@@ -203,12 +203,27 @@ class GstRecActuator(GstActuator):
             return self._release(cam["id"])
         return super().__call__(verb, cam)
 
-    # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass.
+    # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And, on
+    # every recorder pipeline, count what reaches the sink — the writer watch's "offered" (Lesson 10). A held
+    # ring passes nothing, so a held backup offers nothing and is never "stuck".
     def _before_play(self, p, cam: dict) -> None:
+        sink = p.get_by_name("sink")
+        if sink is not None:
+            self.offered_bytes = getattr(self, "offered_bytes", {})
+            self.offered_bytes.setdefault(cam["id"], 0)
+
+            def count(pad_, info, cid=cam["id"]):
+                self.offered_bytes[cid] += info.get_buffer().get_size()
+                return Gst.PadProbeReturn.OK
+
+            sink.get_static_pad("sink").add_probe(Gst.PadProbeType.BUFFER, count)
         if cam.get("hold"):
             pad = p.get_by_name("ring").get_static_pad("src")
             self.blocks = getattr(self, "blocks", {})
             self.blocks[cam["id"]] = pad.add_probe(Gst.PadProbeType.BLOCK_DOWNSTREAM, lambda *_: Gst.PadProbeReturn.OK)
+
+    def offered(self, cid):
+        return getattr(self, "offered_bytes", {}).get(cid)
 
     # Unblock — and drop what the ring pushes until its first KEYFRAME: the leaky queue dropped its oldest
     # buffers one at a time, so it may begin mid-GOP, and the muxer cannot start a file there. The product

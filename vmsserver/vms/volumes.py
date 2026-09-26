@@ -219,6 +219,7 @@ def holders(vars_, sub: Subsystem) -> dict[str, Slot]:
 def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=None) -> dict:
     vols, held = declared(vars_), holders(vars_, sub)
     broken = _unwritable(objects, sub, now, lost_after) if objects is not None else {}
+    writing = _writing(objects, sub, now, lost_after) if objects is not None else {}
     rows = []
     for v in vols:
         slot = held.get(v.name)
@@ -226,6 +227,7 @@ def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=
         err = broken.get(v.name) if live else None
         row = {k: x for k, x in v.to_items().items() if not is_secret_field(k)}   # the rule at the source
         rows.append({**row, "name": v.name, "served_by": slot.holder if live and not err else None,
+                     "writing": writing.get(v.name) if live and not err else None,
                      "why": None if live and not err else
                             f"held by {slot.holder}, which cannot write there: {err}" if err else
                             "disabled by the administrator" if not v.enabled else
@@ -254,6 +256,21 @@ def _unwritable(objects, sub: Subsystem, now: float, lost_after: float) -> dict[
             out[vol] = err
     return out
 
+
+
+# `{volume: what the console says}` for the volumes whose live holder reports its writer stuck or losing
+# (Lesson 10, feedback U). Served, and not writing well: a different sentence from "cannot write there".
+def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str, str]:
+    from w2cplatform.console import heartbeats
+    from .writerwatch import describe
+    out = {}
+    for hb in heartbeats(objects, sub.name + "/").values():
+        if now - hb.ts > lost_after:
+            continue
+        vol, said = str(hb.extra.get("volume", "")), describe(hb.extra.get("writer") or {})
+        if vol and said:
+            out[vol] = said
+    return out
 
 
 # -- the backup archive (М10B Lesson 26) ---------------------------------------------------------------

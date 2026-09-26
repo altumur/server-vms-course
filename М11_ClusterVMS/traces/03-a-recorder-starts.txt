@@ -94,6 +94,9 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
       "archive_error": "",
       "archive_away_since": 0.0,
       "archive_failure": "",
+      "writer": {
+        "state": "ok"
+      },
       "refused": {},
       "spool": 0,
       "spool_for": {},

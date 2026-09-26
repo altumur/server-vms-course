@@ -143,7 +143,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
   #servers { font-size:12px; margin-top:8px; }
   #servers .srv { padding:4px 0; border-top:1px solid var(--line); }
   #servers .srv small { color:var(--muted); display:block; }
-  #servers .bad { color:var(--stale); }
+  #servers .bad, #archlist .bad { color:var(--stale); }
   #mounts { color:var(--muted); font-size:12px; margin-top:6px; }
   #policy { font-size:12px; margin-top:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
   #policy select { font-size:12px; }
@@ -651,7 +651,7 @@ async function loadArchives() {
   for (const v of d.volumes || []) {
     const li = document.createElement('li'); li.className = v.served_by ? 'running' : '';
     li.innerHTML = `<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB · ${v.url}</small></span>` +
-                   `<small>${v.served_by ? 'served by ' + v.served_by : v.why} <a href="#" data-act="del">delete</a></small>`;
+                   `<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? ' · <span class="bad">' + v.writing + '</span>' : ''} <a href="#" data-act="del">delete</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => {
       e.preventDefault();
       if (!confirm(`Stop using ${v.name}? The footage already written stays where it is — this removes the declaration, not the archive.`)) return;

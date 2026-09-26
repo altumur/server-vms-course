@@ -214,6 +214,12 @@ class FakeActuator:
         self.released: list[tuple] = []                  # (id, start, end) of every ring written out
         self.gop = 2.0
         self.started: dict[int, dict] = {}
+        # What each pipeline handed its sink, in bytes, cumulative — the writer watch's "offered" (Lesson
+        # 10). A real actuator counts it at the sink's pad; the tests set it. None: not measured.
+        self.offered_bytes: dict = {}
+
+    def offered(self, cid):
+        return self.offered_bytes.get(cid)
 
     # Records the call. `stop` always succeeds and removes the id. A start/restart on a failing id fails
     # (and clears `running`); otherwise the id is running and `cam["epoch"]` is remembered — the tests read

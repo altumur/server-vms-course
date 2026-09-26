@@ -46,6 +46,7 @@ from . import volumes
 from .archive import ArchiveResource, overlaps, parse, subtract
 from .config import rec_row
 from .worker import FakeActuator, VmsWorker
+from .writerwatch import WriterWatch
 
 # What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13), and
 # where it says when it last reached the domain. Named here because the recorder is the reader; the agent writes.
@@ -173,6 +174,11 @@ class RecWorker(VmsWorker):
         self._opener: threading.Thread | None = None     # the one open in flight — a hung one included
         self.promoting_since = 0.0
         self.last_progress = 0.0                     # when a promotion last moved a segment — what tells moving from stuck
+        # Is the WRITER writing (Lesson 10, feedback U): bytes offered to the sinks against bytes that reached
+        # the spool and the archive. `promoted_bytes` is what left the spool for the archive, so a promotion
+        # does not read as the volume going backwards.
+        self.writer = WriterWatch()
+        self.promoted_bytes = 0
         self.grace_seconds = grace_seconds
         # Backfill (Lesson 16): the hours in local time it may run in (None: any), how far back it may
         # reach, how fresh it must NOT touch, and the seam tolerance that stops 144 seams a day from
@@ -390,7 +396,32 @@ class RecWorker(VmsWorker):
         self.resubscribe(now)
         out = super().reconcile_once(now)
         self.gate_pass()
+        self.writer_pass()
         return out
+
+    # -- is the writer writing (Lesson 10, feedback U) ------------------------------------------------------
+    # Offered: what the actuator says its pipelines handed their sinks. Landed: what is in the spool now plus
+    # what left it for the archive. A recorder whose actuator does not measure says nothing — silence here
+    # is "not measured", never "fine". When the watch says stuck or losing, the cure is to reopen the writer:
+    # the pipelines are stopped and counted lost, and the reconciler starts them again, under a new epoch as
+    # any restart. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat says the state
+    # every pass regardless.
+    def writer_pass(self, now: float | None = None) -> dict:
+        wall = self.wall() if now is None else now
+        measure = getattr(self.actuator, "offered", None)
+        running = list(self.reconciler.actual)
+        vals = [measure(c) for c in running] if measure else []
+        if not any(v is not None for v in vals):
+            return self.writer.state
+        landed = self.promoted_bytes + sum(os.path.getsize(os.path.join(d, f))
+                                           for d, _, fs in os.walk(self.archive.spool) for f in fs)
+        state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
+        if self.writer.reopen_due(wall):
+            log.warning("%s: the writer is %s (%s) — reopening it", self.name, state["state"], state)
+            for cid in running:
+                self.actuator("stop", {"id": cid})
+                self.reconciler.lost(cid, self.now())
+        return state
 
     # What this recorder adds to the heartbeat: how many segments are in the spool and not yet in the
     # archive. Normally nought or one — the fragment being written — and it is the answer to the only
@@ -422,6 +453,9 @@ class RecWorker(VmsWorker):
                 "archive_away_since": self.archive_away_since,
                 # AWAY ("transient") is kept and buffered into; WRONG ("permanent") is handed back.
                 "archive_failure": self.archive_failure,
+                # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stuck or losing.
+                # A fresh hold and a running row do not say it; only this does.
+                "writer": self.writer.state,
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
                 # given, so that a key somebody fixes is picked up without a restart.
                 "refused": {n: why for n, (_, why) in self.refused.items()},
@@ -634,8 +668,13 @@ class RecWorker(VmsWorker):
             owner = self.volume_of(p)
             if owner and owner != volume:
                 continue                                 # another volume's footage — skipped, and NOT counted
+            try:                                         # what leaves the spool, so the writer watch does not see it vanish
+                size = os.path.getsize(p if os.path.isabs(p) else os.path.join(archive.spool, p))
+            except (OSError, AttributeError, TypeError):
+                size = 0
             try:
                 archive.promote(p)
+                self.promoted_bytes += size
             except OSError as e:
                 failed = True
                 if volume == self.volume:                   # still ours: a late answer about a volume we left says nothing now
