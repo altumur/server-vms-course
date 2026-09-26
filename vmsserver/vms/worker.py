@@ -102,7 +102,7 @@ from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
-from .config import (PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, channel_of, device_of, live_shm, live_url,
+from .config import (LIVE_PORT_BASE, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, channel_of, device_of, live_shm, live_url,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
@@ -320,12 +320,18 @@ class FakeActuator:
 
 # The live branch's RTP port for a camera on its worker's server: deterministic, so a gateway needs only the
 # heartbeat (server + this) to subscribe, and nobody keeps a port table.
-def live_port(cid) -> int:
+#
+# `base` is the PROCESS's, not a constant (`RTP_BASE`, default 20000). Ids are unique inside a cluster, so
+# two workers of one cluster on one box never collide. Two CLUSTERS on one box do: a cluster of one camera
+# (М12 Lesson 10) calls its camera 1, and so does every other — on a real camera each has its own loopback,
+# on a bench they all send RTP to 20001 and a picture turns up in someone else's window with no error.
+def live_port(cid, base: int | None = None) -> int:
     from .config import LIVE_PORT_BASE
+    base = LIVE_PORT_BASE if base is None else base
     try:                                         # a port is a number, and this is the only place an id must be one:
-        return LIVE_PORT_BASE + int(cid)         # a named unit gets the base port and the fan-out has none to publish
+        return base + int(cid)                   # a named unit gets the base port and the fan-out has none to publish
     except ValueError:
-        return LIVE_PORT_BASE
+        return base
 
 
 # `WORKER_NAME` if set; else `w-<NOMAD_ALLOC_INDEX>`; else `None` — claim whatever is free, a lapsed slot
@@ -380,6 +386,7 @@ class VmsWorker(Worker):
         # heartbeat (`live_url`, `playback_url`), and it has done since Lesson 4.
         self.rtsp_port = port_of(env.get("RTSP_PORT"), RTSP_PORT)
         self.playback_port = port_of(env.get("PLAYBACK_PORT"), PLAYBACK_PORT)
+        self.rtp_base = int(env.get("RTP_BASE") or LIVE_PORT_BASE)                 # the live branch's ports: `live_port`, per cluster on a shared bench
         self.bucket_seconds = bucket_seconds
         # What this subsystem declared about repeats (`events.suppress`), held for as long as this worker
         # holds its units. The counters live HERE and nowhere else: this process is the only one that sees
@@ -497,7 +504,7 @@ class VmsWorker(Worker):
     def enrich(self, cam: dict) -> dict | None:
         if cam.get("kind") == "io":
             return dict(cam)
-        return dict(cam, live_url=live_url(self.server, cam["id"], self.fanout_port()), live_port=live_port(cam["id"]),
+        return dict(cam, live_url=live_url(self.server, cam["id"], self.fanout_port()), live_port=live_port(cam["id"], self.rtp_base),
                     live_shm=live_shm(cam["id"], self.shm_dir))
 
     # Seconds since start on the monotonic clock — the reconciler's `now` for backoff.

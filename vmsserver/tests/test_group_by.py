@@ -338,3 +338,22 @@ def test_two_workers_on_one_box_open_their_own_doors():
     plain = VmsWorker("w-3", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
                       server="srv-a", archive_root=box.archive, env={})
     assert (plain.rtsp_port, plain.playback_port) == (8554, 8083)
+
+
+def test_two_clusters_of_one_on_one_bench_do_not_share_an_rtp_port():
+    """A cluster of one camera (М12 Lesson 10) calls its camera 1, and so does
+    every other. On a real camera each has its own loopback; on a bench where
+    several such clusters share a machine, a constant base sends them all to
+    20001 and a picture turns up in another cluster's window with no error. The
+    base is the process's (`RTP_BASE`), so each cluster takes its own thousand."""
+    from vms.worker import FakeActuator, VmsWorker, live_port
+
+    assert (live_port(1), live_port(1, 21000), live_port("gate", 21000)) == (20001, 21001, 21000)
+
+    ports = []
+    for base in ("", "21000", "22000"):                # the default, then two more clusters of one
+        box = Box()
+        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall,
+                      server="srv-a", archive_root=box.archive, env={"RTP_BASE": base} if base else {})
+        ports.append(w.enrich({"id": 1})["live_port"])
+    assert ports == [20001, 21001, 22001]
