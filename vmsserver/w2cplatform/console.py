@@ -11,6 +11,8 @@ show them. So the console is one class, run from the same spec:
     GET  /resources              the platform's resources: usage, units, live | silent
     GET  /unplaceable            units nothing live can serve, with the labels that say why
     GET  /servers                every server as placement sees it: its archive (the label), its resource (the fact), its workers, placeable or why not
+    GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
+                                 units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
     GET  /events?from&to&unit&kind&subsystem   the resources' event databases, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
@@ -123,6 +125,27 @@ def send_file(handler, path: str, content_type: str) -> None:
     if rng:
         handler.send_header("Content-Range", f"bytes {start}-{end}/{size}")
     handler.end_headers(); handler.wfile.write(data)
+
+
+# The domain's view, as the domain left it in THIS cluster's object store on its last pass (М12 Lesson 3,
+# feedback X). The operator of the most common site — small members and one server room, the domain in the
+# room's cluster — wants one tree, not the room in one console and everything else in another. The cluster console
+# does not ask any member anything: it reads what the domain already gathered, the way a recorder reads the
+# source book instead of the member's own cluster. A cluster that does not host the domain has no such object and
+# says so — it does not know the others. And the view's age is part of the answer: older than `lost_after`, the
+# page says "the domain is silent" rather than showing a short list as if it were current (Lesson 1's rule,
+# applied to the console itself). Read only: edits go through the domain, the door of Lesson 3.
+DOMAIN_VIEW = "domain/view"
+
+
+def domain_view(objects, now: float, lost_after: float = 45.0) -> tuple[int, dict]:
+    raw = objects.get(DOMAIN_VIEW)
+    if not raw:
+        return 404, {"error": "no domain view here: this cluster does not host the domain, and it does not know "
+                              "the others — ask the domain cluster's console"}
+    d = json.loads(raw)
+    age = max(0.0, now - float(d.get("ts", 0)))
+    return 200, {**d, "age": round(age, 1), "silent": age > lost_after}
 
 
 # Every worker's last heartbeat under `prefix`, whatever its age — the read model's and `/metrics`' source.
@@ -642,6 +665,8 @@ class SpecConsole:
                                      for s, hb in resources_seen(ctl.objects).items()})
             if path == "/servers":
                 return h._send(200, con.servers())
+            if path == "/domain":
+                return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
             if path == "/policy":
                 return h._send(200, {**ctl.policy(), "choices": ctl.POLICY_CHOICES})
             if path == "/unplaceable":

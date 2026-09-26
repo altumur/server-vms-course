@@ -9,6 +9,9 @@ the domain cluster runs the same one pointed at every cluster.
                                                 refuses placement fields
     GET  /healthz
 
+Each pass also leaves what it saw as `domain/view` in the domain cluster's object store, which that cluster's
+own console serves at `GET /domain` (feedback X): one tree for a site whose domain lives in its server room.
+
 Stateless: kill it, start another, the first pass rebuilds everything.
 """
 from __future__ import annotations
@@ -25,14 +28,20 @@ from .readview import ReadView
 
 
 class Console:
-    def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0):
+    def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
+                 publish_to=None, crossings=None):
+        """`publish_to`: the domain cluster's object store — each pass leaves the view there as `domain/view`,
+        for that cluster's own console to draw (feedback X). `crossings`: Lesson 13's, to say who records what."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
+        self.publish_to, self.crossings = publish_to, crossings
         self._stop = threading.Event()
 
     def _refresher(self):
         while not self._stop.is_set():
             try:
                 self.view.refresh()
+                if self.publish_to is not None:
+                    self.view.publish(self.publish_to, self.crossings.all() if self.crossings else None)
             except Exception:                              # noqa: BLE001 — a bad pass is a stale view, not a dead console
                 pass
             self._stop.wait(self.refresh_interval)
@@ -129,7 +138,12 @@ def main() -> None:
         raise ApiError(501, f"forwarding to {cluster}'s console needs service discovery wired here (nomadService)")
 
     api = ConsoleAPI(directory, consoles, verifier=verifier if os.environ.get("AUTH", "1") == "1" else None)
-    console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")))
+    # Each pass also leaves the view in the domain cluster's own object store, for that cluster's console to
+    # draw the domain as the root of its tree (`GET /domain` there). The domain cluster's objects are the
+    # domain's; no other member's store is written.
+    from .crossing import Crossings
+    console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
+                      publish_to=fed.domain_cluster.objects, crossings=Crossings(fed.domain_cluster.vars, view))
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

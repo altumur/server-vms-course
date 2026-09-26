@@ -792,6 +792,21 @@ async function loadResources() {
     }
     if (!Object.keys(sv).length) box.textContent = 'no servers yet';
   } catch (_) {}
+  // The domain, when this cluster hosts it (М12 Lesson 3): its members and what it cannot see, above this
+  // cluster's servers — one tree for the site. Read only; a stale view says the domain is silent.
+  try {
+    const r = await fetch('/domain');
+    if (r.ok) {
+      const d = await r.json();
+      const el = document.createElement('div'); el.className = 'srv';
+      const per = {}; for (const c of d.units || []) per[c.cluster] = (per[c.cluster] || 0) + 1;
+      const ms = Object.entries(d.members || {}).map(([n, m]) => `${n}: ${m.state === 'ok' ? (per[n] || 0) + ' units' : '<span class="bad">' + m.state + '</span>'}`).join(' · ');
+      el.innerHTML = `<strong>domain</strong> <small>${d.complete ? 'every member answered' : '<span class="bad">incomplete</span>'} · as of ${Math.round(d.age)} s ago</small>` +
+                     (d.silent ? `<small class="bad">the domain is silent — this is what it knew ${Math.round(d.age)} s ago</small>` : '') +
+                     `<small>${ms}</small>` + (d.causes || []).map(c => `<small class="bad">${c}</small>`).join('');
+      box.prepend(el);
+    }
+  } catch (_) {}
   try { const m = await (await fetch('/mounts')).json(); const names = Object.keys(m.mounts || {}); $('#mounts').textContent = names.length ? `fronts ${m.root} at / and ${names.map(n => n + ' at /' + n + '/').join(', ')}` : ''; } catch (_) {}
 }
 window.addEventListener('beforeunload', stopLive);

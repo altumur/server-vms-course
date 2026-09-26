@@ -36,6 +36,7 @@ shows ONE cause, not thirty greyed cameras.
 """
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass
 
@@ -247,6 +248,24 @@ class ReadView:
             ages = {}
         return {n: (None if n in self.cluster_down_since else round(ages.get(n), 1) if n in ages else None)
                 for n in self.fed.clusters}
+
+    # What this pass saw, left as ONE object in the domain cluster's own object store (feedback X): the
+    # members and whether each answered, whether the list is complete, the cameras (`units`, the platform's
+    # word — the page that draws them is the platform's) with the cluster, server
+    # and worker they are on, the causes, and — given the crossings — which cluster records which camera of
+    # another. The domain cluster's own console serves it at `GET /domain` (`w2cplatform.console.domain_view`)
+    # and draws the domain as the root of its tree, without asking any member anything.
+    def publish(self, objects, crossings: dict | None = None) -> dict:
+        from w2cplatform.console import DOMAIN_VIEW
+        keep = ("ref", "camera", "name", "cluster", "server", "worker", "phase", "worker_state", "as_of")
+        view = {"ts": self.wall(), "complete": not self.cluster_down_since,
+                "members": {n: {"state": "unreachable" if n in self.cluster_down_since else "ok", "rpo": r}
+                            for n, r in self.rpo().items()},
+                "units": [{k: v for k, v in r.to_json().items() if k in keep} for r in self.rows()],   # the platform's word
+                "causes": [c.sentence() for c in self.causes()],
+                "crossings": dict(crossings or {})}
+        objects.put(DOMAIN_VIEW, json.dumps(view, ensure_ascii=False, sort_keys=True).encode())
+        return view
 
     def causes(self) -> list[Cause]:
         """Silence grouped by the largest failure domain that explains it."""
