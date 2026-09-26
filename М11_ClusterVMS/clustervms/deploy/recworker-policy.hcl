@@ -13,5 +13,10 @@ namespace "default" {
     path "rec/*"         { capabilities = ["read", "list"] }
     path "objects/vms/*" { capabilities = ["read", "list"] }            # the workers' heartbeats: live_url
     path "vms/*"         { capabilities = ["read", "list"] }
+    # М12 Lesson 13: a camera that is a cluster of its own, recorded by another cluster. The backup on its
+    # card reads the book of primaries its domain agent carried home, and when the agent last reached the
+    # domain. Read only: the agent writes both.
+    path "domain/primaries"    { capabilities = ["read"] }
+    path "objects/domain/seen" { capabilities = ["read"] }
   }
 }

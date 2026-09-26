@@ -24,6 +24,16 @@ recording goes on with the domain switched off, from the address last carried.
     domain/crossings            in the domain cluster: {ref: the cluster that records it}
     domain/sources/<cluster>    in the domain cluster: that cluster's source book
     domain/sources              in the recording cluster: its agent's copy
+    domain/primaries/<cluster>  in the domain cluster: the camera cluster's book of primaries
+    domain/primaries            in the camera's cluster: its agent's copy, read by the backup on its card
+
+The book of primaries is the source book the other way round. A backup on the camera's card with
+`when: offline` records while its primary should be written and is not (М10B Lesson 26) — and its primary
+is here, in the recording cluster, where the camera's cluster cannot look. So the domain says, per camera,
+who records it, whether that recording SHOULD be written (enabled, its `until` not passed) and whether it IS
+(a recorder's fresh heartbeat reports it running). No time in it: a book that changed on every pass would
+be rewritten on the camera's flash every few seconds. How current it is, the camera learns from its agent's
+last contact with the domain, which lives in RAM.
 """
 from __future__ import annotations
 
@@ -34,7 +44,8 @@ from dataclasses import dataclass
 from cluster.variables import Conflict
 from vms.archive import subtract
 
-from .agent import SOURCES_PATH
+from .agent import PRIMARIES_PATH, SOURCES_PATH
+from .federation import Unreachable
 from .api import ApiError
 
 CROSSINGS = "domain/crossings"
@@ -89,6 +100,50 @@ class Crossings:
             if have != book:
                 self.vars.put(path, book, cas=idx)
         return books
+
+    # Each camera cluster's book of primaries: for every camera of it that another cluster records, what the
+    # recording cluster's own objects say — its rec snapshot (desired: enabled, until) and its recorders'
+    # heartbeats (actual: running). Read, like the source book, from what the recording cluster publishes and
+    # nothing else. A recording cluster that does not answer is a primary nobody can vouch for: `written` is
+    # false, and the card covers after its grace — which is right when the room is down, and only costs a
+    # card's worth of writing when merely the domain cannot see it.
+    def publish_primaries(self, lost_after: float = 45.0) -> dict[str, dict]:
+        now, books = self.wall(), {}
+        for ref, on in self.all().items():
+            known = self.view.last_known(ref)
+            if known is None:
+                continue
+            books.setdefault(known[0], {})[ref] = json.dumps(self._primary(ref, on, now, lost_after), sort_keys=True)
+        for home, book in books.items():
+            path = f"{PRIMARIES_PATH}/{home}"
+            have, idx = self.vars.get(path)
+            if have != book:
+                self.vars.put(path, book, cas=idx)
+        return books
+
+    def _primary(self, ref: str, on: str, now: float, lost_after: float) -> dict:
+        entry = {"cluster": on, "recording": "", "should": True, "written": False}
+        c = self.view.fed.clusters.get(on)
+        try:
+            if c is None:
+                raise Unreachable(on)
+            rows = []
+            for key in c.objects.list("rec/snapshot/"):
+                raw = c.objects.get(key)
+                rows += [r for r in (json.loads(raw).get("recordings", []) if raw else []) if str(r.get("cam")) == f"ref:{ref}"]
+            names = sorted(str(r.get("name") or r.get("id")) for r in rows)
+            running = set()
+            for key in c.objects.list("rec/heartbeats/"):
+                raw = c.objects.get(key)
+                hb = json.loads(raw) if raw else None
+                if hb and now - float(hb.get("ts", 0)) <= lost_after:
+                    running |= {str(st.get("id")) for st in hb.get("status", []) if st.get("phase") == "running"}
+        except Unreachable:
+            return entry
+        until_ok = lambda r: float(r.get("until") or 0) == 0 or float(r.get("until") or 0) > now
+        return {**entry, "recording": ",".join(names),
+                "should": any(bool(r.get("enabled", True)) and until_ok(r) for r in rows),
+                "written": any(n in running for n in names)}
 
     def _doors(self, ref: str) -> dict | None:
         for (cluster, worker), s in self.view.snapshots.items():

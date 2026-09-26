@@ -85,6 +85,6 @@ placement:
 # a recorder takes it (`rec/holds/<name>`), which is what lets an operator create a network archive in the
 # console and have it served without anybody editing a unit file.
 tables: [volumes]
-snapshot: [name, cam, retention_days, enabled, labels, home]
+snapshot: [name, cam, retention_days, enabled, until, labels, home]
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

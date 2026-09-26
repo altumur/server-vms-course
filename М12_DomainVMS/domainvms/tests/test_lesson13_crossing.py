@@ -125,3 +125,60 @@ def test_a_camera_the_book_does_not_hold_is_said_by_name():
         raise AssertionError("nothing was carried yet")
     except NotResolvable as e:
         assert SERIAL in str(e) and "source book" in str(e)
+
+
+def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it():
+    """The source book the other way round. The backup on the camera's card (`when: offline`, М10B Lesson 26)
+    must know whether its primary — a recording of the SERVER ROOM's cluster — is written, and cannot look
+    there. So the domain reads the room's rec snapshot (should it be written?) and its recorders' heartbeats
+    (is it?) and writes one book per camera cluster; the camera's agent carries it home, and says in RAM when
+    it last reached the domain. The book changes when the room's recording does, and only then does it touch
+    the camera's flash."""
+    import json
+    from vms.config import REC_SPEC
+    from vms.recworker import DOMAIN_SEEN, PRIMARIES
+    from w2cplatform.contract import Heartbeat, Subsystem
+    from w2cplatform.spec import SpecController
+
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    south, south_link = make_cluster("south")
+    fed.add(north); fed.add(south)
+    cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
+    cam.boot(); fed.add(cam.cluster())
+    view = ReadView(fed, wall=wall); view.refresh()
+    crossings = Crossings(north.vars, view, wall)
+    crossings.record(SERIAL, on="south")
+    rec = SpecController(REC_SPEC, south.vars, south.objects, wall=wall)
+    rec.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})              # the room's recording of the camera
+    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, seen_store=cam.cluster().objects)
+
+    def room(running: bool):                                          # the room's recorder, and its controller
+        rec.publish_snapshot()
+        st = [{"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True, "phase": "running" if running else "pending"}]
+        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
+
+    def pass_():
+        crossings.publish_primaries(); agent.sync()
+        items, _ = cam.flash.get(PRIMARIES)
+        return json.loads(items[SERIAL])
+
+    room(True)
+    assert pass_() == {"cluster": "south", "recording": SERIAL, "should": True, "written": True}
+    assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == wall()      # freshness: in RAM
+    writes = cam.flash.writes
+    for _ in range(10):
+        wall.advance(5); room(True); pass_()
+    assert cam.flash.writes == writes                                 # ten passes, nothing on flash
+
+    room(False)
+    assert pass_()["written"] is False and cam.flash.writes == writes + 1
+
+    rec.update(SERIAL, {"enabled": False}); room(False)
+    assert pass_()["should"] is False                                 # the operator's decision: nothing to cover
+
+    rec.update(SERIAL, {"enabled": True}); room(True); pass_()
+    south_link.up = False                                             # the room does not answer the domain
+    wall.advance(5)
+    assert pass_() == {"cluster": "south", "recording": "", "should": True, "written": False}

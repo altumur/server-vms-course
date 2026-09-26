@@ -23,7 +23,10 @@ KEYS_PATH, REVOKED_PATH, GRANTS_PATH = "domain/keys", "domain/revoked", "domain/
 # Lesson 13: where this cluster's recorders find cameras of OTHER clusters. Lesson 14: whose closed alarm
 # buckets this cluster keeps a copy of.
 SOURCES_PATH, MIRRORS_PATH = "domain/sources", "domain/mirrors"
-PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH)
+# Lesson 13, the other way round: who records THIS cluster's cameras elsewhere, and whether it writes them —
+# read by the backup on a camera's card. The recorder owns the names; the agent only carries.
+from vms.recworker import DOMAIN_SEEN, PRIMARIES as PRIMARIES_PATH
+PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH)
 
 
 class DomainPublisher:
@@ -52,17 +55,22 @@ class DomainPublisher:
 
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
-                 console=None, current=None, domain_objects=None, cluster_objects=None):
+                 console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
 
         `domain_objects` and `cluster_objects` are Lesson 12: where the domain publishes documents, and
         this cluster's DURABLE object store, where the agent keeps the copy it verified. Given them, it
-        carries the shared settings home."""
+        carries the shared settings home.
+
+        `seen_store` is Lesson 13: where the agent says when it last reached the domain (`domain/seen`), so
+        the books it carried can be judged by their age without the books themselves changing. On a camera
+        it is RAM — this is written on every pass, and flash is not."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
         self.console, self.current = console, current
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
+        self.seen_store = seen_store
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
@@ -120,6 +128,9 @@ class DomainAgent:
             return False
         self.last_synced = self.now()
         self.syncs += 1
+        if self.seen_store is not None:
+            import json
+            self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": self.last_synced, "cluster": self.cluster}).encode())
         return True
 
 

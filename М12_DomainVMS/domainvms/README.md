@@ -33,11 +33,11 @@ domainvms/
     signer-policy.hcl  agent-policy.hcl                                        one writer per prefix; the agent may not touch vms/*
     federation.hcl                                                             two regions, one gossip pool
     verify-bench.sh                                                            what needs a real bench, scripted
-  tests/              96 tests, no Nomad, no Postgres, no browser — about two seconds
+  tests/              97 tests, no Nomad, no Postgres, no browser — about two seconds
 ```
 
 ```bash
-python3 tests/run.py                 # 96 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
+python3 tests/run.py                 # 97 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
 python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variables://objects,...
 ```
 

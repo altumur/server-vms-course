@@ -47,6 +47,11 @@ from .archive import ArchiveResource, overlaps, parse, subtract
 from .config import rec_row
 from .worker import FakeActuator, VmsWorker
 
+# What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13), and
+# where it says when it last reached the domain. Named here because the recorder is the reader; the agent writes.
+PRIMARIES = "domain/primaries"
+DOMAIN_SEEN = "domain/seen"
+
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
 
@@ -119,6 +124,10 @@ class RecWorker(VmsWorker):
     # `START_GRACE` after it went quiet, plus a pass — the ring is written first, so the backup's footage
     # starts BEFORE the moment anybody noticed. Thirty seconds covers the grace, a pass and a keyframe.
     PREBUFFER = 30.0
+    # How old the agent's last contact with the domain may be before the book of primaries it carried stops
+    # counting (М12 Lesson 13). The same 45 s a heartbeat gets: past it, the backup cannot know whether the
+    # primary in the other cluster is written, and records.
+    CARRIED_LOST_AFTER = 45.0
     SLOT_PREFIX, NAME_ENV = "r", "RECORDER_NAME"
     parse_row = staticmethod(rec_row)
 
@@ -300,6 +309,9 @@ class RecWorker(VmsWorker):
 
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
         now = self.wall() if now is None else now
+        carried = self.carried_primary(row, now)
+        if carried is not None:
+            return carried
         names = volumes.backups(self.vars)
         running = {str(st.get("id")) for hb in heartbeats(self.objects, self.SUB.name + "/").values()
                    if now - hb.ts <= 45.0 for st in hb.status if st.get("phase") == "running"}
@@ -319,6 +331,42 @@ class RecWorker(VmsWorker):
             since = self._not_written_since.setdefault(str(other["id"]), now)
             need = need or now - since >= self.START_GRACE
         return need
+
+    # -- a primary in ANOTHER cluster (М12 Lesson 13) --------------------------------------------------------
+    # The rule above looks for the primary in this cluster's rows and this cluster's heartbeats. A camera
+    # that is a cluster of its own, recorded by a server room, has neither: its primary is a row of the
+    # room's cluster, written by the room's recorder. Looking only here, the backup on its card found no
+    # primary and never covered — not when the room was down either, which is the one moment it exists for.
+    #
+    # So the domain, which reads both clusters, writes a BOOK OF PRIMARIES for the camera's cluster, and the
+    # camera's agent carries it home like the grants: per camera, by the domain's name for it (`ref`), who
+    # records it, whether it SHOULD be written and whether it IS. No timestamps in it, on purpose: a book that
+    # changed on every pass of the domain would be rewritten on the camera's flash every few seconds. How
+    # current the book is comes separately — the time the agent last reached the domain, an object in the
+    # cluster's object store (RAM on a camera). A book the agent has not refreshed for `lost_after` is a book
+    # nobody can vouch for, and then the backup records: it cannot know, and not knowing is a failure.
+    def carried_primary(self, row: dict, now: float) -> bool | None:
+        """None: the camera's primary is not in another cluster — decide as always. Else: whether to cover."""
+        items, _ = self.vars.get(PRIMARIES)
+        if not items:
+            return None
+        cam, _ = self.vars.get(f"vms/cameras/{row['cam']}")
+        ref = str((cam or {}).get("ref") or "")
+        if not ref or ref not in items:
+            return None
+        import json
+        e = json.loads(items[ref])
+        raw = self.objects.get(DOMAIN_SEEN)
+        seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
+        key = f"ref:{ref}"
+        if now - seen > self.CARRIED_LOST_AFTER:                 # the book is as old as the agent's last contact
+            self._not_written_since.pop(key, None)
+            return True
+        if not e.get("should") or e.get("written"):
+            self._not_written_since.pop(key, None)
+            return False
+        since = self._not_written_since.setdefault(key, now)
+        return now - since >= self.START_GRACE
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved, plus the
     # promotion of closed segments ---------------------------------------------------------------------

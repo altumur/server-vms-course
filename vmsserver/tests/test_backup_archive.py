@@ -268,3 +268,68 @@ def test_a_backup_volume_is_a_box_or_an_address():
     vols = [volumes.Volume("card", "backup", "/data/card", "cam-7", 1), volumes.Volume("cloud", "backup", "s3://c", "", 1)]
     assert volumes.servable(vols, "cam-7") == ["card", "cloud"]
     assert volumes.servable(vols, "srv-a") == ["cloud"]
+
+
+def _camera_cluster():
+    """A camera that is a cluster of its own (М12 Lesson 10): its row, `ref` its serial, and ONE recording
+    here — the backup on its card, `when: offline`. Its primary is a row of another cluster, the server room
+    that records it (М12 Lesson 13), and nothing of it is in this cluster: no row, no heartbeat."""
+    import json
+    box, ctl, con, con_vars = _box()
+    w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
+    con.create_camera({"name": "gate", "source": CARD, "ref": "SN1"})
+    ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+    volumes.write(box.vars, {"name": "card", "kind": "backup", "server": "srv-1", "url": "/data/card", "quota_bytes": 10**10})
+    SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
+    card = _recorder(box, "r-1", "srv-1", "card")
+    SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    card.reconcile_once(); card.heartbeat_once()
+
+    def carry(should=True, written=True, seen=True):         # what the camera's agent does on a pass
+        book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written}, sort_keys=True)}
+        have, idx = box.vars.get("domain/primaries")
+        if have != book:
+            box.vars.put("domain/primaries", book, cas=idx)
+        if seen:
+            box.objects.put("domain/seen", json.dumps({"ts": box.wall()}).encode())
+    return box, card, next(r for r in card.rows if r["id"] == "1-card"), carry
+
+
+def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_agent_carries():
+    """The primary is in the server room's cluster, so this cluster's rows and heartbeats say nothing about
+    it. Without a book the rule finds no primary and the card never covers — the room down included, the one
+    moment it exists for. With the book of primaries the domain writes for this cluster and the agent
+    carries home, the card holds while the room writes, covers when the room stops (after the same grace),
+    covers when the book cannot be vouched for, and never covers an operator's decision."""
+    box, card, row, carry = _camera_cluster()
+    assert not card.primary_needs_cover(row)                  # no book: a camera alone, nothing to stand in for
+
+    carry(written=True)
+    assert not card.primary_needs_cover(row)                  # the room writes it
+    carry(written=False)
+    assert not card.primary_needs_cover(row)                  # …not yet: it may be starting
+    box.wall.advance(card.START_GRACE + 1); carry(written=False)
+    assert card.primary_needs_cover(row)                      # the room stopped writing it
+
+    carry(written=True)
+    assert not card.primary_needs_cover(row)
+    box.wall.advance(card.CARRIED_LOST_AFTER + 1)             # the agent has not reached the domain since
+    assert card.primary_needs_cover(row)                      # nobody can vouch for the book: record
+
+    carry(should=False, written=False)                        # the operator switched the room's recording off
+    box.wall.advance(card.START_GRACE + 1); carry(should=False, written=False)
+    assert not card.primary_needs_cover(row)
+
+
+def test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not():
+    """On a camera the book is flash. A book carrying the time the domain last looked would change on every
+    pass and be rewritten every few seconds for years. So the book holds facts that change when the room's
+    recording does, and freshness goes to the object store — RAM on a camera."""
+    box, card, row, carry = _camera_cluster()
+    carry()
+    _, idx = box.vars.get("domain/primaries")
+    for _ in range(20):
+        box.wall.advance(5); carry()
+    assert box.vars.get("domain/primaries")[1] == idx         # twenty passes, no write
+    carry(written=False)
+    assert box.vars.get("domain/primaries")[1] != idx         # the room stopped: one write
