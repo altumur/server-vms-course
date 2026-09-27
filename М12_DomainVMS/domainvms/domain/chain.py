@@ -370,7 +370,7 @@ def _relayed_rows(member: str) -> list[str]:
 def relay(members: list[str], domain_vars, domain_objects, office_vars, office_objects, now: float) -> int:
     """One pass of the office's relay, after its agent has reached the domain. Copies each row a member's agent
     would read, and the object a pointer names (shared settings, backup), into `relay/`; only what changed.
-    Last, the time of this pass — how current everything below it is."""
+    How current it all is, the office says on every pass of its own, reached or not (`say_seen`)."""
     written, seen = 0, set()
     for m in members:
         for path in _relayed_rows(m):
@@ -391,14 +391,25 @@ def relay(members: list[str], domain_vars, domain_objects, office_vars, office_o
                 if raw is not None and office_objects.get(RELAY + obj) != raw:
                     office_objects.put(RELAY + obj, raw)
                     written += 1
-    office_objects.put(RELAY_SEEN, json.dumps({"ts": now}).encode())
     return written
+
+
+# How current the relayed books are — an AGE, measured on the office's clock: how long ago the office last
+# reached the domain, said on every office pass, the failed ones above all, with a counter. The camera takes a
+# new counter as "said just now" and sets its own mark to ITS clock minus the age: two clocks never compared,
+# and the error is at most one camera pass (feedback AM — the product sends the same age in its exchange).
+def say_seen(office_objects, last_contact: float | None, now: float) -> dict:
+    raw = office_objects.get(RELAY_SEEN)
+    n = int(json.loads(raw).get("n", 0)) + 1 if raw else 1
+    mark = {"n": n, "age": None if last_contact is None else max(0.0, now - last_contact)}
+    office_objects.put(RELAY_SEEN, json.dumps(mark).encode())
+    return mark
 
 
 class Relay:
     """What a camera that can reach only its office uses in place of the domain: `vars` and `objects` over the
-    office's `relay/` copy — its reports go into the office's store as they are — and `seen()`, the time the
-    OFFICE last reached the domain, which is how current the camera's books are."""
+    office's `relay/` copy — its reports go into the office's store as they are — and `seen()`, how long ago the
+    OFFICE last reached the domain (`say_seen`), which is how current the camera's books are."""
 
     def __init__(self, office_vars, office_objects):
         self.vars = _RelayVars(office_vars, office_objects)
@@ -415,9 +426,9 @@ class _RelayVars:
     def list(self, prefix):
         return [k[len(RELAY):] for k in self.office_vars.list(RELAY + prefix)]
 
-    def seen(self) -> float | None:
+    def seen(self) -> dict | None:
         raw = self.office_objects.get(RELAY_SEEN)
-        return float(json.loads(raw)["ts"]) if raw else None
+        return json.loads(raw) if raw else None
 
 
 class _RelayObjects:
