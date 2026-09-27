@@ -86,7 +86,8 @@ class Ram:
 
 
 class _Door:
-    """What the domain reaches a camera through. Closed while it is off, and while it is booting."""
+    """What the SITE reaches a camera through — a recorder, a neighbour, the operator on site; never the domain,
+    which reads reports. Closed while it is off, and while it is booting."""
 
     def __init__(self, device: "DeviceCluster", store_of):
         self.device, self.store_of = device, store_of
