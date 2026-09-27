@@ -13,6 +13,7 @@ from w2cplatform.variables import items_bytes
 from domain.agent import DomainAgent, DomainPublisher
 from domain.device import DeviceCluster
 from domain.federation import Federation
+from domain.uplink import member_copy
 from domain.shared import OBJECT, POINTER, SharedSettings, SharedView, sign
 from domain.signer import Signer
 from domain.tokens import TokenIssuer
@@ -29,10 +30,10 @@ def _site(wall, n=3):
     for i in range(n):
         d = DeviceCluster(f"SN{i}", FakeVariables(), wall=wall)
         d.boot()
-        fed.add(d.cluster())
+        fed.add(member_copy(d.name, north.objects, wall=wall))       # the domain reads its reports, never its door
         devices.append(d)
         agents.append(DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
-                                  cluster_objects=d.disk))
+                                  cluster_objects=d.disk, published=d.local_objects()))
     shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
     return fed, north, north_link, signer, shared, devices, agents
 
