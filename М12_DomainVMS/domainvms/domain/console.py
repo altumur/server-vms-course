@@ -7,6 +7,8 @@ the domain cluster runs the same one pointed at every cluster.
     GET  /api/where/<camera>                    the directory of directories, incompleteness included
     PUT  /api/cameras/<camera>                  proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields
+    GET  /api/members                           the domain's members: who, admitted how and when (`domain/members.py`)
+    DELETE /api/members/<name>                  a member leaves: an admin of the domain cluster only
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain cluster only (`domain/topology.py`)
@@ -32,19 +34,22 @@ from .readview import ReadView
 
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
-                 publish_to=None, crossings=None, pending=None, topology=None, admin=None):
+                 publish_to=None, crossings=None, pending=None, topology=None, admin=None, members=None):
         """`publish_to`: the domain cluster's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `crossings`: Lesson 13's, to say who records what."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
         self.publish_to, self.crossings, self.pending = publish_to, crossings, pending
         # The operator's topology, and `admin(subject) -> bool`: who may edit it. Each pass also makes the domain's
         # copy of every reporting member read where the topology says it reports.
-        self.topology, self.admin = topology, admin
+        self.topology, self.admin, self.members = topology, admin, members
         self._stop = threading.Event()
 
     def _refresher(self):
         while not self._stop.is_set():
             try:
+                if self.members is not None and self.publish_to is not None:
+                    from .members import apply as follow_members
+                    follow_members(self.view.fed, self.members, self.publish_to, self.topology)
                 if self.topology is not None and self.publish_to is not None:
                     from .topology import apply
                     apply(self.view.fed, self.topology, self.publish_to)
@@ -86,6 +91,8 @@ class Console:
                         return self._send(200, [c.__dict__ | {"sentence": c.sentence()} for c in console.view.causes()])
                     if u.path == "/api/topology" and console.topology is not None:
                         return self._send(200, console.topology.read())
+                    if u.path == "/api/members" and console.members is not None:
+                        return self._send(200, console.members.read())
                     if u.path.startswith("/api/where/"):
                         a = console.directory.where(u.path.rsplit("/", 1)[1])
                         return self._send(200 if a.found else (404 if a.complete else 503),
@@ -108,6 +115,21 @@ class Console:
                 try:
                     resp = console.api.update_camera(u.path.rsplit("/", 1)[1], fields, key, self._token())
                     self._send(202 if resp.get("pending") else 200, resp)    # kept for a cluster that is off: accepted, not applied
+                except ApiError as e:
+                    self._send(e.status, {"detail": e.detail})
+
+            def do_DELETE(self):
+                u = urlsplit(self.path)
+                if not (u.path.startswith("/api/members/") and console.members is not None):
+                    return self._send(404, {"detail": "no such route"})
+                name = u.path.rsplit("/", 1)[1]
+                try:
+                    subject = console.api._subject(self._token())
+                    if console.admin is not None and subject is not None and not console.admin(subject):
+                        raise ApiError(403, f"{subject} is not an admin of the domain cluster: members are the domain's")
+                    if not console.members.remove(name, by=subject):
+                        return self._send(404, {"detail": f"{name} is not a member of this domain"})
+                    self._send(200, console.members.read())
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})
 
@@ -184,11 +206,13 @@ def main() -> None:
     def admin(subject: str) -> bool:                  # an `admin` grant in the domain cluster itself
         return any(g.subject == subject and g.capability == "admin" for g in trust.grants())
 
+    from .members import Members
     topology = Topology(fed.domain_cluster.vars)
+    members = Members(fed.domain_cluster.vars)
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       publish_to=fed.domain_cluster.objects,
                       crossings=Crossings(fed.domain_cluster.vars, view, topology=topology),
-                      pending=pending, topology=topology, admin=admin)
+                      pending=pending, topology=topology, admin=admin, members=members)
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
