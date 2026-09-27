@@ -1,38 +1,38 @@
-"""Lesson 17 — a chain: site, office, centre.
+"""Lesson 17 — a chain: site, relay, centre.
 
-Cameras behind NATs on remote sites, recorded by offices that are behind NATs too, watched from one
+Cameras behind NATs on remote sites, recorded by relays that are behind NATs too, watched from one
 monitoring centre. Nothing new is needed beyond Lesson 16 repeated on every hop, and one rule that
 generalises Lessons 10 and 16: EACH LEVEL DIALS THE LEVEL ABOVE; a level must be reachable from below and
 never from above.
 
     control  flat where it can be: one customer, one domain, hosted by the centre, and every member that can
-             reach the centre reports to it directly (Lesson 10). A camera that can reach ONLY ITS OFFICE
-             cannot — and then the office is its road to the domain both ways. The office's agent RELAYS down
+             reach the centre reports to it directly (Lesson 10). A camera that can reach ONLY ITS RELAY
+             cannot — and then the relay is its road to the domain both ways. The relay's agent RELAYS down
              everything the domain leaves for that camera (keys, revocations, its grants, kept edits, its books,
              stream tokens, the host record, shared settings and backups, with their objects) into `relay/` in
-             the office's own stores, with the time the office last reached the domain; the camera's agent reads
-             that instead of the domain (`Relay`). Up, the camera reports into the office's store and the office
-             carries ONE object for all such cameras (`bundle`, `member_copy(..., via=office)`). The price: an
-             office down makes its cameras silent too, and nothing can be done about it — there is no other road
-    media    Lesson 16 on every hop. The office's ingest is to the centre what the camera is to the office:
+             the relay's own stores, with the time the relay last reached the domain; the camera's agent reads
+             that instead of the domain (`Relay`). Up, the camera reports into the relay's store and the relay
+             carries ONE object for all such cameras (`bundle`, `member_copy(..., via=relay)`). The price: an
+             relay down makes its cameras silent too, and nothing can be done about it — there is no other road
+    media    Lesson 16 on every hop. The relay's ingest is to the centre what the camera is to the relay:
              its FORWARDER keeps a long poll to the centre's ingest and pushes while the centre wants a stream.
              And the want travels DOWN: a viewer in the centre wants camera X, so the centre's ingest wants X
-             from the office, so the office's ingest wants X from the camera. A camera recorded continuously is
+             from the relay, so the relay's ingest wants X from the camera. A camera recorded continuously is
              already pushing, and the chain answers at once; one recorded on events starts two polls later
     first    one cluster receives a camera's stream FROM THE CAMERA — its recording cluster (Lesson 13): the
              camera serves one session. Everyone else — the centre's viewers, a copy of an important camera on
              the centre's volume (М10B Lesson 26) — receives it from that cluster
-    ranges   the office's archive, asked for by the centre, is uploaded by the office — the card's rule
+    ranges   the relay's archive, asked for by the centre, is uploaded by the relay — the card's rule
              (Lesson 16) one level up
-    asks     a scenario between two sites of two offices (Lesson 16, step 8), when the trigger camera sees only
-             its office: it leaves the ask at its OWN office, on a road marked "up"; the office's forwarder,
-             woken by the ask itself, takes it to the centre with a token the domain gave the office for exactly
-             that pair; the other office's forwarder, whose poll the centre is holding, carries it down; the
+    asks     a scenario between two sites of two relays (Lesson 16, step 8), when the trigger camera sees only
+             its relay: it leaves the ask at its OWN relay, on a road marked "up"; the relay's forwarder,
+             woken by the ask itself, takes it to the centre with a token the domain gave the relay for exactly
+             that pair; the other relay's forwarder, whose poll the centre is holding, carries it down; the
              outcome comes back the same way, each hop woken by the one before. Seconds, not passes. An ask for
-             a camera in the same office never takes this road — its book names the office directly
-    star     an office that cannot open a port to its sites — a cloud cluster that takes no inbound, sites and
-             offices on mobile operators — cannot be pushed to. Then the camera pushes to the CENTRE, and the
-             office takes the streams of its cameras from the centre, calling in (`Ingest.pull`). Every byte
+             a camera in the same relay never takes this road — its book names the relay directly
+    star     a relay that cannot open a port to its sites — a cloud cluster that takes no inbound, sites and
+             relays on mobile operators — cannot be pushed to. Then the camera pushes to the CENTRE, and the
+             relay takes the streams of its cameras from the centre, calling in (`Ingest.pull`). Every byte
              goes through the centre's link: Lesson 8's arithmetic decides whether a site can afford it
 
 In the tests every "dial" is a function the caller owns; nobody below is ever called.
@@ -49,7 +49,7 @@ from .agent import UPSTREAM_PATH       # in a recording cluster: where its strea
 
 
 # -- the domain's side: the book of a recording cluster's upstream ----------------------------------------
-# For every camera a cluster records, the centre's ingest and a token to push to it — or, for a star office,
+# For every camera a cluster records, the centre's ingest and a token to push to it — or, for a star relay,
 # a token to PULL from it. Tokens are the domain signer's, re-issued past their half-life (Lesson 16).
 def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
     from .ingest import INGEST, audience
@@ -64,9 +64,9 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
     if raw is None or crossings.issuer is None:
         return {}
     urls = json.loads(raw)["urls"]
-    # Every camera an office records — and every camera that only POLLS an office (nobody records it, and it
-    # reaches only that office, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
-    # a viewer in the centre, whose want the office's forwarder carries down like any other.
+    # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
+    # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
+    # a viewer in the centre, whose want the relay's forwarder carries down like any other.
     polled = {ref: crossings._poll_home(home) for ref, home in crossings.unrecorded().items()}
     for ref, on in [*crossings.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
         if on == centre:
@@ -88,7 +88,7 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
     return books
 
 
-# -- the office's side: the forwarder ------------------------------------------------------------------------
+# -- the relay's side: the forwarder ------------------------------------------------------------------------
 # One pass. For every camera in this cluster's upstream book: PUSH mode — poll the centre's ingest; if it wants
 # the stream, want it here too (that is the want travelling down to the camera) and push up what arrived;
 # upload any range the centre asked for, out of this cluster's archive; carry down any ask left there for the camera
@@ -177,7 +177,7 @@ class Forwarder:
                     del self.carried[(ref, aid)]                          # the centre has called it expired itself
 
     def asks_book(self) -> dict[str, dict]:
-        """What the domain let this office carry up: {"<target>|<asker>": {"roads": [...]}}, one token per pair."""
+        """What the domain let this relay carry up: {"<target>|<asker>": {"roads": [...]}}, one token per pair."""
         from .ingest import ASKS_PATH
         items, _ = self.vars.get(ASKS_PATH)
         return {k: json.loads(v) for k, v in (items or {}).items() if "|" in k}
@@ -242,7 +242,7 @@ class Forwarder:
         · one per camera in the upstream book — a HELD poll at the centre: the centre answers it the moment a
           want, a range or an ask for that camera arrives there. While the centre wants the stream, it forwards.
         · outcomes — while asks it took up are open, a held wait at the centre for their outcome.
-        On a real office the per-camera polls are one held request for all its cameras; here, a thread each."""
+        On a real relay the per-camera polls are one held request for all its cameras; here, a thread each."""
         threads: dict[str, threading.Thread] = {}
 
         def down(ref):
@@ -303,21 +303,21 @@ class Forwarder:
 
 
 # -- the summary report ------------------------------------------------------------------------------------
-# The office carries its cameras' reports as ONE object in the domain cluster. Cameras report to the OFFICE's
-# object store (the office is reachable from its sites — that is the whole premise of this layout); the
-# office's agent folds what is there into `domain/members/<office>/bundle`, only when it changed.
+# The relay carries its cameras' reports as ONE object in the domain cluster. Cameras report to the RELAY's
+# object store (the relay is reachable from its sites — that is the whole premise of this layout); the
+# relay's agent folds what is there into `domain/members/<relay>/bundle`, only when it changed.
 BUNDLE = "bundle"
 
 
-def bundle(office: str, members: list[str], office_objects, domain_objects) -> bool:
+def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> bool:
     out: dict[str, dict[str, str]] = {}
     for m in members:
         b = base(m)
-        keys = office_objects.list(b)
+        keys = relay_objects.list(b)
         if keys:
-            out[m] = {k[len(b):]: office_objects.get(k).decode("utf-8", "surrogateescape") for k in keys}
+            out[m] = {k[len(b):]: relay_objects.get(k).decode("utf-8", "surrogateescape") for k in keys}
     raw = json.dumps(out, sort_keys=True).encode()
-    key = base(office) + BUNDLE
+    key = base(relay) + BUNDLE
     if domain_objects.get(key) == raw:
         return False
     domain_objects.put(key, raw)
@@ -325,14 +325,14 @@ def bundle(office: str, members: list[str], office_objects, domain_objects) -> b
 
 
 class BundleView:
-    """The domain cluster's store as a member reporting through `office` sees it: its report, out of the
-    office's bundle. Read only; what `member_copy(..., via=office)` reads through."""
+    """The domain cluster's store as a member reporting through `relay` sees it: its report, out of the
+    relay's bundle. Read only; what `member_copy(..., via=relay)` reads through."""
 
-    def __init__(self, office: str, domain_objects):
-        self.office, self.store = office, domain_objects
+    def __init__(self, relay: str, domain_objects):
+        self.relay, self.store = relay, domain_objects
 
     def _entries(self, member: str) -> dict[str, str]:
-        raw = self.store.get(base(self.office) + BUNDLE)
+        raw = self.store.get(base(self.relay) + BUNDLE)
         return (json.loads(raw) if raw else {}).get(member, {})
 
     @staticmethod
@@ -351,7 +351,7 @@ class BundleView:
         return [base(member) + k for k in self._entries(member) if k.startswith(sub)]
 
 
-# -- the relay: an office as its cameras' road to the domain -----------------------------------------------
+# -- the relay: a cluster as its cameras' road to the domain ---------------------------------------------
 # What the domain leaves for a member, as its agent reads it (`DomainAgent.sync`): named once here, so the
 # relay carries exactly that and a camera's agent needs no other code.
 RELAY = "relay/"
@@ -367,10 +367,10 @@ def _relayed_rows(member: str) -> list[str]:
             f"{BACKUP}/{member}", *[f"{p}/{member}" for p in PER_CLUSTER]]
 
 
-def relay(members: list[str], domain_vars, domain_objects, office_vars, office_objects, now: float) -> int:
-    """One pass of the office's relay, after its agent has reached the domain. Copies each row a member's agent
+def relay_down(members: list[str], domain_vars, domain_objects, relay_vars, relay_objects, now: float) -> int:
+    """One pass of relaying down, after the relay's agent has reached the domain. Copies each row a member's agent
     would read, and the object a pointer names (shared settings, backup), into `relay/`; only what changed.
-    How current it all is, the office says on every pass of its own, reached or not (`say_seen`)."""
+    How current it all is, the relay says on every pass of its own, reached or not (`say_seen`)."""
     written, seen = 0, set()
     for m in members:
         for path in _relayed_rows(m):
@@ -378,77 +378,77 @@ def relay(members: list[str], domain_vars, domain_objects, office_vars, office_o
                 continue
             seen.add(path)
             items, _ = domain_vars.get(path)
-            have, idx = office_vars.get(RELAY + path)
+            have, idx = relay_vars.get(RELAY + path)
             if items is None and have is None:
                 continue
             items = dict(items or {})
             if have != items:
-                office_vars.put(RELAY + path, items, cas=idx)
+                relay_vars.put(RELAY + path, items, cas=idx)
                 written += 1
             obj = items.get("object") if isinstance(items, dict) else None
             if obj and domain_objects is not None:
                 raw = domain_objects.get(obj)
-                if raw is not None and office_objects.get(RELAY + obj) != raw:
-                    office_objects.put(RELAY + obj, raw)
+                if raw is not None and relay_objects.get(RELAY + obj) != raw:
+                    relay_objects.put(RELAY + obj, raw)
                     written += 1
     return written
 
 
-# How current the relayed books are — an AGE, measured on the office's clock: how long ago the office last
-# reached the domain, said on every office pass, the failed ones above all, with a counter. The camera takes a
+# How current the relayed books are — an AGE, measured on the relay's clock: how long ago the relay last
+# reached the domain, said on every relay pass, the failed ones above all, with a counter. The camera takes a
 # new counter as "said just now" and sets its own mark to ITS clock minus the age: two clocks never compared,
 # and the error is at most one camera pass (feedback AM — the product sends the same age in its exchange).
-def say_seen(office_objects, last_contact: float | None, now: float) -> dict:
-    raw = office_objects.get(RELAY_SEEN)
+def say_seen(relay_objects, last_contact: float | None, now: float) -> dict:
+    raw = relay_objects.get(RELAY_SEEN)
     n = int(json.loads(raw).get("n", 0)) + 1 if raw else 1
     mark = {"n": n, "age": None if last_contact is None else max(0.0, now - last_contact)}
-    office_objects.put(RELAY_SEEN, json.dumps(mark).encode())
+    relay_objects.put(RELAY_SEEN, json.dumps(mark).encode())
     return mark
 
 
 class Relay:
-    """What a camera that can reach only its office uses in place of the domain: `vars` and `objects` over the
-    office's `relay/` copy — its reports go into the office's store as they are — and `seen()`, how long ago the
-    OFFICE last reached the domain (`say_seen`), which is how current the camera's books are."""
+    """What a camera that can reach only its relay uses in place of the domain: `vars` and `objects` over the
+    relay's `relay/` copy — its reports go into the relay's store as they are — and `seen()`, how long ago the
+    RELAY last reached the domain (`say_seen`), which is how current the camera's books are."""
 
-    def __init__(self, office_vars, office_objects):
-        self.vars = _RelayVars(office_vars, office_objects)
-        self.objects = _RelayObjects(office_objects)
+    def __init__(self, relay_vars, relay_objects):
+        self.vars = _RelayVars(relay_vars, relay_objects)
+        self.objects = _RelayObjects(relay_objects)
 
 
 class _RelayVars:
-    def __init__(self, office_vars, office_objects):
-        self.office_vars, self.office_objects = office_vars, office_objects
+    def __init__(self, relay_vars, relay_objects):
+        self.relay_vars, self.relay_objects = relay_vars, relay_objects
 
     def get(self, path):
-        return self.office_vars.get(RELAY + path)
+        return self.relay_vars.get(RELAY + path)
 
     def list(self, prefix):
-        return [k[len(RELAY):] for k in self.office_vars.list(RELAY + prefix)]
+        return [k[len(RELAY):] for k in self.relay_vars.list(RELAY + prefix)]
 
     def seen(self) -> dict | None:
-        raw = self.office_objects.get(RELAY_SEEN)
+        raw = self.relay_objects.get(RELAY_SEEN)
         return json.loads(raw) if raw else None
 
 
 class _RelayObjects:
-    """Documents from the relay; the member's own report straight into the office's store."""
+    """Documents from the relay; the member's own report straight into the relay's store."""
 
-    def __init__(self, office_objects):
-        self.office = office_objects
+    def __init__(self, relay_objects):
+        self.relay = relay_objects
 
     def _key(self, key: str) -> str:
         return key if key.startswith(UPLINK + "/") else RELAY + key
 
     def get(self, key):
-        return self.office.get(self._key(key))
+        return self.relay.get(self._key(key))
 
     def list(self, prefix):
-        return self.office.list(prefix) if prefix.startswith(UPLINK + "/") else \
-            [k[len(RELAY):] for k in self.office.list(RELAY + prefix)]
+        return self.relay.list(prefix) if prefix.startswith(UPLINK + "/") else \
+            [k[len(RELAY):] for k in self.relay.list(RELAY + prefix)]
 
     def put(self, key, data):
-        return self.office.put(key, data)
+        return self.relay.put(key, data)
 
     def delete(self, key):
-        return self.office.delete(key)
+        return self.relay.delete(key)
