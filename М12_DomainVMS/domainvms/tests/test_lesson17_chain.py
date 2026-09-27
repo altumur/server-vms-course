@@ -66,7 +66,7 @@ def _chain(wall, star=frozenset()):
             raise Unreachable(f"{url} did not answer {who}")
         return dial
 
-    pusher = CameraPusher(SERIAL, cam.flash, dial_from("camera", {"office"} if not star else set()))
+    pusher = CameraPusher(SERIAL, cam.flash, dial_from("camera", {"office"} if not star else set()), clock=wall)
     fwd = Forwarder("east", office, east.vars, dial_from("office", set()),
                     archive=lambda ref, t0, t1: [("east-archive", ref, t0, t1)], needs=lambda ref: True)
 
@@ -113,11 +113,10 @@ def test_the_centres_copy_is_fed_by_the_office_and_the_camera_serves_one_session
 def test_the_office_archive_asked_for_by_the_centre_is_uploaded_by_the_office():
     wall = Clock()
     north, east, centre, office, pusher, fwd, dialled, _ = _chain(wall)
-    bq = centre.subscribe(SERIAL, "recorder:centre", kind="backfill")
-    centre.request_range(SERIAL, 5000.0, 5600.0)
+    rid = centre.request_range(SERIAL, 5000.0, 5600.0)
     fwd.pass_once()
     assert centre.landed(SERIAL) == [(5000.0, 5600.0)]
-    assert bq.drain() == [("east-archive", SERIAL, 5000.0, 5600.0)]    # out of the office's archive, not the camera's card
+    assert centre.answer(SERIAL, rid) == [("east-archive", SERIAL, 5000.0, 5600.0)]   # out of the office's archive
 
 
 def test_the_star_the_camera_pushes_to_the_centre_and_the_office_pulls_its_cameras_from_there():

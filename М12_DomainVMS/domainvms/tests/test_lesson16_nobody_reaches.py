@@ -53,7 +53,7 @@ def _site(wall, down=()):
             raise Unreachable(f"{url} did not answer")
         return ingest
 
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=lambda t0, t1: [("card", t0, t1)])
+    pusher = CameraPusher(SERIAL, cam.flash, dial, card=lambda t0, t1: [("card", t0, t1)], clock=wall)
 
     def domain_pass():
         view.refresh(); crossings.publish(); crossings.publish_primaries(); cam_agent.sync(); room_agent.sync()
@@ -115,11 +115,11 @@ def test_backfill_and_card_playback_are_ranges_the_camera_uploads_on_request():
     the live one. The same request serves an operator who wants to see what only the card holds."""
     wall = Clock()
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
-    bq = ingest.subscribe(SERIAL, "recorder:r-0", kind="backfill")
-    ingest.request_range(SERIAL, 1000.0, 1600.0)
+    rid = ingest.request_range(SERIAL, 1000.0, 1600.0)
+    assert ingest.answer(SERIAL, rid) is None                          # asked, not answered
     out = pusher.pass_once([])
     assert out["uploaded"] == [(1000.0, 1600.0)] and ingest.landed(SERIAL) == [(1000.0, 1600.0)]
-    assert bq.drain() == [("card", 1000.0, 1600.0)]
+    assert ingest.answer(SERIAL, rid) == [("card", 1000.0, 1600.0)]   # the answer to THAT request, by its id (AD)
     assert pusher.pass_once([])["uploaded"] == []                      # asked once, uploaded once
 
 
@@ -147,3 +147,80 @@ def test_one_ingest_down_the_camera_dials_the_next():
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall, down=(URLS[0],))
     ingest.want(SERIAL, "recorder:r-0")
     assert pusher.pass_once(["f"])["pushed"] == 1 and pusher.state == f"pushing to {URLS[1]}"
+
+
+def test_a_frame_carries_its_capture_time_and_the_ingest_moves_it_between_the_clocks_both_ways():
+    """Feedback AC. The camera's clock is ninety seconds fast. Its frames arrive stamped with the camera's time;
+    the ingest moves them onto the cluster's by what the camera states in every request, and a range asked on
+    the cluster's clock reaches the camera on its own — and comes back on the cluster's."""
+    wall = Clock()
+    fast = Clock(wall() + 90)
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=fast,
+                          card=lambda t0, t1: [{"t": t0, "k": True}, {"t": t1 - 1}])
+    ingest.want(SERIAL, "recorder:r-0")
+    q = ingest.subscribe(SERIAL, "recorder:r-0")
+    pusher.pass_once([{"t": fast(), "k": True}])
+    [f] = q.drain()
+    assert abs(f["t"] - wall()) < 1e-6                                 # on the cluster's clock
+    rid = ingest.request_range(SERIAL, wall() - 600, wall() - 300)
+    assert pusher.pass_once([])["uploaded"] == [(fast() - 600, fast() - 300)]   # on the camera's clock
+    assert [round(s["t"] - wall()) for s in ingest.answer(SERIAL, rid)] == [-600, -301]   # and back
+
+
+def test_the_ring_lives_on_the_camera_the_recorder_gets_it_and_the_viewer_does_not():
+    """Feedback AC and AF. Nobody wants the stream, and the camera keeps the last thirty seconds. An event:
+    the recorder wants it, and the first push starts with the ring — marked, with its own capture times, so
+    the start of the event is not lost to the time the want took. A viewer, opened at the same moment, gets the
+    live edge: the ring would be the last half-minute played fast."""
+    wall = Clock()
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, ring_seconds=30)
+    for _ in range(6):                                                 # a minute nobody watches: the ring keeps 30 s
+        wall.advance(10); pusher.pass_once([{"t": wall()}])
+    ingest.want(SERIAL, "recorder:event")
+    rq = ingest.subscribe(SERIAL, "recorder:event")
+    vq = ingest.subscribe(SERIAL, "viewer", edge=True)
+    wall.advance(1); pusher.pass_once([{"t": wall()}])
+    got = rq.drain()
+    assert [f.get("ring", False) for f in got] == [True, True, True, True, False]   # 30 s of ring, then live
+    assert got[0]["t"] == wall() - 31 and vq.drain() == [{"t": wall()}]
+
+
+def test_the_long_poll_answers_first_holds_when_nothing_changed_and_wakes_when_a_want_runs_out():
+    """Feedback AF: a camera that never polled is answered at once (version -1); the same version again is a
+    poll the real ingest holds; a viewer who left wakes it at the end of the linger, not at the end of the poll."""
+    wall = Clock()
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    token = pusher.entry()["ingest"]["token"]
+    first = ingest.poll(token, SERIAL, version=-1)
+    assert "held" not in first and first["push"] is False
+    assert ingest.poll(token, SERIAL, version=first["version"]).get("held")
+    ingest.want(SERIAL, "anna"); ingest.release(SERIAL, "anna")        # a viewer came and went
+    woke = ingest.poll(token, SERIAL, version=first["version"])
+    assert "held" not in woke and woke["push"] is True                 # the linger
+    wall.advance(LINGER + 0.1)
+    lapsed = ingest.poll(token, SERIAL, version=woke["version"])
+    assert "held" not in lapsed and lapsed["push"] is False            # woken by the want running out
+
+
+def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
+    """Feedback AG. The book lists both ingests of the recording cluster; the camera pushes to the first that
+    answers; the recorder holding the recording is on the other server. A want at either counts at both, and the
+    ingest with a subscriber and no camera takes the stream from the one that has it. A range asked there is
+    answered there."""
+    wall = Clock()
+    fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
+    keys = lambda: ClusterTrust(south.vars).keyset()
+    a = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[0], peers=lambda: [b])
+    b = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[1], peers=lambda: [a])
+    by_url = {URLS[0]: a, URLS[1]: b}
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=lambda t0, t1: [("card", t0, t1)])
+    b.want(SERIAL, "recorder:srv-2")                                   # the recorder is on the second server
+    rq = b.subscribe(SERIAL, "recorder:srv-2")
+    assert pusher.pass_once(["x1", "x2"])["pushed"] == 2 and pusher.state == f"pushing to {URLS[0]}"
+    b.pump()
+    assert rq.drain() == ["x1", "x2"]
+    rid = b.request_range(SERIAL, 100.0, 200.0)
+    pusher.pass_once([])                                               # asked at b, polled and answered at a
+    assert b.answer(SERIAL, rid) == [("card", 100.0, 200.0)]
