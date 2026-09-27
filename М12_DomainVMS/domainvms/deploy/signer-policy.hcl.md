@@ -12,8 +12,11 @@
 - `path "domain/licence" { capabilities = ["read", "write"] }` — the cached licence (`EntitlementCache`, Lesson 5): the entitlement cache is expected to live in the signer process.
 - `path "domain/placement" { capabilities = ["read", "write"] }` — the placement revision counter (`ClusterPlacer._rev`).
 - `path "domain/placement/*" { capabilities = ["read", "write"] }` — the per-camera placements (`ClusterPlacer._store`): the placement service is expected to live in the signer process too.
+- `domain/sources/*`, `domain/primaries/*`, `domain/poll/*`, `domain/upstream/*`, `domain/asks/*` — read and write: the books of `Books.pass_once` (`domain/books.py`), one per member, which the signer service runs when it is given `CLUSTERS`. They live here because they carry tokens the signer mints — stream tokens (Lesson 16), upstream tokens (Lesson 17), tokens to ask (Lesson 16, step 8). `domain/asks/*` also has `list`: `publish_asks` lists the books to empty one no scenario fills any more.
+- `domain/crossings`, `domain/shared` — read only: who records what (written by the console, Lesson 13) and the shared document's pointer, whose scenarios the book of asks is built from.
 
 ## Notes
 - `domain/grants/*` is absent, so `DomainPublisher.publish_grants` — which writes `domain/grants/<cluster>` in the domain cluster — would be refused under this policy; no production process calls it either. Grants have no writer in the deployed system. See the report.
-- `signer_service.py` uses `domain/signer`, `identity/*`, `domain/keys`, `domain/revoked`; the licence and placement grants anticipate code the service does not yet run.
+- `signer_service.py` uses `domain/signer`, `identity/*`, `domain/keys`, `domain/revoked`, and with `CLUSTERS` the books above; the licence and placement grants anticipate code the service does not yet run.
+- The books pass also READS the other clusters (their `rec/ingest`, `rec/snapshot/*`, `rec/heartbeats/*`, and the members' reports in the domain cluster's object store) through the URLs in `CLUSTERS`, exactly as the console does; that access is the console's (`federation.hcl`), not this policy's.
 - Nomad's Variables ACL distinguishes `list` from `read`; `IdentityStore.users()` and `login_federated` call `vars.list("identity/users/")`, which this policy does not grant.
