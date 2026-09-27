@@ -87,12 +87,19 @@ class SharedSettings:
 
     # `base_rev` is the revision the editor was looking at. Two editors on one document are Lesson 3's two
     # tabs: the second is told, not overwritten — the CAS on the pointer is what tells them.
-    def edit(self, mutate, base_rev: int, by: str | None = None) -> int:
+    def edit(self, mutate, base_rev: int, by: str | None = None, check=None) -> int:
+        """`check(settings) -> [reasons]`: refusals of the document it would become — Lesson 16's scenarios whose
+        cameras hold no poll (`scenario.refusals`). Any reason is a 409, and nothing is written."""
         doc, idx = self.current()
         if int(doc["rev"]) != base_rev:
             raise Conflict(f"shared settings are at rev {doc['rev']}; the edit was made against rev {base_rev}")
         settings = json.loads(json.dumps(doc.get("settings", {})))
         mutate(settings)
+        if check is not None:
+            reasons = check(settings)
+            if reasons:
+                from .api import ApiError
+                raise ApiError(409, "; ".join(reasons))
         new = sign({"rev": int(doc["rev"]) + 1, "term": self.term(), "at": self.wall(), "by": by,
                     "settings": settings}, self.issuer)
         raw = json.dumps(new, ensure_ascii=False, sort_keys=True).encode()
