@@ -24,6 +24,14 @@ stolen. So re-hosting the domain has to become an ordinary operation, and three 
     backup/rev-<n>              in the host's durable objects: the signed state
     domain/backup               in a chosen member: its agent's copy of the pointer, and of the document
 
+Who opens which connection (Lesson 10, step 7). The host reads the other cameras only by their REPORTS, left
+in its own store by their agents (`reported`) — a planned handover sees that the target took the last backup
+in the target's report, never by calling it. The site's doors are used only by a camera acting as a camera:
+one that boots and looks for the host (`find_host`), an old host that comes back and looks whether it still is
+one (`check`), and the operator re-hosting on a camera, which reads its neighbours for the newest backup and
+the largest term (`rehost`) — the one exception the lesson names, because the host that would have held the
+reports is the one that is gone.
+
 What is NOT in the backup: the signer's key. It is the one thing that must never sit beside the rest, and it
 is restored from where Lesson 7 put it — offline, or in the recovery file the installer handed over. Without
 it no backup verifies and no member follows the new host, which is the point.
@@ -67,8 +75,11 @@ def read_host(vars_, keys, now: float) -> dict | None:
 class DomainHost:
     """The domain's services on one member, holding a term."""
 
-    def __init__(self, fed, name: str, signer: Signer, term: int, wall=time.time):
+    def __init__(self, fed, name: str, signer: Signer, term: int, wall=time.time, objects=None):
+        """`fed`: the site, each camera through its door — what this camera, AS a camera, can reach. `objects`:
+        this host's durable store, where the other cameras' agents leave their reports."""
         self.fed, self.name, self.signer, self.term, self.wall = fed, name, signer, term, wall
+        self.objects = objects
         self.backup_rev = 0
         self.deposed_by: dict | None = None
         self.frozen_for: str | None = None               # the member a planned handover is moving the domain to
@@ -76,6 +87,11 @@ class DomainHost:
     @property
     def vars(self):
         return self.fed.clusters[self.name].vars
+
+    def reported(self, member: str):
+        """What the host knows of another camera: its last report, in the host's own store."""
+        from .uplink import member_copy
+        return member_copy(member, self.objects, wall=self.wall)
 
     def claim(self) -> None:
         doc = sign({"term": self.term, "host": self.name, "at": self.wall()}, self.signer.tokens)
@@ -110,7 +126,9 @@ class DomainHost:
         return self.backup_rev
 
     # Is this host still the host? Any member that carries a larger term says no. Read, not told: the
-    # loser finds out on its next look, exactly as a fenced worker does.
+    # loser finds out on its next look, exactly as a fenced worker does. It looks as any camera looks for the
+    # host at boot — opening the connections itself: the members that follow the new term report to the NEW
+    # host, so nothing about it would ever land in this one's store.
     def check(self) -> bool:
         keys = self.signer.tokens.keyset()
         for name, c in self.fed.clusters.items():
@@ -230,7 +248,7 @@ def rehost(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall
                 break
     for name, c in fed.clusters.items():
         c.is_domain_cluster = name == new
-    host = DomainHost(fed, new, signer, top_term + 1, wall)
+    host = DomainHost(fed, new, signer, top_term + 1, wall, objects=objects_of(new))
     host.backup_rev = int(best[1]["rev"]) if best else 0
     host.claim()
     rev = host.backup_rev
@@ -279,17 +297,22 @@ def handover(host: DomainHost, to: str, signer_backup: bytes, domain_id: str, ob
     try:
         rev = host.backup([to], objects_of(host.name))
         carry_to()
-        try:
-            ptr, _ = host.fed.clusters[to].vars.get(BACKUP)
+        try:                                             # read in `to`'s REPORT, which its agent left in the host's store
+            ptr, _ = (host.reported(to).vars if host.objects is not None else host.fed.clusters[to].vars).get(BACKUP)
         except Unreachable:
-            ptr = None                                   # gone in the middle: it cannot be the new host now
+            ptr = None                                   # silent: it cannot be the new host now
         if not ptr or int(ptr["rev"]) != rev or int(ptr["term"]) != host.term:
             raise RuntimeError(f"{to} did not take backup rev {rev}; the handover is called off and {host.name} "
                                f"is still the host")
     except Exception:
         host.frozen_for = None
         raise
-    new, report = rehost(host.fed, to, signer_backup, domain_id, objects_of, wall)
+    try:
+        new, report = rehost(host.fed, to, signer_backup, domain_id, objects_of, wall)
+    except Unreachable:                                  # it reported the backup, then went silent: not the new host
+        host.frozen_for = None
+        raise RuntimeError(f"{to} took backup rev {rev} and then stopped answering; the handover is called off and "
+                           f"{host.name} is still the host")
     host.check()
     left = stranded(host.vars, report["state"])
     report.update(planned=True, stranded=left,
