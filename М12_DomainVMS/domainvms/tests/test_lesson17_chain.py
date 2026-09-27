@@ -298,3 +298,76 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_office_
     fwd.pass_once()                                                    # the outcome, up
     assert centre.ask_outcome(SERIAL, aid) == "performed"
     assert done == [{"preset": 3}]                                     # carried twice, done once
+
+
+def test_a_camera_that_sees_only_its_office_and_that_nobody_records_polls_its_office():
+    """One site, one office: the gate camera and a PTZ camera kept for live view, both reaching only the east
+    office, neither recorded. A scenario ties them. The book of polls must send the PTZ camera to its OFFICE's
+    ingest — the centre's, or the domain's cluster's, is exactly what it cannot reach, and a scenario inside one
+    site would never act. The gate camera's book of asks names the same office; the ask goes there and back."""
+    from domain.books import Books
+    from domain.chain import Relay
+    from domain.ingest import Asker
+    from domain.scenario import Scenarios
+    from domain.shared import SharedSettings, SharedView
+
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    east, _ = make_cluster("east")
+    fed.add(north); fed.add(east)
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    centre = Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
+    centre.announce(north.objects)                                     # there IS an ingest up there: the wrong one
+    through = Relay(east.vars, east.objects)                           # all a camera of this site can reach
+    cams, agents = {}, []
+    for n in ("SN7002", "SN7003"):                                     # the gate, the PTZ
+        d = DeviceCluster(n, FakeVariables(), wall=wall, pushes=True)
+        d.boot(); d.door_open = False
+        fed.add(member_copy(d.name, north.objects, wall=wall, via="east"))
+        agents.append(DomainAgent(d.name, through.vars, d.flash, now=wall, domain_objects=through.objects,
+                                  cluster_objects=d.disk, published=d.local_objects(), seen_store=d.local_objects()))
+        cams[n] = d
+    members = [d.name for d in cams.values()]
+    office_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
+                               bundle_store=east.objects, bundle_members=members, relay_members=members)
+    office_agent.sync()
+    office = Ingest("east", OFFICE_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
+    office.announce(east.objects)
+    SharedSettings(north.vars, north.objects, signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
+        {"when": {"camera": "SN7002", "kind": "vehicle"}, "then": {"camera": "SN7003", "action": "preset", "arg": 3}}]),
+        base_rev=0, by="anna")
+    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens), north.objects)
+
+    def domain_pass():
+        for d in cams.values():
+            d.publish()
+        for a in agents:
+            a.sync()                                                   # reports into the office
+        office_agent.sync()                                            # up in the bundle, and down the relay
+        books.pass_once()
+        office_agent.sync()                                            # the new books relayed down
+        for a in agents:
+            a.sync()
+
+    domain_pass(); domain_pass()
+
+    def site_dial(url):
+        if url in OFFICE_URLS:
+            return office
+        raise Unreachable(f"{url} is beyond the site's network")
+
+    done = []
+    ptz = CameraPusher("SN7003", cams["SN7003"].flash, site_dial, clock=wall,
+                       perform=lambda action: done.append(action) or "performed")
+    e = ptz.entry()
+    assert e["polls_only"] and e["cluster"] == "east" and e["ingest"]["urls"] == OFFICE_URLS
+    assert "asks only" in ptz.pass_once([])["state"]                   # it reached its poll
+
+    asker = Asker("SN7002", cams["SN7002"].flash, site_dial, clock=wall)
+    assert [r["cluster"] for r in asker.book()["SN7003"]] == ["east"]
+    left = Scenarios("SN7002", SharedView(cams["SN7002"].flash, cams["SN7002"].disk, wall), asker).on_event("vehicle")
+    assert [x["state"] for x in left] == ["asked"] and left[0]["ingest"] is office
+    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert asker.outcome("SN7003", left[0]["ask"], left[0]["deadline"]) == "performed"
