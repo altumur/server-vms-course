@@ -471,3 +471,53 @@ def plan_takeback(src: Source, ours: list[tuple[float, float]], now: float, keep
     else:
         missing += [(h, "on no backup, and the camera has no card") for h in holes]
     return sorted(fetch), missing
+
+
+# -- a standby that PULLS: one stream, when the primary does not take it (М11 lesson 1) ---------------------
+# A camera the second server takes itself — RTSP, a camera without the platform, or ours with its door open.
+# Nobody pushes, so the standby asks the camera for its stream — and only when the primary does not take it:
+# COLD, not on hold, so the camera serves one session, not two. How it knows: it watches the primary's recorder
+# on the site's LAN, through that server's door, as neighbours do for alarm mirrors — no domain in it.
+def neighbour_writes(objects, recording: str, now: float, lost_after: float = 45.0) -> bool:
+    """Whether the primary's recorder, read through its server's door, says the recording is running."""
+    try:
+        for key in objects.list("rec/heartbeats/"):
+            raw = objects.get(key)
+            hb = json.loads(raw) if raw else {}
+            if now - float(hb.get("ts", 0)) > lost_after:
+                continue
+            if any(str(st.get("id")) == recording and st.get("phase") == "running" for st in hb.get("status", [])):
+                return True
+    except Unreachable:
+        return False                                     # the server does not answer: it writes nothing we know of
+    return False
+
+
+class ColdStandby:
+    """`open()` / `close()` a session with the camera; `pass_once()` opens it when the primary is not writing
+    and closes it when the primary is back — a minute later, so the two archives overlap (М10B lesson 26) and
+    the primary's takeback finds the seam on both sides. A partition between the servers, both alive, opens a
+    second session: two recordings for a while, which Lesson 8 of М11 prefers to none."""
+
+    OVERLAP = 60.0
+
+    def __init__(self, neighbour_objects, recording: str, open_, close, wall=time.time):
+        self.objects, self.recording, self.open, self.close, self.wall = neighbour_objects, recording, open_, close, wall
+        self.pulling, self._back_since = False, None
+
+    def pass_once(self) -> str:
+        now = self.wall()
+        writes = neighbour_writes(self.objects, self.recording, now)
+        if not writes:
+            self._back_since = None
+            if not self.pulling:
+                self.open(); self.pulling = True
+                return "pulling: the primary does not write"
+            return "pulling"
+        if self.pulling:
+            self._back_since = self._back_since or now
+            if now - self._back_since >= self.OVERLAP:
+                self.close(); self.pulling = False
+                return "closed: the primary writes again"
+            return "pulling: the overlap"
+        return "cold: the primary writes"
