@@ -16,5 +16,6 @@ namespace "default" {
     path "domain/asks/*"      { capabilities = ["read", "write", "list"] }   # list: a book no scenario fills any more is emptied
     path "domain/crossings"   { capabilities = ["read"] }
     path "domain/shared"      { capabilities = ["read"] }
+    path "domain/topology"    { capabilities = ["read"] }      # the operator's topology: the centre, the star
   }
 }
