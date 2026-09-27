@@ -66,7 +66,7 @@ class ClusterPlacer:
         return ClusterPlacement(items["cluster"], items["reason"], float(items["at"]), int(items["rev"]))
 
     def candidates(self, site: CameraSite, unreachable: set[str] = frozenset()) -> list[Cluster]:
-        return [c for c in self.fed.clusters.values() if site.network in c.reaches and c.name not in unreachable]
+        return [c for c in self.fed.clusters.values() if site.network in c.networks() and c.name not in unreachable]
 
     def place(self, site: CameraSite, unreachable: set[str] = frozenset()) -> ClusterPlacement:
         """Place ONE new camera. An existing placement is returned untouched."""
@@ -75,7 +75,7 @@ class ClusterPlacer:
             return have
         cands = self.candidates(site, unreachable)
         if not cands:
-            seen = sorted(c.name for c in self.fed.clusters.values() if site.network in c.reaches)
+            seen = sorted(c.name for c in self.fed.clusters.values() if site.network in c.networks())
             if seen:
                 raise Refused(f"camera {site.camera}: the only cluster(s) reaching {site.network} "
                               f"({', '.join(seen)}) are unreachable; not placing elsewhere — nothing else can see it")
