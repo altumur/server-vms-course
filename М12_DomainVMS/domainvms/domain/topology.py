@@ -1,15 +1,15 @@
 """The domain's topology — who reaches the domain through whom — as ONE record the operator edits.
 
 Lesson 17 needed three facts that no cluster can observe about itself, because they are the network's POLICY,
-not its state: which member reaches the domain only through an office (`via`), which offices cannot be pushed
+not its state: which member reaches the domain only through a relay (`via`), which relays cannot be pushed
 to and take their streams from the centre (`star`), and which cluster is the centre. They lived in the
-environment of three different jobs (`name=report@office`, RELAY_MEMBERS, CENTRE/STAR). Now they live here,
+environment of three different jobs (`name=report@relay`, RELAY_MEMBERS, CENTRE/STAR). Now they live here,
 in the domain cluster, edited by CAS and checked when written — and every pass reads them from here: the
-books (`Crossings`), the office's relay and bundle (its agent), the domain's copy of each member (`apply`).
+books (`Crossings`), the relay's copying down and its bundle (its agent), the domain's copy of each member (`apply`).
 
 What a cluster CAN observe — the networks it sees — is not here: it says that itself (`federation.REACHES`).
 
-    domain/topology   in the domain cluster's Variables: {"doc": {rev, centre, star: [...], via: {member: office}}}
+    domain/topology   in the domain cluster's Variables: {"doc": {rev, centre, star: [...], via: {member: relay}}}
 """
 from __future__ import annotations
 
@@ -39,8 +39,8 @@ class Topology:
     def via(self, member: str) -> str | None:
         return self.read()["via"].get(member)
 
-    def relayed_by(self, office: str) -> list[str]:
-        return sorted(m for m, o in self.read()["via"].items() if o == office)
+    def relayed_by(self, relay: str) -> list[str]:
+        return sorted(m for m, o in self.read()["via"].items() if o == relay)
 
     def edit(self, mutate, base_rev: int, known=None, by: str | None = None, domain: str | None = None) -> int:
         """`mutate(doc)` changes {centre, star, via}. `known`: the clusters of the domain — a name that is not
@@ -71,9 +71,9 @@ def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
     if known is not None:
         out += [f"{what}: {n} is not a cluster of this domain" for what, n in names if n not in known]
     if star and not centre:
-        out.append("a star office takes its streams from the centre, and there is no centre")
+        out.append("a star relay takes its streams from the centre, and there is no centre")
     if centre and centre in star:
-        out.append(f"{centre} is the centre and cannot be a star office")
+        out.append(f"{centre} is the centre and cannot be a star relay")
     for m, o in sorted(via.items()):
         if domain and o == domain:
             out.append(f"{m} through {domain}, the domain's own cluster: whoever reaches it reaches the domain")
@@ -84,20 +84,20 @@ def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
         if m == o:
             out.append(f"{m} cannot reach the domain through itself")
         elif o in via:
-            out.append(f"{m} goes through {o}, which itself goes through {via[o]}: one office between a member and "
+            out.append(f"{m} goes through {o}, which itself goes through {via[o]}: one relay between a member and "
                        f"the domain (Lesson 17)")
     return out
 
 
 def apply(fed, topology: Topology, domain_objects, lost_after: float = 45.0, wall=None) -> list[str]:
     """Make the domain's copy of each REPORTING member read where the topology says it reports: its own
-    report, or its office's bundle. A member moved behind an office, or out from behind one, is read the new
+    report, or its relay's bundle. A member moved behind a relay, or out from behind one, is read the new
     way on the next pass — no restart. Returns the members whose road changed."""
     import time
     from .uplink import _CopyObjects, member_copy
     moved = []
     if topology.read()["rev"] == 0:
-        return moved                                     # never written: the configuration's `report@office` stands
+        return moved                                     # never written: the configuration's `report@relay` stands
     for name, c in list(fed.clusters.items()):
         if not isinstance(c.objects, _CopyObjects):
             continue                                     # a cluster the domain reads directly: not a reporting member
