@@ -124,7 +124,7 @@ class _Local:
 
 class DeviceCluster:
     def __init__(self, serial: str, flash_vars: Variables, wall=time.time, name: str | None = None,
-                 reaches=(), address: str | None = None, disk=None):
+                 reaches=(), address: str | None = None, disk=None, pushes: bool = False):
         self.serial = str(serial)
         self.name = name or f"cam-{self.serial}"
         self.flash, self.ram, self.wall = Flash(flash_vars), Ram(), wall
@@ -133,6 +133,7 @@ class DeviceCluster:
         self.address = address or f"{self.name}.local"
         self.epoch, self.boots, self.door_open = 0, 0, False
         self.coverage: dict | None = None               # what the card holds, when there is a card (Lesson 13)
+        self.pushes = pushes                            # Lesson 16: nobody can dial this camera; it pushes its stream
 
     # -- power ----------------------------------------------------------------------------------------
     # The order is the lesson. The epoch first, because everything the camera writes after it carries it.
@@ -174,7 +175,7 @@ class DeviceCluster:
         hb = {"worker": self.serial, "ts": now, "server": self.serial, "instance": f"{self.name}-boot-{self.boots}",
               "capacity": 1, "headroom": 0, "status": [status],
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",
-              "coverage": self.coverage}
+              "coverage": self.coverage, **({"push": True} if self.pushes else {})}
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
                 "cameras": [{**row, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())

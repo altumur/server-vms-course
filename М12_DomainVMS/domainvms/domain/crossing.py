@@ -54,8 +54,11 @@ CROSSINGS = "domain/crossings"
 class Crossings:
     """The domain's side: which cluster records which camera of another cluster, and the books."""
 
-    def __init__(self, domain_vars, view, wall=time.time):
+    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float = 86400.0):
+        """`issuer` is Lesson 16: the domain signer's token issuer. Given it, the book of primaries also tells
+        a camera where to PUSH — the recording cluster's ingest — with a stream token for it."""
         self.vars, self.view, self.wall = domain_vars, view, wall
+        self.issuer, self.token_lifetime = issuer, token_lifetime
 
     def all(self) -> dict[str, str]:
         items, _ = self.vars.get(CROSSINGS)
@@ -113,7 +116,11 @@ class Crossings:
             known = self.view.last_known(ref)
             if known is None:
                 continue
-            books.setdefault(known[0], {})[ref] = json.dumps(self._primary(ref, on, now, lost_after), sort_keys=True)
+            entry = self._primary(ref, on, now, lost_after)
+            ingest = self._ingest(ref, on, known[0], now)
+            if ingest:
+                entry["ingest"] = ingest
+            books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
         for home, book in books.items():
             path = f"{PRIMARIES_PATH}/{home}"
             have, idx = self.vars.get(path)
@@ -145,10 +152,37 @@ class Crossings:
                 "should": any(bool(r.get("enabled", True)) and until_ok(r) for r in rows),
                 "written": any(n in running for n in names)}
 
+    # Lesson 16: where the camera pushes, and the token that lets it. The addresses are what the recording
+    # cluster's ingest announced (`rec/ingest`). The token is re-issued only when the one the book already
+    # holds is past half its life — the book is flash on the camera, and a token minted every pass would
+    # rewrite it every pass.
+    def _ingest(self, ref: str, on: str, home: str, now: float) -> dict | None:
+        from .ingest import INGEST, audience
+        c = self.view.fed.clusters.get(on)
+        if self.issuer is None or c is None:
+            return None
+        try:
+            raw = c.objects.get(INGEST)
+        except Unreachable:
+            raw = None
+        have, _ = self.vars.get(f"{PRIMARIES_PATH}/{home}")
+        old = json.loads((have or {}).get(ref, "{}")).get("ingest")
+        if raw is None:
+            return old                                   # the recording cluster is silent: keep what the camera has
+        urls = json.loads(raw)["urls"]
+        if old and old.get("urls") == urls and float(old["until"]) - now > self.token_lifetime / 2:
+            return old
+        token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref)
+        return {"urls": urls, "token": token, "until": now + self.token_lifetime}
+
     def _doors(self, ref: str) -> dict | None:
         for (cluster, worker), s in self.view.snapshots.items():
             if any(str(st.get("ref", "")) == ref for st in s.status) and s.doors:
-                return {"cluster": cluster, "worker": worker, **s.doors, "as_of": s.ts,
+                doors = dict(s.doors)
+                if doors.get("push"):                    # Lesson 16: nobody dials it; it pushes to the recording cluster's ingest
+                    doors["live_url"] = f"ingest://{self.all().get(ref, '?')}/{ref}"
+                    doors.pop("playback_url", None)      # the card is read by asking the camera to upload a range
+                return {"cluster": cluster, "worker": worker, **doors, "as_of": s.ts,
                         "reachable": cluster not in self.view.cluster_down_since}
         return None
 
@@ -162,7 +196,7 @@ class Source:
     ref: str
     cluster: str
     live_url: str
-    playback_url: str
+    playback_url: str | None          # None: a camera that pushes (Lesson 16) — its card is read by asking for an upload
     coverage: dict | None
     age: float
     reachable: bool
@@ -179,7 +213,7 @@ def resolve(cluster_vars, source: str, now: float) -> Source | None:
         raise NotResolvable(f"{ref} is not in this cluster's source book: the domain has not asked this cluster "
                             f"to record it, or has never seen it publish a door")
     e = json.loads(items[ref])
-    return Source(ref, e["cluster"], e["live_url"], e["playback_url"], e.get("coverage"),
+    return Source(ref, e["cluster"], e["live_url"], e.get("playback_url"), e.get("coverage"),
                   max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)))
 
 

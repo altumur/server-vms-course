@@ -92,7 +92,7 @@ class Snapshot:
     status: list[dict]
     doors: dict | None = None   # the worker's published doors — live_url, playback_url, coverage (Lesson 13)
 
-DOORS = ("live_url", "playback_url", "coverage")
+DOORS = ("live_url", "playback_url", "coverage", "push")   # `push`: Lesson 16 — nobody can dial this one
 
 
 class ReadView:
