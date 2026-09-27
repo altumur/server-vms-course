@@ -137,7 +137,10 @@ class DeviceCluster:
         self.serial = str(serial)
         self.name = name or f"cam-{self.serial}"
         self.flash, self.ram, self.wall = Flash(flash_vars), Ram(), wall
-        self.disk = disk if disk is not None else Ram()  # the durable object store — the card; survives a reboot (Lesson 12)
+        self.disk = disk if disk is not None else Ram()
+        # Who is taking this camera's stream now — the recorders that pulled a session (М11 lesson 1): said in
+        # its heartbeat, so a cold standby of the site asks the CAMERA, not the primary's server.
+        self.taken_by: set[str] = set()  # the durable object store — the card; survives a reboot (Lesson 12)
         self.reaches = frozenset(reaches)
         self.address = address or f"{self.name}.local"
         self.epoch, self.boots, self.door_open = 0, 0, False
@@ -185,7 +188,8 @@ class DeviceCluster:
               "capacity": 1, "headroom": 0, "status": [status],
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",
               "coverage": self.coverage, **({"push": True} if self.pushes else {}),
-              "polls": True}                                     # Lesson 16, step 8: a member camera keeps a poll open
+              "polls": True,                                     # Lesson 16, step 8: a member camera keeps a poll open
+              "taken_by": sorted(self.taken_by)}
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
                 "cameras": [{**row, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())
