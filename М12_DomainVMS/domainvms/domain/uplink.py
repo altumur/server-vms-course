@@ -47,7 +47,7 @@ from .federation import Cluster, Unreachable
 UPLINK = "domain/members"
 REPORTED = "reported"
 # What the domain reads of a member, and nothing more. Objects: what a cluster publishes (М10–М11).
-OBJECTS = ("vms/heartbeats/", "vms/snapshot/", "rec/heartbeats/", "rec/snapshot/", "rec/ingest")
+OBJECTS = ("vms/heartbeats/", "vms/snapshot/", "rec/heartbeats/", "rec/snapshot/", "rec/ingest", "domain/reaches")
 
 
 def _rows() -> tuple[str, ...]:
