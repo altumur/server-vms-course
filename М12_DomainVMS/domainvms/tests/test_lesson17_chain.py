@@ -281,7 +281,7 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_office_
                              published=gate.local_objects())
     gate_agent.sync()
     crossings.view.refresh()
-    publish_asks(crossings, [{"trigger": "SN7002", "target": SERIAL}])
+    publish_asks(crossings, [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}])
     gate_agent.sync()
 
     def gate_dial(url):
