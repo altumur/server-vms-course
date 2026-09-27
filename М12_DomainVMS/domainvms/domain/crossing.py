@@ -88,7 +88,7 @@ class Crossings:
         return frozenset(doc["star"]) if doc else (self._star or frozenset())
 
     def via_of(self, member: str | None) -> str | None:
-        """The office this member reaches the domain through: the topology, else how its copy was configured."""
+        """The relay this member reaches the domain through: the topology, else how its copy was configured."""
         if member is None:
             return None
         doc = self._topo()
@@ -98,8 +98,8 @@ class Crossings:
         return c.via if c is not None else None
 
     def _poll_home(self, home: str | None = None) -> str | None:
-        """Where a camera of cluster `home` polls when nobody records it. A camera that reaches only its office
-        (Lesson 17, `report@office`) polls that office's ingest: the centre and the domain's cluster are exactly
+        """Where a camera of cluster `home` polls when nobody records it. A camera that reaches only its relay
+        (Lesson 17, `report@relay`) polls that relay's ingest: the centre and the domain's cluster are exactly
         what it cannot reach."""
         via = self.via_of(home)
         if via:
@@ -246,7 +246,7 @@ class Crossings:
     def _ingest(self, ref: str, on: str, home: str, now: float, old: dict | None) -> dict | None:
         from .ingest import INGEST, audience
         if on in self.star and self.centre:
-            on = self.centre                             # a star: the camera pushes to the centre, never to its office
+            on = self.centre                             # a star: the camera pushes to the centre, never to its relay
         c = self.view.fed.clusters.get(on)
         if self.issuer is None or c is None:
             return None
