@@ -236,10 +236,8 @@ class Crossings:
                     found = {**found, "backups": [archive]}  # where the primary takes its hole back from
                 books[on][ref] = json.dumps(found, sort_keys=True)
                 backup = kept[0] if kept else None          # its backup's cluster resolves `ref:` too — to ITS ingest
-                if backup is not None:
-                    there = {k: v for k, v in found.items() if k != "backups"}
-                    if there.get("push"):
-                        there["live_url"] = f"ingest://{backup}/{ref}"
+                if backup is not None:                      # decided for the backup's cluster by ITS networks
+                    there = self._doors(ref, backup) or {}
                     books.setdefault(backup, {})[ref] = json.dumps(there, sort_keys=True)
         self._write_books(SOURCES_PATH, books)
         return books
@@ -363,12 +361,33 @@ class Crossings:
                 self.vars.put(path, books.get(home, {}), cas=idx)
         return books
 
-    def _doors(self, ref: str) -> dict | None:
+    # Pull or push — who decides (М12 lessons 1 and 16). Not a person: a fact about the network. The recorder
+    # PULLS the camera when its cluster can see the camera's door — a network both say they see (they say it
+    # themselves, `federation.REACHES`). The camera PUSHES when they share none, or when the camera says it
+    # pushes whatever happens (`push`: a camera on a mobile uplink, seen from nowhere). When either side has said
+    # nothing about its networks, there is nothing to decide by, and the camera's word stands, as before.
+    def _road(self, camera_cluster: str, on: str, flag: bool) -> tuple[bool, str]:
+        if flag:
+            return True, "the camera says it pushes"
+        cam, rec = self.view.fed.clusters.get(camera_cluster), self.view.fed.clusters.get(on)
+        cam_nets = cam.networks() if cam is not None else frozenset()
+        rec_nets = rec.networks() if rec is not None else frozenset()
+        if not cam_nets or not rec_nets:
+            return False, "no networks said on one side: the recorder pulls, as it always did"
+        shared = sorted(cam_nets & rec_nets)
+        if shared:
+            return False, f"{on} sees {shared[0]}, where the camera is: the recorder pulls"
+        return True, f"{on} sees none of the camera's networks ({', '.join(sorted(cam_nets))}): the camera pushes"
+
+    def _doors(self, ref: str, on: str | None = None) -> dict | None:
+        on = on or self.all().get(ref, "?")
         for (cluster, worker), s in self.view.snapshots.items():
             if any(str(st.get("ref", "")) == ref for st in s.status) and s.doors:
                 doors = dict(s.doors)
-                if doors.get("push"):                    # Lesson 16: nobody dials it; it pushes to the recording cluster's ingest
-                    doors["live_url"] = f"ingest://{self.all().get(ref, '?')}/{ref}"
+                push, why = self._road(cluster, on, bool(doors.get("push")))
+                doors.update(push=push, road=why)
+                if push:                                 # Lesson 16: it pushes to the recording cluster's ingest
+                    doors["live_url"] = f"ingest://{on}/{ref}"
                     doors.pop("playback_url", None)      # the card is read by asking the camera to upload a range
                 return {"cluster": cluster, "worker": worker, **doors, "as_of": s.ts,
                         "reachable": cluster not in self.view.cluster_down_since}
