@@ -192,3 +192,30 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
     south_link.up = False                                             # the room does not answer the domain
     wall.advance(5)
     assert pass_() == {"cluster": "south", "recording": "", "should": True, "written": False, "starting": False}
+
+
+def test_a_recording_moves_to_another_cluster_and_the_books_follow():
+    """Feedback AN. The site is re-wired: the camera is to be recorded by north now. A second cluster is still
+    refused — but a MOVE rewrites the decision, and on the next pass south's source book loses the camera (its
+    recorder says why and stops), north's gains it. South's book is emptied, not left as it was: it has nothing
+    of another cluster any more."""
+    import json
+    wall = Clock()
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
+    north = fed.domain_cluster
+    crossings.record(SERIAL, on="south"); crossings.publish(); agent.sync()
+    try:
+        crossings.record(SERIAL, on="north")
+        raise AssertionError("a second cluster, without a move")
+    except ApiError as e:
+        assert e.status == 409
+    out = crossings.record(SERIAL, on="north", move=True)
+    assert out["recorded_by"] == "north" and out["moved_from"] == "south"
+    crossings.publish(); agent.sync()
+    assert south.vars.get("domain/sources")[0] == {}
+    try:
+        resolve(south.vars, f"ref:{SERIAL}", wall())
+        raise AssertionError("south records it no more")
+    except NotResolvable:
+        pass
+    assert json.loads(north.vars.get("domain/sources/north")[0][SERIAL])["live_url"] == "rtsp://10.1.0.71/live"
