@@ -120,9 +120,13 @@ class Ingest:
     `peers()` are the other ingests of the same cluster (AG) — on a real cluster, found through its store."""
 
     def __init__(self, cluster: str, urls: list[str], keys, revoked=lambda: set(), wall=time.time,
-                 name: str | None = None, peers=lambda: []):
+                 name: str | None = None, peers=lambda: [], should=None):
+        """`should(ref) -> bool | None`: whether THIS cluster should be recording the camera now — from its own
+        rec rows (`should_from_snapshot`). Given it, every poll also says whether the recording is UNCOVERED:
+        it should be written and no recorder here takes the stream. The camera needs no domain to know that its
+        primary does not take its stream (М11 lesson 1)."""
         self.cluster, self.urls, self.keys, self.revoked, self.wall = cluster, list(urls), keys, revoked, wall
-        self.name, self.peers = name or (urls[0] if urls else cluster), peers
+        self.name, self.peers, self.should = name or (urls[0] if urls else cluster), peers, should
         self.linger = LINGER
         self.links: dict[tuple[str, str], PeerLink] = {}          # (peer, camera) -> the stream this ingest pushes it (AJ)
         self.tees: dict[tuple[str, str], LiveTee] = {}
@@ -225,6 +229,8 @@ class Ingest:
                "ranges": {rid: (t0 - cam.offset, t1 - cam.offset) for rid, (t0, t1) in ranges.items()},
                "asks": {aid: {"action": a["action"], "by": a["by"], "deadline": a["deadline"] - cam.offset}
                         for aid, a in asks.items()}}
+        if self.should is not None:
+            out["uncovered"] = bool(self.should(ref)) and not self.taken(ref)
         if version is not None and version == cam.version:
             out["held"] = True                                   # nothing changed: the real ingest holds the request
         return out
@@ -418,6 +424,13 @@ class Ingest:
     def subscribe(self, ref: str, who: str, kind: str = "live", maxsize: int = 30, edge: bool = False) -> LeakyQueue:
         return self.tees.setdefault((str(ref), "edge" if edge else kind), LiveTee(ref)).subscribe(who, maxsize)
 
+    def taken(self, ref: str) -> bool:
+        """A recorder of this cluster takes the stream — subscribed to it, at any ingest of the cluster. A recorder
+        subscribes as `recorder:<name>`; viewers and forwarders are not recorders."""
+        return any(w.startswith("recorder") for ing in self._cluster()
+                   for (r, kind), tee in list(ing.tees.items()) if r == str(ref) and kind == "live"
+                   for w in list(tee.subscribers))
+
     def _has_subscribers(self, ref: str) -> bool:
         return any(tee.subscribers for (r, _kind), tee in list(self.tees.items()) if r == str(ref))
 
@@ -529,6 +542,7 @@ class CameraPusher:
         self.clock, self.ring_seconds = clock or time.time, ring_seconds
         self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
         self.pushing, self.ring, self.road = None, [], None            # the road it pushes on, if any
+        self.uncovered: bool | None = None                             # the primary does not take the stream
         self.state = "no book yet"
 
     def entry(self) -> dict | None:
@@ -600,11 +614,15 @@ class CameraPusher:
         backup = e.get("backup")
         ing, work, url = self._poll(e["ingest"], "primary", 0.0 if backup else wait)
         pushed, uploaded, performed, road = 0, [], [], None
+        takes = primary_takes(e, ing is not None, work)
+        # What the card (edge) goes by, decided HERE and now: the primary does not take the stream — its ingest
+        # did not answer, or said the recording is uncovered, or (with no word from it) the book says so.
+        self.uncovered = not takes if ing is None or "uncovered" in (work or {}) or backup else None
         if ing is not None:
-            p, u, a = self._serve(ing, e["ingest"]["token"], work if primary_takes(e, True) else {**work, "push": False},
+            p, u, a = self._serve(ing, e["ingest"]["token"], work if takes else {**work, "push": False},
                                   frames_now, "primary")
             pushed, uploaded, performed = p, u, a
-            if primary_takes(e, True):
+            if takes:
                 road = ("primary", url, work["push"])
         if road is None and backup:
             bing, bwork, burl = self._poll(backup["ingest"], "backup", wait)
@@ -640,18 +658,51 @@ def live_road(entry: dict, dial) -> str | None:
             except Unreachable:
                 continue
         return False
-    if primary_takes(entry, answers(entry["ingest"])):
-        return "primary"
+    if primary_takes(entry, answers(entry["ingest"])):                 # (the ingest's own word reaches the camera,
+        return "primary"                                               # not the gateway: the book stands in for it)
     backup = entry.get("backup")
     return "backup" if backup and answers(backup["ingest"]) else None
 
 
-def primary_takes(entry: dict, answered: bool) -> bool:
-    """Whether the camera's primary takes its stream: an ingest of it answered, and the book does not say the
-    primary should be written and is not — a stop, not a start (feedback AB): a start has its grace."""
+def primary_takes(entry: dict, answered: bool, work: dict | None = None) -> bool:
+    """Whether the camera's primary takes its stream. First what its ingest SAID — no answer, or "uncovered"
+    (it should record and no recorder takes it): the primary's own word, fresh, and no domain in it. Only when
+    the ingest says nothing about it, the book: it should be written and is not — a stop, not a start (feedback
+    AB): a start has its grace."""
     if not answered:
         return False
+    if work is not None and "uncovered" in work:
+        return not work["uncovered"]
     return not (entry.get("should") and not entry.get("written") and not entry.get("starting") and entry.get("backup"))
+
+
+# -- the standbys' gates: what the stream says (vms.recworker.RecWorker.stream_says) -------------------------
+def should_from_snapshot(objects, wall=time.time):
+    """`should(ref)` for an ingest, from its own cluster's rec rows: a recording of `ref:<ref>`, enabled, its
+    `until` not passed, and not itself a standby."""
+    def should(ref) -> bool | None:
+        rows = []
+        for key in objects.list("rec/snapshot/"):
+            raw = objects.get(key)
+            rows += [r for r in (json.loads(raw).get("recordings", []) if raw else [])
+                     if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") != "offline"]
+        if not rows:
+            return None
+        now = wall()
+        return any(bool(r.get("enabled", True)) and (float(r.get("until") or 0) == 0 or float(r.get("until")) > now)
+                   for r in rows)
+    return should
+
+
+def backup_gate(ingest):
+    """The backup on the second server, fed by a camera that pushes: the camera came HERE — it does so only when
+    its primary does not take the stream — so write what arrives. Otherwise it cannot say: the book decides."""
+    return lambda row: True if ingest.pushing(str(row["cam"])[4:] if str(row["cam"]).startswith("ref:") else row["cam"]) else None
+
+
+def edge_gate(pusher):
+    """The card in the camera: the camera itself knows whether its primary takes its stream."""
+    return lambda row: pusher.uncovered
 
 
 # -- the asking camera -------------------------------------------------------------------------------------
