@@ -30,7 +30,9 @@ from vms.recworker import DOMAIN_SEEN, PRIMARIES as PRIMARIES_PATH
 UPSTREAM_PATH = "domain/upstream"
 # Lesson 16: whom this camera may ask to act, at which ingest, with what token (a scenario between cameras).
 ASKS_PATH = "domain/asks"
-PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH)
+# …and, for a camera nobody records, the ingest it polls all the same — for asks, with no stream to push.
+POLL_PATH = "domain/poll"
+PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH)
 
 
 class DomainPublisher:
