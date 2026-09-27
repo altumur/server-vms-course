@@ -699,3 +699,37 @@ def test_a_suppression_summary_asks_nothing_and_the_deadline_counts_from_the_eve
     late = {x["target"]: x for x in gate_scenarios.on_event("vehicle", {"ts": wall() - 25})}
     assert late[PTZ]["state"] == "asked" and late[PTZ]["deadline"] == wall() + 5      # 30 s from the event
     assert late[SERIAL]["state"] == "seen after its deadline: not asked"            # its within is 10 s
+
+
+def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
+    """A door contact wired to the room's recorder: a camera of the server cluster, without the platform. It holds
+    no poll, so nobody can ask it — but its events are read in its own cluster, over the cluster's merged event
+    log, and the domain knows it from the room's snapshot. So it can TRIGGER: the book of asks goes to the room,
+    whose automation asks on the camera's behalf. A trigger nobody has reported is refused when written."""
+    from domain.api import ApiError
+    from domain.ingest import Asker
+    from domain.scenario import refusals
+    from tests.conftest import snapshot
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, [])
+    south = books.crossings.view.fed.clusters["south"]
+    snapshot(south, {"DOOR7": ("w-0", "srv-9")}, ts=wall())            # the room's own camera: no heartbeat says `polls`
+    domain_pass()
+    check = lambda s: refusals(s, books.crossings)
+    door = {"when": {"camera": "DOOR7", "kind": "door_forced"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}}
+    rev = shared.current()[0]["rev"]
+    rev = shared.edit(lambda s: s.update(scenarios=[door]), base_rev=rev, by="anna", check=check)   # accepted
+    for bad, why in (({"when": {"camera": "DOOR9", "kind": "x"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+                      "DOOR9 (trigger) is not known to the domain"),
+                     ({"when": {"camera": GATE, "kind": "x"}, "then": {"camera": "DOOR7", "action": "preset", "arg": 1}},
+                      "DOOR7 (target) polls nothing")):
+        try:
+            shared.edit(lambda s: s["scenarios"].append(bad), base_rev=rev, by="anna", check=check)
+            raise AssertionError(why)
+        except ApiError as e:
+            assert e.status == 409 and why in e.detail
+    domain_pass()                                                      # the book of asks, carried to the ROOM
+    room = Asker("DOOR7", south.vars, domain_pass.dial, clock=wall)    # the room's automation, for its camera
+    ing, aid = room.ask(PTZ, {"action": "preset", "arg": 3}, within=30)
+    assert ptz_pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert room.outcome(PTZ, aid, wall() + 30) == "performed"
