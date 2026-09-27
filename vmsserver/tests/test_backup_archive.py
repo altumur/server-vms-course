@@ -279,7 +279,7 @@ def _camera_cluster():
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
     con.create_camera({"name": "gate", "source": CARD, "ref": "SN1"})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    volumes.write(box.vars, {"name": "card", "kind": "backup", "server": "srv-1", "url": "/data/card", "quota_bytes": 10**10})
+    volumes.write(box.vars, {"name": "card", "kind": "edge", "server": "srv-1", "url": "/data/card", "quota_bytes": 10**10})
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
     card = _recorder(box, "r-1", "srv-1", "card")
     SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
@@ -351,3 +351,16 @@ def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
     assert card.primary_needs_cover(row)                      # no grace for a stop
     carry(should=False, written=False)
     assert not card.primary_needs_cover(row)                  # a decision is still never covered
+
+
+def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_name():
+    """Two servers as two clusters of one (М11 lesson 1). The backup on the second server names the camera the
+    way a recording names a camera of another cluster — `cam: ref:<serial>` — and there is no camera row here
+    to find its serial in. It reads the book of primaries by that name: holds while the first server writes,
+    covers when it stops."""
+    box, card, row, carry = _camera_cluster()
+    backup = {**row, "id": "SN1-copy", "cam": "ref:SN1"}
+    carry(written=True)
+    assert card.carried_primary(backup, box.wall()) is False       # the first server writes it
+    carry(written=False, starting=False)
+    assert card.carried_primary(backup, box.wall()) is True        # it stopped: cover, at once
