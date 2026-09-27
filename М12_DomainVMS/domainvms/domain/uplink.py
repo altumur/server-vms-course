@@ -195,8 +195,8 @@ def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.
     """The domain's handle on a member it never reaches: a `Cluster` over that member's last report. Its
     `objects.f.offset` is how far the member's clock is from the domain's, as of the last report.
 
-    `via`: Lesson 17's summary report — the member reports to that office, and the office carries one bundle
-    for all its members. Read the same way; silent together with the office."""
+    `via`: Lesson 17's summary report — the member reports to that relay, and the relay carries one bundle
+    for all its members. Read the same way; silent together with the relay."""
     if via is not None:
         from .chain import BundleView
         domain_objects = NewerRoad(member, domain_objects, BundleView(via, domain_objects))
@@ -205,7 +205,7 @@ def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.
 
 
 class NewerRoad:
-    """A member placed behind an office is read from the office's bundle — and from its own direct report too,
+    """A member placed behind a relay is read from the relay's bundle — and from its own direct report too,
     whichever is NEWER. The topology describes a road; it does not forbid another (feedback AM): a camera that
     can reach the domain after all, or that has not yet been moved, is not made silent by a record that says it
     goes round. Newer by the report's `ts` — the MEMBER's clock, the same one on both roads — not by its number,
