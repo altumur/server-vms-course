@@ -168,13 +168,70 @@ class Crossings:
     # Each recording cluster's book, from the read view's memory: the doors the camera's worker last
     # published, with the time they were published. A camera whose cluster is silent keeps its last entry
     # and says so — the address it had is the best there is, and it is usually still right.
+    # A BACKUP of a camera on another server (М11 lesson 1, two servers as two clusters of one): an ordinary
+    # recording on that cluster's `backup` volume, `when: offline` (М10B lesson 26), naming the camera by the
+    # domain's name (`cam: ref:<serial>`). The operator makes it there as always; the domain finds it in that
+    # cluster's rec snapshot — no record of its own — and from then on the camera has a second road: it pushes
+    # there when, and only when, its primary does not take the stream. One stream, never two.
+    def backup_of(self, ref: str) -> str | None:
+        found = self._backup(ref)
+        return found[0] if found else None
+
+    def _backup(self, ref: str) -> tuple[str, str] | None:
+        """(the backup's cluster, the backup recording's name)."""
+        on, home = self.all().get(str(ref)), (self.view.last_known(ref) or (None,))[0]
+        for name in sorted(self.view.fed.clusters):
+            if name in (on, home):
+                continue
+            c = self.view.fed.clusters[name]
+            try:
+                keys = c.objects.list("rec/snapshot/")
+                for key in keys:
+                    raw = c.objects.get(key)
+                    for r in (json.loads(raw).get("recordings", []) if raw else []):
+                        if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline":
+                            return name, str(r.get("name") or r.get("id"))
+            except Unreachable:
+                continue
+        return None
+
+    # What the backup on the other server HOLDS, as its recorder says in its heartbeat — the same summary and
+    # door a backup of this cluster gives (М10B lesson 26): coverage, and the URL of its archive. Carried in the
+    # PRIMARY's source book, so that the primary, back, knows where to take its hole from.
+    def _backup_archive(self, cluster: str, recording: str, now: float, lost_after: float = 45.0) -> dict | None:
+        c = self.view.fed.clusters.get(cluster)
+        try:
+            keys = c.objects.list("rec/heartbeats/") if c is not None else []
+            for key in keys:
+                raw = c.objects.get(key)
+                hb = json.loads(raw) if raw else {}
+                if not hb.get("archive_url") or now - float(hb.get("ts", 0)) > lost_after:
+                    continue
+                for st in hb.get("status", []):
+                    if str(st.get("id")) == recording and st.get("coverage"):
+                        return {"cluster": cluster, "recording": recording, "url": hb["archive_url"].rstrip("/"),
+                                "coverage": st["coverage"], "as_of": float(hb["ts"])}
+        except Unreachable:
+            return None
+        return None
+
     def publish(self) -> dict[str, dict]:
         books: dict[str, dict] = {}
         for ref, on in self.all().items():
             books.setdefault(on, {})
             found = self._doors(ref)
             if found is not None:
+                kept = self._backup(ref)
+                archive = self._backup_archive(*kept, self.wall()) if kept else None
+                if archive:
+                    found = {**found, "backups": [archive]}  # where the primary takes its hole back from
                 books[on][ref] = json.dumps(found, sort_keys=True)
+                backup = kept[0] if kept else None          # its backup's cluster resolves `ref:` too — to ITS ingest
+                if backup is not None:
+                    there = {k: v for k, v in found.items() if k != "backups"}
+                    if there.get("push"):
+                        there["live_url"] = f"ingest://{backup}/{ref}"
+                    books.setdefault(backup, {})[ref] = json.dumps(there, sort_keys=True)
         for on, book in books.items():
             path = f"{SOURCES_PATH}/{on}"
             have, idx = self.vars.get(path)
@@ -196,10 +253,19 @@ class Crossings:
                 continue
             entry = self._primary(ref, on, now, lost_after)
             have, _ = self.vars.get(f"{PRIMARIES_PATH}/{known[0]}")
-            old = json.loads((have or {}).get(ref, "{}")).get("ingest")
-            ingest = self._ingest(ref, on, known[0], now, old)
+            was = json.loads((have or {}).get(ref, "{}"))
+            ingest = self._ingest(ref, on, known[0], now, was.get("ingest"))
             if ingest:
                 entry["ingest"] = ingest
+            backup = self.backup_of(ref)
+            if backup is not None:
+                # For the backup's cluster: the same facts about the primary, so its recorder's gate knows when
+                # to cover (`carried_primary`, by `ref:`) — the book of primaries, for the other side.
+                facts = {k: v for k, v in entry.items() if k != "ingest"}     # not the camera's stream token
+                books.setdefault(backup, {})[ref] = json.dumps({**facts, "backup": backup}, sort_keys=True)
+                there = self._ingest(ref, backup, known[0], now, (was.get("backup") or {}).get("ingest"))
+                if there and ingest:                          # the camera's second road: only for one that pushes
+                    entry["backup"] = {"cluster": backup, "ingest": there}
             books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
         for home, book in books.items():
             path = f"{PRIMARIES_PATH}/{home}"
@@ -220,7 +286,8 @@ class Crossings:
             rows = []
             for key in c.objects.list("rec/snapshot/"):
                 raw = c.objects.get(key)
-                rows += [r for r in (json.loads(raw).get("recordings", []) if raw else []) if str(r.get("cam")) == f"ref:{ref}"]
+                rows += [r for r in (json.loads(raw).get("recordings", []) if raw else [])
+                         if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") != "offline"]
             names = sorted(str(r.get("name") or r.get("id")) for r in rows)
             running, named = set(), set()
             for key in c.objects.list("rec/heartbeats/"):
@@ -311,6 +378,7 @@ class Source:
     coverage: dict | None
     age: float
     reachable: bool
+    backups: list = None              # М11 lesson 1: backups of this camera on another server — cluster, recording, url, coverage
 
 
 # The recorder's side, in the recording cluster: `ref:<serial>` against this cluster's own copy of the book.
@@ -325,7 +393,7 @@ def resolve(cluster_vars, source: str, now: float) -> Source | None:
                             f"to record it, or has never seen it publish a door")
     e = json.loads(items[ref])
     return Source(ref, e["cluster"], e["live_url"], e.get("playback_url"), e.get("coverage"),
-                  max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)))
+                  max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)), list(e.get("backups", [])))
 
 
 # What to fetch from the card: what the book says it holds, minus what we hold, bounded as М10B's recorder
@@ -352,3 +420,44 @@ def plan_backfill(src: Source, ours: list[tuple[float, float]], now: float, keep
         for gone in subtract(h, [(lo, hi)] if hi > lo else []):
             dropped.append((gone, "no longer on the card"))
     return fetch, dropped
+
+
+# The primary is back, and everything is taken home (М11 lesson 1, two servers). While it was not writing, TWO
+# backups wrote: the card in the camera, and the backup recording on the other server — both `when: offline`,
+# both started by the same book of primaries. Now the primary closes its holes from them, and only inside what it
+# records (М10B lesson 26: between its first and last visible second, not fresher than `settle`):
+#
+#     first   the other server's backup — on the site's LAN, copied as it was recorded, and not over the
+#             camera's uplink, which live video needs
+#     then    the card, for what the backup does not have — the seconds before the camera switched its stream,
+#             a backup that failed too — asked of the device NOW, as Lesson 13 asks (a card is a ring)
+#
+# Returns what to fetch, each range with where from, and what nobody has, with why.
+def plan_takeback(src: Source, ours: list[tuple[float, float]], now: float, keep_days: float, settle: float,
+                  ask_device=None) -> tuple[list[tuple[tuple[float, float], str]], list[tuple[tuple[float, float], str]]]:
+    if not ours:
+        return [], []
+    lo, hi = max(ours[0][0], now - keep_days * 86400), min(ours[-1][1], now - settle)
+    if hi <= lo:
+        return [], []
+    holes = subtract((lo, hi), ours)
+    fetch, missing = [], []
+    for b in src.backups or []:
+        span = (float(b["coverage"]["from"]), float(b["coverage"]["to"]))
+        rest = []
+        for h in holes:
+            got = (max(h[0], span[0]), min(h[1], span[1]))
+            if got[1] > got[0]:
+                fetch.append((got, f"backup:{b['cluster']}"))
+            rest += subtract(h, [got] if got[1] > got[0] else [])
+        holes = rest
+    if holes and src.coverage:
+        card = ask_device() if ask_device else src.coverage
+        for h in holes:
+            got = (max(h[0], float(card["from"])), min(h[1], float(card["to"])))
+            if got[1] > got[0]:
+                fetch.append((got, "card"))
+            missing += [(g, "on no backup and no longer on the card") for g in subtract(h, [got] if got[1] > got[0] else [])]
+    else:
+        missing += [(h, "on no backup, and the camera has no card") for h in holes]
+    return sorted(fetch), missing
