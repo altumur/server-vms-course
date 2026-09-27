@@ -98,6 +98,7 @@ class DomainAgent:
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
+        self._office_n, self._office_seen = None, None      # through an office: its last age mark, on OUR clock
 
     def _carry(self, path: str, items: dict | None, clear: bool = False) -> None:
         have, idx = self.cluster_vars.get(path)
@@ -120,8 +121,22 @@ class DomainAgent:
 
     def sync(self) -> bool:
         """One pass. False (and nothing written) if the domain did not answer."""
-        from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
         self.say_reaches()                                  # local: said even when the domain is away
+        ok = self._sync()
+        if self.relay_members and self.bundle_store is not None:
+            from .chain import say_seen                     # an office: how current its relay is, reached or not
+            say_seen(self.bundle_store, self.last_synced, self.now())
+        return ok
+
+    def _office_mark(self) -> float | None:
+        mark = self.domain_vars.seen()
+        if mark and mark.get("n") != self._office_n:
+            self._office_n = mark.get("n")
+            self._office_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
+        return self._office_seen
+
+    def _sync(self) -> bool:
+        from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
         try:
             keys, _ = self.domain_vars.get(KEYS_PATH)
             revoked, _ = self.domain_vars.get(REVOKED_PATH)
@@ -169,7 +184,7 @@ class DomainAgent:
             # Through a relay (Lesson 17), "when did I last hear from the domain" is when the OFFICE last did: a
             # camera that reaches its office every pass while the office is cut from the centre has current
             # nothing, and must not believe its books are.
-            seen = self.domain_vars.seen() if hasattr(self.domain_vars, "seen") else self.last_synced
+            seen = self._office_mark() if hasattr(self.domain_vars, "seen") else self.last_synced
             self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": seen or 0.0, "cluster": self.cluster}).encode())
         # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
         # so the outcomes of the edits applied above go up in this same pass.
@@ -224,8 +239,11 @@ class ClusterTrust:
 
 
 def local_networks() -> list[str]:
-    """What this cluster can see, observed: REACHES (the site's own names — "vlan:cctv-a") where the operator of
-    the SITE set them, else the IPv4 networks of this host's interfaces, as `net:<cidr>` (`ip -j -4 addr`)."""
+    """What this cluster can see: REACHES — the site's own names ("vlan:cctv-a"), set by the operator of the SITE,
+    and the right source — else, as a fallback, the IPv4 networks of this host's interfaces as `net:<cidr>`
+    (`ip -j -4 addr`), leaving out what is not a network a camera sits on: host routes (/31, /32 — a VPN's
+    tunnel end) and tunnel, bridge and container interfaces. The product found them on its box: every cluster
+    "saw" the same VPN (feedback AM)."""
     import ipaddress
     import json
     import os
@@ -234,8 +252,10 @@ def local_networks() -> list[str]:
         return [n for n in os.environ["REACHES"].split(",") if n]
     try:
         out = subprocess.run(["ip", "-j", "-4", "addr"], capture_output=True, text=True, timeout=5).stdout
+        skip = ("lo", "tun", "utun", "tap", "wg", "ppp", "docker", "br-", "veth", "virbr", "cni", "flannel")
         nets = {str(ipaddress.ip_interface(f"{a['local']}/{a['prefixlen']}").network)
-                for i in json.loads(out or "[]") if i.get("ifname") != "lo" for a in i.get("addr_info", [])}
+                for i in json.loads(out or "[]") if not str(i.get("ifname", "")).startswith(skip)
+                for a in i.get("addr_info", []) if int(a.get("prefixlen", 32)) < 31}
     except (OSError, ValueError, subprocess.SubprocessError):
         nets = set()
     return sorted(f"net:{n}" for n in nets)
