@@ -1153,3 +1153,38 @@ def test_a_job_is_not_promised_minutes_the_device_does_not_have():
         assert not j.device_has("1", 1000.0, 2000.0)               # inside the summary, and empty
     finally:
         srv.shutdown()
+
+
+def test_a_range_just_copied_is_neither_copied_again_nor_taken_for_what_the_source_lacked():
+    """Feedback AE. On a store that shows a block only once it is closed, a range just copied is invisible for
+    minutes. What the source did not have is what it did not DELIVER — not what our volume does not show — and
+    what it delivered is ours until the volume shows it: not a hole to copy again."""
+    box, ctl, con, con_vars = _box()
+    w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000000.0, 5)}))
+    con.create_camera({"name": "front", "source": CARD})
+    ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
+    SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
+    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
+                  FakeActuator(), archive=ArchiveResource(box.spool, box.archive, wall=box.wall), clock=box.clock,
+                  wall=box.wall, server="srv-1", env={}, keep_days=1.0, settle=1000.0)
+    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    now = 1000000.0
+    for start, end in ((now - 80000, now - 76400), (now - 70000, now - 66400)):
+        p = segment_path(box.archive, 1, r.epochs["1"], datetime.fromtimestamp(start, timezone.utc))
+        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
+        Manifest(box.archive, 1).append(Segment(1, r.epochs["1"], start, end, os.path.relpath(p, box.archive), 1))
+    before = r.our_coverage(1)
+    hole = (now - 76400, now - 70000)
+    assert hole in r.gaps(1, {"from": 0.0, "to": now}, now)
+
+    shown = r.our_coverage
+    r.our_coverage = lambda unit: before                               # the store has not shown the copy yet
+    out = r.fetch_from(1, "1", {"kind": "device", "url": "http://srv-1/playback/1"}, *hole)
+    assert out["segments"] > 0
+    assert r.nowhere == {}                                             # everything asked for was delivered
+    assert hole not in r.gaps(1, {"from": 0.0, "to": now}, now)        # …and is not copied a second time
+
+    r.our_coverage = shown                                             # the volume shows it now
+    assert hole not in r.gaps(1, {"from": 0.0, "to": now}, now)          # ours, as the volume says
+    assert r.landing.get("1") == []                                    # nothing left waiting to be shown

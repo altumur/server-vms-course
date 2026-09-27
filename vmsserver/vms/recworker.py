@@ -194,6 +194,10 @@ class RecWorker(VmsWorker):
         # ends, never where its holes are; without this the same empty range is planned every pass, and each
         # plan opens one of the device's one or two sessions.
         self.nowhere: dict[tuple[str, str], list[tuple[float, float]]] = {}
+        # What a source DELIVERED that our volume does not show yet (feedback AE): a store that shows a block
+        # only once it is closed shows a range just copied minutes later. Until it does, the range is ours —
+        # neither a hole to copy again nor, worse, something the source did not have.
+        self.landing: dict[str, list[tuple[float, float]]] = {}
         self.archive_url = ""                       # this recorder's archive door, once served (Lesson 26)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
@@ -860,6 +864,10 @@ class RecWorker(VmsWorker):
         holes = subtract((lo, hi), ours)
         for gone in self.nowhere.get((str(unit), source), []):
             holes = [h for hole in holes for h in subtract(hole, [gone])]
+        pending = [sp for sp in self.landing.get(str(unit), []) if subtract(sp, ours)]   # still not shown by the volume
+        self.landing[str(unit)] = pending
+        for sp in pending:
+            holes = [h for hole in holes for h in subtract(hole, [sp])]
         return holes
 
     # The disk is over its high mark: the resource is freeing space this minute, and backfill exists to
@@ -1073,18 +1081,25 @@ class RecWorker(VmsWorker):
     # already have is dropped rather than written. Then, if the fetch was CLEAN, whatever of the range is
     # still not ours is remembered as nowhere for this source — never after a fetch that failed half way,
     # which says nothing about what the source holds.
+    # What was NOT on the source is what it did not deliver — not what our volume does not show after the
+    # fetch (feedback AE). On the course's file archive the two are the same; on a store that shows a block
+    # only once it is closed, a range just copied is invisible for minutes, and was being remembered as "not on
+    # the card either" and never planned again. Delivered is what came back: landed, or dropped because live
+    # recording had it already.
     def _land(self, unit: str, cam, paths: list[str], t0: float, t1: float, origin: str, source: str) -> dict:
-        have, kept = self.our_coverage(unit), 0
+        have, kept, delivered = self.our_coverage(unit), 0, []
         for p in paths:
             parsed = parse(p, self.archive.spool)
             span = (parsed[2].timestamp(), os.path.getmtime(p)) if parsed else (t0, t1)
+            delivered.append(span)
             if overlaps(have, span):
                 os.remove(p); continue                   # live recording got there while we were fetching
             self.archive.promote(p, source=origin); kept += 1
         self.backfilled += kept
+        self.landing[unit] = sorted(self.landing.get(unit, []) + delivered)
         failed = getattr(self.actuator, "range_error", "")
         if not failed:
-            missing = subtract((t0, t1), self.our_coverage(unit))
+            missing = subtract((t0, t1), sorted(delivered))
             if missing:
                 self.nowhere[(unit, source)] = sorted(self.nowhere.get((unit, source), []) + missing)
         if kept:
