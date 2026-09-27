@@ -201,7 +201,7 @@ def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.
         from .chain import BundleView
         domain_objects = BundleView(via, domain_objects)
     f = _Fresh(member, domain_objects, lost_after, wall)
-    return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches))
+    return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches), via=via)
 
 
 def offset_of(copy: Cluster) -> float:
