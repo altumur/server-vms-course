@@ -7,7 +7,8 @@ the domain cluster runs the same one pointed at every cluster.
     GET  /api/where/<camera>                    the directory of directories, incompleteness included
     PUT  /api/cameras/<camera>                  proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields
-    GET  /api/members                           the domain's members: who, admitted how and when (`domain/members.py`)
+    GET  /api/members                           the domain's members: who, admitted how and when, and who is knocking
+    POST /api/members                           {name} — accept one that is knocking: an admin of the domain cluster only
     DELETE /api/members/<name>                  a member leaves: an admin of the domain cluster only
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
@@ -92,7 +93,8 @@ class Console:
                     if u.path == "/api/topology" and console.topology is not None:
                         return self._send(200, console.topology.read())
                     if u.path == "/api/members" and console.members is not None:
-                        return self._send(200, console.members.read())
+                        knocking = console.members.knocking(console.publish_to) if console.publish_to is not None else []
+                        return self._send(200, {**console.members.read(), "knocking": knocking})
                     if u.path.startswith("/api/where/"):
                         a = console.directory.where(u.path.rsplit("/", 1)[1])
                         return self._send(200 if a.found else (404 if a.complete else 503),
@@ -115,6 +117,22 @@ class Console:
                 try:
                     resp = console.api.update_camera(u.path.rsplit("/", 1)[1], fields, key, self._token())
                     self._send(202 if resp.get("pending") else 200, resp)    # kept for a cluster that is off: accepted, not applied
+                except ApiError as e:
+                    self._send(e.status, {"detail": e.detail})
+
+            def do_POST(self):
+                u = urlsplit(self.path)
+                if not (u.path == "/api/members" and console.members is not None):
+                    return self._send(404, {"detail": "no such route"})
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                try:
+                    subject = console.api._subject(self._token())
+                    if console.admin is not None and subject is not None and not console.admin(subject):
+                        raise ApiError(403, f"{subject} is not an admin of the domain cluster: members are the domain's")
+                    console.members.add(str(body["name"]), how=f"accepted by {subject}", by=subject)
+                    self._send(200, console.members.read())
+                except KeyError:
+                    self._send(400, {"detail": "name the cluster to accept"})
                 except ApiError as e:
                     self._send(e.status, {"detail": e.detail})
 
@@ -207,8 +225,10 @@ def main() -> None:
         return any(g.subject == subject and g.capability == "admin" for g in trust.grants())
 
     from .members import Members
+    from .uplink import _CopyObjects
     topology = Topology(fed.domain_cluster.vars)
-    members = Members(fed.domain_cluster.vars)
+    configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
+    members = Members(fed.domain_cluster.vars, configured=lambda: configured, domain=fed.domain_cluster.name)
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       publish_to=fed.domain_cluster.objects,
                       crossings=Crossings(fed.domain_cluster.vars, view, topology=topology),
