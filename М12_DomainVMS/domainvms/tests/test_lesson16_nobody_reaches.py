@@ -315,7 +315,7 @@ PTZ = "SN5003"                                                         # a PTZ c
 NORTH_URLS = ["srt://ingest.north:9000"]
 
 
-def _scenario_site(wall, scenarios):
+def _scenario_site(wall, scenarios, open_doors=()):
     from domain.books import Books
     from domain.ingest import Asker
     from domain.scenario import Scenarios
@@ -324,9 +324,9 @@ def _scenario_site(wall, scenarios):
     home = Ingest("north", NORTH_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
     home.announce(north.objects)                                       # the domain's cluster: every camera reaches it
 
-    def member(serial):
-        d = DeviceCluster(serial, FakeVariables(), wall=wall, pushes=True)
-        d.boot(); d.door_open = False
+    def member(serial, pushes=True):
+        d = DeviceCluster(serial, FakeVariables(), wall=wall, pushes=pushes)
+        d.boot(); d.door_open = not pushes                             # an open door: the site can dial it; the domain never does
         fed.add(member_copy(d.name, north.objects, wall=wall))
         a = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects, cluster_objects=d.disk,
                         published=d.local_objects())
@@ -334,13 +334,14 @@ def _scenario_site(wall, scenarios):
 
     gate, gate_agent = member(GATE)
     ptz, ptz_agent = member(PTZ)
+    extra = {n: member(n, pushes=False) for n in open_doors}
     shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
     shared.edit(lambda s: s.update(scenarios=scenarios), base_rev=0, by="anna")
     books = Books(crossings, north.objects)
-    agents = (cam_agent, room_agent, gate_agent, ptz_agent)
+    agents = (cam_agent, room_agent, gate_agent, ptz_agent, *(a for _, a in extra.values()))
 
     def domain_pass():
-        for d in (cam, gate, ptz):
+        for d in (cam, gate, ptz, *(d for d, _ in extra.values())):
             d.publish()
         for a in agents:
             a.sync()                                                   # reports up
@@ -349,6 +350,7 @@ def _scenario_site(wall, scenarios):
             a.sync()                                                   # books down
 
     domain_pass()
+    domain_pass.devices = {n: d for n, (d, _) in extra.items()}
     ingests = {u: ingest for u in URLS} | {u: home for u in NORTH_URLS}
 
     def dial(url):
@@ -360,6 +362,7 @@ def _scenario_site(wall, scenarios):
     pusher.perform = lambda action: done[SERIAL].append(action) or "performed"
     ptz_pusher = CameraPusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
     gate_scenarios = Scenarios(GATE, SharedView(gate.flash, gate.disk, wall), Asker(GATE, gate.flash, dial, clock=wall))
+    domain_pass.dial = dial
     return (shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
 
 
@@ -563,3 +566,55 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     assert x["state"] == "asked" and x["ingest"] is ingests["cam-SN3"]
     assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
     assert len(done) == 2
+
+
+# -- who can be asked: every member camera (feedback AL) --------------------------------------------------------
+OPEN, PULLED = "SN5005", "SN5006"      # doors open: one nobody records, one the room records by pulling its RTSP
+
+
+def test_every_member_camera_polls_so_a_camera_with_an_open_door_can_be_asked_too():
+    """One rule for who can be asked: every member camera holds a poll, its door open or closed. The domain never
+    dials a member either way, so an open door is no road for an ask — it is a road for the site. A camera nobody
+    records polls the poll home; one the room records by PULLING its stream polls the room's ingest and is never
+    told to push — the recorder does not subscribe there. Both act on the gate camera's event."""
+    wall = Clock()
+    scenarios = [{"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": OPEN, "action": "preset", "arg": 2}},
+                 {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PULLED, "action": "preset", "arg": 4}}]
+    shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = \
+        _scenario_site(wall, scenarios, open_doors=(OPEN, PULLED))
+    books.crossings.record(PULLED, on="south")                         # the room records it, pulling as always
+    domain_pass()
+    acted = {OPEN: [], PULLED: []}
+    cams = {n: CameraPusher(n, d.flash, domain_pass.dial, clock=wall, perform=lambda a, n=n: acted[n].append(a) or "performed")
+            for n, d in domain_pass.devices.items()}
+    assert cams[OPEN].entry()["polls_only"] and cams[OPEN].entry()["ingest"]["urls"] == NORTH_URLS
+    assert cams[PULLED].entry()["cluster"] == "south" and cams[PULLED].entry()["ingest"]["urls"] == URLS
+    assert cams[PULLED].pass_once(["f"])["pushed"] == 0                # polls, never pushes: the recorder pulls
+    left = gate_scenarios.on_event("vehicle")
+    assert sorted((x["target"], x["state"]) for x in left) == [(OPEN, "asked"), (PULLED, "asked")]
+    for n in (OPEN, PULLED):
+        cams[n].pass_once([])
+    assert acted == {OPEN: [{"action": "preset", "arg": 2}], PULLED: [{"action": "preset", "arg": 4}]}
+
+
+def test_a_scenario_on_a_camera_that_polls_nothing_is_refused_when_written_and_named_on_every_pass():
+    """A serial nobody has seen, or a server cluster's camera that does not run the platform, holds no poll and
+    can never be asked. The document that would name it is refused when written — 409, with the reason — and a
+    scenario whose camera left the domain after it was written is named on every pass over the books, never
+    skipped in silence."""
+    from domain.api import ApiError
+    from domain.scenario import refusals
+    wall = Clock()
+    shared, books, domain_pass, *_ = _scenario_site(wall, SCENARIOS)
+    rev = shared.current()[0]["rev"]
+    stranger = {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": "SN9999", "action": "preset", "arg": 1}}
+    try:
+        shared.edit(lambda s: s["scenarios"].append(stranger), base_rev=rev, by="anna",
+                    check=lambda s: refusals(s, books.crossings))
+        assert False
+    except ApiError as e:
+        assert e.status == 409 and "SN9999 (target) polls nothing" in e.detail
+    assert shared.current()[0]["rev"] == rev                           # nothing written
+    shared.edit(lambda s: s["scenarios"].append(stranger), base_rev=rev, by="anna")   # written past the check
+    out = books.pass_once()
+    assert len(out["refused"]) == 1 and "SN9999" in out["refused"][0]
