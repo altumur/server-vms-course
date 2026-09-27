@@ -224,3 +224,87 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
     rid = b.request_range(SERIAL, 100.0, 200.0)
     pusher.pass_once([])                                               # asked at b, polled and answered at a
     assert b.answer(SERIAL, rid) == [("card", 100.0, 200.0)]
+
+
+# -- asks between cameras: a scenario's action, fast, over the long poll ------------------------------------
+GATE = "SN5002"                                                        # the gate camera: its event asks the yard camera
+
+
+def _two(wall):
+    from domain.ingest import Asker, publish_asks
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    gate = DeviceCluster(GATE, FakeVariables(), wall=wall, pushes=True)
+    gate.boot(); gate.door_open = False
+    fed.add(member_copy(gate.name, north.objects, wall=wall))
+    gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
+                             published=gate.local_objects())
+    gate_agent.sync()
+    done = []
+
+    def perform(action):
+        if action.get("preset") not in (1, 2, 3):
+            return f"refused: no preset {action.get('preset')}"
+        done.append(action)
+        return "performed"
+
+    pusher.perform = perform
+    scenarios = [{"trigger": GATE, "target": SERIAL}]
+
+    def asks_pass():
+        domain_pass(); publish_asks(crossings, scenarios); gate_agent.sync()
+
+    asks_pass()
+    asker = Asker(GATE, gate.flash, lambda url: ingest if url in URLS else (_ for _ in ()).throw(Unreachable(url)),
+                  clock=wall)
+    return ingest, pusher, asker, done, asks_pass, signer, crossings, north
+
+
+def test_a_scenario_between_two_unreachable_cameras_acts_within_one_poll():
+    """"Vehicle at the gate: the yard camera to preset 3." Neither camera can be dialled. The gate camera leaves
+    the ask at the ingest that records the yard camera — its book says where, with a token to ask — and the
+    ask wakes the yard camera's held poll: done on the next answer, not on an agent's pass."""
+    wall = Clock()
+    ingest, pusher, asker, done, *_ = _two(wall)
+    book = asker.book()
+    assert [r["urls"] for r in book[SERIAL]] == [URLS]              # one road: the room that records it
+    e = pusher.entry()["ingest"]
+    held = ingest.poll(e["token"], SERIAL, version=ingest.poll(e["token"], SERIAL)["version"])
+    assert held.get("held")                                            # the yard camera is waiting, nothing new
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    woken = ingest.poll(e["token"], SERIAL, version=held["version"])
+    assert not woken.get("held") and [a["action"] for a in woken["asks"].values()] == [{"preset": 3}]
+    out = pusher.pass_once([])
+    assert out["asks"] == [({"preset": 3}, "performed")] and done == [{"preset": 3}]
+    assert ing.ask_outcome(SERIAL, aid) == "performed"
+    assert pusher.pass_once([])["asks"] == []                          # done once
+
+
+def test_an_ask_dies_at_its_deadline_and_a_camera_that_was_off_never_does_it_late():
+    """Unlike an edit (Lesson 9), an ask is not kept: the yard camera was off for a minute, the ask said "within
+    ten seconds" — when it polls again there is nothing, and the gate camera reads "expired"."""
+    wall = Clock()
+    ingest, pusher, asker, done, *_ = _two(wall)
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    wall.advance(60)                                                   # the yard camera was off
+    assert pusher.pass_once([])["asks"] == [] and done == []
+    assert ing.ask_outcome(SERIAL, aid) == "expired"
+
+
+def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask():
+    wall = Clock()
+    ingest, pusher, asker, done, asks_pass, signer, crossings, north = _two(wall)
+    ing, aid = asker.ask(SERIAL, {"preset": 9}, within=10)
+    pusher.pass_once([])
+    assert ing.ask_outcome(SERIAL, aid) == "refused: no preset 9" and done == []
+    try:
+        asker.ask("SN9999", {"preset": 1}, within=10)                  # no scenario ties them: no book entry
+        assert False
+    except Refused:
+        pass
+    push = pusher.entry()["ingest"]["token"]                           # a push token is not a token to ask
+    for bad in (push, signer.tokens.issue(GATE, 60, now=wall(), aud=audience("south"), ask="SN9999")):
+        try:
+            ingest.ask(bad, SERIAL, {"preset": 1}, wall() + 10)
+            assert False
+        except Refused:
+            pass
