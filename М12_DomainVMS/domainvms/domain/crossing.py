@@ -474,10 +474,18 @@ def plan_takeback(src: Source, ours: list[tuple[float, float]], now: float, keep
 
 
 # -- a standby that PULLS: one stream, when the primary does not take it (М11 lesson 1) ---------------------
-# A camera the second server takes itself — RTSP, a camera without the platform, or ours with its door open.
-# Nobody pushes, so the standby asks the camera for its stream — and only when the primary does not take it:
-# COLD, not on hold, so the camera serves one session, not two. How it knows: it watches the primary's recorder
-# on the site's LAN, through that server's door, as neighbours do for alarm mirrors — no domain in it.
+# A camera the second server takes itself — RTSP, over the camera's door, which is open to the site: where
+# pulling works at all. Nobody pushes, so the standby asks the camera for its stream — and only when the
+# primary does not take it: COLD, not on hold, so the camera serves one session, not two. How it knows, two ways,
+# neither the domain:
+#
+#     our camera     ask the CAMERA who takes its stream (`camera_taken`): the same door it would pull from,
+#                    nothing new to reach, and a partition between the servers opens no second session. What it
+#                    cannot see: a recorder that holds its session and writes nothing
+#     any camera     watch the primary's recorder through its server's door (`neighbour_writes`), as neighbours do
+#                    for alarm mirrors — it sees "running" or not. It needs the servers to SEE each other: one that
+#                    cannot tell "dead" from "out of sight" opens a second session and keeps it — two recordings,
+#                    safe, but not one stream. Servers that cannot see each other take cameras that push
 def neighbour_writes(objects, recording: str, now: float, lost_after: float = 45.0) -> bool:
     """Whether the primary's recorder, read through its server's door, says the recording is running."""
     try:
@@ -493,21 +501,34 @@ def neighbour_writes(objects, recording: str, now: float, lost_after: float = 45
     return False
 
 
+def camera_taken(door_objects, serial: str, me: str) -> bool | None:
+    """Whether anyone but `me` takes the camera's stream, as the camera says through its door. None: the camera
+    does not answer — then there is nothing to pull either."""
+    try:
+        raw = door_objects.get(f"vms/heartbeats/{serial}")
+    except Unreachable:
+        return None
+    hb = json.loads(raw) if raw else {}
+    return any(t != me for t in hb.get("taken_by", []))
+
+
 class ColdStandby:
-    """`open()` / `close()` a session with the camera; `pass_once()` opens it when the primary is not writing
-    and closes it when the primary is back — a minute later, so the two archives overlap (М10B lesson 26) and
-    the primary's takeback finds the seam on both sides. A partition between the servers, both alive, opens a
-    second session: two recordings for a while, which Lesson 8 of М11 prefers to none."""
+    """`primary_writes() -> bool | None` — `neighbour_writes` or `camera_taken`, bound; None: cannot tell, change
+    nothing. `open()` / `close()` a session with the camera; `pass_once()` opens it when the primary does not
+    write and closes it when the primary is back — a minute later, so the two archives overlap (М10B lesson 26)
+    and the primary's takeback finds the seam on both sides."""
 
     OVERLAP = 60.0
 
-    def __init__(self, neighbour_objects, recording: str, open_, close, wall=time.time):
-        self.objects, self.recording, self.open, self.close, self.wall = neighbour_objects, recording, open_, close, wall
+    def __init__(self, primary_writes, open_, close, wall=time.time):
+        self.primary_writes, self.open, self.close, self.wall = primary_writes, open_, close, wall
         self.pulling, self._back_since = False, None
 
     def pass_once(self) -> str:
         now = self.wall()
-        writes = neighbour_writes(self.objects, self.recording, now)
+        writes = self.primary_writes()
+        if writes is None:
+            return "pulling" if self.pulling else "cold: cannot tell"
         if not writes:
             self._back_since = None
             if not self.pulling:
