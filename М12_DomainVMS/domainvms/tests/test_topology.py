@@ -270,3 +270,39 @@ def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
     rows = [r for r in view.list()["rows"] if r["cluster"] == cam.name]
     assert [r["name"] for r in rows] == ["clock-stepped-back"]         # the live road, not the frozen one
     assert view.list()["complete"]                                     # and it is not silent
+
+
+def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
+    """Nobody sets pull or push by hand. The room and the camera each say what they see. No network in common:
+    the room could not reach the camera's door, so the source book says the camera pushes — `ingest://`. The room
+    is cabled onto the camera's VLAN: the book says the recorder pulls — the camera's RTSP. A camera that says it
+    pushes whatever happens (a mobile uplink) pushes. The book says why, each time."""
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
+    fed.add(north); fed.add(south)
+    cam = DeviceCluster("SN8010", FakeVariables(), wall=wall, address="10.2.0.5")
+    cam.boot()
+    fed.add(member_copy(cam.name, north.objects, wall=wall))
+    cam_nets, room_nets = ["vlan:cams"], ["vlan:servers"]
+    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                            published=cam.local_objects(), reaches=lambda: cam_nets)
+    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
+    view = ReadView(fed, wall=wall)
+    crossings = Crossings(north.vars, view, wall)
+    cam_agent.sync(); view.refresh()
+    crossings.record("SN8010", on="south")
+
+    def book():
+        cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
+        return json.loads(north.vars.get("domain/sources/south")[0]["SN8010"])
+
+    e = book()
+    assert (e["push"], e["live_url"]) == (True, "ingest://south/SN8010") and "sees none" in e["road"]
+    room_nets.append("vlan:cams")                                      # the room is cabled onto the cameras' VLAN
+    e = book()
+    assert (e["push"], e["live_url"]) == (False, "rtsp://10.2.0.5/live") and "sees vlan:cams" in e["road"]
+    cam.pushes = True                                                  # a camera on a mobile uplink: always
+    e = book()
+    assert e["push"] is True and e["road"] == "the camera says it pushes"
