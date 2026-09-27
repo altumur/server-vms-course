@@ -243,15 +243,16 @@ def test_the_domain_dies_with_a_and_both_standbys_start_at_once_anyway():
 
 
 def test_a_standby_that_pulls_opens_the_one_session_only_when_the_primary_stops_writing():
-    """A camera the second server takes itself (RTSP). Cold, not on hold: while A's recorder says it writes, B
+    """A camera without the platform, which the second server takes itself (RTSP), watched through A's door. Cold, not on hold: while A's recorder says it writes, B
     holds no session — the camera serves one. A goes silent: B opens its session. A is back: B keeps it a minute,
     so the archives overlap, and closes it. A partition, both servers alive: B cannot see A and opens a second
     session — two recordings for a while, which Lesson 8 of М11 prefers to none."""
-    from domain.crossing import ColdStandby
+    from domain.crossing import ColdStandby, neighbour_writes
     wall = Clock()
     o = _office(wall)
     sessions = {"srv-a"}
-    standby = ColdStandby(o.a.objects, SERIAL, lambda: sessions.add("srv-b"), lambda: sessions.discard("srv-b"), wall=wall)
+    standby = ColdStandby(lambda: neighbour_writes(o.a.objects, SERIAL, wall()),
+                          lambda: sessions.add("srv-b"), lambda: sessions.discard("srv-b"), wall=wall)
     o.recorders()
     assert standby.pass_once() == "cold: the primary writes" and sessions == {"srv-a"}
     o.a_link.up = False; sessions.discard("srv-a")                     # A is gone, and its session with it
@@ -263,3 +264,37 @@ def test_a_standby_that_pulls_opens_the_one_session_only_when_the_primary_stops_
     o.a_link.up = False                                                # a partition: A writes, B cannot see it
     standby.pass_once()
     assert sessions == {"srv-a", "srv-b"}
+
+
+
+def test_a_cold_standby_of_our_camera_asks_the_camera_and_a_partition_opens_no_second_session():
+    """Our camera, door open, recorded by A pulling it. B asks the CAMERA who takes its stream — the same door B
+    would pull from, nothing new to reach. A is gone: the camera says nobody takes it, B opens its session. A is
+    back: a minute of overlap, then B closes. The servers lose sight of each other while A pulls: the camera
+    still says A takes it, and B stays cold — one session."""
+    from domain.crossing import ColdStandby, camera_taken
+    wall = Clock()
+    cam = DeviceCluster("SN6002", FakeVariables(), wall=wall)
+    cam.boot()                                                         # its door open to the site
+    door = cam.cluster().objects
+
+    def take(who):
+        cam.taken_by.add(who); cam.publish()
+
+    def let_go(who):
+        cam.taken_by.discard(who); cam.publish()
+
+    take("srv-a")
+    standby = ColdStandby(lambda: camera_taken(door, "SN6002", "srv-b"), lambda: take("srv-b"), lambda: let_go("srv-b"),
+                          wall=wall)
+    assert standby.pass_once() == "cold: the primary writes" and cam.taken_by == {"srv-a"}
+    let_go("srv-a")                                                    # A is gone
+    assert standby.pass_once().startswith("pulling") and cam.taken_by == {"srv-b"}
+    take("srv-a")                                                      # A is back
+    assert standby.pass_once() == "pulling: the overlap"
+    wall.advance(61)
+    assert standby.pass_once() == "closed: the primary writes again" and cam.taken_by == {"srv-a"}
+    # the servers lose sight of each other: nothing changes for B, which never asked A
+    assert standby.pass_once() == "cold: the primary writes" and cam.taken_by == {"srv-a"}
+    cam.power_off()
+    assert standby.pass_once() == "cold: cannot tell"                  # the camera does not answer: nothing to pull
