@@ -24,6 +24,7 @@
   - `OBJECT_STORE_URL=http://minio.north:9000/domain` — the `domain` bucket for `identity/rev-N` and `users/<id>/prefs`; plain HTTP is enough here because the identity store only `put`s and `get`s (no listing).
   - `TOKEN_LIFETIME=900` — 15 minutes, the number Lesson 4 defends; not read by the code (`identity.TOKEN_LIFETIME` is the constant).
   - `IDENTITY_PUBLISH_FLOOR=60` — the minimum seconds between identity publishes: the stated RPO for users.
+  - `CLUSTERS=…`, `LOST_AFTER=45` — given `CLUSTERS` (the console's format), the service also runs the domain's pass over the books every 5 s (`domain/books.py`: sources, primaries, polls, upstream, asks). The books carry tokens this job mints, so the pass runs here and not in the console. `CENTRE` and `STAR` (Lesson 17) are optional.
 - `resources { cpu = 200  memory = 128 }` — signing is cheap; scrypt on login is the only real work.
 
 ## Notes
