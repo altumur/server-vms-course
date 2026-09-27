@@ -527,7 +527,8 @@ class CameraPusher:
         self.serial, self.flash, self.dial, self.card = str(serial), flash, dial, card or (lambda t0, t1: [])
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
         self.clock, self.ring_seconds = clock or time.time, ring_seconds
-        self.version, self.pushing, self.ring = -1, False, []          # -1: the first poll is answered at once (AF)
+        self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
+        self.pushing, self.ring, self.road = None, [], None            # the road it pushes on, if any
         self.state = "no book yet"
 
     def entry(self) -> dict | None:
@@ -551,52 +552,106 @@ class CameraPusher:
         self.ring = [f for f in self.ring + [f for f in frames if isinstance(f, dict) and "t" in f]
                      if float(f["t"]) >= now - self.ring_seconds]
 
-    def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
-        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll."""
-        e = self.entry()
-        if not e or not e.get("ingest"):
-            self.state = "no book yet" if not e else "recorded in its own cluster: nothing to push"
-            return {"state": self.state}
-        token = e["ingest"]["token"]
-        for url in e["ingest"]["urls"]:
+    def _poll(self, road: dict, key: str, wait: float):
+        """The first ingest of a road that answers, and what it said — or (None, None)."""
+        for url in road["urls"]:
             try:
                 ing = self.dial(url)
-                work = ing.poll(token, self.serial, camera_now=self.clock(), version=self.version, wait=wait)
-                break
+                work = ing.poll(road["token"], self.serial, camera_now=self.clock(),
+                                version=self.versions.get(key, -1), wait=wait)
+                self.versions[key] = work["version"]
+                return ing, work, url
             except Unreachable:
                 continue
-        else:
-            self.state = f"no ingest of {e['cluster']} answered"
-            return {"state": self.state}
-        self.version = work["version"]
+        return None, None, None
+
+    def _serve(self, ing, token: str, work: dict, frames_now: list, key: str) -> tuple[int, list, list]:
         pushed = 0
         if work["push"]:
             batch = list(frames_now)
-            if not self.pushing and self.ring:                         # the start: the ring first, marked
+            if self.pushing != key and self.ring:                      # a start, here: the ring first, marked
                 batch = [dict(f, ring=True) for f in self.ring] + batch
                 self.ring = []
             pushed = ing.push(token, self.serial, batch, camera_now=self.clock())
-            self.pushing = True
-        else:
-            self.pushing = False
-            if self.ring_seconds:
-                self._keep(frames_now)
+            self.pushing = key
         uploaded = []
         for rid, (t0, t1) in work["ranges"].items():
             ing.upload(token, self.serial, rid, self.card(t0, t1), camera_now=self.clock())
             uploaded.append((t0, t1))
         performed = []
         for aid, a in work.get("asks", {}).items():
-            if a["deadline"] <= self.clock():
-                outcome = "expired"                                    # it got here too late: not done
-            else:
-                outcome = self.perform(a["action"])
+            outcome = "expired" if a["deadline"] <= self.clock() else self.perform(a["action"])   # too late: not done
             ing.answer_ask(token, self.serial, aid, outcome)
             performed.append((a["action"], outcome))
-        self.state = (f"pushing to {url}" if work["push"] else
-                      f"polling {url}: nobody records it, asks only" if e.get("polls_only") else
-                      f"idle at {url}: nobody wants the stream")
-        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed}
+        return pushed, uploaded, performed
+
+    def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
+        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll.
+
+        Two roads when the camera has a backup on another server (М11 lesson 1): the PRIMARY's ingest, and
+        the backup's. One stream, never two — the camera pushes to the backup when, and only when, the primary
+        does not take it: no ingest of the primary answers, or the book says the primary should be written and
+        is not (and is not merely starting). Frames nobody takes stay in the ring, so the road it switches to
+        gets them first."""
+        e = self.entry()
+        if not e or not e.get("ingest"):
+            self.state = "no book yet" if not e else "recorded in its own cluster: nothing to push"
+            return {"state": self.state}
+        backup = e.get("backup")
+        ing, work, url = self._poll(e["ingest"], "primary", 0.0 if backup else wait)
+        pushed, uploaded, performed, road = 0, [], [], None
+        if ing is not None:
+            p, u, a = self._serve(ing, e["ingest"]["token"], work if primary_takes(e, True) else {**work, "push": False},
+                                  frames_now, "primary")
+            pushed, uploaded, performed = p, u, a
+            if primary_takes(e, True):
+                road = ("primary", url, work["push"])
+        if road is None and backup:
+            bing, bwork, burl = self._poll(backup["ingest"], "backup", wait)
+            if bing is not None:
+                p, u, a = self._serve(bing, backup["ingest"]["token"], bwork, frames_now, "backup")
+                pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
+                road = ("backup", burl, bwork["push"])
+        if road is None or not road[2]:
+            self.pushing = None
+            if self.ring_seconds:
+                self._keep(frames_now)                                 # nobody takes it now: keep it for who will
+        if road is None:
+            self.state = f"no ingest of {e['cluster']} answered" + (" nor of its backup" if backup else "")
+            return {"state": self.state, "pushed": 0, "uploaded": uploaded, "asks": performed}
+        which, where, pushing = road
+        self.road = which
+        self.state = (f"pushing to {where}" + (" — the backup: the primary does not take the stream" if which == "backup" else "")
+                      if pushing else
+                      f"polling {where}: nobody records it, asks only" if e.get("polls_only") else
+                      f"idle at {where}: nobody wants the stream")
+        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, "road": which}
+
+
+def live_road(entry: dict, dial) -> str | None:
+    """Where a viewer of this camera opens its stream: the road the camera is pushing on — by the same rule the
+    camera follows (`primary_takes`). "primary", "backup", or None when neither answers. A gateway on either
+    server asks this and opens the matching ingest, so its want lands where the one stream goes."""
+    def answers(road):
+        for url in road["urls"]:
+            try:
+                dial(url)
+                return True
+            except Unreachable:
+                continue
+        return False
+    if primary_takes(entry, answers(entry["ingest"])):
+        return "primary"
+    backup = entry.get("backup")
+    return "backup" if backup and answers(backup["ingest"]) else None
+
+
+def primary_takes(entry: dict, answered: bool) -> bool:
+    """Whether the camera's primary takes its stream: an ingest of it answered, and the book does not say the
+    primary should be written and is not — a stop, not a start (feedback AB): a start has its grace."""
+    if not answered:
+        return False
+    return not (entry.get("should") and not entry.get("written") and not entry.get("starting") and entry.get("backup"))
 
 
 # -- the asking camera -------------------------------------------------------------------------------------
