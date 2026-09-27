@@ -32,7 +32,7 @@ domainvms/
     scenario.py       Lessons 12, 16 scenarios between cameras end to end: the pairs the book of asks is built from; the camera's side, event → ask
     books.py          Lessons 13, 16, 17 the domain's pass over every per-cluster book — sources, primaries, polls, upstream, asks — run by the signer service
     topology.py       Lesson 17 who reaches the domain through whom, the centre, the star — one record the operator edits (CAS, checked); every pass reads it
-    chain.py          Lesson 17 site, office, centre: the office's forwarder (the want down, the stream up), the upstream book, the star, the summary report; asks up through one's own office, by event
+    chain.py          Lesson 17 site, relay, centre: the relay's forwarder (the want down, the stream up), the upstream book, the star, the summary report; asks up through one's own relay, by event
     runtime.py, signer_service.py   wiring for the real processes (NomadVariables, the object store, HTTP); the signer runs the books pass given CLUSTERS
   deploy/
     signer.nomad.hcl  console.nomad.hcl  gateway.nomad.hcl  agent.nomad.hcl   the four jobs; constraints, never hostnames
