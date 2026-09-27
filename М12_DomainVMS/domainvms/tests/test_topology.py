@@ -3,7 +3,7 @@
 Two kinds of fact, set in two places. What a cluster CAN observe — the networks it sees — it says itself, in
 its own store, through its agent (`federation.REACHES`); the domain reads it like any published object, and
 placement (Lesson 1) and the mirror plan (Lesson 14) use it. What nobody can observe — the network's policy:
-which member reaches the domain only through an office, which offices are a star, where the centre is — the
+which member reaches the domain only through a relay, which relays are a star, where the centre is — the
 operator sets in ONE record of the domain (`domain/topology`), edited by CAS and checked when written, and
 every pass reads it from there.
 """
@@ -60,7 +60,7 @@ def test_a_cluster_says_what_it_reaches_and_placement_reads_it_there():
 
 
 def test_the_topology_is_one_record_edited_by_cas_and_checked_when_written():
-    """The operator's record: the centre, the star offices, who reaches the domain through whom. Two editors are
+    """The operator's record: the centre, the star relays, who reaches the domain through whom. Two editors are
     told, not overwritten; a name that is not a cluster of the domain, or a topology that contradicts itself,
     is refused with the reason and nothing is written."""
     topo = Topology(FakeVariables())
@@ -72,8 +72,8 @@ def test_the_topology_is_one_record_edited_by_cas_and_checked_when_written():
     except Conflict:
         pass
     for bad, why in ((lambda d: d["via"].update({"cam-SN2": "east"}), "cam-SN2 is not a cluster"),
-                     (lambda d: d.update(star=["north"]), "cannot be a star office"),
-                     (lambda d: d["via"].update({"east": "west"}), "one office between a member and the domain")):
+                     (lambda d: d.update(star=["north"]), "cannot be a star relay"),
+                     (lambda d: d["via"].update({"east": "west"}), "one relay between a member and the domain")):
         try:
             topo.edit(bad, base_rev=1, known=known)
             raise AssertionError(why)
@@ -82,12 +82,12 @@ def test_the_topology_is_one_record_edited_by_cas_and_checked_when_written():
     assert topo.read()["rev"] == 1 and topo.relayed_by("east") == ["cam-SN1"]
 
 
-CENTRE_URLS, OFFICE_URLS = ["srt://ingest.north:9000"], ["srt://ingest.east:9000"]
+CENTRE_URLS, RELAY_URLS = ["srt://ingest.north:9000"], ["srt://ingest.east:9000"]
 
 
 def test_the_passes_follow_the_topology_without_a_restart():
     """A camera reported to the domain directly. The site is re-wired: from now on it reaches only the east
-    office. The operator says so in the topology — once — and the next passes follow: the domain reads the
+    relay. The operator says so in the topology — once — and the next passes follow: the domain reads the
     camera from east's bundle, east relays down what the domain leaves for it, the books take the centre from
     the topology, and the camera, which nobody records, polls east. No job's environment changed."""
     wall = Clock()
@@ -97,13 +97,13 @@ def test_the_passes_follow_the_topology_without_a_restart():
     fed.add(north); fed.add(east)
     signer = Signer("acme", north.vars, now=wall)
     DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
-    for name, c, urls in (("north", north, CENTRE_URLS), ("east", east, OFFICE_URLS)):
+    for name, c, urls in (("north", north, CENTRE_URLS), ("east", east, RELAY_URLS)):
         Ingest(name, urls, keys=lambda c=c: ClusterTrust(c.vars).keyset(), wall=wall).announce(c.objects)
     cam = DeviceCluster("SN8002", FakeVariables(), wall=wall, pushes=True)
     cam.boot(); cam.door_open = False
     fed.add(member_copy(cam.name, north.objects, wall=wall))          # configured: it reports directly
     topo = Topology(north.vars)
-    office = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
+    relay = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects, bundle_store=east.objects,
                          relay_members=lambda: topo.relayed_by("east"), bundle_members=lambda: topo.relayed_by("east"))
     through = Relay(east.vars, east.objects)
     cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
@@ -111,15 +111,15 @@ def test_the_passes_follow_the_topology_without_a_restart():
     books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, topology=topo), north.objects)
 
     topo.edit(lambda d: d.update(centre="north", via={cam.name: "east"}), base_rev=0, known=set(fed.clusters))
-    office.sync()                                                      # east relays for the camera: the topology says so
-    cam_agent.sync(); office.sync()                                    # the camera reports into east; east bundles it up
+    relay.sync()                                                      # east relays for the camera: the topology says so
+    cam_agent.sync(); relay.sync()                                    # the camera reports into east; east bundles it up
     out = books.pass_once()
     assert out["moved"] == [cam.name] and fed.clusters[cam.name].via == "east"
     assert books.crossings.centre == "north"                           # from the topology, not from an argument
     assert [r["ref"] for r in books.crossings.view.list()["rows"] if r["cluster"] == cam.name] == ["SN8002"]
-    office.sync(); cam_agent.sync()                                    # the books, relayed down
+    relay.sync(); cam_agent.sync()                                    # the books, relayed down
     pusher = CameraPusher("SN8002", cam.flash, lambda url: None, clock=wall)
-    assert pusher.entry()["cluster"] == "east" and pusher.entry()["ingest"]["urls"] == OFFICE_URLS
+    assert pusher.entry()["cluster"] == "east" and pusher.entry()["ingest"]["urls"] == RELAY_URLS
     assert books.pass_once()["moved"] == []                            # followed once, not every pass
 
 
@@ -173,7 +173,7 @@ def test_nobody_goes_through_the_domains_own_cluster_and_it_goes_through_nobody(
     assert topo.edit(lambda d: d.update(centre="north", via={"cam-SN1": "east"}), base_rev=0, known=known, domain="north") == 1
 
 
-def test_a_member_placed_behind_an_office_is_read_by_whichever_road_is_newer():
+def test_a_member_placed_behind_a_relay_is_read_by_whichever_road_is_newer():
     """AM, 2. The topology describes a road; it does not forbid another. A camera placed behind east that still
     reports straight to the domain is not made silent — the domain reads the newer of its own report and east's
     bundle, by the camera's own report number."""
@@ -200,22 +200,22 @@ def test_a_member_placed_behind_an_office_is_read_by_whichever_road_is_newer():
     assert [r["name"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["through-east"]
 
 
-def test_books_behind_an_office_are_as_old_as_the_office_says_on_the_cameras_own_clock():
-    """AM, 3. The office says how long ago it last reached the domain — an age, on its own clock — on every pass,
+def test_books_behind_a_relay_are_as_old_as_the_relay_says_on_the_cameras_own_clock():
+    """AM, 3. The relay says how long ago it last reached the domain — an age, on its own clock — on every pass,
     the failed ones included. The camera sets its mark to its OWN clock minus that age: two clocks are never
     compared, and a camera whose clock runs five minutes ahead still judges its books by their true age."""
     from domain.chain import say_seen
-    office_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
-    office_vars, office_objects = FakeVariables(), __import__("domain.device", fromlist=["Ram"]).Ram()
-    agent = DomainAgent("cam-SN8004", Relay(office_vars, office_objects).vars, FakeVariables(), now=cam_clock)
-    last = office_clock()
-    say_seen(office_objects, last, office_clock())                     # the office reached the domain just now
-    assert agent._office_mark() == cam_clock()
+    relay_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
+    relay_vars, relay_objects = FakeVariables(), __import__("domain.device", fromlist=["Ram"]).Ram()
+    agent = DomainAgent("cam-SN8004", Relay(relay_vars, relay_objects).vars, FakeVariables(), now=cam_clock)
+    last = relay_clock()
+    say_seen(relay_objects, last, relay_clock())                     # the relay reached the domain just now
+    assert agent._relay_mark() == cam_clock()
     for _ in range(4):
-        office_clock.advance(30); cam_clock.advance(30)
-        say_seen(office_objects, last, office_clock())                 # it has lost the domain: the age grows
-        mark = agent._office_mark()
-    assert cam_clock() - mark == office_clock() - last == 120.0        # the true age, on the camera's clock
+        relay_clock.advance(30); cam_clock.advance(30)
+        say_seen(relay_objects, last, relay_clock())                 # it has lost the domain: the age grows
+        mark = agent._relay_mark()
+    assert cam_clock() - mark == relay_clock() - last == 120.0        # the true age, on the camera's clock
 
 
 def test_the_sites_names_are_the_source_and_interfaces_only_a_fallback_without_tunnels():
