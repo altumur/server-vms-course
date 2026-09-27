@@ -72,14 +72,24 @@ def pairs(settings: dict) -> list[dict]:
 
 class Scenarios:
     """The camera's side. `shared` is its `SharedView` — the document its agent took and verified; `asker` its
-    `Asker`. `on_event(kind)` is called where the camera's analytics raise an event."""
+    `Asker`. `on_event(kind, event)` is called where the camera's analytics raise an event — a hook on the event
+    itself, which is why the road is milliseconds. A scenario that reads the merged event log instead (the
+    product's automation) adds the log's tail interval: seconds (feedback AK).
+
+    `event`: the row, when there is one. `ts` — when it happened: the deadline counts from THAT, not from when
+    the event became visible, and one seen after its deadline asks nothing. `repeats` — the summary a storm's
+    suppression writes when its window closes (М10A Lesson 12): it reports on a first row that already fired,
+    and firing on it would act twice for one lasting event."""
 
     def __init__(self, serial: str, shared, asker):
         self.serial, self.shared, self.asker = str(serial), shared, asker
         self.fired: dict[str, list[float]] = {}                   # per scenario: when it asked in the last minute
 
-    def on_event(self, kind: str) -> list[dict]:
+    def on_event(self, kind: str, event: dict | None = None) -> list[dict]:
         done, now = [], self.asker.clock()
+        if event and event.get("repeats"):
+            return []                                             # a suppression summary: not an event (AK)
+        at = float(event["ts"]) if event and event.get("ts") is not None else now
         for sc in _scenarios(self.shared.settings()):
             when, then = sc.get("when", {}), dict(sc.get("then", {}))
             if str(when.get("camera")) != self.serial or when.get("kind") != kind:
@@ -88,6 +98,9 @@ class Scenarios:
             within = float(then.pop("within", VALID))
             if not target or target == self.serial:
                 continue                                          # its own automation, not an ask
+            if at + within <= now:
+                done.append({"target": target, "action": then, "state": "seen after its deadline: not asked"})
+                continue
             key, cap = json.dumps(sc, sort_keys=True), int(sc.get("rate_per_minute") or RATE)
             recent = self.fired[key] = [t for t in self.fired.get(key, []) if now - t < 60.0]
             if len(recent) >= cap:
@@ -95,7 +108,7 @@ class Scenarios:
                 continue
             recent.append(now)
             try:
-                left = self.asker.ask(target, then, within)
+                left = self.asker.ask(target, then, at + within - now)
             except (Refused, Unreachable) as e:
                 done.append({"target": target, "action": then, "state": f"not asked: {e}"})
                 continue
@@ -104,5 +117,5 @@ class Scenarios:
             else:
                 ing, aid = left
                 done.append({"target": target, "action": then, "state": "asked", "ingest": ing, "ask": aid,
-                             "deadline": now + within})
+                             "deadline": at + within})
         return done
