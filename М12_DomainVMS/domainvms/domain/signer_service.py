@@ -12,7 +12,7 @@ over mTLS, which need the bench.
 
 Given CLUSTERS (the console's format), it also runs the domain's pass over the books every 5 s
 (`domain/books.py`): sources, primaries, polls, upstream, asks. Those books carry tokens the signer mints —
-stream tokens, tokens to ask — so the pass runs where the key is. The centre and the star offices come from
+stream tokens, tokens to ask — so the pass runs where the key is. The centre and the star relays come from
 the operator's topology (`domain/topology`); CENTRE and STAR only stand where there is none.
 """
 from __future__ import annotations
