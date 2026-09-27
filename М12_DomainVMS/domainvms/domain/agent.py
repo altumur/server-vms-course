@@ -28,7 +28,9 @@ SOURCES_PATH, MIRRORS_PATH = "domain/sources", "domain/mirrors"
 from vms.recworker import DOMAIN_SEEN, PRIMARIES as PRIMARIES_PATH
 # Lesson 17: a recording cluster's upstream — where its streams go up to the centre, or come down from (star).
 UPSTREAM_PATH = "domain/upstream"
-PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH)
+# Lesson 16: whom this camera may ask to act, at which ingest, with what token (a scenario between cameras).
+ASKS_PATH = "domain/asks"
+PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH)
 
 
 class DomainPublisher:
