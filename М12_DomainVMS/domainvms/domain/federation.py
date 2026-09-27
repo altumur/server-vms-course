@@ -34,6 +34,12 @@ SNAPSHOT = "vms/snapshot/"           # a PREFIX: one object per worker, the shap
 HEARTBEATS = "vms/heartbeats/"        # its sibling: the workers' own reports, one object each
 
 
+# What a cluster says it can see, in its OWN object store — written by its agent from what the cluster observes
+# (its interfaces, its configured site), read by the domain like any published object. The operator does not
+# type it into the domain: a fact about a network belongs to the network's side, and goes stale there first.
+REACHES = "domain/reaches"
+
+
 class Unreachable(Exception):
     """The region did not answer. Raised by a cluster's Variables/objects
     when the link is down; the fakes raise it on demand."""
@@ -47,6 +53,14 @@ class Cluster:
     reaches: frozenset = frozenset()      # networks this cluster can see: {"vlan:cctv-a", ...}
     is_domain_cluster: bool = False       # the one that hosts the domain services — a stated decision
     via: str | None = None                # Lesson 17: a member that reaches only this office — and through it the domain
+
+    def networks(self) -> frozenset:
+        """The networks this cluster can see: what it reports (`REACHES`, from its agent), with any stated here."""
+        try:
+            raw = self.objects.get(REACHES)
+        except Unreachable:
+            raw = None
+        return self.reaches | (frozenset(json.loads(raw).get("networks", [])) if raw else frozenset())
 
     def snapshot(self) -> dict | None:
         """The cluster's cameras and placement, merged from one object per worker.
