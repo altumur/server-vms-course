@@ -142,7 +142,12 @@ class Crossings:
         items, _ = self.vars.get(CROSSINGS)
         return dict(items or {})
 
-    def record(self, ref: str, on: str) -> dict:
+    def record(self, ref: str, on: str, move: bool = False) -> dict:
+        """`move`: the camera is recorded elsewhere now — the site was re-wired, a relay took it (feedback AN,
+        Lesson 17). The decision is rewritten, and the books follow on the next pass: the old cluster's source
+        book loses it and its recorder stops for lack of a source; the new one's gains it; the camera's book of
+        primaries names the new cluster and its ingest. The old recording row is that cluster's to remove, and
+        its footage stays there for its retention. Without `move`, a second cluster is still refused."""
         ref = str(ref)
         known = self.view.last_known(ref)
         if known is None:
@@ -154,20 +159,18 @@ class Crossings:
             items = dict(items or {})
             if items.get(ref) == on:
                 return {"camera": ref, "recorded_by": on, "from": known[0]}
-            if ref in items:
+            if ref in items and not move:
                 raise ApiError(409, f"camera {ref} is recorded by {items[ref]} already: a device serves one live "
                                     f"session and one backfill, and a second recorder would take them from the first")
+            was = items.get(ref)
             items[ref] = on
             try:
                 self.vars.put(CROSSINGS, items, cas=idx)
-                return {"camera": ref, "recorded_by": on, "from": known[0]}
+                return {"camera": ref, "recorded_by": on, "from": known[0], **({"moved_from": was} if was else {})}
             except Conflict:
                 continue
         raise ApiError(409, f"could not record {ref} on {on}: the crossings kept changing")
 
-    # Each recording cluster's book, from the read view's memory: the doors the camera's worker last
-    # published, with the time they were published. A camera whose cluster is silent keeps its last entry
-    # and says so — the address it had is the best there is, and it is usually still right.
     # A BACKUP of a camera on another server (М11 lesson 1, two servers as two clusters of one): an ordinary
     # recording on that cluster's `backup` volume, `when: offline` (М10B lesson 26), naming the camera by the
     # domain's name (`cam: ref:<serial>`). The operator makes it there as always; the domain finds it in that
@@ -215,6 +218,12 @@ class Crossings:
             return None
         return None
 
+    # Each recording cluster's book, from the read view's memory: the doors the camera's worker last
+    # published, with the time they were published. A camera whose cluster is silent keeps its last entry
+    # and says so — the address it had is the best there is, and it is usually still right.
+    # A cluster that no longer records anything of another cluster — its last camera moved away — gets an
+    # EMPTY book, not the last one it had: its recorder then says "not in this cluster's source book" and
+    # stops, instead of recording from an address the domain no longer vouches for.
     def publish(self) -> dict[str, dict]:
         books: dict[str, dict] = {}
         for ref, on in self.all().items():
@@ -232,12 +241,17 @@ class Crossings:
                     if there.get("push"):
                         there["live_url"] = f"ingest://{backup}/{ref}"
                     books.setdefault(backup, {})[ref] = json.dumps(there, sort_keys=True)
-        for on, book in books.items():
-            path = f"{SOURCES_PATH}/{on}"
-            have, idx = self.vars.get(path)
-            if have != book:
-                self.vars.put(path, book, cas=idx)
+        self._write_books(SOURCES_PATH, books)
         return books
+
+    def _write_books(self, prefix: str, books: dict[str, dict]) -> None:
+        for path in self.vars.list(f"{prefix}/"):
+            books.setdefault(path[len(prefix) + 1:], {})     # a book this pass has nothing for: emptied
+        for on, book in books.items():
+            path = f"{prefix}/{on}"
+            have, idx = self.vars.get(path)
+            if (have or {}) != book:
+                self.vars.put(path, book, cas=idx)
 
     # Each camera cluster's book of primaries: for every camera of it that another cluster records, what the
     # recording cluster's own objects say — its rec snapshot (desired: enabled, until) and its recorders'
@@ -267,11 +281,7 @@ class Crossings:
                 if there and ingest:                          # the camera's second road: only for one that pushes
                     entry["backup"] = {"cluster": backup, "ingest": there}
             books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
-        for home, book in books.items():
-            path = f"{PRIMARIES_PATH}/{home}"
-            have, idx = self.vars.get(path)
-            if have != book:
-                self.vars.put(path, book, cas=idx)
+        self._write_books(PRIMARIES_PATH, books)
         return books
 
     def _primary(self, ref: str, on: str, now: float, lost_after: float) -> dict:
