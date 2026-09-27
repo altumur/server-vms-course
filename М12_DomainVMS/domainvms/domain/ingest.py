@@ -71,6 +71,11 @@ from .tokens import TokenError, verify
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
+# Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
+# what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
+REMEMBER = 900.0
+MAX_LIVE_ASKS = 16                     # live asks one asking camera may hold at one ingest: a ceiling, not a queue
+ANSWER_GRACE = 5.0                     # past the deadline by this, an ask nobody knows of is lost, not late
 
 
 class Refused(Exception):
@@ -101,7 +106,7 @@ class _Camera:
     pushed_at: float | None = None
     offset: float = 0.0                                          # the cluster's clock minus the camera's
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
-    outcomes: dict[str, str] = field(default_factory=dict)       # what became of each: performed, refused, expired
+    outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, and when: performed, refused, expired
     version: int = 0
     said: tuple | None = None                                    # what the last poll was told
 
@@ -154,9 +159,10 @@ class Ingest:
             c.wants = {w: u for w, u in c.wants.items() if u > now}       # a want that ran out wakes the poll (AF)
             push = push or bool(c.wants)
             ranges.update(c.ranges)
+            c.outcomes = {k: v for k, v in c.outcomes.items() if now - v[1] < REMEMBER}
             for aid, a in list(c.asks.items()):
                 if a["deadline"] <= now:                                  # dies at its deadline, never kept
-                    c.outcomes[aid] = "expired"
+                    c.outcomes[aid] = ("expired", now)
                     del c.asks[aid]
                 else:
                     asks[aid] = a
@@ -210,9 +216,24 @@ class Ingest:
             raise Refused(f"ask token refused: {e}")
         if p.get("aud") != audience(self.cluster) or str(p.get("ask")) != str(target):
             raise Refused(f"ask token is for {p.get('ask')} at {p.get('aud')}, not {target} at {audience(self.cluster)}")
+        # The token names the actions the scenarios allow — "preset 3", not "anything the yard camera does".
+        # A camera whose token was minted for preset 3 cannot ask for preset 9, or for the relay.
+        action = json.loads(json.dumps(action))
+        if action not in (p.get("acts") or []):
+            raise Refused(f"{p.get('by', p['sub'])} may ask {target} for {p.get('acts') or 'nothing'}, not {action}")
+        now, by = self.wall(), p.get("by", p["sub"])
+        shift = 0.0 if camera_now is None else now - float(camera_now)
+        # The same ask while one is alive IS that ask: twenty events from one gust of wind are one preset, not
+        # twenty — the asker is told the id it already has.
+        for ing in self._cluster():
+            for aid, a in ing._cam(target).asks.items():
+                if a["by"] == by and a["action"] == action and a["deadline"] > now:
+                    return aid
+        live = sum(1 for c in self.cams.values() for a in c.asks.values() if a["by"] == by and a["deadline"] > now)
+        if live >= MAX_LIVE_ASKS:
+            raise Refused(f"{by} holds {live} live asks at {self.cluster}: over the ceiling of {MAX_LIVE_ASKS}")
         aid = secrets.token_hex(4)
-        shift = 0.0 if camera_now is None else self.wall() - float(camera_now)
-        self._cam(target).asks[aid] = {"action": dict(action), "deadline": float(deadline) + shift, "by": p.get("by", p["sub"])}
+        self._cam(target).asks[aid] = {"action": action, "deadline": float(deadline) + shift, "by": by}
         return aid
 
     def answer_ask(self, token: str, ref: str, aid: str, outcome: str) -> None:
@@ -222,7 +243,7 @@ class Ingest:
             c = ing._cam(ref)
             if aid in c.asks:
                 del c.asks[aid]
-                c.outcomes[aid] = outcome
+                c.outcomes[aid] = (outcome, self.wall())
 
     def carry_ask(self, ref: str, aid: str, ask: dict) -> None:
         """An ask left at the level above, carried down by this cluster's forwarder (Lesson 17) — the forwarder
@@ -235,7 +256,7 @@ class Ingest:
         for ing in self._cluster():
             out = ing._cam(target).outcomes.get(aid)
             if out is not None:
-                return out
+                return out[0]
         return None
 
     def answer(self, ref: str, rid: str) -> list | None:
@@ -449,7 +470,8 @@ class Asker:
         return {ref: json.loads(raw)["roads"] for ref, raw in (items or {}).items()}
 
     def ask(self, target: str, action: dict, within: float) -> tuple[object, str] | None:
-        """Returns (the ingest, the ask's id) — to read the outcome from — or None when no ingest answered."""
+        """Returns (the ingest, the ask's id) — or None when no ingest answered. The outcome is read with
+        `outcome`, by the roads again: the ingest that took it may be another process by then."""
         roads = self.book().get(str(target))
         if not roads:
             raise Refused(f"{self.serial} may not ask {target}: no scenario ties them")
@@ -462,12 +484,29 @@ class Asker:
                     continue
         return None
 
+    def outcome(self, target: str, aid: str, deadline: float) -> str | None:
+        """What became of an ask: performed, refused, expired — None while it may still come. Asks live in the
+        ingest's memory, so an ingest that restarted knows nothing of one; past the deadline and a grace, an ask
+        no ingest knows of is LOST, and said so — never waited for."""
+        for road in self.book().get(str(target), []):
+            for url in road["urls"]:
+                try:
+                    out = self.dial(url).ask_outcome(target, aid)
+                except Unreachable:
+                    continue
+                if out is not None:
+                    return out
+        if self.clock() > deadline + ANSWER_GRACE:
+            return "unknown: no ingest knows this ask — it restarted, or the ask was lost on the way"
+        return None
+
 
 # -- the domain's side: the book of asks -----------------------------------------------------------------------
 # For every scenario "an event on camera A acts on camera B", A's cluster gets the roads to B: the ingest of the
 # cluster that records B and, when that cluster forwards B up (Lesson 17), the ingest above — with a token to
-# ask B at each. `scenarios`: [{"trigger": ref A, "target": ref B}], from the shared settings (Lesson 12). A
-# target nobody records has no ingest and no fast road: its asks go the agent's way, or not at all.
+# ask B at each, naming the actions the scenarios allow (`acts`). `scenarios`: [{"trigger": ref A, "target":
+# ref B, "actions": [...]}], from the shared settings (Lesson 12, `scenario.pairs`). A target nobody records
+# polls the poll home (`Crossings.polled_at`).
 def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) -> dict[str, dict]:
     from .chain import UPSTREAM_PATH
     now, books = crossings.wall(), {}
@@ -482,6 +521,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
 
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
+        acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
         known_a, on = crossings.view.last_known(a), crossings.polled_at(b)
         if known_a is None or on is None or crossings.issuer is None:
             continue
@@ -498,9 +538,10 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             if urls is None:
                 continue
             r = old.get(cluster)
-            if not (r and r["urls"] == urls and float(r["until"]) - now > lifetime / 2):
-                r = {"cluster": cluster, "urls": urls, "until": now + lifetime,
-                     "token": crossings.issuer.issue(home, lifetime, now=now, aud=audience(cluster), ask=b, by=a)}
+            if not (r and r["urls"] == urls and r.get("acts") == acts and float(r["until"]) - now > lifetime / 2):
+                r = {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts,
+                     "token": crossings.issuer.issue(home, lifetime, now=now, aud=audience(cluster), ask=b, by=a,
+                                                     acts=acts)}
             roads.append(r)
         if roads:
             books.setdefault(home, {})[b] = json.dumps({"roads": roads}, sort_keys=True)
