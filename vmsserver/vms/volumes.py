@@ -53,16 +53,16 @@ from w2cplatform.spec import Refused
 
 SUB = "rec"
 TABLE = "volumes"
-KINDS = ("local", "network", "backup")
+KINDS = ("local", "network", "backup", "edge")
 FIELDS = ("kind", "url", "server", "quota_bytes", "access_secret", "enabled")
 
 
-# The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — a
-# camera's card, the disk of a second server — and an ADDRESS any box may serve when it does not, like a
-# network volume: a second storage somewhere else, which is as independent of the primary's server as a
-# second disk is.
+# The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
+# disk of a second server — and an ADDRESS any box may serve when it does not, like a network volume: a second
+# storage somewhere else, which is as independent of the primary's server as a second disk is. An EDGE volume
+# is the card in a camera that runs the platform: always one box, the camera itself.
 def on_a_box(v: "Volume") -> bool:
-    return v.kind == "local" or (v.kind == "backup" and bool(v.server))
+    return v.kind in ("local", "edge") or (v.kind == "backup" and bool(v.server))
 
 
 def any_box(v: "Volume") -> bool:
@@ -116,6 +116,8 @@ def refuse(fields: dict) -> None:
         raise Refused(f"a volume is {' or '.join(KINDS)}, not {kind!r}")
     if kind == "local" and not str(fields.get("server", "")):
         raise Refused("a local volume is a disk on one server: name it")
+    if kind == "edge" and not str(fields.get("server", "")):
+        raise Refused("an edge volume is the card in one camera: name it")
     if kind == "network" and str(fields.get("server", "")):
         raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
     # EVERY declared volume has a ceiling, local ones included, and that is the change that lets a disk
@@ -273,15 +275,29 @@ def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str
     return out
 
 
-# -- the backup archive (М10B Lesson 26) ---------------------------------------------------------------
-# A BACKUP volume holds a second recording of a camera: on the camera's own card, or on a second server's
-# disk. The primary recording closes its gaps from it — a link that dropped, the seconds its recorder took
-# to move — the way Lesson 16 closes them from a device's archive, except that this archive is OURS: a
-# recording, with a manifest, served by a recorder.
+# -- the standby archives (М10B Lesson 26) ------------------------------------------------------------
+# Two kinds of volume hold a second recording of a camera, and the primary closes its gaps from either — a link
+# that dropped, the seconds its recorder took to move — the way Lesson 16 closes them from a device's archive,
+# except that this archive is OURS: a recording, with a manifest, served by a recorder.
+#
+#     edge     the card in the camera itself. Written by the camera's own recorder from its own sensor: no
+#              network between them, so it records whatever the network does
+#     backup   a second server's disk (or an address). Its stream comes over the network — and a camera that
+#              pushes sends it there only when its primary does not take it (М11 lesson 1, М12 lesson 16)
+#
+# Inside a cluster they are the same rules — a filter for placement, `when: offline`, a source for the primary
+# — so everything here takes both. They are named apart because across clusters they behave apart.
+STANDBY = ("backup", "edge")
+
 
 def backups(vars_) -> set[str]:
-    """The names of the enabled backup volumes."""
-    return {v.name for v in declared(vars_) if v.kind == "backup" and v.enabled}
+    """The names of the enabled standby volumes — backup and edge."""
+    return {v.name for v in declared(vars_) if v.kind in STANDBY and v.enabled}
+
+
+def edges(vars_) -> set[str]:
+    """The names of the enabled edge volumes — cards in cameras."""
+    return {v.name for v in declared(vars_) if v.kind == "edge" and v.enabled}
 
 
 def is_backup(row: dict, vars_=None, names: set[str] | None = None) -> bool:
