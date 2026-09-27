@@ -364,3 +364,19 @@ def test_a_backup_of_another_servers_camera_finds_its_primary_by_the_domains_nam
     assert card.carried_primary(backup, box.wall()) is False       # the first server writes it
     carry(written=False, starting=False)
     assert card.carried_primary(backup, box.wall()) is True        # it stopped: cover, at once
+
+
+def test_what_the_stream_says_comes_before_the_book():
+    """The book of primaries is the domain's, and the domain may be what died with the primary: then the book
+    says "written" until it goes stale. A standby that can tell from its own stream — the camera came here, the
+    card's camera did not hand its stream on — decides by that, at once; when the stream can say nothing, the
+    book decides, as before."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)                                       # the book still says the primary writes
+    card.stream_says = lambda r: True                         # …but the stream is not being taken
+    assert card.primary_needs_cover(row)
+    card.stream_says = lambda r: False
+    carry(written=False, starting=False)
+    assert not card.primary_needs_cover(row)                  # the stream is taken: the book's word is older
+    card.stream_says = lambda r: None
+    assert card.primary_needs_cover(row)                      # it cannot say: the book decides
