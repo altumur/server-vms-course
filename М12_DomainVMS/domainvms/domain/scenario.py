@@ -40,6 +40,23 @@ def _action(then: dict) -> dict:
     return {k: v for k, v in then.items() if k not in ("camera", "within")}
 
 
+def refusals(settings: dict, crossings) -> list[str]:
+    """Scenarios that could never act, each with its reason — checked when the document is WRITTEN (feedback AL),
+    so an operator is told, not left with a scenario that silently never fires. An ask reaches a camera through
+    the poll it holds; every member camera holds one; a camera that is not a member (a server cluster's camera
+    that does not run the platform, a serial nobody has seen) holds none."""
+    out = []
+    for sc in _scenarios(settings):
+        a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
+        if not a or not b or a == b:
+            continue
+        for ref, role in ((a, "trigger"), (b, "target")):
+            if crossings.polled_at(ref) is None:
+                out.append(f"camera {ref} ({role}) polls nothing: an ask travels on the poll a member camera holds "
+                           f"open to an ingest, and {ref} is not a member camera of this domain, or has never reported")
+    return out
+
+
 def pairs(settings: dict) -> list[dict]:
     """What the domain's book of asks is built from: every (trigger camera, target camera) a scenario ties, with
     the actions the scenarios between them name."""
