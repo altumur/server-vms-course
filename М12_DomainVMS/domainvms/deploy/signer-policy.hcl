@@ -17,5 +17,6 @@ namespace "default" {
     path "domain/crossings"   { capabilities = ["read"] }
     path "domain/shared"      { capabilities = ["read"] }
     path "domain/topology"    { capabilities = ["read"] }      # the operator's topology: the centre, the star
+    path "domain/members"     { capabilities = ["read", "write"] }   # the registrar admits, a leave removes; the books pass reads
   }
 }
