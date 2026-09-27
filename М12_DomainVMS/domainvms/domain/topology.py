@@ -42,7 +42,7 @@ class Topology:
     def relayed_by(self, office: str) -> list[str]:
         return sorted(m for m, o in self.read()["via"].items() if o == office)
 
-    def edit(self, mutate, base_rev: int, known=None, by: str | None = None) -> int:
+    def edit(self, mutate, base_rev: int, known=None, by: str | None = None, domain: str | None = None) -> int:
         """`mutate(doc)` changes {centre, star, via}. `known`: the clusters of the domain — a name that is not
         one is refused (409, with the reason), as is a topology that contradicts itself. Nothing is written
         then. `base_rev` is the revision the editor was looking at: two editors are told, not overwritten."""
@@ -52,7 +52,7 @@ class Topology:
             raise Conflict(f"the topology is at rev {doc['rev']}; the edit was made against rev {base_rev}")
         new = {"centre": doc["centre"], "star": list(doc["star"]), "via": dict(doc["via"])}
         mutate(new)
-        reasons = refusals(new, known)
+        reasons = refusals(new, known, domain)
         if reasons:
             from .api import ApiError
             raise ApiError(409, "; ".join(reasons))
@@ -61,7 +61,9 @@ class Topology:
         return new["rev"]
 
 
-def refusals(doc: dict, known=None) -> list[str]:
+def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
+    """`domain`: the domain cluster. Nobody reaches the domain THROUGH it — whoever reaches the domain cluster
+    reaches the domain — and it goes through nobody (feedback AM)."""
     out, known = [], set(known) if known is not None else None
     centre, star, via = doc.get("centre"), set(doc.get("star", [])), doc.get("via", {})
     names = ([("centre", centre)] if centre else []) + [("star", s) for s in sorted(star)] + \
@@ -73,6 +75,12 @@ def refusals(doc: dict, known=None) -> list[str]:
     if centre and centre in star:
         out.append(f"{centre} is the centre and cannot be a star office")
     for m, o in sorted(via.items()):
+        if domain and o == domain:
+            out.append(f"{m} through {domain}, the domain's own cluster: whoever reaches it reaches the domain")
+            continue
+        if domain and m == domain:
+            out.append(f"{domain} is the domain's own cluster and goes through nobody")
+            continue
         if m == o:
             out.append(f"{m} cannot reach the domain through itself")
         elif o in via:
