@@ -179,7 +179,7 @@ class MirrorPlan:
         return out
 
     def publish(self, fed) -> dict[str, list[str]]:
-        members = {n: c.reaches for n, c in fed.clusters.items() if not c.is_domain_cluster}
+        members = {n: c.networks() for n, c in fed.clusters.items() if not c.is_domain_cluster}
         holders = self.choose(members)
         keeps: dict[str, dict] = {b: {} for b in members}
         for a, bs in holders.items():
