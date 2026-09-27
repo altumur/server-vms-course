@@ -111,6 +111,26 @@ class Ingest:
         cam.ranges.pop(rid, None)
         cam.landed.append(tuple(span))
 
+    def pull(self, token: str, ref: str, who: str) -> list:
+        """Lesson 17, the star: a cluster that nobody can dial either — an office behind a mobile operator's
+        NAT, a cluster in a cloud that takes no inbound — takes the streams of ITS cameras from here, calling
+        in. Each pull is wanting the stream for another `LINGER`; stop pulling, and the want runs out."""
+        self._check(token, ref)
+        self.want(ref, who, until=self.wall() + LINGER)
+        return self.subscribe(ref, who).drain()
+
+    def inject(self, ref: str, frames: list, kind: str = "live") -> int:
+        """A stream arriving from this cluster's own forwarder (Lesson 17) — checked where it came from."""
+        tee = self.tees.setdefault((str(ref), kind), LiveTee(ref))
+        for f in frames:
+            tee.push(f)
+        self.cams.setdefault(str(ref), _Camera()).pushed_at = self.wall()
+        return len(frames)
+
+    def wanted(self, ref: str) -> bool:
+        cam = self.cams.get(str(ref))
+        return bool(cam and any(u > self.wall() for u in cam.wants.values()))
+
     # -- the cluster's side -----------------------------------------------------------------------------
     def want(self, ref: str, who: str, until: float = float("inf")) -> None:
         """Somebody in this cluster wants the stream: a recorder (for ever, or an event's window), a viewer."""

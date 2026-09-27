@@ -26,7 +26,9 @@ SOURCES_PATH, MIRRORS_PATH = "domain/sources", "domain/mirrors"
 # Lesson 13, the other way round: who records THIS cluster's cameras elsewhere, and whether it writes them —
 # read by the backup on a camera's card. The recorder owns the names; the agent only carries.
 from vms.recworker import DOMAIN_SEEN, PRIMARIES as PRIMARIES_PATH
-PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH)
+# Lesson 17: a recording cluster's upstream — where its streams go up to the centre, or come down from (star).
+UPSTREAM_PATH = "domain/upstream"
+PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH)
 
 
 class DomainPublisher:
@@ -56,7 +58,7 @@ class DomainPublisher:
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
-                 published=None, pages=None):
+                 published=None, pages=None, bundle_members=None, bundle_store=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -78,6 +80,9 @@ class DomainAgent:
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
         self.published, self.pages = published, pages
+        # Lesson 17's summary report: an office's agent folds the reports its members left in `bundle_store`
+        # (this cluster's object store) into one object in the domain cluster.
+        self.bundle_members, self.bundle_store = bundle_members, bundle_store
         self.reported = ""                                  # what the last pass did with the report
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
@@ -151,6 +156,13 @@ class DomainAgent:
                 self.reported = str(e)
             except Unreachable:
                 self.reported = "the domain did not take the report"
+                return False
+        if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
+            from .chain import bundle
+            try:
+                bundle(self.cluster, self.bundle_members() if callable(self.bundle_members) else self.bundle_members,
+                       self.bundle_store, self.domain_objects)
+            except Unreachable:
                 return False
         return True
 

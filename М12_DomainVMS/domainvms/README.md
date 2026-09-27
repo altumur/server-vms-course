@@ -29,17 +29,18 @@ domainvms/
     term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the host, re-hosting, never a smaller term, what an old host alone held
     uplink.py         Lesson 10 every connection is the member's: the agent's report into the domain cluster; member_copy; silence on the domain's clock
     ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request
+    chain.py          Lesson 17 site, office, centre: the office's forwarder (the want down, the stream up), the upstream book, the star, the summary report
     runtime.py, signer_service.py   wiring for the real processes (NomadVariables, the object store, HTTP)
   deploy/
     signer.nomad.hcl  console.nomad.hcl  gateway.nomad.hcl  agent.nomad.hcl   the four jobs; constraints, never hostnames
     signer-policy.hcl  agent-policy.hcl  member-report-policy.hcl              one writer per prefix; the agent may not touch vms/*; a member writes its own report
     federation.hcl                                                             two regions, one gossip pool
     verify-bench.sh                                                            what needs a real bench, scripted
-  tests/              113 tests, no Nomad, no Postgres, no browser — about two seconds
+  tests/              119 tests, no Nomad, no Postgres, no browser — about two seconds
 ```
 
 ```bash
-python3 tests/run.py                 # 113 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
+python3 tests/run.py                 # 119 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
 python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variables://objects,...
 ```
 

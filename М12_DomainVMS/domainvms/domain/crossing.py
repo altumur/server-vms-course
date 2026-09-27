@@ -54,11 +54,15 @@ CROSSINGS = "domain/crossings"
 class Crossings:
     """The domain's side: which cluster records which camera of another cluster, and the books."""
 
-    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float = 86400.0):
+    def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float = 86400.0,
+                 centre: str | None = None, star=frozenset()):
         """`issuer` is Lesson 16: the domain signer's token issuer. Given it, the book of primaries also tells
         a camera where to PUSH — the recording cluster's ingest — with a stream token for it."""
         self.vars, self.view, self.wall = domain_vars, view, wall
         self.issuer, self.token_lifetime = issuer, token_lifetime
+        # Lesson 17: the monitoring centre, and the recording clusters that cannot be pushed to — their cameras
+        # push to the centre instead, and the cluster pulls its streams from there.
+        self.centre, self.star = centre, frozenset(star)
 
     def all(self) -> dict[str, str]:
         items, _ = self.vars.get(CROSSINGS)
@@ -165,6 +169,8 @@ class Crossings:
     # rewrite it every pass.
     def _ingest(self, ref: str, on: str, home: str, now: float) -> dict | None:
         from .ingest import INGEST, audience
+        if on in self.star and self.centre:
+            on = self.centre                             # a star: the camera pushes to the centre, never to its office
         c = self.view.fed.clusters.get(on)
         if self.issuer is None or c is None:
             return None

@@ -25,8 +25,8 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     reporting = []
     for i, entry in enumerate(filter(None, os.environ.get(var, "").split(","))):
         name, rest = entry.split("=", 1)
-        if rest == "report":
-            reporting.append(name)                         # reached by nobody: read from its own reports
+        if rest == "report" or rest.startswith("report@"):
+            reporting.append((name, rest.partition("@")[2] or None))   # reached by nobody: read from its reports
             continue
         config_url, objects = rest.split("|", 1)
         fed.add(Cluster(name, open_vars(config_url), open_store(objects),
@@ -37,6 +37,8 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     # reports in the domain cluster's object store, and the domain reads it from there — the product's rule
     # for every camera, and a server room's too when the domain cannot route to it.
     from .uplink import member_copy
-    for name in reporting:
-        fed.add(member_copy(name, fed.domain_cluster.objects, lost_after=float(os.environ.get("LOST_AFTER", "45"))))
+    # `name=report@office`: Lesson 17's summary report — the member reports to that office, which carries one
+    # bundle for all its members into the domain cluster.
+    for name, via in reporting:
+        fed.add(member_copy(name, fed.domain_cluster.objects, lost_after=float(os.environ.get("LOST_AFTER", "45")), via=via))
     return fed

@@ -190,9 +190,16 @@ class _CopyVars:
         raise PermissionError("the domain writes nothing into a member: what it wants there is a row its agent takes home")
 
 
-def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.0, wall=time.time) -> Cluster:
+def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.0, wall=time.time,
+                via: str | None = None) -> Cluster:
     """The domain's handle on a member it never reaches: a `Cluster` over that member's last report. Its
-    `objects.f.offset` is how far the member's clock is from the domain's, as of the last report."""
+    `objects.f.offset` is how far the member's clock is from the domain's, as of the last report.
+
+    `via`: Lesson 17's summary report — the member reports to that office, and the office carries one bundle
+    for all its members. Read the same way; silent together with the office."""
+    if via is not None:
+        from .chain import BundleView
+        domain_objects = BundleView(via, domain_objects)
     f = _Fresh(member, domain_objects, lost_after, wall)
     return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches))
 
