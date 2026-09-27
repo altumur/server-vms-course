@@ -18,6 +18,9 @@ job "domain-agent" {
           DOMAIN_CONFIG_URL=nomad://nomad.north:4646   # the domain cluster, read through federation forwarding; a scheme, not a vendor
           NOMAD_ADDR=http://127.0.0.1:4646              # this cluster, written
           SYNC_INTERVAL=30
+          OBJECTS_URL=http://minio.{{ env "NOMAD_REGION" }}:9000/cluster   # this cluster's objects: where it says what it reaches
+          # REACHES=vlan:cctv-a,vlan:cctv-b   the site's names for the networks it sees; unset: the host's interfaces
+          # OFFICE=1                          an office: relays and bundles for the members the domain's topology names
         EOT
         destination = "local/agent.env"
         env         = true
