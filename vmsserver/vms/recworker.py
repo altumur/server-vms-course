@@ -317,8 +317,18 @@ class RecWorker(VmsWorker):
                     done.append((uid, "held"))
         return done
 
+    # What the STREAM itself says, when it can say it — first, before any book (М11 lesson 1, two servers). A
+    # standby whose stream comes only when the primary does not take it (a backup fed by a camera that pushes:
+    # the camera came here) knows at once; so does the card of a camera that did not hand its stream to its
+    # primary; so does a backup that watches the primary's recorder on the site's LAN. None: it cannot say —
+    # decide by the book, as before. The domain is not on this path: it may be the thing that died.
+    stream_says = None                                   # (row) -> bool | None, set by whoever runs this recorder
+
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
         now = self.wall() if now is None else now
+        said = self.stream_says(row) if self.stream_says is not None else None
+        if said is not None:
+            return bool(said)
         carried = self.carried_primary(row, now)
         if carried is not None:
             return carried
