@@ -155,3 +155,89 @@ def test_the_operator_edits_the_topology_in_the_domain_console():
         assert json.load(urllib.request.urlopen(base))["centre"] == "north"
     finally:
         con.stop(srv)
+
+
+# -- feedback AM ----------------------------------------------------------------------------------------------
+def test_nobody_goes_through_the_domains_own_cluster_and_it_goes_through_nobody():
+    """AM, 1. Whoever reaches the domain cluster reaches the domain: "through the domain cluster" says nothing,
+    and it has no agent to relay. It goes through nobody either."""
+    topo = Topology(FakeVariables())
+    known = {"north", "east", "cam-SN1"}
+    for bad, why in ((lambda d: d.update(via={"cam-SN1": "north"}), "the domain's own cluster: whoever reaches it"),
+                     (lambda d: d.update(via={"north": "east"}), "goes through nobody")):
+        try:
+            topo.edit(bad, base_rev=0, known=known, domain="north")
+            raise AssertionError(why)
+        except ApiError as e:
+            assert e.status == 409 and why in e.detail
+    assert topo.edit(lambda d: d.update(centre="north", via={"cam-SN1": "east"}), base_rev=0, known=known, domain="north") == 1
+
+
+def test_a_member_placed_behind_an_office_is_read_by_whichever_road_is_newer():
+    """AM, 2. The topology describes a road; it does not forbid another. A camera placed behind east that still
+    reports straight to the domain is not made silent — the domain reads the newer of its own report and east's
+    bundle, by the camera's own report number."""
+    from domain.chain import bundle
+    wall = Clock()
+    north, _ = make_cluster("north", domain=True)
+    east, _ = make_cluster("east")
+    cam = DeviceCluster("SN8003", FakeVariables(), wall=wall)
+    cam.boot()
+    direct = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects())
+    direct.sync()                                                      # it reaches the domain after all
+    fed = Federation(); fed.add(north)
+    fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
+    view = ReadView(fed, wall=wall); view.refresh()
+    assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["SN8003"]
+
+    wall.advance(30)
+    through = Relay(east.vars, east.objects)                           # now it reports through east, and renames itself
+    cam.local_console().update_camera(1, {"name": "through-east"}, None)
+    DomainAgent(cam.name, through.vars, cam.flash, now=wall, domain_objects=through.objects,
+                published=cam.local_objects()).sync()
+    bundle("east", [cam.name], east.objects, north.objects)
+    view.refresh()
+    assert [r["name"] for r in view.list()["rows"] if r["cluster"] == cam.name] == ["through-east"]
+
+
+def test_books_behind_an_office_are_as_old_as_the_office_says_on_the_cameras_own_clock():
+    """AM, 3. The office says how long ago it last reached the domain — an age, on its own clock — on every pass,
+    the failed ones included. The camera sets its mark to its OWN clock minus that age: two clocks are never
+    compared, and a camera whose clock runs five minutes ahead still judges its books by their true age."""
+    from domain.chain import say_seen
+    office_clock, cam_clock = Clock(10_000.0), Clock(10_300.0)       # the camera runs five minutes ahead
+    office_vars, office_objects = FakeVariables(), __import__("domain.device", fromlist=["Ram"]).Ram()
+    agent = DomainAgent("cam-SN8004", Relay(office_vars, office_objects).vars, FakeVariables(), now=cam_clock)
+    last = office_clock()
+    say_seen(office_objects, last, office_clock())                     # the office reached the domain just now
+    assert agent._office_mark() == cam_clock()
+    for _ in range(4):
+        office_clock.advance(30); cam_clock.advance(30)
+        say_seen(office_objects, last, office_clock())                 # it has lost the domain: the age grows
+        mark = agent._office_mark()
+    assert cam_clock() - mark == office_clock() - last == 120.0        # the true age, on the camera's clock
+
+
+def test_the_sites_names_are_the_source_and_interfaces_only_a_fallback_without_tunnels():
+    """AM, 5. On the product's box a VPN put the same /32 into every cluster's networks. REACHES — the site's own
+    names — is the source; the interfaces are a fallback, without host routes and tunnel or container links."""
+    import os
+    import subprocess
+    from domain import agent as agent_module
+    fake = json.dumps([
+        {"ifname": "lo", "addr_info": [{"local": "127.0.0.1", "prefixlen": 8}]},
+        {"ifname": "eth0", "addr_info": [{"local": "10.1.0.5", "prefixlen": 24}]},
+        {"ifname": "utun3", "addr_info": [{"local": "100.64.0.7", "prefixlen": 32}]},
+        {"ifname": "docker0", "addr_info": [{"local": "172.17.0.1", "prefixlen": 16}]},
+        {"ifname": "eth1", "addr_info": [{"local": "192.168.9.2", "prefixlen": 32}]}])
+    run, env = subprocess.run, os.environ.pop("REACHES", None)
+    subprocess.run = lambda *a, **kw: type("R", (), {"stdout": fake})()
+    try:
+        assert agent_module.local_networks() == ["net:10.1.0.0/24"]
+        os.environ["REACHES"] = "vlan:cctv-a,vlan:cctv-b"
+        assert agent_module.local_networks() == ["vlan:cctv-a", "vlan:cctv-b"]
+    finally:
+        subprocess.run = run
+        os.environ.pop("REACHES", None)
+        if env is not None:
+            os.environ["REACHES"] = env
