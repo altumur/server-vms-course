@@ -42,18 +42,26 @@ def _action(then: dict) -> dict:
 
 def refusals(settings: dict, crossings) -> list[str]:
     """Scenarios that could never act, each with its reason — checked when the document is WRITTEN (feedback AL),
-    so an operator is told, not left with a scenario that silently never fires. An ask reaches a camera through
-    the poll it holds; every member camera holds one; a camera that is not a member (a server cluster's camera
-    that does not run the platform, a serial nobody has seen) holds none."""
+    so an operator is told, not left with a scenario that silently never fires.
+
+    The two ends ask different things. The TARGET must hold a poll: an ask reaches a camera through the poll it
+    keeps open to an ingest, every member camera holds one, and a camera that is not a member (a server
+    cluster's camera without the platform, a serial nobody has seen) holds none. The TRIGGER only has to be
+    known to the domain: its event is read where its cluster reads events — on a member camera by the camera
+    itself, on a server cluster's camera by that cluster's automation, over the cluster's merged event log —
+    and the book of asks goes to that cluster either way. So a server cluster's camera without the platform can
+    be a trigger, and cannot be a target (the product's rule, feedback on notes 10b and 12)."""
     out = []
     for sc in _scenarios(settings):
         a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
         if not a or not b or a == b:
             continue
-        for ref, role in ((a, "trigger"), (b, "target")):
-            if crossings.polled_at(ref) is None:
-                out.append(f"camera {ref} ({role}) polls nothing: an ask travels on the poll a member camera holds "
-                           f"open to an ingest, and {ref} is not a member camera of this domain, or has never reported")
+        if crossings.view.last_known(a) is None:
+            out.append(f"camera {a} (trigger) is not known to the domain: its events are read in its own cluster, "
+                       f"and no member cluster of this domain has reported it")
+        if crossings.polled_at(b) is None:
+            out.append(f"camera {b} (target) polls nothing: an ask travels on the poll a member camera holds open "
+                       f"to an ingest, and {b} is not a member camera of this domain, or has never reported")
     return out
 
 
@@ -71,8 +79,9 @@ def pairs(settings: dict) -> list[dict]:
 
 
 class Scenarios:
-    """The camera's side. `shared` is its `SharedView` — the document its agent took and verified; `asker` its
-    `Asker`. `on_event(kind, event)` is called where the camera's analytics raise an event — a hook on the event
+    """The trigger's side — the camera itself, or, for a server cluster's camera, that cluster's automation, with
+    the cluster's copy of the document and of the book of asks. `shared` is a `SharedView` — the document its
+    agent took and verified; `asker` an `Asker`. `on_event(kind, event)` is called where the camera's analytics raise an event — a hook on the event
     itself, which is why the road is milliseconds. A scenario that reads the merged event log instead (the
     product's automation) adds the log's tail interval: seconds (feedback AK).
 
