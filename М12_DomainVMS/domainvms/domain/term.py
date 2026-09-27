@@ -209,6 +209,25 @@ def rehost(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall
             _, idx = new_vars.get(path)
             new_vars.put(path, items, cas=idx)
     DomainPublisher(new_vars).publish_keys(keys)
+    # The shared document (Lesson 12): its pointer came back with the state, but the object it names was in the
+    # old host's store. Every member holds that document, verified by the same key — the new host first among
+    # them — so it is put back from the first member copy whose checksum matches the pointer. Without it the new
+    # host would publish a pointer to nothing, and every pass that reads the document — the book of asks built
+    # from its scenarios (Lesson 16) — would read an empty one.
+    from .shared import OBJECT as SHARED_OBJECT, POINTER as SHARED_POINTER
+    import hashlib
+    shared_from = None
+    ptr, _ = new_vars.get(SHARED_POINTER)
+    if ptr and ptr.get("object") and objects_of(new).get(ptr["object"]) is None:
+        for name in [new, *[n for n in fed.clusters if n != new]]:
+            try:
+                raw = objects_of(name).get(SHARED_OBJECT)
+            except Unreachable:
+                continue
+            if raw is not None and hashlib.sha256(raw).hexdigest() == ptr["sha256"]:
+                objects_of(new).put(ptr["object"], raw)
+                shared_from = name
+                break
     for name, c in fed.clusters.items():
         c.is_domain_cluster = name == new
     host = DomainHost(fed, new, signer, top_term + 1, wall)
@@ -216,6 +235,7 @@ def rehost(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall
     host.claim()
     rev = host.backup_rev
     report = {"term": host.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
+              "shared_from": shared_from,
               "state": best[1]["state"] if best else {},
               "sentence": (f"term {host.term} on {new}: the domain's state from backup rev {rev}, held by {best[0]}; "
                            f"anything the old host changed after rev {rev} is not here" if best else
