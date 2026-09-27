@@ -492,7 +492,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     from domain.scenario import Scenarios
     from domain.shared import SharedSettings, SharedView
     from domain.term import DomainHost, rehost
-    from tests.test_lesson15_domain_of_one import _agent, _objects
+    from tests.test_lesson15_domain_of_one import _agent, _domain, _objects
 
     wall = Clock()
     fed, devices = Federation(), {}
@@ -505,7 +505,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     signer = Signer("acme", home, now=wall)
     offline = signer.backup()                                          # Lesson 7: the key, kept beyond the host
     DomainPublisher(home).publish_keys(signer.tokens.keyset())
-    host = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall)
+    host = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
     host.claim()
     SharedSettings(home, devices["cam-SN0"].disk_door(), signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
         {"when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}]),
@@ -526,8 +526,8 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     def settle(host_name, issuer):                                     # the host's pass over the books, agents both sides
         live = [n for n in devices if n != host_name and devices[n].door_open]
         agents = [_agent(fed, devices, n, host_name, wall) for n in live]
-        books = Books(Crossings(fed.clusters[host_name].vars, ReadView(fed, wall=wall), wall, issuer=issuer),
-                      devices[host_name].disk_door())
+        books = Books(Crossings(fed.clusters[host_name].vars, ReadView(_domain(devices, host_name, wall), wall=wall),
+                                wall, issuer=issuer), devices[host_name].disk)      # the host reads reports, not doors
         for n in live:
             devices[n].publish()
         for a in agents:
