@@ -24,6 +24,12 @@ never from above.
              the centre's volume (М10B Lesson 26) — receives it from that cluster
     ranges   the office's archive, asked for by the centre, is uploaded by the office — the card's rule
              (Lesson 16) one level up
+    asks     a scenario between two sites of two offices (Lesson 16, step 8), when the trigger camera sees only
+             its office: it leaves the ask at its OWN office, on a road marked "up"; the office's forwarder,
+             woken by the ask itself, takes it to the centre with a token the domain gave the office for exactly
+             that pair; the other office's forwarder, whose poll the centre is holding, carries it down; the
+             outcome comes back the same way, each hop woken by the one before. Seconds, not passes. An ask for
+             a camera in the same office never takes this road — its book names the office directly
     star     an office that cannot open a port to its sites — a cloud cluster that takes no inbound, sites and
              offices on mobile operators — cannot be pushed to. Then the camera pushes to the CENTRE, and the
              office takes the streams of its cameras from the centre, calling in (`Ingest.pull`). Every byte
@@ -34,6 +40,7 @@ In the tests every "dial" is a function the caller owns; nobody below is ever ca
 from __future__ import annotations
 
 import json
+import threading
 
 from .federation import Unreachable
 from .uplink import REPORTED, UPLINK, base
@@ -57,7 +64,11 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
     if raw is None or crossings.issuer is None:
         return {}
     urls = json.loads(raw)["urls"]
-    for ref, on in crossings.all().items():
+    # Every camera an office records — and every camera that only POLLS an office (nobody records it, and it
+    # reaches only that office, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
+    # a viewer in the centre, whose want the office's forwarder carries down like any other.
+    polled = {ref: crossings._poll_home(home) for ref, home in crossings.unrecorded().items()}
+    for ref, on in [*crossings.all().items(), *((r, o) for r, o in polled.items() if o and o != centre)]:
         if on == centre:
             continue
         mode = "pull" if on in star else "push"
@@ -94,6 +105,14 @@ class Forwarder:
         self.up = f"up:{name}"
         self.queues: dict[str, object] = {}
         self.state: dict[str, str] = {}
+        self.versions: dict[str, int] = {}                       # per camera: what the centre last answered
+        self.forwarding: dict[str, bool] = {}
+        self.lifted: dict[str, dict] = {}                        # asks carried UP, waiting for their outcome
+        self.carried: dict[tuple, tuple] = {}                    # asks carried DOWN: (ref, id) -> (centre, token, deadline)
+        self._lock = threading.RLock()
+        self.woken = threading.Event()                           # set by the local ingest: something changed here
+        self.pending = threading.Event()                         # set when an ask went up: an outcome to wait for
+        local.listen(self.woken.set)
 
     def book(self) -> dict[str, dict]:
         items, _ = self.vars.get(UPSTREAM_PATH)
@@ -119,8 +138,9 @@ class Forwarder:
                 self.state[ref] = self._push(ing, ref, e)
         return dict(self.state)
 
-    def _push(self, ing, ref: str, e: dict) -> str:
-        work = ing.poll(e["token"], ref)
+    def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
+        work = ing.poll(e["token"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
+        self.versions[ref], self.forwarding[ref] = work["version"], work["push"]
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
             q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up))
@@ -134,11 +154,145 @@ class Forwarder:
         for rid, (t0, t1) in work["ranges"].items():
             ing.upload(e["token"], ref, rid, self.archive(ref, t0, t1))    # the answer to that request (AD)
         for aid, a in work.get("asks", {}).items():                     # an ask left above: down it goes…
+            with self._lock:
+                self.carried.setdefault((ref, aid), (ing, e["token"], float(a["deadline"])))
             self.local.carry_ask(ref, aid, a)
-            out = self.local.ask_outcome(ref, aid)
-            if out is not None:                                          # …and what became of it, up
-                ing.answer_ask(e["token"], ref, aid, out)
+        self._answer_carried()                                           # …and what became of it, up
         return said
+
+    # -- asks: down and up ----------------------------------------------------------------------------------
+    def _answer_carried(self) -> None:
+        from .ingest import ANSWER_GRACE
+        now = self.local.wall()
+        with self._lock:
+            for (ref, aid), (ing, token, deadline) in list(self.carried.items()):
+                out = self.local.ask_outcome(ref, aid)
+                if out is not None:
+                    try:
+                        ing.answer_ask(token, ref, aid, out)
+                    except Unreachable:
+                        continue                                          # the centre is away: next time
+                    del self.carried[(ref, aid)]
+                elif now > deadline + ANSWER_GRACE:
+                    del self.carried[(ref, aid)]                          # the centre has called it expired itself
+
+    def asks_book(self) -> dict[str, dict]:
+        """What the domain let this office carry up: {"<target>|<asker>": {"roads": [...]}}, one token per pair."""
+        from .ingest import ASKS_PATH
+        items, _ = self.vars.get(ASKS_PATH)
+        return {k: json.loads(v) for k, v in (items or {}).items() if "|" in k}
+
+    def lift(self) -> dict[str, str]:
+        """One round of the asks' work, run whenever the local ingest says something changed: new asks up to
+        the centre, the outcomes of those that went up back down to the asker, and the outcomes of asks carried
+        down back up. Nothing here waits; the waiting is `serve`'s."""
+        from .ingest import ANSWER_GRACE, Refused
+        said: dict[str, str] = {}
+        with self._lock:
+            book = self.asks_book()
+            for ing in self.local._cluster():
+                for aid, a in ing.take_up():
+                    e = book.get(f"{a['target']}|{a['by']}")
+                    if e is None:
+                        ing.settle_up(aid, f"refused: {self.name} may not carry asks from {a['by']} to {a['target']}")
+                        continue
+                    sent = None
+                    for road in e["roads"]:
+                        for url in road["urls"]:
+                            try:
+                                c = self.dial(url)
+                                sent = (c, c.ask(road["token"], a["target"], a["action"], a["deadline"]))
+                                break
+                            except Unreachable:
+                                continue
+                            except Refused as err:
+                                ing.settle_up(aid, f"refused: {err}")
+                                sent = False
+                                break
+                        if sent is not None:
+                            break
+                    if sent is None:
+                        ing.untake_up(aid)                                # the centre did not answer: again, till the deadline
+                        said[aid] = "the centre did not answer"
+                    elif sent:
+                        self.lifted[aid] = {"at": ing, "target": a["target"], "centre": sent[0], "aid": sent[1],
+                                            "deadline": a["deadline"]}
+                        self.pending.set()
+                        said[aid] = "up"
+            now = self.local.wall()
+            for aid, x in list(self.lifted.items()):
+                try:
+                    out = x["centre"].ask_outcome(x["target"], x["aid"])
+                except Unreachable:
+                    out = None
+                if out is None and now > x["deadline"] + ANSWER_GRACE:
+                    out = "unknown: the centre does not know this ask any more"
+                if out is not None:
+                    x["at"].settle_up(aid, out)
+                    del self.lifted[aid]
+                    said[aid] = out
+        self._answer_carried()
+        return said
+
+    # -- by event ---------------------------------------------------------------------------------------------
+    def serve(self, stop: threading.Event, period: float = 5.0, stream_every: float = 0.05) -> list[threading.Thread]:
+        """The forwarder as a process: three kinds of thread, none of them on a timer that matters.
+        · asks — waits for the local ingest to say something changed (an ask to take up, an outcome to take
+          back) and runs `lift` at once; `period` is only its fallback.
+        · one per camera in the upstream book — a HELD poll at the centre: the centre answers it the moment a
+          want, a range or an ask for that camera arrives there. While the centre wants the stream, it forwards.
+        · outcomes — while asks it took up are open, a held wait at the centre for their outcome.
+        On a real office the per-camera polls are one held request for all its cameras; here, a thread each."""
+        threads: dict[str, threading.Thread] = {}
+
+        def down(ref):
+            while not stop.is_set():
+                e = self.book().get(ref)
+                ing = self._centre(e) if e else None
+                if ing is None or e["mode"] != "push":
+                    stop.wait(period)
+                    continue
+                try:
+                    streaming = self.forwarding.get(ref, False)
+                    self.state[ref] = self._push(ing, ref, e, wait=0.0 if streaming else period)
+                    if streaming:
+                        stop.wait(stream_every)
+                except Unreachable:
+                    stop.wait(period)
+
+        def asks():
+            while not stop.is_set():
+                self.woken.wait(period)
+                self.woken.clear()
+                for ref in self.book():
+                    if ref not in threads:
+                        threads[ref] = threading.Thread(target=down, args=(ref,), daemon=True, name=f"fwd-{ref}")
+                        threads[ref].start()
+                try:
+                    self.lift()
+                except Exception:                                        # noqa: BLE001 — a bad round is retried on the next event
+                    pass
+
+        def outcomes():
+            while not stop.is_set():
+                open_ = list(self.lifted.values())
+                if not open_:
+                    self.pending.wait(period)
+                    self.pending.clear()
+                    continue
+                x = open_[0]
+                try:
+                    x["centre"].outcome_wait(x["target"], x["aid"], wait=period)
+                except Unreachable:
+                    stop.wait(period)
+                self.woken.set()                                         # settle it: `lift` does
+
+        started = [threading.Thread(target=asks, daemon=True, name=f"fwd-asks-{self.name}"),
+                   threading.Thread(target=outcomes, daemon=True, name=f"fwd-outcomes-{self.name}")]
+        for t in started:
+            t.start()
+        self.woken.set()
+        return started
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):
