@@ -365,10 +365,20 @@ class CameraPusher:
         self.state = "no book yet"
 
     def entry(self) -> dict | None:
-        from .agent import PRIMARIES_PATH
+        """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
+        asks, never told to push (step 8)."""
+        from .agent import POLL_PATH, PRIMARIES_PATH
         items, _ = self.flash.get(PRIMARIES_PATH)
         raw = (items or {}).get(self.serial)
-        return json.loads(raw) if raw else None
+        if raw:
+            return json.loads(raw)
+        items, _ = self.flash.get(POLL_PATH)
+        raw = (items or {}).get(self.serial)
+        if not raw:
+            return None
+        p = json.loads(raw)
+        return {"cluster": p["cluster"], "polls_only": True,
+                "ingest": {k: p[k] for k in ("urls", "token", "until")}}
 
     def _keep(self, frames: list) -> None:
         now = self.clock()
@@ -416,7 +426,9 @@ class CameraPusher:
                 outcome = self.perform(a["action"])
             ing.answer_ask(token, self.serial, aid, outcome)
             performed.append((a["action"], outcome))
-        self.state = f"pushing to {url}" if work["push"] else f"idle at {url}: nobody wants the stream"
+        self.state = (f"pushing to {url}" if work["push"] else
+                      f"polling {url}: nobody records it, asks only" if e.get("polls_only") else
+                      f"idle at {url}: nobody wants the stream")
         return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed}
 
 
@@ -470,11 +482,10 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
 
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
-        known_a, on = crossings.view.last_known(a), crossings.all().get(b)
+        known_a, on = crossings.view.last_known(a), crossings.polled_at(b)
         if known_a is None or on is None or crossings.issuer is None:
             continue
         home = known_a[0]
-        on = crossings.centre if on in crossings.star and crossings.centre else on
         wanted = [(on, urls_of(on))]
         up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
         above = json.loads((up or {}).get(b, "{}"))
@@ -498,4 +509,12 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         have, idx = crossings.vars.get(path)
         if have != book:
             crossings.vars.put(path, book, cas=idx)
+    # A scenario taken out of the document takes the right with it: a book nobody's scenario fills any more is
+    # emptied, and the agent carries the empty book home. (A token already carried runs to its expiry — a day;
+    # revoke it by its jti for sooner, as any token.)
+    for path in crossings.vars.list(f"{ASKS_PATH}/"):
+        if path[len(ASKS_PATH) + 1:] not in books:
+            have, idx = crossings.vars.get(path)
+            if have:
+                crossings.vars.put(path, {}, cas=idx)
     return books
