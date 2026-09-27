@@ -248,7 +248,7 @@ def _two(wall):
         return "performed"
 
     pusher.perform = perform
-    scenarios = [{"trigger": GATE, "target": SERIAL}]
+    scenarios = [{"trigger": GATE, "target": SERIAL, "actions": [{"preset": 3}, {"preset": 9}]}]
 
     def asks_pass():
         domain_pass(); publish_asks(crossings, scenarios); gate_agent.sync()
@@ -406,3 +406,72 @@ def test_the_books_do_not_churn_and_a_scenario_taken_out_takes_the_right_with_it
         assert False
     except Refused:
         pass
+
+
+# -- asks under pressure: the token names the action, one gust is one ask, and memory is not a log -----------
+def test_the_token_names_the_actions_and_one_camera_cannot_flood_an_ingest():
+    """The scenario says preset 3 and preset 9: the token to ask says so too, and preset 4 is refused at the
+    ingest — before the yard camera hears of it. A token for twenty presets still holds at most sixteen live
+    asks at one ingest: a ceiling, not a queue."""
+    from domain.ingest import MAX_LIVE_ASKS
+    wall = Clock()
+    ingest, pusher, asker, done, asks_pass, signer, crossings, north = _two(wall)
+    try:
+        asker.ask(SERIAL, {"preset": 4}, within=10)
+        assert False
+    except Refused as e:
+        assert "not {'preset': 4}" in str(e)
+    wide = signer.tokens.issue(GATE, 600, now=wall(), aud=audience("south"), ask=SERIAL, by=GATE,
+                               acts=[{"preset": i} for i in range(20)])
+    for i in range(MAX_LIVE_ASKS):
+        ingest.ask(wide, SERIAL, {"preset": i}, wall() + 30)
+    try:
+        ingest.ask(wide, SERIAL, {"preset": 19}, wall() + 30)
+        assert False
+    except Refused as e:
+        assert "ceiling" in str(e)
+
+
+def test_twenty_events_in_a_minute_are_six_asks_and_identical_live_asks_are_one():
+    """Leaves in the wind: the gate camera sees a "vehicle" every three seconds for a minute. The scenario's
+    ceiling (six a minute, the product's default) lets six through; the ingest folds an ask identical to one
+    still alive into that one: while the PTZ camera is between polls, one ask waits for it, not six."""
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
+    seen = []
+    for i in range(20):
+        seen += gate_scenarios.on_event("vehicle")
+        if i == 5:                                                     # the sixth, fifteen seconds in
+            assert len(home.cams[PTZ].asks) == 1
+        wall.advance(3)
+    for target in (PTZ, SERIAL):
+        mine = [x for x in seen if x["target"] == target]
+        assert sum(x["state"] == "asked" for x in mine) == 6
+        assert sum(x["state"].startswith("over its ceiling of 6/min") for x in mine) == 14
+    assert len({x["ask"] for x in seen if x["target"] == PTZ and "ask" in x}) == 1       # within 30 s: one ask
+    assert len({x["ask"] for x in seen if x["target"] == SERIAL and "ask" in x}) == 2    # within 10 s: two
+
+
+def test_an_ingest_that_restarted_knows_nothing_and_the_asker_says_so_after_the_deadline():
+    """Asks live in the ingest's memory. The ingest restarts with one in it: the yard camera never hears of it,
+    and the gate camera, asking the roads again, is told nothing — until the deadline and a grace have passed,
+    when "nobody knows" becomes an answer: lost, not late. Outcomes that were answered are kept a quarter of an
+    hour for the asker, then forgotten."""
+    from domain.ingest import ANSWER_GRACE, REMEMBER
+    wall = Clock()
+    ingest, pusher, asker, done, *_ = _two(wall)
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    deadline = wall() + 10
+    fresh = Ingest("south", URLS, keys=ingest.keys, wall=wall)         # the same addresses, a new process
+    asker.dial = pusher.dial = lambda url: fresh
+    assert pusher.pass_once([])["asks"] == [] and done == []
+    assert asker.outcome(SERIAL, aid, deadline) is None                # not yet: it may still come
+    wall.advance(10 + ANSWER_GRACE + 1)
+    assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
+
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    pusher.pass_once([])
+    assert asker.outcome(SERIAL, aid, wall() + 10) == "performed"
+    wall.advance(REMEMBER + 1)
+    pusher.pass_once([])                                               # a poll, and the ingest forgets what it kept
+    assert fresh.ask_outcome(SERIAL, aid) is None
