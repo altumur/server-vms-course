@@ -33,6 +33,9 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
                         is_domain_cluster=(name == domain) if domain else i == 0))
     if not fed.clusters:
         raise SystemExit(f"{var} is empty: name at least one cluster")
+    # Members that report are, from the first pass on, the ones the domain's list names (`domain/members.py`):
+    # the registrar adds what it admits, a leave removes. `name=report` here is where the domain starts before
+    # anyone has written that list, and what a site without a registrar declares by hand.
     # `name=report`: a member the domain never opens a connection to (`domain/uplink.py`). Its agent leaves
     # reports in the domain cluster's object store, and the domain reads it from there — the product's rule
     # for every camera, and a server room's too when the domain cannot route to it.
