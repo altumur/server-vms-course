@@ -42,8 +42,11 @@ def _office(wall):
     signer = Signer("acme", b.vars, now=wall)
     DomainPublisher(b.vars).publish_keys(signer.tokens.keyset())
     from domain.agent import ClusterTrust
-    ing = {"srv-a": Ingest("srv-a", A_URLS, keys=lambda: ClusterTrust(a.vars).keyset(), wall=wall),
-           "srv-b": Ingest("srv-b", B_URLS, keys=lambda: ClusterTrust(b.vars).keyset(), wall=wall)}
+    from domain.ingest import should_from_snapshot
+    ing = {"srv-a": Ingest("srv-a", A_URLS, keys=lambda: ClusterTrust(a.vars).keyset(), wall=wall,
+                           should=should_from_snapshot(a.objects, wall)),
+           "srv-b": Ingest("srv-b", B_URLS, keys=lambda: ClusterTrust(b.vars).keyset(), wall=wall,
+                           should=should_from_snapshot(b.objects, wall))}
     ing["srv-a"].announce(a.objects); ing["srv-b"].announce(b.objects)
     agents = {"srv-a": DomainAgent("srv-a", b.vars, a.vars, now=wall),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects)}
@@ -143,12 +146,13 @@ def test_a_dies_and_both_standbys_record_the_card_from_its_sensor_the_backup_fro
     assert "the backup" in o.pusher.state
 
 
-def test_a_whose_recorder_stopped_does_not_take_the_stream_even_though_its_ingest_answers():
-    """A's ingest answers, but its recorder has stopped: the book says A should write and does not, and it is not
-    a start. The camera goes to the backup — "the primary does not take the stream" is about the recording, not
-    about who answers the phone."""
+def test_when_as_ingest_cannot_say_the_book_decides_that_a_whose_recorder_stopped_does_not_take_the_stream():
+    """A's ingest answers but has no word on the recording (it cannot read its cluster's rows); A's recorder has
+    stopped: the book says A should write and does not, and it is not a start. The camera goes to the backup on
+    the book's word — "the primary does not take the stream" is about the recording, not about who answers."""
     wall = Clock()
     o = _office(wall)
+    o.ing["srv-a"].should = None                                      # the ingest has no word of its own
     o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
     wall.advance(5)
     o.domain_pass()
@@ -202,3 +206,60 @@ def test_a_viewer_opens_the_camera_where_its_one_stream_is_going():
     o.pusher.pass_once(_frames(wall, 4))
     gw.pump()
     assert len(vq.drain()) == 4                                        # from B's ingest: where the camera is
+
+
+
+# -- failover without the domain: what the stream says -----------------------------------------------------------
+def test_a_whose_recorder_let_go_is_left_at_once_on_its_own_ingests_word_no_domain_asked():
+    """A's recorder stops taking the stream. The book still says "written" — no domain pass has run. A's ingest
+    says it on the next poll: it should record the camera and no recorder takes it. The camera goes to B on
+    that word, and both standbys know it from the stream: the card because its camera did not hand the stream
+    on, the backup because the camera came to it."""
+    from domain.ingest import backup_gate, edge_gate
+    wall = Clock()
+    o = _office(wall)
+    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
+    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")          # A's recorder let go
+    out = o.pusher.pass_once(_frames(wall, 3, start=3))
+    assert out["road"] == "backup" and [f["n"] for f in o.q["srv-b"].drain()] == [3, 4, 5]
+    assert json.loads(o.cam.flash.get("domain/primaries")[0][SERIAL])["written"] is True   # the book: behind
+    assert edge_gate(o.pusher)(EDGE) is True and backup_gate(o.ing["srv-b"])(BACKUP) is True
+
+
+def test_the_domain_dies_with_a_and_both_standbys_start_at_once_anyway():
+    """Suppose the domain lived on A and died with it. No book will say "not written" until it goes stale — 45 s.
+    Nothing waits for it: the camera cannot reach A's ingest and goes to B; the card and the backup start from
+    what the stream says; the book, stale or not, is only the fallback."""
+    from domain.ingest import backup_gate, edge_gate
+    wall = Clock()
+    o = _office(wall)
+    o.pusher.pass_once(_frames(wall, 3)); o.q["srv-a"].drain()
+    o.down.add("srv-a"); o.a_link.up = False                           # A is gone; no domain pass runs after
+    wall.advance(2)
+    assert o.pusher.pass_once(_frames(wall, 3, start=3))["road"] == "backup"
+    assert not _covers(o.cam.flash, o.cam.local_objects(), EDGE, wall())          # the book still says written
+    assert edge_gate(o.pusher)(EDGE) is True                                        # the stream says otherwise
+    assert backup_gate(o.ing["srv-b"])(BACKUP) is True
+
+
+def test_a_standby_that_pulls_opens_the_one_session_only_when_the_primary_stops_writing():
+    """A camera the second server takes itself (RTSP). Cold, not on hold: while A's recorder says it writes, B
+    holds no session — the camera serves one. A goes silent: B opens its session. A is back: B keeps it a minute,
+    so the archives overlap, and closes it. A partition, both servers alive: B cannot see A and opens a second
+    session — two recordings for a while, which Lesson 8 of М11 prefers to none."""
+    from domain.crossing import ColdStandby
+    wall = Clock()
+    o = _office(wall)
+    sessions = {"srv-a"}
+    standby = ColdStandby(o.a.objects, SERIAL, lambda: sessions.add("srv-b"), lambda: sessions.discard("srv-b"), wall=wall)
+    o.recorders()
+    assert standby.pass_once() == "cold: the primary writes" and sessions == {"srv-a"}
+    o.a_link.up = False; sessions.discard("srv-a")                     # A is gone, and its session with it
+    assert standby.pass_once().startswith("pulling") and sessions == {"srv-b"}
+    o.a_link.up = True; sessions.add("srv-a"); o.recorders()           # A is back
+    assert standby.pass_once() == "pulling: the overlap" and sessions == {"srv-a", "srv-b"}
+    wall.advance(61); o.recorders()
+    assert standby.pass_once() == "closed: the primary writes again" and sessions == {"srv-a"}
+    o.a_link.up = False                                                # a partition: A writes, B cannot see it
+    standby.pass_once()
+    assert sessions == {"srv-a", "srv-b"}
