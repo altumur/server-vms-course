@@ -7,7 +7,7 @@ the domain cluster runs the same one pointed at every cluster.
     GET  /api/where/<camera>                    the directory of directories, incompleteness included
     PUT  /api/cameras/<camera>                  proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields
-    GET  /api/topology                          the domain's topology: centre, star offices, who reaches it via whom
+    GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain cluster only (`domain/topology.py`)
     GET  /healthz
