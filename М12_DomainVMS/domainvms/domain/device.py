@@ -183,7 +183,8 @@ class DeviceCluster:
         hb = {"worker": self.serial, "ts": now, "server": self.serial, "instance": f"{self.name}-boot-{self.boots}",
               "capacity": 1, "headroom": 0, "status": [status],
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",
-              "coverage": self.coverage, **({"push": True} if self.pushes else {})}
+              "coverage": self.coverage, **({"push": True} if self.pushes else {}),
+              "polls": True}                                     # Lesson 16, step 8: a member camera keeps a poll open
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
                 "cameras": [{**row, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())
