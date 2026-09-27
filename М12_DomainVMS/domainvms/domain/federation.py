@@ -46,6 +46,7 @@ class Cluster:
     objects: ObjectStore
     reaches: frozenset = frozenset()      # networks this cluster can see: {"vlan:cctv-a", ...}
     is_domain_cluster: bool = False       # the one that hosts the domain services — a stated decision
+    via: str | None = None                # Lesson 17: a member that reaches only this office — and through it the domain
 
     def snapshot(self) -> dict | None:
         """The cluster's cameras and placement, merged from one object per worker.
