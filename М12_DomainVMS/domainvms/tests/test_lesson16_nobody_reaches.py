@@ -308,3 +308,101 @@ def test_a_refused_action_is_answered_and_only_a_scenario_gives_the_right_to_ask
             assert False
         except Refused:
             pass
+
+
+# -- end to end: the scenario from the shared document to the camera that acts ------------------------------
+PTZ = "SN5003"                                                         # a PTZ camera kept for live view: nobody records it
+NORTH_URLS = ["srt://ingest.north:9000"]
+
+
+def _scenario_site(wall, scenarios):
+    from domain.books import Books
+    from domain.ingest import Asker
+    from domain.scenario import Scenarios
+    from domain.shared import SharedSettings, SharedView
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, _ = _site(wall)
+    home = Ingest("north", NORTH_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
+    home.announce(north.objects)                                       # the domain's cluster: every camera reaches it
+
+    def member(serial):
+        d = DeviceCluster(serial, FakeVariables(), wall=wall, pushes=True)
+        d.boot(); d.door_open = False
+        fed.add(member_copy(d.name, north.objects, wall=wall))
+        a = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects, cluster_objects=d.disk,
+                        published=d.local_objects())
+        return d, a
+
+    gate, gate_agent = member(GATE)
+    ptz, ptz_agent = member(PTZ)
+    shared = SharedSettings(north.vars, north.objects, signer.tokens, wall=wall)
+    shared.edit(lambda s: s.update(scenarios=scenarios), base_rev=0, by="anna")
+    books = Books(crossings, north.objects)
+    agents = (cam_agent, room_agent, gate_agent, ptz_agent)
+
+    def domain_pass():
+        for d in (cam, gate, ptz):
+            d.publish()
+        for a in agents:
+            a.sync()                                                   # reports up
+        books.pass_once()                                              # the signer's pass: every book
+        for a in agents:
+            a.sync()                                                   # books down
+
+    domain_pass()
+    ingests = {u: ingest for u in URLS} | {u: home for u in NORTH_URLS}
+
+    def dial(url):
+        if url not in ingests:
+            raise Unreachable(f"{url} did not answer")
+        return ingests[url]
+
+    done = {SERIAL: [], PTZ: []}
+    pusher.perform = lambda action: done[SERIAL].append(action) or "performed"
+    ptz_pusher = CameraPusher(PTZ, ptz.flash, dial, clock=wall, perform=lambda action: done[PTZ].append(action) or "performed")
+    gate_scenarios = Scenarios(GATE, SharedView(gate.flash, gate.disk, wall), Asker(GATE, gate.flash, dial, clock=wall))
+    return (shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done)
+
+
+SCENARIOS = [{"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+             {"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": SERIAL, "action": "preset", "arg": 1, "within": 10}}]
+
+
+def test_a_scenario_in_the_shared_document_acts_on_two_cameras_one_recorded_and_one_not():
+    """The operator writes two scenarios into the shared document. The domain's pass over the books makes the
+    gate camera a trigger with two targets: the yard camera, at the room that records it, and the PTZ camera
+    nobody records — at the domain's own ingest, which the domain gave it to poll, because otherwise an ask
+    for it would have nowhere to wait. The gate camera sees a vehicle; both act, each on its next poll."""
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
+    assert ptz_pusher.entry()["polls_only"] and ptz_pusher.entry()["ingest"]["urls"] == NORTH_URLS
+    assert ptz_pusher.pass_once(["f"])["pushed"] == 0 and "asks only" in ptz_pusher.state   # never told to push
+
+    assert gate_scenarios.on_event("motion") == []                    # no scenario for that event
+    left = gate_scenarios.on_event("vehicle")
+    assert [(x["target"], x["state"]) for x in left] == [(PTZ, "asked"), (SERIAL, "asked")]
+    assert ptz_pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 1}, "performed")]
+    assert done == {PTZ: [{"action": "preset", "arg": 3}], SERIAL: [{"action": "preset", "arg": 1}]}
+    by_target = {x["target"]: x for x in left}
+    assert by_target[PTZ]["ingest"] is home and home.ask_outcome(PTZ, by_target[PTZ]["ask"]) == "performed"
+    assert ingest.ask_outcome(SERIAL, by_target[SERIAL]["ask"]) == "performed"
+
+
+def test_the_books_do_not_churn_and_a_scenario_taken_out_takes_the_right_with_it():
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, *_rest, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
+    writes = (gate.flash.writes, ptz.flash.writes)
+    for _ in range(10):
+        wall.advance(30); domain_pass()
+    assert (gate.flash.writes, ptz.flash.writes) == writes            # five minutes of passes: no book rewritten
+
+    rev = shared.current()[0]["rev"]
+    shared.edit(lambda s: s.update(scenarios=[]), base_rev=rev, by="anna")
+    domain_pass()
+    assert gate_scenarios.on_event("vehicle") == []                   # the document no longer says so…
+    assert gate_scenarios.asker.book() == {}                           # …and the book no longer lets it
+    try:
+        gate_scenarios.asker.ask(PTZ, {"action": "preset", "arg": 3}, within=10)
+        assert False
+    except Refused:
+        pass
