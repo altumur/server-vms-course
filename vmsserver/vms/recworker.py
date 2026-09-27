@@ -361,8 +361,11 @@ class RecWorker(VmsWorker):
         items, _ = self.vars.get(PRIMARIES)
         if not items:
             return None
-        cam, _ = self.vars.get(f"vms/cameras/{row['cam']}")
-        ref = str((cam or {}).get("ref") or "")
+        if str(row.get("cam", "")).startswith("ref:"):
+            ref = str(row["cam"])[4:]                            # a camera of ANOTHER cluster, by the domain's name — a
+        else:                                                    # backup kept here for another server's primary (М11 lesson 1)
+            cam, _ = self.vars.get(f"vms/cameras/{row['cam']}")
+            ref = str((cam or {}).get("ref") or "")
         if not ref or ref not in items:
             return None
         import json
@@ -921,14 +924,20 @@ class RecWorker(VmsWorker):
                 other = self.parse_row(items)
                 if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
                     recs.add(str(other["id"]))
-        out = []
+        out, edge_homes, homes = [], volumes.edges(self.vars), {}
+        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
+            items, _ = self.vars.get(key)
+            if items:
+                other = self.parse_row(items)
+                homes[str(other["id"])] = str(other.get("home") or "")
         for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
             url = hb.extra.get("archive_url", "")
             if not url or now - hb.ts > 45.0:
                 continue
             for st in hb.status:
                 if str(st.get("id")) in recs and st.get("coverage"):
-                    out.append({"key": f"backup:{st['id']}", "kind": "backup", "recording": str(st["id"]),
+                    kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
+                    out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]),
                                 "recorder": name, "url": url.rstrip("/"), "coverage": st["coverage"]})
         return out
 
