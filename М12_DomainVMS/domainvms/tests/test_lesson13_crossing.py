@@ -12,6 +12,7 @@ from domain.api import ApiError
 from domain.crossing import Crossings, NotResolvable, plan_backfill, resolve
 from domain.device import DeviceCluster
 from domain.federation import Federation
+from domain.uplink import member_copy
 from domain.readview import ReadView
 from tests.conftest import Clock, Running, make_cluster
 
@@ -28,12 +29,15 @@ def _site(wall):
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
     cam.coverage = {"from": wall() - 3600, "to": wall()}           # an hour on the card
     cam.boot()
-    fed.add(cam.cluster())
+    fed.add(member_copy(cam.name, north.objects, wall=wall))        # the domain reads the camera's reports
+    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                            published=cam.local_objects())
+    cam_agent.sync()
     view = ReadView(fed, wall=wall)
     view.refresh()
     crossings = Crossings(north.vars, view, wall)
     agent = DomainAgent("south", north.vars, south.vars, now=wall)
-    return fed, north_link, south, cam, view, crossings, agent
+    return fed, north_link, south, cam, view, crossings, agent, cam_agent
 
 
 def test_the_recorder_finds_a_camera_of_another_cluster_in_its_own_clusters_book():
@@ -41,7 +45,7 @@ def test_the_recorder_finds_a_camera_of_another_cluster_in_its_own_clusters_book
     the camera's cluster, and south's agent carries it home. The recorder resolves `ref:SN4471` against
     south's own Variables. And the camera's store is exactly as it was: nobody wrote into it."""
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     writes = cam.flash.writes
     assert crossings.record(SERIAL, on="south") == {"camera": SERIAL, "recorded_by": "south", "from": f"cam-{SERIAL}"}
     crossings.publish()
@@ -57,7 +61,7 @@ def test_one_camera_one_recording_cluster():
     from the first — so which cluster records it is the domain's decision, stored, and a second asker is
     refused with the reason, as Lesson 1 refuses a second placement."""
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     crossings.record(SERIAL, on="south")
     assert crossings.record(SERIAL, on="south")["recorded_by"] == "south"      # asking again is the same answer
     for on, status in (("north", 409), (f"cam-{SERIAL}", 400)):
@@ -77,7 +81,7 @@ def test_the_recording_goes_on_with_the_domain_switched_off_and_says_how_old_its
     """The thesis, for crossings: the recorder never asks the domain, it asks its own cluster's copy. With
     the domain gone the address is the one last carried, and its age grows — shown, never hidden."""
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     crossings.record(SERIAL, on="south"); crossings.publish(); agent.sync()
     north_link.up = False
     wall.advance(6 * 3600)
@@ -91,12 +95,13 @@ def test_a_camera_that_moved_while_the_domain_was_off_is_found_again_when_it_is_
     is recorded from the old address until the domain is back — the recorder sees a dead URL, reports it,
     and has nothing better. When the domain returns, one pass and one carry and the book is right again."""
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     crossings.record(SERIAL, on="south"); crossings.publish(); agent.sync()
     north_link.up = False
     cam.address = "10.1.0.99"; cam.publish()                         # a new lease from DHCP
     assert resolve(south.vars, f"ref:{SERIAL}", wall()).live_url == "rtsp://10.1.0.71/live"
     north_link.up = True
+    cam_agent.sync()                                                 # the camera reports its new door
     view.refresh(); crossings.publish(); agent.sync()
     assert resolve(south.vars, f"ref:{SERIAL}", wall()).live_url == "rtsp://10.1.0.99/live"
 
@@ -106,7 +111,7 @@ def test_backfill_trusts_the_book_to_plan_and_the_card_to_fetch():
     plan. Then the device is asked, and the card — a ring — has overwritten its oldest part since the book
     was carried: what is still there is fetched, what is not is dropped with its reason, not retried."""
     wall = Clock(100_000.0)
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     crossings.record(SERIAL, on="south"); crossings.publish(); agent.sync()
     now = wall()
     src = resolve(south.vars, f"ref:{SERIAL}", now)
@@ -119,7 +124,7 @@ def test_backfill_trusts_the_book_to_plan_and_the_card_to_fetch():
 
 def test_a_camera_the_book_does_not_hold_is_said_by_name():
     wall = Clock()
-    fed, north_link, south, cam, view, crossings, agent = _site(wall)
+    fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
     try:
         resolve(south.vars, f"ref:{SERIAL}", wall())
         raise AssertionError("nothing was carried yet")
@@ -146,13 +151,15 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
     south, south_link = make_cluster("south")
     fed.add(north); fed.add(south)
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, address="10.1.0.71")
-    cam.boot(); fed.add(cam.cluster())
+    cam.boot(); fed.add(member_copy(cam.name, north.objects, wall=wall))
+    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, seen_store=cam.local_objects(),
+                        domain_objects=north.objects, published=cam.local_objects())
+    agent.sync()                                                      # its first report: now the domain knows it
     view = ReadView(fed, wall=wall); view.refresh()
     crossings = Crossings(north.vars, view, wall)
     crossings.record(SERIAL, on="south")
     rec = SpecController(REC_SPEC, south.vars, south.objects, wall=wall)
     rec.create({"name": SERIAL, "cam": f"ref:{SERIAL}"})              # the room's recording of the camera
-    agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, seen_store=cam.cluster().objects)
 
     def room(running: bool):                                          # the room's recorder, and its controller
         rec.publish_snapshot()
