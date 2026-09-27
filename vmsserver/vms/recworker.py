@@ -253,11 +253,25 @@ class RecWorker(VmsWorker):
             out.update(hold=hold, ring_seconds=self.PREBUFFER, now=self.wall())
         return out
 
+    # A source this recorder cannot reach — the pipeline could not open the camera's stream (М12 lesson 16): said
+    # in the heartbeat, per recording, so the domain can stop sending it to pull what it cannot reach and have
+    # the camera push instead. The pipeline's own failure is the only witness; whoever runs it calls this.
+    def note_source_unreachable(self, unit, reason: str | None) -> None:
+        if not hasattr(self, "unreachable_sources"):
+            self.unreachable_sources = {}
+        if reason is None:
+            self.unreachable_sources.pop(str(unit), None)
+        else:
+            self.unreachable_sources[str(unit)] = reason
+
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
         if cam["id"] in self.waiting and cam["id"] not in self.reconciler.actual:
             out["why"] = "camera held by nobody"
+        why = getattr(self, "unreachable_sources", {}).get(str(cam["id"]))
+        if why:
+            out.update(source_unreachable=True, why=f"source unreachable: {why}")
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
         # summary, cheap to carry in every heartbeat. The primary plans from it and asks the manifest before
         # it copies anything (Lesson 26).
