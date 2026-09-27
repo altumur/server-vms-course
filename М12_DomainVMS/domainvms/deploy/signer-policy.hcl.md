@@ -13,6 +13,7 @@
 - `path "domain/placement" { capabilities = ["read", "write"] }` — the placement revision counter (`ClusterPlacer._rev`).
 - `path "domain/placement/*" { capabilities = ["read", "write"] }` — the per-camera placements (`ClusterPlacer._store`): the placement service is expected to live in the signer process too.
 - `domain/sources/*`, `domain/primaries/*`, `domain/poll/*`, `domain/upstream/*`, `domain/asks/*` — read and write: the books of `Books.pass_once` (`domain/books.py`), one per member, which the signer service runs when it is given `CLUSTERS`. They live here because they carry tokens the signer mints — stream tokens (Lesson 16), upstream tokens (Lesson 17), tokens to ask (Lesson 16, step 8). `domain/asks/*` also has `list`: `publish_asks` lists the books to empty one no scenario fills any more.
+- `domain/members` — read and write: the domain's list of members (`domain/members.py`). The registrar, which the signer serves, adds a box it admits and removes one that leaves; the books pass reads it to know whom to read. The console removes on a leave too — its access is the console's.
 - `domain/topology` — read only: the operator's topology (centre, star relays, `via`), which the books pass reads instead of CENTRE/STAR once it is written (`domain/topology.py`).
 - `domain/crossings`, `domain/shared` — read only: who records what (written by the console, Lesson 13) and the shared document's pointer, whose scenarios the book of asks is built from.
 
