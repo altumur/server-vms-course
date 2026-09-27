@@ -219,8 +219,7 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
     b.want(SERIAL, "recorder:srv-2")                                   # the recorder is on the second server
     rq = b.subscribe(SERIAL, "recorder:srv-2")
     assert pusher.pass_once(["x1", "x2"])["pushed"] == 2 and pusher.state == f"pushing to {URLS[0]}"
-    b.pump()
-    assert rq.drain() == ["x1", "x2"]
+    assert rq.drain() == ["x1", "x2"]                                  # pushed on to b as it arrived: nobody drains a queue (AJ)
     rid = b.request_range(SERIAL, 100.0, 200.0)
     pusher.pass_once([])                                               # asked at b, polled and answered at a
     assert b.answer(SERIAL, rid) == [("card", 100.0, 200.0)]
@@ -618,3 +617,85 @@ def test_a_scenario_on_a_camera_that_polls_nothing_is_refused_when_written_and_n
     shared.edit(lambda s: s["scenarios"].append(stranger), base_rev=rev, by="anna")   # written past the check
     out = books.pass_once()
     assert len(out["refused"]) == 1 and "SN9999" in out["refused"][0]
+
+
+# -- feedback AH, AI, AJ, AK --------------------------------------------------------------------------------
+def test_a_held_poll_hears_a_linger_run_out_and_an_ask_expire_on_real_clocks():
+    """AH. Nothing touches the ingest when a viewer's linger runs out, or an ask's deadline passes — so nothing
+    would wake a held poll, and it would answer at the end of its wait: the 24.6 s the product saw on the box.
+    The poll is timed to the next lapse. Real clocks: linger 0.3 s, poll held up to 5 s."""
+    import time as _t
+    wall = _t.time
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    token = pusher.entry()["ingest"]["token"]
+    ingest.linger = 0.3
+    ingest.want(SERIAL, "viewer:anna")
+    first = ingest.poll(token, SERIAL, version=-1)
+    assert first["push"]
+    ingest.release(SERIAL, "viewer:anna")
+    t0 = _t.monotonic()
+    out = ingest.poll(token, SERIAL, version=first["version"], wait=5.0)
+    assert not out["push"] and 0.2 < _t.monotonic() - t0 < 1.5        # woken by the lapse, not by the wait
+    ingest._cam(SERIAL).asks["a1"] = {"action": {"preset": 3}, "deadline": wall() + 0.3, "by": GATE}
+    seen = ingest.poll(token, SERIAL, version=out["version"])
+    assert list(seen["asks"]) == ["a1"]
+    t0 = _t.monotonic()
+    out = ingest.poll(token, SERIAL, version=seen["version"], wait=5.0)
+    assert out["asks"] == {} and 0.2 < _t.monotonic() - t0 < 1.5       # the deadline woke it
+
+
+def test_an_ask_to_a_camera_that_never_polls_again_expires_and_is_then_forgotten():
+    """AI. The yard camera was taken off the site: it never polls again. Its ask still dies at its deadline —
+    the gate camera reads "expired", the answer that means "the target did not answer in time" — and after the
+    quarter hour an outcome is kept, "unknown". Dead asks do not pile up against the ceiling."""
+    from domain.ingest import MAX_LIVE_ASKS, REMEMBER
+    wall = Clock()
+    ingest, pusher, asker, done, *_ = _two(wall)
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    deadline = wall() + 10
+    wall.advance(60)                                                   # and the yard camera never comes back
+    assert asker.outcome(SERIAL, aid, deadline) == "expired"
+    assert ingest._cam(SERIAL).asks == {}
+    for _ in range(MAX_LIVE_ASKS + 4):                                 # the ceiling counts the living only
+        asker.ask(SERIAL, {"preset": 9}, within=1)
+        wall.advance(2)
+    wall.advance(REMEMBER)
+    assert asker.outcome(SERIAL, aid, deadline).startswith("unknown")
+
+
+def test_a_peer_that_falls_behind_is_cut_clean_to_a_keyframe_never_in_the_middle_of_a_gop():
+    """AJ. The camera pushes to the first ingest; the recorder is on the second. The first pushes the stream on
+    as it arrives — nobody has to drain a queue in time. When the second falls behind (backpressure), the whole
+    backlog is dropped at once and the stream resumes at the next keyframe, counted — a recorder given half a GOP
+    writes garbage until the next one."""
+    wall = Clock()
+    fed, north, south, signer, ingest, cam, *_rest, pusher, domain_pass = _site(wall)
+    keys = lambda: ClusterTrust(south.vars).keyset()
+    a = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[0], peers=lambda: [b])
+    b = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[1], peers=lambda: [a])
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: a, clock=wall)
+    b.want(SERIAL, "recorder:srv-2")
+    rq = b.subscribe(SERIAL, "recorder:srv-2", maxsize=1000)
+    gop = lambda start, n: [{"t": wall() + i * 0.04, "n": i, "key": i % 25 == 0} for i in range(start, start + n)]
+    pusher.pass_once(gop(0, 25))
+    assert [f["n"] for f in rq.drain()] == list(range(25))             # all of it, as it arrived
+    link = a.links[(URLS[1], SERIAL)]
+    link.paused = True                                                 # the second server falls behind
+    pusher.pass_once(gop(25, 60))                                      # more than PEER_BUFFER: the backlog is cut
+    link.paused = False
+    pusher.pass_once(gop(85, 30))
+    got = rq.drain()
+    assert got and got[0]["key"] and got[0]["n"] == 100                # resumed at the next keyframe
+    assert [f["n"] for f in got] == list(range(100, 115)) and link.dropped == 75 and link.cuts == 1
+
+
+def test_a_suppression_summary_asks_nothing_and_the_deadline_counts_from_the_event():
+    """AK. A scenario fires on events, not on the summary a storm's suppression writes when its window closes —
+    that reports on a first row which already fired. And the deadline counts from when the event HAPPENED: one
+    seen 25 s late gets 5 s of its 30; one seen after its deadline asks nothing."""
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, home, ingest, pusher, ptz_pusher, gate_scenarios, done = _scenario_site(wall, SCENARIOS)
+    assert gate_scenarios.on_event("vehicle", {"ts": wall() - 15, "repeats": 12}) == []
+    late = {x["target"]: x for x in gate_scenarios.on_event("vehicle", {"ts": wall() - 25})}
+    assert late[PTZ]["state"] == "asked" and late[PTZ]["deadline"] == wall() + 5      # 30 s from the event
+    assert late[SERIAL]["state"] == "seen after its deadline: not asked"            # its within is 10 s
