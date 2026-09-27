@@ -114,3 +114,69 @@ def test_a_leave_from_the_domain_console_admins_only():
         assert delete("cam-SN9004", "anna") == 404                    # not a member any more
     finally:
         con.stop(srv)
+
+
+# -- feedback AN ----------------------------------------------------------------------------------------------
+def test_the_first_write_carries_the_configuration_so_no_configured_member_becomes_a_stranger():
+    """SN9005 was named in the configuration (`cam-SN9005=report`). The registrar admits SN9006 — the list's first
+    write. Had it written only the newcomer, the next pass would have dropped SN9005 as one that left."""
+    wall = Clock(1000.0)
+    fed, north, signer, _ = _domain(wall)
+    fed.add(member_copy("cam-SN9005", north.objects, wall=wall))
+    members = Members(north.vars, wall=wall, configured=lambda: ["cam-SN9005"], domain="north")
+    vendor = Manufacturer("vendor", now=wall)
+    reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public, now=wall, members=members)
+    _enroll(reg, vendor, "SN9006")
+    doc = members.read()["members"]
+    assert sorted(doc) == ["cam-SN9005", "cam-SN9006"] and doc["cam-SN9005"]["how"] == "configuration"
+    assert apply(fed, members, north.objects) == {"joined": ["cam-SN9006"], "left": []}
+
+
+def test_the_domains_own_cluster_is_neither_admitted_nor_removed():
+    from domain.api import ApiError
+    wall = Clock(1000.0)
+    fed, north, signer, _ = _domain(wall)
+    members = Members(north.vars, wall=wall, domain="north")
+    for act in (lambda: members.add("north", "approved by anna"), lambda: members.remove("north")):
+        try:
+            act()
+            raise AssertionError("the domain's own cluster")
+        except ApiError as e:
+            assert e.status == 400
+
+
+def test_a_cluster_that_knocks_is_named_and_accepted_from_the_console():
+    """SN9007 reports into the domain's store and is not on the list — admitted by nobody, or left and still
+    reporting. It is not read; it is named, with when it last reported. An admin accepts it; the next pass
+    reads it."""
+    wall = Clock(1000.0)
+    fed, north, signer, _ = _domain(wall)
+    members = Members(north.vars, wall=wall, domain="north")
+    members.add("cam-SN9001", "voucher", serial="SN9001")
+    cam = DeviceCluster("SN9007", FakeVariables(), wall=wall)
+    cam.boot()
+    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()).sync()
+    assert apply(fed, members, north.objects)["joined"] == ["cam-SN9001"] and "cam-SN9007" not in fed.clusters
+
+    view = ReadView(fed, wall=lambda: 1000.0)
+    con = Console(DomainDirectory(fed), view, ConsoleAPI(DomainDirectory(fed), lambda n: None, verifier=lambda t: t),
+                  refresh_interval=60, members=members, admin=lambda s: s == "anna", publish_to=north.objects)
+    srv = con.serve(port=0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}/api/members"
+    try:
+        body = json.load(urllib.request.urlopen(base))
+        assert [(k["name"], k["reported"]) for k in body["knocking"]] == [("cam-SN9007", 1000.0)]
+        req = urllib.request.Request(base, data=json.dumps({"name": "cam-SN9007"}).encode(), method="POST",
+                                     headers={"Authorization": "Bearer boris"})
+        try:
+            urllib.request.urlopen(req); raise AssertionError("boris is no admin")
+        except urllib.error.HTTPError as e:
+            assert e.code == 403
+        req = urllib.request.Request(base, data=json.dumps({"name": "cam-SN9007"}).encode(), method="POST",
+                                     headers={"Authorization": "Bearer anna"})
+        assert urllib.request.urlopen(req).status == 200
+        assert members.read()["members"]["cam-SN9007"]["how"] == "accepted by anna"
+        assert json.load(urllib.request.urlopen(base))["knocking"] == []
+    finally:
+        con.stop(srv)
+    assert apply(fed, members, north.objects)["joined"] == ["cam-SN9007"]
