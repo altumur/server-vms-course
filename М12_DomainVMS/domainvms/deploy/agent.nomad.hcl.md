@@ -20,6 +20,9 @@
   - `DOMAIN_NOMAD_ADDR=http://nomad.north:4646` — the domain cluster's API, read through federation forwarding (`federation.hcl`). The one hostname in the file, and it names a region's servers, not a box.
   - `NOMAD_ADDR=http://127.0.0.1:4646` — this cluster's local agent, written. (No `network_mode = "host"` is set in `config`, unlike М11's jobs; the loopback address assumes host networking.)
   - `SYNC_INTERVAL=30` — seconds between passes; how stale a cluster's copy of a revocation may be, and half of the agent's contribution to the revocation window.
+  - `OBJECTS_URL` — this cluster's object store: the agent writes `domain/reaches` there, what this cluster can see, and the domain reads it for placement and the mirror plan (`federation.REACHES`).
+  - `REACHES` (commented) — the site's own names for the networks it sees; unset, the agent says the IPv4 networks of the host's interfaces as `net:<cidr>` (`agent.local_networks`).
+  - `OFFICE=1` (commented) — this cluster is an office: it relays down and bundles up for the members that the domain's topology (`domain/topology`) says reach the domain through it, read on every pass; `RELAY_MEMBERS` only where no topology is written.
 - `resources { cpu = 50  memory = 64 }` — three small Variable reads and at most three writes every 30 s.
 
 ## Notes
