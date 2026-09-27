@@ -17,6 +17,7 @@ namespace "default" {
     path "domain/crossings"   { capabilities = ["read"] }
     path "domain/shared"      { capabilities = ["read"] }
     path "domain/topology"    { capabilities = ["read"] }      # the operator's topology: the centre, the star
-    path "domain/members"     { capabilities = ["read", "write"] }   # the registrar admits, a leave removes; the books pass reads
+    path "domain/members"     { capabilities = ["read", "write"] }
+    path "domain/roads"       { capabilities = ["read", "write"] }   # cameras sent to push after a recorder could not pull   # the registrar admits, a leave removes; the books pass reads
   }
 }
