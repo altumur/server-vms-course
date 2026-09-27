@@ -127,8 +127,8 @@ class Ingest:
         self.links: dict[tuple[str, str], PeerLink] = {}          # (peer, camera) -> the stream this ingest pushes it (AJ)
         self.tees: dict[tuple[str, str], LiveTee] = {}
         self.cams: dict[str, _Camera] = {}
-        # Asks going UP (Lesson 17): left here by a camera that sees only this office, for a camera elsewhere;
-        # this office's forwarder takes them to the centre. {id: {target, action, deadline, by, lifted}}
+        # Asks going UP (Lesson 17): left here by a camera that sees only this relay, for a camera elsewhere;
+        # this relay's forwarder takes them to the centre. {id: {target, action, deadline, by, lifted}}
         self.up: dict[str, dict] = {}
         # Held polls, for real: whatever could change an answer bumps the generation and wakes every waiter;
         # listeners — this cluster's forwarder — are told too. That is what "by event" is made of.
@@ -285,7 +285,7 @@ class Ingest:
         shift = 0.0 if camera_now is None else now - float(camera_now)
         live = (sum(1 for c in list(self.cams.values()) for a in list(c.asks.values()) if a["by"] == by and a["deadline"] > now)
                 + sum(1 for a in list(self.up.values()) if a["by"] == by and a["deadline"] > now))
-        if p.get("up"):                                   # a road UP: not for a camera here — for this office to carry
+        if p.get("up"):                                   # a road UP: not for a camera here — for this relay to carry
             for aid, a in list(self.up.items()):
                 if a["by"] == by and a["target"] == str(target) and a["action"] == action and a["deadline"] > now:
                     return aid
@@ -344,8 +344,8 @@ class Ingest:
             self._changed()
 
     def outcome_wait(self, target: str, aid: str, wait: float = 0.0) -> str | None:
-        """`ask_outcome`, held up to `wait` seconds for the outcome to arrive — the call an office holds at the
-        centre for the asks it carried up, answered the moment the other office answers."""
+        """`ask_outcome`, held up to `wait` seconds for the outcome to arrive — the call a relay holds at the
+        centre for the asks it carried up, answered the moment the other relay answers."""
         until = time.monotonic() + wait
         while True:
             gen = self._gen
@@ -387,7 +387,7 @@ class Ingest:
         return self._cam(ref).answers.get(rid)
 
     def pull(self, token: str, ref: str, who: str) -> list:
-        """Lesson 17, the star: a cluster that nobody can dial either — an office behind a mobile operator's
+        """Lesson 17, the star: a cluster that nobody can dial either — a relay behind a mobile operator's
         NAT, a cluster in a cloud that takes no inbound — takes the streams of ITS cameras from here, calling
         in. Each pull is wanting the stream for another `LINGER`; stop pulling, and the want runs out."""
         self._check(token, ref)
@@ -666,7 +666,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         return json.loads(raw)["urls"] if raw else None
 
     dc = getattr(crossings.view.fed, "domain_cluster", None)
-    top = crossings.centre or (dc.name if dc is not None else None)      # where every office's forwarder goes
+    top = crossings.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
 
     def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
@@ -683,15 +683,15 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         if known_a is None or on is None or crossings.issuer is None:
             continue
         home = known_a[0]
-        via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that office
+        via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that relay
         have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
         old = {r["cluster"]: r for r in json.loads((have or {}).get(b, '{"roads": []}'))["roads"]}
         up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
         above = json.loads((up or {}).get(b, "{}"))
         if via and on != via:
-            # The target is in another office. The only road this camera has is its own office, marked UP; the
-            # office gets a token of its own for exactly this pair, to take it to the top — which must have a
-            # road down to the target: it polls the top, or its office forwards it there.
+            # The target is in another relay. The only road this camera has is its own relay, marked UP; the
+            # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
+            # road down to the target: it polls the top, or its relay forwards it there.
             if not (on == top or above.get("mode") == "push") or urls_of(via) is None or urls_of(top) is None:
                 continue
             roads = [road(old.get(via), via, urls_of(via), home, a, b, acts, up=top)]
@@ -700,7 +700,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             books.setdefault(via, {})[f"{b}|{a}"] = json.dumps(
                 {"roads": [road(oold.get(top), top, urls_of(top), via, a, b, acts)]}, sort_keys=True)
         else:
-            # Its own office (the only one it reaches), or — for a camera that reaches the centre — the cluster
+            # Its own relay (the only one it reaches), or — for a camera that reaches the centre — the cluster
             # where the target polls, then the centre that cluster forwards it to.
             wanted = [(on, urls_of(on))]
             if not via and above.get("mode") == "push" and crossings.centre:
