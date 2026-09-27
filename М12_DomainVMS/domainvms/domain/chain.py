@@ -80,7 +80,8 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
 # -- the office's side: the forwarder ------------------------------------------------------------------------
 # One pass. For every camera in this cluster's upstream book: PUSH mode — poll the centre's ingest; if it wants
 # the stream, want it here too (that is the want travelling down to the camera) and push up what arrived;
-# upload any range the centre asked for, out of this cluster's archive. PULL mode (the star) — this cluster
+# upload any range the centre asked for, out of this cluster's archive; carry down any ask left there for the camera
+# and carry its outcome back up. PULL mode (the star) — this cluster
 # wants the stream for its own recorder: pull it from the centre and inject it here.
 class Forwarder:
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None):
@@ -132,6 +133,11 @@ class Forwarder:
             said = "the centre does not want it"
         for rid, (t0, t1) in work["ranges"].items():
             ing.upload(e["token"], ref, rid, self.archive(ref, t0, t1))    # the answer to that request (AD)
+        for aid, a in work.get("asks", {}).items():                     # an ask left above: down it goes…
+            self.local.carry_ask(ref, aid, a)
+            out = self.local.ask_outcome(ref, aid)
+            if out is not None:                                          # …and what became of it, up
+                ing.answer_ask(e["token"], ref, aid, out)
         return said
 
     def _pull(self, ing, ref: str, e: dict) -> str:
