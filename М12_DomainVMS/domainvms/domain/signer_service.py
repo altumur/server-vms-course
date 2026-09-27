@@ -53,11 +53,14 @@ def main() -> None:
         view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
         from .members import Members
         from .topology import Topology
+        from .uplink import _CopyObjects
+        configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
         books = Books(Crossings(fed.domain_cluster.vars, view, issuer=signer.tokens,
                                 centre=os.environ.get("CENTRE") or None, star=star,
                                 topology=Topology(fed.domain_cluster.vars)), fed.domain_cluster.objects,
-                      members=Members(fed.domain_cluster.vars))
+                      members=Members(fed.domain_cluster.vars, configured=lambda: configured,
+                                      domain=fed.domain_cluster.name))
 
     class H(BaseHTTPRequestHandler):
         def _send(self, status, body):
