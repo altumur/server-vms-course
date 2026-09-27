@@ -62,6 +62,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import threading
 import time
 from dataclasses import dataclass, field
 
@@ -121,6 +122,29 @@ class Ingest:
         self.name, self.peers = name or (urls[0] if urls else cluster), peers
         self.tees: dict[tuple[str, str], LiveTee] = {}
         self.cams: dict[str, _Camera] = {}
+        # Asks going UP (Lesson 17): left here by a camera that sees only this office, for a camera elsewhere;
+        # this office's forwarder takes them to the centre. {id: {target, action, deadline, by, lifted}}
+        self.up: dict[str, dict] = {}
+        # Held polls, for real: whatever could change an answer bumps the generation and wakes every waiter;
+        # listeners — this cluster's forwarder — are told too. That is what "by event" is made of.
+        self._cond, self._gen, self._listeners = threading.Condition(), 0, []
+
+    def listen(self, fn) -> None:
+        """`fn()` is called whenever something here may have changed an answer: a want, a range, an ask, an
+        outcome. The forwarder listens, so an ask going up leaves at once and an outcome coming back goes on."""
+        self._listeners.append(fn)
+
+    def _changed(self) -> None:
+        for ing in self._cluster():
+            with ing._cond:
+                ing._gen += 1
+                ing._cond.notify_all()
+            for fn in list(ing._listeners):
+                fn()
+
+    def _wait(self, gen: int, until: float) -> bool:
+        with self._cond:
+            return self._cond.wait_for(lambda: self._gen != gen, timeout=max(0.0, until - time.monotonic()))
 
     def announce(self, objects) -> None:
         """Where cameras push to — in this cluster's own store, where the domain (or this cluster's report) reads it."""
@@ -147,10 +171,21 @@ class Ingest:
             self._cam(ref).offset = self.wall() - float(camera_now)
         return p
 
-    def poll(self, token: str, ref: str, camera_now: float | None = None, version: int | None = None) -> dict:
+    def poll(self, token: str, ref: str, camera_now: float | None = None, version: int | None = None,
+             wait: float = 0.0) -> dict:
         """The camera's long poll: whether to push now, and which ranges to upload — ranges on the CAMERA's
         clock. Wants and requests at any ingest of this cluster count (AG). `version`: what the camera last saw;
-        the same version is a poll the real ingest would hold, and it is said so (`held`)."""
+        the same version is a poll the ingest HOLDS — up to `wait` seconds, answered the moment anything changes
+        — and, if nothing did, answers with `held`."""
+        until = time.monotonic() + wait
+        while True:
+            gen = self._gen
+            out = self._poll_once(token, ref, camera_now, version)
+            if not out.get("held") or time.monotonic() >= until:
+                return out
+            self._wait(gen, until)
+
+    def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None) -> dict:
         self._check(token, ref, camera_now)
         now, cam = self.wall(), self._cam(ref)
         push, ranges, asks = False, {}, {}
@@ -201,6 +236,7 @@ class Ingest:
             if rid in c.ranges:
                 c.answers[rid] = shifted
                 c.landed.append(c.ranges.pop(rid))
+        self._changed()
 
     # -- asks between cameras ---------------------------------------------------------------------------------
     def ask(self, token: str, target: str, action: dict, deadline: float, camera_now: float | None = None) -> str:
@@ -223,18 +259,66 @@ class Ingest:
             raise Refused(f"{p.get('by', p['sub'])} may ask {target} for {p.get('acts') or 'nothing'}, not {action}")
         now, by = self.wall(), p.get("by", p["sub"])
         shift = 0.0 if camera_now is None else now - float(camera_now)
+        live = (sum(1 for c in list(self.cams.values()) for a in list(c.asks.values()) if a["by"] == by and a["deadline"] > now)
+                + sum(1 for a in list(self.up.values()) if a["by"] == by and a["deadline"] > now))
+        if p.get("up"):                                   # a road UP: not for a camera here — for this office to carry
+            for aid, a in list(self.up.items()):
+                if a["by"] == by and a["target"] == str(target) and a["action"] == action and a["deadline"] > now:
+                    return aid
+            if live >= MAX_LIVE_ASKS:
+                raise Refused(f"{by} holds {live} live asks at {self.cluster}: over the ceiling of {MAX_LIVE_ASKS}")
+            aid = secrets.token_hex(4)
+            self.up[aid] = {"target": str(target), "action": action, "deadline": float(deadline) + shift, "by": by,
+                            "lifted": False}
+            self._changed()                                # the forwarder hears it now, not on its next pass
+            return aid
         # The same ask while one is alive IS that ask: twenty events from one gust of wind are one preset, not
         # twenty — the asker is told the id it already has.
         for ing in self._cluster():
-            for aid, a in ing._cam(target).asks.items():
+            for aid, a in list(ing._cam(target).asks.items()):
                 if a["by"] == by and a["action"] == action and a["deadline"] > now:
                     return aid
-        live = sum(1 for c in self.cams.values() for a in c.asks.values() if a["by"] == by and a["deadline"] > now)
         if live >= MAX_LIVE_ASKS:
             raise Refused(f"{by} holds {live} live asks at {self.cluster}: over the ceiling of {MAX_LIVE_ASKS}")
         aid = secrets.token_hex(4)
         self._cam(target).asks[aid] = {"action": action, "deadline": float(deadline) + shift, "by": by}
+        self._changed()                                    # wakes the target's held poll
         return aid
+
+    # The forwarder's side of asks going up: take the new ones, put one back when the centre did not answer (it
+    # is tried again until its deadline), and settle each with what the centre said became of it.
+    def take_up(self) -> list[tuple[str, dict]]:
+        now, out = self.wall(), []
+        for c in list(self.cams.values()):
+            c.outcomes = {k: v for k, v in list(c.outcomes.items()) if now - v[1] < REMEMBER}
+        for aid, a in list(self.up.items()):
+            if a["deadline"] <= now:
+                self.settle_up(aid, "expired")             # died here, on the way up: never kept
+            elif not a["lifted"]:
+                a["lifted"] = True
+                out.append((aid, dict(a)))
+        return out
+
+    def untake_up(self, aid: str) -> None:
+        if aid in self.up:
+            self.up[aid]["lifted"] = False
+
+    def settle_up(self, aid: str, outcome: str) -> None:
+        a = self.up.pop(aid, None)
+        if a is not None:
+            self._cam(a["target"]).outcomes[aid] = (outcome, self.wall())
+            self._changed()
+
+    def outcome_wait(self, target: str, aid: str, wait: float = 0.0) -> str | None:
+        """`ask_outcome`, held up to `wait` seconds for the outcome to arrive — the call an office holds at the
+        centre for the asks it carried up, answered the moment the other office answers."""
+        until = time.monotonic() + wait
+        while True:
+            gen = self._gen
+            out = self.ask_outcome(target, aid)
+            if out is not None or time.monotonic() >= until:
+                return out
+            self._wait(gen, until)
 
     def answer_ask(self, token: str, ref: str, aid: str, outcome: str) -> None:
         """The target's answer: `performed`, or `refused` with its reason. At whichever ingest holds the ask."""
@@ -244,6 +328,7 @@ class Ingest:
             if aid in c.asks:
                 del c.asks[aid]
                 c.outcomes[aid] = (outcome, self.wall())
+        self._changed()                                    # the forwarder that carried it down answers up at once
 
     def carry_ask(self, ref: str, aid: str, ask: dict) -> None:
         """An ask left at the level above, carried down by this cluster's forwarder (Lesson 17) — the forwarder
@@ -251,6 +336,7 @@ class Ingest:
         c = self._cam(ref)
         if aid not in c.asks and aid not in c.outcomes:
             c.asks[aid] = {"action": dict(ask["action"]), "deadline": float(ask["deadline"]), "by": ask["by"]}
+            self._changed()
 
     def ask_outcome(self, target: str, aid: str) -> str | None:
         for ing in self._cluster():
@@ -282,7 +368,10 @@ class Ingest:
     # -- the cluster's side -----------------------------------------------------------------------------
     def want(self, ref: str, who: str, until: float = float("inf")) -> None:
         """Somebody in this cluster wants the stream: a recorder (for ever, or an event's window), a viewer."""
+        new = self._cam(ref).wants.get(who) != until
         self._cam(ref).wants[who] = until
+        if new:
+            self._changed()
 
     def release(self, ref: str, who: str) -> None:
         cam = self.cams.get(str(ref))
@@ -299,6 +388,7 @@ class Ingest:
         """A range on this cluster's clock; the camera is told it on its own (AC)."""
         rid = secrets.token_hex(4)
         self._cam(ref).ranges[rid] = (t0, t1)
+        self._changed()
         return rid
 
     def pushing(self, ref: str, within: float = 5.0) -> bool:
@@ -406,7 +496,8 @@ class CameraPusher:
         self.ring = [f for f in self.ring + [f for f in frames if isinstance(f, dict) and "t" in f]
                      if float(f["t"]) >= now - self.ring_seconds]
 
-    def pass_once(self, frames_now: list) -> dict:
+    def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
+        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll."""
         e = self.entry()
         if not e or not e.get("ingest"):
             self.state = "no book yet" if not e else "recorded in its own cluster: nothing to push"
@@ -415,7 +506,7 @@ class CameraPusher:
         for url in e["ingest"]["urls"]:
             try:
                 ing = self.dial(url)
-                work = ing.poll(token, self.serial, camera_now=self.clock(), version=self.version)
+                work = ing.poll(token, self.serial, camera_now=self.clock(), version=self.version, wait=wait)
                 break
             except Unreachable:
                 continue
@@ -519,6 +610,17 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             raw = None
         return json.loads(raw)["urls"] if raw else None
 
+    dc = getattr(crossings.view.fed, "domain_cluster", None)
+    top = crossings.centre or (dc.name if dc is not None else None)      # where every office's forwarder goes
+
+    def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
+        if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
+                and float(old["until"]) - now > lifetime / 2:
+            return old
+        claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, **({"up": up} if up else {})}
+        return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
+                "token": crossings.issuer.issue(sub, lifetime, now=now, **claims)}
+
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
         acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
@@ -526,23 +628,30 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         if known_a is None or on is None or crossings.issuer is None:
             continue
         home = known_a[0]
-        wanted = [(on, urls_of(on))]
-        up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = json.loads((up or {}).get(b, "{}"))
-        if above.get("mode") == "push" and crossings.centre:
-            wanted.append((crossings.centre, above["urls"]))
+        member = crossings.view.fed.clusters.get(home)
+        via = member.via if member is not None else None     # Lesson 17: this camera reaches only that office
         have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
         old = {r["cluster"]: r for r in json.loads((have or {}).get(b, '{"roads": []}'))["roads"]}
-        roads = []
-        for cluster, urls in wanted:
-            if urls is None:
+        up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
+        above = json.loads((up or {}).get(b, "{}"))
+        if via and on != via:
+            # The target is in another office. The only road this camera has is its own office, marked UP; the
+            # office gets a token of its own for exactly this pair, to take it to the top — which must have a
+            # road down to the target: it polls the top, or its office forwards it there.
+            if not (on == top or above.get("mode") == "push") or urls_of(via) is None or urls_of(top) is None:
                 continue
-            r = old.get(cluster)
-            if not (r and r["urls"] == urls and r.get("acts") == acts and float(r["until"]) - now > lifetime / 2):
-                r = {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts,
-                     "token": crossings.issuer.issue(home, lifetime, now=now, aud=audience(cluster), ask=b, by=a,
-                                                     acts=acts)}
-            roads.append(r)
+            roads = [road(old.get(via), via, urls_of(via), home, a, b, acts, up=top)]
+            ohave, _ = crossings.vars.get(f"{ASKS_PATH}/{via}")
+            oold = {r["cluster"]: r for r in json.loads((ohave or {}).get(f"{b}|{a}", '{"roads": []}'))["roads"]}
+            books.setdefault(via, {})[f"{b}|{a}"] = json.dumps(
+                {"roads": [road(oold.get(top), top, urls_of(top), via, a, b, acts)]}, sort_keys=True)
+        else:
+            # Its own office (the only one it reaches), or — for a camera that reaches the centre — the cluster
+            # where the target polls, then the centre that cluster forwards it to.
+            wanted = [(on, urls_of(on))]
+            if not via and above.get("mode") == "push" and crossings.centre:
+                wanted.append((crossings.centre, above["urls"]))
+            roads = [road(old.get(cluster), cluster, urls, home, a, b, acts) for cluster, urls in wanted if urls]
         if roads:
             books.setdefault(home, {})[b] = json.dumps({"roads": roads}, sort_keys=True)
     for home, book in books.items():
