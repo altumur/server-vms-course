@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from .chain import publish_upstream
 from .ingest import publish_asks
-from .scenario import pairs
+from .scenario import pairs, refusals
 from .shared import published
 
 
@@ -27,5 +27,9 @@ class Books:
         out = {"sources": len(c.publish()), "primaries": len(c.publish_primaries()), "poll": len(c.publish_polls())}
         if c.centre:
             out["upstream"] = len(publish_upstream(c, c.centre, star=c.star))
-        out["asks"] = len(publish_asks(c, pairs(published(c.vars, self.objects))))
+        settings = published(c.vars, self.objects)
+        out["asks"] = len(publish_asks(c, pairs(settings)))
+        # Checked at writing; a camera can still leave the domain afterwards. Such a scenario is SAID, every pass,
+        # never skipped in silence.
+        out["refused"] = refusals(settings, c)
         return out
