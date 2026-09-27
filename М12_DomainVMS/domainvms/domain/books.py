@@ -5,7 +5,7 @@ runs where the signer's key is: `domain.signer_service`, when it is given CLUSTE
     sources      Lesson 13   for each recording cluster: where its cameras of other clusters were last seen
     primaries    Lesson 13   for each camera cluster: who records it, whether written, and where to push (16)
     poll         Lesson 16   for a pushing camera nobody records: the ingest it polls for asks
-    upstream     Lesson 17   for each office: the centre's ingest, per camera, when there is a centre
+    upstream     Lesson 17   for each relay: the centre's ingest, per camera, when there is a centre
     asks         Lesson 16   for each camera a scenario of the shared document makes a trigger: whom it may
                              ask, by which roads — built last, because it reads what the others decided
 """
@@ -24,7 +24,7 @@ class Books:
     def pass_once(self) -> dict[str, int]:
         c = self.crossings
         moved = []
-        if c.topology is not None:                       # a member moved behind an office, or out: read it the new way
+        if c.topology is not None:                       # a member moved behind a relay, or out: read it the new way
             from .topology import apply
             moved = apply(c.view.fed, c.topology, self.objects, wall=c.wall)
         c.view.refresh()
