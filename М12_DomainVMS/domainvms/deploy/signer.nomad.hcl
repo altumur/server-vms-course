@@ -29,7 +29,7 @@ job "domain-signer" {
     task "signer" {
       driver = "podman"
       config { image = "vms/domainvms:latest"; args = ["python3", "-m", "domain.signer_service"] }
-      identity { env = true }    # NOMAD_TOKEN: may write domain/signer, identity/*, domain/keys, domain/revoked
+      identity { env = true }    # NOMAD_TOKEN: may write domain/signer, identity/*, domain/keys, domain/revoked, and the books
       template {
         data        = <<-EOT
           DOMAIN_ID=acme
@@ -37,6 +37,10 @@ job "domain-signer" {
           OBJECT_STORE_URL=http://minio.north:9000/domain
           TOKEN_LIFETIME=900
           IDENTITY_PUBLISH_FLOOR=60
+          # The books (domain/books.py): sources, primaries, polls, upstream, asks — they carry tokens this
+          # job mints, so their pass runs here. The same list as the domain's console; CENTRE/STAR, Lesson 17.
+          CLUSTERS=north=nomad://nomad.north:4646|http://minio.north:9000/cluster-restore,south=nomad://nomad.south:4646|http://minio.south:9000/cluster-restore
+          LOST_AFTER=45
         EOT
         destination = "local/signer.env"
         env         = true
