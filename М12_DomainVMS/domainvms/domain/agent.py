@@ -62,7 +62,8 @@ class DomainPublisher:
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
-                 published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None):
+                 published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None,
+                 reaches=None, own_objects=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -90,6 +91,9 @@ class DomainAgent:
         # …and it RELAYS down what the domain leaves for those members (`chain.relay`): the office is their only
         # road to the domain. `bundle_store` is the office's object store, where both halves live.
         self.relay_members = relay_members
+        # What this cluster can see — `reaches()`, from its interfaces or its site — said in its own object store
+        # (`own_objects`, or the one it reports from), where the domain reads it. Written only when it changes.
+        self.reaches, self.own_objects = reaches, own_objects if own_objects is not None else published
         self.reported = ""                                  # what the last pass did with the report
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
@@ -103,9 +107,21 @@ class DomainAgent:
         if have != items and not (have is None and not items):
             self.cluster_vars.put(path, items, cas=idx)
 
+    def say_reaches(self) -> bool:
+        if self.reaches is None or self.own_objects is None:
+            return False
+        import json
+        from .federation import REACHES
+        raw = json.dumps({"networks": sorted(set(self.reaches()))}).encode()
+        if self.own_objects.get(REACHES) == raw:
+            return False
+        self.own_objects.put(REACHES, raw)
+        return True
+
     def sync(self) -> bool:
         """One pass. False (and nothing written) if the domain did not answer."""
         from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
+        self.say_reaches()                                  # local: said even when the domain is away
         try:
             keys, _ = self.domain_vars.get(KEYS_PATH)
             revoked, _ = self.domain_vars.get(REVOKED_PATH)
@@ -207,6 +223,24 @@ class ClusterTrust:
         return grants_from_items(items)
 
 
+def local_networks() -> list[str]:
+    """What this cluster can see, observed: REACHES (the site's own names — "vlan:cctv-a") where the operator of
+    the SITE set them, else the IPv4 networks of this host's interfaces, as `net:<cidr>` (`ip -j -4 addr`)."""
+    import ipaddress
+    import json
+    import os
+    import subprocess
+    if os.environ.get("REACHES"):
+        return [n for n in os.environ["REACHES"].split(",") if n]
+    try:
+        out = subprocess.run(["ip", "-j", "-4", "addr"], capture_output=True, text=True, timeout=5).stdout
+        nets = {str(ipaddress.ip_interface(f"{a['local']}/{a['prefixlen']}").network)
+                for i in json.loads(out or "[]") if i.get("ifname") != "lo" for a in i.get("addr_info", [])}
+    except (OSError, ValueError, subprocess.SubprocessError):
+        nets = set()
+    return sorted(f"net:{n}" for n in nets)
+
+
 def main() -> None:
     """python3 -m domain.agent — one per cluster."""
     import os
@@ -232,11 +266,23 @@ def main() -> None:
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
+    # Which members this office relays for: the domain's topology (`domain/topology`, the operator's one record),
+    # read on every pass — RELAY_MEMBERS only where there is no topology yet. OFFICE=1 says this cluster is an
+    # office at all: it keeps the relay and the bundle in its own stores.
     relayed = [m for m in os.environ.get("RELAY_MEMBERS", "").split(",") if m]
+    office = os.environ.get("OFFICE") == "1" or bool(relayed)
+    if office and domain_objects is None:
+        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"])
+    if office and not relayed:
+        from .topology import Topology
+        topo = Topology(domain_vars)
+        relayed = lambda: topo.relayed_by(cluster)                       # noqa: E731
+    own_objects = open_store(os.environ["OBJECTS_URL"]) if os.environ.get("OBJECTS_URL") else None
     agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
-                        published=open_store(os.environ["OBJECTS_URL"]) if report else None,
+                        published=own_objects if report else None,
                         relay_members=relayed or None, bundle_members=relayed or None,
-                        bundle_store=open_store(os.environ["OBJECTS_URL"]) if relayed else None)
+                        bundle_store=own_objects if office else None,
+                        reaches=local_networks, own_objects=own_objects)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
