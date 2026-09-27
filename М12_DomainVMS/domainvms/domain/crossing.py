@@ -52,6 +52,7 @@ from .federation import Unreachable
 from .api import ApiError
 
 CROSSINGS = "domain/crossings"
+ROADS = "domain/roads"                 # cameras sent to push because a recorder could not pull them: {ref: {on, why, nets}}
 
 
 class Crossings:
@@ -366,25 +367,80 @@ class Crossings:
     # themselves, `federation.REACHES`). The camera PUSHES when they share none, or when the camera says it
     # pushes whatever happens (`push`: a camera on a mobile uplink, seen from nowhere). When either side has said
     # nothing about its networks, there is nothing to decide by, and the camera's word stands, as before.
-    def _road(self, camera_cluster: str, on: str, flag: bool) -> tuple[bool, str]:
+    #
+    # And the witness that beats both: the recorder that was sent to pull and CANNOT reach the camera says so in
+    # its heartbeat (`source_unreachable` — a firewall, a route the networks did not show). The domain then has
+    # the camera push, and REMEMBERS it (`domain/roads`): once pushing, the recorder no longer pulls and has
+    # nothing to complain of, and the next pass would send it back to pull — a swing. The memory is forgotten when
+    # what it was decided on changes: the networks either side says, or the cluster that records the camera.
+    def _road(self, camera_cluster: str, on: str, flag: bool, ref: str | None = None) -> tuple[bool, str]:
         if flag:
             return True, "the camera says it pushes"
         cam, rec = self.view.fed.clusters.get(camera_cluster), self.view.fed.clusters.get(on)
         cam_nets = cam.networks() if cam is not None else frozenset()
         rec_nets = rec.networks() if rec is not None else frozenset()
+        if ref is not None:
+            remembered = self._remembered_push(ref, on, cam_nets, rec_nets)
+            if remembered:
+                return True, remembered
         if not cam_nets or not rec_nets:
-            return False, "no networks said on one side: the recorder pulls, as it always did"
-        shared = sorted(cam_nets & rec_nets)
-        if shared:
-            return False, f"{on} sees {shared[0]}, where the camera is: the recorder pulls"
-        return True, f"{on} sees none of the camera's networks ({', '.join(sorted(cam_nets))}): the camera pushes"
+            push, why = False, "no networks said on one side: the recorder pulls, as it always did"
+        elif cam_nets & rec_nets:
+            push, why = False, f"{on} sees {sorted(cam_nets & rec_nets)[0]}, where the camera is: the recorder pulls"
+        else:
+            return True, f"{on} sees none of the camera's networks ({', '.join(sorted(cam_nets))}): the camera pushes"
+        failed = self._pull_failed(ref, on) if ref is not None else None
+        if failed:
+            why = f"{on}'s recorder could not reach the camera ({failed}): the camera pushes"
+            self._remember_push(ref, on, cam_nets, rec_nets, why)
+            return True, why
+        return push, why
+
+    @staticmethod
+    def _nets_mark(cam_nets, rec_nets) -> str:
+        return ",".join(sorted(cam_nets)) + "/" + ",".join(sorted(rec_nets))
+
+    def _remembered_push(self, ref: str, on: str, cam_nets, rec_nets) -> str | None:
+        items, idx = self.vars.get(ROADS)
+        mem = json.loads((items or {}).get(ref, "null"))
+        if not mem:
+            return None
+        if mem.get("on") == on and mem.get("nets") == self._nets_mark(cam_nets, rec_nets):
+            return mem["why"]
+        items = dict(items); items.pop(ref)                # what it was decided on changed: forget, decide again
+        self.vars.put(ROADS, items, cas=idx)
+        return None
+
+    def _remember_push(self, ref: str, on: str, cam_nets, rec_nets, why: str) -> None:
+        items, idx = self.vars.get(ROADS)
+        items = dict(items or {})
+        items[ref] = json.dumps({"on": on, "why": why, "since": self.wall(),
+                                 "nets": self._nets_mark(cam_nets, rec_nets)}, sort_keys=True)
+        self.vars.put(ROADS, items, cas=idx)
+
+    def _pull_failed(self, ref: str, on: str, lost_after: float = 45.0) -> str | None:
+        """The recorder of `on` says it cannot reach the camera `ref` — fresh, in its own heartbeat."""
+        c = self.view.fed.clusters.get(on)
+        try:
+            keys = c.objects.list("rec/heartbeats/") if c is not None else []
+            for key in keys:
+                raw = c.objects.get(key)
+                hb = json.loads(raw) if raw else {}
+                if self.wall() - float(hb.get("ts", 0)) > lost_after:
+                    continue
+                for st in hb.get("status", []):
+                    if str(st.get("cam")) == f"ref:{ref}" and st.get("source_unreachable"):
+                        return str(st.get("why") or "source unreachable")
+        except Unreachable:
+            return None
+        return None
 
     def _doors(self, ref: str, on: str | None = None) -> dict | None:
         on = on or self.all().get(ref, "?")
         for (cluster, worker), s in self.view.snapshots.items():
             if any(str(st.get("ref", "")) == ref for st in s.status) and s.doors:
                 doors = dict(s.doors)
-                push, why = self._road(cluster, on, bool(doors.get("push")))
+                push, why = self._road(cluster, on, bool(doors.get("push")), ref)
                 doors.update(push=push, road=why)
                 if push:                                 # Lesson 16: it pushes to the recording cluster's ingest
                     doors["live_url"] = f"ingest://{on}/{ref}"
