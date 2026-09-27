@@ -6,4 +6,4 @@
 
 **Not exercised by the tests** (no Nomad here); what it grants is what `tests/test_uplink.py` does.
 
-**Lesson 17.** A camera that can reach only its office has no connection to the domain cluster at all. It gets this policy in the OFFICE's cluster: it reads `relay/*` — what the office's agent relayed down for it (`chain.relay`) — and writes its report into the office's store, which the office folds into one bundle for the domain. The office's agent writes `relay/*` under its own policy (`agent-policy.hcl`).
+**Lesson 17.** A camera that can reach only its relay has no connection to the domain cluster at all. It gets this policy in the RELAY's cluster: it reads `relay/*` — what the relay's agent relayed down for it (`chain.relay`) — and writes its report into the relay's store, which the relay folds into one bundle for the domain. The relay's agent writes `relay/*` under its own policy (`agent-policy.hcl`).
