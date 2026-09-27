@@ -42,11 +42,13 @@ What the product found running it on a box (feedback AC–AG), all of it here:
     ranges       a range off the card is the ANSWER to a request, by its id — samples with their own times —
                  not a stream: the recorder asks for a minute, gets that minute or nothing (AD)
     the poll     answers at once the first time (a camera that has never polled has version -1), is held
-                 while nothing changed, and wakes when a want runs out — a viewer's LINGER included (AF)
+                 while nothing changed, and wakes when a want runs out — a viewer's LINGER included (AF), timed
+                 to the lapse itself, since nobody touches anything then (AH)
     one cluster  the book lists every ingest of the recording cluster; the camera pushes to the first that
                  answers, and the recorder may be on another server. Ingests of one cluster pass streams to
-                 each other: a want at any of them is a want at all, and the one that has a subscriber but no
-                 camera takes the stream from the one that has (`pump`) — the fan-out stays the cluster's (AG)
+                 each other: a want at any of them is a want at all, and the one the camera pushes to pushes on
+                 to a peer that has a subscriber (`PeerLink`) — a stream, cut clean to a keyframe when the peer
+                 falls behind, never a viewer's leaky queue: a recorder is behind it (AG, AJ)
     asks         a scenario between cameras — "vehicle at the gate: yard camera to preset 3" (Lesson 12) — is
                  worth something NOW. Neither camera can be reached; both keep a long poll open. So the camera
                  whose event fired leaves the ask at the ingest of the cluster that records the target — the
@@ -75,6 +77,7 @@ LINGER = 10.0                          # how long a stream nobody wants any more
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
 # what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
 REMEMBER = 900.0
+PEER_BUFFER = 50                       # frames one ingest holds for a peer that is not keeping up: two seconds (AJ)
 MAX_LIVE_ASKS = 16                     # live asks one asking camera may hold at one ingest: a ceiling, not a queue
 ANSWER_GRACE = 5.0                     # past the deadline by this, an ask nobody knows of is lost, not late
 
@@ -120,6 +123,8 @@ class Ingest:
                  name: str | None = None, peers=lambda: []):
         self.cluster, self.urls, self.keys, self.revoked, self.wall = cluster, list(urls), keys, revoked, wall
         self.name, self.peers = name or (urls[0] if urls else cluster), peers
+        self.linger = LINGER
+        self.links: dict[tuple[str, str], PeerLink] = {}          # (peer, camera) -> the stream this ingest pushes it (AJ)
         self.tees: dict[tuple[str, str], LiveTee] = {}
         self.cams: dict[str, _Camera] = {}
         # Asks going UP (Lesson 17): left here by a camera that sees only this office, for a camera elsewhere;
@@ -183,7 +188,19 @@ class Ingest:
             out = self._poll_once(token, ref, camera_now, version)
             if not out.get("held") or time.monotonic() >= until:
                 return out
-            self._wait(gen, until)
+            lapse = self._next_lapse(ref)                        # AH: a want or an ask that runs out changes the answer
+            self._wait(gen, until if lapse is None else min(until, time.monotonic() + lapse))
+
+    def _next_lapse(self, ref: str) -> float | None:
+        """Seconds until the next thing that changes this camera's answer by itself, with nobody touching
+        anything: a want running out (a viewer's linger) or an ask's deadline. Nothing bumps a generation then,
+        so the held poll must be timed to it (feedback AH)."""
+        now, soon = self.wall(), []
+        for ing in self._cluster():
+            c = ing._cam(ref)
+            soon += [u - now for u in list(c.wants.values()) if u != float("inf") and u > now]
+            soon += [a["deadline"] - now for a in list(c.asks.values()) if a["deadline"] > now]
+        return min(soon) if soon else None
 
     def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None) -> dict:
         self._check(token, ref, camera_now)
@@ -224,6 +241,11 @@ class Ingest:
             if not _is_ring(f):
                 edge.push(f)                                     # viewers: the live edge only (AF)
         self._cam(ref).pushed_at = self.wall()
+        # AG, AJ: a peer with a subscriber for this camera gets the stream PUSHED, as the camera pushes here —
+        # not left in a viewer's leaky queue for someone to drain. A recorder is behind it.
+        for peer in self._cluster()[1:]:
+            if peer._has_subscribers(ref):
+                self.links.setdefault((peer.name, str(ref)), PeerLink(peer, str(ref))).send(frames)
         return len(frames)
 
     def upload(self, token: str, ref: str, rid: str, samples: list, camera_now: float | None = None) -> None:
@@ -258,6 +280,8 @@ class Ingest:
         if action not in (p.get("acts") or []):
             raise Refused(f"{p.get('by', p['sub'])} may ask {target} for {p.get('acts') or 'nothing'}, not {action}")
         now, by = self.wall(), p.get("by", p["sub"])
+        for ing in self._cluster():
+            ing._sweep(now)
         shift = 0.0 if camera_now is None else now - float(camera_now)
         live = (sum(1 for c in list(self.cams.values()) for a in list(c.asks.values()) if a["by"] == by and a["deadline"] > now)
                 + sum(1 for a in list(self.up.values()) if a["by"] == by and a["deadline"] > now))
@@ -285,12 +309,22 @@ class Ingest:
         self._changed()                                    # wakes the target's held poll
         return aid
 
+    def _sweep(self, now: float) -> None:
+        """AI: an ask's deadline is a property of the ASK, not of its target's poll — a camera that is off, or
+        was taken off the site for good, never polls again. Every touch of the ingest sweeps: dead asks become
+        "expired" (the asker reads THAT, not "lost"), and outcomes older than REMEMBER are forgotten."""
+        for c in list(self.cams.values()):
+            for aid, a in list(c.asks.items()):
+                if a["deadline"] <= now:
+                    c.outcomes[aid] = ("expired", now)
+                    c.asks.pop(aid, None)
+            c.outcomes = {k: v for k, v in list(c.outcomes.items()) if now - v[1] < REMEMBER}
+
     # The forwarder's side of asks going up: take the new ones, put one back when the centre did not answer (it
     # is tried again until its deadline), and settle each with what the centre said became of it.
     def take_up(self) -> list[tuple[str, dict]]:
         now, out = self.wall(), []
-        for c in list(self.cams.values()):
-            c.outcomes = {k: v for k, v in list(c.outcomes.items()) if now - v[1] < REMEMBER}
+        self._sweep(now)
         for aid, a in list(self.up.items()):
             if a["deadline"] <= now:
                 self.settle_up(aid, "expired")             # died here, on the way up: never kept
@@ -339,6 +373,9 @@ class Ingest:
             self._changed()
 
     def ask_outcome(self, target: str, aid: str) -> str | None:
+        now = self.wall()
+        for ing in self._cluster():
+            ing._sweep(now)
         for ing in self._cluster():
             out = ing._cam(target).outcomes.get(aid)
             if out is not None:
@@ -354,7 +391,7 @@ class Ingest:
         NAT, a cluster in a cloud that takes no inbound — takes the streams of ITS cameras from here, calling
         in. Each pull is wanting the stream for another `LINGER`; stop pulling, and the want runs out."""
         self._check(token, ref)
-        self.want(ref, who, until=self.wall() + LINGER)
+        self.want(ref, who, until=self.wall() + self.linger)
         return self.subscribe(ref, who).drain()
 
     def inject(self, ref: str, frames: list) -> int:
@@ -376,13 +413,13 @@ class Ingest:
     def release(self, ref: str, who: str) -> None:
         cam = self.cams.get(str(ref))
         if cam and who in cam.wants:
-            cam.wants[who] = min(cam.wants[who], self.wall() + LINGER)   # a viewer who clicks back is not a restart
+            cam.wants[who] = min(cam.wants[who], self.wall() + self.linger)   # a viewer who clicks back is not a restart
 
     def subscribe(self, ref: str, who: str, kind: str = "live", maxsize: int = 30, edge: bool = False) -> LeakyQueue:
-        if not who.startswith("peer:"):                          # AG: be ready to take it from whichever peer gets it
-            for peer in self._cluster()[1:]:
-                peer.tees.setdefault((str(ref), "live"), LiveTee(ref)).subscribe(f"peer:{self.name}", maxsize)
         return self.tees.setdefault((str(ref), "edge" if edge else kind), LiveTee(ref)).subscribe(who, maxsize)
+
+    def _has_subscribers(self, ref: str) -> bool:
+        return any(tee.subscribers for (r, _kind), tee in list(self.tees.items()) if r == str(ref))
 
     def request_range(self, ref: str, t0: float, t1: float) -> str:
         """A range on this cluster's clock; the camera is told it on its own (AC)."""
@@ -399,21 +436,6 @@ class Ingest:
         cam = self.cams.get(str(ref))
         return list(cam.landed) if cam else []
 
-    def pump(self) -> int:
-        """AG: a stream this ingest has subscribers for and no camera pushing to it is taken from the peer
-        that has — one subscription per camera per peer, like the gateway's to a worker."""
-        moved = 0
-        wanted = {ref for (ref, kind), tee in self.tees.items() if any(not w.startswith("peer:") for w in tee.subscribers)}
-        for ref in wanted:
-            if self.pushing(ref):
-                continue                                         # the camera pushes here: nothing to take
-            for peer in self._cluster()[1:]:
-                q = peer.tees.get((ref, "live"))
-                frames = q.subscribers[f"peer:{self.name}"].drain() if q and f"peer:{self.name}" in q.subscribers else []
-                if frames:
-                    moved += self._relay(ref, frames)
-        return moved
-
     def _relay(self, ref: str, frames: list) -> int:
         """Frames taken from a peer: to this ingest's subscribers, without counting as a camera pushing HERE."""
         live = self.tees.setdefault((str(ref), "live"), LiveTee(ref))
@@ -423,6 +445,39 @@ class Ingest:
             if not _is_ring(f):
                 edge.push(f)
         return len(frames)
+
+
+def _is_key(frame) -> bool:
+    """A frame a decoder can start from. A frame that says nothing (the tests' plain values) counts as one."""
+    return not isinstance(frame, dict) or bool(frame.get("key", True))
+
+
+class PeerLink:
+    """The stream one ingest pushes to a peer of its cluster for one camera (AJ). A recorder is behind it, so a
+    frame lost in the middle of a GOP is worse than a gap: the recorder writes garbage, or nothing, until the
+    next keyframe. So the link never leaks frame by frame. While the peer keeps up, every frame goes through; a
+    peer that falls behind by more than `PEER_BUFFER` frames loses the WHOLE backlog, and the link waits for the
+    next keyframe before sending again — a clean cut, counted (`dropped`), as the recorder counts
+    `samples_dropped`. In one process delivery is a call; on a network, `paused` is backpressure."""
+
+    def __init__(self, peer: "Ingest", ref: str, limit: int = 0):
+        self.peer, self.ref, self.limit = peer, ref, limit or PEER_BUFFER
+        self.buffer: list = []
+        self.cutting, self.dropped, self.cuts, self.paused = False, 0, 0, False
+
+    def send(self, frames: list) -> None:
+        for f in frames:
+            if self.cutting and not _is_key(f):
+                self.dropped += 1
+                continue
+            self.cutting = False
+            self.buffer.append(f)
+            if len(self.buffer) > self.limit:
+                self.dropped += len(self.buffer)
+                self.buffer, self.cutting, self.cuts = [], True, self.cuts + 1
+        if not self.paused and self.buffer:
+            batch, self.buffer = self.buffer, []
+            self.peer._relay(self.ref, batch)
 
 
 class IngestLiveEndpoint:
