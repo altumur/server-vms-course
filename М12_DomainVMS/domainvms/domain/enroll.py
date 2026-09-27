@@ -113,7 +113,10 @@ class Pending:
 
 class Registrar:
     def __init__(self, domain: str, signer: Signer, manufacturer_root: x509.Certificate, masa_public: bytes | None,
-                 approval_ttl: float = 24 * 3600.0, now=time.time):
+                 approval_ttl: float = 24 * 3600.0, now=time.time, members=None, cluster_of=None):
+        """`members`: the domain's list of members (`domain/members.py`). Given it, an admitted box is ADDED
+        there — the domain reads it from its next pass, nobody edits a configuration — and a leave removes it.
+        `cluster_of(serial)`: the cluster the box is; a camera of the platform is `cam-<serial>`."""
         self.id = f"{domain}/registrar"
         self.signer, self.now = signer, now
         self.vendor = TrustBundle([manufacturer_root])
@@ -121,6 +124,8 @@ class Registrar:
         self.approval_ttl = approval_ttl
         self.pending: dict[str, Pending] = {}
         self.audit: list[dict] = []
+        from .members import member_name
+        self.members, self.cluster_of = members, cluster_of or member_name
 
     def _check_hello(self, hello: dict) -> x509.Certificate:
         cert = x509.load_pem_x509_certificate(hello["idevid"].encode())
@@ -152,7 +157,15 @@ class Registrar:
         pub = Ed25519PublicKey.from_public_bytes(bytes.fromhex(hello["csr_pub"]))
         cert = self.signer.issue(hello["serial"], "ldevid", pub)        # EST, in one line
         self.audit.append({"at": self.now(), "serial": hello["serial"], "how": how, "ldevid_serial": cert.serial_number})
+        if self.members is not None:
+            self.members.add(self.cluster_of(hello["serial"]), how, serial=hello["serial"])
         return cert
+
+    def leave(self, serial: str, by: str) -> bool:
+        """A planned leave: the domain forgets the member. (Its certificate runs to its end or is revoked on the
+        CA's side; its own row stays its own, as it always was.)"""
+        self.audit.append({"at": self.now(), "serial": serial, "how": "left", "by": by})
+        return self.members.remove(self.cluster_of(serial), by=by) if self.members is not None else False
 
     # -- path 1: zero-touch with a voucher --------------------------------------------
     def enroll_with_voucher(self, hello: dict, voucher: bytes) -> x509.Certificate:
