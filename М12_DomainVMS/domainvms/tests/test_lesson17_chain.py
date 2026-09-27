@@ -371,3 +371,165 @@ def test_a_camera_that_sees_only_its_office_and_that_nobody_records_polls_its_of
     assert [x["state"] for x in left] == ["asked"] and left[0]["ingest"] is office
     assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
     assert asker.outcome("SN7003", left[0]["ask"], left[0]["deadline"]) == "performed"
+
+
+# -- a scenario between two offices: the road up through one's own office, by event -------------------------
+EAST_URLS = OFFICE_URLS
+WEST_URLS = ["srt://ingest.west.office:9000"]
+GATE7, PTZ7, YARD7 = "SN7102", "SN7103", "SN7104"    # the gate and a PTZ at an east site; the yard at a west site
+
+
+def _two_offices(wall):
+    from domain.books import Books
+    from domain.chain import Relay
+    from domain.ingest import Asker
+    from domain.scenario import Scenarios
+    from domain.shared import SharedSettings, SharedView
+
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    east, _ = make_cluster("east")
+    west, _ = make_cluster("west")
+    for c in (north, east, west):
+        fed.add(c)
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    ing = {"north": Ingest("north", CENTRE_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall),
+           "east": Ingest("east", EAST_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall),
+           "west": Ingest("west", WEST_URLS, keys=lambda: ClusterTrust(west.vars).keyset(), wall=wall)}
+    for name, c in (("north", north), ("east", east), ("west", west)):
+        ing[name].announce(c.objects)
+    cams, agents, offices = {}, [], []
+    for office, serials in (("east", (GATE7, PTZ7)), ("west", (YARD7,))):
+        store = east if office == "east" else west
+        through = Relay(store.vars, store.objects)                     # all a camera of that site reaches
+        members = []
+        for n in serials:
+            d = DeviceCluster(n, FakeVariables(), wall=wall, pushes=True)
+            d.boot(); d.door_open = False
+            fed.add(member_copy(d.name, north.objects, wall=wall, via=office))
+            agents.append(DomainAgent(d.name, through.vars, d.flash, now=wall, domain_objects=through.objects,
+                                      cluster_objects=d.disk, published=d.local_objects(), seen_store=d.local_objects()))
+            cams[n] = d
+            members.append(d.name)
+        offices.append(DomainAgent(office, north.vars, store.vars, now=wall, domain_objects=north.objects,
+                                   bundle_store=store.objects, bundle_members=members, relay_members=members))
+    for o in offices:
+        o.sync()
+    SharedSettings(north.vars, north.objects, signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
+        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": YARD7, "action": "preset", "arg": 3}},
+        {"when": {"camera": GATE7, "kind": "vehicle"}, "then": {"camera": PTZ7, "action": "preset", "arg": 1}}]),
+        base_rev=0, by="anna")
+    books = Books(Crossings(north.vars, ReadView(fed, wall=wall), wall, issuer=signer.tokens, centre="north"), north.objects)
+
+    def domain_pass():
+        for d in cams.values():
+            d.publish()
+        for a in agents:
+            a.sync()
+        for o in offices:
+            o.sync()
+        books.pass_once()
+        for o in offices:
+            o.sync()
+        for a in agents:
+            a.sync()
+
+    domain_pass(); domain_pass()
+    centre_up = {"on": True}
+
+    def reach(urls, owner):
+        def dial(url):
+            if url in urls and (owner != "office" or centre_up["on"]):
+                return next(i for i in ing.values() if url in i.urls)
+            raise Unreachable(f"{url} does not answer {owner}")
+        return dial
+
+    fwd = {"east": Forwarder("east", ing["east"], east.vars, reach(CENTRE_URLS, "office")),
+           "west": Forwarder("west", ing["west"], west.vars, reach(CENTRE_URLS, "office"))}
+    done = {PTZ7: [], YARD7: []}
+    ptz = CameraPusher(PTZ7, cams[PTZ7].flash, reach(EAST_URLS, "site"), clock=wall,
+                       perform=lambda a: done[PTZ7].append(a) or "performed")
+    yard = CameraPusher(YARD7, cams[YARD7].flash, reach(WEST_URLS, "site"), clock=wall,
+                        perform=lambda a: done[YARD7].append(a) or "performed")
+    gate = Scenarios(GATE7, SharedView(cams[GATE7].flash, cams[GATE7].disk, wall),
+                     Asker(GATE7, cams[GATE7].flash, reach(EAST_URLS, "site"), clock=wall))
+    return ing, fwd, ptz, yard, gate, done, centre_up
+
+
+def test_an_ask_to_another_office_goes_up_through_ones_own_and_an_ask_inside_the_office_does_not():
+    """The gate camera sees only the east office. The PTZ camera is in the same office: its book names the east
+    ingest directly, and the ask never leaves the site. The yard camera is behind the west office: the book
+    names the east ingest again, marked UP; the east forwarder takes it to the centre with the office's own
+    token for that pair, the west forwarder carries it down, and the outcome comes back hop by hop."""
+    wall = Clock()
+    ing, fwd, ptz, yard, gate, done, _ = _two_offices(wall)
+    book = gate.asker.book()
+    assert [(r["cluster"], r.get("up")) for r in book[PTZ7]] == [("east", None)]      # inside: direct
+    assert [(r["cluster"], r.get("up")) for r in book[YARD7]] == [("east", "north")]  # across: up through its own
+    assert list(fwd["east"].asks_book()) == [f"{YARD7}|{GATE7}"]                     # the office may carry that pair
+    assert YARD7 in fwd["west"].book()                                 # the centre has a road down to the yard
+
+    left = {x["target"]: x for x in gate.on_event("vehicle")}
+    assert {t: (x["state"], x["ingest"]) for t, x in left.items()} == {PTZ7: ("asked", ing["east"]), YARD7: ("asked", ing["east"])}
+    assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 1}, "performed")]
+    assert PTZ7 not in ing["north"].cams                               # the centre never heard of the PTZ's ask
+
+    assert fwd["east"].woken.is_set()                                  # the ask woke the east forwarder
+    assert list(fwd["east"].lift().values()) == ["up"]
+    fwd["west"].pass_once()                                            # the centre answers west's poll: down it goes
+    assert yard.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
+    assert fwd["west"].woken.is_set()                                  # the yard's answer woke the west forwarder
+    fwd["west"].lift()                                                 # …which answers the centre
+    assert list(fwd["east"].lift().values()) == ["performed"]          # …and east takes the outcome back down
+    x = left[YARD7]
+    assert gate.asker.outcome(YARD7, x["ask"], x["deadline"]) == "performed"
+    assert done == {PTZ7: [{"action": "preset", "arg": 1}], YARD7: [{"action": "preset", "arg": 3}]}
+
+
+def test_an_ask_going_up_dies_at_its_deadline_on_the_way_and_is_not_kept():
+    """The east office has lost the centre. The ask waits at the office — tried again on every event — and when
+    its deadline passes it dies there: the gate camera reads "expired", and the centre never saw it."""
+    wall = Clock()
+    ing, fwd, ptz, yard, gate, done, centre_up = _two_offices(wall)
+    centre_up["on"] = False
+    x = next(x for x in gate.on_event("vehicle") if x["target"] == YARD7)
+    assert list(fwd["east"].lift().values()) == ["the centre did not answer"]
+    wall.advance(31)
+    centre_up["on"] = True
+    fwd["east"].lift()
+    assert gate.asker.outcome(YARD7, x["ask"], x["deadline"]) == "expired"
+    assert YARD7 not in ing["north"].cams and done[YARD7] == []
+
+
+def test_by_event_the_whole_road_takes_milliseconds_while_every_timer_is_a_second():
+    """Both forwarders as processes, the yard camera in its own long poll, every fallback timer one second. The
+    gate camera sees a vehicle; the ask goes east → centre → west → yard, the answer yard → west → centre → east,
+    each hop woken by the one before — done in far less than one timer."""
+    import threading
+    import time as _t
+    wall = Clock()
+    ing, fwd, ptz, yard, gate, done, _ = _two_offices(wall)
+    stop = threading.Event()
+    threads = fwd["east"].serve(stop, period=1.0) + fwd["west"].serve(stop, period=1.0)
+
+    def camera():
+        while not stop.is_set():
+            yard.pass_once([], wait=1.0)
+    cam = threading.Thread(target=camera, daemon=True)
+    cam.start()
+    _t.sleep(0.2)                                                      # everyone settles into a held poll
+    try:
+        t0 = _t.monotonic()
+        x = next(x for x in gate.on_event("vehicle") if x["target"] == YARD7)
+        out = None
+        while out is None and _t.monotonic() - t0 < 3.0:
+            out = gate.asker.outcome(YARD7, x["ask"], x["deadline"])
+            _t.sleep(0.005)
+        took = _t.monotonic() - t0
+    finally:
+        stop.set()
+        for t in threads + [cam]:
+            t.join(timeout=2.0)
+    assert out == "performed" and done[YARD7] == [{"action": "preset", "arg": 3}]
+    assert took < 0.5, f"took {took:.3f} s: something waited for a timer"
