@@ -75,6 +75,7 @@ def _chain(wall, star=frozenset()):
         publish_upstream(crossings, "north", star=star)
         cam_agent.sync(); office_agent.sync()
 
+    domain_pass.crossings = crossings
     domain_pass()
     return north, east, centre, office, pusher, fwd, dialled, domain_pass
 
@@ -259,3 +260,41 @@ def test_a_camera_that_sees_only_its_office_reaches_the_domain_through_it_both_w
     for _ in range(4):
         wall.advance(20); office_agent.sync(); cam_agent.sync()        # the camera still reaches its office
     assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == last          # …and knows its books are as old as the office's
+
+
+def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_office_carries_it_down():
+    """The gate camera is at another site: it reaches the centre, not the east office. Its book names two roads
+    to the yard camera — the office that records it, then the centre the office forwards it to. The office's
+    ingest does not answer, so the ask is left at the centre; the office's forwarder, polling the centre, carries
+    it down to the camera's poll, and the outcome back up."""
+    from domain.ingest import Asker, publish_asks
+    wall = Clock()
+    north, east, centre, office, pusher, fwd, dialled, domain_pass = _chain(wall)
+    gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
+    gate.boot(); gate.door_open = False
+    done = []
+    pusher.perform = lambda action: done.append(action) or "performed"
+    # the gate camera is a member like the yard camera: its report makes it known to the domain's view
+    crossings = domain_pass.crossings
+    crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
+    gate_agent = DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
+                             published=gate.local_objects())
+    gate_agent.sync()
+    crossings.view.refresh()
+    publish_asks(crossings, [{"trigger": "SN7002", "target": SERIAL}])
+    gate_agent.sync()
+
+    def gate_dial(url):
+        if url in CENTRE_URLS:
+            return centre
+        raise Unreachable(f"{url} did not answer the gate camera")
+
+    asker = Asker("SN7002", gate.flash, gate_dial, clock=wall)
+    assert [r["urls"] for r in asker.book()[SERIAL]] == [OFFICE_URLS, CENTRE_URLS]
+    ing, aid = asker.ask(SERIAL, {"preset": 3}, within=10)
+    assert ing is centre and centre.ask_outcome(SERIAL, aid) is None
+    fwd.pass_once()                                                    # down to the office's ingest
+    assert pusher.pass_once([])["asks"] == [({"preset": 3}, "performed")] and done == [{"preset": 3}]
+    fwd.pass_once()                                                    # the outcome, up
+    assert centre.ask_outcome(SERIAL, aid) == "performed"
+    assert done == [{"preset": 3}]                                     # carried twice, done once
