@@ -1,5 +1,9 @@
 """Lesson 15 — a domain cluster of one node.
 
+`fed` below is the SITE — every camera through its door, what a camera on the site can reach. The domain on its
+host reads the other cameras only by their reports (`_domain`); the doors are used by cameras acting as cameras
+(looking for the host) and by the re-host, the one exception the lesson names.
+
 A site of cameras and no server: the domain's services run on one camera. Re-hosting them becomes an
 ordinary operation — from the signer's key, kept beyond the host since Lesson 7, and the newest signed copy
 of the domain's state that other members keep — and it needs a term, so that a host which comes back after
@@ -21,6 +25,8 @@ from domain.signer import Signer
 from domain.term import (BACKUP, Deposed, DomainHost, GuardedPending, carry_host, find_host, handover, read_host,
                          rehost, stranded)
 from domain.tokens import TokenIssuer
+from domain.federation import Unreachable
+from domain.uplink import member_copy
 from tests.conftest import Clock
 
 DOMAIN = "acme"
@@ -39,7 +45,7 @@ def _site(wall, n=4):
     DomainPublisher(home).publish_keys(signer.tokens.keyset())
     for name in devices:
         DomainPublisher(home).publish_grants(name, [Grant("anna", "edit", None, wall() + 30 * 86400)])
-    host = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall)
+    host = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
     host.claim()
     agents = {name: _agent(fed, devices, name, "cam-SN0", wall) for name in devices if name != "cam-SN0"}
     for a in agents.values():
@@ -49,16 +55,31 @@ def _site(wall, n=4):
 
 def _agent(fed, devices, name, host, wall):
     d = devices[name]
-    return DomainAgent(name, fed.clusters[host].vars, d.flash, now=wall, console=d, current=d.current,
-                       domain_objects=devices[host].disk_door(), cluster_objects=d.disk)
+    return DomainAgent(name, fed.clusters[host].vars, d.flash, now=wall, console=d.local_console(), current=d.current,
+                       domain_objects=devices[host].disk_door(), cluster_objects=d.disk, published=d.local_objects())
 
 
-def _keep_an_edit_for(fed, devices, camera, host_vars, wall):
-    view = ReadView(fed, wall=wall)
+def _domain(devices, host, wall):
+    """What the domain on `host` reads: itself, and every other camera by the report its agent left here."""
+    fed = Federation()
+    fed.add(devices[host].cluster(domain=True))
+    for name in devices:
+        if name != host:
+            fed.add(member_copy(name, devices[host].disk, wall=wall))
+    return fed
+
+
+def _no_door(name):
+    raise Unreachable(f"{name} is reached only by its own agent: the edit is kept")
+
+
+def _keep_an_edit_for(fed, devices, camera, host_vars, wall, host="cam-SN0"):
+    dom = _domain(devices, host, wall)
+    view = ReadView(dom, wall=wall)
     view.refresh()
     devices[f"cam-{camera}"].power_off()
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), lambda n: devices[n], verifier=lambda t: t,
+    api = ConsoleAPI(DomainDirectory(dom, wall=wall), _no_door, verifier=lambda t: t,
                      pending=PendingEdits(host_vars, wall), last_known=view.last_known)
     return api.update_camera(camera, {"name": f"{camera}-renamed"}, idempotency_key=f"k-{camera}", token="anna")
 
@@ -197,11 +218,12 @@ def test_a_planned_handover_strands_nothing():
     fed, devices, signer, offline, host, agents = _site(wall)
     _keep_an_edit_for(fed, devices, "SN3", host.vars, wall)          # kept before the handover: must travel
 
-    view = ReadView(fed, wall=wall)
+    dom = _domain(devices, "cam-SN0", wall)
+    view = ReadView(dom, wall=wall)
     view.refresh()
     devices["cam-SN2"].power_off()
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), lambda n: devices[n], verifier=lambda t: t,
+    api = ConsoleAPI(DomainDirectory(dom, wall=wall), _no_door, verifier=lambda t: t,
                      pending=GuardedPending(PendingEdits(host.vars, wall), host), last_known=view.last_known)
 
     def carry_to():
@@ -228,8 +250,7 @@ def test_a_handover_the_target_did_not_take_is_called_off_and_changes_nothing():
     fed, devices, signer, offline, host, agents = _site(wall)
 
     def carry_to():
-        devices["cam-SN1"].power_off()
-        agents["cam-SN1"].sync()
+        devices["cam-SN1"].power_off()                   # and its agent with it: no report of the backup comes
 
     try:
         handover(host, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
