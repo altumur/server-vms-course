@@ -241,3 +241,32 @@ def test_the_sites_names_are_the_source_and_interfaces_only_a_fallback_without_t
         os.environ.pop("REACHES", None)
         if env is not None:
             os.environ["REACHES"] = env
+
+
+def test_a_camera_whose_clock_stepped_back_is_not_frozen_on_its_stale_road():
+    """AM, found by the product. A camera reported straight to the domain; then it moves behind east and its
+    clock steps back a thousand seconds. Compared by the camera's clock alone, the stale direct report would stay
+    "newer" for ever and the camera would freeze on it until silent. A road that has gone silent on the DOMAIN's
+    clock gives way to the one that is alive, whatever the camera's clock says."""
+    from domain.chain import bundle
+    wall = Clock()
+    north, _ = make_cluster("north", domain=True)
+    east, _ = make_cluster("east")
+    cam = DeviceCluster("SN8005", FakeVariables(), wall=wall)
+    cam.boot()
+    DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects, published=cam.local_objects()).sync()
+    fed = Federation(); fed.add(north)
+    fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
+    view = ReadView(fed, wall=wall); view.refresh()                    # the domain has seen the direct report
+    behind = lambda: wall() - 1000                                     # the camera's clock, a thousand seconds back
+    cam.local_console().update_camera(1, {"name": "clock-stepped-back"}, None)
+    through = Relay(east.vars, east.objects)
+    relay_agent = DomainAgent(cam.name, through.vars, cam.flash, now=behind, domain_objects=through.objects,
+                              published=cam.local_objects())
+    for _ in range(4):                                                 # a minute of passes through east
+        wall.advance(15)
+        relay_agent.sync(); bundle("east", [cam.name], east.objects, north.objects)
+        view.refresh()
+    rows = [r for r in view.list()["rows"] if r["cluster"] == cam.name]
+    assert [r["name"] for r in rows] == ["clock-stepped-back"]         # the live road, not the frozen one
+    assert view.list()["complete"]                                     # and it is not silent
