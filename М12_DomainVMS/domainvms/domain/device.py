@@ -106,6 +106,22 @@ class _Door:
         return self._open().list(*a)
 
 
+class _Local:
+    """The camera's RAM, as the camera's own processes read it: always the current one (a reboot replaces it)."""
+
+    def __init__(self, device: "DeviceCluster"):
+        self.device = device
+
+    def get(self, key):
+        return self.device.ram.get(key)
+
+    def list(self, prefix):
+        return self.device.ram.list(prefix)
+
+    def put(self, key, data):
+        return self.device.ram.put(key, data)
+
+
 class DeviceCluster:
     def __init__(self, serial: str, flash_vars: Variables, wall=time.time, name: str | None = None,
                  reaches=(), address: str | None = None, disk=None):
@@ -168,6 +184,11 @@ class DeviceCluster:
         """The domain's handle on this camera: its stores, through its door. `domain=True` is a camera that
         hosts the domain's services (Lesson 15)."""
         return Cluster(self.name, _Door(self, lambda: self.flash), _Door(self, lambda: self.ram), self.reaches, domain)
+
+    def local_objects(self) -> "_Local":
+        """Its object store as its own processes see it — the agent, reporting (`domain/uplink.py`). No door:
+        this is the camera reading itself."""
+        return _Local(self)
 
     def disk_door(self) -> _Door:
         """Its durable object store, through its door — where a camera that hosts the domain publishes the

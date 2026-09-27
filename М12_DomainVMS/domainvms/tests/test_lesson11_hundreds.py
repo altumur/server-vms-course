@@ -172,3 +172,60 @@ def test_lanes_are_real_threads_not_only_arithmetic():
     t0 = _time.monotonic(); ReadView(slow, wall=wall).refresh(); one = _time.monotonic() - t0
     t0 = _time.monotonic(); ReadView(slow, wall=wall, lanes=16).refresh(); many = _time.monotonic() - t0
     assert one > 0.7 and many < one / 3
+
+
+class _CountingObjects:
+    """The domain cluster's object store, counting what members write into it."""
+
+    def __init__(self, inner):
+        self.inner, self.puts, self.bytes = inner, 0, 0
+
+    def put(self, key, data):
+        self.puts += 1; self.bytes += len(data); return self.inner.put(key, data)
+
+    def get(self, key): return self.inner.get(key)
+    def list(self, prefix): return self.inner.list(prefix)
+    def delete(self, key): return self.inner.delete(key)
+
+
+def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writes():
+    """The uplink (`domain/uplink.py`), measured on the same site. Each member's agent leaves a report in the
+    domain cluster's store; the domain reads only that store. A member that is off costs the pass nothing —
+    its copy is stale and says so at once, with no connection to wait on — and the pass is local calls. What
+    the domain pays instead is writes: every report rewrites what changed — the heartbeat and the snapshot
+    shard, both stamped with the time — and the `reported` mark."""
+    from domain.agent import DomainAgent
+    from domain.device import Ram
+    from domain.uplink import member_copy
+    wall = Clock()
+    north, _ = make_cluster("north", domain=True)
+    domain_store = Ram()                                 # the domain cluster's objects; a prefix listing is the server's work
+    store = _CountingObjects(domain_store)
+    fed = Federation(); fed.add(north)
+    agents, devices = [], []
+    for i in range(N):
+        d = DeviceCluster(f"SN{i:04d}", FakeVariables(), wall=wall)
+        d.boot()
+        fed.add(member_copy(d.name, domain_store, wall=wall))
+        agents.append(DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=store, published=d.local_objects()))
+        devices.append(d)
+    for a in agents:
+        a.sync()
+    meter = Meter(latency=0.001, timeout=0.001)          # the domain's own store: a local call, and no timeout to wait
+    view = ReadView(meter.wrap_all(fed), wall=wall)
+    view.refresh()                                       # the domain has seen every report once, by its clock
+    wall.advance(60)
+    for d in devices:
+        d.publish()                                      # a minute later: new heartbeats, new shards
+    store.puts = store.bytes = 0
+    for a in agents[OFF:]:                               # a tenth of them are off and do not report
+        a.sync()
+    assert store.puts == 3 * (N - OFF)                   # heartbeat, shard, `reported` — per member, per report
+    assert store.bytes < 400_000
+
+    meter.reset()
+    view.refresh()
+    assert sum(meter.calls[d.name] for d in devices[:OFF]) == OFF        # one look at a stale mark each
+    assert meter.pass_time(lanes=1) < 1.2                # 270 × 4 + 30 local calls, one after another
+    assert meter.pass_time(lanes=16) < 0.1
+    assert set(view.list(size=N)["clusters"][d.name] for d in devices[:OFF]) == {"unreachable"}

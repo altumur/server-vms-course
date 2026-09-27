@@ -55,7 +55,8 @@ class DomainPublisher:
 
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
-                 console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None):
+                 console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
+                 published=None, pages=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -66,11 +67,18 @@ class DomainAgent:
 
         `seen_store` is Lesson 13: where the agent says when it last reached the domain (`domain/seen`), so
         the books it carried can be judged by their age without the books themselves changing. On a camera
-        it is RAM — this is written on every pass, and flash is not."""
+        it is RAM — this is written on every pass, and flash is not.
+
+        `published` and `pages` are the uplink (`domain/uplink.py`): this member's own object store, where
+        its workers publish, and a callable returning the pages it is asked to show (Lesson 14). Given
+        them, every pass ends with a REPORT into the domain cluster's object store — the domain never opens
+        a connection to this member; this pass is the only one there is, and it carries both ways."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
         self.console, self.current = console, current
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
+        self.published, self.pages = published, pages
+        self.reported = ""                                  # what the last pass did with the report
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
@@ -131,6 +139,19 @@ class DomainAgent:
         if self.seen_store is not None:
             import json
             self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": self.last_synced, "cluster": self.cluster}).encode())
+        # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
+        # so the outcomes of the edits applied above go up in this same pass.
+        if self.published is not None and self.domain_objects is not None:
+            from .uplink import NotPublished, report
+            try:
+                n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, self.now(),
+                           self.pages() if self.pages else None)
+                self.reported = f"reported ({n} written)"
+            except NotPublished as e:
+                self.reported = str(e)
+            except Unreachable:
+                self.reported = "the domain did not take the report"
+                return False
         return True
 
 
@@ -166,8 +187,16 @@ def main() -> None:
     from w2cplatform.variables import open_vars
 
     cluster = os.environ.get("CLUSTER", os.environ.get("NOMAD_REGION", "local"))
+    # REPORT=1: this member is one the domain never reaches (`domain/uplink.py`) — every pass also leaves its
+    # report in the domain cluster's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
+    # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
+    report = os.environ.get("REPORT") == "1"
+    if report:
+        from cluster.objectstore import open_store
     agent = DomainAgent(cluster, open_vars(os.environ["DOMAIN_CONFIG_URL"]),
-                        open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", "")))
+                        open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", "")),
+                        domain_objects=open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report else None,
+                        published=open_store(os.environ["OBJECTS_URL"]) if report else None)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

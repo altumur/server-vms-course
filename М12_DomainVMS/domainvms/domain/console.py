@@ -29,11 +29,11 @@ from .readview import ReadView
 
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
-                 publish_to=None, crossings=None):
+                 publish_to=None, crossings=None, pending=None):
         """`publish_to`: the domain cluster's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `crossings`: Lesson 13's, to say who records what."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
-        self.publish_to, self.crossings = publish_to, crossings
+        self.publish_to, self.crossings, self.pending = publish_to, crossings, pending
         self._stop = threading.Event()
 
     def _refresher(self):
@@ -42,6 +42,8 @@ class Console:
                 self.view.refresh()
                 if self.publish_to is not None:
                     self.view.publish(self.publish_to, self.crossings.all() if self.crossings else None)
+                if self.pending is not None:
+                    self.pending.collect(self.view.fed)      # what the members' reports say became of kept edits
             except Exception:                              # noqa: BLE001 — a bad pass is a stale view, not a dead console
                 pass
             self._stop.wait(self.refresh_interval)
@@ -135,15 +137,22 @@ def main() -> None:
         return verify(token, ks, trust.revoked())["sub"]
 
     def consoles(cluster: str):
-        raise ApiError(501, f"forwarding to {cluster}'s console needs service discovery wired here (nomadService)")
+        # Forwarding to a member's console needs a connection TO the member, and the domain opens none
+        # (`domain/uplink.py`): the edit is kept, and the member's agent takes it home on its next pass.
+        from .federation import Unreachable
+        raise Unreachable(f"{cluster} is reached only by its own agent; the edit waits for its next pass")
 
-    api = ConsoleAPI(directory, consoles, verifier=verifier if os.environ.get("AUTH", "1") == "1" else None)
+    from .pending import PendingEdits
+    pending = PendingEdits(fed.domain_cluster.vars)
+    api = ConsoleAPI(directory, consoles, verifier=verifier if os.environ.get("AUTH", "1") == "1" else None,
+                     pending=pending, last_known=view.last_known)
     # Each pass also leaves the view in the domain cluster's own object store, for that cluster's console to
     # draw the domain as the root of its tree (`GET /domain` there). The domain cluster's objects are the
     # domain's; no other member's store is written.
     from .crossing import Crossings
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
-                      publish_to=fed.domain_cluster.objects, crossings=Crossings(fed.domain_cluster.vars, view))
+                      publish_to=fed.domain_cluster.objects, crossings=Crossings(fed.domain_cluster.vars, view),
+                      pending=pending)
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

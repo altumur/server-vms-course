@@ -117,6 +117,45 @@ class EventDoor:
         return self._open().mirrored(of, since, until, limit)
 
 
+# The alarm pages a member reports (`domain/uplink.py`): its newest alarms of the last `window` seconds, and
+# the same for every neighbour it keeps a copy of. The domain answers from these and never opens the member's
+# door. What is older than the page is not in it, and the answer says so (`truncated`); an operator asking
+# about last week asks the member's own console, on the site.
+WINDOW = 86400.0
+
+
+def pages(card: Card, keeps, now: float, per_member: int = 100, window: float = WINDOW) -> dict[str, bytes]:
+    since = now - window
+    out = {"alarms": json.dumps({"from": since, "to": now, **card.alarms(since, now + 1, per_member)}).encode()}
+    for of in sorted(keeps or {}):
+        out[f"mirror/{of}"] = json.dumps({"from": since, "to": now, **card.mirrored(of, since, now + 1, per_member)}).encode()
+    return out
+
+
+class ReportedDoor:
+    """A member's alarms as the domain sees them: from the pages in its last report. Unreachable when the
+    report is too old — and then the domain turns to the pages its neighbours report, as it did to their doors."""
+
+    def __init__(self, member: str, domain_objects, lost_after: float = 45.0, wall=time.time):
+        self.member, self.store, self.lost_after, self.wall = member, domain_objects, lost_after, wall
+
+    def _page(self, name: str) -> dict:
+        from .uplink import page
+        return page(self.member, name, self.store, self.lost_after, self.wall) or {"from": self.wall(), "events": [], "truncated": False}
+
+    @staticmethod
+    def _cut(p: dict, since: float, until: float, limit: int) -> dict:
+        evs = [e for e in p.get("events", []) if since <= float(e["t"]) < until]
+        return {"events": evs[:limit], "truncated": bool(p.get("truncated")) or len(evs) > limit or since < float(p.get("from", since))}
+
+    def alarms(self, since, until, limit):
+        return self._cut(self._page("alarms"), since, until, limit)
+
+    def mirrored(self, of, since, until, limit):
+        p = self._page(f"mirror/{of}")
+        return {**self._cut(p, since, until, limit), "known_until": p.get("known_until")}
+
+
 def _score(a: str, b: str) -> int:
     return int.from_bytes(hashlib.sha256(f"{a}|{b}".encode()).digest()[:8], "big")
 

@@ -22,11 +22,21 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     different scheme in this one string."""
     fed = Federation()
     domain = os.environ.get("DOMAIN_CLUSTER")
+    reporting = []
     for i, entry in enumerate(filter(None, os.environ.get(var, "").split(","))):
         name, rest = entry.split("=", 1)
+        if rest == "report":
+            reporting.append(name)                         # reached by nobody: read from its own reports
+            continue
         config_url, objects = rest.split("|", 1)
         fed.add(Cluster(name, open_vars(config_url), open_store(objects),
                         is_domain_cluster=(name == domain) if domain else i == 0))
     if not fed.clusters:
         raise SystemExit(f"{var} is empty: name at least one cluster")
+    # `name=report`: a member the domain never opens a connection to (`domain/uplink.py`). Its agent leaves
+    # reports in the domain cluster's object store, and the domain reads it from there — the product's rule
+    # for every camera, and a server room's too when the domain cannot route to it.
+    from .uplink import member_copy
+    for name in reporting:
+        fed.add(member_copy(name, fed.domain_cluster.objects, lost_after=float(os.environ.get("LOST_AFTER", "45"))))
     return fed
