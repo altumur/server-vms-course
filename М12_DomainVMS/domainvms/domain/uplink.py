@@ -199,9 +199,36 @@ def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.
     for all its members. Read the same way; silent together with the office."""
     if via is not None:
         from .chain import BundleView
-        domain_objects = BundleView(via, domain_objects)
+        domain_objects = NewerRoad(member, domain_objects, BundleView(via, domain_objects))
     f = _Fresh(member, domain_objects, lost_after, wall)
     return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches), via=via)
+
+
+class NewerRoad:
+    """A member placed behind an office is read from the office's bundle — and from its own direct report too,
+    whichever is NEWER. The topology describes a road; it does not forbid another (feedback AM): a camera that
+    can reach the domain after all, or that has not yet been moved, is not made silent by a record that says it
+    goes round. Newer by the report's `ts` — the MEMBER's clock, the same one on both roads — not by its number,
+    which each store counts for itself."""
+
+    def __init__(self, member: str, direct, bundled):
+        self.member, self.direct, self.bundled = member, direct, bundled
+
+    def _pick(self):
+        best, top = self.direct, (float("-inf"), -1)
+        for road in (self.direct, self.bundled):
+            raw = road.get(base(self.member) + REPORTED)
+            mark = json.loads(raw) if raw else {}
+            key = (float(mark.get("ts", float("-inf"))), int(mark.get("seq", -1)))
+            if key > top:
+                best, top = road, key
+        return best
+
+    def get(self, key: str):
+        return self._pick().get(key)
+
+    def list(self, prefix: str) -> list[str]:
+        return self._pick().list(prefix)
 
 
 def offset_of(copy: Cluster) -> float:
