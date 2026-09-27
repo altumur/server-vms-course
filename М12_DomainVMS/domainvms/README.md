@@ -31,18 +31,18 @@ domainvms/
     ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request, asks between cameras
     scenario.py       Lessons 12, 16 scenarios between cameras end to end: the pairs the book of asks is built from; the camera's side, event → ask
     books.py          Lessons 13, 16, 17 the domain's pass over every per-cluster book — sources, primaries, polls, upstream, asks — run by the signer service
-    chain.py          Lesson 17 site, office, centre: the office's forwarder (the want down, the stream up), the upstream book, the star, the summary report
+    chain.py          Lesson 17 site, office, centre: the office's forwarder (the want down, the stream up), the upstream book, the star, the summary report; asks up through one's own office, by event
     runtime.py, signer_service.py   wiring for the real processes (NomadVariables, the object store, HTTP); the signer runs the books pass given CLUSTERS
   deploy/
     signer.nomad.hcl  console.nomad.hcl  gateway.nomad.hcl  agent.nomad.hcl   the four jobs; constraints, never hostnames
     signer-policy.hcl  agent-policy.hcl  member-report-policy.hcl              one writer per prefix; the agent may not touch vms/*; a member writes its own report
     federation.hcl                                                             two regions, one gossip pool
     verify-bench.sh                                                            what needs a real bench, scripted
-  tests/              134 tests, no Nomad, no Postgres, no browser — about two seconds
+  tests/              137 tests, no Nomad, no Postgres, no browser — a few seconds
 ```
 
 ```bash
-python3 tests/run.py                 # 134 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
+python3 tests/run.py                 # 137 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
 python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variables://objects,...
 ```
 
