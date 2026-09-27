@@ -85,11 +85,11 @@ class DomainAgent:
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
         self.published, self.pages = published, pages
-        # Lesson 17's summary report: an office's agent folds the reports its members left in `bundle_store`
+        # Lesson 17's summary report: a relay's agent folds the reports its members left in `bundle_store`
         # (this cluster's object store) into one object in the domain cluster.
         self.bundle_members, self.bundle_store = bundle_members, bundle_store
-        # …and it RELAYS down what the domain leaves for those members (`chain.relay`): the office is their only
-        # road to the domain. `bundle_store` is the office's object store, where both halves live.
+        # …and it RELAYS down what the domain leaves for those members (`chain.relay`): the relay is their only
+        # road to the domain. `bundle_store` is the relay's object store, where both halves live.
         self.relay_members = relay_members
         # What this cluster can see — `reaches()`, from its interfaces or its site — said in its own object store
         # (`own_objects`, or the one it reports from), where the domain reads it. Written only when it changes.
@@ -98,7 +98,7 @@ class DomainAgent:
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
-        self._office_n, self._office_seen = None, None      # through an office: its last age mark, on OUR clock
+        self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
 
     def _carry(self, path: str, items: dict | None, clear: bool = False) -> None:
         have, idx = self.cluster_vars.get(path)
@@ -124,16 +124,16 @@ class DomainAgent:
         self.say_reaches()                                  # local: said even when the domain is away
         ok = self._sync()
         if self.relay_members and self.bundle_store is not None:
-            from .chain import say_seen                     # an office: how current its relay is, reached or not
+            from .chain import say_seen                     # a relay: how current its relay is, reached or not
             say_seen(self.bundle_store, self.last_synced, self.now())
         return ok
 
-    def _office_mark(self) -> float | None:
+    def _relay_mark(self) -> float | None:
         mark = self.domain_vars.seen()
-        if mark and mark.get("n") != self._office_n:
-            self._office_n = mark.get("n")
-            self._office_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
-        return self._office_seen
+        if mark and mark.get("n") != self._relay_n:
+            self._relay_n = mark.get("n")
+            self._relay_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
+        return self._relay_seen
 
     def _sync(self) -> bool:
         from .pending import OUTCOMES_PATH, PENDING_PATH, apply_pending
@@ -181,10 +181,10 @@ class DomainAgent:
         self.syncs += 1
         if self.seen_store is not None:
             import json
-            # Through a relay (Lesson 17), "when did I last hear from the domain" is when the OFFICE last did: a
-            # camera that reaches its office every pass while the office is cut from the centre has current
+            # Through a relay (Lesson 17), "when did I last hear from the domain" is when the RELAY last did: a
+            # camera that reaches its relay every pass while the relay is cut from the centre has current
             # nothing, and must not believe its books are.
-            seen = self._office_mark() if hasattr(self.domain_vars, "seen") else self.last_synced
+            seen = self._relay_mark() if hasattr(self.domain_vars, "seen") else self.last_synced
             self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": seen or 0.0, "cluster": self.cluster}).encode())
         # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
         # so the outcomes of the edits applied above go up in this same pass.
@@ -200,10 +200,10 @@ class DomainAgent:
                 self.reported = "the domain did not take the report"
                 return False
         if self.relay_members and self.bundle_store is not None:
-            from .chain import relay
+            from .chain import relay_down
             members = self.relay_members() if callable(self.relay_members) else self.relay_members
             try:
-                relay(members, self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now())
+                relay_down(members, self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now())
             except Unreachable:
                 return False
         if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
@@ -277,23 +277,23 @@ def main() -> None:
     report = os.environ.get("REPORT") == "1"
     from cluster.objectstore import open_store
     own_vars = open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", ""))
-    # Lesson 17. OFFICE_CONFIG_URL / OFFICE_OBJECTS_URL: this member can reach only its office — the office is
-    # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such an office, relaying for them.
-    if os.environ.get("OFFICE_CONFIG_URL"):
+    # Lesson 17. RELAY_CONFIG_URL / RELAY_OBJECTS_URL: this member can reach only its relay — the relay is
+    # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such a relay, relaying for them.
+    if os.environ.get("RELAY_CONFIG_URL"):
         from .chain import Relay
-        through = Relay(open_vars(os.environ["OFFICE_CONFIG_URL"]), open_store(os.environ["OFFICE_OBJECTS_URL"]))
+        through = Relay(open_vars(os.environ["RELAY_CONFIG_URL"]), open_store(os.environ["RELAY_OBJECTS_URL"]))
         domain_vars, domain_objects = through.vars, through.objects
     else:
         domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
-    # Which members this office relays for: the domain's topology (`domain/topology`, the operator's one record),
-    # read on every pass — RELAY_MEMBERS only where there is no topology yet. OFFICE=1 says this cluster is an
-    # office at all: it keeps the relay and the bundle in its own stores.
+    # Which members this relay cluster works for: the domain's topology (`domain/topology`, the operator's one record),
+    # read on every pass — RELAY_MEMBERS only where there is no topology yet. RELAY=1 says this cluster is an
+    # relay at all: it keeps the relay and the bundle in its own stores.
     relayed = [m for m in os.environ.get("RELAY_MEMBERS", "").split(",") if m]
-    office = os.environ.get("OFFICE") == "1" or bool(relayed)
-    if office and domain_objects is None:
+    relay = os.environ.get("RELAY") == "1" or bool(relayed)
+    if relay and domain_objects is None:
         domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"])
-    if office and not relayed:
+    if relay and not relayed:
         from .topology import Topology
         topo = Topology(domain_vars)
         relayed = lambda: topo.relayed_by(cluster)                       # noqa: E731
@@ -301,7 +301,7 @@ def main() -> None:
     agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
                         published=own_objects if report else None,
                         relay_members=relayed or None, bundle_members=relayed or None,
-                        bundle_store=own_objects if office else None,
+                        bundle_store=own_objects if relay else None,
                         reaches=local_networks, own_objects=own_objects)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
