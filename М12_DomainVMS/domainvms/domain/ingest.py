@@ -683,8 +683,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         if known_a is None or on is None or crossings.issuer is None:
             continue
         home = known_a[0]
-        member = crossings.view.fed.clusters.get(home)
-        via = member.via if member is not None else None     # Lesson 17: this camera reaches only that office
+        via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that office
         have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
         old = {r["cluster"]: r for r in json.loads((have or {}).get(b, '{"roads": []}'))["roads"]}
         up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
