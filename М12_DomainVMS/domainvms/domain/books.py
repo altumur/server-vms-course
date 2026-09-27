@@ -18,12 +18,16 @@ from .shared import published
 
 
 class Books:
-    def __init__(self, crossings, domain_objects):
-        self.crossings, self.objects = crossings, domain_objects
+    def __init__(self, crossings, domain_objects, members=None):
+        """`members`: the domain's list of members (`domain/members.py`) — followed first, every pass."""
+        self.crossings, self.objects, self.members = crossings, domain_objects, members
 
     def pass_once(self) -> dict[str, int]:
         c = self.crossings
-        moved = []
+        moved, joined = [], {"joined": [], "left": []}
+        if self.members is not None:                     # who the members are: the record, not the configuration
+            from .members import apply as follow_members
+            joined = follow_members(c.view.fed, self.members, self.objects, c.topology, wall=c.wall)
         if c.topology is not None:                       # a member moved behind a relay, or out: read it the new way
             from .topology import apply
             moved = apply(c.view.fed, c.topology, self.objects, wall=c.wall)
@@ -37,4 +41,5 @@ class Books:
         # never skipped in silence.
         out["refused"] = refusals(settings, c)
         out["moved"] = moved
+        out["members"] = joined
         return out
