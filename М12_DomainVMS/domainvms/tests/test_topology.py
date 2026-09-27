@@ -306,3 +306,48 @@ def test_pull_or_push_is_decided_by_the_networks_both_sides_say_they_see():
     cam.pushes = True                                                  # a camera on a mobile uplink: always
     e = book()
     assert e["push"] is True and e["road"] == "the camera says it pushes"
+
+
+def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remembers_why():
+    """The networks say the room sees the cameras' VLAN, so the book sends the recorder to pull. A firewall says
+    otherwise: the recorder cannot reach the camera and says so in its heartbeat. The domain has the camera
+    push — and remembers it, because pushing, the recorder no longer pulls and has nothing more to say; without
+    the memory the next pass would send it back. The room is re-cabled (its networks change): the memory is
+    forgotten and the networks decide again."""
+    from w2cplatform.contract import Heartbeat, Subsystem
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
+    fed.add(north); fed.add(south)
+    cam = DeviceCluster("SN8011", FakeVariables(), wall=wall, address="10.2.0.6")
+    cam.boot()
+    fed.add(member_copy(cam.name, north.objects, wall=wall))
+    room_nets = ["vlan:servers", "vlan:cams"]
+    cam_agent = DomainAgent(cam.name, north.vars, cam.flash, now=wall, domain_objects=north.objects,
+                            published=cam.local_objects(), reaches=lambda: ["vlan:cams"])
+    room_agent = DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: room_nets, own_objects=south.objects)
+    view = ReadView(fed, wall=wall)
+    crossings = Crossings(north.vars, view, wall)
+    cam_agent.sync(); view.refresh()
+    crossings.record("SN8011", on="south")
+
+    def recorder(unreachable: bool):
+        st = [{"id": "SN8011", "cam": "ref:SN8011", "phase": "pending" if unreachable else "running",
+               **({"source_unreachable": True, "why": "source unreachable: connection refused"} if unreachable else {})}]
+        south.objects.put(Subsystem("rec").heartbeat_key("r-0"), Heartbeat("r-0", wall(), st, {}).to_bytes())
+
+    def book():
+        cam.publish(); cam_agent.sync(); room_agent.sync(); view.refresh(); crossings.publish()
+        return json.loads(north.vars.get("domain/sources/south")[0]["SN8011"])
+
+    assert book()["push"] is False                                     # the networks say: pull
+    recorder(unreachable=True)
+    e = book()
+    assert e["push"] is True and "could not reach the camera (source unreachable: connection refused)" in e["road"]
+    recorder(unreachable=False)                                        # pushing now, the recorder has nothing to say
+    wall.advance(30)
+    assert book()["push"] is True                                      # …and the camera keeps pushing
+    room_nets.append("vlan:new")                                       # the room is re-cabled
+    e = book()
+    assert e["push"] is False and "the recorder pulls" in e["road"]    # decided again, by the networks
