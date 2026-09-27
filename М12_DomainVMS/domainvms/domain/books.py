@@ -23,6 +23,10 @@ class Books:
 
     def pass_once(self) -> dict[str, int]:
         c = self.crossings
+        moved = []
+        if c.topology is not None:                       # a member moved behind an office, or out: read it the new way
+            from .topology import apply
+            moved = apply(c.view.fed, c.topology, self.objects, wall=c.wall)
         c.view.refresh()
         out = {"sources": len(c.publish()), "primaries": len(c.publish_primaries()), "poll": len(c.publish_polls())}
         if c.centre:
@@ -32,4 +36,5 @@ class Books:
         # Checked at writing; a camera can still leave the domain afterwards. Such a scenario is SAID, every pass,
         # never skipped in silence.
         out["refused"] = refusals(settings, c)
+        out["moved"] = moved
         return out
