@@ -3,8 +3,9 @@
 Cameras nobody can dial, recorded by an office nobody above can dial, watched from a centre everybody can
 reach. Each level dials the level above: the camera its office (media) and the centre (books, reports); the
 office the centre. The want travels down, the stream up. The star: an office that cannot be pushed to takes
-its cameras' streams from the centre. The summary report: cameras report through their office, one object
-for all of them in the centre.
+its cameras' streams from the centre. The relay: a camera that can reach only its office reaches the domain
+through it both ways — the office relays down what the domain left for it and carries its report up in one
+summary object.
 """
 import json
 
@@ -160,9 +161,10 @@ class _Counting:
 
 
 def test_the_summary_report_one_object_per_office_and_the_price_of_it():
-    """Cameras report to their office; the office folds their reports into one object in the centre. Three
-    hundred cameras in ten offices are ten writes per round instead of eight hundred — and when an office
-    goes quiet, its cameras go quiet with it: the centre cannot tell the office from its sites."""
+    """Cameras that can reach only their office report to it, and the office folds their reports into one
+    object in the centre. The price: when an office goes quiet, its cameras go quiet with it — they have no
+    other road, and the centre cannot tell the office from its sites. The side effect: three hundred cameras
+    in ten offices are ten writes per round instead of eight hundred."""
     wall = Clock()
     north, store, offices, fed = _site_of(10, 30, wall)
 
@@ -187,3 +189,74 @@ def test_the_summary_report_one_object_per_office_and_the_price_of_it():
     page = view.list(size=400)
     silent = {n for n, s in page["clusters"].items() if s == "unreachable"}
     assert silent == {d.name for d, _ in offices["office-3"][1]}        # its thirty cameras, all at once
+
+
+def test_a_camera_that_sees_only_its_office_reaches_the_domain_through_it_both_ways():
+    """The summary report's reason: the camera can reach its office and nothing else. The office is its road
+    to the domain in both directions — the office's agent relays down everything the domain leaves for the
+    camera, the camera reports into the office, and the office carries the report up in its bundle. Grants,
+    a kept edit and its outcome, the book with the stream token, the list in the centre: all through the office.
+    And how current the camera's books are is when the OFFICE last reached the domain."""
+    from vms.config import REC_SPEC
+    from vms.recworker import DOMAIN_SEEN
+    from w2cplatform.spec import SpecController
+    from domain.api import ConsoleAPI
+    from domain.chain import Relay
+    from domain.federation import DomainDirectory
+    from domain.grants import Grant
+    from domain.pending import PendingEdits
+
+    wall = Clock()
+    fed = Federation()
+    north, north_link = make_cluster("north", domain=True)
+    east, _ = make_cluster("east")
+    fed.add(north); fed.add(east)
+    signer = Signer("acme", north.vars, now=wall)
+    DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    cam = DeviceCluster(SERIAL, FakeVariables(), wall=wall, pushes=True)
+    cam.boot(); cam.door_open = False
+    fed.add(member_copy(cam.name, north.objects, wall=wall, via="east"))
+    office_agent = DomainAgent("east", north.vars, east.vars, now=wall, domain_objects=north.objects,
+                               bundle_store=east.objects, bundle_members=[cam.name], relay_members=[cam.name])
+    through = Relay(east.vars, east.objects)                           # all the camera can reach
+    cam_agent = DomainAgent(cam.name, through.vars, cam.flash, now=wall, console=cam.local_console(), current=cam.current,
+                            domain_objects=through.objects, published=cam.local_objects(), seen_store=cam.local_objects())
+    office = Ingest("east", OFFICE_URLS, keys=lambda: ClusterTrust(east.vars).keyset(), wall=wall)
+    office.announce(east.objects)
+    SpecController(REC_SPEC, east.vars, east.objects, wall=wall).create({"name": SERIAL, "cam": f"ref:{SERIAL}"})
+
+    def passes():
+        office_agent.sync(); cam_agent.sync(); office_agent.sync()
+
+    passes()
+    view = ReadView(fed, wall=wall); view.refresh()
+    assert [r["ref"] for r in view.list()["rows"] if r["cluster"] == cam.name] == [SERIAL]   # up: the bundle
+
+    DomainPublisher(north.vars).publish_grants(cam.name, [Grant("anna", "edit", None, wall() + 3600)])
+    passes()
+    assert [g.subject for g in ClusterTrust(cam.flash).grants()] == ["anna"]                   # down: the relay
+
+    pending = PendingEdits(north.vars, wall)
+
+    def no_door(name):
+        raise Unreachable(f"{name} is reached only through its office")
+
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), no_door, verifier=lambda t: t, pending=pending, last_known=view.last_known)
+    assert api.update_camera(SERIAL, {"name": "yard"}, idempotency_key="k1", token="anna")["pending"]
+    passes()
+    assert cam.row()["name"] == "yard"                                 # carried down by the office, applied by the camera
+    view.refresh(); pending.collect(fed)
+    assert pending.of(cam.name) == {}                                  # the outcome came up in the bundle
+
+    crossings = Crossings(north.vars, view, wall, issuer=signer.tokens)
+    crossings.record(SERIAL, on="east"); crossings.publish_primaries()
+    passes()
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: office if url in OFFICE_URLS else (_ for _ in ()).throw(Unreachable(url)))
+    office.want(SERIAL, "recorder:east")
+    assert pusher.pass_once(["f"])["pushed"] == 1                      # the stream token came down the same road
+
+    last = wall()
+    north_link.up = False                                              # the office loses the centre
+    for _ in range(4):
+        wall.advance(20); office_agent.sync(); cam_agent.sync()        # the camera still reaches its office
+    assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == last          # …and knows its books are as old as the office's

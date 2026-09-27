@@ -58,7 +58,7 @@ class DomainPublisher:
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
-                 published=None, pages=None, bundle_members=None, bundle_store=None):
+                 published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
         the edits the domain kept while this cluster was off. Without them it only carries them home.
@@ -83,6 +83,9 @@ class DomainAgent:
         # Lesson 17's summary report: an office's agent folds the reports its members left in `bundle_store`
         # (this cluster's object store) into one object in the domain cluster.
         self.bundle_members, self.bundle_store = bundle_members, bundle_store
+        # …and it RELAYS down what the domain leaves for those members (`chain.relay`): the office is their only
+        # road to the domain. `bundle_store` is the office's object store, where both halves live.
+        self.relay_members = relay_members
         self.reported = ""                                  # what the last pass did with the report
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
@@ -143,7 +146,11 @@ class DomainAgent:
         self.syncs += 1
         if self.seen_store is not None:
             import json
-            self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": self.last_synced, "cluster": self.cluster}).encode())
+            # Through a relay (Lesson 17), "when did I last hear from the domain" is when the OFFICE last did: a
+            # camera that reaches its office every pass while the office is cut from the centre has current
+            # nothing, and must not believe its books are.
+            seen = self.domain_vars.seen() if hasattr(self.domain_vars, "seen") else self.last_synced
+            self.seen_store.put(DOMAIN_SEEN, json.dumps({"ts": seen or 0.0, "cluster": self.cluster}).encode())
         # Up, on the same connection: what the domain reads of this member, left where it reads it. Last,
         # so the outcomes of the edits applied above go up in this same pass.
         if self.published is not None and self.domain_objects is not None:
@@ -156,6 +163,13 @@ class DomainAgent:
                 self.reported = str(e)
             except Unreachable:
                 self.reported = "the domain did not take the report"
+                return False
+        if self.relay_members and self.bundle_store is not None:
+            from .chain import relay
+            members = self.relay_members() if callable(self.relay_members) else self.relay_members
+            try:
+                relay(members, self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now())
+            except Unreachable:
                 return False
         if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
             from .chain import bundle
@@ -203,12 +217,22 @@ def main() -> None:
     # report in the domain cluster's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
     # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
     report = os.environ.get("REPORT") == "1"
-    if report:
-        from cluster.objectstore import open_store
-    agent = DomainAgent(cluster, open_vars(os.environ["DOMAIN_CONFIG_URL"]),
-                        open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", "")),
-                        domain_objects=open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report else None,
-                        published=open_store(os.environ["OBJECTS_URL"]) if report else None)
+    from cluster.objectstore import open_store
+    own_vars = open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", ""))
+    # Lesson 17. OFFICE_CONFIG_URL / OFFICE_OBJECTS_URL: this member can reach only its office — the office is
+    # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such an office, relaying for them.
+    if os.environ.get("OFFICE_CONFIG_URL"):
+        from .chain import Relay
+        through = Relay(open_vars(os.environ["OFFICE_CONFIG_URL"]), open_store(os.environ["OFFICE_OBJECTS_URL"]))
+        domain_vars, domain_objects = through.vars, through.objects
+    else:
+        domain_vars = open_vars(os.environ["DOMAIN_CONFIG_URL"])
+        domain_objects = open_store(os.environ["DOMAIN_OBJECTS_URL"]) if report or os.environ.get("RELAY_MEMBERS") else None
+    relayed = [m for m in os.environ.get("RELAY_MEMBERS", "").split(",") if m]
+    agent = DomainAgent(cluster, domain_vars, own_vars, domain_objects=domain_objects,
+                        published=open_store(os.environ["OBJECTS_URL"]) if report else None,
+                        relay_members=relayed or None, bundle_members=relayed or None,
+                        bundle_store=open_store(os.environ["OBJECTS_URL"]) if relayed else None)
     interval = float(os.environ.get("SYNC_INTERVAL", "30"))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

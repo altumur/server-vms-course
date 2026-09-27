@@ -5,11 +5,15 @@ monitoring centre. Nothing new is needed beyond Lesson 16 repeated on every hop,
 generalises Lessons 10 and 16: EACH LEVEL DIALS THE LEVEL ABOVE; a level must be reachable from below and
 never from above.
 
-    control  flat, as it always was: one customer, one domain, hosted by the centre. Cameras and offices are
-             its members and report to it directly (Lesson 10) — all of them can reach the centre. The
-             summary report is the variant: cameras report to their office, and the office carries ONE object
-             for all of them — fewer writes in the centre's raft, at the price that an office down makes its
-             cameras invisible too (`bundle`, `member_copy(..., via=office)`)
+    control  flat where it can be: one customer, one domain, hosted by the centre, and every member that can
+             reach the centre reports to it directly (Lesson 10). A camera that can reach ONLY ITS OFFICE
+             cannot — and then the office is its road to the domain both ways. The office's agent RELAYS down
+             everything the domain leaves for that camera (keys, revocations, its grants, kept edits, its books,
+             stream tokens, the host record, shared settings and backups, with their objects) into `relay/` in
+             the office's own stores, with the time the office last reached the domain; the camera's agent reads
+             that instead of the domain (`Relay`). Up, the camera reports into the office's store and the office
+             carries ONE object for all such cameras (`bundle`, `member_copy(..., via=office)`). The price: an
+             office down makes its cameras silent too, and nothing can be done about it — there is no other road
     media    Lesson 16 on every hop. The office's ingest is to the centre what the camera is to the office:
              its FORWARDER keeps a long poll to the centre's ingest and pushes while the centre wants a stream.
              And the want travels DOWN: a viewer in the centre wants camera X, so the centre's ingest wants X
@@ -185,3 +189,95 @@ class BundleView:
     def list(self, prefix: str) -> list[str]:
         member, sub = self._split(prefix)
         return [base(member) + k for k in self._entries(member) if k.startswith(sub)]
+
+
+# -- the relay: an office as its cameras' road to the domain -----------------------------------------------
+# What the domain leaves for a member, as its agent reads it (`DomainAgent.sync`): named once here, so the
+# relay carries exactly that and a camera's agent needs no other code.
+RELAY = "relay/"
+RELAY_SEEN = "relay/domain/seen"
+
+
+def _relayed_rows(member: str) -> list[str]:
+    from .agent import GRANTS_PATH, KEYS_PATH, PER_CLUSTER, REVOKED_PATH
+    from .pending import PENDING_PATH
+    from .shared import POINTER
+    from .term import BACKUP, HOST
+    return [KEYS_PATH, REVOKED_PATH, HOST, POINTER, f"{GRANTS_PATH}/{member}", f"{PENDING_PATH}/{member}",
+            f"{BACKUP}/{member}", *[f"{p}/{member}" for p in PER_CLUSTER]]
+
+
+def relay(members: list[str], domain_vars, domain_objects, office_vars, office_objects, now: float) -> int:
+    """One pass of the office's relay, after its agent has reached the domain. Copies each row a member's agent
+    would read, and the object a pointer names (shared settings, backup), into `relay/`; only what changed.
+    Last, the time of this pass — how current everything below it is."""
+    written, seen = 0, set()
+    for m in members:
+        for path in _relayed_rows(m):
+            if path in seen:
+                continue
+            seen.add(path)
+            items, _ = domain_vars.get(path)
+            have, idx = office_vars.get(RELAY + path)
+            if items is None and have is None:
+                continue
+            items = dict(items or {})
+            if have != items:
+                office_vars.put(RELAY + path, items, cas=idx)
+                written += 1
+            obj = items.get("object") if isinstance(items, dict) else None
+            if obj and domain_objects is not None:
+                raw = domain_objects.get(obj)
+                if raw is not None and office_objects.get(RELAY + obj) != raw:
+                    office_objects.put(RELAY + obj, raw)
+                    written += 1
+    office_objects.put(RELAY_SEEN, json.dumps({"ts": now}).encode())
+    return written
+
+
+class Relay:
+    """What a camera that can reach only its office uses in place of the domain: `vars` and `objects` over the
+    office's `relay/` copy — its reports go into the office's store as they are — and `seen()`, the time the
+    OFFICE last reached the domain, which is how current the camera's books are."""
+
+    def __init__(self, office_vars, office_objects):
+        self.vars = _RelayVars(office_vars, office_objects)
+        self.objects = _RelayObjects(office_objects)
+
+
+class _RelayVars:
+    def __init__(self, office_vars, office_objects):
+        self.office_vars, self.office_objects = office_vars, office_objects
+
+    def get(self, path):
+        return self.office_vars.get(RELAY + path)
+
+    def list(self, prefix):
+        return [k[len(RELAY):] for k in self.office_vars.list(RELAY + prefix)]
+
+    def seen(self) -> float | None:
+        raw = self.office_objects.get(RELAY_SEEN)
+        return float(json.loads(raw)["ts"]) if raw else None
+
+
+class _RelayObjects:
+    """Documents from the relay; the member's own report straight into the office's store."""
+
+    def __init__(self, office_objects):
+        self.office = office_objects
+
+    def _key(self, key: str) -> str:
+        return key if key.startswith(UPLINK + "/") else RELAY + key
+
+    def get(self, key):
+        return self.office.get(self._key(key))
+
+    def list(self, prefix):
+        return self.office.list(prefix) if prefix.startswith(UPLINK + "/") else \
+            [k[len(RELAY):] for k in self.office.list(RELAY + prefix)]
+
+    def put(self, key, data):
+        return self.office.put(key, data)
+
+    def delete(self, key):
+        return self.office.delete(key)

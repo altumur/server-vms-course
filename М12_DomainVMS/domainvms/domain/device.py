@@ -122,6 +122,14 @@ class _Local:
         return self.device.ram.put(key, data)
 
 
+class _LocalConsole:
+    def __init__(self, device: "DeviceCluster"):
+        self.device = device
+
+    def update_camera(self, camera, fields: dict, subject: str | None) -> dict:
+        return self.device._update(camera, fields, subject)
+
+
 class DeviceCluster:
     def __init__(self, serial: str, flash_vars: Variables, wall=time.time, name: str | None = None,
                  reaches=(), address: str | None = None, disk=None, pushes: bool = False):
@@ -208,6 +216,14 @@ class DeviceCluster:
     def update_camera(self, camera, fields: dict, subject: str | None) -> dict:
         if not self.door_open:
             raise Unreachable(f"{self.name} did not answer")          # the domain reaches it over the network
+        return self._update(camera, fields, subject)
+
+    def local_console(self) -> "_LocalConsole":
+        """The console as the camera's OWN agent calls it, applying a kept edit (Lesson 9): no door — this is
+        the camera, not the network. A camera nobody can reach (Lessons 16–17) applies its edits this way."""
+        return _LocalConsole(self)
+
+    def _update(self, camera, fields: dict, subject: str | None) -> dict:
         if str(camera) not in ("1", self.serial):
             raise ApiError(404, f"{self.name} is one camera, {self.serial}; it has no camera {camera}")
         if subject is not None and not self.may(subject, "edit"):

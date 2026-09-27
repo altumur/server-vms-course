@@ -10,6 +10,10 @@ namespace "default" {
     # its objects: the verified copies of the domain's documents (Lessons 12, 15) and `domain/seen`, when it
     # last reached the domain (Lesson 13) — on a camera that store is RAM for what changes every pass
     path "objects/domain/*" { capabilities = ["read", "write"] }
+    # Lesson 17, an office that is its cameras' only road to the domain: what the domain left for them, relayed
+    # down into this cluster (`chain.relay`), and the time this office last reached the domain.
+    path "relay/*"          { capabilities = ["read", "write"] }
+    path "objects/relay/*"  { capabilities = ["read", "write"] }
     path "vms/*"            { capabilities = ["deny"] }
   }
 }

@@ -5,3 +5,5 @@
 **One policy per member**, rendered with its name, so that a member writes only its own report: the same one-writer-per-prefix rule the cluster's ACLs keep for `vms/*`. `destroy` because a report drops what the member no longer has. The member's agent keeps its own cluster's policy (`agent-policy.hcl`) unchanged.
 
 **Not exercised by the tests** (no Nomad here); what it grants is what `tests/test_uplink.py` does.
+
+**Lesson 17.** A camera that can reach only its office has no connection to the domain cluster at all. It gets this policy in the OFFICE's cluster: it reads `relay/*` — what the office's agent relayed down for it (`chain.relay`) — and writes its report into the office's store, which the office folds into one bundle for the domain. The office's agent writes `relay/*` under its own policy (`agent-policy.hcl`).
