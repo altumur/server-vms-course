@@ -380,3 +380,15 @@ def test_what_the_stream_says_comes_before_the_book():
     assert not card.primary_needs_cover(row)                  # the stream is taken: the book's word is older
     card.stream_says = lambda r: None
     assert card.primary_needs_cover(row)                      # it cannot say: the book decides
+
+
+
+def test_a_recorder_says_when_it_cannot_reach_its_source():
+    """The pipeline could not open the camera's stream: the recorder says so in its heartbeat, per recording —
+    the witness the domain needs to stop sending it to pull and have the camera push (М12 lesson 16)."""
+    box, card, row, carry = _camera_cluster()
+    card.note_source_unreachable(row["id"], "connection refused")
+    st = card.status_extra(row)
+    assert st["source_unreachable"] is True and st["why"] == "source unreachable: connection refused"
+    card.note_source_unreachable(row["id"], None)
+    assert "source_unreachable" not in card.status_extra(row)
