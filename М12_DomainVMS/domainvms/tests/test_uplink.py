@@ -204,3 +204,21 @@ def test_a_camera_whose_clock_is_wrong_is_neither_stale_for_ever_nor_never_stale
     assert view.rows()[0].worker_state == "live"
     wall.advance(60); slow.advance(60); view.refresh()                          # it stops
     assert view.list()["clusters"][d.name] == "unreachable"
+
+
+def test_a_cluster_with_no_cameras_yet_reports_that_it_has_none():
+    """Feedback AA, on the report. A server room nobody has given a camera yet runs its controller once and
+    publishes an empty `unplaced` shard; its agent reports; the domain lists it as a member that answered
+    with nothing — complete — and not as one that never reported."""
+    from cluster.controller import ClusterController
+    wall = Clock(NOW)
+    north, _ = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
+    fed = Federation(); fed.add(north)
+    fed.add(member_copy("south", north.objects, wall=wall))
+    ClusterController(south.vars, south.objects, wall=wall, cluster="south").publish_snapshot()
+    agent = DomainAgent("south", north.vars, south.vars, now=wall, domain_objects=north.objects, published=south.objects)
+    assert agent.sync() and agent.reported.startswith("reported")
+    view = ReadView(fed, wall=wall); view.refresh()
+    page = view.list()
+    assert page["total"] == 0 and page["complete"] and page["clusters"]["south"] == "ok"

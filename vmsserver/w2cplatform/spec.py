@@ -1462,6 +1462,12 @@ class SpecController(Controller):
         for key in self.objects.list(prefix):
             shards.setdefault(key[len(prefix):], {"cluster": self.cluster, "worker": None, "ts": self.wall(),
                                                   self.spec.rows: []})
+        # A cluster with no units at all — a camera's cluster before its camera, a recording cluster before
+        # its first recording — would publish NOTHING, and "published that there are none" would read as
+        # "never published" (feedback AA). М12's member that has not published does not report (Lesson 10),
+        # so such a cluster stayed "never reported" for ever. An empty `unplaced` shard is the statement.
+        if not shards:
+            shards[UNPLACED] = {"cluster": self.cluster, "worker": None, "ts": self.wall(), self.spec.rows: []}
         for name, shard in shards.items():
             try:
                 self.objects.put(prefix + name, json.dumps(shard).encode())

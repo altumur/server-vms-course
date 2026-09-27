@@ -238,10 +238,11 @@ Items.data:
 GET /v1/vars?prefix=vms/placement/  ×2   → []     нечего забирать: ни удалённых, ни завершённых
 GET /v1/vars?prefix=vms/cameras/         → []     нечего размещать
 GET /v1/vars?prefix=vms/slots/           → 3 пути  никто слот не отпускал
-GET /v1/vars?prefix=objects/vms/snapshot/ → []    публиковать нечего
+GET /v1/vars?prefix=objects/vms/snapshot/ → []    шардов ещё нет
+PUT /v1/var/objects/vms/snapshot/unplaced         {"worker": null, "cameras": []}
 ```
 
-Ни одной записи. Контроллер в спокойном кластере пишет только снапшот, а снапшот пустого кластера — это пустой набор шардов, то есть ноль объектов.
+Одна запись — снапшот, единственная безусловная запись контроллера. У пустого кластера это пустой шард `unplaced`: «камер нет» — тоже публикация. Раньше здесь не писалось ничего, и слой над кластером не мог отличить «камер нет» от «не публиковал ни разу»; для камеры, которая отчитывается домену сама (М12, урок 10), это значило «ни разу не отчитывался» навсегда (обратная связь, пункт AA).
 
 ## Состояние хранилища перед приходом оператора
 
@@ -250,6 +251,7 @@ GET /v1/vars?prefix=objects/vms/snapshot/ → []    публиковать не�
 | `vms/slots/w-1..w-3` | взяты, `released: false`, `until` в будущем |
 | `objects/vms/heartbeats/w-1..w-3` | свежие, `status: []`, `capacity: 50`, `headroom: 50` |
 | `objects/platform/resources/srv-1..3/heartbeat` | свежие |
+| `objects/vms/snapshot/unplaced` | пустой шард: камер нет |
 | `vms/cameras/*`, `vms/next_id`, `vms/placement/*`, `vms/workers/*` | **не существуют** |
 
 ---

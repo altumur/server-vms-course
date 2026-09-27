@@ -128,3 +128,19 @@ def test_the_age_is_the_stalest_shard_and_never_the_freshest():
     box.objects.put("vms/snapshot/w-1", json.dumps(stale).encode())
 
     assert round(ctl.snapshot_age()) == 300, "the freshest shard was taken, and the RPO looked better than it is"
+
+
+def test_a_cluster_with_no_units_publishes_that_it_has_none():
+    """Feedback AA. A cluster with no units used to publish nothing — no shard to write — and "there are
+    none" read as "never published". Above the cluster that is two different answers: М12's member that has
+    not published does not report (Lesson 10), and a camera's cluster before its camera stayed "never
+    reported" for ever. So a pass over an empty cluster writes an empty `unplaced` shard, and once there is
+    a unit, the shard is emptied like any other the pass did not fill."""
+    import json
+    box = Box()
+    ctl = _cluster(box, cameras=0)
+    assert ctl.snapshot_age() is None                                # before any pass: never published
+    ctl.publish_snapshot()
+    shard = json.loads(box.objects.get("vms/snapshot/unplaced"))
+    assert shard["cameras"] == [] and shard["worker"] is None and ctl.snapshot_age() == 0
+    assert ctl.snapshot()["cameras"] == []                            # published, and it says none

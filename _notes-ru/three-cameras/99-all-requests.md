@@ -32,6 +32,7 @@ w-1  PUT  /v1/var/objects/vms/heartbeats/w-1                → 200  status [], 
 res  GET  /v1/var/platform/schema                           → 404
 res  PUT  /v1/var/objects/platform/resources/srv-1/heartbeat → 200  space, volumes
      …то же для srv-2 и srv-3
+ctl  PUT  /v1/var/objects/vms/snapshot/unplaced             → 200  пустой шард: камер нет
 
 ── создание камеры 1 (T+0.0) ───────────────────────────────────────────────
 OP   POST /cameras  Idempotency-Key: 8f4b21e0-…             → 201  id 1, worker null
@@ -70,8 +71,9 @@ ctl  PUT  /v1/var/vms/workers/w-3?cas=0                     → 200  units "3"
 ctl  GET  /v1/vars?prefix=vms/placement/                    → 3 пути  redistribute проверяет их заново
 ctl  GET  /v1/vars?prefix=vms/slots/                        → 3 пути  никто не отпускал — уходит
 ctl  GET  /v1/vars?prefix=objects/rec/heartbeats/           → []      ensure_home: записи нет, дома нет
-ctl  GET  /v1/vars?prefix=objects/vms/snapshot/             → []
+ctl  GET  /v1/vars?prefix=objects/vms/snapshot/             → unplaced
 ctl  PUT  /v1/var/objects/vms/snapshot/w-1..3               → 200  по шарду на воркера
+ctl  PUT  /v1/var/objects/vms/snapshot/unplaced             → 200  снова пустой: неразмещённых нет
 
 ── воркеры забирают камеры (T+4.1 … T+5.0) ─────────────────────────────────
 w-1  GET  /v1/var/vms/workers/w-1                           → units "1", rev 1

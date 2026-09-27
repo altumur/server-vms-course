@@ -347,12 +347,13 @@ GET /v1/var/vms/placement/2              → w-2
 GET /v1/var/vms/placement/3              → w-3
 
 # какие шарды уже есть (чтобы переписать пустыми те, что осиротели)
-GET /v1/vars?prefix=objects/vms/snapshot/   → []
+GET /v1/vars?prefix=objects/vms/snapshot/   → ["objects/vms/snapshot/unplaced"]
 
-# и три записи
+# три записи — и пустой `unplaced`, оставшийся с прохода по пустому кластеру
 PUT /v1/var/objects/vms/snapshot/w-1
 PUT /v1/var/objects/vms/snapshot/w-2
 PUT /v1/var/objects/vms/snapshot/w-3
+PUT /v1/var/objects/vms/snapshot/unplaced   → {"worker": null, "cameras": []}
 ```
 
 Содержимое шарда `w-1`:
