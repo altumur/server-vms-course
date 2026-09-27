@@ -38,7 +38,9 @@ def federation_from_env(var: str = "CLUSTERS") -> Federation:
     # for every camera, and a server room's too when the domain cannot route to it.
     from .uplink import member_copy
     # `name=report@office`: Lesson 17's summary report — the member reports to that office, which carries one
-    # bundle for all its members into the domain cluster.
+    # bundle for all its members into the domain cluster. Once the operator has written the domain's topology
+    # (`domain/topology`), IT says who reports through whom, and each pass follows it (`topology.apply`); the
+    # `@office` here is only where the domain starts before anyone has.
     for name, via in reporting:
         fed.add(member_copy(name, fed.domain_cluster.objects, lost_after=float(os.environ.get("LOST_AFTER", "45")), via=via))
     return fed
