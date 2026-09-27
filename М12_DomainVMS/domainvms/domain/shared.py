@@ -129,6 +129,14 @@ class SharedSettings:
         return out
 
 
+# The domain's own read of what it published — for the passes that act on the document (Lesson 16's book of
+# asks is built from its scenarios). Its own store, its own document: nothing to verify against.
+def published(domain_vars, domain_objects) -> dict:
+    ptr, _ = domain_vars.get(POINTER)
+    raw = domain_objects.get(ptr["object"]) if ptr else None
+    return json.loads(raw).get("settings", {}) if raw else {}
+
+
 # The agent's side, one pass: carry the document home if it is newer than what the member holds and it
 # verifies against the member's OWN key set. Object first, then the pointer — a member that dies between
 # the two still points at a document it has.
