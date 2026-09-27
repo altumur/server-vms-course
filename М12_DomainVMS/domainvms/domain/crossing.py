@@ -71,7 +71,13 @@ class Crossings:
         # it for its agent's pass anyway.
         self.poll_home = poll_home
 
-    def _poll_home(self) -> str | None:
+    def _poll_home(self, home: str | None = None) -> str | None:
+        """Where a camera of cluster `home` polls when nobody records it. A camera that reaches only its office
+        (Lesson 17, `report@office`) polls that office's ingest: the centre and the domain's cluster are exactly
+        what it cannot reach."""
+        c = self.view.fed.clusters.get(home) if home else None
+        if c is not None and c.via:
+            return c.via
         if self.poll_home or self.centre:
             return self.poll_home or self.centre
         dc = getattr(self.view.fed, "domain_cluster", None)
@@ -94,7 +100,8 @@ class Crossings:
         on = self.all().get(str(ref))
         if on is not None:
             return self.centre if on in self.star and self.centre else on
-        return self._poll_home() if str(ref) in self.unrecorded() else None
+        home = self.unrecorded().get(str(ref))
+        return self._poll_home(home) if home is not None else None
 
     def all(self) -> dict[str, str]:
         items, _ = self.vars.get(CROSSINGS)
@@ -227,15 +234,16 @@ class Crossings:
     # that records nothing must not look like a primary there. The camera polls, is never told to push, and
     # takes its asks. Kept by the same half-life rule, so the book on its flash does not churn.
     def publish_polls(self) -> dict[str, dict]:
-        now, books, home_of = self.wall(), {}, self._poll_home()
-        if home_of is None:
-            return {}
+        now, books = self.wall(), {}
         for ref, home in self.unrecorded().items():
+            on = self._poll_home(home)
+            if on is None:
+                continue
             have, _ = self.vars.get(f"{POLL_PATH}/{home}")
             old = json.loads((have or {}).get(ref, "null"))
-            ingest = self._ingest(ref, home_of, home, now, old)
+            ingest = self._ingest(ref, on, home, now, old)
             if ingest:
-                books.setdefault(home, {})[ref] = json.dumps({**ingest, "cluster": home_of}, sort_keys=True)
+                books.setdefault(home, {})[ref] = json.dumps({**ingest, "cluster": on}, sort_keys=True)
         for home in {h for h in self.unrecorded().values()} | set(books):
             path = f"{POLL_PATH}/{home}"
             have, idx = self.vars.get(path)
