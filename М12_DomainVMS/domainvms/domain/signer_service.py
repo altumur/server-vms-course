@@ -12,7 +12,8 @@ over mTLS, which need the bench.
 
 Given CLUSTERS (the console's format), it also runs the domain's pass over the books every 5 s
 (`domain/books.py`): sources, primaries, polls, upstream, asks. Those books carry tokens the signer mints —
-stream tokens, tokens to ask — so the pass runs where the key is. CENTRE and STAR are Lesson 17's.
+stream tokens, tokens to ask — so the pass runs where the key is. The centre and the star offices come from
+the operator's topology (`domain/topology`); CENTRE and STAR only stand where there is none.
 """
 from __future__ import annotations
 
@@ -50,9 +51,11 @@ def main() -> None:
         from .runtime import federation_from_env
         fed = federation_from_env()
         view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
+        from .topology import Topology
         star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
         books = Books(Crossings(fed.domain_cluster.vars, view, issuer=signer.tokens,
-                                centre=os.environ.get("CENTRE") or None, star=star), fed.domain_cluster.objects)
+                                centre=os.environ.get("CENTRE") or None, star=star,
+                                topology=Topology(fed.domain_cluster.vars)), fed.domain_cluster.objects)
 
     class H(BaseHTTPRequestHandler):
         def _send(self, status, body):
