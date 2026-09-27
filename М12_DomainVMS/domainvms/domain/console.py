@@ -119,7 +119,8 @@ class Console:
                     if console.admin is not None and subject is not None and not console.admin(subject):
                         raise ApiError(403, f"{subject} is not an admin of the domain cluster: the topology is the domain's")
                     rev = console.topology.edit(lambda d: d.update({k: body[k] for k in ("centre", "star", "via") if k in body}),
-                                                int(body.get("base_rev", 0)), known=set(console.view.fed.clusters), by=subject)
+                                                int(body.get("base_rev", 0)), known=set(console.view.fed.clusters), by=subject,
+                                                domain=console.view.fed.domain_cluster.name)
                     self._send(200, {"rev": rev, **console.topology.read()})
                 except Conflict as e:
                     self._send(409, {"detail": str(e)})
