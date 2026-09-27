@@ -58,26 +58,52 @@ class Crossings:
     """The domain's side: which cluster records which camera of another cluster, and the books."""
 
     def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float = 86400.0,
-                 centre: str | None = None, star=frozenset(), poll_home: str | None = None):
+                 centre: str | None = None, star=frozenset(), poll_home: str | None = None, topology=None):
         """`issuer` is Lesson 16: the domain signer's token issuer. Given it, the book of primaries also tells
         a camera where to PUSH — the recording cluster's ingest — with a stream token for it."""
         self.vars, self.view, self.wall = domain_vars, view, wall
         self.issuer, self.token_lifetime = issuer, token_lifetime
         # Lesson 17: the monitoring centre, and the recording clusters that cannot be pushed to — their cameras
         # push to the centre instead, and the cluster pulls its streams from there.
-        self.centre, self.star = centre, frozenset(star)
+        # Given explicitly they stand; otherwise the operator's topology says (`domain/topology.py`), read on
+        # every use, so an edit there reaches the next pass without a restart.
+        self._centre, self._star, self.topology = centre, (frozenset(star) if star else None), topology
         # Lesson 16, step 8: where a pushing camera that nobody records keeps its poll — a cluster every camera
         # already reaches. The centre if there is one, else the cluster that hosts the domain: a camera reaches
         # it for its agent's pass anyway.
         self.poll_home = poll_home
 
+    def _topo(self) -> dict | None:
+        doc = self.topology.read() if self.topology is not None else None
+        return doc if doc and doc["rev"] else None      # written by the operator: it wins over what was configured
+
+    @property
+    def centre(self) -> str | None:
+        doc = self._topo()
+        return doc["centre"] if doc else self._centre
+
+    @property
+    def star(self) -> frozenset:
+        doc = self._topo()
+        return frozenset(doc["star"]) if doc else (self._star or frozenset())
+
+    def via_of(self, member: str | None) -> str | None:
+        """The office this member reaches the domain through: the topology, else how its copy was configured."""
+        if member is None:
+            return None
+        doc = self._topo()
+        if doc:
+            return doc["via"].get(member)
+        c = self.view.fed.clusters.get(member)
+        return c.via if c is not None else None
+
     def _poll_home(self, home: str | None = None) -> str | None:
         """Where a camera of cluster `home` polls when nobody records it. A camera that reaches only its office
         (Lesson 17, `report@office`) polls that office's ingest: the centre and the domain's cluster are exactly
         what it cannot reach."""
-        c = self.view.fed.clusters.get(home) if home else None
-        if c is not None and c.via:
-            return c.via
+        via = self.via_of(home)
+        if via:
+            return via
         if self.poll_home or self.centre:
             return self.poll_home or self.centre
         dc = getattr(self.view.fed, "domain_cluster", None)
