@@ -20,7 +20,7 @@ job "domain-agent" {
           SYNC_INTERVAL=30
           OBJECTS_URL=http://minio.{{ env "NOMAD_REGION" }}:9000/cluster   # this cluster's objects: where it says what it reaches
           # REACHES=vlan:cctv-a,vlan:cctv-b   the site's names for the networks it sees; unset: the host's interfaces
-          # OFFICE=1                          an office: relays and bundles for the members the domain's topology names
+          # RELAY=1                          a relay: relays and bundles for the members the domain's topology names
         EOT
         destination = "local/agent.env"
         env         = true
