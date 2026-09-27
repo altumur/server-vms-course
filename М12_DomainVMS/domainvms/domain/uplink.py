@@ -199,36 +199,54 @@ def member_copy(member: str, domain_objects, reaches=(), lost_after: float = 45.
     for all its members. Read the same way; silent together with the relay."""
     if via is not None:
         from .chain import BundleView
-        domain_objects = NewerRoad(member, domain_objects, BundleView(via, domain_objects))
+        domain_objects = NewerRoad(member, domain_objects, BundleView(via, domain_objects), lost_after, wall)
     f = _Fresh(member, domain_objects, lost_after, wall)
     return Cluster(member, _CopyVars(f), _CopyObjects(f), frozenset(reaches), via=via)
 
 
 class NewerRoad:
-    """A member placed behind a relay is read from the relay's bundle — and from its own direct report too,
-    whichever is NEWER. The topology describes a road; it does not forbid another (feedback AM): a camera that
-    can reach the domain after all, or that has not yet been moved, is not made silent by a record that says it
-    goes round. Newer by the report's `ts` — the MEMBER's clock, the same one on both roads — not by its number,
-    which each store counts for itself."""
+    """A member placed behind a relay is read from the relay's bundle — and from its own direct report too. The
+    topology describes a road; it does not forbid another (feedback AM): a camera that can reach the domain after
+    all, or that has not yet been moved, is not made silent by a record that says it goes round.
 
-    def __init__(self, member: str, direct, bundled):
-        self.member, self.direct, self.bundled = member, direct, bundled
+    Which of the two: among the roads still ALIVE on the domain's clock — whose report changed within
+    `lost_after` — the newer by the report's `ts`, the member's own clock, the same one on both roads (not by its
+    number, which each store counts for itself). A road that has gone silent gives way to a live one whatever
+    the member's clock says: a camera whose clock stepped back would otherwise freeze on its stale road until it
+    counted as silent (found by the product). The number the domain's freshness sees is the road's name with its
+    own, so a switch of road is a new report."""
 
-    def _pick(self):
-        best, top = self.direct, (float("-inf"), -1)
-        for road in (self.direct, self.bundled):
+    def __init__(self, member: str, direct, bundled, lost_after: float = 45.0, wall=time.time):
+        self.member, self.roads, self.lost_after, self.wall = member, {"direct": direct, "via": bundled}, lost_after, wall
+        self.seen: dict[str, tuple] = {}                  # road -> (its report number, when the domain first saw it)
+
+    def _pick(self) -> str:
+        now, marks = self.wall(), {}
+        for name, road in self.roads.items():
             raw = road.get(base(self.member) + REPORTED)
-            mark = json.loads(raw) if raw else {}
-            key = (float(mark.get("ts", float("-inf"))), int(mark.get("seq", -1)))
-            if key > top:
-                best, top = road, key
-        return best
+            if not raw:
+                continue
+            mark = json.loads(raw)
+            if self.seen.get(name, (None,))[0] != mark.get("seq"):
+                self.seen[name] = (mark.get("seq"), now)
+            marks[name] = mark
+        if not marks:
+            return "direct"
+        alive = [n for n in marks if now - self.seen[n][1] <= self.lost_after] or \
+                [max(marks, key=lambda n: self.seen[n][1])]          # both silent: the one heard last
+        return max(alive, key=lambda n: (float(marks[n].get("ts", 0)), self.seen[n][1]))
 
     def get(self, key: str):
-        return self._pick().get(key)
+        name = self._pick()
+        raw = self.roads[name].get(key)
+        if raw is not None and key == base(self.member) + REPORTED:
+            mark = json.loads(raw)
+            mark["seq"] = f"{name}:{mark.get('seq')}"
+            return json.dumps(mark).encode()
+        return raw
 
     def list(self, prefix: str) -> list[str]:
-        return self._pick().list(prefix)
+        return self.roads[self._pick()].list(prefix)
 
 
 def offset_of(copy: Cluster) -> float:
