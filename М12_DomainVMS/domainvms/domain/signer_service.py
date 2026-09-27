@@ -9,6 +9,10 @@ over mTLS, which need the bench.
     POST /login          {"user","password"}         -> {"token"}
     POST /revoke         {"token"}                    -> revokes that token's jti
     GET  /keys           the key set (what agents copy)
+
+Given CLUSTERS (the console's format), it also runs the domain's pass over the books every 5 s
+(`domain/books.py`): sources, primaries, polls, upstream, asks. Those books carry tokens the signer mints —
+stream tokens, tokens to ask — so the pass runs where the key is. CENTRE and STAR are Lesson 17's.
 """
 from __future__ import annotations
 
@@ -38,6 +42,17 @@ def main() -> None:
     pub = DomainPublisher(vars_)
     revoked = RevocationList.from_items(vars_.get("domain/revoked")[0])
     pub.publish_keys(signer.tokens.keyset())
+    books = None
+    if os.environ.get("CLUSTERS"):
+        from .books import Books
+        from .crossing import Crossings
+        from .readview import ReadView
+        from .runtime import federation_from_env
+        fed = federation_from_env()
+        view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
+        star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
+        books = Books(Crossings(fed.domain_cluster.vars, view, issuer=signer.tokens,
+                                centre=os.environ.get("CENTRE") or None, star=star), fed.domain_cluster.objects)
 
     class H(BaseHTTPRequestHandler):
         def _send(self, status, body):
@@ -76,6 +91,11 @@ def main() -> None:
             ids.publish()                                     # object first, then the pointer, on a floor
             revoked.prune(__import__("time").time())
         except Exception:                                     # noqa: BLE001
+            pass
+        try:
+            if books is not None:
+                books.pass_once()                             # the books the agents carry home
+        except Exception:                                     # noqa: BLE001 — a bad pass leaves the last books, which is their point
             pass
         stop.wait(5)
     srv.shutdown()
