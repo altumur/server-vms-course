@@ -26,6 +26,9 @@ recording goes on with the domain switched off, from the address last carried.
     domain/sources              in the recording cluster: its agent's copy
     domain/primaries/<cluster>  in the domain cluster: the camera cluster's book of primaries
     domain/primaries            in the camera's cluster: its agent's copy, read by the backup on its card
+    domain/poll/<cluster>       in the domain cluster: for a camera that pushes and that NOBODY records, the
+                                ingest it polls anyway — so an ask reaches it (Lesson 16, step 8)
+    domain/poll                 in the camera's cluster: its agent's copy
 
 The book of primaries is the source book the other way round. A backup on the camera's card with
 `when: offline` records while its primary should be written and is not (М10B Lesson 26) — and its primary
@@ -44,7 +47,7 @@ from dataclasses import dataclass
 from cluster.variables import Conflict
 from vms.archive import subtract
 
-from .agent import PRIMARIES_PATH, SOURCES_PATH
+from .agent import POLL_PATH, PRIMARIES_PATH, SOURCES_PATH
 from .federation import Unreachable
 from .api import ApiError
 
@@ -55,7 +58,7 @@ class Crossings:
     """The domain's side: which cluster records which camera of another cluster, and the books."""
 
     def __init__(self, domain_vars, view, wall=time.time, issuer=None, token_lifetime: float = 86400.0,
-                 centre: str | None = None, star=frozenset()):
+                 centre: str | None = None, star=frozenset(), poll_home: str | None = None):
         """`issuer` is Lesson 16: the domain signer's token issuer. Given it, the book of primaries also tells
         a camera where to PUSH — the recording cluster's ingest — with a stream token for it."""
         self.vars, self.view, self.wall = domain_vars, view, wall
@@ -63,6 +66,35 @@ class Crossings:
         # Lesson 17: the monitoring centre, and the recording clusters that cannot be pushed to — their cameras
         # push to the centre instead, and the cluster pulls its streams from there.
         self.centre, self.star = centre, frozenset(star)
+        # Lesson 16, step 8: where a pushing camera that nobody records keeps its poll — a cluster every camera
+        # already reaches. The centre if there is one, else the cluster that hosts the domain: a camera reaches
+        # it for its agent's pass anyway.
+        self.poll_home = poll_home
+
+    def _poll_home(self) -> str | None:
+        if self.poll_home or self.centre:
+            return self.poll_home or self.centre
+        dc = getattr(self.view.fed, "domain_cluster", None)
+        return dc.name if dc is not None else None
+
+    def unrecorded(self) -> dict[str, str]:
+        """{ref: its own cluster} for every camera that pushes (its door says so) and that no cluster records."""
+        rec, out = self.all(), {}
+        for (cluster, _worker), s in self.view.snapshots.items():
+            if (s.doors or {}).get("push"):
+                for st in s.status:
+                    ref = str(st.get("ref", ""))
+                    if ref and ref not in rec:
+                        out[ref] = cluster
+        return out
+
+    def polled_at(self, ref: str) -> str | None:
+        """The cluster whose ingest this camera polls: the one that records it (the centre for a star), or the
+        poll home for a pushing camera nobody records; None for a camera that polls nothing."""
+        on = self.all().get(str(ref))
+        if on is not None:
+            return self.centre if on in self.star and self.centre else on
+        return self._poll_home() if str(ref) in self.unrecorded() else None
 
     def all(self) -> dict[str, str]:
         items, _ = self.vars.get(CROSSINGS)
@@ -121,7 +153,9 @@ class Crossings:
             if known is None:
                 continue
             entry = self._primary(ref, on, now, lost_after)
-            ingest = self._ingest(ref, on, known[0], now)
+            have, _ = self.vars.get(f"{PRIMARIES_PATH}/{known[0]}")
+            old = json.loads((have or {}).get(ref, "{}")).get("ingest")
+            ingest = self._ingest(ref, on, known[0], now, old)
             if ingest:
                 entry["ingest"] = ingest
             books.setdefault(known[0], {})[ref] = json.dumps(entry, sort_keys=True)
@@ -167,7 +201,7 @@ class Crossings:
     # cluster's ingest announced (`rec/ingest`). The token is re-issued only when the one the book already
     # holds is past half its life — the book is flash on the camera, and a token minted every pass would
     # rewrite it every pass.
-    def _ingest(self, ref: str, on: str, home: str, now: float) -> dict | None:
+    def _ingest(self, ref: str, on: str, home: str, now: float, old: dict | None) -> dict | None:
         from .ingest import INGEST, audience
         if on in self.star and self.centre:
             on = self.centre                             # a star: the camera pushes to the centre, never to its office
@@ -178,8 +212,6 @@ class Crossings:
             raw = c.objects.get(INGEST)
         except Unreachable:
             raw = None
-        have, _ = self.vars.get(f"{PRIMARIES_PATH}/{home}")
-        old = json.loads((have or {}).get(ref, "{}")).get("ingest")
         if raw is None:
             return old                                   # the recording cluster is silent: keep what the camera has
         urls = json.loads(raw)["urls"]
@@ -187,6 +219,29 @@ class Crossings:
             return old
         token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref)
         return {"urls": urls, "token": token, "until": now + self.token_lifetime}
+
+    # Lesson 16, step 8: the book of polls. A camera that pushes and that nobody records polls nothing, and an
+    # ask for it — "turn to preset 3" is the usual one for a PTZ camera kept for live view only — would have
+    # nowhere to wait. So it gets the poll home's ingest and a stream token for it, in a book of its own: the
+    # book of primaries says who RECORDS a camera, and a backup on its card reads it (М10B Lesson 26); a poll
+    # that records nothing must not look like a primary there. The camera polls, is never told to push, and
+    # takes its asks. Kept by the same half-life rule, so the book on its flash does not churn.
+    def publish_polls(self) -> dict[str, dict]:
+        now, books, home_of = self.wall(), {}, self._poll_home()
+        if home_of is None:
+            return {}
+        for ref, home in self.unrecorded().items():
+            have, _ = self.vars.get(f"{POLL_PATH}/{home}")
+            old = json.loads((have or {}).get(ref, "null"))
+            ingest = self._ingest(ref, home_of, home, now, old)
+            if ingest:
+                books.setdefault(home, {})[ref] = json.dumps({**ingest, "cluster": home_of}, sort_keys=True)
+        for home in {h for h in self.unrecorded().values()} | set(books):
+            path = f"{POLL_PATH}/{home}"
+            have, idx = self.vars.get(path)
+            if (have or {}) != books.get(home, {}):
+                self.vars.put(path, books.get(home, {}), cas=idx)
+        return books
 
     def _doors(self, ref: str) -> dict | None:
         for (cluster, worker), s in self.view.snapshots.items():
