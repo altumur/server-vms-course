@@ -285,8 +285,9 @@ def _camera_cluster():
     SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
     card.reconcile_once(); card.heartbeat_once()
 
-    def carry(should=True, written=True, seen=True):         # what the camera's agent does on a pass
-        book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written}, sort_keys=True)}
+    def carry(should=True, written=True, seen=True, starting=False):   # what the camera's agent does on a pass
+        book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written,
+                                   "starting": starting}, sort_keys=True)}
         have, idx = box.vars.get("domain/primaries")
         if have != book:
             box.vars.put("domain/primaries", book, cas=idx)
@@ -304,12 +305,14 @@ def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_ag
     box, card, row, carry = _camera_cluster()
     assert not card.primary_needs_cover(row)                  # no book: a camera alone, nothing to stand in for
 
+    carry(written=False, starting=True)
+    assert not card.primary_needs_cover(row)                  # a recording starting: not yet
+    box.wall.advance(card.START_GRACE + 1); carry(written=False, starting=True)
+    assert card.primary_needs_cover(row)                      # …it took longer than a start takes
     carry(written=True)
     assert not card.primary_needs_cover(row)                  # the room writes it
     carry(written=False)
-    assert not card.primary_needs_cover(row)                  # …not yet: it may be starting
-    box.wall.advance(card.START_GRACE + 1); carry(written=False)
-    assert card.primary_needs_cover(row)                      # the room stopped writing it
+    assert card.primary_needs_cover(row)                      # it was written and stopped: at once (feedback AB)
 
     carry(written=True)
     assert not card.primary_needs_cover(row)
@@ -333,3 +336,18 @@ def test_the_book_is_written_to_flash_when_it_changes_and_its_freshness_is_not()
     assert box.vars.get("domain/primaries")[1] == idx         # twenty passes, no write
     carry(written=False)
     assert box.vars.get("domain/primaries")[1] != idx         # the room stopped: one write
+
+
+def test_a_primary_that_stops_is_covered_at_once_and_only_a_start_waits():
+    """Feedback AB. With no time in the book, "not written" was one state: the card gave a primary that had
+    never started and one that had been written and stopped the same twenty seconds. The second is lost
+    footage, on top of the time the domain took to notice. The domain knows the difference — a recording
+    no recorder of its cluster has named yet is starting — and says it in the book (`starting`), a field
+    that changes when a recording starts and when a recorder first reports it."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    assert not card.primary_needs_cover(row)
+    carry(written=False, starting=False)
+    assert card.primary_needs_cover(row)                      # no grace for a stop
+    carry(should=False, written=False)
+    assert not card.primary_needs_cover(row)                  # a decision is still never covered

@@ -346,7 +346,8 @@ class RecWorker(VmsWorker):
     #
     # So the domain, which reads both clusters, writes a BOOK OF PRIMARIES for the camera's cluster, and the
     # camera's agent carries it home like the grants: per camera, by the domain's name for it (`ref`), who
-    # records it, whether it SHOULD be written and whether it IS. No timestamps in it, on purpose: a book that
+    # records it, whether it SHOULD be written, whether it IS, and whether it is still STARTING (no recorder
+    # of that cluster has named it yet — the only case that gets the grace). No timestamps in it, on purpose: a book that
     # changed on every pass of the domain would be rewritten on the camera's flash every few seconds. How
     # current the book is comes separately — the time the agent last reached the domain, an object in the
     # cluster's object store (RAM on a camera). A book the agent has not refreshed for `lost_after` is a book
@@ -371,7 +372,10 @@ class RecWorker(VmsWorker):
         if not e.get("should") or e.get("written"):
             self._not_written_since.pop(key, None)
             return False
-        since = self._not_written_since.setdefault(key, now)
+        if not e.get("starting"):                                # it was written and stopped: cover at once (feedback AB)
+            self._not_written_since.pop(key, None)
+            return True
+        since = self._not_written_since.setdefault(key, now)    # still starting: every event begins this way
         return now - since >= self.START_GRACE
 
     # -- the passes: the worker's, plus a re-subscription when the camera's holder moved, plus the

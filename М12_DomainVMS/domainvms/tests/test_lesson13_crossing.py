@@ -164,8 +164,10 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
         items, _ = cam.flash.get(PRIMARIES)
         return json.loads(items[SERIAL])
 
+    rec.publish_snapshot()                                            # the row, and no recorder has named it yet
+    assert pass_() == {"cluster": "south", "recording": SERIAL, "should": True, "written": False, "starting": True}
     room(True)
-    assert pass_() == {"cluster": "south", "recording": SERIAL, "should": True, "written": True}
+    assert pass_() == {"cluster": "south", "recording": SERIAL, "should": True, "written": True, "starting": False}
     assert json.loads(cam.ram.get(DOMAIN_SEEN))["ts"] == wall()      # freshness: in RAM
     writes = cam.flash.writes
     for _ in range(10):
@@ -173,7 +175,8 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
     assert cam.flash.writes == writes                                 # ten passes, nothing on flash
 
     room(False)
-    assert pass_()["written"] is False and cam.flash.writes == writes + 1
+    e = pass_()
+    assert e["written"] is False and e["starting"] is False and cam.flash.writes == writes + 1   # a stop, not a start (AB)
 
     rec.update(SERIAL, {"enabled": False}); room(False)
     assert pass_()["should"] is False                                 # the operator's decision: nothing to cover
@@ -181,4 +184,4 @@ def test_the_card_learns_from_the_book_of_primaries_whether_the_room_writes_it()
     rec.update(SERIAL, {"enabled": True}); room(True); pass_()
     south_link.up = False                                             # the room does not answer the domain
     wall.advance(5)
-    assert pass_() == {"cluster": "south", "recording": "", "should": True, "written": False}
+    assert pass_() == {"cluster": "south", "recording": "", "should": True, "written": False, "starting": False}

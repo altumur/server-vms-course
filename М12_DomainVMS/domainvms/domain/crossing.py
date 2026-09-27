@@ -129,7 +129,10 @@ class Crossings:
         return books
 
     def _primary(self, ref: str, on: str, now: float, lost_after: float) -> dict:
-        entry = {"cluster": on, "recording": "", "should": True, "written": False}
+        # `starting` (feedback AB): the recording should be written and no recorder of its cluster has NAMED it
+        # yet — a start, which gets the card's grace. Named and not written, or the cluster silent — a stop,
+        # covered at once. It changes when a recording starts and when a recorder first reports it: rarely.
+        entry = {"cluster": on, "recording": "", "should": True, "written": False, "starting": False}
         c = self.view.fed.clusters.get(on)
         try:
             if c is None:
@@ -139,18 +142,22 @@ class Crossings:
                 raw = c.objects.get(key)
                 rows += [r for r in (json.loads(raw).get("recordings", []) if raw else []) if str(r.get("cam")) == f"ref:{ref}"]
             names = sorted(str(r.get("name") or r.get("id")) for r in rows)
-            running = set()
+            running, named = set(), set()
             for key in c.objects.list("rec/heartbeats/"):
                 raw = c.objects.get(key)
                 hb = json.loads(raw) if raw else None
-                if hb and now - float(hb.get("ts", 0)) <= lost_after:
+                if not hb:
+                    continue
+                named |= {str(st.get("id")) for st in hb.get("status", [])}          # fresh or not: it knew of it
+                if now - float(hb.get("ts", 0)) <= lost_after:
                     running |= {str(st.get("id")) for st in hb.get("status", []) if st.get("phase") == "running"}
         except Unreachable:
             return entry
         until_ok = lambda r: float(r.get("until") or 0) == 0 or float(r.get("until") or 0) > now
-        return {**entry, "recording": ",".join(names),
-                "should": any(bool(r.get("enabled", True)) and until_ok(r) for r in rows),
-                "written": any(n in running for n in names)}
+        should = any(bool(r.get("enabled", True)) and until_ok(r) for r in rows)
+        return {**entry, "recording": ",".join(names), "should": should,
+                "written": any(n in running for n in names),
+                "starting": should and not any(n in named for n in names)}
 
     # Lesson 16: where the camera pushes, and the token that lets it. The addresses are what the recording
     # cluster's ingest announced (`rec/ingest`). The token is re-issued only when the one the book already
