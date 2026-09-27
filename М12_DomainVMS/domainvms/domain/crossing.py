@@ -83,20 +83,29 @@ class Crossings:
         dc = getattr(self.view.fed, "domain_cluster", None)
         return dc.name if dc is not None else None
 
-    def unrecorded(self) -> dict[str, str]:
-        """{ref: its own cluster} for every camera that pushes (its door says so) and that no cluster records."""
-        rec, out = self.all(), {}
+    # Who holds a poll — one rule (feedback AL): EVERY member camera, its door open or not. A camera of ours
+    # says so in its heartbeat (`polls`); one that pushes polls by definition. A camera of a server cluster that
+    # does not run the platform holds none, and cannot be asked: a scenario on it is refused when written.
+    def members(self) -> dict[str, str]:
+        """{ref: its own cluster} for every member camera — every camera that holds a poll to an ingest."""
+        out = {}
         for (cluster, _worker), s in self.view.snapshots.items():
-            if (s.doors or {}).get("push"):
+            if (s.doors or {}).get("polls") or (s.doors or {}).get("push"):
                 for st in s.status:
-                    ref = str(st.get("ref", ""))
-                    if ref and ref not in rec:
-                        out[ref] = cluster
+                    if st.get("ref"):
+                        out[str(st["ref"])] = cluster
         return out
+
+    def unrecorded(self) -> dict[str, str]:
+        """{ref: its own cluster} for every member camera that no cluster records: it polls the poll home."""
+        rec = self.all()
+        return {ref: c for ref, c in self.members().items() if ref not in rec}
 
     def polled_at(self, ref: str) -> str | None:
         """The cluster whose ingest this camera polls: the one that records it (the centre for a star), or the
         poll home for a pushing camera nobody records; None for a camera that polls nothing."""
+        if str(ref) not in self.members():
+            return None                                  # not a member camera: it polls nothing, nobody can ask it
         on = self.all().get(str(ref))
         if on is not None:
             return self.centre if on in self.star and self.centre else on
