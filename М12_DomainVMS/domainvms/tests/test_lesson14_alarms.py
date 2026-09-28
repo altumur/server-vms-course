@@ -35,9 +35,9 @@ def _site(wall, nets=("vlan:a", "vlan:a", "vlan:b")):
     plan = MirrorPlan(north.vars, copies=1)
     plan.publish(fed)
 
-    def report():                                                      # every camera that is on: one pass of its agent
+    def report(skip=()):                                               # every camera that is on: one pass of its agent
         for name, a in agents.items():
-            if devices[name].door_open:
+            if devices[name].door_open and name not in skip:
                 a.sync()
 
     report()                                                           # carries `domain/mirrors` home
@@ -58,11 +58,12 @@ def test_one_list_newest_first_each_line_naming_its_member():
     assert out["complete"] and out["sentence"] == "every member answered"
 
 
-def test_a_member_that_is_off_is_answered_from_its_neighbours_copy_up_to_when_it_knows():
-    """SN0 raised an alarm twenty-five minutes ago and another a minute and a half ago, and then went off.
-    Its neighbour on the same network had pulled its closed buckets: the first alarm is on the list, from
-    the copy. The second was in the open bucket, in no copy — and the list does not pretend otherwise: it
-    says up to when the copy knows, and that nothing is known since."""
+def test_a_member_that_is_off_is_answered_from_its_last_report_and_its_neighbours_copy():
+    """SN0 raised an alarm twenty-five minutes ago and another a minute and a half ago, and then went off. Its
+    neighbour on the same network had pulled its closed buckets — the second alarm was in the open bucket, in no
+    copy. But the domain still has SN0's LAST report, one agent pass behind the camera, and the second alarm is
+    in its page (feedback AR). The list takes both sources, says so, and says up to when: the later of the two,
+    here the report."""
     wall = Clock(NOW)
     fed, north, devices, cards, site, plan, report, reported = _site(wall)
     cards["cam-SN0"].observe(1, NOW - 1500, "door_forced", alarm=True)
@@ -77,14 +78,48 @@ def test_a_member_that_is_off_is_answered_from_its_neighbours_copy_up_to_when_it
     report()                                                           # the others go on reporting, the copy included
 
     out = DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)
-    mine = [e for e in out["events"] if e["member"] == "cam-SN0"]
-    assert [(e["t"], e["from_mirror_on"]) for e in mine] == [(NOW - 1500, "cam-SN1")]
+    mine = [(e["t"], e.get("from_mirror_on")) for e in out["events"] if e["member"] == "cam-SN0"]
+    assert mine == [(NOW - 90, None), (NOW - 1500, None)]              # both: its own word, in its last report
     m = out["members"]["cam-SN0"]
-    assert (m["state"], m["via"], m["known_until"]) == ("mirror", "cam-SN1", 999_600.0)
-    assert not out["complete"] and "known up to" in out["sentence"] and "none known since" in out["sentence"]
+    assert (m["state"], m["via"], m["last_report_until"], m["known_until"]) == ("mirror", "cam-SN1", NOW, NOW)
+    assert not out["complete"]
+    assert "cam-SN0 silent — its alarms from its last report and the copy on cam-SN1, known up to" in out["sentence"]
+    assert "none known since" in out["sentence"]
 
 
-def test_a_member_with_no_reachable_copy_is_said_to_be_missing_not_quiet():
+def test_a_camera_that_lost_its_road_to_the_domain_is_known_from_the_copy_and_so_is_a_quiet_one():
+    """What the copy is for once the last report exists: the camera works, the site works, and only its road to
+    the domain is gone — its agent stopped. The neighbour goes on pulling through the camera's door. An alarm
+    after the last report reaches the list from the copy, and "known up to" moves with the copy: the keeper keeps
+    the boundary the source named at every pull (feedback AR), so it moves on for a quiet camera too, one with
+    no bucket at all in the interval."""
+    wall = Clock(NOW)
+    fed, north, devices, cards, site, plan, report, reported = _site(wall)
+    holder = plan.holders("cam-SN0")[0]
+    report()
+    DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)
+    wall.advance(500)
+    cards["cam-SN0"].observe(1, wall(), "door_forced", alarm=True)       # after its last report
+    wall.advance(600)                                                    # …and its bucket has closed
+    mirror_once(cards[holder], devices[holder].flash, site, wall())
+    report(skip=("cam-SN0",))                                            # its agent is gone; the camera is not
+    out = DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)
+    assert [(e["t"], e["from_mirror_on"]) for e in out["events"] if e["member"] == "cam-SN0"] == [(NOW + 500, "cam-SN1")]
+    m = out["members"]["cam-SN0"]
+    assert (m["last_report_until"], m["known_until"]) == (NOW, 1_002_000.0)    # the copy knows more than the report
+
+    wall.advance(1200)                                                   # twenty quiet minutes: nothing raised
+    mirror_once(cards[holder], devices[holder].flash, site, wall())
+    report(skip=("cam-SN0",))
+    out = DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)
+    assert out["members"]["cam-SN0"]["known_until"] == 1_003_200.0       # looked at, not stuck at its last alarm
+
+
+def test_a_member_with_no_reachable_copy_is_answered_from_its_last_report_and_one_never_heard_is_missing():
+    """SN2 and its keeper are both off. Its alarms are still on the list — from its last report, and said to be
+    so. What is truly missing is a member the domain has never heard from and nobody keeps a copy of: named,
+    never read as quiet."""
+    from domain.uplink import member_copy as copy_of
     wall = Clock(NOW)
     fed, north, devices, cards, site, plan, report, reported = _site(wall)
     cards["cam-SN2"].observe(1, NOW - 1500, "tamper", alarm=True)
@@ -92,11 +127,15 @@ def test_a_member_with_no_reachable_copy_is_said_to_be_missing_not_quiet():
     report()
     DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)     # the domain's pass: it has seen these reports
     devices["cam-SN2"].power_off(); devices[holder].power_off()
+    fed.add(copy_of("cam-SN9", north.objects, wall=wall))              # admitted, and never reported
     wall.advance(60)
     report()
     out = DomainAlarms(fed, reported, plan, wall).list(since=NOW - 3600)
-    assert out["members"]["cam-SN2"]["state"] == "unreachable"
-    assert "cam-SN2 off, and no copy of its alarms could be reached" in out["sentence"]
+    assert out["members"]["cam-SN2"]["state"] == "last_report"
+    assert ("cam-SN2", "tamper") in [(e["member"], e["kind"]) for e in out["events"]]
+    assert "cam-SN2 silent — its alarms from its last report, known up to" in out["sentence"]
+    assert out["members"]["cam-SN9"]["state"] == "unreachable"
+    assert "cam-SN9 off, and no copy of its alarms could be reached" in out["sentence"]
 
 
 def test_the_copy_is_closed_alarm_buckets_only_and_taking_it_twice_takes_nothing():

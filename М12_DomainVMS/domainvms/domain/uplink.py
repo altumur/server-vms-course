@@ -257,12 +257,19 @@ def offset_of(copy: Cluster) -> float:
 _FRESH: dict[tuple[int, str], _Fresh] = {}
 
 
-def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=time.time) -> dict | None:
+def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=time.time,
+         stale_ok: bool = False) -> dict | None:
     """One page a member reported (Lesson 14's alarms), with its times on the domain's clock, or Unreachable
-    if its report is too old — by the domain's clock, remembered per store and member across calls."""
+    if its report is too old — by the domain's clock, remembered per store and member across calls.
+    `stale_ok`: the page of the LAST report however old — what a silent member said before it went quiet.
+    A member that never reported is still Unreachable."""
     f = _FRESH.setdefault((id(domain_objects), member), _Fresh(member, domain_objects, lost_after, wall))
     f.lost_after, f.wall = lost_after, wall
-    f.check()
+    try:
+        f.check()
+    except Unreachable:
+        if not stale_ok or f.seq is None:
+            raise
     raw = domain_objects.get(base(member) + "p/" + name)
     if not raw:
         return None
