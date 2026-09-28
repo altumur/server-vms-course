@@ -101,11 +101,11 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     its own epoch in `rec/<cam>/e<epoch>/`, indexed by the manifest beside it.
     Two trees, two writers, one camera: a camera that is watched and never
     recorded has buckets and no rec/ tree; the manifest indexes media only, the
-    resource's event database indexes the buckets; each is retained by its own
+    resource's event index answers from the buckets; each is retained by its own
     policy. No controller wrote any of it."""
     from vms.archive import event_log
     from w2cplatform.events import parse_bucket, read_bucket, subsystems_under
-    from w2cplatform.eventdatabase import EventDatabase
+    from w2cplatform.eventdatabase import EventIndex
     box = Box(); res = ArchiveResource(box.spool, box.archive, wall=lambda: box.wall())
     t0 = utc("2026-09-12T10:00:00").timestamp()
     box.wall.t = t0 + 2000
@@ -116,8 +116,8 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     p2 = log.append(t0 + 700.0, "person", score=0.9)                            # the next bucket: rolled by the clock
     assert subsystems_under(box.archive) == {"vms": ["7"]} and res.units() == []   # watched, not recorded: buckets, no rec/ tree
     assert Manifest(box.archive, 7).timeline(t0, t0 + 1200) == []              # the manifest indexes media, and there is none
-    db = EventDatabase(box.archive, "box", wall=box.wall)
-    assert db.rebuild()["added"] == 3 and [e["kind"] for e in db.query(t0, t0 + 1200, cam=7)["events"]] == ["motion", "silent", "person"]
+    db = EventIndex(box.archive, "box", wall=box.wall)
+    assert [e["kind"] for e in db.query(t0, t0 + 1200, cam=7)["events"]] == ["motion", "silent", "person"]
     # now a recorder records the camera under ITS epoch, into rec/: the timeline has a span, the events are still the worker's
     seg = res.promote(write_segment(box.spool, 7, 4, "2026-09-12T10:10:00", mtime=t0 + 1200))
     assert seg.path == "rec/7/e4/20260912T101000Z.mp4" and res.units() == ["7"]   # the tree is unchanged on disk: the unit IS the camera while `id: cam`
@@ -132,7 +132,7 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     assert os.path.exists(p) and os.path.exists(p2)                              # the recorder's retention never touches the worker's buckets
     box.vars.put("vms/retention/7", {"days": 30})                               # what the VMS controller writes for a camera's events
     platform = Resource(box.archive, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
-    platform.database = db
-    assert platform.retain() == 2 and not os.path.exists(p)                     # files, by the platform — and the database forgets
+    platform.index = db
+    assert platform.retain() == 2 and not os.path.exists(p)                     # files, by the platform — and the index's cache lets them go
     assert db.query(t0, t0 + 1200, cam=7)["events"] == []
     assert box.vars.list("vms/events") == []

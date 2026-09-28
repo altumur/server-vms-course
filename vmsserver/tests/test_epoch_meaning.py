@@ -1,7 +1,7 @@
 """What an older epoch MEANS. Same comparison, two answers: a writer that lost
 the race, or a finished earlier run of work that ends."""
 from w2cplatform.epoch import current_epoch, next_epoch
-from w2cplatform.eventdatabase import EventDatabase
+from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.events import EventLog
 from w2cplatform.spec import SubsystemSpec
 from vms.config import DET_SPEC, DETJOB_SPEC, SPEC
@@ -14,7 +14,7 @@ def _run(box, sub, unit, t, epoch):
 
 
 def _events(box, sub, unit, policy):
-    db = EventDatabase(box.archive, "srv-1"); db.rebuild()
+    db = EventIndex(box.archive, "srv-1")
     cur = {(sub, unit): current_epoch(box.vars, f"{sub}/epoch/{unit}")}
     out = db.query(0, 1e12, current_epochs=cur, epoch_policy=policy)["events"]
     return sorted(((e["epoch"], e["epoch_is"], e["fenced"]) for e in out))

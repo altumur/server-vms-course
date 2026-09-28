@@ -1,16 +1,16 @@
-"""Lesson 10 — events: the database that is a cache. An event is an
+"""Lesson 10 — events, and the tree that is their index. An event is an
 observation, written by the worker holding a unit's epoch into that unit's
-bucket on the resource (Lesson 3); the resource PROCESS keeps a database
-over its own tree and serves it; the console holds none and asks. Three
+bucket on the resource (Lesson 3); the resource PROCESS reads its own tree
+where it lies and serves it; the console holds nothing and asks. Three
 subsystems' events land on one camera's timeline, fenced by their own
-epochs; a restarted database rebuilds to the same answer from the files;
-retention on the resource takes the rows with the file."""
+epochs; a fresh index over the same tree gives the same answer; retention on
+the resource takes the events with the file."""
 import json
 import os
 import urllib.error
 import urllib.request
 
-from w2cplatform.eventdatabase import EventDatabase, MergedIndex
+from w2cplatform.eventdatabase import EventIndex, MergedIndex
 from w2cplatform.resource import resources_seen, serve as serve_resource
 from w2cplatform.spec import SpecController
 from vms.archive import ArchiveResource
@@ -42,11 +42,11 @@ def _console_over(box, db, per_minute: float = 0.0):
 
 def _resource_process(box):
     """What `python3 -m vms resource` does: the platform's Resource with the VMS registered,
-    served over HTTP, heartbeating so the console can find it, its database rebuilt from the tree."""
+    served over HTTP, heartbeating so the console can find it, its index over the tree."""
     res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "", box.vars, box.objects, wall=box.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0, extra=vms_routes(ArchiveResource(box.spool, box.archive, wall=box.wall)))
     res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"
-    res.heartbeat(); res.database.rebuild()
+    res.heartbeat()
     return res, rsrv
 
 
@@ -74,8 +74,7 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         # the operator marks a moment, and the camera goes silent: three subsystems' events on one resource
         call(base, "POST", "/marks", {"cam": 1, "note": "check this"}, {"Idempotency-Key": "m1", "X-User": "murat"})
         w.actuator.dead.append(1); w.pump_once()
-        assert res.database.tail()["added"] == 3                                          # the resource's tail; the console was not told
-        st, out = call(base, "GET", "/events?cam=1"); ev = out["events"]
+        st, out = call(base, "GET", "/events?cam=1"); ev = out["events"]             # nobody tailed, nobody told: the files, as they are
         assert st == 200 and out["state"] == "live"
         assert [(e["subsystem"], e["kind"], e["server"], e["fenced"]) for e in ev] == [
             ("det", "linecross", "srv-1", False), ("console", "mark", "srv-1", False), ("vms", "silent", "srv-1", False)]
@@ -85,10 +84,10 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/servers" in page
         # the same answer under the mount: /det/events fences by det's epochs too
         assert call(base, "GET", "/det/events?cam=1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
-        # an open bucket keeps growing: the next event is picked up by the next tail, not left for a rebuild
+        # an open bucket keeps growing: the next event is in the next answer — the file is looked at, not remembered
         for _ in range(3):
             box.wall.advance(2); gpu.reconcile_once()
-        assert res.database.tail()["added"] == 1 and len(call(base, "GET", "/events?cam=1&subsystem=det")[1]["events"]) == 2
+        assert len(call(base, "GET", "/events?cam=1&subsystem=det")[1]["events"]) == 2
         # another detector instance takes the unit's epoch: the first one's events are fenced, nobody else's
         box.vars.put("det/epoch/1-linecross", {"epoch": "2"})
         assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?cam=1")[1]["events"]] == [
@@ -101,23 +100,23 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         srv.shutdown(); srv.server_close()
 
 
-def test_the_database_is_a_cache_and_retention_takes_the_rows_with_the_file():
-    """No store between the buckets and the answer: a fresh database over the same
-    tree gives the same rows; the resource's retention pass removes a bucket file
-    and its rows go with it — the database is told, the console just asks."""
+def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
+    """No store between the buckets and the answer: a fresh index over the same
+    tree gives the same rows, with nothing rebuilt; the resource's retention pass
+    removes a bucket file and its events go with it — the console just asks."""
     from vms.archive import event_log
     box = Box(); t = box.wall() - 3 * 86400
     event_log(box.archive, 7, 1).append(t + 10, "motion", zone="gate")                  # three days old: past a 1-day policy
     event_log(box.archive, 7, 1).append(box.wall() - 100, "motion")                      # fresh
     res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.heartbeat()
-    assert res.database.rebuild() == {"added": 2, "segments": 2, "mirrored": []} and res.database.state == "live"
-    again = EventDatabase(box.archive, "srv-1", wall=box.wall); again.rebuild()
-    assert again.query(0, 1e12)["events"] == res.database.query(0, 1e12)["events"]          # a cache proves it by being rebuilt
-    m = MergedIndex(box.objects, fetch=lambda url, p: res.database.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None), wall=box.wall)
+    assert res.index.listing() == {"units": 1, "buckets": 2, "mirrored": [], "cached": 0} and res.index.state == "live"
+    again = EventIndex(box.archive, "srv-1", wall=box.wall)
+    assert again.query(0, 1e12)["events"] == res.index.query(0, 1e12)["events"]          # nothing of its own: two indexes, one tree
+    m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None), wall=box.wall)
     assert [e["t"] for e in m.query(0, 1e12, cam=7)["events"]] == [t + 10, box.wall() - 100]
     box.vars.put("vms/retention/7", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
-    assert res.retain() == 1                                                              # the file went — and the rows with it
+    assert res.retain() == 1                                                              # the file went — and its events with it
     assert [e["t"] for e in m.query(0, 1e12, cam=7)["events"]] == [box.wall() - 100]
     assert box.vars.list("vms/events") == [] and box.objects.list("vms/events") == []     # nothing about events in any store
 
@@ -127,7 +126,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     half-written. That is the accepted loss — and it must be the same SHAPE as the one
     for footage: the open thing, not the day. A bucket of ten minutes' observations is
     not thrown away because one record was damaged; the torn line is skipped and
-    counted, and the database built over it holds everything that did land."""
+    counted, and the index over it answers everything that did land."""
     import w2cplatform.events as ev
     from w2cplatform.events import EventLog, read_bucket
     from tests.conftest import Box
@@ -144,8 +143,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     assert [r["score"] for r in rows] == [0, 1, 2, 3, 4]      # every whole line survives
     assert ev.torn == before + 1                              # and the damage is counted, not silent
 
-    db = EventDatabase(box.archive, "srv-1", ":memory:", lambda: 2000.0, 600)
-    db.rebuild()
+    db = EventIndex(box.archive, "srv-1", lambda: 2000.0, 600)
     assert len(db.query(0, 1e12, cam=None, kind=None, subsystem="vms", unit="8123",
                         current_epochs={("vms", "8123"): 7})["events"]) == 5
 
@@ -156,7 +154,7 @@ def _events(box, n, cam=7):
     log = event_log(box.archive, cam, 1)
     for i in range(n):
         log.append(1000.0 + i, "motion", n=i)
-    db = EventDatabase(box.archive, "srv-1", wall=box.wall); db.rebuild()
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
     return db
 
 
@@ -299,7 +297,7 @@ def test_an_overflowing_window_drops_observations_before_alarms():
     for i in range(20):
         log.append(1000.0 + i, "stats", n=i)                      # the noise, filling the window
     log.append(1001.5, "io.input", ALARM, port="1", value="open")  # one alarm, and an OLD one at that
-    db = EventDatabase(box.archive, "srv-1", wall=box.wall); db.rebuild()
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
 
     rep = db.query(0, 1e12, limit=5)
     assert rep["truncated"] is True
@@ -389,7 +387,7 @@ def test_past_the_norm_the_timeline_counts_instead_of_listing():
         log.append(t + i * 0.5, "stats", n=i)
     for i in range(3):
         log.append(t + 10 + i, "io.input", ALARM, port="1", value="open")
-    db = EventDatabase(box.archive, "srv-1", wall=box.wall); db.rebuild()
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
     con = _console_over(box, db)
 
     quiet = con.timeline(db.query(0, t + 5), 0, t + 5)             # a handful over a long window
@@ -418,7 +416,7 @@ def test_the_norm_is_the_operators_and_a_process_still_gets_every_line():
     log = event_log(box.archive, 7, 1)
     for i in range(90):
         log.append(t + i * 0.5, "stats", n=i)
-    db = EventDatabase(box.archive, "srv-1", wall=box.wall); db.rebuild()
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
 
     assert len(db.query(t, t + 60)["events"]) == 90                # the index never aggregates
     assert "aggregated" not in db.query(t, t + 60)
@@ -546,3 +544,94 @@ def test_the_consoles_records_outlive_what_they_refer_to():
 
     assert console_floor({("vms", "7"): 500.0, ("console", "c-1"): 365.0}) == 500.0
     assert console_floor({("console", "c-1"): 365.0}) == 0.0       # nothing to outlive: its own days stand
+
+
+# -- the tree is the index (the notes on the event log's concurrency and load, 28 September) ------------------
+def test_an_event_written_into_a_past_bucket_is_in_the_next_answer():
+    """A bucket is named by the time of its EVENTS, not of their writing: a scan of an archive (Lesson 21) and a
+    survey of somebody else's (Lesson 23) write lines stamped hours ago into buckets whose time is long past. An
+    index leaning on "a closed bucket never changes" would never see them. This one asks the file — its size —
+    at every query that touches it, and reads only what it had not read."""
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    scan = EventLog(box.archive, "detjob", "7-scan", 1, 600)
+    scan.append(now - 7200, "person", n=1)                                       # two hours ago, into a closed bucket
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    window = (now - 7300, now - 7100)
+    assert [e["n"] for e in db.query(*window)["events"]] == [1]
+    scan.append(now - 7150, "person", n=2)                                       # the scan goes on: the same past bucket grows
+    assert [e["n"] for e in db.query(*window)["events"]] == [1, 2]
+
+
+def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_same_answer():
+    """Up to a day, the candidate files are computed from the window — a name from a time, a stat for whether it
+    is there; wider, the epoch's directory is listed. Two ways to find the same files: one answer."""
+    from w2cplatform.eventdatabase import NARROW
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    log = EventLog(box.archive, "vms", "7", 1, 600)
+    for i in range(6):
+        log.append(now - 3 * 86400 + i * 3600, "motion", n=i)                   # six hours, three days ago
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    narrow = db.query(now - 3 * 86400 - 1, now - 3 * 86400 + 6 * 3600)
+    wide = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, now + 1)
+    assert (now - (now - 3 * 86400 - 1)) / 600 > NARROW                          # the second one took the listing road
+    assert [e["n"] for e in narrow["events"]] == [e["n"] for e in wide["events"]] == list(range(6))
+
+
+def test_a_query_reads_the_files_of_its_window_and_nothing_else_and_nothing_twice():
+    """What a query costs is what its window touches, not what the tree holds: three days of buckets, and a
+    ten-minute question opens one file. Asked again over files that did not change, it opens none."""
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    log = EventLog(box.archive, "vms", "7", 1, 600)
+    for i in range(3 * 144):
+        log.append(now - 3 * 86400 + i * 600 + 5, "motion", n=i)                 # a line in every bucket of three days
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    opened = []
+    real_open = open
+
+    def counting(path, *a, **kw):
+        if str(path).endswith(".events.jsonl"):
+            opened.append(path)
+        return real_open(path, *a, **kw)
+
+    import builtins
+    builtins.open = counting
+    try:
+        assert len(db.query(now - 600, now)["events"]) == 1
+        assert len(opened) == 1 and db.listing()["cached"] == 1
+        db.query(now - 600, now)
+        assert len(opened) == 1                                                  # unchanged size and time: the cached lines
+    finally:
+        builtins.open = real_open
+
+
+def test_the_cache_keeps_to_its_ceiling():
+    """In memory lives the working set, not the retention: read buckets go least recently used first once the
+    cache passes its ceiling in bytes, and come back from the file when asked for again."""
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    log = EventLog(box.archive, "vms", "7", 1, 600)
+    for i in range(20):
+        log.append(now - 20 * 600 + i * 600 + 5, "motion", pad="x" * 200)
+    db = EventIndex(box.archive, "srv-1", wall=box.wall, cache_bytes=5 * 300)
+    assert len(db.query(now - 20 * 600, now)["events"]) == 20
+    assert db.listing()["cached"] <= 6 and db._bytes <= 5 * 300 + 300
+    assert len(db.query(now - 20 * 600, now)["events"]) == 20                   # evicted is not lost: read again
+
+
+def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_own():
+    """`cam` is a field an event may carry: a detector `7-motion` writes `cam: 7` in its lines, and its name is not
+    its camera. Once its lines have named camera 7, a timeline for camera 9 does not read its buckets."""
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    EventLog(box.archive, "det", "7-motion", 1, 600).append(now - 60, "motion", cam=7)
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    assert [e["cam"] for e in db.query(now - 600, now, cam=7)["events"]] == [7]
+    assert db._may_be("srv-1", "det", "7-motion", 9) is False and db.query(now - 600, now, cam=9)["events"] == []
