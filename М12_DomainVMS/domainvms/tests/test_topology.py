@@ -351,3 +351,27 @@ def test_a_recorder_that_cannot_pull_has_the_camera_push_and_the_domain_remember
     room_nets.append("vlan:new")                                       # the room is re-cabled
     e = book()
     assert e["push"] is False and "the recorder pulls" in e["road"]    # decided again, by the networks
+
+
+
+def test_a_camera_without_the_platform_is_always_pulled_whatever_the_networks():
+    """Feedback AO. A camera of a server cluster that does not run the platform holds no poll: it has nothing to
+    push with. However far apart the networks, the book says the recorder pulls it, and why."""
+    from tests.conftest import snapshot
+    wall = Clock()
+    fed = Federation()
+    north, _ = make_cluster("north", domain=True)
+    south, _ = make_cluster("south")
+    west, _ = make_cluster("west", reaches=("vlan:west",))
+    for c in (north, south, west):
+        fed.add(c)
+    snapshot(west, {"DOOR8": ("w-0", "srv-9")}, ts=wall())
+    west.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-9",
+        "status": [{"id": 1, "ref": "DOOR8", "phase": "running"}], "live_url": "rtsp://10.9.0.8/live"}).encode())
+    DomainAgent("south", north.vars, south.vars, now=wall, reaches=lambda: ["vlan:south"], own_objects=south.objects).sync()
+    view = ReadView(fed, wall=wall); view.refresh()
+    crossings = Crossings(north.vars, view, wall)
+    crossings.record("DOOR8", on="south")
+    crossings.publish()
+    e = json.loads(north.vars.get("domain/sources/south")[0]["DOOR8"])
+    assert (e["push"], e["live_url"]) == (False, "rtsp://10.9.0.8/live") and "not a member camera" in e["road"]
