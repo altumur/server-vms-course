@@ -52,7 +52,7 @@
 ## Что нужно знать заранее
 
 - **Урок 12** — бакеты, `buckets_under`, `subsystems_under`: то, из чего ресурс узнаёт, что у него лежит.
-- **Урок 13** — база событий: ресурс её содержит и сообщает ей об удалениях.
+- **Урок 13** — индекс событий: ресурс его держит и сообщает ему об удалениях.
 - **Урок 4** — heartbeat: у ресурса он свой, под своим префиксом.
 - **Урок 2** — `FileVariables` и сериализация записи блокировкой файла `<root>/lock`.
 - **Урок 11** — `register_constraint`: та же дверь «код под именем», что откроется здесь; и предпочтение против фильтра — тот же ход мысли повторится в ступенях освобождения.
@@ -278,14 +278,14 @@ Docstring называет суть: **правило, заменяющее ка
                 for b in buckets_under(self.root, sub, unit, self.bucket_seconds):
                     if b.end < self.wall() - days * 86400:
                         os.remove(os.path.join(self.root, b.path)); removed.append(b.path)
-        if removed and self.database is not None:
-            self.database.forget(self.server, removed)                  # the rows go with the file
+        if removed and self.index is not None:
+            self.index.forget(self.server, removed)                     # out of its cache with the file
         return len(removed)
 ```
 
 По подсистемам и единицам, у каждой свой срок. Удаляются **только файлы бакетов**: то, что подсистема хранит рядом (видео, манифест), — её забота, и удаляет она это в своём проходе, по своему сроку. Разделение записано в docstring: *files only; a subsystem that indexes its buckets drops the lines in its own pass.*
 
-И последняя пара строк — стык с уроком 15: база **должна узнать** об удалении, потому что проход по существующим файлам исчезнувших не заметит.
+И последняя пара строк — стык с уроком 13: индекс узнаёт об удалении и выбрасывает бакеты из кэша. Правильность от этого не зависит — запрос делает `stat` каждому файлу, который читает, — но память да.
 
 ## Шаг 8 — HTTP
 
@@ -293,7 +293,7 @@ Docstring называет суть: **правило, заменяющее ка
         def do_GET(self):
             if self.path.startswith("/buckets/"): …        # какие бакеты есть у этой единицы
             if self.path.startswith("/mirrored/"): …       # чьи копии я держу
-            if self.path == "/events" or self.path.startswith("/events?"): …   # запрос к базе
+            if self.path == "/events" or self.path.startswith("/events?"): …   # запрос к индексу
             if self.path.startswith("/events/"): …         # один бакет целиком
             if extra is not None: …                        # маршруты подсистемы
             self._raw(404, b"")
@@ -302,11 +302,11 @@ Docstring называет суть: **правило, заменяющее ка
 Пять веток. Первые две — межресурсный разговор (зеркало). Третья — то, что спрашивает консоль (урок 13). Четвёртая — выдача файла: по ней сосед тянет копию, и по ней же отдаются копии обратно владельцу.
 
 ```python
-            if resource.database is None:
-                return self._raw(503, b'{"error": "this resource runs no event database"}', …)
+            if resource.index is None:
+                return self._raw(503, b'{"error": "this resource runs no event index"}', …)
 ```
 
-Ресурс без базы честно отвечает 503 с объяснением, а не пустым списком. Тот же принцип, что `catching up` в уроке 13: **не отвечать коротко.**
+Ресурс без индекса честно отвечает 503 с объяснением, а не пустым списком. Тот же принцип, что `truncated` в уроке 13: **не отвечать коротко.**
 
 ```python
             if extra is not None:

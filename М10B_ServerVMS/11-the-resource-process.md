@@ -30,12 +30,12 @@ the names say so: platform/resources/<server>/heartbeat, platform/mirror.
 
 И третий — **диапазонные запросы**: тридцать строк, благодаря которым плеер на странице перематывает часовой сегмент, не скачивая его целиком.
 
-> **Проверка без железа.** Весь урок. Маршруты проверяются настоящим HTTP на `port=0`, база событий — над временным каталогом.
+> **Проверка без железа.** Весь урок. Маршруты проверяются настоящим HTTP на `port=0`, индекс событий — над временным каталогом.
 
 ## Что нужно знать заранее
 
 - **М10A, урок 14** — `Resource`: heartbeat, `register`, `pass_`, `restore`, `serve`, `extra`.
-- **М10A, урок 13** — `EventDatabase`: кэш над деревом, `rebuild`, `tail`, `forget`.
+- **М10A, урок 13** — `EventIndex`: дерево бакетов, прочитанное там, где лежит, `query`, `forget`.
 - **Уроки 7–8** — `Manifest`, `ArchivePolicy`, два дерева.
 - **М10A, урок 15** — протокол `extra`: четыре формы ответа, включая байты с заголовками.
 
@@ -53,7 +53,7 @@ the names say so: platform/resources/<server>/heartbeat, platform/mirror.
 
 ```
 It has no controller: it has a policy pass on a timer, a heartbeat, its HTTP,
-and the event database over its own tree.
+and the event index over its own tree.
 ```
 
 Четыре вещи, и ни одной из них не нужен контроллер.
@@ -130,12 +130,11 @@ def vms_routes(archive: ArchiveResource):
 ## Шаг 4 — Сборка ресурса
 
 ```python
-def vms_resource(archive: ArchiveResource, server: str, url: str, vars_, objects, wall=None, peers=None,
-                 database: str = ":memory:") -> Resource:
+def vms_resource(archive: ArchiveResource, server: str, url: str, vars_, objects, wall=None, peers=None) -> Resource:
     wall = wall or archive.wall
     r = Resource(archive.root, server, url, vars_, objects, archive.bucket_seconds, wall, peers)
     r.register("rec", ArchivePolicy(archive, vars_))                    # footage is the recorder's
-    r.database = EventDatabase(archive.root, server, database, wall, archive.bucket_seconds)
+    r.index = EventIndex(archive.root, server, wall, archive.bucket_seconds)
     return r
 ```
 
@@ -147,24 +146,19 @@ def vms_resource(archive: ArchiveResource, server: str, url: str, vars_, objects
 
 Дверь `register` (урок 16 М10A) была написана без единого знания о том, кто в неё войдёт. Вот первый вошедший. В уроке 14 войдёт второй — детекторы; в уроке 13 третий не понадобится, потому что живое видео ничего не хранит.
 
-`r.database = EventDatabase(...)` — **присвоение атрибута, а не аргумент конструктора**. База создаётся, но не запускается: докстрока говорит *created; the process starts it after `restore()`*.
-
-Почему это важно, видно в цикле процесса.
-
-`database: str = ":memory:"` — по умолчанию база в памяти. Кэш, который пересобирается из дерева при каждом старте (урок 15 М10A); файл на диске — оптимизация для большого архива, включаемая переменной окружения.
+`r.index = EventIndex(...)` — **присвоение атрибута, а не аргумент конструктора**: платформенный `Resource` не обязан держать индекс событий, а этот ресурс держит. Запускать его не нужно — он ничего не строит и готов, как только создан: читает дерево бакетов там, где оно лежит, в момент каждого запроса (урок 13 М10A). Ни файла базы, ни переменной окружения для него нет.
 
 ## Шаг 5 — Цикл процесса
 
 ```python
 def resource() -> None:
     """The resource process: the archive has no controller — it has a policy pass, a
-    heartbeat, its HTTP, and the event database over its own tree."""
+    heartbeat, its HTTP, and the event index over its own tree."""
     archive = ArchiveResource(os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive"))
     vars_ = FileVariables(os.path.join(root, "config"))
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(archive, socket.gethostname(), os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects,
-                       database=os.environ.get("EVENTDB", ":memory:"))
+    res = vms_resource(archive, socket.gethostname(), os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port, extra=vms_routes(archive))
 ```
 
@@ -174,18 +168,15 @@ def resource() -> None:
 
 ```python
     res.heartbeat(); logging.info("restore: %s", res.restore())
-    res.database.start()                                                  # a cache over THIS tree: rebuilt after restore, tailed every 3 s
 ```
 
-**Порядок из трёх шагов, и он строгий.**
+**Порядок из двух шагов, и он строгий.**
 
 `heartbeat()` **первым**: заявить о себе до всякой работы. Восстановление может занять минуты (это копирование зеркал обратно после замены диска, урок 16 М10A), и всё это время контроллеры должны видеть, что ресурс есть. Иначе они успеют перераспределить записи с сервера, который на самом деле поднимается.
 
-`restore()` **вторым**: забрать с соседей то, что было зазеркалено, пока этот сервер лежал. Комментарий говорит: *rebuilt after restore.*
+`restore()` **вторым**: забрать с соседей то, что было зазеркалено, пока этот сервер лежал.
 
-`database.start()` **третьим**, и именно поэтому база создавалась, а не запускалась. Запусти её до восстановления — она проиндексирует дерево без вернувшихся бакетов, и до следующей пересборки события за время простоя были бы невидимы.
-
-**Кэш строится после того, как данные на месте.** Простое правило, нарушение которого даёт ошибку, воспроизводящуюся только после аварии — то есть тогда, когда меньше всего хочется разбираться.
+Третьего шага больше нет, и это стоит заметить. Пока в курсе стояла база SQLite, здесь был `database.start()` — пересборка из дерева, — и его место в порядке было правилом: **кэш строится после того, как данные на месте**; запусти его до восстановления, и события за время простоя были бы невидимы до следующей пересборки. Индексу это правило не нужно: он ничего не строит и читает дерево в момент запроса, поэтому вернувшиеся бакеты видны, как только легли на диск. Ошибка, которая воспроизводилась только после аварии, исчезла вместе с шагом, в котором её можно было сделать.
 
 ```python
     last_policy = 0.0
@@ -197,7 +188,7 @@ def resource() -> None:
         except Exception:                                                 # noqa: BLE001
             logging.exception("resource pass failed")
         stop.wait(10)
-    res.database.stop(); srv.shutdown()
+    srv.shutdown()
 ```
 
 **Двенадцать строк — весь процесс.** Heartbeat каждые десять секунд, проход политики каждые десять минут.
