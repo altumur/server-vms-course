@@ -117,7 +117,7 @@ nomad acl bootstrap          # один раз; управляющий токе�
 
 ## Шаг 3 — Консоль создаёт камеру
 
-Трасса — [`traces/02-console-creates-a-camera.txt`](traces/02-console-creates-a-camera.txt). Консоль стенда создаёт камеру `north-gate` и делает шесть запросов.
+Трасса — [`traces/02-console-creates-a-camera.txt`](traces/02-console-creates-a-camera.txt). Консоль стенда создаёт камеру `north-gate` и делает пять запросов.
 
 Сначала номер. Камерам номера выдаёт счётчик `vms/next_id`, и выдаёт по CAS, как любую другую запись:
 
@@ -145,11 +145,9 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=0
     "name": "north-gate",
     "source": "driverpack://acme/10.2.0.11",
     "enabled": "true",
-    "events_retention_days": "365",
     "priority": "100",
     "labels": "vlan:cctv-a",
     "folders": "",
-    "alarms": "",
     "ref": "",
     "cred_username": "",
     "cred_secret": "",
@@ -164,7 +162,7 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=0
 
 Все значения — строки. У Nomad Variables значения только строковые, поэтому `"enabled": "true"` и `"priority": "100"`, а список меток — строка через запятую. Типы восстанавливает спека подсистемы при чтении (`SPEC.row`, М10A урок 9): хранилище хранит текст, смысл знает подсистема.
 
-Последняя пара запросов — срок хранения событий в отдельной строке `vms/retention/1`. Её читает ресурс (урок 6), которому незачем видеть всю строку камеры.
+Последний запрос — консоль смотрит строку `vms/retention/1` со сроком хранения событий и ничего в неё не пишет. Эту строку читает ресурс (урок 6), которому незачем видеть всю строку камеры. Срок у новой камеры **не задан**, поэтому его нет ни в строке камеры, ни здесь: он наследуется (`inherit` в спеке, урок 12 М12), и ресурс возьмёт его по своей цепочке — строка камеры, строка подсистемы, год. Появится строка тогда, когда срок зададут, как в следующем шаге.
 
 Полностью путь `POST /cameras` через консоль — с ключом идемпотентности и ответом, который найдёт повтор, — разобран в части 3 записок [`three-cameras`](../_notes-ru/three-cameras/03-creating-a-camera.md). Здесь мы смотрим на то, что под ним: на то, как запросы держатся на CAS.
 
@@ -188,7 +186,7 @@ B пишет первой — и проходит, потому что инде�
 # console B
 PUT /v1/var/vms/cameras/1?namespace=default&cas=1002
 {"Items": {..., "revision": "2", "events_retention_days": "30", ...}}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1004}
+→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1003}
 ```
 
 A пишет второй — со старым индексом, и получает отказ:
@@ -196,21 +194,21 @@ A пишет второй — со старым индексом, и получ�
 ```
 # console A
 PUT /v1/var/vms/cameras/1?namespace=default&cas=1002
-{"Items": {..., "revision": "1", "name": "north-gate-2", "events_retention_days": "365", ...}}
-→ 409 {"ModifyIndex": 1004}
+{"Items": {..., "revision": "1", "name": "north-gate-2", ...}}
+→ 409 {"ModifyIndex": 1003}
 ```
 
-Посмотрите на тело этого `PUT`. В нём `events_retention_days: 365` — значение, которое A прочитала до того, как B его изменила. Без CAS этот запрос прошёл бы, и правка B исчезла бы молча: никто бы ничего не заметил, пока через месяц не стали бы искать, куда делись события. С CAS A получает `409`, читает строку снова и пишет поверх:
+Посмотрите на тело этого `PUT`. В нём **нет** `events_retention_days`: A прочитала строку до того, как B задала срок. Без CAS этот запрос прошёл бы, строка снова осталась бы без срока, и правка B исчезла бы молча — камера вернулась бы к наследуемому сроку: никто бы ничего не заметил, пока через месяц не стали бы искать, куда делись события. С CAS A получает `409`, читает строку снова и пишет поверх:
 
 ```
 # console A
 GET /v1/var/vms/cameras/1?namespace=default
-→ 200 {..., "revision": "2", "events_retention_days": "30", ..., "ModifyIndex": 1004}
+→ 200 {..., "revision": "2", "events_retention_days": "30", ..., "ModifyIndex": 1003}
 
 # console A
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1004
+PUT /v1/var/vms/cameras/1?namespace=default&cas=1003
 {"Items": {..., "revision": "2", "name": "north-gate-2", "events_retention_days": "30", ...}}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1006}
+→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1005}
 ```
 
 Обе правки на месте. Это делает `Controller.write` из М10A — примитив, которым пользуется каждая правка в платформе:

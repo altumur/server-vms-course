@@ -104,9 +104,9 @@ B читает слот — его держит A — и берёт его вс�
 GET /v1/var/vms/slots/w-0?namespace=default
 → 200 {"Path": "vms/slots/w-0", "Items": {"holder": "alloc-A", "released": "false", "gen": "1", ...}, "ModifyIndex": 1010}
 
-PUT /v1/var/vms/slots/w-0?namespace=default&cas=1010
+PUT /v1/var/vms/slots/w-0?namespace=default&cas=1008
 {"Items": {"holder": "alloc-B", "until": "1757500045.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-0", "ModifyIndex": 1014}
+→ 200 {"Path": "vms/slots/w-0", "ModifyIndex": 1012}
 ```
 
 `gen: 2` — новое поколение имени. A в это время продолжает работать и через несколько секунд продлевает слот:
@@ -124,12 +124,12 @@ B читает назначение `w-0` и берёт эпохи своих к
 ```
 # vmsworker (allocation 0 on srv-b)
 GET /v1/var/vms/workers/w-0?namespace=default
-→ 200 {"Path": "vms/workers/w-0", "Items": {"units": "1,2", "rev": "1"}, "ModifyIndex": 1011}
+→ 200 {"Path": "vms/workers/w-0", "Items": {"units": "1,2", "rev": "1"}, "ModifyIndex": 1009}
 
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1012}
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1012
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1015}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1010}
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1010
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1013}
 ```
 
 Эпоха камеры 1 стала 2. Это **второй** барьер. Даже если A по какой-то причине не заметил потерю слота — завис между продлениями, — его эпоха 1 устарела: при следующем продлении аренды на камеру он увидит эпоху 2 и остановит её. А всё, что он успел записать, лежит в каталоге `e1/` и помечено как запись отсечённого писателя (урок 9). Двое писать одну камеру не могут: сначала их разводит слот, потом эпоха.
@@ -233,7 +233,7 @@ PUT /v1/var/vms/epoch/9?namespace=default&cas=0
 
 ```
 # vmsworker (allocation 2 on srv-c)
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1061
+PUT /v1/var/vms/slots/w-2?namespace=default&cas=1052
 {"Items": {"holder": "alloc-0003", "until": "1757500000.0", "released": "true", "gen": "1"}}
 ```
 
@@ -241,15 +241,15 @@ PUT /v1/var/vms/slots/w-2?namespace=default&cas=1061
 
 ```
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1064
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1055
 {"Items": {"units": "", "rev": "2"}}
 
 # vmscontroller
-PUT /v1/var/vms/placement/9?namespace=default&cas=1063
+PUT /v1/var/vms/placement/9?namespace=default&cas=1054
 {"Items": {"worker": "w-0", "reason": "slot w-2 released; most free capacity (1); on srv-a", ...}}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-0?namespace=default&cas=1071
+PUT /v1/var/vms/workers/w-0?namespace=default&cas=1060
 {"Items": {"units": "3,5,7,9", "rev": "6"}}
 ```
 
@@ -273,12 +273,12 @@ Nomad тем временем поднимает замену — блок `disc
 
 ```
 # vmsworker (allocation 2 on srv-a)
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1007
+PUT /v1/var/vms/slots/w-2?namespace=default&cas=1006
 {"Items": {"holder": "alloc-0099", "until": "1757500105.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1012}
+→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1011}
 
 GET /v1/var/vms/workers/w-2?namespace=default
-→ 200 {"Path": "vms/workers/w-2", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1010}
+→ 200 {"Path": "vms/workers/w-2", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1009}
 ```
 
 Назначение на месте: камера 1 ждала своего воркера — и дождалась. Переезд не переписал ни одной строки конфигурации. Это центральная мысль модуля: **камера назначена воркеру `w-2` в raft, а не серверу**, поэтому, когда Nomad переставляет `w-2`, новый экземпляр читает то же назначение из того же raft.

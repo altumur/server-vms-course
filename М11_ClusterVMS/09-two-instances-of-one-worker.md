@@ -55,11 +55,11 @@ w-1: FENCED (slot w-1 is held by another instance now). Stopping every pipeline.
 
 ```
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1026}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1023}
 GET /v1/var/vms/epoch/2?namespace=default
 → 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1027}
 GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1028}
+→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1025}
 ```
 
 Каждая говорит то же самое, этажом ниже:
@@ -99,17 +99,17 @@ GET /v1/var/vms/epoch/3?namespace=default
 
 ```
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1020
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1017
 {"Items": {"units": "1,3", "rev": "4"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1027}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1024}
 
-PUT /v1/var/vms/placement/2?namespace=default&cas=1017
+PUT /v1/var/vms/placement/2?namespace=default&cas=1014
 {"Items": {"worker": "w-2", "reason": "operator: srv-b sees that VLAN", "at": "1757500000.0", "rev": "2"}}
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1028}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1025}
 
 PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 {"Items": {"units": "2", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1029}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1026}
 ```
 
 Порядок не случайный: сначала из источника, потом в цель. Иначе был бы момент, когда камера в двух назначениях сразу, и оба воркера имели бы право её держать.
@@ -118,9 +118,9 @@ PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 
 ```
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/2?namespace=default&cas=1022
+PUT /v1/var/vms/epoch/2?namespace=default&cas=1019
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1030}
+→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1027}
 ```
 
 `w-1` на своём проходе аренд продлевает слот — он всё ещё его — и проверяет эпохи. Эпоха камеры 2 теперь 2:
@@ -128,7 +128,7 @@ PUT /v1/var/vms/epoch/2?namespace=default&cas=1022
 ```
 # vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/epoch/2?namespace=default
-→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1030}
+→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1027}
 ```
 
 С точки зрения аренды это **то же самое**, что в шаге 1: продление нашло более новую эпоху. Воркер различает два случая одним чтением своего назначения. Камеры 2 в нём больше нет — значит, это переезд, а не захват. Он отпускает камеру 2 и оставляет себе остальные:
