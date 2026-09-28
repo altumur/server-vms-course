@@ -93,7 +93,7 @@ DET_NAME=d-1                     CAPACITY here is streams
 |---|---|
 | `vmscontroller` | `vms/workers/*`, `vms/placement/*`, `vms/slots/*` |
 | `console` | `vms/cameras/*`, `vms/next_id`, `vms/retention/*`, `vms/idem/*` |
-| `vmsworker` | `vms/epoch/*`, `vms/slots/*` |
+| `vmsworker` | `vms/epoch/*`, `vms/slots/*`, `vms/holds/*`; с урока 25 — ещё `vms/devices/*` (`config.WORKER_ACL`) |
 
 **Ни один не может делать работу другого.** Консоль, у которой завёлся бы код размещения, получила бы `Forbidden` (урок 3 М10A). Воркер, попытавшийся поправить строку камеры, — тоже.
 
