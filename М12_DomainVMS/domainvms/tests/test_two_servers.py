@@ -44,9 +44,9 @@ def _office(wall):
     from domain.agent import ClusterTrust
     from domain.ingest import should_from_snapshot
     ing = {"srv-a": Ingest("srv-a", A_URLS, keys=lambda: ClusterTrust(a.vars).keyset(), wall=wall,
-                           should=should_from_snapshot(a.objects, wall)),
+                           should=should_from_snapshot(a.objects, wall, sources=a.vars)),
            "srv-b": Ingest("srv-b", B_URLS, keys=lambda: ClusterTrust(b.vars).keyset(), wall=wall,
-                           should=should_from_snapshot(b.objects, wall))}
+                           should=should_from_snapshot(b.objects, wall, sources=b.vars))}
     ing["srv-a"].announce(a.objects); ing["srv-b"].announce(b.objects)
     agents = {"srv-a": DomainAgent("srv-a", b.vars, a.vars, now=wall),
               "srv-b": DomainAgent("srv-b", b.vars, b.vars, now=wall, seen_store=b.objects)}
@@ -298,3 +298,23 @@ def test_a_cold_standby_of_our_camera_asks_the_camera_and_a_partition_opens_no_s
     assert standby.pass_once() == "cold: the primary writes" and cam.taken_by == {"srv-a"}
     cam.power_off()
     assert standby.pass_once() == "cold: cannot tell"                  # the camera does not answer: nothing to pull
+
+
+
+def test_a_camera_that_a_pulls_is_not_called_uncovered_and_its_card_does_not_record():
+    """Feedback AP — a defect of the course. The camera is pulled by A over RTSP (its door is open, it does not
+    push); it still holds a poll, as every member camera does. No recorder subscribes to A's ingest for it — A's
+    recorder pulls. Asked only "should A record it?", the ingest would call it uncovered: the card would record all
+    the time and the camera would push a second stream to B. The ingest speaks only of a camera that pushes to it;
+    of this one it says nothing, and the book — A writes it — decides."""
+    from domain.ingest import edge_gate
+    wall = Clock()
+    o = _office(wall)
+    o.cam.pushes = False; o.cam.door_open = True                       # pulled by A now
+    o.ing["srv-a"].tees[(SERIAL, "live")].unsubscribe("recorder:srv-a")  # A's recorder pulls; it is not on the ingest
+    o.domain_pass()
+    assert not json.loads(o.a.vars.get("domain/sources")[0][SERIAL])["live_url"].startswith("ingest://")
+    out = o.pusher.pass_once(_frames(wall, 3))
+    assert out["road"] == "primary" and o.q["srv-b"].drain() == []     # no second stream
+    assert edge_gate(o.pusher)(EDGE) is False                          # and the card holds
+    assert "uncovered" not in o.ing["srv-a"].poll(o.pusher.entry()["ingest"]["token"], SERIAL)   # silent, not "covered"
