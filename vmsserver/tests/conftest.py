@@ -42,6 +42,21 @@ def published_snapshot(objects, sub: str, rows: str = "cameras") -> dict:
     return {rows: out}
 
 
+def door_site(box) -> None:
+    """What a scenario about the front door needs to EXIST before it is written (М10B Lesson 25): the door
+    controller (camera 12 — one contact, two relays, no picture), the lobby camera 7 (a telemetry with five
+    presets, its own motion analytics) and a motion detector on 7. The device rows are what their holder
+    would have written on its first pass (`VmsWorker.describe_devices`)."""
+    box.vars.put("vms/cameras/12", {"id": "12", "name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1",
+                                    "kind": "io"})
+    box.vars.put("vms/devices/acme/10.0.0.90", {"events": "command,command.failed,io.input,silent", "rays": "1",
+                                                "relays": "2", "ptz": "false", "presets": "0"})
+    box.vars.put("vms/cameras/7", {"id": "7", "name": "lobby", "source": "driverpack://acme/10.0.0.77/ch/1"})
+    box.vars.put("vms/devices/acme/10.0.0.77", {"events": "command,command.failed,motion,silent", "rays": "0",
+                                                "relays": "0", "ptz": "true", "presets": "5"})
+    box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "enabled": "true"})
+
+
 def cam(i, revision=1, enabled=True, **kw):
     return {"id": i, "name": f"cam{i}", "source": f"driverpack://file/cam{i}.mp4", "enabled": enabled,
             "priority": 100, "revision": revision, **kw}

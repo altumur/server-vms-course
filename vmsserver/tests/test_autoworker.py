@@ -12,7 +12,7 @@ from w2cplatform.variables import Forbidden
 from vms.auto import AutoController
 from vms.autoworker import AutoWorker
 from vms.config import AUTO_SPEC, REC_SPEC, SPEC as VMS_SPEC
-from tests.conftest import Box
+from tests.conftest import Box, door_site
 
 
 class _Log:
@@ -56,7 +56,7 @@ def ev(t, sub, unit, kind, **fields):
 
 DOOR = {"name": "door-on-badge",
         "when": [{"sub": "vms", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}},
-                 {"sub": "det", "kind": "motion", "unit": "7"}],
+                 {"sub": "det", "kind": "motion", "unit": "7-motion"}],
         "within": 30,
         "then": [{"sub": "vms", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500},
                  {"sub": "rec", "action": "record", "cam": "7", "minutes": 10}]}
@@ -77,6 +77,7 @@ def _assigned(box, scenario, worker="a-1"):
 
 
 def _scenario(box, **patch):
+    door_site(box)                                   # the door, the lobby and its detector exist
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     return con.create({**DOOR, **patch})
 
@@ -84,7 +85,7 @@ def _scenario(box, **patch):
 def test_two_triggers_inside_the_window_fire_once_and_file_what_was_asked():
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", 7, "motion"),
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"),
                 ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
@@ -111,7 +112,7 @@ def test_the_same_log_read_again_files_nothing_new():
     row rather than a second door."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 20, "det", 7, "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
 
@@ -131,7 +132,7 @@ def test_outside_the_window_is_not_a_firing():
     things that happened together."""
     box = Box()
     t = box.wall()
-    log = _Log([ev(t - 400, "det", 7, "motion"),                      # four hundred seconds earlier
+    log = _Log([ev(t - 400, "det", "7-motion", "motion"),                      # four hundred seconds earlier
                 ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
@@ -217,7 +218,7 @@ def test_a_scenarios_minutes_become_a_recording_and_then_stop_being_one():
     box = Box()
     t = box.wall()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    log = _Log([ev(t - 20, "det", 7, "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 5, "vms", 12, "io.input", port="1", value="closed")])
     _scenario(box); _assigned(box, "door-on-badge")
     w = _worker(box, log)
     w.reconcile_once()
