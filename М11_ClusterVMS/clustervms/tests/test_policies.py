@@ -27,7 +27,7 @@ and nothing else is.
 import os
 import re
 
-from vms.config import REC_SPEC, SPEC
+from vms.config import REC_SPEC, SPEC, WORKER_ACL
 from w2cplatform.blobs import digest
 
 DEPLOY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "deploy")
@@ -86,7 +86,7 @@ def test_every_row_the_code_writes_is_granted_too():
     first time the blob sweep ran on a cluster. The gap was the same shape as the
     three this file was written for."""
     cases = [
-        ("vmsworker-policy.hcl", SPEC.sub.acl_worker(), ["w-1"]),
+        ("vmsworker-policy.hcl", WORKER_ACL, ["w-1"]),                  # the platform's grant + what a device is
         ("recworker-policy.hcl", REC_SPEC.sub.acl_worker(), ["r-1"]),
         ("vmscontroller-policy.hcl", SPEC.acl_controller(), ["7"]),
         ("reccontroller-policy.hcl", REC_SPEC.acl_controller(), ["7"]),
@@ -125,7 +125,7 @@ def test_every_write_grant_is_one_the_code_asked_for():
     This is what `objects/vms/*` would fail — the grant the worker had until now,
     whose comment said "its heartbeat" while the pattern said the whole subsystem."""
     expected = {
-        "vmsworker-policy.hcl": set(SPEC.sub.acl_worker()) | {OBJECTS + p for p in SPEC.sub.acl_objects_worker()},
+        "vmsworker-policy.hcl": set(WORKER_ACL) | {OBJECTS + p for p in SPEC.sub.acl_objects_worker()},
         "recworker-policy.hcl": set(REC_SPEC.sub.acl_worker()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_worker()},
         "vmscontroller-policy.hcl": set(SPEC.acl_controller()) | {OBJECTS + p for p in SPEC.sub.acl_objects_controller()},
         "reccontroller-policy.hcl": set(REC_SPEC.acl_controller()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_controller()},

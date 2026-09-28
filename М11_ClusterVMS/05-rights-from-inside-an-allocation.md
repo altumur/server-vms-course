@@ -86,7 +86,7 @@ PUT /v1/var/objects/vms/heartbeats/w-0?namespace=default
 
 | Процесс | Пишет | Не может писать |
 |---|---|---|
-| **воркер** | `vms/epoch/*`, `vms/slots/*`, `vms/holds/*`, `objects/vms/heartbeats/*` | ни строк, ни размещения, ни назначений |
+| **воркер** | `vms/epoch/*`, `vms/slots/*`, `vms/holds/*`, `vms/devices/*` (что умеет устройство — урок 25 М10B), `objects/vms/heartbeats/*` | ни строк, ни размещения, ни назначений |
 | **регистратор** | `rec/epoch/*`, `rec/slots/*`, `rec/holds/*`, `objects/rec/heartbeats/*` | ни записей, ни размещения |
 | **контроллер** | `vms/workers/*`, `vms/placement/*`, `vms/slots/*`, `objects/vms/snapshot/*` | ни одной строки камеры |
 | **консоль** | `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/policy`, `vms/requests/*`, `vms/retention/*`, `vms/sweep`, `platform/drain`, `objects/vms/blobs/*`; то же под `rec/`, и `rec/volumes/*` | ни размещения, ни назначений, ни heartbeat'ов |
