@@ -109,7 +109,7 @@
     def retain(self, cam: int, days: float, now: float) -> int:
         """Delete media older than `days`: the file first, then the line. The
         buckets are the platform's to retain (vms/retention/<cam>, written by the
-        VMS controller); the resource's event database forgets their rows."""
+        VMS controller); the resource's event index lets them go from its cache."""
         cutoff = now - days * 86400
         man = Manifest(self.root, cam)
         keep, removed = [], 0
@@ -148,7 +148,7 @@
     def timeline(self, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
         """Media spans overlapping [t0, t1), each marked *fenced* if its epoch is
         older than the recorder's current one. Events are not here: the resource's
-        event database has them, and the console draws them over these spans."""
+        event index answers them, and the console draws them over these spans."""
         out = []
         for s in self.read():
             if s.end > t0 and s.start < t1:
@@ -173,7 +173,7 @@
 
 **Отсечённое показывается, а не прячется.** Бледным интервалом (урок 19 М10A), кликабельным, проигрываемым. Это настоящее видео настоящей камеры: зомби писал реальный поток, он просто не имел на это права. Скрыв его, вы потеряете запись, которая может оказаться единственной; удалив — тем более.
 
-Последнее замечание докстроки: **событий здесь нет.** Интервалы — это видео; события рисует консоль поверх них, взяв из базы событий (урок 15 М10A). Два источника, соединяемые по времени на экране, — та же форма, что в живой ленте из урока 4.
+Последнее замечание докстроки: **событий здесь нет.** Интервалы — это видео; события рисует консоль поверх них, взяв их у индекса событий (урок 13 М10A). Два источника, соединяемые по времени на экране, — та же форма, что в живой ленте из урока 4.
 
 И примечание к классу: *таймлайны двух ресурсов просто склеиваются и сортируются — консоль сливает манифесты.* Регистратор переехал, видео лежит на двух серверах — консоль запрашивает оба, складывает списки, сортирует. Ни координации, ни глобального индекса: формат ответа таков, что склейка тривиальна.
 

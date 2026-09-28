@@ -13,7 +13,7 @@ vmsserver/
     contract.py                Lesson 1  Subsystem, Assignment, Heartbeat, Slot; the Controller and Worker bases; identity by claim
     events.py                  Lesson 3  the event log: buckets per unit per epoch on the resource, for any subsystem — generic
     resource.py                Lesson 3  the resource as a platform job: heartbeat, buckets over HTTP, retention by each subsystem's row, the mirror to a peer, restore
-    eventdatabase.py           Lesson 10  EventDatabase — the database a resource keeps over its own buckets, a cache; MergedIndex — what a console has instead: every live resource's /events, merged
+    eventdatabase.py           Lesson 10  EventIndex — a resource's own buckets, read where they lie, with a bounded cache; MergedIndex — what a console has instead: every live resource's /events, merged
     spec.py                    Lesson 6  the controller as data: SubsystemSpec (rows, fields, derived rows, placement by name — requires, servers, near — snapshot, the two ACLs) and SpecController, the one controller every subsystem runs
     console.py                 Lesson 7  the console as data: SpecConsole over the same spec — the page, /spec, /<rows>, /where, /metrics with the subsystem's prefix, /marks, the writes with the spec's refusals; a subsystem registers extra routes;
                                Mount — one process fronting several subsystems, the root at / and the others under their names (/live/…, /det/…)
@@ -35,7 +35,7 @@ vmsserver/
     detworker.py               Lesson 9  DetWorker: runs a Model against the camera's fan-out, writes what it saw into det/<unit>/e<epoch>/ on the resource under its own epoch
     liveworker.py              Lesson 8  LiveWorker, a worker whose unit is a camera's fan-out and whose capacity is viewers: one subscription to the worker's
                                RTSP fan-out (live_url) per camera, N webrtcbin peers behind it, WHEP (POST /whep/<cam>, DELETE /whep/session/<id>), demand-created and demand-deleted units
-    resource.py                Lesson 10  the resource process: the platform's Resource with the recorder's ArchivePolicy registered and an EventDatabase attached; /manifest and /segment plugged in — the same function М11 runs as the resource job
+    resource.py                Lesson 10  the resource process: the platform's Resource with the recorder's ArchivePolicy registered and an EventIndex attached; /manifest and /segment plugged in — the same function М11 runs as the resource job
     config.py                  the schema's Python view over the spec: row() and items()
     __main__.py                python3 -m vms worker | controller | recorder | reccontroller | console | resource | gateway | livecontroller | detworker | detcontroller
   gstvms/                      Track 2 — needs GStreamer

@@ -243,7 +243,7 @@ ExecStart=/usr/local/bin/vms-spares.sh
 ## Шаг 5 — Ресурс: процесс вместо таймера
 
 ```ini
-Description=VMS resource — the policy pass, the heartbeat, the event database
+Description=VMS resource — the policy pass, the heartbeat, the event index
 Exec=python3 -m vms resource
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
@@ -261,17 +261,17 @@ Restart=always
 
 Было: таймер systemd, раз в десять минут запускающий разовую задачу. Стало: процесс с циклом (урок 11).
 
-**Тот же проход, та же периодичность** — и три вещи, которых у разовой задачи быть не может: heartbeat (её не видно между запусками), порт (к ней нельзя обратиться) и база событий (ей негде жить).
+**Тот же проход, та же периодичность** — и три вещи, которых у разовой задачи быть не может: heartbeat (её не видно между запусками), порт (к ней нельзя обратиться) и индекс событий с его кэшем (ему негде жить).
 
 Тест проверяет `Restart=always` с комментарием: *процесс, а не таймер: база живёт в нём.*
 
 `RESOURCE_HOST=127.0.0.1` — на одной коробке к ресурсу обращается только консоль. Примечание говорит, что в М11 задача слушает адрес узла, потому что соседи шлют туда зеркала.
 
-И честное примечание про базу:
+И примечание про индекс событий:
 
-> *`EVENTDB` is not set, so it is `:memory:` and disappears with the container; the next start rebuilds it from the buckets in seconds. Set `EVENTDB=/data/archive/.eventdb` to keep it across restarts; nothing depends on that.*
+> *The event index keeps nothing of its own: it reads the buckets where they lie at each query and caches what it read (64 MiB by default). A restart loses the cache and nothing else; there is nothing to rebuild and no `EVENTDB` to set.*
 
-**«Ничего от этого не зависит»** — проверка того, что база действительно кэш (урок 15 М10A). Если бы её потеря что-то значила, эта строка не могла бы быть написана.
+**«Ничего, кроме кэша»** — проверка того, что у индекса нет ничего своего (урок 13 М10A). Пока здесь стояла база SQLite, примечание говорило, что перезапуск пересобирает её за секунды, — на годе хранения это были не секунды.
 
 ## Шаг 6 — Один образ
 
