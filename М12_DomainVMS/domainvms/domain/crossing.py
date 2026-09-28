@@ -440,7 +440,10 @@ class Crossings:
         for (cluster, worker), s in self.view.snapshots.items():
             if any(str(st.get("ref", "")) == ref for st in s.status) and s.doors:
                 doors = dict(s.doors)
-                push, why = self._road(cluster, on, bool(doors.get("push")), ref)
+                if not (doors.get("polls") or doors.get("push")):   # not a member camera: nothing to push with (AO)
+                    push, why = False, "not a member camera: it has nothing to push with, and is always pulled"
+                else:
+                    push, why = self._road(cluster, on, bool(doors.get("push")), ref)
                 doors.update(push=push, road=why)
                 if push:                                 # Lesson 16: it pushes to the recording cluster's ingest
                     doors["live_url"] = f"ingest://{on}/{ref}"
