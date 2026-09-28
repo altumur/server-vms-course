@@ -733,3 +733,22 @@ def test_a_server_clusters_camera_can_trigger_a_scenario_but_cannot_be_asked():
     ing, aid = room.ask(PTZ, {"action": "preset", "arg": 3}, within=30)
     assert ptz_pusher.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
     assert room.outcome(PTZ, aid, wall() + 30) == "performed"
+
+
+
+def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wakes_nobody():
+    """Feedback AP. A recorder that lets go of the camera — or dies — changes nothing the ingest is told of, and a
+    held poll woken only by changes would answer at the end of its wait. With a word to say about coverage, it
+    looks again at least every `recheck` (the product's 5 s; here 0.3 s on real clocks)."""
+    import time as _t
+    wall = _t.time
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    token = pusher.entry()["ingest"]["token"]
+    ingest.should, ingest.recheck = (lambda ref: True), 0.3
+    ingest.want(SERIAL, "recorder:r-0"); ingest.subscribe(SERIAL, "recorder:r-0")
+    first = ingest.poll(token, SERIAL, version=-1)
+    assert first["uncovered"] is False
+    ingest.tees[(SERIAL, "live")].unsubscribe("recorder:r-0")          # the recorder is gone, silently
+    t0 = _t.monotonic()
+    out = ingest.poll(token, SERIAL, version=first["version"], wait=5.0)
+    assert out["uncovered"] is True and _t.monotonic() - t0 < 1.5
