@@ -344,7 +344,7 @@ def _merged(s):
         name = _host(url)
         if getattr(s.servers[name], "down", False):
             raise ConnectionError(name)
-        return s.resources[name].database.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None,
+        return s.resources[name].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None,
                                                 p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
     return MergedIndex(s.objects, fetch=fetch, wall=s.wall)
 
@@ -355,13 +355,13 @@ def _short(q) -> dict:
 
 
 def events_merged() -> str:
-    """Lesson 7: each resource keeps a database over its OWN tree; the console holds none and merges theirs,
+    """Lesson 7: each resource reads its OWN tree where it lies; the console holds nothing and merges theirs,
     fencing by the epochs only the cluster's rows know. A silent resource is named, not guessed."""
     s, t = _events_site()
     rs = s.resources_up()
-    out = ["# each resource rebuilds its own database, from its own buckets"]
+    out = ["# each resource's index: what its own tree holds, from its directories alone — nothing rebuilt"]
     for name in rs:
-        out.append(f"{name}: {rs[name].database.rebuild()}")
+        out.append(f"{name}: {rs[name].index.listing()}")
     m = _merged(s)
     out += ["", "# GET /events?cam=7 on the console — merged from every live resource",
             _json(_short(m.query(t, t + 7200, cam=7, current_epochs={("vms", "7"): 4})))]
@@ -388,7 +388,7 @@ def the_events_mirror() -> str:
     for r in rs.values():
         r.heartbeat()
     for name in rs:
-        out.append(f"{name} database rebuild -> {rs[name].database.rebuild()}")
+        out.append(f"{name} index -> {rs[name].index.listing()}")
     m = _merged(s)
     out += ["", "# srv-a answers: its own events, the open bucket included", _json(_short(m.query(t, t + 7200, cam=7)))]
     s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
@@ -396,7 +396,7 @@ def the_events_mirror() -> str:
     shutil.rmtree(s.servers["srv-a"].archive); os.makedirs(s.servers["srv-a"].archive)
     rs["srv-a"].heartbeat()
     out += ["", f"# srv-a back with an EMPTY disk: restore -> {rs['srv-a'].restore()}"]
-    rs["srv-a"].heartbeat(); rs["srv-a"].database.rebuild()
+    rs["srv-a"].heartbeat()
     out += [_json(_short(m.query(t, t + 7200, cam=7)))]
     return "\n".join(out) + "\n"
 

@@ -5,7 +5,7 @@ adds is where the bytes and the events are — merged, not held:
 
     GET /timeline/<id>               merged across the resources that hold the camera's RECORDING (rec/<cam>); unreachable ones named
     GET /segment/<path>?server=<s>   the bytes of one segment, fetched from THAT server's resource job (Range passed through)
-    GET /events?from&to&cam&…        merged across the live resources' event databases (the platform's `MergedIndex`); none here
+    GET /events?from&to&cam&…        merged across the live resources' event indexes (the platform's `MergedIndex`); none here
     /rec/spec, /rec/recordings, …    the recorder mounted under its name (`Mount`): the page's Record toggle POSTs here
 
 The rest — the page, /spec, /cameras, /where (one scan of the assignments),
@@ -13,7 +13,7 @@ The rest — the page, /spec, /cameras, /where (one scan of the assignments),
 `w2cplatform.console.SpecConsole` reading `vms.subsystem.yaml`. The recorder's
 console at `/rec/…` is the same class over `rec.subsystem.yaml` and no extra.
 
-The console holds no event database. Each resource job keeps one over its
+The console holds no event index. Each resource job keeps one over its
 own tree (its buckets and the copies it holds of its peers') and answers
 `GET /events` from it; the console asks every live resource and merges by
 time — the way `/timeline` merges manifests — naming the ones that did not
@@ -29,7 +29,7 @@ from http.server import ThreadingHTTPServer
 
 from w2cplatform.console import Mount, SpecConsole, heartbeats   # noqa: F401
 from w2cplatform.epoch import current_epoch
-from w2cplatform.eventdatabase import MergedIndex          # noqa: F401  (re-exported: the console's view of the event databases)
+from w2cplatform.eventdatabase import MergedIndex          # noqa: F401  (re-exported: the console's view of the event indexes)
 from w2cplatform.resource import resources_seen
 from w2cplatform.spec import SpecController
 
@@ -71,7 +71,7 @@ def cluster_routes(ctl: ClusterController, reader=None):
 def make_console(ctl: ClusterController, reader=None, worst_failover: float = 0.0, index=None, archive_root: str | None = None,
                  rec_ctl: SpecController | None = None) -> Mount:
     """The VMS at `/` and, when the console fronts it, the recorder at `/rec/…` (the page's Record toggle:
-    POST /rec/recordings). Both answer /events from the same merge over the resources' databases."""
+    POST /rec/recordings). Both answer /events from the same merge over the resources' indexes."""
     index = index or MergedIndex(ctl.objects, wall=ctl.wall)
     root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, extra=cluster_routes(ctl, reader), media=True)
     m = Mount(root)

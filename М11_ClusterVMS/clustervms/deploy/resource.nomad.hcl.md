@@ -25,8 +25,8 @@
 - `service { name = "resource"  port = "manifests" }` — the comment: peers find each other here, and `verify-bench.sh` item 5a uses `nomad service info -json resource` to pick a resource to PUT a mirror probe against. (In the code, peers actually find each other through `resources_seen(objects)` — the heartbeats — not the service catalog.)
 - `resources { cpu = 200  memory = 256 }` — 200 MHz, 256 MB: an HTTP file server plus a ten-minute policy pass.
 
-- `# EVENTDB unset` — the job's `EventDatabase` over this tree is `:memory:`, rebuilt after `restore()` on every start: a cache. Set it to a path under `/data` to keep it across restarts; nothing depends on that.
-- `resources { cpu = 200  memory = 384 }` — the tree, the passes, and the event database over this server's buckets (the index left the console job and came here).
+- No `EVENTDB` any more: the job's `EventIndex` reads this tree where it lies at each query, with nothing to rebuild after `restore()` and a bounded cache of what it read.
+- `resources { cpu = 200  memory = 384 }` — the tree, the passes, and the event index's cache over this server's buckets (64 MiB by default; the index left the console job and came here).
 
 ## Notes
 - No `SPOOL`/`ARCHIVE` env: `__main__` defaults them to `/data/spool` and `/data/archive`, which the volumes bind.

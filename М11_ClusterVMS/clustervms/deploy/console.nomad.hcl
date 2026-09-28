@@ -4,7 +4,7 @@
 # load balancer, no ingress; a person types any server's name, or a DNS
 # name that resolves to all of them. It is stateless and holds no database:
 # every instance reads the same raft and the same heartbeats, /events asks
-# every live resource's event database and merges, and a retried POST is answered
+# every live resource's event index and merges, and a retried POST is answered
 # the same by whichever instance gets it because the Idempotency-Key is a
 # Variable (vms/idem/*).
 # Placed on servers that run a resource so that an operator's marks have a
@@ -49,7 +49,7 @@ job "console" {
         port = "console"
         tags = ["metrics"]
       }
-      resources { cpu = 300  memory = 128 }             # the page and the API; no event database here
+      resources { cpu = 300  memory = 128 }             # the page and the API; no event index here
     }
   }
 }

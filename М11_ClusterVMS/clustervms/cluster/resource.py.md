@@ -9,5 +9,5 @@
 - `PeerClient`, `Resource`, `mirror_settings`, `mirrored_buckets`, `peers_of`, `resources_seen`, `serve` — the platform's resource API, re-exported.
 
 ## Notes
-- `__main__.resource` builds `cluster_resource(arch, server, url, NomadVariables(), objects, database=EVENTDB)`, serves it with `extra=vms_routes(arch)`, heartbeats, restores, then `res.database.start()`.
-- The tests (`test_lesson3_events.py`, `test_lesson3_resources.py`, `test_lesson5_controller.py`) build the same object over directories and call `res.database.rebuild()` / `tail()` by hand.
+- `__main__.resource` builds `cluster_resource(arch, server, url, NomadVariables(), objects)`, serves it with `extra=vms_routes(arch)`, heartbeats and restores; its event index (`res.index`) needs no start.
+- The tests (`test_lesson3_events.py`, `test_lesson3_resources.py`, `test_lesson5_controller.py`) build the same object over directories and query `res.index` directly — there is no rebuild or tail to call.

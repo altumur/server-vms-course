@@ -1,5 +1,5 @@
 """python3 -m cluster worker | controller | recorder | reccontroller | console | resource — the jobs
-(each resource keeps the event database over its own tree; the recorder is the only writer of footage).
+(each resource keeps the event index over its own tree; the recorder is the only writer of footage).
 
     CONFIG_URL                         the store, as a URL: nomad://host:port here, k8s://ns/prefix at a k8s site,
                                        file:///path on a bench. Defaults from NOMAD_ADDR; NOMAD_TOKEN is the task's
@@ -12,7 +12,6 @@
     ARCHIVE                            worker: where its events go (the resource on its server); recorder and resource: the same disks
     SPOOL                              recorder: where its pipelines write before promotion
     RESOURCE_URL                       resource: how the console reaches this server's manifests and events
-    EVENTDB                            resource: where its event database lives (default :memory: — a cache, rebuilt on start)
     CAPACITY                           worker: cameras it can carry on this server
 """
 from __future__ import annotations
@@ -102,7 +101,7 @@ def controller() -> None:
 def console() -> None:
     """one per server, a system job: the page and the API. Its token writes the
     operator's rows and nothing else; a create is placed by the controller's next
-    pass. No event database of its own: /events asks the live resources and merges."""
+    pass. No event index of its own: /events asks the live resources and merges."""
     from cluster.console import serve
     from cluster.controller import ClusterController
     from w2cplatform.spec import SpecController
@@ -118,17 +117,16 @@ def console() -> None:
 
 
 def resource() -> None:
-    """М10's resource process as a job: the platform's Resource with the VMS registered on it, and the event database over its own tree."""
+    """М10's resource process as a job: the platform's Resource with the VMS registered on it, and the event index over its own tree."""
     from vms.archive import ArchiveResource
     from cluster.resource import cluster_resource, vms_routes
     from w2cplatform.resource import serve
     arch = ArchiveResource(spool, archive)
     server = runtime.server(os.environ)
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
-    res = cluster_resource(arch, server, url, open_vars(CONFIG_URL), objects, database=os.environ.get("EVENTDB", ":memory:"))
+    res = cluster_resource(arch, server, url, open_vars(CONFIG_URL), objects)
     srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")), extra=vms_routes(arch))
     res.heartbeat(); logging.info("restore: %s", res.restore())    # back with an empty disk? pull my buckets from my peers first
-    res.database.start()                                              # a cache over MY tree: rebuilt after restore, tailed every 3 s
     last_policy = 0.0
     while not stop.is_set():
         try:
@@ -138,7 +136,7 @@ def resource() -> None:
         except Exception:                         # noqa: BLE001
             logging.exception("resource pass failed")
         stop.wait(10)
-    res.database.stop(); srv.shutdown()
+    srv.shutdown()
 
 
 if __name__ == "__main__":
