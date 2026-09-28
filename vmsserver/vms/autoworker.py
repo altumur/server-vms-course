@@ -90,6 +90,9 @@ class AutoWorker(Worker):
         # telemetry, a detector deleted, a device finally held and describing itself for the first time.
         self.catalog = catalog if catalog is not None else Catalog(vars_)
         self.fired: dict[str, float] = {}            # firing id -> when it was filed (the replay guard)
+        self.holes: dict[str, dict] = {}             # scenario -> what its last window was missing
+        self.gave_up: dict[str, dict] = {}           # scenario -> the servers it stopped waiting for
+        self.held_from: dict[str, float] = {}        # scenario -> since when its window has been incomplete
         self.recent: dict[str, list[float]] = {}     # scenario -> firing times inside the last minute
         self.filed = 0
         self.status_by_unit: dict[str, dict] = {}
@@ -128,7 +131,10 @@ class AutoWorker(Worker):
             # and the one that cannot be done is refused by the holder, on the unit, where it is seen. What
             # changes is that the scenario SAYS so, on every pass — never a scenario silently half-working.
             misfit, unsure = self.catalog.check(row)
+            holes = self.holes.get(unit) or {}
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
+                                         **({"holding": holes} if holes else {}),
+                                         **({"decided_without": self.gave_up.pop(unit)} if unit in self.gave_up else {}),
                                          **({"unfit": misfit} if misfit else {}),
                                          **({"unchecked": unsure} if unsure else {})}
             if n:
@@ -140,11 +146,17 @@ class AutoWorker(Worker):
         unit = str(row["id"])
         front = Frontier(self.archive_root, unit, AUTO.name)
         since = front.read()
+        held = self.held_from.get(unit)
+        if held is not None and held < now - self.COLD_START and self.holes.get(unit):
+            self.gave_up[unit] = self.holes[unit]    # held as long as it may: decided without them from here
+            self.held_from.pop(unit)
+            log.warning("%s: %s waited %.0fs for %s; deciding without them", self.name, unit, now - held,
+                        ", ".join(sorted(self.holes[unit])))
         since = now - self.COLD_START if since is None else max(since, now - self.COLD_START)
         window = float(row.get("within") or 0)
         # Read back far enough to answer the question, not far enough to answer it twice: the window is
         # how much history a firing may span, and `since` is how much of it is new.
-        events = self.window(row, since - window, now)
+        events, holes = self.window(row, since - window, now)
         fired = 0
         for fid, at in self.firings(row, events, since):
             if fired >= self.PER_PASS:
@@ -157,7 +169,21 @@ class AutoWorker(Worker):
             self.file(row, fid, at)
             fired += 1
         self.forget(now)
-        front.set(max(since, now - self.SETTLE))     # …and never further than the log has caught up to
+        # The cursor moves only past a window that was WHOLE. A server that did not answer, a resource that
+        # was rebuilding after a restart, a silent one answered by its peer's copies (which never hold the
+        # open bucket): each makes the window short, and moving past it would lose, for ever, whatever that
+        # server holds — the most expensive silence there is, exactly as for an event not yet in the merge.
+        # So the cursor stays and the same window is asked again next pass; what fired from its known part is
+        # filed already and is not filed twice (`fired`, the deterministic id).
+        #
+        # Not for ever: `since` never trails `now` by more than `COLD_START`, so a server that does not come
+        # back holds a scenario for five minutes at most — and then the scenario SAYS it decided without it.
+        self.holes[unit] = holes
+        if holes:
+            self.held_from.setdefault(unit, since)   # where the window it keeps asking again begins
+        else:
+            self.held_from.pop(unit, None)
+            front.set(max(since, now - self.SETTLE))  # …and never further than the log has caught up to
         return fired
 
     # The events to decide on — ONE QUERY PER KIND THE SCENARIO WATCHES, and that is not an optimisation.
@@ -174,11 +200,15 @@ class AutoWorker(Worker):
     #
     # And when a window still comes back cut, SAY SO: a decision taken on truncated data must not look
     # like a decision taken on all of it.
-    def window(self, row: dict, t0: float, t1: float) -> list[dict]:
+    #
+    # And what the window is MISSING (`holes`: server -> why), from the merge's `complete` — a window a server
+    # did not answer for is not a window with nothing in it.
+    def window(self, row: dict, t0: float, t1: float) -> tuple[list[dict], dict[str, str]]:
         kinds = sorted({(str(t.get("sub", "")), str(t.get("kind", ""))) for t in row["when"]})
-        out, full = [], []
+        out, full, holes = [], [], {}
         for sub, kind in kinds:
             rep = self.index.query(max(0.0, t0), t1, subsystem=sub, kind=kind, limit=self.PER_KIND)
+            holes.update(rep.get("incomplete") or {})
             evs = [e for e in rep.get("events", []) if not e.get("fenced")]
             if rep.get("truncated"):                              # the index's own answer, not a guess from the count:
                 full.append(f"{sub}.{kind}")                      # fencing drops rows AFTER the cut, so a window that
@@ -188,7 +218,7 @@ class AutoWorker(Worker):
             log.warning("%s: %s — the window came back full for %s; a firing may have been cut off its "
                         "newest end", self.name, row["id"], ", ".join(full))
         out.sort(key=lambda e: float(e.get("t", 0)))
-        return out
+        return out, holes
 
     # Which firings this scenario has, newest first — `(id, when)`.
     #
@@ -225,9 +255,12 @@ class AutoWorker(Worker):
 
     # File what the scenario asks for: one row per action, in the TARGET subsystem's request family.
     #
-    # `valid_until` is the scenario's window, or thirty seconds — the same default the console uses for an
-    # operator's own command, and for the same reason: an action that arrives after its moment is not a
-    # late action, it is a wrong one.
+    # `valid_until` is the event's moment plus `valid_for` — thirty seconds by default, the same the console
+    # uses for an operator's own command, and for the same reason: an action that arrives after its moment is
+    # not a late action, it is a wrong one. It used to be the scenario's `within`, which is another thing: how
+    # far apart two triggers may be. A scenario with `within: 5` then got requests that lived five seconds,
+    # while the road from the event to the holder takes up to seven with nothing loaded — the tail, the pass,
+    # the holder's pass — and they expired unperformed on an idle box.
     def file(self, row: dict, fid: str, at: float) -> None:
         unit = str(row["id"])
         for i, action in enumerate(row["then"]):
@@ -238,7 +271,7 @@ class AutoWorker(Worker):
                 fields = {"unit": fields.get("cam", ""), **fields}
             self.vars.put(f"{sub}/requests/{rid}",
                           {**fields, "action": name, "at": str(at), "by": f"auto/{unit}",
-                           "valid_until": str(at + (float(row.get("within") or 0) or 30.0))})
+                           "valid_until": str(at + (float(row.get("valid_for") or 0) or 30.0))})
             self.filed += 1
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
@@ -265,3 +298,22 @@ class AutoWorker(Worker):
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
+
+    # The loop — which this worker did not have: `python -m vms autoworker` called `run` and fell over, and no
+    # test noticed, because every test drives `reconcile_once` by hand (feedback on the event log's load).
+    #
+    # The period is not a habit copied from the neighbours. It is one link of the road from an event to an
+    # action — the resource's tail, `SETTLE`, this period, the holder's own pass — and it multiplies the load:
+    # every pass asks every scenario's window. Two seconds is the same as the holder's pass, so neither
+    # dominates; `PASS_SECONDS` changes it, and the latency it costs is the operator's to accept.
+    def run(self, poll: float | None = None, stop=None) -> None:
+        import threading
+        poll = float(os.environ.get("PASS_SECONDS", "2")) if poll is None else poll
+        stop = stop or threading.Event()
+        while not stop.is_set():
+            try:
+                self.reconcile_once(); self.heartbeat_once()
+            except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
+                log.exception("%s: pass failed", self.name)
+            stop.wait(poll)
+        self.release_slot()

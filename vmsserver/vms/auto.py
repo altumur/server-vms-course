@@ -259,6 +259,11 @@ def refuse_scenario(fields: dict, catalog: Catalog | None = None) -> None:
         if missing:
             raise Refused(f"{key[0]}.{key[1]} needs {missing[0]!r}")
 
+    valid = int(fields.get("valid_for") or 0)
+    if valid and not 5 <= valid <= MAX_WITHIN:
+        raise Refused(f"`valid_for` is between 5 and {MAX_WITHIN} seconds — less is shorter than the road from "
+                      f"an event to the device, and the request would expire on its way")
+
     rate = int(fields.get("rate_per_minute") or 0)
     if rate and not 1 <= rate <= 600:
         raise Refused("`rate_per_minute` is between 1 and 600 — automation without a ceiling can ring")

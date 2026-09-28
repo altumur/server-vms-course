@@ -38,6 +38,11 @@ unit:
     # ring: a sensor bouncing at 5 Hz would file three hundred door commands a minute, and every one of
     # them would be obeyed.
     rate_per_minute: {type: int,    default: 6}
+    # How long a request this scenario files stays worth doing, from the moment of the event: the holder does
+    # not perform it later (`expired`). Its own field and not `within`: `within` is how far apart two triggers
+    # may be, and a scenario comparing two events five seconds apart still needs its door opened when the
+    # request gets there, which takes up to seven with nothing loaded.
+    valid_for:       {type: int,    default: 30}
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
 placement:
