@@ -247,6 +247,21 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
       </div>
     </form>
   </div>
+  <div id="autos" style="display:none">
+    <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><strong>Automation</strong><small>scenarios this unit triggers or is asked by — the auto subsystem, when the console mounts it: the choices are what the units' holders said they raise and can do (<code>/auto/catalog</code>)</small></div>
+    <ul id="autolist"></ul>
+    <form id="autoadd" style="margin-top:6px;padding-top:0;border-top:0">
+      <div class="row">
+        <label>when it raises <select name="when" id="autowhen"></select></label>
+        <label>then <select name="target" id="autotarget"></select></label>
+        <select name="action" id="autoaction"></select>
+        <span id="autoarg"></span>
+        <label>name <input type="text" name="name" required style="width:10em"></label>
+        <button type="submit">Add scenario</button>
+        <div class="err" id="autoerr"></div>
+      </div>
+    </form>
+  </div>
   <form id="edit">
     <div class="row"><strong>Edit</strong><small>every save is a new revision; the worker restarts what it runs for this unit</small></div>
     <div class="row" id="editfields"></div>
@@ -349,7 +364,7 @@ async function select(id) {
   const streams = !!c.live_url;
   $('#live').style.display = spec.media && streams ? '' : 'none';
   $('#media').style.display = spec.media && streams ? 'block' : 'none';
-  loadDets(); loadRec(streams);
+  loadDets(); loadAutos(); loadRec(streams);
   if (spec.media && streams) await loadTimeline();
 }
 
@@ -751,6 +766,72 @@ $('#detadd').onsubmit = async e => {
   try { await send('POST', '/det/units', { name: `${current}-${f.kind}`, cam: String(current), kind: f.kind, params: f.params || '' }); e.target.reset(); loadDets(); }
   catch (err) { $('#deterr').textContent = 'refused: ' + err.message; }
 };
+// -- automation: the `auto` subsystem, mounted at /auto. The form is built from `/auto/catalog` — what
+// automation may ask for, and what each unit raises and can do as its holder described it — so the kinds
+// offered are the ones THIS unit raises and the presets the ones the target has. A unit whose device never
+// described itself (`can: null`) gets a free field: "unknown" is offered as unknown, and the console's own
+// check says the rest. The form is rebuilt when the unit changes or a scenario is added — never on the
+// ten-second refresh, which would redraw a select under the operator's cursor.
+let autos = null, catalog = null, autoFor = null;                    // /auto/spec, /auto/catalog, the unit the form was built for
+async function loadAutos(rebuild) {
+  if (autos === null) { try { const r = await fetch('/auto/spec'); autos = r.ok ? await r.json() : false; } catch (_) { autos = false; } }
+  $('#autos').style.display = autos && current != null ? 'block' : 'none';
+  if (!autos || current == null) return;
+  if (rebuild || autoFor !== String(current)) {
+    try { catalog = await (await fetch('/auto/catalog')).json(); } catch (_) { return; }
+    autoFor = String(current); buildAutoForm();
+  }
+  const d = await (await fetch('/auto/scenarios')).json();
+  const mine = sc => (sc.when || []).some(t => String(t.unit) === String(current) || (catalog.det[t.unit] || {}).cam === String(current))
+                  || (sc.then || []).some(a => String(a.unit || a.cam) === String(current));
+  const byId = {};
+  for (const sc of d.configured || []) if (mine(sc)) byId[sc.id] = { ...sc, phase: 'silent' };
+  for (const r of d.rows || []) if (byId[r.id]) byId[r.id] = { ...byId[r.id], ...r };
+  const ul = $('#autolist'); ul.innerHTML = '';
+  for (const sc of Object.values(byId)) {
+    const li = document.createElement('li'); li.className = sc.unfit ? 'failed' : (sc.phase === 'running' ? 'running' : '');
+    const when = (sc.when || []).map(t => `${t.sub}${t.unit ? ' ' + t.unit : ''} ${t.kind}`).join(' + ');
+    const then = (sc.then || []).map(a => `${a.sub}.${a.action} ${a.unit || a.cam}${a.port ? ' port ' + a.port : ''}${a.n ? ' #' + a.n : ''}`).join(', ');
+    const said = sc.unfit ? ' · does not fit: ' + sc.unfit.join('; ') : (sc.unchecked ? ' · not checked: ' + sc.unchecked.join('; ') : '');
+    li.innerHTML = `<span><span class="dot"></span>${sc.id} <small>${when} → ${then}</small></span>` +
+                   `<small>${sc.phase}${said} <a href="#" data-act="del">delete</a></small>`;
+    li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/auto/scenarios/${sc.id}`); } catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; } loadAutos(); };
+    ul.appendChild(li);
+  }
+}
+function opt(value, text) { const o = document.createElement('option'); o.value = value; o.textContent = text; return o; }
+function buildAutoForm() {
+  const me = catalog.vms[String(current)] || {}, when = $('#autowhen'), target = $('#autotarget');
+  when.innerHTML = '';
+  for (const k of (me.can ? me.can.events : catalog.holder_events)) when.appendChild(opt(`vms|${current}|${k}`, k));
+  for (const [n, det] of Object.entries(catalog.det)) if (det.cam === String(current)) for (const k of det.raises) when.appendChild(opt(`det|${n}|${k}`, `${k} (detector ${n})`));
+  target.innerHTML = '';
+  for (const [u, c] of Object.entries(catalog.vms)) target.appendChild(opt(u, `${c.name} (${u})`));
+  target.value = String(current); target.onchange = buildAutoAction; buildAutoAction();
+}
+function buildAutoAction() {
+  const t = catalog.vms[$('#autotarget').value] || {}, can = t.can, action = $('#autoaction');
+  action.innerHTML = '';
+  if (!can || can.relays) action.appendChild(opt('output', 'pulse a relay'));
+  if (!can || can.ptz) action.appendChild(opt('preset', 'go to a preset'));
+  action.appendChild(opt('record', 'record 10 minutes'));
+  action.onchange = buildAutoArg; buildAutoArg();
+}
+function buildAutoArg() {
+  const can = (catalog.vms[$('#autotarget').value] || {}).can, a = $('#autoaction').value, box = $('#autoarg');
+  const upto = a === 'output' ? (can && can.relays) : a === 'preset' ? (can && can.presets) : 0;
+  box.innerHTML = a === 'record' ? '' : upto
+    ? `<select name="arg">${Array.from({ length: upto }, (_, i) => `<option>${i + 1}</option>`).join('')}</select>`
+    : `<input type="number" name="arg" min="1" value="1" style="width:4em">`;
+}
+$('#autoadd').onsubmit = async e => {
+  e.preventDefault(); $('#autoerr').textContent = '';
+  const f = Object.fromEntries(new FormData(e.target)), [sub, unit, kind] = f.when.split('|');
+  const then = f.action === 'record' ? { sub: 'rec', action: 'record', cam: f.target, minutes: 10 }
+             : { sub: 'vms', action: f.action, unit: f.target, [f.action === 'output' ? 'port' : 'n']: parseInt(f.arg, 10) };
+  try { await send('POST', '/auto/scenarios', { name: f.name, when: [{ sub, unit, kind }], then: [then] }); e.target.reset(); loadAutos(true); }
+  catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; }
+};
 // -- the administrator's knob: servers shared or distinct ----------------------------------------------
 // `PUT /policy {servers}` — one row, `<sub>/policy`, read by the controller on its next pass. `shared`: every
 // worker is a place to put units, two on one server included, and a dead server's slot is the scheduler's
@@ -812,5 +893,5 @@ async function loadResources() {
 window.addEventListener('beforeunload', stopLive);
 $('#last24').onclick = () => { window_ = [Date.now() / 1000 - 86400, Date.now() / 1000]; if (current) loadTimeline(); };
 $('#all').onclick = () => { window_ = null; if (current) loadTimeline(); };
-loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
+loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadAutos(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
 </script>

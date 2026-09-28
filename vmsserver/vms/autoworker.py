@@ -35,7 +35,7 @@ from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import EventLog
 from w2cplatform.variables import Variables
 
-from .auto import fires
+from .auto import Catalog, fires
 from .config import AUTO_SPEC
 from .scan import Frontier
 
@@ -74,7 +74,7 @@ class AutoWorker(Worker):
 
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
-                 archive_root: str | None = None, env: dict | None = None):
+                 archive_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, "AUTO_NAME", "a"))
@@ -85,6 +85,10 @@ class AutoWorker(Worker):
         # The same reader the console uses, for the same reason: a scenario watches what an operator would
         # see on the timeline. One merge, one definition of "the events of the last minute".
         self.index = index or MergedIndex(objects, wall=wall)
+        # What the units say and do — the same check the console made when the scenario was written, made
+        # again every pass, because the answer can change after it: a camera replaced by one without a
+        # telemetry, a detector deleted, a device finally held and describing itself for the first time.
+        self.catalog = catalog if catalog is not None else Catalog(vars_)
         self.fired: dict[str, float] = {}            # firing id -> when it was filed (the replay guard)
         self.recent: dict[str, list[float]] = {}     # scenario -> firing times inside the last minute
         self.filed = 0
@@ -120,7 +124,13 @@ class AutoWorker(Worker):
                 self.status_by_unit[unit] = {"id": unit, "phase": "waiting", "why": str(e)}
                 log.warning("%s: %s not evaluated: %s", self.name, unit, e)
                 continue
-            self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n}
+            # A scenario that no longer fits still runs: its trigger may be fine and its other actions too,
+            # and the one that cannot be done is refused by the holder, on the unit, where it is seen. What
+            # changes is that the scenario SAYS so, on every pass — never a scenario silently half-working.
+            misfit, unsure = self.catalog.check(row)
+            self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
+                                         **({"unfit": misfit} if misfit else {}),
+                                         **({"unchecked": unsure} if unsure else {})}
             if n:
                 acted.append(unit)
         return acted

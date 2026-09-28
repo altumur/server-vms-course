@@ -424,6 +424,18 @@ def rec_routes(rec_ctl: SpecController):
     return extra
 
 
+# What the `auto` mount adds: the catalogue a scenario form is built from (М10B Lesson 25). One answer with
+# both halves — what automation may ask for, and what each unit raises and can do, as its holder described
+# it — so the page offers the kinds camera 12 actually raises and the presets camera 7 actually has, and an
+# operator picks rather than types. The check at the door stays: a form is a convenience, `curl` is not.
+def auto_routes(auto_ctl):
+    def extra(handler, method, path, q):
+        if method == "GET" and path in ("/catalog", "/catalog/") and getattr(auto_ctl, "catalog", None) is not None:
+            return 200, auto_ctl.catalog.reply()
+        return None
+    return extra
+
+
 def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None, live_ctl: SpecController | None = None,
                  mounts: dict[str, SpecController] | None = None, index=None) -> Mount:
     """One console process for the box: the VMS at `/` (the page, /cameras, the media routes, the WHEP door),
@@ -440,7 +452,8 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
     for name, c in (mounts or {}).items():
         m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
-                                  extra=rec_routes(c) if name == "rec" else None,    # …and `rec` answers for the archives too
+                                  extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
+                                         auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
                                   metrics_extra=rec_metrics(c) if name == "rec" else None))
     return m
 

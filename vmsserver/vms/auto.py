@@ -22,9 +22,20 @@ and the refusal that happens at the door instead of at three in the morning."""
 # reason the trigger shapes do; it lives here and not in each target subsystem because it is a statement
 # about what AUTOMATION may ask for, which is narrower than what those subsystems can do.
 #
+# **The catalogue is not the device.** `ACTIONS` says preset is a thing automation may ask for; it does not
+# say camera 12 has a telemetry, or that it raises `io.input`, or that detector `7` exists. That is a FACT,
+# and only the holder of the device knows it: it writes it in `vms/devices/<device>` (`config.describe`).
+# `Catalog` reads those rows beside the operator's own (`vms/cameras/*`, `det/units/*`), and a scenario is
+# checked against both — the policy (may automation ask for this at all) and the fact (can this unit say
+# or do it). A misfit is refused at the door like a missing field; a scenario the fact cannot vouch for yet
+# (the device has never been held) is accepted and named on every pass, and so is one that stopped fitting
+# after it was written (the camera was replaced by one without a telemetry).
+#
 # ## Public API
 # - `TRIGGER_KEYS`, `ACTIONS` — the language, as data.
-# - `refuse_scenario(fields)` — raises `Refused` with a sentence an operator can act on.
+# - `Catalog(vars_)` — what the units say and do; `check(fields) -> (misfits, unchecked)`; `reply()` — the
+#   whole of it, for the page to build its form from (`GET /auto/catalog`).
+# - `refuse_scenario(fields, catalog=None)` — raises `Refused` with a sentence an operator can act on.
 # - `AutoController` — `SpecController` over `AUTO_SPEC`, refusing on create and on update.
 # - `fires(trigger, event)` — does this event match this trigger. The evaluator's half of the language,
 #   here beside the validation so the two cannot drift.
@@ -37,7 +48,7 @@ from w2cplatform.objects import ObjectStore
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Variables
 
-from .config import AUTO_SPEC
+from .config import AUTO_SPEC, DET_SPEC, DEVICES, HOLDER_EVENTS, SPEC as VMS_SPEC, device_of, parse_device_row
 
 # A trigger names the subsystem whose events it watches and the kind of event, and may narrow it to one
 # unit and to fields of the event. Four keys and no more: anything a fifth key would express is either a
@@ -71,9 +82,152 @@ def _dicts(v, what: str) -> list[dict]:
     return v
 
 
+# What the units of this cluster can say and do — the operator's rows for what EXISTS, the holders' rows for
+# what it IS. Read from the store on every question: a scenario is written seldom and checked once a pass,
+# and a cache here would be a second copy of the rows to keep right.
+#
+# Two subsystems describe their units, and that is where the check stops. A camera (`vms`) raises what its
+# device posts plus what its holder says about every unit (`HOLDER_EVENTS`); a detector (`det`) raises its
+# `kind` and nothing else, and its name is `<cam>-<kind>` — the trigger `{sub: det, unit: "7"}` this lesson
+# first printed would never have fired, and nothing said so. Any other subsystem's events are not checked,
+# and the scenario is told that rather than passed as if they were.
+class Catalog:
+    def __init__(self, vars_: Variables):
+        self.vars = vars_
+
+    def camera(self, unit) -> dict | None:
+        it, _ = self.vars.get(VMS_SPEC.sub.config(VMS_SPEC.rows, str(unit)))
+        return it if it and it.get("deleted") != "true" else None
+
+    def device(self, cam: dict) -> dict | None:
+        if not cam.get("source"):
+            return None
+        it, _ = self.vars.get(VMS_SPEC.sub.config(DEVICES, device_of(str(cam["source"]))))
+        return parse_device_row(it)
+
+    def detectors(self) -> dict[str, dict]:
+        out = {}
+        for key in self.vars.list(DET_SPEC.sub.config(DET_SPEC.rows, "")):
+            it, _ = self.vars.get(key)
+            if it and it.get("deleted") != "true":
+                out[key.rsplit("/", 1)[1]] = it
+        return out
+
+    def cameras(self) -> dict[str, dict]:
+        out = {}
+        for key in self.vars.list(VMS_SPEC.sub.config(VMS_SPEC.rows, "")):
+            it, _ = self.vars.get(key)
+            if it and it.get("deleted") != "true":
+                out[key.rsplit("/", 1)[1]] = it
+        return out
+
+    # -- one trigger ------------------------------------------------------------------------------
+    def _trigger(self, t: dict, misfit: list, unsure: list) -> None:
+        sub, kind, unit = str(t.get("sub", "")), str(t.get("kind", "")), str(t.get("unit") or "")
+        if sub == VMS_SPEC.name:
+            cams = {unit: self.camera(unit)} if unit else self.cameras()
+            if unit and cams[unit] is None:
+                misfit.append(f"there is no camera {unit}")
+                return
+            if kind in HOLDER_EVENTS:
+                return                                   # every held unit raises these: nothing to ask a device
+            descs = {u: self.device(c) for u, c in cams.items()}
+            said = {u: d for u, d in descs.items() if d is not None}
+            if any(kind in d["events"] for d in said.values()):
+                if kind == "io.input" and unit and "port" in (t.get("match") or {}):
+                    rays = said[unit]["rays"]
+                    if not str(t["match"]["port"]).isdigit() or not 1 <= int(t["match"]["port"]) <= rays:
+                        misfit.append(f"camera {unit} has {rays} input(s), not port {t['match']['port']}")
+                return
+            if len(said) < len(descs):
+                who = f"camera {unit}" if unit else "not every camera"
+                unsure.append(f"{who} has not said what it raises — its device has not been held yet; "
+                              f"{kind!r} is not checked")
+                return
+            raised = sorted({e for d in said.values() for e in d["events"]})
+            misfit.append(f"camera {unit} does not raise {kind!r} — it raises {', '.join(raised)}" if unit else
+                          f"no camera raises {kind!r} — the cameras raise {', '.join(raised)}")
+        elif sub == DET_SPEC.name:
+            dets = self.detectors()
+            if unit and unit not in dets:
+                on = sorted(n for n, d in dets.items() if str(d.get("cam")) == unit)
+                misfit.append(f"there is no detector {unit}" +
+                              (f" — a detector is named by its unit: {', '.join(on)} (camera {unit}'s)" if on else ""))
+                return
+            kinds = {str(dets[unit].get("kind"))} if unit else {str(d.get("kind")) for d in dets.values()}
+            if kind not in kinds:
+                misfit.append(f"detector {unit} raises {', '.join(sorted(kinds))}, not {kind!r}" if unit else
+                              f"no detector raises {kind!r}" + (f" — the detectors raise {', '.join(sorted(kinds))}"
+                                                                if kinds else " — there are no detectors"))
+        else:
+            unsure.append(f"{sub} does not describe what its units raise: {kind!r} is not checked")
+
+    # -- one action -------------------------------------------------------------------------------
+    def _action(self, a: dict, misfit: list, unsure: list) -> None:
+        sub, name = str(a.get("sub", "")), str(a.get("action", ""))
+        if (sub, name) == ("rec", "record"):
+            if self.camera(a.get("cam")) is None:
+                misfit.append(f"there is no camera {a.get('cam')} to record")
+            return
+        if sub != VMS_SPEC.name:
+            return
+        unit = str(a.get("unit", ""))
+        cam = self.camera(unit)
+        if cam is None:
+            misfit.append(f"there is no camera {unit}")
+            return
+        d = self.device(cam)
+        if d is None:
+            unsure.append(f"camera {unit} has not said what it can do — its device has not been held yet; "
+                          f"vms.{name} is not checked")
+            return
+        if name == "output":
+            port = str(a.get("port", ""))
+            if not d["relays"]:
+                misfit.append(f"camera {unit} has no relays")
+            elif not port.isdigit() or not 1 <= int(port) <= d["relays"]:
+                misfit.append(f"camera {unit} has {d['relays']} relay(s), not port {port}")
+        elif name == "preset":
+            n = str(a.get("n", ""))
+            if not d["ptz"]:
+                misfit.append(f"camera {unit} has no telemetry: it cannot go to a preset")
+            elif d["presets"] and (not n.isdigit() or not 1 <= int(n) <= d["presets"]):
+                misfit.append(f"camera {unit} has {d['presets']} preset(s), not {n}")
+
+    def check(self, fields: dict) -> tuple[list[str], list[str]]:
+        """(misfits — refused at the door; unchecked — accepted, and said on every pass)."""
+        misfit: list[str] = []
+        unsure: list[str] = []
+        for t in fields.get("when") or []:
+            if isinstance(t, dict):
+                self._trigger(t, misfit, unsure)
+        for a in fields.get("then") or []:
+            if isinstance(a, dict):
+                self._action(a, misfit, unsure)
+        return list(dict.fromkeys(misfit)), list(dict.fromkeys(unsure))   # one camera named twice is one sentence
+
+    def reply(self) -> dict:
+        """Everything a form needs, in one answer: what automation may ask for (`ACTIONS`), and per unit what
+        it raises and what it can do. A unit whose device never described itself says `can: null` — the
+        page offers it with a free field, which is the honest thing to offer for "unknown"."""
+        cams = {}
+        for u, c in sorted(self.cameras().items(), key=lambda kv: (len(kv[0]), kv[0])):
+            d = self.device(c)
+            cams[u] = {"name": c.get("name", u), "can": d}
+        dets = {n: {"cam": str(d.get("cam", "")), "raises": [str(d.get("kind", ""))]}
+                for n, d in sorted(self.detectors().items())}
+        return {"actions": {f"{s}.{n}": {"need": list(v["need"]), "may": list(v["may"])} for (s, n), v in sorted(ACTIONS.items())},
+                "trigger_keys": list(TRIGGER_KEYS), "holder_events": list(HOLDER_EVENTS),
+                "vms": cams, "det": dets}
+
+
 # The whole language, checked. Every message names the thing that is wrong and what would be right: this
 # runs while the operator is still looking at what they typed, which is the only moment the answer is cheap.
-def refuse_scenario(fields: dict) -> None:
+#
+# With a `catalog`, the scenario is checked against the units too — after the language, for the reason the
+# platform's check runs before this one: "camera 12 has no relays" is not a sentence to hand somebody whose
+# action has no `sub`.
+def refuse_scenario(fields: dict, catalog: Catalog | None = None) -> None:
     for t in _dicts(fields.get("when"), "when"):
         bad = [k for k in t if k not in TRIGGER_KEYS]
         if bad:
@@ -108,6 +262,11 @@ def refuse_scenario(fields: dict) -> None:
     rate = int(fields.get("rate_per_minute") or 0)
     if rate and not 1 <= rate <= 600:
         raise Refused("`rate_per_minute` is between 1 and 600 — automation without a ceiling can ring")
+
+    if catalog is not None:
+        misfit, _ = catalog.check(fields)
+        if misfit:
+            raise Refused("; ".join(misfit))
 
 
 # Does this event set off this trigger? The evaluator's half of the language, and it lives beside the
@@ -147,8 +306,9 @@ class AutoController(SpecController):
     the platform cannot do: refuse a scenario that says nothing runnable."""
 
     def __init__(self, vars_: Variables, objects: ObjectStore, capacity: int = 50, wall=time.time,
-                 cluster: str | None = None):
+                 cluster: str | None = None, catalog: Catalog | None = None):
         super().__init__(AUTO_SPEC, vars_, objects, capacity, wall, cluster)
+        self.catalog = catalog if catalog is not None else Catalog(vars_)
 
     # Both doors, because an edit can break a scenario exactly as a create can — and an edit is the likelier
     # of the two: the scenario that runs the site was written months ago and is being adjusted at speed.
@@ -157,7 +317,7 @@ class AutoController(SpecController):
     # parsed and the operator gets a sentence about triggers for a missing brace.
     def create(self, fields: dict) -> dict:
         self.spec.refuse(fields)
-        refuse_scenario(fields)
+        refuse_scenario(fields, self.catalog)
         return super().create(fields)
 
     def update(self, uid, fields: dict) -> dict:
@@ -165,5 +325,5 @@ class AutoController(SpecController):
         if row is None:
             raise Refused(f"no scenario {uid}")
         self.spec.refuse(fields)                    # the patch: shapes and sizes
-        refuse_scenario({**row, **fields})          # the scenario as it WOULD be, not the half being sent
+        refuse_scenario({**row, **fields}, self.catalog)   # the scenario as it WOULD be, not the half being sent
         return super().update(uid, fields)
