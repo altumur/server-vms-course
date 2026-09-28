@@ -133,7 +133,7 @@ class _LocalConsole:
 
 class DeviceCluster:
     def __init__(self, serial: str, flash_vars: Variables, wall=time.time, name: str | None = None,
-                 reaches=(), address: str | None = None, disk=None, pushes: bool = False):
+                 reaches=(), address: str | None = None, disk=None, pushes: bool = False, can: dict | None = None):
         self.serial = str(serial)
         self.name = name or f"cam-{self.serial}"
         self.flash, self.ram, self.wall = Flash(flash_vars), Ram(), wall
@@ -146,6 +146,10 @@ class DeviceCluster:
         self.epoch, self.boots, self.door_open = 0, 0, False
         self.coverage: dict | None = None               # what the card holds, when there is a card (Lesson 13)
         self.pushes = pushes                            # Lesson 16: nobody can dial this camera; it pushes its stream
+        # What it raises and what it can be asked to do — the shape of М10B's `vms.config.describe`: `events`,
+        # `rays`, `relays`, `ptz`, `presets`. Only the camera knows it, and it says so in its heartbeat (`can`),
+        # which is how the domain checks a scenario naming it (Lesson 16, step 8). None — it has not said.
+        self.can = can
 
     # -- power ----------------------------------------------------------------------------------------
     # The order is the lesson. The epoch first, because everything the camera writes after it carries it.
@@ -163,6 +167,13 @@ class DeviceCluster:
 
     def power_off(self) -> None:
         self.door_open = False
+
+    # An ask from another camera, done — or refused by the SAME description the domain checked the scenario
+    # against when it was written (`scenario.misfit`). One rule in two places would drift; here it cannot.
+    def perform(self, action: dict) -> str:
+        from .scenario import misfit
+        why = misfit(f"camera {self.serial}", self.can, action) if self.can is not None else None
+        return f"refused: {why}" if why else "performed"
 
     # -- the row: one writer, this camera's console ------------------------------------------------------
     def row(self) -> dict:
@@ -183,7 +194,8 @@ class DeviceCluster:
         now, row = self.wall(), self.row()
         rev = int(row.get("revision", 1))
         status = {"id": 1, "ref": self.serial, "name": row.get("name", ""), "enabled": True, "phase": "running",
-                  "position": "converged", "revision": rev, "observed_revision": rev, "epoch": self.epoch}
+                  "position": "converged", "revision": rev, "observed_revision": rev, "epoch": self.epoch,
+                  **({"can": self.can} if self.can is not None else {})}
         hb = {"worker": self.serial, "ts": now, "server": self.serial, "instance": f"{self.name}-boot-{self.boots}",
               "capacity": 1, "headroom": 0, "status": [status],
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",

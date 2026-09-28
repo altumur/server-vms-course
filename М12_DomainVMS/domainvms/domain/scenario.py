@@ -20,6 +20,12 @@ and is not an ask.
 
 The action a scenario names is what the domain writes into the token to ask (`acts`): the ingest refuses any
 other, so a camera — or whoever holds its token — can ask for preset 3 and nothing else.
+
+What each camera raises and can be asked to do is its own word — `can` in its heartbeat (М10B Lesson 25: the
+holder of a device is the one that knows it). The domain checks a scenario against it when the document is
+written (`refusals`): the trigger must raise the kind, the target must be able to do the action. A camera that
+has not said is not refused — it is named on every pass (`unchecked`) — and the page builds its form from
+`catalog`, so an operator picks a kind the gate camera raises and a preset the yard camera has.
 """
 from __future__ import annotations
 
@@ -30,6 +36,33 @@ from .ingest import Refused
 
 VALID = 30.0
 RATE = 6                               # asks per scenario per minute, the product's default
+
+
+# What one camera may ask another — М10B's `vms.preset` and `vms.output`, and nothing else: an ask is a thing
+# a camera DOES, over the poll it holds, and the recording of another camera is not one (that is the recorder's
+# cluster's automation, М10B Lesson 25). `arg` is the preset's number, or the relay's port.
+ACTIONS = {"preset": "the preset's number", "output": "the relay's port"}
+
+
+def misfit(who: str, can: dict, action: dict) -> str | None:
+    """Why a camera that described itself as `can` cannot do `action` ({action, arg}) — None when it can. The
+    domain says it when the scenario is written, the camera when the ask arrives (`DeviceCluster.perform`)."""
+    name, arg = str(action.get("action", "")), str(action.get("arg", ""))
+    if name == "preset":
+        n = int(can.get("presets") or 0)
+        if not can.get("ptz"):
+            return f"{who} has no telemetry: it cannot go to a preset"
+        if n and (not arg.isdigit() or not 1 <= int(arg) <= n):
+            return f"{who} has {n} preset(s), not {arg}"
+        return None
+    if name == "output":
+        r = int(can.get("relays") or 0)
+        if not r:
+            return f"{who} has no relays"
+        if not arg.isdigit() or not 1 <= int(arg) <= r:
+            return f"{who} has {r} relay(s), not port {arg}"
+        return None
+    return f"{who} cannot be asked {name!r}: one camera asks another for {' or '.join(ACTIONS)}"
 
 
 def _scenarios(settings: dict) -> list[dict]:
@@ -62,7 +95,51 @@ def refusals(settings: dict, crossings) -> list[str]:
         if crossings.polled_at(b) is None:
             out.append(f"camera {b} (target) polls nothing: an ask travels on the poll a member camera holds open "
                        f"to an ingest, and {b} is not a member camera of this domain, or has never reported")
-    return out
+        # …and what each end says it can (Lesson 16, step 8). The trigger's word counts only for a camera of ours:
+        # a server cluster's camera is read over its cluster's merged log, where the detectors on it write too,
+        # and its holder's `can` knows the device, not the detectors.
+        kind, action = str(sc.get("when", {}).get("kind", "")), _action(sc.get("then", {}))
+        can_a = crossings.can_of(a) if a in crossings.members() else None
+        if can_a is not None and kind not in can_a.get("events", []):
+            out.append(f"camera {a} (trigger) does not raise {kind!r} — it raises {', '.join(can_a['events'])}")
+        can_b = crossings.can_of(b)
+        why = (misfit(f"camera {b} (target)", can_b, action) if can_b is not None else
+               None if str(action.get("action", "")) in ACTIONS else misfit(f"camera {b} (target)", {}, action))
+        if why:
+            out.append(why)
+    return list(dict.fromkeys(out))
+
+
+def unchecked(settings: dict, crossings) -> list[str]:
+    """What the domain accepted without being able to vouch for it: an end that has not said what it raises or
+    can do. Said on every pass, like a refusal — and gone the pass after the camera describes itself."""
+    out, members = [], crossings.members()
+    for sc in _scenarios(settings):
+        a, b = str(sc.get("when", {}).get("camera", "")), str(sc.get("then", {}).get("camera", ""))
+        if not a or not b or a == b:
+            continue
+        kind, action = str(sc.get("when", {}).get("kind", "")), _action(sc.get("then", {}))
+        if a in members and crossings.can_of(a) is None:
+            out.append(f"camera {a} (trigger) has not said what it raises: {kind!r} is not checked")
+        elif a not in members and crossings.view.last_known(a) is not None:
+            out.append(f"camera {a} (trigger) is read over its cluster's merged log: {kind!r} is not checked here")
+        if crossings.polled_at(b) is not None and crossings.can_of(b) is None:
+            out.append(f"camera {b} (target) has not said what it can do: {action.get('action')!r} is not checked")
+    return list(dict.fromkeys(out))
+
+
+def catalog(crossings) -> dict:
+    """What a form needs to offer a scenario between cameras: what one camera may ask another, and per camera
+    the domain knows — its cluster, what it said it raises and can do (`can`, None if it has not), and whether it
+    can be asked at all (it holds a poll)."""
+    cams = {}
+    for cluster, rows in sorted(crossings.view.configured.items()):
+        for row in rows:
+            ref = str(row.get("ref", ""))
+            if ref:
+                cams[ref] = {"cluster": cluster, "name": row.get("name", ref), "can": crossings.can_of(ref),
+                             "asked": crossings.polled_at(ref) is not None}
+    return {"actions": dict(ACTIONS), "cameras": cams}
 
 
 def pairs(settings: dict) -> list[dict]:

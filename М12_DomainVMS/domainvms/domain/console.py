@@ -10,6 +10,8 @@ the domain cluster runs the same one pointed at every cluster.
     GET  /api/members                           the domain's members: who, admitted how and when, and who is knocking
     POST /api/members                           {name} — accept one that is knocking: an admin of the domain cluster only
     DELETE /api/members/<name>                  a member leaves: an admin of the domain cluster only
+    GET  /api/catalog                           what a scenario between cameras may name: the actions one camera may
+                                                ask another, and per camera what it said it raises and can do (`can`)
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain cluster only (`domain/topology.py`)
@@ -92,6 +94,9 @@ class Console:
                         return self._send(200, [c.__dict__ | {"sentence": c.sentence()} for c in console.view.causes()])
                     if u.path == "/api/topology" and console.topology is not None:
                         return self._send(200, console.topology.read())
+                    if u.path == "/api/catalog" and console.crossings is not None:
+                        from .scenario import catalog
+                        return self._send(200, catalog(console.crossings))
                     if u.path == "/api/members" and console.members is not None:
                         knocking = console.members.knocking(console.publish_to) if console.publish_to is not None else []
                         return self._send(200, {**console.members.read(), "knocking": knocking})

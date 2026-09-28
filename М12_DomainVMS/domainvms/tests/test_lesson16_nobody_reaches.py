@@ -619,6 +619,59 @@ def test_a_scenario_on_a_camera_that_polls_nothing_is_refused_when_written_and_n
     assert len(out["refused"]) == 1 and "SN9999" in out["refused"][0]
 
 
+def test_a_scenario_between_cameras_is_checked_against_what_each_camera_says_it_can():
+    """Only a camera knows that it raises `vehicle` and has five presets, and it says so in its heartbeat
+    (`can`), the shape М10B's holder writes for a device (Lesson 25). The domain checks the document against it
+    when it is written: a kind the gate camera does not raise, a preset the yard camera does not have, an action
+    one camera cannot ask another — 409, with what would be right. A camera that has not said is accepted and
+    named on every pass; when it describes itself, the same scenario is refused on the next pass if it no longer
+    fits — and the camera refuses the ask by the same rule. The form is built from `catalog`."""
+    from domain.api import ApiError
+    from domain.scenario import catalog, refusals
+    wall = Clock()
+    shared, books, domain_pass, gate, ptz, *_ = _scenario_site(wall, SCENARIOS[:1])
+    out = books.pass_once()
+    assert out["refused"] == [] and out["unchecked"] == [
+        f"camera {GATE} (trigger) has not said what it raises: 'vehicle' is not checked",
+        f"camera {PTZ} (target) has not said what it can do: 'preset' is not checked"]
+
+    gate.can = {"events": ["command", "command.failed", "silent", "vehicle"], "rays": 0, "relays": 1,
+                "ptz": False, "presets": 0}
+    ptz.can = {"events": ["command", "command.failed", "motion", "silent"], "rays": 0, "relays": 0,
+               "ptz": True, "presets": 5}
+    domain_pass()
+    assert books.pass_once()["unchecked"] == []                        # both have said: nothing left unvouched
+    check = lambda s: refusals(s, books.crossings)
+    rev = shared.current()[0]["rev"]
+    for bad, why in (({"when": {"camera": GATE, "kind": "vehicel"}, "then": {"camera": PTZ, "action": "preset", "arg": 3}},
+                      f"camera {GATE} (trigger) does not raise 'vehicel' — it raises command, command.failed, silent, vehicle"),
+                     ({"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "preset", "arg": 9}},
+                      f"camera {PTZ} (target) has 5 preset(s), not 9"),
+                     ({"when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "preset", "arg": 1}},
+                      f"camera {GATE} (target) has no telemetry: it cannot go to a preset"),
+                     ({"when": {"camera": GATE, "kind": "vehicle"}, "then": {"camera": PTZ, "action": "reboot"}},
+                      f"camera {PTZ} (target) cannot be asked 'reboot': one camera asks another for preset or output")):
+        try:
+            shared.edit(lambda s: s["scenarios"].append(bad), base_rev=rev, by="anna", check=check)
+            raise AssertionError(why)
+        except ApiError as e:
+            assert e.status == 409 and why in e.detail, e.detail
+    rev = shared.edit(lambda s: s["scenarios"].append(
+        {"when": {"camera": PTZ, "kind": "motion"}, "then": {"camera": GATE, "action": "output", "arg": 1}}),
+        base_rev=rev, by="anna", check=check)                          # the gate's relay: it has one
+
+    ptz.can = {**ptz.can, "ptz": False, "presets": 0}                  # the yard camera replaced by a fixed one
+    domain_pass()
+    assert books.pass_once()["refused"] == [f"camera {PTZ} (target) has no telemetry: it cannot go to a preset"]
+    assert ptz.perform({"action": "preset", "arg": 3}) == f"refused: camera {PTZ} has no telemetry: it cannot go to a preset"
+    assert gate.perform({"action": "output", "arg": 1}) == "performed"
+
+    cat = catalog(books.crossings)
+    assert set(cat["actions"]) == {"preset", "output"}
+    assert cat["cameras"][GATE]["can"]["relays"] == 1 and cat["cameras"][GATE]["asked"]
+    assert cat["cameras"][PTZ]["can"]["ptz"] is False
+
+
 # -- feedback AH, AI, AJ, AK --------------------------------------------------------------------------------
 def test_a_held_poll_hears_a_linger_run_out_and_an_ask_expire_on_real_clocks():
     """AH. Nothing touches the ingest when a viewer's linger runs out, or an ask's deadline passes — so nothing

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from .chain import publish_upstream
 from .ingest import publish_asks
-from .scenario import pairs, refusals
+from .scenario import pairs, refusals, unchecked
 from .shared import published
 
 
@@ -40,6 +40,7 @@ class Books:
         # Checked at writing; a camera can still leave the domain afterwards. Such a scenario is SAID, every pass,
         # never skipped in silence.
         out["refused"] = refusals(settings, c)
+        out["unchecked"] = unchecked(settings, c)       # accepted, and nobody could vouch for it: said too
         out["moved"] = moved
         out["members"] = joined
         return out

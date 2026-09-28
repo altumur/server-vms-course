@@ -123,6 +123,18 @@ class Crossings:
                         out[str(st["ref"])] = cluster
         return out
 
+    # What a camera says it raises and can be asked to do (`can`, per camera in its heartbeat — a camera of ours
+    # from its own description, a server cluster's camera from its holder's, М10B Lesson 25). The newest
+    # heartbeat that says it wins; a member that went silent keeps what it last said, because "the yard camera
+    # has five presets" is not less true while it reboots. None — nobody has said.
+    def can_of(self, ref: str) -> dict | None:
+        best = None
+        for (_cluster, _worker), s in self.view.snapshots.items():
+            for st in s.status:
+                if str(st.get("ref", "")) == str(ref) and st.get("can") is not None and (best is None or s.ts > best[0]):
+                    best = (s.ts, st["can"])
+        return best[1] if best else None
+
     def unrecorded(self) -> dict[str, str]:
         """{ref: its own cluster} for every member camera that no cluster records: it polls the poll home."""
         rec = self.all()
