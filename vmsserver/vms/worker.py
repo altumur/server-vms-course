@@ -41,7 +41,8 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! archivesink` (`gstvms/actuator.py`;
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
-# carrying its status. It never writes configuration: its token is `vms/epoch/*` and `vms/slots/*`. Nomad or
+# carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
+# `vms/devices/*` — the last one what it found a device to be, a discovery and not a decision. Nomad or
 # systemd supervises the process; the process supervises its pipelines; nothing supervises the loop, because
 # the loop is the process. The docstring names what the environment hands a process: `WORKER_NAME` /
 # `NOMAD_ALLOC_INDEX` (the slot preference; the CAS claim on `vms/slots/w-N` is the proof),
@@ -102,7 +103,8 @@ from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
-from .config import (LIVE_PORT_BASE, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, channel_of, device_of, live_shm, live_url,
+from .config import (DEVICES, LIVE_PORT_BASE, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, channel_of, describe, device_of,
+                     device_row, live_shm, live_url,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
@@ -122,14 +124,16 @@ class FakeDevice:
     """A held device: its channels, its own footage, and how many playbacks it allows at once."""
 
     def __init__(self, key: str, channels=(), coverage=None, max_playbacks: int = 2, bps: int = 1, index=None,
-                 rays: int = 0, relays: int = 0, ptz: bool = False):
+                 rays: int = 0, relays: int = 0, ptz: bool = False, presets: int = 0, events=()):
         self.key, self._channels = key, [str(c) for c in channels]
         self._coverage = {str(k): v for k, v in (coverage or {}).items()}   # camera -> (from, to[, fragments])
         self._index = {str(k): [(float(a), float(b)) for a, b in v] for k, v in (index or {}).items()}
         self.max_playbacks, self.bps = max_playbacks, bps
         self.open: dict[str, tuple] = {}
         self.fetched: list[tuple] = []
-        self.rays, self.relays, self.ptz = rays, relays, ptz     # what the `.rep` file would have said
+        self.rays, self.relays, self.ptz = rays, relays, ptz or presets > 0     # what the `.rep` file would have said
+        self.presets = presets                                   # how many the telemetry knows; 0 — it did not say
+        self.events = tuple(events)                              # what its own analytics post: "motion", "tamper"
         self.did: list[tuple] = []                               # every command performed, in order
 
     def channels(self) -> list[str]:
@@ -139,8 +143,12 @@ class FakeDevice:
     # (`ioDevice` with its `rayCount`/`relayCount`, and `telemetry`), because those are the two an
     # operator points at: open the door, look at the gate. Both are momentary — there is nothing to hold
     # open, nothing to fence over time — which is why they are requests and not units.
+    #
+    # And what it can SAY on its own: the analytics the device runs itself and posts on the bus (`events`).
+    # The worker adds what it says about every unit it holds — `describe` below.
     def capabilities(self) -> dict:
-        return {"rays": self.rays, "relays": self.relays, "ptz": self.ptz}
+        return {"rays": self.rays, "relays": self.relays, "ptz": self.ptz, "presets": self.presets,
+                "events": list(self.events)}
 
     def output(self, port: int, state: str, ms: int = 0) -> None:
         if not 1 <= int(port) <= self.relays:
@@ -150,6 +158,8 @@ class FakeDevice:
     def preset(self, n: int) -> None:
         if not self.ptz:
             raise ValueError(f"{self.key} has no telemetry")
+        if self.presets and not 1 <= int(n) <= self.presets:
+            raise ValueError(f"{self.key} has {self.presets} preset(s), not {n}")
         self.did.append(("preset", int(n), "", 0))
 
     # The summary the holder puts in its heartbeat — not the index. Drawing a timeline must not
@@ -410,6 +420,7 @@ class VmsWorker(Worker):
         # a box, a `FakeDevice` in the tests, `None` for a source with no archive of its own (a file).
         self.device_factory = device_factory or (lambda key: None)
         self.devices: dict[str, object] = {}
+        self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -466,8 +477,36 @@ class VmsWorker(Worker):
                 self.devices[key] = dev
         for key in set(self.devices) - want:
             dev = self.devices.pop(key)
+            self.described.pop(key, None)
             if hasattr(dev, "close"):
                 dev.close()
+        self.describe_devices()
+
+    # What each held device is, written where automation reads it: `vms/devices/<device>` (`config.py` says
+    # why a row). Only when the answer differs from what is stored — the first pass after a start compares
+    # with the store, every later one with memory, so a worker that holds a camera for a year writes its row
+    # once. A device that described nothing is left alone: silence is "unknown", and a row saying "no relays"
+    # would be a lie that refuses scenarios.
+    def describe_devices(self) -> int:
+        wrote = 0
+        for key, dev in self.devices.items():
+            desc = describe(dev.capabilities() if hasattr(dev, "capabilities") else None)
+            if desc is None or self.described.get(key) == desc:
+                continue
+            path, row = self.SUB.config(DEVICES, key), device_row(desc)
+            items, _ = self.vars.get(path)
+            if items != row:
+                self.vars.put(path, row)
+                wrote += 1
+            self.described[key] = desc
+        return wrote
+
+    # The same description, per unit, as it is carried in the heartbeat (`can`). The row is for this
+    # cluster's automation; the heartbeat is how the description leaves the cluster — a domain reads
+    # heartbeats and never another cluster's rows (М12, Lesson 16).
+    def can_of(self, cam: dict) -> dict | None:
+        dev = self.device_of_row(cam)
+        return self.described.get(device_of(cam["source"])) if dev is not None else None
 
     # The device a camera is a channel of, and the device object if it is held.
     def device_of_row(self, cam: dict):
@@ -749,8 +788,9 @@ class VmsWorker(Worker):
         return out
 
     # What each held device is, and what it has that we have not imported. Discovery is an OBSERVATION and
-    # goes where observations go: this worker's token writes `vms/epoch/*` and `vms/slots/*`, never
-    # `vms/cameras/*`. The operator imports channels from the page, with their own token.
+    # goes where observations go: this worker's token writes `vms/epoch/*`, `vms/slots/*` and what a device
+    # is (`vms/devices/*`), never `vms/cameras/*`. The operator imports channels from the page, with their
+    # own token.
     def device_status(self) -> list[dict]:
         known: dict[str, set] = {}
         for r in self.rows:
@@ -762,7 +802,8 @@ class VmsWorker(Worker):
             have = known.get(key, set())
             out.append({"device": key, "channels": len(chans), "known": sorted(have),
                         "unimported": [c for c in chans if c not in have],
-                        "playbacks": dev.in_use(), "max_playbacks": dev.max_playbacks})
+                        "playbacks": dev.in_use(), "max_playbacks": dev.max_playbacks,
+                        **({"can": self.described[key]} if key in self.described else {})})
         return out
 
     # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
@@ -807,12 +848,13 @@ class VmsWorker(Worker):
         """What the heartbeat says per camera beyond the platform's fields. Two kinds of output:
         `live_url`/`live_shm` — the stream now; `playback_url` + `coverage` — the archive the DEVICE
         wrote, which we did not. A subscriber needs nothing but this object, for either."""
+        can = self.can_of(cam)
         if cam.get("kind") == "io":
             # Nothing to subscribe to, and saying so is the point: a subscriber reads this object and
             # nothing else, so an address published here would be an address somebody dials.
-            return {"kind": "io"}
+            return {"kind": "io", **({"can": can} if can else {})}
         out = {"live_url": live_url(self.server, cam["id"], self.fanout_port()),
-               "live_shm": live_shm(cam["id"], self.shm_dir)}
+               "live_shm": live_shm(cam["id"], self.shm_dir), **({"can": can} if can else {})}
         dev = self.device_of_row(cam)
         cov = dev.coverage(cam["id"]) if dev is not None else None
         if cov is not None:

@@ -53,7 +53,7 @@ Environment=WORKER_NAME=%i
 Environment=RTSP_PORT=auto
 Environment=PLAYBACK_PORT=auto
 EnvironmentFile=/data/config/vms.env
-# the two stores, read-write: the worker writes `vms/epoch/*`, `vms/slots/*` (its token) and its heartbeat
+# the two stores, read-write: the worker writes `vms/epoch/*`, `vms/slots/*`, `vms/devices/*` (its token) and its heartbeat
 # object. `:z` relabels for SELinux, shared.
 Volume=/data/platform:/data/platform:z
 # no spool: the worker records nothing — the recorder does (`recworker@.container`). Read-write here

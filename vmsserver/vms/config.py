@@ -7,6 +7,7 @@ Python view of the same thing, for the worker and the tests:
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
     vms/retention/<id>    days — derived from events_retention_days       (the controller writes; the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
+    vms/devices/<device>  events, rays, relays, ptz, presets — what it says and does   (its holder, on a change)
     vms/next_id           n                                               (the controller)
 
 A camera row is small, rare and must be consistent: raft's shape. Nothing
@@ -88,6 +89,56 @@ def device_of(source: str) -> str:
     if u.netloc == "file":
         return "file/" + parts[0] if parts else "file"
     return f"{u.netloc}/{parts[0]}" if parts else u.netloc
+
+
+# -- the device row: what the holder found the device to be -----------------------------------------------
+# `vms/devices/<device>`, keyed by DEVICE and not by camera: a sixteen-channel recorder is one device and one
+# set of relays, and keyed by camera the same facts would be written sixteen times. Its one writer is the
+# worker that holds the device (`group_by: device` makes that one worker), and it writes only when the
+# answer changes — on a camera the row is on flash, and a description does not change between passes.
+#
+# Why a row and not only the heartbeat: automation checks a scenario against it when the scenario is
+# WRITTEN (`auto.Catalog`), and the device may be off at that moment. A heartbeat is what the device is now;
+# the row is what it last was, and "the door controller has one relay" does not stop being true because the
+# controller is rebooting.
+DEVICES = "devices"
+
+# What a holder writes about ANY unit it holds, whatever the device: it went quiet, a command was done to it,
+# a command was refused (`VmsWorker.pump_once`, `requests`). Every unit raises these; the device adds its own.
+HOLDER_EVENTS = ("command", "command.failed", "silent")
+
+
+# The holder's token: the platform's grant for any worker, plus the one row it writes that is not a claim about
+# itself — what a device turned out to be. Derived here, once, so the process (`__main__.worker`) and a cluster's
+# policy file (М11, `test_policies`) cannot say different things.
+WORKER_ACL = SPEC.sub.acl_worker() + [SPEC.sub.config(DEVICES, "*")]
+
+
+def describe(caps: dict | None) -> dict | None:
+    """What automation may point at on a device, from what the device said about itself (`capabilities()`):
+    the kinds of event its units raise, and what it can be asked to do. `None` — the device said nothing,
+    which is not the same answer as "it can do nothing"."""
+    if caps is None:
+        return None
+    events = set(HOLDER_EVENTS) | {str(e) for e in caps.get("events", ()) if str(e)}
+    if int(caps.get("rays", 0) or 0):
+        events.add("io.input")                   # a contact is read as `io.input` with its port and value
+    return {"events": sorted(events), "rays": int(caps.get("rays", 0) or 0), "relays": int(caps.get("relays", 0) or 0),
+            "ptz": bool(caps.get("ptz")), "presets": int(caps.get("presets", 0) or 0)}
+
+
+def device_row(desc: dict) -> dict:
+    """The description as a row: strings, a list comma-joined — the store's shape (М10A Lesson 9)."""
+    return {"events": ",".join(desc["events"]), "rays": str(desc["rays"]), "relays": str(desc["relays"]),
+            "ptz": "true" if desc["ptz"] else "false", "presets": str(desc["presets"])}
+
+
+def parse_device_row(items: dict | None) -> dict | None:
+    if not items:
+        return None
+    return {"events": [e for e in str(items.get("events", "")).split(",") if e],
+            "rays": int(items.get("rays") or 0), "relays": int(items.get("relays") or 0), "ptz": str(items.get("ptz")) == "true",
+            "presets": int(items.get("presets") or 0)}
 
 
 def channel_of(source: str) -> str | None:

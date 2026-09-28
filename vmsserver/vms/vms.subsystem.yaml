@@ -2,7 +2,8 @@
 # subsystem is here; the worker (vmsworker) is the part that knows what a camera is.
 # the prefix. `SubsystemSpec.sub` becomes `Subsystem("vms")`, so every key is `vms/…`: rows under
 # `vms/cameras/`, `vms/next_id`, `vms/workers/<w>`, `vms/placement/<id>`, `vms/slots/<w>`, `vms/epoch/<id>`,
-# `vms/idem/<key>`, `vms/retention/<id>`, and the object-store keys `vms/<w>/heartbeat` and `vms/snapshot`.
+# `vms/idem/<key>`, `vms/retention/<id>`, `vms/devices/<device>` (what a held device raises and can do — its
+# holder's, Lesson 25), and the object-store keys `vms/<w>/heartbeat` and `vms/snapshot`.
 # It also prefixes every `/metrics` line (`vms_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/vms/<cam>/…`). The two ACLs are cut from it: the console's token gets `vms/cameras/*`,
 # `vms/next_id`, `vms/idem/*`, `vms/retention/*`; the controller's gets `vms/workers/*`, `vms/placement/*`,
@@ -125,8 +126,10 @@ unit:
     # recorder looks for `live_url` and does not find one, the gateway the same, the page the same.
     #
     # Deliberately NOT a list of capabilities. What a device can do — two inputs, one relay, PTZ — is a
-    # DISCOVERY and belongs in the holder's `device_status()`, beside the channels it found. The row is
-    # what the operator declared; the heartbeat is what the process saw.
+    # DISCOVERY and belongs to the holder, not to the operator's row: the holder writes it in
+    # `vms/devices/<device>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
+    # 25, where automation checks a scenario against it. The row is what the operator declared; the device
+    # row is what the process found.
     kind:                  {type: string, default: "video"}   # video | io — a device without a picture is still a device
   # rows the platform keeps beside the unit (`SpecController._derived`).
   derived:

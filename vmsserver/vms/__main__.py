@@ -97,9 +97,10 @@ for s in (signal.SIGTERM, signal.SIGINT):
 # Builds `vmsworker`:
 # - Resolves the slot name: `WORKER_NAME`, else `w-$NOMAD_ALLOC_INDEX`, else `None`. (Same rule as
 #   `worker.slot_from_environment`, written out again here.)
-# - Opens Variables as writer `vmsworker` with the ACL `["vms/epoch/*", "vms/slots/*"]` — literally
-#   `Subsystem.acl_worker()` for `vms`: a worker takes epochs and claims its slot, and can write nothing
-#   else. A bug that tried to write a camera row would be a `Forbidden` from the store.
+# - Opens Variables as writer `vmsworker` with `config.WORKER_ACL` — `Subsystem.acl_worker()` for `vms`
+#   (epochs, slot, the place it took) plus `vms/devices/*`: a worker says what a device it holds turned out to
+#   be (М10B Lesson 25), and can write nothing else. A bug that tried to write a camera row would be a
+#   `Forbidden` from the store.
 # - Tries `gstvms.actuator.GstActuator()` — `driverpacksrc ! tee`, served as the RTSP fan-out on :8554; on
 #   `ImportError` (no `gi`) logs a warning and uses `FakeActuator`, which holds nothing. The worker records
 #   nothing either way: recording is the recorder's (`recorder` below).
@@ -110,8 +111,9 @@ for s in (signal.SIGTERM, signal.SIGINT):
 #   to lapse.
 def worker() -> None:
     from w2cplatform import runtime
+    from .config import WORKER_ACL
     name = runtime.slot(os.environ, "WORKER_NAME", "w")
-    vars_ = open_vars(CONFIG_URL, writer="vmsworker", acl={"vmsworker": ["vms/epoch/*", "vms/slots/*"]})
+    vars_ = open_vars(CONFIG_URL, writer="vmsworker", acl={"vmsworker": WORKER_ACL})
     objects = FsObjectStore(os.path.join(root, "objects"))
     archive = os.environ.get("ARCHIVE", "/data/archive")
     try:
