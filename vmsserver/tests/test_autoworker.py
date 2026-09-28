@@ -375,3 +375,125 @@ def test_the_summary_of_a_suppressed_storm_does_not_fire_a_scenario():
                                 repeats=200, since=t2 - 10, until=t2 - 2)], wall=box2.wall))
     assert w2.reconcile_once() == ["one"]                       # the observation fires it…
     assert len(box2.vars.list("vms/requests/")) == 1, "one continuous event, one request"   # …and only it
+
+
+# -- feedback on the event log's load: three defects ---------------------------------------------------------
+def test_the_evaluator_runs_as_a_process_and_lets_its_slot_go_when_stopped():
+    """`python -m vms autoworker` calls `run`, and this worker had none: the process fell over at start, and no
+    test noticed, because every test drives `reconcile_once` by hand. This one drives the loop."""
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 3, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+
+    class OnePass:
+        def __init__(self): self.asked = 0
+        def is_set(self): self.asked += 1; return self.asked > 1
+        def wait(self, s): return None
+
+    w.run(poll=0, stop=OnePass())
+    assert len(box.vars.list("vms/requests/")) == 1                   # a pass ran, and filed
+    assert w.slot is None                                              # an orderly stop: the slot let go, said so
+    assert box.vars.get(w.sub.slot_key("a-1"))[0]["released"] == "true"
+
+
+class _Holey(_Log):
+    """The merge, as it answers when a server did not: what the others hold, and the window called incomplete."""
+    def __init__(self, events=(), wall=None):
+        super().__init__(events, wall=wall)
+        self.missing = {}
+
+    def query(self, *a, **kw):
+        rep = super().query(*a, **kw)
+        if self.missing:
+            rep = {**rep, "events": [e for e in rep["events"] if e["server"] not in self.missing]}
+        return {**rep, "complete": not self.missing, "incomplete": dict(self.missing)}
+
+
+def test_a_window_a_server_did_not_answer_for_does_not_move_the_cursor():
+    """The event is on srv-b, and srv-b does not answer on the first pass — it is restarting, or loaded past
+    the merge's timeout. The merge says the window is incomplete. The cursor used to move past it anyway, and
+    when srv-b answered a pass later its event was older than the cursor: never considered, no refusal, no log
+    line. Now the cursor holds, the scenario says what it is waiting for, and the event fires when srv-b is back."""
+    box = Box()
+    t = box.wall()
+    door = {**ev(t - 20, "vms", 12, "io.input", port="1", value="closed"), "server": "srv-b"}
+    log = _Holey([door], wall=box.wall)
+    log.missing = {"srv-b": "did not answer"}
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+
+    assert w.reconcile_once() == []
+    assert w.status()[0]["holding"] == {"srv-b": "did not answer"}
+    box.wall.advance(10)
+    log.missing = {}                                                   # srv-b answers again
+    assert w.reconcile_once() == ["one"]
+    assert len(box.vars.list("vms/requests/")) == 1 and "holding" not in w.status()[0]
+
+
+def test_a_server_that_never_comes_back_holds_a_scenario_five_minutes_and_then_it_says_so():
+    """Holding the cursor must not become holding it for ever: `since` never trails `now` by more than
+    `COLD_START`. Past it the scenario decides without the silent server, and its status says whom it
+    stopped waiting for."""
+    box = Box()
+    log = _Holey([], wall=box.wall)
+    log.missing = {"srv-b": "silent"}
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    w.reconcile_once()
+    box.wall.advance(w.COLD_START + 10)
+    w.reconcile_once()
+    assert w.status()[0]["decided_without"] == {"srv-b": "silent"}
+
+
+def test_a_short_window_between_triggers_is_not_a_short_life_for_the_request():
+    """`within` is how far apart two triggers may be. It was also the life of the request, so a scenario with
+    `within: 5` filed requests that expired on an idle box: the road from the event to the holder takes up to
+    seven seconds. The life is `valid_for`, thirty seconds unless the scenario says otherwise."""
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 20, "det", "7-motion", "motion"), ev(t - 18, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box, within=5); _assigned(box, "door-on-badge")
+    _worker(box, log).reconcile_once()
+    out, _ = box.vars.get(sorted(box.vars.list("vms/requests/"))[0])
+    assert float(out["valid_until"]) == (t - 18) + 30
+
+    box2 = Box()
+    t2 = box2.wall()
+    _scenario(box2, within=5, valid_for=10); _assigned(box2, "door-on-badge")
+    _worker(box2, _Log([ev(t2 - 20, "det", "7-motion", "motion"), ev(t2 - 18, "vms", 12, "io.input", port="1",
+                                                                       value="closed")])).reconcile_once()
+    out, _ = box2.vars.get(sorted(box2.vars.list("vms/requests/"))[0])
+    assert float(out["valid_until"]) == (t2 - 18) + 10
+    try:
+        _scenario(Box(), name="x", valid_for=2)
+        raise AssertionError("a request that expires on its way")
+    except Exception as e:
+        assert "valid_for" in str(e)
+
+
+def test_the_merge_says_which_servers_a_window_is_missing():
+    """A reader that decides on a window needs to know it is whole. The merge now says so, server by server:
+    one live by heartbeat that did not answer; one that answered but is rebuilding after a restart (its own
+    `catching up`); one silent inside the window. A server silent since before the window cannot have
+    written in it, and does not make it incomplete."""
+    import json as _json
+    from w2cplatform.eventdatabase import MergedIndex
+    box = Box()
+    now = box.wall()
+    for server, age in (("srv-a", 0), ("srv-b", 0), ("srv-c", 0), ("srv-d", 60), ("srv-e", 7200)):
+        box.objects.put(f"platform/resources/{server}/heartbeat",
+                        _json.dumps({"server": server, "ts": now - age, "url": f"http://{server}"}).encode())
+
+    def fetch(url, params):
+        if url == "http://srv-b":
+            raise OSError("timed out")
+        return {"events": [], "truncated": False, "state": "catching up" if url == "http://srv-c" else "live"}
+
+    rep = MergedIndex(box.objects, fetch=fetch, wall=box.wall).query(now - 300, now)
+    assert rep["complete"] is False
+    assert rep["incomplete"] == {"srv-b": "did not answer", "srv-c": "said catching up", "srv-d": "silent"}
