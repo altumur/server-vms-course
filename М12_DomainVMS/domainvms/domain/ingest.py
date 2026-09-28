@@ -127,6 +127,9 @@ class Ingest:
         primary does not take its stream (М11 lesson 1)."""
         self.cluster, self.urls, self.keys, self.revoked, self.wall = cluster, list(urls), keys, revoked, wall
         self.name, self.peers, self.should = name or (urls[0] if urls else cluster), peers, should
+        # A recorder that lets go of a camera — or dies — wakes nobody: nothing here changes. So a held poll that
+        # has a word to say about coverage looks again at least this often (feedback AP: the product does 5 s).
+        self.recheck = 5.0
         self.linger = LINGER
         self.links: dict[tuple[str, str], PeerLink] = {}          # (peer, camera) -> the stream this ingest pushes it (AJ)
         self.tees: dict[tuple[str, str], LiveTee] = {}
@@ -193,6 +196,8 @@ class Ingest:
             if not out.get("held") or time.monotonic() >= until:
                 return out
             lapse = self._next_lapse(ref)                        # AH: a want or an ask that runs out changes the answer
+            if self.should is not None:
+                lapse = self.recheck if lapse is None else min(lapse, self.recheck)
             self._wait(gen, until if lapse is None else min(until, time.monotonic() + lapse))
 
     def _next_lapse(self, ref: str) -> float | None:
@@ -222,15 +227,17 @@ class Ingest:
                     del c.asks[aid]
                 else:
                     asks[aid] = a
-        said = (push, tuple(sorted(ranges.items())), tuple(sorted(asks)))   # a new ask wakes a held poll
+        sv = self.should(ref) if self.should is not None else None     # None: nothing to say — the book decides
+        uncovered = None if sv is None else (bool(sv) and not self.taken(ref))
+        said = (push, tuple(sorted(ranges.items())), tuple(sorted(asks)), uncovered)   # a new ask, a lost recorder: news
         if said != cam.said:
             cam.said, cam.version = said, cam.version + 1
         out = {"push": push, "version": cam.version,
                "ranges": {rid: (t0 - cam.offset, t1 - cam.offset) for rid, (t0, t1) in ranges.items()},
                "asks": {aid: {"action": a["action"], "by": a["by"], "deadline": a["deadline"] - cam.offset}
                         for aid, a in asks.items()}}
-        if self.should is not None:
-            out["uncovered"] = bool(self.should(ref)) and not self.taken(ref)
+        if uncovered is not None:
+            out["uncovered"] = uncovered
         if version is not None and version == cam.version:
             out["held"] = True                                   # nothing changed: the real ingest holds the request
         return out
@@ -677,10 +684,20 @@ def primary_takes(entry: dict, answered: bool, work: dict | None = None) -> bool
 
 
 # -- the standbys' gates: what the stream says (vms.recworker.RecWorker.stream_says) -------------------------
-def should_from_snapshot(objects, wall=time.time):
+def should_from_snapshot(objects, wall=time.time, sources=None):
     """`should(ref)` for an ingest, from its own cluster's rec rows: a recording of `ref:<ref>`, enabled, its
-    `until` not passed, and not itself a standby."""
+    `until` not passed, and not itself a standby. `sources`: this cluster's Variables, where its agent keeps the
+    source book — and then only a camera that PUSHES here (`ingest://`) is answered. Every member camera holds a
+    poll (feedback AL), a camera this cluster's recorder pulls over RTSP too; no recorder subscribes to the ingest
+    for it, and "uncovered" would be said of a camera that is being written — its card would record all the
+    time, and with a backup it would push a second stream (feedback AP). Of those the ingest says nothing."""
     def should(ref) -> bool | None:
+        if sources is not None:
+            from .agent import SOURCES_PATH
+            items, _ = sources.get(SOURCES_PATH)
+            e = json.loads((items or {}).get(str(ref), "{}"))
+            if not str(e.get("live_url", "")).startswith("ingest://"):
+                return None                                  # pulled, or not ours to say: the book decides
         rows = []
         for key in objects.list("rec/snapshot/"):
             raw = objects.get(key)
