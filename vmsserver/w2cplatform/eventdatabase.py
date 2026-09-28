@@ -274,6 +274,15 @@ class MergedIndex:
         `truncated` is true if ANY resource cut its answer or the merge cut theirs: the reader is
         told the window is partial, not which server made it partial.
 
+        `complete` is the other half of "is this all of it", and a reader that DECIDES on a window —
+        automation moving its cursor past it — needs it: an empty window and a window whose server did not
+        answer look the same in `events`. `incomplete` names each server the window is missing, and why:
+        live by heartbeat and did not answer; answered, but its own state is not `live` (`empty`,
+        `catching up` — a restarted resource rebuilding); or silent, and it could have written inside the
+        window — even when a peer answers with its copies, because a copy holds only CLOSED buckets and the
+        open one is in none. A server silent since before the window cannot have written in it and does not
+        make it incomplete: a box taken out of service must not hold every reader's window for ever.
+
         The check below is the SAME refusal the database makes, and it has to be here too rather
         than left to the resources: this method reads any failure from a resource as "unreachable"
         (live by heartbeat, not answering), so a caller's bad `keep` would come back as an empty
@@ -287,12 +296,16 @@ class MergedIndex:
         params = {k: v for k, v in (("from", t0), ("to", t1), ("cam", cam), ("kind", kind), ("subsystem", subsystem),
                                     ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls)) if v is not None}
         events, unreachable, from_mirror, have = [], [], set(), set()
+        incomplete: dict[str, str] = {}
         truncated = False
         for server in sorted(live):
             try:
                 rep = self.fetch(seen[server]["url"], params)
             except Exception:                                   # noqa: BLE001 — live by heartbeat, not answering
-                unreachable.append(server); continue
+                unreachable.append(server); incomplete[server] = "did not answer"; continue
+            said = str(rep.get("state", "live"))
+            if not said.startswith("live"):
+                incomplete[server] = f"said {said}"             # its own word: rebuilding, or nothing yet
             truncated = truncated or bool(rep.get("truncated"))
             for e in rep["events"]:
                 if e["server"] != server:                         # a copy this resource holds for a peer
@@ -306,6 +319,9 @@ class MergedIndex:
         for server in sorted(seen):
             if server not in live and server not in from_mirror:
                 unreachable.append(server)                        # silent, and nobody holds its copies
+            if server not in live and float(seen[server]["ts"]) + self.lost_after >= t0:
+                incomplete[server] = ("silent; its closed buckets from a copy, its open one from nobody"
+                                      if server in from_mirror else "silent")
         events.sort(key=lambda e: e["t"])
         if len(events) > limit:
             truncated = True
@@ -326,4 +342,5 @@ class MergedIndex:
         unreachable = sorted(set(unreachable))
         self.state = "live" + (f"; {', '.join(unreachable)} unreachable" if unreachable else "") \
                             + (f"; {', '.join(sorted(from_mirror))} from mirror" if from_mirror else "")
-        return {"events": events, "state": self.state, "truncated": truncated}
+        return {"events": events, "state": self.state, "truncated": truncated,
+                "complete": not incomplete, "incomplete": incomplete}
