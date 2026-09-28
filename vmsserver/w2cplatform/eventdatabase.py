@@ -1,172 +1,229 @@
-"""eventdatabase — the event "database", which is a cache. Part of the resource job:
-one per RESOURCE, over that resource's own tree — its buckets, and the copies
-it holds of its peers' closed buckets (`.mirror/<server>/`). Nothing per
-console, nothing cluster-wide: a console with a question asks every live
-resource's `GET /events` and merges the answers by time (`MergedIndex`), on
-one box and on a cluster alike.
+"""eventdatabase — the event index. Part of the resource job: one per RESOURCE,
+over that resource's own tree — its buckets, and the copies it holds of its
+peers' closed buckets (`.mirror/<server>/`). Nothing per console, nothing
+cluster-wide: a console with a question asks every live resource's
+`GET /events` and merges the answers by time (`MergedIndex`), on one box and
+on a cluster alike.
 
 Events are observations: written by the worker that holds a unit's epoch,
-into that unit's bucket on its server's resource (w2cplatform.events). The
-database is a SQLite table the resource job can rebuild entirely by
-re-reading its tree. It knows which subsystems exist by the directories it
-finds; a new one is indexed the pass after it starts writing, with no change
-here. It knows nothing about what an event means: `cam` is a field an event
-may carry, indexed if present.
+into that unit's bucket on its server's resource (w2cplatform.events). And
+the tree they are written into IS the index already: split by subsystem, unit
+and epoch in its directories, by time in its file names, ordered by time
+inside each file, addressable by arithmetic — `bucket_path(sub, unit, epoch,
+start)`. So nothing is copied out of it. A query computes which files its
+window can touch, looks at each (`os.stat`), reads what it has not read yet,
+and keeps what it read in a bounded cache. There is no second copy to keep in
+step with the first, no pass that re-reads the tree, no rebuild after a
+restart and no "catching up": the index is ready when the process is, and an
+event is visible the moment its line is in the file.
 
-Its two properties are the controller's, in the form that matters here:
-it holds nothing it cannot rebuild, and nothing running depends on it.
-No controller writes events. A restarted resource says *catching up*
-until its rebuild is done rather than answering short.
+It knows which subsystems exist by the directories it finds; a new one answers
+the moment it starts writing. It knows nothing about what an event means:
+`cam` is a field an event may carry.
 
-    EventDatabase(root, server)   the resource job's: rebuilt on start, tailed every few seconds
-    rebuild() / tail()            read the tree: closed buckets once, open ones by the lines past what is held
-    query(...)                    subsystem, unit, cam (a field an event may carry), kind, time window
-    forget(server, paths)         retention removed a bucket: its rows go with it (the resource calls this)
+    EventIndex(root, server)      the resource job's; nothing to start and nothing to rebuild
+    query(...)                    subsystem, unit, cam (a field an event may carry), kind, class, time window
+    listing()                     what the tree holds, from its directories alone: units, buckets, mirrors
+    forget(server, paths)         retention removed a bucket: drop it from the cache (the resource calls this)
     MergedIndex(objects)          what a console has instead: every live resource's /events, merged
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # eventdatabase.py — the event "database", which is a cache: one SQLite table per resource, over its own tree
+# # eventdatabase.py — the event index: the tree of buckets read where it lies, and a cache of what was read
 #
-# **Role in the module.** Lesson 10 on the box, Lesson 3 on the cluster: the reader of `events.py`. Events are
-# written by workers into per-unit buckets on their server's resource; search needs a database over them,
-# and this is it — but one PER RESOURCE, not one per cluster: the resource job runs an `EventDatabase` over
-# its own root (own buckets and the `.mirror/<server>/` copies it holds) and answers `GET /events` from it.
-# A console asks every live resource and merges (`MergedIndex`) — the box's console asks its one resource,
-# М11's asks them all. Nothing crosses the network to build a database, and no job holds every server's
-# rows. It discovers subsystems and units from the directories, so a new subsystem is indexed the pass
-# after it starts writing, with no change here. It knows nothing about what an event means: `cam` is a
-# field an event may carry, indexed if present. Its two properties are the controller's in the form that
-# matters here: it holds nothing it cannot rebuild, and nothing running depends on it. No controller writes
-# events.
+# **Role in the module.** Lesson 13 on the box, Lesson 7 of М11 on the cluster: the reader of `events.py`.
+# Events are written by workers into per-unit buckets on their server's resource; `GET /events` is answered
+# over them, per RESOURCE, not per cluster: the resource job runs an `EventIndex` over its own root (own
+# buckets and the `.mirror/<server>/` copies it holds). A console asks every live resource and merges
+# (`MergedIndex`).
+#
+# **Why not a database — it was one, and what it cost.** Until 28 September this was an in-memory SQLite
+# table rebuilt from the tree on every start and "tailed" every three seconds. The tail was the price, and
+# it was the whole tree: to learn which files had grown it opened and parsed EVERY bucket, a year of them at
+# the default retention — about a million files for twenty cameras, every three seconds. The four indexes
+# over the flat table rebuilt what flattening had destroyed: two of them copied the directory layout, one
+# split two values, and "everything in this hour" was covered by none. One connection and one mutex
+# serialised every reader behind every other and behind the tail; and a restarted resource answered short
+# while it rebuilt, saying `catching up` to a merge that did not listen. (The notes on the event log's
+# concurrency and load, 28 September.)
+#
+# **What changes nothing.** The answer: the same rows, the same `truncated` from one row past the limit,
+# alarms kept ahead of observations when a window overflows, `keep`, fencing by epoch, a peer's copies
+# answered under the owner's name. `MergedIndex` below is untouched.
+#
+# **Freshness is looked at, not assumed.** A bucket is named by the time of its EVENTS, not by the time
+# they were written: a scan of an archive (`detjob`, М10B Lesson 21) and a survey of somebody else's
+# (Lesson 23) write lines stamped hours ago into buckets whose time is long past. So "a closed bucket never
+# changes" is not a rule this index may lean on. It asks the file instead — size and modification time —
+# and only for the files a query's window can touch: one or two per unit for the minutes automation asks
+# about, a day's worth for a timeline. A file that grew is read from where the last read stopped.
 #
 # ## Module-level names
-# None.
-#
-# ## Notes
-# - The `cam` column exists so a VMS timeline can ask "everything about camera 7 from any subsystem" without
-#   the database knowing what a camera is; the console's `/events?cam=` maps onto it.
-# - Nothing is ever updated in place: rows are inserted per bucket (an open bucket by the lines past what is
-#   held) and deleted per bucket, matching the resource's file-level retention.
-# - Rows from a mirror copy are inserted under the REAL owning server and the original path: a query answers
-#   "srv-a's events" whichever resource holds them, and the console drops the copy when the owner itself
-#   answers.
+# `NARROW` — the widest window, in buckets, whose file names are computed rather than listed.
+# `CACHE_BYTES` — the cache's ceiling by default.
 # ================================================================================================
 from __future__ import annotations
 
 import json
-import logging
 import os
 import socket
-import sqlite3
 import threading
 import time
 import urllib.parse
 import urllib.request
+from collections import OrderedDict
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
-from .events import ALARM, CLASSES, OBSERVATION, Bucket, buckets_under, read_bucket, subsystems_under
-from .resource import MIRROR_DIR, mirrored_buckets, mirrored_servers, resources_seen
+from .events import ALARM, CLASSES, EPOCH_DIR, EVENTS, OBSERVATION, bucket_path, bucket_start, subsystems_under
+from .resource import MIRROR_DIR, mirrored_servers, resources_seen
+
+# Up to a day of buckets, the candidate files are COMPUTED from the window — a name from a time, and a stat
+# that says whether it is there. Wider than that, the epoch's directory is listed and its names filtered:
+# a query from 0 to 10^12 must not compute a billion names.
+NARROW = 144
+CACHE_BYTES = 64 << 20
 
 
-# The database. State: a SQLite connection (`check_same_thread=False`, so the resource's threaded server may
-# query it while the tail thread writes), `state` (`"empty"`, `"catching up"`, `"live"`) and
-# `indexed_segments`. Two tables: `seen (server, path, n)` — which buckets have been ingested and how many
-# lines of each, keyed by the real owning server and the original path; and `events (subsystem, unit, cam,
-# epoch, t, kind, server, path, fields)` with indexes on `(cam, t)`, `(subsystem, unit, t)`, `(kind, t)`.
-# `fields` holds the remaining event keys as JSON.
-class EventDatabase:
-    """The event database of ONE resource: its own buckets and the mirror copies it holds.
-    Not a subsystem — a cache with nothing to place — rebuilt on start, tailed
-    every few seconds. The resource job serves it as `GET /events`."""
+# One bucket as read: its size and modification time when read (what says "unchanged" next time), how far
+# into the file the read got (a half-written last line is not consumed — the next read starts at it), and
+# its lines, each reduced once to what a query compares: `(t, kind, class, cam or None, the other fields)`.
+@dataclass(frozen=True)
+class _Read:
+    size: int
+    mtime: int
+    offset: int
+    lines: tuple
 
-    def __init__(self, root: str, server: str | None = None, path: str = ":memory:", wall=time.time,
-                 bucket_seconds: int = 600, interval: float = 3.0):
-        self.root, self.wall, self.bucket_seconds, self.interval = root, wall, bucket_seconds, interval
+
+class EventIndex:
+    """The event index of ONE resource: its own buckets and the mirror copies it holds, read where they lie.
+    Not a subsystem and not a database: nothing to place, nothing to start, nothing to rebuild. The resource
+    job serves it as `GET /events`."""
+
+    def __init__(self, root: str, server: str | None = None, wall=time.time, bucket_seconds: int = 600,
+                 cache_bytes: int = CACHE_BYTES):
+        self.root, self.wall, self.bucket_seconds, self.cache_bytes = root, wall, bucket_seconds, cache_bytes
         self.server = server or socket.gethostname()
-        self.db = sqlite3.connect(path, check_same_thread=False)
-        self.db.executescript("""
-            CREATE TABLE IF NOT EXISTS seen   (server TEXT, path TEXT, n INTEGER DEFAULT 0, PRIMARY KEY (server, path));
-            CREATE TABLE IF NOT EXISTS events (subsystem TEXT, unit TEXT, cam INTEGER, epoch INTEGER, t REAL, kind TEXT,
-                                               server TEXT, path TEXT, cls TEXT, fields TEXT);
-            CREATE INDEX IF NOT EXISTS events_cam_t ON events (cam, t);
-            CREATE INDEX IF NOT EXISTS events_sub_unit_t ON events (subsystem, unit, t);
-            CREATE INDEX IF NOT EXISTS events_kind_t ON events (kind, t);
-            CREATE INDEX IF NOT EXISTS events_cls_t ON events (cls, t);""")
-        self.state = "empty"
-        self.indexed_segments = 0
-        self._stop = threading.Event()
+        self.state = "live"                              # ready as soon as it exists: there is nothing to catch up on
+        self.torn = 0                                    # half-written lines seen, and not yet completed
+        # The cache: absolute path -> `_Read`, least recently used first. The lock guards the DICTIONARY and
+        # nothing else — files are read outside it, and a `_Read` is never changed, only replaced — so two
+        # readers wait for each other for the length of a dictionary operation, not of a query.
+        self._cache: OrderedDict[str, _Read] = OrderedDict()
+        self._bytes = 0
         self._lock = threading.Lock()
+        # Which camera a unit's lines have named (`cam` in the line: a detector `7-motion` names camera 7).
+        # A unit whose lines named exactly one camera is skipped by a query for another without being read.
+        self._cams: dict[tuple[str, str, str], set] = {}
 
-    # From nothing — what a restarted resource job does first: truncate both tables, zero the counter, then
-    # `tail(rebuild=True)`.
-    def rebuild(self) -> dict:
-        """From nothing: what a restarted resource job does first."""
+    # -- the tree, as candidates ------------------------------------------------------------------------
+    # The places that hold buckets: this resource's root under its own name, and each peer's copies under
+    # the PEER's name — a query answers "srv-a's events" whichever resource holds them.
+    def _bases(self) -> list[tuple[str, str]]:
+        out = [(self.server, self.root)]
+        for peer in mirrored_servers(self.root):
+            out.append((peer, os.path.join(self.root, MIRROR_DIR, peer)))
+        return out
+
+    def _epochs(self, unit_path: str) -> list[int]:
+        try:
+            return sorted(int(m.group(1)) for d in os.listdir(unit_path) if (m := EPOCH_DIR.match(d)))
+        except FileNotFoundError:
+            return []
+
+    # The bucket files a window [t0, t1) can hold lines of, per epoch: computed for a narrow window, listed
+    # for a wide one. A bucket starting at `s` holds [s, s + bucket), so the first candidate starts at the
+    # bucket of t0 and the last at the bucket of the last instant before t1.
+    def _candidates(self, base: str, sub: str, unit: str, t0: float, t1: float):
+        first, last = bucket_start(max(t0, 0.0), self.bucket_seconds), bucket_start(max(t1 - 1e-6, 0.0), self.bucket_seconds)
+        unit_path = os.path.join(base, sub, unit)
+        for epoch in self._epochs(unit_path):
+            if (last - first) / self.bucket_seconds <= NARROW:
+                s = first
+                while s <= last:
+                    yield epoch, bucket_path(base, sub, unit, epoch, s)
+                    s += self.bucket_seconds
+                continue
+            edir = os.path.join(unit_path, f"e{epoch}")
+            try:
+                names = os.listdir(edir)
+            except FileNotFoundError:
+                continue
+            for name in sorted(names):
+                m = EVENTS.match(name)
+                if not m:
+                    continue
+                start = datetime.strptime(m.group(1), "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).timestamp()
+                if first <= start <= last:
+                    yield epoch, os.path.join(edir, name)
+
+    # -- one bucket, read or re-read ----------------------------------------------------------------------
+    # The file is looked at, not remembered: unchanged size and time — the cached lines; grown — only the
+    # part past the last read; shrunk or rewritten — read again from the start; gone — nothing, and out of
+    # the cache.
+    def _lines(self, path: str) -> tuple:
+        try:
+            st = os.stat(path)
+        except FileNotFoundError:
+            self._drop(path)
+            return ()
         with self._lock:
-            self.db.executescript("DELETE FROM seen; DELETE FROM events;")
-            self.indexed_segments = 0
-        return self.tail(rebuild=True)
-
-    # Walks the tree: every unit of every subsystem under `root`, then every server under `.mirror/`. For
-    # each bucket, skip it if the database already holds as many lines as the file has (a closed bucket
-    # never grows; an open one does); otherwise insert the lines past what is held — `cam` is the event's
-    # `cam` field, or the unit id itself when the unit is numeric — and mark the count, in one transaction
-    # per bucket. Copies are inserted under the REAL owning server and the original path. Returns `{added,
-    # segments, mirrored}`; sets `state` to "live".
-    def tail(self, rebuild: bool = False) -> dict:
-        self.state = "catching up" if rebuild else self.state
-        added = 0
-        for sub, units in subsystems_under(self.root).items():
-            for unit in units:
-                for b in buckets_under(self.root, sub, unit, self.bucket_seconds):
-                    added += self._ingest(self.server, b, os.path.join(self.root, b.path))
-        mirrored = mirrored_servers(self.root)
-        for server in mirrored:
-            for b in mirrored_buckets(self.root, server, self.bucket_seconds):
-                added += self._ingest(server, b, os.path.join(self.root, MIRROR_DIR, server, b.path))
-        self.state = "live"
-        return {"added": added, "segments": self.indexed_segments, "mirrored": mirrored}
-
-    def _ingest(self, server: str, b: Bucket, file: str) -> int:
+            have = self._cache.get(path)
+            if have is not None and have.size == st.st_size and have.mtime == st.st_mtime_ns:
+                self._cache.move_to_end(path)
+                return have.lines
+        start, kept = (have.offset, have.lines) if have is not None and st.st_size >= have.size else (0, ())
+        with open(path, "rb") as f:
+            f.seek(start)
+            data = f.read()
+        cut = data.rfind(b"\n") + 1                      # a half-written last line waits for its end
+        lines = list(kept)
+        for raw in data[:cut].splitlines():
+            if not raw.strip():
+                continue
+            try:
+                e = json.loads(raw)
+            except ValueError:                           # a torn line in the middle: the writer died mid-append
+                self.torn += 1
+                continue
+            lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)), e.get("cam"),
+                          {k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")}))
+        read = _Read(st.st_size, st.st_mtime_ns, start + cut, tuple(lines))
         with self._lock:
-            row = self.db.execute("SELECT n FROM seen WHERE server=? AND path=?", (server, b.path)).fetchone()
-            have = row[0] if row else 0
-            if b.events <= have:                                              # nothing new: a closed bucket never grows, an open one may
-                return 0
-            rows = []
-            for e in read_bucket(file)[have:]:                                # buckets are append-only: the lines past what we hold
-                cam = e.get("cam", int(b.unit) if b.unit.isdigit() else None)   # a numeric unit is its own `cam`; others may name one
-                # `class` becomes a COLUMN and leaves `fields`: it is the one field the database itself
-                # acts on (the overflow policy in `query`), and a JSON blob cannot be ordered by. Absent
-                # in the line means `observation`, so the column is never null and the SQL never has to
-                # say `IS NULL OR = ?`.
-                rows.append((b.subsystem, b.unit, cam, b.epoch, float(e["t"]), e["kind"], server, b.path,
-                             str(e.get("class", OBSERVATION)),
-                             json.dumps({k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")})))
-            with self.db:
-                self.db.executemany("INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
-                self.db.execute("INSERT OR REPLACE INTO seen VALUES (?,?,?)", (server, b.path, have + len(rows)))
-            self.indexed_segments += 0 if row else 1
-            return len(rows)
+            old = self._cache.pop(path, None)
+            self._bytes -= old.size if old is not None else 0
+            self._cache[path] = read
+            self._bytes += read.size
+            while self._bytes > self.cache_bytes and len(self._cache) > 1:
+                _, gone = self._cache.popitem(last=False)
+                self._bytes -= gone.size
+        return read.lines
 
+    def _drop(self, path: str) -> None:
+        with self._lock:
+            old = self._cache.pop(path, None)
+            if old is not None:
+                self._bytes -= old.size
+
+    # -- the one read ---------------------------------------------------------------------------------------
     def query(self, t0: float, t1: float, cam: int | None = None, kind: str | None = None,
               subsystem: str | None = None, unit: str | None = None,
               current_epochs: dict[tuple[str, str], int] | None = None, limit: int = 1000,
               epoch_policy: dict[str, str] | None = None, keep: str = "newest", cls: str | None = None) -> dict:
         """`current_epochs` is {(subsystem, unit): epoch} — fencing is per unit, and only the
-        unit's own subsystem knows its current epoch; the database just compares.
+        unit's own subsystem knows its current epoch; the index just compares.
 
         `epoch_policy` is {subsystem: "fenced" | "earlier-run"} — what an older epoch MEANS
         there. Same comparison, two meanings: a writer that lost the race, or a finished
-        earlier run of work that ends. The database is told; it does not decide.
+        earlier run of work that ends. The index is told; it does not decide.
 
         `keep` is which END of an overflowing window survives `limit` — and it is the CALLER's
         to choose, because "a thousand of the five thousand" means nothing without it. The
         default is "newest": nearly everything asked of an event log is a form of "what just
         happened", and the reader that wants the other end — paging forward through an archive
-        from a cursor — knows that about itself and says so. `LIMIT` with no direction was this
-        method dropping the newest end silently, which is the end a timeline and an automation
-        scenario are both looking at.
+        from a cursor — knows that about itself and says so.
 
         The answer is ascending by time whichever end was kept, and it carries `truncated`, so a
         decision taken on part of a window cannot look like one taken on all of it.
@@ -178,78 +235,102 @@ class EventDatabase:
         And the class earns its existence HERE: when the window overflows, OBSERVATIONS ARE DROPPED
         BEFORE ALARMS. A limit is a budget for a screenful, and spending it on the thousand statistics
         lines that crowded out the one contact that opened is the failure the class was introduced to
-        prevent. The ordering costs one clause; leaving it out would make the class a word in a file."""
+        prevent.
+
+        What it costs is what the window touches, not what the tree holds: the files named by the window,
+        a stat each, and a read of whatever of them is not in the cache yet."""
         if keep not in ("newest", "oldest"):
             raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
         if cls is not None and cls not in CLASSES:
             raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
-        sql, args = ("SELECT subsystem, unit, cam, epoch, t, kind, server, path, cls, fields "
-                     "FROM events WHERE t >= ? AND t < ?"), [t0, t1]
-        if cam is not None: sql += " AND cam = ?"; args.append(cam)
-        if kind is not None: sql += " AND kind = ?"; args.append(kind)
-        if subsystem is not None: sql += " AND subsystem = ?"; args.append(subsystem)
-        if unit is not None: sql += " AND unit = ?"; args.append(str(unit))
-        if cls is not None: sql += " AND cls = ?"; args.append(cls)
-        # One row PAST the limit, so `truncated` is a fact and not a guess: a window holding exactly
-        # `limit` rows is whole, and calling it cut would be the same lie pointing the other way.
-        #
-        # Alarms first, then time. `keep` still decides which end of the OBSERVATIONS survives; what it
-        # no longer decides is whether an alarm survives at all.
-        args.append(ALARM)                                        # binds the ORDER BY below, after every filter above
-        sql += " ORDER BY cls = ? DESC, t DESC LIMIT ?" if keep == "newest" else " ORDER BY cls = ? DESC, t LIMIT ?"
-        args.append(limit + 1)
-        out = []
-        with self._lock:
-            rows = self.db.execute(sql, args).fetchall()
+        rows = []
+        for server, base in self._bases():
+            subs = subsystems_under(base)
+            for sub in ([subsystem] if subsystem is not None else sorted(subs)):
+                for u in sorted(subs.get(sub, [])):
+                    if unit is not None and u != str(unit):
+                        continue
+                    if cam is not None and not self._may_be(server, sub, u, cam):
+                        continue
+                    for epoch, path in self._candidates(base, sub, u, t0, t1):
+                        lines = self._lines(path)
+                        if lines:
+                            self._learn(server, sub, u, lines)
+                        rel = os.path.relpath(path, base)
+                        for t, k, c, ecam, fields in lines:
+                            if not t0 <= t < t1 or (kind is not None and k != kind) or (cls is not None and c != cls):
+                                continue
+                            the_cam = ecam if ecam is not None else (int(u) if u.isdigit() else None)
+                            if cam is not None and the_cam != cam:
+                                continue
+                            rows.append((c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
+        # One row PAST the limit, so `truncated` is a fact and not a guess. Alarms first, then time — `keep`
+        # decides which end of the OBSERVATIONS survives, never whether an alarm does.
+        rows.sort(key=(lambda r: (not r[0], -r[1])) if keep == "newest" else (lambda r: (not r[0], r[1])))
         truncated = len(rows) > limit
-        rows = rows[:limit]
-        rows.sort(key=lambda r: r[4])                             # alarms came first for the CUT; the answer is by time
-        for sub, u, c, ep, t, k, server, path, rcls, fields in rows:
+        rows = sorted(rows[:limit], key=lambda r: r[1])  # alarms came first for the CUT; the answer is by time
+        out = []
+        for _, t, sub, u, c, ep, k, server, rel, rcls, fields in rows:
             cur = (current_epochs or {}).get((sub, u))
             older = cur is not None and ep < cur
             was = (epoch_policy or {}).get(sub, "fenced") if older else "current"
-            out.append({"subsystem": sub, "unit": u, "cam": c, "epoch": ep, "t": t, "kind": k, "server": server, "bucket": path,
-                        "class": rcls or OBSERVATION,
-                        "epoch_is": was, "fenced": was == "fenced", **json.loads(fields)})
+            out.append({"subsystem": sub, "unit": u, "cam": c, "epoch": ep, "t": t, "kind": k, "server": server,
+                        "bucket": rel, "class": rcls, "epoch_is": was, "fenced": was == "fenced", **fields})
         return {"events": out, "state": self.state, "truncated": truncated}
 
-    # Retention removed a bucket: delete its rows and its `seen` row, so a re-mirrored copy is not refused.
+    # A unit is skipped for camera `cam` only when everything read of it so far named one OTHER camera; a unit
+    # never read, or one naming several, is read. A numeric unit is its own camera.
+    def _may_be(self, server: str, sub: str, unit: str, cam: int) -> bool:
+        if unit.isdigit() and not self._cams.get((server, sub, unit)):
+            return int(unit) == cam
+        seen = self._cams.get((server, sub, unit))
+        return not seen or len(seen) > 1 or cam in seen
+
+    def _learn(self, server: str, sub: str, unit: str, lines: tuple) -> None:
+        cams = {ecam for _, _, _, ecam, _ in lines if ecam is not None}
+        if cams:
+            self._cams.setdefault((server, sub, unit), set()).update(cams)
+
+    # What the tree holds, from its directories alone — no file opened. For a person, a heartbeat and a test:
+    # the answer to "is anything here", which a rebuild's row count used to give.
+    def listing(self) -> dict:
+        units = buckets = 0
+        mirrored = []
+        for server, base in self._bases():
+            if server != self.server:
+                mirrored.append(server)
+            for sub, us in subsystems_under(base).items():
+                for u in us:
+                    n = 0
+                    for epoch in self._epochs(os.path.join(base, sub, u)):
+                        try:
+                            n += sum(1 for f in os.listdir(os.path.join(base, sub, u, f"e{epoch}")) if EVENTS.match(f))
+                        except FileNotFoundError:
+                            pass
+                    units += 1 if n else 0                   # a recorder's tree is a unit with no events: not counted
+                    buckets += n
+        return {"units": units, "buckets": buckets, "mirrored": sorted(mirrored), "cached": len(self._cache)}
+
+    # Retention removed buckets: out of the cache now rather than at the next stat. Correctness does not
+    # depend on it — a query stats every file it reads, and a missing one answers nothing — but the memory
+    # does.
     def forget(self, server: str, paths: list[str]) -> int:
-        """Retention on the resource removed a bucket: its events go with it."""
-        with self._lock, self.db:
-            for p in paths:
-                self.db.execute("DELETE FROM events WHERE server=? AND path=?", (server, p))
-                self.db.execute("DELETE FROM seen WHERE server=? AND path=?", (server, p))
+        base = self.root if server == self.server else os.path.join(self.root, MIRROR_DIR, server)
+        for p in paths:
+            self._drop(os.path.join(base, p))
         return len(paths)
-
-    # Rebuild now, then tail every `interval` seconds in a daemon thread, so an open bucket's new lines are
-    # on the timeline within one tail.
-    def start(self) -> "EventDatabase":
-        self.rebuild()
-
-        def loop():
-            while not self._stop.wait(self.interval):
-                try:
-                    self.tail()
-                except Exception:                                             # noqa: BLE001
-                    logging.getLogger("w2cplatform.eventdatabase").exception("event database tail failed")
-        threading.Thread(target=loop, daemon=True).start()
-        return self
-
-    def stop(self) -> None:
-        self._stop.set()
 
 
 # What stands behind a console's `/events`: nothing of its own. `query` asks every LIVE resource's
-# `GET /events` (each answers from the database over its own tree — own buckets and mirror copies), merges by
+# `GET /events` (each answers from the index over its own tree — own buckets and mirror copies), merges by
 # time, dedupes a dead server's copies when two peers hold them, drops a copy when the owner is live (it
 # answered for itself), fences by `current_epochs`, and names in `state` the servers nobody answered for:
 # `live; srv-a unreachable` for a resource that is silent and unmirrored (or live but not answering),
-# `live; srv-a from mirror` when a peer's copy stood in. The same shape `EventDatabase.query` returns, so
+# `live; srv-a from mirror` when a peer's copy stood in. The same shape `EventIndex.query` returns, so
 # `SpecConsole` cannot tell the difference. `fetch(url, params) -> dict` is HTTP by default; tests pass a
-# call into the resource's database.
+# call into the resource's index.
 class MergedIndex:
-    """A console's view of the event databases: every live resource's `/events`, merged by time."""
+    """A console's view of the event indexes: every live resource's `/events`, merged by time."""
 
     def __init__(self, objects, fetch=None, wall=time.time, lost_after: float = 45.0, timeout: float = 3.0):
         self.objects, self.wall, self.lost_after, self.timeout = objects, wall, lost_after, timeout
@@ -263,7 +344,7 @@ class MergedIndex:
     def query(self, t0: float, t1: float, cam=None, kind=None, subsystem=None, unit=None, current_epochs=None,
               limit: int = 1000, epoch_policy: dict[str, str] | None = None, keep: str = "newest",
               cls: str | None = None) -> dict:
-        """`keep` as in `EventDatabase.query`, and it has to be carried BOTH ways: the merge asks
+        """`keep` as in `EventIndex.query`, and it has to be carried BOTH ways: the merge asks
         each resource for a window and then cuts the union to `limit` again, so a limit with no
         direction dropped the newest end twice — once per resource, once more over the merge.
 
@@ -283,7 +364,7 @@ class MergedIndex:
         open one is in none. A server silent since before the window cannot have written in it and does not
         make it incomplete: a box taken out of service must not hold every reader's window for ever.
 
-        The check below is the SAME refusal the database makes, and it has to be here too rather
+        The check below is the SAME refusal the index makes, and it has to be here too rather
         than left to the resources: this method reads any failure from a resource as "unreachable"
         (live by heartbeat, not answering), so a caller's bad `keep` would come back as an empty
         window and an infrastructure fault that never happened."""
