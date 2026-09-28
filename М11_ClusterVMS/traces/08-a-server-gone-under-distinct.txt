@@ -2,12 +2,12 @@
 # the power pull — w-1 AND srv-a's resource silent: gone_servers() = {'w-1': 'srv-a'}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1020
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1017
 {"Items": {"units": "2,3", "rev": "4"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1035}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1032}
 
 # vmscontroller
-PUT /v1/var/vms/placement/1?namespace=default&cas=1015
+PUT /v1/var/vms/placement/1?namespace=default&cas=1012
 {
   "Items": {
     "worker": "w-2",
@@ -16,20 +16,20 @@ PUT /v1/var/vms/placement/1?namespace=default&cas=1015
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1036}
+→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1033}
 
 # vmscontroller
 PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 {"Items": {"units": "1", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1037}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1034}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1035
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1032
 {"Items": {"units": "3", "rev": "5"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1038}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1035}
 
 # vmscontroller
-PUT /v1/var/vms/placement/2?namespace=default&cas=1017
+PUT /v1/var/vms/placement/2?namespace=default&cas=1014
 {
   "Items": {
     "worker": "w-2",
@@ -38,20 +38,20 @@ PUT /v1/var/vms/placement/2?namespace=default&cas=1017
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1039}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1036}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1037
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1034
 {"Items": {"units": "1,2", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1040}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1037}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1038
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1035
 {"Items": {"units": "", "rev": "6"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1041}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1038}
 
 # vmscontroller
-PUT /v1/var/vms/placement/3?namespace=default&cas=1019
+PUT /v1/var/vms/placement/3?namespace=default&cas=1016
 {
   "Items": {
     "worker": "w-2",
@@ -60,24 +60,24 @@ PUT /v1/var/vms/placement/3?namespace=default&cas=1019
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/3", "ModifyIndex": 1042}
+→ 200 {"Path": "vms/placement/3", "ModifyIndex": 1039}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1040
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1037
 {"Items": {"units": "1,2,3", "rev": "3"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1043}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1040}
 
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1021
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1044}
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1041}
 
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/2?namespace=default&cas=1022
+PUT /v1/var/vms/epoch/2?namespace=default&cas=1019
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1045}
+→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1042}
 
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/3?namespace=default&cas=1023
+PUT /v1/var/vms/epoch/3?namespace=default&cas=1020
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/3", "ModifyIndex": 1046}
+→ 200 {"Path": "vms/epoch/3", "ModifyIndex": 1043}

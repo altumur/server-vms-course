@@ -8,12 +8,12 @@ PUT /v1/var/vms/placement/1?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1022}
+→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1018}
 
 # vmscontroller
 PUT /v1/var/vms/workers/w-0?namespace=default&cas=0
 {"Items": {"units": "1", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1023}
+→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1019}
 
 # vmscontroller
 PUT /v1/var/vms/placement/2?namespace=default&cas=0
@@ -25,12 +25,12 @@ PUT /v1/var/vms/placement/2?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1024}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1020}
 
 # vmscontroller
 PUT /v1/var/vms/workers/w-1?namespace=default&cas=0
 {"Items": {"units": "2", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1025}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1021}
 
 # vmscontroller
 PUT /v1/var/vms/placement/3?namespace=default&cas=0
@@ -42,11 +42,11 @@ PUT /v1/var/vms/placement/3?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 200 {"Path": "vms/placement/3", "ModifyIndex": 1026}
+→ 200 {"Path": "vms/placement/3", "ModifyIndex": 1022}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1025
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1021
 {"Items": {"units": "2,3", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1027}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1023}
 
 # unplaceable() = [{'id': 4, 'labels': ['vlan:cctv-x'], 'workers_live': 3}]

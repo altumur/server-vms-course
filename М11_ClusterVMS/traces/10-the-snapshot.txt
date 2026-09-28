@@ -12,10 +12,10 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
           "name": "gate",
           "source": "driverpack://file/gate.mp4",
           "enabled": true,
-          "events_retention_days": 365,
+          "events_retention_days": null,
           "priority": 100,
           "labels": [],
-          "alarms": [],
+          "alarms": null,
           "ref": "",
           "live": "always",
           "kind": "video",
@@ -27,7 +27,7 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-0", "ModifyIndex": 1025}
+→ 200 {"Path": "objects/vms/snapshot/w-0", "ModifyIndex": 1022}
 
 # vmscontroller
 PUT /v1/var/objects/vms/snapshot/w-1?namespace=default
@@ -43,10 +43,10 @@ PUT /v1/var/objects/vms/snapshot/w-1?namespace=default
           "name": "yard",
           "source": "driverpack://file/yard.mp4",
           "enabled": true,
-          "events_retention_days": 365,
+          "events_retention_days": null,
           "priority": 100,
           "labels": [],
-          "alarms": [],
+          "alarms": null,
           "ref": "",
           "live": "always",
           "kind": "video",
@@ -58,7 +58,7 @@ PUT /v1/var/objects/vms/snapshot/w-1?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-1", "ModifyIndex": 1026}
+→ 200 {"Path": "objects/vms/snapshot/w-1", "ModifyIndex": 1023}
 
 # vmscontroller
 PUT /v1/var/objects/vms/snapshot/w-2?namespace=default
@@ -74,10 +74,10 @@ PUT /v1/var/objects/vms/snapshot/w-2?namespace=default
           "name": "dock",
           "source": "driverpack://file/dock.mp4",
           "enabled": true,
-          "events_retention_days": 365,
+          "events_retention_days": null,
           "priority": 100,
           "labels": [],
-          "alarms": [],
+          "alarms": null,
           "ref": "",
           "live": "always",
           "kind": "video",
@@ -89,4 +89,4 @@ PUT /v1/var/objects/vms/snapshot/w-2?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-2", "ModifyIndex": 1027}
+→ 200 {"Path": "objects/vms/snapshot/w-2", "ModifyIndex": 1024}
