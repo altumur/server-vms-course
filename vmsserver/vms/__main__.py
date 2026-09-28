@@ -7,8 +7,7 @@
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
     RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
     CONSOLE_PORT=8080                the console (its own process, its own token: the operator's rows, never placement)
-    RESOURCE_PORT=8090  RESOURCE_URL the resource process: heartbeat, the policy pass, the event database served as /events
-    EVENTDB=:memory:                 where the resource keeps its event database — a cache, rebuilt on every start
+    RESOURCE_PORT=8090  RESOURCE_URL the resource process: heartbeat, the policy pass, the event index served as /events
     GATEWAY_PORT=8082  GATEWAY_URL   a live gateway: WHEP on this port (`auto` — ask the OS, which is what a
                                      SECOND gateway on one box needs); the URL the console proxies to
     RTSP_PORT=8554  PLAYBACK_PORT=8083   the worker's two doors, `auto` likewise: a template that fixes a
@@ -42,7 +41,7 @@
 # - `CONSOLE_HOST` (`127.0.0.1`), `CONSOLE_PORT` (`8080`) — where the console listens
 #   (`console.container` sets `0.0.0.0`).
 # - `RESOURCE_HOST` (`127.0.0.1`), `RESOURCE_PORT` (`8090`), `RESOURCE_URL` — the resource process's HTTP and the URL
-#   its heartbeat advertises (the console asks `/events` there); `EVENTDB` (`:memory:`) — its database file.
+#   its heartbeat advertises (the console asks `/events` there).
 # - `LOG_LEVEL` (`INFO`) — `logging.basicConfig` level.
 #
 # ## Module-level names
@@ -65,8 +64,8 @@
 #   (`test_capacity_is_the_workers_word_not_the_controllers`).
 # - `resource` runs the platform's `Resource` as a process on the box exactly as М11 runs it as a job:
 #   heartbeat, HTTP, the policy pass (the VMS's hook first, then bucket retention, then the mirror — off on
-#   one box), and the `EventDatabase` over the tree. The old `retain` verb and its timer are gone: a pass
-#   every 600 s from the process's loop is the same pass, and a oneshot could not hold a database.
+#   one box), and the `EventIndex` over the tree. The old `retain` verb and its timer are gone: a pass
+#   every 600 s from the process's loop is the same pass, and a oneshot could not hold an index's cache.
 # ================================================================================================
 from __future__ import annotations
 
@@ -468,7 +467,7 @@ def console() -> None:
                         # `AutoController` and not the platform's class: a scenario is refused where it is
                         # written, which is here, and the refusal has to be the subsystem's own words.
                         "auto": AutoController(vars_, objects)})
-    logging.info("console on %s", srv.server_address)                     # no event database here: /events asks the resource process
+    logging.info("console on %s", srv.server_address)                     # no event index here: /events asks the resource process
     det_ctl, rec_ctl = SpecController(DET_SPEC, vars_, objects), SpecController(REC_SPEC, vars_, objects)
     job_ctl = SpecController(DETJOB_SPEC, vars_, objects)
     survey_ctl = SpecController(SURVEY_SPEC, vars_, objects)
@@ -485,17 +484,16 @@ def console() -> None:
 # - `ArchiveResource($SPOOL, $ARCHIVE)`; Variables opened with *no* writer and no ACL — the resource only
 #   reads rows (the camera rows for media retention, `<sub>/retention/*` for buckets, `platform/mirror`).
 # - `vms_resource(archive, hostname, $RESOURCE_URL, vars_, objects)` — the platform's `Resource` with
-#   `ArchivePolicy` registered as the `vms` hook and an `EventDatabase($EVENTDB)` over the tree.
+#   `ArchivePolicy` registered as the `vms` hook and an `EventIndex` over the tree.
 # - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT, extra=vms_routes(archive), extra_put=vms_writes(archive))` — `/buckets`, `/events`,
 #   `/mirrored`, `PUT /mirror`, plus the VMS's `/manifest/<cam>` and `/segment/<path>`.
 # - one heartbeat (`platform/resources/<server>/heartbeat` — how the console finds this process), then
-#   `restore()` (nothing to pull on one box: no peers), then `database.start()` — rebuilt from the tree,
-#   tailed every 3 s — and the loop: a heartbeat every 10 s, the policy pass every 600 s (`pass_`: repair,
+#   `restore()` (nothing to pull on one box: no peers) — and the loop: a heartbeat every 10 s, the policy pass every 600 s (`pass_`: repair,
 #   close buckets, media retention per camera row; then bucket retention by `vms/retention/<cam>`, which
-#   tells the database what it removed; then the mirror, off).
+#   tells the index what it removed; then the mirror, off).
 def resource() -> None:
     """The resource process: the archive has no controller — it has a policy pass, a
-    heartbeat, its HTTP, and the event database over its own tree."""
+    heartbeat, its HTTP, and the event index over its own tree."""
     import socket
     import time
     from w2cplatform.resource import serve
@@ -505,11 +503,9 @@ def resource() -> None:
     vars_ = open_vars(CONFIG_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(archive, socket.gethostname(), os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects,
-                       database=os.environ.get("EVENTDB", ":memory:"))
+    res = vms_resource(archive, socket.gethostname(), os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port, extra=vms_routes(archive, objects, res.server), extra_put=vms_writes(archive))
     res.heartbeat(); logging.info("restore: %s", res.restore())
-    res.database.start()                                                  # a cache over THIS tree: rebuilt after restore, tailed every 3 s
     logging.info("resource %s on %s", res.server, srv.server_address)
     last_policy = 0.0
     while not stop.is_set():
@@ -524,7 +520,7 @@ def resource() -> None:
         except Exception:                                                 # noqa: BLE001
             logging.exception("resource pass failed")
         stop.wait(10)
-    res.database.stop(); srv.shutdown()
+    srv.shutdown()
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ show them. So the console is one class, run from the same spec:
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
-    GET  /events?from&to&unit&kind&subsystem   the resources' event databases, merged (MergedIndex), fenced by every subsystem's epochs
+    GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
                                  <name>_epoch_conflicts · <name>_failover_seconds{kind="worst"} · <name>_resources_live ·
                                  <name>_<running> (units in phase "running"; the spec names the gauge)
@@ -74,7 +74,7 @@ rule in this file.
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
 # - Idempotency covers POST always, PUT optionally, DELETE never; the page sends a fresh key with every
 #   request (including DELETE, where it is ignored).
-# - `/events` relies on a `MergedIndex` behind the console — every live resource's own event database, merged; without one it is an honest 503,
+# - `/events` relies on a `MergedIndex` behind the console — every live resource's own event index, merged; without one it is an honest 503,
 #   and the page tolerates that.
 # ================================================================================================
 from __future__ import annotations
@@ -674,7 +674,7 @@ class SpecConsole:
                 return h._send(200, ctl.unplaceable())
             if path == "/events":
                 if con.index is None:
-                    return h._send(503, {"error": "no event database behind this console"})
+                    return h._send(503, {"error": "no event index behind this console"})
                 cur = {(p.split("/")[0], p.rsplit("/", 1)[1]): current_epoch(ctl.vars, p) for p in ctl.vars.list("") if "/epoch/" in p}   # every subsystem's epochs: the timeline shows them all
                 cam = q.get("cam") or (q.get("unit") if (q.get("unit") or "").isdigit() else None)
                 try:                                          # the operator's timeline: `limit` is theirs to set, and

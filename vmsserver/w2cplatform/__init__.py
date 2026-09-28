@@ -7,7 +7,7 @@ stateless shards writing bulk data; nothing here knows what a camera is.
     contract.py    what a subsystem gives the platform: a controller and its workers
     spec.py        the controller as data: SubsystemSpec from <sub>.subsystem.yaml, SpecController
     console.py     the console as data: SpecConsole over the same spec; console.html, the one page
-    events.py, eventdatabase.py, resource.py   buckets, the event database each resource keeps over its own, the resource job
+    events.py, eventdatabase.py, resource.py   buckets, the event index each resource reads its own by, the resource job
 
 М11 replaces variables.py with Nomad Variables and objects.py with MinIO,
 behind the same interfaces, and changes nothing above this line.

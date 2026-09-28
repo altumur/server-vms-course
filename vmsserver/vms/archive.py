@@ -17,7 +17,7 @@ into `rec/<unit>/` — the recording's own directory, named by the operator
 (`7`, `7-cloud`) and not by the camera. A camera that is watched and never recorded has buckets
 and no `rec/` tree; a camera whose recorder moved has footage under two
 servers' `rec/` trees, merged by the console. The manifest indexes media
-only; events are indexed by the resource's event database.
+only; events are answered by the resource's event index, over their own buckets.
 
 The acknowledgement order is М9 Lesson 4's: a closed segment is PROMOTED
 (renamed into the archive, then a manifest line appended), and the spool
@@ -45,7 +45,7 @@ job: its own pass over its own part of the tree.
 # `rec/<unit>/e<epoch>/` on the recorder's server; the camera's event buckets live under `vms/<cam>/e<epoch>/`
 # on the worker's server (`event_log`, the platform's `EventLog`). `segment_path`/`parse` name and read the
 # media paths; `Manifest` is the per-camera index beside the footage — media lines only, since the events
-# are indexed by the resource's event database; `ArchiveResource` promotes closed segments from the spool,
+# are answered by the resource's event index; `ArchiveResource` promotes closed segments from the spool,
 # repairs manifests from the files, retains media by days; `ArchivePolicy` is the hook the recorder
 # registers with the platform's resource job (`vms/resource.py`).
 #
@@ -170,7 +170,7 @@ class Manifest:
     def timeline(self, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
         """Media spans overlapping [t0, t1), each marked *fenced* if its epoch is
         older than the recorder's current one. Events are not here: the resource's
-        event database has them, and the console draws them over these spans."""
+        event index answers them, and the console draws them over these spans."""
         out = []
         for s in self.read():
             if s.end > t0 and s.start < t1:
@@ -287,7 +287,7 @@ class ArchiveResource:
     def retain(self, unit, days: float, now: float) -> int:
         """Delete media older than `days`: the file first, then the line. The
         buckets are the platform's to retain (vms/retention/<cam>, written by the
-        VMS controller); the resource's event database forgets their rows."""
+        VMS controller); the resource's event index lets them go from its cache."""
         cutoff = now - days * 86400
         man = Manifest(self.root, unit)
         keep, removed = [], 0
