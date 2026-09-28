@@ -357,7 +357,8 @@ class SpecConsole:
     def describe(self) -> dict:
         s = self.spec
         return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
-                "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required} for f in s.fields.values()],
+                "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
+                            **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {})} for f in s.fields.values()],
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------

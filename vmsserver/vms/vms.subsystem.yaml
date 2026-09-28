@@ -42,7 +42,13 @@ unit:
     # controller only stores it.
     # bucket retention: the platform's, via the derived row below. Events are small and kept a year where
     # footage is kept a month.
-    events_retention_days: {type: int,    default: 365}       # buckets: the platform's, via the derived row below
+    #
+    # `inherit`, not `default` (М12 Lesson 12, feedback AT). A default is written into the row when the row is
+    # created, and then a domain's shared default of 14 days can never apply: "set to 365" and "not set" are
+    # the same row. Left unset, the row carries nothing, the derived row below says nothing, and the value is
+    # resolved where it is used: the camera's own, else the domain's default, else 365 — the resource's own
+    # year, the same number said twice on purpose, since the resource does not read this file.
+    events_retention_days: {type: int,    inherit: 365}       # buckets: the platform's, via the derived row below
     # stored and carried in the snapshot; nothing in М10 reads it (no placement rule uses it).
     priority:              {type: int,    default: 100}
     # where the camera is reachable from (`"vlan:cctv-a"`); the placement constraint below compares it
@@ -96,7 +102,10 @@ unit:
     # how the device was WIRED, not of the event type: `io.input` is an alarm on a door contact and noise
     # on a technological sensor that reports the same way. Written here as a constant, a perimeter camera
     # and a corridor camera would have to be two subsystems to be told apart.
-    alarms:                {type: list}                       # kinds that are alarms on THIS device: "io.input,silent"
+    #
+    # And it inherits by UNION (feedback AT): a kind the site declares an alarm is an alarm on every camera,
+    # plus the camera's own. Override would let one camera's list silently drop the site's door contact.
+    alarms:                {type: list,   inherit: [], merge: union}   # kinds that are alarms on THIS device: "io.input,silent"
     # the name a layer above (М12) knows the camera by; the worker copies it into each status entry, and it
     # leaves the cluster in the snapshot.
     ref:                   {type: string}                     # the name a layer above knows it by (М12)

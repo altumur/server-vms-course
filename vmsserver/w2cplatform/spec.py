@@ -111,16 +111,30 @@ class Placement:
 # One operator field from the spec: `name`, `type` (`string | int | float | bool | list | url | blob`),
 # `default`, `required`. A `blob` holds a DIGEST (`sha256-<hex>`); the bytes live in the object store under
 # `<name>/blobs/<digest>` and the platform never looks inside them — see `blobs.py`.
+#
+# `inherit` instead of `default` (М12 Lesson 12, feedback AT): the field may be left NOT SET, and a value
+# somebody above sets — a domain's shared default — is then the value. A `default` cannot do that: it is
+# written into the row when the row is created and supplied again when the row is read, so "set" and "not set"
+# are the same row, and an inherited value never applies. An inheriting field has no default at all: a new row
+# does not carry it, a read gives `None`, and the value in `inherit` is only the LAST link of the chain, taken
+# at the moment of use by whoever resolves it (`SharedView.effective` in М12; the resource's own fallback for
+# retention). `merge` says what a set value does to an inherited one: `override` (the default) replaces it,
+# `union` adds to it — a list of alarm kinds the site declares, plus the camera's own.
 @dataclass
 class Field:
     name: str
     type: str = "string"          # string | int | float | bool | list | url | blob | json
     default: object = None
     required: bool = False
+    inherit: object = None        # the fallback of an inheriting field; see `inherits`
+    inherits: bool = False
+    merge: str = "override"       # override | union — for an inheriting field
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
     def parse(self, v):
+        if self.inherits and (v is None or v == ""):
+            return None                                  # not set: the value is whatever is inherited
         if v is None:
             return self.default_value()
         if self.type == "int":
@@ -147,6 +161,8 @@ class Field:
 
     # The declared default, else the type's zero (`0`, `0.0`, `False`, `[]`, `""`).
     def default_value(self):
+        if self.inherits:
+            return None
         if self.default is not None:
             return self.default
         return {"int": 0, "float": 0.0, "bool": False, "list": [], "json": None}.get(self.type, "")
@@ -322,11 +338,19 @@ class SubsystemSpec:
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
         unit, pl = d.get("unit", {}), d.get("placement", {})
-        fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)))
+        fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
+                           f.get("inherit"), "inherit" in f, f.get("merge", "override"))
                   for n, f in (unit.get("fields") or {}).items()}
         for f in fields.values():
+            if f.inherits and f.default is not None:
+                raise ValueError(f"field {f.name}: `default` and `inherit` — a field is either filled in when the row "
+                                 f"is created or left for somebody above to set, not both")
+            if f.merge not in ("override", "union"):
+                raise ValueError(f"field {f.name}: merge is override or union, not {f.merge!r}")
             if f.default is not None:
                 f.default = f.parse(f.default) if f.type != "string" else str(f.default)
+            if f.inherits and f.inherit is not None:
+                f.inherit = Field(f.name, f.type).parse(f.inherit) if f.type != "string" else str(f.inherit)
         derived = [Derived(x["row"], dict(x.get("items", {})), x.get("on_delete")) for x in unit.get("derived", [])]
         # `snapshot:` LEFT OUT means "every field that may go" — a convenience, not a decision.
         # `snapshot: []` means "no field of the row leaves the cluster", which is a decision. The two were
@@ -490,7 +514,10 @@ class SubsystemSpec:
     def items(self, row: dict) -> dict:
         out = {"id": str(row["id"]), "revision": str(row.get("revision", 1))}
         for n, f in self.fields.items():
-            out[n] = f.to_item(row.get(n, f.default_value()))
+            v = row.get(n, f.default_value())
+            if f.inherits and v is None:
+                continue                                 # not set is ABSENT — never a stored "None"
+            out[n] = f.to_item(v)
         return out
 
     # Raise `Refused` for any `PLATFORM_FIELDS` key or any key not in the spec. Called first by `create` and
@@ -684,7 +711,9 @@ class SpecController(Controller):
                 if d.on_delete is not None:
                     self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()} if it else None)
                 continue
-            want = {k: self.spec.fields[f].to_item(row[f]) for k, f in d.items.items()}
+            # A field left to inherit gives no item: the derived row then says nothing, and its reader goes on
+            # down its own chain — the resource's retention falls back to the subsystem's, then to a year.
+            want = {k: self.spec.fields[f].to_item(row[f]) for k, f in d.items.items() if row.get(f) is not None}
             self.write(path, lambda it, want=want: None if it == want else want)
 
     # `refuse`, choose the id (numeric: `_next_id`; else the field's value, which must be present and not

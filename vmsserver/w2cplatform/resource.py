@@ -132,10 +132,11 @@ def mirror_settings(vars_) -> dict:
 # `SpecController._derived` from `events_retention_days`; on delete it becomes `{days: 0}` so the buckets go
 # on the next pass. Each subsystem's controller owns its row; the resource only reads.
 def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> float:
-    """The unit's days if its subsystem set them, else the subsystem's, else a year."""
+    """The unit's days if its subsystem set them, else the subsystem's, else a year. A row that says nothing —
+    a unit whose field is left to inherit (М12 Lesson 12) — is not zero days: it is the next link."""
     for path in (f"{subsystem}/retention/{unit}", f"{subsystem}/retention"):
         items, _ = vars_.get(path)
-        if items and "days" in items:
+        if items and str(items.get("days", "")).strip() not in ("", "None"):
             return float(items["days"])
     return default
 
