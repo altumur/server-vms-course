@@ -277,3 +277,79 @@ def test_a_write_that_slips_past_the_freeze_is_reported_not_trusted_away():
     new, report = handover(host, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
     assert [(p, k) for p, k, _ in report["stranded"]] == [("domain/pending/cam-SN2", "SN2")]
     assert "1 item(s) stranded" in report["sentence"]
+
+
+# -- feedback AS ------------------------------------------------------------------------------------------------
+def test_a_rehost_keeps_the_topology_the_members_and_the_roads():
+    """The first backup stopped at Lesson 14. A re-host then lost every chain through a relay (the topology of
+    Lesson 17), every road a recorder had said it could not pull (Lesson 16 — a push became a pull again), and the
+    list of members — which, if nobody had ever written it, was the configuration of the old host's processes and
+    nothing else. They travel now, and the list is written by the first backup so that there is one to carry."""
+    from domain.members import Members
+    wall = Clock()
+    fed, devices, signer, offline, host, agents = _site(wall)
+    topology = {"doc": json.dumps({"rev": 1, "centre": None, "star": [], "via": {"cam-SN3": "cam-SN2"}})}
+    roads = {"SN3": json.dumps({"road": "push", "why": "the recorder could not open its stream"})}
+    host.vars.put("domain/topology", topology)
+    host.vars.put("domain/roads", roads)
+    assert host.vars.get("domain/members")[0] is None                   # never written: configuration only
+    host.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    assert Members(host.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the backup wrote it first
+    devices["cam-SN0"].power_off()
+    new, report = rehost(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
+    assert new.vars.get("domain/topology")[0] == topology and new.vars.get("domain/roads")[0] == roads
+    assert Members(new.vars).names() == ["cam-SN0", "cam-SN1", "cam-SN2", "cam-SN3"]   # the old host: a member now
+
+
+def test_a_report_that_closes_an_edit_during_a_handover_is_not_stranded():
+    """Only adding an edit is guarded by the freeze. A member's report goes on during the handover and closes
+    part of an edit the last backup still holds as waiting — here it marks a conflict. That is the camera's news,
+    not the operator's decision: the new term carries the same edit again and the camera answers the same. So
+    the handover strands nothing, and the edit waits in the new term (feedback AS)."""
+    wall = Clock()
+    fed, devices, signer, offline, host, agents = _site(wall)
+    _keep_an_edit_for(fed, devices, "SN3", host.vars, wall)
+    rev = PendingEdits(host.vars, wall).of("cam-SN3")["SN3"]["rev"]
+
+    def carry_to():
+        PendingEdits(host.vars, wall).reconcile("cam-SN3", {"SN3": {"rev": rev, "conflicts": {"name": {"current": "x"}}}})
+        agents["cam-SN1"].sync()
+
+    new, report = handover(host, "cam-SN1", offline, DOMAIN, _objects(devices), carry_to, wall)
+    assert report["stranded"] == [] and report["sentence"].endswith("nothing stranded")
+    assert PendingEdits(new.vars, wall).of("cam-SN3")["SN3"]["rev"] == rev
+
+
+def test_an_old_host_that_learns_of_two_rehosts_from_its_own_agent_starts_deposed_and_keeps_its_list():
+    """SN0 kept an edit for SN2 after its last backup and died; the domain was re-hosted twice, to term 3. SN0
+    comes back behind closed neighbours' doors, and its own agent carries term 3 home before the host process
+    starts. The process looks before it claims: it starts deposed, never writes term 1 over term 3 in its own
+    store, and decides what it alone held ONCE — against its own last backup, since term 3 was restored from
+    somebody else's — and keeps that list (feedback AS)."""
+    wall = Clock()
+    fed, devices, signer, offline, host, agents = _site(wall)
+    host.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    _keep_an_edit_for(fed, devices, "SN2", host.vars, wall)             # after the last backup
+    devices["cam-SN0"].power_off()
+    second, _ = rehost(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
+    devices["cam-SN2"].boot()
+    _agent(fed, devices, "cam-SN2", "cam-SN1", wall).sync()
+    second.backup(["cam-SN2"], devices["cam-SN1"].disk_door())
+    _agent(fed, devices, "cam-SN2", "cam-SN1", wall).sync()
+    devices["cam-SN1"].power_off()
+    third, report = rehost(fed, "cam-SN2", offline, DOMAIN, _objects(devices), wall)
+    assert report["term"] == 3
+
+    devices["cam-SN0"].boot()
+    _agent(fed, devices, "cam-SN0", "cam-SN2", wall).sync()             # its own agent: term 3, carried home
+    for name in ("cam-SN2", "cam-SN3"):
+        devices[name].door_open = False                                  # and no neighbour's door to look through
+    old = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)   # a fresh process
+    assert old.start() is False
+    assert old.deposed_by["term"] == 3 and read_host(devices["cam-SN0"].flash, signer.tokens.keyset(), wall())["term"] == 3
+    kept = old.stranded_items()
+    assert kept["base"] == "its own last backup, rev 1" and [(p, k) for p, k, _ in kept["items"]] == [("domain/pending/cam-SN2", "SN2")]
+
+    PendingEdits(old.vars, wall).add("cam-SN3", "SN3", {"name": "later"}, {"name": "SN3"}, "anna")   # a write past it
+    old.check()
+    assert old.stranded_items() == kept                                  # decided once, not re-decided

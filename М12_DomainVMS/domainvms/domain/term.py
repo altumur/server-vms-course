@@ -19,10 +19,12 @@ stolen. So re-hosting the domain has to become an ordinary operation, and three 
                     silently lost and not silently applied: they are listed, for a person, as "not in term
                     N+1 — apply again?"
 
-    domain/host                 in the host's Variables, and carried to every member: {term, host}, signed
+    domain/host                 in the host's Variables, and carried to every member: {term, host, from}, signed —
+                                `from`: the backup {term, rev} this term was restored from
     domain/backup/<member>      in the host's Variables: a pointer, for each member chosen to keep a copy
     backup/rev-<n>              in the host's durable objects: the signed state
     domain/backup               in a chosen member: its agent's copy of the pointer, and of the document
+    domain/stranded             in a DEPOSED host's Variables: what it alone held, decided once, when it stepped down
 
 Who opens which connection (Lesson 10, step 7). The host reads the other cameras only by their REPORTS, left
 in its own store by their agents (`reported`) — a planned handover sees that the target took the last backup
@@ -46,8 +48,15 @@ from .federation import Unreachable
 from .shared import NotTaken, sign, verify
 from .signer import Signer
 
-HOST, BACKUP = "domain/host", "domain/backup"
-EXPORTED = ("domain/pending/", "domain/grants/", "domain/crossings", "domain/sources/", "domain/mirrors/", "domain/shared")
+HOST, BACKUP, STRANDED = "domain/host", "domain/backup", "domain/stranded"
+# Everything the domain DECIDED and nobody else holds (feedback AS: the first list stopped at Lesson 14, and a
+# re-host lost the topology of Lesson 17 — every chain through a relay —, the list of members, and every road a
+# recorder had said it could not pull, which became a pull again). What is not here is not lost: the books are
+# recomputed by the next pass, and the keys, the revocation list and each cluster's grants are already on every
+# member, the new host first among them. The licence is a cache of the vendor's file (Lesson 5): kept, so that
+# a re-host does not start the grace period for nothing.
+EXPORTED = ("domain/pending/", "domain/grants/", "domain/crossings", "domain/sources/", "domain/mirrors/", "domain/shared",
+            "domain/topology", "domain/members", "domain/roads", "domain/placement", "domain/licence")
 
 
 class Deposed(Exception):
@@ -81,6 +90,8 @@ class DomainHost:
         self.fed, self.name, self.signer, self.term, self.wall = fed, name, signer, term, wall
         self.objects = objects
         self.backup_rev = 0
+        self.backups = objects                           # where its own backups are written — read again on deposition
+        self.restored_from: dict | None = None           # {term, rev} of the backup this term started from
         self.deposed_by: dict | None = None
         self.frozen_for: str | None = None               # the member a planned handover is moving the domain to
 
@@ -94,11 +105,23 @@ class DomainHost:
         return member_copy(member, self.objects, wall=self.wall)
 
     def claim(self) -> None:
-        doc = sign({"term": self.term, "host": self.name, "at": self.wall()}, self.signer.tokens)
+        doc = sign({"term": self.term, "host": self.name, "at": self.wall(),
+                    **({"from": self.restored_from} if self.restored_from else {})}, self.signer.tokens)
         _, idx = self.vars.get(HOST)
         self.vars.put(HOST, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
 
+    # A host process starting — after a reboot, a crash, a power cut. It LOOKS before it claims (feedback AS): its
+    # own agent may have carried a larger term into this cluster before this process came up, and then there is
+    # nothing to claim. Claiming blindly would write term 1 over the carried term 2 in its own store — the one
+    # record that says who the host is now. Deposed from the start, it still opens its door, for the list.
+    def start(self) -> bool:
+        if not self.check():
+            return False
+        self.claim()
+        return True
+
     def export(self) -> dict[str, dict]:
+        self._settle_members()
         out = {}
         for prefix in EXPORTED:
             for path in self.vars.list(prefix):
@@ -109,8 +132,18 @@ class DomainHost:
 
     # Publish the state beyond the host: one signed document in the host's durable store, and a pointer for
     # each member chosen to keep it, which that member's agent carries home as it carries the settings.
+    # The list of members, if nobody ever wrote it, was the configuration of THIS host's processes (`Members`); a
+    # new host restored without it would not know who its members are. So the first backup writes it — every
+    # cluster of the site, this host included: after a re-host it is a camera like the others, and the domain's
+    # own cluster on the list is left alone by `members.apply`. From then on it is a record, exported with the rest.
+    def _settle_members(self) -> None:
+        from .members import MEMBERS, Members
+        if self.vars.get(MEMBERS)[0] is None:
+            Members(self.vars, self.wall, configured=lambda: sorted(self.fed.clusters)).settle()
+
     def backup(self, targets: list[str], objects) -> int:
         self._not_deposed()                              # a FROZEN host still backs up: that is how it hands over
+        self.backups = objects
         self.backup_rev += 1
         doc = sign({"term": self.term, "rev": self.backup_rev, "host": self.name, "at": self.wall(),
                     "state": self.export()}, self.signer.tokens)
@@ -129,19 +162,62 @@ class DomainHost:
     # loser finds out on its next look, exactly as a fenced worker does. It looks as any camera looks for the
     # host at boot — opening the connections itself: the members that follow the new term report to the NEW
     # host, so nothing about it would ever land in this one's store.
+    #
+    # Its OWN store first: this cluster is a member too, and its agent carries the host record home like any
+    # agent — a host whose neighbours' doors are closed learns it was replaced from its own agent, or not at all.
     def check(self) -> bool:
         keys = self.signer.tokens.keyset()
-        for name, c in self.fed.clusters.items():
-            if name == self.name:
-                continue
+        for name, c in [(self.name, self.fed.clusters[self.name]),
+                        *[(n, c) for n, c in self.fed.clusters.items() if n != self.name]]:
             try:
                 rec = read_host(c.vars, keys, self.wall())
             except Unreachable:
                 continue
             if rec and int(rec["term"]) > self.term:
                 self.deposed_by = rec
+                self._strand()
                 return False
         return True
+
+    # What this host alone held, decided ONCE — the moment it learns it was replaced — and kept (feedback AS).
+    # Later there is nothing to decide it against: after a second re-host the record names a term restored from
+    # somebody else's backup. Measured against the backup the new term was restored from, when that was one of
+    # this host's own (`from` in the record); otherwise against this host's own last backup — "changed after my
+    # last copy", which is the most it can know — and the list says which.
+    def _strand(self) -> None:
+        if self.vars.get(STRANDED)[0] is not None:
+            return
+        base, state = "no backup of its own: everything it holds", {}
+        mine = self._own_backups()
+        src = self.deposed_by.get("from") or {}
+        if int(src.get("term", -1)) == self.term and int(src.get("rev", -1)) in mine:
+            rev = int(src["rev"])
+            base, state = f"backup rev {rev}, which term {self.deposed_by['term']} was restored from", mine[rev]
+        elif mine:
+            rev = max(mine)
+            base, state = f"its own last backup, rev {rev}", mine[rev]
+        left = stranded(self.vars, state)
+        self.vars.put(STRANDED, {"doc": json.dumps({"term": self.deposed_by["term"], "host": self.deposed_by["host"],
+                                                     "base": base, "items": left}, sort_keys=True, ensure_ascii=False)})
+
+    def _own_backups(self) -> dict[int, dict]:
+        """{rev: state} of the backups this host wrote at its own term, from its own store."""
+        out = {}
+        if self.backups is None:
+            return out
+        for key in self.backups.list("backup/rev-"):
+            raw = self.backups.get(key)
+            try:
+                doc = json.loads(raw)                    # its own, in its own store: read, not verified
+            except (TypeError, ValueError):
+                continue
+            if int(doc.get("term", -1)) == self.term and doc.get("host") == self.name:
+                out[int(doc["rev"])] = doc.get("state", {})
+        return out
+
+    def stranded_items(self) -> dict | None:
+        items, _ = self.vars.get(STRANDED)
+        return json.loads(items["doc"]) if items else None
 
     # What every write to the domain's state asks first. Frozen: a planned handover is under way, and a write
     # accepted now would be made after the last backup — exactly what `stranded` exists to catch, created on
@@ -250,6 +326,7 @@ def rehost(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall
         c.is_domain_cluster = name == new
     host = DomainHost(fed, new, signer, top_term + 1, wall, objects=objects_of(new))
     host.backup_rev = int(best[1]["rev"]) if best else 0
+    host.restored_from = {"term": int(best[1]["term"]), "rev": int(best[1]["rev"])} if best else None
     host.claim()
     rev = host.backup_rev
     report = {"term": host.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
@@ -263,6 +340,11 @@ def rehost(fed, new: str, signer_backup: bytes, domain_id: str, objects_of, wall
 
 # The domain's writes, behind the host's guard: a kept edit (Lesson 9) is refused while the host is frozen or
 # deposed, as a 503 with the reason — the API's word for "not now, and here is why".
+#
+# Only ADDING is guarded. The other write to the same row — a member's report closing an edit (`reconcile`) —
+# goes on during a handover, and that is not a hole (feedback AS): an edit the new term still holds as waiting
+# is carried again, found already on the camera, and closed there by the camera's own report ("already").
+# A closure is the camera's news, not the operator's decision; losing it costs one repeat, never an edit.
 class GuardedPending:
     def __init__(self, pending, host: DomainHost):
         self.pending, self.host = pending, host
@@ -314,7 +396,7 @@ def handover(host: DomainHost, to: str, signer_backup: bytes, domain_id: str, ob
         raise RuntimeError(f"{to} took backup rev {rev} and then stopped answering; the handover is called off and "
                            f"{host.name} is still the host")
     host.check()
-    left = stranded(host.vars, report["state"])
+    left = (host.stranded_items() or {}).get("items", [])
     report.update(planned=True, stranded=left,
                   sentence=f"planned handover: term {new.term} on {to}, the domain's state at rev {rev} from "
                            f"{host.name}; " + ("nothing stranded" if not left else f"{len(left)} item(s) stranded — a write got past the freeze"))
@@ -323,13 +405,25 @@ def handover(host: DomainHost, to: str, signer_backup: bytes, domain_id: str, ob
 
 # What an old host that came back holds and the new term does not: every exported item that differs from
 # the state the new host was restored from. For a person to look at — never applied by anyone on its own.
-def stranded(old_vars, restored_state: dict) -> list[tuple[str, str, str]]:
+#
+# A kept edit counts only as an EDIT: its `rev` moved, or the new term has none for that camera. An entry that
+# differs only because a report closed fields of it, or annotated a conflict or a refusal, is not stranded —
+# the new term will carry the same edit and the camera will say "already" (see `GuardedPending`).
+def stranded(old_vars, restored_state: dict) -> list:
+    from .pending import PENDING_PATH
     out = []
     for prefix in EXPORTED:
         for path in old_vars.list(prefix):
             items, _ = old_vars.get(path)
             theirs = restored_state.get(path, {})
             for k, v in (items or {}).items():
-                if theirs.get(k) != v:
-                    out.append((path, k, v))
+                if theirs.get(k) == v:
+                    continue
+                if path.startswith(PENDING_PATH + "/") and k in theirs:
+                    try:
+                        if json.loads(v).get("rev") == json.loads(theirs[k]).get("rev"):
+                            continue                     # the same edit, closed further here: not the operator's
+                    except (TypeError, ValueError, AttributeError):
+                        pass
+                out.append([path, k, v])
     return out

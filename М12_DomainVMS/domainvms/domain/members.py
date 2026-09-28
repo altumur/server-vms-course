@@ -56,6 +56,11 @@ class Members:
     def names(self) -> list[str]:
         return sorted(self.read()["members"])
 
+    def settle(self) -> bool:
+        """Write the list if nobody ever has — the configuration's members, as the first write carries them
+        — so that it is a record and not a property of this host's processes (Lesson 15, feedback AS)."""
+        return self.read()["rev"] == 0 and self._change(lambda members: True)
+
     def _refuse_domain(self, name: str) -> None:
         if self.domain and name == self.domain:
             from .api import ApiError
