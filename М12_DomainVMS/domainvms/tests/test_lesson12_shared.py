@@ -118,6 +118,39 @@ def test_a_default_is_resolved_when_read_and_never_written_into_a_row():
     assert eff == [(14, "domain rev 1"), (30, "camera")]
 
 
+def test_a_field_with_a_default_can_never_inherit_and_one_that_inherits_is_left_unset():
+    """What the product found (feedback AT). A server cluster's camera row is made by the spec, and a field with
+    a `default` is filled in when the row is created and supplied again when it is read: "set to 365" and "not
+    set" are one row, and the domain's 14 days never apply. `events_retention_days` inherits instead: the new row
+    does not carry it, and the chain is resolved at the moment of use — the camera's, else the domain's, else
+    the spec's 365. The alarm kinds inherit by UNION: the site's and the camera's own."""
+    from vms.config import SPEC
+    from w2cplatform.spec import SubsystemSpec
+    wall = Clock()
+    fed, north, _, signer, shared, devices, agents = _site(wall, n=1)
+    view = SharedView(devices[0].flash, devices[0].disk, wall)
+    row = SPEC.row(SPEC.items(SPEC.new_row(7, {"source": "driverpack://file/a.mp4", "alarms": "tamper"})))
+    assert row["events_retention_days"] is None and "events_retention_days" not in SPEC.items(row)
+    assert view.effective(row)["events_retention_days"] == (365, "spec")               # nobody above said anything
+
+    shared.edit(lambda s: s.setdefault("defaults", {}).update(events_retention_days=14, alarms=["io.input"]), base_rev=0)
+    agents[0].sync()
+    eff = view.effective(row)
+    assert eff["events_retention_days"] == (14, "domain rev 1")
+    assert eff["alarms"] == (["io.input", "tamper"], "camera + domain rev 1")
+
+    old = SubsystemSpec.from_dict({"name": "vms", "unit": {"rows": "cameras", "id": "numeric", "fields": {
+        "source": {"type": "url"}, "events_retention_days": {"type": "int", "default": 365}}}})
+    was = old.row(old.items(old.new_row(7, {"source": "driverpack://file/a.mp4"})))
+    assert view.effective(was, old)["events_retention_days"] == (365, "camera")        # the defect: 14 never applies
+    try:
+        SubsystemSpec.from_dict({"name": "x", "unit": {"rows": "r", "id": "numeric", "fields": {
+            "days": {"type": "int", "default": 365, "inherit": 365}}}})
+        raise AssertionError("default and inherit on one field")
+    except ValueError as e:
+        assert "not both" in str(e)
+
+
 def test_two_editors_of_the_shared_settings_are_told_not_overwritten():
     wall = Clock()
     fed, north, _, signer, shared, devices, agents = _site(wall, n=1)

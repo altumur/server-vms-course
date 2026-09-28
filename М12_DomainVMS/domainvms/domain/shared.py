@@ -200,13 +200,28 @@ class SharedView:
     # A field the camera set is the camera's. A field it did not set takes the domain's default, and says
     # so: the console shows WHERE a value came from, because "why does this camera keep 14 days" must have
     # an answer that is not "somebody, somewhere".
-    def effective(self, row: dict) -> dict[str, tuple[object, str]]:
+    #
+    # The chain has three links (feedback AT): the camera's value, the domain's default, the spec's `inherit` —
+    # the last one resolved here, at the moment of use, and never written. It only works for a field the spec
+    # lets be NOT SET: a field with a `default` is filled in when the row is created and supplied again when it
+    # is read, and then the domain's default never applies. And a list the spec merges by `union` (the alarm
+    # kinds) is the site's AND the camera's, not one of them.
+    def effective(self, row: dict, spec=None) -> dict[str, tuple[object, str]]:
+        if spec is None:
+            from vms.config import SPEC as spec
         doc = self.document()
         defaults = (doc or {}).get("settings", {}).get("defaults", {})
+        domain = f"domain rev {doc['rev']}" if doc else None
         out = {}
-        for k in set(defaults) | set(row):
-            if row.get(k) is not None:
-                out[k] = (row[k], "camera")
+        for k in set(defaults) | set(row) | {n for n, f in spec.fields.items() if f.inherits}:
+            f = spec.fields.get(k)
+            mine = row.get(k)
+            if f is not None and f.inherits and f.merge == "union" and mine is not None and k in defaults:
+                out[k] = (sorted(set(mine) | set(defaults[k])), f"camera + {domain}")
+            elif mine is not None:
+                out[k] = (mine, "camera")
             elif k in defaults:
-                out[k] = (defaults[k], f"domain rev {doc['rev']}")
+                out[k] = (defaults[k], domain)
+            elif f is not None and f.inherits and f.inherit is not None:
+                out[k] = (f.inherit, "spec")
         return out
