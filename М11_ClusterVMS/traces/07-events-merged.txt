@@ -1,7 +1,7 @@
-# each resource rebuilds its own database, from its own buckets
-srv-a: {'added': 3, 'segments': 2, 'mirrored': []}
-srv-b: {'added': 1, 'segments': 1, 'mirrored': []}
-srv-c: {'added': 1, 'segments': 1, 'mirrored': []}
+# each resource's index: what its own tree holds, from its directories alone — nothing rebuilt
+srv-a: {'units': 1, 'buckets': 2, 'mirrored': [], 'cached': 0}
+srv-b: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
+srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
 
 # GET /events?cam=7 on the console — merged from every live resource
 {

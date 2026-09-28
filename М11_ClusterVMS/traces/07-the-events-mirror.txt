@@ -3,9 +3,9 @@
 srv-a pass -> mirrored 1 to ['srv-b']
 srv-b pass -> mirrored 1 to ['srv-c']
 srv-c pass -> mirrored 1 to ['srv-a']
-srv-a database rebuild -> {'added': 4, 'segments': 3, 'mirrored': ['srv-c']}
-srv-b database rebuild -> {'added': 3, 'segments': 2, 'mirrored': ['srv-a']}
-srv-c database rebuild -> {'added': 2, 'segments': 2, 'mirrored': ['srv-b']}
+srv-a index -> {'units': 2, 'buckets': 3, 'mirrored': ['srv-c'], 'cached': 0}
+srv-b index -> {'units': 2, 'buckets': 2, 'mirrored': ['srv-a'], 'cached': 0}
+srv-c index -> {'units': 2, 'buckets': 2, 'mirrored': ['srv-b'], 'cached': 0}
 
 # srv-a answers: its own events, the open bucket included
 {
