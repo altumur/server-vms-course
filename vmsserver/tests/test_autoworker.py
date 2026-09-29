@@ -32,14 +32,15 @@ class _Log:
         self.lag, self.wall = lag, wall
         self.asked: list[dict] = []
 
-    def query(self, t0, t1, subsystem=None, kind=None, limit=1000, keep="newest", **kw):
-        self.asked.append({"t0": t0, "t1": t1, "subsystem": subsystem, "kind": kind, "limit": limit, "keep": keep})
+    def query(self, t0, t1, subsystem=None, kind=None, limit=1000, keep="newest", unit=None, **kw):
+        self.asked.append({"t0": t0, "t1": t1, "subsystem": subsystem, "kind": kind, "unit": unit, "limit": limit, "keep": keep})
         now = self.wall() if self.wall else t1
         rows = [e for e in self.events
                 if t0 <= e["t"] <= t1
                 and e["t"] + self.lag <= now                      # not in the merge yet
                 and (subsystem is None or e["subsystem"] == subsystem)
-                and (kind is None or e["kind"] == kind)]
+                and (kind is None or e["kind"] == kind)
+                and (unit is None or e["unit"] == str(unit))]
         rows.sort(key=lambda e: e["t"])
         cut = len(rows) > limit
         rows = (rows[-limit:] if keep == "newest" else rows[:limit]) if cut else rows
@@ -533,7 +534,7 @@ def test_a_cut_in_the_shared_answer_counts_only_against_the_scenario_it_reached(
     w = _worker(box, log)
     w.reconcile_once()
     st = {s["id"]: s for s in w.status()}
-    assert st["long"]["cut"] == ["vms.io.input"] and "cut" not in st["short"]
+    assert st["long"]["cut"] == ["vms.io.input@12"] and "cut" not in st["short"]
     assert len(log.asked) == 1
 
 
@@ -592,3 +593,18 @@ def test_the_merge_asks_its_resources_at_once_and_does_not_wait_twice_for_one_th
                         _json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}"}).encode())
     calls.clear(); m.query(now - 60, now)
     assert "http://srv-c" in calls                                    # the pause is over: asked again
+
+
+def test_a_loud_camera_does_not_cut_the_quiet_one_a_scenario_watches():
+    """Measured before it was fixed (`tests/load_events.py`): asked across all units, one kind on twenty busy
+    cameras filled the 500-row window, and the loud ones cut the quiet camera a scenario was watching. A trigger
+    that names its unit gets a query for that unit, which no other camera can crowd."""
+    box = Box()
+    t = box.wall()
+    noise = [ev(t - 250 + i * 0.4, "vms", 13, "io.input", port="1", value="open") for i in range(600)]
+    log = _Log(noise + [ev(t - 200, "vms", 12, "io.input", port="1", value="closed")], wall=box.wall)
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    assert w.reconcile_once() == ["one"] and "cut" not in w.status()[0]
+    assert log.asked[0]["unit"] == "12"
