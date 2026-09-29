@@ -90,9 +90,9 @@ def test_a_stolen_holder_can_neither_take_the_domain_nor_hand_out_keys_of_its_ow
     wall = Clock()
     fed, devices, root, holder, agents, _ = _site(wall)
     thief = Signer(DOMAIN, holder.vars, now=wall)                        # read off the flash
-    forged = sign({"term": 9, "host": "cam-SN0", "at": wall()}, thief.tokens)
+    forged = sign({"term": 9, "holder": "cam-SN0", "at": wall()}, thief.tokens)
     import json
-    holder.vars.put("domain/host", {"doc": json.dumps(forged, sort_keys=True)})
+    holder.vars.put("domain/holder", {"doc": json.dumps(forged, sort_keys=True)})
     mine = KeySet(current="evil", keys={"evil": Ed25519PrivateKey.generate().public_key().public_bytes(
         serialization.Encoding.Raw, serialization.PublicFormat.Raw)})
     DomainPublisher(holder.vars).publish_keys(mine)
@@ -136,7 +136,7 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     except TokenError:
         pass
     assert verify(new.signer.tokens.issue("anna", 900, now=wall()), keys, now=wall())["sub"] == "anna"
-    assert read_holder(devices["cam-SN2"].flash, keys, wall())["host"] == "cam-SN1"
+    assert read_holder(devices["cam-SN2"].flash, keys, wall())["holder"] == "cam-SN1"
     assert SharedView(devices["cam-SN2"].flash, devices["cam-SN2"].disk, wall).settings() == {"retention_days": 30}
 
     bundle = TrustBundle([root.cert])

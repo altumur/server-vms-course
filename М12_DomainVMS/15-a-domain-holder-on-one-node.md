@@ -40,13 +40,13 @@
 
 ## Шаг 1 — Держатель держит срок
 
-Держатель пишет запись в свои собственные Variables — `{term, host, at}`, подписанную ключом домена, — и агент каждого члена несёт её домой, как несёт ключи:
+Держатель пишет запись в свои собственные Variables — `{term, holder, at}`, подписанную ключом домена, — и агент каждого члена несёт её домой, как несёт ключи:
 
 ```python
     def claim(self) -> None:
-        doc = sign({"term": self.term, "host": self.name, "at": self.wall()}, self.signer.tokens)
-        _, idx = self.vars.get(HOST)
-        self.vars.put(HOST, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
+        doc = sign({"term": self.term, "holder": self.name, "at": self.wall()}, self.signer.tokens)
+        _, idx = self.vars.get(HOLDER)
+        self.vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
 ```
 
 Срок — это эпоха уровнем выше. Воркер держит эпоху для камеры; держатель держит срок для домена. Ни то, ни другое не раздаётся голосованием — голосовать нечем, потому что ни один raft не охватывает кластеры. Перенос, сделанный оператором, берёт следующий номер, и номер решает.
@@ -61,7 +61,7 @@
     def backup(self, targets: list[str], objects) -> int:
         self.guard()
         self.backup_rev += 1
-        doc = sign({"term": self.term, "rev": self.backup_rev, "host": self.name, "at": self.wall(),
+        doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
                     "state": self.export()}, self.signer.tokens)
         ...
 ```
@@ -76,6 +76,8 @@
 - решения о размещении;
 - кэш лицензии (урок 5), чтобы перенос не начинал льготный срок зря;
 - неделя истории тревог (урок 14) — не из Variables, а из хранилища объектов держателя (`EXPORTED_OBJECTS`): она лежит на его карте, рядом с отчётами, и умерла бы вместе с ней. Восстановленная, она такой давности, как копия; остальное дополнят отчёты.
+
+**Копию узнают по хэшу, и это обязывает при любой правке формы.** Указатель у держателя и копия указателя у члена несут `sha256` документа, и перенос берёт только копию, чей текст совпадает с указателем. Продукт, переименовывая поле `host` в `holder` (обратная связь, BB), переписал документы копий во всех хранилищах и пересчитал хэш во всех указателях: иначе все копии стали бы «не той, что называет указатель», и узнали бы об этом при переносе, то есть в худший момент. Любая миграция формы копии — это миграция и её указателей.
 
 Первая версия списка кончалась уроком 14. Продукт нашёл, что после переноса пропадали цепочка через ретрансляторы, список членов и дороги: толкание снова становилось забором (обратная связь, AS). Чего в списке нет, то не теряется. Книги пересчитывает следующий проход. Ключи, список отзыва и права каждого кластера уже лежат на каждом члене, и первым среди них — на новом держателе.
 
@@ -121,7 +123,7 @@ def find_holder(fed, member_vars, keys, now: float) -> str | None:
     best = read_holder(member_vars, keys, now)
     for name, c in fed.clusters.items():
         ...
-        if not rec or rec["host"] != name:
+        if not rec or rec["holder"] != name:
             continue                                     # a member's CARRIED record is hearsay; only the holder's own claim counts here
 ```
 
@@ -233,7 +235,7 @@ def install(fed, name, domain_id, root, wall, objects):
     signer = Signer(domain_id, vars_, now=wall, root=root)
     DomainPublisher(vars_).publish_keys(root.key_set(signer.tokens.keyset(), rev=1,
                                                      issuing=[signer.root.cert.serial_number]))
-    record = sign({"term": 1, "host": name, "at": wall()}, root)
+    record = sign({"term": 1, "holder": name, "at": wall()}, root)
     ...
 ```
 

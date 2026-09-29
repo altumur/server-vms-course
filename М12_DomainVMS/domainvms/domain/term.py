@@ -19,7 +19,7 @@ stolen. So moving the domain has to become an ordinary operation, and three thin
                     silently lost and not silently applied: they are listed, for a person, as "not in term
                     N+1 — apply again?"
 
-    domain/host                 in the holder's Variables, and carried to every member: {term, host, from}, signed —
+    domain/holder                 in the holder's Variables, and carried to every member: {term, holder, from}, signed —
                                 `from`: the backup {term, rev} this term was restored from
     domain/backup/<member>      in the holder's Variables: a pointer, for each member chosen to keep a copy
     backup/rev-<n>              in the holder's durable objects: the signed state
@@ -50,7 +50,7 @@ from .shared import NotTaken, sign, verify
 from .signer import DomainRoot, Signer, is_recovery_file
 from .tokens import ROOT_KID, KeySet
 
-HOST, BACKUP, STRANDED = "domain/host", "domain/backup", "domain/stranded"
+HOLDER, BACKUP, STRANDED = "domain/holder", "domain/backup", "domain/stranded"
 # Everything the domain DECIDED and nobody else holds (feedback AS: the first list stopped at Lesson 14, and a
 # move lost the topology of Lesson 17 — every chain through a relay —, the list of members, and every road a
 # recorder had said it could not pull, which became a pull again). What is not here is not lost: the books are
@@ -78,7 +78,7 @@ class TwoHolders(Exception):
 
 
 def read_holder(vars_, keys, now: float) -> dict | None:
-    items, _ = vars_.get(HOST)
+    items, _ = vars_.get(HOLDER)
     if not items:
         return None
     try:
@@ -100,7 +100,7 @@ def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, ob
     signer = Signer(domain_id, vars_, now=wall, root=root)
     DomainPublisher(vars_).publish_keys(root.key_set(signer.tokens.keyset(), rev=1,
                                                      issuing=[signer.root.cert.serial_number]))
-    record = sign({"term": 1, "host": name, "at": wall()}, root)
+    record = sign({"term": 1, "holder": name, "at": wall()}, root)
     holder = DomainHolder(fed, name, signer, 1, wall, objects=objects, record=record)
     holder.claim()
     return holder
@@ -131,10 +131,10 @@ class DomainHolder:
         return member_copy(member, self.objects, wall=self.wall)
 
     def claim(self) -> None:
-        doc = self.record or sign({"term": self.term, "host": self.name, "at": self.wall(),
+        doc = self.record or sign({"term": self.term, "holder": self.name, "at": self.wall(),
                                    **({"from": self.restored_from} if self.restored_from else {})}, self.signer.tokens)
-        _, idx = self.vars.get(HOST)
-        self.vars.put(HOST, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
+        _, idx = self.vars.get(HOLDER)
+        self.vars.put(HOLDER, {"doc": json.dumps(doc, sort_keys=True)}, cas=idx)
 
     # A holder process starting — after a reboot, a crash, a power cut. It LOOKS before it claims (feedback AS): its
     # own agent may have carried a larger term into this cluster before this process came up, and then there is
@@ -180,7 +180,7 @@ class DomainHolder:
         self._not_deposed()                              # a FROZEN holder still backs up: that is how it hands over
         self.backups = objects
         self.backup_rev += 1
-        doc = sign({"term": self.term, "rev": self.backup_rev, "host": self.name, "at": self.wall(),
+        doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
                     "state": self.export(), "objects": self.export_objects()}, self.signer.tokens)
         raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
         key = f"backup/rev-{self.backup_rev}"
@@ -244,7 +244,7 @@ class DomainHolder:
             rev = max(mine)
             base, state = f"its own last backup, rev {rev}", mine[rev]
         left = stranded(self.vars, state)
-        self.vars.put(STRANDED, {"doc": json.dumps({"term": self.deposed_by["term"], "host": self.deposed_by["host"],
+        self.vars.put(STRANDED, {"doc": json.dumps({"term": self.deposed_by["term"], "holder": self.deposed_by["holder"],
                                                      "base": base, "items": left}, sort_keys=True, ensure_ascii=False)})
 
     def _own_backups(self) -> dict[int, dict]:
@@ -258,7 +258,7 @@ class DomainHolder:
                 doc = json.loads(raw)                    # its own, in its own store: read, not verified
             except (TypeError, ValueError):
                 continue
-            if int(doc.get("term", -1)) == self.term and doc.get("host") == self.name:
+            if int(doc.get("term", -1)) == self.term and doc.get("holder") == self.name:
                 out[int(doc["rev"])] = doc.get("state", {})
         return out
 
@@ -277,7 +277,7 @@ class DomainHolder:
 
     def _not_deposed(self) -> None:
         if self.deposed_by:
-            raise Deposed(f"{self.name} held the domain at term {self.term}; {self.deposed_by['host']} holds it "
+            raise Deposed(f"{self.name} held the domain at term {self.term}; {self.deposed_by['holder']} holds it "
                           f"at term {self.deposed_by['term']} — edits go there")
 
 
@@ -285,7 +285,7 @@ class DomainHolder:
 # never goes BACKWARDS. An agent still pointed at an old holder that came back would otherwise carry that
 # holder's smaller term over the larger one, and undo the move on every member it reached.
 def carry_holder(domain_vars, member_vars, keys, now: float) -> str:
-    items, _ = domain_vars.get(HOST)
+    items, _ = domain_vars.get(HOLDER)
     if not items:
         return "no holder record"
     try:
@@ -297,8 +297,8 @@ def carry_holder(domain_vars, member_vars, keys, now: float) -> str:
     have = read_holder(member_vars, keys, now)
     if have and int(have["term"]) >= int(incoming["term"]):
         return "holding" if int(have["term"]) == int(incoming["term"]) else "holding a larger term"
-    _, idx = member_vars.get(HOST)
-    member_vars.put(HOST, dict(items), cas=idx)
+    _, idx = member_vars.get(HOLDER)
+    member_vars.put(HOLDER, dict(items), cas=idx)
     return f"took term {incoming['term']}"
 
 
@@ -312,13 +312,13 @@ def find_holder(fed, member_vars, keys, now: float) -> str | None:
             rec = read_holder(c.vars, keys, now)
         except Unreachable:
             continue
-        if not rec or rec["host"] != name:
+        if not rec or rec["holder"] != name:
             continue                                     # a member's CARRIED record is hearsay; only the holder's own claim counts here
         if best is None or int(rec["term"]) > int(best["term"]):
             best = rec
-        elif int(rec["term"]) == int(best["term"]) and rec["host"] != best["host"]:
-            raise TwoHolders(f"{rec['host']} and {best['host']} both claim term {rec['term']}: the domain was moved twice")
-    return best["host"] if best else None
+        elif int(rec["term"]) == int(best["term"]) and rec["holder"] != best["holder"]:
+            raise TwoHolders(f"{rec['holder']} and {best['holder']} both claim term {rec['term']}: the domain was moved twice")
+    return best["holder"] if best else None
 
 
 # How long the old holder's token keys stay trusted after a PLANNED move (step 9): the people's tokens it issued
@@ -405,7 +405,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     for name, c in fed.clusters.items():
         c.is_domain_holder = name == new
     restored_from = {"term": int(best[1]["term"]), "rev": int(best[1]["rev"])} if best else None
-    record = None if root is None else sign({"term": term, "host": new, "at": now,
+    record = None if root is None else sign({"term": term, "holder": new, "at": now,
                                               **({"from": restored_from} if restored_from else {})}, root)
     holder = DomainHolder(fed, new, signer, term, wall, objects=objects_of(new), record=record)
     holder.backup_rev = int(best[1]["rev"]) if best else 0

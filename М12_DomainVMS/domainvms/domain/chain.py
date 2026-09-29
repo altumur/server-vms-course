@@ -364,8 +364,8 @@ def _relayed_rows(member: str) -> list[str]:
     from .agent import GRANTS_PATH, KEYS_PATH, PER_CLUSTER, REVOKED_PATH
     from .pending import PENDING_PATH
     from .shared import POINTER
-    from .term import BACKUP, HOST
-    return [KEYS_PATH, REVOKED_PATH, HOST, POINTER, f"{GRANTS_PATH}/{member}", f"{PENDING_PATH}/{member}",
+    from .term import BACKUP, HOLDER
+    return [KEYS_PATH, REVOKED_PATH, HOLDER, POINTER, f"{GRANTS_PATH}/{member}", f"{PENDING_PATH}/{member}",
             f"{BACKUP}/{member}", *[f"{p}/{member}" for p in PER_CLUSTER]]
 
 

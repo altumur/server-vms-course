@@ -180,7 +180,7 @@ def test_a_backup_not_signed_by_the_domain_is_ignored_however_new_it_claims_to_b
     wall = Clock()
     fed, devices, signer, offline, holder, agents = _site(wall)
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
-    forged = sign({"term": 9, "rev": 99, "host": "cam-SN2", "state": {"domain/grants/cam-SN3": {"mallory": "admin"}}},
+    forged = sign({"term": 9, "rev": 99, "holder": "cam-SN2", "state": {"domain/grants/cam-SN3": {"mallory": "admin"}}},
                   TokenIssuer(DOMAIN))
     devices["cam-SN2"].disk.put(BACKUP, json.dumps(forged).encode())
     devices["cam-SN2"].flash.put(BACKUP, {"rev": 99, "term": 9, "sha256": "x"})
@@ -255,7 +255,7 @@ def test_a_planned_handover_strands_nothing():
     assert report["planned"] and report["stranded"] == [] and report["term"] == 2
     assert report["sentence"].endswith("nothing stranded")
     assert "SN3" in PendingEdits(new.vars, wall).of("cam-SN3")
-    assert holder.deposed_by["host"] == "cam-SN1" and fed.domain_holder.name == "cam-SN1"
+    assert holder.deposed_by["holder"] == "cam-SN1" and fed.domain_holder.name == "cam-SN1"
 
 
 def test_a_handover_the_target_did_not_take_is_called_off_and_changes_nothing():

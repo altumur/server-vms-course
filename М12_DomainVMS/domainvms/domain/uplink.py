@@ -55,8 +55,8 @@ def _rows() -> tuple[str, ...]:
     those modules import the agent, and the agent imports this)."""
     from .pending import OUTCOMES_PATH
     from .shared import POINTER, REFUSED
-    from .term import BACKUP, HOST
-    return (OUTCOMES_PATH, POINTER, REFUSED, HOST, BACKUP, "vms/epoch/")
+    from .term import BACKUP, HOLDER
+    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP, "vms/epoch/")
 
 
 def base(member: str) -> str:
