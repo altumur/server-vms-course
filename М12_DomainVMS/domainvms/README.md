@@ -17,7 +17,7 @@ domainvms/
     grants.py         Lesson 4  cluster-local grants with expiry (ClusterGrants); ClusterAuthoriser: signature, then its own table, never a network call
     agent.py          Lesson 4  the domain agent: keys, revocations and the cluster's grants into its domain/* and nothing else; `python3 -m domain.agent`
     signer.py         Lessons 4, 7  the domain signer: root, service and LDevID lifetimes, renewal with overlap, root rotation with a trust bundle and a cross-cert, clock skew named
-    entitlement.py    Lesson 5  the licence cached in the domain cluster, verified against the product's vendor key, graceful for a stated period; recording never stops
+    entitlement.py    Lesson 5  the licence cached in the domain holder, verified against the product's vendor key, graceful for a stated period; recording never stops
     enroll.py         Lesson 6  pledge, registrar, a simulated manufacturer CA and MASA; the voucher path and the approval queue with audit and expiry
     cloud.py          Lesson 8  the bandwidth and cost arithmetic; М11's worker job rendered three ways and diffed
     pending.py        Lesson 9  an edit kept for a cluster that is off: per field, beside the grants, applied by the member's console, matched by rev
@@ -26,8 +26,8 @@ domainvms/
     shared.py         Lesson 12 shared settings: one signed object behind a pointer, carried by agents, ordered by (term, rev), defaults resolved at read
     crossing.py       Lesson 13 a stream from another cluster: one recording cluster per camera, the source book, backfill planned from it and fetched from the card
     alarms.py         Lesson 14 one list of alarms from every member; an alarm that leaves at once; silence as an alarm, witnessed by the ingest; a week of history at the domain
-    term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the host, re-hosting, never a smaller term, what an old host alone held
-    uplink.py         Lesson 10 every connection is the member's: the agent's report into the domain cluster; member_copy; silence on the domain's clock
+    term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the holder, moving, never a smaller term, what an old holder alone held
+    uplink.py         Lesson 10 every connection is the member's: the agent's report into the domain holder; member_copy; silence on the domain's clock
     ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request, asks between cameras
     scenario.py       Lessons 12, 16 scenarios between cameras end to end: the pairs the book of asks is built from; the camera's side, event → ask
     books.py          Lessons 13, 16, 17 the domain's pass over every per-cluster book — sources, primaries, polls, upstream, asks — run by the signer service
@@ -67,11 +67,11 @@ python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variable
 | 12 | settings shared without a database | `test_lesson12_shared.py`: delivery named per member; a stranger's signature refused with a matching checksum; never backwards; defaults resolved and no row touched; two editors told; a tree over 64 KiB; the domain off and a camera rebooted |
 | 13 | a server room records a camera of another cluster | `test_lesson13_crossing.py`: resolved from the carried book with nothing written into the camera; one recording cluster per camera; six hours with the domain off; a camera that moved meanwhile, found again; backfill fetches what the card still holds and drops the rest |
 | 14 | one list of alarms; the camera that goes dark | `test_lesson14_alarms.py`: merged newest first; an alarm wakes the agent, a storm is one report a second; a dark camera from its last report, "none known since", and its silence an alarm; alive and not reporting, by the ingest's word; a week of history outlives the card; a storm is truncated, not the page |
-| 15 | the domain re-hosted from one camera to another | `test_lesson15_domain_of_one.py`: the kept edit survives the host; the host record never goes backwards; the old host steps down and lists what it alone held; a forged backup ignored; the wrong key followed by nobody; the second re-host takes term 3; a planned handover strands nothing, is called off cleanly when the target cannot take the backup, and reports a write that slipped past its freeze |
+| 15 | the domain moved from one camera to another | `test_lesson15_domain_of_one.py`: the kept edit survives the holder; the holder record never goes backwards; the old holder steps down and lists what it alone held; a forged backup ignored; the wrong key followed by nobody; the second move takes term 3; a planned handover strands nothing, is called off cleanly when the target cannot take the backup, and reports a write that slipped past its freeze |
 
 ## What the design record says, as code
 
-**No database.** `grep -r "postgres\|sqlite\|CREATE TABLE" domain/` finds nothing. Users are Variables under `identity/*`; the read model is memory rebuilt from objects; placement is Variables; the signer's keys are one Variable. `IdentityStore.restore()` and `Signer.restore()` are the re-hosting: the backed-up key, then the identity object the pointer names.
+**No database.** `grep -r "postgres\|sqlite\|CREATE TABLE" domain/` finds nothing. Users are Variables under `identity/*`; the read model is memory rebuilt from objects; placement is Variables; the signer's keys are one Variable. `IdentityStore.restore()` and `Signer.restore()` are the moving: the backed-up key, then the identity object the pointer names.
 
 **The domain reads two objects and never the rows.** `Cluster.snapshot()` is the controller's `vms/snapshot` (with its `ts`); `Cluster.heartbeats()` is every `vms/<w>/heartbeat`. `ReadView.refresh()` reads those and nothing else; `DomainDirectory.where(ref)` answers from them. Nothing in this package reads `vms/cameras/*`.
 

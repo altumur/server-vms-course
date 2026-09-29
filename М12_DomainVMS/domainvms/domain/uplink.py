@@ -7,11 +7,11 @@ what that member's agent left there; what it wants of a member is a row the agen
 12–15 — that half was always the agent's). The agent already opens one connection to the domain on every
 pass; this module is the other half of that same pass.
 
-    up      the member's agent writes a REPORT into the domain cluster's object store, under a prefix of
+    up      the member's agent writes a REPORT into the domain holder's object store, under a prefix of
             its own — `domain/members/<member>/` — one writer per prefix, as everywhere: copies of the
             objects the domain reads (its workers' heartbeats and snapshot shards, its recorders' too),
             copies of the rows the domain reads (the outcomes of kept edits, its copy of the shared
-            settings' pointer, the host record it follows, its backup pointer, its epochs), the pages it
+            settings' pointer, the holder record it follows, its backup pointer, its epochs), the pages it
             is asked for (its newest alarms, the ones it keeps for a neighbour) — and, LAST, `reported`:
             the time of this report. Only what changed is rewritten
     read    `member_copy()` gives the domain a `Cluster` over that prefix, with the same reads a member's
@@ -30,11 +30,11 @@ pass; this module is the other half of that same pass.
             difference is kept (`offset`) and shown with the member
 
 What moves: the cost. A domain pass reads one store instead of N members, and a member that cannot be
-reached costs nothing to ask about. Each member's report is writes into the domain cluster instead — at
+reached costs nothing to ask about. Each member's report is writes into the domain holder instead — at
 three hundred members, measured in Lesson 11.
 
-The one exception, and it is named, not hidden: re-hosting the domain on another camera (Lesson 15) needs
-the new host to find the newest backup, and it reads its PEERS for it — member to member, on the site. The
+The one exception, and it is named, not hidden: moving the domain to another camera (Lesson 15) needs
+the new holder to find the newest backup, and it reads its PEERS for it — member to member, on the site. The
 domain in steady state never opens a connection to anyone.
 """
 from __future__ import annotations
@@ -68,7 +68,7 @@ class NotPublished(Exception):
 
 
 # One report. `member_vars` and `member_objects` are the member's OWN stores, read locally by its agent;
-# `domain_objects` is the domain cluster's object store, the one connection. `pages` is what the member is
+# `domain_objects` is the domain holder's object store, the one connection. `pages` is what the member is
 # asked to show beyond its rows and objects — Lesson 14's alarm pages — as {name: bytes}.
 #
 # Lesson 10's ordering rule, on the report: a member that has not published yet does not report. Its report

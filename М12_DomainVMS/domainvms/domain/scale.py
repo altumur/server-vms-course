@@ -59,7 +59,7 @@ class Meter:
 
     def wrap(self, c: Cluster) -> Cluster:
         return Cluster(c.name, _Metered(self, c.name, c.vars), _Metered(self, c.name, c.objects), c.reaches,
-                       c.is_domain_cluster)
+                       c.is_domain_holder)
 
     def wrap_all(self, fed: Federation) -> Federation:
         out = Federation()

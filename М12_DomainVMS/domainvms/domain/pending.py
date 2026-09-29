@@ -5,7 +5,7 @@ right where a whole cluster is rarely unreachable, and wrong where a cluster is 
 its own cluster, off for its power, its switch, its maintenance, and edited in bulk with forty-nine others.
 
 So the domain keeps the edit, and keeps it the way it keeps everything a cluster needs from it: in the domain
-cluster's Variables, under `domain/pending/<cluster>`, beside `domain/grants/<cluster>`, carried home by that
+holder's Variables, under `domain/pending/<cluster>`, beside `domain/grants/<cluster>`, carried home by that
 cluster's agent when it is back. The cluster's own console applies it. Nothing about ownership moves: the
 cluster's console is still the only writer of its rows, and the agent still writes nothing but `domain/*`.
 

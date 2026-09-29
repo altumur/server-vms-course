@@ -38,4 +38,4 @@ A `TokenError` becomes `PermissionError("token refused: …")`; no matching gran
 ## Notes
 - The item key splits on `|`; a subject containing `|` would break `grants_from_items`. Subjects here are login ids.
 - `gateway.py` defines its own `Forbidden` for the same refusal; the two are not related classes.
-- In production the grants a cluster reads live at `domain/grants` (the agent copies `domain/grants/<cluster>` from the domain cluster to that exact path in its own cluster — see `agent.py.md`).
+- In production the grants a cluster reads live at `domain/grants` (the agent copies `domain/grants/<cluster>` from the domain holder to that exact path in its own cluster — see `agent.py.md`).

@@ -3,7 +3,7 @@
 # federates them; a request to any region is forwarded to the right one.
 # Nothing here replicates a worker, a Variable or an object between clusters.
 #
-# Servers of the south cluster (north is the domain cluster and the
+# Servers of the south cluster (north is the domain holder and the
 # authoritative region for ACL policies):
 region     = "south"
 datacenter = "room-b"

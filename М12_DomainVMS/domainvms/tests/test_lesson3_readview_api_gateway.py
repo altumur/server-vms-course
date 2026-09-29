@@ -251,10 +251,10 @@ def test_console_over_http():
         con.stop(srv)
 
 
-def test_the_domain_cluster_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
-    """One tree for the site (feedback X). The domain leaves its view as one object in the domain cluster's own
+def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
+    """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A
-    cluster that does not host the domain has no such object, and says it does not know the others. An old view
+    cluster that does not hold the domain has no such object, and says it does not know the others. An old view
     is served with its age and `silent`, never as if it were current."""
     from w2cplatform.console import domain_view
     wall = Clock(10_000.0); fed, links = _four_workers(wall)
@@ -266,7 +266,7 @@ def test_the_domain_cluster_console_draws_the_domain_from_one_object_and_says_wh
     assert st == 200 and d["complete"] and not d["silent"] and d["age"] == 0
     assert d["members"]["south"]["state"] == "ok" and len(d["units"]) == 200 and d["crossings"] == {"SN7": "north"}
     assert {c["cluster"] for c in d["units"] if c["worker"] == "w-0"} == {"north", "south"}
-    assert domain_view(south.objects, wall())[0] == 404      # not the domain's host: it knows only itself
+    assert domain_view(south.objects, wall())[0] == 404      # not the domain's holder: it knows only itself
 
     links["south"].up = False; wall.advance(30); view.refresh(); view.publish(north.objects)
     st, d = domain_view(north.objects, wall())

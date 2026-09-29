@@ -13,7 +13,7 @@ server is not a trigger (Nomad moves the worker; its cameras follow its
 name). A dead cluster is not a trigger either — its cameras cannot be
 reached from anywhere else.
 
-The placement is STORED, with a reason and a time, in the domain cluster's
+The placement is STORED, with a reason and a time, in the domain holder's
 Variables under domain/placement/<camera> — by check-and-set, which is why
 two placers racing is harmless: the second gets a conflict and re-reads.
 """
@@ -52,7 +52,7 @@ class ClusterPlacer:
         """`headroom(cluster) -> float` is the cluster's spare capacity in units
         of I, from its own placement service; the domain does not measure it."""
         self.fed = fed
-        self.vars = vars_ or fed.domain_cluster.vars
+        self.vars = vars_ or fed.domain_holder.vars
         self.headroom = headroom or (lambda c: 1.0)
         self.clock = clock
 

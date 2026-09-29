@@ -321,7 +321,7 @@ def _scenario_site(wall, scenarios, open_doors=()):
     from domain.shared import SharedSettings, SharedView
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, _ = _site(wall)
     home = Ingest("north", NORTH_URLS, keys=lambda: ClusterTrust(north.vars).keyset(), wall=wall)
-    home.announce(north.objects)                                       # the domain's cluster: every camera reaches it
+    home.announce(north.objects)                                       # the domain's holder: every camera reaches it
 
     def member(serial, pushes=True):
         d = DeviceCluster(serial, FakeVariables(), wall=wall, pushes=pushes)
@@ -484,14 +484,14 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     """No server: the domain runs on SN0 (Lesson 15), and SN0 runs a light ingest — polls and asks, no streams.
     Every camera polls it, as it takes everything else from it. The gate camera SN1 asks the PTZ camera SN2
     through it. SN0 dies: asks stop, like edits of the shared settings — nothing to wait for, "not asked".
-    The operator re-hosts on SN3; its first pass over the books names its own ingest, the agents carry the
+    The operator moves the domain to SN3; its first pass over the books names its own ingest, the agents carry the
     books home, and the same scenario acts again. The shared document comes back with the domain, from a
     member's copy: the book of asks is built from its scenarios."""
     from domain.books import Books
     from domain.ingest import Asker
     from domain.scenario import Scenarios
     from domain.shared import SharedSettings, SharedView
-    from domain.term import DomainHost, rehost
+    from domain.term import DomainHolder, move_domain
     from tests.test_lesson15_domain_of_one import _agent, _domain, _objects
 
     wall = Clock()
@@ -503,10 +503,10 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
         fed.add(d.cluster(domain=i == 0))
     home = fed.clusters["cam-SN0"].vars
     signer = Signer("acme", home, now=wall)
-    offline = signer.backup()                                          # Lesson 7: the key, kept beyond the host
+    offline = signer.backup()                                          # Lesson 7: the key, kept beyond the holder
     DomainPublisher(home).publish_keys(signer.tokens.keyset())
-    host = DomainHost(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
-    host.claim()
+    holder = DomainHolder(fed, "cam-SN0", signer, term=1, wall=wall, objects=devices["cam-SN0"].disk)
+    holder.claim()
     SharedSettings(home, devices["cam-SN0"].disk_door(), signer.tokens, wall=wall).edit(lambda s: s.update(scenarios=[
         {"when": {"camera": "SN1", "kind": "vehicle"}, "then": {"camera": "SN2", "action": "preset", "arg": 3}}]),
         base_rev=0, by="anna")
@@ -523,11 +523,11 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
                 return i
         raise Unreachable(f"{url} did not answer")
 
-    def settle(host_name, issuer):                                     # the host's pass over the books, agents both sides
-        live = [n for n in devices if n != host_name and devices[n].door_open]
-        agents = [_agent(fed, devices, n, host_name, wall) for n in live]
-        books = Books(Crossings(fed.clusters[host_name].vars, ReadView(_domain(devices, host_name, wall), wall=wall),
-                                wall, issuer=issuer), devices[host_name].disk)      # the host reads reports, not doors
+    def settle(holder_name, issuer):                                     # the holder's pass over the books, agents both sides
+        live = [n for n in devices if n != holder_name and devices[n].door_open]
+        agents = [_agent(fed, devices, n, holder_name, wall) for n in live]
+        books = Books(Crossings(fed.clusters[holder_name].vars, ReadView(_domain(devices, holder_name, wall), wall=wall),
+                                wall, issuer=issuer), devices[holder_name].disk)      # the holder reads reports, not doors
         for n in live:
             devices[n].publish()
         for a in agents:
@@ -547,7 +547,7 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     assert x["state"] == "asked" and x["ingest"] is ingests["cam-SN0"]
     assert ptz.pass_once([])["asks"] == [({"action": "preset", "arg": 3}, "performed")]
 
-    host.backup(["cam-SN1", "cam-SN3"], devices["cam-SN0"].disk_door())
+    holder.backup(["cam-SN1", "cam-SN3"], devices["cam-SN0"].disk_door())
     for n in ("cam-SN1", "cam-SN3"):
         _agent(fed, devices, n, "cam-SN0", wall).sync()               # the backup, carried
     devices["cam-SN0"].power_off()                                     # the domain camera is gone
@@ -555,8 +555,8 @@ def test_cameras_only_asks_go_through_the_domain_camera_and_follow_it_when_the_d
     [x] = gate.on_event("vehicle")
     assert x["state"] == "no ingest answered: not asked"               # stopped, with the rest of the domain
 
-    new, report = rehost(fed, "cam-SN3", offline, "acme", _objects(devices), wall)
-    assert report["shared_from"] == "cam-SN3"                          # the document, from the new host's own copy
+    new, report = move_domain(fed, "cam-SN3", offline, "acme", _objects(devices), wall)
+    assert report["shared_from"] == "cam-SN3"                          # the document, from the new holder's own copy
     light_ingest("cam-SN3", new.vars)
     settle("cam-SN3", new.signer.tokens)
     assert ptz.entry()["cluster"] == "cam-SN3" and [r["cluster"] for r in gate.asker.book()["SN2"]] == ["cam-SN3"]

@@ -21,12 +21,12 @@ recording goes on with the domain switched off, from the address last carried.
     a hint          what the book says about the card is as old as the book. The device is asked again
                     before a range is fetched, and a range the card no longer holds is dropped, not retried
 
-    domain/crossings            in the domain cluster: {ref: the cluster that records it}
-    domain/sources/<cluster>    in the domain cluster: that cluster's source book
+    domain/crossings            in the domain holder: {ref: the cluster that records it}
+    domain/sources/<cluster>    in the domain holder: that cluster's source book
     domain/sources              in the recording cluster: its agent's copy
-    domain/primaries/<cluster>  in the domain cluster: the camera cluster's book of primaries
+    domain/primaries/<cluster>  in the domain holder: the camera cluster's book of primaries
     domain/primaries            in the camera's cluster: its agent's copy, read by the backup on its card
-    domain/poll/<cluster>       in the domain cluster: for a camera that pushes and that NOBODY records, the
+    domain/poll/<cluster>       in the domain holder: for a camera that pushes and that NOBODY records, the
                                 ingest it polls anyway — so an ask reaches it (Lesson 16, step 8)
     domain/poll                 in the camera's cluster: its agent's copy
 
@@ -70,7 +70,7 @@ class Crossings:
         # every use, so an edit there reaches the next pass without a restart.
         self._centre, self._star, self.topology = centre, (frozenset(star) if star else None), topology
         # Lesson 16, step 8: where a pushing camera that nobody records keeps its poll — a cluster every camera
-        # already reaches. The centre if there is one, else the cluster that hosts the domain: a camera reaches
+        # already reaches. The centre if there is one, else the cluster that holds the domain: a camera reaches
         # it for its agent's pass anyway.
         self.poll_home = poll_home
 
@@ -100,14 +100,14 @@ class Crossings:
 
     def _poll_home(self, home: str | None = None) -> str | None:
         """Where a camera of cluster `home` polls when nobody records it. A camera that reaches only its relay
-        (Lesson 17, `report@relay`) polls that relay's ingest: the centre and the domain's cluster are exactly
+        (Lesson 17, `report@relay`) polls that relay's ingest: the centre and the domain's holder are exactly
         what it cannot reach."""
         via = self.via_of(home)
         if via:
             return via
         if self.poll_home or self.centre:
             return self.poll_home or self.centre
-        dc = getattr(self.view.fed, "domain_cluster", None)
+        dc = getattr(self.view.fed, "domain_holder", None)
         return dc.name if dc is not None else None
 
     # Who holds a poll — one rule (feedback AL): EVERY member camera, its door open or not. A camera of ours

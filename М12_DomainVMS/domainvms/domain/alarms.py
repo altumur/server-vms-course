@@ -202,7 +202,7 @@ class DomainAlarms:
         until = self.wall() if until is None else until
         events, members = [], {}
         for name, c in self.fed.clusters.items():
-            if c.is_domain_cluster:
+            if c.is_domain_holder:
                 continue
             door = self.doors(name)
             kept = self.history.read(name, since, until) if self.history is not None else []

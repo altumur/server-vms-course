@@ -5,11 +5,11 @@ monitoring centre. Nothing new is needed beyond Lesson 16 repeated on every hop,
 generalises Lessons 10 and 16: EACH LEVEL DIALS THE LEVEL ABOVE; a level must be reachable from below and
 never from above.
 
-    control  flat where it can be: one customer, one domain, hosted by the centre, and every member that can
+    control  flat where it can be: one customer, one domain, held by the centre, and every member that can
              reach the centre reports to it directly (Lesson 10). A camera that can reach ONLY ITS RELAY
              cannot — and then the relay is its road to the domain both ways. The relay's agent RELAYS down
              everything the domain leaves for that camera (keys, revocations, its grants, kept edits, its books,
-             stream tokens, the host record, shared settings and backups, with their objects) into `relay/` in
+             stream tokens, the holder record, shared settings and backups, with their objects) into `relay/` in
              the relay's own stores, with the time the relay last reached the domain; the camera's agent reads
              that instead of the domain (`Relay`). Up, the camera reports into the relay's store and the relay
              carries ONE object for all such cameras (`bundle`, `member_copy(..., via=relay)`). The price: an
@@ -303,7 +303,7 @@ class Forwarder:
 
 
 # -- the summary report ------------------------------------------------------------------------------------
-# The relay carries its cameras' reports as ONE object in the domain cluster. Cameras report to the RELAY's
+# The relay carries its cameras' reports as ONE object in the domain holder. Cameras report to the RELAY's
 # object store (the relay is reachable from its sites — that is the whole premise of this layout); the
 # relay's agent folds what is there into `domain/members/<relay>/bundle`, only when it changed.
 BUNDLE = "bundle"
@@ -325,7 +325,7 @@ def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> boo
 
 
 class BundleView:
-    """The domain cluster's store as a member reporting through `relay` sees it: its report, out of the
+    """The domain holder's store as a member reporting through `relay` sees it: its report, out of the
     relay's bundle. Read only; what `member_copy(..., via=relay)` reads through."""
 
     def __init__(self, relay: str, domain_objects):

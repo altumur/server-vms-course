@@ -14,15 +14,15 @@ READ — on every member, when the domain may be gone:
                     as the original, and a member that got it from a stale mirror or a wrong door cannot be
                     fooled by it
     ordered         (term, rev): a member never replaces a newer document with an older one, whatever
-                    arrives. The term is Lesson 15's — the domain re-hosted — and it outranks the revision
+                    arrives. The term is Lesson 15's — the domain moved — and it outranks the revision
     kept            each member keeps the last verified document in its own durable store. The domain can be
                     gone for a month; the settings are where they are read
     defaults        a shared setting is a DEFAULT, resolved when it is read. It is never copied into rows:
                     that would make the agent a writer of rows, and a change of default a write to five
                     hundred cameras, each of which might be off
 
-    domain/shared            in the domain cluster's Variables: {object, rev, term, sha256} — the pointer, and the CAS
-    shared/rev-<n>           in the domain cluster's objects: the signed document
+    domain/shared            in the domain holder's Variables: {object, rev, term, sha256} — the pointer, and the CAS
+    shared/rev-<n>           in the domain holder's objects: the signed document
     domain/shared            in each member's Variables: the pointer to what it holds, written by its agent
     domain/shared            in each member's durable objects: the document itself
     domain/shared-refused    in each member's Variables: a document it would not take, and why
@@ -116,7 +116,7 @@ class SharedSettings:
         want = (int(ptr["term"]), int(ptr["rev"])) if ptr else (0, 0)
         out = {"rev": want[1], "holding": [], "behind": {}, "refused": {}, "silent": []}
         for name, c in fed.clusters.items():
-            if c.is_domain_cluster:
+            if c.is_domain_holder:
                 continue
             try:
                 have, _ = c.vars.get(POINTER)
@@ -149,7 +149,7 @@ def published(domain_vars, domain_objects) -> dict:
 # the two still points at a document it has.
 #
 # The same carry takes Lesson 15's backup of the domain's state home, under other names: `src` is the pointer
-# in the domain cluster, `dst` the member's copy of it, `obj` where the member keeps the document.
+# in the domain holder, `dst` the member's copy of it, `obj` where the member keeps the document.
 def carry(domain_vars, domain_objects, member_vars, member_objects, keys: KeySet | None, now: float,
           src: str = POINTER, dst: str = POINTER, obj: str = OBJECT, refused: str = REFUSED) -> str:
     ptr, _ = domain_vars.get(src)

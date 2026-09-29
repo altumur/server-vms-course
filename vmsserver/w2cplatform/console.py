@@ -142,7 +142,7 @@ def domain_view(objects, now: float, lost_after: float = 45.0) -> tuple[int, dic
     raw = objects.get(DOMAIN_VIEW)
     if not raw:
         return 404, {"error": "no domain view here: this cluster does not host the domain, and it does not know "
-                              "the others — ask the domain cluster's console"}
+                              "the others — ask the domain holder's console"}
     d = json.loads(raw)
     age = max(0.0, now - float(d.get("ts", 0)))
     return 200, {**d, "age": round(age, 1), "silent": age > lost_after}

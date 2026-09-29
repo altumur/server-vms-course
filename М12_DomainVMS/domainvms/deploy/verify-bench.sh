@@ -4,7 +4,7 @@
 #
 #   deploy/verify-bench.sh north south
 set -u
-DOMAIN="${1:?domain cluster region}"; OTHER="${2:?another region}"
+DOMAIN="${1:?domain holder region}"; OTHER="${2:?another region}"
 
 echo "== 1. two regions, one gossip pool"
 nomad server members | grep -E "$DOMAIN|$OTHER" || { echo "regions not federated"; exit 1; }
@@ -19,7 +19,7 @@ if NOMAD_TOKEN="$TOKEN" nomad var put -region "$OTHER" -force vms/cameras/999 na
   echo "FAIL: the agent could write vms/cameras/999"; exit 1
 else echo "vms/cameras/999: 403 (correct)"; fi
 
-echo "== 4. the domain cluster is a stated decision, visible in the directory"
+echo "== 4. the domain holder is a stated decision, visible in the directory"
 nomad var get -region "$DOMAIN" domain/signer >/dev/null && echo "signer keys in $DOMAIN's raft"
 nomad var get -region "$OTHER" domain/signer >/dev/null 2>&1 && { echo "FAIL: signer keys in $OTHER"; exit 1; } || echo "not in $OTHER (correct)"
 

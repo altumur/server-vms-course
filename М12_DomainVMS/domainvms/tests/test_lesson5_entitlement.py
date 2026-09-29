@@ -18,7 +18,7 @@ def test_licence_verified_cached_and_graceful():
     fed, links = make_domain({"north": ()}, "north")
     vendor = Ed25519PrivateKey.generate()
     pub = vendor.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
-    ent = EntitlementCache("acme", fed.domain_cluster.vars, pub, now=clk)
+    ent = EntitlementCache("acme", fed.domain_holder.vars, pub, now=clk)
     assert ent.status() == "none" and ent.may_add_camera(0) == (False, "entitlement none: recording continues, adding cameras does not")
     ent.install(vendor_licence(vendor, "acme", cameras=100, valid_until=clk() + 30 * 86400, issued=clk()))
     assert ent.status() == "valid" and ent.may_add_camera(99)[0] and not ent.may_add_camera(100)[0]

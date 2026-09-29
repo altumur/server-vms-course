@@ -1,6 +1,6 @@
 """The cluster console — the process that serves browsers, in the standard
 library. One of the two cluster-level jobs (the other is the live gateway);
-the domain cluster runs the same one pointed at every cluster.
+the domain holder runs the same one pointed at every cluster.
 
     GET  /api/cameras?q=&page=&size=&cluster=   the read model, with each row's age and its cluster's state
     GET  /api/causes                            silence grouped by failure domain: one server, one cause
@@ -8,16 +8,16 @@ the domain cluster runs the same one pointed at every cluster.
     PUT  /api/cameras/<camera>                  proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields
     GET  /api/members                           the domain's members: who, admitted how and when, and who is knocking
-    POST /api/members                           {name} — accept one that is knocking: an admin of the domain cluster only
-    DELETE /api/members/<name>                  a member leaves: an admin of the domain cluster only
+    POST /api/members                           {name} — accept one that is knocking: an admin of the domain holder only
+    DELETE /api/members/<name>                  a member leaves: an admin of the domain holder only
     GET  /api/catalog                           what a scenario between cameras may name: the actions one camera may
                                                 ask another, and per camera what it said it raises and can do (`can`)
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
-                                                domain cluster only (`domain/topology.py`)
+                                                domain holder only (`domain/topology.py`)
     GET  /healthz
 
-Each pass also leaves what it saw as `domain/view` in the domain cluster's object store, which that cluster's
+Each pass also leaves what it saw as `domain/view` in the domain holder's object store, which that cluster's
 own console serves at `GET /domain` (feedback X): one tree for a site whose domain lives in its server room.
 
 Stateless: kill it, start another, the first pass rebuilds everything.
@@ -38,7 +38,7 @@ from .readview import ReadView
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
                  publish_to=None, crossings=None, pending=None, topology=None, admin=None, members=None):
-        """`publish_to`: the domain cluster's object store — each pass leaves the view there as `domain/view`,
+        """`publish_to`: the domain holder's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `crossings`: Lesson 13's, to say who records what."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
         self.publish_to, self.crossings, self.pending = publish_to, crossings, pending
@@ -133,7 +133,7 @@ class Console:
                 try:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):
-                        raise ApiError(403, f"{subject} is not an admin of the domain cluster: members are the domain's")
+                        raise ApiError(403, f"{subject} is not an admin of the domain holder: members are the domain's")
                     console.members.add(str(body["name"]), how=f"accepted by {subject}", by=subject)
                     self._send(200, console.members.read())
                 except KeyError:
@@ -149,7 +149,7 @@ class Console:
                 try:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):
-                        raise ApiError(403, f"{subject} is not an admin of the domain cluster: members are the domain's")
+                        raise ApiError(403, f"{subject} is not an admin of the domain holder: members are the domain's")
                     if not console.members.remove(name, by=subject):
                         return self._send(404, {"detail": f"{name} is not a member of this domain"})
                     self._send(200, console.members.read())
@@ -162,10 +162,10 @@ class Console:
                 try:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):
-                        raise ApiError(403, f"{subject} is not an admin of the domain cluster: the topology is the domain's")
+                        raise ApiError(403, f"{subject} is not an admin of the domain holder: the topology is the domain's")
                     rev = console.topology.edit(lambda d: d.update({k: body[k] for k in ("centre", "star", "via") if k in body}),
                                                 int(body.get("base_rev", 0)), known=set(console.view.fed.clusters), by=subject,
-                                                domain=console.view.fed.domain_cluster.name)
+                                                domain=console.view.fed.domain_holder.name)
                     self._send(200, {"rev": rev, **console.topology.read()})
                 except Conflict as e:
                     self._send(409, {"detail": str(e)})
@@ -202,7 +202,7 @@ def main() -> None:
     fed = federation_from_env()
     directory = DomainDirectory(fed)
     view = ReadView(fed, lost_after=float(os.environ.get("LOST_AFTER", "45")))
-    trust = ClusterTrust(fed.domain_cluster.vars)
+    trust = ClusterTrust(fed.domain_holder.vars)
 
     def verifier(token: str) -> str:
         ks = trust.keyset()
@@ -217,26 +217,26 @@ def main() -> None:
         raise Unreachable(f"{cluster} is reached only by its own agent; the edit waits for its next pass")
 
     from .pending import PendingEdits
-    pending = PendingEdits(fed.domain_cluster.vars)
+    pending = PendingEdits(fed.domain_holder.vars)
     api = ConsoleAPI(directory, consoles, verifier=verifier if os.environ.get("AUTH", "1") == "1" else None,
                      pending=pending, last_known=view.last_known)
-    # Each pass also leaves the view in the domain cluster's own object store, for that cluster's console to
-    # draw the domain as the root of its tree (`GET /domain` there). The domain cluster's objects are the
+    # Each pass also leaves the view in the domain holder's own object store, for that cluster's console to
+    # draw the domain as the root of its tree (`GET /domain` there). The domain holder's objects are the
     # domain's; no other member's store is written.
     from .crossing import Crossings
     from .topology import Topology
 
-    def admin(subject: str) -> bool:                  # an `admin` grant in the domain cluster itself
+    def admin(subject: str) -> bool:                  # an `admin` grant in the domain holder itself
         return any(g.subject == subject and g.capability == "admin" for g in trust.grants())
 
     from .members import Members
     from .uplink import _CopyObjects
-    topology = Topology(fed.domain_cluster.vars)
+    topology = Topology(fed.domain_holder.vars)
     configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
-    members = Members(fed.domain_cluster.vars, configured=lambda: configured, domain=fed.domain_cluster.name)
+    members = Members(fed.domain_holder.vars, configured=lambda: configured, domain=fed.domain_holder.name)
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
-                      publish_to=fed.domain_cluster.objects,
-                      crossings=Crossings(fed.domain_cluster.vars, view, topology=topology),
+                      publish_to=fed.domain_holder.objects,
+                      crossings=Crossings(fed.domain_holder.vars, view, topology=topology),
                       pending=pending, topology=topology, admin=admin, members=members)
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()

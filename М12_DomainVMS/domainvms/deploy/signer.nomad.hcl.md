@@ -1,11 +1,11 @@
-# signer.nomad.hcl — the domain signer job: one job, two keys, in the DOMAIN CLUSTER only, kept off the servers that carry workers by a constraint
+# signer.nomad.hcl — the domain signer job: one job, two keys, in the DOMAIN HOLDER only, kept off the servers that carry workers by a constraint
 
 **Role.** Lessons 4 and 7. The jobspec for `python3 -m domain.signer_service` (`../domain/signer_service.py.md`, `../domain/signer.py.md`); its token is `signer-policy.hcl`. The header comment: one job, two keys (the CA and the token issuer); `count = 1` is not exactly-one during a reschedule, and that is harmless here — same key, same signatures; the key lives in the Variable `domain/signer`, a software key on purpose, because a TPM would pin the job to one server and defeat the failover it just gained.
 
 ## Stanza by stanza
 
 ### `job "domain-signer"`
-- `region = "north"` — the domain cluster; the comment: a stated decision, recorded where the directory can report it (`Cluster.is_domain_cluster`, and `verify-bench.sh` item 4 checks `domain/signer` exists in north's raft and not in south's). The only jobspec in М12 with a `region` line.
+- `region = "north"` — the domain holder; the comment: a stated decision, recorded where the directory can report it (`Cluster.is_domain_holder`, and `verify-bench.sh` item 4 checks `domain/signer` exists in north's raft and not in south's). The only jobspec in М12 with a `region` line.
 - `datacenters = ["*"]`, `type = "service"`.
 
 ### `group "signer"`

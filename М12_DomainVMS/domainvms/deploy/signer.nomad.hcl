@@ -1,10 +1,10 @@
 # The domain signer: one job, two keys (the CA and the token issuer), in the
-# DOMAIN CLUSTER only. count = 1 is not exactly-one during a reschedule, and
+# DOMAIN HOLDER only. count = 1 is not exactly-one during a reschedule, and
 # that is harmless here: same key, same signatures. The key lives in the
 # Variable domain/signer — a software key on purpose; a TPM would pin the
 # job to one server and defeat the failover it just gained.
 job "domain-signer" {
-  region      = "north"          # the domain cluster: a stated decision, recorded where the directory can report it
+  region      = "north"          # the domain holder: a stated decision, recorded where the directory can report it
   datacenters = ["*"]
   type        = "service"
 

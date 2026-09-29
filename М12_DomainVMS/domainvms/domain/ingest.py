@@ -800,7 +800,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             raw = None
         return json.loads(raw)["urls"] if raw else None
 
-    dc = getattr(crossings.view.fed, "domain_cluster", None)
+    dc = getattr(crossings.view.fed, "domain_holder", None)
     top = crossings.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
 
     def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):

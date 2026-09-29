@@ -4,7 +4,7 @@
 namespace "default" {
   variables {
     # Everything the agent carries is under domain/: keys, revoked, grants (Lesson 4), pending and outcomes
-    # (Lesson 9), sources, mirrors and primaries (Lessons 13–14), the shared settings' pointer and the host
+    # (Lesson 9), sources, mirrors and primaries (Lessons 13–14), the shared settings' pointer and the holder
     # (Lessons 12, 15). One prefix, so one line — it listed the first three only and lagged every lesson after.
     path "domain/*"         { capabilities = ["read", "write"] }
     # its objects: the verified copies of the domain's documents (Lessons 12, 15) and `domain/seen`, when it

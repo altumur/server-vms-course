@@ -51,7 +51,7 @@ class Cluster:
     vars: Variables
     objects: ObjectStore
     reaches: frozenset = frozenset()      # networks this cluster can see: {"vlan:cctv-a", ...}
-    is_domain_cluster: bool = False       # the one that hosts the domain services — a stated decision
+    is_domain_holder: bool = False        # the one that runs the domain services — a stated decision
     via: str | None = None                # Lesson 17: a member that reaches only this relay — and through it the domain
 
     def networks(self) -> frozenset:
@@ -143,11 +143,11 @@ class Federation:
         self.clusters[c.name] = c
 
     @property
-    def domain_cluster(self) -> Cluster:
-        hosts = [c for c in self.clusters.values() if c.is_domain_cluster]
-        if len(hosts) != 1:
-            raise RuntimeError(f"exactly one domain cluster must be designated; found {[c.name for c in hosts]}")
-        return hosts[0]
+    def domain_holder(self) -> Cluster:
+        holders = [c for c in self.clusters.values() if c.is_domain_holder]
+        if len(holders) != 1:
+            raise RuntimeError(f"exactly one domain holder must be designated; found {[c.name for c in holders]}")
+        return holders[0]
 
 
 class DomainDirectory:

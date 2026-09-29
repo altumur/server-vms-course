@@ -11,7 +11,7 @@ report it left behind.
 `CLUSTERS` keeps what only configuration can say: how to reach the clusters the domain reads DIRECTLY — its own
 and the server rooms. Members that report — cameras, and any cluster the domain cannot dial — are here.
 
-    domain/members   in the domain cluster's Variables: {"doc": {rev, members: {name: {how, serial, since, by}}}}
+    domain/members   in the domain holder's Variables: {"doc": {rev, members: {name: {how, serial, since, by}}}}
                      (not the object prefix `domain/members/<member>/` where the reports themselves land)
 
 Three rules the product found (feedback AN):
@@ -19,7 +19,7 @@ Three rules the product found (feedback AN):
     the first write carries the configuration   the members the configuration named are written into the list
                                                  as `how: configuration` by its FIRST write — else the first
                                                  admission would make every configured member a stranger
-    the domain's own cluster                     is neither admitted nor removed: 400
+    the domain's holder                     is neither admitted nor removed: 400
     who is knocking                              a cluster whose reports are in the domain's store and that is not
                                                  on the list: not read, but named (`knocking`), with when it last
                                                  reported, for a person to accept. Its report could only be
@@ -44,7 +44,7 @@ def member_name(serial: str) -> str:
 class Members:
     def __init__(self, domain_vars, wall=time.time, configured=None, domain: str | None = None):
         """`configured()`: the reporting members the configuration names — carried into the list by its first
-        write. `domain`: the domain's own cluster, which is not a member to admit or remove."""
+        write. `domain`: the domain's holder, which is not a member to admit or remove."""
         self.vars, self.wall = domain_vars, wall
         self.configured, self.domain = configured or (lambda: []), domain
 
@@ -58,13 +58,13 @@ class Members:
 
     def settle(self) -> bool:
         """Write the list if nobody ever has — the configuration's members, as the first write carries them
-        — so that it is a record and not a property of this host's processes (Lesson 15, feedback AS)."""
+        — so that it is a record and not a property of this holder's processes (Lesson 15, feedback AS)."""
         return self.read()["rev"] == 0 and self._change(lambda members: True)
 
     def _refuse_domain(self, name: str) -> None:
         if self.domain and name == self.domain:
             from .api import ApiError
-            raise ApiError(400, f"{name} is the domain's own cluster: it is neither admitted nor removed")
+            raise ApiError(400, f"{name} is the domain's holder: it is neither admitted nor removed")
 
     def _change(self, mutate) -> bool:
         for _ in range(10):

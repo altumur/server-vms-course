@@ -1,6 +1,6 @@
 # signer-policy.hcl — the ACL policy for job `domain-signer`'s workload identity: the only writer of its keys, its users, and what it publishes to agents
 
-**Role.** Lesson 4. Bound to the `domain-signer` job in the domain cluster (north). The header comment: the signer is the only writer of its keys, its users, and what it publishes to agents. Every path here is one the Python writes by CAS: `Signer._persist`, `IdentityStore._put`/`publish`, `DomainPublisher.publish_keys`/`publish_revoked`, `EntitlementCache.install`, `ClusterPlacer._store`/`_rev`.
+**Role.** Lesson 4. Bound to the `domain-signer` job in the domain holder (north). The header comment: the signer is the only writer of its keys, its users, and what it publishes to agents. Every path here is one the Python writes by CAS: `Signer._persist`, `IdentityStore._put`/`publish`, `DomainPublisher.publish_keys`/`publish_revoked`, `EntitlementCache.install`, `ClusterPlacer._store`/`_rev`.
 
 ## Stanza by stanza
 
@@ -19,7 +19,7 @@
 - `domain/crossings`, `domain/shared` — read only: who records what (written by the console, Lesson 13) and the shared document's pointer, whose scenarios the book of asks is built from.
 
 ## Notes
-- `domain/grants/*` is absent, so `DomainPublisher.publish_grants` — which writes `domain/grants/<cluster>` in the domain cluster — would be refused under this policy; no production process calls it either. Grants have no writer in the deployed system. See the report.
+- `domain/grants/*` is absent, so `DomainPublisher.publish_grants` — which writes `domain/grants/<cluster>` in the domain holder — would be refused under this policy; no production process calls it either. Grants have no writer in the deployed system. See the report.
 - `signer_service.py` uses `domain/signer`, `identity/*`, `domain/keys`, `domain/revoked`, and with `CLUSTERS` the books above; the licence and placement grants anticipate code the service does not yet run.
-- The books pass also READS the other clusters (their `rec/ingest`, `rec/snapshot/*`, `rec/heartbeats/*`, and the members' reports in the domain cluster's object store) through the URLs in `CLUSTERS`, exactly as the console does; that access is the console's (`federation.hcl`), not this policy's.
+- The books pass also READS the other clusters (their `rec/ingest`, `rec/snapshot/*`, `rec/heartbeats/*`, and the members' reports in the domain holder's object store) through the URLs in `CLUSTERS`, exactly as the console does; that access is the console's (`federation.hcl`), not this policy's.
 - Nomad's Variables ACL distinguishes `list` from `read`; `IdentityStore.users()` and `login_federated` call `vars.list("identity/users/")`, which this policy does not grant.

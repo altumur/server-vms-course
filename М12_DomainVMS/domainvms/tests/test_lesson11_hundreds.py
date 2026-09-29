@@ -143,7 +143,7 @@ def test_a_bulk_edit_answered_from_memory_keeps_what_went_silent_since_the_pass(
     view = ReadView(fed, wall=wall, lanes=8)
     view.refresh()
     by_name = {d.name: d for d in devices}
-    pending = PendingEdits(fed.domain_cluster.vars, wall)
+    pending = PendingEdits(fed.domain_holder.vars, wall)
     api = ConsoleAPI(view, lambda name: by_name[name], pending=pending, last_known=view.last_known)
 
     devices[3].power_off()                               # after the pass, before the edit
@@ -168,14 +168,14 @@ def test_lanes_are_real_threads_not_only_arithmetic():
     fed, devices = _site(wall, n=40)
     slow = Federation()
     for c in fed.clusters.values():
-        slow.add(type(c)(c.name, Slow(c.vars), Slow(c.objects), c.reaches, c.is_domain_cluster))
+        slow.add(type(c)(c.name, Slow(c.vars), Slow(c.objects), c.reaches, c.is_domain_holder))
     t0 = _time.monotonic(); ReadView(slow, wall=wall).refresh(); one = _time.monotonic() - t0
     t0 = _time.monotonic(); ReadView(slow, wall=wall, lanes=16).refresh(); many = _time.monotonic() - t0
     assert one > 0.7 and many < one / 3
 
 
 class _CountingObjects:
-    """The domain cluster's object store, counting what members write into it."""
+    """The domain holder's object store, counting what members write into it."""
 
     def __init__(self, inner):
         self.inner, self.puts, self.bytes = inner, 0, 0
@@ -190,7 +190,7 @@ class _CountingObjects:
 
 def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writes():
     """The uplink (`domain/uplink.py`), measured on the same site. Each member's agent leaves a report in the
-    domain cluster's store; the domain reads only that store. A member that is off costs the pass nothing —
+    domain holder's store; the domain reads only that store. A member that is off costs the pass nothing —
     its copy is stale and says so at once, with no connection to wait on — and the pass is local calls. What
     the domain pays instead is writes: every report rewrites what changed — the heartbeat and the snapshot
     shard, both stamped with the time — and the `reported` mark."""
@@ -199,7 +199,7 @@ def test_when_members_report_the_pass_reads_one_store_and_the_cost_is_their_writ
     from domain.uplink import member_copy
     wall = Clock()
     north, _ = make_cluster("north", domain=True)
-    domain_store = Ram()                                 # the domain cluster's objects; a prefix listing is the server's work
+    domain_store = Ram()                                 # the domain holder's objects; a prefix listing is the server's work
     store = _CountingObjects(domain_store)
     fed = Federation(); fed.add(north)
     agents, devices = [], []

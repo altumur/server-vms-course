@@ -6,7 +6,7 @@ from tests.conftest import Clock, make_domain
 
 def _setup(clk, with_masa=True):
     fed, _ = make_domain({"north": ()}, "north")
-    signer = Signer("acme", fed.domain_cluster.vars, now=clk)
+    signer = Signer("acme", fed.domain_holder.vars, now=clk)
     bundle = TrustBundle([signer.root.cert])
     vendor = Manufacturer("vendor", now=clk)
     reg = Registrar("acme", signer, vendor.ca_cert, vendor.masa_public if with_masa else None, approval_ttl=3600, now=clk)

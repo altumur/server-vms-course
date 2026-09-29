@@ -17,7 +17,7 @@
 ### 3. the agent may write `domain/*` and nothing else
 Creates a client token carrying only the `domain-agent` policy (`agent-policy.hcl`) in the other region, extracts its `SecretID` with an inline Python `json.load`, then with that token: `nomad var put -force domain/keys current=probe` must succeed ("domain/keys: write ok"); `nomad var put -force vms/cameras/999 name=x` must fail — success is `FAIL: the agent could write vms/cameras/999`, exit 1; failure prints "403 (correct)". The same two assertions as `test_nothing_about_a_user_reaches_a_worker_only_trust_does`, against real ACLs. (The probe overwrites `domain/keys` in that region with `current=probe`; the agent's next sync restores it.)
 
-### 4. the domain cluster is a stated decision, visible in the directory
+### 4. the domain holder is a stated decision, visible in the directory
 `nomad var get -region "$DOMAIN" domain/signer` must exist ("signer keys in north's raft"); the same in `$OTHER` must *not* exist — if it does, `FAIL: signer keys in south`, exit 1. `signer.nomad.hcl`'s `region = "north"` made real.
 
 ### 5. the cold start order: signer before any certificate

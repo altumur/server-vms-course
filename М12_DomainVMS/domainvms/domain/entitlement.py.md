@@ -1,6 +1,6 @@
-# entitlement.py — Lesson 5: the licence cached in the domain cluster's Variables, verified against the product's vendor key, graceful for a stated period; recording never stops
+# entitlement.py — Lesson 5: the licence cached in the domain holder's Variables, verified against the product's vendor key, graceful for a stated period; recording never stops
 
-**Role in the module.** Lesson 5, entitlement from the domain's side. The vendor issues it (М14 Lesson 3); the domain CACHES it and degrades on a grace period, exactly like placement and identity. The licence lives in the domain cluster's Variables (`domain/licence`, granted to the signer in `deploy/signer-policy.hcl`), is verified against a key shipped in the product, and what degrades is record-but-don't-add-cameras: nothing that is already recording stops because a licence server is unreachable — "not for a month, not ever". Depends on `cryptography` (Ed25519) and М11's `Variables`. Used by the Lesson 5 test; not wired into a process.
+**Role in the module.** Lesson 5, entitlement from the domain's side. The vendor issues it (М14 Lesson 3); the domain CACHES it and degrades on a grace period, exactly like placement and identity. The licence lives in the domain holder's Variables (`domain/licence`, granted to the signer in `deploy/signer-policy.hcl`), is verified against a key shipped in the product, and what degrades is record-but-don't-add-cameras: nothing that is already recording stops because a licence server is unreachable — "not for a month, not ever". Depends on `cryptography` (Ed25519) and М11's `Variables`. Used by the Lesson 5 test; not wired into a process.
 
 ## Module-level names
 - `GRACE = 30 * 86400.0` — thirty days past `valid_until`: "the number the datasheet states".

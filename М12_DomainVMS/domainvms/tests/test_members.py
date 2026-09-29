@@ -140,7 +140,7 @@ def test_the_domains_own_cluster_is_neither_admitted_nor_removed():
     for act in (lambda: members.add("north", "approved by anna"), lambda: members.remove("north")):
         try:
             act()
-            raise AssertionError("the domain's own cluster")
+            raise AssertionError("the domain's holder")
         except ApiError as e:
             assert e.status == 400
 

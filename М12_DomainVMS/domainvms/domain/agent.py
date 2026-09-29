@@ -38,7 +38,7 @@ PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH
 
 class DomainPublisher:
     """The signer's side: writes the key set and the revocation list into
-    the DOMAIN cluster's Variables, where agents read them."""
+    the domain HOLDER's Variables, where agents read them."""
 
     def __init__(self, domain_vars: Variables):
         self.vars = domain_vars
@@ -53,7 +53,7 @@ class DomainPublisher:
 
     def publish_grants(self, cluster: str, grants: list) -> None:
         """The grants for one cluster, under domain/grants/<cluster> in the
-        domain cluster's Variables; the cluster's agent copies them home."""
+        domain holder's Variables; the cluster's agent copies them home."""
         from .grants import grants_to_items
         path = f"{GRANTS_PATH}/{cluster}"
         _, idx = self.vars.get(path)
@@ -79,7 +79,7 @@ class DomainAgent:
 
         `published` and `pages` are the uplink (`domain/uplink.py`): this member's own object store, where
         its workers publish, and a callable returning the pages it is asked to show (Lesson 14). Given
-        them, every pass ends with a REPORT into the domain cluster's object store — the domain never opens
+        them, every pass ends with a REPORT into the domain holder's object store — the domain never opens
         a connection to this member; this pass is the only one there is, and it carries both ways."""
         self.cluster, self.domain_vars, self.cluster_vars, self.now = cluster, domain_vars, cluster_vars, now
         self.console, self.current = console, current
@@ -87,7 +87,7 @@ class DomainAgent:
         self.seen_store = seen_store
         self.published, self.pages = published, pages
         # Lesson 17's summary report: a relay's agent folds the reports its members left in `bundle_store`
-        # (this cluster's object store) into one object in the domain cluster.
+        # (this cluster's object store) into one object in the domain holder.
         self.bundle_members, self.bundle_store = bundle_members, bundle_store
         # …and it RELAYS down what the domain leaves for those members (`chain.relay`): the relay is their only
         # road to the domain. `bundle_store` is the relay's object store, where both halves live.
@@ -96,7 +96,7 @@ class DomainAgent:
         # (`own_objects`, or the one it reports from), where the domain reads it. Written only when it changes.
         self.reaches, self.own_objects = reaches, own_objects if own_objects is not None else published
         self.reported = ""                                  # what the last pass did with the report
-        self.shared = self.backup = self.host = ""          # what the last pass did with each document
+        self.shared = self.backup = self.holder = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
         # An alarm on the card wakes the agent (Lesson 14): the report goes now, not at the next pass — half a
@@ -186,12 +186,12 @@ class DomainAgent:
                                         for k, v in outcomes.items()}, clear=True)
         # The shared settings (Lesson 12), checked against the key set this pass just carried — the member's
         # own, never one that came with the document.
-        # And Lesson 15: which member hosts the domain — carried like the keys, but never to a smaller term —
+        # And Lesson 15: which member holds the domain — carried like the keys, but never to a smaller term —
         # and, on the members chosen to keep it, the backup of the domain's state, carried like the settings.
-        from .term import BACKUP, carry_host
+        from .term import BACKUP, carry_holder
         keyset = ClusterTrust(self.cluster_vars).keyset()
         try:
-            self.host = carry_host(self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet"
+            self.holder = carry_holder(self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet"
             if self.domain_objects is not None and self.cluster_objects is not None:
                 from .shared import carry
                 self.shared = carry(self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects,
@@ -296,7 +296,7 @@ def main() -> None:
 
     cluster = os.environ.get("CLUSTER", os.environ.get("NOMAD_REGION", "local"))
     # REPORT=1: this member is one the domain never reaches (`domain/uplink.py`) — every pass also leaves its
-    # report in the domain cluster's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
+    # report in the domain holder's object store, `DOMAIN_OBJECTS_URL`, read from this cluster's own
     # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
     report = os.environ.get("REPORT") == "1"
     from cluster.objectstore import open_store

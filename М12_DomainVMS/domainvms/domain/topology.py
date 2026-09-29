@@ -4,12 +4,12 @@ Lesson 17 needed three facts that no cluster can observe about itself, because t
 not its state: which member reaches the domain only through a relay (`via`), which relays cannot be pushed
 to and take their streams from the centre (`star`), and which cluster is the centre. They lived in the
 environment of three different jobs (`name=report@relay`, RELAY_MEMBERS, CENTRE/STAR). Now they live here,
-in the domain cluster, edited by CAS and checked when written — and every pass reads them from here: the
+in the domain holder, edited by CAS and checked when written — and every pass reads them from here: the
 books (`Crossings`), the relay's copying down and its bundle (its agent), the domain's copy of each member (`apply`).
 
 What a cluster CAN observe — the networks it sees — is not here: it says that itself (`federation.REACHES`).
 
-    domain/topology   in the domain cluster's Variables: {"doc": {rev, centre, star: [...], via: {member: relay}}}
+    domain/topology   in the domain holder's Variables: {"doc": {rev, centre, star: [...], via: {member: relay}}}
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ class Topology:
 
 
 def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
-    """`domain`: the domain cluster. Nobody reaches the domain THROUGH it — whoever reaches the domain cluster
+    """`domain`: the domain holder. Nobody reaches the domain THROUGH it — whoever reaches the domain holder
     reaches the domain — and it goes through nobody (feedback AM)."""
     out, known = [], set(known) if known is not None else None
     centre, star, via = doc.get("centre"), set(doc.get("star", [])), doc.get("via", {})
@@ -76,10 +76,10 @@ def refusals(doc: dict, known=None, domain: str | None = None) -> list[str]:
         out.append(f"{centre} is the centre and cannot be a star relay")
     for m, o in sorted(via.items()):
         if domain and o == domain:
-            out.append(f"{m} through {domain}, the domain's own cluster: whoever reaches it reaches the domain")
+            out.append(f"{m} through {domain}, the domain's holder: whoever reaches it reaches the domain")
             continue
         if domain and m == domain:
-            out.append(f"{domain} is the domain's own cluster and goes through nobody")
+            out.append(f"{domain} is the domain's holder and goes through nobody")
             continue
         if m == o:
             out.append(f"{m} cannot reach the domain through itself")

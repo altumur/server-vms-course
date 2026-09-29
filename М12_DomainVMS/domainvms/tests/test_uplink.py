@@ -27,7 +27,7 @@ NOW = 1_001_000.0
 
 
 def _site(wall, n=2, nets=None):
-    """A domain cluster, and cameras the domain cannot open a connection to. Each is in the federation only as
+    """A domain holder, and cameras the domain cannot open a connection to. Each is in the federation only as
     the copy its own reports make."""
     fed = Federation()
     north, _ = make_cluster("north", domain=True)

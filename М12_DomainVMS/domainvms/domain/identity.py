@@ -1,6 +1,6 @@
 """Lesson 4 — where users live, and creating a user touches no cluster.
 
-    identity/users/<id>   in the domain cluster's Variables, the signer the only writer
+    identity/users/<id>   in the domain holder's Variables, the signer the only writer
                           local: a scrypt hash; federated: an IdP subject and no secret
     identity/pointer      -> identity/rev-N object: the whole set, published object-first
     users/<id>/prefs      per-user UI configuration as an object; last write wins, with a revision
@@ -147,7 +147,7 @@ class IdentityStore:
 
     @classmethod
     def restore(cls, signer: Signer, new_vars: Variables, objects, pointer_items: dict, now=time.time) -> "IdentityStore":
-        """Re-hosting the domain: the backed-up key (Signer.restore), then the
+        """Moving the domain: the backed-up key (Signer.restore), then the
         identity object the pointer names. М11's restore with different nouns."""
         blob = objects.get(pointer_items["object"])
         if blob is None:

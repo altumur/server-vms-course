@@ -250,11 +250,11 @@ class ReadView:
         return {n: (None if n in self.cluster_down_since else round(ages.get(n), 1) if n in ages else None)
                 for n in self.fed.clusters}
 
-    # What this pass saw, left as ONE object in the domain cluster's own object store (feedback X): the
+    # What this pass saw, left as ONE object in the domain holder's own object store (feedback X): the
     # members and whether each answered, whether the list is complete, the cameras (`units`, the platform's
     # word — the page that draws them is the platform's) with the cluster, server
     # and worker they are on, the causes, and — given the crossings — which cluster records which camera of
-    # another. The domain cluster's own console serves it at `GET /domain` (`w2cplatform.console.domain_view`)
+    # another. The domain holder's own console serves it at `GET /domain` (`w2cplatform.console.domain_view`)
     # and draws the domain as the root of its tree, without asking any member anything.
     def publish(self, objects, crossings: dict | None = None) -> dict:
         from w2cplatform.console import DOMAIN_VIEW

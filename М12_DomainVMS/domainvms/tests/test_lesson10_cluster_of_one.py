@@ -3,7 +3,7 @@
 A camera that runs the platform is a cluster of its own: one store on its flash, one writer, a unit pinned
 to its hardware, no controller, no slot, its own epoch. For the domain it must be nothing special — the
 directory, the read view, the agent and Lesson 9's kept edits read it exactly as they read a server room: by
-the report its agent leaves in the domain cluster (step 7). What IS special is small and physical: flash that
+the report its agent leaves in the domain holder (step 7). What IS special is small and physical: flash that
 wears, and a box that is rebooted whole, which makes the order of its boot a correctness question — for the
 site that reads its door, and for the domain that reads its report.
 """
@@ -24,7 +24,7 @@ SERIAL = "SN4471"
 
 
 def _domain(wall, *serials):
-    """A server room (М11's real controller and a worker) that hosts the domain, and cameras, each its own
+    """A server room (М11's real controller and a worker) that holds the domain, and cameras, each its own
     cluster — read by the domain from the reports their agents leave in the room, never through a door."""
     fed = Federation()
     north, _ = make_cluster("north", domain=True)
@@ -48,7 +48,7 @@ def _no_door(name):
 
 
 def _grant(fed, cluster, subject, wall, capability="edit"):
-    DomainPublisher(fed.domain_cluster.vars).publish_grants(cluster, [Grant(subject, capability, None, wall() + 3600)])
+    DomainPublisher(fed.domain_holder.vars).publish_grants(cluster, [Grant(subject, capability, None, wall() + 3600)])
 
 
 def test_the_domain_reads_a_camera_the_way_it_reads_a_server_room():
@@ -87,7 +87,7 @@ def test_a_day_of_heartbeats_costs_the_flash_nothing():
     fed, room, devices, agents = _domain(wall, SERIAL)
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
-    agent = DomainAgent(d.name, fed.domain_cluster.vars, d.flash, now=wall)
+    agent = DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall)
     after_boot = d.flash.writes
     for i in range(8640):                                # one day, a heartbeat every 10 s
         wall.advance(10)
@@ -106,7 +106,7 @@ def test_nothing_places_a_pinned_unit_so_nothing_a_placer_writes_is_there():
     fed, room, devices, agents = _domain(wall, SERIAL)
     d = devices[SERIAL]
     _grant(fed, d.name, "anna", wall)
-    DomainAgent(d.name, fed.domain_cluster.vars, d.flash, now=wall).sync()
+    DomainAgent(d.name, fed.domain_holder.vars, d.flash, now=wall).sync()
     assert d.flash.list("") == ["domain/grants", "vms/cameras/1", "vms/epoch/1"]
 
 
@@ -122,7 +122,7 @@ def test_an_edit_from_the_domain_is_the_cameras_own_console_deciding():
     agents[SERIAL].sync()
     view = ReadView(fed, wall=wall)
     view.refresh()
-    pending = PendingEdits(fed.domain_cluster.vars, wall)
+    pending = PendingEdits(fed.domain_holder.vars, wall)
     api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, verifier=lambda token: token, pending=pending,
                      last_known=view.last_known)
 
@@ -165,7 +165,7 @@ def test_the_door_opens_after_the_first_publish_not_before():
     # the domain meanwhile: the last report, and an edit kept for the agent to take home
     view = ReadView(fed, wall=wall)
     view.refresh()
-    api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, pending=PendingEdits(fed.domain_cluster.vars, wall),
+    api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, pending=PendingEdits(fed.domain_holder.vars, wall),
                      last_known=view.last_known)
     assert api.update_camera(SERIAL, {"name": "main-gate"}, idempotency_key="k2")["pending"] is True
 
@@ -189,7 +189,7 @@ def test_a_kept_edit_reaches_a_real_camera_when_it_boots():
     agent.sync()
     view = ReadView(fed, wall=wall)
     view.refresh()
-    pending = PendingEdits(fed.domain_cluster.vars, wall)
+    pending = PendingEdits(fed.domain_holder.vars, wall)
     api = ConsoleAPI(DomainDirectory(fed, wall=wall), _no_door, verifier=lambda token: token,
                      pending=pending, last_known=view.last_known)
 

@@ -23,7 +23,7 @@ The order is the lesson: door shut; fresh RAM; `next_epoch` from flash by CAS (g
 ### `row(self)`, `rec_prefix(self)` — the row (JSON in one item), and `rec/<serial>/e<epoch>/`.
 ### `publish(self)`
 One heartbeat (`worker` = `server` = serial, the status entry with `ref` and `epoch`, `live_url`, `playback_url`, `coverage`) and one snapshot shard, both into RAM.
-### `cluster(self, domain=False) -> Cluster`, `disk_door(self)` — the domain's handle (stores through the door; `domain=True` for a camera hosting the domain, Lesson 15), and the durable store through the door.
+### `cluster(self, domain=False) -> Cluster`, `disk_door(self)` — the domain's handle (stores through the door; `domain=True` for a camera holding the domain, Lesson 15), and the durable store through the door.
 ### `may(self, subject, capability)`, `update_camera(self, camera, fields, subject)`, `create_camera(...)`, `current(self, ref)`
 The camera's console: accepts `1` or the serial, raises `Unreachable` when the door is shut (the domain reaches it over the network), checks a named subject against the grants its agent carried (403 otherwise; `None` is its own page), CAS-writes the row with `revision + 1`, publishes. `create_camera` is 409 — a device is one camera. `current` serves Lesson 9's agent.
 

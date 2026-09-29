@@ -2,7 +2,7 @@
 
 The vendor issues it (М14 Lesson 3); the domain CACHES it and degrades on a
 grace period, exactly like placement and identity. The licence lives in
-the domain cluster's Variables, arrives through the same update server as
+the domain holder's Variables, arrives through the same update server as
 bundles, and is verified against a key shipped in the product. What
 degrades: record-but-don't-add-cameras. Nothing that is already recording
 stops because a licence server is unreachable — not for a month, not ever.

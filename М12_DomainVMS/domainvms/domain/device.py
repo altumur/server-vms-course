@@ -209,7 +209,7 @@ class DeviceCluster:
 
     def cluster(self, domain: bool = False) -> Cluster:
         """The domain's handle on this camera: its stores, through its door. `domain=True` is a camera that
-        hosts the domain's services (Lesson 15)."""
+        runs the domain's services (Lesson 15)."""
         return Cluster(self.name, _Door(self, lambda: self.flash), _Door(self, lambda: self.ram), self.reaches, domain)
 
     def local_objects(self) -> "_Local":
@@ -218,7 +218,7 @@ class DeviceCluster:
         return _Local(self)
 
     def disk_door(self) -> _Door:
-        """Its durable object store, through its door — where a camera that hosts the domain publishes the
+        """Its durable object store, through its door — where a camera that holds the domain publishes the
         domain's documents, and where a member keeps the copies its agent verified."""
         return _Door(self, lambda: self.disk)
 

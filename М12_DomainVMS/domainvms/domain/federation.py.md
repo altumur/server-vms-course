@@ -1,6 +1,6 @@
 # federation.py — Lesson 1: N clusters as a `Federation` of `Cluster` handles, and a `DomainDirectory` whose every `Answer` says what it could not reach
 
-**Role in the module.** Lesson 1, "what a cluster cannot know". A domain is N clusters, each its own Nomad region with its own raft, Variables and object store; nothing replicates between them (`deploy/federation.hcl`). So the domain's directory is an *aggregation* over N cluster directories — partial, stale by a bounded amount, sometimes incomplete — and the honest answer to "where is camera 7" when a cluster is unreachable is "not found in the clusters I could reach", never a short list rendered as complete. What a cluster publishes for the domain (М11 Lesson 10) is one object, `vms/snapshot` — the controller's copy of every camera row with the worker and server it is placed on, carrying a `ts` (`SpecController.publish_snapshot`, see `../../../vmsserver/w2cplatform/spec.py.md`) — plus its workers' heartbeats `vms/<w>/heartbeat` (`../../../vmsserver/vms/worker.py.md`). The domain never reads a cluster's Variables for rows: the rows stay in raft with one writer, and what leaves is a copy with an age. Used by `placement.py` (candidates, the domain cluster's Variables), `readview.py` (heartbeats), `shadow.reports_from`, `api.py` and `console.py` (`where`), `runtime.py` (construction), and every test through `conftest.make_domain`.
+**Role in the module.** Lesson 1, "what a cluster cannot know". A domain is N clusters, each its own Nomad region with its own raft, Variables and object store; nothing replicates between them (`deploy/federation.hcl`). So the domain's directory is an *aggregation* over N cluster directories — partial, stale by a bounded amount, sometimes incomplete — and the honest answer to "where is camera 7" when a cluster is unreachable is "not found in the clusters I could reach", never a short list rendered as complete. What a cluster publishes for the domain (М11 Lesson 10) is one object, `vms/snapshot` — the controller's copy of every camera row with the worker and server it is placed on, carrying a `ts` (`SpecController.publish_snapshot`, see `../../../vmsserver/w2cplatform/spec.py.md`) — plus its workers' heartbeats `vms/<w>/heartbeat` (`../../../vmsserver/vms/worker.py.md`). The domain never reads a cluster's Variables for rows: the rows stay in raft with one writer, and what leaves is a copy with an age. Used by `placement.py` (candidates, the domain holder's Variables), `readview.py` (heartbeats), `shadow.reports_from`, `api.py` and `console.py` (`where`), `runtime.py` (construction), and every test through `conftest.make_domain`.
 
 ## Module-level names
 - `SNAPSHOT = "vms/snapshot"` — the one object key `Cluster.snapshot()` reads; the same key М11's controller writes.
@@ -11,10 +11,10 @@
 ## `class Cluster` (dataclass)
 The domain's handle on one region. Holds no state of its own beyond the two adapters and two facts the domain knows about it.
 - `name: str` — the region name (`north`, `south`); the key in `Federation.clusters`, the `cluster` in every `Answer`, `Row` and `Finding`.
-- `vars: Variables` — that region's Nomad Variables (М11 contract: `get → (items, index)`, `put(..., cas=)`, `list`). The domain cluster's `vars` is where placement, the signer's keys and identity live; a member cluster's `vars` is where its agent writes `domain/*`.
+- `vars: Variables` — that region's Nomad Variables (М11 contract: `get → (items, index)`, `put(..., cas=)`, `list`). The domain holder's `vars` is where placement, the signer's keys and identity live; a member cluster's `vars` is where its agent writes `domain/*`.
 - `objects: ObjectStore` — that region's object store (`put/get/list`): the snapshot and the heartbeats.
 - `reaches: frozenset = frozenset()` — the networks this cluster can see, e.g. `{"vlan:cctv-a"}`; the input to placement by reachability. Set by the tests' `make_domain`; `runtime.py` leaves it empty.
-- `is_domain_cluster: bool = False` — the one cluster that hosts the domain services (signer, placement Variables, identity). The comment: a stated decision, not a discovery.
+- `is_domain_holder: bool = False` — the one cluster that runs the domain services (signer, placement Variables, identity). The comment: a stated decision, not a discovery.
 
 ### `snapshot(self) -> dict | None`
 `objects.get("vms/snapshot")` decoded as JSON, or `None` if the cluster has never published one. The dict is М10's snapshot shape: `{"cluster", "ts", "cameras": [{id, ref, name, worker, server, …}]}`.
@@ -39,8 +39,8 @@ The four honest sentences: found and complete — `camera 7 is on w-0 (srv-9) in
 - `clusters: dict[str, Cluster]` — by name, in insertion order.
 
 ### `add(self, c)` — registers a cluster under its name (a second `add` with the same name replaces).
-### `domain_cluster` (property) `-> Cluster`
-The single `Cluster` with `is_domain_cluster=True`. Zero or more than one raises `RuntimeError("exactly one domain cluster must be designated; found […]")` — `test_exactly_one_domain_cluster_is_designated`. Callers: `ClusterPlacer` (its Variables), `console.main` (`ClusterTrust`), every Lesson 4–7 test (`Signer` over its Variables).
+### `domain_holder` (property) `-> Cluster`
+The single `Cluster` with `is_domain_holder=True`. Zero or more than one raises `RuntimeError("exactly one domain holder must be designated; found […]")` — `test_exactly_one_domain_holder_is_designated`. Callers: `ClusterPlacer` (its Variables), `console.main` (`ClusterTrust`), every Lesson 4–7 test (`Signer` over its Variables).
 
 ## `class DomainDirectory`
 "A directory of directories. Reads each cluster's snapshot; never copies the rows; never claims more than it reached." Stateless: every question is a fresh scan.

@@ -3,7 +3,7 @@
 **Role in the module.** The recorder (М10B Lessons 15–16) found its camera's doors in its own cluster's heartbeats; a camera that is its own cluster publishes them elsewhere, and the recorder must not depend on the domain. So the domain — which reads every member — publishes, per recording cluster, a book of the doors of the cameras it records from other clusters, with their age; the agent carries it to `domain/sources`; the recorder resolves `ref:<serial>` against it. Data crosses; work does not. Which cluster records a camera is a stored domain decision, one per camera (a device serves one live session and one backfill).
 
 ## Module-level names
-- `CROSSINGS = "domain/crossings"` — `{ref: recording cluster}` in the domain cluster.
+- `CROSSINGS = "domain/crossings"` — `{ref: recording cluster}` in the domain holder.
 
 ## `class Crossings`
 ### `record(self, ref, on) -> dict` — 404 for a camera the read view never saw, 400 if `on` is its own cluster, 409 if another cluster records it; else CAS it in. Asking again is the same answer.

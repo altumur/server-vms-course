@@ -1,6 +1,6 @@
 """python3 -m domain.signer_service — the domain signer as a process.
 
-Holds the keys (from domain/signer in the domain cluster's raft), publishes
+Holds the keys (from domain/signer in the domain holder's raft), publishes
 the key set and the revocation list for the agents, publishes the identity
 set object-first on a floor, and answers logins with tokens. The CA half
 (issue, renew, rotate) is driven by the registrar and by renewal requests
@@ -56,11 +56,11 @@ def main() -> None:
         from .uplink import _CopyObjects
         configured = [n for n, c in fed.clusters.items() if isinstance(c.objects, _CopyObjects)]
         star = frozenset(filter(None, os.environ.get("STAR", "").split(",")))
-        books = Books(Crossings(fed.domain_cluster.vars, view, issuer=signer.tokens,
+        books = Books(Crossings(fed.domain_holder.vars, view, issuer=signer.tokens,
                                 centre=os.environ.get("CENTRE") or None, star=star,
-                                topology=Topology(fed.domain_cluster.vars)), fed.domain_cluster.objects,
-                      members=Members(fed.domain_cluster.vars, configured=lambda: configured,
-                                      domain=fed.domain_cluster.name))
+                                topology=Topology(fed.domain_holder.vars)), fed.domain_holder.objects,
+                      members=Members(fed.domain_holder.vars, configured=lambda: configured,
+                                      domain=fed.domain_holder.name))
 
     class H(BaseHTTPRequestHandler):
         def _send(self, status, body):

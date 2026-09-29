@@ -95,7 +95,7 @@ def test_placement_is_by_reachability_then_headroom():
         p.place(CameraSite(3, "vlan:z")); raise AssertionError("must refuse")
     except Refused as e:
         assert "no cluster in the domain reaches vlan:z" in str(e)                    # never "cluster X is full"
-    stored, _ = fed.domain_cluster.vars.get("domain/placement/2")
+    stored, _ = fed.domain_holder.vars.get("domain/placement/2")
     assert stored["cluster"] == "south" and stored["at"] == "1234.0" and stored["reason"]   # stored, with a reason and a time
     assert p.place(CameraSite(2, "vlan:b")).cluster == "south"                        # placing again changes nothing
 
@@ -113,7 +113,7 @@ def test_the_cluster_then_places_on_a_worker_and_the_domain_never_named_one():
     assert where.worker in ("w-0", "w-1") and "reaching vlan:b" in where.reason and "on srv-" in where.reason
     a = DomainDirectory(fed).where(7)
     assert a.cluster == "south" and a.worker == where.worker                          # the snapshot carried the cluster's decision up
-    assert fed.domain_cluster.vars.list("domain/placement/") == ["domain/placement/7"]  # the domain stored its level, nothing about workers
+    assert fed.domain_holder.vars.list("domain/placement/") == ["domain/placement/7"]  # the domain stored its level, nothing about workers
 
 
 def test_two_placers_racing_agree_by_cas():
@@ -149,9 +149,9 @@ def test_a_dead_cluster_is_not_a_trigger():
         assert "never crosses a cluster" in str(e)
 
 
-def test_exactly_one_domain_cluster_is_designated():
+def test_exactly_one_domain_holder_is_designated():
     fed, _ = make_domain({"north": (), "south": ()}, "nowhere")
     try:
-        fed.domain_cluster; raise AssertionError("must raise")
+        fed.domain_holder; raise AssertionError("must raise")
     except RuntimeError as e:
-        assert "exactly one domain cluster" in str(e)
+        assert "exactly one domain holder" in str(e)

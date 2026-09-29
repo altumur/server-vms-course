@@ -13,7 +13,7 @@ from tests.conftest import Clock, make_domain
 
 def _domain(clk):
     fed, links = make_domain({"north": (), "south": ()}, "north")
-    dc = fed.domain_cluster
+    dc = fed.domain_holder
     signer = Signer("acme", dc.vars, now=clk)
     return fed, links, dc, signer
 
@@ -72,7 +72,7 @@ def test_domain_down_clusters_keep_verifying_nobody_new_logs_in():
     agent = DomainAgent("south", dc.vars, south.vars, now=clk)
     agent.sync()
     tok = ids.login("alice", "pw")
-    links["north"].up = False                                              # the domain cluster is gone
+    links["north"].up = False                                              # the domain holder is gone
     assert agent.sync() is False and agent.last_synced == 1000.0           # the agent stops updating, writes nothing
     trust = ClusterTrust(south.vars)
     assert verify(tok, trust.keyset(), now=clk())["sub"] == "alice"        # existing tokens: fine, offline
@@ -158,7 +158,7 @@ def test_identity_publishes_object_first_then_pointer_and_restores_elsewhere():
     ptr, _ = dc.vars.get("identity/pointer")
     assert ptr["object"] == "identity/rev-1" and dc.objects.get("identity/rev-1") is not None
     ids.set_roles("alice", ["admin"]); assert ids.publish() and dc.vars.get("identity/pointer")[0]["revision"] == "2"
-    # The domain cluster dies. Re-host in south: the backed-up key, then the identity object.
+    # The domain holder dies. Move the domain to south: the backed-up key, then the identity object.
     backup = signer.backup()
     south = fed.clusters["south"]
     objs_backup = south.objects; objs_backup.put("identity/rev-2", dc.objects.get("identity/rev-2"))

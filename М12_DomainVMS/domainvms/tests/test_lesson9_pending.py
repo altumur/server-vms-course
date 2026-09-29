@@ -4,7 +4,7 @@ Lesson 3 forwarded an edit to the owning cluster and, when that cluster did not 
 look*. That is right for a server room, which is rarely wholly unreachable, and wrong for a camera, which is
 one device and is off often — power, a PoE switch, maintenance, a remote site. And cameras are edited in bulk.
 
-So the domain KEEPS the edit: per field, the value it last saw and the value wanted, in the domain cluster's
+So the domain KEEPS the edit: per field, the value it last saw and the value wanted, in the domain holder's
 Variables beside the grants. The cluster's own agent carries it home when the cluster comes back, and the
 cluster's own console applies it — as the operator, with that operator's grant checked then, and only where
 the field still holds the value the edit was based on. The owner never changes; one writer per key stands.
@@ -54,7 +54,7 @@ class Member:
 
 def _domain_with_a_camera_that_went_off(fields=None):
     """The domain saw camera 4471 while it was on — its row is in the read view — and then it was switched
-    off. The domain cluster is `north`; the camera is a cluster of its own."""
+    off. The domain holder is `north`; the camera is a cluster of its own."""
     wall = Clock(10_000.0)
     fed, links = make_domain({"north": (), "cam-4471": ()}, "north")
     _snapshot(fed.clusters["cam-4471"], {CAM: fields or {"name": "gate", "events_retention_days": 30}}, wall())
@@ -62,14 +62,14 @@ def _domain_with_a_camera_that_went_off(fields=None):
     view.refresh()
     links["cam-4471"].up = False
     view.refresh()
-    pending = PendingEdits(fed.domain_cluster.vars, wall)
+    pending = PendingEdits(fed.domain_holder.vars, wall)
     api = ConsoleAPI(DomainDirectory(fed), lambda name: (_ for _ in ()).throw(AssertionError("owner is off")),
                      verifier=lambda token: token, pending=pending, last_known=view.last_known)
     return wall, fed, links, pending, api
 
 
 def _agent(fed, member, wall):
-    return DomainAgent("cam-4471", fed.domain_cluster.vars, fed.clusters["cam-4471"].vars, now=wall,
+    return DomainAgent("cam-4471", fed.domain_holder.vars, fed.clusters["cam-4471"].vars, now=wall,
                        console=member, current=member.current)
 
 

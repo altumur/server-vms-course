@@ -8,7 +8,7 @@ from tests.conftest import Clock, make_domain
 
 def _signer(clk):
     fed, _ = make_domain({"north": ()}, "north")
-    s = Signer("acme", fed.domain_cluster.vars, now=clk)
+    s = Signer("acme", fed.domain_holder.vars, now=clk)
     return s, TrustBundle([s.root.cert])
 
 

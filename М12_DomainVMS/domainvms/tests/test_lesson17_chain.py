@@ -32,7 +32,7 @@ def _chain(wall, star=frozenset()):
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
     fed = Federation()
-    north, _ = make_cluster("north", domain=True)                     # the centre: hosts the domain, has an ingest
+    north, _ = make_cluster("north", domain=True)                     # the centre: holds the domain, has an ingest
     east, _ = make_cluster("east")                                     # the relay: records the site's cameras
     fed.add(north); fed.add(east)
     signer = Signer("acme", north.vars, now=wall)
@@ -303,7 +303,7 @@ def test_an_ask_from_a_camera_at_another_site_goes_by_the_centre_and_the_relay_c
 def test_a_camera_that_sees_only_its_relay_and_that_nobody_records_polls_its_relay():
     """One site, one relay: the gate camera and a PTZ camera kept for live view, both reaching only the east
     relay, neither recorded. A scenario ties them. The book of polls must send the PTZ camera to its RELAY's
-    ingest — the centre's, or the domain's cluster's, is exactly what it cannot reach, and a scenario inside one
+    ingest — the centre's, or the domain holder's, is exactly what it cannot reach, and a scenario inside one
     site would never act. The gate camera's book of asks names the same relay; the ask goes there and back."""
     from domain.books import Books
     from domain.chain import Relay

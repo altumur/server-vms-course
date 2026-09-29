@@ -61,11 +61,11 @@ def make_cluster(name: str, reaches=(), domain: bool = False) -> tuple[Cluster, 
     return c, link
 
 
-def make_domain(spec: dict[str, tuple], domain_cluster: str) -> tuple[Federation, dict[str, Link]]:
+def make_domain(spec: dict[str, tuple], domain_holder: str) -> tuple[Federation, dict[str, Link]]:
     """spec: {"north": ("vlan:a", "vlan:b"), ...}"""
     fed, links = Federation(), {}
     for name, reaches in spec.items():
-        c, link = make_cluster(name, reaches, name == domain_cluster)
+        c, link = make_cluster(name, reaches, name == domain_holder)
         fed.add(c); links[name] = link
     return fed, links
 

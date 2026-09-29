@@ -1,6 +1,6 @@
 # The console: UI, API façade, the read model, TLS, token verification.
 # Runs in EVERY cluster (a single-cluster customer has it with no domain);
-# the domain cluster's instance is the same image pointed at every
+# the domain holder's instance is the same image pointed at every
 # cluster's stores. Stateless; count = 2; placed anywhere.
 job "console" {
   datacenters = ["*"]

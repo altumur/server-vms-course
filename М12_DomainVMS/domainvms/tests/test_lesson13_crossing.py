@@ -202,7 +202,7 @@ def test_a_recording_moves_to_another_cluster_and_the_books_follow():
     import json
     wall = Clock()
     fed, north_link, south, cam, view, crossings, agent, cam_agent = _site(wall)
-    north = fed.domain_cluster
+    north = fed.domain_holder
     crossings.record(SERIAL, on="south"); crossings.publish(); agent.sync()
     try:
         crossings.record(SERIAL, on="north")

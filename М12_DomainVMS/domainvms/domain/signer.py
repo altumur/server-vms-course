@@ -2,7 +2,7 @@
 
 The CA and the token issuer are the same operational thing — a process that
 holds keys and signs — so they are one service. Its keys live in a Nomad
-Variable in the domain cluster's raft (domain/signer): a SOFTWARE key on
+Variable in the domain holder's raft (domain/signer): a SOFTWARE key on
 purpose, because a TPM-sealed key pins the signer to one server and defeats
 the failover it just gained. A software key is acceptable because
 everything it signs is short-lived.
@@ -127,7 +127,7 @@ class TrustBundle:
 
 
 class Signer:
-    """The domain signer. `vars_` is the domain cluster's Variables; the
+    """The domain signer. `vars_` is the domain holder's Variables; the
     keys are loaded from domain/signer or created on first start (the cold
     start Lesson 1 walks: Nomad up → signer scheduled → certificates issued
     → workers heartbeat)."""
@@ -211,7 +211,7 @@ class Signer:
         return new, cross
 
     def backup(self) -> bytes:
-        """What goes beyond the domain cluster (another cluster's object
+        """What goes beyond the domain holder (another cluster's object
         store, or offline). Losing this loses the domain's trust: every server
         re-enrolls."""
         import json

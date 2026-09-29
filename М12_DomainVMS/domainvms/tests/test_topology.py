@@ -124,7 +124,7 @@ def test_the_passes_follow_the_topology_without_a_restart():
 
 
 def test_the_operator_edits_the_topology_in_the_domain_console():
-    """PUT /api/topology, with the revision the operator was looking at; only an admin of the domain cluster;
+    """PUT /api/topology, with the revision the operator was looking at; only an admin of the domain holder;
     a refusal says why. GET shows it."""
     fed = Federation()
     north, _ = make_cluster("north", domain=True)
@@ -159,11 +159,11 @@ def test_the_operator_edits_the_topology_in_the_domain_console():
 
 # -- feedback AM ----------------------------------------------------------------------------------------------
 def test_nobody_goes_through_the_domains_own_cluster_and_it_goes_through_nobody():
-    """AM, 1. Whoever reaches the domain cluster reaches the domain: "through the domain cluster" says nothing,
+    """AM, 1. Whoever reaches the domain holder reaches the domain: "through the domain holder" says nothing,
     and it has no agent to relay. It goes through nobody either."""
     topo = Topology(FakeVariables())
     known = {"north", "east", "cam-SN1"}
-    for bad, why in ((lambda d: d.update(via={"cam-SN1": "north"}), "the domain's own cluster: whoever reaches it"),
+    for bad, why in ((lambda d: d.update(via={"cam-SN1": "north"}), "the domain's holder: whoever reaches it"),
                      (lambda d: d.update(via={"north": "east"}), "goes through nobody")):
         try:
             topo.edit(bad, base_rev=0, known=known, domain="north")
