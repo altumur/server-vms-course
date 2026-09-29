@@ -16,7 +16,8 @@ After=network.target
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms autoworker
 Environment=AUTO_NAME=%i
-# CAPACITY here is scenarios: each one is a window and a query per pass.
+# CAPACITY here is scenarios: each one is a window read per pass — and one query per KIND the pass's
+# scenarios watch, shared between them, not one per scenario (М10B Lesson 25).
 EnvironmentFile=/data/config/vms.env
 # read-write: `auto/epoch/*`, `auto/slots/*` and the two request families (its token); its own events and
 # its cursor go under the archive, beside everything else written on this box.

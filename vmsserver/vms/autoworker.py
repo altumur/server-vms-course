@@ -93,6 +93,14 @@ class AutoWorker(Worker):
         self.holes: dict[str, dict] = {}             # scenario -> what its last window was missing
         self.gave_up: dict[str, dict] = {}           # scenario -> the servers it stopped waiting for
         self.held_from: dict[str, float] = {}        # scenario -> since when its window has been incomplete
+        self.cut: dict[str, list] = {}               # scenario -> the kinds whose answer did not fit its window
+        # One pass's answers, per (subsystem, kind): asked ONCE for every scenario watching that kind, over the
+        # longest window any of them needs (`reconcile_once`). And what the pass cost — said in the heartbeat,
+        # because a slow pass is otherwise visible nowhere: its seconds, its queries, how far the furthest
+        # cursor trails `now`, and the longest road from an event to the request it filed.
+        self._asked: dict[tuple[str, str], dict] = {}
+        self._needed: dict[tuple[str, str], float] = {}
+        self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
         self.recent: dict[str, list[float]] = {}     # scenario -> firing times inside the last minute
         self.filed = 0
         self.status_by_unit: dict[str, dict] = {}
@@ -109,9 +117,14 @@ class AutoWorker(Worker):
     # between the two would lose the firing instead of repeating it.
     def reconcile_once(self, now: float | None = None) -> list[str]:
         now = self.wall() if now is None else now
+        started = self.clock()
         acted: list[str] = []
-        for unit in sorted(self.assignment().units):
-            row = self.scenario(unit)
+        units = sorted(self.assignment().units)
+        rows = {u: self.scenario(u) for u in units}
+        self._plan(rows, now)
+        self.pass_stats.update(queries=0, lag_seconds=0.0, latency_seconds=0.0)
+        for unit in units:
+            row = rows[unit]
             if row is None:
                 continue
             if not row["enabled"]:
@@ -134,12 +147,43 @@ class AutoWorker(Worker):
             holes = self.holes.get(unit) or {}
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
                                          **({"holding": holes} if holes else {}),
+                                         **({"cut": self.cut[unit]} if self.cut.get(unit) else {}),
                                          **({"decided_without": self.gave_up.pop(unit)} if unit in self.gave_up else {}),
                                          **({"unfit": misfit} if misfit else {}),
                                          **({"unchecked": unsure} if unsure else {})}
             if n:
                 acted.append(unit)
+        self.pass_stats["pass_seconds"] = round(self.clock() - started, 3)
         return acted
+
+    # Where each scenario's window begins — the cursor, bounded by `COLD_START`, less the scenario's own
+    # `within` — so a pass can ask each (subsystem, kind) ONCE, from the earliest start any scenario watching it
+    # needs, instead of once per scenario. Fifty scenarios on three kinds were a hundred and fifty queries a
+    # pass, to every resource; now they are three (the notes on the event log's load: "the product, not the
+    # sum").
+    def _since(self, row: dict, now: float) -> float:
+        since = Frontier(self.archive_root, str(row["id"]), AUTO.name).read()
+        return now - self.COLD_START if since is None else max(since, now - self.COLD_START)
+
+    def _plan(self, rows: dict, now: float) -> None:
+        self._asked, self._needed = {}, {}
+        for row in rows.values():
+            if row is None or not row["enabled"]:
+                continue
+            t0 = self._since(row, now) - float(row.get("within") or 0)
+            for t in row["when"]:
+                key = (str(t.get("sub", "")), str(t.get("kind", "")))
+                self._needed[key] = min(self._needed.get(key, t0), t0)
+
+    def _ask(self, sub: str, kind: str, t0: float, t1: float) -> dict:
+        key = (sub, kind)
+        have = self._asked.get(key)
+        if have is None or have["t0"] > t0 or have["t1"] < t1:
+            start = min(t0, self._needed.get(key, t0))
+            rep = self.index.query(max(0.0, start), t1, subsystem=sub, kind=kind, limit=self.PER_KIND)
+            self.pass_stats["queries"] += 1
+            have = self._asked[key] = {"t0": start, "t1": t1, "rep": rep}
+        return have["rep"]
 
     # One scenario against the log. Returns how many firings were filed.
     def evaluate(self, row: dict, now: float) -> int:
@@ -157,6 +201,7 @@ class AutoWorker(Worker):
         # Read back far enough to answer the question, not far enough to answer it twice: the window is
         # how much history a firing may span, and `since` is how much of it is new.
         events, holes = self.window(row, since - window, now)
+        self.pass_stats["lag_seconds"] = max(self.pass_stats["lag_seconds"], round(now - since, 3))
         fired = 0
         for fid, at in self.firings(row, events, since):
             if fired >= self.PER_PASS:
@@ -207,16 +252,22 @@ class AutoWorker(Worker):
         kinds = sorted({(str(t.get("sub", "")), str(t.get("kind", ""))) for t in row["when"]})
         out, full, holes = [], [], {}
         for sub, kind in kinds:
-            rep = self.index.query(max(0.0, t0), t1, subsystem=sub, kind=kind, limit=self.PER_KIND)
+            rep = self._ask(sub, kind, t0, t1)                    # asked once this pass, for every scenario on this kind
             holes.update(rep.get("incomplete") or {})
-            evs = [e for e in rep.get("events", []) if not e.get("fenced")]
-            if rep.get("truncated"):                              # the index's own answer, not a guess from the count:
+            rows = rep.get("events", [])
+            evs = [e for e in rows if t0 <= float(e.get("t", 0)) < t1 and not e.get("fenced")]
+            # Cut FOR THIS SCENARIO only if the cut reached into its window. The shared answer spans the longest
+            # window any scenario needs and keeps its newest end; a scenario looking at the last minute of an
+            # hour-long answer lost nothing when the hour's first minutes were dropped.
+            oldest = float(rows[0]["t"]) if rows else t1
+            if rep.get("truncated") and oldest > t0:              # the index's own answer, not a guess from the count:
                 full.append(f"{sub}.{kind}")                      # fencing drops rows AFTER the cut, so a window that
                                                                   # WAS cut can still come back short of the limit
             out += evs
+        self.cut[str(row["id"])] = full
         if full:
             log.warning("%s: %s — the window came back full for %s; a firing may have been cut off its "
-                        "newest end", self.name, row["id"], ", ".join(full))
+                        "oldest end", self.name, row["id"], ", ".join(full))
         out.sort(key=lambda e: float(e.get("t", 0)))
         return out, holes
 
@@ -275,6 +326,7 @@ class AutoWorker(Worker):
             self.filed += 1
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
+        self.pass_stats["latency_seconds"] = max(self.pass_stats["latency_seconds"], round(self.wall() - at, 3))
         # …and the scenario's own event, in its own bucket: what an operator sees on the timeline when
         # they ask why the door opened at 14:02.
         if unit in self.epochs:
@@ -294,7 +346,7 @@ class AutoWorker(Worker):
     def heartbeat_once(self) -> None:
         self.heartbeat(self.status(), server=self.server, instance=self.instance,
                        labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
-                       filed=self.filed)
+                       filed=self.filed, **self.pass_stats)
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
