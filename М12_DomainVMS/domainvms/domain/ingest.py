@@ -73,7 +73,7 @@ from .gateway import Forbidden, LeakyQueue, LiveTee
 from .tokens import TokenError, kid_of, verify
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
-POLLED = "rec/polled"                  # when each camera last polled here, as ages: {"cluster", "ts", "cameras"}
+POLLED = "rec/polled"                  # `/<ingest>`: when each camera last polled here, as ages: {"cluster", "ingest", "ts", "cameras"}
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
 # what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
@@ -167,10 +167,13 @@ class Ingest:
     # When each camera last polled — the domain's witness that a camera is alive when its agent is not reporting
     # (Lesson 14): the poll is kept by the camera's pusher, another process than its agent. Ages, not times, so
     # the domain reads them against the object's own `ts` and a clock difference cancels out.
+    # One object per INGEST, not per cluster (feedback AZ): a cluster runs several (Lesson 16, step 7), each knows only
+    # the cameras that poll it, and one shared object would be whichever wrote last.
     def publish_polled(self, objects) -> dict:
         now = self.wall()
         cams = {ref: round(now - c.polled_at, 3) for ref, c in self.cams.items() if c.polled_at is not None}
-        objects.put(POLLED, json.dumps({"cluster": self.cluster, "ts": now, "cameras": cams}).encode())
+        key = f"{POLLED}/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.name)
+        objects.put(key, json.dumps({"cluster": self.cluster, "ingest": self.name, "ts": now, "cameras": cams}).encode())
         return cams
 
     def _cam(self, ref) -> _Camera:

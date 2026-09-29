@@ -69,7 +69,7 @@ class DomainPublisher:
 class DomainAgent:
     def __init__(self, cluster: str, domain_vars: Variables, cluster_vars: Variables, now=time.time,
                  console=None, current=None, domain_objects=None, cluster_objects=None, seen_store=None,
-                 published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None,
+                 published=None, pages=None, bundle_members=None, bundle_store=None, relay_members=None, alarm_waiting=None,
                  reaches=None, own_objects=None):
         """`console` and `current` are Lesson 9: this cluster's console, which writes its rows, and
         `current(ref) -> (id, row)` for a camera by the domain's name. Given them, the agent also applies
@@ -92,6 +92,10 @@ class DomainAgent:
         self.domain_objects, self.cluster_objects = domain_objects, cluster_objects
         self.seen_store = seen_store
         self.published, self.pages = published, pages
+        # An agent in another process than the card cannot be woken by it (feedback AZ: the product's agent is its own
+        # process). `alarm_waiting(since)` — is there an alarm newer than the last page reported? — is asked instead,
+        # once a second by the loop (`due`). In one process the card's `on_alarm` still wakes it at once.
+        self.alarm_waiting, self._paged_at = alarm_waiting, None
         # Lesson 17's summary report: a relay's agent folds the reports its members left in `bundle_store`
         # (this cluster's object store) into one object in the domain holder.
         self.bundle_members, self.bundle_store = bundle_members, bundle_store
@@ -170,7 +174,11 @@ class DomainAgent:
         self.woken.set()
 
     def due(self) -> bool:
-        """Woken, and the last urgent report was at least `URGENT_GAP` ago: report now."""
+        """Woken — or an alarm newer than the last page reported — and the last urgent report was at least
+        `URGENT_GAP` ago: report now."""
+        if not self.woken.is_set() and self.alarm_waiting is not None and self._paged_at is not None \
+                and self.alarm_waiting(self._paged_at):
+            self.woken.set()
         if not self.woken.is_set():
             return False
         return self._urgent_at is None or self.now() - self._urgent_at >= self.URGENT_GAP
@@ -254,8 +262,10 @@ class DomainAgent:
         if self.published is not None and self.domain_objects is not None:
             from .uplink import NotPublished, report
             try:
-                n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, self.now(),
+                paged_at = self.now()
+                n = report(self.cluster, self.cluster_vars, self.published, self.domain_objects, paged_at,
                            self.pages() if self.pages else None)
+                self._paged_at = paged_at
                 self.reported = f"reported ({n} written)"
             except NotPublished as e:
                 self.reported = str(e)

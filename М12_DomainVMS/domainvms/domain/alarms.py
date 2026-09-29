@@ -44,7 +44,7 @@ from w2cplatform.events import ALARM, EventLog, buckets_under, read_bucket, subs
 from .federation import Unreachable
 
 BUCKET = 600
-POLLED = "rec/polled"                 # an ingest's word: when each camera last polled it (Lesson 16)
+POLLED = "rec/polled"                 # an ingest's word, `rec/polled/<ingest>`: when each camera last polled it
 HISTORY = "domain/alarm-history"      # in the domain's object store: <member>, a rolling week of what it read
 
 
@@ -77,6 +77,11 @@ class Card:
     def alarms(self, since: float, until: float, limit: int) -> dict:
         evs = sorted(self._alarms_in(self.root, since, until), key=lambda e: -float(e["t"]))
         return {"events": evs[:limit], "truncated": len(evs) > limit}
+
+    def waiting(self, since: float) -> bool:
+        """An alarm on the card newer than `since` — the last page the agent reported. What an agent in ANOTHER
+        process asks, once a second, instead of being woken (`DomainAgent(alarm_waiting=...)`)."""
+        return any(float(e["t"]) > since for e in self._alarms_in(self.root, since, float("inf")))
 
 
 # The alarm page a member reports (`domain/uplink.py`): its newest alarms of the last `window` seconds. The
@@ -120,8 +125,12 @@ class ReportedDoor:
 
 
 def _same(e: dict) -> str:
-    """One alarm, whichever source carried it: the line itself, without what the list adds."""
-    return json.dumps({k: v for k, v in e.items() if k not in ("member", "from_history")}, sort_keys=True)
+    """One alarm, whichever source carried it: the line itself, without what the list adds — and by its time on
+    the SOURCE's clock when the page carries it (`t_src`): the time on ours moves from report to report."""
+    d = {k: v for k, v in e.items() if k not in ("member", "from_history")}
+    if "t_src" in d:
+        d.pop("t")
+    return json.dumps(d, sort_keys=True)
 
 
 def serial_of(member: str) -> str:
@@ -135,38 +144,57 @@ class AlarmHistory:
     with it. The domain has read it all already — so it keeps it, instead of asking a neighbour to.
 
     One object per member, a rolling week: what is older than `days` falls off when the object is written again.
-    Nothing is deleted, because the store under the domain may not delete at all (М11's has put, get and list)."""
+    Nothing is deleted, because the store under the domain may not delete at all (М11's has put, get and list).
 
-    def __init__(self, domain_objects, days: int = 7, wall=time.time):
-        self.store, self.days, self.wall = domain_objects, days, wall
+    And at most `max_lines` of them, the newest (feedback BA). A contact that bounces once a second for a week is
+    six hundred thousand lines — fifty megabytes for one member, read whole by every answer of the list and carried
+    in every backup of the holder (Lesson 15). A storm pushes its own oldest lines out, and the object says from
+    when it holds the member whole (`cut_before`): what a page still shows from before it is not taken back — it
+    would push out newer lines — and the list says the week is incomplete there. A week, then, is the newest week."""
+
+    MAX_LINES = 2000                             # twenty pages; ~160 KB a member, whatever the storm
+
+    def __init__(self, domain_objects, days: int = 7, wall=time.time, max_lines: int = MAX_LINES):
+        self.store, self.days, self.wall, self.max_lines = domain_objects, days, wall, max_lines
         self._lock = threading.Lock()
 
     def _key(self, member: str) -> str:
         return f"{HISTORY}/{member}"
 
-    def _read(self, member: str) -> list[dict]:
+    def _read(self, member: str) -> dict:
         raw = self.store.get(self._key(member))
-        return json.loads(raw) if raw else []
+        doc = json.loads(raw) if raw else []
+        return {"events": doc, "cut_before": None} if isinstance(doc, list) else doc    # the first form: a list
 
-    def _write(self, member: str, events: list[dict]) -> None:
-        self.store.put(self._key(member), json.dumps(sorted(events, key=lambda e: float(e["t"]))).encode())
+    def _write(self, member: str, events: list[dict], cut_before: float | None) -> None:
+        self.store.put(self._key(member), json.dumps({"events": sorted(events, key=lambda e: float(e["t"])),
+                                                      "cut_before": cut_before}).encode())
 
     def keep(self, member: str, events: list[dict]) -> int:
-        """Add what is not kept yet, and let go what is older than the week; returns how many were new."""
+        """Add what is not kept yet, and let go what is older than the week or past the ceiling; returns how many
+        were new."""
         horizon = self.wall() - self.days * 86400
         with self._lock:
-            have = self._read(member)
+            doc = self._read(member)
+            have, cut = doc["events"], doc.get("cut_before")
             seen = {_same(e) for e in have}
             add = [{k: v for k, v in e.items() if k != "member"} for e in events
-                   if float(e["t"]) >= horizon and _same(e) not in seen]
-            kept = [e for e in have if float(e["t"]) >= horizon]
-            if add or len(kept) != len(have):
-                self._write(member, kept + add)
+                   if float(e["t"]) >= horizon and (cut is None or float(e["t"]) >= cut) and _same(e) not in seen]
+            kept = sorted([e for e in have if float(e["t"]) >= horizon] + add, key=lambda e: float(e["t"]))
+            if len(kept) > self.max_lines:
+                kept = kept[-self.max_lines:]
+                cut = max(cut or 0.0, float(kept[0]["t"]))
+            if add or len(kept) != len(have) or cut != doc.get("cut_before"):
+                self._write(member, kept, cut)
         return len(add)
 
     def read(self, member: str, since: float, until: float) -> list[dict]:
         horizon = self.wall() - self.days * 86400
-        return [e for e in self._read(member) if since <= float(e["t"]) < until and float(e["t"]) >= horizon]
+        return [e for e in self._read(member)["events"] if since <= float(e["t"]) < until and float(e["t"]) >= horizon]
+
+    def cut_before(self, member: str) -> float | None:
+        """From when the history holds this member whole — None if a storm never pushed any of its lines out."""
+        return self._read(member).get("cut_before")
 
 
 class DomainAlarms:
@@ -184,18 +212,17 @@ class DomainAlarms:
         best = None
         for name, c in self.fed.clusters.items():
             try:
-                raw = c.objects.get(POLLED)
+                raws = [c.objects.get(k) for k in c.objects.list(POLLED + "/")]   # one per ingest of the cluster
             except Unreachable:
                 continue
-            if not raw:
-                continue
-            d = json.loads(raw)
-            age = (d.get("cameras") or {}).get(str(ref))
-            if age is None:
-                continue
-            at = float(d["ts"]) - float(age)
-            if best is None or at > best[0]:
-                best = (at, d.get("cluster", name))
+            for raw in filter(None, raws):
+                d = json.loads(raw)
+                age = (d.get("cameras") or {}).get(str(ref))
+                if age is None:
+                    continue
+                at = float(d["ts"]) - float(age)                 # `ts` on the domain's clock: the copy shifts it
+                if best is None or at > best[0]:
+                    best = (at, d.get("cluster", name))
         return best
 
     def list(self, since: float, until: float | None = None) -> dict:
@@ -205,23 +232,27 @@ class DomainAlarms:
             if c.is_domain_holder:
                 continue
             door = self.doors(name)
-            kept = self.history.read(name, since, until) if self.history is not None else []
             try:
                 got = door.alarms(since, until, self.per_member)
                 if self.history is not None:          # what it reads, it keeps: the whole page, not the window
                     self.history.keep(name, door.alarms(self.wall() - WINDOW, self.wall() + 1, self.per_member)["events"])
-                members[name] = {"state": "ok", "truncated": got["truncated"]}
+                # …and only then reads the history back: kept first, so this answer knows what the keeping pushed
+                # out (feedback BA — the other order answered from a history about to lose its oldest lines).
+                kept = self.history.read(name, since, until) if self.history is not None else []
+                members[name] = {"state": "ok", "truncated": got["truncated"], **self._history_cut(name, since)}
                 events += self._union(name, got["events"], kept)
                 continue
             except Unreachable:
                 pass
+            kept = self.history.read(name, since, until) if self.history is not None else []
             last = door.last(since, until, self.per_member) if hasattr(door, "last") else None
             if last is None and not kept:
                 members[name] = {"state": "unreachable", "truncated": False}
                 continue
             reported = (last or {}).get("known_until")
             events += self._union(name, (last or {}).get("events", []), kept)
-            m = {"state": "last_report", "known_until": reported, "truncated": bool((last or {}).get("truncated"))}
+            m = {"state": "last_report", "known_until": reported, "truncated": bool((last or {}).get("truncated")),
+                 **self._history_cut(name, since)}
             if reported is not None:
                 silent_since = float(reported) + self.lost_after
                 alive = self.alive_at(self.ref_of(name))
@@ -239,6 +270,10 @@ class DomainAlarms:
         events.sort(key=lambda e: -float(e["t"]))
         return {"events": events, "members": members, "complete": all(m["state"] == "ok" for m in members.values()),
                 "sentence": self._sentence(members)}
+
+    def _history_cut(self, name: str, since: float) -> dict:
+        cut = self.history.cut_before(name) if self.history is not None else None
+        return {"history_cut_before": cut} if cut is not None and since < cut else {}
 
     @staticmethod
     def _union(name: str, fresh: list[dict], kept: list[dict]) -> list[dict]:
@@ -266,4 +301,7 @@ class DomainAlarms:
                 parts.append(f"{name} has never reported to the domain")
             if m.get("truncated"):
                 parts.append(f"{name} had more alarms than one page holds; showing its newest")
+            if m.get("history_cut_before"):
+                parts.append(f"{name} had an alarm storm: the domain keeps only its newest alarms, and what came before "
+                             f"{hm(m['history_cut_before'])} UTC is not known in full")
         return "; ".join(parts) if parts else "every member answered"

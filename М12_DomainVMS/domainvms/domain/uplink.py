@@ -278,5 +278,8 @@ def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=
         if p.get(k) is not None:
             p[k] = f.domain_time(p[k])
     for e in p.get("events", []):
-        e["t"] = f.domain_time(e["t"])
+        # `t_src` keeps the line's own time, on the member's clock: the shift to ours is taken afresh with every
+        # report and moves with how late the domain read it, so a line compared by its shifted time is a new line
+        # on every report (feedback AZ). Whatever remembers lines — the week of history — keys them on this.
+        e["t_src"], e["t"] = e["t"], f.domain_time(e["t"])
     return p

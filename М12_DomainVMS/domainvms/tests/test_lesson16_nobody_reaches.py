@@ -824,8 +824,11 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
 
 def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as_alive():
     """The domain's witness that a camera is alive when its agent is not reporting (Lesson 14): the ingest it
-    polls publishes when it last did (`rec/polled`), as ages against the object's own time, so a clock
-    difference cancels out. The poll is kept by the camera's pusher — another process than its agent."""
+    polls publishes when it last did (`rec/polled/<ingest>`), as ages against the object's own time, so a clock
+    difference cancels out. The poll is kept by the camera's pusher — another process than its agent.
+
+    One object per ingest (feedback AZ): a cluster runs several, and the one the camera does NOT poll, publishing
+    after the other, used to overwrite the single `rec/polled` and make a live camera look gone."""
     import json
     from domain.alarms import DomainAlarms
     from domain.ingest import POLLED
@@ -834,6 +837,10 @@ def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as
     pusher.pass_once([])                                                   # a poll
     wall.advance(10)
     assert ingest.publish_polled(south.objects) == {SERIAL: 10.0}
-    d = json.loads(south.objects.get(POLLED))
-    assert d["cluster"] == "south" and d["ts"] == wall()
+    other = Ingest("south", ["srt://srv-3.south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
+    assert other.publish_polled(south.objects) == {}                      # the second ingest: nobody polled it
+    keys = south.objects.list(POLLED + "/")
+    assert len(keys) == 2
+    d = json.loads(south.objects.get([k for k in keys if "srv-1" in k][0]))
+    assert d["cluster"] == "south" and d["ts"] == wall() and d["ingest"] == URLS[0]
     assert DomainAlarms(fed, None, wall).alive_at(SERIAL) == (wall() - 10, "south")

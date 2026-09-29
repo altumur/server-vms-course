@@ -45,3 +45,5 @@ Since Lessons 9–15 the same pass also: reads `domain/pending/<cluster>` and th
 - No production process calls `publish_grants`: `signer_service` publishes keys and the revocation list only, and `deploy/signer-policy.hcl` does not grant `domain/grants/*` to the signer. Grants reach a cluster only in the tests. See the report.
 - The domain holder's own agent (the jobspec runs one per region, including north) reads `domain/keys` from north and writes it to north — the same Variable, always equal, so a no-op.
 - Lesson 14: `wake()` — an alarm on the card; `due()` — woken, and the last urgent report at least `URGENT_GAP` (1 s) ago; `report_now()` — the loop's urgent pass. `main` waits for the interval or a wake, whichever first, so the card never syncs from its own thread.
+
+`alarm_waiting` (feedback AZ): given a card's `waiting`, `due()` also reports at once when the card holds an alarm newer than the last page reported (`_paged_at`) — for an agent in another process than the card, which `on_alarm` cannot wake.

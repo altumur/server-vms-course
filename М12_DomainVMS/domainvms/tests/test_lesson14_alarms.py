@@ -81,6 +81,41 @@ def test_an_alarm_wakes_the_agent_and_leaves_at_once_and_a_storm_is_one_report_a
     assert not agent.due()
 
 
+def test_an_agent_the_card_cannot_wake_asks_it_once_a_second():
+    """The card wakes the agent when both are one process. The product's agent is a process of its own, and so is
+    the course's in production — nothing can wake it (feedback AZ). So it asks: is there an alarm on the card
+    newer than the last page it reported? Asked by the loop with `due`, once a second; the report goes at once."""
+    wall = Clock(NOW)
+    fed, north, devices, cards, agents, report, reported = _site(wall)
+    card, d = Card(), devices["cam-SN0"]                                   # no `on_alarm`: another process
+    agent = DomainAgent(d.name, north.vars, d.flash, now=wall, domain_objects=north.objects,
+                        published=d.local_objects(), pages=lambda: pages(card, wall()), alarm_waiting=card.waiting)
+    agent.sync()
+    assert not agent.due()
+    wall.advance(0.5)
+    card.observe(1, wall(), "door_forced", alarm=True)
+    assert agent.due() and agent.report_now()
+    assert [e["kind"] for e in DomainAlarms(fed, reported, wall).list(since=NOW - 60, until=NOW + 60)["events"]] == ["door_forced"]
+    assert not agent.due()                                                # reported: nothing newer on the card
+
+
+def test_the_history_keeps_an_alarm_once_however_late_the_domain_reads_the_report():
+    """A page's times are moved to the domain's clock by a shift taken afresh with every report — the domain's time
+    when it first saw the report, less the report's stamp — and it moves with how late the domain read it. The
+    product's history compared lines by the shifted time and kept every alarm again on every read: two alarms, eight
+    lines on its box (feedback AZ). The key is the line's time on the member's clock (`t_src`)."""
+    wall = Clock(NOW)
+    fed, north, devices, cards, agents, report, reported = _site(wall)
+    history = AlarmHistory(north.objects, days=7, wall=wall)
+    cards["cam-SN1"].observe(1, NOW - 100, "door_forced", alarm=True)
+    for late in (3.0, 0.4, 2.7):                                          # how long after the report the domain reads it
+        report(); wall.advance(late)
+        out = DomainAlarms(fed, reported, wall, history=history).list(since=NOW - 3600)
+        assert [e["kind"] for e in out["events"] if e["member"] == "cam-SN1"] == ["door_forced"]
+        wall.advance(30 - late)
+    assert [e["kind"] for e in history.read("cam-SN1", NOW - 3600, wall())] == ["door_forced"]
+
+
 def test_a_member_that_goes_dark_is_answered_from_its_last_report_and_its_silence_is_an_alarm():
     """SN0 raised an alarm twenty-five minutes ago and another ninety seconds ago, and went dark. The domain has
     its last report, one pass behind the camera: both alarms are on the list, "known up to" the report. And
@@ -114,7 +149,7 @@ def test_a_camera_still_polling_its_ingest_is_alive_and_not_reporting():
     DomainAlarms(fed, reported, wall).list(since=NOW - 60)
     wall.advance(120)
     report(skip=("cam-SN0",))                                            # its agent is gone; the camera is not
-    north.objects.put(POLLED, json.dumps({"cluster": "north", "ts": wall(), "cameras": {"SN0": 2.0}}).encode())
+    north.objects.put(f"{POLLED}/srt___north_9000", json.dumps({"cluster": "north", "ts": wall(), "cameras": {"SN0": 2.0}}).encode())
     out = DomainAlarms(fed, reported, wall).list(since=NOW - 60)
     alarm = [e for e in out["events"] if e["member"] == "cam-SN0"][0]
     assert (alarm["kind"], alarm["alive_at"], alarm["alive_via"]) == ("not_reporting", NOW + 118, "north")
@@ -143,6 +178,31 @@ def test_the_domain_keeps_a_week_of_what_it_read_and_a_dead_card_takes_nothing_w
     wall.advance(7 * 86400)
     got = [e for e in alarms().list(since=NOW - 3600, until=NOW + 1)["events"] if e["member"] == "cam-SN1"]
     assert "door_forced" not in [e["kind"] for e in got]                 # a week, and then it goes
+
+
+def test_a_storm_pushes_its_oldest_out_of_the_history_and_the_list_says_so():
+    """The history had no ceiling (feedback BA): a contact bouncing once a second for a week is fifty megabytes for
+    one member, read whole by every answer and carried in every backup. Now it keeps the newest `max_lines` and says
+    from when it holds the member whole. What a page still shows from before that is not taken back, and a window
+    reaching past it is told the week is not complete there."""
+    wall = Clock(NOW)
+    fed, north, devices, cards, agents, report, reported = _site(wall)
+    history = AlarmHistory(north.objects, days=7, wall=wall, max_lines=50)
+    alarms = lambda: DomainAlarms(fed, reported, wall, history=history)
+    for i in range(100):
+        cards["cam-SN1"].observe(1, NOW - 1000 + i, "stream_lost", alarm=True)
+    report()
+    out = alarms().list(since=NOW - 3600)
+    assert len(history.read("cam-SN1", NOW - 3600, wall() + 1)) == 50 and history.cut_before("cam-SN1") == NOW - 950
+    assert out["members"]["cam-SN1"]["history_cut_before"] == NOW - 950
+    assert "cam-SN1 had an alarm storm" in out["sentence"]
+    key = "domain/alarm-history/cam-SN1"
+    raw = north.objects.get(key)
+    assert history.keep("cam-SN1", alarms().doors("cam-SN1").alarms(NOW - 3600, NOW + 1, 100)["events"]) == 0
+    assert north.objects.get(key) == raw                                  # the fifty let go stay let go
+    assert "history_cut_before" not in alarms().list(since=NOW - 900)["members"]["cam-SN1"]
+    north.objects.put(key, json.dumps([{"t": NOW - 10, "kind": "tamper", "class": "alarm"}]).encode())
+    assert [e["kind"] for e in history.read("cam-SN1", NOW - 60, NOW)] == ["tamper"]   # the first form still reads
 
 
 def test_a_member_never_heard_from_is_named_not_read_as_quiet():

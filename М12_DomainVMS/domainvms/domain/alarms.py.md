@@ -24,3 +24,10 @@ A member's alarms from its last report in the domain's store. `alarms(...)` rais
 ## Notes
 - `serial_of(member)` — `cam-<serial>` → `<serial>`, the ref a camera's poll is known by.
 - The agent's side is `DomainAgent.wake/due/report_now` in `agent.py`; the ingest's is `Ingest.publish_polled` in `ingest.py`.
+
+## Feedback AZ and BA (29 September)
+- `Card.waiting(since)` — an alarm newer than the last page reported: what an agent in another process asks once a second (`DomainAgent(alarm_waiting=...)`), instead of being woken by `on_alarm`.
+- `_same` compares by `t_src` — the line's time on the member's clock, which `uplink.page` now keeps beside the shifted `t` — because the shift is taken afresh with every report and moves with how late the domain read it.
+- `alive_at` reads every `rec/polled/<ingest>` of a cluster: one witness object per ingest, not one per cluster that the last writer owned.
+- `AlarmHistory(max_lines=2000)`: the newest lines only; the object is `{events, cut_before}` (the first form, a plain list, still reads); lines older than `cut_before` are not taken back; `cut_before(member)`. `DomainAlarms.list` keeps the page first and reads the history after, and a window reaching past `cut_before` gets `history_cut_before` and a sentence.
+- Tests: `test_an_agent_the_card_cannot_wake_asks_it_once_a_second`, `test_the_history_keeps_an_alarm_once_however_late_the_domain_reads_the_report`, `test_a_storm_pushes_its_oldest_out_of_the_history_and_the_list_says_so`.
