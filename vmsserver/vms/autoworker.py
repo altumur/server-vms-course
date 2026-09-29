@@ -98,8 +98,8 @@ class AutoWorker(Worker):
         # longest window any of them needs (`reconcile_once`). And what the pass cost — said in the heartbeat,
         # because a slow pass is otherwise visible nowhere: its seconds, its queries, how far the furthest
         # cursor trails `now`, and the longest road from an event to the request it filed.
-        self._asked: dict[tuple[str, str], dict] = {}
-        self._needed: dict[tuple[str, str], float] = {}
+        self._asked: dict[tuple[str, str, str], dict] = {}
+        self._needed: dict[tuple[str, str, str], float] = {}
         self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
         self.recent: dict[str, list[float]] = {}     # scenario -> firing times inside the last minute
         self.filed = 0
@@ -157,10 +157,15 @@ class AutoWorker(Worker):
         return acted
 
     # Where each scenario's window begins — the cursor, bounded by `COLD_START`, less the scenario's own
-    # `within` — so a pass can ask each (subsystem, kind) ONCE, from the earliest start any scenario watching it
-    # needs, instead of once per scenario. Fifty scenarios on three kinds were a hundred and fifty queries a
-    # pass, to every resource; now they are three (the notes on the event log's load: "the product, not the
-    # sum").
+    # `within` — so a pass can ask each (subsystem, kind, unit) ONCE, from the earliest start any scenario
+    # watching it needs, instead of once per scenario (the notes on the event log's load: "the product, not
+    # the sum").
+    #
+    # The UNIT is in the key, and that was measured (`tests/load_events.py`): asked across all units, one kind
+    # on twenty cameras writing a line every ten seconds filled the 500-row window, and the loud cameras cut
+    # the quiet one a scenario was watching. A trigger that names its unit gets a query for that unit — one
+    # no other camera can crowd, and for the index the cheapest there is: it opens that unit's files and no
+    # others. Scenarios on the same unit and kind still share it; a trigger naming no unit shares the kind's.
     def _since(self, row: dict, now: float) -> float:
         since = Frontier(self.archive_root, str(row["id"]), AUTO.name).read()
         return now - self.COLD_START if since is None else max(since, now - self.COLD_START)
@@ -171,16 +176,19 @@ class AutoWorker(Worker):
             if row is None or not row["enabled"]:
                 continue
             t0 = self._since(row, now) - float(row.get("within") or 0)
-            for t in row["when"]:
-                key = (str(t.get("sub", "")), str(t.get("kind", "")))
+            for key in self._keys(row):
                 self._needed[key] = min(self._needed.get(key, t0), t0)
 
-    def _ask(self, sub: str, kind: str, t0: float, t1: float) -> dict:
-        key = (sub, kind)
+    @staticmethod
+    def _keys(row: dict) -> list[tuple[str, str, str]]:
+        return sorted({(str(t.get("sub", "")), str(t.get("kind", "")), str(t.get("unit") or "")) for t in row["when"]})
+
+    def _ask(self, sub: str, kind: str, unit: str, t0: float, t1: float) -> dict:
+        key = (sub, kind, unit)
         have = self._asked.get(key)
         if have is None or have["t0"] > t0 or have["t1"] < t1:
             start = min(t0, self._needed.get(key, t0))
-            rep = self.index.query(max(0.0, start), t1, subsystem=sub, kind=kind, limit=self.PER_KIND)
+            rep = self.index.query(max(0.0, start), t1, subsystem=sub, kind=kind, unit=unit or None, limit=self.PER_KIND)
             self.pass_stats["queries"] += 1
             have = self._asked[key] = {"t0": start, "t1": t1, "rep": rep}
         return have["rep"]
@@ -249,10 +257,9 @@ class AutoWorker(Worker):
     # And what the window is MISSING (`holes`: server -> why), from the merge's `complete` — a window a server
     # did not answer for is not a window with nothing in it.
     def window(self, row: dict, t0: float, t1: float) -> tuple[list[dict], dict[str, str]]:
-        kinds = sorted({(str(t.get("sub", "")), str(t.get("kind", ""))) for t in row["when"]})
         out, full, holes = [], [], {}
-        for sub, kind in kinds:
-            rep = self._ask(sub, kind, t0, t1)                    # asked once this pass, for every scenario on this kind
+        for sub, kind, u in self._keys(row):
+            rep = self._ask(sub, kind, u, t0, t1)                 # asked once this pass, for every scenario on this unit and kind
             holes.update(rep.get("incomplete") or {})
             rows = rep.get("events", [])
             evs = [e for e in rows if t0 <= float(e.get("t", 0)) < t1 and not e.get("fenced")]
@@ -261,7 +268,7 @@ class AutoWorker(Worker):
             # hour-long answer lost nothing when the hour's first minutes were dropped.
             oldest = float(rows[0]["t"]) if rows else t1
             if rep.get("truncated") and oldest > t0:              # the index's own answer, not a guess from the count:
-                full.append(f"{sub}.{kind}")                      # fencing drops rows AFTER the cut, so a window that
+                full.append(f"{sub}.{kind}" + (f"@{u}" if u else ""))   # fencing drops rows AFTER the cut, so a window that
                                                                   # WAS cut can still come back short of the limit
             out += evs
         self.cut[str(row["id"])] = full
