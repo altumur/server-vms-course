@@ -1,23 +1,26 @@
-# alarms.py — Lesson 14: one list of alarms from every member, and a neighbour's copy of each camera's closed alarm buckets
+# alarms.py — Lesson 14: one list of alarms from every member; an alarm that leaves at once; silence as an alarm, with a witness; a week of history at the domain
 
-**Role in the module.** The brief's `MergedIndex` over cameras and its mirrors, which had no lesson in the first plan. The domain merges each member's alarms from its door, newest first, a page per member, with what it could not reach said (Lesson 1's honesty). A neighbour keeps a copy of another member's CLOSED alarm buckets — immutable, so copying needs no coordination — pulled by the keeper; who keeps whose is the domain's decision (`domain/mirrors/<member>`, carried by the agent), by rendezvous hashing so it barely moves as the site grows. A member answered from a copy says up to when the copy knows.
+**Role in the module.** The brief's `MergedIndex` over cameras. The domain merges each member's alarms from the page in its report, newest first, a page per member, with what it could not hear said (Lesson 1's honesty). The camera that goes dark is the one whose last alarm matters, so: the card wakes the agent on an alarm; a silent member is answered from its last report; its silence is an alarm of its own, and the ingest it polls says whether it is alive; the domain keeps a week of what it read. Copies of alarms on neighbours' cards were removed on 29 September — they copied only closed buckets, so the last alarm before a camera went dark was in none of them (the lesson's step 7).
 
 ## Module-level names
-- `BUCKET = 600` — М10A's bucket span.
+- `BUCKET = 600` — М10A's bucket span. `WINDOW = 86400` — a page's span.
+- `POLLED = "rec/polled"` — an ingest's word: when each camera last polled it, as ages.
+- `HISTORY = "domain/alarm-history"` — in the domain's object store: one object per member, a rolling week.
 
 ## `class Card`
-A member's events on its card, as М10A's buckets (`EventLog`, `buckets_under`, `read_bucket`), and a `mirror/<member>/…` tree for copies. `observe(epoch, t, kind, alarm=False)`; `alarms(since, until, limit)` → `{events, truncated}`; `closed_alarm_buckets(now)` → `{path: alarm lines}` for buckets whose span ended; `keep_copy(of, path, lines)` → False if already there, else write-and-rename; `mirrored(of, since, until, limit)` → `{events, truncated, known_until}`.
+A member's events on its card, as М10A's buckets. `observe(epoch, t, kind, alarm=False)` — and on an alarm, `on_alarm()` (the agent's `wake`); `alarms(since, until, limit)` → `{events, truncated}`.
 
-## `class EventDoor` — a member's `Card` through its door; `Unreachable` when off.
+## `pages(card, now, per_member=100, window=WINDOW)` — the page the agent puts in its report: `{"alarms": …}`.
 
-## `class MirrorPlan`
-`choose(members)` → `{member: [keepers]}`: the others ranked by a hash of the pair, top `copies`, from the same network when enough share one. `publish(fed)` writes `domain/mirrors/<keeper>` = `{member: "1"}`. `holders(of)` inverts it.
+## `class ReportedDoor`
+A member's alarms from its last report in the domain's store. `alarms(...)` raises `Unreachable` when the report is older than `lost_after`; `last(...)` is the page of that last report anyway, `known_until` its time — None if it never reported.
 
-## Functions
-### `mirror_once(me, my_vars, doors, now) -> int` — for each member in this one's carried `domain/mirrors`, copy the closed alarm buckets not yet held; a silent source is skipped.
+## `class AlarmHistory`
+`keep(member, events)` adds what is not kept yet and drops what is older than `days`, rewriting the member's one object (the store under the domain may not delete). `read(member, since, until)`.
 
 ## `class DomainAlarms`
-`list(since, until=None)` → `{events (each with member, and from_mirror_on when copied), members: {name: {state ok|mirror|unreachable, via, known_until, truncated}}, complete, sentence}`.
+`alive_at(ref)` → `(time, cluster)` of the latest poll any ingest reports for that camera. `list(since, until=None)` → `{events (each with member; from_history when only the history had it; a synthetic class-alarm line `silent` or `not_reporting` for each silent member), members: {name: {state ok|last_report|unreachable, known_until, silent_since, alive_at, alive_via, truncated}}, complete, sentence}`. A fresh page is kept in the history as it is read.
 
 ## Notes
-- `test_who_keeps_whose_copy_is_stable_as_the_site_grows`: one pair of 300 moves when a camera is added. The plan's load is uneven (some keep none, a few keep four) — the lesson's first exercise.
+- `serial_of(member)` — `cam-<serial>` → `<serial>`, the ref a camera's poll is known by.
+- The agent's side is `DomainAgent.wake/due/report_now` in `agent.py`; the ingest's is `Ingest.publish_polled` in `ingest.py`.
