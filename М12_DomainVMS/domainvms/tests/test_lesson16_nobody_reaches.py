@@ -805,3 +805,20 @@ def test_a_held_poll_looks_again_at_coverage_because_a_recorder_that_lets_go_wak
     t0 = _t.monotonic()
     out = ingest.poll(token, SERIAL, version=first["version"], wait=5.0)
     assert out["uncovered"] is True and _t.monotonic() - t0 < 1.5
+
+
+def test_the_ingest_says_when_each_camera_last_polled_and_the_domain_reads_it_as_alive():
+    """The domain's witness that a camera is alive when its agent is not reporting (Lesson 14): the ingest it
+    polls publishes when it last did (`rec/polled`), as ages against the object's own time, so a clock
+    difference cancels out. The poll is kept by the camera's pusher — another process than its agent."""
+    import json
+    from domain.alarms import DomainAlarms
+    from domain.ingest import POLLED
+    wall = Clock()
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    pusher.pass_once([])                                                   # a poll
+    wall.advance(10)
+    assert ingest.publish_polled(south.objects) == {SERIAL: 10.0}
+    d = json.loads(south.objects.get(POLLED))
+    assert d["cluster"] == "south" and d["ts"] == wall()
+    assert DomainAlarms(fed, None, wall).alive_at(SERIAL) == (wall() - 10, "south")

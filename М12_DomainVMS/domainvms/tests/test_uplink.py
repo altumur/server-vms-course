@@ -11,7 +11,7 @@ import json
 from cluster.variables import FakeVariables
 
 from domain.agent import DomainAgent, DomainPublisher
-from domain.alarms import Card, DomainAlarms, MirrorPlan, ReportedDoor, mirror_once, pages
+from domain.alarms import Card, DomainAlarms, ReportedDoor, pages
 from domain.api import ConsoleAPI
 from domain.device import DeviceCluster
 from domain.federation import DomainDirectory, Federation, Unreachable
@@ -44,7 +44,7 @@ def _site(wall, n=2, nets=None):
         agents[d.name] = DomainAgent(d.name, north.vars, d.flash, now=wall, console=d, current=d.current,
                                      domain_objects=north.objects, cluster_objects=d.disk,
                                      published=d.local_objects(),
-                                     pages=lambda d=d: pages(cards[d.name], d.flash.get("domain/mirrors")[0], wall()))
+                                     pages=lambda d=d: pages(cards[d.name], wall()))
     return fed, north, signer, devices, agents, cards
 
 
@@ -141,27 +141,22 @@ def test_shared_settings_delivery_is_read_from_what_members_reported():
     assert sorted(report["holding"]) == ["cam-SN0", "cam-SN1"] and report["silent"] == ["cam-SN2"]
 
 
-def test_alarms_come_from_the_pages_members_report_and_a_silent_ones_from_its_neighbours_page():
+def test_alarms_come_from_the_pages_members_report_and_a_silent_ones_from_its_last_report():
     wall = Clock(NOW)
     fed, north, _, devices, agents, cards = _site(wall, n=2)
-    plan = MirrorPlan(north.vars, copies=1)
-    plan.publish(fed)
-    _pass(agents)                                                              # carries `domain/mirrors` home
     cards["cam-SN0"].observe(1, NOW - 1500, "door_forced", alarm=True)
     cards["cam-SN1"].observe(1, NOW - 100, "tamper", alarm=True)
-    mirror_once(cards["cam-SN1"], devices["cam-SN1"].flash, lambda of: cards[of], NOW)   # neighbours: member to member
     _pass(agents)
     doors = lambda name: ReportedDoor(name, north.objects, wall=wall)
-    out = DomainAlarms(fed, doors, plan, wall).list(since=NOW - 3600)
+    out = DomainAlarms(fed, doors, wall).list(since=NOW - 3600)
     assert [(e["member"], e["kind"]) for e in out["events"]] == [("cam-SN1", "tamper"), ("cam-SN0", "door_forced")]
     assert out["complete"]
 
     wall.advance(60)
     _pass(agents, "cam-SN0")                                                   # SN0 goes quiet
-    out = DomainAlarms(fed, doors, plan, wall).list(since=NOW - 3600)
-    assert out["members"]["cam-SN0"]["state"] == "mirror" and out["members"]["cam-SN0"]["via"] == "cam-SN1"
-    assert ("cam-SN0", "door_forced") in [(e["member"], e["kind"]) for e in out["events"]]
-
+    out = DomainAlarms(fed, doors, wall).list(since=NOW - 3600)
+    assert out["members"]["cam-SN0"]["state"] == "last_report"
+    assert [(e["member"], e["kind"]) for e in out["events"] if e["member"] == "cam-SN0"] == [("cam-SN0", "silent"), ("cam-SN0", "door_forced")]
 
 def test_the_domain_cannot_write_into_a_member_and_needs_no_door():
     """What the domain wants of a member is a row its agent takes home; the copy refuses writes, and nothing

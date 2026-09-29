@@ -2,7 +2,7 @@
 
 Two kinds of fact, set in two places. What a cluster CAN observe — the networks it sees — it says itself, in
 its own store, through its agent (`federation.REACHES`); the domain reads it like any published object, and
-placement (Lesson 1) and the mirror plan (Lesson 14) use it. What nobody can observe — the network's policy:
+placement (Lesson 1) uses it. What nobody can observe — the network's policy:
 which member reaches the domain only through a relay, which relays are a star, where the centre is — the
 operator sets in ONE record of the domain (`domain/topology`), edited by CAS and checked when written, and
 every pass reads it from there.
