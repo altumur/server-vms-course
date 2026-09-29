@@ -44,6 +44,7 @@ import json
 import time
 
 from .agent import DomainPublisher
+from .alarms import HISTORY
 from .federation import Unreachable
 from .shared import NotTaken, sign, verify
 from .signer import Signer
@@ -57,6 +58,10 @@ HOST, BACKUP, STRANDED = "domain/host", "domain/backup", "domain/stranded"
 # a move does not start the grace period for nothing.
 EXPORTED = ("domain/pending/", "domain/grants/", "domain/crossings", "domain/sources/", "domain/shared",
             "domain/topology", "domain/members", "domain/roads", "domain/placement", "domain/licence")
+# And from the holder's OBJECT store: the week of alarms the domain read (Lesson 14). It lives on the holder's
+# card, next to the reports — and a card is what dies with a camera. Promised to outlive any card, it has to
+# leave the holder with the rest; restored, it is as old as the backup, and the reports fill in the rest.
+EXPORTED_OBJECTS = (f"{HISTORY}/",)
 
 
 class Deposed(Exception):
@@ -141,12 +146,21 @@ class DomainHolder:
         if self.vars.get(MEMBERS)[0] is None:
             Members(self.vars, self.wall, configured=lambda: sorted(self.fed.clusters)).settle()
 
+    def export_objects(self) -> dict[str, str]:
+        out = {}
+        for prefix in EXPORTED_OBJECTS if self.objects is not None else ():
+            for key in self.objects.list(prefix):
+                raw = self.objects.get(key)
+                if raw is not None:
+                    out[key] = raw.decode()
+        return out
+
     def backup(self, targets: list[str], objects) -> int:
         self._not_deposed()                              # a FROZEN holder still backs up: that is how it hands over
         self.backups = objects
         self.backup_rev += 1
         doc = sign({"term": self.term, "rev": self.backup_rev, "host": self.name, "at": self.wall(),
-                    "state": self.export()}, self.signer.tokens)
+                    "state": self.export(), "objects": self.export_objects()}, self.signer.tokens)
         raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
         key = f"backup/rev-{self.backup_rev}"
         objects.put(key, raw)
@@ -302,6 +316,8 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
         for path, items in best[1]["state"].items():
             _, idx = new_vars.get(path)
             new_vars.put(path, items, cas=idx)
+        for key, text in best[1].get("objects", {}).items():
+            objects_of(new).put(key, text.encode())      # the alarm history, as of the backup
     DomainPublisher(new_vars).publish_keys(keys)
     # The shared document (Lesson 12): its pointer came back with the state, but the object it names was in the
     # old holder's store. Every member holds that document, verified by the same key — the new holder first among

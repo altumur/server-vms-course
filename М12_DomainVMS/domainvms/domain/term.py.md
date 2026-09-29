@@ -3,7 +3,7 @@
 **Role in the module.** On a site with no server the designated domain holder is a camera, and cameras die. Moving the domain becomes ordinary, and three things follow: a TERM (the epoch one level up — a larger term wins, a returning holder steps down on its next read), STATE BEYOND THE HOST (what only the holder holds — Lesson 9's kept edits for a member that is off above all — published as a signed backup that chosen members' agents carry, like the shared settings), and NOTHING LOST SILENTLY (an old holder's un-backed-up changes listed for a person). The signer's key is never in the backup; it comes from where Lesson 7 put it.
 
 ## Module-level names
-- `HOST = "domain/host"` (a signed `{term, host, at}` in the holder and in every member), `BACKUP = "domain/backup"` (per-member pointer `domain/backup/<member>` in the holder; the member's copy and document), `EXPORTED` — the prefixes the backup carries: pending, grants, crossings, sources, mirrors, the settings pointer.
+- `HOST = "domain/host"` (a signed `{term, host, at}` in the holder and in every member), `BACKUP = "domain/backup"` (per-member pointer `domain/backup/<member>` in the holder; the member's copy and document), `EXPORTED` — the prefixes the backup carries: pending, grants, crossings, sources, the settings pointer, topology, members, roads, placement, the licence; `EXPORTED_OBJECTS` — from the holder's object store, the week of alarm history (Lesson 14), which lives on the holder's card and would otherwise die with it.
 
 ## `class Deposed`, `class Frozen`, `class TwoHolders`
 
@@ -15,7 +15,7 @@
 ### `stranded(old_vars, restored_state) -> list` — every exported item on a returning old holder that differs from what the new term was restored from.
 
 ## `class DomainHolder`
-`claim()`; `export()`; `backup(targets, objects) -> rev` (a deposed holder may not publish; a frozen one may — that is how it hands over); `check()` — False, and `deposed_by` set, if any reachable member carries a larger term; `guard()` raises `Deposed` naming the new holder and term, or `Frozen` while `frozen_for` names the member a handover is moving the domain to.
+`claim()`; `export()`; `export_objects()` (the `EXPORTED_OBJECTS` keys, as text — `move_domain` puts them back on the new holder); `backup(targets, objects) -> rev` (a deposed holder may not publish; a frozen one may — that is how it hands over); `check()` — False, and `deposed_by` set, if any reachable member carries a larger term; `guard()` raises `Deposed` naming the new holder and term, or `Frozen` while `frozen_for` names the member a handover is moving the domain to.
 
 ## `class GuardedPending`
 `PendingEdits` with the holder's guard in front of `add`: a kept edit is refused as `ApiError(503, reason)` while the holder is frozen or deposed. Everything else passes through.

@@ -114,6 +114,23 @@ def test_the_holder_dies_and_the_domain_is_moved_with_the_edit_it_was_keeping():
     assert d3.row()["name"] == "SN3-renamed"
 
 
+def test_the_week_of_alarms_leaves_the_holder_with_its_backup():
+    """The domain keeps a week of the alarms it read (Lesson 14) in its own store — on the holder's card, next
+    to the reports. The failure table promised that week outlives any card; the holder's own card is the one
+    it did not. So the history goes into the backup, and a move puts it back on the new holder: as of the
+    backup, which is what the backup promises about everything."""
+    from domain.alarms import AlarmHistory
+    wall = Clock()
+    fed, devices, signer, offline, holder, agents = _site(wall)
+    history = AlarmHistory(devices["cam-SN0"].disk, wall=wall)
+    history.keep("cam-SN2", [{"t": wall() - 3600, "kind": "door_forced", "class": "alarm"}])
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    devices["cam-SN0"].power_off()                                     # the card goes with the camera
+    new, report = move_domain(fed, "cam-SN1", offline, DOMAIN, _objects(devices), wall)
+    kept = AlarmHistory(devices["cam-SN1"].disk, wall=wall).read("cam-SN2", wall() - 86400, wall())
+    assert [e["kind"] for e in kept] == ["door_forced"]
+
+
 def test_a_holder_record_is_never_carried_backwards():
     """The old holder comes back and an agent still pointed at it carries its record. Carried blindly, term 1
     would overwrite term 2 on every member that agent reached and undo the move. The record is carried
