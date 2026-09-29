@@ -564,6 +564,54 @@ def test_an_event_written_into_a_past_bucket_is_in_the_next_answer():
     assert [e["n"] for e in db.query(*window)["events"]] == [1, 2]
 
 
+def test_a_bucket_removed_and_written_again_is_read_as_a_new_file():
+    """Retention removed a bucket, and a late scan of the archive wrote the same hour again under the same name —
+    as long as the old file, or longer. "Not shorter" is not "the same file grown" (feedback AX): read on from
+    the old offset, the index kept the old line and began the new ones mid-line. The file's identity and its
+    first bytes are compared as well, and a different file is read from its start."""
+    import glob
+    from w2cplatform.events import EventLog
+    box = Box()
+    now = box.wall()
+    EventLog(box.archive, "detjob", "7-scan", 1, 600).append(now - 7200, "person", n=1)
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    window = (now - 7300, now - 7100)
+    assert [e["n"] for e in db.query(*window)["events"]] == [1]
+    [path] = glob.glob(os.path.join(box.archive, "**", "*.events.jsonl"), recursive=True)
+    os.remove(path)                                                              # retention
+    again = EventLog(box.archive, "detjob", "7-scan", 1, 600)                   # the late scan
+    again.append(now - 7190, "person", n=2)
+    again.append(now - 7180, "person", n=3)
+    assert [e["n"] for e in db.query(*window)["events"]] == [2, 3]
+    assert db.torn == 0
+    # Written again IN PLACE — the same inode, as a freed one handed straight back would be: only the first
+    # bytes tell it from the file the index read.
+    with open(path, "r+b") as f:
+        body = f.read()
+        f.seek(0)
+        f.write(body.replace(b'"n": 2', b'"n": 7'))
+    again.append(now - 7170, "person", n=4)
+    assert [e["n"] for e in db.query(*window)["events"]] == [7, 3, 4]
+
+
+def test_the_operators_timeline_says_which_servers_a_window_is_missing():
+    """The product's console built its `/events` answer itself and dropped the merge's word on completeness
+    (feedback AX): a window a server did not answer for looked empty to the operator. Here it is passed on as
+    it came — in the plain answer and in the one folded into groups for a busy hour."""
+    box = Box()
+
+    class Merge:
+        def query(self, t0, t1, *a, **kw):
+            evs = [{"t": t0 + i, "subsystem": "vms", "unit": "7", "kind": "motion", "class": "observation"} for i in range(50)]
+            return {"events": evs, "state": "live", "complete": False, "incomplete": {"srv-2": "did not answer"}}
+
+    now = box.wall()
+    for per_minute in (0.0, 1000.0):                                   # folded, and plain
+        con = _console_over(box, Merge(), per_minute=per_minute)
+        out = con.timeline(con.index.query(now - 60, now), now - 60, now)
+        assert out["complete"] is False and out["incomplete"] == {"srv-2": "did not answer"}
+
+
 def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_same_answer():
     """Up to a day, the candidate files are computed from the window — a name from a time, a stat for whether it
     is there; wider, the epoch's directory is listed. Two ways to find the same files: one answer."""

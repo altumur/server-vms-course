@@ -95,6 +95,8 @@ class _Read:
     mtime: int
     offset: int
     lines: tuple
+    ident: tuple = ()        # (device, inode): the same FILE, not only the same name
+    head: bytes = b""        # its first bytes, as read — an inode is reused the moment it is freed
 
 
 class EventIndex:
@@ -163,21 +165,31 @@ class EventIndex:
     # The file is looked at, not remembered: unchanged size and time — the cached lines; grown — only the
     # part past the last read; shrunk or rewritten — read again from the start; gone — nothing, and out of
     # the cache.
+    #
+    # "Grown" means the SAME file grown (feedback AX). A bucket that retention removed and a late scan of the
+    # archive wrote again under the same name is at least as long as the old one, and read on from the old
+    # offset it would keep the old lines and start the new ones mid-line — one lost, and counted as torn. So
+    # the file's identity is compared (device and inode), and its first bytes too: a freed inode is handed to
+    # the next file created, often at once.
     def _lines(self, path: str) -> tuple:
         try:
             st = os.stat(path)
         except FileNotFoundError:
             self._drop(path)
             return ()
+        ident = (st.st_dev, st.st_ino)
         with self._lock:
             have = self._cache.get(path)
-            if have is not None and have.size == st.st_size and have.mtime == st.st_mtime_ns:
+            if have is not None and have.size == st.st_size and have.mtime == st.st_mtime_ns and have.ident == ident:
                 self._cache.move_to_end(path)
                 return have.lines
-        start, kept = (have.offset, have.lines) if have is not None and st.st_size >= have.size else (0, ())
         with open(path, "rb") as f:
+            same = have is not None and have.ident == ident and st.st_size >= have.size \
+                and f.read(len(have.head)) == have.head
+            start, kept, head = (have.offset, have.lines, have.head) if same else (0, (), None)
             f.seek(start)
             data = f.read()
+        head = data[:64] if head is None else head
         cut = data.rfind(b"\n") + 1                      # a half-written last line waits for its end
         lines = list(kept)
         for raw in data[:cut].splitlines():
@@ -190,7 +202,7 @@ class EventIndex:
                 continue
             lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)), e.get("cam"),
                           {k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")}))
-        read = _Read(st.st_size, st.st_mtime_ns, start + cut, tuple(lines))
+        read = _Read(st.st_size, st.st_mtime_ns, start + cut, tuple(lines), ident, head)
         with self._lock:
             old = self._cache.pop(path, None)
             self._bytes -= old.size if old is not None else 0
