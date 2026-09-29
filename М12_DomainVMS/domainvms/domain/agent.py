@@ -12,6 +12,7 @@ Workers are not involved: nothing about a user reaches a worker, ever.
 """
 from __future__ import annotations
 
+import threading
 import time
 
 from cluster.variables import Variables
@@ -22,7 +23,7 @@ from .tokens import KeySet, RevocationList
 KEYS_PATH, REVOKED_PATH, GRANTS_PATH = "domain/keys", "domain/revoked", "domain/grants"
 # Lesson 13: where this cluster's recorders find cameras of OTHER clusters. Lesson 14: whose closed alarm
 # buckets this cluster keeps a copy of.
-SOURCES_PATH, MIRRORS_PATH = "domain/sources", "domain/mirrors"
+SOURCES_PATH = "domain/sources"
 # Lesson 13, the other way round: who records THIS cluster's cameras elsewhere, and whether it writes them —
 # read by the backup on a camera's card. The recorder owns the names; the agent only carries.
 from vms.recworker import DOMAIN_SEEN, PRIMARIES as PRIMARIES_PATH
@@ -32,7 +33,7 @@ UPSTREAM_PATH = "domain/upstream"
 ASKS_PATH = "domain/asks"
 # …and, for a camera nobody records, the ingest it polls all the same — for asks, with no stream to push.
 POLL_PATH = "domain/poll"
-PER_CLUSTER = (SOURCES_PATH, MIRRORS_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH)
+PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH)
 
 
 class DomainPublisher:
@@ -98,6 +99,11 @@ class DomainAgent:
         self.shared = self.backup = self.host = ""          # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
+        # An alarm on the card wakes the agent (Lesson 14): the report goes now, not at the next pass — half a
+        # minute is long enough for the camera that saw the door forced to be broken before it reported it. The
+        # card only sets this; the agent's own loop reports, so two threads never sync at once.
+        self.woken = threading.Event()
+        self._urgent_at: float | None = None
         self._relay_n, self._relay_seen = None, None      # through a relay: its last age mark, on OUR clock
 
     def _carry(self, path: str, items: dict | None, clear: bool = False) -> None:
@@ -118,6 +124,24 @@ class DomainAgent:
             return False
         self.own_objects.put(REACHES, raw)
         return True
+
+    URGENT_GAP = 1.0                                        # a storm is one report a second, not one per line
+
+    def wake(self) -> None:
+        """An alarm was written: report as soon as the loop can."""
+        self.woken.set()
+
+    def due(self) -> bool:
+        """Woken, and the last urgent report was at least `URGENT_GAP` ago: report now."""
+        if not self.woken.is_set():
+            return False
+        return self._urgent_at is None or self.now() - self._urgent_at >= self.URGENT_GAP
+
+    def report_now(self) -> bool:
+        """The loop's answer to `wake`: one pass, marked as urgent."""
+        self.woken.clear()
+        self._urgent_at = self.now()
+        return self.sync()
 
     def sync(self) -> bool:
         """One pass. False (and nothing written) if the domain did not answer."""
@@ -307,14 +331,20 @@ def main() -> None:
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
+    next_pass = 0.0
     while not stop.is_set():
         try:
-            ok = agent.sync()
+            if agent.due():
+                ok = agent.report_now()                      # an alarm woke it: the report goes now
+            elif time.monotonic() >= next_pass:
+                ok = agent.sync(); next_pass = time.monotonic() + interval
+            else:
+                ok = True
         except Exception:                                    # noqa: BLE001 — the domain is unreachable; keep the last set
             ok = False
         if not ok:
             print(f"{cluster}: domain unreachable; keeping the key set from {agent.last_synced}", flush=True)
-        stop.wait(interval)
+        agent.woken.wait(max(0.05, min(agent.URGENT_GAP, next_pass - time.monotonic())))
 
 
 if __name__ == "__main__":
