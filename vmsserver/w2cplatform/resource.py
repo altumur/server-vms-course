@@ -82,6 +82,7 @@ from .contract import BUILD, SCHEMA, check_schema
 from .events import CONSOLE, Bucket, buckets_under, parse_bucket, subsystems_under
 
 MIRROR_DIR = ".mirror"
+EVENTS_INFLIGHT = 8          # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
 SPACE_KEY = "platform/space"
 RESOURCES = "platform/resources"
@@ -294,6 +295,12 @@ class Resource:
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
+        # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
+        # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
+        # reader that times out cannot tell "slow" from "gone". Past the limit the answer is 503 with
+        # `Retry-After` — a refusal the merge reads as "did not answer", which makes the window incomplete and
+        # holds automation's cursor rather than losing what this resource holds (М10B Lesson 25).
+        self.events_slots = threading.BoundedSemaphore(EVENTS_INFLIGHT)
         for path in self.volumes.values():
             os.makedirs(path, exist_ok=True)
 
@@ -601,15 +608,21 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             if self.path == "/events" or self.path.startswith("/events?"):
                 if resource.index is None:
                     return self._raw(503, b'{"error": "this resource runs no event index"}', [("Content-Type", "application/json")])
-                q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
+                if not resource.events_slots.acquire(blocking=False):
+                    return self._raw(503, json.dumps({"error": f"busy: {EVENTS_INFLIGHT} queries already being answered"}).encode(),
+                                     [("Content-Type", "application/json"), ("Retry-After", "1")])
                 try:
-                    rep = resource.index.query(float(q.get("from", 0)), float(q.get("to", 1e12)),
-                                               int(q["cam"]) if q.get("cam") else None, q.get("kind"), q.get("subsystem"), q.get("unit"),
-                                               limit=int(q.get("limit", 1000)), keep=q.get("keep", "newest"),
-                                               cls=q.get("class"))
-                except ValueError as e:                           # an unknown `keep` is refused, not read as the other end
-                    return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
-                return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
+                    q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
+                    try:
+                        rep = resource.index.query(float(q.get("from", 0)), float(q.get("to", 1e12)),
+                                                   int(q["cam"]) if q.get("cam") else None, q.get("kind"), q.get("subsystem"), q.get("unit"),
+                                                   limit=int(q.get("limit", 1000)), keep=q.get("keep", "newest"),
+                                                   cls=q.get("class"))
+                    except ValueError as e:                       # an unknown `keep` is refused, not read as the other end
+                        return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
+                    return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
+                finally:
+                    resource.events_slots.release()
             if self.path.startswith("/events/"):
                 rel = self.path[len("/events/"):]; p = os.path.join(root, rel)
                 if ".." in rel or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
