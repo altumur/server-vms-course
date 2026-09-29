@@ -497,3 +497,98 @@ def test_the_merge_says_which_servers_a_window_is_missing():
     rep = MergedIndex(box.objects, fetch=fetch, wall=box.wall).query(now - 300, now)
     assert rep["complete"] is False
     assert rep["incomplete"] == {"srv-b": "did not answer", "srv-c": "said catching up", "srv-d": "silent"}
+
+
+# -- the notes on the event log's load: one query per kind a pass, and what a pass costs ----------------------
+def test_scenarios_watching_one_kind_share_one_query_a_pass():
+    """Every scenario used to ask its own window of every kind it watches — fifty scenarios on three kinds
+    were a hundred and fifty queries a pass, each to every resource. A pass now asks each (subsystem, kind)
+    once, over the longest window any scenario on it needs, and each scenario reads its own part."""
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 20, "vms", 12, "io.input", port="1", value="closed")])
+    for name in ("a", "b", "c"):
+        _scenario(box, name=name, when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    ctl = AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl.assign("a-1", ["a", "b", "c"])
+    w = _worker(box, log)
+    assert sorted(w.reconcile_once()) == ["a", "b", "c"]
+    assert len(log.asked) == 1 and w.pass_stats["queries"] == 1       # three scenarios, one kind: one question
+
+
+def test_a_cut_in_the_shared_answer_counts_only_against_the_scenario_it_reached():
+    """The shared answer spans the longest window and keeps its newest end. A scenario reaching an hour back
+    lost the hour's first minutes to the cut and says so (`cut`); one looking at the last five minutes lost
+    nothing, and says nothing."""
+    box = Box()
+    t = box.wall()
+    rows = [ev(t - 3000 + i * 5, "vms", 12, "io.input", port="1", value="open") for i in range(600)]
+    log = _Log(rows, wall=box.wall)
+    _scenario(box, name="long", within=3600,
+              when=[DOOR["when"][0], {"sub": "vms", "kind": "io.input", "unit": "12", "match": {"value": "open"}}],
+              then=[DOOR["then"][0]])
+    _scenario(box, name="short", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    ctl = AutoController(box.vars.as_writer("autocontroller", AUTO_SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl.assign("a-1", ["long", "short"])
+    w = _worker(box, log)
+    w.reconcile_once()
+    st = {s["id"]: s for s in w.status()}
+    assert st["long"]["cut"] == ["vms.io.input"] and "cut" not in st["short"]
+    assert len(log.asked) == 1
+
+
+def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
+    """A slow pass and a held cursor were visible nowhere. The evaluator's heartbeat now carries its last
+    pass — seconds, queries, how far the furthest cursor trails `now`, the longest road from an event to the
+    request it filed — and the console's `/metrics` exports them per evaluator."""
+    from vms.console import auto_metrics
+    from w2cplatform.contract import Heartbeat
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 4, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    w.reconcile_once(); w.heartbeat_once()
+    hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
+    assert hb.extra["queries"] == 1 and hb.extra["latency_seconds"] == 4.0 and hb.extra["lag_seconds"] == w.COLD_START
+    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    text = "\n".join(auto_metrics(con)())
+    assert 'auto_firing_latency_seconds{worker="a-1"} 4.0' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
+
+
+def test_the_merge_asks_its_resources_at_once_and_does_not_wait_twice_for_one_that_hung():
+    """Asked one after another, three resources that take a second each took three; asked at once, one. And a
+    resource that did not answer is not asked again for a few seconds: it is named at once as not answering,
+    instead of costing every query of the pass its full timeout."""
+    import json as _json
+    import time as _time
+    from w2cplatform.eventdatabase import MergedIndex
+    box = Box()
+    now = box.wall()
+    for server in ("srv-a", "srv-b", "srv-c"):
+        box.objects.put(f"platform/resources/{server}/heartbeat",
+                        _json.dumps({"server": server, "ts": now, "url": f"http://{server}"}).encode())
+    calls = []
+
+    def fetch(url, params):
+        calls.append(url)
+        if url == "http://srv-c":
+            raise OSError("timed out")
+        _time.sleep(0.3)
+        return {"events": [], "truncated": False, "state": "live"}
+
+    m = MergedIndex(box.objects, fetch=fetch, wall=box.wall, cooldown=10.0)
+    t0 = _time.monotonic()
+    rep = m.query(now - 60, now)
+    assert _time.monotonic() - t0 < 0.55                              # at once: not 0.6 for two sleeping resources
+    assert rep["incomplete"] == {"srv-c": "did not answer"}
+    calls.clear()
+    rep = m.query(now - 60, now)
+    assert "http://srv-c" not in calls and rep["incomplete"] == {"srv-c": "did not answer a moment ago"}
+    box.wall.advance(11)
+    for server in ("srv-a", "srv-b", "srv-c"):
+        box.objects.put(f"platform/resources/{server}/heartbeat",
+                        _json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}"}).encode())
+    calls.clear(); m.query(now - 60, now)
+    assert "http://srv-c" in calls                                    # the pause is over: asked again

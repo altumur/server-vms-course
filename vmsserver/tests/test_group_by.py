@@ -357,3 +357,22 @@ def test_two_clusters_of_one_on_one_bench_do_not_share_an_rtp_port():
                       server="srv-a", archive_root=box.archive, env={"RTP_BASE": base} if base else {})
         ports.append(w.enrich({"id": 1})["live_port"])
     assert ports == [20001, 21001, 22001]
+
+
+def test_what_became_of_the_commands_is_counted_and_exported():
+    """Performed, refused by the device, or arrived after its moment: each is counted in the holder's heartbeat,
+    and the console sums them into `vms_commands_total`. A share of `expired` that grows is the road from an
+    event to the holder getting longer than the requests live."""
+    from vms.console import vms_metrics
+    box = Box(); ctl, con = _ctl(box)
+    door = con.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
+    _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, relays=1)
+    w.reconcile_once()
+    for rid, fields in (("ok", {"port": "1"}), ("bad", {"port": "9"}), ("late", {"port": "1", "valid_until": str(box.wall() - 1)})):
+        con.vars.put(SPEC.sub.request_key(rid), {"unit": str(door), "action": "output",
+                                                 "valid_until": str(box.wall() + 30), **fields})
+    w.requests(); w.heartbeat_once()
+    text = "\n".join(vms_metrics(ctl)())
+    assert 'vms_commands_total{outcome="performed"} 1' in text
+    assert 'vms_commands_total{outcome="refused"} 1' in text and 'vms_commands_total{outcome="expired"} 1' in text

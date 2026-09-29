@@ -635,3 +635,25 @@ def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_
     db = EventIndex(box.archive, "srv-1", wall=box.wall)
     assert [e["cam"] for e in db.query(now - 600, now, cam=7)["events"]] == [7]
     assert db._may_be("srv-1", "det", "7-motion", 9) is False and db.query(now - 600, now, cam=9)["events"] == []
+
+
+def test_a_resource_says_busy_rather_than_queueing_without_end():
+    """The server starts a thread per request and never says no; without a limit a burst of readers is a queue
+    with no end, and a reader that times out cannot tell slow from gone. Past `EVENTS_INFLIGHT` queries at once,
+    `/events` answers 503 with `Retry-After` — which the merge reads as "did not answer", holding automation's
+    cursor instead of losing what this resource holds."""
+    from w2cplatform.resource import EVENTS_INFLIGHT
+    box = Box()
+    res, rsrv = _resource_process(box)
+    try:
+        for _ in range(EVENTS_INFLIGHT):
+            assert res.events_slots.acquire(blocking=False)             # as many queries as it takes, in flight
+        try:
+            urllib.request.urlopen(res.url + "/events?from=0&to=1")
+            raise AssertionError("a ninth query was queued")
+        except urllib.error.HTTPError as e:
+            assert e.code == 503 and e.headers["Retry-After"] == "1" and b"busy" in e.read()
+        res.events_slots.release()
+        assert urllib.request.urlopen(res.url + "/events?from=0&to=1").status == 200   # a slot free: answered
+    finally:
+        rsrv.shutdown(); rsrv.server_close()
