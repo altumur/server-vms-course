@@ -73,6 +73,7 @@ from .gateway import Forbidden, LeakyQueue, LiveTee
 from .tokens import TokenError, verify
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
+POLLED = "rec/polled"                  # when each camera last polled here, as ages: {"cluster", "ts", "cameras"}
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
 # what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
@@ -113,6 +114,7 @@ class _Camera:
     outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, and when: performed, refused, expired
     version: int = 0
     said: tuple | None = None                                    # what the last poll was told
+    polled_at: float | None = None                               # when it last polled, on the cluster's clock
 
 
 class Ingest:
@@ -161,6 +163,15 @@ class Ingest:
     def announce(self, objects) -> None:
         """Where cameras push to — in this cluster's own store, where the domain (or this cluster's report) reads it."""
         objects.put(INGEST, json.dumps({"cluster": self.cluster, "urls": self.urls, "ts": self.wall()}).encode())
+
+    # When each camera last polled — the domain's witness that a camera is alive when its agent is not reporting
+    # (Lesson 14): the poll is kept by the camera's pusher, another process than its agent. Ages, not times, so
+    # the domain reads them against the object's own `ts` and a clock difference cancels out.
+    def publish_polled(self, objects) -> dict:
+        now = self.wall()
+        cams = {ref: round(now - c.polled_at, 3) for ref, c in self.cams.items() if c.polled_at is not None}
+        objects.put(POLLED, json.dumps({"cluster": self.cluster, "ts": now, "cameras": cams}).encode())
+        return cams
 
     def _cam(self, ref) -> _Camera:
         return self.cams.setdefault(str(ref), _Camera())
@@ -214,6 +225,7 @@ class Ingest:
     def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None) -> dict:
         self._check(token, ref, camera_now)
         now, cam = self.wall(), self._cam(ref)
+        cam.polled_at = now
         push, ranges, asks = False, {}, {}
         for ing in self._cluster():
             c = ing._cam(ref)
