@@ -76,6 +76,21 @@ def test_the_camera_learns_where_to_push_from_its_book_and_the_book_does_not_chu
     assert pusher.entry()["ingest"]["token"] != e["ingest"]["token"]  # past half its life: a new token, one write
 
 
+def test_a_token_the_current_key_did_not_sign_is_issued_again_whatever_its_half_life():
+    """The half-life rule keeps the book still — but after a move the holder's key is new (Lesson 15, step 9),
+    and after a theft the old one is trusted nowhere. A token the current key did not sign is issued again on
+    the next pass, and the ingest takes it: the room carried the new key set on the same pass."""
+    from domain.tokens import kid_of
+    wall = Clock()
+    fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    before = pusher.entry()["ingest"]["token"]
+    signer.tokens.rotate(overlap=0, now=wall()); DomainPublisher(north.vars).publish_keys(signer.tokens.keyset())
+    wall.advance(30); cam.publish(); domain_pass()
+    after = pusher.entry()["ingest"]["token"]
+    assert after != before and kid_of(after) == signer.tokens.kid
+    ingest.poll(after, SERIAL)
+
+
 def test_a_recorder_holding_an_always_recording_gets_the_stream_the_camera_pushes():
     """The recorder wants the stream for ever, so the camera pushes for ever — and it finds the camera the
     way it found any camera of another cluster: in its own cluster's source book, which now says ingest."""

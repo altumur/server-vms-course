@@ -43,6 +43,7 @@ import json
 import threading
 
 from .federation import Unreachable
+from .tokens import kid_of
 from .uplink import REPORTED, UPLINK, base
 
 from .agent import UPSTREAM_PATH       # in a recording cluster: where its streams go up, or come down from (star)
@@ -74,7 +75,8 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
         mode = "pull" if on in star else "push"
         have, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
         old = json.loads((have or {}).get(ref, "{}"))
-        if old.get("urls") == urls and old.get("mode") == mode and float(old.get("until", 0)) - now > lifetime / 2:
+        if old.get("urls") == urls and old.get("mode") == mode and float(old.get("until", 0)) - now > lifetime / 2 \
+                and kid_of(old.get("token", "")) == crossings.issuer.kid:
             entry = old
         else:
             entry = {"urls": urls, "mode": mode, "until": now + lifetime,

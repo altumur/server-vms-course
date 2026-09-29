@@ -158,7 +158,7 @@ class Registrar:
         cert = self.signer.issue(hello["serial"], "ldevid", pub)        # EST, in one line
         self.audit.append({"at": self.now(), "serial": hello["serial"], "how": how, "ldevid_serial": cert.serial_number})
         if self.members is not None:
-            self.members.add(self.cluster_of(hello["serial"]), how, serial=hello["serial"])
+            self.members.add(self.cluster_of(hello["serial"]), how, serial=hello["serial"], key=hello["csr_pub"])
         return cert
 
     def leave(self, serial: str, by: str) -> bool:

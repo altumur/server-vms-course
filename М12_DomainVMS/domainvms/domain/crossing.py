@@ -49,6 +49,7 @@ from vms.archive import subtract
 
 from .agent import POLL_PATH, PRIMARIES_PATH, SOURCES_PATH
 from .federation import Unreachable
+from .tokens import kid_of
 from .api import ApiError
 
 CROSSINGS = "domain/crossings"
@@ -345,7 +346,8 @@ class Crossings:
         if raw is None:
             return old                                   # the recording cluster is silent: keep what the camera has
         urls = json.loads(raw)["urls"]
-        if old and old.get("urls") == urls and float(old["until"]) - now > self.token_lifetime / 2:
+        if old and old.get("urls") == urls and float(old["until"]) - now > self.token_lifetime / 2 \
+                and kid_of(old.get("token", "")) == self.issuer.kid:
             return old
         token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref)
         return {"urls": urls, "token": token, "until": now + self.token_lifetime}

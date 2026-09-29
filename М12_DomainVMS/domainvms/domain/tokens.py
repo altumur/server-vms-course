@@ -55,13 +55,29 @@ def _unb64(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
 
+ROOT_KID = "root"      # Lesson 15: the domain's root, kept OFF the holder, signs the key set and the holder record
+
+
 @dataclass
 class KeySet:
     """What every cluster and agent holds: current kid, and every public key
-    still trusted with the time after which each is retired (0 = never)."""
+    still trusted with the time after which each is retired (0 = never).
+
+    Since Lesson 15 it may come signed by the domain's root: then it also
+    holds the root's public key (kid `root`), a revision that only grows, and
+    the serials of the holder's issuing certificates that are no longer
+    trusted (`revoked_ca`). Parsed here; VERIFIED by the agent that carries
+    it (`DomainAgent._carry_keys`), against the root the member pinned."""
     current: str
     keys: dict[str, bytes] = field(default_factory=dict)       # kid -> raw 32-byte public key
     retire_at: dict[str, float] = field(default_factory=dict)  # kid -> wall time; missing = current/never
+    rev: int = 0
+    revoked_ca: set[str] = field(default_factory=set)
+    issuing: set[str] = field(default_factory=set)             # serials of the holders' issuing certificates so far
+
+    @property
+    def root(self) -> bytes | None:
+        return self.keys.get(ROOT_KID)
 
     def to_items(self) -> dict:
         items = {"current": self.current}
@@ -73,6 +89,12 @@ class KeySet:
 
     @classmethod
     def from_items(cls, items: dict) -> "KeySet":
+        if "doc" in items:                                      # signed by the root (Lesson 15)
+            d = json.loads(items["doc"])
+            ks = cls.from_items(d["keys"])
+            ks.keys[ROOT_KID] = bytes.fromhex(d["root"])
+            ks.rev, ks.revoked_ca, ks.issuing = int(d["rev"]), set(d.get("revoked_ca", [])), set(d.get("issuing", []))
+            return ks
         ks = cls(current=items["current"])
         for k, v in items.items():
             if k.startswith("key:"):
@@ -83,6 +105,16 @@ class KeySet:
 
     def usable(self, kid: str, now: float) -> bool:
         return kid in self.keys and (kid not in self.retire_at or now < self.retire_at[kid])
+
+
+def kid_of(token: str) -> str | None:
+    """The key a token names, read without verifying — for a book deciding whether to issue it again: a
+    token the CURRENT key did not sign is re-issued whatever its half-life says (Lesson 15, step 9: after a
+    move the holder's key is new, and after a theft the old one is no longer trusted anywhere)."""
+    try:
+        return json.loads(_unb64(token.split(".")[0])).get("kid")
+    except (ValueError, IndexError, AttributeError):
+        return None
 
 
 class TokenIssuer:

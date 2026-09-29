@@ -23,3 +23,6 @@ Then a `ThreadingHTTPServer` on a daemon thread, SIGTERM/SIGINT handlers, and th
 - No route creates or edits users; `IdentityStore.create_local` and friends have no HTTP surface, so the identity set this loop publishes changes only if something else in the process calls them.
 - `TOKEN_LIFETIME` from the jobspec's environment is not read; `identity.TOKEN_LIFETIME` is the constant used.
 - Federated login (`login_federated`) and break-glass have no route here either.
+
+## Lesson 15, step 9
+`RECOVERY_FILE`, on the first start only (no `domain/signer` yet): an issuing signer under that root and key set rev 1 signed by it; the installer takes the file back. Afterwards the service never publishes a key set of its own over the root's (members that pinned the root would refuse it); `GET /keys` answers what `domain/keys` holds.

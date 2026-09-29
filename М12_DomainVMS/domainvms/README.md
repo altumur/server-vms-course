@@ -26,7 +26,7 @@ domainvms/
     shared.py         Lesson 12 shared settings: one signed object behind a pointer, carried by agents, ordered by (term, rev), defaults resolved at read
     crossing.py       Lesson 13 a stream from another cluster: one recording cluster per camera, the source book, backfill planned from it and fetched from the card
     alarms.py         Lesson 14 one list of alarms from every member; an alarm that leaves at once; silence as an alarm, witnessed by the ingest; a week of history at the domain
-    term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the holder, moving, never a smaller term, what an old holder alone held
+    term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the holder, moving, never a smaller term, what an old holder alone held; the root off the holder, and a theft answered by a move
     uplink.py         Lesson 10 every connection is the member's: the agent's report into the domain holder; member_copy; silence on the domain's clock
     ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request, asks between cameras
     scenario.py       Lessons 12, 16 scenarios between cameras end to end: the pairs the book of asks is built from; the camera's side, event → ask
@@ -40,11 +40,11 @@ domainvms/
     signer-policy.hcl  agent-policy.hcl  member-report-policy.hcl              one writer per prefix; the agent may not touch vms/*; a member writes its own report
     federation.hcl                                                             two regions, one gossip pool
     verify-bench.sh                                                            what needs a real bench, scripted
-  tests/              184 tests, no Nomad, no Postgres, no browser — a few seconds
+  tests/              191 tests, no Nomad, no Postgres, no browser — a few seconds
 ```
 
 ```bash
-python3 tests/run.py                 # 184 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
+python3 tests/run.py                 # 191 tests; finds ../../М11_ClusterVMS/clustervms (or CLUSTERVMS_PATH) and М10 through it
 python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variables://objects,...
 ```
 
@@ -67,7 +67,7 @@ python3 -m domain.console            # CLUSTERS=north=http://nomad:4646|variable
 | 12 | settings shared without a database | `test_lesson12_shared.py`: delivery named per member; a stranger's signature refused with a matching checksum; never backwards; defaults resolved and no row touched; two editors told; a tree over 64 KiB; the domain off and a camera rebooted |
 | 13 | a server room records a camera of another cluster | `test_lesson13_crossing.py`: resolved from the carried book with nothing written into the camera; one recording cluster per camera; six hours with the domain off; a camera that moved meanwhile, found again; backfill fetches what the card still holds and drops the rest |
 | 14 | one list of alarms; the camera that goes dark | `test_lesson14_alarms.py`: merged newest first; an alarm wakes the agent, a storm is one report a second; a dark camera from its last report, "none known since", and its silence an alarm; alive and not reporting, by the ingest's word; a week of history outlives the card; a storm is truncated, not the page |
-| 15 | the domain moved from one camera to another | `test_lesson15_domain_of_one.py`: the kept edit survives the holder; the holder record never goes backwards; the old holder steps down and lists what it alone held; a forged backup ignored; the wrong key followed by nobody; the second move takes term 3; a planned handover strands nothing, is called off cleanly when the target cannot take the backup, and reports a write that slipped past its freeze |
+| 15 | the domain moved from one camera to another | `test_lesson15_domain_of_one.py`: the kept edit survives the holder; the holder record never goes backwards; the old holder steps down and lists what it alone held; a forged backup ignored; the wrong key followed by nobody; the second move takes term 3; a planned handover strands nothing, is called off cleanly when the target cannot take the backup, and reports a write that slipped past its freeze; the week of alarm history leaves with the backup. `test_lesson15_root.py`: the root off the holder — a stolen holder takes neither the domain nor the members' key set; a move after a theft drops its keys and signs every LDevID again; a planned move gives the new holder keys of its own; a key set only goes forward |
 
 ## What the design record says, as code
 

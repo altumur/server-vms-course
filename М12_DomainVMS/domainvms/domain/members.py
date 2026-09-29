@@ -85,14 +85,16 @@ class Members:
                 continue
         raise Conflict("the list of members kept changing underneath the write")
 
-    def add(self, name: str, how: str, serial: str | None = None, by: str | None = None) -> bool:
-        """Admitted — by a voucher, or by a person who approved it. Adding one already there changes nothing."""
+    def add(self, name: str, how: str, serial: str | None = None, by: str | None = None, key: str | None = None) -> bool:
+        """Admitted — by a voucher, or by a person who approved it. Adding one already there changes nothing.
+        `key`: the public key its LDevID was issued for (hex) — what a new holder signs again when the issuing
+        certificate that signed it is revoked (Lesson 15, step 9), and the one key it will sign for this member."""
         self._refuse_domain(name)
 
         def mutate(m):
             if name in m:
                 return False
-            m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by}
+            m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by, **({"key": key} if key else {})}
             return True
         return self._change(mutate)
 

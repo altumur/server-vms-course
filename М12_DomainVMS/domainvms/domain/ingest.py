@@ -70,7 +70,7 @@ from dataclasses import dataclass, field
 
 from .federation import Unreachable
 from .gateway import Forbidden, LeakyQueue, LiveTee
-from .tokens import TokenError, verify
+from .tokens import TokenError, kid_of, verify
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
 POLLED = "rec/polled"                  # when each camera last polled here, as ages: {"cluster", "ts", "cameras"}
@@ -805,7 +805,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
 
     def road(old: dict | None, cluster: str, urls: list, sub: str, a: str, b: str, acts: list, up: str | None = None):
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
-                and float(old["until"]) - now > lifetime / 2:
+                and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token", "")) == crossings.issuer.kid:
             return old
         claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, **({"up": up} if up else {})}
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),

@@ -18,9 +18,14 @@ import time
 from cluster.variables import Variables
 
 from .federation import Unreachable
-from .tokens import KeySet, RevocationList
+from .tokens import ROOT_KID, KeySet, RevocationList
 
 KEYS_PATH, REVOKED_PATH, GRANTS_PATH = "domain/keys", "domain/revoked", "domain/grants"
+# Lesson 15: the domain root's public key, PINNED in each member — written once, never replaced by the agent.
+# In production it comes with enrollment (the trust bundle of Lesson 6); here the first root-signed key set pins it.
+ROOT_PATH = "domain/root"
+# …and the member's LDevID, issued again by a new holder after its issuing certificate was revoked.
+LDEVID_PATH = "domain/ldevid"
 # Lesson 13: where this cluster's recorders find cameras of OTHER clusters. Lesson 14: whose closed alarm
 # buckets this cluster keeps a copy of.
 SOURCES_PATH = "domain/sources"
@@ -33,7 +38,7 @@ UPSTREAM_PATH = "domain/upstream"
 ASKS_PATH = "domain/asks"
 # …and, for a camera nobody records, the ingest it polls all the same — for asks, with no stream to push.
 POLL_PATH = "domain/poll"
-PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH)
+PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH, LDEVID_PATH)
 
 
 class DomainPublisher:
@@ -43,9 +48,10 @@ class DomainPublisher:
     def __init__(self, domain_vars: Variables):
         self.vars = domain_vars
 
-    def publish_keys(self, ks: KeySet) -> None:
+    def publish_keys(self, ks: KeySet | dict) -> None:
+        """A key set, or — Lesson 15 — the items `DomainRoot.key_set` signed."""
         _, idx = self.vars.get(KEYS_PATH)
-        self.vars.put(KEYS_PATH, ks.to_items(), cas=idx)
+        self.vars.put(KEYS_PATH, ks if isinstance(ks, dict) else ks.to_items(), cas=idx)
 
     def publish_revoked(self, rl: RevocationList) -> None:
         _, idx = self.vars.get(REVOKED_PATH)
@@ -96,7 +102,7 @@ class DomainAgent:
         # (`own_objects`, or the one it reports from), where the domain reads it. Written only when it changes.
         self.reaches, self.own_objects = reaches, own_objects if own_objects is not None else published
         self.reported = ""                                  # what the last pass did with the report
-        self.shared = self.backup = self.holder = ""          # what the last pass did with each document
+        self.shared = self.backup = self.holder = self.keys = ""   # what the last pass did with each document
         self.last_synced: float | None = None
         self.syncs = 0
         # An alarm on the card wakes the agent (Lesson 14): the report goes now, not at the next pass — half a
@@ -113,6 +119,38 @@ class DomainAgent:
         items = items or {}
         if have != items and not (have is None and not items):
             self.cluster_vars.put(path, items, cas=idx)
+
+    # The key set, carried with one rule per lesson. Lesson 4: as it is — the channel was the trust. Lesson 15:
+    # once this member has a root pinned, only a key set that root SIGNED, and never an older revision than it
+    # holds. A holder carried off the wall has the token key and can sign anything with it — but not as the
+    # root: a key set of its own, published to members it can still reach, is refused, and says why.
+    def _carry_keys(self, items: dict | None) -> str:
+        import json
+        from .shared import NotTaken, verify
+        if items is None:
+            return "no key set"
+        trust = ClusterTrust(self.cluster_vars)
+        pinned = trust.root()
+        if "doc" not in items:
+            if pinned is not None:
+                return "refused: a key set not signed by the domain's root"
+            self._carry(KEYS_PATH, items)
+            return "carried"
+        doc = json.loads(items["doc"])
+        root = pinned if pinned is not None else bytes.fromhex(doc.get("root", ""))
+        try:
+            verify(doc, KeySet(current="", keys={ROOT_KID: root}), self.now())
+        except NotTaken as e:
+            return f"refused: {e}"
+        if doc.get("root") != root.hex() or doc.get("kid") != ROOT_KID:
+            return "refused: signed by a root this member did not pin"
+        have = trust.keyset()
+        if have is not None and have.root is not None and int(doc["rev"]) < have.rev:
+            return f"holding rev {have.rev}"
+        if pinned is None:
+            self.cluster_vars.put(ROOT_PATH, {"pub": root.hex()})
+        self._carry(KEYS_PATH, items)
+        return f"rev {doc['rev']}"
 
     def say_reaches(self) -> bool:
         if self.reaches is None or self.own_objects is None:
@@ -171,7 +209,8 @@ class DomainAgent:
             later = [(path, self.domain_vars.get(f"{path}/{self.cluster}")[0]) for path in PER_CLUSTER]
         except Unreachable:
             return False
-        for path, items in ((KEYS_PATH, keys), (REVOKED_PATH, revoked), (GRANTS_PATH, grants), *later):
+        self.keys = self._carry_keys(keys)
+        for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), *later):
             self._carry(path, items)
         # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
         # none left, because an edit the domain has cleared must stop being applied here. Then applied, by
@@ -251,6 +290,10 @@ class ClusterTrust:
     def keyset(self) -> KeySet | None:
         items, _ = self.vars.get(KEYS_PATH)
         return KeySet.from_items(items) if items else None
+
+    def root(self) -> bytes | None:
+        items, _ = self.vars.get(ROOT_PATH)
+        return bytes.fromhex(items["pub"]) if items else None
 
     def revoked(self) -> set[str]:
         items, _ = self.vars.get(REVOKED_PATH)

@@ -13,8 +13,9 @@ What every cluster and agent holds.
 - `current: str` — the kid the signer signs with now.
 - `keys: dict[str, bytes]` — kid → raw 32-byte Ed25519 public key.
 - `retire_at: dict[str, float]` — kid → wall time after which it is no longer accepted; a missing entry means current/never.
+- Lesson 15, step 9: `rev`, `revoked_ca`, `issuing` — set when the set came signed by the root; `root` (property) — the root's public key, kept under kid `ROOT_KID = "root"`. Parsed here, verified by the agent that carries it.
 ### `to_items(self) -> dict` — the Variable shape: `current`, `key:<kid>` (hex), `retire:<kid>` (string float) — flat string items, as Nomad Variables require.
-### `from_items(cls, items) -> KeySet` — the inverse; used by `ClusterTrust.keyset()`.
+### `from_items(cls, items) -> KeySet` — the inverse; used by `ClusterTrust.keyset()`. Items with a `doc` are a root-signed set: the inner items, plus the root's key, `rev`, `revoked_ca`, `issuing`.
 ### `usable(self, kid, now) -> bool` — in the set and not yet retired.
 
 ## `class TokenIssuer`
@@ -32,6 +33,8 @@ Header `{"alg": "EdDSA", "kid"}`; payload `{iss, sub, iat: now, exp: now + lifet
 Pushes the current `(kid, public, now + overlap)` onto `previous`, generates a new key and kid, prunes previous entries already past retirement, returns the new kid. The old key's tokens keep verifying for `overlap` seconds (`test_revocation_travels_by_the_agent_and_rotation_overlaps`: 600 s overlap; after 700 s the old token is `UnknownKey`).
 
 ## Functions
+
+### `kid_of(token) -> str | None` — the key a token names, unverified: a book issues a token again when the current key did not sign it, whatever its half-life (Lesson 15, step 9: after a move the holder's key is new).
 
 ### `verify(token, keys, revoked=frozenset(), now=None, skew=60.0) -> dict`
 Offline; returns the payload. Steps, in order: split into three parts and decode header/payload (anything malformed → `BadSignature("not a token")`); `kid` must be `usable` at `now` → else `UnknownKey`; Ed25519 verify over `header.payload` → else `BadSignature`; `now > exp + skew` → `Expired`; `now < iat − skew` → `BadSignature("issued …s in the future — clock skew")`; `jti in revoked` → `Revoked`. The 60 s skew on both sides is why the tests advance `TOKEN_LIFETIME + 61`.

@@ -24,14 +24,23 @@
 ### `__init__(self, roots=None)` — adds each with `retire_at = 0`.
 ### `add(self, root, retire_at=0.0)` / `retire(self, root, at)` — set the entry; `retire` overwrites the time.
 ### `pems(self) -> bytes` — every root as PEM, concatenated: the bundle file a server would install.
-### `verify(self, cert, now=None, skew=300.0, cross=()) -> str`
-Returns the issuing root's CN. Candidates are the bundle's roots plus any `cross` certificate whose *subject* equals the leaf's issuer (never retired). For the first candidate whose subject matches the leaf's issuer: retired at or before `now` → `VerifyError("issuer … was retired at …")`; the leaf's signature must verify under that candidate's public key; `now < notBefore − skew` → "not yet valid … — clock skew?"; `now > notAfter + skew` → "expired …s ago"; else the candidate's CN. No candidate → "no trusted root named …". The 5-minute skew is what `test_revocation_is_a_lifetime_problem_and_clock_skew_is_named` exercises: a peer an hour behind is refused with "clock skew", 200 s behind is fine.
+### `verify(self, cert, now=None, skew=300.0, cross=(), chain=(), revoked=frozenset()) -> str`
+Lesson 15, step 9, first: a leaf whose issuer is one of the `chain` certificates (a holder's issuing CA) verifies through it — the CA's serial must not be in `revoked` ("…whose certificate the domain's root revoked"), the CA itself must verify against the bundle (a recursive call), the leaf's signature under the CA's key, and the leaf's validity window (`_within`). Otherwise, as before: returns the issuing root's CN. Candidates are the bundle's roots plus any `cross` certificate whose *subject* equals the leaf's issuer (never retired). For the first candidate whose subject matches the leaf's issuer: retired at or before `now` → `VerifyError("issuer … was retired at …")`; the leaf's signature must verify under that candidate's public key; `now < notBefore − skew` → "not yet valid … — clock skew?"; `now > notAfter + skew` → "expired …s ago"; else the candidate's CN. No candidate → "no trusted root named …". The 5-minute skew is what `test_revocation_is_a_lifetime_problem_and_clock_skew_is_named` exercises: a peer an hour behind is refused with "clock skew", 200 s behind is fine.
+
+## `class DomainRoot` — Lesson 15, step 9: the domain's root, OFF the holder
+The comment block above it: Lessons 4 and 7 kept both keys in the holder's raft, in software, and defended it (a TPM-sealed key defeats the failover inside the cluster; what it signs is short-lived). On a camera the defence does not hold — no failover inside a camera — and the camera can be carried away. So the key that DECIDES who the domain is lives in the recovery file and signs three rare things: the holder's issuing certificate, the key set members trust, the holder record. Every move needs the recovery file already, so none of this asks for it more often.
+### `__init__(self, domain, org="customer", key=None, cert=None, now=time.time)` — `kid = "root"`, so `shared.sign(doc, root)` signs as the root; a self-signed certificate with `path_length=1` (one CA beneath it).
+### `public_bytes` — the raw public key members pin.
+### `issuing(self, cn, public_key, lifetime) -> x509.Certificate` — the holder's issuing CA (`path_length=0`).
+### `key_set(self, ks, rev, revoked_ca=(), issuing=()) -> dict` — the items for `domain/keys`: `{"doc": …}`, signed by the root — the token keys, the root's public key, `rev`, the issuing certificates so far, and those revoked.
+### `recovery(self) -> bytes` / `restore(cls, domain, blob, now)` — the recovery file: the root and nothing else.
+## `is_recovery_file(blob) -> bool` — a root's recovery file, or the signer's backup of Lessons 4 and 7.
 
 ## `class Signer`
 "The domain signer. `vars_` is the domain holder's Variables; the keys are loaded from `domain/signer` or created on first start (the cold start Lesson 1 walks: Nomad up → signer scheduled → certificates issued → workers heartbeat)."
 
-### `__init__(self, domain, vars_, org="customer", now=time.time)`
-Reads `domain/signer`. If it exists: rebuild the root from `ca_key`/`ca_cert`, the `TokenIssuer` from `token_key`/`kid`, and `generation` from `gen` (default 1) — a restart anywhere in the domain holder is the same signer (`test_root_rotation…` restarts as `s2` and finds root g2). If not: generation 1, a new root named `root_cn()`, a fresh token issuer, `_persist()`. `serial` (the leaf serial counter) starts at 0 on every start.
+### `__init__(self, domain, vars_, org="customer", now=time.time, root=None)`
+Lesson 15, step 9: given a `root` and no `domain/signer`, `_issue_from(root)` — an issuing certificate under the root instead of a root of its own; `self.root` is then that issuing CA and `self.chain == [its certificate]`, persisted with `issued: "true"` so a restart knows. Items that say `forgotten` (a deposed holder, `DomainHolder._forget_keys`) raise `RuntimeError`: this cluster no longer holds the domain's keys. Otherwise reads `domain/signer`. If it exists: rebuild the root from `ca_key`/`ca_cert`, the `TokenIssuer` from `token_key`/`kid`, and `generation` from `gen` (default 1) — a restart anywhere in the domain holder is the same signer (`test_root_rotation…` restarts as `s2` and finds root g2). If not: generation 1, a new root named `root_cn()`, a fresh token issuer, `_persist()`. `serial` (the leaf serial counter) starts at 0 on every start.
 
 ### `root_cn(self) -> str` — `<domain> root g<generation>`. The comment: a trust bundle keys on the subject, and two roots sharing one name would be one root to it.
 ### `_persist(self)` — `domain/signer` ← `{ca_key, ca_cert, token_key, kid, gen}` by CAS. The signer is the only writer (`signer-policy.hcl`).
@@ -47,8 +56,11 @@ Same key, same CN, a fresh window: "overlapping validity is what lets the holder
 ### `rotate_root(self, bundle, overlap) -> (Root, x509.Certificate)`
 Lesson 7's drill: bump the generation, make a new root, build a cross-certificate (subject = the new root's name, issuer = the old root, the new root's public key, CA, valid for `overlap` seconds, signed by the *old* key), add the new root to the bundle, retire the old root at `now + overlap`, switch `self.root`, persist. Returns the new root and the cross-cert. `test_root_rotation_is_a_drill…`: an old LDevID verifies under g1 and a new one under g2; a bundle holding only g1 verifies the new leaf via `cross=[cross]`; after the overlap the old leaf fails with "retired".
 
+### `issued(cls, domain, vars_, root, now)` — a signer with keys of its OWN under `root`, written over whatever the cluster held: what `move_domain` gives the new holder.
+### `_issue_from(self, root)` — a fresh Ed25519 key, `root.issuing(...)` for it, a fresh `TokenIssuer`, `_persist()`.
+
 ### `backup(self) -> bytes`
-The JSON of exactly what `_persist` writes — what must go beyond the domain holder (another cluster's object store, or offline): "losing this loses the domain's trust: every server re-enrolls".
+Refused (`RuntimeError`) for an issuing signer: its keys never leave the holder, and what the operator keeps is the root's recovery file. Otherwise: the JSON of exactly what `_persist` writes — what must go beyond the domain holder (another cluster's object store, or offline): "losing this loses the domain's trust: every server re-enrolls".
 
 ### `restore(cls, domain, vars_, backup, now=time.time) -> Signer`
 Writes the backup into a new cluster's `domain/signer` by CAS and constructs a `Signer` over it — the same root and the same token key, so tokens issued before the move still verify (`test_identity_publishes_object_first_then_pointer_and_restores_elsewhere`).

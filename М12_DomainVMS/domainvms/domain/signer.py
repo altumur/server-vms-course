@@ -24,6 +24,8 @@ an optional cross-certificate for peers that have only the old root.
 from __future__ import annotations
 
 import datetime as dt
+import json
+import secrets
 import time
 from dataclasses import dataclass
 
@@ -33,7 +35,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.x509.oid import NameOID
 
-from .tokens import TokenIssuer
+from .tokens import ROOT_KID, KeySet, TokenIssuer
 
 HOUR, DAY, YEAR = 3600.0, 86400.0, 365 * 86400.0
 
@@ -101,12 +103,30 @@ class TrustBundle:
         return b"".join(_pem(r) for r, _ in self.roots.values())
 
     def verify(self, cert: x509.Certificate, now: float | None = None, skew: float = 300.0,
-               cross: list[x509.Certificate] = ()) -> str:
+               cross: list[x509.Certificate] = (), chain: list[x509.Certificate] = (),
+               revoked: set[str] = frozenset()) -> str:
         """Returns the issuing root's CN. `cross` are cross-certificates:
         a new root's public key signed by an old root, for peers that have
-        not yet received the new root."""
+        not yet received the new root.
+
+        `chain` (Lesson 15): the holder's issuing certificates, each signed
+        by a root in the bundle. A leaf signed by one of them verifies through
+        it — unless its serial is in `revoked`, the list the root signed with
+        the key set when the holder that held it was stolen."""
         now = time.time() if now is None else now
         issuer = cert.issuer.rfc4514_string()
+        for ca in chain:
+            if ca.subject.rfc4514_string() != issuer:
+                continue
+            if str(ca.serial_number) in revoked:
+                raise VerifyError(f"issued by {issuer}, whose certificate the domain's root revoked")
+            root_cn = self.verify(ca, now=now, skew=skew, cross=cross)
+            try:
+                ca.public_key().verify(cert.signature, cert.tbs_certificate_bytes)
+            except InvalidSignature:
+                raise VerifyError("signature does not verify under the issuing certificate it names")
+            self._within(cert, now, skew)
+            return root_cn
         chain = list(self.roots.values()) + [(c, 0.0) for c in cross if c.subject.rfc4514_string() == issuer]
         for root, retire_at in chain:
             if root.subject.rfc4514_string() != issuer:
@@ -117,36 +137,148 @@ class TrustBundle:
                 root.public_key().verify(cert.signature, cert.tbs_certificate_bytes)
             except InvalidSignature:
                 raise VerifyError("signature does not verify under the root it names")
-            nvb, nva = cert.not_valid_before_utc.timestamp(), cert.not_valid_after_utc.timestamp()
-            if now < nvb - skew:
-                raise VerifyError(f"not yet valid: starts in {nvb - now:.0f}s — clock skew?")
-            if now > nva + skew:
-                raise VerifyError(f"expired {now - nva:.0f}s ago")
+            self._within(cert, now, skew)
             return root.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
         raise VerifyError(f"no trusted root named {issuer}")
+
+    @staticmethod
+    def _within(cert: x509.Certificate, now: float, skew: float) -> None:
+        nvb, nva = cert.not_valid_before_utc.timestamp(), cert.not_valid_after_utc.timestamp()
+        if now < nvb - skew:
+            raise VerifyError(f"not yet valid: starts in {nvb - now:.0f}s — clock skew?")
+        if now > nva + skew:
+            raise VerifyError(f"expired {now - nva:.0f}s ago")
+
+
+# Lesson 15 — the domain's ROOT, off the holder.
+#
+# Lessons 4 and 7 kept both of the signer's keys in the holder's raft, in software, and defended it: a key
+# sealed in one server's TPM defeats the failover inside the cluster, and what it signs is short-lived. On a
+# camera that defence does not hold — there is no failover inside a camera — and the camera can be carried
+# away: whoever has its flash has the domain. So the key that DECIDES who the domain is leaves the holder:
+#
+#     the root        in the recovery file the operator keeps, and nowhere online. It signs three things, all
+#                     rare: the holder's issuing certificate, the key set members trust, and the holder record
+#                     (who holds the domain, at which term). Every move of the domain needs the recovery file
+#                     already (Lesson 15, step 3), so none of this asks for it more often than before.
+#     the holder      an issuing certificate (LDevIDs, service certificates) and the token key — everything
+#                     signed every minute. Stolen, they are revoked by the root: a new key set without the
+#                     token key and with the issuing certificate's serial in `revoked_ca`.
+#
+# What a thief with a holder can no longer do: take the domain (a term is the root's to sign), or give the
+# members a key set of his own (they pinned the root). What he can still do until the move: issue tokens and
+# certificates under the keys he has. The move ends that — and is the same operation as any other move.
+class DomainRoot:
+    KID = ROOT_KID
+
+    def __init__(self, domain: str, org: str = "customer", key: Ed25519PrivateKey | None = None,
+                 cert: x509.Certificate | None = None, now=time.time):
+        self.domain, self.org, self.now = domain, org, now
+        self.key = key or Ed25519PrivateKey.generate()
+        self.kid = self.KID                              # so `shared.sign(doc, root)` signs as the root
+        self.cert = cert or self._self_signed()
+
+    def _self_signed(self) -> x509.Certificate:
+        cn, now = f"{self.domain} root", self.now()
+        return (x509.CertificateBuilder().subject_name(_name(cn, self.org)).issuer_name(_name(cn, self.org))
+                .public_key(self.key.public_key()).serial_number(x509.random_serial_number())
+                .not_valid_before(_utc(now - 60)).not_valid_after(_utc(now + LIFETIMES["root"]["lifetime"]))
+                .add_extension(x509.BasicConstraints(ca=True, path_length=1), critical=True)
+                .sign(self.key, None))
+
+    @property
+    def public_bytes(self) -> bytes:
+        return self.key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+
+    def issuing(self, cn: str, public_key: Ed25519PublicKey, lifetime: float = LIFETIMES["root"]["lifetime"]) -> x509.Certificate:
+        """The holder's issuing certificate: a CA under this root, allowed no CA beneath it."""
+        now = self.now()
+        return (x509.CertificateBuilder().subject_name(_name(cn, self.org)).issuer_name(self.cert.subject)
+                .public_key(public_key).serial_number(x509.random_serial_number())
+                .not_valid_before(_utc(now - 60)).not_valid_after(_utc(now + lifetime))
+                .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
+                .sign(self.key, None))
+
+    def key_set(self, ks: "KeySet", rev: int, revoked_ca=(), issuing=()) -> dict:
+        """The key set members take, signed: the token keys, this root's public key, a revision that only
+        grows, the holders' issuing certificates so far, and those no longer trusted. Items for `domain/keys`."""
+        from .shared import sign
+        doc = sign({"rev": int(rev), "keys": {k: v for k, v in ks.to_items().items() if k != f"key:{ROOT_KID}"},
+                    "root": self.public_bytes.hex(), "revoked_ca": sorted(str(r) for r in revoked_ca),
+                    "issuing": sorted(str(i) for i in issuing)}, self)
+        return {"doc": json.dumps(doc, sort_keys=True)}
+
+    def recovery(self) -> bytes:
+        """The recovery file: the root and nothing else. The holder's keys are not in it — they never leave
+        the holder, and a move gives the new holder keys of its own."""
+        return json.dumps({"domain": self.domain, "root_key": _key_bytes(self.key).hex(),
+                           "root_cert": _pem(self.cert).decode()}).encode()
+
+    @classmethod
+    def restore(cls, domain: str, blob: bytes, now=time.time) -> "DomainRoot":
+        d = json.loads(blob)
+        return cls(domain, key=Ed25519PrivateKey.from_private_bytes(bytes.fromhex(d["root_key"])),
+                   cert=x509.load_pem_x509_certificate(d["root_cert"].encode()), now=now)
+
+
+def is_recovery_file(blob: bytes) -> bool:
+    """A root's recovery file (Lesson 15), or the signer's backup of Lessons 4 and 7 (both keys)."""
+    try:
+        return "root_key" in json.loads(blob)
+    except ValueError:
+        return False
 
 
 class Signer:
     """The domain signer. `vars_` is the domain holder's Variables; the
     keys are loaded from domain/signer or created on first start (the cold
     start Lesson 1 walks: Nomad up → signer scheduled → certificates issued
-    → workers heartbeat)."""
+    → workers heartbeat).
 
-    def __init__(self, domain: str, vars_, org: str = "customer", now=time.time):
+    Given a `root` (Lesson 15), what it creates is an issuing certificate
+    under that root instead of a root of its own: `self.root` is then the
+    issuing CA, and `self.chain` the certificate a verifier needs between a
+    leaf and the root. The root's key is never written here."""
+
+    def __init__(self, domain: str, vars_, org: str = "customer", now=time.time, root: DomainRoot | None = None):
         self.domain, self.org, self.now = domain, org, now
         items, _ = vars_.get("domain/signer")
         self.vars = vars_
+        self.chain: list[x509.Certificate] = []
+        if items and "ca_key" not in items:
+            raise RuntimeError(f"this cluster no longer holds the domain's keys ({items.get('forgotten', 'forgotten')})")
         if items:
             key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["ca_key"]))
             self.root = Root(x509.load_pem_x509_certificate(items["ca_cert"].encode()), key)
             self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key"])), items["kid"])
             self.generation = int(items.get("gen", "1"))
+            if items.get("issued") == "true":
+                self.chain = [self.root.cert]
+        elif root is not None:
+            self.generation = 1
+            self._issue_from(root)
         else:
             self.generation = 1
             self.root = self._new_root(self.root_cn())
             self.tokens = TokenIssuer(domain)
             self._persist()
         self.serial = 0
+
+    @classmethod
+    def issued(cls, domain: str, vars_, root: DomainRoot, now=time.time) -> "Signer":
+        """A signer with keys of its OWN under `root` — whatever this cluster held before. What a move gives
+        the new holder: the old holder's keys are not in the recovery file, and must not be."""
+        s = cls.__new__(cls)                             # `_persist` writes over whatever was there, by CAS
+        s.domain, s.org, s.now, s.vars, s.chain, s.serial, s.generation = domain, root.org, now, vars_, [], 0, 1
+        s._issue_from(root)
+        return s
+
+    def _issue_from(self, root: DomainRoot) -> None:
+        key = Ed25519PrivateKey.generate()
+        cert = root.issuing(f"{self.domain} issuing {secrets.token_hex(3)}", key.public_key())
+        self.root, self.chain = Root(cert, key), [cert]
+        self.tokens = TokenIssuer(self.domain)
+        self._persist()
 
     def root_cn(self) -> str:
         # Each root generation has its own name: a trust bundle keys on the
@@ -157,7 +289,7 @@ class Signer:
         _, idx = self.vars.get("domain/signer")
         self.vars.put("domain/signer", {"ca_key": _key_bytes(self.root.key).hex(), "ca_cert": self.root.pem.decode(),
                                         "token_key": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid,
-                                        "gen": self.generation}, cas=idx)
+                                        "gen": self.generation, **({"issued": "true"} if self.chain else {})}, cas=idx)
 
     def _new_root(self, cn: str) -> Root:
         key = Ed25519PrivateKey.generate()
@@ -213,15 +345,18 @@ class Signer:
     def backup(self) -> bytes:
         """What goes beyond the domain holder (another cluster's object
         store, or offline). Losing this loses the domain's trust: every server
-        re-enrolls."""
-        import json
+        re-enrolls.
+
+        Not for a signer issued by a root (Lesson 15): its keys never leave
+        the holder, and what the operator keeps is the root's recovery file."""
+        if self.chain:
+            raise RuntimeError("an issuing signer's keys stay on the holder; keep the root's recovery file instead")
         return json.dumps({"ca_key": _key_bytes(self.root.key).hex(), "ca_cert": self.root.pem.decode(),
                            "token_key": _key_bytes(self.tokens.key).hex(), "kid": self.tokens.kid,
                            "gen": self.generation}).encode()
 
     @classmethod
     def restore(cls, domain: str, vars_, backup: bytes, now=time.time) -> "Signer":
-        import json
         d = json.loads(backup)
         _, idx = vars_.get("domain/signer")
         vars_.put("domain/signer", d, cas=idx)

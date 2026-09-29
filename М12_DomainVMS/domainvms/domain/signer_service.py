@@ -26,9 +26,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from cluster.objectstore import open_store
 from cluster.variables import NomadVariables
 
-from .agent import DomainPublisher
+from .agent import KEYS_PATH, DomainPublisher
 from .identity import AuthError, IdentityStore
-from .signer import Signer
+from .signer import DomainRoot, Signer
 from .tokens import RevocationList, verify
 import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
 from w2cplatform.variables import open_vars
@@ -38,11 +38,23 @@ def main() -> None:
     domain = os.environ.get("DOMAIN_ID", "domain")
     vars_ = open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", ""))
     objects = open_store(os.environ.get("OBJECT_STORE_URL", "file:///data/domain"))
-    signer = Signer(domain, vars_)
-    ids = IdentityStore(signer, vars_, objects, publish_floor=float(os.environ.get("IDENTITY_PUBLISH_FLOOR", "60")))
     pub = DomainPublisher(vars_)
+    # Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root
+    # for the FIRST start only: the holder's issuing certificate and the first key set are signed, and the file
+    # goes back to the operator. From then on the signer holds its own keys, and the key set is the root's —
+    # never overwritten here by one of its own, which members that pinned the root would refuse.
+    recovery = os.environ.get("RECOVERY_FILE")
+    if vars_.get("domain/signer")[0] is None and recovery:
+        with open(recovery, "rb") as f:
+            root = DomainRoot.restore(domain, f.read())
+        signer = Signer(domain, vars_, root=root)
+        pub.publish_keys(root.key_set(signer.tokens.keyset(), rev=1, issuing=[signer.root.cert.serial_number]))
+    else:
+        signer = Signer(domain, vars_)
+        if not signer.chain:
+            pub.publish_keys(signer.tokens.keyset())
+    ids = IdentityStore(signer, vars_, objects, publish_floor=float(os.environ.get("IDENTITY_PUBLISH_FLOOR", "60")))
     revoked = RevocationList.from_items(vars_.get("domain/revoked")[0])
-    pub.publish_keys(signer.tokens.keyset())
     books = None
     if os.environ.get("CLUSTERS"):
         from .books import Books
@@ -70,7 +82,7 @@ def main() -> None:
 
         def do_GET(self):
             if self.path == "/keys":
-                return self._send(200, signer.tokens.keyset().to_items())
+                return self._send(200, vars_.get(KEYS_PATH)[0] or signer.tokens.keyset().to_items())
             self._send(404, {"detail": "no such route"})
 
         def do_POST(self):

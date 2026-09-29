@@ -50,3 +50,5 @@ The box's last step: verify the LDevID under the domain's trust bundle (it must 
 - The registrar keeps no record of used nonces; the same `(hello, voucher)` pair presented twice within the voucher's day would be accepted twice. The nonce binds a voucher to one hello, not to one use.
 - `request()` for a serial already pending overwrites the earlier request.
 - The approval path has no MASA and therefore no proof the unit was sold to this customer — only that it is a genuine unit of a trusted manufacturer; the human approving is that proof.
+
+The registrar passes the pledge's `csr_pub` to `Members.add(..., key=)` (Lesson 15, step 9): after a theft of the holder, the new holder signs again exactly the key each member was admitted with.
