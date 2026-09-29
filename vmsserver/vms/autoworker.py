@@ -54,6 +54,10 @@ class AutoWorker(Worker):
     # was restarting is not two hundred doors — it is a bounce, and the rate ceiling below says so; this
     # one keeps a single pass bounded whatever the log holds.
     PER_PASS = 4
+    # The road from an event to the request filed for it, counted since this process started, in these buckets
+    # (seconds) — a histogram, because the longest road of the LAST pass says nothing about a slow one between
+    # two scrapes (feedback AY): the pass after it filed nothing and said 0.
+    LATENCY_BUCKETS = (1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0)
     # How long a firing id is remembered after it is filed. Long enough that the same event, still inside
     # somebody's window, is not filed twice; short enough to be a handful of strings.
     REMEMBER = 900.0
@@ -95,6 +99,7 @@ class AutoWorker(Worker):
         self.held_from: dict[str, float] = {}        # scenario -> when (by the clock) its window first came back incomplete
         self.said_without: set[str] = set()          # scenarios that said `decided_without` for the gap they are in
         self.cut: dict[str, list] = {}               # scenario -> the kinds whose answer did not fit its window
+        self.late_by_unit: dict[str, int] = {}       # scenario -> firings its last pass did not file (late)
         # One pass's answers, per (subsystem, kind): asked ONCE for every scenario watching that kind, over the
         # longest window any of them needs (`reconcile_once`). And what the pass cost — said in the heartbeat,
         # because a slow pass is otherwise visible nowhere: its seconds, its queries, how far the furthest
@@ -102,6 +107,8 @@ class AutoWorker(Worker):
         self._asked: dict[tuple[str, str, str], dict] = {}
         self._needed: dict[tuple[str, str, str], float] = {}
         self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
+        self.latency = {"buckets": [0] * len(self.LATENCY_BUCKETS), "sum": 0.0, "count": 0}
+        self.late = 0                                 # firings not filed: their request was expired before it left
         self.recent: dict[str, list[float]] = {}     # scenario -> firing times inside the last minute
         self.filed = 0
         self.status_by_unit: dict[str, dict] = {}
@@ -156,6 +163,7 @@ class AutoWorker(Worker):
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
                                          **({"holding": holes} if holes else {}),
                                          **({"cut": self.cut[unit]} if self.cut.get(unit) else {}),
+                                         **({"late": self.late_by_unit[unit]} if self.late_by_unit.get(unit) else {}),
                                          **({"decided_without": self.gave_up.pop(unit)} if unit in self.gave_up else {}),
                                          **({"unfit": misfit} if misfit else {}),
                                          **({"unchecked": unsure} if unsure else {})}
@@ -218,7 +226,7 @@ class AutoWorker(Worker):
         # how much history a firing may span, and `since` is how much of it is new.
         events, holes = self.window(row, since - window, now)
         self.pass_stats["lag_seconds"] = max(self.pass_stats["lag_seconds"], round(now - since, 3))
-        fired = 0
+        fired, late = 0, 0
         for fid, at in self.firings(row, events, since):
             if fired >= self.PER_PASS:
                 break
@@ -227,8 +235,9 @@ class AutoWorker(Worker):
             if not self.allowed(row, now):
                 log.warning("%s: %s is over its ceiling of %s/min — not firing", self.name, unit, row["rate_per_minute"])
                 break
-            self.file(row, fid, at)
+            late += not self.file(row, fid, at)
             fired += 1
+        self.late_by_unit[unit] = late
         self.forget(now)
         # The cursor moves only past a window that was WHOLE. A server that did not answer, a resource that
         # was rebuilding after a restart, a silent one answered by its peer's copies (which never hold the
@@ -334,8 +343,20 @@ class AutoWorker(Worker):
     # far apart two triggers may be. A scenario with `within: 5` then got requests that lived five seconds,
     # while the road from the event to the holder takes up to seven with nothing loaded — the tail, the pass,
     # the holder's pass — and they expired unperformed on an idle box.
-    def file(self, row: dict, fid: str, at: float) -> None:
+    # Returns whether the requests were filed. A firing whose requests would be expired before they leave — a
+    # cold start looks five minutes back, and `valid_for` is thirty seconds — is not filed (feedback AY): the
+    # holder would only count it `expired`, and `expired` is the number that says the ROAD grew longer. It is
+    # still a firing: the scenario's event says so, with how late, and the worker counts it apart (`late`).
+    def file(self, row: dict, fid: str, at: float) -> bool:
         unit = str(row["id"])
+        valid_until = at + (float(row.get("valid_for") or 0) or 30.0)
+        if valid_until <= self.wall():
+            self.fired[fid] = self.wall()
+            self.late += 1
+            if unit in self.epochs:
+                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
+                    at, "fired", scenario=unit, actions=0, late=round(self.wall() - at, 3))
+            return False
         for i, action in enumerate(row["then"]):
             sub, name = str(action.get("sub", "")), str(action.get("action", ""))
             rid = f"{fid}-{i}"
@@ -343,17 +364,23 @@ class AutoWorker(Worker):
             if name == "record":                     # the recorder's own words for "record this from now"
                 fields = {"unit": fields.get("cam", ""), **fields}
             self.vars.put(f"{sub}/requests/{rid}",
-                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}",
-                           "valid_until": str(at + (float(row.get("valid_for") or 0) or 30.0))})
+                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}", "valid_until": str(valid_until)})
             self.filed += 1
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
-        self.pass_stats["latency_seconds"] = max(self.pass_stats["latency_seconds"], round(self.wall() - at, 3))
+        road = self.wall() - at
+        self.pass_stats["latency_seconds"] = max(self.pass_stats["latency_seconds"], round(road, 3))
+        self.latency["sum"] += road
+        self.latency["count"] += 1
+        for i, le in enumerate(self.LATENCY_BUCKETS):
+            if road <= le:
+                self.latency["buckets"][i] += 1
         # …and the scenario's own event, in its own bucket: what an operator sees on the timeline when
         # they ask why the door opened at 14:02.
         if unit in self.epochs:
             EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
                 at, "fired", scenario=unit, actions=len(row["then"]))
+        return True
 
     def forget(self, now: float) -> None:
         self.fired = {k: t for k, t in self.fired.items() if now - t < self.REMEMBER}
@@ -368,7 +395,7 @@ class AutoWorker(Worker):
     def heartbeat_once(self) -> None:
         self.heartbeat(self.status(), server=self.server, instance=self.instance,
                        labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
-                       filed=self.filed, **self.pass_stats)
+                       filed=self.filed, late=self.late, latency=self.latency, **self.pass_stats)
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines

@@ -420,7 +420,7 @@ def test_a_window_a_server_did_not_answer_for_does_not_move_the_cursor():
     line. Now the cursor holds, the scenario says what it is waiting for, and the event fires when srv-b is back."""
     box = Box()
     t = box.wall()
-    door = {**ev(t - 20, "vms", 12, "io.input", port="1", value="closed"), "server": "srv-b"}
+    door = {**ev(t - 5, "vms", 12, "io.input", port="1", value="closed"), "server": "srv-b"}
     log = _Holey([door], wall=box.wall)
     log.missing = {"srv-b": "did not answer"}
     _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
@@ -493,10 +493,10 @@ def test_a_short_window_between_triggers_is_not_a_short_life_for_the_request():
     box2 = Box()
     t2 = box2.wall()
     _scenario(box2, within=5, valid_for=10); _assigned(box2, "door-on-badge")
-    _worker(box2, _Log([ev(t2 - 20, "det", "7-motion", "motion"), ev(t2 - 18, "vms", 12, "io.input", port="1",
-                                                                       value="closed")])).reconcile_once()
+    _worker(box2, _Log([ev(t2 - 8, "det", "7-motion", "motion"), ev(t2 - 6, "vms", 12, "io.input", port="1",
+                                                                     value="closed")])).reconcile_once()
     out, _ = box2.vars.get(sorted(box2.vars.list("vms/requests/"))[0])
-    assert float(out["valid_until"]) == (t2 - 18) + 10
+    assert float(out["valid_until"]) == (t2 - 6) + 10
     try:
         _scenario(Box(), name="x", valid_for=2)
         raise AssertionError("a request that expires on its way")
@@ -583,6 +583,43 @@ def test_a_pass_says_what_it_cost_in_its_heartbeat_and_the_console_exports_it():
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     text = "\n".join(auto_metrics(con)())
     assert 'auto_firing_latency_seconds{worker="a-1"} 4.0' in text and 'auto_queries_per_pass{worker="a-1"} 1' in text
+    # …and the road as a histogram since the process started: the pass after this one files nothing and its
+    # gauge says 0, but a scrape between the two still sees the four-second road (feedback AY).
+    box.wall.advance(2); w.reconcile_once(); w.heartbeat_once()
+    text = "\n".join(auto_metrics(con)())
+    assert 'auto_firing_latency_seconds{worker="a-1"} 0.0' in text
+    assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="2"} 0' in text
+    assert 'auto_event_to_request_seconds_bucket{worker="a-1",le="5"} 1' in text
+    assert 'auto_event_to_request_seconds_count{worker="a-1"} 1' in text
+
+
+def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_apart():
+    """A cold start looks five minutes back; `valid_for` is thirty seconds. On the product's box four requests
+    of five reached the holder 47 to 229 seconds late and were counted `expired` — and `expired` is the number
+    that says the road from event to device grew longer, so every start of the evaluator said so, falsely
+    (feedback AY). A request that would be expired before it leaves is not filed. The firing is still a
+    firing: the scenario's event says it fired, and how late; the status and the heartbeat count it apart."""
+    from vms.console import auto_metrics
+    from w2cplatform.eventdatabase import EventIndex
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 120, "vms", 12, "io.input", port="1", value="closed"),
+                ev(t - 4, "vms", 12, "io.input", port="1", value="open"),
+                ev(t - 3, "vms", 12, "io.input", port="1", value="closed")])
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    w.reconcile_once(); w.heartbeat_once()
+    reqs = [box.vars.get(p)[0] for p in box.vars.list("vms/requests/")]
+    assert len(reqs) == 1 and float(reqs[0]["at"]) == t - 3              # the fresh one; the old one is not filed
+    assert w.status()[0]["late"] == 1 and w.late == 1
+    fired = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 400, t + 1, subsystem="auto")["events"]
+             if e["kind"] == "fired"]
+    assert sorted((e["t"], e.get("late")) for e in fired) == [(t - 120, 120.0), (t - 3, None)]
+    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    assert 'auto_fired_late_total{worker="a-1"} 1' in "\n".join(auto_metrics(con)())
+    w.reconcile_once()
+    assert len(box.vars.list("vms/requests/")) == 1 and w.late == 1      # remembered: not late twice
 
 
 def test_the_merge_asks_its_resources_at_once_and_does_not_wait_twice_for_one_that_hung():

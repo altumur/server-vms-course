@@ -392,7 +392,7 @@ def vms_metrics(ctl):
     def lines() -> list[str]:
         total = {"performed": 0, "refused": 0, "expired": 0}
         for hb in heartbeats(ctl.objects, ctl.spec.sub.name).values():
-            for k, v in (hb.extra.get("commands") or {}).items():
+            for k, v in (hb.extra.get("command_counts") or {}).items():
                 if k in total:
                     total[k] += int(v)
         return ["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
@@ -411,6 +411,21 @@ def auto_metrics(auto_ctl):
         for key, metric in names:
             out.append(f"# TYPE {metric} gauge")
             out += [f'{metric}{{worker="{w}"}} {hb.extra[key]}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+        # Counted since each evaluator started, so a scrape misses nothing that happened between two of them:
+        # the road from an event to its request as a histogram, and the firings too late to file.
+        from vms.autoworker import AutoWorker
+        out.append("# TYPE auto_event_to_request_seconds histogram")
+        for w, hb in sorted(hbs.items()):
+            lat = hb.extra.get("latency")
+            if not lat:
+                continue
+            for le, n in zip(AutoWorker.LATENCY_BUCKETS, lat["buckets"]):
+                out.append(f'auto_event_to_request_seconds_bucket{{worker="{w}",le="{le:g}"}} {n}')
+            out.append(f'auto_event_to_request_seconds_bucket{{worker="{w}",le="+Inf"}} {lat["count"]}')
+            out.append(f'auto_event_to_request_seconds_sum{{worker="{w}"}} {round(lat["sum"], 3)}')
+            out.append(f'auto_event_to_request_seconds_count{{worker="{w}"}} {lat["count"]}')
+        out.append("# TYPE auto_fired_late_total counter")
+        out += [f'auto_fired_late_total{{worker="{w}"}} {hb.extra["late"]}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
         return out
     return lines
 

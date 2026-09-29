@@ -901,7 +901,7 @@ class VmsWorker(Worker):
     # it by extending this, not by rewriting the heartbeat.
     def heartbeat_extra(self) -> dict:
         return {"fetched": ",".join(self.fetched[-32:]),
-                **({"commands": dict(self.commands)} if any(self.commands.values()) else {})}
+                **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {})}
 
     # -- the playback door ---------------------------------------------------------------------------
     # The holder's second surface, and the reason it is HTTP and not the RTSP fan-out: a browser has to
