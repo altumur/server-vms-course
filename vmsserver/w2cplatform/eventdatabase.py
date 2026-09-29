@@ -342,6 +342,10 @@ class MergedIndex:
         # cost the full timeout to EVERY query, and a pass of a hundred queries waited five minutes on one box.
         # The simplest circuit breaker there is, and enough: it opens on one failure and closes on its own.
         self.cooldown, self.lanes = cooldown, lanes
+        # One merge serves the console's requests, and those come in on threads of their own; the lanes do not
+        # touch this map, only the query that owns them does. Here each read and write of it is one dict
+        # operation, whole under the GIL, and the worst two queries can do is ask a hung server once more. A port
+        # without a GIL guards it — the product keeps it under a mutex (feedback AW); without one it is a race.
         self._quiet: dict[str, float] = {}               # server -> not asked again until
 
     def _http(self, url: str, params: dict) -> dict:
