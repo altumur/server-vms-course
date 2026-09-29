@@ -92,7 +92,8 @@ class AutoWorker(Worker):
         self.fired: dict[str, float] = {}            # firing id -> when it was filed (the replay guard)
         self.holes: dict[str, dict] = {}             # scenario -> what its last window was missing
         self.gave_up: dict[str, dict] = {}           # scenario -> the servers it stopped waiting for
-        self.held_from: dict[str, float] = {}        # scenario -> since when its window has been incomplete
+        self.held_from: dict[str, float] = {}        # scenario -> when (by the clock) its window first came back incomplete
+        self.said_without: set[str] = set()          # scenarios that said `decided_without` for the gap they are in
         self.cut: dict[str, list] = {}               # scenario -> the kinds whose answer did not fit its window
         # One pass's answers, per (subsystem, kind): asked ONCE for every scenario watching that kind, over the
         # longest window any of them needs (`reconcile_once`). And what the pass cost — said in the heartbeat,
@@ -132,8 +133,15 @@ class AutoWorker(Worker):
                 continue
             if unit not in self.epochs:
                 self.take_epoch(unit)                # its own events — "this scenario fired" — need one writer
-            if not self.may_write(unit):
-                continue                             # the lease says another instance has it: decide nothing
+            if not self.may_write(unit):             # the lease says another instance has it: decide nothing…
+                # …and say so. The status of the last pass this instance made would otherwise stay, and say
+                # `holding` for a window this instance no longer asks for (feedback AV). What it was waiting
+                # for goes too: taken back later, it starts waiting afresh, not five minutes into a wait.
+                self.status_by_unit[unit] = {"id": unit, "phase": "waiting", "why": "its lease is not this instance's"}
+                self.holes.pop(unit, None)
+                self.held_from.pop(unit, None)
+                self.said_without.discard(unit)
+                continue
             try:
                 n = self.evaluate(row, now)
             except Exception as e:                   # noqa: BLE001 — a resource that stopped answering mid-pass
@@ -199,9 +207,9 @@ class AutoWorker(Worker):
         front = Frontier(self.archive_root, unit, AUTO.name)
         since = front.read()
         held = self.held_from.get(unit)
-        if held is not None and held < now - self.COLD_START and self.holes.get(unit):
+        if held is not None and now - held > self.COLD_START and self.holes.get(unit) and unit not in self.said_without:
             self.gave_up[unit] = self.holes[unit]    # held as long as it may: decided without them from here
-            self.held_from.pop(unit)
+            self.said_without.add(unit)              # said once for this gap, not once a pass
             log.warning("%s: %s waited %.0fs for %s; deciding without them", self.name, unit, now - held,
                         ", ".join(sorted(self.holes[unit])))
         since = now - self.COLD_START if since is None else max(since, now - self.COLD_START)
@@ -231,11 +239,18 @@ class AutoWorker(Worker):
         #
         # Not for ever: `since` never trails `now` by more than `COLD_START`, so a server that does not come
         # back holds a scenario for five minutes at most — and then the scenario SAYS it decided without it.
+        #
+        # Five minutes counted by the clock, from the pass that first found the window incomplete — not from
+        # where that window began (feedback AV). A scenario with no cursor yet starts its window
+        # `COLD_START` back already, and counted from there it "gave up" on the very next pass, two seconds
+        # into the wait. The cursor stands still meanwhile, so the window starts losing its old edge about
+        # `COLD_START` after this moment: that is the honest point to say so.
         self.holes[unit] = holes
         if holes:
-            self.held_from.setdefault(unit, since)   # where the window it keeps asking again begins
+            self.held_from.setdefault(unit, now)
         else:
             self.held_from.pop(unit, None)
+            self.said_without.discard(unit)
             front.set(max(since, now - self.SETTLE))  # …and never further than the log has caught up to
         return fired
 

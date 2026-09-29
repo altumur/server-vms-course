@@ -438,7 +438,11 @@ def test_a_window_a_server_did_not_answer_for_does_not_move_the_cursor():
 def test_a_server_that_never_comes_back_holds_a_scenario_five_minutes_and_then_it_says_so():
     """Holding the cursor must not become holding it for ever: `since` never trails `now` by more than
     `COLD_START`. Past it the scenario decides without the silent server, and its status says whom it
-    stopped waiting for."""
+    stopped waiting for — once, not on every pass after.
+
+    Five minutes from when the wait BEGAN (feedback AV). This scenario has no cursor yet, so its window already
+    starts `COLD_START` back; counted from there, it said `decided_without` ten seconds into the wait. The pass
+    in between is what catches that."""
     box = Box()
     log = _Holey([], wall=box.wall)
     log.missing = {"srv-b": "silent"}
@@ -446,9 +450,32 @@ def test_a_server_that_never_comes_back_holds_a_scenario_five_minutes_and_then_i
     _assigned(box, "one")
     w = _worker(box, log)
     w.reconcile_once()
-    box.wall.advance(w.COLD_START + 10)
+    box.wall.advance(10)
+    w.reconcile_once()
+    assert w.status()[0]["holding"] == {"srv-b": "silent"} and "decided_without" not in w.status()[0]
+    box.wall.advance(w.COLD_START)
     w.reconcile_once()
     assert w.status()[0]["decided_without"] == {"srv-b": "silent"}
+    box.wall.advance(2)
+    w.reconcile_once()
+    assert "decided_without" not in w.status()[0] and w.status()[0]["holding"] == {"srv-b": "silent"}
+
+
+def test_a_scenario_whose_lease_went_elsewhere_does_not_keep_saying_what_it_last_said():
+    """The lease moved to another instance: this one stops deciding, and used to leave its last status up —
+    `holding` a server for a window it no longer asks for (feedback AV). It says whose the scenario is not."""
+    box = Box()
+    log = _Holey([], wall=box.wall)
+    log.missing = {"srv-b": "did not answer"}
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    w.reconcile_once()
+    assert w.status()[0]["holding"] == {"srv-b": "did not answer"}
+    w.may_write = lambda unit: False
+    w.reconcile_once()
+    st = w.status()[0]
+    assert "holding" not in st and st["phase"] == "waiting" and "lease" in st["why"]
 
 
 def test_a_short_window_between_triggers_is_not_a_short_life_for_the_request():
