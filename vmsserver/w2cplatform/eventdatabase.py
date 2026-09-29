@@ -332,14 +332,34 @@ class EventIndex:
 class MergedIndex:
     """A console's view of the event indexes: every live resource's `/events`, merged by time."""
 
-    def __init__(self, objects, fetch=None, wall=time.time, lost_after: float = 45.0, timeout: float = 3.0):
+    def __init__(self, objects, fetch=None, wall=time.time, lost_after: float = 45.0, timeout: float = 3.0,
+                 cooldown: float = 10.0, lanes: int = 8):
         self.objects, self.wall, self.lost_after, self.timeout = objects, wall, lost_after, timeout
         self.fetch = fetch or self._http
         self.state = "live"
+        # A resource that did not answer is not asked again for `cooldown` seconds: it is named in the answer as
+        # not answering, straight away. Without it a resource that hung — live by heartbeat for another 45 s —
+        # cost the full timeout to EVERY query, and a pass of a hundred queries waited five minutes on one box.
+        # The simplest circuit breaker there is, and enough: it opens on one failure and closes on its own.
+        self.cooldown, self.lanes = cooldown, lanes
+        self._quiet: dict[str, float] = {}               # server -> not asked again until
 
     def _http(self, url: str, params: dict) -> dict:
         with urllib.request.urlopen(f"{url}/events?{urllib.parse.urlencode(params)}", timeout=self.timeout) as r:
             return json.loads(r.read())
+
+    def _fan_out(self, servers: list[str], seen: dict, params: dict) -> dict:
+        """{server: its answer, or None if it did not give one} — asked in parallel, `lanes` at a time."""
+        def one(server):
+            try:
+                return self.fetch(seen[server]["url"], params)
+            except Exception:                                   # noqa: BLE001 — any failure is "did not answer"
+                return None
+        if len(servers) <= 1:
+            return {s: one(s) for s in servers}
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=min(self.lanes, len(servers))) as pool:
+            return dict(zip(servers, pool.map(one, servers)))
 
     def query(self, t0: float, t1: float, cam=None, kind=None, subsystem=None, unit=None, current_epochs=None,
               limit: int = 1000, epoch_policy: dict[str, str] | None = None, keep: str = "newest",
@@ -379,11 +399,19 @@ class MergedIndex:
         events, unreachable, from_mirror, have = [], [], set(), set()
         incomplete: dict[str, str] = {}
         truncated = False
+        # Every live resource is asked AT ONCE, not one after another: the answer takes as long as the slowest
+        # resource, not as long as all of them together. The answers are then read in server order, so the merge
+        # is the same whichever came back first.
+        ask = [s for s in sorted(live) if self._quiet.get(s, 0.0) <= now]
+        answers = self._fan_out(ask, seen, params)
         for server in sorted(live):
-            try:
-                rep = self.fetch(seen[server]["url"], params)
-            except Exception:                                   # noqa: BLE001 — live by heartbeat, not answering
+            if server not in ask:
+                unreachable.append(server); incomplete[server] = "did not answer a moment ago"; continue
+            rep = answers[server]
+            if rep is None:                                     # live by heartbeat, not answering
+                self._quiet[server] = now + self.cooldown
                 unreachable.append(server); incomplete[server] = "did not answer"; continue
+            self._quiet.pop(server, None)
             said = str(rep.get("state", "live"))
             if not said.startswith("live"):
                 incomplete[server] = f"said {said}"             # its own word: rebuilding, or nothing yet
