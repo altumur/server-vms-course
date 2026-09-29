@@ -413,6 +413,10 @@ class VmsWorker(Worker):
         # The heartbeat carries them and the controller's `clear_requests` removes the rows: a worker
         # writes no configuration, so it cannot delete what it has done, only say that it did it.
         self.fetched: list[str] = []
+        # What became of the commands this worker was asked to perform, counted since it started: done, refused
+        # by the device, or arrived after their moment. The last is the one to watch — a share of `expired` that
+        # grows is the road from an event to this worker getting longer than the requests live (М10B Lesson 25).
+        self.commands = {"performed": 0, "refused": 0, "expired": 0}
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
         self.actuator = actuator or FakeActuator()
         self.rows: list[dict] = []
@@ -729,6 +733,7 @@ class VmsWorker(Worker):
             if until and now > until:
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
                 done.append({"request": rid, "unit": row["id"], "expired": True})
+                self.commands["expired"] += 1
                 log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
                 continue
             dev = self.device_of_row(row)
@@ -739,10 +744,12 @@ class VmsWorker(Worker):
             except Exception as e:                       # noqa: BLE001 — the device's word, whatever it is
                 self.fetched.append(rid)                 # a refusal is an answer: do not ask for ever
                 done.append({"request": rid, "unit": row["id"], "error": str(e)})
+                self.commands["refused"] += 1
                 self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=str(e))
                 continue
             self.fetched.append(rid)
             done.append({"request": rid, "unit": row["id"], **out})
+            self.commands["performed"] += 1
             self.observe(row["id"], "command", **out)    # what was done to a device is an event about it
         return done
 
@@ -893,7 +900,8 @@ class VmsWorker(Worker):
     # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says
     # it by extending this, not by rewriting the heartbeat.
     def heartbeat_extra(self) -> dict:
-        return {"fetched": ",".join(self.fetched[-32:])}
+        return {"fetched": ",".join(self.fetched[-32:]),
+                **({"commands": dict(self.commands)} if any(self.commands.values()) else {})}
 
     # -- the playback door ---------------------------------------------------------------------------
     # The holder's second surface, and the reason it is HTTP and not the RTSP fan-out: a browser has to

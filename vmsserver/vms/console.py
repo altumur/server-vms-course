@@ -385,6 +385,36 @@ def rec_metrics(rec_ctl: SpecController):
     return lines
 
 
+# What the VMS adds to `/metrics`: the commands its holders performed, refused or let expire, summed over their
+# heartbeats. `expired` over the total is the number that says a scenario's requests live shorter than the road
+# from an event to the device.
+def vms_metrics(ctl):
+    def lines() -> list[str]:
+        total = {"performed": 0, "refused": 0, "expired": 0}
+        for hb in heartbeats(ctl.objects, ctl.spec.sub.name).values():
+            for k, v in (hb.extra.get("commands") or {}).items():
+                if k in total:
+                    total[k] += int(v)
+        return ["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
+    return lines
+
+
+# What automation adds: each evaluator's last pass, from its heartbeat — how long it took, how many queries it
+# made, how far its furthest cursor trails `now`, and the longest road from an event to a request it filed.
+# Without these a slow pass and a held cursor are visible nowhere (the notes on the event log's load).
+def auto_metrics(auto_ctl):
+    def lines() -> list[str]:
+        names = (("pass_seconds", "auto_pass_seconds"), ("queries", "auto_queries_per_pass"),
+                 ("lag_seconds", "auto_cursor_lag_seconds"), ("latency_seconds", "auto_firing_latency_seconds"))
+        out = []
+        hbs = heartbeats(auto_ctl.objects, auto_ctl.spec.sub.name)
+        for key, metric in names:
+            out.append(f"# TYPE {metric} gauge")
+            out += [f'{metric}{{worker="{w}"}} {hb.extra[key]}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+        return out
+    return lines
+
+
 def rec_routes(rec_ctl: SpecController):
     def extra(handler, method, path, q):
         if not path.startswith("/volumes"):
@@ -446,7 +476,8 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
     index = index or MergedIndex(ctl.objects, wall=wall or time.time)   # no database here: the resource process's, asked over HTTP
     rec_ctl = (mounts or {}).get("rec")                                  # the console fronts it anyway: the page's Record toggle
     root = SpecConsole(ctl, marks_root=archive.root if archive else None, wall=wall,
-                       extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index)
+                       extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index,
+                       metrics_extra=vms_metrics(ctl))
     m = Mount(root)
     if live_ctl is not None:
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
@@ -454,7 +485,8 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
         m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
                                   extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
                                          auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
-                                  metrics_extra=rec_metrics(c) if name == "rec" else None))
+                                  metrics_extra=(rec_metrics(c) if name == "rec" else
+                                                 auto_metrics(c) if name == "auto" else None)))
     return m
 
 
