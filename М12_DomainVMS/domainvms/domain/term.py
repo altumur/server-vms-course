@@ -55,7 +55,7 @@ HOST, BACKUP, STRANDED = "domain/host", "domain/backup", "domain/stranded"
 # recomputed by the next pass, and the keys, the revocation list and each cluster's grants are already on every
 # member, the new host first among them. The licence is a cache of the vendor's file (Lesson 5): kept, so that
 # a re-host does not start the grace period for nothing.
-EXPORTED = ("domain/pending/", "domain/grants/", "domain/crossings", "domain/sources/", "domain/mirrors/", "domain/shared",
+EXPORTED = ("domain/pending/", "domain/grants/", "domain/crossings", "domain/sources/", "domain/shared",
             "domain/topology", "domain/members", "domain/roads", "domain/placement", "domain/licence")
 
 

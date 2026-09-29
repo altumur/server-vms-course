@@ -572,8 +572,8 @@ def plan_takeback(src: Source, ours: list[tuple[float, float]], now: float, keep
 #     our camera     ask the CAMERA who takes its stream (`camera_taken`): the same door it would pull from,
 #                    nothing new to reach, and a partition between the servers opens no second session. What it
 #                    cannot see: a recorder that holds its session and writes nothing
-#     any camera     watch the primary's recorder through its server's door (`neighbour_writes`), as neighbours do
-#                    for alarm mirrors — it sees "running" or not. It needs the servers to SEE each other: one that
+#     any camera     watch the primary's recorder through its server's door (`neighbour_writes`) — site traffic
+#                    between servers — and sees "running" or not. It needs the servers to SEE each other: one that
 #                    cannot tell "dead" from "out of sight" opens a second session and keeps it — two recordings,
 #                    safe, but not one stream. Servers that cannot see each other take cameras that push
 def neighbour_writes(objects, recording: str, now: float, lost_after: float = 45.0) -> bool:
