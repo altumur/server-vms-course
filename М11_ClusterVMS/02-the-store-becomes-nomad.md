@@ -215,7 +215,7 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=1003
 
 ```python
 def write(self, path: str, mutate, retries: int = 10) -> dict:
-    for _ in range(retries):
+    for attempt in range(retries):
         items, idx = self.vars.get(path)
         new = mutate(dict(items or {}))
         if new is None:
@@ -224,7 +224,8 @@ def write(self, path: str, mutate, retries: int = 10) -> dict:
             self.vars.put(path, new, cas=idx)
             return new
         except Conflict:
-            continue                     # кто-то успел раньше: прочитать заново и применить поверх
+            cas_pause(attempt)           # кто-то успел раньше: подождать случайный миг, прочитать заново и применить поверх
+            continue
     raise RuntimeError(f"{path}: {retries} conflicts")
 ```
 

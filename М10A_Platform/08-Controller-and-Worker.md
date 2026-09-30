@@ -55,7 +55,7 @@ class Controller:
     def write(self, path: str, mutate, retries: int = 10) -> dict:
         """Read-modify-write by CAS: `mutate(items or {}) -> new items`.
         A conflict means another instance wrote; re-read and go again."""
-        for _ in range(retries):
+        for attempt in range(retries):
             items, idx = self.vars.get(path)
             new = mutate(dict(items or {}))
             if new is None:
@@ -64,6 +64,7 @@ class Controller:
                 self.vars.put(path, new, cas=idx)
                 return new
             except Conflict:
+                cas_pause(attempt)                   # a random pause, growing: tried again at once, the same writers meet again
                 continue
         raise RuntimeError(f"{path}: {retries} conflicts")
 ```

@@ -101,7 +101,9 @@ class Slot:
     def claim_slot(self, prefer: str | None = None, retries: int = 50) -> str:
         prefix = self.sub.name + "/slots/"
         now = self.wall()
-        for _ in range(retries):
+        for attempt in range(retries):
+            if attempt:
+                cas_pause(attempt - 1)               # every candidate was taken under us: not the same race again at once
             names = [p[len(prefix):] for p in self.vars.list(prefix)]
             known = {n: Slot.from_items(n, self.vars.get(prefix + n)[0]) for n in names}
             if prefer is not None:
@@ -335,7 +337,9 @@ def server(env: dict, given: str | None = None) -> str:
         return f"{self.name}/holds/{place}"
 
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
-        for _ in range(retries):
+        for attempt in range(retries):
+            if attempt:
+                cas_pause(attempt - 1)
             contended = False
             for cand in candidates:
                 key, now = self.sub.hold_key(cand), self.wall()

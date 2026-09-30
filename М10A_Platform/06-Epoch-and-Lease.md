@@ -47,16 +47,31 @@
 
 ```python
 def next_epoch(vars_: Variables, key: str, retries: int = 200) -> tuple[int, int]:
-    for _ in range(retries):
+    for attempt in range(retries):
         items, idx = vars_.get(key)
         current = int(items["epoch"]) if items else 0
         try:
             new_idx = vars_.put(key, {"epoch": current + 1}, cas=idx)
             return current + 1, new_idx
         except Conflict:
+            cas_pause(attempt)                       # not at once: whoever won is one of several still trying
             continue
     raise RuntimeError(f"could not issue an epoch for {key} after {retries} conflicts")
 ```
+
+**Повтор — не сразу.** Конфликт значит, что между нашим чтением и нашей записью написал кто-то ещё. Повторённая немедленно, попытка встречает тех же соперников в тот же момент: десять регистраторов после отключения питания проигрывают друг другу по девять раз подряд, и цикл с десятью попытками сдаётся (ревью платформы; обратная связь, BI). Поэтому перед повтором — случайная пауза, и она растёт с числом проигрышей:
+
+```python
+CAS_PAUSE_MAX = 0.1
+
+
+def cas_pause(attempt: int, sleep=time.sleep) -> float:
+    t = random.uniform(0, min(CAS_PAUSE_MAX, 0.0005 * (2 ** min(attempt, 12))))
+    sleep(t)
+    return t
+```
+
+От долей миллисекунды до десятой секунды. Случайная, а не фиксированная: двое, ждущие одинаково, столкнутся снова. Своего потолка попыток у паузы нет — он есть у каждого цикла, который её зовёт: здесь, в `Controller.write` и в захвате слота и места (уроки 7 и 8).
 
 Прочитать, прибавить единицу, записать с CAS на прочитанную версию. Если кто-то успел между чтением и записью — `Conflict`, и попытка повторяется с новым чтением.
 
