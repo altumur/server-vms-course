@@ -244,13 +244,9 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             seen_reads[(user, rel)] = now
         parts = rel.split("/")
         log.info("archive read: %s read %s from %s", user, rel, addr)
-        marks = getattr(extra, "marks", None)             # the console's own log, set by `make_console`
-        if marks is not None:
-            try:
-                marks.append(now, "archive.read", user=user, media=rel, addr=addr,
-                             **({"unit": parts[1]} if len(parts) > 1 else {}))
-            except OSError:
-                log.exception("archive read by %s of %s could not be written to the console's log", user, rel)
+        journal = getattr(extra, "journal", None)         # the console's journal (`w2cplatform/journal.py`), set by `make_console`
+        if journal is not None:
+            journal.say("archive.read", user=user, media=rel, addr=addr, **({"recording": parts[1]} if len(parts) > 1 else {}))
 
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
@@ -473,7 +469,7 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
 # from an event to the device.
 def vms_metrics(ctl):
     def lines() -> list[str]:
-        total = {"performed": 0, "refused": 0, "expired": 0}
+        total = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
         for hb in heartbeats(ctl.objects, ctl.spec.sub.name).values():
             for k, v in (hb.extra.get("command_counts") or {}).items():
                 if k in total:
@@ -516,6 +512,12 @@ def auto_metrics(auto_ctl):
 
 
 def rec_routes(rec_ctl: SpecController):
+    # Who set a keep, lifted it, shrank a volume or withdrew one — into the journal (`w2cplatform/journal.py`).
+    def said(kind: str, handler, **fields) -> None:
+        journal = getattr(extra, "journal", None)
+        if journal is not None:
+            journal.say(kind, user=(getattr(handler, "headers", None) or {}).get("X-User", "operator"), **fields)
+
     def extra(handler, method, path, q):
         # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is —
         # the resource that holds the footage reads it on its own pass, and nothing is sent anywhere.
@@ -531,12 +533,14 @@ def rec_routes(rec_ctl: SpecController):
                 k = keeps.write(rec_ctl.vars, body, sorted(names), handler.headers.get("X-User", "operator"), rec_ctl.wall())
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
+            said("archive.keep.made", handler, keep=k.id, cam=k.cam, since=k.since, until=k.until)
             return 201, {"keep": k.shown()}
         if method == "DELETE" and path.startswith("/keeps/"):
             id_ = path[len("/keeps/"):]
             if not any(k.id == id_ for k in keeps.declared(rec_ctl.vars)):
                 return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
             keeps.delete(rec_ctl.vars, id_)
+            said("archive.keep.lifted", handler, keep=id_)
             return 200, {"deleted": id_, "detail": "the footage and the events are under their own retention again, "
                                                    "from the next pass of the resource that holds them"}
         if not path.startswith("/volumes"):
@@ -556,10 +560,13 @@ def rec_routes(rec_ctl: SpecController):
                          "suggested": volumes.suggest(rec_ctl.vars, rec_ctl.objects, rec_ctl.spec.sub, now)}
         if method == "POST" and path in ("/volumes", "/volumes/"):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
+            was = next((v for v in volumes.declared(rec_ctl.vars) if v.name == str(body.get("name", ""))), None)
             try:
                 vol = volumes.write(rec_ctl.vars, body)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
+            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the watermark frees the oldest
+                said("archive.volume.shrunk", handler, volume=vol.name, quota_bytes=vol.quota_bytes, was=was.quota_bytes)
             return 201, {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items()
                                     if not k.endswith("_secret")}}
         if method == "DELETE" and path.startswith("/volumes/"):
@@ -570,6 +577,7 @@ def rec_routes(rec_ctl: SpecController):
             # there and takes something else. The FOOTAGE is not touched — deleting the declaration is not
             # deleting the archive, and the two must not be one button.
             volumes.delete(rec_ctl.vars, name)
+            said("archive.volume.withdrawn", handler, volume=name)
             return 200, {"deleted": name, "detail": "the recorder stops writing there on its next pass; "
                                                     "the footage already written is untouched"}
         return None
@@ -600,16 +608,22 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
     root = SpecConsole(ctl, marks_root=archive.root if archive else None, wall=wall,
                        extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index,
                        metrics_extra=vms_metrics(ctl))
-    root.extra.marks = root.marks        # where `archive.read` goes: the console's own log, one writer
+    root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
     m = Mount(root)
     if live_ctl is not None:
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
     for name, c in (mounts or {}).items():
-        m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
-                                  extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
-                                         auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
-                                  metrics_extra=(rec_metrics(c) if name == "rec" else
-                                                 auto_metrics(c) if name == "auto" else None)))
+        con = SpecConsole(c, wall=wall, index=index,                     # every mount answers /events from the same merge
+                          extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
+                                 auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
+                          metrics_extra=(rec_metrics(c) if name == "rec" else
+                                         auto_metrics(c) if name == "auto" else None))
+        # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
+        # belongs beside "who deleted camera 7".
+        con.journal = root.journal
+        if con.extra is not None:
+            con.extra.journal = root.journal
+        m.mount(name, con)
     return m
 
 

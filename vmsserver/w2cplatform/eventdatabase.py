@@ -77,8 +77,8 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, bucket_path, bucket_start,
-                     subsystems_under, when)
+from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, alarm_tree, bucket_path,
+                     bucket_start, subsystems_under, tree_owner, when)
 from .resource import MIRROR_DIR, mirrored_servers, resources_seen
 
 # Up to a day of buckets, the candidate files are COMPUTED from the window — a name from a time, and a stat
@@ -274,16 +274,20 @@ class EventIndex:
         kept = {True: [], False: []}                     # alarm? -> heap of (rank, row); the smallest rank leaves first
         for server, base in self._bases():
             subs = subsystems_under(base)
-            for sub in ([subsystem] if subsystem is not None else sorted(subs)):
-                for u in sorted(subs.get(sub, [])):
+            # A subsystem's lines lie in two trees — its own and its alarms' (`events.alarm_tree`) — and are
+            # answered under ONE name: where a line lies is not whose it is. Both are read whatever class was
+            # asked for: a bucket written before alarms had a tree holds both.
+            for tree in ([subsystem, alarm_tree(subsystem)] if subsystem is not None else sorted(subs)):
+                sub = tree_owner(tree)[0]
+                for u in sorted(subs.get(tree, [])):
                     if unit is not None and u != str(unit):
                         continue
-                    if cam is not None and not self._may_be(server, sub, u, cam):
+                    if cam is not None and not self._may_be(server, tree, u, cam):
                         continue
-                    for epoch, path in self._candidates(base, sub, u, t0, read_to):
+                    for epoch, path in self._candidates(base, tree, u, t0, read_to):
                         lines = self._lines(path)
                         if lines:
-                            self._learn(server, sub, u, lines)
+                            self._learn(server, tree, u, lines)
                         rel = os.path.relpath(path, base)
                         for t, k, c, ecam, fields in lines:
                             at = float(fields.get("occurred", t)) if by == "occurred" else t

@@ -81,7 +81,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 from .contract import BUILD, SCHEMA, check_schema
-from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under
+from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
@@ -146,10 +146,23 @@ def mirror_settings(vars_) -> dict:
 # else a year. For the VMS the per-unit row is the derived row `vms/retention/<id>` written by
 # `SpecController._derived` from `events_retention_days`; on delete it becomes `{days: 0}` so the buckets go
 # on the next pass. Each subsystem's controller owns its row; the resource only reads.
+#
+# THE ALARMS' TREE HAS DAYS OF ITS OWN (feedback BO). `<sub>.alarms/<unit>` is kept by
+# `<sub>/alarms_retention/<unit>`, else `<sub>/alarms_retention`, else THREE YEARS — and three years is what
+# a subsystem that says nothing gets, which is every one that raises an alarm and has no row for it: the
+# recorder's `archive.shallow`, say. That row has no `on_delete`: deleting a unit ends its observations at the
+# next pass, and not the record of what happened at it.
+ALARM_DAYS = 1095.0
+
+
 def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> float:
     """The unit's days if its subsystem set them, else the subsystem's, else a year. A row that says nothing —
     a unit whose field is left to inherit (М12 Lesson 12) — is not zero days: it is the next link."""
-    for path in (f"{subsystem}/retention/{unit}", f"{subsystem}/retention"):
+    subsystem, alarms = tree_owner(subsystem)
+    if subsystem == "audit":                         # who deleted it and who read it: kept as long as alarms are (`journal.py`)
+        default = ALARM_DAYS
+    family, default = ("alarms_retention", ALARM_DAYS) if alarms else ("retention", default)
+    for path in (f"{subsystem}/{family}/{unit}", f"{subsystem}/{family}"):
         items, _ = vars_.get(path)
         if items and str(items.get("days", "")).strip() not in ("", "None"):
             return float(items["days"])
@@ -170,7 +183,7 @@ def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> 
 # day the record is missing.
 def console_floor(days_of: dict[tuple[str, str], float]) -> float:
     """The longest retention among everything that is not the console's own."""
-    others = [d for (sub, _), d in days_of.items() if sub != CONSOLE]
+    others = [d for (sub, _), d in days_of.items() if tree_owner(sub)[0] != CONSOLE]
     return max(others) if others else 0.0
 
 
@@ -319,6 +332,8 @@ class Resource:
         # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
         # the one state the watermark cannot mend, and it used to be a number in a log line: said in the
         # heartbeat, it is a metric on any console (`<sub>_resource_short_bytes`) and somebody's alert.
+        from .journal import Journal
+        self.journal = Journal(self.root, "resource", wall)     # what the policy removed (`journal.py`)
         self.short: dict[str, int] = {}
         self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
@@ -479,15 +494,23 @@ class Resource:
         # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
         # nothing is swept: not knowing what is kept is not "nothing is".
         kept = self.kept() if self.kept is not None else None
+        swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
-                days = max(days_of[(sub, unit)], floor) if sub == CONSOLE else days_of[(sub, unit)]
+                days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     for b in bucket_names_under(path, sub, unit, self.bucket_seconds):   # by NAME: no file is opened to be swept
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
                             os.remove(os.path.join(path, b.path)); removed.append(b.path)
+                            n, a, z = swept.get((sub, unit), (0, b.start, b.end))
+                            swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
+        # What the pass removed, per unit, in the journal: whose buckets, how many, of what period, by what
+        # days. It used to be one number in a log line (feedback BN).
+        for (sub, unit), (n, a, z) in sorted(swept.items()):
+            self.journal.say("events.removed", of=sub, target=unit, buckets=n, since=a, until=z,
+                             days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)])
         # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
         # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
         # with the mirror on it only ever grew. A copy is kept by the days of ITS unit, as the original is,
@@ -500,7 +523,7 @@ class Resource:
                 for sub, units in subsystems_under(base).items():
                     for unit in units:
                         days = retention_days(self.vars, sub, unit)
-                        days = max(days, floor) if sub == CONSOLE else days
+                        days = max(days, floor) if tree_owner(sub)[0] == CONSOLE else days
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):

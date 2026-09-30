@@ -35,3 +35,7 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=0
 # console
 GET /v1/var/vms/retention/1?namespace=default
 → 404
+
+# console
+GET /v1/var/vms/alarms_retention/1?namespace=default
+→ 404

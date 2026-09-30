@@ -717,7 +717,11 @@ class SpecController(Controller):
             path = self.sub.config(*d.row.replace("{id}", str(uid)).split("/"))
             if deleted:
                 if d.on_delete is not None:
-                    self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()} if it else None)
+                    # Written whether or not the row was there. "If the row exists" was the rule, and it stopped
+                    # being right the day a field could be left to INHERIT (М12 Lesson 12): such a unit has no
+                    # derived row at all, so deleting it wrote nothing, and what the row governs lived on by the
+                    # subsystem's default — a deleted camera's events, for a year (found with feedback BO).
+                    self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()})
                 continue
             # A field left to inherit gives no item: the derived row then says nothing, and its reader goes on
             # down its own chain — the resource's retention falls back to the subsystem's, then to a year.
@@ -981,6 +985,13 @@ class SpecController(Controller):
     # Workers whose server's resource is silent, when the spec requires one: not placed on, and (in
     # `redistribute`) moved off. A worker on a server whose resource was never seen passes — "silent" is
     # a fact, "unknown" is not one.
+    # Live workers that say they hold no place, in a subsystem that places by one — spares. Not a fault in
+    # itself; it is one when such a worker still has units assigned (`redistribute`).
+    def placeless(self, workers) -> list[str]:
+        if self.spec.place_by == "server":
+            return []
+        return [w for w in workers if self.place_of(w) == ""]
+
     def without_resource(self, workers) -> list[str]:
         if self.spec.requires != "resource":
             return []
@@ -1348,6 +1359,13 @@ class SpecController(Controller):
         for w in self.without_resource(seen):
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"resource on {self.server_of(w)} silent")
+        # …and a live worker that holds NO PLACE where the subsystem places by one (feedback BN): a recorder
+        # that lost its volume — two restarted, the other took it — is alive, keeps its slot and cannot write
+        # a byte, and the recordings assigned to it used to stay there, recorded by nobody, for as long as it
+        # lived. It says so itself (`place` empty in its heartbeat); its units go to a worker that has a place.
+        for w in self.placeless(seen):
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"{w} holds no {self.spec.place_by} now")
         for w in self.on_draining(seen):                               # an operator said this machine is about to stop
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")

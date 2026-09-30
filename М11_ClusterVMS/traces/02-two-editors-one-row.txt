@@ -73,6 +73,10 @@ PUT /v1/var/vms/retention/1?namespace=default&cas=0
 {"Items": {"days": "30"}}
 → 200 {"Path": "vms/retention/1", "ModifyIndex": 1004}
 
+# console B
+GET /v1/var/vms/alarms_retention/1?namespace=default
+→ 404
+
 # console A
 PUT /v1/var/vms/cameras/1?namespace=default&cas=1002
 {

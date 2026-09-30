@@ -104,6 +104,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
+from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
 from .spec import Refused, SpecController
@@ -343,6 +344,7 @@ class SpecConsole:
         # screens and a guard with a phone are not the same reader.
         self.per_minute = float(os.environ.get("EVENTS_PER_MINUTE", per_minute) or PER_MINUTE)
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
+        self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall)   # in the store: any instance answers a retry
         self.epoch_policy: dict[str, str] = {self.spec.name: self.spec.older_epochs}   # replaced by the Mount's shared one
         self._scan: tuple[float, dict] = (-1e9, {})
@@ -606,10 +608,15 @@ class SpecConsole:
         return 200, {**mask_secrets([row])[0], field: d, "bytes": len(data)}
 
     # 404 if the unit is absent; else `ctl.delete(uid)` and 200 `{deleted: uid}`.
-    def delete(self, uid) -> tuple[int, dict]:
+    #
+    # …and WHO. A deleted unit leaves a tombstone and a revision; neither is a name (feedback BN).
+    def delete(self, uid, user: str = "operator") -> tuple[int, dict]:
         if self.ctl.unit(uid) is None:
             return 404, {"detail": "no such unit", "error": "no such unit"}
         self.ctl.delete(uid)
+        # `of` and `target`, not `subsystem` and `unit`: those two are the LINE's own — who wrote it — and a field
+        # of the same name would answer for it in every reader.
+        self.journal.say("unit.deleted", of=self.spec.name, target=str(uid), user=user)
         return 200, {"deleted": uid}
 
     # An operator's observation. 503 if there is no resource on this server; 400 unless the body names `cam`
@@ -826,7 +833,7 @@ class SpecConsole:
                 if self._extra(h, "DELETE", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
-            return h._send(*con.delete(self._uid(path)))
+            return h._send(*con.delete(self._uid(path), h.headers.get("X-User", "operator")))
         h._send(405, {"detail": "method", "error": "method"})
 
     # Starts the server in a daemon thread and returns it (tests use `port=0` and read `server_address`).

@@ -21,3 +21,4 @@
 - `rec/recordings/*`, `rec/next_id`, `rec/idem/*` — the recorder's operator rows, for the console's mount at `/rec/…` (the page's *Record* toggle); `rec/*` read-only for `/rec/where`, `/rec/servers`.
 
 **Added later.** `vms/requests/*`, `rec/requests/*` — an operator's requests to a worker (a relay, a range from a card), written by the console and removed when a worker reports them done, hence `destroy`; `rec/volumes/*` — the administrator's list of archives (М10B Lesson 10). All three named by `acl_console()` and absent here until the policies were checked against the code again. `rec/keeps/*` — what an operator said to keep (М10B Lesson 18): the second of `rec`'s tables, set and lifted from the console.
+- `path "vms/alarms_retention/*"` — the derived row carrying a camera's `alarms_retention_days`: alarms lie in their own tree (`vms.alarms/…`) and are kept by their own days. Named by `acl_console()` through the spec's `derived:`.

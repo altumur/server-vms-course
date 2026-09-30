@@ -448,15 +448,17 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
     try:
         p = log.append(1000.0, "stats", n=1)                       # an observation pays nothing…
         assert synced == [] and dirs == []                         # …including for the file it just created
-        log.append(1001.0, "io.input", ALARM, port="1")
-        assert synced == [p] and dirs == [os.path.dirname(p)]      # the alarm pays for both, the entry included:
-        log.append(1002.0, "io.input", ALARM, port="1")            # the unsynced observation left it in the cache
-        assert synced == [p, p] and dirs == [os.path.dirname(p)]   # …and once per bucket is enough
+        pa = log.append(1001.0, "io.input", ALARM, port="1")
+        assert synced == [pa] and dirs == [os.path.dirname(pa)]    # the alarm pays for both, the entry included
+        log.append(1002.0, "io.input", ALARM, port="1")
+        assert synced == [pa, pa] and dirs == [os.path.dirname(pa)]   # …and once per bucket is enough
     finally:
         ev.durably, ev.durable_dir = real_durably, real_dir
 
+    # …and the alarm lies in a tree of its own (feedback BO): the same shape, another first directory
     from w2cplatform.events import read_bucket
-    assert [r["kind"] for r in read_bucket(p)] == ["stats", "io.input", "io.input"]
+    assert os.path.relpath(p, box.archive).startswith("vms/7/e1/") and os.path.relpath(pa, box.archive).startswith("vms.alarms/7/e1/")
+    assert [r["kind"] for r in read_bucket(p)] == ["stats"] and [r["kind"] for r in read_bucket(pa)] == ["io.input", "io.input"]
 
 
 def test_the_durable_write_reaches_the_medium_or_says_it_could_not():

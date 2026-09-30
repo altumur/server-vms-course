@@ -49,6 +49,10 @@ unit:
     # resolved where it is used: the camera's own, else the domain's default, else 365 — the resource's own
     # year, the same number said twice on purpose, since the resource does not read this file.
     events_retention_days: {type: int,    inherit: 365}       # buckets: the platform's, via the derived row below
+    # …and the ALARMS' own days: they lie in a tree of their own (`vms.alarms/<cam>/…`, `w2cplatform/events.py`)
+    # and are kept three years unless the row says otherwise. Observations can then be kept a month without
+    # an alarm going with them — which, in one bucket, was the choice.
+    alarms_retention_days: {type: int,    inherit: 1095}
     # stored and carried in the snapshot; nothing in М10 reads it (no placement rule uses it).
     priority:              {type: int,    default: 100}
     # where the camera is reachable from (`"vlan:cctv-a"`); the placement constraint below compares it
@@ -148,6 +152,11 @@ unit:
       # on `delete_camera` the row becomes `{days: 0}`, so a deleted camera's buckets go at the resource's
       # next pass without anyone deleting files by hand.
       on_delete: {days: 0}           # a deleted camera's buckets go at the next pass
+    # The alarms' days. No `on_delete`, and that is the answer to "should deleting a camera erase its events at
+    # once": it ends the camera's observations, and not the record of what happened at it. The row stays, and
+    # the alarms live out their days.
+    - row: alarms_retention/{id}     # vms/alarms_retention/<id> {days}
+      items: {days: alarms_retention_days}
 placement:
   # `SpecController.capacity_of(worker)` reads `extra["capacity"]` from the worker's latest heartbeat (any
   # age); a worker that never said anything counts as 50 (the constructor's `capacity` argument overrides

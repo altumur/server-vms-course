@@ -309,8 +309,8 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
             return len(r.read())
 
     def said():
-        return [(e["user"], e["media"], e["unit"]) for unit in os.listdir(os.path.join(box.archive, "console"))
-                for b in buckets_under(box.archive, "console", unit, 600)
+        return [(e["user"], e["media"], e["recording"])                  # in the journal: `audit/console/…` (feedback BN)
+                for b in buckets_under(box.archive, "audit", "console", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:

@@ -138,6 +138,35 @@ ALARM = "alarm"
 OBSERVATION = "observation"
 CLASSES = (ALARM, OBSERVATION)
 
+# WHERE AN ALARM LIES: a tree of its own, `<subsystem>.alarms/<unit>/e<epoch>/…`, beside `<subsystem>/<unit>/…`
+# (the platform review, "a retention of its own for the class `alarm`"; agreed with the product, whose format
+# this is too — feedback BO).
+#
+# An alarm and an observation used to share a bucket, and a bucket is deleted whole. So either a year of a
+# driver's statistics was kept for the sake of one door alarm, or the alarm went with the statistics. Two ways
+# out. Rewrite old buckets, dropping the observations — which breaks "a closed bucket is never written again",
+# the rule mirroring, the index's cache and the check of copies all stand on. Or write alarms apart from the
+# start. This is the second.
+#
+# The shape is the same and only the first directory differs, so everything that WALKS a resource's tree —
+# buckets, the mirror, the doors — sees one more directory and knows nothing about classes. Two things know:
+# the WRITER picks the tree by the line's class (`EventLog.append`), and the INDEX, asked for a subsystem,
+# reads both and answers under the subsystem's own name — where a line lies is not whose it is.
+#
+# Buckets written before this hold both classes in the first tree and live out the days they had. The index
+# reads them as it always did; nothing is moved.
+ALARM_TREE = ".alarms"
+
+
+def alarm_tree(subsystem: str) -> str:
+    return subsystem + ALARM_TREE
+
+
+# `(subsystem, is it the alarm tree)` for a first directory of a resource: `vms.alarms` is `vms`'s.
+def tree_owner(name: str) -> tuple[str, bool]:
+    return (name[:-len(ALARM_TREE)], True) if name.endswith(ALARM_TREE) else (name, False)
+
+
 # The console's own subsystem name: its marks (and whatever else an operator records about the system)
 # live in `console/<instance>/` beside every worker's buckets, written by the console process, epoch 1
 # because there is one writer. `resource.retain` knows this name for one reason — see `console_floor`.
@@ -231,9 +260,10 @@ class EventLog:
         self.root, self.subsystem, self.unit, self.epoch, self.bucket_seconds = root, subsystem, str(unit), epoch, bucket_seconds
         self._synced_dirs: set[str] = set()       # bucket directories this writer has made durable
 
-    # The bucket file that time `t` falls in, for this epoch.
-    def path_for(self, t: float) -> str:
-        return bucket_path(self.root, self.subsystem, self.unit, self.epoch, bucket_start(t, self.bucket_seconds))
+    # The bucket file that time `t` falls in, for this epoch — in the alarms' tree for an alarm.
+    def path_for(self, t: float, cls: str = OBSERVATION) -> str:
+        tree = alarm_tree(self.subsystem) if cls == ALARM else self.subsystem
+        return bucket_path(self.root, tree, self.unit, self.epoch, bucket_start(t, self.bucket_seconds))
 
     # Writes one JSON line `{t, kind, **fields}` to the bucket for `t`, creating directories, flushing after
     # the write; returns the path. Append-only, one process per file: the epoch in the path guarantees no
@@ -258,7 +288,7 @@ class EventLog:
         if "v" in fields:
             raise ValueError("`v` is the format's version and is not written: a line without it is version 1")
         given = fields.pop("id", None)               # the writer names the line; a name it was handed is kept
-        p = self.path_for(t)
+        p = self.path_for(t, cls)                    # the class picks the tree: an alarm is kept by its own days
         os.makedirs(os.path.dirname(p), exist_ok=True)
         line = {"t": t, "kind": kind, **({} if cls == OBSERVATION else {"class": cls}),
                 "id": str(given) if given else new_event_id(self.unit, self.epoch), **fields}

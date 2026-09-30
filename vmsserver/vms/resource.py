@@ -192,6 +192,8 @@ def kept_buckets(vars_):
         all_ = keeps.declared(vars_)
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
+            from w2cplatform.events import tree_owner
+            sub = tree_owner(sub)[0]                 # a keep holds the alarms' tree as it holds the other
             if sub == "vms":
                 return keeps.held(keeps.spans_of_cam(all_, str(unit)), start, end)
             if sub == "rec":

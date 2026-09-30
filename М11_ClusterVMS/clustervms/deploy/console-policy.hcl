@@ -31,6 +31,9 @@ namespace "default" {
     # …and what an operator said to keep (М10B Lesson 18): a camera, an interval, a note. Set and lifted from
     # the console; the resource that holds the footage only reads it.
     path "rec/keeps/*"     { capabilities = ["write", "read", "list", "destroy"] }
+    # The alarms' own days (М10A Lesson 12): a derived row like `vms/retention/<id>`, kept in step with the
+    # camera's `alarms_retention_days` — and, unlike it, left alone when the camera is deleted.
+    path "vms/alarms_retention/*" { capabilities = ["write", "read", "list"] }
     # `destroy` — the only grant in this cluster that lets anything remove an object, and it is bounded to
     # the one prefix whose contents can be proved unreferenced (М10A Lesson 29). Heartbeats and snapshot
     # shards are deliberately NOT here: a worker reads the heartbeat its previous instance left to measure

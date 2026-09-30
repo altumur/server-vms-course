@@ -39,7 +39,7 @@ import tempfile
 import threading
 import time
 
-from w2cplatform.events import ALARM, EventLog, buckets_under, read_bucket, subsystems_under
+from w2cplatform.events import ALARM, EventLog, alarm_tree, buckets_under, read_bucket, subsystems_under
 
 from .federation import Unreachable
 
@@ -61,9 +61,13 @@ class Card:
         if alarm and self.on_alarm is not None:
             self.on_alarm()                          # the line is on the card: now it has to leave it
 
+    # Alarms lie in a tree of their own (`vms.alarms/…`, М10A Lesson 12); a bucket written before they did
+    # holds both classes in `vms/…`. Both are read, and the class is what picks a line.
     def _buckets(self, root: str):
-        for unit in subsystems_under(root).get("vms", []):
-            yield from buckets_under(root, "vms", unit, self.bucket)
+        trees = subsystems_under(root)
+        for tree in ("vms", alarm_tree("vms")):
+            for unit in trees.get(tree, []):
+                yield from buckets_under(root, tree, unit, self.bucket)
 
     def _alarms_in(self, root: str, since: float, until: float) -> list[dict]:
         out = []
