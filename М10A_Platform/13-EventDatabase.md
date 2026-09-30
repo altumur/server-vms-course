@@ -118,7 +118,8 @@ def bucket_path(root, subsystem, unit, epoch, start) -> str:
         `epoch_policy` is {subsystem: "fenced" | "earlier-run"} — what an older epoch MEANS
         there. Same comparison, two meanings: a writer that lost the race, or a finished
         earlier run of work that ends. The index is told; it does not decide."""
-        rows = []
+        cap, seen = limit + 1, 0
+        kept = {True: [], False: []}                         # тревоги и наблюдения: по куче на limit+1 строк
         for server, base in self._bases():                   # своё дерево и копии соседей
             for sub, u in units(base, subsystem, unit):
                 if cam is not None and not self._may_be(server, sub, u, cam):
@@ -126,9 +127,10 @@ def bucket_path(root, subsystem, unit, epoch, start) -> str:
                 for epoch, path in self._candidates(base, sub, u, t0, t1):
                     for t, k, c, ecam, fields in self._lines(path):
                         if t0 <= t < t1 and matches(k, c, ecam):
-                            rows.append((c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
-        rows.sort(key=lambda r: (not r[0], -r[1]) if keep == "newest" else (not r[0], r[1]))
-        truncated = len(rows) > limit                        # строки сверх предела: «обрезано» — факт, а не догадка
+                            seen += 1
+                            push(kept[c == ALARM], cap, keep, (c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
+        rows = newest_or_oldest_first(kept[True]) + newest_or_oldest_first(kept[False])   # тревоги первыми
+        truncated = seen > limit                             # строки сверх предела: «обрезано» — факт, а не догадка
         rows = sorted(rows[:limit], key=lambda r: r[1])      # ответ по возрастанию времени, какой бы конец ни сохранили
         for _, t, sub, u, c, ep, k, server, rel, rcls, fields in rows:
             cur = (current_epochs or {}).get((sub, u))
@@ -138,6 +140,8 @@ def bucket_path(root, subsystem, unit, epoch, start) -> str:
                         "bucket": rel, "class": rcls, "epoch_is": was, "fenced": was == "fenced", **fields})
         return {"events": out, "state": self.state, "truncated": truncated}
 ```
+
+**Запрос держит столько, сколько унесёт ответ.** Первая версия собирала в список все совпавшие строки окна и резала по `limit` в самом конце. Потолок кэша ограничивает файлы, а не ответ: восемь запросов без `from` собирали каждый все строки дерева, и это была память процесса ресурса (ревью платформы; BD). Теперь по ходу чтения в двух кучах остаётся по `limit + 1` строк каждого класса с того конца, который называет `keep`; `+ 1` нужен, чтобы `truncated` оставался фактом. Ответ тот же, что давало прежнее правило, — проверено на двадцати тысячах строк (`test_a_query_holds_what_the_answer_can_carry_and_answers_as_before`). Отклонять запрос без `from`, как предлагало ревью, не стали: «последние события камеры» — законный вопрос, и его задают соседи через слияние. А `limit` больше десяти тысяч двери обрезают до десяти тысяч (`doors.MAX_LIMIT`).
 
 Окно времени обязательно, остальные условия — по желанию. Порядок по времени, предел на число строк. Стоимость — то, что задевает окно, а не то, что держит дерево: файлы окна, `stat` на каждый и чтение того, чего нет в кэше.
 

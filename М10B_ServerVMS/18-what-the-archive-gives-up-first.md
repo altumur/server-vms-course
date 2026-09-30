@@ -113,13 +113,15 @@ def foreign(archive: ArchiveResource, objects, server: str, now: float, lost_aft
         if not path.startswith("/segment/"):
             return None
         rel = path[len("/segment/"):]
-        if ".." in rel or not rel.startswith(SUB + "/") or not rel.endswith(".mp4"):
+        if not safe_rel(rel) or not rel.startswith(SUB + "/") or not rel.endswith(".mp4"):
             return 400, b""
         line = headers.get("X-Segment")
         ...
         seg = Segment.from_line(line)
         if seg.path != rel:
             return 400, b'{"error": "the line does not describe this path"}'
+        if not safe_segment(str(seg.unit)):                 # it names the manifest the line is appended to
+            return 400, b'{"error": "the line names no unit"}'
         dest = os.path.join(root, rel)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         n = int(headers.get("Content-Length", 0))

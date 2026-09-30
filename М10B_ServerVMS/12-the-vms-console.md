@@ -65,13 +65,13 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             return None
         if path.startswith("/segment/"):
             rel = path[len("/segment/"):]; p = os.path.join(archive.root, rel)
-            if ".." in rel or not os.path.isfile(p):
+            if not safe_rel(rel) or not os.path.isfile(p):
                 return 404, {"detail": "no such segment", "error": "no such segment"}
             send_file(handler, p, "video/mp4")
             return ()                                                     # served in full by send_file
 ```
 
-`send_file` — платформенная функция (урок 17 М10A), умеющая диапазонные запросы: целиком или `206` с `Content-Range`.
+`send_file` — платформенная функция (урок 17 М10A), умеющая диапазонные запросы: целиком или `206` с `Content-Range`. Путь проходит ту же проверку, что у двери ресурса (`doors.safe_rel`, урок 11), а диапазон обрезается по файлу: это одна дверь в двух процессах, и первая версия пропускала абсолютный путь в обеих.
 
 `return ()` — **вторая форма протокола**: ответ уже отправлен. Платформа не пытается ничего дописать.
 

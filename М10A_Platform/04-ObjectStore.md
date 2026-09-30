@@ -91,10 +91,13 @@ class FsObjectStore:
     def put(self, key: str, data: bytes) -> None:
         p = self._p(key)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p + ".tmp", "wb") as f:
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        with os.fdopen(fd, "wb") as f:
             f.write(data)
-        os.replace(p + ".tmp", p)
+        os.replace(tmp, p)
 ```
+
+У файла в пути — **своё имя**. Первая версия писала в `<path>.tmp`, одно имя на всех писателей ключа. Зомби и его замена, пишущие один heartbeat, писали в один файл, и на место вставала смесь двух — heartbeat, который не разбирается, прочитанный проходом контроллера (ревью платформы; BD). `list` по-прежнему пропускает всё, что кончается на `.tmp`.
 
 Тот же приём, что в уроке 2: запись во временный файл и `os.replace`. Но защищает он здесь от другого.
 

@@ -95,25 +95,31 @@ def vms_routes(archive: ArchiveResource):
         if path.startswith("/segment/"):
             rel = path[len("/segment/"):]
             p = os.path.join(root, rel)
-            if ".." in rel or not os.path.isfile(p):
+            if not safe_rel(rel) or not os.path.isfile(p):
                 return 404, b""
 ```
+
+`safe_rel` — из `w2cplatform/doors.py` (урок 14 М10A): относительный путь, каждый сегмент которого — имя. Первая версия проверяла только `".." in rel`, и запрос `GET /segment//etc/hosts` — второй слэш, абсолютный путь — отдавал любой файл машины: `os.path.join(root, "/etc/hosts")` отбрасывает `root`. Так читалась и строка камеры с её учётными данными (ревью платформы, 29 сентября).
 
 Проверка `..` — та же защита от обхода каталога, что в уроке 5. Здесь она обязательна вдвойне: путь приходит из HTTP, то есть от кого угодно.
 
 Проверка и отсутствия файла, и `..` дают **один и тот же ответ** — 404 с пустым телом. Не 403 для `..`: разные коды сообщили бы атакующему, существует ли путь.
 
 ```python
-            size = os.path.getsize(p); start, end = 0, size - 1
+            size = os.path.getsize(p)
             rng = headers.get("Range")
-            if rng and rng.startswith("bytes="):
-                a, b = rng[6:].split("-"); start = int(a or 0); end = int(b) if b else end
+            span = byte_range(rng, size)                     # cut to the file: never the client's number of bytes
+            if span is None:
+                return 416, b"", (("Content-Range", f"bytes */{size}"),)
+            start, end = span
             with open(p, "rb") as f:
                 f.seek(start); data = f.read(end - start + 1)
             return (206 if rng else 200), data, ((("Content-Range", f"bytes {start}-{end}/{size}"),) if rng else ())
 ```
 
-Восемь строк, и без них плеер не работает.
+Десять строк, и без них плеер не работает.
+
+**Диапазон обрезается по файлу** (`doors.byte_range`). Первая версия брала `end` прямо из заголовка: `Range: bytes=0-99999999999` просил у `read()` сто гигабайт одним выделением, а `bytes=50-40` давал отрицательную длину, которую `read()` понимает как «всё». Суффиксная форма `bytes=-N` — последние N байт; раньше она читалась как `0-N`. Диапазон, ни одной части которого в файле нет, получает `416` (обратная связь, BD).
 
 **Что делает браузер с видеофайлом.** Он не скачивает его целиком. Он просит первые несколько килобайт, находит в них `moov` (таблицу смещений), и дальше **просит ровно те байты, которые нужны для запрошенного момента**. Перемотка на середину десятиминутного сегмента — это один запрос `Range: bytes=52428800-` вместо ста мегабайт.
 

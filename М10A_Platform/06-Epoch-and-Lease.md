@@ -142,16 +142,22 @@ def current_epoch(vars_: Variables, key: str) -> int:
     def renew(self) -> bool:
         if self.fenced:
             return False
+        t0 = self.clock()
         try:
             live = current_epoch(self.vars, self.key)
         except Exception:                      # noqa: BLE001 — the store is unreachable; keep going until TTL − margin
+            self.store_errors += 1
             return self.may_write()
         if live != self.epoch:
             self.fenced, self.conflicts = True, self.conflicts + 1
             return False
-        self.last_renewal = self.clock()
+        self.last_renewal = t0
         return True
 ```
+
+**Аренда отсчитывается от момента до чтения.** Первая версия ставила `last_renewal = self.clock()` после чтения. Держатель, замерший на минуту между чтением строки и отметкой — пауза сборщика мусора, зависший диск, — просыпался со свежей арендой, которую на деле проспал, и писал старой эпохой ещё двадцать пять секунд (ревью платформы). `t0` берётся до чтения: строка сказала «твоя» в этот момент, не позже.
+
+**Неответившее хранилище считается** (`store_errors`, в heartbeat воркера). Раньше ошибка проглатывалась молча: недоступное хранилище и битая строка эпохи выглядели одинаково и не были видны никому, пока аренды не кончались.
 
 Четыре ветви, и каждая — отдельное решение.
 
