@@ -81,23 +81,32 @@ class Lease:
         self.last_renewal = clock()
         self.fenced = False
         self.conflicts = 0
+        self.store_errors = 0                  # renewals the store did not answer: not a loss, and not nothing
 
     # Once fenced, always `False`. Otherwise read `current_epoch(key)`: if the store raises (unreachable),
     # do not fence — return `may_write()` and keep going until `ttl − margin` runs out; if the live epoch
     # differs from mine, set `fenced = True`, count a conflict and return `False`; else stamp `last_renewal`
     # and return `True`. `conflicts` is what the worker sums into its heartbeat (`conflicts=`) and the
     # console exports as `<sub>_epoch_conflicts`.
+    #
+    # The lease runs from BEFORE the read, not from after it (the platform review): a holder paused for a minute
+    # between reading the row and stamping the renewal — a GC, a stalled disk — woke up with twenty-five more
+    # seconds of a lease it had in fact lost while it slept. And a renewal the store did not answer is counted
+    # (`store_errors`): "the store is away" and "the row is garbled" used to look alike and be seen by nobody
+    # until the leases ran out.
     def renew(self) -> bool:
         if self.fenced:
             return False
+        t0 = self.clock()
         try:
             live = current_epoch(self.vars, self.key)
         except Exception:                      # noqa: BLE001 — the store is unreachable; keep going until TTL − margin
+            self.store_errors += 1
             return self.may_write()
         if live != self.epoch:
             self.fenced, self.conflicts = True, self.conflicts + 1
             return False
-        self.last_renewal = self.clock()
+        self.last_renewal = t0
         return True
 
     # `not fenced and (clock() − last_renewal) < ttl − margin`. The one line the actuator asks before a

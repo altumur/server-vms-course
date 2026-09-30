@@ -174,7 +174,7 @@ PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
 # vmscontroller
 PUT /v1/var/vms/placement/1?namespace=default&cas=1012
 {"Items": {"worker": "w-2", "reason": "server srv-a gone: slot w-1 lapsed and its resource silent; most free capacity (50); on srv-b", ...}}
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1033}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1035}
 ```
 
 `w-2` на `srv-b` берёт следующую эпоху каждой камеры и начинает писать:

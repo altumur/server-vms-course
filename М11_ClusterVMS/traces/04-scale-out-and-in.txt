@@ -19,6 +19,7 @@ PUT /v1/var/objects/vms/heartbeats/w-2?namespace=default
       "fenced": false,
       "conflicts": 0,
       "passes": 0,
+      "store_errors": 0,
       "capacity": 4,
       "headroom": 4,
       "started": 1757500000.0,
@@ -126,11 +127,6 @@ PUT /v1/var/vms/placement/2?namespace=default&cas=1026
 → 200 {"Path": "vms/placement/2", "ModifyIndex": 1063}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1055
-{"Items": {"units": "", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1064}
-
-# vmscontroller
 PUT /v1/var/vms/placement/9?namespace=default&cas=1054
 {
   "Items": {
@@ -140,11 +136,16 @@ PUT /v1/var/vms/placement/9?namespace=default&cas=1054
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1065}
+→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1064}
+
+# vmscontroller
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1055
+{"Items": {"units": "", "rev": "2"}}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1065}
 
 # vmscontroller
 PUT /v1/var/vms/workers/w-0?namespace=default&cas=1060
 {"Items": {"units": "3,5,7,9", "rev": "6"}}
 → 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1066}
 
-# … and 415 GET requests, omitted
+# … and 439 GET requests, omitted

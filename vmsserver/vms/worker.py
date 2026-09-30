@@ -429,6 +429,8 @@ class VmsWorker(Worker):
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
         self.fenced_reason: str | None = None
+        self.was_fenced: str | None = None               # why it was fenced last, once it has rejoined
+        self.store_errors = 0                            # passes and renewals the store did not answer
         self.server = runtime.server(env, server)
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
@@ -530,7 +532,14 @@ class VmsWorker(Worker):
             if not self.recording_allowed:
                 return False
             if verb == "start" or unit not in self.epochs:
-                cam = dict(cam, epoch=self.take_epoch(unit))       # a new epoch for a new writer
+                try:
+                    cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
+                except OSError as e:
+                    # No store, no epoch, no start — for THIS unit, this pass: a failed start the reconciler
+                    # retries with its backoff. Raised out of here, it ended the pass for every unit after it.
+                    self.store_errors += 1
+                    log.warning("%s: camera %s not started: the store did not answer for its epoch (%s)", self.name, unit, e)
+                    return False
             else:
                 cam = dict(cam, epoch=self.epochs[unit])
             if not self.may_write(unit):
@@ -563,8 +572,17 @@ class VmsWorker(Worker):
     # -- the passes ---------------------------------------------------------------
     # One pass: `refresh`, `reconciler.reconcile(now)`, count the pass, log each action. The base class's
     # abstract method; called by `run` and directly by every test.
+    #
+    # NOT KNOWING IS NOT "NO" (feedback BC). A store that did not answer says nothing about what this worker
+    # should be doing: it goes on with the assignment and the rows it read last — what is running keeps running,
+    # what fell over is started again, when the store lets it take an epoch. It used to raise out of the pass,
+    # and the pass used to be the only place the local work was done.
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
-        self.refresh()
+        try:
+            self.refresh()
+        except OSError as e:
+            self.store_errors += 1
+            log.warning("%s: the store did not answer (%s); going on with the last assignment read", self.name, e)
         actions = self.reconciler.reconcile(self.now() if now is None else now)
         self.passes += 1
         for verb, cid in actions:
@@ -575,37 +593,72 @@ class VmsWorker(Worker):
     # is held by another instance now, `fence("slot w-N is held by another instance now")` and return every
     # held unit — the zombie is fenced at the slot *before* any epoch is looked at
     # (`test_the_zombie_is_fenced_at_the_slot_first`: the replacement's `slot.gen == 2`). Then
-    # `renew_leases()`; for each lost unit: if it is no longer in my assignment this is a reassignment —
-    # stop the pipeline, drop it from `reconciler.actual`, `release` it, and carry on recording the rest
-    # (`test_a_reassignment_is_not_a_zombie`: released, not fenced, `recording_allowed` still true); if it
-    # *is* still mine, another instance of me took the epoch — I am the zombie — `fence` and stop looking.
-    # Returns the lost units. `test_the_zombie_on_one_box`: A's `lease_pass` returns `["1"]`, A is fenced
-    # with "slot w-1" in the reason, its epoch lease also reports a conflict, and it may start nothing
-    # (`("failed", 1)`); B is fine.
+    # `renew_leases()`; each lost unit's pipeline is stopped, it is dropped from `reconciler.actual` and
+    # released, and the rest go on recording (`test_a_reassignment_is_not_a_zombie`: released, not fenced,
+    # `recording_allowed` still true). Returns the lost units. `test_the_zombie_on_one_box`: A's `lease_pass`
+    # returns `["1"]`, A is fenced with "slot w-1" in the reason, its epoch lease also reports a conflict, and
+    # it may start nothing (`("failed", 1)`); B is fine.
+    #
+    # Since feedback BC, three rules, and the second replaces "a lost lease on a camera still mine: I am the
+    # zombie, fence the instance":
+    #
+    #   the slot says who I am    only a slot row READ, naming another holder, fences the instance. A store that
+    #                             did not answer is not that row: "still me", counted (`store_errors`). The slot
+    #                             is a name; the right to write is the leases', and they run out by themselves
+    #   a lease is one camera's   lost however it was lost — the camera went to another worker, it is in two
+    #                             assignments for the seconds a controller takes to mend that, or the store did
+    #                             not confirm the lease in time — ONE pipeline stops and its epoch is given up.
+    #                             If the camera is still mine the reconciler starts it again, with its backoff,
+    #                             under a new epoch. The slot was renewed a line above: there is no other
+    #                             instance of me, and fifty cameras are not stopped for one
+    #   a fence is not for ever   `rejoin`, below
     def lease_pass(self) -> list[str]:
-        """Renew every lease. A lost lease on a camera that is no longer
-        assigned to me is a reassignment: let it go. A lost lease on a camera
-        that IS still mine means another instance of ME took it: I am the
-        zombie, and the whole instance fences."""
-        if not self.renew_slot():
+        """Renew the slot and every lease. Another holder on my slot: the instance
+        fences. A lost lease: that one camera stops and gives its epoch up."""
+        try:
+            mine = self.renew_slot()
+        except OSError as e:
+            self.store_errors += 1
+            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
+            mine = True
+        if not mine:
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
         lost = self.renew_leases()
-        if not lost:
-            return []
-        assigned = set(self.assignment().units)
         for unit in lost:
-            if unit not in assigned:
-                # `lost` names units the way the lease does — as text. The reconciler keys by the row's id,
-                # which the spec parsed (a number for cameras, a name for recordings): match it, never cast.
-                uid = next((k for k in self.reconciler.actual if str(k) == unit), unit)
-                self.actuator("stop", {"id": uid})
-                self.reconciler.actual.pop(uid, None)
-                self.release(unit)
-            else:
-                self.fence(f"camera {unit}: a newer epoch was issued to another instance of {self.name}")
-                break
+            lease = self.leases.get(unit)
+            why = ("a newer epoch was issued for it" if lease is not None and lease.fenced
+                   else "the store did not confirm the lease in time")
+            log.warning("%s: camera %s stopped: %s", self.name, unit, why)
+            # `lost` names units the way the lease does — as text. The reconciler keys by the row's id,
+            # which the spec parsed (a number for cameras, a name for recordings): match it, never cast.
+            uid = next((k for k in self.reconciler.actual if str(k) == unit), unit)
+            self.actuator("stop", {"id": uid})
+            self.reconciler.actual.pop(uid, None)
+            self.release(unit)
         return lost
+
+    # A fenced instance used to stay fenced: alive, renewing nothing, heartbeating `fenced: true` — which
+    # placement does not read — and recording nothing until somebody restarted it by hand; a supervisor does not
+    # restart a process that has not died (the product's Go worker, feedback BC). Fenced, it is nobody: the
+    # slot it had belongs to the instance that took it. So on its next pass it takes a FREE slot and starts
+    # from nothing — no epochs, no rows, whatever that slot's assignment says. Returns the new name, or None
+    # while there is no slot to take.
+    def rejoin(self) -> str | None:
+        if self.recording_allowed:
+            return self.name
+        was = self.name
+        self.epochs.clear(); self.leases.clear()
+        self.rows, self.assignment_rev = [], 0
+        self.reconciler.clear()
+        self.slot = None
+        try:
+            name = self.claim_slot()
+        except RuntimeError:
+            return None
+        log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
+        self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
+        return name
 
     # Once: log at error, set `recording_allowed = False` and `fenced_reason`, `actuator.stop_all()`,
     # `reconciler.clear()` — the pipelines were stopped underneath the loop. Idempotent (a second call
@@ -701,7 +754,11 @@ class VmsWorker(Worker):
             self.reconciler.lost(cid, self.now())
             self.observe(cid, "silent")                 # the event with no segment open, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
-        self.requests()                                 # …and what somebody asked this device to DO
+        try:
+            self.requests()                             # …and what somebody asked this device to DO
+        except OSError as e:                            # the requests are rows in the store: no store, none this pass
+            self.store_errors += 1
+            log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
 
     # -- commands: `<sub>/requests/<id>`, done by whoever holds the device ------------------------------
     # The other half of what a device is. Until now a holder only OBSERVED: one connection, a fan-out,
@@ -891,6 +948,8 @@ class VmsWorker(Worker):
         self.heartbeat(self.status(), server=self.server, instance=self.instance, alloc=self.alloc,
                        labels=",".join(self.labels), assignment_rev=self.assignment_rev,
                        fenced=not self.recording_allowed, conflicts=self.conflicts(), passes=self.passes,
+                       store_errors=self.store_errors + sum(l.store_errors for l in self.leases.values()),
+                       **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
                        archive=self.archive_root, devices=self.device_status(),                                    # the resource its events (a recorder: its footage) go to — Nomad's meta.archive, through $ARCHIVE
@@ -977,12 +1036,21 @@ class VmsWorker(Worker):
         self.heartbeat_once()
         last_lease, last_hb = 0.0, self.clock()
         while not stop.is_set():
-            # The WORK, and whatever it raises stays in here.
+            # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
+            # pipelines' buses, the devices' events, moving closed segments out of the spool — does not wait
+            # for the pass over the store to succeed (feedback BC). They shared a `try`, so a store that was
+            # away skipped the pump on every pass: a device's alarms piled up in memory, a pipeline that fell
+            # over was not noticed, the spool was not emptied.
             try:
+                if not self.recording_allowed:
+                    self.rejoin()                          # a fence is not for ever: a free slot, from nothing
                 self.reconcile_once()
-                self.pump_once()
             except Exception:                              # noqa: BLE001
                 log.exception("%s: pass failed; will retry", self.name)
+            try:
+                self.pump_once()
+            except Exception:                              # noqa: BLE001
+                log.exception("%s: pump failed; will retry", self.name)
             # STAYING ALIVE, in a try of its own and never inside the one above. These two used to share
             # it, so anything the work raised skipped them — every pass, for as long as it kept raising.
             # A recorder whose archive went away stopped renewing its leases (fenced at 30 s) and stopped
