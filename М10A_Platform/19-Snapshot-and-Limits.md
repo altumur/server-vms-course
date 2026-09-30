@@ -475,8 +475,7 @@ def digest(data: bytes) -> str:
 ## Шаг 17 — Два `try`
 
 ```python
-        except Exception:                             # noqa: BLE001
-            logging.exception("placement pass failed")
+        ctl.pass_once(1)                              # place, move, bring ONE unit home — and report on itself; it does not raise
         # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
         # inside the block above, placement had already succeeded — and the log said "placement pass
         # failed", naming the one thing that had not. The reverse hid the other half: a placement that
@@ -496,6 +495,8 @@ def digest(data: bytes) -> str:
 Разница между «publish_snapshot failed» и этой строкой — разница между «сломался вызов» и «вот что теперь неправда». Второе — то, что нужно человеку в три часа ночи.
 
 Побочный эффект, который стоит заметить: теперь размещение **продолжается**, даже если публикация падает каждый проход. Раньше это и так было так, но случайно — потому что публикация стояла последней. Теперь это сказано.
+
+Первый `try` при этом ушёл из цикла в платформу: три вызова размещения — это `pass_once` (урок 11, шаг 9), который ловит своё исключение сам, пишет ту же фразу «placement pass failed» и оставляет отчёт о проходе. Причина та же, что у этого шага, с другой стороны: свежий снимок не значит, что размещение работает. Возраст снимка и возраст успешного прохода — два разных числа, и у каждого своя метрика.
 
 ## Шаг 18 — Возраст читается из хранилища, а не хранится в процессе
 

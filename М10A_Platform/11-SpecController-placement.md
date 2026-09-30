@@ -409,7 +409,7 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
     def ensure_placed(self, workers: list[str] | None = None) -> list[Placement]:
         self.unplace_deleted()
         self.unplace_retired()
-        self.sync_assignments()
+        self.last_diverged = len(self.sync_assignments())
         out = []
         for r in self.units():
             try:
@@ -427,6 +427,42 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 **Одна единица — не весь проход.** Строка, которая не разбирается после смены типа поля, или хранилище, отказавшее в одной записи, оставляют ждать одну единицу. Раньше исключение выходило из цикла, и все единицы после неё не размещались ни на одном проходе.
 
 Восемь строк, и это весь основной проход контроллера: сначала прибрать удалённые (урок 10) и законченные, потом пройти по всем единицам. Возвращаются все размещения, а не только новые, — вызывающему обычно нужен именно полный список.
+
+**Проход отчитывается о себе.** У контроллера нет порта. Его проход был тремя вызовами в цикле процесса, и то, что с ним происходило, не было числом нигде: проход, падающий каждый раз, единица, которой некуда встать, назначение, разошедшееся со строкой. Снимок при этом оставался свежим, потому что публикуется отдельно (урок 19), и возраст снимка говорил «всё в порядке» (ревью платформы; обратная связь, BG). Поэтому проход — один вызов, который себя измеряет и оставляет отчёт там, где его прочтёт любая консоль:
+
+```python
+    PASS_KEY = "controller/pass"
+
+    def pass_once(self, home_budget: int = 1) -> dict:
+        import json
+        started, now = time.monotonic(), self.wall()
+        prev = self.pass_report() or {}
+        rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
+               "last_success": prev.get("last_success")}
+        self.last_diverged = 0
+        try:
+            self.ensure_placed()                      # deleted rows unplaced; new units onto the workers it sees
+            self.redistribute()                       # units of a RELEASED slot (scale-in) onto the rest
+            self.ensure_home(home_budget)             # a unit back to the server its row names, if it is back
+            rep["last_success"] = now
+        except Exception as e:                        # noqa: BLE001
+            rep.update(ok=False, error=str(e), failures=rep["failures"] + 1)
+            log.exception("%s: placement pass failed", self.sub.name)
+        rep["seconds"] = round(time.monotonic() - started, 3)
+        rep["diverged"] = self.last_diverged
+        try:
+            rep["unplaced"] = len(self.unplaced())
+            self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
+        except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
+            log.exception("%s: the pass could not report on itself", self.sub.name)
+        return rep
+```
+
+Отчёт лежит в хранилище объектов (`<подсистема>/controller/pass`), как heartbeat: состояние наблюдения, а не конфигурация. Счётчик отказов тоже оттуда, а не из поля процесса, — перезапуск контроллера его не обнуляет, и второй экземпляр продолжает тот же счёт.
+
+В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки.
+
+Отчёт, который не удалось записать, не роняет проход: старый отчёт останется лежать, и его возраст скажет то же самое. `pass_once` не бросает исключений — циклу процесса остаётся вызвать его и опубликовать снимок. Консоль отдаёт отчёт в `/metrics` (урок 15, шаг 11).
 
 ### Законченная работа — второе «не размещать»
 

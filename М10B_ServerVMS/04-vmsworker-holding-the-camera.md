@@ -385,10 +385,12 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
                     self.rejoin()                          # a fence is not for ever
                 self.reconcile_once()
             except Exception:                              # noqa: BLE001
+                self.pass_failures += 1                    # …and counted
                 log.exception("%s: pass failed; will retry", self.name)
             try:                                           # what is LOCAL does not wait for the store
                 self.pump_once()
             except Exception:                              # noqa: BLE001
+                self.pass_failures += 1
                 log.exception("%s: pump failed; will retry", self.name)
             try:                                           # STAYING ALIVE — never inside the try above
                 if self.clock() - last_lease >= lease_every:
@@ -401,6 +403,8 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 ```
 
 Четыре действия с тремя периодами — и три `try`, а не два. Дренаж (`pump_once`) — работа локальная: шины конвейеров, события устройств, перенос закрытых сегментов из спула. Он стоял в одном `try` с проходом, и проход, споткнувшийся о хранилище, пропускал дренаж на каждом круге: тревоги устройства копились в памяти, упавший конвейер не замечался (обратная связь, BC). Сам проход при неответившем хранилище теперь идёт дальше с последним прочитанным назначением (`reconcile_once`), а камера, которой не удалось взять эпоху, — неудачный старт одной камеры, а не конец прохода.
+
+**Упавшая часть цикла считается.** `try` оставляет процесс жить — и этим же прячет поломку: воркер, у которого проход падает каждый раз, бьётся, держит аренды и ничего не согласует, а снаружи это видно только в его логе. Счётчик `pass_failures` идёт в heartbeat, консоль отдаёт его как `vms_worker_pass_failures{worker}` (обратная связь, BG). Растущее число при живом воркере — повод читать лог именно этого процесса.
 
 `reconcile_once` и `pump_once` — каждый проход, каждые две секунды. Сверка дёшева (чтения), прокачка шины обязательна (иначе сообщения копятся).
 
