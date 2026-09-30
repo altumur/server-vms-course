@@ -176,9 +176,9 @@ def test_what_a_route_needs_and_where_a_token_is_read_from():
     assert root.needs("POST", "/requests")[0] == "edit" and root.needs("POST", "/backfill")[0] == "edit" and root.needs("POST", "/marks")[0] == "edit"
     assert root.needs("POST", f"/whep/{cam}") == ("view", str(cam), ["ground"])          # a live stream: `view` on that camera
     assert root.needs("GET", f"/timeline/{cam}")[1] == str(cam)
-    assert recs.needs("DELETE", "/recordings/1-cloud") == ("admin", str(cam), [])        # a recording is its camera's
+    assert recs.needs("DELETE", "/recordings/1-cloud") == ("admin", str(cam), ["ground"])   # a recording is its camera's — and so are its labels
     assert recs.needs("POST", "/keeps")[0] == "edit" and recs.needs("POST", "/volumes")[0] == "admin"
-    assert root.needs("POST", "/marks", str(cam)) == ("edit", str(cam), ["ground"]) and recs.needs("POST", "/keeps", str(cam)) == ("edit", str(cam), [])
+    assert root.needs("POST", "/marks", str(cam)) == ("edit", str(cam), ["ground"]) and recs.needs("POST", "/keeps", str(cam)) == ("edit", str(cam), ["ground"])
     assert token_of({"Authorization": "Bearer abc"}) == "abc" and token_of({"Cookie": "a=b; w2c_token=xyz"}) == "xyz"
     assert token_of({}) is None and token_of({"Authorization": "Basic abc"}) is None
 
@@ -210,3 +210,24 @@ def test_the_live_gateway_asks_the_viewer_too():
     assert whep(1, "guard") == 404 and whep(2, "guard") == 403         # a grant on a label: the camera's labels, read from its row
     assert whep(1, "nobody") == 403
     assert whep(None, method="DELETE", path="/whep/session/x") == 401 and whep(None, "viewer", "DELETE", "/whep/session/x") == 404
+
+
+def test_a_grant_on_labels_reaches_the_recordings_of_the_cameras_that_carry_them():
+    """A recording is its camera's, and so is a keep. A grant on the label `ground` covers the recordings of the
+    cameras labelled `ground` — read from the CAMERA's row: a recording's own labels say where it may run."""
+    box = Box()
+    access = Tokens({"guard": [("edit", None, ("ground",))], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["ground"]}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/2.mp4"}, token="admin")[0] == 201
+        rec.create({"name": "1-cloud", "cam": "1", "labels": ["rack-7"]}); rec.create({"name": "2-cloud", "cam": "2"})
+        t = box.wall()
+        assert _call(base, "POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300}, token="guard")[0] == 201
+        assert _call(base, "POST", "/rec/keeps", {"cam": "2", "from": t - 900, "to": t - 300}, token="guard")[0] == 403
+        names = sorted(r["id"] for r in _call(base, "GET", "/rec/recordings", token="guard")[1]["configured"])
+        assert names == ["1-cloud"]                                   # its camera carries the label; the recording's own "rack-7" does not matter
+        assert _call(base, "GET", "/rec/where/1-cloud", token="guard")[0] in (200, 404) and _call(base, "GET", "/rec/where/2-cloud", token="guard")[0] == 403
+    finally:
+        srv.shutdown()
+

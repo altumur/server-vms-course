@@ -757,7 +757,21 @@ class SpecConsole:
             row = None
         if not in_path and row is not None and "cam" in row:
             row = None                                   # a body names the unit the action is ABOUT, not one of this console's rows
-        return cap, str((row or {}).get("cam") or uid), list((row or {}).get("labels") or [])
+        unit = str((row or {}).get("cam") or uid)
+        return cap, unit, self._labels(unit, row)
+
+    # The labels a grant is matched against are the labels of the unit the grant is ON. A console whose rows are
+    # ABOUT another subsystem's units (a recording is its camera's) says whose they are: `labels_of`, set by
+    # whoever builds it. Without it, the row's own.
+    labels_of = None
+
+    def _labels(self, unit: str, row: dict | None) -> list:
+        if self.labels_of is not None and (row is None or "cam" in row):
+            try:
+                return list(self.labels_of(unit) or [])
+            except Exception:                            # noqa: BLE001 — not found, or the store is away: no labels, so no label grant matches
+                return []
+        return list((row or {}).get("labels") or [])
 
     def _extra(self, h, method, path, q):
         r = self.extra(h, method, path, q) if self.extra else None
@@ -858,7 +872,7 @@ class SpecConsole:
                 rows, configured = ctl.read_model(con.lost_after), mask_secrets(ctl.units())
                 sees = self._visible(h)
                 if sees is not None:                     # gated: the list is what THIS caller may look at, not the cluster's
-                    ok = {str(r["id"]) for r in ctl.units() if sees(str(r.get("cam") or r["id"]), list(r.get("labels") or []))}
+                    ok = {str(r["id"]) for r in ctl.units() if sees(str(r.get("cam") or r["id"]), self._labels(str(r.get("cam") or r["id"]), r))}
                     rows = [r for r in rows if str(r.get("id")) in ok]
                     configured = [r for r in configured if str(r.get("id")) in ok]
                 return h._send(200, {"rows": rows, "configured": configured})

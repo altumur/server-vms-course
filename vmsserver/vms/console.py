@@ -635,6 +635,10 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
         con.journal = root.journal
         if name == "rec":
             con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/keeps",)   # a keep is set by an operator; a volume by an administrator
+        if name in ("rec", "live", "det"):
+            # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
+            # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).
+            con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
         if con.extra is not None:
             con.extra.journal = root.journal
         m.mount(name, con)
