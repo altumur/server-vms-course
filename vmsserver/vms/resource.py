@@ -177,7 +177,9 @@ def vms_resource(archive: ArchiveResource, server: str, url: str, vars_, objects
     wall = wall or archive.wall
     volumes = {name: a.root for name, a in (archives or {}).items()} or None
     r = Resource(archive.root, server, url, vars_, objects, archive.bucket_seconds, wall, peers, volumes=volumes)
-    r.register("rec", ArchivePolicy(archive, vars_, objects, r.peers, server, volumes=archives))   # footage is the recorder's: rec/<unit>/…, rec/recordings/<unit>
+    policy = ArchivePolicy(archive, vars_, objects, r.peers, server, volumes=archives)
+    policy.journal = r.journal                       # where kept footage the ring took is said, as an alarm
+    r.register("rec", policy)   # footage is the recorder's: rec/<unit>/…, rec/recordings/<unit>
     r.index = EventIndex(archive.root, server, wall, archive.bucket_seconds)
     r.kept = kept_buckets(vars_)
     return r

@@ -420,6 +420,7 @@ class ArchivePolicy:
         # client carries the bytes. Absent, the policy still repairs and retains — an archive on a box
         # with no neighbours has nowhere to evacuate to and does not pretend otherwise.
         self.objects, self.peers, self.server = objects, peers, server
+        self.journal = None                          # the resource's journal, when there is one (`vms/resource.py`)
 
     # The resource's watermark, answered in the recorder's own terms. Evacuate what is not ours, then cut
     # above the floor, then report the shortfall — the order is in `vms/space.py`, and so is why.
@@ -439,10 +440,28 @@ class ArchivePolicy:
             out["cut"] = rep["removed"]
             if rep.get("kept_cut"):                 # the ring reached what somebody said to keep: a number, and loud
                 out["kept_cut"] = rep["kept_cut"]
+                self._lost(rep["kept_lost"], now)
         short = max(0, need - freed)
         if short:                                   # everything on the floor: said out loud, not cut into
             out["shortfall"] = short
         return {"freed": freed, **out}
+
+    # KEPT FOOTAGE THE RING TOOK IS AN ALARM (the product's question, feedback BR). It was a number in the
+    # pass's report, a warning in a log and a reason in the deletions journal — three places nobody is woken
+    # from. A keep is set so that the footage lives until somebody comes for it; its loss is the thing that
+    # somebody has to be told. One `archive.keep.lost` per recording, in the journal (`audit/resource`), class
+    # `alarm`: which recording, how many seconds, of what span.
+    def _lost(self, segments: list, now: float) -> None:
+        if self.journal is None:
+            return
+        from w2cplatform.events import ALARM
+        by_unit: dict[str, list] = {}
+        for s in segments:
+            by_unit.setdefault(str(s.unit), []).append(s)
+        for unit, segs in sorted(by_unit.items()):
+            self.journal.say("archive.keep.lost", cls=ALARM, of=SUB, target=unit, segments=len(segs),
+                             seconds=round(sum(s.end - s.start for s in segs), 1),
+                             **{"from": min(s.start for s in segs), "to": max(s.end for s in segs)})
 
     # `unit -> [(since, until), …]`: what is kept of one recording, read ONCE for a pass. A keep names the
     # recordings it found when it was set, and the camera; the recording's row says whose it is now.

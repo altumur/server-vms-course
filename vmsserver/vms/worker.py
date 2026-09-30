@@ -1243,3 +1243,9 @@ class VmsWorker(Worker):
         self.actuator.stop_all()
         self.heartbeat_once()
         self.release_slot()                           # an orderly stop says so; a crash says nothing
+        self.after_stop()
+
+    # What a subsystem's worker lets go of on an ORDERLY stop, after the slot: nothing here. A recorder: its
+    # place (`RecWorker.after_stop`).
+    def after_stop(self) -> None:
+        pass

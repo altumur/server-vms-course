@@ -187,7 +187,7 @@ def cut(archive: ArchiveResource, need: int, now: float, min_days: float, spans_
         freed += oldest.bytes; removed += 1
     # Step 3: the ring. Still short, and what is left over the floor is kept. The oldest kept segment on the
     # disk goes — whichever unit it is, because "oldest" is the only order a ring has.
-    kept_cut = 0
+    kept_cut, lost = 0, []
     while freed < need:
         oldest = None
         for unit in archive.units():
@@ -202,7 +202,9 @@ def cut(archive: ArchiveResource, need: int, now: float, min_days: float, spans_
         archive.remove(oldest, "pressure-kept", now)
         man.rewrite([s for s in man.read() if s != oldest])
         freed += oldest.bytes; kept_cut += 1
+        lost.append(oldest)
     if kept_cut:
         log.warning("the disk is full and nothing else is above the floor: %d KEPT segment(s) were cut, oldest "
                     "first — export what must outlive the disk", kept_cut)
-    return {"freed": freed, "removed": removed + kept_cut, **({"kept_cut": kept_cut} if kept_cut else {})}
+    return {"freed": freed, "removed": removed + kept_cut,
+            **({"kept_cut": kept_cut, "kept_lost": lost} if kept_cut else {})}

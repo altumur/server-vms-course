@@ -154,7 +154,11 @@ def worker() -> None:
 #   loop, plus a re-subscription when a camera's holder moves, plus promotion on every pass.
 def recorder() -> None:
     from .recworker import RecWorker
-    vars_ = open_vars(CONFIG_URL, writer="recworker", acl={"recworker": ["rec/epoch/*", "rec/slots/*"]})
+    # The platform's grant for a worker of `rec` — epochs, its slot AND its hold. The list here was written by
+    # hand before a recorder took volumes, and was never given `rec/holds/*`: on a box with a declared volume
+    # this process was refused its own place, by its own token (found with feedback BR).
+    from .config import REC_SPEC
+    vars_ = open_vars(CONFIG_URL, writer="recworker", acl={"recworker": REC_SPEC.sub.acl_worker()})
     objects = FsObjectStore(os.path.join(root, "objects"))
     spool, archive = os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive")
     try:

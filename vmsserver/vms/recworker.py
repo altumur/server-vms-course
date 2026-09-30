@@ -714,6 +714,32 @@ class RecWorker(VmsWorker):
         # a promotion still in flight into the old one will not write over it (`promote_closed`).
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
 
+    # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
+    #
+    # A recorder that stopped released its slot and not its hold: the volume stayed "held" until the hold
+    # lapsed, and whoever was to write there next waited out `slot_ttl` — forty-five seconds of no recording
+    # on every restart and every rolling update, for nothing: the process that held it had said goodbye.
+    #
+    # The ORDER is the point. A released place is taken at once, and whoever takes it opens the archive. So
+    # the hold goes LAST: the pipelines are stopped, the last heartbeat said so, the slot is released — and
+    # then what they closed is moved out of the spool while the archive is still ours, and only then is the
+    # hold let go. Released together with the slot, there would be a moment with two writers in one archive.
+    #
+    # A crash does none of this, and the hold lapses by itself, as before.
+    def after_stop(self) -> None:
+        if self.hold is None:
+            return
+        try:
+            self.promote_closed(limit=self.PROMOTE_BUDGET)
+        except OSError as e:                         # an archive that went away: the spool keeps what it has, marked for it
+            logging.warning("%s: could not promote the spool into %s on the way out: %s", self.name, self.hold, e)
+        held = self.hold
+        try:
+            self.release_hold()
+            logging.info("%s: released %s on the way out", self.name, held)
+        except OSError as e:                         # the store does not answer: the hold lapses by itself
+            logging.warning("%s: could not release %s (%s); it lapses in %.0f s", self.name, held, e, self.slot_ttl)
+
     # HOW DEEP EACH RECORDING IS, AND WHETHER THAT IS LESS THAN IT WAS PROMISED (feedback BM).
     #
     # `retention_days` is a ceiling. The row's `min_depth_days` is the floor — and the floor is not enforced
