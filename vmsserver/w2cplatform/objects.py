@@ -31,6 +31,7 @@ here; MinIO or S3 in М11. An object appears whole or not at all."""
 from __future__ import annotations
 
 import os
+import tempfile
 from typing import Protocol
 
 from .limits import NO_CEILING, check
@@ -77,9 +78,20 @@ class FsObjectStore:
         check(key, len(data), self.max_bytes)      # refused before the write: the old object survives intact
         p = self._p(key)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p + ".tmp", "wb") as f:
-            f.write(data)
-        os.replace(p + ".tmp", p)
+        # A name of its OWN for the file in flight (feedback BD). `<path>.tmp` was shared by every writer of the
+        # key: a zombie and its replacement writing one heartbeat wrote into one file, and what was renamed into
+        # place was the two of them interleaved — a heartbeat that does not parse, read by a controller's pass.
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(data)
+            os.replace(tmp, p)
+        except BaseException:
+            try:
+                os.remove(tmp)
+            except FileNotFoundError:
+                pass
+            raise
 
     # Removes the file; a missing key is not an error, so a sweep that runs twice on the same candidate —
     # two consoles, a retry — does the same thing the second time.

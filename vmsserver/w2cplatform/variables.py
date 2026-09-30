@@ -53,6 +53,7 @@ import json
 import os
 from typing import Protocol
 
+from .events import durable_dir, durably
 from .limits import NO_CEILING, check
 
 
@@ -179,13 +180,23 @@ def _lock_exclusive(f) -> None:
     fcntl.flock(f, fcntl.LOCK_EX)
 
 
+class Corrupt(Exception):
+    """The store cannot say what it holds — and says so, instead of starting again."""
+
+
 class FileVariables:
     # `root` is the store directory; `<root>/vars/` is created. `writer` is this handle's identity (None
     # means unrestricted). `acl` is `{writer: [allowed prefixes]}`; when both `writer` and a non-empty `acl`
     # are present, `put` checks them. Nothing is read at construction; the index counter file is created
     # lazily on the first write.
+    #
+    # `volatile`: skip the barriers that make a write survive a power cut (below, `put`). For tests only — a
+    # barrier costs some fifteen milliseconds on a laptop's disk and a suite makes thousands of writes — and
+    # said by the environment (`STORE_VOLATILE=1`, which `tests/run.py` sets and a test's subprocesses inherit),
+    # never by a default: a store opened with nothing said is durable.
     def __init__(self, root: str, writer: str | None = None, acl: dict[str, list[str]] | None = None,
-                 max_bytes: int = NO_CEILING):
+                 max_bytes: int = NO_CEILING, volatile: bool | None = None):
+        self.volatile = os.environ.get("STORE_VOLATILE") == "1" if volatile is None else volatile
         self.root = root
         self.dir = os.path.join(root, "vars")
         os.makedirs(self.dir, exist_ok=True)
@@ -202,7 +213,7 @@ class FileVariables:
     def as_writer(self, writer: str, allowed: list[str]) -> "FileVariables":
         """The same store seen through another identity, allowed only these
         prefixes ('vms/*', 'vms/epoch/*') — what a Nomad ACL policy does."""
-        v = FileVariables(self.root, writer, dict(self.acl))
+        v = FileVariables(self.root, writer, dict(self.acl), volatile=self.volatile)
         v.acl[writer] = allowed
         return v
 
@@ -227,17 +238,46 @@ class FileVariables:
     # `os.replace`) and returns the new value. Always called under the lock. The starting value 1000 is why
     # the very first write in the tests returns index 1001 — indices never restart from zero after a
     # restart, so a stale CAS from before a restart still conflicts.
+    #
+    # A counter that cannot be read is an ERROR, not a new beginning (feedback BD). An empty or garbled file
+    # used to read as 1000, and so did a missing one beside rows that exist: numbering started again, and a CAS
+    # remembered from before could match a row it was never read from. Only a store with no rows at all starts
+    # at 1000.
     def _next_index(self) -> int:
         try:
-            n = int(open(self.index_file).read() or 1000)
+            raw = open(self.index_file).read().strip()
         except FileNotFoundError:
+            raw = None
+        if raw is None:
+            if any(f.endswith(".json") for f in os.listdir(self.dir)):
+                raise Corrupt(f"{self.index_file} is missing beside rows that exist: refusing to number again from 1000")
             n = 1000
+        else:
+            try:
+                n = int(raw)
+            except ValueError:
+                raise Corrupt(f"{self.index_file} does not hold a number ({raw[:20]!r}): refusing to number again from 1000")
         n += 1
         tmp = self.index_file + ".tmp"
         with open(tmp, "w") as f:
             f.write(str(n))
+            self._durable(f)
         os.replace(tmp, self.index_file)
         return n
+
+    # The barriers. A row written with `write` + `rename` and nothing else is in the page cache: after a power
+    # cut the file can be there, empty, or the old one — and the row is an EPOCH, so the next `next_epoch` hands
+    # out a number that was already given (the platform review; the product's store, feedback BD). The file
+    # reaches the medium before it is renamed into place, and the directory after.
+    def _durable(self, f) -> None:
+        if not self.volatile:
+            f.flush()
+            durably(f)
+
+    def _durable_dirs(self) -> None:
+        if not self.volatile:
+            durable_dir(self.dir)
+            durable_dir(self.root)
 
     # Reads the path's file and returns `(items, index)`; a missing path is `(None, 0)`. Not locked: a
     # reader sees either the old file or the new one, never a half-written one, because writes rename into
@@ -274,7 +314,9 @@ class FileVariables:
             tmp = self._file(path) + ".tmp"
             with open(tmp, "w") as f:
                 json.dump({"items": {k: str(v) for k, v in items.items()}, "index": idx}, f)
+                self._durable(f)
             os.replace(tmp, self._file(path))
+            self._durable_dirs()
             return idx
 
     # Under the lock: the same CAS check as `put`, then remove the file (a missing file is not an error) and
