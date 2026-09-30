@@ -209,6 +209,33 @@ def test_backfill_waits_while_the_archive_is_not_taking_segments():
     assert tried == [], "backfill fetched into a spool whose archive is taking nothing"
 
 
+def test_a_fetch_from_a_slow_card_does_not_hold_the_pass():
+    """A fetch is a pipeline on the device's playback door, run to the end of the range — minutes, on a slow card —
+    and it ran on the loop's thread. A card slower than the lease fenced the recorder and stopped the live
+    recording of every camera it had, to fetch an hour of one (the platform review, blocker 3; feedback BE). It
+    runs on a thread of its own, one range at a time; the pass waits half a second for it and goes on."""
+    import threading
+    import time
+    box = Box()
+    r = _real_recorder(box)
+    started, release = [], threading.Event()
+
+    def slow_card(*a, **k):
+        started.append(1)
+        release.wait(30)
+        return []
+
+    r.backfill_budget, r.backfill = 1, slow_card
+    t0 = time.monotonic()
+    r.pump_once()
+    r.pump_once()
+    assert time.monotonic() - t0 < 5 and started == [1]              # two passes went by; ONE fetch is in flight
+    release.set(); r._backfiller.join(5)
+    r.pump_once()
+    r._backfiller.join(5)
+    assert started == [1, 1]                                          # it came back: the next range may go
+
+
 # -- draining the queue: a budget per pass, and a watchdog that can tell moving from stuck -----------------
 
 def _real_recorder(box: Box, server: str = "srv-1") -> RecWorker:

@@ -239,6 +239,59 @@ def test_a_command_is_a_row_performed_by_whoever_holds_the_device():
     assert w.requests() == [] and dev.did == [("output", 2, "pulse", 500)]
 
 
+def test_a_device_that_does_not_come_back_from_a_command_does_not_hold_the_loop():
+    """A command is a call into a driver, and the driver's call has no timeout of ours. A camera whose network went
+    away with its session held kept `requests` — and the loop, the slot, the leases and the heartbeat of every
+    camera of the worker — for as long as the vendor's SDK waited (the product's `Perform`, feedback BE). The call
+    is made on a thread of its own: the pass waits 0.2 s for it; the camera next to it gets its command; no second
+    call goes into the busy device; and after ten seconds the request is answered "the device did not answer"."""
+    import threading
+    import time
+    box = Box(); ctl, con = _ctl(box)
+    stuck = con.create_camera({"name": "stuck", "source": "driverpack://acme/10.0.0.90/ch/1"})["id"]
+    fine = con.create_camera({"name": "fine", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
+    _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, ptz=True)
+    w.reconcile_once()
+    release, calls = threading.Event(), []
+    dev = w.devices["acme/10.0.0.90"]
+    dev.preset = lambda n: (calls.append(n), release.wait(30))         # the SDK call that does not return
+    for rid, unit, n in (("r1", stuck, 1), ("r2", stuck, 2), ("r3", fine, 3)):
+        con.vars.put(SPEC.sub.request_key(rid), {"unit": str(unit), "action": "preset", "n": str(n),
+                                                 "valid_until": str(box.wall() + 60)})
+    t0 = time.monotonic()
+    done = w.requests()
+    assert time.monotonic() - t0 < 2                                   # the pass did not wait for the device
+    assert [d["request"] for d in done] == ["r3"] and w.devices["acme/10.0.0.91"].did == [("preset", 3, "", 0)]
+    assert calls == [1]                                                # one call into the busy device, not two
+    assert w.requests() == [] and calls == [1]
+    box.clock.advance(11)                                              # PERFORM_TIMEOUT
+    done = w.requests()
+    assert done == [{"request": "r1", "unit": stuck, "error": "the device did not answer"}] and w.commands["refused"] == 1
+    assert calls == [1]                                                # r2 still waits: the driver has not returned
+    release.set()
+    time.sleep(0.1)
+    done = w.requests()                                                # the driver came back: the next in line goes
+    assert [d["request"] for d in done] == ["r2"] and calls == [1, 2]
+    assert w.commands == {"performed": 2, "refused": 1, "expired": 0}  # r1 is not counted twice for coming back late
+
+
+def test_a_worker_that_may_no_longer_write_does_not_act_on_the_device():
+    """The presence of a row was the whole check. A fenced instance, or one whose lease on the unit is lost, leaves
+    the request for whoever holds the device now — a door is not opened by a worker that has been replaced."""
+    box = Box(); ctl, con = _ctl(box)
+    cam = con.create_camera({"name": "ptz", "source": "driverpack://acme/10.0.0.90/ch/1"})["id"]
+    _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, ptz=True)
+    w.reconcile_once()
+    con.vars.put(SPEC.sub.request_key("r1"), {"unit": str(cam), "action": "preset", "n": "1",
+                                              "valid_until": str(box.wall() + 60)})
+    box.clock.advance(26)                                              # past ttl - margin: the lease is not confirmed
+    assert w.requests() == [] and w.devices["acme/10.0.0.90"].did == []
+    w.renew_leases()
+    assert [d["request"] for d in w.requests()] == ["r1"]              # confirmed again: it acts
+
+
 def test_a_command_that_missed_its_moment_expires_instead_of_firing():
     """The field a recording's request does not need. Footage fetched an hour
     late is still the footage; a door opened an hour late is an incident."""

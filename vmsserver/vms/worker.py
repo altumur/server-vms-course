@@ -430,6 +430,7 @@ class VmsWorker(Worker):
         self.recording_allowed = True
         self.fenced_reason: str | None = None
         self.was_fenced: str | None = None               # why it was fenced last, once it has rejoined
+        self._performing: dict[int, dict] = {}           # device -> the one command in flight into it
         self.store_errors = 0                            # passes and renewals the store did not answer
         self.server = runtime.server(env, server)
         self.labels = labels_from_environment(env)
@@ -774,18 +775,36 @@ class VmsWorker(Worker):
     # `valid_until` is the one field a recording's request does not need. Footage fetched an hour late is
     # still the footage; a door opened an hour late is an incident. A request that arrives after its
     # moment is EXPIRED, reported as such and cleared — never performed, never silently dropped.
+    #
+    # NOTHING LONG WHERE THE LEASES ARE RENEWED (feedback BE). `perform` is a call into a driver, and a driver's
+    # call has no timeout of ours: a camera whose network went away with its session still held kept this
+    # method — and with it the loop, the slot, the leases and the heartbeat of every camera of this worker —
+    # for as long as the vendor's SDK cared to wait. So the call is made on a thread of its own:
+    #
+    #   PERFORM_GRACE     the loop waits this long for it: a device that answers at once is answered at once
+    #   PERFORM_TIMEOUT   after this the request is answered `the device did not answer`, and cleared
+    #   one at a time     while a call into a device has not returned, no second call is made into it — the next
+    #                     requests wait their turn, or expire by their own `valid_until`
+    #
+    # And a worker that may no longer write for the unit does not act on it either: a fenced instance, or one
+    # whose lease on the unit is lost, leaves the request for whoever holds the device now.
+    PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
+
     def requests(self, budget: int = 4, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         mine = {str(r["id"]): r for r in self.rows}
-        done: list[dict] = []
+        done: list[dict] = self._performed()             # what calls already in flight have come to
         for key in sorted(self.vars.list(self.SUB.requests_prefix())):
             if len(done) >= budget:
                 break
             it, _ = self.vars.get(key)
             rid = key.rsplit("/", 1)[1]
             row = mine.get(str(it.get("unit", ""))) if it else None
-            if row is None or rid in self.fetched:
-                continue                                 # another worker's device, or one we have done
+            if row is None or rid in self.fetched or any(c["rid"] == rid for c in self._performing.values()):
+                continue                                 # another worker's device, one we have done, or one in flight
+            unit = str(row["id"])
+            if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
+                continue                                 # not mine to act on now: fenced, or the lease is lost
             until = float(it.get("valid_until", 0) or 0)
             if until and now > until:
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
@@ -796,19 +815,51 @@ class VmsWorker(Worker):
             dev = self.device_of_row(row)
             if dev is None:
                 continue                                 # the device is not open yet: ask again next pass
-            try:
-                out = self.perform(dev, row, it)
-            except Exception as e:                       # noqa: BLE001 — the device's word, whatever it is
-                self.fetched.append(rid)                 # a refusal is an answer: do not ask for ever
-                done.append({"request": rid, "unit": row["id"], "error": str(e)})
-                self.commands["refused"] += 1
-                self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=str(e))
-                continue
-            self.fetched.append(rid)
-            done.append({"request": rid, "unit": row["id"], **out})
-            self.commands["performed"] += 1
-            self.observe(row["id"], "command", **out)    # what was done to a device is an event about it
+            if id(dev) in self._performing:
+                continue                                 # a call into this device has not returned: wait your turn
+            call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False}
+
+            def run(call=call, dev=dev):
+                try:
+                    call["out"] = self.perform(dev, call["row"], call["it"])
+                except Exception as e:                   # noqa: BLE001 — the device's word, whatever it is
+                    call["error"] = str(e)
+                call["returned"].set()
+
+            self._performing[id(dev)] = call
+            threading.Thread(target=run, daemon=True).start()
+            call["returned"].wait(self.PERFORM_GRACE)
+            done += self._performed()
         return done
+
+    # What the calls in flight have come to: performed, refused by the device, or — after `PERFORM_TIMEOUT` —
+    # not answered. A call that timed out is answered ONCE and stays in flight until the driver returns: the
+    # device is busy for as long as the driver says it is, whatever we told the requester.
+    def _performed(self) -> list[dict]:
+        done = []
+        for key, call in list(self._performing.items()):
+            rid, row, it = call["rid"], call["row"], call["it"]
+            if call["returned"].is_set():
+                del self._performing[key]
+                if call["answered"]:
+                    continue                             # it came back after we had said it did not answer
+                if "error" in call:
+                    self._refused(rid, row, it, call["error"], done)
+                else:
+                    self.fetched.append(rid)
+                    done.append({"request": rid, "unit": row["id"], **call["out"]})
+                    self.commands["performed"] += 1
+                    self.observe(row["id"], "command", **call["out"])    # what was done to a device is an event about it
+            elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
+                call["answered"] = True
+                self._refused(rid, row, it, "the device did not answer", done)
+        return done
+
+    def _refused(self, rid: str, row: dict, it: dict, why: str, done: list) -> None:
+        self.fetched.append(rid)                         # a refusal is an answer: do not ask for ever
+        done.append({"request": rid, "unit": row["id"], "error": why})
+        self.commands["refused"] += 1
+        self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
 
     # One command against an open device. Two verbs, because two are what an operator points at; a third
     # belongs here and not in a new place. Unknown verbs raise, which the caller turns into a refusal

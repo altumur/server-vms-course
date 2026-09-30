@@ -424,6 +424,7 @@ class Resource:
               "mirrors": {s: sum(len(mirrored_buckets(r, s, self.bucket_seconds)) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
+        self._last_heartbeat = hb
         return hb
 
     # `resources_seen` filtered to heartbeats younger than `lost_after`.
@@ -553,17 +554,38 @@ class Resource:
     # The timer's body, in order: each subsystem's hook (it may index or drop lines), then `retain`, then
     # `relieve` — the promise first, the watermark only for what the promise left behind — then `mirror`;
     # results flattened into one dict (`<sub>.<key>`, `removed`, `space`, `enabled`, `mirrored`, `peers`).
+    #
+    # THE PASS CARRIES ITS OWN PULSE (feedback BE). It runs on the thread that heartbeats, and it reads every
+    # bucket it keeps: on a year of archive it takes longer than `lost_after`, the resource is called silent,
+    # and `redistribute` moves the recordings off a server that is perfectly well. A second thread calling
+    # `heartbeat()` would race the pass for the very state a heartbeat reads — the usage it caches, the volumes
+    # — so what is sent while the pass runs is the LAST heartbeat again, with the time moved on: bytes already
+    # published, and nothing the pass is changing.
+    PULSE_SECONDS = 10.0
+
     def pass_(self) -> dict:
-        out = {}
-        for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
-            out.update({f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
-        out["removed"] = self.retain()
-        self.last_usage, self.usage_at = self.usage(), self.wall()    # the one walk of the pass, not one per heartbeat
-        self._volume_usage = {n: self.usage(n) for n in self.quotas}  # …and the same for the volumes with a ceiling
-        out["usage"] = self.last_usage
-        out.update(self.relieve())
-        out.update(self.mirror())
-        return out
+        done = threading.Event()
+
+        def pulse():
+            while not done.wait(self.PULSE_SECONDS):
+                last = getattr(self, "_last_heartbeat", None)
+                if last is not None:
+                    self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps({**last, "ts": self.wall()}).encode())
+
+        threading.Thread(target=pulse, daemon=True).start()
+        try:
+            out = {}
+            for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
+                out.update({f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
+            out["removed"] = self.retain()
+            self.last_usage, self.usage_at = self.usage(), self.wall()    # the one walk of the pass, not one per heartbeat
+            self._volume_usage = {n: self.usage(n) for n in self.quotas}  # …and the same for the volumes with a ceiling
+            out["usage"] = self.last_usage
+            out.update(self.relieve())
+            out.update(self.mirror())
+            return out
+        finally:
+            done.set()
 
 
 # The resource over HTTP, in a daemon thread. `extra(path, headers) -> (status, bytes[, headers]) | None`

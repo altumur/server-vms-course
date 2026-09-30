@@ -647,6 +647,35 @@ def test_a_query_holds_what_the_answer_can_carry_and_answers_as_before():
         rsrv.shutdown()
 
 
+def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
+    """The pass and the heartbeat share a thread, and the pass reads every bucket it keeps. On a year of archive it
+    outlasts `lost_after`: the resource is called silent and the controller moves the recordings off a healthy
+    server (the platform review; feedback BE). While the pass runs, the last heartbeat goes out again with the
+    time moved on — what was already published, and nothing the pass is changing."""
+    import time
+    box = Box()
+    res, rsrv = _resource_process(box)
+    try:
+        res.PULSE_SECONDS = 0.02
+        first = res.heartbeat()
+
+        class Slow:                                                   # a subsystem's own pass, over a long archive
+            def pass_(self, now):
+                box.wall.advance(100)
+                time.sleep(0.2)
+                return {}
+
+        res.register("slow", Slow())
+        seen = {}
+        mirror = res.mirror
+        res.mirror = lambda: seen.update(resources_seen(box.objects)) or mirror()     # the last step of the pass
+        res.pass_()
+        assert seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()   # fresh, while the pass ran
+        assert {k: v for k, v in seen["srv-1"].items() if k != "ts"} == {k: v for k, v in first.items() if k != "ts"}
+    finally:
+        rsrv.shutdown()
+
+
 def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_same_answer():
     """Up to a day, the candidate files are computed from the window — a name from a time, a stat for whether it
     is there; wider, the epoch's directory is listed. Two ways to find the same files: one answer."""

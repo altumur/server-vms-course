@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 
 import gi
 
@@ -31,7 +32,7 @@ Gst.init(None)
 # assigns in its offer, so packing into RTP belongs to the viewer's branch — see `payload.py`. One
 # payloader here, fixed at one number, could serve exactly one browser and would silently feed every
 # other one packets it throws away.
-SOURCE = "rtspsrc location={url} latency=200 protocols=tcp ! rtph264depay ! h264parse name=p config-interval=-1 ! tee name=t allow-not-linked=true"
+SOURCE = "rtspsrc name=src location={url} latency=200 protocols=tcp ! rtph264depay name=d ! h264parse name=p config-interval=-1 ! tee name=t allow-not-linked=true"
 
 
 # One camera's subscription on the gateway: the pipeline every viewer of that camera branches from. Built once
@@ -41,8 +42,27 @@ class _Source:
         self.pipeline = Gst.parse_launch(SOURCE.format(url=url))
         self.tee = self.pipeline.get_by_name("t")
         self.parse = self.pipeline.get_by_name("p")
+        self.upstream = [self.pipeline.get_by_name(n) for n in ("src", "d", "p")]
+        self.dead = ""
         self.pipeline.set_state(Gst.State.PLAYING)
         self.viewers = 0
+
+    # Is the camera's stream still arriving? Nobody read this pipeline's bus: when the camera moved or its worker
+    # restarted, `rtspsrc` died quietly and the viewers kept a black picture (feedback BF). Asked by the gateway
+    # once a pass. Only what the UPSTREAM half posts counts — `rtspsrc`, the depayloader, the parser, and what
+    # is inside them: a viewer's branch lives in this pipeline too, and one browser's failed connection is not
+    # the camera's. (NOT run against GStreamer here — the box this was written on has none.)
+    def alive(self) -> bool:
+        bus = self.pipeline.get_bus()
+        while not self.dead:
+            msg = bus.pop_filtered(Gst.MessageType.ERROR | Gst.MessageType.EOS)
+            if msg is None:
+                break
+            if msg.type == Gst.MessageType.EOS:
+                self.dead = "the stream ended"
+            elif any(msg.src == e or msg.src.has_as_ancestor(e) for e in self.upstream if e is not None):
+                self.dead = msg.parse_error()[0].message
+        return not self.dead
 
     # What the stream turned OUT to be, read off the caps `h264parse` negotiated — the one place where
     # that is known, as opposed to what the camera's papers claim. "" while a browser can play it, and ""
@@ -62,6 +82,8 @@ class _Source:
 class GstPeer:
     """One viewer: a `queue ! webrtcbin` branch on the camera's tee."""
 
+    DISCONNECTED_SECONDS = 15.0
+
     def __init__(self, upstream):
         self.up = upstream
         if getattr(upstream, "pipeline", None) is None:
@@ -72,6 +94,7 @@ class GstPeer:
         self.queue = self.pay = self.caps = self.webrtc = None
         self.src.viewers += 1
         self._gathered = threading.Event()
+        self._disconnected_at = 0.0
 
     # `queue ! rtph264pay ! capsfilter ! webrtcbin` on the camera's tee, with THIS viewer's number.
     def _build(self, pt: int) -> None:
@@ -132,10 +155,14 @@ class GstPeer:
         if self.webrtc is None:
             return "connecting"
         s = self.webrtc.get_property("connection-state")
-        gone = (GstWebRTC.WebRTCPeerConnectionState.DISCONNECTED, GstWebRTC.WebRTCPeerConnectionState.FAILED,
-                GstWebRTC.WebRTCPeerConnectionState.CLOSED)
-        if s in gone:
+        if s in (GstWebRTC.WebRTCPeerConnectionState.FAILED, GstWebRTC.WebRTCPeerConnectionState.CLOSED):
             return "gone"
+        if s == GstWebRTC.WebRTCPeerConnectionState.DISCONNECTED:
+            # A browser holds `disconnected` for some half a minute before it admits `failed`, and may come back
+            # from it: gone only after DISCONNECTED_SECONDS of it (the product's gateway: fifteen).
+            self._disconnected_at = self._disconnected_at or time.monotonic()
+            return "gone" if time.monotonic() - self._disconnected_at >= self.DISCONNECTED_SECONDS else "connected"
+        self._disconnected_at = 0.0
         return "connected" if s == GstWebRTC.WebRTCPeerConnectionState.CONNECTED else "connecting"
 
     def close(self) -> None:

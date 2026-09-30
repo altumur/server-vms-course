@@ -281,3 +281,92 @@ def test_the_codec_report_is_on_the_peer_the_gateway_asks():
     assert methods["_Source"].count("codec_note") == 1
     assert "codec_note" in methods["GstPeer"] and "state" in methods["GstPeer"]
 
+
+def test_a_camera_that_moved_hangs_up_its_viewers_and_the_subscription_takes_the_new_address():
+    """Where the camera is was read once, when the subscription was made. Its worker restarted the pipeline under
+    a new epoch, or the camera moved: the gateway's source died quietly, the status said `live` at the old
+    address and the viewers had a black picture (the platform review; the product's gateway, feedback BF). Every
+    pass compares `(url, epoch)` with what the holder says now."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        (sid,) = _watched(base, live_ctl, g)
+        peer, before = g.sessions[sid][1], g.upstreams["1"]
+        g.reconcile_once()
+        assert sid in g.sessions and g.resets == 0                     # nothing changed: nothing reopened
+        w.actuator("stop", {"id": 1}); w.reconciler.actual.pop(1, None); w.release("1")
+        w.reconcile_once(); w.heartbeat_once()                         # the worker started it again: epoch 2
+        g.reconcile_once()
+        up = g.upstreams["1"]
+        assert up is not before and up.epoch == 2 and up.reset == "the camera is served elsewhere now"
+        assert sid not in g.sessions and peer.closed and g.resets == 1 and up.idle_since == box.wall()
+        assert g.offer("1", OFFER)[0] in g.sessions                    # the viewer's page connects again: the new source
+    finally:
+        srv.shutdown()
+
+
+def test_a_source_that_died_is_reopened_even_where_the_camera_has_not_moved():
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        (sid,) = _watched(base, live_ctl, g)
+
+        class Source:
+            def __init__(self): self.ok, self.closed = True, False
+            def alive(self): return self.ok
+            def close(self): self.closed = True
+
+        src = g.upstreams["1"].pipeline = Source()
+        g.reconcile_once()
+        assert sid in g.sessions
+        src.ok = False                                                 # rtspsrc posted an error: nobody else would have read it
+        g.reconcile_once()
+        assert sid not in g.sessions and src.closed and g.upstreams["1"].reset == "the source stopped"
+    finally:
+        srv.shutdown()
+
+
+def test_an_answer_is_prepared_outside_the_gateways_lock_with_its_seat_already_taken():
+    """The answer waits for every ICE candidate — up to five seconds — and it was prepared under the lock the pass
+    takes for the leases and the heartbeat, and every other viewer takes to be answered (feedback BE). Now the
+    pass goes on while a viewer is being answered; the seat is taken first, so a burst cannot overfill; and an
+    answer into a subscription the pass has dropped meanwhile closes its peer."""
+    import threading
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1", capacity=1)
+        _watched(base, live_ctl, g, viewers=0)
+        answering, go, peers = threading.Event(), threading.Event(), []
+        factory = g.peer_factory
+
+        class Slow:
+            def __init__(self, up): self.inner = factory(up); self.closed = False; peers.append(self)
+            def answer(self, sdp):
+                answering.set(); go.wait(10)
+                return self.inner.answer(sdp)
+            def state(self): return "connected"
+            def close(self): self.closed = True
+
+        g.peer_factory = Slow
+        out = {}
+        t = threading.Thread(target=lambda: out.update(r=_try(lambda: g.offer("1", OFFER))), daemon=True)
+        t.start()
+        assert answering.wait(5)
+        assert g.reconcile_once() == ["1"] and g.headroom() == 0       # the pass ran, and the seat is taken
+        try:
+            g.offer("1", OFFER); raise AssertionError("the one seat is being answered")
+        except OverflowError:
+            pass
+        g._drop("1")                                                   # …and the pass takes the subscription away
+        go.set(); t.join(5)
+        assert isinstance(out["r"], KeyError) and peers[0].closed and g.sessions == {} and g.answering == 0
+    finally:
+        srv.shutdown()
+
+
+def _try(fn):
+    try:
+        return fn()
+    except Exception as e:                                             # noqa: BLE001
+        return e
+

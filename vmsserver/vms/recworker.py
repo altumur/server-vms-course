@@ -171,6 +171,7 @@ class RecWorker(VmsWorker):
         # the call it swallowed, and starting another behind it every pass would pile up threads that are
         # all waiting on the same dead mount.
         self._promoter: threading.Thread | None = None
+        self._backfiller: threading.Thread | None = None
         self._opener: threading.Thread | None = None     # the one open in flight — a hung one included
         self.promoting_since = 0.0
         self.last_progress = 0.0                     # when a promotion last moved a segment — what tells moving from stuck
@@ -851,7 +852,7 @@ class RecWorker(VmsWorker):
         # nothing: a fetched range would only pile into the spool behind the queue, and its own promote
         # would be one more call waiting on the dead mount, made on this thread.
         if self.backfill_budget and not self.archive_busy():
-            self.backfill(self.backfill_budget)
+            self.backfill_in_background()
 
     # -- backfill: closing our gaps from the device's own archive (Lesson 16) ---------------------------
     # The card exists because the camera kept recording while we could not, so replication is not "copy
@@ -1055,6 +1056,27 @@ class RecWorker(VmsWorker):
     # (Lesson 13): backfill competes with live for the device's uplink, so it gets a ceiling and an hour.
     # Each of this recorder's recordings, from each of its sources in order — the device, then any backup —
     # and a backup recording from none: a backup fetches from nobody.
+    # A fetch is a pipeline on the device's playback door, run to the end of the range: minutes, on a camera's
+    # slow card — and it ran on the loop's thread, where the leases are renewed and the heartbeat goes out. A card
+    # that took longer than the lease fenced the recorder and stopped the live recording of every camera it had,
+    # to fetch an hour of one (the platform review; feedback BE). So it runs where `promote_closed` runs — on a
+    # thread of its own, one at a time, the pass waiting `BACKFILL_WAIT` for it and no longer.
+    BACKFILL_WAIT = 0.5
+
+    def backfill_in_background(self) -> None:
+        if self._backfiller is not None and self._backfiller.is_alive():
+            return                                       # one range at a time: the device has one uplink
+
+        def fetch():
+            try:
+                self.backfill(self.backfill_budget)
+            except Exception:                            # noqa: BLE001 — a thread has nobody to raise to
+                logging.exception("%s: backfill failed", self.name)
+
+        self._backfiller = threading.Thread(target=fetch, name=f"{self.name}-backfill", daemon=True)
+        self._backfiller.start()
+        self._backfiller.join(timeout=self.BACKFILL_WAIT)
+
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
         if not (force or self.in_window(now)):

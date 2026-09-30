@@ -264,10 +264,18 @@ class GstRecActuator(GstActuator):
         p = Gst.parse_launch(REC_RANGE_DESC.format(source=source, cam=int(cam), epoch=epoch, spool=spool,
                                                    archive=self.archive, seg=seg))
         p.set_state(Gst.State.PLAYING)
-        msg = p.get_bus().timed_pop_filtered(Gst.CLOCK_TIME_NONE, Gst.MessageType.EOS | Gst.MessageType.ERROR)
+        # A deadline, not for ever (feedback BE): a device that stops answering in the middle of a range would keep
+        # this call — and whoever waits for it — as long as the TCP connection cared to. Generous, because a card
+        # is slow: the length of the range, and a minute, and never less than five. (Not run against GStreamer
+        # here.)
+        deadline = max(300.0, (t1 - t0) + 60.0)
+        msg = p.get_bus().timed_pop_filtered(int(deadline * Gst.SECOND), Gst.MessageType.EOS | Gst.MessageType.ERROR)
         p.send_event(Gst.Event.new_eos())                # finalize whatever fragment is open
         p.set_state(Gst.State.NULL)
         self.range_error = ""
+        if msg is None:
+            log.error("camera %s: backfill %s-%s: the device did not finish the range in %.0f s", cam, t0, t1, deadline)
+            self.range_error = f"the device did not finish the range in {deadline:.0f} s"
         if msg is not None and msg.type == Gst.MessageType.ERROR:
             log.error("camera %s: backfill %s-%s: %s", cam, t0, t1, msg.parse_error()[0])
             # Said, not only logged: a range that failed half way is not a range the source does not have,

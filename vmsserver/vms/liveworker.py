@@ -99,6 +99,8 @@ class LiveWorker(Worker):
         self.upstreams: dict[str, Upstream] = {}
         self.sessions: dict[str, tuple[str, object]] = {}          # session id -> (cam, peer)
         self.session_at: dict[str, float] = {}                     # session id -> when it was offered
+        self.answering = 0                                          # offers being answered: seats held, not yet sessions
+        self.resets = 0                                             # subscriptions reopened because the camera moved or the source died
         self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
         self.lock = threading.Lock()
@@ -128,6 +130,7 @@ class LiveWorker(Worker):
                 self.upstreams[cam].idle_since = now
             for cam in set(self.upstreams) - wanted:                # taken away (rebalanced, deleted): drop viewers, close the source
                 self._drop(cam)
+            self._recheck(now)
             self._sweep(now)
             # the grace period: an idle fan-out is deleted by the gateway itself — demand-created, demand-deleted
             for cam, up in list(self.upstreams.items()):
@@ -144,6 +147,32 @@ class LiveWorker(Worker):
     # everybody after (the product's gateway, feedback BC). So every pass asks each peer: gone, or still
     # connecting `CONNECT_SECONDS` after its offer — closed, as if it had hung up.
     CONNECT_SECONDS = 30.0
+
+    # Where the camera is was read ONCE, when the subscription was made. The camera moved to another worker, or
+    # its worker restarted the pipeline under a new epoch: the source this gateway had opened died quietly, the
+    # status went on saying `live` with the old address, and the viewers had a black picture — new ones too,
+    # joining the same dead source (the platform review; the product's gateway, feedback BF). Every pass
+    # compares `(url, epoch)` with what the holder's heartbeat says NOW, and asks the source whether it is
+    # alive. Moved, or dead: the viewers are hung up on — their page connects again by itself — and the
+    # subscription takes the new address; the first viewer back opens the source where the camera is.
+    def _recheck(self, now: float) -> None:
+        for cam, up in list(self.upstreams.items()):
+            src = self.rtp_source(cam)
+            alive = getattr(getattr(up, "pipeline", None), "alive", None)
+            dead = callable(alive) and not alive()
+            if src is None or ((src[1], src[2]) == (up.url, up.epoch) and not dead):
+                continue                                            # nothing known against it: leave it be
+            why = "the source stopped" if (src[1], src[2]) == (up.url, up.epoch) else "the camera is served elsewhere now"
+            for sid, (c, _) in list(self.sessions.items()):
+                if c == cam:
+                    self._close(sid, now)
+            if getattr(up, "pipeline", None) is not None:
+                up.pipeline.close()
+            fresh = Upstream(cam, *src)
+            fresh.idle_since, fresh.reset = now, why
+            self.upstreams[cam] = fresh
+            self.resets += 1
+            log.warning("%s: stream %s reopened: %s (%s, epoch %s)", self.name, cam, why, src[1], src[2])
 
     def _sweep(self, now: float) -> None:
         for sid, (cam, peer) in list(self.sessions.items()):
@@ -174,18 +203,30 @@ class LiveWorker(Worker):
     # -- WHEP ----------------------------------------------------------------------------------------
     def offer(self, cam: str, sdp: str) -> tuple[str, str]:
         """A viewer's offer: refuse if the camera is not this gateway's or the gateway is full; else a session."""
+        # The answer is prepared OUTSIDE the gateway's lock (feedback BE): it waits for every ICE candidate, up to
+        # five seconds, and the same lock is taken by the pass — the leases, the heartbeat — and by every other
+        # viewer. The seat is taken before the answer, so a burst of offers cannot overfill the gateway; and
+        # after it the subscription is looked at again — the pass may have dropped or reopened it meanwhile.
         with self.lock:
             up = self.upstreams.get(str(cam))
             if up is None:
                 raise KeyError(cam)
-            if len(self.sessions) >= self.capacity:
+            if len(self.sessions) + self.answering >= self.capacity:
                 raise OverflowError("full")
+            self.answering += 1
             peer = self.peer_factory(up)
-            try:
-                answer = peer.answer(sdp)
-            except Exception:
-                peer.close()                                        # an offer that failed leaves no branch on the tee
-                raise
+        try:
+            answer = peer.answer(sdp)
+        except Exception:
+            with self.lock:
+                self.answering -= 1
+            peer.close()                                            # an offer that failed leaves no branch on the tee
+            raise
+        with self.lock:
+            self.answering -= 1
+            if self.upstreams.get(str(cam)) is not up:
+                peer.close()                                        # answered into a subscription that is gone
+                raise KeyError(cam)
             # The profile is known only once something has flowed, so the FIRST viewer may well arrive
             # before it is: ask after the answer, and ask every time.
             note = getattr(peer, "codec_note", None)
@@ -206,13 +247,13 @@ class LiveWorker(Worker):
 
     # -- what it reports -----------------------------------------------------------------------------
     def headroom(self) -> int:
-        return max(0, self.capacity - len(self.sessions))
+        return max(0, self.capacity - len(self.sessions) - self.answering)
 
     def heartbeat_once(self) -> None:
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
-                       swept=self.swept)
+                       swept=self.swept, resets=self.resets)
 
     def metrics_text(self) -> str:
         return (f"# TYPE live_sessions gauge\nlive_sessions {len(self.sessions)}\n"
