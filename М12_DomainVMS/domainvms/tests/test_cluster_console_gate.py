@@ -163,3 +163,64 @@ def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
         assert code == 200 and cookie.startswith("w2c_token=; ") and "Max-Age=0" in cookie
     finally:
         srv.shutdown()
+
+
+def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_every_use_is_an_alarm():
+    """Lesson 4, step 7, at a cluster's door. The holder is away and every token has run out. The one local
+    account: the domain set its password, the agent carried the HASH home, the console checks it here and opens
+    a session in its own memory — no token is made, so none can be taken from the store. Every attempt is an
+    alarm, the refused ones too; every request under it is one."""
+    import itertools
+    from domain.agent import BREAK_GLASS_PATH, PER_CLUSTER, DomainPublisher
+    from domain.identity import _hash
+    from w2cplatform.eventdatabase import EventIndex
+    assert BREAK_GLASS_PATH in PER_CLUSTER                                            # carried home by the agent like the grants
+    home = FakeVariables()
+    DomainPublisher(home).publish_break_glass("south", _hash("glass-for-south"), 1000.0)
+    assert home.get(f"{BREAK_GLASS_PATH}/south")[0]["pwhash"].count(":") == 1          # a hash, never the password
+
+    clk = Clock(1_757_500_000.0)
+    vars_ = FakeVariables()
+    archive = tempfile.mkdtemp(prefix="glass-")
+    from vms.archive import ArchiveResource
+    ctl = VmsController(vars_, FsObjectStore(tempfile.mkdtemp(prefix="gate-")), wall=clk)
+    srv = make_console(ctl, ArchiveResource(tempfile.mkdtemp(), archive, wall=clk), clk).serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    keys = itertools.count(1)
+
+    def raw(method, path, body=None, headers=None):
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method,
+                                     headers={"Content-Type": "application/json", "Idempotency-Key": f"g{next(keys)}", **(headers or {})})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.loads(r.read() or b"null"), r.headers.get("Set-Cookie", "")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}"), e.headers.get("Set-Cookie", "")
+
+    def alarms():
+        return [(e["kind"], e["user"]) for e in EventIndex(archive, "srv-1", wall=clk).query(0, clk() + 1, subsystem="audit", cls="alarm")["events"]]
+
+    try:
+        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "x"}})[1]["gated"] is False   # open: nothing to break into
+        vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
+        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "x"}})[0] == 403   # no account for this cluster
+        vars_.put(BREAK_GLASS_PATH, home.get(f"{BREAK_GLASS_PATH}/south")[0])            # what the agent carried home
+        assert raw("POST", "/session", {"glass": {"who": "", "why": "", "password": "glass-for-south"}})[0] == 400      # who and why are said
+        assert raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "wrong"}})[0] == 401
+        code, body, cookie = raw("POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": "glass-for-south"}})
+        assert code == 200 and body["user"] == "break-glass(carol)" and body["until"] == clk() + 900
+        assert cookie.startswith("w2c_glass=") and "HttpOnly" in cookie and "SameSite=Strict" in cookie
+        me = {"Cookie": cookie.split(";")[0]}
+        assert raw("GET", "/session", headers=me)[1]["user"] == "break-glass(carol)"
+        assert raw("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, me)[0] == 201                          # it is let in…
+        refused = ("access.break_glass.refused", "break-glass(carol)")                                             # no account here, then a wrong password
+        assert alarms() == [refused, refused, ("access.break_glass.opened", "break-glass(carol)"),
+                            ("access.break_glass", "break-glass(carol)")]                                            # …and every step is said
+        assert raw("GET", "/cameras", {"Cookie": "w2c_glass=guessed"})[0] == 401                                      # a session is this process's, not a guess
+        clk.advance(901)
+        assert raw("GET", "/cameras", headers=me)[0] == 401                                                          # fifteen minutes, like a token
+        code, body, cookie = raw("POST", "/session", {"glass": {"who": "carol", "why": "still down", "password": "glass-for-south"}})
+        me = {"Cookie": cookie.split(";")[0]}
+        assert raw("DELETE", "/session", headers=me)[0] == 200 and raw("GET", "/cameras", headers=me)[0] == 401     # closed: gone from memory
+    finally:
+        srv.shutdown()

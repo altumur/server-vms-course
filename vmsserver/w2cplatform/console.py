@@ -105,7 +105,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
-from .access import COOKIE, OPEN_ROUTES, Denied, Gate, session_cookie, token_of
+from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, session_cookie, token_of
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -707,7 +707,7 @@ class SpecConsole:
         if access is None:
             return None
         try:
-            payload = access.who(token_of(h.headers) or "")
+            payload = self.gate.payload(h.headers, access)
         except Denied:
             return lambda unit, labels: False
         return lambda unit, labels: access.may(payload, "view", unit, labels)
@@ -835,13 +835,26 @@ class SpecConsole:
             return h._send(e.status, {"detail": e.why, "error": "denied"})
         login = os.environ.get("LOGIN_URL") or None
         if method == "DELETE":
-            h._extra_headers = (("Set-Cookie", session_cookie("", 0)),)
+            self.gate.close_glass(h.headers)
+            h._extra_headers = (("Set-Cookie", session_cookie("", 0)), ("Set-Cookie", session_cookie("", 0).replace(COOKIE, GLASS_COOKIE, 1)))
             return h._send(200, {"gated": access is not None, "user": None})
         if access is None:
             return h._send(200, {"gated": False, "user": h.headers.get("X-User", "operator"), "login": None})
-        token = (h._body().get("token") if method == "POST" else token_of(h.headers)) or ""
+        secure = (h.headers.get("X-Forwarded-Proto", "") == "https")
+        body = h._body() if method == "POST" else {}
+        if method == "POST" and isinstance(body.get("glass"), dict):
+            # The emergency entry (`Gate.open_glass`): who, why and the one local password. What comes back is
+            # a session in this process's memory, carried by a cookie of its own.
+            g = body["glass"]
+            try:
+                sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")))
+            except Denied as e:
+                return h._send(e.status, {"detail": e.why, "error": "denied"})
+            h._extra_headers = (("Set-Cookie", session_cookie(sid, float(payload.get("exp", 0)) - self.wall(), secure).replace(COOKIE, GLASS_COOKIE, 1)),)
+            return h._send(200, {"gated": True, "user": f"break-glass({payload.get('who')})", "until": payload.get("exp"), "login": login})
+        token = (body.get("token") if method == "POST" else token_of(h.headers)) or ""
         try:
-            payload = access.who(token) if token else None
+            payload = access.who(token) if token else (self.gate.payload(h.headers, access) if method == "GET" else None)
         except Denied as e:
             if method == "POST":
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
@@ -849,9 +862,9 @@ class SpecConsole:
         if payload is None:
             return h._send(200 if method == "GET" else 400, {"gated": True, "user": None, "login": login})
         if method == "POST":
-            secure = (h.headers.get("X-Forwarded-Proto", "") == "https")
             h._extra_headers = (("Set-Cookie", session_cookie(token, float(payload.get("exp", 0)) - self.wall(), secure)),)
-        return h._send(200, {"gated": True, "user": payload.get("sub"), "until": payload.get("exp"), "login": login})
+        user = f"break-glass({payload.get('who')})" if payload.get("via") == "break-glass" else payload.get("sub")
+        return h._send(200, {"gated": True, "user": user, "until": payload.get("exp"), "login": login})
 
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount

@@ -34,6 +34,21 @@ class ClusterAccess:
         except TokenError as e:
             raise Denied(401, f"token refused: {e}") from None
 
+    # The emergency entry, checked HERE: the hash the agent carried (`domain/break_glass`), scrypt, and a
+    # payload the gate keeps in memory for fifteen minutes. The domain is not asked — it is away, which is why
+    # somebody is breaking the glass. The gate alarms on every attempt; the domain rotates the password when it
+    # sees them.
+    def glass(self, who: str, why: str, password: str) -> dict:
+        from .agent import BREAK_GLASS_PATH
+        from .identity import TOKEN_LIFETIME, _check
+        items, _ = self.trust.vars.get(BREAK_GLASS_PATH)
+        if not items or not items.get("pwhash"):
+            raise Denied(403, "this cluster has no emergency account")
+        if not _check(password, items["pwhash"]):
+            raise Denied(401, "break-glass: bad password")
+        now = self.wall()
+        return {"sub": "break-glass", "via": "break-glass", "who": who, "why": why, "iat": now, "exp": now + TOKEN_LIFETIME}
+
     def _grants(self) -> ClusterGrants:
         g = ClusterGrants("", now=self.wall)
         g.renew_from_domain(self.trust.grants())

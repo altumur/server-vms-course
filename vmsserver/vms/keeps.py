@@ -52,7 +52,7 @@ class Keep:
 
     @classmethod
     def from_items(cls, id_: str, d: dict) -> "Keep":
-        return cls(id_, str(d.get("cam", "")), float(d.get("from", 0) or 0), float(d.get("to", 0) or 0),
+        return cls(id_, str(d.get("cam", "")), float(d.get("from", d.get("since", 0)) or 0), float(d.get("to", d.get("until", 0)) or 0),   # `since`/`until`: rows written before the rename (feedback BV)
                    str(d.get("note", "")), str(d.get("by", "")), float(d.get("at", 0) or 0),
                    tuple(str(r) for r in _names(d.get("recordings"))))
 

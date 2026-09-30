@@ -38,7 +38,10 @@ UPSTREAM_PATH = "domain/upstream"
 ASKS_PATH = "domain/asks"
 # …and, for a camera nobody records, the ingest it polls all the same — for asks, with no stream to push.
 POLL_PATH = "domain/poll"
-PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH, LDEVID_PATH)
+# The emergency account's password HASH for one cluster (Lesson 4, step 7): set at the domain, carried home, checked
+# at the cluster's console with the domain away — which is the only time it is for.
+BREAK_GLASS_PATH = "domain/break_glass"
+PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH, LDEVID_PATH, BREAK_GLASS_PATH)
 
 
 class DomainPublisher:
@@ -56,6 +59,13 @@ class DomainPublisher:
     def publish_revoked(self, rl: RevocationList) -> None:
         _, idx = self.vars.get(REVOKED_PATH)
         self.vars.put(REVOKED_PATH, rl.to_items(), cas=idx)
+
+    def publish_break_glass(self, cluster: str, pwhash: str, now: float) -> None:
+        """The one local account of `cluster`: its password's hash, never the password. Rotating it is
+        publishing a new one — which the domain does when an emergency entry has been used."""
+        path = f"{BREAK_GLASS_PATH}/{cluster}"
+        _, idx = self.vars.get(path)
+        self.vars.put(path, {"pwhash": pwhash, "set_at": now}, cas=idx)
 
     def publish_grants(self, cluster: str, grants: list) -> None:
         """The grants for one cluster, under domain/grants/<cluster> in the

@@ -197,3 +197,14 @@ def test_the_resource_says_what_its_policies_deleted_and_why():
     assert json.loads(door("/deletions?unit=8", {})[1])["deletions"] == []
     assert len(json.loads(door("/deletions?unit=7&limit=1", {})[1])["deletions"]) == 1
     assert door("/deletions?limit=many", {})[0] == 400
+
+
+def test_a_keep_written_before_its_fields_were_renamed_still_holds():
+    """`since`/`until` became `from`/`to` (feedback BQ). A row written before that, read by the new names only,
+    would hold nothing — an interval from 0 to 0 — and the footage would go by its days, silently. It is read by
+    the old names when the new ones are absent (the product's question, feedback BV)."""
+    box = Box()
+    box.vars.put("rec/keeps/7-100-200", {"cam": "7", "since": "100.0", "until": "200.0", "note": "", "by": "anna", "at": "50", "recordings": '["7"]'})
+    [k] = keeps.declared(box.vars)
+    assert (k.since, k.until) == (100.0, 200.0) and keeps.spans_of([k], "7") == [(100.0, 200.0)]
+

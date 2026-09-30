@@ -41,6 +41,7 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 RANK = {"view": 0, "edit": 1, "admin": 2}
 OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
 COOKIE = "w2c_token"
+GLASS_COOKIE = "w2c_glass"            # an emergency session: this console's own, in its memory, never a token
 log = logging.getLogger("w2cplatform.access")
 
 
@@ -92,9 +93,24 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
             + ("; Secure" if secure else ""))
 
 
+def cookie(headers, name: str) -> str | None:
+    for part in (headers.get("Cookie", "") or "").split(";"):
+        k, _, v = part.strip().partition("=")
+        if k == name and v:
+            return v
+    return None
+
+
 class Gate:
     """One console's gate. `impl` pins an `Access` (tests, or a process that builds its own); without it the
     gate looks in the cluster's store on every request — a cluster may join a domain while a console runs."""
+
+    # EMERGENCY SESSIONS (М12 Lesson 4, step 7; the product's question 7). The holder is away, the agent cannot
+    # renew, the operator's token ran out an hour ago, and somebody has to get in. The one local account: its
+    # password's HASH is carried into this cluster's store by the agent, the check is local, and what it opens is
+    # a session held in THIS process's memory — no token, so nothing to steal from the store and nothing that
+    # outlives the console. Shared by every console of the process (a mount's gate is another object).
+    _glass: dict = {}
 
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
@@ -124,17 +140,54 @@ class Gate:
                                   f"verify a token ({name}: {e}): it admits nobody") from None
         return self._loaded
 
+    # The caller's payload: from a token, or from an emergency session of this process. `Denied` if neither.
+    def payload(self, headers, access: Access) -> dict:
+        sid = cookie(headers, GLASS_COOKIE)
+        if sid:
+            held = self._glass.get(sid)
+            if held is not None and float(held.get("exp", 0)) > self.wall():
+                return held
+            self._glass.pop(sid, None)
+        token = token_of(headers)
+        if not token:
+            raise Denied(401, "this console asks who is calling: send the domain's token (Authorization: Bearer …)")
+        return access.who(token)
+
+    # Open an emergency session: `(session id, payload)`. Every attempt is an alarm, the refused ones too — the
+    # account exists to be used rarely and seen always.
+    def open_glass(self, who: str, why: str, password: str) -> tuple[str, dict]:
+        import secrets
+        from .events import ALARM
+        access = self.access()
+        if access is None:
+            raise Denied(400, "this console is open: there is nothing to break into")
+        if not who.strip() or not why.strip():
+            raise Denied(400, "an emergency entry says who is entering and why")
+        if not hasattr(access, "glass"):
+            raise Denied(501, "this cluster's access has no emergency account")
+        try:
+            payload = access.glass(who, why, password)
+        except Denied:
+            if self.journal is not None:
+                self.journal().say("access.break_glass.refused", cls=ALARM, user=f"break-glass({who})", why=why)
+            raise
+        sid = secrets.token_urlsafe(24)
+        self._glass[sid] = payload
+        if self.journal is not None:
+            self.journal().say("access.break_glass.opened", cls=ALARM, user=f"break-glass({who})", why=why, until=payload.get("exp"))
+        return sid, payload
+
+    def close_glass(self, headers) -> None:
+        self._glass.pop(cookie(headers, GLASS_COOKIE) or "", None)
+
     # The name to act under — or `Denied`. With no key set: whatever `X-User` says, as before.
     def admit(self, headers, capability: str, unit: str | None = None, labels: list | None = None) -> str:
         access = self.access()
         if access is None:
             return headers.get("X-User", "operator")
-        token = token_of(headers)
-        if not token:
-            raise Denied(401, "this console asks who is calling: send the domain's token (Authorization: Bearer …)")
-        if capability != "view" and from_cookie(headers) and cross_site(headers):
+        if capability != "view" and (from_cookie(headers) or cookie(headers, GLASS_COOKIE)) and cross_site(headers):
             raise Denied(403, "a request that acts came from another site's page: refused")
-        payload = access.who(token)
+        payload = self.payload(headers, access)
         name = str(payload.get("sub", ""))
         if payload.get("via") == "break-glass":          # the one local account (М12 Lesson 4): every use is an alarm
             name = f"break-glass({payload.get('who', '?')})"

@@ -167,6 +167,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
     <p id="gatenote" style="color:var(--muted); font-size:13px;"></p>
     <div id="byname"><input id="su" placeholder="user" autocomplete="username"><br><input id="sp" type="password" placeholder="password" autocomplete="current-password"></div>
     <details id="bytoken"><summary>I have a token</summary><textarea id="st" rows="4" style="width:100%" placeholder="the domain's token"></textarea></details>
+    <details id="byglass"><summary>Emergency access (the domain is away)</summary><input id="gw" placeholder="who you are"><br><input id="gy" placeholder="why"><br><input id="gp" type="password" placeholder="emergency password"><br><small>every use is an alarm</small></details>
     <button>Sign in</button> <span id="gateerr" class="err"></span>
   </form>
 </div>
@@ -933,6 +934,12 @@ async function session() {
   $('#signin').onsubmit = async e => {
     e.preventDefault(); $('#gateerr').textContent = '';
     try {
+      if ($('#byglass').open) {
+        const r = await fetch('/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ glass: { who: $('#gw').value, why: $('#gy').value, password: $('#gp').value } }) });
+        $('#gp').value = '';
+        if (!r.ok) throw new Error((await r.json()).detail || 'refused');
+        session(); return;
+      }
       let token = $('#st').value.trim();
       if (!token) {
         const r = await fetch(s.login.replace(/\/$/, '') + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('#su').value, password: $('#sp').value }) });
