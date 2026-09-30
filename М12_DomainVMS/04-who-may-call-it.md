@@ -135,6 +135,33 @@ def verifier(token) -> str:
 
 и ответы консоли перестают говорить `"authenticated": false`. Консоль домена проверяет *токен*; о *праве* решает консоль **кластера-владельца**, когда приходит пересланная правка, — по своим Variables, потому что консоль домена тоже не переживает недоступность домена, и проверка прав не должна жить в ней. Шлюз живого видео (урок 3) делает то же самое: ретранслирует, а решает авторизатор кластера на точке входа воркера.
 
+**И консоль кластера — наконец.** Всё, что выше, долго оставалось обещанием: консоль кластера из М10 принимала `X-User` и не спрашивала никого. Теперь у неё есть ворота (М10A, урок 15, шаг 12а), и они задают два вопроса, на которые отвечает `domain/access.py` — целиком из хранилища самого кластера:
+
+```python
+class ClusterAccess:
+    def who(self, token: str) -> dict:
+        keys = self.trust.keyset()
+        if keys is None:
+            raise Denied(503, "the key set has gone from this cluster's store: nobody can be checked")
+        try:
+            return verify(token, keys, self.trust.revoked(), now=self.wall())
+        except TokenError as e:
+            raise Denied(401, f"token refused: {e}") from None
+
+    def may(self, payload: dict, capability: str, unit: str | None, labels: list) -> bool:
+        if payload.get("via") == "break-glass":              # the one local account: admitted, and alarmed by the gate
+            return True
+        subject, grants, now = str(payload.get("sub", "")), self._grants(), self.wall()
+        if unit is None and capability == "view":
+            return any(s == subject and now < until for (s, *_), until in grants.grants.items())
+        camera = int(unit) if unit is not None and str(unit).isdigit() else unit
+        return any(grants.may(subject, c, camera, now, labels=labels) for c, r in RANK.items() if r >= RANK[capability])
+```
+
+Ворота включаются сами: в хранилище кластера появился набор ключей — значит, кластер в домене, и консоль начинает спрашивать. Ни одного обращения к домену: отрезанный кластер пускает тех, у кого токен не истёк и право не истекло, и никого больше.
+
+**Право на метки.** Кроме «на камеру» и «на все камеры» право бывает «на камеры с такими метками» — первый этаж без права на каждую камеру (область из предложения продукта). В строке прав это третий вид третьего поля: `bob|edit|labels:east,ground`. Одно правило, которое стоило теста: право с метками покрывает камеру, несущую **все** его метки, и никогда не значит «все камеры» — спрошенное о камере без меток, оно не совпадает.
+
 ## Шаг 7 — Честный остаток: аварийный доступ
 
 Алиса на площадке, канал лежит, её токен истёк час назад. Никакой проект этот случай не уберёт. Настоящие продукты поставляют локальную аварийную учётку, и она возвращает ровно тот хеш пароля, который этот урок убрал. Защитимая версия — `BreakGlass`: **одна** учётка, аудит каждого использования (успеха *и* попытки), тревога и смена после, — и модуль, который говорит это вслух, а не делает вид, что у чистого проекта нет края.
