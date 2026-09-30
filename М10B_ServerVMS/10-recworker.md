@@ -425,8 +425,10 @@ class RecWorker(VmsWorker):
         self.promote_in_background()                     # its own thread, waited on for PROMOTE_WAIT and no more
         self.watch_promotion()                           # a promotion running past PROMOTE_STUCK is said
         if self.backfill_budget and not self.archive_busy():
-            self.backfill(self.backfill_budget)
+            self.backfill_in_background()                # its own thread too: a range from a slow card is minutes
 ```
+
+**Дозагрузка — тоже в своём потоке.** Выборка диапазона — это конвейер на двери воспроизведения устройства, идущий до конца диапазона: минуты на медленной карте камеры. Она шла в потоке цикла, где продлеваются аренды и уходит heartbeat, и карта медленнее аренды отсекала рекордер и останавливала живую запись всех его камер ради часа одной (ревью платформы, блокер 3; обратная связь BE). Теперь она идёт там же, где перенос из спула: в своём потоке, по одному диапазону, и проход ждёт её полсекунды (`BACKFILL_WAIT`), не дольше. А у самого конвейера выборки появился срок — длина диапазона плюс минута, не меньше пяти минут: раньше он ждал конца без срока.
 
 Второе отличие от воркера.
 
