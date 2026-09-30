@@ -78,7 +78,21 @@ def main() -> None:
         def _send(self, status, body):
             raw = json.dumps(body).encode()
             self.send_response(status); self.send_header("Content-Type", "application/json")
+            self._cors()
             self.send_header("Content-Length", str(len(raw))); self.end_headers(); self.wfile.write(raw)
+
+        # A cluster console's page logs a person in HERE, from its own origin (`w2cplatform/console.html`): the
+        # password goes to the signer and only the token goes back to the console. So the login door answers a
+        # page on another origin. Any origin: what the door gives is a token for credentials the person typed,
+        # and it gives the same to `curl`; it sets no cookie and reads none, so there is nothing of this origin
+        # for another site's page to ride on.
+        def _cors(self):
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+
+        def do_OPTIONS(self):
+            self.send_response(204); self._cors(); self.send_header("Content-Length", "0"); self.end_headers()
 
         def do_GET(self):
             if self.path == "/keys":

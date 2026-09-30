@@ -105,7 +105,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
-from .access import OPEN_ROUTES, Denied, Gate
+from .access import COOKIE, OPEN_ROUTES, Denied, Gate, session_cookie, token_of
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -224,6 +224,9 @@ class SendMixin:
     def _send(self, status, body, raw=False):
         data = body.encode() if raw else json.dumps(body).encode()
         self.send_response(status); self.send_header("Content-Type", "text/plain" if raw else "application/json")
+        for k, v in getattr(self, "_extra_headers", ()):                 # a cookie, set by `SpecConsole.session`
+            self.send_header(k, v)
+        self._extra_headers = ()
         self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
 
     def _body(self):
@@ -690,6 +693,23 @@ class SpecConsole:
     def _uid(self, path):
         return self.spec.parse_id(path.rsplit("/", 1)[1])
 
+    # What a gated caller may LOOK at: `(unit, labels) -> bool`, or None when this console is open. A list is
+    # not a route that names a unit, so the gate lets in anybody with any grant — and the list then shows them
+    # only what their grants cover. `"*"` asks about no unit in particular: only a grant on the whole cluster
+    # answers yes.
+    def _visible(self, h):
+        try:
+            access = self.gate.access()
+        except Denied:
+            return lambda unit, labels: False
+        if access is None:
+            return None
+        try:
+            payload = access.who(token_of(h.headers) or "")
+        except Denied:
+            return lambda unit, labels: False
+        return lambda unit, labels: access.may(payload, "view", unit, labels)
+
     # What a route needs: `(capability, unit, labels)`.
     #
     #   view    every GET, and whatever a subsystem says changes nothing though it is a POST (`VIEW_POSTS` —
@@ -782,11 +802,48 @@ class SpecConsole:
         log.error("%s: a write failed: %s", self.spec.name, e)
         return 500, {"detail": str(e), "error": "the write failed"}
 
+    # THE DOOR IN: `/session`. The gate asks for a token; this is how a person's BROWSER comes to carry one.
+    #
+    #   GET     is this console gated, who am I here, and where does one log in (`LOGIN_URL` — the domain's
+    #           signer; a console issues no tokens and keeps no passwords, М12 Lesson 4)
+    #   POST    `{token}` — checked exactly as the gate would check it, and set as a cookie the page's script
+    #           cannot read (`access.session_cookie`), for as long as the token lives
+    #   DELETE  the cookie goes
+    #
+    # The password never comes here. The page sends it to the domain's login door and brings back only the
+    # token: N consoles that never see a password are N places it cannot be taken from.
+    def session(self, h, method: str) -> None:
+        try:
+            access = self.gate.access()
+        except Denied as e:
+            return h._send(e.status, {"detail": e.why, "error": "denied"})
+        login = os.environ.get("LOGIN_URL") or None
+        if method == "DELETE":
+            h._extra_headers = (("Set-Cookie", session_cookie("", 0)),)
+            return h._send(200, {"gated": access is not None, "user": None})
+        if access is None:
+            return h._send(200, {"gated": False, "user": h.headers.get("X-User", "operator"), "login": None})
+        token = (h._body().get("token") if method == "POST" else token_of(h.headers)) or ""
+        try:
+            payload = access.who(token) if token else None
+        except Denied as e:
+            if method == "POST":
+                return h._send(e.status, {"detail": e.why, "error": "denied"})
+            payload = None                               # a cookie that has expired: not logged in, and not an error
+        if payload is None:
+            return h._send(200 if method == "GET" else 400, {"gated": True, "user": None, "login": login})
+        if method == "POST":
+            secure = (h.headers.get("X-Forwarded-Proto", "") == "https")
+            h._extra_headers = (("Set-Cookie", session_cookie(token, float(payload.get("exp", 0)) - self.wall(), secure)),)
+        return h._send(200, {"gated": True, "user": payload.get("sub"), "until": payload.get("exp"), "login": login})
+
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
         rows_path = "/" + spec.rows
+        if path == "/session":
+            return self.session(h, method)
         if path not in OPEN_ROUTES:                      # the gate: open while this cluster has no key set, shut when it cannot check
             try:
                 self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path)))
@@ -798,7 +855,13 @@ class SpecConsole:
             if path == "/spec":
                 return h._send(200, con.describe())
             if path == rows_path:
-                return h._send(200, {"rows": ctl.read_model(con.lost_after), "configured": mask_secrets(ctl.units())})
+                rows, configured = ctl.read_model(con.lost_after), mask_secrets(ctl.units())
+                sees = self._visible(h)
+                if sees is not None:                     # gated: the list is what THIS caller may look at, not the cluster's
+                    ok = {str(r["id"]) for r in ctl.units() if sees(str(r.get("cam") or r["id"]), list(r.get("labels") or []))}
+                    rows = [r for r in rows if str(r.get("id")) in ok]
+                    configured = [r for r in configured if str(r.get("id")) in ok]
+                return h._send(200, {"rows": rows, "configured": configured})
             if path.startswith("/where/"):
                 uid = self._uid(path); pl = ctl.placement(uid)
                 return h._send(200 if pl else 404, {"worker": pl.worker if pl else None, "reason": pl.reason if pl else None,
@@ -829,6 +892,17 @@ class SpecConsole:
                                           limit=min(int(q.get("limit", 1000)), MAX_LIMIT),
                                           epoch_policy=con.epoch_policy, keep=q.get("keep", "newest"),
                                           cls=q.get("class"), by=q.get("by", "t"))
+                    sees = self._visible(h)
+                    if sees is not None:                 # …and so are the events: a unit's, to whoever may view that unit;
+                        known: dict = {}                 # what names no unit — the journal — to whoever may view the whole cluster
+
+                        def may_see(e):
+                            unit = "*" if e.get("cam") is None else str(e["cam"])
+                            if unit not in known:
+                                row = None if unit == "*" else ctl.unit(spec.parse_id(unit)) if spec.rows and "cam" not in (spec.fields or {}) else None
+                                known[unit] = sees(unit, list((row or {}).get("labels") or []))
+                            return known[unit]
+                        rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
                     return h._send(200, con.timeline(rep, t0, t1))
                 except ValueError as e:
                     return h._send(400, {"error": str(e)})

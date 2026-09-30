@@ -1,0 +1,15 @@
+# deploy/Containerfile — `vms/domainvms:latest`: М11's image plus the `domain` package and what it signs with.
+#
+# Build order: М10's image, then М11's, then this one, from the `domainvms/` module directory:
+#   podman build -t vms/domainvms:latest -f deploy/Containerfile .
+#
+# Everything the domain runs is in it — the agent, the signer, the domain's console, the gateway — AND it is
+# the image a CLUSTER's own console runs from once that cluster is in a domain: the console's gate
+# (w2cplatform/access.py) loads `domain.access` to check a token, and М11's image has neither that module nor
+# the library it verifies a signature with.
+FROM localhost/clustervms:latest
+RUN apt-get update && apt-get install -y --no-install-recommends python3-cryptography && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY domain domain
+ENV ACCESS_IMPL=domain.access:cluster_access
+CMD ["python3", "-m", "domain.agent"]

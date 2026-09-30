@@ -55,6 +55,7 @@ import time
 import urllib.error
 import urllib.request
 
+from w2cplatform.access import token_of
 from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import slot_number
 from w2cplatform.doors import safe_rel
@@ -103,7 +104,10 @@ class LiveFront:
     # viewer's "exists" is fine); 503 with retry_after while the live controller has not placed it or the
     # gateway has not heartbeaten; else the gateway's 201 + SDP answer, with Location rewritten to go back
     # through this console (`/whep/session/<id>?gateway=<g>`).
-    def offer(self, cam: str, sdp: str, labels: list[str]):
+    #
+    # The viewer's token goes with it: the gateway checks it too (`LiveWorker.handler`) — the console is not
+    # the only one who can reach that door.
+    def offer(self, cam: str, sdp: str, labels: list[str], token: str | None = None):
         if self.ctl.camera(cam) is None:
             return 404, {"error": f"no camera {cam}", "detail": f"no camera {cam}"}
         if self.live.unit(cam) is None:
@@ -115,7 +119,8 @@ class LiveFront:
         g, url = self.where(cam)
         if not g or not url:
             return 503, {"error": "no gateway holds this stream yet — retry", "detail": "placed on the live controller's next pass", "retry_after": 2}
-        req = urllib.request.Request(f"{url}/whep/{cam}", data=sdp.encode(), method="POST", headers={"Content-Type": "application/sdp"})
+        req = urllib.request.Request(f"{url}/whep/{cam}", data=sdp.encode(), method="POST",
+                                     headers={"Content-Type": "application/sdp", **({"Authorization": f"Bearer {token}"} if token else {})})
         try:
             with urllib.request.urlopen(req, timeout=10) as r:
                 data, status, loc = r.read(), r.status, r.headers.get("Location", "")
@@ -139,11 +144,12 @@ class LiveFront:
         return status, data, [("Content-Type", "application/sdp"), ("Location", f"/whep/session/{sid}?gateway={g}")]
 
     # The viewer hangs up: DELETE proxied to the gateway named in the session URL.
-    def hangup(self, sid: str, g: str):
+    def hangup(self, sid: str, g: str, token: str | None = None):
         hb = self.gateways().get(g)
         if not hb or not hb.extra.get("url"):
             return 404, {"error": f"no gateway {g}"}
-        req = urllib.request.Request(f"{hb.extra['url']}/whep/session/{sid}", method="DELETE")
+        req = urllib.request.Request(f"{hb.extra['url']}/whep/session/{sid}", method="DELETE",
+                                     headers={"Authorization": f"Bearer {token}"} if token else {})
         try:
             with urllib.request.urlopen(req, timeout=10) as r:
                 return r.status, json.loads(r.read() or b"{}")
@@ -252,9 +258,9 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
         if live is not None and path.startswith("/whep/"):
             if method == "POST" and not path.startswith("/whep/session/"):
                 sdp = handler.rfile.read(int(handler.headers.get("Content-Length", 0))).decode()
-                return live.offer(path[len("/whep/"):], sdp, [l for l in q.get("labels", "").split(",") if l])
+                return live.offer(path[len("/whep/"):], sdp, [l for l in q.get("labels", "").split(",") if l], token_of(handler.headers))
             if method == "DELETE" and path.startswith("/whep/session/"):
-                return live.hangup(path[len("/whep/session/"):], q.get("gateway", ""))
+                return live.hangup(path[len("/whep/session/"):], q.get("gateway", ""), token_of(handler.headers))
             if method == "GET" and not path.startswith("/whep/session/"):
                 return 200, live.status(path[len("/whep/"):])           # GET /whep/<cam>: the stream, its gateway, that gateway's word
             return None

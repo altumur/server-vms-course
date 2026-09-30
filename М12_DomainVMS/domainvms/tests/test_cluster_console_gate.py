@@ -95,3 +95,71 @@ def test_a_labelled_grant_travels_as_a_row_and_never_means_every_camera():
     assert cg.may("bob", "edit", 3, labels=["ground", "east", "roof"]) and not cg.may("bob", "edit", 3, labels=["ground"])
     assert not cg.may("bob", "edit", 3) and not cg.may("bob", "edit", None)      # asked about no camera's labels: it is not "all"
     assert cg.may("bob", "view", 7) and cg.may("ann", "edit", 3)
+
+
+def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_token():
+    """The gate loads `domain.access`; М11's image has neither that module nor the library it verifies with. A
+    console left on that image in a domain answers 503 to everything — shut, and useless. So the domain has an
+    image of its own, and the cluster's console job takes its image as a variable."""
+    import os
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    image = open(os.path.join(here, "deploy", "Containerfile")).read()
+    assert "FROM localhost/clustervms:latest" in image and "COPY domain domain" in image and "python3-cryptography" in image
+    job = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "console.nomad.hcl")).read()
+    assert 'variable "image"' in job and "image        = var.image" in job and 'default = "localhost/clustervms:latest"' in job
+    import importlib
+    from w2cplatform.access import Gate
+    assert importlib.import_module("domain.access").cluster_access                 # what `ACCESS_IMPL` names is there to be loaded
+    vars_ = FakeVariables(); vars_.put(KEYS_PATH, TokenIssuer("acme").keyset().to_items())
+    assert type(Gate(vars_, lambda: 0.0).access()).__name__ == "ClusterAccess"     # …and with a key set in the store, the gate loads it
+
+
+
+def test_a_browser_is_handed_a_cookie_for_a_token_the_console_checked():
+    """`/session` — the door in. The page takes the password to the DOMAIN and brings the console only the token;
+    the console checks it as the gate would and sets a cookie the page's script cannot read, for as long as the
+    token lives. A request that ACTS, rides on the cookie and comes from another site's page is refused."""
+    clk = Clock(1_757_500_000.0)
+    signer = TokenIssuer("acme")
+    vars_, ctl, srv, base = _cluster(clk)
+
+    import itertools
+    keys = itertools.count(1)
+
+    def raw(method, path, body=None, headers=None):
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method,
+                                     headers={"Content-Type": "application/json", "Idempotency-Key": f"s{next(keys)}", **(headers or {})})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.loads(r.read() or b"null"), r.headers.get("Set-Cookie", "")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}"), e.headers.get("Set-Cookie", "")
+
+    try:
+        assert raw("GET", "/session")[1] == {"gated": False, "user": "operator", "login": None}    # no domain: nobody to be
+        vars_.put(KEYS_PATH, signer.keyset().to_items())
+        vars_.put(GRANTS_PATH, grants_to_items([Grant("alice", "admin", None, clk() + 86400)]))
+        assert raw("GET", "/session")[1] == {"gated": True, "user": None, "login": None}           # gated, and not known
+        assert raw("POST", "/session", {"token": "not-a-token"})[0] == 401
+
+        token = signer.issue("alice", 900, now=clk())
+        code, body, cookie = raw("POST", "/session", {"token": token})
+        assert code == 200 and body["user"] == "alice" and body["until"] == clk() + 900
+        assert cookie.startswith(f"w2c_token={token}; ") and "HttpOnly" in cookie and "SameSite=Strict" in cookie and "Max-Age=900" in cookie
+
+        me = {"Cookie": f"w2c_token={token}"}
+        assert raw("GET", "/session", headers=me)[1]["user"] == "alice"
+        assert raw("GET", "/cameras", headers=me)[0] == 200                                         # the cookie is a token, at the gate
+        host = base[len("http://"):]
+        assert raw("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, {**me, "Origin": f"http://{host}"})[0] == 201
+        code, body, _ = raw("POST", "/cameras", {"source": "driverpack://file/2.mp4"}, {**me, "Origin": "http://evil.example"})
+        assert code == 403 and "another site" in body["detail"]                                      # steered by somebody else's page
+        assert raw("POST", "/cameras", {"source": "driverpack://file/2.mp4"},
+                   {"Authorization": f"Bearer {token}", "Origin": "http://evil.example"})[0] == 201   # a bearer is not a browser being steered
+
+        clk.advance(1000)                                                                            # the token ended: the cookie is nobody's
+        assert raw("GET", "/session", headers=me)[1]["user"] is None and raw("GET", "/cameras", headers=me)[0] == 401
+        code, body, cookie = raw("DELETE", "/session", headers=me)
+        assert code == 200 and cookie.startswith("w2c_token=; ") and "Max-Age=0" in cookie
+    finally:
+        srv.shutdown()

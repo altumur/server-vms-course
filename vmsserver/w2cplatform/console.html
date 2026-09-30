@@ -161,7 +161,17 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
   #edit, #media { display:none; }
   #status { color:var(--muted); font-size:12px; margin-top:12px; }
 </style>
+<div id="gate" style="display:none; position:fixed; inset:0; z-index:10; background:var(--bg, #111); padding:15vh 0 0; text-align:center;">
+  <form id="signin" style="display:inline-block; text-align:left; min-width:260px;">
+    <h1>Sign in</h1>
+    <p id="gatenote" style="color:var(--muted); font-size:13px;"></p>
+    <div id="byname"><input id="su" placeholder="user" autocomplete="username"><br><input id="sp" type="password" placeholder="password" autocomplete="current-password"></div>
+    <details id="bytoken"><summary>I have a token</summary><textarea id="st" rows="4" style="width:100%" placeholder="the domain's token"></textarea></details>
+    <button>Sign in</button> <span id="gateerr" class="err"></span>
+  </form>
+</div>
 <aside>
+  <div id="whoami" style="font-size:12px; color:var(--muted);"></div>
   <h1 id="rows">…</h1>
   <ul id="units"></ul>
   <details id="addbox"><summary id="addlabel">Add</summary>
@@ -893,5 +903,48 @@ async function loadResources() {
 window.addEventListener('beforeunload', stopLive);
 $('#last24').onclick = () => { window_ = [Date.now() / 1000 - 86400, Date.now() / 1000]; if (current) loadTimeline(); };
 $('#all').onclick = () => { window_ = null; if (current) loadTimeline(); };
-loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadAutos(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
+// -- who is looking: `/session` ---------------------------------------------------------------
+// A console in a domain asks who is calling (the gate). The page asks the console first: is it gated, and am
+// I known? If not, it shows the form. The PASSWORD goes to the domain's login door (`login`, another origin)
+// and never to this console; what comes back is a token, which this console checks and keeps in a cookie the
+// script cannot read. With no login door configured, or to use a token somebody handed over, the token can
+// be pasted.
+let booted = false;
+function boot() {
+  if (booted) return; booted = true;
+  loadSpec().then(() => { loadUnits(); loadResources(); loadArchives(); setInterval(() => { loadUnits(); loadDets(); loadAutos(); loadRec(); loadResources(); loadArchives(); }, 10000); setInterval(loadEvents, 5000); });
+}
+async function session() {
+  let s;
+  try { const r = await fetch('/session'); if (!r.ok) { $('#gate').style.display = 'block'; $('#gatenote').textContent = (await r.json()).detail || 'this console cannot check who is calling'; $('#signin').querySelector('button').disabled = true; return; } s = await r.json(); }
+  catch (_) { boot(); return; }                                  // an older console: no such route, and no gate
+  if (!s.gated) { boot(); return; }
+  if (s.user) {
+    $('#gate').style.display = 'none';
+    $('#whoami').innerHTML = `${s.user} · <a href="#" id="signout">sign out</a>`;
+    $('#signout').onclick = async e => { e.preventDefault(); await fetch('/session', { method: 'DELETE' }); location.reload(); };
+    if (s.until) setTimeout(session, Math.max(1000, (s.until - Date.now() / 1000) * 1000 + 500));   // the token ends: ask again
+    boot(); return;
+  }
+  $('#gate').style.display = 'block';
+  $('#byname').style.display = s.login ? 'block' : 'none';
+  $('#bytoken').open = !s.login;
+  $('#gatenote').textContent = s.login ? 'your password goes to the domain, not to this console' : 'this console has no login door configured: paste a token';
+  $('#signin').onsubmit = async e => {
+    e.preventDefault(); $('#gateerr').textContent = '';
+    try {
+      let token = $('#st').value.trim();
+      if (!token) {
+        const r = await fetch(s.login.replace(/\/$/, '') + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: $('#su').value, password: $('#sp').value }) });
+        if (!r.ok) throw new Error('bad credentials');
+        token = (await r.json()).token;
+      }
+      $('#sp').value = '';
+      const r = await fetch('/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+      if (!r.ok) throw new Error((await r.json()).detail || 'the token was refused');
+      $('#st').value = ''; session();
+    } catch (err) { $('#gateerr').textContent = err.message; }
+  };
+}
+session();
 </script>

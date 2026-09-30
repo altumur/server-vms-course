@@ -9,6 +9,18 @@
 # Variable (vms/idem/*).
 # Placed on servers that run a resource so that an operator's marks have a
 # bucket to go into; drop the constraint and /marks answers 503 there.
+#
+# THE IMAGE IS A VARIABLE, and М12 is why. A cluster's console asks who is calling once the cluster's store
+# holds a domain's key set (М10A Lesson 15) — and what checks a token is М12's code, which is not in this
+# module's image. A cluster in a domain runs the same job from the domain's image:
+#   nomad job run -var image=vms/domainvms:latest console.nomad.hcl
+# With this module's image in a cluster that HAS a key set, the console answers 503 to everything: it cannot
+# check, so it admits nobody. That is the gate failing shut, not a fault to work around.
+variable "image" {
+  type    = string
+  default = "localhost/clustervms:latest"
+}
+
 job "console" {
   datacenters = ["room-a"]
   type        = "system"
@@ -26,7 +38,7 @@ job "console" {
       driver = "podman"
       identity { env = true }
       config {
-        image        = "localhost/clustervms:latest"
+        image        = var.image
         network_mode = "host"
         args         = ["python3", "-m", "cluster", "console"]
         volumes      = ["/data/archive:/data/archive"]

@@ -45,7 +45,8 @@ class Tokens:
 def _console(box, access=None):
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    m = make_console(ctl, ArchiveResource(box.spool, box.archive, wall=box.wall), box.wall, mounts={"rec": rec})
+    m = make_console(ctl, ArchiveResource(box.spool, box.archive, wall=box.wall), box.wall, mounts={"rec": rec},
+                     index=EventIndex(box.archive, "srv-1", wall=box.wall))       # this box's own events, read where they lie
     if access is not None:
         m.root.gate.impl = access
         for con in m.mounts.values():
@@ -133,11 +134,18 @@ def test_the_gate_asks_who_and_the_grant_says_what():
         assert _call(base, "POST", "/marks", {"cam": 2, "note": "bag"}, token="guard")[0] == 403   # …and this one is not the guard's
         assert _call(base, "POST", "/marks", {"cam": 1, "note": "bag"}, token="viewer")[0] == 403  # looking is not acting
 
+        # a list shows a caller what their grants cover, and not the cluster's
+        ids = lambda token: sorted(r["id"] for r in _call(base, "GET", "/cameras", token=token)[1]["configured"])
+        assert ids("viewer") == [1] and ids("guard") == [1] and ids("admin") == [1, 2]
+
         # the name in the journal is the one the token proved — whatever the header said
         assert _call(base, "DELETE", "/cameras/2", token="admin", user="somebody-else")[0] == 200
         said = _audit(box)
         assert ("unit.deleted", "admin") in said and ("unit.deleted", "somebody-else") not in said
         assert ("access.denied", "viewer") in said
+        # …and the events too: the journal names no unit, and is shown to whoever may view the whole cluster
+        seen = lambda token: {e["kind"] for e in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token=token)[1]["events"]}
+        assert "unit.deleted" in seen("admin") and "unit.deleted" not in seen("viewer") and "mark" in seen("viewer")
 
         # a mount is gated by the same rules, and its own routes: a keep is an operator's, a volume an administrator's
         t = box.wall()
@@ -173,3 +181,32 @@ def test_what_a_route_needs_and_where_a_token_is_read_from():
     assert root.needs("POST", "/marks", str(cam)) == ("edit", str(cam), ["ground"]) and recs.needs("POST", "/keeps", str(cam)) == ("edit", str(cam), [])
     assert token_of({"Authorization": "Bearer abc"}) == "abc" and token_of({"Cookie": "a=b; w2c_token=xyz"}) == "xyz"
     assert token_of({}) is None and token_of({"Authorization": "Basic abc"}) is None
+
+
+def test_the_live_gateway_asks_the_viewer_too():
+    """The console checks a viewer's token and then calls the gateway — a door anybody on its network could call
+    instead. The console passes the token on, and the gateway checks it by the same gate, against the same
+    store: `view` on this camera."""
+    from tests.test_lesson8_live import OFFER, _gateway
+    box = Box()
+    box.vars.put("vms/cameras/1", {"name": "gate", "labels": "ground"})
+    box.vars.put("vms/cameras/2", {"name": "yard", "labels": ""})
+    g = _gateway(box, "g-1")
+    base = g.url
+
+    def whep(cam, token=None, method="POST", path=None):
+        req = urllib.request.Request(base + (path or f"/whep/{cam}"), data=OFFER.encode() if method == "POST" else None, method=method,
+                                     headers={"Content-Type": "application/sdp", **({"Authorization": f"Bearer {token}"} if token else {})})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    assert whep(1) == 404                                              # no key set: open — and the stream is simply not here
+    g.gate.impl = Tokens({"viewer": [("view", "1", ())], "guard": [("view", None, ("ground",))], "nobody": []})
+    assert whep(1) == 401 and whep(1, "stranger") == 401               # now it asks
+    assert whep(1, "viewer") == 404 and whep(2, "viewer") == 403       # admitted for its camera (and the stream is not here); not for another
+    assert whep(1, "guard") == 404 and whep(2, "guard") == 403         # a grant on a label: the camera's labels, read from its row
+    assert whep(1, "nobody") == 403
+    assert whep(None, method="DELETE", path="/whep/session/x") == 401 and whep(None, "viewer", "DELETE", "/whep/session/x") == 404

@@ -31,6 +31,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from w2cplatform import runtime
+from w2cplatform.access import Denied, Gate
 from w2cplatform.console import SendMixin, heartbeats, holder_of
 from w2cplatform.contract import Worker
 from w2cplatform.spec import SpecController
@@ -89,6 +90,7 @@ class LiveWorker(Worker):
                  peer_factory=None, env: dict | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
+        self.gate = Gate(self.vars, self.wall)      # who may be given a stream here (`handler`)
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, "GATEWAY_NAME", "g"))
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units
         self.url = url or env.get("GATEWAY_URL", "")
@@ -260,6 +262,15 @@ class LiveWorker(Worker):
                 f"# TYPE live_streams_up gauge\nlive_streams_up {len(self.upstreams)}\n"
                 f"# TYPE live_headroom gauge\nlive_headroom {self.headroom()}\n")
 
+    # The labels of the camera a stream is of, for a grant given on labels. Read from the row, as text: a
+    # gateway holds fan-outs, not cameras, and has no parsed rows of them.
+    def labels_of(self, cam) -> list:
+        try:
+            items, _ = self.vars.get(f"vms/cameras/{cam}")
+        except OSError:
+            return []
+        return [l for l in str((items or {}).get("labels", "")).split(",") if l]
+
     # -- the WHEP server -------------------------------------------------------------------------------
     def handler(self):
         gw = self
@@ -271,6 +282,8 @@ class LiveWorker(Worker):
                 if not self.path.startswith("/whep/"):
                     return self._send(404, {"error": "no such path"})
                 cam = self.path[len("/whep/"):].split("?")[0]
+                if not self._admitted(cam):
+                    return
                 sdp = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode()
                 try:
                     sid, answer = gw.offer(cam, sdp)
@@ -285,9 +298,26 @@ class LiveWorker(Worker):
                 self.send_header("Location", f"/whep/session/{sid}"); self.send_header("Content-Length", str(len(data)))
                 self.end_headers(); self.wfile.write(data)
 
+            # THE GATEWAY ASKS TOO (the order agreed with the product, feedback BP). The console checks a
+            # viewer's token — and then calls this door, which anybody on the network it listens on could
+            # call instead. Until processes prove themselves to each other (mutual TLS: not in this course's
+            # code), the one check that can stand here is the VIEWER's own: the console passes the token on,
+            # and the gateway checks it against the same cluster store, by the same gate
+            # (`w2cplatform/access.py`) — `view` on this camera. No key set in the store: open, as the
+            # console is. A key set and nothing to check with: shut.
+            def _admitted(self, cam) -> bool:
+                try:
+                    gw.gate.admit(self.headers, "view", cam, gw.labels_of(cam) if cam is not None else [])
+                    return True
+                except Denied as e:
+                    self._send(e.status, {"error": "denied", "detail": e.why})
+                    return False
+
             def do_DELETE(self):
                 if not self.path.startswith("/whep/session/"):
                     return self._send(404, {"error": "no such path"})
+                if not self._admitted(None):                        # to hang up: anybody this cluster knows
+                    return
                 ok = gw.hangup(self.path[len("/whep/session/"):])
                 self._send(200 if ok else 404, {"closed": ok})
 

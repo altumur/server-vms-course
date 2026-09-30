@@ -39,7 +39,8 @@ from typing import Protocol
 
 TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set in a cluster's store (М12)
 RANK = {"view": 0, "edit": 1, "admin": 2}
-OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz")   # the page itself and what monitoring reads
+OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
+COOKIE = "w2c_token"
 log = logging.getLogger("w2cplatform.access")
 
 
@@ -64,9 +65,31 @@ def token_of(headers) -> str | None:
         return auth[7:].strip() or None
     for part in (headers.get("Cookie", "") or "").split(";"):
         k, _, v = part.strip().partition("=")
-        if k == "w2c_token" and v:
+        if k == COOKIE and v:
             return v
     return None
+
+
+def from_cookie(headers) -> bool:
+    return not (headers.get("Authorization", "") or "").startswith("Bearer ") and token_of(headers) is not None
+
+
+# A browser sends the cookie with every request to this console — including one a page on ANOTHER site made
+# it send. `SameSite=Strict` is what stops that; this is the second lock, for the browser that does not honour
+# it: a request that ACTS, carries its proof in the cookie and names an `Origin` that is not this console is
+# refused. A caller with a bearer token is not a browser being steered and is not asked.
+def cross_site(headers) -> bool:
+    from urllib.parse import urlsplit
+    origin = headers.get("Origin", "") or ""
+    return bool(origin) and urlsplit(origin).netloc != (headers.get("Host", "") or "")
+
+
+# The cookie a console sets when somebody hands it a token it has checked (`POST /session`). `HttpOnly`: a
+# page's script never reads it back — a script injected into the page cannot carry the token away. It lives
+# exactly as long as the token does.
+def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
+    return (f"{COOKIE}={token}; Path=/; Max-Age={max(0, int(seconds))}; HttpOnly; SameSite=Strict"
+            + ("; Secure" if secure else ""))
 
 
 class Gate:
@@ -109,6 +132,8 @@ class Gate:
         token = token_of(headers)
         if not token:
             raise Denied(401, "this console asks who is calling: send the domain's token (Authorization: Bearer …)")
+        if capability != "view" and from_cookie(headers) and cross_site(headers):
+            raise Denied(403, "a request that acts came from another site's page: refused")
         payload = access.who(token)
         name = str(payload.get("sub", ""))
         if payload.get("via") == "break-glass":          # the one local account (М12 Lesson 4): every use is an alarm
