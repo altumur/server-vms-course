@@ -87,6 +87,8 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
+from .doors import byte_range
+
 from .secrets import mask_secrets
 from .contract import HEARTBEATS, SCHEMA, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds, schema_version
 from .epoch import current_epoch
@@ -114,10 +116,14 @@ PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 # `/segment/<path>` extra; the test asks `bytes=10-19` and gets 206 with `Content-Range: bytes 10-19/256`.
 def send_file(handler, path: str, content_type: str) -> None:
     """A file, whole or by Range — what a <video> element asks for."""
-    size = os.path.getsize(path); start, end = 0, size - 1
+    size = os.path.getsize(path)
     rng = handler.headers.get("Range")
-    if rng and rng.startswith("bytes="):
-        a, b = rng[6:].split("-"); start = int(a or 0); end = int(b) if b else end
+    span = byte_range(rng, size)                             # cut to the file (`doors`)
+    if span is None:
+        handler.send_response(416); handler.send_header("Content-Range", f"bytes */{size}")
+        handler.send_header("Content-Length", "0"); handler.end_headers()
+        return
+    start, end = span
     with open(path, "rb") as f:
         f.seek(start); data = f.read(end - start + 1)
     handler.send_response(206 if rng else 200); handler.send_header("Content-Type", content_type)

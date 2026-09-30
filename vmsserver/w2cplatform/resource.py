@@ -78,6 +78,8 @@ import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from .doors import safe_rel, safe_segment
+
 from .contract import BUILD, SCHEMA, check_schema
 from .events import CONSOLE, Bucket, buckets_under, parse_bucket, subsystems_under
 
@@ -601,9 +603,13 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
 
         def do_GET(self):
             if self.path.startswith("/buckets/"):
-                _, _, sub, unit = self.path.split("/", 3)
+                _, _, sub, unit = (self.path.split("/", 3) + [""])[:4]
+                if not (safe_segment(sub) and safe_segment(unit)):     # a name, not a way out of the tree (`doors`)
+                    return self._raw(404, b"")
                 return self._raw(200, "".join(b.line() + "\n" for b in buckets_under(root, sub, unit, resource.bucket_seconds)).encode())
             if self.path.startswith("/mirrored/"):
+                if not safe_segment(self.path[len("/mirrored/"):]):
+                    return self._raw(404, b"")
                 return self._raw(200, "".join(b.line() + "\n" for b in mirrored_buckets(root, self.path[len("/mirrored/"):], resource.bucket_seconds)).encode())
             if self.path == "/events" or self.path.startswith("/events?"):
                 if resource.index is None:
@@ -625,7 +631,7 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                     resource.events_slots.release()
             if self.path.startswith("/events/"):
                 rel = self.path[len("/events/"):]; p = os.path.join(root, rel)
-                if ".." in rel or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
+                if not safe_rel(rel) or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
                     return self._raw(404, b"")
                 with open(p, "rb") as f: return self._raw(200, f.read())
             if extra is not None:
@@ -643,7 +649,7 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                 return self._raw(404, b"")
             rel = self.path[len("/mirror/"):]
             server, _, path = rel.partition("/")
-            if ".." in rel or not server or not path.endswith(".events.jsonl"):
+            if not safe_segment(server) or not safe_rel(path) or not path.endswith(".events.jsonl"):
                 return self._raw(400, b"")
             dest = os.path.join(root, MIRROR_DIR, server, path)
             os.makedirs(os.path.dirname(dest), exist_ok=True)

@@ -57,6 +57,7 @@ from __future__ import annotations
 import json
 import os
 
+from w2cplatform.doors import byte_range, safe_rel, safe_segment
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.resource import Resource
 
@@ -86,16 +87,20 @@ def vms_routes(archive: ArchiveResource, objects=None, server: str = ""):
                                     "accounted": sum(u["bytes"] for u in units.values())}).encode(), (("Content-Type", "application/json"),)
         if path.startswith("/manifest/"):
             unit = path.rsplit("/", 1)[1]                 # a UNIT, verbatim: "7" today, "7-backup" the day the spec says so
+            if not safe_segment(unit):
+                return 404, b""
             return 200, "".join(l for l in Manifest(root, unit)._lines()).encode()
         if path.startswith("/segment/"):
             rel = path[len("/segment/"):]
             p = os.path.join(root, rel)
-            if ".." in rel or not os.path.isfile(p):
+            if not safe_rel(rel) or not os.path.isfile(p):   # relative, every segment a name: no `..`, no second slash
                 return 404, b""
-            size = os.path.getsize(p); start, end = 0, size - 1
+            size = os.path.getsize(p)
             rng = headers.get("Range")
-            if rng and rng.startswith("bytes="):
-                a, b = rng[6:].split("-"); start = int(a or 0); end = int(b) if b else end
+            span = byte_range(rng, size)                     # cut to the file: never the client's number of bytes
+            if span is None:
+                return 416, b"", (("Content-Range", f"bytes */{size}"),)
+            start, end = span
             with open(p, "rb") as f:
                 f.seek(start); data = f.read(end - start + 1)
             return (206 if rng else 200), data, ((("Content-Range", f"bytes {start}-{end}/{size}"),) if rng else ())
@@ -121,7 +126,7 @@ def vms_writes(archive: ArchiveResource):
         if not path.startswith("/segment/"):
             return None
         rel = path[len("/segment/"):]
-        if ".." in rel or not rel.startswith(SUB + "/") or not rel.endswith(".mp4"):
+        if not safe_rel(rel) or not rel.startswith(SUB + "/") or not rel.endswith(".mp4"):
             return 400, b""
         line = headers.get("X-Segment")
         if not line:
@@ -132,6 +137,8 @@ def vms_writes(archive: ArchiveResource):
             return 400, b'{"error": "a segment arrives with its manifest line"}'
         if seg.path != rel:
             return 400, b'{"error": "the line does not describe this path"}'
+        if not safe_segment(str(seg.unit)):                 # it names the manifest the line is appended to
+            return 400, b'{"error": "the line names no unit"}'
         dest = os.path.join(root, rel)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         n = int(headers.get("Content-Length", 0))

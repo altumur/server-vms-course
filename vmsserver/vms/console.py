@@ -55,6 +55,7 @@ import urllib.request
 
 from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import slot_number
+from w2cplatform.doors import safe_rel
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
 
@@ -288,7 +289,7 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
         if path.startswith("/segment/"):
             rel = path[len("/segment/"):]; p = os.path.join(archive.root, rel)
-            if ".." in rel or not os.path.isfile(p):
+            if not safe_rel(rel) or not os.path.isfile(p):   # `doors`: an absolute path used to read any file of the box
                 return 404, {"detail": "no such segment", "error": "no such segment"}
             send_file(handler, p, "video/mp4")
             return ()                                                     # served in full by send_file
