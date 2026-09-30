@@ -133,6 +133,57 @@ class Segment:
                    d.get("source", "live"))
 
 
+# Every segment a policy took off this archive, and why: `<archive>/deletions.jsonl`, one line each.
+#
+# A manifest says what is here. Nothing said what WAS here and who removed it: a segment deleted by
+# retention, one cut by the watermark and one that was never written all read the same afterwards — a gap
+# (the platform review, "deletions by policy are not journalled"; feedback BH). The line is written BEFORE
+# the file goes: a crash between the two leaves a line for a file that is still there, and the next pass
+# removes it and says so again. The other order leaves a deletion nobody recorded.
+#
+#   why   retention        older than the recording's `retention_days`
+#         pressure         cut by the watermark, above the floor
+#         pressure-kept    cut by the watermark although a keep named it: nothing else was left (`vms/keeps.py`)
+#         moved            sent to the server that writes the unit now, and confirmed there (`to`)
+#
+# Bounded: past `MAX_BYTES` the file becomes `deletions.jsonl.1` and a new one starts — two files, the
+# newest deletions always there. It is a journal of what a policy did, not a second archive.
+class Deletions:
+    MAX_BYTES = 4 << 20
+
+    def __init__(self, archive_root: str):
+        self.path = os.path.join(archive_root, "deletions.jsonl")
+
+    def append(self, seg: "Segment", why: str, now: float, **extra) -> None:
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        try:
+            if os.path.getsize(self.path) > self.MAX_BYTES:
+                os.replace(self.path, self.path + ".1")
+        except FileNotFoundError:
+            pass
+        with open(self.path, "a") as f:
+            f.write(json.dumps({"t": now, "why": why, "unit": seg.unit, "epoch": seg.epoch, "start": seg.start,
+                                "end": seg.end, "path": seg.path, "bytes": seg.bytes, **extra}) + "\n")
+            f.flush(); os.fsync(f.fileno())
+
+    def read(self, unit: str | None = None, limit: int = 1000) -> list[dict]:
+        """The newest `limit` lines, oldest first; one unit's, if named."""
+        out = []
+        for p in (self.path + ".1", self.path):
+            try:
+                with open(p) as f:
+                    for l in f:
+                        try:
+                            d = json.loads(l)
+                        except ValueError:
+                            continue                     # a line cut short by a crash
+                        if unit is None or str(d.get("unit")) == str(unit):
+                            out.append(d)
+            except FileNotFoundError:
+                pass
+        return out[-limit:]
+
+
 # Per unit, append-only, beside the footage: `<archive>/rec/<unit>/manifest.jsonl`. Media lines only.
 class Manifest:
     """Per unit, append-only, beside the footage."""
@@ -284,19 +335,33 @@ class ArchiveResource:
                 runs.append([s.start, s.end])
         return [(a, b) for a, b in runs]
 
-    def retain(self, unit, days: float, now: float) -> int:
+    # The ONE way a policy takes a segment off this archive: said in the journal, then the file. The caller
+    # rewrites the manifest — it knows which lines stay.
+    def remove(self, seg: Segment, why: str, now: float, **extra) -> None:
+        Deletions(self.root).append(seg, why, now, **extra)
+        try:
+            os.remove(os.path.join(self.root, seg.path))
+        except FileNotFoundError:
+            pass
+
+    def retain(self, unit, days: float, now: float, kept: list | tuple = (), report: dict | None = None) -> int:
         """Delete media older than `days`: the file first, then the line. The
         buckets are the platform's to retain (vms/retention/<cam>, written by the
-        VMS controller); the resource's event index lets them go from its cache."""
+        VMS controller); the resource's event index lets them go from its cache.
+
+        `kept` is the intervals somebody said to keep (`vms/keeps.py`): a segment
+        that overlaps one stays past its days, and `report["kept"]` counts them."""
+        from .keeps import held
         cutoff = now - days * 86400
         man = Manifest(self.root, unit)
         keep, removed = [], 0
         for s in man.read():
-            if s.end < cutoff:
-                try:
-                    os.remove(os.path.join(self.root, s.path))
-                except FileNotFoundError:
-                    pass
+            if s.end < cutoff and held(kept, s.start, s.end):
+                keep.append(s)
+                if report is not None:
+                    report["kept"] = report.get("kept", 0) + 1
+            elif s.end < cutoff:
+                self.remove(s, "retention", now, days=days)
                 removed += 1
             else:
                 keep.append(s)
@@ -369,16 +434,37 @@ class ArchivePolicy:
             freed += rep["freed"]
             out.update({"evacuated": rep["moved"], **({"skipped": rep["skipped"]} if "skipped" in rep else {})})
         if freed < need:
-            rep = cut(res, need - freed, now, min_days)
+            rep = cut(res, need - freed, now, min_days, self.kept())
             freed += rep["freed"]
             out["cut"] = rep["removed"]
+            if rep.get("kept_cut"):                 # the ring reached what somebody said to keep: a number, and loud
+                out["kept_cut"] = rep["kept_cut"]
         short = max(0, need - freed)
         if short:                                   # everything on the floor: said out loud, not cut into
             out["shortfall"] = short
         return {"freed": freed, **out}
 
+    # `unit -> [(since, until), …]`: what is kept of one recording, read ONCE for a pass. A keep names the
+    # recordings it found when it was set, and the camera; the recording's row says whose it is now.
+    #
+    # The read is not in a `try`. A store that does not answer raises, the pass fails, and nothing is
+    # deleted this time: "I could not read the keeps" is not "there are none".
+    def kept(self):
+        from . import keeps
+        all_, cams = keeps.declared(self.vars), {}
+
+        def spans(unit: str) -> list:
+            if not all_:
+                return []
+            if unit not in cams:
+                items, _ = self.vars.get(f"{SUB}/recordings/{unit}")
+                cams[unit] = str(items.get("cam", "")) if items else ""
+            return keeps.spans_of(all_, str(unit), cams[unit])
+        return spans
+
     def pass_(self, now: float) -> dict:
-        out, removed = {}, 0
+        out, removed, rep_kept = {}, 0, {}
+        spans = self.kept()
         for res in (list(self.volumes.values()) or [self.res]):
             rep = res.repair()
             for k, v in rep.items():
@@ -386,5 +472,5 @@ class ArchivePolicy:
             for unit in res.units():
                 items, _ = self.vars.get(f"{SUB}/recordings/{unit}")   # the unit's own row: its retention, not the camera's
                 days = int(items.get("retention_days", 30)) if items else 30
-                removed += res.retain(unit, days, now)
-        return {**out, "media_removed": removed}
+                removed += res.retain(unit, days, now, spans(unit), rep_kept)
+        return {**out, "media_removed": removed, **({"media_kept": rep_kept["kept"]} if rep_kept else {})}

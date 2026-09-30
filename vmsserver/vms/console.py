@@ -59,7 +59,7 @@ from w2cplatform.doors import safe_rel
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
 
-from . import volumes
+from . import keeps, volumes
 from .archive import ArchiveResource, Manifest, subtract
 from .controller import VmsController
 
@@ -461,6 +461,28 @@ def auto_metrics(auto_ctl):
 
 def rec_routes(rec_ctl: SpecController):
     def extra(handler, method, path, q):
+        # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is —
+        # the resource that holds the footage reads it on its own pass, and nothing is sent anywhere.
+        if method == "GET" and path in ("/keeps", "/keeps/"):
+            return 200, {"keeps": [k.shown() for k in keeps.declared(rec_ctl.vars)]}
+        if method == "POST" and path in ("/keeps", "/keeps/"):
+            body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
+            try:
+                keeps.refuse(body)
+                # The recordings of the camera as they are NOW, and the camera's own name: a recording
+                # deleted before today left a tree called after the camera, and nothing else says whose it is.
+                names = set(recordings_of(rec_ctl, body["cam"])) | {str(body["cam"])}
+                k = keeps.write(rec_ctl.vars, body, sorted(names), handler.headers.get("X-User", "operator"), rec_ctl.wall())
+            except Refused as e:
+                return 400, {"detail": str(e), "error": "refused"}
+            return 201, {"keep": k.shown()}
+        if method == "DELETE" and path.startswith("/keeps/"):
+            id_ = path[len("/keeps/"):]
+            if not any(k.id == id_ for k in keeps.declared(rec_ctl.vars)):
+                return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
+            keeps.delete(rec_ctl.vars, id_)
+            return 200, {"deleted": id_, "detail": "the footage and the events are under their own retention again, "
+                                                   "from the next pass of the resource that holds them"}
         if not path.startswith("/volumes"):
             return None
         if method == "GET" and path in ("/volumes", "/volumes/"):

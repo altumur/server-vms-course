@@ -297,6 +297,7 @@ class Resource:
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
+        self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
         # reader that times out cannot tell "slow" from "gone". Past the limit the answer is 503 with
@@ -446,12 +447,20 @@ class Resource:
         days_of = {(sub, unit): retention_days(self.vars, sub, unit)
                    for sub, units in self.units().items() for unit in units}
         floor = console_floor(days_of)
+        # What somebody said to keep (feedback BH). The resource does not know what a keep is: whoever built
+        # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
+        # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
+        # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
+        # nothing is swept: not knowing what is kept is not "nothing is".
+        kept = self.kept() if self.kept is not None else None
         for sub, units in self.units().items():
             for unit in units:
                 days = max(days_of[(sub, unit)], floor) if sub == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     for b in buckets_under(path, sub, unit, self.bucket_seconds):
                         if b.end < self.wall() - days * 86400:
+                            if kept is not None and kept(sub, unit, b.start, b.end):
+                                continue                                # somebody said to keep it: past its days, and here
                             os.remove(os.path.join(path, b.path)); removed.append(b.path)
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file

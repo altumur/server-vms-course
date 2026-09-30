@@ -6,8 +6,15 @@ module is what happens when the promise cannot be kept, and it is deliberately
 not the same thing. Three steps, in this order:
 
     1. give up what is not ours    a unit whose recorder now writes on another server: send it there
-    2. cut above the floor         from the unit with the most days over `min_days`, oldest first
-    3. say the shortfall out loud  everything on the floor and still no room: a number, not a quiet cut
+    2. cut above the floor         from the unit with the most days over `min_days`, oldest first —
+                                   and never what somebody said to keep (`vms/keeps.py`)
+    3. the ring reaches the kept   nothing else is above the floor: the oldest KEPT segment, counted
+    4. say the shortfall out loud  everything on the floor and still no room: a number, not a quiet cut
+
+Step 3 is a decision and not an accident. A keep holds footage past its days and behind everything else
+the watermark can take; it does not stop the recorder. A disk is a ring, and a ring that may not overwrite
+its oldest part stops recording today to protect last month. What goes is said: `kept_cut` in the report,
+`pressure-kept` in the deletions journal, a warning in the log.
 
 Step 1 is why there is no separate "evacuation" job, schedule or button. A
 recording written here while the owner's server was down is not lost, not
@@ -21,6 +28,7 @@ files mean. Nothing in the platform deletes a segment.
 """
 from __future__ import annotations
 
+import logging
 import os
 
 from w2cplatform.console import holder_of
@@ -29,6 +37,7 @@ from w2cplatform.resource import resources_seen
 
 from .archive import SUB, ArchiveResource, Manifest
 
+log = logging.getLogger("vms.space")
 MAX_SEGMENTS = 50          # one pass moves a batch, not an archive: the next pass continues
 ROOM_MARGIN = 0.9          # never fill the destination's last tenth — that is its own watermark's air
 
@@ -123,10 +132,7 @@ def evacuate(archive: ArchiveResource, objects, peers, server: str, need: int, n
         keep, gone = [], 0
         for s in segs:
             if s in sent and s.path in there:
-                try:
-                    os.remove(os.path.join(archive.root, s.path))
-                except FileNotFoundError:
-                    pass
+                archive.remove(s, "moved", now, to=to)           # not lost: it is there, and the journal says where
                 gone += s.bytes; moved += 1
             else:
                 keep.append(s)
@@ -154,26 +160,49 @@ def confirmed(peers, url: str, unit: str) -> set[str]:
 # Not "the oldest segments on the resource": that empties the camera with the longest retention, which is
 # the one the operator cared most about. Not "the biggest file": that empties the camera with the highest
 # bitrate, which is usually the same camera.
-def cut(archive: ArchiveResource, need: int, now: float, min_days: float) -> dict:
+#
+# `spans_of(unit)` is what somebody said to keep of that unit. Kept segments are not candidates and do not
+# count towards a unit's depth: a camera whose only footage over the floor is kept has nothing to give.
+def cut(archive: ArchiveResource, need: int, now: float, min_days: float, spans_of=None) -> dict:
     """Free `need` bytes from the unit with the most slack over the floor."""
+    from .keeps import held
+    spans_of = spans_of or (lambda unit: [])
     freed, removed = 0, 0
     while freed < need:
-        best, slack = None, 0.0
+        best, slack, oldest = None, 0.0, None
         for unit in archive.units():
-            over = depth_days(archive, unit, now) - min_days
+            spans = spans_of(unit)
+            free = [s for s in Manifest(archive.root, unit).read() if not held(spans, s.start, s.end)]
+            if not free:
+                continue
+            first = min(free, key=lambda s: (s.start, s.epoch))
+            over = (now - first.start) / 86400 - min_days
             if over > slack:
-                best, slack = unit, over
+                best, slack, oldest = unit, over, first
         if best is None:
-            break                                                # everything is on the floor
+            break                                                # everything that is not kept is on the floor
         man = Manifest(archive.root, best)
-        segs = sorted(man.read(), key=lambda s: (s.start, s.epoch))
-        if not segs:
+        archive.remove(oldest, "pressure", now)
+        man.rewrite([s for s in man.read() if s != oldest])
+        freed += oldest.bytes; removed += 1
+    # Step 3: the ring. Still short, and what is left over the floor is kept. The oldest kept segment on the
+    # disk goes — whichever unit it is, because "oldest" is the only order a ring has.
+    kept_cut = 0
+    while freed < need:
+        oldest = None
+        for unit in archive.units():
+            spans = spans_of(unit)
+            for s in Manifest(archive.root, unit).read():
+                if held(spans, s.start, s.end) and (now - s.start) / 86400 > min_days \
+                        and (oldest is None or (s.start, s.epoch) < (oldest.start, oldest.epoch)):
+                    oldest = s
+        if oldest is None:
             break
-        s = segs[0]
-        try:
-            os.remove(os.path.join(archive.root, s.path))
-        except FileNotFoundError:
-            pass
-        man.rewrite(segs[1:])
-        freed += s.bytes; removed += 1
-    return {"freed": freed, "removed": removed}
+        man = Manifest(archive.root, oldest.unit)
+        archive.remove(oldest, "pressure-kept", now)
+        man.rewrite([s for s in man.read() if s != oldest])
+        freed += oldest.bytes; kept_cut += 1
+    if kept_cut:
+        log.warning("the disk is full and nothing else is above the floor: %d KEPT segment(s) were cut, oldest "
+                    "first — export what must outlive the disk", kept_cut)
+    return {"freed": freed, "removed": removed + kept_cut, **({"kept_cut": kept_cut} if kept_cut else {})}

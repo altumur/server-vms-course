@@ -10,5 +10,8 @@ namespace "default" {
     path "*/retention"                  { capabilities = ["read"] }
     path "*/retention/*"                { capabilities = ["read"] }
     path "rec/recordings/*"             { capabilities = ["read", "list"] }   # the recorder's registered pass: media retention per recording row
+    # What somebody said to keep (М10B Lesson 18). The pass reads these BEFORE it deletes anything, and a
+    # pass that cannot read them does not run: without this grant retention stops, loudly, on every box.
+    path "rec/keeps/*"                  { capabilities = ["read", "list"] }
   }
 }

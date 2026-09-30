@@ -85,6 +85,19 @@ def vms_routes(archive: ArchiveResource, objects=None, server: str = ""):
             # half-written segment, somebody's tarball on the same disk. Worth seeing side by side.
             return 200, json.dumps({"server": server, "units": units, "foreign": away,
                                     "accounted": sum(u["bytes"] for u in units.values())}).encode(), (("Content-Type", "application/json"),)
+        if path == "/deletions" or path.startswith("/deletions?"):
+            # What the policies took off this archive, and why — the newest lines of the journal. The answer
+            # to "there is a gap on Tuesday: was it never recorded, or was it deleted".
+            from urllib.parse import parse_qs, urlsplit
+            from w2cplatform.doors import MAX_LIMIT
+            from .archive import Deletions
+            q = parse_qs(urlsplit(path).query)
+            try:
+                limit = max(1, min(int(q.get("limit", ["1000"])[0]), MAX_LIMIT))
+            except ValueError:
+                return 400, b"limit is a number"
+            lines = Deletions(root).read(q.get("unit", [None])[0], limit)
+            return 200, json.dumps({"server": server, "deletions": lines}).encode(), (("Content-Type", "application/json"),)
         if path.startswith("/manifest/"):
             unit = path.rsplit("/", 1)[1]                 # a UNIT, verbatim: "7" today, "7-backup" the day the spec says so
             if not safe_segment(unit):
@@ -166,7 +179,26 @@ def vms_resource(archive: ArchiveResource, server: str, url: str, vars_, objects
     r = Resource(archive.root, server, url, vars_, objects, archive.bucket_seconds, wall, peers, volumes=volumes)
     r.register("rec", ArchivePolicy(archive, vars_, objects, r.peers, server, volumes=archives))   # footage is the recorder's: rec/<unit>/…, rec/recordings/<unit>
     r.index = EventIndex(archive.root, server, wall, archive.bucket_seconds)
+    r.kept = kept_buckets(vars_)
     return r
+
+
+# Which event buckets a keep holds (`vms/keeps.py`), for the platform's retention pass. The camera's events
+# are in `vms/<cam>/`; whatever a recorder wrote about a recording is in `rec/<name>/`. Read once a pass.
+def kept_buckets(vars_):
+    from . import keeps
+
+    def once():
+        all_ = keeps.declared(vars_)
+
+        def kept(sub: str, unit: str, start: float, end: float) -> bool:
+            if sub == "vms":
+                return keeps.held(keeps.spans_of_cam(all_, str(unit)), start, end)
+            if sub == "rec":
+                return keeps.held(keeps.spans_of(all_, str(unit)), start, end)
+            return False
+        return kept
+    return once
 
 
 # Which archives THIS server's resource is responsible for, from the declared rows — the trees whose

@@ -28,6 +28,9 @@ namespace "default" {
     path "vms/requests/*"  { capabilities = ["write", "read", "list", "destroy"] }
     path "rec/requests/*"  { capabilities = ["write", "read", "list", "destroy"] }
     path "rec/volumes/*"   { capabilities = ["write", "read", "list", "destroy"] }
+    # …and what an operator said to keep (М10B Lesson 18): a camera, an interval, a note. Set and lifted from
+    # the console; the resource that holds the footage only reads it.
+    path "rec/keeps/*"     { capabilities = ["write", "read", "list", "destroy"] }
     # `destroy` — the only grant in this cluster that lets anything remove an object, and it is bounded to
     # the one prefix whose contents can be proved unreferenced (М10A Lesson 29). Heartbeats and snapshot
     # shards are deliberately NOT here: a worker reads the heartbeat its previous instance left to measure
