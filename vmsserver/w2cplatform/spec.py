@@ -70,6 +70,7 @@ and the worker is the subsystem.
 # ================================================================================================
 from __future__ import annotations
 
+import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -92,6 +93,13 @@ JSON_CEILING = 4000
 
 # A write the spec does not allow: a platform field, an unknown field, a missing required field, an id for a
 # numeric-id subsystem, a duplicate id. The console turns it into HTTP 400.
+log = logging.getLogger(__name__)
+
+
+class Moved(Exception):
+    """A move the controller decided on a row that has changed since: somebody else moved the unit first."""
+
+
 class Refused(Exception):
     pass
 
@@ -1182,12 +1190,45 @@ class SpecController(Controller):
     def ensure_placed(self, workers: list[str] | None = None) -> list[Placement]:
         self.unplace_deleted()
         self.unplace_retired()
+        self.sync_assignments()
         out = []
         for r in self.units():
-            pl = self.place(r["id"], workers)
+            # One unit that cannot be placed — a row that does not parse after a field changed its type, a
+            # store that refused one write — is one unit waiting, not a pass that stops at it and places
+            # nothing after it, every pass (feedback BC).
+            try:
+                pl = self.place(r["id"], workers)
+            except Exception:                           # noqa: BLE001
+                log.exception("%s: unit %s not placed this pass", self.sub.name, r.get("id"))
+                continue
             if pl:
                 out.append(pl)
         return out
+
+    # The placement rows are the DECISION; the assignments carry it out. They are two writes, and a pass can
+    # stop between them: a controller killed after the row and before `assign_add` left a unit whose row
+    # named a worker that never heard of it — not placed again ("an existing placement is returned
+    # untouched"), not in `/unplaceable`, running nowhere, for ever (the platform review; the product lost
+    # a unit the same way to ten CAS conflicts in a row, feedback BC). So every pass starts by making the
+    # assignments say what the rows say: the unit is added to the worker its row names and taken from any
+    # other that lists it. A unit with no placement row is not touched — placing it is `place`'s job.
+    def sync_assignments(self) -> list[tuple]:
+        fixed = []
+        assignments = self.assignments()
+        for p in self.vars.list(self.sub.config("placement") + "/"):
+            unit = p.rsplit("/", 1)[1]
+            it, _ = self.vars.get(p)
+            if not it or not it.get("worker"):
+                continue
+            want = it["worker"]
+            for w, a in assignments.items():
+                if w != want and unit in a.units:
+                    self.assign_remove(w, unit)
+                    fixed.append((unit, w, None))
+            if unit not in (assignments[want].units if want in assignments else ()):
+                self.assign_add(want, unit)
+                fixed.append((unit, None, want))
+        return fixed
 
     # Units with no placement that no live worker's labels can serve — the console's honest answer, with the
     # labels named and the live worker count.
@@ -1207,17 +1248,35 @@ class SpecController(Controller):
     # (wherever it is listed, not only where the row says), rewrite the placement row, `assign_add` on `to`.
     # The destination takes the next epoch when it starts; the source's lease fences on renewal and it
     # stops. Explicit, never automatic.
-    def move(self, uid, to: str, reason: str) -> Placement:
+    #
+    # The order is the row, then the removals, then the addition (feedback BC): the row is the decision, and
+    # `sync_assignments` finishes a move a crash cut short — from either side of it. `expect`: the worker the
+    # caller saw the unit on. The OPERATOR's move has none — "from wherever it is". A move the CONTROLLER decided
+    # names it (`move_from`), and the same CAS that writes the row checks the row still says so: two
+    # controllers, overlapping for the seconds of a deploy, each moved the unit where it thought best, and the
+    # unit ended in two assignments — which a worker reads as "I am a zombie".
+    def move(self, uid, to: str, reason: str, expect: str | None = None) -> Placement:
         """The one two-writer operation: the destination takes the next epoch when
         it starts; the source's lease fences on renewal and it stops. Explicit,
         never automatic."""
+        def mutate(it):
+            if expect is not None and (it or {}).get("worker") != expect:
+                raise Moved(f"{uid} is on {(it or {}).get('worker') or 'nobody'}, not on {expect}: somebody moved it first")
+            return {"worker": to, "reason": reason, "at": self.wall(), "rev": int(it.get("rev", 0)) + 1 if it else 1}
+        new = self.write(self.sub.config("placement", str(uid)), mutate)
         for w, a in self.assignments().items():                     # wherever it is listed, and not only where the row says
             if str(uid) in a.units and w != to:
                 self.assign_remove(w, str(uid))
-        new = self.write(self.sub.config("placement", str(uid)),
-                         lambda it: {"worker": to, "reason": reason, "at": self.wall(), "rev": int(it.get("rev", 0)) + 1 if it else 1})
         self.assign_add(to, str(uid))
         return Placement(self.spec.parse_id(uid), to, reason, float(new["at"]), int(new["rev"]))
+
+    def move_from(self, uid, frm: str, to: str, reason: str) -> Placement | None:
+        """The controller's own move: only if the row still names `frm`. None if somebody moved it first."""
+        try:
+            return self.move(uid, to, reason, expect=frm)
+        except Moved as e:
+            log.info("%s: %s", self.sub.name, e)
+            return None
 
     # The controller's one unasked move: for each released slot (scale-in, or `retire`) that still lists
     # units, move each to the live worker with the most free capacity; stop when the system is full (the
@@ -1255,9 +1314,12 @@ class SpecController(Controller):
                 pool = self.eligible(row, live) if row else live
                 best, free, near = self._pick(pool, uid)
                 if best is None:
-                    break                                   # the system is full; the unit waits, listed where it was
-                self.move(uid, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}")
-                moves.append((uid, gone, best))
+                    # THIS unit waits, listed where it was — and the next one is looked at: each has filters of
+                    # its own, and a `break` here let one unit with a rare label, first in the list, hold every
+                    # other unit of a dead worker for ever (the platform review; feedback BC).
+                    continue
+                if self.move_from(uid, gone, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}"):
+                    moves.append((uid, gone, best))
         return moves
 
     # Units placed away from the home their row names, moved back — at most `budget` a pass, because every
@@ -1285,8 +1347,8 @@ class SpecController(Controller):
             if best is None:
                 continue                                  # home is not back, or has no room: stay put, quietly
             why = f"it follows {self.spec.near} onto" if self.spec.home == "near" else "home is"
-            self.move(uid, best, f"{why} {home}; most free capacity ({free}); on {home}")
-            moves.append((uid, pl.worker, best))
+            if self.move_from(uid, pl.worker, best, f"{why} {home}; most free capacity ({free}); on {home}"):
+                moves.append((uid, pl.worker, best))
         return moves
 
     # Up to `budget` moves: each step takes the most and least loaded workers by `load/capacity`, stops if
@@ -1309,7 +1371,8 @@ class SpecController(Controller):
             if not cands or self.load(lo) + 1 > self.capacity_of(lo):
                 break
             uid = self.spec.parse_id(cands[0])
-            self.move(uid, lo, f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)")
+            if not self.move_from(uid, hi, lo, f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)"):
+                break                                     # the picture changed under this pass: the next one looks again
             moves.append((uid, hi, lo))
         return moves
 
