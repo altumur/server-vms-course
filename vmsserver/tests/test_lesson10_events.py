@@ -612,6 +612,41 @@ def test_the_operators_timeline_says_which_servers_a_window_is_missing():
         assert out["complete"] is False and out["incomplete"] == {"srv-2": "did not answer"}
 
 
+def test_a_query_holds_what_the_answer_can_carry_and_answers_as_before():
+    """The cache's ceiling bounds the files held, not the answer: a window with no `from` gathered every matching
+    line of the tree and cut it to `limit` at the very end (the platform review; the product's index, feedback
+    BD). Now only `limit + 1` rows of each class are held while the window is read. Same answer as the old
+    rule — alarms first, then the end `keep` names, then by time — checked on twenty thousand lines; and a door
+    clamps a `limit` of a billion to ten thousand."""
+    from w2cplatform.doors import MAX_LIMIT
+    from w2cplatform.events import ALARM, EventLog
+    box = Box()
+    now = box.wall()
+    log = EventLog(box.archive, "vms", "7", 1, 600)
+    for i in range(20_000):
+        log.append(now - 20_000 + i + 0.5, "motion", n=i)
+    for i in range(30):
+        log.append(now - 19_000 + i * 600, "door_forced", cls=ALARM, n=i)
+    db = EventIndex(box.archive, "srv-1", wall=box.wall)
+    everything = db.query(0, now + 1, limit=10 ** 9)["events"]
+    assert len(everything) == 20_030
+    for keep in ("newest", "oldest"):
+        for limit in (1000, 20):                                       # 20: fewer than the alarms alone
+            ranked = sorted(everything, key=lambda e: (e["class"] != ALARM, -e["t"] if keep == "newest" else e["t"]))
+            want = sorted(ranked[:limit], key=lambda e: e["t"])
+            got = db.query(0, now + 1, limit=limit, keep=keep)
+            assert got["events"] == want and got["truncated"] is True, (keep, limit)
+    assert db.query(now - 10, now + 1, limit=1000)["truncated"] is False
+
+    res, rsrv = _resource_process(box)
+    try:
+        with urllib.request.urlopen(f"{res.url}/events?limit=999999999", timeout=30) as r:
+            rep = json.loads(r.read())
+        assert len(rep["events"]) == MAX_LIMIT and rep["truncated"] is True
+    finally:
+        rsrv.shutdown()
+
+
 def test_a_narrow_window_computes_its_files_and_a_wide_one_lists_them_with_the_same_answer():
     """Up to a day, the candidate files are computed from the window — a name from a time, a stat for whether it
     is there; wider, the epoch's directory is listed. Two ways to find the same files: one answer."""

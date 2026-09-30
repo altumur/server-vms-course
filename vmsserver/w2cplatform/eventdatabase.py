@@ -65,6 +65,7 @@ the moment it starts writing. It knows nothing about what an event means:
 # ================================================================================================
 from __future__ import annotations
 
+import heapq
 import json
 import os
 import socket
@@ -255,7 +256,13 @@ class EventIndex:
             raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
         if cls is not None and cls not in CLASSES:
             raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
-        rows = []
+        # What the answer can still carry, and no more (feedback BD): `limit + 1` rows of each class from the end
+        # `keep` names, held in two small heaps while the window is read. The cache's ceiling bounds the FILES
+        # held, not the answer — a window with no `from` used to gather every matching line of the tree before
+        # cutting it to a thousand, and eight such queries at once were the resource's memory. The `+ 1` is what
+        # keeps `truncated` a fact.
+        cap, seq, seen = max(0, int(limit)) + 1, 0, 0
+        kept = {True: [], False: []}                     # alarm? -> heap of (rank, row); the smallest rank leaves first
         for server, base in self._bases():
             subs = subsystems_under(base)
             for sub in ([subsystem] if subsystem is not None else sorted(subs)):
@@ -275,11 +282,18 @@ class EventIndex:
                             the_cam = ecam if ecam is not None else (int(u) if u.isdigit() else None)
                             if cam is not None and the_cam != cam:
                                 continue
-                            rows.append((c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
+                            seq, seen = seq + 1, seen + 1
+                            heap = kept[c == ALARM]
+                            rank = (t, -seq) if keep == "newest" else (-t, -seq)
+                            item = (rank, (c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
+                            if len(heap) < cap:
+                                heapq.heappush(heap, item)
+                            elif rank > heap[0][0]:
+                                heapq.heapreplace(heap, item)
         # One row PAST the limit, so `truncated` is a fact and not a guess. Alarms first, then time — `keep`
         # decides which end of the OBSERVATIONS survives, never whether an alarm does.
-        rows.sort(key=(lambda r: (not r[0], -r[1])) if keep == "newest" else (lambda r: (not r[0], r[1])))
-        truncated = len(rows) > limit
+        rows = [row for _, row in sorted(kept[True], reverse=True)] + [row for _, row in sorted(kept[False], reverse=True)]
+        truncated = seen > limit
         rows = sorted(rows[:limit], key=lambda r: r[1])  # alarms came first for the CUT; the answer is by time
         out = []
         for _, t, sub, u, c, ep, k, server, rel, rcls, fields in rows:

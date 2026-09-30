@@ -87,7 +87,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
-from .doors import byte_range
+from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
 from .contract import HEARTBEATS, SCHEMA, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds, schema_version
@@ -689,7 +689,7 @@ class SpecConsole:
                     rep = con.index.query(t0, t1,
                                           int(cam) if cam else None, q.get("kind"), q.get("subsystem"),
                                           q.get("unit") if not cam else None, cur,
-                                          limit=int(q.get("limit", 1000)),
+                                          limit=min(int(q.get("limit", 1000)), MAX_LIMIT),
                                           epoch_policy=con.epoch_policy, keep=q.get("keep", "newest"),
                                           cls=q.get("class"))
                     return h._send(200, con.timeline(rep, t0, t1))
