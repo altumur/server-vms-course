@@ -77,7 +77,8 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .events import ALARM, CLASSES, EPOCH_DIR, EVENTS, OBSERVATION, bucket_path, bucket_start, subsystems_under
+from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, bucket_path, bucket_start,
+                     subsystems_under, when)
 from .resource import MIRROR_DIR, mirrored_servers, resources_seen
 
 # Up to a day of buckets, the candidate files are COMPUTED from the window — a name from a time, and a stat
@@ -190,7 +191,7 @@ class EventIndex:
             start, kept, head = (have.offset, have.lines, have.head) if same else (0, (), None)
             f.seek(start)
             data = f.read()
-        head = data[:64] if head is None else head
+        head = data[:256] if head is None else head       # past the first line's name: two files differ there, if nowhere else
         cut = data.rfind(b"\n") + 1                      # a half-written last line waits for its end
         lines = list(kept)
         for raw in data[:cut].splitlines():
@@ -224,8 +225,13 @@ class EventIndex:
     def query(self, t0: float, t1: float, cam: int | None = None, kind: str | None = None,
               subsystem: str | None = None, unit: str | None = None,
               current_epochs: dict[tuple[str, str], int] | None = None, limit: int = 1000,
-              epoch_policy: dict[str, str] | None = None, keep: str = "newest", cls: str | None = None) -> dict:
-        """`current_epochs` is {(subsystem, unit): epoch} — fencing is per unit, and only the
+              epoch_policy: dict[str, str] | None = None, keep: str = "newest", cls: str | None = None,
+              by: str = "t") -> dict:
+        """`by` is WHICH TIME the window and the order are in: `t`, when a line was written — or `occurred`,
+        when its event happened (where the writer knew; `t` where it did not). In event time the window's
+        buckets are read and `MAX_EVENT_LATENESS` further on: a line written late lies in a later file.
+
+        `current_epochs` is {(subsystem, unit): epoch} — fencing is per unit, and only the
         unit's own subsystem knows its current epoch; the index just compares.
 
         `epoch_policy` is {subsystem: "fenced" | "earlier-run"} — what an older epoch MEANS
@@ -256,6 +262,9 @@ class EventIndex:
             raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
         if cls is not None and cls not in CLASSES:
             raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
+        if by not in ("t", "occurred"):
+            raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
+        read_to = t1 + MAX_EVENT_LATENESS if by == "occurred" else t1
         # What the answer can still carry, and no more (feedback BD): `limit + 1` rows of each class from the end
         # `keep` names, held in two small heaps while the window is read. The cache's ceiling bounds the FILES
         # held, not the answer — a window with no `from` used to gather every matching line of the tree before
@@ -271,21 +280,22 @@ class EventIndex:
                         continue
                     if cam is not None and not self._may_be(server, sub, u, cam):
                         continue
-                    for epoch, path in self._candidates(base, sub, u, t0, t1):
+                    for epoch, path in self._candidates(base, sub, u, t0, read_to):
                         lines = self._lines(path)
                         if lines:
                             self._learn(server, sub, u, lines)
                         rel = os.path.relpath(path, base)
                         for t, k, c, ecam, fields in lines:
-                            if not t0 <= t < t1 or (kind is not None and k != kind) or (cls is not None and c != cls):
+                            at = float(fields.get("occurred", t)) if by == "occurred" else t
+                            if not t0 <= at < t1 or (kind is not None and k != kind) or (cls is not None and c != cls):
                                 continue
                             the_cam = ecam if ecam is not None else (int(u) if u.isdigit() else None)
                             if cam is not None and the_cam != cam:
                                 continue
                             seq, seen = seq + 1, seen + 1
                             heap = kept[c == ALARM]
-                            rank = (t, -seq) if keep == "newest" else (-t, -seq)
-                            item = (rank, (c == ALARM, t, sub, u, the_cam, epoch, k, server, rel, c, fields))
+                            rank = (at, -seq) if keep == "newest" else (-at, -seq)
+                            item = (rank, (c == ALARM, at, sub, u, the_cam, epoch, k, server, rel, c, fields, t))
                             if len(heap) < cap:
                                 heapq.heappush(heap, item)
                             elif rank > heap[0][0]:
@@ -296,7 +306,7 @@ class EventIndex:
         truncated = seen > limit
         rows = sorted(rows[:limit], key=lambda r: r[1])  # alarms came first for the CUT; the answer is by time
         out = []
-        for _, t, sub, u, c, ep, k, server, rel, rcls, fields in rows:
+        for _, _at, sub, u, c, ep, k, server, rel, rcls, fields, t in rows:
             cur = (current_epochs or {}).get((sub, u))
             older = cur is not None and ep < cur
             was = (epoch_policy or {}).get(sub, "fenced") if older else "current"
@@ -393,8 +403,10 @@ class MergedIndex:
 
     def query(self, t0: float, t1: float, cam=None, kind=None, subsystem=None, unit=None, current_epochs=None,
               limit: int = 1000, epoch_policy: dict[str, str] | None = None, keep: str = "newest",
-              cls: str | None = None) -> dict:
-        """`keep` as in `EventIndex.query`, and it has to be carried BOTH ways: the merge asks
+              cls: str | None = None, by: str = "t") -> dict:
+        """`by` as in `EventIndex.query`: asked of every resource, and the merge orders by the same time.
+
+        `keep` as in `EventIndex.query`, and it has to be carried BOTH ways: the merge asks
         each resource for a window and then cuts the union to `limit` again, so a limit with no
         direction dropped the newest end twice — once per resource, once more over the merge.
 
@@ -422,10 +434,14 @@ class MergedIndex:
             raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
         if cls is not None and cls not in CLASSES:
             raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
+        if by not in ("t", "occurred"):
+            raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
+        order = when if by == "occurred" else (lambda e: e["t"])
         now = self.wall(); seen = resources_seen(self.objects)
         live = {s for s, hb in seen.items() if now - float(hb["ts"]) <= self.lost_after}
         params = {k: v for k, v in (("from", t0), ("to", t1), ("cam", cam), ("kind", kind), ("subsystem", subsystem),
-                                    ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls)) if v is not None}
+                                    ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls),
+                                    ("by", by if by != "t" else None)) if v is not None}
         events, unreachable, from_mirror, have = [], [], set(), set()
         incomplete: dict[str, str] = {}
         truncated = False
@@ -450,7 +466,9 @@ class MergedIndex:
                 if e["server"] != server:                         # a copy this resource holds for a peer
                     if e["server"] in live:
                         continue                                  # the owner answers for itself
-                    key = (e["server"], e["bucket"], e["t"], e["kind"], e["unit"])
+                    # A copy is known by the line's NAME. Without one — a line written before lines had names —
+                    # by where and when it was written, which made two events of one kind in one instant one.
+                    key = e.get("id") or (e["server"], e["bucket"], e["t"], e["kind"], e["unit"])
                     if key in have:
                         continue                                  # two peers hold the same copy
                     have.add(key); from_mirror.add(e["server"])
@@ -461,7 +479,7 @@ class MergedIndex:
             if server not in live and float(seen[server]["ts"]) + self.lost_after >= t0:
                 incomplete[server] = ("silent; its closed buckets from a copy, its open one from nobody"
                                       if server in from_mirror else "silent")
-        events.sort(key=lambda e: e["t"])
+        events.sort(key=order)
         if len(events) > limit:
             truncated = True
             alarms = [e for e in events if e.get("class") == ALARM]
@@ -471,7 +489,7 @@ class MergedIndex:
             # anybody — but it is cut with the observations already gone, and `truncated` says so.
             alarms = alarms if len(alarms) <= limit else (alarms[-limit:] if keep == "newest" else alarms[:limit])
             room = max(0, limit - len(alarms))
-            events = sorted(alarms + (rest[-room:] if keep == "newest" else rest[:room]), key=lambda e: e["t"])
+            events = sorted(alarms + (rest[-room:] if keep == "newest" else rest[:room]), key=order)
         cur = current_epochs or {}
         for e in events:                                          # each resource fenced its own; re-decide over the merge
             c = cur.get((e["subsystem"], e["unit"]))

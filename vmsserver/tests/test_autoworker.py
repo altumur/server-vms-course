@@ -688,7 +688,8 @@ def test_a_firing_whose_request_would_leave_expired_is_not_filed_and_is_counted_
     assert w.status()[0]["late"] == 1 and w.late == 1
     fired = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 400, t + 1, subsystem="auto")["events"]
              if e["kind"] == "fired"]
-    assert sorted((e["t"], e.get("late")) for e in fired) == [(t - 120, 120.0), (t - 3, None)]
+    # written NOW, about THEN (feedback BL): `t` files the line, `occurred` is the cause's moment
+    assert sorted((e["occurred"], e.get("late"), e["t"]) for e in fired) == [(t - 120, 120.0, t), (t - 3, None, t)]
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     assert 'auto_fired_late_total{worker="a-1"} 1' in "\n".join(auto_metrics(con)())
     w.reconcile_once()

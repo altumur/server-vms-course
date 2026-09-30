@@ -757,7 +757,7 @@ class SpecConsole:
                                           q.get("unit") if not cam else None, cur,
                                           limit=min(int(q.get("limit", 1000)), MAX_LIMIT),
                                           epoch_policy=con.epoch_policy, keep=q.get("keep", "newest"),
-                                          cls=q.get("class"))
+                                          cls=q.get("class"), by=q.get("by", "t"))
                     return h._send(200, con.timeline(rep, t0, t1))
                 except ValueError as e:
                     return h._send(400, {"error": str(e)})

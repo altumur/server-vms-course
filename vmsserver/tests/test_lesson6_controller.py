@@ -189,6 +189,8 @@ def test_the_console_over_http():
         assert m["subsystem"] == "console" and m["bucket"].startswith(f"console/{m['unit']}/e1/")
         assert json.load(urllib.request.urlopen(req)) == m                                      # idempotent: one mark
         ev = read_bucket(os.path.join(box.archive, m["bucket"]))
+        name = ev[0].pop("id")                                                                   # every line has a name, given by its writer
+        assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
         assert ev == [{"t": box.wall(), "kind": "mark", "cam": 1, "user": "murat", "note": "left the bag"}]
         assert subsystems_under(box.archive) == {"console": [m["unit"]]}                          # not in vms/1/: that bucket has one writer
         # the page, and the bytes it plays: three fetches and a Range

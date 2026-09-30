@@ -55,6 +55,7 @@ gi.require_version("Gst", "1.0")
 from gi.repository import Gst  # noqa: E402
 
 from . import archivesink, driverpacksrc  # noqa: E402,F401 — registers the elements
+from .observes import observes      # noqa: E402 — which bus messages are observations; no GStreamer needed to test it
 
 log = logging.getLogger("gstvms")
 Gst.init(None)
@@ -162,9 +163,16 @@ class GstActuator:
     # analytics element posts) and its scalar fields (`int`, `float`, `str`, `bool`) are copied; appended to
     # `posted`. The worker's `pump_once` turns each into `observe(cid, kind, **fields)`, a line in the
     # camera's bucket, if it still holds the epoch.
+    #
+    # ONLY WHAT ONE OF OUR ELEMENTS SAID (feedback BL). The filter used to be a list of names to DROP, and a
+    # list like that is wrong the day GStreamer grows a message: on the product's box `rtpbin` posted
+    # `application/x-rtp-source-sdes` every few seconds, and each went into the camera's event log as an event
+    # of the camera. So the question is turned round — who posted it — and `observes` answers it.
     def _posted(self, cid: int, msg) -> None:
         st = msg.get_structure()
-        if st is None or st.get_name() in ("GstBinForwarded", "splitmuxsink-fragment-opened", "splitmuxsink-fragment-closed"):
+        src = getattr(msg, "src", None)
+        factory = src.get_factory() if src is not None and hasattr(src, "get_factory") else None
+        if st is None or not observes(factory.get_name() if factory is not None else "", st.get_name()):
             return                                       # plumbing, not an observation
         fields = {}
         for i in range(st.n_fields()):

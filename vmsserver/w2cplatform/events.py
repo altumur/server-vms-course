@@ -41,9 +41,12 @@ observed at a time, about a unit it holds.
 # ================================================================================================
 from __future__ import annotations
 
+import itertools
 import json
 import os
+import random
 import re
+import string
 
 try:
     import fcntl                                  # Unix; `durably` falls back to `os.fsync` without it
@@ -176,6 +179,46 @@ def durable_dir(path: str) -> None:
         os.close(fd)
 
 
+# THE LINE, AS AGREED WITH THE PRODUCT (feedback BL; the platform review, "an event line with no second
+# timestamp, no id and no version"). The file format is shared, so the names and what they mean are too:
+#
+#   t          when the line was WRITTEN, by the writer's clock. Always there, and its meaning has not changed.
+#              It is what files a line: the bucket is chosen by `t`, a closed bucket is never written again —
+#              and mirroring (closed buckets are copied), the index's cache and the retention pass all stand on
+#              that. An event filed by when it HAPPENED would, arriving an hour late, have to be appended to a
+#              file a neighbour has already copied; a month late, to one that was deleted
+#   occurred   when the event HAPPENED, by the writer's clock, as far as the writer knows. Only when it knows
+#              better than `t`: a device that reported late, a driver's callback a pass ago. A device's own
+#              raw clock is not this — it is brought to the writer's clock first, or it is a field of the kind
+#   id         the line's name: `<unit>-e<epoch>-<process>-<n>`. Given by the writer when it writes; the
+#              device is not needed for it, and a device's own id, when it has one, is a field of the kind.
+#              What tells a COPY from a TWIN: two events of one kind in one instant used to be one event to
+#              the merge, which knew a line by (server, file, time, kind, unit)
+#   v          the format's version — and NOT written. A line without `v` is version 1; a reader skips the
+#              fields it does not know; `v` appears the day a line changes so that an old reader would read it
+#              WRONGLY, and not before
+#
+# The process is in the id because several processes write under one epoch in one place: a console's marks
+# and its journal of archive reads are all epoch 1.
+_PROC = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
+_SEQ = itertools.count(1)
+
+
+def new_event_id(unit: str, epoch: int) -> str:
+    return f"{unit}-e{epoch}-{_PROC}-{next(_SEQ)}"
+
+
+# How late a line may be written after what it is about and still be found by a query in EVENT time
+# (`by=occurred`): the index reads the window's buckets and this much further on, because the late line lies
+# in a later file. Later than this, a query by `t` still finds it — always.
+MAX_EVENT_LATENESS = 3600.0
+
+
+# When an event is, for a reader that asks in event time: `occurred` where the writer knew it, else `t`.
+def when(e: dict) -> float:
+    return float(e.get("occurred", e["t"]))
+
+
 # What a worker holds per unit it has an epoch for: the writer side.
 class EventLog:
     """What a worker holds per unit it has an epoch for. `append` writes one
@@ -210,9 +253,15 @@ class EventLog:
         if "class" in fields:
             raise ValueError("`class` is the traffic class and travels as `cls=`, not as a field — two "
                              "spellings of one thing drift, and the drift is invisible in the file")
+        if "occurred" in fields and (isinstance(fields["occurred"], bool) or not isinstance(fields["occurred"], (int, float))):
+            raise ValueError(f"`occurred` is a time, in seconds, by the writer's clock — not {fields['occurred']!r}")
+        if "v" in fields:
+            raise ValueError("`v` is the format's version and is not written: a line without it is version 1")
+        given = fields.pop("id", None)               # the writer names the line; a name it was handed is kept
         p = self.path_for(t)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        line = {"t": t, "kind": kind, **({} if cls == OBSERVATION else {"class": cls}), **fields}
+        line = {"t": t, "kind": kind, **({} if cls == OBSERVATION else {"class": cls}),
+                "id": str(given) if given else new_event_id(self.unit, self.epoch), **fields}
         # The second policy the class carries, and the one that costs something. An observation is
         # flushed and no more: it survives the process dying, not the power going, and that loss was
         # accepted on purpose (see `read_bucket` below — it is the same shape as the accepted loss for

@@ -240,11 +240,11 @@ class AutoWorker(Worker):
         #                         same window does not count it again; the worker says how many (`suppressed`),
         #                         and the scenario's own log gets ONE line with the number and the span
         fired, late, queued_at, refused = 0, 0, None, []
-        for fid, at in self.firings(row, events, since):
+        for fid, at, written in self.firings(row, events, since):
             if fid in self.fired:
                 continue                             # already filed, or refused; the id is the same either way
             if fired >= self.PER_PASS:
-                queued_at = at
+                queued_at = written                  # the cursor is in written time
                 break
             if not self.allowed(row, now):
                 self.fired[fid] = now
@@ -257,8 +257,9 @@ class AutoWorker(Worker):
             log.warning("%s: %s is over its ceiling of %s/min — %d firing(s) not filed", self.name, unit,
                         row["rate_per_minute"], len(refused))
             if unit in self.epochs:
-                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
-                    max(refused), "suppressed", scenario=unit, count=len(refused), since=min(refused), until=max(refused))
+                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(   # written now; about then
+                    now, "suppressed", occurred=max(refused), scenario=unit, count=len(refused),
+                    since=min(refused), until=max(refused))
         self.late_by_unit[unit], self.suppressed_by_unit[unit] = late, len(refused)
         self.forget(now)
         # The cursor moves only past a window that was WHOLE. A server that did not answer, a resource that
@@ -333,9 +334,19 @@ class AutoWorker(Worker):
     # event that matches one of them and has a partner for each of the others inside the window ending at
     # it. Asking it this way is what removes the state machine: the same question, asked of the same log,
     # gives the same answer on every pass, whoever is asking and however many times they have restarted.
-    def firings(self, row: dict, events: list[dict], since: float) -> list[tuple[str, float]]:
+    #
+    # TWO TIMES, AND EACH HAS ITS USE (feedback BL). The CURSOR walks what has been written, so it compares `t`.
+    # What the scenario MEANS is in event time: "within N seconds" is between when two things happened, and an
+    # action is valid from when its cause happened — `occurred`, where the writer knew it. An event a device
+    # delivered ten minutes late gives a request whose deadline has already passed, and that is right: the
+    # door is not opened for somebody who left ten minutes ago.
+    #
+    # And the firing is named after the completing event's `id`, not its time in milliseconds: two badges read
+    # in one millisecond are two firings. `(id, when it happened, when it was written)`.
+    def firings(self, row: dict, events: list[dict], since: float) -> list[tuple[str, float, float]]:
         triggers, window = list(row["when"]), float(row.get("within") or 0)
-        out: list[tuple[str, float]] = []
+        at = lambda e: float(e.get("occurred", e.get("t", 0)))
+        out: list[tuple[str, float, float]] = []
         for e in events:
             t = float(e.get("t", 0))
             if t <= since:
@@ -345,10 +356,11 @@ class AutoWorker(Worker):
             if len(triggers) > 1:
                 done = [tr for tr in triggers if fires(tr, e)]
                 waiting = [tr for tr in triggers if tr not in done]
-                if not all(any(fires(tr, o) and t - window <= float(o.get("t", 0)) <= t for o in events)
+                if not all(any(fires(tr, o) and at(e) - window <= at(o) <= at(e) for o in events)
                            for tr in waiting):
                     continue                         # not all of them, not inside the window: not yet
-            out.append((f"{row['id']}-{int(t * 1000)}", t))
+            name = str(e["id"]) if e.get("id") else str(int(t * 1000))   # a line written before lines had names
+            out.append((f"{row['id']}-{name}", at(e), t))
         return out
 
     # The ceiling, per scenario, per minute. In memory on purpose: it is a guard against a sensor that
@@ -380,7 +392,7 @@ class AutoWorker(Worker):
             self.late += 1
             if unit in self.epochs:
                 EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
-                    at, "fired", scenario=unit, actions=0, late=round(self.wall() - at, 3))
+                    self.wall(), "fired", occurred=at, scenario=unit, actions=0, late=round(self.wall() - at, 3))
             return False
         for i, action in enumerate(row["then"]):
             sub, name = str(action.get("sub", "")), str(action.get("action", ""))
@@ -401,10 +413,13 @@ class AutoWorker(Worker):
             if road <= le:
                 self.latency["buckets"][i] += 1
         # …and the scenario's own event, in its own bucket: what an operator sees on the timeline when
-        # they ask why the door opened at 14:02.
+        # they ask why the door opened at 14:02. WRITTEN now (`t`), ABOUT the moment its cause happened
+        # (`occurred`) — feedback BL. It used to be filed under the cause's time, which after a cold start or
+        # a held cursor is minutes back: a line appended to a bucket that had closed, and that a neighbour
+        # mirroring this server had already copied without it.
         if unit in self.epochs:
             EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
-                at, "fired", scenario=unit, actions=len(row["then"]))
+                self.wall(), "fired", occurred=at, scenario=unit, actions=len(row["then"]))
         return True
 
     def forget(self, now: float) -> None:

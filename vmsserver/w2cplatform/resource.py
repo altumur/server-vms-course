@@ -690,7 +690,7 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                         rep = resource.index.query(float(q.get("from", 0)), float(q.get("to", 1e12)),
                                                    int(q["cam"]) if q.get("cam") else None, q.get("kind"), q.get("subsystem"), q.get("unit"),
                                                    limit=min(int(q.get("limit", 1000)), MAX_LIMIT), keep=q.get("keep", "newest"),
-                                                   cls=q.get("class"))
+                                                   cls=q.get("class"), by=q.get("by", "t"))
                     except ValueError as e:                       # an unknown `keep` is refused, not read as the other end
                         return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
                     return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
