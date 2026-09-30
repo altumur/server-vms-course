@@ -219,9 +219,10 @@ camera 7 has 5 preset(s), not 9
 ## Шаг 5 — Вычислитель: вопрос к журналу, а не автомат
 
 ```python
-    def firings(self, row: dict, events: list[dict], since: float) -> list[tuple[str, float]]:
+    def firings(self, row: dict, events: list[dict], since: float) -> list[tuple[str, float, float]]:
         triggers, window = list(row["when"]), float(row.get("within") or 0)
-        out: list[tuple[str, float]] = []
+        at = lambda e: float(e.get("occurred", e.get("t", 0)))
+        out: list[tuple[str, float, float]] = []
         for e in events:
             t = float(e.get("t", 0))
             if t <= since:
@@ -231,12 +232,17 @@ camera 7 has 5 preset(s), not 9
             if len(triggers) > 1:
                 done = [tr for tr in triggers if fires(tr, e)]
                 waiting = [tr for tr in triggers if tr not in done]
-                if not all(any(fires(tr, o) and t - window <= float(o.get("t", 0)) <= t for o in events)
+                if not all(any(fires(tr, o) and at(e) - window <= at(o) <= at(e) for o in events)
                            for tr in waiting):
                     continue                         # not all of them, not inside the window: not yet
-            out.append((f"{row['id']}-{int(t * 1000)}", t))
+            name = str(e["id"]) if e.get("id") else str(int(t * 1000))   # a line written before lines had names
+            out.append((f"{row['id']}-{name}", at(e), t))
         return out
 ```
+
+**Два времени, и у каждого своё дело** (М10A, урок 12; обратная связь, BL). **Курсор** идёт по тому, что записано, и сравнивает `t`. **Смысл** сценария — во времени события: «в течение N секунд» — это между тем, когда две вещи произошли, и срок действия отсчитывается от того, когда произошла причина (`occurred`, где писатель его знал). Событие, которое устройство донесло с опозданием в десять минут, даёт заявку с уже истёкшим сроком, и она не подаётся (шаг 6). Это правильно: дверь не открывают тому, кто ушёл десять минут назад.
+
+Своё событие `fired` вычислитель пишет **сейчас** (`t`), а о моменте причины говорит `occurred`. Раньше он писал его под временем причины — после холодного старта или удержанного курсора это минуты назад, то есть в бакет, который уже закрылся и который сосед, зеркалящий этот сервер, уже скопировал без этой строки.
 
 Решает **завершающее событие**: то, что совпало с одним триггером и у которого для каждого из остальных нашёлся партнёр в окне, кончающемся на нём.
 
@@ -270,7 +276,7 @@ camera 7 has 5 preset(s), not 9
 
 **Курсор.** `Frontier` — то самое число из урока 23, тот же формат файла, рядом с событиями; ему добавили подсистему параметром. Он говорит, докуда сценарий **рассмотрен**.
 
-**Детерминированный id заявки** — `<сценарий>-<миллисекунда завершающего события>-<i>`. Посчитали дважды — записали ту же строку; выполняется она один раз, потому что у исполнителя своя защита (урок 4, шаг 3а).
+**Детерминированный id заявки** — `<сценарий>-<id завершающего события>-<i>`. Раньше на месте имени события стояла его миллисекунда, и два прохода карты в одну миллисекунду давали одну заявку. Посчитали дважды — записали ту же строку; выполняется она один раз, потому что у исполнителя своя защита (урок 4, шаг 3а).
 
 Самый злой тест на это — не «два прохода подряд», а **свежий процесс**: память пуста, курсор на диске. Заявок не прибавляется.
 
@@ -317,7 +323,7 @@ camera 7 has 5 preset(s), not 9
 
 ```python
         fired, late, queued_at, refused = 0, 0, None, []
-        for fid, at in self.firings(row, events, since):
+        for fid, at, written in self.firings(row, events, since):
             if fid in self.fired:
                 continue                             # already filed, or refused; the id is the same either way
             if fired >= self.PER_PASS:

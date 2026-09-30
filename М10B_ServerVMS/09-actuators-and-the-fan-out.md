@@ -279,7 +279,9 @@ class GstActuator:
 ```python
     def _posted(self, cid: int, msg) -> None:
         st = msg.get_structure()
-        if st is None or st.get_name() in ("GstBinForwarded", "splitmuxsink-fragment-opened", "splitmuxsink-fragment-closed"):
+        src = getattr(msg, "src", None)
+        factory = src.get_factory() if src is not None and hasattr(src, "get_factory") else None
+        if st is None or not observes(factory.get_name() if factory is not None else "", st.get_name()):
             return                                       # plumbing, not an observation
         fields = {}
         for i in range(st.n_fields()):
@@ -289,6 +291,20 @@ class GstActuator:
                 fields[name] = v
         self.posted.append((cid, st.get_name(), fields))
 ```
+
+**Наблюдение — только то, что сказал наш элемент.** Первая версия отбрасывала сообщения по списку имён: `GstBinForwarded` и два сообщения `splitmuxsink`. Список «что выбросить» неверен в тот день, когда у GStreamer появляется новое сообщение. На ящике продукта `rtpbin` слал `application/x-rtp-source-sdes` каждые несколько секунд, и каждое ложилось в журнал событий камеры как событие камеры (обратная связь, BL). Вопрос перевёрнут: не «что это за сообщение», а «кто его послал».
+
+```python
+OUR_ELEMENTS = ("driverpacksrc", "archivesink")
+PLUMBING = ("GstBinForwarded", "splitmuxsink-fragment-opened", "splitmuxsink-fragment-closed")
+
+
+def observes(factory: str, name: str, extra: tuple = ()) -> bool:
+    ours = OUR_ELEMENTS + tuple(extra) + tuple(f for f in os.environ.get("EVENT_ELEMENTS", "").split(",") if f)
+    return factory in ours and name not in PLUMBING
+```
+
+Функция лежит в `gstvms/observes.py` и GStreamer не импортирует — поэтому у неё есть тест, которому GStreamer не нужен. Аналитический элемент, добавленный в установке, называют в `EVENT_ELEMENTS`. Сам `_posted` на машине курса не запускался: здесь нет GStreamer, и то, что `msg.src.get_factory()` возвращает ожидаемое имя для элемента на Python, проверено чтением, а не прогоном.
 
 Фильтр служебного. Три имени в чёрном списке — сообщения GStreamer о собственной работе; `splitmuxsink-fragment-closed` уже обработан элементом из урока 6, и здесь он не наблюдение.
 
