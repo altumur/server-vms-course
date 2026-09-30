@@ -259,3 +259,48 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         assert post(p2, "k-1")[1]["id"] == 2                                 # a forgotten key is a new request, by design
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
+
+
+def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
+    """A console claims the key, then crashes — or its write raises — before it stores the reply. The claim stood
+    for the key's whole day and every correct retry got 409 "in flight" (the platform review; feedback BG). A
+    pending claim older than thirty seconds is nobody's: the next request takes it over and does the work. A 5xx
+    is not remembered under the key — "the store is away" is not an answer to the request — and a write that
+    raised lets its claim go at once. The store failing at the claim is 503, which a client retries, not 400."""
+    from vms.config import SPEC
+    from w2cplatform.console import IdempotencyKeys
+    box = Box()
+    a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    srv = serve(a, None, port=0, wall=box.wall)
+    port = srv.server_address[1]
+
+    def post(key, name="gate"):
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=json.dumps({"name": name, "source": "driverpack://file/g.mp4"}).encode(),
+                                     method="POST", headers={"Idempotency-Key": key})
+        try:
+            with urllib.request.urlopen(req) as r: return r.status, json.load(r)
+        except urllib.error.HTTPError as e: return e.code, json.load(e)
+
+    try:
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall()}, cas=0)   # claimed by a console that then died
+        box.wall.advance(31)
+        assert post("k-1")[0] == 201 and len(a.cameras()) == 1                          # taken over: the work is done
+        assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
+
+        create = a.create
+        a.create = lambda body: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
+        code, body = post("k-2")
+        assert code == 503 and body["error"] == "store unavailable"
+        assert box.vars.get("vms/idem/k-2")[0] is None                                 # the claim was let go, not left pending
+        a.create = create
+        assert post("k-2")[0] == 201 and len(a.cameras()) == 2                          # the retry does the work
+
+        keys = IdempotencyKeys(box.vars, "vms/idem/", box.wall, clock=box.clock)
+        assert keys.claim("k-3") is None
+        keys.store("k-3", (500, {"error": "the write failed"}))
+        assert box.vars.get("vms/idem/k-3")[0] is None                                 # a 5xx is not the key's answer
+        keys.store("k-3", (400, {"error": "no such source"}))
+        assert box.vars.get("vms/idem/k-3")[0]["status"] == "400"                      # a refusal is
+    finally:
+        srv.shutdown()
+

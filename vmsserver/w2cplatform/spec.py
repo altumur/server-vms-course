@@ -1187,10 +1187,57 @@ class SpecController(Controller):
     # The pass: `unplace_deleted`, then `place` every unit; returns what is placed.
     # `test_placement_is_stored_with_a_reason_and_adding_a_worker_moves_nothing`: six cameras split 3/3 by
     # capacity 3; the seventh waits; a third worker arriving takes only the seventh.
+    # THE PASS, as one call that measures itself and says so where anybody can read it (feedback BG). The
+    # controller has no port, and its pass used to be three calls in a loop in `__main__`: a pass that raised
+    # every time, a unit with nowhere to go, an assignment the rows contradicted — none of it was a number
+    # anywhere. `snapshot_age` stayed fresh while the cameras were not recorded. The report goes to the object
+    # store (`<sub>/controller/pass`), like a heartbeat, and the console exports it:
+    #
+    #   ts, last_success   when the pass last ran, and when it last ran WITHOUT raising. Both: a pass that does
+    #                      not run is a controller that stopped; one that runs and never succeeds is a controller
+    #                      that is up and failing — and a fresh snapshot hid exactly that
+    #   seconds, failures  how long it took; how many passes have raised since the store was new
+    #   unplaced           units that should be somewhere and are nowhere
+    #   diverged           assignments this pass had to bring back to what the placement rows say
+    PASS_KEY = "controller/pass"
+
+    def pass_once(self, home_budget: int = 1) -> dict:
+        import json
+        started, now = time.monotonic(), self.wall()
+        prev = self.pass_report() or {}
+        rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
+               "last_success": prev.get("last_success")}
+        self.last_diverged = 0
+        try:
+            self.ensure_placed()                      # deleted rows unplaced; new units onto the workers it sees
+            self.redistribute()                       # units of a RELEASED slot (scale-in) onto the rest
+            self.ensure_home(home_budget)             # a unit back to the server its row names, if it is back
+            rep["last_success"] = now
+        except Exception as e:                        # noqa: BLE001
+            rep.update(ok=False, error=str(e), failures=rep["failures"] + 1)
+            log.exception("%s: placement pass failed", self.sub.name)
+        rep["seconds"] = round(time.monotonic() - started, 3)
+        rep["diverged"] = self.last_diverged
+        try:
+            rep["unplaced"] = len(self.unplaced())
+            self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
+        except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
+            log.exception("%s: the pass could not report on itself", self.sub.name)
+        return rep
+
+    def pass_report(self) -> dict | None:
+        import json
+        raw = self.objects.get(f"{self.sub.name}/{self.PASS_KEY}")
+        return json.loads(raw) if raw else None
+
+    def unplaced(self) -> list:
+        """Units that should be somewhere and are nowhere — whatever the reason; `/unplaceable` says which cannot be."""
+        return [r["id"] for r in self.units() if not self.retired(r) and self.placement(r["id"]) is None]
+
     def ensure_placed(self, workers: list[str] | None = None) -> list[Placement]:
         self.unplace_deleted()
         self.unplace_retired()
-        self.sync_assignments()
+        self.last_diverged = len(self.sync_assignments())
         out = []
         for r in self.units():
             # One unit that cannot be placed — a row that does not parse after a field changed its type, a

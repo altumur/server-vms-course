@@ -82,6 +82,7 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
       "conflicts": 0,
       "passes": 0,
       "store_errors": 0,
+      "pass_failures": 0,
       "capacity": 50,
       "headroom": 50,
       "started": 1757500000.0,

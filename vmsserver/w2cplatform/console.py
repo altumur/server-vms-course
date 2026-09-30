@@ -80,6 +80,7 @@ rule in this file.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import socket
 import threading
@@ -107,6 +108,8 @@ from .resource import resources_seen
 from .limits import TooLarge
 from .spec import Refused, SpecController
 from .variables import Conflict, Forbidden
+
+log = logging.getLogger(__name__)
 
 PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 
@@ -262,17 +265,41 @@ class IdempotencyKeys:
         except Conflict:
             pass
         for _ in range(40):                                              # another instance holds it: its reply, when it lands
-            items, _ = self.vars.get(path)
+            items, idx = self.vars.get(path)
             if items is None:
                 return self.claim(key)                                   # pruned or crashed mid-flight: claim again
             if items.get("state") == "done":
                 return int(items["status"]), json.loads(items["body"])
+            # A claim older than `PENDING_TTL` is nobody's: its console crashed between the claim and the reply,
+            # or its write raised. It used to stand for the key's whole day, answering every correct retry
+            # with 409 (the platform review; feedback BG). The next request takes it over, by CAS, and does
+            # the work.
+            if self.wall() - float(items.get("at", 0)) >= self.PENDING_TTL:
+                try:
+                    self.vars.put(path, {"state": "pending", "at": self.wall()}, cas=idx)
+                    return None
+                except Conflict:
+                    continue
             self.sleep(0.05)
         return 409, {"detail": "the same request is in flight on another console", "error": "in flight"}
 
+    PENDING_TTL = 30.0
+
     # Overwrite the row with `{state: done, status, body: json, at}` (no CAS: the claimant owns it).
+    #
+    # A 5xx is NOT remembered: "the store is away" is not an answer to the request, and kept under the key it was
+    # the answer to every retry for a day. The claim is let go instead, and the retry does the work.
     def store(self, key: str, resp: tuple[int, dict]) -> None:
+        if int(resp[0]) >= 500:
+            return self.release(key)
         self.vars.put(self._path(key), {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall()})
+
+    def release(self, key: str) -> None:
+        """Let a claim go: the write it stood for did not happen."""
+        try:
+            self.vars.delete(self._path(key))
+        except Exception:                                                # noqa: BLE001 — it will age out in `PENDING_TTL`
+            pass
 
     # At most once per 60 s of monotonic time: delete every key under the prefix whose `at` is older than
     # `ttl`, by CAS (a conflict skips it). The test advances a day and sees 2 pruned, then 0, then a re-used
@@ -481,6 +508,27 @@ class SpecConsole:
         age = self.ctl.snapshot_age(now)
         lines += [f"# TYPE {p}_snapshot_age_seconds gauge",
                   f"{p}_snapshot_age_seconds {-1 if age is None else round(age, 1)}"]
+        # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
+        # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
+        # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.
+        rep = self.ctl.pass_report() or {}
+        ago = lambda t: -1 if t is None else round(now - float(t), 1)
+        lines += [f"# TYPE {p}_reconcile_last_pass_age_seconds gauge",
+                  f"{p}_reconcile_last_pass_age_seconds {ago(rep.get('ts'))}",
+                  f"# TYPE {p}_reconcile_last_success_age_seconds gauge",
+                  f"{p}_reconcile_last_success_age_seconds {ago(rep.get('last_success'))}",
+                  f"# TYPE {p}_reconcile_pass_seconds gauge", f"{p}_reconcile_pass_seconds {rep.get('seconds', 0)}",
+                  f"# TYPE {p}_reconcile_failures counter", f"{p}_reconcile_failures {rep.get('failures', 0)}",
+                  f"# TYPE {p}_units_unplaced gauge", f"{p}_units_unplaced {rep.get('unplaced', 0)}",
+                  f"# TYPE {p}_units_diverged gauge", f"{p}_units_diverged {rep.get('diverged', 0)}",
+                  # What a worker says about itself and placement does not read — a person can, now: fenced
+                  # (alive, holding nothing), and how often the store did not answer it.
+                  f"# TYPE {p}_worker_fenced gauge",
+                  *[f'{p}_worker_fenced{{worker="{w}"}} {1 if str(hb.extra.get("fenced")).lower() == "true" else 0}' for w, hb in hbs.items()],
+                  f"# TYPE {p}_worker_store_errors counter",
+                  *[f'{p}_worker_store_errors{{worker="{w}"}} {hb.extra.get("store_errors", 0)}' for w, hb in hbs.items()],
+                  f"# TYPE {p}_worker_pass_failures counter",
+                  *[f'{p}_worker_pass_failures{{worker="{w}"}} {hb.extra.get("pass_failures", 0)}' for w, hb in hbs.items()]]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix
         # listing and one row — deliberately NOT `blobs_referenced()`, which walks every unit's row: a
         # gauge scraped every fifteen seconds must not cost a full scan of the configuration.
@@ -646,9 +694,23 @@ class SpecConsole:
             prior = self.seen.claim(key)
         except Refused as e:
             h._send(400, {"detail": str(e), "error": str(e)}); return None
+        except OSError as e:                                             # the store, not the request: a client told 400 does not retry
+            h._send(503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}); return None
         if prior is not None:
             h._send(*prior); return None
         return key
+
+    # A write that RAISED under a claimed key: the claim is let go — nothing was written that the key could
+    # answer for — and the reply says whose fault it was. The store: 503, which a client retries. Anything
+    # else: 500. It used to leave the claim pending and the handler to fall over, and the correct retry got
+    # 409 "in flight" until the key aged out a day later (feedback BG).
+    def _failed(self, key: str | None, e: Exception) -> tuple[int, dict]:
+        if key:
+            self.seen.release(key)
+        if isinstance(e, OSError):
+            return 503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}
+        log.error("%s: a write failed: %s", self.spec.name, e)
+        return 500, {"detail": str(e), "error": "the write failed"}
 
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount
@@ -708,10 +770,13 @@ class SpecConsole:
             key = self._idem(h)
             if key is None:
                 return
-            if path == "/marks":
-                resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
-            else:
-                resp = con.create(h._body())
+            try:
+                if path == "/marks":
+                    resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
+                else:
+                    resp = con.create(h._body())
+            except Exception as e:                                       # noqa: BLE001
+                return h._send(*self._failed(key, e))
             con.seen.store(key, resp); return h._send(*resp)
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
@@ -734,9 +799,14 @@ class SpecConsole:
                     prior = con.seen.claim(key)
                 except Refused as e:
                     return h._send(400, {"detail": str(e), "error": str(e)})
+                except OSError as e:
+                    return h._send(503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"})
                 if prior is not None:
                     return h._send(*prior)
-            resp = con.update(self._uid(path), h._body())
+            try:
+                resp = con.update(self._uid(path), h._body())
+            except Exception as e:                                       # noqa: BLE001
+                return h._send(*self._failed(key, e))
             if key:
                 con.seen.store(key, resp)
             return h._send(*resp)

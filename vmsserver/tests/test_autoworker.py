@@ -158,6 +158,49 @@ def test_a_bouncing_sensor_does_not_ring_the_door():
     assert len(box.vars.list("vms/requests/")) == 3, "the ceiling holds across passes, not inside one"
 
 
+def test_more_firings_than_a_pass_files_wait_for_the_next_pass_and_none_is_lost():
+    """`PER_PASS` bounds one pass. It used to bound the scenario: the cursor moved past the firings it had not
+    filed, and they were gone without a word (the platform review; feedback BG). It is a queue — the cursor stops
+    just before the first firing left over, and the next pass files it."""
+    box = Box()
+    t = box.wall()
+    events = [ev(t - 20 + i, "vms", 12, "io.input", port="1", value="closed") for i in range(6)]
+    _scenario(box, name="six", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "six")
+    w = _worker(box, _Log(events))
+    assert w.PER_PASS == 4
+    w.reconcile_once()
+    assert len(box.vars.list("vms/requests/")) == 4
+    w.reconcile_once()
+    assert len(box.vars.list("vms/requests/")) == 6                    # the two that waited
+    w.reconcile_once()
+    assert len(box.vars.list("vms/requests/")) == 6 and w.suppressed == 0
+
+
+def test_firings_over_the_ceiling_are_refused_counted_and_said_once():
+    """A refusal by design — a contact that chatters is not fifty people at the door — and it was silent: nothing
+    counted them, and the scenario's own log did not mention them. Each is marked decided, so a pass over the
+    same window does not count it again; the worker says how many; the scenario's log gets one line with the
+    number and the span."""
+    from vms.console import auto_metrics
+    from w2cplatform.eventdatabase import EventIndex
+    box = Box()
+    t = box.wall()
+    bounce = [ev(t - 20 + i * 0.2, "vms", 12, "io.input", port="1", value="closed") for i in range(50)]
+    _scenario(box, name="buzz", when=[DOOR["when"][0]], within=0, rate_per_minute=3, then=[DOOR["then"][0]])
+    _assigned(box, "buzz")
+    w = _worker(box, _Log(bounce))
+    for _ in range(4):
+        w.reconcile_once()
+    assert len(box.vars.list("vms/requests/")) == 3 and w.suppressed == 47
+    w.heartbeat_once()
+    lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(t - 60, t + 1, subsystem="auto")["events"]
+             if e["kind"] == "suppressed"]
+    assert [(e["count"], e["since"], e["until"]) for e in lines] == [(47, bounce[3]["t"], bounce[49]["t"])]
+    con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
+    assert 'auto_firings_suppressed_total{worker="a-1"} 47' in "\n".join(auto_metrics(con)())
+
+
 def test_a_scenario_that_is_off_decides_nothing():
     box = Box()
     t = box.wall()

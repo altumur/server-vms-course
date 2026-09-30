@@ -26,6 +26,7 @@ gone the other way:
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 
@@ -100,6 +101,9 @@ class AutoWorker(Worker):
         self.said_without: set[str] = set()          # scenarios that said `decided_without` for the gap they are in
         self.cut: dict[str, list] = {}               # scenario -> the kinds whose answer did not fit its window
         self.late_by_unit: dict[str, int] = {}       # scenario -> firings its last pass did not file (late)
+        self.suppressed_by_unit: dict[str, int] = {} # scenario -> firings its last pass refused: over its ceiling
+        self.suppressed = 0                          # …and all of them, since this process started
+        self.pass_failures = 0                       # passes that raised
         # One pass's answers, per (subsystem, kind): asked ONCE for every scenario watching that kind, over the
         # longest window any of them needs (`reconcile_once`). And what the pass cost — said in the heartbeat,
         # because a slow pass is otherwise visible nowhere: its seconds, its queries, how far the furthest
@@ -164,6 +168,7 @@ class AutoWorker(Worker):
                                          **({"holding": holes} if holes else {}),
                                          **({"cut": self.cut[unit]} if self.cut.get(unit) else {}),
                                          **({"late": self.late_by_unit[unit]} if self.late_by_unit.get(unit) else {}),
+                                         **({"suppressed": self.suppressed_by_unit[unit]} if self.suppressed_by_unit.get(unit) else {}),
                                          **({"decided_without": self.gave_up.pop(unit)} if unit in self.gave_up else {}),
                                          **({"unfit": misfit} if misfit else {}),
                                          **({"unchecked": unsure} if unsure else {})}
@@ -226,18 +231,35 @@ class AutoWorker(Worker):
         # how much history a firing may span, and `since` is how much of it is new.
         events, holes = self.window(row, since - window, now)
         self.pass_stats["lag_seconds"] = max(self.pass_stats["lag_seconds"], round(now - since, 3))
-        fired, late = 0, 0
+        # Two ways a firing is not filed on this pass, and they are not the same thing (feedback BG; the review
+        # called both "lost without a trace", and both were):
+        #
+        #   more than PER_PASS    a QUEUE, not a refusal. The cursor stops just before the first firing not
+        #                         filed, and the next pass files it. It used to move on, and the firing was gone
+        #   over the ceiling      a refusal, by design — and counted: each is marked decided, so a pass over the
+        #                         same window does not count it again; the worker says how many (`suppressed`),
+        #                         and the scenario's own log gets ONE line with the number and the span
+        fired, late, queued_at, refused = 0, 0, None, []
         for fid, at in self.firings(row, events, since):
-            if fired >= self.PER_PASS:
-                break
             if fid in self.fired:
-                continue                             # already filed; the id is the same either way
-            if not self.allowed(row, now):
-                log.warning("%s: %s is over its ceiling of %s/min — not firing", self.name, unit, row["rate_per_minute"])
+                continue                             # already filed, or refused; the id is the same either way
+            if fired >= self.PER_PASS:
+                queued_at = at
                 break
+            if not self.allowed(row, now):
+                self.fired[fid] = now
+                refused.append(at)
+                continue
             late += not self.file(row, fid, at)
             fired += 1
-        self.late_by_unit[unit] = late
+        if refused:
+            self.suppressed += len(refused)
+            log.warning("%s: %s is over its ceiling of %s/min — %d firing(s) not filed", self.name, unit,
+                        row["rate_per_minute"], len(refused))
+            if unit in self.epochs:
+                EventLog(self.archive_root, AUTO.name, unit, self.epochs[unit]).append(
+                    max(refused), "suppressed", scenario=unit, count=len(refused), since=min(refused), until=max(refused))
+        self.late_by_unit[unit], self.suppressed_by_unit[unit] = late, len(refused)
         self.forget(now)
         # The cursor moves only past a window that was WHOLE. A server that did not answer, a resource that
         # was rebuilding after a restart, a silent one answered by its peer's copies (which never hold the
@@ -260,7 +282,10 @@ class AutoWorker(Worker):
         else:
             self.held_from.pop(unit, None)
             self.said_without.discard(unit)
-            front.set(max(since, now - self.SETTLE))  # …and never further than the log has caught up to
+            to = max(since, now - self.SETTLE)        # …and never further than the log has caught up to
+            if queued_at is not None:                 # …nor past a firing still waiting its turn
+                to = max(since, min(to, math.nextafter(queued_at, -math.inf)))
+            front.set(to)
         return fired
 
     # The events to decide on — ONE QUERY PER KIND THE SCENARIO WATCHES, and that is not an optimisation.
@@ -395,7 +420,8 @@ class AutoWorker(Worker):
     def heartbeat_once(self) -> None:
         self.heartbeat(self.status(), server=self.server, instance=self.instance,
                        labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
-                       filed=self.filed, late=self.late, latency=self.latency, **self.pass_stats)
+                       filed=self.filed, late=self.late, suppressed=self.suppressed, latency=self.latency,
+                       pass_failures=self.pass_failures, **self.pass_stats)
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
@@ -443,6 +469,7 @@ class AutoWorker(Worker):
             try:
                 self.reconcile_once()
             except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
+                self.pass_failures += 1
                 log.exception("%s: pass failed", self.name)
             try:                                      # in a try of its own: a pass that raises still holds its scenarios
                 if self.clock() - last_lease >= lease_every:

@@ -199,12 +199,7 @@ def _controller_loop(ctl) -> None:
     workers it sees, move what a released slot left, bring one unit home if its server came back, publish the
     snapshot. Nothing else, ever."""
     while not stop.is_set():
-        try:
-            ctl.ensure_placed()                       # deleted rows unplaced; new units onto the workers it sees
-            ctl.redistribute()                        # units of a RELEASED slot (scale-in) onto the rest
-            ctl.ensure_home(1)                        # ONE unit a pass back to the server its row names, if it is back
-        except Exception:                             # noqa: BLE001
-            logging.exception("placement pass failed")
+        ctl.pass_once(1)                              # place, move, bring ONE unit home — and report on itself; it does not raise
         # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
         # inside the block above, placement had already succeeded — and the log said "placement pass
         # failed", naming the one thing that had not. The reverse hid the other half: a placement that

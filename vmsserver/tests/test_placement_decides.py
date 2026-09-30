@@ -102,3 +102,40 @@ def test_one_unit_that_raises_does_not_stop_the_placing_of_the_rest():
     ctl.place = flaky
     placed = [p.unit for p in ctl.ensure_placed()]
     assert placed == [1, 2, 4, 5] and ctl.placement(3) is None and ctl.placement(5) is not None
+
+
+def test_the_pass_reports_on_itself_and_the_console_exports_it():
+    """The controller has no port. A pass that raised every time, a unit with nowhere to go, an assignment the rows
+    contradicted were numbers nowhere — and the snapshot's age stayed fresh while the cameras were not recorded
+    (the platform review; feedback BG). The pass is one call; it leaves a report in the object store, and any
+    console exports it."""
+    from w2cplatform.console import SpecConsole
+    box = Box()
+    ctl = VmsController(box.vars, box.objects, capacity=4, wall=box.wall)
+    ctl.create_camera({"source": "driverpack://file/1.mp4"})
+    rep = ctl.pass_once()
+    assert (rep["ok"], rep["unplaced"], rep["diverged"], rep["failures"]) == (True, 1, 0, 0)    # no workers: it waits, counted
+    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4)
+    w.heartbeat_once()
+    assert ctl.pass_once()["unplaced"] == 0
+    ctl.assign_remove("w-1", "1")                                      # somebody took the assignment away; the row still says w-1
+    rep = ctl.pass_once()
+    assert rep["diverged"] == 1 and ctl.assignment("w-1").units == ["1"]
+    first_ok = box.wall()
+
+    box.wall.advance(30)
+    place = ctl.ensure_placed
+    ctl.ensure_placed = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("the store went away mid-pass"))
+    rep = ctl.pass_once()                                              # it does not raise: it says so
+    assert (rep["ok"], rep["failures"], rep["last_success"]) == (False, 1, first_ok) and "went away" in rep["error"]
+    ctl.ensure_placed = place
+
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()
+    for line in ("vms_reconcile_last_pass_age_seconds 0.0", "vms_reconcile_last_success_age_seconds 30.0",
+                 "vms_reconcile_failures 1", "vms_units_unplaced 0", "vms_units_diverged 0",
+                 'vms_worker_fenced{worker="w-1"} 0', 'vms_worker_store_errors{worker="w-1"} 0'):
+        assert line in text, line
+    w.fence("slot w-1 is held by another instance now"); w.heartbeat_once()
+    assert 'vms_worker_fenced{worker="w-1"} 1' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert "vms_reconcile_last_pass_age_seconds -1" in SpecConsole(VmsController(Box().vars, Box().objects), wall=box.wall).metrics_text()
+

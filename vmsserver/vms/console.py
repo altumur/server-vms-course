@@ -382,8 +382,34 @@ def rec_metrics(rec_ctl: SpecController):
                 # ceiling — every one of them a spare that cannot help. Subtracting the spares stops it
                 # after the first: one free process proves the shortage is not a shortage of processes.
                 "# TYPE rec_recorders_needed gauge",
-                f"rec_recorders_needed {max(0, unserved - spare)}"]
+                f"rec_recorders_needed {max(0, unserved - spare)}",
+                *_recorders(rec_ctl)]
     return lines
+
+
+# What each recorder says about itself, from its heartbeat (feedback BG). A fenced recorder and a recorder with
+# nothing assigned both showed "0 running"; a volume that would not open, a writer that stalled, an archive that
+# went away were in the heartbeat and on the page, and there was nothing to put an alert on.
+def _recorders(rec_ctl: SpecController) -> list[str]:
+    hbs = sorted(heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items())
+    now = rec_ctl.wall()
+    out = ["# TYPE rec_recordings gauge"]
+    for w, hb in hbs:
+        phases: dict[str, int] = {}
+        for st in hb.status:
+            phases[str(st.get("phase", "?"))] = phases.get(str(st.get("phase", "?")), 0) + 1
+        out += [f'rec_recordings{{worker="{w}",phase="{ph}"}} {n}' for ph, n in sorted(phases.items())]
+    out.append("# TYPE rec_volume_error gauge")
+    out += [f'rec_volume_error{{worker="{w}"}} {1 if hb.extra.get("volume_error") else 0}' for w, hb in hbs]
+    out.append("# TYPE rec_archive_away_seconds gauge")
+    out += [f'rec_archive_away_seconds{{worker="{w}"}} '
+            f'{round(now - float(hb.extra["archive_away_since"]), 1) if float(hb.extra.get("archive_away_since") or 0) else 0}'
+            for w, hb in hbs]
+    out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
+    out += [f'rec_writer{{worker="{w}",state="{(hb.extra.get("writer") or {}).get("state") or "ok"}"}} 1' for w, hb in hbs]
+    out.append("# TYPE rec_spool_segments gauge")                  # closed segments waiting to reach the archive
+    out += [f'rec_spool_segments{{worker="{w}"}} {hb.extra.get("spool", 0)}' for w, hb in hbs]
+    return out
 
 
 # What the VMS adds to `/metrics`: the commands its holders performed, refused or let expire, summed over their
@@ -427,6 +453,8 @@ def auto_metrics(auto_ctl):
             out.append(f'auto_event_to_request_seconds_count{{worker="{w}"}} {lat["count"]}')
         out.append("# TYPE auto_fired_late_total counter")
         out += [f'auto_fired_late_total{{worker="{w}"}} {hb.extra["late"]}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
+        out.append("# TYPE auto_firings_suppressed_total counter")     # refused by a scenario's own ceiling
+        out += [f'auto_firings_suppressed_total{{worker="{w}"}} {hb.extra["suppressed"]}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
         return out
     return lines
 

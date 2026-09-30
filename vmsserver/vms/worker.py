@@ -432,6 +432,7 @@ class VmsWorker(Worker):
         self.was_fenced: str | None = None               # why it was fenced last, once it has rejoined
         self._performing: dict[int, dict] = {}           # device -> the one command in flight into it
         self.store_errors = 0                            # passes and renewals the store did not answer
+        self.pass_failures = 0                           # parts of the loop that raised, since the process started
         self.server = runtime.server(env, server)
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
@@ -1000,6 +1001,7 @@ class VmsWorker(Worker):
                        labels=",".join(self.labels), assignment_rev=self.assignment_rev,
                        fenced=not self.recording_allowed, conflicts=self.conflicts(), passes=self.passes,
                        store_errors=self.store_errors + sum(l.store_errors for l in self.leases.values()),
+                       pass_failures=self.pass_failures,
                        **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
@@ -1097,10 +1099,12 @@ class VmsWorker(Worker):
                     self.rejoin()                          # a fence is not for ever: a free slot, from nothing
                 self.reconcile_once()
             except Exception:                              # noqa: BLE001
+                self.pass_failures += 1                    # …and counted: a loop that raises every pass is alive and says so
                 log.exception("%s: pass failed; will retry", self.name)
             try:
                 self.pump_once()
             except Exception:                              # noqa: BLE001
+                self.pass_failures += 1
                 log.exception("%s: pump failed; will retry", self.name)
             # STAYING ALIVE, in a try of its own and never inside the one above. These two used to share
             # it, so anything the work raised skipped them — every pass, for as long as it kept raising.
