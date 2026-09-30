@@ -607,6 +607,10 @@ class Worker:
         check_schema(vars_)                       # a build older than the store does not run at all
         self.clock, self.wall = clock, wall
         self.lease_ttl, self.lease_margin = lease_ttl, lease_margin
+        # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_record`).
+        # 0: not at all — every subsystem's default. A subsystem whose units write data sets it: `None` is
+        # "for as long as the silence lasts".
+        self.unconfirmed_max: float | None = 0.0
         self.epochs: dict[str, int] = {}          # unit -> epoch this worker holds
         self.leases: dict[str, Lease] = {}
         self.instance = instance or f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"   # the process; a name is a slot
@@ -782,7 +786,8 @@ class Worker:
         number, and the first one's lease will fence on renewal."""
         epoch, _ = next_epoch(self.vars, self.sub.epoch_key(unit))
         self.epochs[unit] = epoch
-        self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock)
+        self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
+                                  self.unconfirmed_max)
         return epoch
 
     # Forget the unit's epoch and lease (the worker stopped it).
@@ -794,6 +799,15 @@ class Worker:
     def may_write(self, unit: str) -> bool:
         lease = self.leases.get(unit)
         return lease is not None and lease.may_write()
+
+    # The wider question, for data: also a lease that ran out while the store was silent (`Lease.may_record`).
+    def may_record(self, unit: str) -> bool:
+        lease = self.leases.get(unit)
+        return lease is not None and lease.may_record()
+
+    # Units recording past their lease's end, unconfirmed: `{unit: seconds}`.
+    def unconfirmed(self) -> dict[str, float]:
+        return {u: round(l.unconfirmed(), 1) for u, l in self.leases.items() if l.unconfirmed() > 0}
 
     # Renews every lease; returns the units whose lease was lost — fenced or expired — for the subsystem to
     # stop.

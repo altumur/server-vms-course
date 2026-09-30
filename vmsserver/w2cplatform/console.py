@@ -527,6 +527,10 @@ class SpecConsole:
                   *[f'{p}_worker_fenced{{worker="{w}"}} {1 if str(hb.extra.get("fenced")).lower() == "true" else 0}' for w, hb in hbs.items()],
                   f"# TYPE {p}_worker_store_errors counter",
                   *[f'{p}_worker_store_errors{{worker="{w}"}} {hb.extra.get("store_errors", 0)}' for w, hb in hbs.items()],
+                  # Units a worker is recording past their lease's end, the store silent (feedback BK): data goes
+                  # on, actions wait. Not zero for long is a store that is away, seen from the workers' side.
+                  f"# TYPE {p}_worker_unconfirmed gauge",
+                  *[f'{p}_worker_unconfirmed{{worker="{w}"}} {hb.extra.get("unconfirmed", 0)}' for w, hb in hbs.items()],
                   f"# TYPE {p}_worker_pass_failures counter",
                   *[f'{p}_worker_pass_failures{{worker="{w}"}} {hb.extra.get("pass_failures", 0)}' for w, hb in hbs.items()]]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix

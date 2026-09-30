@@ -189,6 +189,8 @@ class RecWorker(VmsWorker):
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
+        self._shared: set = set()                   # the declared volumes any box may serve, as last read
+        self._hold_confirmed = self.clock()          # when `volume_pass` last ran to its end
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
         self.closed: list[str] = []                 # ranges promoted from a device: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
@@ -538,6 +540,7 @@ class RecWorker(VmsWorker):
         if self.pinned:
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
+        self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
         free = volumes.servable(list(rows.values()), self.server)
         # An archive that refuses writes — WRONG, not away — is handed back: buffering into it waits for
         # nothing while the spool grows, and its recordings should go somewhere that works. What it already
@@ -683,16 +686,42 @@ class RecWorker(VmsWorker):
             self.actuator("stop", {"id": uid})
             self.reconciler.actual.pop(uid, None)
             self.release(str(uid))
-        self.release_hold()
+        try:
+            self.release_hold()
+        except OSError:                              # the store is silent: the hold lapses by itself
+            self.hold = None
         self.volume, self.capacity = "", 0
         # What the archive's state said was about the archive we just left. The next one starts clean — and
         # a promotion still in flight into the old one will not write over it (`promote_closed`).
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
 
+    # THE PLACE, WHILE THE STORE IS SILENT (feedback BK). `volume_pass` reads the declared volumes and renews the
+    # hold; a store that does not answer raises out of it, and nothing is let go for that — not reading the
+    # list is not "nothing is declared", and not reading the hold is not "somebody else holds it".
+    #
+    # How long that lasts depends on whose the place is:
+    #
+    #   a disk of this server     stays this recorder's for as long as the silence lasts. Nobody else can write
+    #                             to it: it is here
+    #   a network archive         any box may serve it, and one that can reach the store will take the hold when
+    #                             it lapses. Two writers in one archive is not a duplicate, it is damage — so
+    #                             when the hold has gone `slot_ttl − margin` unconfirmed, it is let go, and its
+    #                             recordings stop. The one case where silence still stops a recording
     def lease_pass(self) -> list[str]:
         lost = super().lease_pass()
         if self.recording_allowed:                   # a fenced instance decides nothing about volumes
-            self.volume_pass()
+            try:
+                self.volume_pass()
+                self._hold_confirmed = self.clock()
+            except OSError as e:
+                self.store_errors += 1
+                quiet = self.clock() - self._hold_confirmed
+                if self.hold is not None and self.hold in self._shared and quiet >= self.slot_ttl - self.lease_margin:
+                    self.leave_volume(f"the hold on network archive {self.hold} has not been confirmed for {quiet:.0f} s "
+                                      f"(the store does not answer: {e})")
+                else:
+                    logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
+                                    self.name, e, self.volume or "nothing")
         return lost
 
     # Move what has closed from the spool into the archive — and survive the archive being away.
@@ -1119,7 +1148,7 @@ class RecWorker(VmsWorker):
         if src["kind"] == "device":
             return self.fetch(unit, cam, src["url"], t0, t1)
         unit = str(unit)
-        if not self.may_write(unit):
+        if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
         try:
             segs = self.read_manifest(src["url"], src["recording"])
@@ -1138,7 +1167,7 @@ class RecWorker(VmsWorker):
     # our manifest, our retention.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
         unit = str(unit)
-        if not self.may_write(unit):
+        if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
         self.actuator.range_error = ""
         paths = self.actuator.record_range(unit, f"{url}?from={t0}&to={t1}", self.epochs.get(unit, 0),

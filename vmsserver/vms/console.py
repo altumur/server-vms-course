@@ -454,6 +454,9 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
             for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
+    out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
+    out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {st["unconfirmed_s"]}'
+            for w, hb in hbs for st in hb.status if st.get("lease") == "unconfirmed"]
     out.append("# TYPE rec_spool_segments gauge")                  # closed segments waiting to reach the archive
     out += [f'rec_spool_segments{{worker="{w}"}} {hb.extra.get("spool", 0)}' for w, hb in hbs]
     return out

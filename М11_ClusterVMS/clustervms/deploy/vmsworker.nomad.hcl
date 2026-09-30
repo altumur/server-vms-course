@@ -69,6 +69,13 @@ job "vmsworker" {
         # reads, filled here from Nomad's own. This file already knows the orchestrator — the
         # worker must not. A k8s manifest fills the same four from an ordinal and a fieldRef.
         SLOT_INDEX  = "${NOMAD_ALLOC_INDEX}"
+        # How long this process goes on RECORDING past a lease's end while Nomad's Variables do not answer
+        # (М10A Lesson 6). On one box there is no ceiling: the store is a directory, and nobody else can be
+        # given the camera. Here the store is on the network — a worker cut off from it may still hold the
+        # camera's session while its successor cannot connect. Ninety seconds past the lease's end: longer
+        # than `lost_after` (45 s) and the slot's TTL, so the recording does not stop before anybody has
+        # been given the camera, and not for ever.
+        UNCONFIRMED_MAX = "90"
         SERVER_NAME = "${node.unique.name}"
         LABELS      = "${meta.labels}"
         INSTANCE_ID = "${NOMAD_ALLOC_ID}"

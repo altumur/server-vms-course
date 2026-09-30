@@ -76,13 +76,30 @@ class Lease:
     # stop `margin` seconds before the TTL to leave room for the fence to propagate), `clock` a monotonic
     # clock (tests inject a fake). Sets `last_renewal = clock()` now, `fenced = False`, `conflicts = 0`.
     def __init__(self, vars_: Variables, key: str, epoch: int, ttl: float = 30.0, margin: float = 5.0,
-                 clock=time.monotonic):
+                 clock=time.monotonic, unconfirmed_max: float | None = 0.0):
         self.vars, self.key, self.epoch = vars_, key, epoch
         self.ttl, self.margin, self.clock = ttl, margin, clock
         self.last_renewal = clock()
         self.fenced = False
         self.conflicts = 0
         self.store_errors = 0                  # renewals the store did not answer: not a loss, and not nothing
+        # TWO QUESTIONS, NOT ONE (feedback BK). `may_write` is the strict one and it has not changed: the store
+        # confirmed this epoch less than `ttl − margin` ago. It is what an ACTION asks — a relay, a scenario's
+        # firing — because an action done twice is done twice.
+        #
+        # `may_record` is what DATA asks, and it is wider by exactly one case: a lease that ran out while the
+        # store was SILENT is not a lease somebody took. Nobody said this epoch is over; nobody could have. A
+        # frame written under it harms nothing — the epoch is in the path, a reader marks what an old epoch
+        # wrote, and if there really was a second writer the cost is a duplicate. Stopping costs a hole.
+        #
+        #   silent_since       when the store first failed to answer a renewal WHILE THE LEASE WAS STILL GOOD.
+        #                      A holder that slept past its lease and then found the store away has not
+        #                      established silence: its lease ran out while nobody was asking, and it is lost
+        #   unconfirmed_max    how long past the lease's end the recording may go on unconfirmed. `None`: no
+        #                      ceiling. `0`: none at all — the strict behaviour, which is this class's default;
+        #                      a subsystem that writes data says otherwise
+        self.silent_since: float | None = None
+        self.unconfirmed_max = unconfirmed_max
 
     # Once fenced, always `False`. Otherwise read `current_epoch(key)`: if the store raises (unreachable),
     # do not fence — return `may_write()` and keep going until `ttl − margin` runs out; if the live epoch
@@ -101,14 +118,33 @@ class Lease:
         t0 = self.clock()
         try:
             live = current_epoch(self.vars, self.key)
-        except Exception:                      # noqa: BLE001 — the store is unreachable; keep going until TTL − margin
+        except Exception:                      # noqa: BLE001 — the store is unreachable: not a loss, and not a confirmation
             self.store_errors += 1
-            return self.may_write()
+            if self.silent_since is None and self.may_write():
+                self.silent_since = t0         # silence, established while the lease was still good
+            return self.may_record()
+        self.silent_since = None               # it answered: whatever it says now is an answer
         if live != self.epoch:
             self.fenced, self.conflicts = True, self.conflicts + 1
             return False
         self.last_renewal = t0
         return True
+
+    # Data may go on: the strict answer, or a lease that ran out in silence and is under its ceiling.
+    def may_record(self) -> bool:
+        if self.fenced:
+            return False
+        if self.may_write():
+            return True
+        if self.silent_since is None:
+            return False                       # it ran out and nobody was silent about it: lost
+        return self.unconfirmed_max is None or self.unconfirmed() < self.unconfirmed_max
+
+    # Seconds this lease has been past its end with the store silent; 0 while it is confirmed.
+    def unconfirmed(self) -> float:
+        if self.silent_since is None:
+            return 0.0
+        return max(0.0, (self.clock() - self.last_renewal) - (self.ttl - self.margin))
 
     # `not fenced and (clock() − last_renewal) < ttl − margin`. The one line the actuator asks before a
     # write.

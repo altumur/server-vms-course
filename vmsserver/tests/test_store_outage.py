@@ -36,11 +36,11 @@ class Flaky:
         return call
 
 
-def _worker(n=2):
+def _worker(n=2, env=None):
     box, ctl = _box_with_cameras(n)
     ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
     store, act = Flaky(box.vars), FakeActuator()
-    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive, env=env)
     w.claim_slot(prefer="w-1")
     w.reconcile_once()
     assert act.running == set(range(1, n + 1))
@@ -59,17 +59,18 @@ def test_a_store_that_does_not_answer_is_not_an_empty_assignment():
     act.dead.append(1)                                                # a pipeline falls over while the store is away
     w.pump_once()                                                     # noticed: the pump is local (the requests are not, and wait)
     box.clock.advance(5); box.wall.advance(5)
-    assert w.reconcile_once() == [("failed", 1)]                      # a new writer needs a new epoch: a failed start, retried
-    assert w.recording_allowed and act.running == {2}                 # …of one camera. The pass did not end at it
+    assert w.reconcile_once() == [("start", 1)]                       # it comes back under the epoch this worker holds:
+    assert act.running == {1, 2} and act.epochs == {1: 1, 2: 1}       # the same writer — nobody could be given another number
     store.down = False
-    box.clock.advance(60); box.wall.advance(60)
-    assert ("start", 1) in w.reconcile_once() and act.epochs[1] == 2
+    assert w.lease_pass() == [] and w.reconcile_once() == [] and act.epochs == {1: 1, 2: 1}
 
 
-def test_a_lease_the_store_did_not_confirm_in_time_stops_that_camera_and_it_comes_back_under_a_new_epoch():
-    """Thirty-six seconds: past `ttl - margin`. Nobody confirmed that these cameras are still this worker's, so
-    they stop — each with the reason in the log — and the instance is NOT fenced. The store returns, and the
-    reconciler starts them again under the next epoch."""
+def test_a_lease_that_ran_out_with_nobody_asking_stops_that_camera_and_it_comes_back_under_a_new_epoch():
+    """Thirty-six seconds in which this worker asked nothing — a GC pause, a suspended VM — and then a store
+    that does not answer. That is not silence (feedback BK): the lease ran out while nobody was asking, and
+    somebody may have been given the cameras meanwhile. They stop — each with the reason in the log — and the
+    instance is NOT fenced. The store returns, and the reconciler starts them again under the next epoch.
+    Silence counts from a renewal that failed while the lease was still good; see the tests at the end."""
     box, ctl, store, act, w = _worker()
     store.down = True
     box.clock.advance(36); box.wall.advance(36)
@@ -142,3 +143,115 @@ def test_the_pump_does_not_wait_for_the_pass_over_the_store():
 
     w.run(poll=0, stop=Twice())
     assert len(pumps) == 2
+
+
+# -- recording through a silent store (feedback BK) -------------------------------------------------------
+
+def _silence(box, w, seconds, step=8):
+    """The loop, for `seconds`: a lease pass and a reconcile every `step` — the store asked each time."""
+    out = []
+    for _ in range(int(seconds // step)):
+        box.clock.advance(step); box.wall.advance(step)
+        out += w.lease_pass()
+        w.reconcile_once()
+    return out
+
+
+def test_ten_minutes_of_silence_stop_nothing_and_the_store_coming_back_stops_nothing_either():
+    """A lease that ran out while the store was SILENT is not a lease somebody took. The cameras record on under
+    the epochs they have — a frame under an old epoch harms nothing: the epoch is in the path, and a second writer
+    would cost a duplicate, where stopping costs a hole. On one box there is nobody to protect them from: the
+    store is a directory on the same disk, away for everybody at once."""
+    box, ctl, store, act, w = _worker()
+    assert w.unconfirmed_max is None                                  # one box, nothing said: no ceiling
+    store.down = True
+    assert _silence(box, w, 600) == [] and act.running == {1, 2} and act.epochs == {1: 1, 2: 1}
+    assert not w.may_write("1") and w.may_record("1")                 # the strict question says no; the data one says yes
+    st = {s["id"]: s for s in w.status()}
+    assert st[1]["lease"] == "unconfirmed" and 570 <= st[1]["unconfirmed_s"] <= 580
+    w.objects = box.objects; w.heartbeat_once()
+    from w2cplatform.console import SpecConsole
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'vms_worker_unconfirmed{worker="w-1"} 2' in text
+
+    store.down = False
+    assert w.lease_pass() == [] and act.running == {1, 2} and act.epochs == {1: 1, 2: 1}   # confirmed: no stop, no seam
+    assert w.may_write("1") and "lease" not in w.status()[0] and w.unconfirmed() == {}
+
+
+def test_a_camera_given_to_somebody_else_during_the_silence_stops_at_the_stores_first_answer():
+    box, ctl, store, act, w = _worker()
+    store.down = True
+    _silence(box, w, 120)
+    next_epoch(box.vars, "vms/epoch/1")                               # another worker reached the store and started camera 1
+    store.down = False
+    assert w.lease_pass() == ["1"] and act.running == {2} and w.recording_allowed
+
+
+def test_the_ceiling_and_off():
+    """A cluster's store is on the network: a worker cut off from it may hold the camera's session while its
+    successor cannot connect. `UNCONFIRMED_MAX` is how long past the lease's end it records on; `off` is the old
+    behaviour — a lease not confirmed in time stops its camera."""
+    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "60"})
+    store.down = True
+    assert _silence(box, w, 80) == [] and act.running == {1, 2}       # 25 s of lease + 55 s unconfirmed: under the ceiling
+    assert sorted(_silence(box, w, 16)) == ["1", "2"] and act.running == set() and w.recording_allowed
+
+    box, ctl, store, act, w = _worker(env={"UNCONFIRMED_MAX": "off"})
+    store.down = True
+    assert _silence(box, w, 24) == [] and sorted(_silence(box, w, 8)) == ["1", "2"]
+
+
+def test_a_camera_never_started_waits_and_an_action_waits_for_the_stores_word():
+    """Data goes on; two things do not. A camera this worker has not started has no epoch to record under — it
+    waits. And a command is not data: a relay pulsed by a worker that may have been replaced is pulsed twice."""
+    from vms.config import SPEC
+    from tests.conftest import Box
+    from tests.test_group_by import _ctl, _holder, _worker as _placed
+    box = Box(); ctl, con = _ctl(box)
+    door = con.create_camera({"name": "front door", "source": "driverpack://acme/10.0.0.90/ch/1"})["id"]
+    _placed(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, relays=2)
+    store = Flaky(box.vars)
+    w.vars = store
+    w.reconcile_once()
+    late = con.create_camera({"name": "late", "source": "driverpack://acme/10.0.0.91/ch/1"})["id"]
+    ctl.ensure_placed(); w.refresh()                                  # assigned, and not yet started
+    store.down = True
+    _silence(box, w, 40)
+    assert w.may_record(str(door)) and str(late) not in w.epochs      # no epoch for it: it waits
+    assert late not in w.actuator.running
+
+    store.down = False
+    con.vars.put(SPEC.sub.request_key("r1"), {"unit": str(door), "action": "output", "port": "1",
+                                              "valid_until": str(box.wall() + 60)})
+    w.leases[str(door)].vars = Flaky(box.vars); w.leases[str(door)].vars.down = True      # the row is read; the lease is still unconfirmed
+    assert w.requests() == [] and w.devices["acme/10.0.0.90"].did == []                  # not performed
+    w.leases[str(door)].vars.down = False
+    w.lease_pass()
+    assert [d["request"] for d in w.requests()] == ["r1"]             # confirmed: it acts
+
+
+def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
+    """The place, while the store is silent. Not reading the list of volumes is not "nothing is declared", and
+    not reading the hold is not "somebody else holds it": the recorder used to be one store error away from
+    dropping its archive and every recording on it. A disk of this server stays. A network archive any box may
+    serve is let go when its hold has gone unconfirmed for its TTL — two writers in one archive is damage."""
+    import os
+    from vms import volumes
+    from tests.conftest import Box
+    from tests.test_volumes import _recorder
+    for kind, stays in (("local", True), ("network", False)):
+        box = Box()
+        row = {"name": "vol", "kind": kind, "url": os.path.join(box.root, "vol"), "quota_bytes": 10 ** 9}
+        volumes.write(box.vars, {**row, "server": "srv-a"} if kind == "local" else row)
+        r = _recorder(box, "r-1", "srv-a")
+        assert r.lease_pass() == [] and r.hold == "vol" and r.volume == "vol"
+        r.vars = Flaky(box.vars); r.vars.down = True
+        box.clock.advance(8); box.wall.advance(8)
+        r.lease_pass()
+        assert r.hold == "vol" and r.volume == "vol" and r.store_errors >= 1      # one error: nothing is let go
+        for _ in range(8):
+            box.clock.advance(8); box.wall.advance(8); r.lease_pass()
+        assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, kind
+

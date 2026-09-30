@@ -81,6 +81,7 @@ PUT /v1/var/objects/vms/heartbeats/w-1?namespace=default
       "passes": 1,
       "store_errors": 0,
       "pass_failures": 0,
+      "unconfirmed": 0,
       "capacity": 50,
       "headroom": 47,
       "started": 1757500000.0,

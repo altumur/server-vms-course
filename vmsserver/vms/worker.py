@@ -109,6 +109,22 @@ from .config import (DEVICES, LIVE_PORT_BASE, PLAYBACK_PORT, RTSP_PORT, SHM_DIR,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
+# `UNCONFIRMED_MAX`: how long a holder goes on RECORDING past a lease's end while the store is silent.
+#
+#   unset      no ceiling. One box: the store is a directory on the same disk — away for one process, away for
+#              all of them, and nobody can be given the next epoch. There is nobody to protect the camera from,
+#              and `ttl − margin` was costing footage to guard against something that cannot happen
+#   a number   seconds. A cluster: the store is on the network, and a worker cut off from it may still be
+#              holding the camera's session while its successor cannot connect. Longer than `lost_after`, or
+#              the recording stops before anybody has been given the camera (М11 sets it)
+#   off        none at all: a lease that was not confirmed in time stops its camera, as before feedback BK
+def unconfirmed_max(env) -> float | None:
+    raw = str(env.get("UNCONFIRMED_MAX", "") or "").strip().lower()
+    if not raw:
+        return None
+    return 0.0 if raw == "off" else float(raw)
+
+
 log = logging.getLogger("vmsworker")
 VMS = Subsystem("vms")
 
@@ -394,6 +410,7 @@ class VmsWorker(Worker):
         env = dict(os.environ if env is None else env)
         instance = instance or runtime.instance(env)
         super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl)
+        self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -539,14 +556,24 @@ class VmsWorker(Worker):
                 try:
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
                 except OSError as e:
-                    # No store, no epoch, no start — for THIS unit, this pass: a failed start the reconciler
-                    # retries with its backoff. Raised out of here, it ended the pass for every unit after it.
                     self.store_errors += 1
-                    log.warning("%s: camera %s not started: the store did not answer for its epoch (%s)", self.name, unit, e)
-                    return False
+                    if unit in self.epochs and self.may_record(unit):
+                        # A pipeline that fell over while the store is away comes back under the epoch this
+                        # worker ALREADY holds (feedback BK). It is the same writer: nobody else could have been
+                        # given a number meanwhile by a store that answers nobody. It used to wait for a new
+                        # epoch, and the camera was not recorded for as long as the store was silent.
+                        log.warning("%s: camera %s restarted under the epoch it holds (%d): the store did not answer "
+                                    "for a new one (%s)", self.name, unit, self.epochs[unit], e)
+                        cam = dict(cam, epoch=self.epochs[unit])
+                    else:
+                        # Never started by this worker: no epoch, no start — for THIS unit, this pass: a failed
+                        # start the reconciler retries with its backoff. Raised out of here, it ended the pass
+                        # for every unit after it.
+                        log.warning("%s: camera %s not started: the store did not answer for its epoch (%s)", self.name, unit, e)
+                        return False
             else:
                 cam = dict(cam, epoch=self.epochs[unit])
-            if not self.may_write(unit):
+            if not self.may_record(unit):                       # data: a lease that ran out in silence still records
                 return False
             cam = self.enrich(cam)                              # what the pipeline needs beyond the row: the fan-out here, the source for a recorder
             if cam is None:
@@ -616,6 +643,13 @@ class VmsWorker(Worker):
     #                             under a new epoch. The slot was renewed a line above: there is no other
     #                             instance of me, and fifty cameras are not stopped for one
     #   a fence is not for ever   `rejoin`, below
+    #
+    # And since feedback BK the second rule has an exception, which is the whole of that decision: a lease that
+    # ran out while the store was SILENT is not lost. The pipeline goes on under the epoch it has — DATA, which
+    # a stale epoch cannot harm — and ACTIONS wait (`requests` asks the strict `may_write`). When the store
+    # answers again: the same epoch, and nothing was stopped; another, and the camera stops as it always did.
+    # `UNCONFIRMED_MAX` is the ceiling on that, in seconds past the lease's end; unset is none, `off` is the old
+    # behaviour.
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one camera stops and gives its epoch up."""
@@ -628,10 +662,17 @@ class VmsWorker(Worker):
         if not mine:
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
+        waiting = {u: l.epoch for u, l in self.leases.items() if l.unconfirmed() > 0}
         lost = self.renew_leases()
+        for unit, epoch in waiting.items():
+            lease = self.leases.get(unit)
+            if unit not in lost and lease is not None and lease.silent_since is None:
+                log.warning("%s: the store confirms epoch %d of camera %s again; nothing was stopped", self.name, epoch, unit)
         for unit in lost:
             lease = self.leases.get(unit)
             why = ("a newer epoch was issued for it" if lease is not None and lease.fenced
+                   else f"unconfirmed for longer than UNCONFIRMED_MAX ({lease.unconfirmed_max:g} s)"
+                   if lease is not None and lease.silent_since is not None and lease.unconfirmed_max
                    else "the store did not confirm the lease in time")
             log.warning("%s: camera %s stopped: %s", self.name, unit, why)
             # `lost` names units the way the lease does — as text. The reconciler keys by the row's id,
@@ -961,9 +1002,14 @@ class VmsWorker(Worker):
             pos, lag = st.get(cid, (CONVERGED, 0))
             phase = "running" if cid in self.reconciler.actual else ("pending" if not cam["enabled"] else
                                                                      ("failed" if cid in self.reconciler.failures else "pending"))
+            lease = self.leases.get(str(cid))
             out.append({"id": cid, "ref": cam.get("ref", ""), "name": cam.get("name", str(cid)), "enabled": cam["enabled"], "phase": phase, "position": pos,
                         "revision": cam["revision"], "observed_revision": self.reconciler.actual.get(cid, {}).get("revision", 0),
-                        "epoch": self.epochs.get(str(cid), 0), **self.status_extra(cam)})
+                        "epoch": self.epochs.get(str(cid), 0),
+                        # recording under an epoch the store has not confirmed: said, not hidden
+                        **({"lease": "unconfirmed", "unconfirmed_s": round(lease.unconfirmed(), 1)}
+                           if lease is not None and lease.unconfirmed() > 0 else {}),
+                        **self.status_extra(cam)})
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"
@@ -1068,6 +1114,7 @@ class VmsWorker(Worker):
                        fenced=not self.recording_allowed, conflicts=self.conflicts(), passes=self.passes,
                        store_errors=self.store_errors + sum(l.store_errors for l in self.leases.values()),
                        pass_failures=self.pass_failures,
+                       unconfirmed=len(self.unconfirmed()),          # units recording past their lease, the store silent
                        **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,

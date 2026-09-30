@@ -49,3 +49,4 @@ Lesson 4 — the comment: the defaults are wrong for a worker.
 - `SPOOL`/`ARCHIVE`/`SEGMENT_SECONDS` are left to `__main__`'s defaults (`/data/spool`, `/data/archive`, 600).
 - Nomad's duplicate-index case (issue #10727) is harmless by design: two allocations with one index resolve at the CAS on the slot row (`test_two_allocations_with_one_index_resolve_at_the_cas`).
 - The one-line `resources` block: see `autoscaler.nomad.hcl.md`.
+- `UNCONFIRMED_MAX = "90"` — how long the process goes on recording past a lease's end while the store is silent (М10A Lesson 6, `Lease.may_record`). Unset on one box (no ceiling: the store is a local directory); a number here, because the store is on the network and a cut-off worker may still hold the camera's session. Longer than `lost_after` (45 s), so the recording does not stop before the camera has been given to anybody. `off` restores the strict behaviour.
