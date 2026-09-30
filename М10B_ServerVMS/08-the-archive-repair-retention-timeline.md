@@ -106,19 +106,17 @@
 ## Шаг 2 — Хранение
 
 ```python
-    def retain(self, cam: int, days: float, now: float) -> int:
-        """Delete media older than `days`: the file first, then the line. The
-        buckets are the platform's to retain (vms/retention/<cam>, written by the
-        VMS controller); the resource's event index lets them go from its cache."""
+    def retain(self, unit, days: float, now: float, kept: list | tuple = (), report: dict | None = None) -> int:
         cutoff = now - days * 86400
-        man = Manifest(self.root, cam)
+        man = Manifest(self.root, unit)
         keep, removed = [], 0
         for s in man.read():
-            if s.end < cutoff:
-                try:
-                    os.remove(os.path.join(self.root, s.path))
-                except FileNotFoundError:
-                    pass
+            if s.end < cutoff and held(kept, s.start, s.end):
+                keep.append(s)
+                if report is not None:
+                    report["kept"] = report.get("kept", 0) + 1
+            elif s.end < cutoff:
+                self.remove(s, "retention", now, days=days)
                 removed += 1
             else:
                 keep.append(s)
@@ -126,6 +124,8 @@
             man.rewrite(keep)
         return removed
 ```
+
+`self.remove` — это `os.remove` файла с проглоченным `FileNotFoundError`, перед которым пишется строка в журнал удалений. А `kept` — интервалы, которые кто-то сказал сохранить: сегмент под меткой остаётся и после срока. И то и другое — урок 18, шаги 10 и 11; здесь достаточно знать, что без меток и без журнала функция делает ровно то, что написано ниже.
 
 **Файл первым, потом строка** — и это, на первый взгляд, противоречит уроку 7, где строка писалась после файла. На самом деле правило одно и то же, просто применённое к удалению.
 
