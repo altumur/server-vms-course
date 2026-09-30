@@ -30,6 +30,9 @@ class Grant:
     capability: str          # "view" | "edit" | "admin"
     camera: int | None       # None = every camera in this cluster
     valid_until: float
+    # …or the cameras that carry ALL of these labels (the product's scope, feedback BP): "the ground floor"
+    # without a grant per camera. With labels, `camera` is None and means nothing.
+    labels: tuple = ()
 
 
 class ClusterGrants:
@@ -38,43 +41,51 @@ class ClusterGrants:
 
     def __init__(self, cluster: str, now=time.time):
         self.cluster, self.now = cluster, now
-        self.grants: dict[tuple[str, str, int | None], float] = {}
+        self.grants: dict[tuple, float] = {}             # (subject, capability, camera, labels) -> valid until
 
-    def grant(self, subject: str, capability: str, camera: int | None, valid_until: float) -> None:
-        self.grants[(subject, capability, camera)] = valid_until
+    def grant(self, subject: str, capability: str, camera: int | None, valid_until: float, labels: tuple = ()) -> None:
+        self.grants[(subject, capability, camera, tuple(sorted(labels)))] = valid_until
 
     def revoke(self, subject: str) -> None:
         self.grants = {k: v for k, v in self.grants.items() if k[0] != subject}
 
-    def may(self, subject: str, capability: str, camera: int, now: float | None = None) -> bool:
+    def may(self, subject: str, capability: str, camera, now: float | None = None, labels=()) -> bool:
         now = self.now() if now is None else now
-        for (s, c, cam), until in self.grants.items():
-            if s == subject and c in (capability, "admin") and cam in (camera, None) and now < until:
+        for (s, c, cam, lab), until in self.grants.items():
+            if s != subject or c not in (capability, "admin") or now >= until:
+                continue
+            # A labelled grant covers a camera that carries all of its labels — and never "every camera":
+            # asked about no camera in particular (`camera=None`, no labels), it does not match.
+            if (set(lab) <= set(labels)) if lab else (cam in (camera, None)):
                 return True
         return False
 
     def renew_from_domain(self, renewals: list[Grant]) -> None:
         """The agent carried the domain's current grants for this cluster:
         replace, so a grant the domain dropped is not renewed."""
-        self.grants = {(g.subject, g.capability, g.camera): g.valid_until for g in renewals}
+        self.grants = {(g.subject, g.capability, g.camera, tuple(sorted(g.labels))): g.valid_until for g in renewals}
 
     def access_ends(self, subject: str, token_exp: float) -> float:
         """State in advance: if a revoke cannot reach this cluster, when does
         `subject` lose it? min(token expiry, latest grant expiry)."""
-        untils = [u for (s, _, _), u in self.grants.items() if s == subject]
+        untils = [u for (s, *_), u in self.grants.items() if s == subject]
         return min(token_exp, max(untils)) if untils else token_exp
 
 
 def grants_to_items(grants: list[Grant]) -> dict:
     """domain/grants/<cluster> as a Variable: one item per grant, the value its expiry."""
-    return {f"{g.subject}|{g.capability}|{'' if g.camera is None else g.camera}": str(g.valid_until) for g in grants}
+    return {f"{g.subject}|{g.capability}|" + ("labels:" + ",".join(sorted(g.labels)) if g.labels else
+                                              "" if g.camera is None else str(g.camera)): str(g.valid_until) for g in grants}
 
 
 def grants_from_items(items: dict | None) -> list[Grant]:
     out = []
     for k, v in (items or {}).items():
         subject, cap, cam = k.split("|")
-        out.append(Grant(subject, cap, int(cam) if cam else None, float(v)))
+        if cam.startswith("labels:"):
+            out.append(Grant(subject, cap, None, float(v), tuple(l for l in cam[7:].split(",") if l)))
+        else:
+            out.append(Grant(subject, cap, int(cam) if cam else None, float(v)))
     return out
 
 

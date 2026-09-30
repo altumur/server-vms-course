@@ -1,0 +1,125 @@
+"""Who is calling a cluster's console, and may they: the gate, and nothing of the cryptography behind it."""
+# ================================================================================================
+# # access.py — the console's gate
+#
+# Until now whoever reached a console was an administrator, under whatever name they put in `X-User` (the
+# platform review, blocker 1; the order agreed with the product, feedback BP — this is its step 3).
+#
+# THE PLATFORM DOES NOT KNOW HOW A PERSON IS PROVED. That is the domain's (М12, Lesson 4): users live with the
+# domain's holder, a short token names a subject and nothing else, and what the subject may do is a table in
+# THIS cluster's own store, carried there by the domain's agent. The platform knows three things:
+#
+#   when to ask     when this cluster's store holds a key set (`domain/keys`). A cluster nobody has joined to
+#                   a domain has none, and its console is as open as it always was — and says so in its log.
+#                   М10A and М10B are read and run without М12; one box is not made to carry a signer
+#   what to ask     `Access`: `who(token)` — the token's payload, or a refusal — and `may(payload, capability,
+#                   unit, labels)`. Whoever can verify a token implements it; `ACCESS_IMPL` names it
+#                   (`domain.access:cluster_access`), and it is imported only when there are keys to check by
+#   what a route    `view` to read, `edit` to act (a command, a mark, a keep), `admin` to change what the
+#   needs           cluster is (units, volumes, policy)
+#
+# AND IT FAILS SHUT. A key set in the store and no way to verify a token — the implementation is not
+# installed, the store does not answer — is 503 for every request, not an open console: "I cannot check" is
+# not "there is nothing to check".
+#
+# With the gate on, `X-User` from outside is thrown away and replaced by the name the token proved. Every line
+# a console writes about who did what — `unit.deleted`, `archive.read`, a keep — then names somebody who was
+# checked, not somebody who introduced themselves.
+#
+# What this does NOT close, and it is said in `М10B_ServerVMS/module-design.md`: the doors BEHIND the console —
+# the resource, a recorder's archive door — still ask nobody. That is mutual TLS between processes, the next
+# step, and until it a cluster of several machines stands behind its network.
+# ================================================================================================
+from __future__ import annotations
+
+import importlib
+import logging
+import os
+from typing import Protocol
+
+TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set in a cluster's store (М12)
+RANK = {"view": 0, "edit": 1, "admin": 2}
+OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz")   # the page itself and what monitoring reads
+log = logging.getLogger("w2cplatform.access")
+
+
+class Denied(Exception):
+    """401: nobody proved who they are. 403: they did, and may not. 503: this console cannot check."""
+
+    def __init__(self, status: int, why: str):
+        super().__init__(why)
+        self.status, self.why = status, why
+
+
+class Access(Protocol):
+    def who(self, token: str) -> dict: ...                       # the token's payload (`sub`, …), or `Denied(401)`
+    def may(self, payload: dict, capability: str, unit: str | None, labels: list) -> bool: ...
+
+
+# `Authorization: Bearer …`, or the cookie a browser carries (`w2c_token`, set `HttpOnly` by whoever logged
+# the person in — a page's script never sees it).
+def token_of(headers) -> str | None:
+    auth = headers.get("Authorization", "") or ""
+    if auth.startswith("Bearer "):
+        return auth[7:].strip() or None
+    for part in (headers.get("Cookie", "") or "").split(";"):
+        k, _, v = part.strip().partition("=")
+        if k == "w2c_token" and v:
+            return v
+    return None
+
+
+class Gate:
+    """One console's gate. `impl` pins an `Access` (tests, or a process that builds its own); without it the
+    gate looks in the cluster's store on every request — a cluster may join a domain while a console runs."""
+
+    def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
+        self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
+        self._said_open = False
+        self._loaded: Access | None = None
+
+    def access(self) -> Access | None:
+        if self.impl is not None:
+            return self.impl
+        try:
+            items, _ = self.vars.get(TRUST_KEYS)
+        except OSError as e:
+            raise Denied(503, f"this console cannot read the cluster's trust ({e}): it admits nobody until it can") from None
+        if not items:
+            if not self._said_open:
+                self._said_open = True
+                log.warning("this console is OPEN: the cluster's store holds no key set (%s), so nobody is asked who "
+                            "they are and whoever reaches it is an administrator under any name", TRUST_KEYS)
+            return None
+        if self._loaded is None:
+            name = os.environ.get("ACCESS_IMPL", "domain.access:cluster_access")
+            try:
+                module, _, fn = name.partition(":")
+                self._loaded = getattr(importlib.import_module(module), fn)(self.vars, self.wall)
+            except Exception as e:                       # noqa: BLE001 — not installed, or broken: shut either way
+                raise Denied(503, f"this cluster is in a domain (its store holds a key set) and this console cannot "
+                                  f"verify a token ({name}: {e}): it admits nobody") from None
+        return self._loaded
+
+    # The name to act under — or `Denied`. With no key set: whatever `X-User` says, as before.
+    def admit(self, headers, capability: str, unit: str | None = None, labels: list | None = None) -> str:
+        access = self.access()
+        if access is None:
+            return headers.get("X-User", "operator")
+        token = token_of(headers)
+        if not token:
+            raise Denied(401, "this console asks who is calling: send the domain's token (Authorization: Bearer …)")
+        payload = access.who(token)
+        name = str(payload.get("sub", ""))
+        if payload.get("via") == "break-glass":          # the one local account (М12 Lesson 4): every use is an alarm
+            name = f"break-glass({payload.get('who', '?')})"
+            if self.journal is not None:
+                from .events import ALARM
+                self.journal().say("access.break_glass", cls=ALARM, user=name, capability=capability, **({"target": unit} if unit else {}))
+        if not access.may(payload, capability, unit, list(labels or [])):
+            if self.journal is not None:
+                self.journal().say("access.denied", user=name, capability=capability, **({"target": unit} if unit else {}))
+            raise Denied(403, f"{name} may not {capability}" + (f" {unit}" if unit else " here"))
+        del headers["X-User"]                            # whatever the caller called themselves
+        headers["X-User"] = name                         # …is replaced by what the token proved
+        return name

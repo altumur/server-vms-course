@@ -609,6 +609,12 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
                        extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index,
                        metrics_extra=vms_metrics(ctl))
     root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
+    # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
+    # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
+    # which is the viewer's token on the live door.
+    root.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/backfill",)
+    root.UNIT_ROUTES = SpecConsole.UNIT_ROUTES + ("timeline", "whep")
+    root.VIEW_POSTS = ("/whep/",)
     m = Mount(root)
     if live_ctl is not None:
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
@@ -621,6 +627,8 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
         # belongs beside "who deleted camera 7".
         con.journal = root.journal
+        if name == "rec":
+            con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/keeps",)   # a keep is set by an operator; a volume by an administrator
         if con.extra is not None:
             con.extra.journal = root.journal
         m.mount(name, con)

@@ -79,6 +79,7 @@ rule in this file.
 # ================================================================================================
 from __future__ import annotations
 
+import io
 import json
 import logging
 import os
@@ -104,6 +105,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
+from .access import OPEN_ROUTES, Denied, Gate
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -345,6 +347,7 @@ class SpecConsole:
         self.per_minute = float(os.environ.get("EVENTS_PER_MINUTE", per_minute) or PER_MINUTE)
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
         self.journal = Journal(marks_root, "console", self.wall)   # what was done through this console, and by whom (`journal.py`)
+        self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall)   # in the store: any instance answers a retry
         self.epoch_policy: dict[str, str] = {self.spec.name: self.spec.older_epochs}   # replaced by the Mount's shared one
         self._scan: tuple[float, dict] = (-1e9, {})
@@ -687,6 +690,55 @@ class SpecConsole:
     def _uid(self, path):
         return self.spec.parse_id(path.rsplit("/", 1)[1])
 
+    # What a route needs: `(capability, unit, labels)`.
+    #
+    #   view    every GET, and whatever a subsystem says changes nothing though it is a POST (`VIEW_POSTS` —
+    #           the VMS: asking for a live stream)
+    #   edit    acting through the system without changing what it IS — a mark, a command to a device, a
+    #           backfill, a keep
+    #   admin   everything else that writes: units, volumes, policy, drain
+    #
+    # The unit is named when the path names one; a grant may be for one unit, for units with given labels, or
+    # for the whole cluster, and a route that names no unit needs the last (to act) or any grant at all (to look).
+    # A recording is its camera's: the grant is on the camera.
+    #
+    # The three lists are the platform's own routes; a subsystem adds its own to the console it builds
+    # (`vms/console.py`), because only it knows that a backfill acts and a volume configures.
+    EDIT_ROUTES: tuple = ("/marks", "/requests")
+    UNIT_ROUTES: tuple = ("where",)
+    VIEW_POSTS: tuple = ()
+
+    # The unit an ACTION names in its body (`unit`, or `cam`): a mark, a command and a keep are about one unit,
+    # and an operator granted that unit must be able to make them. The body is read here and put back, so
+    # whoever answers the request reads it again as if nobody had.
+    def _named(self, h, method: str, path: str) -> str | None:
+        if method not in ("POST", "PUT") or not path.startswith(self.EDIT_ROUTES):
+            return None
+        raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
+        h.rfile = io.BytesIO(raw)
+        try:
+            body = json.loads(raw or b"{}")
+        except ValueError:
+            return None
+        named = body.get("unit", body.get("cam")) if isinstance(body, dict) else None
+        return str(named) if named not in (None, "") else None
+
+    def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list]:
+        cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) else \
+              "edit" if path.startswith(self.EDIT_ROUTES) else "admin"
+        segs = path.split("/")
+        in_path = len(segs) >= 3 and segs[2] and segs[1] in (self.spec.rows, *self.UNIT_ROUTES)
+        uid = segs[2] if in_path else named
+        if uid is None:
+            return cap, None, []
+        try:
+            row = self.ctl.unit(self.spec.parse_id(uid))
+        except (ValueError, KeyError):
+            row = None
+        if not in_path and row is not None and "cam" in row:
+            row = None                                   # a body names the unit the action is ABOUT, not one of this console's rows
+        return cap, str((row or {}).get("cam") or uid), list((row or {}).get("labels") or [])
+
     def _extra(self, h, method, path, q):
         r = self.extra(h, method, path, q) if self.extra else None
         if r is None:
@@ -735,6 +787,11 @@ class SpecConsole:
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
         rows_path = "/" + spec.rows
+        if path not in OPEN_ROUTES:                      # the gate: open while this cluster has no key set, shut when it cannot check
+            try:
+                self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path)))
+            except Denied as e:
+                return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
             if path in ("/", "/index.html"):
                 return send_file(h, PAGE, "text/html; charset=utf-8")
