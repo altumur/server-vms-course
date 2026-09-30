@@ -85,6 +85,8 @@ class Upstream:
 class LiveWorker(Worker):
     """`name` is a slot (`g-1`); `url` is where the console proxies WHEP to; `capacity` is viewers."""
 
+    SLOT_PREFIX = "g"                            # a slot it has to make is `g-<n>`, like the ones it is given
+
     def __init__(self, name: str | None, vars_: Variables, objects, ctl: SpecController | None = None, url: str = "",
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  peer_factory=None, env: dict | None = None):

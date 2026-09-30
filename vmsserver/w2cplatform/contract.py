@@ -630,6 +630,8 @@ class Worker:
     # someone took it between read and write, move on. Sets `self.slot` and `self.name`.
     # `test_identity_by_claim_is_a_platform_piece`: two nameless workers get `w-1` and `w-2`; after `w-1`
     # lapses a third gets `w-1` back and its assignment with it; `prefer="w-7"` creates and takes `w-7`.
+    SLOT_PREFIX = "w"                             # what a slot this worker has to MAKE is called: `<prefix>-<n>`
+
     def claim_slot(self, prefer: str | None = None, retries: int = 50) -> str:
         """Become somebody. With `prefer` (whatever `runtime.slot` made of
         SLOT_INDEX or a <ROLE>_NAME) take that slot, by CAS, even from a holder
@@ -650,7 +652,12 @@ class Worker:
             else:
                 lapsed = sorted((n for n, s in known.items() if s.lapsed(now)), key=lambda n: known[n].until)
                 free = sorted((n for n, s in known.items() if s.claimable(now) and not s.lapsed(now)), key=slot_number)
-                nxt = f"w-{max([slot_number(n) for n in names] + [0]) + 1}"
+                # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: `r` a recorder, `g` a
+                # gateway, `a` an evaluator — the letters a process given a name already had), not `w-` for
+                # everybody: a recorder that had to make a slot looked like a camera worker in every list, every
+                # heartbeat and every log line (the product's box, feedback BU). Slots that exist keep their
+                # names; a lapsed or free one is still taken before a new one is made.
+                nxt = f"{self.SLOT_PREFIX}-{max([slot_number(n) for n in names] + [0]) + 1}"
                 order = lapsed + free + [nxt]
             for cand in order:
                 items, idx = self.vars.get(prefix + cand)

@@ -59,6 +59,8 @@ class SurveyWorker(Worker):
     # idempotent on its own because the request's id is the range.
     HITS_REPORTED = 32
 
+    SLOT_PREFIX = "s"                            # a slot it has to make is `s-<n>`, like the ones it is given
+
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  archive_root: str | None = None, env: dict | None = None, step: float | None = None,

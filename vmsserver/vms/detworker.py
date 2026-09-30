@@ -49,6 +49,8 @@ class DetWorker(Worker):
     """`name` is a slot (`d-1`); `models` maps a kind to a factory `(unit) -> Model`; unknown kinds are
     reported as `phase: unsupported` and run nothing."""
 
+    SLOT_PREFIX = "d"                            # a slot it has to make is `d-<n>`, like the ones it is given
+
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None, archive_root: str | None = None,
                  env: dict | None = None):

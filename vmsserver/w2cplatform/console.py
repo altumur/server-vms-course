@@ -120,15 +120,16 @@ PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 # A file, whole or by `Range` — what a `<video>` element asks for. Parses `bytes=a-b`, replies 206 with
 # `Content-Range` and `Accept-Ranges` when a range was asked, 200 otherwise. Used by the VMS's
 # `/segment/<path>` extra; the test asks `bytes=10-19` and gets 206 with `Content-Range: bytes 10-19/256`.
-def send_file(handler, path: str, content_type: str) -> None:
-    """A file, whole or by Range — what a <video> element asks for."""
+def send_file(handler, path: str, content_type: str) -> dict:
+    """A file, whole or by Range — what a <video> element asks for. Returns what LEFT: `status`, `bytes`, and
+    whether it was the whole file (`whole`, with `data` to take a digest of)."""
     size = os.path.getsize(path)
     rng = handler.headers.get("Range")
     span = byte_range(rng, size)                             # cut to the file (`doors`)
     if span is None:
         handler.send_response(416); handler.send_header("Content-Range", f"bytes */{size}")
         handler.send_header("Content-Length", "0"); handler.end_headers()
-        return
+        return {"status": 416, "bytes": 0, "whole": False}
     start, end = span
     with open(path, "rb") as f:
         f.seek(start); data = f.read(end - start + 1)
@@ -137,6 +138,7 @@ def send_file(handler, path: str, content_type: str) -> None:
     if rng:
         handler.send_header("Content-Range", f"bytes {start}-{end}/{size}")
     handler.end_headers(); handler.wfile.write(data)
+    return {"status": 206 if rng else 200, "bytes": len(data), "whole": start == 0 and end == size - 1, "data": data}
 
 
 # The domain's view, as the domain left it in THIS cluster's object store on its last pass (М12 Lesson 3,

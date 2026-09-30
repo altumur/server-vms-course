@@ -55,6 +55,8 @@ class DetJobWorker(Worker):
     STRETCHES_PER_PASS = 4
     STEP = 1.0                     # seconds of media between two looks; a real model decodes, this one counts
 
+    SLOT_PREFIX = "j"                            # a slot it has to make is `j-<n>`, like the ones it is given
+
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  archive_root: str | None = None, env: dict | None = None, step: float | None = None):

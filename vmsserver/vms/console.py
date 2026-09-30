@@ -237,22 +237,33 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
     seen_reads: dict[tuple, float] = {}
     reads_lock = threading.Lock()
 
-    def note_read(handler, rel: str) -> None:
+    # WHAT LEFT, NOT WHAT WAS ASKED (the product, feedback BU). The line used to be written before the piece
+    # went, and said only that somebody asked. It is written after, and says what was sent: the status, the
+    # bytes and — when the piece left WHOLE (200, or 206 from the first byte to the last) — the sha256 of those
+    # bytes. Then "is this the file you gave out" is answered by the journal: whoever holds the file takes its
+    # digest and compares. A player seeking inside a file is a part, and a part has no digest.
+    #
+    # Once a minute per (who, piece) as a part and once a minute as a whole: otherwise a download right after
+    # watching would be swallowed by the watching.
+    def note_read(handler, rel: str, sent: dict) -> None:
+        import hashlib
         user = handler.headers.get("X-User", "operator")
         addr = (getattr(handler, "client_address", None) or ("",))[0]
-        now = con_wall()
+        now, whole = con_wall(), bool(sent.get("whole"))
         with reads_lock:
-            if now - seen_reads.get((user, rel), -1e18) < READ_NOTE_EVERY:
+            if now - seen_reads.get((user, rel, whole), -1e18) < READ_NOTE_EVERY:
                 return
             if len(seen_reads) > 10000:
                 for k in [k for k, t in seen_reads.items() if now - t >= READ_NOTE_EVERY]:
                     del seen_reads[k]
-            seen_reads[(user, rel)] = now
+            seen_reads[(user, rel, whole)] = now
         parts = rel.split("/")
-        log.info("archive read: %s read %s from %s", user, rel, addr)
+        digest = hashlib.sha256(sent["data"]).hexdigest() if whole and "data" in sent else None
+        log.info("archive read: %s got %s (%s, %d bytes) from %s", user, rel, sent.get("status"), sent.get("bytes", 0), addr)
         journal = getattr(extra, "journal", None)         # the console's journal (`w2cplatform/journal.py`), set by `make_console`
         if journal is not None:
-            journal.say("archive.read", user=user, media=rel, addr=addr, **({"recording": parts[1]} if len(parts) > 1 else {}))
+            journal.say("archive.read", user=user, media=rel, addr=addr, status=sent.get("status"), bytes=sent.get("bytes", 0),
+                        **({"sha256": digest} if digest else {}), **({"recording": parts[1]} if len(parts) > 1 else {}))
 
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
@@ -332,8 +343,9 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             rel = path[len("/segment/"):]; p = os.path.join(archive.root, rel)
             if not safe_rel(rel) or not os.path.isfile(p):   # `doors`: an absolute path used to read any file of the box
                 return 404, {"detail": "no such segment", "error": "no such segment"}
-            note_read(handler, rel)
-            send_file(handler, p, "video/mp4")
+            sent = send_file(handler, p, "video/mp4")
+            if sent["status"] != 416:                     # nothing left: nothing to say
+                note_read(handler, rel, sent)
             return ()                                                     # served in full by send_file
         if path.startswith("/timeline/"):
             cid = path.rsplit("/", 1)[1]                                      # a camera, as text: everything below compares as text

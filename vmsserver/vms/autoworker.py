@@ -77,6 +77,8 @@ class AutoWorker(Worker):
     # wants its window whole, and one query per kind is what keeps it that way.
     PER_KIND = 500
 
+    SLOT_PREFIX = "a"                            # a slot it has to make is `a-<n>`, like the ones it is given
+
     def __init__(self, name: str | None, vars_: Variables, objects, index=None, capacity: int | None = None,
                  clock=time.monotonic, wall=time.time, server: str | None = None,
                  archive_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
