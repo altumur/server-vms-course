@@ -1065,6 +1065,9 @@ class RecWorker(VmsWorker):
         found = holder_of(self.objects, "vms/", cam, self.wall(), field="playback_url")
         if found is None or not found[2].get("coverage"):
             return None                       # no phase: a channel held only for its archive answers too
+        from .config import local_only
+        if local_only(found[2]["playback_url"], found[1].extra.get("server", "?"), self.server):
+            return None                       # the holder's archive door is on ITS loopback: not a source from here
         return found[2]["playback_url"], found[2]["coverage"]
 
     # -- the backup archive: a recording of the same camera on a backup volume (Lesson 26) ----------------
@@ -1093,6 +1096,9 @@ class RecWorker(VmsWorker):
             url = hb.extra.get("archive_url", "")
             if not url or now - hb.ts > 45.0:
                 continue
+            from .config import local_only
+            if local_only(url, hb.extra.get("server", "?"), self.server):
+                continue                      # that recorder's archive door is on its own loopback: not reachable from here
             for st in hb.status:
                 if str(st.get("id")) in recs and st.get("coverage"):
                     kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
@@ -1142,7 +1148,8 @@ class RecWorker(VmsWorker):
 
         srv = ThreadingHTTPServer((host, port), H)
         threading.Thread(target=srv.serve_forever, daemon=True, name="archive-door").start()
-        self.archive_url = f"http://{host}:{srv.server_address[1]}"
+        from .config import announce_host
+        self.archive_url = f"http://{announce_host(host, self.server)}:{srv.server_address[1]}"   # what it bound: loopback, or this server's name — never `0.0.0.0`
         return srv
 
     # -- what an operator asked for: `rec/requests/<id>`, written by the console ------------------------

@@ -70,3 +70,21 @@ def test_a_recorder_on_another_server_does_not_knock_on_its_own_loopback():
     far.waiting = {"7"}
     why = far.status_extra({"id": "7", "cam": "7"})["why"]
     assert "served on loopback on srv-b" in why and "RTSP_HOST" in why   # not "camera held by nobody"
+
+
+def test_a_gateway_and_a_backfill_do_not_knock_on_their_own_loopback_either():
+    """The same rule for the other two subscribers (the product applied it to both, feedback BT): the live gateway
+    does not open another server's loopback fan-out, and a backfill does not take a source whose door is on
+    another server's loopback — a device's own archive, or a backup recorder's."""
+    from w2cplatform.contract import Heartbeat
+    from tests.test_lesson8_live import _gateway
+    from tests.test_volumes import _recorder
+    box = Box()
+    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [
+        {"id": 7, "phase": "running", "live_url": "rtsp://127.0.0.1:8554/7",
+         "playback_url": "http://127.0.0.1:8083/playback/7", "coverage": {"from": 1, "to": 2}}], {"server": "srv-b"}).to_bytes())
+    g = _gateway(box, "g-1")                                           # on srv-1
+    assert g.rtp_source("7") is None
+    far, near = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
+    assert far.device_source("7") is None and near.device_source("7") == ("http://127.0.0.1:8083/playback/7", {"from": 1, "to": 2})
+

@@ -46,6 +46,19 @@ def _footage(r, unit, spans):
         Manifest(r.archive.root, unit).append(Segment(unit, r.epochs[unit], start, end, os.path.relpath(p, r.archive.root), 1))
 
 
+# The two recorders of `_site` are on srv-a and srv-b, and this test runs both on ONE machine, where the backup's
+# archive door is on loopback. On two machines that door would be opened and announced by the server's name; a
+# loopback address from another server is not followed (`vms.config.local_only`, feedback BT). The tests that
+# fetch across "servers" say so: they stand in for the network, and nothing else.
+class _OneMachine:
+    def __enter__(self):
+        import vms.config as c
+        self.c, self.real = c, c.local_only
+        c.local_only = lambda url, holder, me: False
+    def __exit__(self, *a):
+        self.c.local_only = self.real
+
+
 def _site(when="always", backup_act=None, card=None):
     """Camera 1, held on srv-1. Recorded twice: `1` on srv-a's disks, `1-copy` on srv-b's backup volume."""
     box, ctl, con, con_vars = _box()
@@ -72,37 +85,39 @@ def test_the_primary_closes_its_gap_from_the_backup_recording():
     volume, whose recorder says what it holds and serves its archive — and copies exactly the hundred
     seconds, cut out of the backup's segment, with the times they were recorded at. What lands is ours:
     our manifest, our epoch, `source: backup`."""
-    box, rec_ctl, primary, backup, _ = _site()
-    now = box.wall()
-    _footage(backup, "1-copy", ((now - 7200, now - 600),))
-    _footage(primary, "1", ((now - 7200, now - 4000), (now - 3900, now - 600)))
-    backup.serve_archive(); backup.heartbeat_once()
+    with _OneMachine():
+        box, rec_ctl, primary, backup, _ = _site()
+        now = box.wall()
+        _footage(backup, "1-copy", ((now - 7200, now - 600),))
+        _footage(primary, "1", ((now - 7200, now - 4000), (now - 3900, now - 600)))
+        backup.serve_archive(); backup.heartbeat_once()
 
-    src = primary.backup_sources({"id": "1", "cam": "1", "home": "disks"})
-    assert [(s["recording"], s["recorder"]) for s in src] == [("1-copy", "r-2")]
-    done = primary.backfill(budget=1, now=now, force=True)
-    assert done == [{"unit": "1", "cam": "1", "from": now - 4000, "to": now - 3900, "segments": 1, "source": "backup:1-copy"}]
-    assert [(c[1], c[2]) for c in primary.actuator.copied] == [(now - 4000, now - 3900)]      # cut to the hole
-    assert primary.actuator.fetched == []                                                    # nothing re-recorded
-    copied = [s for s in Manifest(primary.archive.root, "1").read() if s.source == "backup"]
-    assert copied and copied[0].epoch == primary.epochs["1"]
-    assert primary.our_coverage("1") == [(now - 7200, now - 600)]
+        src = primary.backup_sources({"id": "1", "cam": "1", "home": "disks"})
+        assert [(s["recording"], s["recorder"]) for s in src] == [("1-copy", "r-2")]
+        done = primary.backfill(budget=1, now=now, force=True)
+        assert done == [{"unit": "1", "cam": "1", "from": now - 4000, "to": now - 3900, "segments": 1, "source": "backup:1-copy"}]
+        assert [(c[1], c[2]) for c in primary.actuator.copied] == [(now - 4000, now - 3900)]      # cut to the hole
+        assert primary.actuator.fetched == []                                                    # nothing re-recorded
+        copied = [s for s in Manifest(primary.archive.root, "1").read() if s.source == "backup"]
+        assert copied and copied[0].epoch == primary.epochs["1"]
+        assert primary.our_coverage("1") == [(now - 7200, now - 600)]
 
 
 def test_the_backups_manifest_decides_what_is_copied_not_its_summary():
     """The backup's heartbeat says it holds two hours — a summary, start and end. Its manifest says there is
     a hole in it too. The primary plans from the summary, copies from the manifest, and remembers what the
     backup did not have, so the next pass does not ask it again."""
-    box, rec_ctl, primary, backup, _ = _site()
-    now = box.wall()
-    _footage(backup, "1-copy", ((now - 7200, now - 3960), (now - 3920, now - 600)))        # 40 s missing there too
-    _footage(primary, "1", ((now - 7200, now - 4000), (now - 3900, now - 600)))
-    backup.serve_archive(); backup.heartbeat_once()
+    with _OneMachine():
+        box, rec_ctl, primary, backup, _ = _site()
+        now = box.wall()
+        _footage(backup, "1-copy", ((now - 7200, now - 3960), (now - 3920, now - 600)))        # 40 s missing there too
+        _footage(primary, "1", ((now - 7200, now - 4000), (now - 3900, now - 600)))
+        backup.serve_archive(); backup.heartbeat_once()
 
-    primary.backfill(budget=1, now=now, force=True)
-    assert sorted((c[1], c[2]) for c in primary.actuator.copied) == [(now - 4000, now - 3960), (now - 3920, now - 3900)]
-    assert primary.nowhere[("1", "backup:1-copy")] == [(now - 3960, now - 3920)]
-    assert primary.backfill(budget=1, now=now, force=True) == []
+        primary.backfill(budget=1, now=now, force=True)
+        assert sorted((c[1], c[2]) for c in primary.actuator.copied) == [(now - 4000, now - 3960), (now - 3920, now - 3900)]
+        assert primary.nowhere[("1", "backup:1-copy")] == [(now - 3960, now - 3920)]
+        assert primary.backfill(budget=1, now=now, force=True) == []
 
 
 def test_a_backup_fetches_from_nobody():

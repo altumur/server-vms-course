@@ -91,6 +91,7 @@ class LiveWorker(Worker):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
         self.gate = Gate(self.vars, self.wall)      # who may be given a stream here (`handler`)
+        self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, "GATEWAY_NAME", "g"))
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units
         self.url = url or env.get("GATEWAY_URL", "")
@@ -114,7 +115,18 @@ class LiveWorker(Worker):
         if found is None:
             return None
         _, hb, st = found
-        return hb.extra.get("server", "?"), st["live_url"], int(st.get("epoch", 0))
+        from .config import local_only
+        server = hb.extra.get("server", "?")
+        if local_only(st["live_url"], server, self.server):
+            # The fan-out is on loopback on ANOTHER server: announced truthfully, not for us. Said once per
+            # camera, and the stream opens as soon as that server announces an address that is reachable.
+            if cam not in self._said_loopback:
+                self._said_loopback.add(cam)
+                log.warning("%s: camera %s is served on loopback on %s — not reachable from %s (RTSP_HOST there)",
+                            self.name, cam, server, self.server)
+            return None
+        self._said_loopback.discard(cam)
+        return server, st["live_url"], int(st.get("epoch", 0))
 
     # -- the reconcile pass: make the subscriptions equal the assignment -------------------------------
     def reconcile_once(self, now: float | None = None) -> list[str]:
