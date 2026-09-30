@@ -508,6 +508,13 @@ class SpecConsole:
         age = self.ctl.snapshot_age(now)
         lines += [f"# TYPE {p}_snapshot_age_seconds gauge",
                   f"{p}_snapshot_age_seconds {-1 if age is None else round(age, 1)}"]
+        # Each server's disk, from its resource's heartbeat: how full, and how many bytes the watermark was asked
+        # to free and could not (feedback BM). The second is the state nothing mends by itself — everything on
+        # the floor, or nothing of the subsystems' on that disk at all — and it used to be a line in a log.
+        lines += [f"# TYPE {p}_resource_full gauge",
+                  *[f'{p}_resource_full{{server="{s}"}} {round(float((hb.get("space") or {}).get("full", 0)), 3)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_short_bytes gauge",
+                  *[f'{p}_resource_short_bytes{{server="{s}"}} {int(hb.get("short", 0) or 0)}' for s, hb in sorted(res.items())]]
         # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
         # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
         # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.

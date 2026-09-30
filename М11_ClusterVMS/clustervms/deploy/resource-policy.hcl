@@ -7,6 +7,10 @@ namespace "default" {
   variables {
     path "objects/platform/resources/*" { capabilities = ["write", "read", "list"] }
     path "platform/mirror"              { capabilities = ["read"] }
+    # The watermark's settings (М10A Lesson 14). The pass has read this row since there was a watermark, and
+    # the grant was missing: nothing noticed while the watermark was off unless a row said otherwise. It is on
+    # by default now, and a resource that may not read its settings must not be left guessing them.
+    path "platform/space"               { capabilities = ["read"] }
     path "*/retention"                  { capabilities = ["read"] }
     path "*/retention/*"                { capabilities = ["read"] }
     path "rec/recordings/*"             { capabilities = ["read", "list"] }   # the recorder's registered pass: media retention per recording row

@@ -44,6 +44,12 @@ unit:
     # survive ten minutes for the recording to stop, and a restart would leave a camera recording for
     # ever with nobody remembering why.
     until:          {type: float,  default: 0}       # unix seconds; 0 — never
+    # THE FLOOR OF THIS RECORDING, in days; 0 — none. `retention_days` is a ceiling: nothing older is kept.
+    # Nothing said how much must BE there, and a recording promised thirty days on a disk that holds four
+    # looked healthy. When the watermark cuts footage younger than this, the recorder raises the alarm
+    # `archive.shallow` (М10B Lesson 18). It does not stop the cut: `platform/space` has a floor of its own
+    # (`min_days`, for every recording on the disk), and this is not that one — hence the other name.
+    min_depth_days: {type: float,  default: 0}
     when:           {type: string, default: always}  # a BACKUP recording (home on a backup volume): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
 placement:
   capacity:   {from: capacity, fallback: 50}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
@@ -88,6 +94,6 @@ placement:
 # And what somebody said to KEEP: `rec/keeps/<id>` (`vms/keeps.py`) — a camera, an interval, a note, who set
 # it. Retention by days skips the footage and the events it names; the watermark takes them last.
 tables: [volumes, keeps]
-snapshot: [name, cam, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
+snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

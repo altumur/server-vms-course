@@ -189,6 +189,9 @@ class RecWorker(VmsWorker):
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
+        self.depths: dict = {}                      # recording -> days of footage it has here (`depth_pass`)
+        self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
+        self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._hold_confirmed = self.clock()          # when `volume_pass` last ran to its end
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
@@ -278,6 +281,10 @@ class RecWorker(VmsWorker):
             out.update(source_unreachable=True, why=f"source unreachable: {why}")
         if cam["id"] in self.fed:
             out["last_frame_at"] = self.fed[cam["id"]][1]
+        if str(cam["id"]) in self.depths:
+            out["depth_days"] = self.depths[str(cam["id"])]
+            if str(cam["id"]) in self.shallow:
+                out["shallow"] = True
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
         # summary, cheap to carry in every heartbeat. The primary plans from it and asks the manifest before
         # it copies anything (Lesson 26).
@@ -695,6 +702,51 @@ class RecWorker(VmsWorker):
         # a promotion still in flight into the old one will not write over it (`promote_closed`).
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
 
+    # HOW DEEP EACH RECORDING IS, AND WHETHER THAT IS LESS THAN IT WAS PROMISED (feedback BM).
+    #
+    # `retention_days` is a ceiling. The row's `min_depth_days` is the floor — and the floor is not enforced
+    # by anybody: the watermark has its own, one for the whole disk (`platform/space`, `min_days`), and cuts
+    # down to that. So the recorder WATCHES. Once a minute it reads, per recording:
+    #
+    #   depth_days   from the manifest: how far back the footage goes. In the status and on `/metrics`
+    #   shallow      the watermark deleted footage that would still be inside this recording's floor — read
+    #                from the archive's deletions journal, where every cut is a line with its reason
+    #
+    # A young archive is shallow because it is young, and that is not this: nothing was deleted. The alarm
+    # `archive.shallow` is raised when it begins and once a day while it lasts — an alarm, because a recording
+    # that holds four days of a promised thirty is the thing somebody is asked about afterwards.
+    DEPTH_EVERY, SHALLOW_AGAIN = 60.0, 86400.0
+
+    def depth_pass(self, now: float | None = None) -> dict:
+        from w2cplatform.events import ALARM, EventLog
+        from .archive import Deletions
+        from .space import depth_days
+        if self.clock() - self._depth_at < self.DEPTH_EVERY:
+            return self.depths
+        self._depth_at, now = self.clock(), self.wall() if now is None else now
+        try:
+            cut: dict[str, float] = {}               # recording -> the newest end of what pressure took from it
+            for d in Deletions(self.archive.root).read():
+                if str(d.get("why", "")).startswith("pressure"):
+                    cut[str(d["unit"])] = max(cut.get(str(d["unit"]), 0.0), float(d["end"]))
+            depths = {str(r["id"]): round(depth_days(self.archive, str(r["id"]), now), 2) for r in self.rows}
+        except OSError:                              # an archive that is away says nothing about depth
+            return self.depths
+        self.depths = depths
+        for row in self.rows:
+            unit, floor = str(row["id"]), float(row.get("min_depth_days") or 0)
+            if not floor or cut.get(unit, 0.0) <= now - floor * 86400:
+                self.shallow.pop(unit, None)
+                continue
+            if now - self.shallow.get(unit, -1e18) < self.SHALLOW_AGAIN or unit not in self.epochs:
+                continue
+            self.shallow[unit] = now
+            EventLog(self.archive_root, REC.name, unit, self.epochs[unit]).append(
+                now, "archive.shallow", cls=ALARM, cam=row.get("cam"), depth_days=depths[unit], min_depth_days=floor)
+            logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the watermark cut inside its floor",
+                            self.name, unit, depths[unit], floor)
+        return self.depths
+
     # THE PLACE, WHILE THE STORE IS SILENT (feedback BK). `volume_pass` reads the declared volumes and renews the
     # hold; a store that does not answer raises out of it, and nothing is let go for that — not reading the
     # list is not "nothing is declared", and not reading the hold is not "somebody else holds it".
@@ -722,6 +774,7 @@ class RecWorker(VmsWorker):
                 else:
                     logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
                                     self.name, e, self.volume or "nothing")
+            self.depth_pass()
         return lost
 
     # Move what has closed from the spool into the archive — and survive the archive being away.

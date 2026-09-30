@@ -16,6 +16,7 @@ import traceback
 # milliseconds each on a laptop (`w2cplatform/variables.py`). A suite makes thousands; it says it is a test.
 # The one test of the barriers asks for a durable store by name.
 os.environ.setdefault("STORE_VOLATILE", "1")
+os.environ.setdefault("WATERMARK_DEFAULT", "off")     # a suite runs on a disk as full as it happens to be: no cutting fixtures for that
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cluster  # noqa: E402,F401  — puts М10's vmsserver on sys.path

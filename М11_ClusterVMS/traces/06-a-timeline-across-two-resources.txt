@@ -27,6 +27,7 @@ GET /v1/var/objects/platform/resources/srv-a/heartbeat → data:
       "7"
     ]
   },
+  "short": 0,
   "mirrors": {}
 }
 

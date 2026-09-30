@@ -117,10 +117,21 @@ def bucket_from_line(line: str) -> Bucket:
 # at four megabit write about 2.2 TB a day, and ten percent of a 20 TB disk is less than one of them.
 # `min_days` is the floor no unit is cut below; when everything is on the floor the answer is a shortfall,
 # said out loud, and not a quiet cut into yesterday.
+#
+# ON UNLESS SOMEBODY TURNED IT OFF (the platform review, "what happens when the disk fills is chosen by the
+# code"; feedback BM). It used to be off until a row said `enabled: true` — and an installation where nobody
+# had written that row met a full disk with no policy at all: the recorder's writes failed, the store and the
+# event log on the same partition failed with them, and nothing had been decided by anyone. With no row the
+# watermark now runs on its defaults; `enabled: false` is the decision not to have one, and it is a decision
+# somebody makes.
+#
+# `WATERMARK_DEFAULT=off` is for tests, said by the environment like `STORE_VOLATILE`: a suite runs on a
+# developer's disk, which is as full as it happens to be, and must not start cutting its fixtures for that.
 def space_settings(vars_) -> dict:
     items, _ = vars_.get(SPACE_KEY)
     d = items or {}
-    return {"enabled": bool(items) and d.get("enabled") == "true",
+    default_on = os.environ.get("WATERMARK_DEFAULT", "on") != "off"
+    return {"enabled": d.get("enabled") == "true" if "enabled" in d else default_on,
             "high": float(d.get("high", 0.85)), "low": float(d.get("low", 0.75)),
             "min_days": float(d.get("min_days", 3))}
 
@@ -305,6 +316,10 @@ class Resource:
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
+        # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
+        # the one state the watermark cannot mend, and it used to be a number in a log line: said in the
+        # heartbeat, it is a metric on any console (`<sub>_resource_short_bytes`) and somebody's alert.
+        self.short: dict[str, int] = {}
         self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
@@ -432,6 +447,7 @@ class Resource:
               "schema": SCHEMA, "build": BUILD,                      # what this build understands, and what it is
               "usage": self.usage_cached(), "usage_at": self.usage_at,
               "space": self.space(), "volumes": self.spaces(), "units": self.units(),
+              "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
               "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
@@ -570,6 +586,7 @@ class Resource:
                 return {"space": "unknown", "error": str(e)}
             knob = self._space_knob
         if not knob["enabled"]:
+            self.short = {}
             return {"space": "off"}
         out, worst, over = {}, 0.0, []
         for name in self.volumes:
@@ -590,6 +607,7 @@ class Resource:
                     break
             over.append({"volume": name, "full": round(sp["full"], 3), "need": need, "freed": freed,
                          "short": max(0, need - freed)})
+        self.short = {v["volume"]: v["short"] for v in over if v["short"]}
         if not over:
             return {"space": "ok", "full": round(worst, 3)}
         first = over[0]                                      # single-volume callers read these three at the top level

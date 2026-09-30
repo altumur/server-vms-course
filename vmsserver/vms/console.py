@@ -454,6 +454,12 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
             for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
+    # How far back each recording goes, and whether the watermark has cut inside the floor it was promised
+    # (`min_depth_days`; feedback BM).
+    out.append("# TYPE rec_archive_depth_days gauge")
+    out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {st["depth_days"]}' for w, hb in hbs for st in hb.status if "depth_days" in st]
+    out.append("# TYPE rec_archive_shallow gauge")
+    out += [f'rec_archive_shallow{{unit="{st["id"]}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in hb.status if "depth_days" in st]
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
     out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {st["unconfirmed_s"]}'
             for w, hb in hbs for st in hb.status if st.get("lease") == "unconfirmed"]
