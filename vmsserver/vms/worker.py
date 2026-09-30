@@ -104,6 +104,7 @@ from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
+from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
                      device_row, live_shm, live_url,
                      playback_url, port_of, row)
@@ -411,6 +412,7 @@ class VmsWorker(Worker):
         instance = instance or runtime.instance(env)
         super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl)
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
+        self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -581,6 +583,13 @@ class VmsWorker(Worker):
             cam = self.enrich(cam)                              # what the pipeline needs beyond the row: the fan-out here, the source for a recorder
             if cam is None:
                 return False                                    # not startable now (a recorder whose camera nobody holds): the reconciler retries
+            # The device's password, opened at the last moment and only for the pipeline (`w2cplatform/sealing.py`):
+            # the row in the store, in this process's memory and in its heartbeat stays sealed.
+            try:
+                cam = open_row(self.sealer, cam)
+            except Sealed as e:
+                log.error("%s: camera %s not started: %s", self.name, unit, e)
+                return False
             return self.actuator(verb, cam)
         ok = self.actuator("stop", cam)
         self.release(unit)

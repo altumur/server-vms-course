@@ -64,7 +64,16 @@ job "vmsworker" {
         args         = ["python3", "-m", "cluster", "worker"]
         volumes      = ["/data/archive:/data/archive", "/data/media:/data/media", "/run/vms:/run/vms"]   # no spool: it writes events, never segments; /run/vms: the tee's shared-memory branch for subscribers on this server
       }
+      # The cluster's key (`w2cplatform/sealing.py`): rendered from the Nomad variable `secrets/vms` into this
+      # task's secrets directory, which only this task sees. The policy lets this job and the worker's read it
+      # and no other job; the variable is `ring`: lines `<kid> <hex>`, the current key first.
+      template {
+        data        = "{{ with nomadVar \"secrets/vms\" }}{{ .ring }}{{ end }}"
+        destination = "secrets/vms.key"
+        perms       = "0600"
+      }
       env {
+        SECRETS_KEY = "/secrets/vms.key"         # what the template above rendered
         # The runtime's part of the seam (`w2cplatform/runtime.py`): the neutral names the loop
         # reads, filled here from Nomad's own. This file already knows the orchestrator — the
         # worker must not. A k8s manifest fills the same four from an ordinal and a fieldRef.

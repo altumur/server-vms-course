@@ -308,17 +308,26 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         with urllib.request.urlopen(req) as r:
             return len(r.read())
 
-    def said():
+    def said(n=None):                                                    # written after the reply has gone: ask until it lands
+        import time
+        for _ in range(100):
+            got = _said()
+            if n is None or len(got) >= n:
+                return got
+            time.sleep(0.02)
+        return got
+
+    def _said():
         return [(e["user"], e["media"], e["recording"])                  # in the journal: `audit/console/…` (feedback BN)
                 for b in buckets_under(box.archive, "audit", "console", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:
         assert [read("anna", f"bytes={a}-{a + 999}") for a in (0, 1000, 2000)] == [1000] * 3   # a player: one file, many ranges
-        assert said() == [("anna", rel, "7")]                                  # …one line
+        assert said(1) == [("anna", rel, "7")]                                  # …one line
         assert read("boris", "bytes=0-99") == 100
         box.wall.advance(61)
         assert read("anna", "bytes=3000-3999") == 1000                          # a minute later it is said again
-        assert said() == [("anna", rel, "7"), ("boris", rel, "7"), ("anna", rel, "7")]
+        assert said(3) == [("anna", rel, "7"), ("boris", rel, "7"), ("anna", rel, "7")]
     finally:
         srv.shutdown()

@@ -54,7 +54,18 @@ def test_archive_read_says_what_left_and_the_digest_of_a_whole_piece():
         with urllib.request.urlopen(req) as r:
             return r.status, r.read()
 
-    def said():
+    # The line is written AFTER the reply has gone (what left, not what was asked), so the client can read the
+    # journal a moment before it lands: ask until it has, briefly.
+    def said(n=None):
+        import time
+        for _ in range(100):
+            got = _said()
+            if n is None or len(got) >= n:
+                return got
+            time.sleep(0.02)
+        return got
+
+    def _said():
         return [(e["user"], e["status"], e["bytes"], e.get("sha256"))
                 for b in buckets_under(box.archive, "audit", "console", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
@@ -64,9 +75,9 @@ def test_archive_read_says_what_left_and_the_digest_of_a_whole_piece():
         assert get()[1] == body                                        # a download, right after: a WHOLE, not swallowed by the part
         assert get("bytes=0-")[0] == 206                               # from the first byte to the last is whole too, and said once a minute
         digest = hashlib.sha256(body).hexdigest()
-        assert said() == [("anna", 206, 1000, None), ("anna", 200, 4000, digest)]
+        assert said(2) == [("anna", 206, 1000, None), ("anna", 200, 4000, digest)]
         box.wall.advance(61)
         assert get("bytes=0-", user="boris")[0] == 206
-        assert said()[-1] == ("boris", 206, 4000, digest)             # whoever holds the file takes its digest and compares
+        assert said(3)[-1] == ("boris", 206, 4000, digest)             # whoever holds the file takes its digest and compares
     finally:
         srv.shutdown()

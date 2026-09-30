@@ -50,7 +50,7 @@
 FROM docker.io/library/debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
         # the runtime for all four verbs.
-        python3 python3-gi python3-yaml \
+        python3 python3-gi python3-yaml python3-cryptography \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
         gir1.2-gst-plugins-base-1.0 curl \
     && rm -rf /var/lib/apt/lists/*

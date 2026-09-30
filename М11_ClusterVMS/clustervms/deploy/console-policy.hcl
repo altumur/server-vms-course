@@ -7,6 +7,7 @@
 # verify-bench.sh proves the "nothing else".
 namespace "default" {
   variables {
+    path "secrets/vms"          { capabilities = ["read"] }   # the cluster's key: this job and one other, nobody else
     path "vms/cameras/*"   { capabilities = ["write", "read", "list"] }
     path "vms/next_id"     { capabilities = ["write", "read"] }
     path "vms/retention/*" { capabilities = ["write", "read", "list", "destroy"] }

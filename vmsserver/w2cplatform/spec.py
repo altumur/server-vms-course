@@ -647,6 +647,15 @@ class SpecController(Controller):
         self.spec = spec
         self.capacity = capacity if capacity is not None else spec.capacity_fallback   # the FALLBACK for a worker whose heartbeat says nothing
         self.cluster = cluster or os.environ.get("CLUSTER", "cluster-a")               # the name the snapshot carries; one box is a cluster of one
+        # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
+        # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
+        from .sealing import Sealer
+        self.sealer = Sealer.from_env()
+
+    # The row as it goes into the store: `*_secret` values sealed, when this process holds the key.
+    def _sealed(self, items: dict) -> dict:
+        from .sealing import seal_items
+        return seal_items(self.sealer, items)
 
     # `<name>/<rows>/<id>`.
     def _row_key(self, uid) -> str:
@@ -753,11 +762,11 @@ class SpecController(Controller):
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
-                self.vars.put(self._row_key(uid), self.spec.items(r), cas=idx)
+                self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r)), cas=idx)
                 self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
-        self.vars.put(self._row_key(uid), self.spec.items(r), cas=0)
+        self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r)), cas=0)
         self._derived(r, uid)
         return r
 
@@ -774,7 +783,7 @@ class SpecController(Controller):
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
-            return self.spec.items(r)
+            return self._sealed(self.spec.items(r))
         r = self.spec.row(self.write(self._row_key(uid), mutate))
         if any(f in fields for d in self.spec.derived for f in d.items.values()):
             self._derived(r, uid)

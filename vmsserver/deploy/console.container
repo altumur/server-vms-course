@@ -58,6 +58,11 @@ EnvironmentFile=/data/config/vms.env
 # read-write: the console's token writes camera rows, `next_id`, derived retention rows and idempotency
 # keys, and reads heartbeats for the read model.
 Volume=/data/platform:/data/platform:z
+# The cluster's key (`w2cplatform/sealing.py`): the console seals device passwords with it, the holder opens
+# them for the pipeline. Mounted into these two units ONLY — a key beside the store, in /data/platform, would
+# be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
+Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
+Environment=SECRETS_KEY=/run/secrets/vms.key
 # read-only. The console constructs an `ArchiveResource` with the spool root (which `makedirs` it — already
 # present on the box) but serves only from the archive; the mount says it cannot record.
 Volume=/data/spool:/data/spool:ro,z
