@@ -51,6 +51,8 @@ from __future__ import annotations
 
 import json
 import os
+import random
+import time
 from typing import Protocol
 
 from .events import durable_dir, durably
@@ -163,21 +165,90 @@ def open_vars(url: str, writer: str | None = None, acl: dict[str, list[str]] | N
 # a call, not behave oddly: the MODULE did not import, so nothing that touches Variables existed at all.
 # That is the shape a portability bug takes in Python, and it is why the import lives inside the branch.
 #
-# `msvcrt.locking(LK_LOCK)` is the near equivalent, with one difference worth knowing rather than hiding:
-# it retries for about ten seconds and then raises, where `flock(LOCK_EX)` waits for as long as it takes.
-# A store held for ten seconds is a box in trouble either way, and an exception naming the lock beats a
-# process that waits for ever — but it is a difference, not a translation, and the day it fires the message
-# will be the only thing that says which platform you are on. `msvcrt` locks a region from the current
+# THE LOCK HAS A LIMIT (the platform review, "`flock` with no timeout"; feedback BI). `flock(LOCK_EX)` waits
+# for as long as it takes, and what waited with it was the loop that renews the leases: a backup tool, a
+# stuck neighbour or a debugger holding the lock file froze every process of the box, silently, until it
+# let go — and then they all found their leases gone. So the lock is ASKED for, not waited for: taken without
+# blocking, asked again every few milliseconds, and after `LOCK_WAIT` seconds the write raises `StoreBusy`.
+# That is an `OSError`, which every caller already reads as "the store did not answer" — not as "no"
+# (feedback BC): a worker counts it, keeps what it holds and tries again.
+#
+# The two platforms now behave the same. `msvcrt.locking(LK_LOCK)` had a ten-second limit of its own and
+# `flock` had none; `LK_NBLCK` and `LOCK_NB` are the same question. `msvcrt` locks a region from the current
 # position, so one byte from zero is the whole of it: the file exists to BE a lock and nobody reads it.
-def _lock_exclusive(f) -> None:
+LOCK_WAIT = 10.0
+
+
+class StoreBusy(OSError):
+    """The store's lock was held by somebody else for longer than we wait: not answered, not refused."""
+
+
+def _try_lock(f) -> bool:
     try:
         import fcntl
     except ImportError:                                   # Windows
         import msvcrt
         f.seek(0)
-        msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
-        return
-    fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            return True
+        except OSError:
+            return False
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except BlockingIOError:
+        return False
+
+
+def _lock_exclusive(f, wait: float | None = None) -> None:
+    wait = LOCK_WAIT if wait is None else wait
+    deadline = time.monotonic() + wait
+    while not _try_lock(f):
+        if time.monotonic() >= deadline:
+            raise StoreBusy(f"the store's lock has been held by another process for {wait:g} s")
+        time.sleep(0.005)
+
+
+# A PAUSE BEFORE A CAS IS TRIED AGAIN (the review, "CAS retries with no delay and no jitter"). A conflict
+# means somebody else wrote between our read and our write. Tried again at once, the same writers meet again
+# at once — ten recorders starting after a power cut each lose nine times in a row to the same nine others,
+# and a loop with ten tries gives up. A random pause, growing with the number of losses, spreads them out:
+# from a fraction of a millisecond to a tenth of a second. Random and not fixed, because two writers that
+# wait the same time collide again.
+#
+# No ceiling of its own on the tries: every loop that calls this already has one.
+CAS_PAUSE_MAX = 0.1
+
+
+def cas_pause(attempt: int, sleep=time.sleep) -> float:
+    """Sleep a random time before CAS try number `attempt + 1`; returns what it slept."""
+    t = random.uniform(0, min(CAS_PAUSE_MAX, 0.0005 * (2 ** min(attempt, 12))))
+    sleep(t)
+    return t
+
+
+# A DELETE IS A WRITE (the review, "`delete` bypasses the ACL"). One rule for every backend, so the file store,
+# the memory one and a cluster's cannot disagree about it:
+#
+#   the ACL        whoever may not write a path may not remove it either. It used to be unchecked: a worker
+#                  whose token writes epochs and its slot could delete a camera's row
+#   the epoch      nobody deletes `<subsystem>/epoch/<unit>` — not even a handle with no writer at all. The
+#                  row is a counter. Deleted, it starts again from 1, and `e1` is already the name of footage
+#                  and events somebody else wrote: two writers' files under one name, and a fencing token
+#                  that went backwards
+def epoch_row(path: str) -> bool:
+    parts = path.split("/")
+    return len(parts) == 3 and parts[1] == "epoch"
+
+
+def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
+    if epoch_row(path):
+        raise Forbidden(f"{path} is an epoch: a counter nobody deletes")
+    if writer is not None and acl:
+        allowed = acl.get(writer, [])
+        if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
+            raise Forbidden(f"{writer} may not delete {path}")
 
 
 class Corrupt(Exception):
@@ -319,9 +390,10 @@ class FileVariables:
             self._durable_dirs()
             return idx
 
-    # Under the lock: the same CAS check as `put`, then remove the file (a missing file is not an error) and
-    # burn an index. Used by `IdempotencyKeys.prune`. No ACL check is applied here.
+    # A delete is a write: the same ACL as `put`, and never an epoch (`refuse_delete`). Then, under the lock:
+    # the same CAS check as `put`, remove the file (a missing file is not an error) and burn an index.
     def delete(self, path: str, cas: int | None = None) -> None:
+        refuse_delete(path, self.writer, self.acl)
         with self._locked():
             _, current = self.get(path)
             if cas is not None and cas != current:

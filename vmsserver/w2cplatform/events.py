@@ -284,6 +284,42 @@ def buckets_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> 
     return sorted(out, key=lambda b: (b.start, b.epoch))
 
 
+# The same list from the NAMES alone: `events` is 0 and no file is opened.
+#
+# A bucket's path says everything a policy needs — whose it is, which epoch, when it starts — and its end is
+# the start plus the bucket's length. `buckets_under` also opens every file to count its lines, which is what
+# `/buckets` answers and what nothing that SWEEPS needs: the retention pass read a year of archive, every
+# pass, to delete the files of one day (the platform review; feedback BI).
+def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> list[Bucket]:
+    out = []
+    for d, _, files in os.walk(unit_dir(root, subsystem, unit)):
+        for f in files:
+            p = os.path.join(d, f)
+            parsed = parse_bucket(p, root)
+            if parsed:
+                sub, u, epoch, start = parsed
+                out.append(Bucket(sub, u, epoch, start, start + bucket_seconds, os.path.relpath(p, root), 0))
+    return sorted(out, key=lambda b: (b.start, b.epoch))
+
+
+# The same list from the NAMES alone: `events` is 0 and no file is opened.
+#
+# A bucket's path says everything a policy needs — whose it is, which epoch, when it starts — and its end is
+# the start plus the bucket's length. `buckets_under` also opens every file to count its lines, which is what
+# `/buckets` answers and what nothing that SWEEPS needs: the retention pass read a year of archive, every
+# pass, to delete the files of one day (the platform review; feedback BI).
+def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> list[Bucket]:
+    out = []
+    for d, _, files in os.walk(unit_dir(root, subsystem, unit)):
+        for f in files:
+            p = os.path.join(d, f)
+            parsed = parse_bucket(p, root)
+            if parsed:
+                sub, u, epoch, start = parsed
+                out.append(Bucket(sub, u, epoch, start, start + bucket_seconds, os.path.relpath(p, root), 0))
+    return sorted(out, key=lambda b: (b.start, b.epoch))
+
+
 # `{subsystem: [unit, ...]}` present on a resource, from the directory tree — the index's and the resource
 # heartbeat's discovery, with no registry. Hidden directories (`.mirror`) are skipped; a missing root is
 # `{}`. The console test asserts that after one mark the archive root shows `{"console": [<instance>]}` and

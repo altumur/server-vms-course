@@ -504,14 +504,25 @@ def resource() -> None:
     logging.info("resource %s on %s", res.server, srv.server_address)
     last_policy = 0.0
     while not stop.is_set():
+        # Three jobs, three tries (feedback BI). They shared one, in this order, and the first of them reads
+        # the store: with the store away the resource stopped HEARTBEATING, was called silent, and the
+        # recordings were moved off a server whose disks were perfectly well.
         try:
             # The declared volumes are configuration and they change under a running process: a network
             # archive created on the console, a disk split in two. Read before the heartbeat, so the
-            # spaces this box publishes are the spaces it is actually responsible for.
+            # spaces this box publishes are the spaces it is actually responsible for. Not read: the
+            # volumes stay what they were.
             refresh_volumes(res, vars_, objects, REC_SPEC.sub, time.time())
+        except Exception:                                                 # noqa: BLE001
+            logging.exception("the declared volumes could not be read — keeping the ones this resource has")
+        try:
             res.heartbeat()
+        except Exception:                                                 # noqa: BLE001
+            logging.exception("resource heartbeat failed")
+        try:
             if time.time() - last_policy >= 600:
-                logging.info("policy: %s", res.pass_()); last_policy = time.time()
+                last_policy = time.time()                                 # a pass that raised is tried in ten minutes, not in ten seconds
+                logging.info("policy: %s", res.pass_())
         except Exception:                                                 # noqa: BLE001
             logging.exception("resource pass failed")
         stop.wait(10)

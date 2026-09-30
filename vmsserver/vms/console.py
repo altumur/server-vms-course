@@ -49,6 +49,8 @@ import os
 from http.server import ThreadingHTTPServer
 
 import json
+import logging
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -60,6 +62,9 @@ from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
 
 from . import keeps, volumes
+
+log = logging.getLogger("vms.console")
+READ_NOTE_EVERY = 60.0        # the same piece of archive, by the same person: one `archive.read` a minute
 from .archive import ArchiveResource, Manifest, subtract
 from .controller import VmsController
 
@@ -216,6 +221,37 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
     ctl = ctl if ctl is not None else (live.ctl if live is not None else None)
     con_wall = (ctl.wall if ctl is not None else time.time)   # the catalogue needs "now" to know who is reachable
 
+    # WHO READ THE ARCHIVE (the platform review, blocker 1 — the part of it that needs no login; feedback BI).
+    # Footage left through this door and nothing said so. Every piece served is an event `archive.read` in
+    # the console's own bucket, and a line in the log: who, which piece, from what address. A player asks
+    # for one file in dozens of byte ranges, so the same piece by the same person is said once a minute.
+    #
+    # "Who" is `X-User` — the name the caller gave. There is no authentication in this course, and the
+    # journal does not pretend otherwise; when there is, it writes into the same place.
+    seen_reads: dict[tuple, float] = {}
+    reads_lock = threading.Lock()
+
+    def note_read(handler, rel: str) -> None:
+        user = handler.headers.get("X-User", "operator")
+        addr = (getattr(handler, "client_address", None) or ("",))[0]
+        now = con_wall()
+        with reads_lock:
+            if now - seen_reads.get((user, rel), -1e18) < READ_NOTE_EVERY:
+                return
+            if len(seen_reads) > 10000:
+                for k in [k for k, t in seen_reads.items() if now - t >= READ_NOTE_EVERY]:
+                    del seen_reads[k]
+            seen_reads[(user, rel)] = now
+        parts = rel.split("/")
+        log.info("archive read: %s read %s from %s", user, rel, addr)
+        marks = getattr(extra, "marks", None)             # the console's own log, set by `make_console`
+        if marks is not None:
+            try:
+                marks.append(now, "archive.read", user=user, media=rel, addr=addr,
+                             **({"unit": parts[1]} if len(parts) > 1 else {}))
+            except OSError:
+                log.exception("archive read by %s of %s could not be written to the console's log", user, rel)
+
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
             if method == "POST" and not path.startswith("/whep/session/"):
@@ -246,8 +282,11 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             rid = str(body.get("id") or f"{unit}-{action}-{int(now * 1000)}")
             if "/" in rid:
                 return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
+            until = float(body.get("valid_until") or now + 30)
+            if until - now > 600:                                     # the holder refuses it (`VmsWorker.MAX_VALID`): say so at the door
+                return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
             row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
-                   "valid_until": str(float(body.get("valid_until") or now + 30))}
+                   "valid_until": str(until)}
             for f in ("port", "state", "pulse_ms", "n"):
                 if body.get(f) is not None:
                     row[f] = str(body[f])
@@ -291,6 +330,7 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             rel = path[len("/segment/"):]; p = os.path.join(archive.root, rel)
             if not safe_rel(rel) or not os.path.isfile(p):   # `doors`: an absolute path used to read any file of the box
                 return 404, {"detail": "no such segment", "error": "no such segment"}
+            note_read(handler, rel)
             send_file(handler, p, "video/mp4")
             return ()                                                     # served in full by send_file
         if path.startswith("/timeline/"):
@@ -407,6 +447,13 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
             for w, hb in hbs]
     out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
     out += [f'rec_writer{{worker="{w}",state="{(hb.extra.get("writer") or {}).get("state") or "ok"}"}} 1' for w, hb in hbs]
+    # How long since each recording last took anything from its source (feedback BI; the review's
+    # `rec_archive_gap_seconds`). `rec_recordings{phase="running"}` says the pipeline is up; this says it is
+    # being FED. Counted from the moment the recorder says bytes last arrived — so a recorder that went silent
+    # grows here too — and only for recorders whose actuator measures.
+    out.append("# TYPE rec_last_frame_age_seconds gauge")
+    out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
+            for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
     out.append("# TYPE rec_spool_segments gauge")                  # closed segments waiting to reach the archive
     out += [f'rec_spool_segments{{worker="{w}"}} {hb.extra.get("spool", 0)}' for w, hb in hbs]
     return out
@@ -544,6 +591,7 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
     root = SpecConsole(ctl, marks_root=archive.root if archive else None, wall=wall,
                        extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index,
                        metrics_extra=vms_metrics(ctl))
+    root.extra.marks = root.marks        # where `archive.read` goes: the console's own log, one writer
     m = Mount(root)
     if live_ctl is not None:
         m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))

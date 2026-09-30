@@ -19,6 +19,7 @@ from w2cplatform.spec import SpecController, SubsystemSpec
 from w2cplatform.contract import Heartbeat
 from vms.config import SPEC
 from vms.controller import VmsController
+from w2cplatform.variables import Forbidden
 from tests.conftest import Box
 
 
@@ -232,7 +233,12 @@ def test_a_command_is_a_row_performed_by_whoever_holds_the_device():
     assert ("command" in [k for _, _, k in w.observed])    # …and what was done to a device is an event about it
 
     w.heartbeat_once()
-    assert clear_requests(ctl) == 1                        # the worker says done; the controller removes the row
+    assert clear_requests(con) == 1                        # the worker says done; the CONSOLE removes the row —
+    try:                                                   # a delete is a write, and the controller's token has no such grant
+        ctl.vars.delete(SPEC.sub.request_key("r1"))
+        raise AssertionError("the controller may not delete a request")
+    except Forbidden:
+        pass
     assert box.vars.list(SPEC.sub.requests_prefix()) == []
 
     # doing it again is not doing it twice: the row is gone, and the id is remembered while it is not
@@ -273,7 +279,7 @@ def test_a_device_that_does_not_come_back_from_a_command_does_not_hold_the_loop(
     time.sleep(0.1)
     done = w.requests()                                                # the driver came back: the next in line goes
     assert [d["request"] for d in done] == ["r2"] and calls == [1, 2]
-    assert w.commands == {"performed": 2, "refused": 1, "expired": 0}  # r1 is not counted twice for coming back late
+    assert w.commands == {"performed": 2, "refused": 1, "expired": 0, "unknown": 0}  # r1 is not counted twice for coming back late
 
 
 def test_a_worker_that_may_no_longer_write_does_not_act_on_the_device():

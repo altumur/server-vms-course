@@ -189,6 +189,7 @@ class RecWorker(VmsWorker):
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
+        self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
         self.closed: list[str] = []                 # ranges promoted from a device: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
@@ -273,6 +274,8 @@ class RecWorker(VmsWorker):
         why = getattr(self, "unreachable_sources", {}).get(str(cam["id"]))
         if why:
             out.update(source_unreachable=True, why=f"source unreachable: {why}")
+        if cam["id"] in self.fed:
+            out["last_frame_at"] = self.fed[cam["id"]][1]
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
         # summary, cheap to carry in every heartbeat. The primary plans from it and asks the manifest before
         # it copies anything (Lesson 26).
@@ -447,6 +450,17 @@ class RecWorker(VmsWorker):
         measure = getattr(self.actuator, "offered", None)
         running = list(self.reconciler.actual)
         vals = [measure(c) for c in running] if measure else []
+        # Per recording: when what it was offered last GREW. A pipeline that is up and fed nothing — a source
+        # that stalled, a fan-out that stopped — is `running` for ever; this is the number that says otherwise.
+        # A recording that has taken nothing yet is counted from when it was first seen running.
+        for c, v in zip(running, vals):
+            if v is None:
+                continue
+            last = self.fed.get(c)
+            if last is None or v > last[0]:
+                self.fed[c] = (v, wall)
+        for c in [c for c in self.fed if c not in running]:
+            del self.fed[c]
         if not any(v is not None for v in vals):
             return self.writer.state
         landed = self.promoted_bytes + sum(os.path.getsize(os.path.join(d, f))

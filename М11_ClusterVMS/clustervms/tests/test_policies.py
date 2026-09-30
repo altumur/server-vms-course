@@ -27,7 +27,7 @@ and nothing else is.
 import os
 import re
 
-from vms.config import REC_SPEC, SPEC, WORKER_ACL
+from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS
 from w2cplatform.blobs import digest
 
 DEPLOY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "deploy")
@@ -66,7 +66,7 @@ def _keys(prefixes: list[str], sample: str) -> list[str]:
 def test_every_object_the_code_writes_is_granted():
     """Direction one: take the keys the platform actually writes and find them a rule."""
     cases = [
-        ("vmsworker-policy.hcl", _keys(SPEC.sub.acl_objects_worker(), "w-1")),
+        ("vmsworker-policy.hcl", _keys(WORKER_OBJECTS, "w-1")),          # its heartbeat, and the mark it leaves before a command
         ("recworker-policy.hcl", _keys(REC_SPEC.sub.acl_objects_worker(), "r-1")),
         ("vmscontroller-policy.hcl", _keys(SPEC.sub.acl_objects_controller(), "w-1")
                                      + _keys(SPEC.sub.acl_objects_controller(), "unplaced")),
@@ -125,7 +125,7 @@ def test_every_write_grant_is_one_the_code_asked_for():
     This is what `objects/vms/*` would fail — the grant the worker had until now,
     whose comment said "its heartbeat" while the pattern said the whole subsystem."""
     expected = {
-        "vmsworker-policy.hcl": set(WORKER_ACL) | {OBJECTS + p for p in SPEC.sub.acl_objects_worker()},
+        "vmsworker-policy.hcl": set(WORKER_ACL) | {OBJECTS + p for p in WORKER_OBJECTS},
         "recworker-policy.hcl": set(REC_SPEC.sub.acl_worker()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_worker()},
         "vmscontroller-policy.hcl": set(SPEC.acl_controller()) | {OBJECTS + p for p in SPEC.sub.acl_objects_controller()},
         "reccontroller-policy.hcl": set(REC_SPEC.acl_controller()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_controller()},

@@ -21,7 +21,7 @@ from typing import Protocol
 
 from w2cplatform.variables import Conflict, Forbidden   # noqa: E402  the platform's exceptions: one class, so a CAS retry catches ours too
 from w2cplatform.limits import check
-from w2cplatform.variables import items_bytes, register_scheme, safe_path
+from w2cplatform.variables import items_bytes, refuse_delete, register_scheme, safe_path
 
 
 class Variables(Protocol):
@@ -101,6 +101,7 @@ class NomadVariables:
         return [v["Path"] for v in (body or [])]
 
     def delete(self, path: str, cas: int | None = None) -> None:
+        refuse_delete(path, None, {})            # an epoch is never deleted, whatever the token allows; the ACL is the server's
         q = f"namespace={self.namespace}" + (f"&cas={cas}" if cas is not None else "")
         self._req("DELETE", f"{self.addr}/v1/var/{self._key(path)}?{q}")
 
@@ -159,6 +160,7 @@ class FakeVariables:
 
     def delete(self, path, cas=None):
         safe_path(path)
+        refuse_delete(path, None, {})            # the platform's rule: an epoch is a counter nobody deletes
         self._acl(path)
         with self._lock:
             _, current = self._items.get(path, (None, 0))

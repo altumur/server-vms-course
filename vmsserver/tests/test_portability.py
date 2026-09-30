@@ -79,9 +79,11 @@ def test_the_lock_is_one_seam_and_the_caller_does_not_branch():
     site, and the day a third platform appears, one of them is missed."""
     import inspect
 
-    from w2cplatform.variables import FileVariables, _lock_exclusive
+    from w2cplatform.variables import FileVariables, _lock_exclusive, _try_lock
     src = inspect.getsource(FileVariables._locked)
     assert "_lock_exclusive(f)" in src
     for word in ("fcntl", "msvcrt", "win32", "sys.platform", "os.name"):
         assert word not in src, f"{word!r} leaked into the caller"
-    assert "fcntl" in inspect.getsource(_lock_exclusive) and "msvcrt" in inspect.getsource(_lock_exclusive)
+    assert "fcntl" in inspect.getsource(_try_lock) and "msvcrt" in inspect.getsource(_try_lock)
+    for word in ("fcntl", "msvcrt"):                       # …and the waiting is written once, over both
+        assert word not in inspect.getsource(_lock_exclusive), f"{word!r} leaked into the wait"

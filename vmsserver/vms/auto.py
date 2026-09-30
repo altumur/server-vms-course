@@ -68,6 +68,7 @@ ACTIONS = {
 # pass, and it would be the operator's own console that got slow.
 MAX_TRIGGERS = 4
 MAX_WITHIN = 3600
+MAX_VALID_FOR = 600          # what a holder accepts: `VmsWorker.MAX_VALID` (a command's deadline is near)
 MAX_ACTIONS = 4
 
 
@@ -260,9 +261,10 @@ def refuse_scenario(fields: dict, catalog: Catalog | None = None) -> None:
             raise Refused(f"{key[0]}.{key[1]} needs {missing[0]!r}")
 
     valid = int(fields.get("valid_for") or 0)
-    if valid and not 5 <= valid <= MAX_WITHIN:
-        raise Refused(f"`valid_for` is between 5 and {MAX_WITHIN} seconds — less is shorter than the road from "
-                      f"an event to the device, and the request would expire on its way")
+    if valid and not 5 <= valid <= MAX_VALID_FOR:
+        raise Refused(f"`valid_for` is between 5 and {MAX_VALID_FOR} seconds — less is shorter than the road from "
+                      f"an event to the device, and the request would expire on its way; more is not a command "
+                      f"any longer, and the worker holding the device refuses it")
 
     rate = int(fields.get("rate_per_minute") or 0)
     if rate and not 1 <= rate <= 600:

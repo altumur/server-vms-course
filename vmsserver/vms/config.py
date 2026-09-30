@@ -112,6 +112,9 @@ HOLDER_EVENTS = ("command", "command.failed", "silent")
 # itself — what a device turned out to be. Derived here, once, so the process (`__main__.worker`) and a cluster's
 # policy file (М11, `test_policies`) cannot say different things.
 WORKER_ACL = SPEC.sub.acl_worker() + [SPEC.sub.config(DEVICES, "*")]
+# …and the same for objects: its heartbeat, and the marks it leaves before it calls a device (`vms/commands/<id>`,
+# written and — when the request is gone — removed; `VmsWorker.requests`).
+WORKER_OBJECTS = SPEC.sub.acl_objects_worker() + [f"{SPEC.name}/commands/*"]
 
 
 def describe(caps: dict | None) -> dict | None:

@@ -81,8 +81,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 from .contract import BUILD, SCHEMA, check_schema
-from .events import CONSOLE, Bucket, buckets_under, parse_bucket, subsystems_under
+from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under
 
+MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
 EVENTS_INFLIGHT = 8          # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
@@ -213,6 +214,13 @@ def mirrored_buckets(root: str, server: str, bucket_seconds: int = 600) -> list[
     return sorted(out, key=lambda b: (b.start, b.epoch))
 
 
+# How many copies, from the names alone — what the heartbeat says every ten seconds. `mirrored_buckets` opens
+# every copy to count its lines; the heartbeat wants a number of files.
+def mirrored_count(root: str, server: str) -> int:
+    base = os.path.join(root, MIRROR_DIR, server)
+    return sum(1 for d, _, files in os.walk(base) for f in files if parse_bucket(os.path.join(d, f), base))
+
+
 # How one resource talks to another: HTTP. Tests substitute an in-process client with the same three methods
 # over directories.
 class PeerClient:
@@ -297,6 +305,8 @@ class Resource:
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
+        self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
+        self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
@@ -422,7 +432,7 @@ class Resource:
               "schema": SCHEMA, "build": BUILD,                      # what this build understands, and what it is
               "usage": self.usage_cached(), "usage_at": self.usage_at,
               "space": self.space(), "volumes": self.spaces(), "units": self.units(),
-              "mirrors": {s: sum(len(mirrored_buckets(r, s, self.bucket_seconds)) for r in self.volumes.values())
+              "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
         self._last_heartbeat = hb
@@ -457,11 +467,28 @@ class Resource:
             for unit in units:
                 days = max(days_of[(sub, unit)], floor) if sub == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
-                    for b in buckets_under(path, sub, unit, self.bucket_seconds):
+                    for b in bucket_names_under(path, sub, unit, self.bucket_seconds):   # by NAME: no file is opened to be swept
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
                             os.remove(os.path.join(path, b.path)); removed.append(b.path)
+        # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
+        # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
+        # with the mirror on it only ever grew. A copy is kept by the days of ITS unit, as the original is,
+        # and a keep holds it the same way. `MIRROR_GRACE` later than the original, because the two servers
+        # have two clocks: a copy swept a moment before its original would be sent again on the owner's next
+        # pass, and swept again.
+        for path in self.volumes.values():
+            for server in mirrored_servers(path):
+                base = os.path.join(path, MIRROR_DIR, server)
+                for sub, units in subsystems_under(base).items():
+                    for unit in units:
+                        days = retention_days(self.vars, sub, unit)
+                        days = max(days, floor) if sub == CONSOLE else days
+                        for b in bucket_names_under(base, sub, unit, self.bucket_seconds):
+                            if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
+                                    and not (kept is not None and kept(sub, unit, b.start, b.end)):
+                                os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
         return len(removed)
@@ -532,7 +559,16 @@ class Resource:
         only the subsystem knows which of its files are where, but only the
         resource knows which disk is short.
         """
-        knob = space_settings(self.vars)
+        # THE STORE NOT ANSWERING IS NOT "THE KNOB IS OFF" (feedback BI). The settings are one row; a pass that
+        # could not read it used to stop here with an exception — and a full disk stayed full for as long as
+        # the store was away, which is exactly when nobody is looking. The resource keeps what it last read
+        # and acts on that. With nothing ever read it says `unknown` and frees nothing: it does not guess.
+        try:
+            knob = self._space_knob = space_settings(self.vars)
+        except OSError as e:
+            if self._space_knob is None:
+                return {"space": "unknown", "error": str(e)}
+            knob = self._space_knob
         if not knob["enabled"]:
             return {"space": "off"}
         out, worst, over = {}, 0.0, []

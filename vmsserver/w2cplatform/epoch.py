@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import time
 
-from .variables import Conflict, Variables
+from .variables import Conflict, Variables, cas_pause
 
 
 # Issues the next epoch for `key` by check-and-set: read `{epoch}` and its ModifyIndex (missing key means
@@ -47,13 +47,14 @@ from .variables import Conflict, Variables
 # four threads issuing 25 each and asserts the set is exactly 1..100. The returned index is the row's
 # ModifyIndex after the write (unused by `Worker.take_epoch`, which keeps only the epoch).
 def next_epoch(vars_: Variables, key: str, retries: int = 200) -> tuple[int, int]:
-    for _ in range(retries):
+    for attempt in range(retries):
         items, idx = vars_.get(key)
         current = int(items["epoch"]) if items else 0
         try:
             new_idx = vars_.put(key, {"epoch": current + 1}, cas=idx)
             return current + 1, new_idx
         except Conflict:
+            cas_pause(attempt)                       # not at once: whoever won is one of several still trying
             continue
     raise RuntimeError(f"could not issue an epoch for {key} after {retries} conflicts")
 

@@ -463,14 +463,23 @@ class ArchivePolicy:
         return spans
 
     def pass_(self, now: float) -> dict:
-        out, removed, rep_kept = {}, 0, {}
+        out, removed, rep_kept, skipped = {}, 0, {}, 0
         spans = self.kept()
         for res in (list(self.volumes.values()) or [self.res]):
             rep = res.repair()
             for k, v in rep.items():
                 out[k] = out.get(k, 0) + v if isinstance(v, int) else v
             for unit in res.units():
-                items, _ = self.vars.get(f"{SUB}/recordings/{unit}")   # the unit's own row: its retention, not the camera's
+                # A row that could not be READ is not a row that is absent (feedback BI). Absent is thirty
+                # days; unread is unknown — and a recording kept for ninety would be cut to thirty by a store
+                # that blinked. The unit waits for the next pass; the others are not held up by it.
+                try:
+                    items, _ = self.vars.get(f"{SUB}/recordings/{unit}")   # the unit's own row: its retention, not the camera's
+                    kept = spans(unit)
+                except OSError:
+                    skipped += 1
+                    continue
                 days = int(items.get("retention_days", 30)) if items else 30
-                removed += res.retain(unit, days, now, spans(unit), rep_kept)
-        return {**out, "media_removed": removed, **({"media_kept": rep_kept["kept"]} if rep_kept else {})}
+                removed += res.retain(unit, days, now, kept, rep_kept)
+        return {**out, "media_removed": removed, **({"media_kept": rep_kept["kept"]} if rep_kept else {}),
+                **({"media_unread": skipped} if skipped else {})}

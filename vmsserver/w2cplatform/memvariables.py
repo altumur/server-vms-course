@@ -42,7 +42,7 @@ from __future__ import annotations
 import threading
 
 from .limits import NO_CEILING, check
-from .variables import Conflict, Forbidden, items_bytes, register_scheme, safe_path
+from .variables import Conflict, Forbidden, items_bytes, refuse_delete, register_scheme, safe_path
 
 # One store per name, per process. Module-level because that is what "per process" means; the lock is
 # around the registry, not around a store — each store has its own.
@@ -114,9 +114,11 @@ class MemVariables:
             self._s.items[path] = ({k: str(v) for k, v in items.items()}, self._s.index)
             return self._s.index
 
-    # The same CAS check as `put`, and — as on the file backend — no ACL check.
+    # A delete is a write: the same ACL as `put`, and never an epoch — the rule is the file backend's
+    # (`variables.refuse_delete`), so the two cannot disagree. Then the same CAS check as `put`.
     def delete(self, path: str, cas: int | None = None) -> None:
         safe_path(path)
+        refuse_delete(path, self.writer, self._s.acl)
         with self._s.lock:
             current = self._s.items.get(path, (None, 0))[1]
             if cas is not None and cas != current:

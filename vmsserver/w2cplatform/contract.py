@@ -74,7 +74,7 @@ from dataclasses import dataclass, field
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
-from .variables import Conflict, Variables
+from .variables import Conflict, Variables, cas_pause
 
 # What layout of the store this build understands. A rolling upgrade means old and new processes read and
 # write the same rows for a while, so adding a field is free and changing what one MEANS is not: that is a
@@ -434,7 +434,7 @@ class Controller:
     def write(self, path: str, mutate, retries: int = 10) -> dict:
         """Read-modify-write by CAS: `mutate(items or {}) -> new items`.
         A conflict means another instance wrote; re-read and go again."""
-        for _ in range(retries):
+        for attempt in range(retries):
             items, idx = self.vars.get(path)
             new = mutate(dict(items or {}))
             if new is None:
@@ -443,6 +443,7 @@ class Controller:
                 self.vars.put(path, new, cas=idx)
                 return new
             except Conflict:
+                cas_pause(attempt)                   # a random pause, growing: tried again at once, the same writers meet again
                 continue
         raise RuntimeError(f"{path}: {retries} conflicts")
 
@@ -635,7 +636,9 @@ class Worker:
         instance. The controller never hands names out; a process takes one."""
         prefix = self.sub.name + "/slots/"
         now = self.wall()
-        for _ in range(retries):
+        for attempt in range(retries):
+            if attempt:
+                cas_pause(attempt - 1)               # every candidate was taken under us: not the same race again at once
             names = [p[len(prefix):] for p in self.vars.list(prefix)]
             known = {n: Slot.from_items(n, self.vars.get(prefix + n)[0]) for n in names}
             if prefer is not None:
@@ -698,7 +701,9 @@ class Worker:
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
         """Take one place out of a list somebody else wrote. None when they are
         all taken — a spare, not a failure."""
-        for _ in range(retries):
+        for attempt in range(retries):
+            if attempt:
+                cas_pause(attempt - 1)
             contended = False
             for cand in candidates:
                 key, now = self.sub.hold_key(cand), self.wall()

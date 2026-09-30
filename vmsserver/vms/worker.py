@@ -90,6 +90,7 @@ from __future__ import annotations
 import logging
 import os
 import socket
+import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -410,13 +411,14 @@ class VmsWorker(Worker):
         self.suppressor = Suppressor(SPEC.suppress)
         self.observed: list[tuple[int, float, str]] = []
         # Request ids this worker has served — performed, refused or expired, all three being answers.
-        # The heartbeat carries them and the controller's `clear_requests` removes the rows: a worker
+        # The heartbeat carries them and the console's `clear_requests` removes the rows: a worker
         # writes no configuration, so it cannot delete what it has done, only say that it did it.
         self.fetched: list[str] = []
         # What became of the commands this worker was asked to perform, counted since it started: done, refused
         # by the device, or arrived after their moment. The last is the one to watch — a share of `expired` that
         # grows is the road from an event to this worker getting longer than the requests live (М10B Lesson 25).
-        self.commands = {"performed": 0, "refused": 0, "expired": 0}
+        self.commands = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
+        self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
         self.actuator = actuator or FakeActuator()
         self.rows: list[dict] = []
@@ -789,12 +791,59 @@ class VmsWorker(Worker):
     #
     # And a worker that may no longer write for the unit does not act on it either: a fenced instance, or one
     # whose lease on the unit is lost, leaves the request for whoever holds the device now.
+    #
+    # A COMMAND HAS A DEADLINE, AND IT IS NEAR (feedback BI). `valid_until` was optional: a row without one
+    # waited for its device for ever, and was performed the day the device came back. Without it a command is
+    # refused; with one more than `MAX_VALID` away it is refused too — "open the door some time in the next
+    # week" is not a command.
+    #
+    # AT MOST ONCE (the platform review, "a command with no fence check"). The answer to a request is said in
+    # the heartbeat, seconds after the device was called. A worker that died in between left a request that
+    # looked untouched, and whoever took the device next performed it again: a door pulsed twice, the second
+    # time a minute later, with nobody at it. So before the device is called the worker says it is about to —
+    # a MARK, `<subsystem>/commands/<id>` in the object store, the one place a worker may write besides its
+    # own rows. A request that carries another instance's mark is not performed: it is answered `unknown: an
+    # earlier instance … began it`, and a person decides. For a door, "perhaps twice" is worse than "perhaps
+    # not at all".
+    #
+    # The mark is written only when the call is about to be made — the device is open and free — so a request
+    # that waits for its device carries none. Marks of requests that no longer exist are cleared every
+    # `MARK_SWEEP` seconds, by whichever worker gets there.
     PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
+    MAX_VALID, MARK_SWEEP = 600.0, 30.0
+
+    def command_key(self, rid: str) -> str:
+        return f"{self.SUB.name}/commands/{rid}"
+
+    def began_by(self, rid: str) -> str | None:
+        """The instance that said it was about to perform this request, or None."""
+        raw = self.objects.get(self.command_key(rid))
+        if raw is None:
+            return None
+        try:
+            return str(json.loads(raw).get("instance", "")) or "?"
+        except ValueError:
+            return "?"                                   # a mark that does not parse is still a mark
+
+    def sweep_marks(self) -> int:
+        if self.clock() - self._marks_swept < self.MARK_SWEEP:
+            return 0
+        self._marks_swept = self.clock()
+        prefix = f"{self.SUB.name}/commands/"
+        marks = self.objects.list(prefix)                # the marks FIRST: a mark is written after its request,
+        if not marks:                                    # so a mark listed here whose row is gone below is over
+            return 0
+        rows = {k.rsplit("/", 1)[1] for k in self.vars.list(self.SUB.requests_prefix())}
+        gone = [k for k in marks if k.rsplit("/", 1)[1] not in rows]
+        for k in gone:
+            self.objects.delete(k)
+        return len(gone)
 
     def requests(self, budget: int = 4, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         mine = {str(r["id"]): r for r in self.rows}
         done: list[dict] = self._performed()             # what calls already in flight have come to
+        self.sweep_marks()
         for key in sorted(self.vars.list(self.SUB.requests_prefix())):
             if len(done) >= budget:
                 break
@@ -807,7 +856,14 @@ class VmsWorker(Worker):
             if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
                 continue                                 # not mine to act on now: fenced, or the lease is lost
             until = float(it.get("valid_until", 0) or 0)
-            if until and now > until:
+            if not until:
+                self._refused(rid, row, it, "a command carries a deadline (`valid_until`): without one it would wait "
+                                            "for its device for ever", done)
+                continue
+            if until - now > self.MAX_VALID:
+                self._refused(rid, row, it, f"`valid_until` is more than {self.MAX_VALID:.0f} s away: that is not a command", done)
+                continue
+            if now > until:
                 self.fetched.append(rid)                 # say so, so it is cleared rather than asked again
                 done.append({"request": rid, "unit": row["id"], "expired": True})
                 self.commands["expired"] += 1
@@ -818,6 +874,16 @@ class VmsWorker(Worker):
                 continue                                 # the device is not open yet: ask again next pass
             if id(dev) in self._performing:
                 continue                                 # a call into this device has not returned: wait your turn
+            before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
+            if before is not None:
+                why = f"unknown: an earlier instance ({before}) began it, and whether the device acted is not known"
+                self.fetched.append(rid)
+                done.append({"request": rid, "unit": row["id"], "error": why})
+                self.commands["unknown"] += 1
+                self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
+                log.warning("%s: request %s not performed — %s", self.name, rid, why)
+                continue
+            self.objects.put(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode())
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False}
 
             def run(call=call, dev=dev):
