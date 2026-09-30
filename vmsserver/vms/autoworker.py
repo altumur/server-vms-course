@@ -407,14 +407,48 @@ class AutoWorker(Worker):
     # action — the resource's tail, `SETTLE`, this period, the holder's own pass — and it multiplies the load:
     # every pass asks every scenario's window. Two seconds is the same as the holder's pass, so neither
     # dominates; `PASS_SECONDS` changes it, and the latency it costs is the operator's to accept.
+    # Staying itself. The loop used to pass and heartbeat and renew NOTHING: thirty seconds after it started the
+    # leases on its scenarios ran out, `may_write` said no for every one of them, and the evaluator went on
+    # heartbeating and decided nothing, for ever; fifteen seconds later its slot lapsed and another process could
+    # take its name (the product noticed the slot; the leases were worse — feedback BC). No test saw it: they move
+    # the wall clock, and a lease runs on the monotonic one.
+    #
+    # The rules are the worker's (`VmsWorker.lease_pass`): a store that did not answer is not "no"; a lost lease
+    # is one scenario's — its epoch is given up and the next pass takes a new one; a slot held by another
+    # instance means this one is nobody, and it takes a free slot and starts from nothing.
+    def lease_pass(self) -> list[str]:
+        try:
+            mine = self.renew_slot()
+        except OSError as e:
+            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
+            mine = True
+        if not mine:
+            was, lost = self.name, list(self.epochs)
+            self.epochs.clear(); self.leases.clear(); self.slot = None
+            self.claim_slot()
+            log.warning("%s: slot %s is held by another instance now; going on as %s", self.instance, was, self.name)
+            return lost
+        lost = self.renew_leases()
+        for unit in lost:
+            self.release(unit)                        # the next pass takes a new epoch for it, if it is still mine
+        return lost
+
     def run(self, poll: float | None = None, stop=None) -> None:
         import threading
         poll = float(os.environ.get("PASS_SECONDS", "2")) if poll is None else poll
         stop = stop or threading.Event()
+        lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
+        last_lease = self.clock()
         while not stop.is_set():
             try:
-                self.reconcile_once(); self.heartbeat_once()
+                self.reconcile_once()
             except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
                 log.exception("%s: pass failed", self.name)
+            try:                                      # in a try of its own: a pass that raises still holds its scenarios
+                if self.clock() - last_lease >= lease_every:
+                    self.lease_pass(); last_lease = self.clock()
+                self.heartbeat_once()
+            except Exception:                         # noqa: BLE001
+                log.exception("%s: lease or heartbeat failed", self.name)
             stop.wait(poll)
         self.release_slot()

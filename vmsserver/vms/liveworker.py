@@ -47,6 +47,11 @@ log = logging.getLogger("vms.liveworker")
 class FakePeer:
     def __init__(self, upstream):
         self.upstream, self.closed = upstream, False
+        self.connected, self.lost = True, False           # a test says otherwise: never connected, or gone
+
+    def state(self) -> str:
+        """`connecting`, `connected` or `gone` — what `GstPeer.state` reads off webrtcbin."""
+        return "gone" if self.closed or self.lost else ("connected" if self.connected else "connecting")
 
     def answer(self, offer: str) -> str:
         if "m=video" not in offer:
@@ -93,6 +98,8 @@ class LiveWorker(Worker):
         self.peer_factory = peer_factory or FakePeer
         self.upstreams: dict[str, Upstream] = {}
         self.sessions: dict[str, tuple[str, object]] = {}          # session id -> (cam, peer)
+        self.session_at: dict[str, float] = {}                     # session id -> when it was offered
+        self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
         self.lock = threading.Lock()
 
@@ -121,6 +128,7 @@ class LiveWorker(Worker):
                 self.upstreams[cam].idle_since = now
             for cam in set(self.upstreams) - wanted:                # taken away (rebalanced, deleted): drop viewers, close the source
                 self._drop(cam)
+            self._sweep(now)
             # the grace period: an idle fan-out is deleted by the gateway itself — demand-created, demand-deleted
             for cam, up in list(self.upstreams.items()):
                 if not up.peers and up.idle_since is not None and self.ctl is not None:
@@ -130,11 +138,35 @@ class LiveWorker(Worker):
         self.renew_leases()
         return sorted(self.upstreams)
 
+    # A session ends with DELETE — when the viewer says so. A tab closed, a laptop lid shut, an offer whose
+    # connection never came up say nothing, and their sessions stayed: the fan-out was never idle, so the unit
+    # was never deleted, and the gateway filled to `capacity` with nobody watching and answered 503 "full" to
+    # everybody after (the product's gateway, feedback BC). So every pass asks each peer: gone, or still
+    # connecting `CONNECT_SECONDS` after its offer — closed, as if it had hung up.
+    CONNECT_SECONDS = 30.0
+
+    def _sweep(self, now: float) -> None:
+        for sid, (cam, peer) in list(self.sessions.items()):
+            state = peer.state() if callable(getattr(peer, "state", None)) else "connected"
+            if state == "gone" or (state == "connecting" and now - self.session_at.get(sid, now) >= self.CONNECT_SECONDS):
+                self._close(sid, now)
+                self.swept += 1
+
+    def _close(self, sid: str, now: float) -> None:
+        cam, peer = self.sessions.pop(sid)
+        self.session_at.pop(sid, None)
+        peer.close()
+        up = self.upstreams.get(cam)
+        if up is not None:
+            up.peers.pop(sid, None)
+            if not up.peers:
+                up.idle_since = now
+
     def _drop(self, cam: str) -> None:
         up = self.upstreams.pop(cam)
         for sid, (c, peer) in list(self.sessions.items()):
             if c == cam:
-                peer.close(); del self.sessions[sid]
+                peer.close(); del self.sessions[sid]; self.session_at.pop(sid, None)
         if getattr(up, "pipeline", None) is not None:              # the real media path (gstvms.webrtc): close the source
             up.pipeline.close()
         self.release(cam)
@@ -149,7 +181,11 @@ class LiveWorker(Worker):
             if len(self.sessions) >= self.capacity:
                 raise OverflowError("full")
             peer = self.peer_factory(up)
-            answer = peer.answer(sdp)
+            try:
+                answer = peer.answer(sdp)
+            except Exception:
+                peer.close()                                        # an offer that failed leaves no branch on the tee
+                raise
             # The profile is known only once something has flowed, so the FIRST viewer may well arrive
             # before it is: ask after the answer, and ask every time.
             note = getattr(peer, "codec_note", None)
@@ -158,19 +194,14 @@ class LiveWorker(Worker):
             sid = uuid.uuid4().hex
             up.peers[sid] = peer; up.idle_since = None
             self.sessions[sid] = (str(cam), peer)
+            self.session_at[sid] = self.wall()
             return sid, answer
 
     def hangup(self, sid: str) -> bool:
         with self.lock:
             if sid not in self.sessions:
                 return False
-            cam, peer = self.sessions.pop(sid)
-            peer.close()
-            up = self.upstreams.get(cam)
-            if up is not None:
-                up.peers.pop(sid, None)
-                if not up.peers:
-                    up.idle_since = self.wall()
+            self._close(sid, self.wall())
             return True
 
     # -- what it reports -----------------------------------------------------------------------------
@@ -180,7 +211,8 @@ class LiveWorker(Worker):
     def heartbeat_once(self) -> None:
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
-                       sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts())
+                       sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
+                       swept=self.swept)
 
     def metrics_text(self) -> str:
         return (f"# TYPE live_sessions gauge\nlive_sessions {len(self.sessions)}\n"

@@ -205,3 +205,79 @@ def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
         assert snap["streams"][0]["cam"] == "1" and snap["streams"][0]["worker"] == "g-1"
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def _watched(base, live_ctl, g, viewers=1):
+    _whep(base, 1); live_ctl.ensure_placed()                          # the first viewer creates the unit; the controller places it
+    assert g.reconcile_once() == ["1"]
+    return [g.offer("1", OFFER)[0] for _ in range(viewers)]
+
+
+def test_a_viewer_that_left_without_saying_so_does_not_hold_its_session_for_ever():
+    """A session ended with DELETE, and only with DELETE. A closed tab says nothing: its session stayed, the
+    fan-out was never idle, and a gateway of `capacity` viewers filled with nobody watching and answered 503
+    "full" to everybody after (the product's gateway, feedback BC). Every pass asks each peer what became of it."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1", capacity=2)
+        a, b = _watched(base, live_ctl, g, viewers=2)
+        assert g.headroom() == 0
+        try:
+            g.offer("1", OFFER); raise AssertionError("full")
+        except OverflowError:
+            pass
+        g.sessions[a][1].lost = True                                   # the tab was closed: no DELETE, the connection is gone
+        g.reconcile_once()
+        assert a not in g.sessions and b in g.sessions and g.headroom() == 1 and g.swept == 1
+        assert g.upstreams["1"].idle_since is None                     # somebody is still watching
+        g.sessions[b][1].lost = True
+        g.reconcile_once()
+        assert g.sessions == {} and g.upstreams["1"].idle_since == box.wall()   # idle from now: the grace period can start
+    finally:
+        srv.shutdown()
+
+
+def test_an_offer_whose_connection_never_came_up_is_closed_after_half_a_minute():
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        (sid,) = _watched(base, live_ctl, g)
+        peer = g.sessions[sid][1]
+        peer.connected = False                                         # answered, and the browser never connected
+        box.wall.advance(20); g.reconcile_once()
+        assert sid in g.sessions                                       # still inside the time a connection may take
+        box.wall.advance(11); g.reconcile_once()
+        assert sid not in g.sessions and peer.closed and g.swept == 1
+    finally:
+        srv.shutdown()
+
+
+def test_an_offer_that_fails_leaves_no_peer_behind():
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        _watched(base, live_ctl, g, viewers=0)
+        made = []
+        factory = g.peer_factory
+        g.peer_factory = lambda up: made.append(factory(up)) or made[-1]
+        try:
+            g.offer("1", "v=0\r\n"); raise AssertionError("an offer with no video section")
+        except ValueError:
+            pass
+        assert made[0].closed and g.sessions == {}
+    finally:
+        srv.shutdown()
+
+
+def test_the_codec_report_is_on_the_peer_the_gateway_asks():
+    """`codec_note` was defined twice on `_Source` — the second, meant for the peer, replaced the first and called
+    an attribute `_Source` does not have — and `GstPeer`, which is what the gateway asks, had none: a camera
+    sending a codec no browser plays was a black picture with an empty `codec`. Read from the source: the module
+    needs GStreamer to import."""
+    import ast
+    import os
+    tree = ast.parse(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gstvms", "webrtc.py")).read())
+    methods = {c.name: [f.name for f in c.body if isinstance(f, ast.FunctionDef)] for c in tree.body if isinstance(c, ast.ClassDef)}
+    assert methods["_Source"].count("codec_note") == 1
+    assert "codec_note" in methods["GstPeer"] and "state" in methods["GstPeer"]
+

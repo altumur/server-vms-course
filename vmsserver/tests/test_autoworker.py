@@ -400,6 +400,36 @@ def test_the_evaluator_runs_as_a_process_and_lets_its_slot_go_when_stopped():
     assert box.vars.get(w.sub.slot_key("a-1"))[0]["released"] == "true"
 
 
+def test_the_evaluators_loop_keeps_its_leases_and_its_slot_for_longer_than_half_a_minute():
+    """The loop passed, heartbeated and renewed nothing. Thirty seconds in, every lease had run out: the evaluator
+    was alive and decided nothing, for ever, and its slot lapsed for anybody to take (feedback BC). The tests
+    above move the wall clock; a lease runs on the monotonic one — this test moves both, through the loop."""
+    box = Box()
+    t = box.wall()
+    log = _Log([ev(t - 3, "vms", 12, "io.input", port="1", value="closed")], wall=box.wall)
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+
+    class Minute:
+        """Seven passes nine seconds apart; a door event just before the last."""
+        def __init__(self): self.n = 0
+        def is_set(self): return self.n >= 7
+        def wait(self, s):
+            self.n += 1
+            box.clock.advance(9); box.wall.advance(9)
+            if self.n == 6:
+                now = box.wall()
+                log.events += [ev(now - 4, "vms", 12, "io.input", port="1", value="open"),
+                               ev(now - 3, "vms", 12, "io.input", port="1", value="closed")]
+
+    w.run(poll=0, stop=Minute())
+    assert len(box.vars.list("vms/requests/")) == 2                   # the first pass, and one a minute later
+    assert w.epochs == {"one": 1} and w.may_write("one")              # the same epoch, renewed — not taken again
+    slot, _ = box.vars.get(w.sub.slot_key("a-1"))
+    assert slot["released"] == "true" and float(slot["until"]) >= box.wall() - 1    # held to the end, then let go
+
+
 class _Holey(_Log):
     """The merge, as it answers when a server did not: what the others hold, and the window called incomplete."""
     def __init__(self, events=(), wall=None):

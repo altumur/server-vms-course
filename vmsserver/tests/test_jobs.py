@@ -302,3 +302,29 @@ def test_the_console_process_queues_those_scans():
     loop = inspect.getsource(m._reap_loop)
     assert "scan_what_arrived(rec_ctl, det_ctl, c)" in loop, "backfilled footage would never be looked at"
     assert "det_ctl" in inspect.getsource(m.console)
+
+
+def test_a_request_to_record_is_kept_when_the_recording_could_not_be_made_this_pass():
+    """The scenario fired and filed "record camera 7 for ten minutes". The pass that turns it into a recording
+    hit a store that conflicted — and deleted the request with the rest: no recording, and nothing to say one
+    had been asked for (the product's `RecordOnRequest`, feedback BC). A failure is not an answer; the request
+    stays for the next pass, and its `valid_until` is what ends the waiting. A REFUSAL is an answer: it goes."""
+    from vms.jobs import record_on_request
+    from w2cplatform.spec import Refused
+    box = Box()
+    rec = _rec(box, cam="9")                                           # some other recording; the controller under test
+    now = box.wall()
+    box.vars.put("rec/requests/f1-0", {"action": "record", "cam": "7", "minutes": "10", "valid_until": str(now + 30)})
+    create = rec.create
+    rec.create = lambda fields: (_ for _ in ()).throw(RuntimeError("rec/recordings/7-auto: 10 conflicts"))
+    assert record_on_request(rec, now) == 0
+    assert box.vars.get("rec/requests/f1-0")[0] is not None            # kept: nothing was decided about it
+    rec.create = create
+    assert record_on_request(rec, now + 2) == 1 and rec.unit("7-auto")["until"] == now + 2 + 600
+    assert box.vars.get("rec/requests/f1-0")[0] is None                # performed: it has nothing left to say
+
+    box.vars.put("rec/requests/f2-0", {"action": "record", "cam": "8", "minutes": "10", "valid_until": str(now + 30)})
+    rec.create = lambda fields: (_ for _ in ()).throw(Refused("no such camera"))
+    assert record_on_request(rec, now + 4) == 0
+    assert box.vars.get("rec/requests/f2-0")[0] is None                # refused: an answer, and it goes
+

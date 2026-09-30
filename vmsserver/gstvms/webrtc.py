@@ -55,11 +55,6 @@ class _Source:
         st = caps.get_structure(0)
         return codec_note(st.get_name(), st.get_string("profile"))
 
-    # What the camera turned out to be sending, for the gateway's status. Asked after every answer:
-    # the first viewer may arrive before anything has flowed and the profile is known.
-    def codec_note(self) -> str:
-        return self.src.codec_note()
-
     def close(self) -> None:
         self.pipeline.set_state(Gst.State.NULL)
 
@@ -123,6 +118,25 @@ class GstPeer:
         self.webrtc.emit("set-local-description", holder["answer"], None)
         self._gathered.wait(timeout)                                   # every candidate in the SDP: WHEP without trickle
         return self.webrtc.get_property("local-description").sdp.as_text()
+
+    # What the camera turned out to be sending, for the gateway's status. Asked after every answer:
+    # the first viewer may arrive before anything has flowed and the profile is known. It stood on `_Source`,
+    # under the same name as the method it calls — the second definition replaced the first, and the peer, which
+    # is what the gateway asks, had none: an unsupported codec was a black picture with an empty `codec`.
+    def codec_note(self) -> str:
+        return self.src.codec_note()
+
+    # What became of this viewer's connection, for the gateway's sweep (`LiveWorker._sweep`): a browser that
+    # closed its tab says nothing, and webrtcbin is the only one who knows.
+    def state(self) -> str:
+        if self.webrtc is None:
+            return "connecting"
+        s = self.webrtc.get_property("connection-state")
+        gone = (GstWebRTC.WebRTCPeerConnectionState.DISCONNECTED, GstWebRTC.WebRTCPeerConnectionState.FAILED,
+                GstWebRTC.WebRTCPeerConnectionState.CLOSED)
+        if s in gone:
+            return "gone"
+        return "connected" if s == GstWebRTC.WebRTCPeerConnectionState.CONNECTED else "connecting"
 
     def close(self) -> None:
         for e in (self.queue, self.pay, self.caps, self.webrtc):

@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import logging
 
+from w2cplatform.spec import Refused
+
 TERMINAL = ("done", "failed")
 # What a job's row may say, and what the worker's phase is allowed to move it to. The console mirrors the
 # phase into the row not because the row is a better heartbeat — it is a worse one — but because the row is
@@ -80,8 +82,15 @@ def record_on_request(rec_ctl, now: float) -> int:
             elif float(row.get("until") or 0) < ends:
                 rec_ctl.update(name, {"until": ends})       # keep recording, not record twice
                 started += 1
-        except Exception as e:                              # noqa: BLE001 — a refusal is an answer, and it is ours to log
-            log.warning("%s: %s could not start %s: %s", rec_ctl.spec.name, rid, name, e)
+        except Refused as e:                                # a refusal is an answer, and it is ours to log
+            log.warning("%s: %s refused for %s: %s", rec_ctl.spec.name, rid, name, e)
+        except Exception as e:                              # noqa: BLE001
+            # NOT an answer: the store conflicted, or did not answer at all. The request stays and the next
+            # pass tries again — it carries `valid_until`, so it cannot wait for ever. It used to be deleted
+            # here with the rest: the scenario fired, the recording was never made, and nothing said so
+            # (the product's `RecordOnRequest`, feedback BC).
+            log.warning("%s: %s could not start %s this pass: %s", rec_ctl.spec.name, rid, name, e)
+            continue
         rec_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
     return started
 
