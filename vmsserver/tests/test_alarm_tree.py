@@ -91,7 +91,7 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     EventLog(box.archive, "vms", "8", 1).append(t + 10, "io.input", ALARM, port="1")
     for cam in ("7", "8"):
         box.vars.put(f"vms/alarms_retention/{cam}", {"days": 1})
-    keeps.write(box.vars, {"cam": "7", "since": t, "until": t + 60}, ["7"], "anna", box.wall())
+    keeps.write(box.vars, {"cam": "7", "from": t, "to": t + 60}, ["7"], "anna", box.wall())
     res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 1
     assert len(buckets_under(box.archive, "vms.alarms", "7", 600)) == 1 and buckets_under(box.archive, "vms.alarms", "8", 600) == []

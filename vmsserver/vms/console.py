@@ -533,7 +533,7 @@ def rec_routes(rec_ctl: SpecController):
                 k = keeps.write(rec_ctl.vars, body, sorted(names), handler.headers.get("X-User", "operator"), rec_ctl.wall())
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
-            said("archive.keep.made", handler, keep=k.id, cam=k.cam, since=k.since, until=k.until)
+            said("archive.keep.made", handler, keep=k.id, cam=k.cam, **{"from": k.since, "to": k.until})
             return 201, {"keep": k.shown()}
         if method == "DELETE" and path.startswith("/keeps/"):
             id_ = path[len("/keeps/"):]

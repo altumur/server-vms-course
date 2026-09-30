@@ -32,7 +32,10 @@ from w2cplatform.spec import Refused
 
 SUB = "rec"
 TABLE = "keeps"
-FIELDS = ("cam", "since", "until", "note")
+# The interval is `from` / `to` in the row and at the door — the names every archive door already uses
+# (`/timeline`, `/segment`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
+# on a recording already means something else: how long a recording made on request goes on.
+FIELDS = ("cam", "from", "to", "note")
 MAX_NOTE = 500
 
 
@@ -49,12 +52,12 @@ class Keep:
 
     @classmethod
     def from_items(cls, id_: str, d: dict) -> "Keep":
-        return cls(id_, str(d.get("cam", "")), float(d.get("since", 0) or 0), float(d.get("until", 0) or 0),
+        return cls(id_, str(d.get("cam", "")), float(d.get("from", 0) or 0), float(d.get("to", 0) or 0),
                    str(d.get("note", "")), str(d.get("by", "")), float(d.get("at", 0) or 0),
                    tuple(str(r) for r in _names(d.get("recordings"))))
 
     def to_items(self) -> dict:
-        return {"cam": self.cam, "since": self.since, "until": self.until, "note": self.note, "by": self.by,
+        return {"cam": self.cam, "from": self.since, "to": self.until, "note": self.note, "by": self.by,
                 "at": self.at, "recordings": json.dumps(list(self.recordings))}
 
     def shown(self) -> dict:
@@ -86,9 +89,9 @@ def refuse(fields: dict) -> None:
     if not cam or not safe_segment(cam):
         raise Refused("a keep names a camera")
     try:
-        since, until = float(fields.get("since")), float(fields.get("until"))
+        since, until = float(fields.get("from")), float(fields.get("to"))
     except (TypeError, ValueError):
-        raise Refused("a keep is an interval: `since` and `until`, unix seconds") from None
+        raise Refused("a keep is an interval: `from` and `to`, unix seconds") from None
     if not 0 < since < until:
         raise Refused("a keep's interval ends after it starts")
     if len(str(fields.get("note", ""))) > MAX_NOTE:
@@ -99,7 +102,7 @@ def refuse(fields: dict) -> None:
 # two people keeping the same ten minutes keep them once.
 def write(vars_, fields: dict, recordings: list, by: str, now: float) -> Keep:
     refuse(fields)
-    cam, since, until = str(fields["cam"]), float(fields["since"]), float(fields["until"])
+    cam, since, until = str(fields["cam"]), float(fields["from"]), float(fields["to"])
     k = Keep(f"{cam}-{int(since)}-{int(until)}", cam, since, until, str(fields.get("note", "")), by, now,
              tuple(sorted(str(r) for r in recordings)))
     _, idx = vars_.get(key(k.id))

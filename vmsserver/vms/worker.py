@@ -104,7 +104,7 @@ from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
-from .config import (DEVICES, LIVE_PORT_BASE, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, channel_of, describe, device_of,
+from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
                      device_row, live_shm, live_url,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
@@ -419,6 +419,9 @@ class VmsWorker(Worker):
         # all. Both numbers are published, never assumed: a subscriber reads the address out of the
         # heartbeat (`live_url`, `playback_url`), and it has done since Lesson 4.
         self.rtsp_port = port_of(env.get("RTSP_PORT"), RTSP_PORT)
+        # What the two doors are BOUND to — and therefore what the heartbeat says their address is (`announce_host`).
+        self.rtsp_host = env.get("RTSP_HOST")            # the fan-out is the actuator's to bind; the process says to what
+        self.playback_host = env.get("PLAYBACK_HOST")    # set by `serve_playback`, which binds it
         self.playback_port = port_of(env.get("PLAYBACK_PORT"), PLAYBACK_PORT)
         self.rtp_base = int(env.get("RTP_BASE") or LIVE_PORT_BASE)                 # the live branch's ports: `live_port`, per cluster on a shared bench
         self.bucket_seconds = bucket_seconds
@@ -593,7 +596,7 @@ class VmsWorker(Worker):
     def enrich(self, cam: dict) -> dict | None:
         if cam.get("kind") == "io":
             return dict(cam)
-        return dict(cam, live_url=live_url(self.server, cam["id"], self.fanout_port()), live_port=live_port(cam["id"], self.rtp_base),
+        return dict(cam, live_url=live_url(announce_host(self.rtsp_host, self.server), cam["id"], self.fanout_port()), live_port=live_port(cam["id"], self.rtp_base),
                     live_shm=live_shm(cam["id"], self.shm_dir))
 
     # Seconds since start on the monotonic clock — the reconciler's `now` for backoff.
@@ -1081,17 +1084,17 @@ class VmsWorker(Worker):
             # Nothing to subscribe to, and saying so is the point: a subscriber reads this object and
             # nothing else, so an address published here would be an address somebody dials.
             return {"kind": "io", **({"can": can} if can else {})}
-        out = {"live_url": live_url(self.server, cam["id"], self.fanout_port()),
+        out = {"live_url": live_url(announce_host(self.rtsp_host, self.server), cam["id"], self.fanout_port()),
                "live_shm": live_shm(cam["id"], self.shm_dir), **({"can": can} if can else {})}
         dev = self.device_of_row(cam)
         cov = dev.coverage(cam["id"]) if dev is not None else None
         if cov is not None:
-            out["playback_url"] = playback_url(self.server, cam["id"], self.playback_port)
+            out["playback_url"] = playback_url(announce_host(self.playback_host, self.server), cam["id"], self.playback_port)
             out["coverage"] = cov                         # the SUMMARY: from, to, fragments — never the index
             # …and WHERE to ask for the index, which is not the same thing as carrying it. The heartbeat is
             # one object under a ceiling; thirty days of motion recording is thousands of spans. A door,
             # not a field (М10A Lesson 26 made the same choice for a mask).
-            out["index_url"] = playback_url(self.server, cam["id"], self.playback_port).replace("/playback/", "/recordings/")
+            out["index_url"] = playback_url(announce_host(self.playback_host, self.server), cam["id"], self.playback_port).replace("/playback/", "/recordings/")
         return out
 
     # `max(0, capacity − len(rows))`: cameras this worker could still take. "Not CPU — a worker at 40 % CPU
@@ -1176,7 +1179,11 @@ class VmsWorker(Worker):
     # `port=0` the number is invented by the kernel, so it is read back and kept: from this moment
     # `playback_url` says the truth, and a second worker on the same box is an ordinary thing rather than
     # a crash loop every two seconds.
-    def serve_playback(self, host: str = "127.0.0.1", port: int | None = None) -> ThreadingHTTPServer:
+    def serve_playback(self, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
+        from .config import opened_beyond_loopback
+        host = (self.playback_host or LOOPBACK) if host is None else host
+        self.playback_host = host                        # what it is bound to is what the heartbeat announces
+        opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log)
         srv = ThreadingHTTPServer((host, self.playback_port if port is None else port), self.playback_handler())
         self.playback_port = srv.server_address[1]
         threading.Thread(target=srv.serve_forever, daemon=True).start()

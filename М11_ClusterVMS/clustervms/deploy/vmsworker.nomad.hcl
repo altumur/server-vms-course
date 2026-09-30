@@ -69,6 +69,11 @@ job "vmsworker" {
         # reads, filled here from Nomad's own. This file already knows the orchestrator — the
         # worker must not. A k8s manifest fills the same four from an ordinal and a fieldRef.
         SLOT_INDEX  = "${NOMAD_ALLOC_INDEX}"
+        # The fan-out, OPENED: its default is loopback (М10B Lesson 4), and here a recorder or a gateway on
+        # another server has to reach it. Nobody is asked who they are at this door — there is no
+        # authentication below М12 — so this line is a statement about the network these servers are on: it
+        # is closed to everybody else, or every camera's live stream is everybody's.
+        RTSP_HOST   = "0.0.0.0"
         # How long this process goes on RECORDING past a lease's end while Nomad's Variables do not answer
         # (М10A Lesson 6). On one box there is no ceiling: the store is a directory, and nobody else can be
         # given the camera. Here the store is on the network — a worker cut off from it may still hold the

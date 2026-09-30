@@ -142,7 +142,7 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
     assert [p for p in opened if p.endswith(".events.jsonl")] == []    # …and swept over, with no bucket opened
 
     box.vars.put("vms/retention/7", {"days": 1}); box.vars.put("vms/retention/8", {"days": 1})
-    keeps.write(box.vars, {"cam": "8", "since": t, "until": t + 60}, ["8"], "anna", box.wall())
+    keeps.write(box.vars, {"cam": "8", "from": t, "to": t + 60}, ["8"], "anna", box.wall())
     res["srv-b"].kept = res["srv-a"].kept = __import__("vms.resource", fromlist=["kept_buckets"]).kept_buckets(box.vars)
     box.wall.advance(DAY - 5000)                                       # the two early buckets are past their day…
     assert res["srv-a"].retain() == 1                                  # the original of camera 7 goes; 8's is kept

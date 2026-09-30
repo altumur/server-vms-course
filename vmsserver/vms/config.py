@@ -166,6 +166,48 @@ def port_of(value, default: int) -> int:
     return int(v) if v else int(default)
 
 
+# THE DOORS ARE SHUT UNTIL SOMEBODY OPENS THEM, AND A DOOR ANNOUNCES WHAT IT BOUND (the platform review, blocker
+# 1; the product's step 0, feedback BP).
+#
+# Nothing in this module checks who is calling — there is no authentication below М12, and that is a decision
+# written down in `module-design.md`, not an oversight. What stood between a camera's live stream and anybody
+# on the network was the address a door listened on, and two of them listened on every interface by default:
+# the RTSP fan-out and the door to a device's own archive. They bind to loopback now. Opening one to the
+# network is a setting somebody makes (`RTSP_HOST`, `PLAYBACK_HOST`), and the process says in its log that the
+# door is open and asks nobody who they are.
+#
+# The second half is what makes the first one work. A door's address is ANNOUNCED — `live_url`, `playback_url`
+# in the heartbeat — and it was always the server's name. A door bound to loopback and announced under the
+# server's name is unreachable wherever that name resolves to a network address: the subscriber goes to an
+# address nobody listens on. So: loopback if bound to loopback, else the server's name. And a subscriber on
+# ANOTHER server that reads a loopback address knows it is not for it (`local_only`) — it does not go and
+# knock on its own machine.
+LOOPBACK = "127.0.0.1"
+
+
+def is_loopback(host: str) -> bool:
+    return host in ("localhost", "::1", "[::1]") or host.startswith("127.")
+
+
+def announce_host(bound: str | None, server: str) -> str:
+    """What a door bound to `bound` on `server` says its address is. `None` — the worker was not told what its
+    door is bound to (it does not bind the fan-out itself: the actuator does) — is the server's name, as it
+    always was; the PROCESS is what says loopback (`__main__`)."""
+    return LOOPBACK if bound is not None and is_loopback(bound) else server
+
+
+def local_only(url: str, holder_server: str, my_server: str) -> bool:
+    """The address is a loopback one on another machine: announced truthfully, and not reachable from here."""
+    from urllib.parse import urlsplit
+    return holder_server != my_server and is_loopback(urlsplit(url).hostname or "")
+
+
+def opened_beyond_loopback(what: str, host: str, log) -> None:
+    if not is_loopback(host):
+        log.warning("%s is open on %s and asks nobody who they are: there is no authentication at this door — "
+                    "it is for a network that is already closed", what, host)
+
+
 def playback_url(server: str, cid, port: int = PLAYBACK_PORT) -> str:
     """Where a camera's OWN archive is served from — the holder's playback surface.
     HTTP, not the RTSP fan-out: a browser has to seek inside it, and the recorder

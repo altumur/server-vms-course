@@ -89,10 +89,10 @@ REC_SHM_DESC = "shmsrc socket-path={path} is-live=true do-timestamp=true name=sr
 class GstActuator:
     """The worker's: holds the camera, serves the fan-out, records nothing."""
 
-    def __init__(self, watchdog_ms: int = 8000, rtsp_port: int = 8554):
+    def __init__(self, watchdog_ms: int = 8000, rtsp_port: int = 8554, rtsp_address: str = "127.0.0.1"):
         self.watchdog = watchdog_ms
         from .livesrv import FanOut
-        self.fanout = FanOut(rtsp_port)
+        self.fanout = FanOut(rtsp_port, rtsp_address)
         self.rtsp_port = self.fanout.port                # what the OS gave, when `rtsp_port` was 0                  # rtsp://<server>:8554/<cam>: one shared factory per camera over its loopback port
         self.pipelines: dict[int, Gst.Pipeline] = {}
         self.dead: list[int] = []

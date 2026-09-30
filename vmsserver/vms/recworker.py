@@ -189,6 +189,7 @@ class RecWorker(VmsWorker):
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
+        self.behind_loopback: dict = {}             # camera -> the server whose fan-out is bound to loopback, and is not ours
         self.depths: dict = {}                      # recording -> days of footage it has here (`depth_pass`)
         self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
         self._depth_at = -1e18
@@ -232,6 +233,14 @@ class RecWorker(VmsWorker):
         server = hb.extra.get("server", "?")
         if server == self.server and st.get("live_shm"):
             return server, st["live_shm"]
+        from .config import local_only
+        if local_only(st["live_url"], server, self.server):
+            # Announced truthfully and not for us: the fan-out is bound to loopback on ANOTHER server. Going to
+            # that address would be knocking on our own machine. Said in the status, so the operator reads
+            # "open RTSP_HOST on srv-b" instead of "camera held by nobody".
+            self.behind_loopback[str(cam)] = server
+            return None
+        self.behind_loopback.pop(str(cam), None)
         return server, st["live_url"]
 
     # A recording's pipeline needs a source: `rtspsrc location=<live_url> ! archivesink` under this
@@ -276,6 +285,9 @@ class RecWorker(VmsWorker):
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
         if cam["id"] in self.waiting and cam["id"] not in self.reconciler.actual:
             out["why"] = "camera held by nobody"
+            if str(cam["cam"]) in self.behind_loopback:
+                out["why"] = (f"the camera's stream is served on loopback on {self.behind_loopback[str(cam['cam'])]}: "
+                              f"not reachable from {self.server} (RTSP_HOST there)")
         why = getattr(self, "unreachable_sources", {}).get(str(cam["id"]))
         if why:
             out.update(source_unreachable=True, why=f"source unreachable: {why}")

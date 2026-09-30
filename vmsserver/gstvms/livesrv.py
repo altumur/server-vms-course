@@ -32,8 +32,13 @@ class FanOut:
     # `port=0` — let the OS choose, and then ASK which one it chose (`get_bound_port`, available once the
     # server is attached). A number baked into a unit template is a door only the first instance on the
     # box can open; the address is published in the heartbeat anyway, so it never needed to be a constant.
-    def __init__(self, port: int = 8554):
+    #
+    # `address` — what the server BINDS to. It was never set, and GStreamer's default is every interface: the
+    # live stream of every camera of this worker, open to the network with nobody asked who they are. Loopback
+    # unless the caller says otherwise (`RTSP_HOST`; `vms/config.py` says why, and what the heartbeat announces).
+    def __init__(self, port: int = 8554, address: str = "127.0.0.1"):
         self.server = GstRtspServer.RTSPServer()
+        self.server.set_address(address)
         self.server.set_service(str(port))
         self.mounts = self.server.get_mount_points()
         self.published: dict[str, GstRtspServer.RTSPMediaFactory] = {}

@@ -48,10 +48,14 @@ def worker() -> None:
     from cluster.worker import ClusterWorker
     try:
         from gstvms.actuator import GstActuator
-        act = GstActuator()
+        # Bound to loopback unless the job opens it (`RTSP_HOST`, М10B Lesson 4) — and in a cluster the job
+        # does: a recorder on another server has to reach it. There is no authentication at this door; what
+        # the job opens, the cluster's network has to keep closed.
+        act = GstActuator(rtsp_address=os.environ.get("RTSP_HOST", "127.0.0.1"))
     except ImportError:
         logging.warning("no GStreamer: the fake actuator holds nothing"); act = None
     w = ClusterWorker(open_vars(CONFIG_URL), objects, act)
+    w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # a door announces what it bound
     logging.info("worker %s on %s (alloc %s) claimed its slot; labels %s", w.name, w.server, w.alloc, w.labels)
     w.run(stop=stop)                              # SIGTERM from Nomad → release_slot(): scale-in, not a crash
 

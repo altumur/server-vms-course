@@ -47,7 +47,7 @@ def _ages(box, unit) -> list[int]:
 def _keep(box, cam, d_from, d_to, recordings=None):
     """Keep what is between `d_from` and `d_to` days old."""
     now = box.wall()
-    return keeps.write(box.vars, {"cam": cam, "since": now - d_from * DAY - 1, "until": now - d_to * DAY + 601, "note": "the gate"},
+    return keeps.write(box.vars, {"cam": cam, "from": now - d_from * DAY - 1, "to": now - d_to * DAY + 601, "note": "the gate"},
                        recordings if recordings is not None else [cam], "anna", now)
 
 
@@ -150,7 +150,7 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     log = event_log(box.archive, 7, 3)
     log.append(t0 + 10, "alarm", zone="gate"); log.append(t0 + 3000, "motion")     # two buckets, fifty minutes apart
     event_log(box.archive, 8, 1).append(t0 + 10, "motion")
-    keeps.write(box.vars, {"cam": "7", "since": t0, "until": t0 + 60}, ["7"], "anna", box.wall())
+    keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
     box.vars.put("vms/retention/7", {"days": 0}); box.vars.put("vms/retention/8", {"days": 0})
 
     assert res.retain() == 2                                           # camera 8's, and camera 7's outside the keep
@@ -166,7 +166,7 @@ def test_the_console_sets_a_keep_lists_it_and_lifts_it():
     rec.create({"name": "7", "cam": "7"}); rec.create({"name": "7-cloud", "cam": "7"}); rec.create({"name": "9", "cam": "9"})
 
     t = box.wall()
-    body = {"cam": "7", "since": t - 900, "until": t - 300, "note": "the gate, 14:10"}
+    body = {"cam": "7", "from": t - 900, "to": t - 300, "note": "the gate, 14:10"}
     status, made = route(_Body(body, user="anna"), "POST", "/keeps", {})
     assert status == 201 and made["keep"]["id"] == f"7-{int(t - 900)}-{int(t - 300)}"
     assert (made["keep"]["by"], made["keep"]["at"], made["keep"]["recordings"]) == ("anna", t, ["7", "7-cloud"])
@@ -174,9 +174,9 @@ def test_the_console_sets_a_keep_lists_it_and_lifts_it():
     status, view = route(None, "GET", "/keeps", {})
     assert status == 200 and [k["id"] for k in view["keeps"]] == [made["keep"]["id"]]
 
-    for bad in ({"since": 1, "until": 2}, {"cam": "7", "since": t, "until": t - 1}, {"cam": "7", "since": "yesterday", "until": t},
-                {"cam": "../7", "since": 1, "until": 2}, {"cam": "7", "since": 1, "until": 2, "forever": True},
-                {"cam": "7", "since": 1, "until": 2, "note": "x" * 501}):
+    for bad in ({"from": 1, "to": 2}, {"cam": "7", "from": t, "to": t - 1}, {"cam": "7", "from": "yesterday", "to": t},
+                {"cam": "../7", "from": 1, "to": 2}, {"cam": "7", "from": 1, "to": 2, "forever": True},
+                {"cam": "7", "from": 1, "to": 2, "note": "x" * 501}):
         assert route(_Body(bad), "POST", "/keeps", {})[0] == 400, bad
 
     assert route(None, "DELETE", "/keeps/nope", {})[0] == 404

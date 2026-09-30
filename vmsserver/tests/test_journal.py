@@ -44,7 +44,7 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
 
     try:
         t = box.wall()
-        keep = call("POST", "/rec/keeps", {"cam": "1", "since": t - 900, "until": t - 300})["keep"]["id"]
+        keep = call("POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300})["keep"]["id"]
         call("DELETE", f"/rec/keeps/{keep}", user="boris")
         vol = {"name": "cold", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12}
         call("POST", "/rec/volumes", vol)

@@ -118,7 +118,10 @@ def worker() -> None:
     try:
         from gstvms.actuator import GstActuator
         from .config import port_of, RTSP_PORT
-        act = GstActuator(rtsp_port=port_of(os.environ.get("RTSP_PORT"), RTSP_PORT))
+        rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")     # loopback unless somebody opens it (`vms/config.py`)
+        act = GstActuator(rtsp_port=port_of(os.environ.get("RTSP_PORT"), RTSP_PORT), rtsp_address=rtsp_host)
+        from .config import opened_beyond_loopback
+        opened_beyond_loopback("the RTSP fan-out", rtsp_host, logging.getLogger("vmsworker"))
     except ImportError:
         logging.warning("no GStreamer: the fake actuator holds nothing")
         act = FakeActuator()
@@ -131,9 +134,10 @@ def worker() -> None:
         device_factory = None
     w = VmsWorker(name, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), archive_root=archive,
                   device_factory=device_factory)
+    w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # what the fan-out is bound to is what the heartbeat announces
     # The port is the worker's own (`$PLAYBACK_PORT`, `auto` for "ask the OS"), read in its constructor and
     # written back here by whatever the socket actually got.
-    srv = w.serve_playback(os.environ.get("PLAYBACK_HOST", "0.0.0.0"))
+    srv = w.serve_playback()                             # `$PLAYBACK_HOST`, loopback by default — it was every interface
     logging.info("worker %s (instance %s) claimed its slot; playback on %s", w.name, w.instance, srv.server_address)
     try:
         w.run(stop=stop)

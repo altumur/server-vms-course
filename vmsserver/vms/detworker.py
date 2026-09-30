@@ -68,7 +68,11 @@ class DetWorker(Worker):
     def rtp_source(self, cam: str):
         """`(server, live_url)` of the worker holding the camera — its RTSP fan-out, on any server."""
         found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
-        return None if found is None else (found[1].extra.get("server", "?"), found[2]["live_url"])
+        if found is None:
+            return None
+        from .config import local_only
+        server, url = found[1].extra.get("server", "?"), found[2]["live_url"]
+        return None if local_only(url, server, self.server) else (server, url)   # loopback on another server: not for us
 
     def unit_row(self, unit: str) -> dict | None:
         it, _ = self.vars.get(DET.config("units", unit))
