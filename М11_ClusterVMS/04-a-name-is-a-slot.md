@@ -251,7 +251,7 @@ PUT /v1/var/vms/placement/9?namespace=default&cas=1054
 {"Items": {"worker": "w-0", "reason": "slot w-2 released; most free capacity (1); on srv-a", ...}}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-0?namespace=default&cas=1060
+PUT /v1/var/vms/workers/w-0?namespace=default&cas=1062
 {"Items": {"units": "3,5,7,9", "rev": "6"}}
 ```
 

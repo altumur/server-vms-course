@@ -165,7 +165,7 @@ class SpecController(Controller):
             path = self.sub.config(*d.row.replace("{id}", str(uid)).split("/"))
             if deleted:
                 if d.on_delete is not None:
-                    self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()} if it else None)
+                    self.write(path, lambda it, v=d.on_delete: {k: str(x) for k, x in v.items()})
                 continue
             want = {k: self.spec.fields[f].to_item(row[f]) for k, f in d.items.items()}
             self.write(path, lambda it, want=want: None if it == want else want)
@@ -173,7 +173,7 @@ class SpecController(Controller):
 
 Путь собирается подстановкой `{id}` и разрезанием по слэшу — `retention/{id}` для единицы 7 даёт `vms/retention/7`.
 
-**При удалении** пишется `on_delete`, и только если ключ существует (`if it else None`): создавать производную строку для единицы, которой уже нет, незачем.
+**При удалении** пишется `on_delete` — есть производная строка или нет. Первая версия писала «только если ключ существует: создавать строку для единицы, которой уже нет, незачем». Это стало неверным в день, когда поле разрешили **наследовать** (М12, урок 12): у такой единицы производной строки нет вовсе, удаление ничего не писало, и то, чем строка управляет, жило дальше по умолчанию подсистемы. Удалённая камера с унаследованным сроком хранила свои события ещё год (найдено при разборе обратной связи, BO). Производная строка без `on_delete` при удалении не трогается — так устроен срок тревог: `vms/alarms_retention/<id>` переживает камеру, и тревоги доживают своё.
 
 **При создании и правке** — самая полезная строка метода:
 
