@@ -148,5 +148,60 @@ def recorder(box, name: str = "r-1", server: str = "srv-1", actuator=None, acl=N
     vars_ = box.vars.as_writer(f"recworker-{name}", acl or REC_ACL) if acl is not False else box.vars
     kw.setdefault("env", {})
     kw.setdefault("default_quota", TEST_QUOTA)
+    if kw.get("obsd") is None:
+        kw["obsd"] = obsd_session(f"rec-{name}")
     return RecWorker(name, vars_, box.objects, actuator or FakeActuator(), clock=box.clock, wall=box.wall, server=server,
-                     archive_root=box.archive, obsd=obsd_session(f"rec-{name}"), block=TEST_BLOCK, read=TEST_READ, **kw)
+                     archive_root=box.archive, block=TEST_BLOCK, read=TEST_READ, **kw)
+
+
+def store(name: str = "vol", quota: int = TEST_QUOTA, path: str | None = None, owner: str | None = None):
+    """A volume of its own on the test daemon, open for writing: `vms.archive.Archive`."""
+    from vms.archive import Archive
+    path = path or tempfile.mkdtemp(prefix="vol-")
+    return Archive("file://" + path, name, quota, owner or f"rec:{name}-{os.path.basename(path)}",
+                   obsd_session(f"store-{name}"), block=TEST_BLOCK, read=TEST_READ).open()
+
+
+def footage(st, unit, epoch: int, t0: float, t1: float, step: float = 1.0, backfill: bool = False, seal: bool = True):
+    """Frames of `[t0, t1)` into a recording's stream, the sequence finished — and, unless told otherwise, the
+    writer closed and taken again, so what was written is readable now (a reader sees only closed blocks)."""
+    from vms.worker import fake_samples
+    for smp in fake_samples(t0, t1, step=step):
+        st.put(unit, epoch, smp, backfill)
+    st.finish(unit, epoch, backfill)
+    if seal:
+        st.seal()
+
+
+def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | None = None):
+    """A recorder's archive door over `st`, served, and a heartbeat that announces it — what the console and a
+    scan find a recording's footage by. Returns the server; shut it down when done."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from w2cplatform.contract import Heartbeat
+    from vms.config import REC_SPEC
+    from vms.recworker import archive_routes
+    routes = archive_routes(lambda: st, box.wall)
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            got = routes(self.path)
+            if got is None:
+                self.send_response(404); self.end_headers(); return
+            code, body, ctype = got
+            self.send_response(code); self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def announce():                                  # a heartbeat, now: a test that moves the clock says it again
+        box.objects.put(REC_SPEC.sub.heartbeat_key(name),
+                        Heartbeat(name, box.wall(), status or [], {"server": server, "archive_url": url, "volume": st.name}).to_bytes())
+    announce()
+    srv.announce, srv.url = announce, url
+    return srv

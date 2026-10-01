@@ -144,7 +144,12 @@ class RecWorker(VmsWorker):
                          slot_ttl, archive_root=events_root, env=env)
         # The host's ObjectStorage daemon, and this process's one session with it. Every volume this recorder
         # opens, every writer, every reader is a handle of THIS session — a token the daemon knows it by.
-        self.session = obsd or Session(client=f"rec-{self.name}")
+        #
+        # Every call waits at most `OBSD_TIMEOUT` — ten seconds, a third of a lease. The calls a pass makes run on
+        # the thread that renews the leases, and a daemon that took a request and went quiet would otherwise hold
+        # that thread past the lease: the recorder fenced, every recording stopped, for one silent daemon. Silent
+        # is `away` (`ArchiveError`): the volume is kept, the pass goes on, the next one asks again.
+        self.session = obsd or Session(client=f"rec-{self.name}", timeout=float(env.get("OBSD_TIMEOUT", "10")))
         self.block, self.read = block, read           # how a volume this recorder formats is cut (`vms/archive.py`)
         # WHICH VOLUME THIS RECORDER WRITES INTO — its place, in the sense `place_by: volume` means. Three
         # ways to be told, in this order:

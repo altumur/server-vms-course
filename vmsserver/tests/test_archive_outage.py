@@ -1,20 +1,21 @@
-"""An archive that stops answering — the network volume behind a recording, gone for a minute or an hour.
+"""An archive that stops answering — the host's `obsd` gone, or there and silent, for a minute or an hour.
 
-The recorder already has the right buffer: the pipeline writes into a LOCAL spool and never touches the
-network, and every pass `promote_closed` moves what has closed into the archive. So an outage should cost
-nothing but a queue: keep recording into the spool, and move the backlog across when the link returns.
+The recorder writes through the daemon, and the daemon is a process of its own: it can be restarted, it can be
+killed, it can take a request and say nothing. None of that may stop the recorder LIVING. A recorder that stops
+renewing its leases loses its epochs, and one that stops heartbeating is reassigned by its controller — either
+way every recording on it ends, and it ends because of the one component it was told to wait for.
 
-These tests pin that, starting with the part that was not true: that the recorder keeps LIVING while its
-archive is unreachable. A recorder that stops renewing its leases loses its epochs, and one that stops
-heartbeating is reassigned by its controller — either way the recording ends, and it ends because of the
-one component that was supposed to be optional for a while.
+So the rule is about the loop: staying alive — renewing leases, sending the heartbeat — never shares a fate with
+doing the work, and no call the work makes may hold the loop longer than a lease.
 """
 import os
+import socket
+import tempfile
 import threading
 
-from vms.archive import ArchiveResource
+from w2cplatform.obsd import Session
 from vms.recworker import RecWorker
-from tests.conftest import Box
+from tests.conftest import Box, obsd_session, recorder
 
 
 class _Passes:
@@ -34,18 +35,8 @@ class _Passes:
         self.box.wall.advance(poll)
 
 
-def _recorder_over_an_unreachable_archive(box: Box) -> tuple[RecWorker, dict]:
-    """A recorder with one closed segment waiting in its spool, whose archive refuses every promote the
-    way a network volume refuses when the link is down — and counters on the two things a living
-    recorder must keep doing."""
-    r = RecWorker("r-1", box.vars, box.objects, archive=ArchiveResource(box.spool, box.archive, wall=box.wall),
-                  clock=box.clock, wall=box.wall, server="srv-1")
-    r.archive.closed_in_spool = lambda *a: ["rec/7/e1/20250910T100000Z.mkv"]
-
-    def unreachable(*a, **k):
-        raise OSError("network is unreachable")
-    r.archive.promote = unreachable
-
+def _counted(r: RecWorker) -> dict:
+    """Counters on the two things a living recorder must keep doing."""
     calls = {"heartbeat": 0, "lease": 0}
     heartbeat, lease = r.heartbeat_once, r.lease_pass
 
@@ -57,75 +48,68 @@ def _recorder_over_an_unreachable_archive(box: Box) -> tuple[RecWorker, dict]:
         calls["lease"] += 1
         return lease()
     r.heartbeat_once, r.lease_pass = counted_heartbeat, counted_lease
-    return r, calls
+    return calls
 
 
-def test_an_unreachable_archive_does_not_stop_the_recorder():
-    """A minute of the loop with the archive unreachable throughout.
+def _without_a_daemon(box: Box) -> tuple[RecWorker, dict]:
+    """A recorder whose host has no obsd at all: nothing listens on its socket."""
+    r = recorder(box, obsd=Session(os.path.join(tempfile.mkdtemp(), "obsd.sock"), client="rec-r-1", timeout=0.5))
+    return r, _counted(r)
+
+
+def test_a_daemon_that_is_not_there_does_not_stop_the_recorder():
+    """A minute of the loop with no daemon throughout.
 
     Leases are renewed every `(ttl − margin) / 3` ≈ 8 s and the heartbeat goes every 10 s, so a minute
-    holds several of each. Both must keep happening: the recorder is healthy, its pipeline is writing
-    into the spool, and only the place the spool drains into is away. If a failed promote takes the rest
-    of the pass down with it, neither happens after the first pass — the leases lapse at 30 s, the
-    controller calls the recorder dead at 45 s, and the recording that the spool could have carried
-    through the outage is stopped by the outage instead."""
+    holds several of each. Both must keep happening: the recorder is healthy, its place is its own, and
+    only the engine it writes through is away."""
     box = Box()
-    r, calls = _recorder_over_an_unreachable_archive(box)
+    r, calls = _without_a_daemon(box)
+    r.run(poll=2.0, stop=_Passes(30, box))                       # a minute, the daemon away the whole time
 
-    r.run(poll=2.0, stop=_Passes(30, box))                       # a minute, archive away the whole time
+    assert calls["lease"] >= 5, f"leases renewed {calls['lease']} times in a minute: the work took the loop with it"
+    assert calls["heartbeat"] >= 5, f"heartbeat sent {calls['heartbeat']} times in a minute: the controller will call it dead"
 
-    assert calls["lease"] >= 5, \
-        f"leases renewed {calls['lease']} times in a minute: a failed promote took the rest of the pass with it"
-    assert calls["heartbeat"] >= 5, \
-        f"heartbeat sent {calls['heartbeat']} times in a minute: the controller will call this recorder dead"
-
-    # …and the outage is SAID, not just survived: a recorder quietly queueing into its spool looks, from
-    # outside, exactly like one that is fine.
+    # …and the outage is SAID, not just survived: a recorder quietly holding a volume it cannot write into looks,
+    # from outside, exactly like one that is fine.
     hb = r.heartbeat_extra()
-    assert hb["archive_error"] == "network is unreachable" and hb["archive_away_since"] > 0
-    assert hb["volume_error"] == "", "an archive that went away is not one that will not open — it is not handed back"
+    assert "obsd is not answering" in hb["archive_error"] and hb["archive_away_since"] > 0
+    assert hb["archive_failure"] == "away"
+    assert hb["volume_error"] == "", "an engine that went away is not a volume that will not open — it is not handed back"
+    assert hb["volume"] == "srv-1"                               # the place is kept
 
 
-def test_when_the_archive_answers_again_the_queue_drains_and_the_outage_is_over():
-    """The other end of the outage. A segment that could not go across stays in the spool, first in line;
-    when the archive answers, it goes, and `archive_error` clears — but only because a segment actually
-    went. An empty spool would prove nothing about an archive that was away: nothing was asked of it."""
+def test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over():
+    """The other end of the outage. The start of it is kept while it lasts; when the daemon answers — restarted,
+    or back from wherever it was — the next pass opens the volume, and `archive_error` clears because a volume
+    actually opened."""
     box = Box()
-    r, _ = _recorder_over_an_unreachable_archive(box)
-    moved = []
-    r.promote_closed()
-    assert r.archive_error and r.archive_away_since
+    r, _ = _without_a_daemon(box)
+    r.lease_pass()
     away_since = r.archive_away_since
+    assert r.archive_error and away_since and r.store is None
 
     box.wall.advance(600)
-    r.promote_closed()                                            # still away: the start of the outage is kept
+    r.lease_pass()                                               # still away: the start of the outage is kept
     assert r.archive_away_since == away_since
 
-    r.archive.promote = lambda p, *a, **k: moved.append(p)        # the link is back
-    assert r.promote_closed() == 1 and moved == ["rec/7/e1/20250910T100000Z.mkv"]
-    assert r.archive_error == "" and r.archive_away_since == 0.0
-
-    r.archive.closed_in_spool = lambda *a: []                     # nothing left to send…
-    r.archive_error = "left over"
-    r.promote_closed()
-    assert r.archive_error == "left over", "an empty spool proved the archive was back — nothing was asked of it"
+    r.session = obsd_session("rec-r-1")                          # the daemon is back
+    r.lease_pass()
+    assert r.store is not None and r.store.writer is not None
+    assert r.archive_error == "" and r.archive_away_since == 0.0 and r.archive_failure == ""
 
 
 def test_no_failure_in_the_work_can_stop_the_recorder_living():
-    """The structural half, and why fixing `promote_closed` alone was not enough.
+    """The structural half. `pump_once` is where a recorder reaches out — backfill fetches a range from a device
+    or a backup and lands it — and any of it can fail during the very outage it was meant to ride out. Catching
+    them one call site at a time is a list that is complete only until the next call site.
 
-    `pump_once` is where a recorder reaches across the network, and it does so from more than one place:
-    promoting the spool, and backfill — which fetches a range from the device (`record_range`) and then
-    promotes it — with `BACKFILL_BUDGET` defaulting to one range a pass. Each of those can fail during
-    the very outage the spool is for. Catching them one call site at a time is a list that is complete
-    only until the next call site.
-
-    So the rule is about the loop, not about any one caller: STAYING ALIVE — renewing leases, sending the
-    heartbeat — never shares a fate with DOING THE WORK. A pass that failed is logged and retried; the
-    process that ran it is still the one holding its units, and saying so is not optional. The error
-    here is deliberately not an `OSError`: this is the guarantee for whatever nobody anticipated."""
+    So: STAYING ALIVE never shares a fate with DOING THE WORK. A pass that failed is logged and retried; the
+    process that ran it is still the one holding its units, and saying so is not optional. The error here is
+    deliberately not an `OSError`: this is the guarantee for whatever nobody anticipated."""
     box = Box()
-    r, calls = _recorder_over_an_unreachable_archive(box)
+    r = recorder(box)
+    calls = _counted(r)
 
     def something_nobody_anticipated(*a, **k):
         raise RuntimeError("backfill fell over")
@@ -137,76 +121,79 @@ def test_no_failure_in_the_work_can_stop_the_recorder_living():
     assert calls["heartbeat"] >= 5, f"heartbeat sent {calls['heartbeat']} times: the controller will call it dead"
 
 
-# -- the worse failure: a call that does not fail, it does not RETURN --------------------------------------
+# -- the worse failure: a daemon that does not fail, it does not ANSWER -------------------------------------
 #
-# A network mount that goes quiet does not raise. `rename` and `write` into it wait in the kernel, with no
-# timeout to give them, for as long as the mount is gone. The two-`try` loop above cannot help: there is no
-# exception to catch, only a call that never comes back — and while it has not, the loop is not renewing
-# anything. So promotion runs in a thread of its own, and a pass waits on it for `PROMOTE_WAIT` and no more.
+# A daemon wedged on a dead network volume takes the request and says nothing. There is no exception to catch,
+# only a call that does not come back — and while it has not, the loop is not renewing anything. So every call
+# waits at most the session's timeout, shorter than a lease, and a silence is `away`, not asked twice.
 
-def _hung_archive(box: Box) -> tuple[RecWorker, dict, threading.Event]:
-    """A recorder whose archive has stopped answering the worse way — `promote` blocks. `release` is the
-    link coming back. The wait is bounded so that a failing test cannot hang the suite."""
-    r, calls = _recorder_over_an_unreachable_archive(box)
-    release = threading.Event()
+class _Silent:
+    """A daemon that accepts every connection, reads what it is sent, and never answers."""
 
-    def hangs(*a, **k):
-        release.wait(10)
-    r.archive.promote = hangs
-    r.PROMOTE_WAIT = 0.05                                          # how long a pass waits on a promotion
-    r.PROMOTE_STUCK = 20.0                                         # how long before it is called stuck
-    return r, calls, release
+    def __init__(self):
+        self.path = os.path.join(tempfile.mkdtemp(), "obsd.sock")
+        self.srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.srv.bind(self.path); self.srv.listen(8)
+        self.conns: list[socket.socket] = []
+        threading.Thread(target=self._accept, daemon=True).start()
+
+    def _accept(self):
+        while True:
+            try:
+                c, _ = self.srv.accept()
+            except OSError:
+                return
+            self.conns.append(c)
+
+    def close(self):
+        for c in self.conns:
+            c.close()
+        self.srv.close()
 
 
-def _run_a_minute_in_the_background(r: RecWorker, box: Box) -> threading.Thread:
-    t = threading.Thread(target=r.run, kwargs={"poll": 2.0, "stop": _Passes(30, box)}, daemon=True)
-    t.start()
-    t.join(timeout=3)                                              # a living loop runs its minute in far less
-    return t
-
-
-def test_an_archive_that_hangs_does_not_stop_the_recorder_living():
-    """A promote that never returns, for the whole minute. A loop that waits on it is a loop that renews
-    nothing: the same thirty seconds to losing its epochs as an archive that raises, with nothing in the
-    log to say why, because nothing failed."""
+def test_a_daemon_that_says_nothing_does_not_stop_the_recorder_living():
+    """A minute of the loop against a daemon that never answers. A loop that waited on it would renew nothing:
+    the same thirty seconds to losing its epochs as no daemon at all, with nothing in the log to say why,
+    because nothing failed."""
     box = Box()
-    r, calls, release = _hung_archive(box)
-    t = _run_a_minute_in_the_background(r, box)
-    seen = dict(calls)
-    release.set(); t.join(timeout=10)
+    silent = _Silent()
+    try:
+        r = recorder(box, obsd=Session(silent.path, client="rec-r-1", timeout=0.05))
+        calls = _counted(r)
+        t = threading.Thread(target=r.run, kwargs={"poll": 2.0, "stop": _Passes(30, box)}, daemon=True)
+        t.start(); t.join(timeout=20)
+        assert not t.is_alive(), "a minute of the loop did not end: a call waited on the silent daemon"
+    finally:
+        silent.close()
 
-    assert seen["lease"] >= 5, f"leases renewed {seen['lease']} times while a promotion hung: the loop waited on it"
-    assert seen["heartbeat"] >= 5, f"heartbeat sent {seen['heartbeat']} times while a promotion hung"
+    assert calls["lease"] >= 5, f"leases renewed {calls['lease']} times while the daemon said nothing"
+    assert calls["heartbeat"] >= 5, f"heartbeat sent {calls['heartbeat']} times while the daemon said nothing"
+    assert r.archive_failure == "away" and "no answer in" in r.archive_error, r.archive_error
 
 
-def test_a_promotion_that_does_not_return_is_reported_stuck():
-    """A hung call cannot be killed — a thread waiting in the kernel on a dead mount waits for as long as
-    the mount is dead. What CAN be done is to say so. Nothing raised, so there is no error to report
-    unless the recorder notices the silence itself: a promotion running longer than `PROMOTE_STUCK` is
-    reported, in the same field an outage that raises uses."""
+def test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_its_flush():
+    """The number behind the test above, in production: a third of a lease, and `WRITER_CLOSE` — which the
+    protocol lets take thirty seconds to flush — the one call allowed to wait longer."""
     box = Box()
-    r, _, release = _hung_archive(box)
-    t = _run_a_minute_in_the_background(r, box)
-    reported = r.heartbeat_extra()["archive_error"]
-    release.set(); t.join(timeout=10)
-
-    assert "has not returned" in reported, f"a promotion hung for a minute and the heartbeat said {reported!r}"
+    r = RecWorker("r-x", box.vars, box.objects, clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive,
+                  env={}, default_quota=1 << 26)
+    assert r.session.timeout == 10.0 and r.session.timeout < r.lease_ttl - r.lease_margin
+    assert r.session.long_timeout >= 30.0
 
 
-def test_backfill_waits_while_the_archive_is_not_taking_segments():
-    """Backfill exists to bring MORE into the archive. While the archive is taking nothing — away, or a
-    promotion still in flight — a fetched range would only pile into the spool behind the queue, and its
-    own promote would be one more call waiting on the dead mount, on the loop's own thread. Same reasoning
-    as `under_pressure`: an archive that cannot take what it has cannot be given more."""
+def test_backfill_waits_while_the_volume_is_taking_nothing():
+    """Backfill exists to bring MORE into the volume. While the volume is taking nothing — away, or not open —
+    a fetched range has nowhere to land, and the fetch would be one more call on a silent engine."""
     box = Box()
-    r, _ = _recorder_over_an_unreachable_archive(box)
+    r, _ = _without_a_daemon(box)
+    r.lease_pass()
     tried = []
     r.backfill_budget = 1
     r.backfill = lambda *a, **k: tried.append(1) or []
 
     r.pump_once()
     r.pump_once()
-    assert tried == [], "backfill fetched into a spool whose archive is taking nothing"
+    assert tried == [], "backfill fetched for a volume that is taking nothing"
 
 
 def test_a_fetch_from_a_slow_card_does_not_hold_the_pass():
@@ -214,10 +201,10 @@ def test_a_fetch_from_a_slow_card_does_not_hold_the_pass():
     and it ran on the loop's thread. A card slower than the lease fenced the recorder and stopped the live
     recording of every camera it had, to fetch an hour of one (the platform review, blocker 3; feedback BE). It
     runs on a thread of its own, one range at a time; the pass waits half a second for it and goes on."""
-    import threading
     import time
     box = Box()
-    r = _real_recorder(box)
+    r = recorder(box)
+    r.lease_pass()
     started, release = [], threading.Event()
 
     def slow_card(*a, **k):
@@ -234,150 +221,3 @@ def test_a_fetch_from_a_slow_card_does_not_hold_the_pass():
     r.pump_once()
     r._backfiller.join(5)
     assert started == [1, 1]                                          # it came back: the next range may go
-
-
-# -- draining the queue: a budget per pass, and a watchdog that can tell moving from stuck -----------------
-
-def _real_recorder(box: Box, server: str = "srv-1") -> RecWorker:
-    return RecWorker(f"r-{server}", box.vars, box.objects, archive=ArchiveResource(box.spool, box.archive, wall=box.wall),
-                     clock=box.clock, wall=box.wall, server=server, env={})
-
-
-def _backlog(box: Box, r: RecWorker, n: int, cam: str = "7") -> list[str]:
-    """`n` closed segments for the volume `r` holds, oldest first — the queue an outage leaves behind."""
-    from datetime import datetime, timezone
-    from vms.archive import segment_path
-    r.mark_epoch(cam, 1)
-    t, out = box.wall(), []
-    for i in range(n):
-        start = t - 600 * (n - i) - 60
-        p = segment_path(r.archive.spool, cam, 1, datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        open(p, "wb").write(b"x")
-        os.utime(p, (start + 600, start + 600))
-        out.append(p)
-    return out
-
-
-def test_a_long_drain_that_is_moving_is_not_called_stuck():
-    """The watchdog asked the wrong question. It called a promotion stuck when the promotion had been
-    RUNNING longer than `PROMOTE_STUCK` — and a promotion used to be the whole queue. An hour of footage
-    after an outage drains for minutes on a healthy link, so a minute in the watchdog said "has not
-    returned" about a drain that was moving the whole time: the same words it uses for a dead mount.
-
-    A hang and a slow drain differ in exactly one thing — progress. A dead mount moves nothing; a drain
-    finishes a segment every so often. So the question is "has anything gone across lately", and a
-    promotion is stuck when nothing has, for `PROMOTE_STUCK`."""
-    box = Box()
-    r = _real_recorder(box)
-    r.PROMOTE_STUCK = 60.0
-    r.promoting_since = box.wall()                                 # a drain started…
-    box.wall.advance(600)                                          # …ten minutes ago
-    r.last_progress = box.wall() - 10                              # and a segment went across ten seconds ago
-    r.watch_promotion()
-    assert "has not returned" not in r.archive_error, "a drain that is moving was reported as a hang"
-
-    box.wall.advance(120)                                          # now nothing has moved for two minutes
-    r.watch_promotion()
-    assert "has not returned" in r.archive_error
-
-
-def test_a_pass_drains_at_most_its_budget_and_the_rest_waits_in_order():
-    """After an outage the queue is long, and a pass takes a bounded bite of it: `PROMOTE_BUDGET` segments,
-    oldest first, and the rest on the next pass. It keeps each promotion short — so what the heartbeat says
-    between passes is true — and it paces the drain instead of emptying the spool in one go."""
-    box = Box()
-    r = _real_recorder(box)
-    r.PROMOTE_BUDGET = 3
-    segs = _backlog(box, r, 10)
-
-    r.pump_once()
-    assert [p for p in segs if os.path.exists(p)] == segs[3:], "the oldest three go; the rest wait, in order"
-    r.pump_once()
-    assert [p for p in segs if os.path.exists(p)] == segs[6:]
-
-
-def test_the_budget_is_spent_on_this_recorders_own_footage():
-    """The spool is the box's, so it holds neighbours' segments too, and this recorder skips them. Skipping
-    is not spending: a budget used up walking past somebody else's footage would leave this recorder's own
-    queue where it was, pass after pass, on a box where the neighbour's happens to sort first."""
-    box = Box()
-    neighbour, r = _real_recorder(box, "srv-2"), _real_recorder(box, "srv-1")
-    r.PROMOTE_BUDGET = 2
-    theirs = _backlog(box, neighbour, 2, cam="1")                  # "rec/1/…" sorts before "rec/7/…"
-    mine = _backlog(box, r, 3, cam="7")
-
-    r.pump_once()
-    assert [p for p in mine if os.path.exists(p)] == mine[2:], "two of its own should have gone"
-    assert all(os.path.exists(p) for p in theirs), "the neighbour's were skipped, and must stay"
-
-
-def test_a_promotion_that_comes_back_late_does_not_speak_for_the_next_volume():
-    """A hung promotion is not cancelled, only left — and it may come back after the recorder has moved on
-    to another volume. Whatever it then reports is about the volume it started for. If it wrote that into
-    the recorder's state, a dead mount that finally answered "permission denied" would mark the NEW volume
-    wrong and have it handed back; one that finally succeeded would clear an error the new volume really
-    has. So a promotion speaks only while the volume it was promoting for is still the one held."""
-    import errno
-    box = Box()
-    r = _real_recorder(box)
-    old_archive = r.archive
-    _backlog(box, r, 1)                                            # marked for the volume held now
-
-    def refused(*a, **k):
-        raise OSError(errno.EACCES, "Permission denied")
-    old_archive.promote = refused
-    started_for = r.volume
-    r.volume = "vol-new"                                           # the recorder moved on while it hung
-
-    r.promote_closed(old_archive, started_for)                     # …and the old promotion finally answers
-    assert r.archive_error == "" and r.archive_failure == "", \
-        "a late answer about the old volume was written into the new one's state"
-
-
-def test_an_archive_that_hangs_at_open_does_not_stop_the_recorder_living():
-    """Opening a volume is `makedirs` on its root, and a mount that went quiet does not raise there either —
-    it waits in the kernel. It used to wait inside `volume_pass`, which runs inside `lease_pass`: the one
-    place a hang does the most damage, because it stops the renewals themselves. A recorder that restarted
-    during an outage and reached for its network archive stopped renewing its leases on the spot.
-
-    So opening runs on a thread of its own and is waited on for `OPEN_WAIT`. One that has not come back by
-    then is an archive that is AWAY — the same answer as a timeout that did come back: keep the volume,
-    point at it without touching its root, record into the spool, and say so."""
-    import vms.recworker as rw
-    from vms import volumes
-    box = Box()
-    cloud = os.path.join(box.root, "cloud")
-    volumes.write(box.vars, {"name": "cloud", "kind": "local", "url": cloud, "server": "srv-1", "quota_bytes": 10 ** 9})
-    release, real = threading.Event(), rw.ArchiveResource
-
-    class Hanging(real):
-        def __init__(self, spool, root, *a, create=True, **k):
-            if root == cloud and create:
-                release.wait(10)                                   # the mount does not answer
-            super().__init__(spool, root, *a, create=create, **k)
-    rw.ArchiveResource = Hanging
-    try:
-        r = _real_recorder(box)
-        r.OPEN_WAIT = 0.05
-        calls = {"heartbeat": 0, "lease": 0}
-        heartbeat, lease = r.heartbeat_once, r.lease_pass
-
-        def counted_heartbeat():
-            calls["heartbeat"] += 1
-            return heartbeat()
-
-        def counted_lease():
-            calls["lease"] += 1
-            return lease()
-        r.heartbeat_once, r.lease_pass = counted_heartbeat, counted_lease
-
-        t = _run_a_minute_in_the_background(r, box)
-        seen, state = dict(calls), (r.volume, r.archive_failure)
-        release.set(); t.join(timeout=10)
-    finally:
-        rw.ArchiveResource = real
-
-    assert seen["lease"] >= 5, f"leases renewed {seen['lease']} times while opening the archive hung"
-    assert seen["heartbeat"] >= 5, f"heartbeat sent {seen['heartbeat']} times while opening the archive hung"
-    assert state == ("cloud", "transient"), f"a volume that hung at open should be kept and said away, got {state}"

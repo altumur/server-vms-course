@@ -170,11 +170,17 @@ class Session:
     A connection that breaks is opened again under the SAME session token — the daemon keeps a session whose
     connection is gone for `OBSD_SESSION_LINGER_MS`, handles and writers included — and the request is sent
     once more. A daemon that does not answer at all is `Unavailable`, which a recorder treats as "the engine
-    is lost": remount, at once (feedback CF)."""
+    is lost": remount, at once (feedback CF).
+
+    A daemon that takes the request and says nothing is `Unavailable` too, after `timeout` — and is NOT asked
+    again: a broken connection is a reason to resend, a silence is not, and asking twice would double the wait
+    of whoever is waiting. A caller that renews leases keeps `timeout` shorter than a lease; the one request the
+    protocol allows to take long — `WRITER_CLOSE`, after its flush — waits `long_timeout`."""
 
     def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
-                 timeout: float = 35.0, log_level: str = "warning"):
+                 timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
         self.path, self.client, self.timeout, self.log_level = path or default_socket(), client, timeout, log_level
+        self.long_timeout = max(long_timeout, timeout)
         self.token = token or f"{client}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
         self._sock: socket.socket | None = None
         self._lock = threading.Lock()
@@ -220,15 +226,19 @@ class Session:
                 raise ObsdError(status, op, str(reply.get("detail", "")))
             return reply, frame[HEADER.size + jl:]
 
-    def call(self, op: str, js: dict | None = None, tail: bytes = b"") -> tuple[dict, bytes]:
+    def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False) -> tuple[dict, bytes]:
         with self._lock:
             for attempt in (0, 1):
                 try:
                     if self._sock is None:
                         self._connect()
+                    self._sock.settimeout(self.long_timeout if long else self.timeout)
                     return self._exchange(op, js, tail)
                 except ObsdError:
                     raise
+                except socket.timeout:
+                    self._drop()
+                    raise Unavailable(op, f"no answer in {self.long_timeout if long else self.timeout:g} s") from None
                 except (OSError, ConnectionError) as e:
                     self._drop()
                     if attempt:
@@ -350,7 +360,7 @@ class Writer:
 
     def close(self) -> None:
         """After the flush — up to 30 s. What was written becomes readable: the last block is closed."""
-        self.session.call("WRITER_CLOSE", {"writer": self.handle})
+        self.session.call("WRITER_CLOSE", {"writer": self.handle}, long=True)
 
 
 @dataclass
