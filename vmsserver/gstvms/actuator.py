@@ -161,9 +161,8 @@ class GstActuator:
         if self.fanout is not None:
             self.fanout.unpublish(str(cid))
 
-    # Filters an element message into an observation. Messages with no structure, or named
-    # `GstBinForwarded`, `splitmuxsink-fragment-opened` or `splitmuxsink-fragment-closed`, are plumbing and
-    # dropped. Otherwise the structure's name is the event kind (`motion`, `person`, … — whatever an
+    # Filters an element message into an observation. Messages with no structure, or posted by an element that
+    # is not one of ours (`gstvms/observes.py`), are plumbing and dropped. Otherwise the structure's name is the event kind (`motion`, `person`, … — whatever an
     # analytics element posts) and its scalar fields (`int`, `float`, `str`, `bool`) are copied; appended to
     # `posted`. The worker's `pump_once` turns each into `observe(cid, kind, **fields)`, a line in the
     # camera's bucket, if it still holds the epoch.
