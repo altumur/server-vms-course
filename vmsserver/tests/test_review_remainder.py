@@ -3,8 +3,9 @@
     the store    its lock has a limit; a delete is a write; an epoch is never deleted; a CAS waits before it tries again
     the policy   sweeps by the names of the files, not by reading them; the copies of other servers age too;
                  a store that did not answer is "I do not know" — not "the knob is off", and not "thirty days"
-    a command    carries a deadline, a near one; and is performed at most once
+    a command    carries a deadline, a near one; and is performed at most once — under a lease, with a mark made once
     what is seen how long since each recording last took a frame; who read the archive
+    whose clock  a heartbeat from the future is not live, and the skew is a number (the review's second pass)
 """
 import io
 import json
@@ -266,6 +267,87 @@ def test_a_command_another_instance_began_is_not_performed_again():
     con.vars.put(SPEC.sub.request_key("r2"), req)
     w2.device_of_row = lambda row: None
     assert w2.requests() == [] and box.objects.get("vms/commands/r2") is None
+
+
+def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():
+    """The review's second pass (minor): a unit `live: on-demand` is held — its device on the line, nothing
+    recorded — under no epoch and so under no lease; its commands went to the device with no fence at all, and the
+    mark that says "I began it" was read, then written: two holders in the same second both read nothing and both
+    pulsed the door. Now the unit takes its epoch before its first command, so a second holder fences the first;
+    and the mark is created or refused by the store, never written over."""
+    box = Box(); ctl, con = _ctl(box)
+    door = con.create_camera({"name": "back door", "source": "driverpack://acme/10.0.0.91/ch/1", "live": "on-demand"})["id"]
+    _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, relays=2); w.reconcile_once()
+    assert {s["id"]: s["phase"] for s in w.status()}[door] == "held" and str(door) not in w.leases    # held, no epoch: the finding
+
+    con.vars.put(SPEC.sub.request_key("d1"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    assert [d["request"] for d in w.requests()] == ["d1"] and w.devices["acme/10.0.0.91"].did == [("output", 1, "pulse", 0)]
+    assert w.may_write(str(door)) and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "1"            # under a lease from here on
+    con.vars.delete(SPEC.sub.request_key("d1"))                                                        # the console clears what was answered
+
+    # a second holder of the same device — the seconds of a double assignment: its command takes epoch 2, and the
+    # first instance learns at its next renewal that the unit is not its to act on; its next command, if the
+    # device is still assigned to it, takes epoch 3 and fences the second — every command under a lease the
+    # store confirmed, as every stream is
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-b", env={},
+                   archive_root=box.archive, device_factory=lambda key: FakeDevice(key, channels=["1"], relays=2))
+    ctl.assign_add("w-2", str(door)); w2.reconcile_once()                                              # the double assignment
+    con.vars.put(SPEC.sub.request_key("d2"), {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)})
+    assert [d["request"] for d in w2.requests()] == ["d2"] and w2.may_write(str(door))
+    assert str(door) in w.lease_pass() and not w.may_write(str(door)) and str(door) not in w.leases
+    con.vars.delete(SPEC.sub.request_key("d2"))
+    con.vars.put(SPEC.sub.request_key("d3"), {"unit": str(door), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    assert [d["request"] for d in w.requests()] == ["d3"] and box.vars.get(f"vms/epoch/{door}")[0]["epoch"] == "3"
+    assert str(door) in w2.lease_pass() and not w2.may_write(str(door))
+
+    # the mark: the store says who made it
+    assert w2._mark("m1", str(door), box.wall()) and not w._mark("m1", str(door), box.wall())
+    assert json.loads(box.objects.get("vms/commands/m1"))["instance"] == w2.instance                     # …and it was not written over
+
+    class LastWriterWins:                                     # a store with no create-only: written, then read back
+        def __init__(self, real, then=None): self._r, self._then = real, then
+        def __getattr__(self, n):
+            if n == "put_new":
+                raise AttributeError(n)
+            return getattr(self._r, n)
+        def put(self, key, data):
+            self._r.put(key, data)
+            if self._then:
+                self._then(key)                               # …and the other instance's write lands right after ours
+    w2.objects = LastWriterWins(box.objects)
+    w.objects = LastWriterWins(box.objects, then=lambda key: w2.objects.put(key, json.dumps({"instance": w2.instance}).encode()))
+    assert not w._mark("m2", str(door), box.wall())           # w read w2's name over its own: not first
+    assert json.loads(box.objects.get("vms/commands/m2"))["instance"] == w2.instance
+    assert w2._mark("m3", str(door), box.wall())              # alone, it reads its own name
+
+
+# -- whose clock -------------------------------------------------------------------------------------------
+
+def test_a_heartbeat_from_the_future_is_not_live_and_the_skew_is_a_number():
+    """The review's second pass, M9. Liveness is `now - hb.ts`, and the two are two machines' clocks. A worker
+    whose clock ran a minute ahead stayed "live" a minute after it died; nothing said how far apart the clocks
+    were. Now a `ts` ahead by more than `FUTURE_TOLERANCE` is not live, the largest skew seen is on `/metrics`,
+    and a heartbeat a few seconds ahead — NTP's everyday — is live as before."""
+    from w2cplatform import contract
+    from w2cplatform.console import SpecConsole, holders
+    from vms.controller import VmsController
+    box = Box()
+    ctl = VmsController(box.vars, box.objects, wall=box.wall)
+    now = box.wall()
+    for name, ts in (("w-1", now), ("w-2", now + 3), ("w-3", now + 60), ("w-4", now - 100)):
+        box.objects.put(SPEC.sub.heartbeat_key(name), Heartbeat(name, ts, [], {"server": "srv-a", "capacity": 4, "headroom": 4}).to_bytes())
+    assert contract.FUTURE_TOLERANCE == 5.0
+    assert sorted(ctl.workers_seen()) == ["w-1", "w-2"] == sorted(holders(box.objects, "vms/", now))
+    assert not contract.builds(box.objects, now)["vms/w-3"]["live"] and contract.builds(box.objects, now)["vms/w-2"]["live"]
+    con = SpecConsole(ctl, wall=box.wall)
+    states = {w["worker"]: w["state"] for s in con.servers()["servers"].values() for w in s["workers"]}
+    assert states == {"w-1": "live", "w-2": "live", "w-3": "stale", "w-4": "stale"}
+    text = con.metrics_text()
+    assert "vms_workers_live 2" in text and "vms_heartbeat_skew_seconds_max 60.0" in text
+    box.wall.advance(56)
+    assert "w-3" in ctl.workers_seen()                                                        # its clock is 4 s ahead of ours now: live
 
 
 # -- what is seen -----------------------------------------------------------------------------------------

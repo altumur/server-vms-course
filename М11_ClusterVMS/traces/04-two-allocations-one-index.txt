@@ -42,6 +42,10 @@ GET /v1/var/objects/vms/heartbeats/w-0?namespace=default
 → 404
 
 # vmsworker (allocation 0 on srv-a)
+GET /v1/var/platform/schema?namespace=default
+→ 404
+
+# vmsworker (allocation 0 on srv-a)
 GET /v1/var/vms/slots/w-0?namespace=default
 → 200 {
   "Path": "vms/slots/w-0",

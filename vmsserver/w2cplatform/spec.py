@@ -79,11 +79,11 @@ from urllib.parse import urlsplit
 
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import DRAIN_KEY, UNPLACED, Controller, Subsystem, slot_number
+from .contract import DRAIN_KEY, UNPLACED, Controller, Subsystem, is_live, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
-from .variables import Variables
+from .variables import Conflict, Variables
 
 PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revision", "phase", "id")   # never the operator's
 # The most a single `json` field may be. Not the row's ceiling (Lesson 19) — this one keeps ONE field
@@ -655,6 +655,8 @@ class SpecController(Controller):
         self.spec = spec
         self.capacity = capacity if capacity is not None else spec.capacity_fallback   # the FALLBACK for a worker whose heartbeat says nothing
         self.cluster = cluster or os.environ.get("CLUSTER", "cluster-a")               # the name the snapshot carries; one box is a cluster of one
+        self.rows_garbled = 0                                                            # rows the last `units()` could not parse (the review's second pass, M7)
+        self._garbled_rows: set[str] = set()
         # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
         # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
         from .sealing import Sealer
@@ -857,13 +859,25 @@ class SpecController(Controller):
         it, _ = self.vars.get(self._row_key(uid))
         return self.spec.row(it) if it and it.get("deleted") != "true" else None
 
-    # Every live row under `<name>/<rows>/`, sorted by `_unit_key`.
+    # Every live row under `<name>/<rows>/`, sorted by `_unit_key`. A row that does not parse — a field edited by
+    # hand, a build that wrote another layout — is ONE unit nobody serves, not the end of every caller's pass
+    # (the review's second pass, M7): skipped, counted in `rows_garbled` (the pass report; `<sub>_rows_garbled`),
+    # logged once per row until it parses again.
     def units(self) -> list[dict]:
-        out = []
+        out, garbled = [], 0
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
             it, _ = self.vars.get(p)
             if it and it.get("deleted") != "true":
-                out.append(self.spec.row(it))
+                try:
+                    out.append(self.spec.row(it))
+                except (ValueError, KeyError, TypeError) as e:
+                    garbled += 1
+                    if p not in self._garbled_rows:
+                        self._garbled_rows.add(p)
+                        log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+                    continue
+                self._garbled_rows.discard(p)
+        self.rows_garbled = garbled
         return sorted(out, key=lambda r: _unit_key(str(r["id"])))
 
     # -- placement ---------------------------------------------------------------------
@@ -997,7 +1011,7 @@ class SpecController(Controller):
         hb = resources_seen(self.objects).get(server)
         if hb is None:
             return "unknown"
-        return "live" if self.wall() - float(hb["ts"]) <= lost_after else "silent"
+        return "live" if is_live("platform", float(hb["ts"]), self.wall(), lost_after) else "silent"
 
     # Workers whose server's resource is silent, when the spec requires one: not placed on, and (in
     # `redistribute`) moved off. A worker on a server whose resource was never seen passes — "silent" is
@@ -1087,7 +1101,7 @@ class SpecController(Controller):
         from .console import heartbeats                            # the read model's scan, without the age filter
         found: list[tuple[str, str, str]] = []                     # (their unit id, worker, server)
         for w, hb in heartbeats(self.objects, self.spec.near + "/").items():
-            if self.wall() - hb.ts > 45.0:
+            if not is_live(self.spec.near, hb.ts, self.wall(), 45.0):
                 continue
             for st in hb.status:
                 key = st.get(field) if field else st.get("id")
@@ -1227,6 +1241,10 @@ class SpecController(Controller):
     #   seconds, failures  how long it took; how many passes have raised since the store was new
     #   unplaced           units that should be somewhere and are nowhere
     #   diverged           assignments this pass had to bring back to what the placement rows say
+    #   garbled            rows that do not parse — units nobody serves until somebody mends the row
+    #
+    # The three steps each in a `try` of their own (the review's second pass, M7): they shared one, so a
+    # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass.
     PASS_KEY = "controller/pass"
 
     def pass_once(self, home_budget: int = 1) -> dict:
@@ -1236,18 +1254,24 @@ class SpecController(Controller):
         rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
-        try:
-            self.ensure_placed()                      # deleted rows unplaced; new units onto the workers it sees
-            self.redistribute()                       # units of a RELEASED slot (scale-in) onto the rest
-            self.ensure_home(home_budget)             # a unit back to the server its row names, if it is back
+        errors = []
+        for step, run in (("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
+                          ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
+                          ("ensure_home", lambda: self.ensure_home(home_budget))): # a unit back to the server its row names, if it is back
+            try:
+                run()
+            except Exception as e:                    # noqa: BLE001
+                errors.append(f"{step}: {e}")
+                log.exception("%s: placement pass failed at %s", self.sub.name, step)
+        if errors:
+            rep.update(ok=False, error="; ".join(errors), failures=rep["failures"] + 1)
+        else:
             rep["last_success"] = now
-        except Exception as e:                        # noqa: BLE001
-            rep.update(ok=False, error=str(e), failures=rep["failures"] + 1)
-            log.exception("%s: placement pass failed", self.sub.name)
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
         try:
             rep["unplaced"] = len(self.unplaced())
+            rep["garbled"] = self.rows_garbled
             self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
         except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
             log.exception("%s: the pass could not report on itself", self.sub.name)
@@ -1489,10 +1513,12 @@ class SpecController(Controller):
         # Taking it off the list makes the sweep's own CAS fail, and a sweep that loses that CAS deletes
         # nothing at all. The alternative is a lock, for a window two store calls wide.
         key = self.sub.sweep_key()
-        items, idx = self.vars.get(key)
-        marked = json.loads((items or {}).get("digests", "[]"))
-        if d in marked:
-            self.vars.put(key, {**items, "digests": json.dumps([x for x in marked if x != d])}, cas=idx)
+
+        def off_the_list(it):
+            marked = json.loads(it.get("digests", "[]"))
+            return {**it, "digests": json.dumps([x for x in marked if x != d])} if d in marked else None
+
+        self.write(key, off_the_list)                 # by CAS, tried again on a conflict: the sweeper writes this row too
         # On the platter before the row names it (`FsObjectStore.put_durable`); a store without the barrier puts as it can.
         getattr(self.objects, "put_durable", self.objects.put)(self.sub.blob_key(d), data)
         return d
@@ -1532,12 +1558,20 @@ class SpecController(Controller):
     #   mark   nothing is deleted. The digests that no row names are written to `<name>/sweep` with the
     #          time. A blob created after this moment is not on the list, which is where the grace period
     #          comes from — no timestamps on objects required, and `variables://` has none to offer.
-    #   sweep  one pass later, and only after `grace`: the marked digests are checked AGAIN, the row is
-    #          cleared by CAS on the index just read, and only then are the objects removed.
+    #   sweep  one pass later, and only after `grace`: the marked digests are checked AGAIN, the decision is
+    #          written by CAS on the index just read — the doomed digests, `state: deleting` — and only then
+    #          are the objects removed, each one read back from the row the moment before.
     #
-    # The order of those last two is the whole safety argument. Clearing first means a lost CAS — anyone
-    # touched the row since the mark — costs nothing: not one object has been deleted yet. Deleting first
-    # would mean acting on a decision that something has already contradicted.
+    # The order of those last two is the whole safety argument. Writing the decision first means a lost CAS —
+    # anyone touched the row since the mark — costs nothing: not one object has been deleted yet. Deleting
+    # first would mean acting on a decision that something has already contradicted.
+    #
+    # And the decision STAYS on the row while the bytes go (the review's second pass, m5). It used to be
+    # cleared first, so a `put_blob` of a marked digest in the seconds the deletes took found an empty list,
+    # took nothing off it, and its bytes were removed under a row about to name them. Now it finds the digest
+    # there, as before the decision, and takes it off; the sweeper re-reads the row before each delete and
+    # leaves what is gone from it alone. The row is cleared at the end, by CAS; a clear that loses — somebody
+    # took a digest off meanwhile — leaves the rest listed for the next pass, which checks them again.
     #
     # `limit` is not a nicety either: `<name>/sweep` is a row, and a row has the store's ceiling over it
     # (Lesson 26). The sweep is subject to the rule it was written under.
@@ -1566,11 +1600,19 @@ class SpecController(Controller):
         if now - float((items or {}).get("at", 0)) < grace:
             return {"marked": 0, "deleted": 0, "waiting": len(marked)}
 
-        # -- sweep: check again, clear the decision, and only then remove the bytes
+        # -- sweep: check again, write the decision down, and only then remove the bytes
         referenced = self.blobs_referenced()
         doomed = [d for d in marked if d not in referenced]
-        self.vars.put(key, {"at": str(now), "digests": "[]"}, cas=idx)   # Conflict here deletes nothing
-        deleted = sum(1 for d in doomed if self.objects.delete(self.sub.blob_key(d)))
+        self.vars.put(key, {"at": str(now), "digests": json.dumps(doomed), "state": "deleting"}, cas=idx)   # Conflict here deletes nothing
+        deleted = 0
+        for d in doomed:
+            items, idx = self.vars.get(key)                                 # still doomed? `put_blob` takes a digest off this list
+            if d in json.loads((items or {}).get("digests", "[]")) and self.objects.delete(self.sub.blob_key(d)):
+                deleted += 1
+        try:
+            self.vars.put(key, {"at": str(now), "digests": "[]"}, cas=idx)
+        except Conflict:
+            pass                                                            # a digest left the list under us: the rest wait for the next pass
         return {"marked": 0, "deleted": deleted, "waiting": 0}
 
     # Units and placement for the layer above, ONE OBJECT PER WORKER: `<name>/snapshot/<worker>` holding

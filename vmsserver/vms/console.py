@@ -556,6 +556,10 @@ def rec_metrics(rec_ctl: SpecController):
                 # after the first: one free process proves the shortage is not a shortage of processes.
                 "# TYPE rec_recorders_needed gauge",
                 f"rec_recorders_needed {max(0, unserved - spare)}",
+                # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second
+                # pass, B10). Not zero is evidence somebody asked for and the ring will take all the same.
+                "# TYPE rec_keeps_unprotected gauge",
+                f"rec_keeps_unprotected {0 if volumes.incidents(rec_ctl.vars) else len(keeps.declared(rec_ctl.vars))}",
                 *_recorders(rec_ctl)]
     return lines
 
@@ -688,6 +692,12 @@ def rec_routes(rec_ctl: SpecController):
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
             said("archive.keep.made", handler, keep=k.id, cam=k.cam, **{"from": k.since, "to": k.until})
+            # The mark is valid without a place to copy into — so 201 — but then it is ONLY a mark (the review's
+            # second pass, B10): no recorder's `keep_pass` copies anything, and the footage goes with its ring. Said
+            # in the answer, and counted on `/metrics` (`rec_keeps_unprotected`) for as long as it is so.
+            if not volumes.incidents(rec_ctl.vars):
+                return 201, {"keep": k.shown(), "warning": "no incidents volume: the keep is a mark, nothing is copied "
+                                                           "until one is declared"}
             return 201, {"keep": k.shown()}
         if method == "DELETE" and path.startswith("/keeps/"):
             id_ = path[len("/keeps/"):]

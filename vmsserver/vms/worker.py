@@ -98,7 +98,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform import runtime
 from w2cplatform.console import SendMixin
-from w2cplatform.contract import Subsystem, Worker
+from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
 from w2cplatform.variables import Variables
 
@@ -687,6 +687,12 @@ class VmsWorker(Worker):
             self.store_errors += 1
             log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
             mine = True
+        except SchemaTooNew as e:
+            # The store was raised past this build while it ran (the review's second pass, m4): the rows it
+            # would read next are not what it thinks they are. Fenced, as a build older than the store does
+            # not start — and it stays fenced (`rejoin` checks the same thing) until somebody restarts it new.
+            self.fence(str(e))
+            return list(self.epochs)
         if not mine:
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
@@ -720,6 +726,12 @@ class VmsWorker(Worker):
     def rejoin(self) -> str | None:
         if self.recording_allowed:
             return self.name
+        try:
+            check_schema(self.vars)                   # a store raised past this build: nobody to rejoin as (the review's second pass, m4)
+        except SchemaTooNew:
+            return None
+        except OSError:
+            return None                               # not known: a fenced instance can wait a pass
         was = self.name
         self.epochs.clear(); self.leases.clear()
         self.rows, self.assignment_rev = [], 0
@@ -762,13 +774,28 @@ class VmsWorker(Worker):
         if epoch is None or not self.recording_allowed:
             return None
         t = self.wall()
+        # `t` is when the bus was drained; `occurred` is when the DEVICE says it happened, where the path that
+        # posted the line knows it (the review's second pass, M11) — a driver that reads the device's clock passes
+        # it in the fields; one that does not passes nothing, and no second time is invented. It is kept out of
+        # the suppressor's identity: a repeat is the same thing, whatever the device's clock said each time.
+        occurred = fields.pop("occurred", None)
+        if occurred is not None:
+            try:
+                occurred = float(occurred)
+            except (TypeError, ValueError):
+                log.warning("%s: camera %s posted %s with occurred=%r, not a time; dropped", self.name, cid, kind, occurred)
+                occurred = None
         self.observed.append((cid, t, kind))
         # Suppression stands between the observation and the file, and it is the LAST thing before the
         # write for a reason: everything above this line — the epoch, the fence, `observed` — is about
         # whether this worker may speak about this unit at all, and that answer does not change because
         # the same thing happened twice. What comes back is what belongs in the log: usually this line,
         # sometimes nothing, sometimes the summary of a window that just closed and then this line.
-        return self._write(cid, epoch, self.suppressor.lines(t, str(cid), kind, fields), self.class_of(cid, kind))
+        lines = self.suppressor.lines(t, str(cid), kind, fields)
+        if lines and occurred is not None:                      # the observation itself is the last line; a summary before it has its own times
+            lt, lk, lf = lines[-1]
+            lines[-1] = (lt, lk, {**lf, "occurred": occurred})
+        return self._write(cid, epoch, lines, self.class_of(cid, kind))
 
     # The traffic class of one line: `alarm` when this DEVICE lists this kind among its alarms, else
     # `observation`. The platform fixes the two words and refuses anything else (`events.py`); which of a
@@ -884,6 +911,13 @@ class VmsWorker(Worker):
     # The mark is written only when the call is about to be made — the device is open and free — so a request
     # that waits for its device carries none. Marks of requests that no longer exist are cleared every
     # `MARK_SWEEP` seconds, by whichever worker gets there.
+    #
+    # And the mark is written CREATE-ONLY, and the unit is under a lease first (the review's second pass). Two
+    # holders of one device in the same second — the seconds a controller takes to mend a double assignment —
+    # both read "no mark" and both wrote one; now the store says which of them made it, and the other answers
+    # `unknown`. A unit held with no lease (`live: on-demand`: the device is on the line, nothing recorded) took
+    # no epoch and so had no fence: it takes one here, before its first command, so that a second holder fences
+    # the first the way it would for a stream.
     PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
     MAX_VALID, MARK_SWEEP = 600.0, 30.0
 
@@ -949,7 +983,13 @@ class VmsWorker(Worker):
                 continue                                 # the device is not open yet: ask again next pass
             if id(dev) in self._performing:
                 continue                                 # a call into this device has not returned: wait your turn
+            if unit not in self.leases:
+                self.take_epoch(unit)                    # a device commanded is a unit fenced: its epoch, before the first command
+            if not self.may_write(unit):
+                continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
+            if before is None and not self._mark(rid, unit, now):
+                before = self.began_by(rid) or "?"       # somebody made the mark between our read and our write
             if before is not None:
                 why = f"unknown: an earlier instance ({before}) began it, and whether the device acted is not known"
                 self.fetched.append(rid)
@@ -958,7 +998,6 @@ class VmsWorker(Worker):
                 self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
                 log.warning("%s: request %s not performed — %s", self.name, rid, why)
                 continue
-            self.objects.put(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode())
             call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False}
 
             def run(call=call, dev=dev):
@@ -973,6 +1012,17 @@ class VmsWorker(Worker):
             call["returned"].wait(self.PERFORM_GRACE)
             done += self._performed()
         return done
+
+    # The mark, create-only: `True` when this instance made it. A store with `put_new` says so itself; one
+    # without (last-writer-wins and nothing else) is read back — the write that landed last is the one
+    # everybody reads, so the instance that reads its own name proceeds and the other does not.
+    def _mark(self, rid: str, unit: str, now: float) -> bool:
+        key, data = self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode()
+        put_new = getattr(self.objects, "put_new", None)
+        if put_new is not None:
+            return bool(put_new(key, data))
+        self.objects.put(key, data)
+        return self.began_by(rid) == self.instance
 
     # What the calls in flight have come to: performed, refused by the device, or — after `PERFORM_TIMEOUT` —
     # not answered. A call that timed out is answered ONCE and stays in flight until the driver returns: the

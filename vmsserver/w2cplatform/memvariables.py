@@ -36,6 +36,11 @@ therefore right exactly when the contract suite is green against it."""
 # `delete` does not; `get` of an absent path is `(None, 0)`; a bad path is refused by `safe_path` before
 # anything else happens. Where those differ, the contract suite is what says so — which is the entire
 # argument for having written the suite before the second backend.
+#
+# And the ACL is the HANDLE's, as it is in `FileVariables` (the review's second pass, m3). It lived on the
+# shared state, so `as_writer` on one handle widened or narrowed what every other handle of the same name
+# might write: a worker opening `memory://dev` with its own prefixes rewrote the console's. A handle is an
+# identity, and what an identity may write is its own to carry.
 # ================================================================================================
 from __future__ import annotations
 
@@ -51,45 +56,37 @@ _NAMED_LOCK = threading.Lock()
 
 
 class _MemState:
-    """What the handles share. A handle is an identity over this."""
+    """What the handles share: the rows and the index. Not who may write what."""
 
     def __init__(self) -> None:
         self.lock = threading.Lock()
         self.index = 1000           # matched to the file store so two backends read alike; a store that dies
                                     # with its process has no "before the restart", so the value is cosmetic here
         self.items: dict[str, tuple[dict, int]] = {}
-        self.acl: dict[str, list[str]] = {}
 
 
 class MemVariables:
     # `writer` is this handle's identity (None means unrestricted); `acl` is `{writer: [prefixes]}`. Both
-    # mean exactly what they mean in `FileVariables`.
+    # mean exactly what they mean in `FileVariables` — and, as there, both belong to the handle.
     def __init__(self, state: "_MemState | None" = None, writer: str | None = None,
                  acl: dict[str, list[str]] | None = None, max_bytes: int = NO_CEILING):
         self._s = state or _MemState()
         self.writer = writer
+        self.acl: dict[str, list[str]] = dict(acl or {})
         # The ceiling this store declares. A dict in memory has none — but `memory://x?max_bytes=512`
         # gives the contract suite a store that DOES, which is how the clause below gets exercised
         # against something other than prose.
         self.max_bytes = max_bytes
-        if acl:
-            with self._s.lock:
-                self._s.acl.update(acl)
 
-    # The same store seen through another identity, allowed only these prefixes.
+    # The same store seen through another identity, allowed only these prefixes. A copy of this handle's
+    # ACL with the new identity in it — `FileVariables.as_writer`, to the letter.
     def as_writer(self, writer: str, allowed: list[str]) -> "MemVariables":
-        with self._s.lock:
-            self._s.acl[writer] = allowed
-        return MemVariables(self._s, writer, max_bytes=self.max_bytes)
-
-    @property
-    def acl(self) -> dict[str, list[str]]:
-        return self._s.acl
+        return MemVariables(self._s, writer, {**self.acl, writer: allowed}, max_bytes=self.max_bytes)
 
     def _refuse(self, path: str) -> None:
-        if self.writer is None or not self._s.acl:
+        if self.writer is None or not self.acl:
             return
-        allowed = self._s.acl.get(self.writer, [])
+        allowed = self.acl.get(self.writer, [])
         if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):
             raise Forbidden(f"{self.writer} may not write {path}")
 
@@ -118,7 +115,7 @@ class MemVariables:
     # (`variables.refuse_delete`), so the two cannot disagree. Then the same CAS check as `put`.
     def delete(self, path: str, cas: int | None = None) -> None:
         safe_path(path)
-        refuse_delete(path, self.writer, self._s.acl)
+        refuse_delete(path, self.writer, self.acl)
         with self._s.lock:
             current = self._s.items.get(path, (None, 0))[1]
             if cas is not None and cas != current:
