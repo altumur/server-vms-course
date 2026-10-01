@@ -105,7 +105,7 @@ job "recworker" {
         INSTANCE_ID = "${NOMAD_ALLOC_ID}"
         OBJECTS   = "variables://objects"
         CAPACITY  = "50"                             # recordings this server's disks and NIC can take — its own number
-        ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder: its events, and `$ARCHIVE/volume`
+        ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder: its events; its own volume goes beside it, `/data/volume`
         ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # what its archive door binds: the node's address
         ARCHIVE_PORT = "8084"
         ARCHIVE_URL  = "http://${attr.unique.network.ip-address}:8084"   # what the heartbeat says: an IP, as RESOURCE_URL is — no DNS between servers

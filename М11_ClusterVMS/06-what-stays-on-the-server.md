@@ -122,21 +122,23 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 Какой том он держит, если никто ничего не объявлял? Собственный том сервера (`vms/recworker.py`):
 
 ```python
-        # Nothing pinned and nothing declared — the SERVER's own volume, `file://$ARCHIVE/volume`, named after
-        # the server: what every single-disk box meant before any of this existed — one place, `home: srv-a`
-        # still true, `place_by: volume` behaving exactly like `place_by: server`.
+        # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
+        # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
+        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
+        # `/data/volume` next to `/data/archive`: …
         self.pinned = bool(env.get("VOLUME"))
         self.default_volume = str(self.server or "default")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{os.path.join(events_root, 'volume')}"
+        beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
+        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
 ```
 
-Тома, которого ещё нет, демон форматирует при первом открытии — размером с квоту, и квота становится размером кольца. Для собственного тома квота — `ARCHIVE_QUOTA_BYTES` или четыре пятых свободного места на диске, с запасом не меньше двух гигабайт.
+Тома, которого ещё нет, демон форматирует при первом открытии — размером с квоту, и квота становится размером кольца. Для собственного тома квота — `ARCHIVE_QUOTA_BYTES` или четыре пятых свободного места на диске, с запасом в два гигабайта и не выше нижней отметки ватерлинии, когда кольцо заполнится (М10B, урок 27).
 
 Вот что говорят о своих томах два регистратора сцены ([`traces/06-a-timeline-across-two-volumes.txt`](traces/06-a-timeline-across-two-volumes.txt)):
 
 ```
-r-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/archive/volume', writer {'state': 'ok'}
-r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/archive/volume', writer {'state': 'ok'}
+r-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/volume', writer {'state': 'ok'}
+r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer {'state': 'ok'}
 ```
 
 | Поле heartbeat'а регистратора | Кто читает |

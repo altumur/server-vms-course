@@ -15,8 +15,8 @@
 # `live_url`, takes `rec/epoch/<cam>`, and records with `GstRecActuator` (`rtspsrc ! … ! appsink`): every
 # access unit a sample into the volume's writer, through the daemon's socket in /run/vms. The mounts are the
 # recorder's: /run/vms (the daemon's socket, and the workers' shared memory), the archive read-write for its
-# own events (`rec/<recording>/…`) and for the box's own volume, `$ARCHIVE/volume`, which the DAEMON opens —
-# the same path on the host and in here; the platform's stores read-write for its slot, epochs, holds and
+# own events (`rec/<recording>/…`); the box's own volume, `/data/volume` beside it, is opened by the DAEMON on
+# the host and needs no mount here; the platform's stores read-write for its slot, epochs, holds and
 # heartbeat; no media directory (it never reads a camera). Checked by `tests/test_deploy_units.py`.
 #
 # ## Notes
@@ -53,8 +53,8 @@ Environment=RECORDER_NAME=%i
 EnvironmentFile=/data/config/vms.env
 # read-write: `rec/epoch/*`, `rec/slots/*`, `rec/holds/*` (its token) and its heartbeat object.
 Volume=/data/platform:/data/platform:z
-# read-write: its events (`archive.shallow`, `archive.keep.*`) under `rec/`, on this server's resource — and
-# the path of the box's own volume, `$ARCHIVE/volume`, which it names to the daemon.
+# read-write: its events (`archive.shallow`, `archive.keep.*`) under `rec/`, on this server's resource. Footage
+# is not here: the box's own volume is `/data/volume`, which only the host's daemon opens.
 Volume=/data/archive:/data/archive:z
 # a tmpfs of sockets, not state: the daemon's (`obsd.sock`), and the workers' shared-memory branches
 # (`live_shm`) — the recorder reads a camera held HERE from its worker's tee with `shmsrc`; one held elsewhere

@@ -363,7 +363,7 @@ r.backfill(budget=1, now=night)    # [{'unit': '41', 'cam': '41', 'from': t1, 't
 ```
 
 ```
-том srv-1 (file:///data/archive/volume)
+том srv-1 (file:///data/volume)
     41/e7              ← живая запись
     41/e7/backfill     ← дозаписано: текущая эпоха, позавчерашнее время
 

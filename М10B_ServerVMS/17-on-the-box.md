@@ -145,7 +145,7 @@ def test_who_may_write_where_is_in_the_mounts_too():
 
 **Медиа воркеру только на чтение**, регистратору — **не смонтированы вовсе**, и комментарий объясняет: *он никогда не читает камеру, он подписывается на раздачу.* Регистратор, у которого нет доступа к файлам камер, физически не может открыть второе соединение.
 
-**Регистратору архив на запись — по двум причинам.** Первая — его события: `archive.shallow`, `archive.keep.*` под `rec/` на ресурсе этого сервера. Вторая — путь собственного тома сервера, `$ARCHIVE/volume` (урок 10, шаг 8). Регистратор не пишет в этот каталог сам: он называет путь демону, и том открывает демон. Поэтому путь обязан совпадать на хосте и в контейнере — `/data/archive` смонтирован в тот же `/data/archive`. Объявленный локальный том — тоже путь на хосте, который открывает демон, и монтировать его регистратору не нужно вовсе.
+**Регистратору архив на запись — ради его событий**: `archive.shallow`, `archive.keep.*` под `rec/` на ресурсе этого сервера. Видео здесь нет. Собственный том сервера лежит рядом, в `/data/volume` (урок 10, шаг 8), и регистратор его не монтирует: он называет путь демону, а том открывает демон на хосте. Объявленный локальный том — тоже путь на хосте, который открывает демон, и монтировать его регистратору не нужно вовсе.
 
 **`/run/vms` — и у воркера, и у регистратора**, одинаково на запись. Там две вещи. Разделяемая память раздачи (урок 4): воркер пишет, регистратор на том же сервере читает. И сокет демона, `obsd.sock`: через него регистратор говорит с движком. Это tmpfs, а не состояние — единственное монтирование вне `/data`, и обновление системы не обязано его сохранять.
 
@@ -448,12 +448,17 @@ CMD ["python3", "-m", "vms", "worker"]
 
 `SPOOL` и `SEGMENT_SECONDS` ушли вместе с файловым архивом: очереди на диске нет, а длину куска решает движок — блоками и последовательностями (урок 7). Вторая строка теста не даёт им вернуться в пример, который копируют на коробки.
 
-Пришли три переменные архива, все три закомментированы — у каждой есть разумное умолчание:
+Пришли четыре переменные архива, все закомментированы — у каждой есть разумное умолчание:
 
 ```
-# the size of that volume when it is first formatted — a ring: it never grows past it, and gives up its oldest
-# minutes when full. Unset: four fifths of what is free under $ARCHIVE, leaving two gigabytes. A volume that
-# exists keeps its size until a declaration (`rec/volumes/<name>`) says another.
+# the server's own volume, where a recorder with nothing declared writes: a volume of ObjectStorage, opened by
+# the host's obsd (`obsd.service`). Unset: `volume` BESIDE `$ARCHIVE` — `/data/volume` — and not inside the
+# tree, where the resource's walks would take the ring for events and count its blocks as the tree's usage.
+# ARCHIVE_VOLUME=file:///data/volume
+# its size when it is first formatted — a ring: it never grows past it, and gives up its oldest minutes when
+# full. Unset: four fifths of what is free, leaving two gigabytes and the disk under the watermark's low mark
+# once the ring is full. A volume that exists keeps its size until a declaration (`rec/volumes/<name>`) says
+# another.
 # ARCHIVE_QUOTA_BYTES=
 # the host's ObjectStorage daemon. Unset: /run/vms/obsd.sock, where `obsd.service` puts it. How long a
 # recorder waits for one answer from it: shorter than a lease, or a silent daemon fences every recording.
@@ -461,7 +466,9 @@ CMD ["python3", "-m", "vms", "worker"]
 # OBSD_TIMEOUT=10
 ```
 
-**`ARCHIVE_QUOTA_BYTES`** — размер собственного тома сервера, когда он форматируется впервые. Квота — это размер кольца (урок 10, шаг 3), и спрашивается она один раз: отформатированный том свой размер не меняет, пока объявление не скажет другой.
+**`ARCHIVE_VOLUME`** — где собственный том сервера. Рядом с деревом ресурса, а не внутри: внутри обходы ресурса приняли бы кольцо за дерево событий и посчитали бы его блоки занятым местом.
+
+**`ARCHIVE_QUOTA_BYTES`** — размер собственного тома сервера, когда он форматируется впервые. Квота — это размер кольца (урок 10, шаг 3), и спрашивается она один раз: отформатированный том свой размер не меняет, пока объявление не скажет другой. Без неё — четыре пятых свободного места, но не больше, чем держит диск под нижней отметкой ватерлинии, когда кольцо заполнится.
 
 **`OBSD_SOCKET`** — где демон. Задавать его на коробке незачем: умолчание клиента совпадает с тем, что `obsd.service` передаёт демону.
 
@@ -538,7 +545,7 @@ curl -X POST localhost:8080/cameras -H 'Idempotency-Key: a1' \
      -d '{"source":"driverpack://file/lobby.mp4"}'
 ```
 
-За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. Нажали «Запись» — регистратор форматирует том сервера `/data/archive/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
+За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. Нажали «Запись» — регистратор форматирует том сервера `/data/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
 
 ```bash
 systemctl stop vmscontroller            # ничего работающее не останавливается

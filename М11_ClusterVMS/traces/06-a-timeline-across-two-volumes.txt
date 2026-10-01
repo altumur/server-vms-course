@@ -1,6 +1,6 @@
 # what each recorder says of its volume (its heartbeat, the door's address left out)
-r-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/archive/volume', writer {'state': 'ok'}
-r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/archive/volume', writer {'state': 'ok'}
+r-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/volume', writer {'state': 'ok'}
+r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer {'state': 'ok'}
 
 # GET /timeline/7 — both recorders answer
 [

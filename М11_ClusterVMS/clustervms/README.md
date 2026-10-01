@@ -26,7 +26,7 @@ clustervms/
     verify-bench.sh            the six checks that need a real cluster, PASS/FAIL — including the ACL from inside an allocation and a scale drill
     failover-drill.sh          L4  the power pull, measured: three runs, worst case kept, the old instance's conflicts counted
     Containerfile              the image: FROM М10's localhost/vmsserver (the Quadlet units' image) plus cluster/, four entrypoints
-  tests/                       31 tests, no Nomad, no GStreamer, milliseconds: python3 tests/run.py
+  tests/                       43 tests, no Nomad, no GStreamer; the archive's tests start a real obsd: OBSD_BIN=… python3 tests/run.py
 ```
 
 ## What a cluster adds, and what it does not
@@ -54,4 +54,4 @@ clustervms/
 
 ## Verified where
 
-The 31 tests ran in the authoring sandbox (Python 3.11) and on the author's machine (3.10), on fakes that implement what Nomad's and S3's documentation promise. `deploy/verify-bench.sh` and `deploy/failover-drill.sh` are what proves the promises against real Nomad: the ACL from inside an allocation, the four jobspecs validating, the scale drill, and the power pull with the worst case kept. There is no Go port of this package: a worker on a cluster is a worker on a box whose stores happen to be raft, and what is М11's about the rest is the jobspecs. М10's `../../vmsserver-go/` is whole and current if one is wanted again.
+The 43 tests run on the author's machine on fakes that implement what Nomad's and S3's documentation promise, and against a real obsd for the archive. `deploy/verify-bench.sh` and `deploy/failover-drill.sh` are what proves the promises against real Nomad: the ACL from inside an allocation, the four jobspecs validating, the scale drill, and the power pull with the worst case kept. There is no Go port of this package: a worker on a cluster is a worker on a box whose stores happen to be raft, and what is М11's about the rest is the jobspecs. М10's `../../vmsserver-go/` is whole and current if one is wanted again.

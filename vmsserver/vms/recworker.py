@@ -686,7 +686,7 @@ class RecWorker(VmsWorker):
             self.leave_volume(f"volume {held} is not this recorder's any more")   # withdrawn, disabled, or taken from us
         if self.hold is None and not free:
             # Nothing declared anywhere: the box as it was before volumes were rows — one place, named after
-            # the server, `file://$ARCHIVE/volume`. Note this is reached after letting go above, so withdrawing
+            # the server, beside `$ARCHIVE`. Note this is reached after letting go above, so withdrawing
             # the last volume does not leave a process quietly writing into it.
             err = self._write_into(volumes.Volume(self.default_volume, "local", self.default_url, self.server or "",
                                                   self.default_quota))

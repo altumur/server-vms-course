@@ -121,39 +121,48 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 ```python
         self.pinned = bool(env.get("VOLUME"))
         self.default_volume = str(self.server or "default")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{os.path.join(events_root, 'volume')}"
+        beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
+        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
         q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(events_root)
+        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
 ```
 
-Имя тома — имя сервера, путь — `file://$ARCHIVE/volume`, рядом с деревом событий ресурса. Комментарий называет, зачем так: это то, что значила любая коробка с одним диском до появления строк, — одно место, `home: srv-a` остаётся верным, а `place_by: volume` ведёт себя в точности как `place_by: server`.
+Имя тома — имя сервера, путь — `volume` рядом с деревом событий ресурса: `/data/volume` возле `/data/archive`. Рядом, а не внутри, потому что внутри обходы ресурса приняли бы кольцо за подсистему и посчитали бы его блоки занятым местом дерева. Комментарий называет, зачем том вообще такой: это то, что значила любая коробка с одним диском до появления строк, — одно место, `home: srv-a` остаётся верным, а `place_by: volume` ведёт себя в точности как `place_by: server`.
 
-Размер — `ARCHIVE_QUOTA_BYTES`, а без неё четыре пятых свободного места:
+Размер — `ARCHIVE_QUOTA_BYTES`, а без неё четыре пятых свободного места, но не больше, чем держит диск под нижней отметкой ватерлинии:
 
 ```python
-    # A volume nobody declared, on a disk nobody measured: four fifths of what is free under the resource,
-    # leaving at least two gigabytes — the product's rule (feedback BM). Asked once, when it is first formatted;
-    # a volume that exists keeps the size it has.
+    # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
+    # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
+    # (`space_settings`, 0.75 by default) once the ring is full. The disk is shared with the resource's events,
+    # and a ring that filled it past the mark would leave the watermark short for good: nothing of the VMS's
+    # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
+    # formatted; a volume that exists keeps the size it has.
     @staticmethod
-    def _share_of_free(root: str) -> int:
+    def _share_of_free(root: str, low: float = 0.75) -> int:
         ...
-        return max(1 << 30, min(int(free * 0.8), free - (2 << 30)))
+        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
 ```
 
 Спрашивается это **один раз**, при форматировании. Существующий том хранит свой размер, и перезапуск регистратора на заполненном диске не сожмёт кольцо.
 
 Третий путь — `$VOLUME` в юните: том прибит к этому экземпляру. Так говорят про диск, который знает юнит-файл. Прибитый регистратор захвата не берёт и не отдаёт.
 
-Тесты: `test_volumes.py::test_nothing_declared_is_the_box_as_it_always_was` и `test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it` — регистратор форматирует том сервера по адресу `file://<archive>/volume` и пишет в него поток `1/e<эпоха>`.
+Тесты: `test_volumes.py::test_nothing_declared_is_the_box_as_it_always_was` и `test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it` — регистратор форматирует том сервера рядом с деревом ресурса (`file://<корень коробки>/volume`) и пишет в него поток `1/e<эпоха>`.
 
 ### Предложение консоли
 
-Первый том оператор не должен набирать руками. Коробка уже говорит, куда пишет (`archive` в heartbeat'е регистратора), и какого размера этот раздел (`space.total` в heartbeat'е ресурса). Консоль это и предлагает:
+Первый том оператор не должен набирать руками. Коробка уже говорит, куда пишет и какого размера её том: `archive` и `archive_quota` в heartbeat'е регистратора. Консоль это и предлагает:
 
 ```python
+        # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
+        # with the resource's events: declared at the partition's size, the ring would be resized past the room.
+        total = int(hb.extra.get("archive_quota") or ((res.get(server) or {}).get("space") or {}).get("total", 0))
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
 ```
+
+Размер раздела из heartbeat'а ресурса остался запасным ответом — для регистратора, который своего размера не сказал. Предложить весь раздел было бы ошибкой: объявление поменяло бы размер кольца, и оно выросло бы за место, которое делит с деревом событий.
 
 **Предложение, а не строка.** Комментарий над `suggest`: *nothing here writes configuration on a process's behalf.* Оператор нажимает кнопку, и с этой минуты диск — том с числом. Число можно уменьшить, а остаток отдать второму тому.
 
@@ -170,8 +179,8 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 
 ```python
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — how much of the disk is ITS, in bytes "
-                      "(the whole partition is a fine answer, and it is what the console offers)")
+        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
+                      "(the console offers the size the box's own volume already has)")
 ```
 
 Квота нужна **каждому** объявленному тому, локальному тоже. Причина — в том, что такое том для движка. Новый том `obsd` форматирует ровно на этот размер, и дальше он кольцо: заполнился — отдаёт старейшие блоки (урок 7). Без числа форматировать нечем:
@@ -481,7 +490,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста.
 - **`home` предпочтением для резервного тома.** Основная переезжает на него при перезагрузке своего сервера, и копий становится одна.
 - **Запись на томе `incidents`.** Камера крутит кольцо улик своим потоком, и отмеченное уходит за часы. Двойная защита: `admit_recording` и нулевая ёмкость.
-- **Квота во весь раздел.** Так консоль предлагает первый том, и так проходит `refuse`. Но кольцо делит раздел с деревом событий ресурса: число стоит уменьшить сразу, как только том объявлен.
+- **Квота во весь раздел.** `refuse` её пропустит, но кольцо делит раздел с деревом событий ресурса и уведёт диск выше отметки ватерлинии. Консоль поэтому предлагает тот размер, который у тома уже есть.
 - **Том недоступного сервера рисуют дырой.** Оператор ищет потерянное видео, которое лежит на месте. Таймлайн называет том и сервер.
 
 ## Итог
@@ -489,7 +498,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - Том — заявление (`rec/volumes/<имя>`) и факт (`rec/holds/<имя>`). Заявление пишет консоль, факт — регистратор, и место существует, потому что его держат.
 - `server` в строке решает, где том: на одной коробке или по адресу. `local` и `edge` — всегда коробка, `network` — всегда адрес, `backup` и `incidents` — по полю.
 - Регистратор берёт сначала свои диски, потом адреса. Всё занято — запасной: процесс без места и с нулевой ёмкостью.
-- Ничего не объявлено — собственный том сервера, `file://$ARCHIVE/volume`, на четыре пятых свободного места. Консоль предлагает его объявить, и объявление ничего не двигает.
+- Ничего не объявлено — собственный том сервера, `/data/volume` рядом с деревом ресурса, на четыре пятых свободного места и не выше нижней отметки ватерлинии. Консоль предлагает его объявить с тем размером, который у него есть, и объявление ничего не двигает.
 - Квота — размер кольца. Новый том форматируется на неё, новая квота меняет размер на ходу, уменьшение отдаёт старейшее и попадает в журнал.
 - Том открывается по параметрам. Ключ — значение `access_secret`, запечатанное, и в адрес не попадает никогда.
 - Захват идёт за именем слота, писатель — за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.

@@ -86,11 +86,14 @@
 Для собственного тома сервера — того, что регистратор берёт, когда ничего не объявлено, — квоту берут из `ARCHIVE_QUOTA_BYTES`, а без неё считают от свободного места:
 
 ```python
-    # A volume nobody declared, on a disk nobody measured: four fifths of what is free under the resource,
-    # leaving at least two gigabytes — the product's rule (feedback BM). Asked once, when it is first formatted;
-    # a volume that exists keeps the size it has.
+    # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
+    # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
+    # (`space_settings`, 0.75 by default) once the ring is full. The disk is shared with the resource's events,
+    # and a ring that filled it past the mark would leave the watermark short for good: nothing of the VMS's
+    # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
+    # formatted; a volume that exists keeps the size it has.
     @staticmethod
-    def _share_of_free(root: str) -> int:
+    def _share_of_free(root: str, low: float = 0.75) -> int:
 ```
 
 Спрашивают один раз. Том, который уже существует, сохраняет свой размер, иначе каждый перезапуск мерил бы диск заново и получал бы другое число.
@@ -378,7 +381,7 @@ VMS держит на диске ресурса только события, и 
 - `test_the_watermark_is_on_until_somebody_turns_it_off` — без строки `platform/space` ватерлиния работает на умолчаниях. `enabled: false` — решение, которое кто-то принял, а не умолчание.
 - `test_what_could_not_be_freed_is_a_number_anybody_can_read` — недостача уходит в heartbeat ресурса и в метрику консоли `vms_resource_short_bytes{server}`, а не в строку лога.
 
-Учтите одно: собственный том сервера (`file://$ARCHIVE/volume`) лежит на том же диске, что и дерево ресурса. Для ватерлинии его байты — занятое место, и отдать их ей некому: кольцо не растёт сверх квоты и не уменьшается по просьбе. Если ватерлиния на коробке говорит о недостаче, смотрите сначала на квоту тома.
+Учтите одно: собственный том сервера (`/data/volume`, рядом с деревом ресурса) лежит на том же диске. Для ватерлинии его байты — занятое место, и отдать их ей некому: кольцо не растёт сверх квоты и не уменьшается по просьбе. Поэтому квота по умолчанию кончается раньше нижней отметки ватерлинии (`_share_of_free` выше). Если ватерлиния на коробке всё же говорит о недостаче, смотрите сначала на квоту тома: её задали руками или объявили больше.
 
 **Дозапись больше не ждёт диска.** Раньше у неё был второй предохранитель: не тянуть с карты то, что ватерлиния собирается удалить. Теперь гоняться некому:
 
@@ -436,7 +439,7 @@ VMS держит на диске ресурса только события, и 
 5. Уберите `seal` после копии. Что посчитает `inside` в том же проходе и что попадёт в heartbeat?
 6. Сделайте копию одной последовательностью, без `finish` на разрыве. Отметьте интервал, внутри которого пять минут не было записи, и посмотрите на таймлайн тома `incidents`.
 7. Запишите копию под текущей эпохой записи, а не под нулём. Что покажет таймлайн консоли, когда эпоха записи сменится?
-8. Квота собственного тома — четыре пятых свободного места. Диск занят на 30 % до первого форматирования. Посчитайте, где окажется ватерлиния (`high: 0.85`), когда кольцо заполнится. Что скажет `vms_resource_short_bytes`?
+8. Уберите из `_share_of_free` третье слагаемое — то, что держит диск под нижней отметкой. Диск занят на 30 % до первого форматирования. Посчитайте, где окажется ватерлиния (`high: 0.85`), когда кольцо заполнится. Что скажет `vms_resource_short_bytes` — и что из курса могло бы его уменьшить?
 
 ## Что дальше
 

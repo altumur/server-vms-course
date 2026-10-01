@@ -11,7 +11,7 @@ the host's obsd — the `obsd` system job, which is not a Python process).
                                        neutral names (`w2cplatform/runtime.py`); the jobspec maps NOMAD_ALLOC_INDEX,
                                        node.unique.name and meta.labels into them, a k8s manifest the ordinal and a fieldRef
     ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
-                                       recorder's own volume under it, `$ARCHIVE/volume`, when nothing is declared
+                                       recorder's own volume goes beside it (`/data/volume`) when nothing is declared
     OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (default /run/vms/obsd.sock)
     ARCHIVE_HOST, ARCHIVE_PORT         recorder: what its archive door binds
     ARCHIVE_URL                        recorder: what its heartbeat says the door is — the node's IP, so the console and

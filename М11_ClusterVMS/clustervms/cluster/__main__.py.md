@@ -6,7 +6,7 @@
 - `logging.basicConfig(...)` — level from `LOG_LEVEL` (default `INFO`); one format for all four jobs so Nomad's `alloc logs` read alike.
 - `stop` — a `threading.Event` set by `SIGTERM` or `SIGINT`. Nomad stops a task with SIGTERM and waits `kill_timeout` (20 s for the worker, see `deploy/vmsworker.nomad.hcl.md`); every loop below polls `stop` so that a stop is orderly — for the worker that means `release_slot()`, which is what turns a scale-in into "redistribute" rather than "a crash".
 - `objects` — the object store, opened once from `OBJECTS` (default `variables://objects`, i.e. heartbeats and the snapshot as Nomad Variables; `s3+http://…` for MinIO/S3; `file:///path` on a bench). Shared by all four functions.
-- `archive` — `ARCHIVE` (default `/data/archive`): the resource's tree on this server — every subsystem's events — mounted by the jobspecs' `volumes`; a recorder's own volume lives under it (`$ARCHIVE/volume`), opened by the host's `obsd`.
+- `archive` — `ARCHIVE` (default `/data/archive`): the resource's tree on this server — every subsystem's events — mounted by the jobspecs' `volumes`; a recorder's own volume lives beside it (`/data/volume`), opened by the host's `obsd`.
 
 ## Functions
 

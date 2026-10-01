@@ -34,7 +34,8 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 # - `PLATFORM_DIR` (default `/data/platform`) — the platform's stores: `<dir>/config` is `FileVariables`,
 #   `<dir>/objects` is `FsObjectStore`.
 # - `ARCHIVE` (`/data/archive`) — the resource's tree: every subsystem's events. A recorder with nothing declared
-#   formats its server's own volume under it (`$ARCHIVE/volume`). `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
+#   formats its server's own volume beside it (`/data/volume` for `/data/archive`; `ARCHIVE_VOLUME` to put it elsewhere).
+#   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
 # - `OBSD_SOCKET` — the host's ObjectStorage daemon (`w2cplatform/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
 #   recorder waits for one answer from it — shorter than a lease.
 # - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `NOMAD_ALLOC_INDEX` → `w-<index>`; neither:

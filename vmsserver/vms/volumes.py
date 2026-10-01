@@ -128,8 +128,8 @@ def refuse(fields: dict) -> None:
     # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
     # already has when it declares the first one, so the ordinary answer is a number the operator can change.
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — how much of the disk is ITS, in bytes "
-                      "(the whole partition is a fine answer, and it is what the console offers)")
+        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
+                      "(the console offers the size the box's own volume already has)")
     url = str(fields.get("url", ""))
     if not url:
         raise Refused("a volume needs a url: the directory it is, or the address it is at")

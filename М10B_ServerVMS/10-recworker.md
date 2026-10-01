@@ -101,7 +101,7 @@ placement:
   rebalance:  {dead_band: 0.10}
 ```
 
-`requires: resource` — *единственная подсистема, которая обязана быть там, где архив.* Регистратор пишет на ресурс своего сервера события записи (`archive.shallow`, `archive.keep.*`), а собственный том сервера лежит под тем же корнем, `$ARCHIVE/volume` (шаг 8). Нет ресурса — некуда писать ни то, ни другое.
+`requires: resource` — *единственная подсистема, которая обязана быть там, где архив.* Регистратор пишет на ресурс своего сервера события записи (`archive.shallow`, `archive.keep.*`), а собственный том сервера лежит рядом с деревом ресурса, на тех же дисках (`/data/volume`, шаг 8). Нет ресурса — некуда писать события, и нет дисков для тома.
 
 `servers: distinct` **по умолчанию**, и обоснование в заголовке файла:
 
@@ -165,9 +165,12 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
         # that volume's recorder until it stops or lapses (`volume_pass`). This is what makes a network
         # archive created on the console get served without anybody starting a process for it.
         #
-        # Nothing pinned and nothing declared — the SERVER's own volume, `file://$ARCHIVE/volume`, named after
-        # the server: what every single-disk box meant before any of this existed — one place, `home: srv-a`
-        # still true, `place_by: volume` behaving exactly like `place_by: server`.
+        # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
+        # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
+        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
+        # `/data/volume` next to `/data/archive`: inside, the resource's walks would take the ring for a
+        # subsystem, count its blocks as the tree's usage and mirror nothing of it (`ARCHIVE_VOLUME` to put it
+        # elsewhere).
 ```
 
 И проход, который решает это раз за проход, после слота и аренд:
@@ -335,9 +338,10 @@ class RecWorker(VmsWorker):
         …
         self.pinned = bool(env.get("VOLUME"))
         self.default_volume = str(self.server or "default")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{os.path.join(events_root, 'volume')}"
+        beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
+        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
         q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(events_root)
+        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
         self.volume = str(env.get("VOLUME") or self.default_volume)
         self.store: Archive | None = None            # the volume open for writing, if one is
 ```
@@ -543,17 +547,19 @@ class RecWorker(VmsWorker):
 
 ### Какой том открыть, когда ничего не объявлено
 
-Свой том сервера: `file://$ARCHIVE/volume` (или `ARCHIVE_VOLUME`, если задан), с именем сервера. Квота — `ARCHIVE_QUOTA_BYTES`, а если её нет — доля свободного места:
+Свой том сервера: `/data/volume` рядом с `/data/archive` (или `ARCHIVE_VOLUME`, если задан), с именем сервера. Рядом, а не внутри: внутри дерева ресурса обходы ресурса приняли бы кольцо за подсистему и посчитали бы его блоки занятым местом дерева. Квота — `ARCHIVE_QUOTA_BYTES`, а если её нет — доля свободного места:
 
 ```python
-    # A volume nobody declared, on a disk nobody measured: four fifths of what is free under the resource,
-    # leaving at least two gigabytes — the product's rule (feedback BM). Asked once, when it is first formatted;
-    # a volume that exists keeps the size it has.
+    # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
+    # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
+    # (`space_settings`, 0.75 by default) once the ring is full. …
     @staticmethod
-    def _share_of_free(root: str) -> int:
+    def _share_of_free(root: str, low: float = 0.75) -> int:
         …
-        return max(1 << 30, min(int(free * 0.8), free - (2 << 30)))
+        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
 ```
+
+Третье слагаемое появилось после того, как его нашли на расчёте. Диск общий с событиями ресурса, а ватерлиния ресурса включена по умолчанию. Кольцо, заполнившее диск выше её отметки, оставило бы недостачу навсегда: у VMS больше нечем ответить на «освободи». Поэтому кольцо по умолчанию кончается раньше нижней отметки.
 
 Обратите внимание на «asked once». Том, который уже есть, своего размера не меняет: отформатированное кольцо открывается каким было. Регистратор на коробке, где ничего не объявляли, форматирует свой том при первом проходе и пишет в него (`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`).
 
