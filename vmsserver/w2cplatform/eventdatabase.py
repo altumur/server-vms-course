@@ -361,6 +361,19 @@ class EventIndex:
         return len(paths)
 
 
+# The fence, decided again over events already read: `current_epochs` is `{(subsystem, unit): epoch}` and
+# `epoch_policy` what an older epoch means. The merge calls it over the union; the console calls it over an
+# answer whose epochs it read AFTER the query — the units in the answer are the only ones it needs.
+def refence(events: list, current_epochs: dict | None, epoch_policy: dict | None) -> list:
+    cur = current_epochs or {}
+    for e in events:
+        c = cur.get((e["subsystem"], e["unit"]))
+        older = c is not None and e["epoch"] < c
+        e["epoch_is"] = (epoch_policy or {}).get(e["subsystem"], "fenced") if older else "current"
+        e["fenced"] = e["epoch_is"] == "fenced"
+    return events
+
+
 # What stands behind a console's `/events`: nothing of its own. `query` asks every LIVE resource's
 # `GET /events` (each answers from the index over its own tree — own buckets and mirror copies), merges by
 # time, dedupes a dead server's copies when two peers hold them, drops a copy when the owner is live (it
@@ -494,12 +507,7 @@ class MergedIndex:
             alarms = alarms if len(alarms) <= limit else (alarms[-limit:] if keep == "newest" else alarms[:limit])
             room = max(0, limit - len(alarms))
             events = sorted(alarms + (rest[-room:] if keep == "newest" else rest[:room]), key=order)
-        cur = current_epochs or {}
-        for e in events:                                          # each resource fenced its own; re-decide over the merge
-            c = cur.get((e["subsystem"], e["unit"]))
-            older = c is not None and e["epoch"] < c
-            e["epoch_is"] = (epoch_policy or {}).get(e["subsystem"], "fenced") if older else "current"
-            e["fenced"] = e["epoch_is"] == "fenced"
+        refence(events, current_epochs, epoch_policy)             # each resource fenced its own; re-decide over the merge
         unreachable = sorted(set(unreachable))
         self.state = "live" + (f"; {', '.join(unreachable)} unreachable" if unreachable else "") \
                             + (f"; {', '.join(sorted(from_mirror))} from mirror" if from_mirror else "")

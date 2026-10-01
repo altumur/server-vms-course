@@ -513,6 +513,49 @@ def test_the_timeline_endpoint_hands_the_page_counts_and_says_why():
         srv.shutdown(); rsrv.shutdown()
 
 
+def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_only_its_own():
+    """The review's second pass, major: every `GET /events` listed the WHOLE store and read every epoch row —
+    a thousand cameras, a page polling every three seconds, ten operators: thousands of reads a second to the
+    store, the leases' CAS queueing behind them. The map is cached for `EPOCH_CACHE` seconds of the console's
+    monotonic clock; a camera's or one unit's timeline makes no scan at all — it reads, by name and now, the
+    epochs of the units in its answer, so a fence that fell a moment ago still shows."""
+    from vms.archive import event_log
+    box = Box(); t = box.wall() - 60
+    event_log(box.archive, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
+    event_log(box.archive, 9, 1).append(t + 2, "motion"); box.vars.put("vms/epoch/9", {"epoch": "2"})   # a zombie's line: epoch 1 < 2
+    con = _console_over(box, EventIndex(box.archive, "srv-1", wall=box.wall))
+    con.clock = box.clock
+
+    class Counting:
+        """The console's store, counting what the review counted: scans of the whole store, and epoch rows read."""
+        def __init__(self, inner): self.inner, self.scans, self.epochs = inner, 0, 0
+        def list(self, prefix): self.scans += prefix == ""; return self.inner.list(prefix)
+        def get(self, path): self.epochs += "/epoch/" in path; return self.inner.get(path)
+        def __getattr__(self, name): return getattr(self.inner, name)
+
+    vars_ = con.ctl.vars = Counting(con.ctl.vars)
+
+    class H:
+        headers: dict = {}
+        def _send(self, status, body, raw=False): self.reply = (status, body)
+
+    def ask(**q):
+        h = H(); con.dispatch(h, "GET", "/events", {"from": str(t), "to": str(t + 60), **q}); return h.reply
+
+    fenced = lambda rep: [(e["unit"], e["fenced"]) for e in rep[1]["events"]]
+    assert fenced(ask()) == [("7", False), ("9", True)] and (vars_.scans, vars_.epochs) == (1, 2)
+    assert fenced(ask()) == [("7", False), ("9", True)] and (vars_.scans, vars_.epochs) == (1, 2)   # a second request: the cache
+    box.clock.advance(con.EPOCH_CACHE + 1)
+    assert fenced(ask()) == [("7", False), ("9", True)] and vars_.scans == 2                   # past the window: read again
+    # one camera: no scan, one row — its own — and read now, not from the cache
+    vars_.scans = vars_.epochs = 0
+    assert fenced(ask(cam="9")) == [("9", True)] and (vars_.scans, vars_.epochs) == (0, 1)
+    box.vars.put("vms/epoch/7", {"epoch": "3"})                                                 # the camera's holder changed this instant
+    assert fenced(ask(cam="7")) == [("7", True)] and vars_.scans == 0                           # the camera's timeline knows at once…
+    assert fenced(ask()) == [("7", False), ("9", True)]                                         # …the whole one, inside its three seconds, not yet
+    assert fenced(ask(unit="7")) == [("7", True)]                                               # a unit named is read the same way
+
+
 def test_the_consoles_records_outlive_what_they_refer_to():
     """The one rule that has to exist BEFORE the records it protects.
 

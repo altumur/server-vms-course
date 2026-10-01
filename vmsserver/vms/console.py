@@ -25,10 +25,11 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
+from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, holders, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import slot_number
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
+from w2cplatform.variables import Conflict
 
 from . import keeps, volumes
 
@@ -82,6 +83,17 @@ class LiveFront:
         if self.ctl.camera(cam) is None:
             return 404, {"error": f"no camera {cam}", "detail": f"no camera {cam}"}
         if self.live.unit(cam) is None:
+            # The viewer chooses where the stream is served from (`?labels=`: Lesson 13, a stream for the gateway
+            # with a public address) — from among the places that EXIST. A label no live gateway carries made a
+            # row nothing could place, and every next viewer of the camera was told "retry" for ever (the review's
+            # second pass, major). Refused by name, and no row.
+            carried = {l for hb in holders(self.live.objects, "live/", self.ctl.wall()).values()
+                       for l in str(hb.extra.get("labels", "")).split(",") if l}
+            unknown = sorted(set(labels) - carried)
+            if unknown:
+                return 400, {"error": f"no gateway carries the label{'s' if len(unknown) > 1 else ''} {', '.join(unknown)}",
+                             "detail": f"a stream is placed on a gateway whose labels cover its own; the gateways here carry: "
+                                       f"{', '.join(sorted(carried)) or 'none'}"}
             try:
                 self.live.create({"cam": str(cam), "labels": labels})
             except Refused as e:
@@ -309,6 +321,15 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # opened a minute after the button is an incident, and a request that misses its moment must
         # expire rather than wait. Automation will set its own, from the scenario.
         if method == "POST" and path == "/requests" and ctl is not None:
+            # A command is not idempotent by nature — the same door pulsed twice IS two pulses — so the request's
+            # NAME has to make the retry the same request: the `Idempotency-Key` is the row's id unless the body
+            # names one, and the row is written create-only; a second POST under the key finds the row and is
+            # answered the same 202 (the platform review, M17; the review's second pass). Named by the clock it
+            # was a new row every time, and a retried click opened the door again.
+            key = handler.headers.get("Idempotency-Key")
+            if not key:
+                return 400, {"detail": "Idempotency-Key header is required: a command retried is the same command",
+                             "error": "Idempotency-Key required"}
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             unit, action = str(body.get("unit", "")), str(body.get("action", ""))
             if not unit or ctl.camera(unit) is None:
@@ -316,8 +337,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if action not in ("output", "preset"):
                 return 400, {"detail": f"actions are output and preset, not {action!r}", "error": "unknown action"}
             now = con_wall()
-            rid = str(body.get("id") or f"{unit}-{action}-{int(now * 1000)}")
-            if "/" in rid:
+            rid = str(body.get("id") or key)
+            if "/" in rid or rid in (".", "..") or len(rid) > 200:
                 return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
             until = float(body.get("valid_until") or now + 30)
             if until - now > 600:                                     # the holder refuses it (`VmsWorker.MAX_VALID`): say so at the door
@@ -327,7 +348,10 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             for f in ("port", "state", "pulse_ms", "n"):
                 if body.get(f) is not None:
                     row[f] = str(body[f])
-            ctl.vars.put(ctl.spec.sub.request_key(rid), row)
+            try:
+                ctl.vars.put(ctl.spec.sub.request_key(rid), row, cas=0)
+            except Conflict:
+                row = ctl.vars.get(ctl.spec.sub.request_key(rid))[0] or row   # the same request, filed already: its row is the answer
             return 202, {"queued": {"id": rid, **row},
                          "detail": "the worker holding this device performs it on its next pass; "
                                    "after valid_until it expires unperformed"}

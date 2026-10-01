@@ -70,9 +70,10 @@ def test_a_model_on_a_camera_is_placed_on_a_gpu_worker_and_writes_its_own_bucket
     try:
         cpu, gpu = _det(box, "d-1", labels=""), _det(box, "d-2", labels="gpu")
         # from the camera's page: the console's token writes det's rows; the name is the operator's for the pair
-        st, r = call(base, "POST", "/det/units", {"name": "1-linecross", "cam": "1", "kind": "linecross", "params": "line=10,20;30,40"}, {"Idempotency-Key": "k1"})
+        unit = {"name": "1-linecross", "cam": "1", "kind": "linecross", "params": "line=10,20;30,40"}
+        st, r = call(base, "POST", "/det/units", unit, {"Idempotency-Key": "k1"})
         assert st == 201 and r["id"] == "1-linecross" and r["labels"] == ["gpu"] and r["worker"] is None
-        assert call(base, "POST", "/det/units", {"name": "1-linecross", "cam": "1", "kind": "linecross"}, {"Idempotency-Key": "k1"})[0] == 201   # the same POST
+        assert call(base, "POST", "/det/units", unit, {"Idempotency-Key": "k1"})[0] == 201   # the same POST: the same body under the same key
         assert call(base, "POST", "/det/units", {"name": "x", "cam": "1", "kind": "motion", "worker": "d-2"}, {"Idempotency-Key": "k2"})[0] == 400  # placement is not the operator's
         try:
             SpecController(DET_SPEC, box.vars.as_writer("console", DET_SPEC.acl_console()), box.objects, wall=box.wall).place("1-linecross")

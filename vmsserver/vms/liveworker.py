@@ -108,6 +108,7 @@ class LiveWorker(Worker):
         self.resets = 0                                             # subscriptions reopened because the camera moved or the source died
         self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
+        self._unplaced_since: dict[str, float] = {}                 # stream rows nobody holds -> when this gateway first saw them so
         self.lock = threading.Lock()
 
     # -- where a camera's RTP is: the VMS heartbeat, never a call to the worker ----------------------
@@ -131,30 +132,63 @@ class LiveWorker(Worker):
         return server, st["live_url"], int(st.get("epoch", 0))
 
     # -- the reconcile pass: make the subscriptions equal the assignment -------------------------------
+    # The store is read BEFORE the lock and written AFTER it; under the lock only `upstreams` and `sessions`
+    # change. It used to hold the lock across every heartbeat read, the epochs and the row deletes, and `offer`
+    # waits for the same lock: a store that answered slowly held every viewer at the door for as long as it took
+    # (the review's second pass, minor).
     def reconcile_once(self, now: float | None = None) -> list[str]:
         now = self.wall() if now is None else now
         a = self.assignment()
         wanted = set(a.units)
+        sources = {cam: self.rtp_source(cam) for cam in wanted}  # where every wanted camera is NOW: new ones, and the recheck of the old
+        with self.lock:
+            fresh = wanted - set(self.upstreams)
+            idle = [cam for cam, up in self.upstreams.items() if not up.peers and up.idle_since is not None]
+        for cam in fresh:
+            if sources[cam] is not None and cam not in self.epochs:
+                self.take_epoch(cam)                                # one gateway per fan-out, fenced like any unit
+        rows = {cam: self.ctl.unit(cam) for cam in idle} if self.ctl is not None else {}
+        orphans = self._orphans(now, wanted) if self.ctl is not None else []
+        dropped, deleted = [], []
         with self.lock:
             for cam in wanted - set(self.upstreams):
-                src = self.rtp_source(cam)
-                if src is None:
+                src = sources.get(cam)
+                if src is None or cam not in self.epochs:
                     continue                                        # the camera is not recording anywhere: wait, say so in the heartbeat
-                if cam not in self.epochs:
-                    self.take_epoch(cam)                            # one gateway per fan-out, fenced like any unit
                 self.upstreams[cam] = Upstream(cam, *src); self.subscriptions += 1
                 self.upstreams[cam].idle_since = now
             for cam in set(self.upstreams) - wanted:                # taken away (rebalanced, deleted): drop viewers, close the source
-                self._drop(cam)
-            self._recheck(now)
+                self._drop(cam, release=False); dropped.append(cam)
+            self._recheck(now, sources)
             self._sweep(now)
             # the grace period: an idle fan-out is deleted by the gateway itself — demand-created, demand-deleted
             for cam, up in list(self.upstreams.items()):
-                if not up.peers and up.idle_since is not None and self.ctl is not None:
-                    row = self.ctl.unit(cam)
-                    if row is not None and now - up.idle_since >= int(row.get("grace", 30)):
-                        self.ctl.delete(cam)                        # the controller's next pass takes the placement back
+                row = rows.get(cam)
+                if not up.peers and up.idle_since is not None and row is not None and now - up.idle_since >= int(row.get("grace", 30)):
+                    deleted.append(cam)
+        for cam in dropped:
+            self.release(cam)
+        for cam in deleted + orphans:
+            self.ctl.delete(cam)                                    # the controller's next pass takes the placement back
         return sorted(self.upstreams)
+
+    # A stream row nobody holds and nobody is about to: a viewer asked for labels no gateway carries, or the row
+    # outlived its controller. It stood for ever, and every next viewer of that camera was told 503 "retry" (the
+    # review's second pass, major). A row seen unplaced for its own `grace` — by this gateway's wall clock from
+    # the pass that first saw it — is deleted by whichever gateway sees it so, with the token that deletes idle
+    # fan-outs already; the next viewer makes a fresh row, with labels the console now checks against the
+    # gateways that are there (`LiveFront.offer`).
+    def _orphans(self, now: float, wanted: set) -> list[str]:
+        out = []
+        unplaced = {str(r["id"]): r for r in self.ctl.units() if str(r["id"]) not in wanted and self.ctl.placement(r["id"]) is None}
+        for cam in list(self._unplaced_since):
+            if cam not in unplaced:
+                del self._unplaced_since[cam]                      # placed, or gone
+        for cam, row in unplaced.items():
+            since = self._unplaced_since.setdefault(cam, now)
+            if now - since >= int(row.get("grace", 30)):
+                out.append(cam); del self._unplaced_since[cam]
+        return out
 
     # A session ends with DELETE — when the viewer says so. A tab closed, a laptop lid shut, an offer whose
     # connection never came up say nothing, and their sessions stayed: the fan-out was never idle, so the unit
@@ -170,9 +204,9 @@ class LiveWorker(Worker):
     # compares `(url, epoch)` with what the holder's heartbeat says NOW, and asks the source whether it is
     # alive. Moved, or dead: the viewers are hung up on — their page connects again by itself — and the
     # subscription takes the new address; the first viewer back opens the source where the camera is.
-    def _recheck(self, now: float) -> None:
+    def _recheck(self, now: float, sources: dict | None = None) -> None:
         for cam, up in list(self.upstreams.items()):
-            src = self.rtp_source(cam)
+            src = sources[cam] if sources is not None and cam in sources else self.rtp_source(cam)
             alive = getattr(getattr(up, "pipeline", None), "alive", None)
             dead = callable(alive) and not alive()
             if src is None or ((src[1], src[2]) == (up.url, up.epoch) and not dead):
@@ -206,14 +240,15 @@ class LiveWorker(Worker):
             if not up.peers:
                 up.idle_since = now
 
-    def _drop(self, cam: str) -> None:
+    def _drop(self, cam: str, release: bool = True) -> None:
         up = self.upstreams.pop(cam)
         for sid, (c, peer) in list(self.sessions.items()):
             if c == cam:
                 peer.close(); del self.sessions[sid]; self.session_at.pop(sid, None)
         if getattr(up, "pipeline", None) is not None:              # the real media path (gstvms.webrtc): close the source
             up.pipeline.close()
-        self.release(cam)
+        if release:
+            self.release(cam)                                       # the pass does this after its lock: a store write
 
     # -- WHEP ----------------------------------------------------------------------------------------
     def offer(self, cam: str, sdp: str) -> tuple[str, str]:

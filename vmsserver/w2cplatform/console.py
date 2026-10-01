@@ -95,6 +95,7 @@ from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
                        is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
+from .eventdatabase import refence
 from .events import ALARM, EventLog
 
 
@@ -260,11 +261,14 @@ class IdempotencyKeys:
     serves it; it never repeats the write. Keys older than `ttl` are pruned
     on the way past, at most once a minute."""
 
-    # `prefix` is `<sub>/idem/`; `wall` stamps `at`; `clock` rate-limits pruning; `sleep` is the wait
-    # between polls (injected for tests).
+    # `prefix` is `<sub>/idem/`; `wall` stamps `at`; `clock` rate-limits pruning and ages a pending claim;
+    # `sleep` is the wait between polls (injected for tests).
     def __init__(self, vars_, prefix: str, wall, ttl: float = 86400.0, clock=time.monotonic, sleep=time.sleep):
         self.vars, self.prefix, self.wall, self.ttl, self.clock, self.sleep = vars_, prefix, wall, ttl, clock, sleep
         self._pruned = -1e9
+        self._seen: dict[str, tuple[int, float]] = {}    # pending claim -> (its revision, when THIS process first saw it)
+        self._mine: dict[str, dict] = {}                 # the claims this process holds: whose, and of what body
+        self._reserved: dict[str, str] = {}              # claims taken over -> the id the first attempt reserved
 
     # Refuses an empty key, one containing `/` or `..`, or longer than 200 chars (`Refused`: must be one
     # path segment) and returns `prefix + key`.
@@ -273,17 +277,42 @@ class IdempotencyKeys:
             raise Refused("Idempotency-Key must be one path segment")
         return self.prefix + key
 
-    # Try `put({state: pending, at}, cas=0)`: success means ours to answer — return `None` (the caller does
-    # the write, then `store`). On `Conflict`, another instance holds it: poll up to 40 × 50 ms; if the row
-    # vanished (pruned or the claimant crashed mid-flight) claim again; if `state == done` return `(status,
+    # Whose request, and of what: `sub` and the sha256 of the body go into the claim, so a replay is answered
+    # only to the same caller with the same body.
+    @staticmethod
+    def _tag(sub, body) -> dict:
+        import hashlib
+        out = {}
+        if sub is not None:
+            out["sub"] = str(sub)
+        if body is not None:
+            out["sha256"] = hashlib.sha256(body if isinstance(body, bytes) else str(body).encode()).hexdigest()
+        return out
+
+    # A key is a name for ONE request by ONE caller. Replayed by somebody else, or with another body, it used to be
+    # answered with the first caller's reply — a stranger got anna's 201, and anna's own second mark under a reused
+    # key was silently not written (the review's second pass, minor). A claim that carries no tag — written before
+    # tags, or by a test — matches anybody, as it did.
+    @staticmethod
+    def _mismatch(items: dict, tag: dict):
+        for k in ("sub", "sha256"):
+            if k in items and k in tag and items[k] != tag[k]:
+                return 422, {"detail": "this Idempotency-Key names another request: a key is one caller's, for one body",
+                             "error": "key reused"}
+        return None
+
+    # Try `put({state: pending, at, sub, sha256}, cas=0)`: success means ours to answer — return `None` (the
+    # caller does the write, then `store`). On `Conflict`, another instance holds it: poll up to 40 × 50 ms; if the
+    # row vanished (pruned or the claimant crashed mid-flight) claim again; if `state == done` return `(status,
     # body)`; after the polls, `409 in flight`. `test_a_retry_that_lands_on_another_console_is_one_camera`
     # covers all of it: the second console returns the first's 201 body; a key with a pending claim makes
     # console A wait and then serve B's reply without creating a camera; a key `a/b` is 400.
-    def claim(self, key: str):
+    def claim(self, key: str, sub=None, body=None):
         """None: ours to answer — do the write, then store(). Else the reply to serve."""
-        path = self._path(key)
+        path, tag = self._path(key), self._tag(sub, body)
         try:
-            self.vars.put(path, {"state": "pending", "at": self.wall()}, cas=0)   # create-only: the first claimant wins
+            self.vars.put(path, {"state": "pending", "at": self.wall(), **tag}, cas=0)   # create-only: the first claimant wins
+            self._mine[path] = tag
             self.prune()
             return None
         except Conflict:
@@ -291,37 +320,77 @@ class IdempotencyKeys:
         for _ in range(40):                                              # another instance holds it: its reply, when it lands
             items, idx = self.vars.get(path)
             if items is None:
-                return self.claim(key)                                   # pruned or crashed mid-flight: claim again
+                self._seen.pop(path, None)
+                return self.claim(key, sub, body)                        # pruned or crashed mid-flight: claim again
+            wrong = self._mismatch(items, tag)
+            if wrong is not None:
+                return wrong                                             # somebody else's key, or another body under it: not this reply
             if items.get("state") == "done":
+                self._seen.pop(path, None)
                 return int(items["status"]), json.loads(items["body"])
-            # A claim older than `PENDING_TTL` is nobody's: its console crashed between the claim and the reply,
-            # or its write raised. It used to stand for the key's whole day, answering every correct retry
-            # with 409 (the platform review; feedback BG). The next request takes it over, by CAS, and does
-            # the work.
-            if self.wall() - float(items.get("at", 0)) >= self.PENDING_TTL:
+            # A claim that has stood still for `PENDING_TTL` is nobody's: its console crashed between the claim
+            # and the reply, or its write raised. It used to stand for the key's whole day, answering every
+            # correct retry with 409 (the platform review; feedback BG). The next request takes it over, by
+            # CAS, and does the work.
+            #
+            # "Stood still" is judged by THIS process's monotonic clock from the moment it first saw this
+            # revision of the claim — never by the `at` another console wrote with its own wall clock (the
+            # review's second pass, major): a console a minute behind its neighbour read every fresh claim as
+            # stale, took it over and created the second camera. A claim re-made by somebody else is a new
+            # revision, and the count starts again.
+            first = self._seen.get(path)
+            if first is None or first[0] != idx:
+                first = self._seen[path] = (idx, self.clock())
+            if self.clock() - first[1] >= self.PENDING_TTL:
+                kept = {"id": items["id"]} if "id" in items else {}       # the id the first attempt reserved: ours to create under
                 try:
-                    self.vars.put(path, {"state": "pending", "at": self.wall()}, cas=idx)
+                    self.vars.put(path, {"state": "pending", "at": self.wall(), **tag, **kept}, cas=idx)
+                    self._seen.pop(path, None)
+                    self._mine[path] = tag
+                    if kept:
+                        self._reserved[path] = kept["id"]
                     return None
                 except Conflict:
                     continue
             self.sleep(0.05)
+        if len(self._seen) > 1000:                                       # claims nobody came back for: forgotten past the TTL
+            cutoff = self.clock() - self.PENDING_TTL
+            self._seen = {p: v for p, v in self._seen.items() if v[1] > cutoff}
         return 409, {"detail": "the same request is in flight on another console", "error": "in flight"}
 
     PENDING_TTL = 30.0
 
-    # Overwrite the row with `{state: done, status, body: json, at}` (no CAS: the claimant owns it).
+    # The id a create is about to use, written into the claim BEFORE the row (`SpecController.create(reserve=)`).
+    # A console that dies between the two leaves a claim that names the unit: whoever takes the claim over
+    # creates under that id, or finds it created and answers with it — one camera either way (the product's
+    # `Reserve`, feedback CS). Without it a lost reply and a write never made were the same claim, and the
+    # retry made the second camera.
+    def reserve(self, key: str, uid) -> None:
+        path = self._path(key)
+        self.vars.put(path, {"state": "pending", "at": self.wall(), **self._mine.get(path, {}), "id": str(uid)})
+
+    def reserved(self, key: str):
+        """The id reserved by the attempt this process took the claim over from, if it got that far; else None."""
+        return self._reserved.pop(self._path(key), None)
+
+    # Overwrite the row with `{state: done, status, body: json, at}` plus the claim's tag (no CAS: the claimant
+    # owns it).
     #
     # A 5xx is NOT remembered: "the store is away" is not an answer to the request, and kept under the key it was
     # the answer to every retry for a day. The claim is let go instead, and the retry does the work.
     def store(self, key: str, resp: tuple[int, dict]) -> None:
         if int(resp[0]) >= 500:
             return self.release(key)
-        self.vars.put(self._path(key), {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall()})
+        path = self._path(key)
+        tag = self._mine.pop(path, {})
+        self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall(), **tag})
 
     def release(self, key: str) -> None:
         """Let a claim go: the write it stood for did not happen."""
+        path = self._path(key)
+        self._mine.pop(path, None); self._reserved.pop(path, None)
         try:
-            self.vars.delete(self._path(key))
+            self.vars.delete(path)
         except Exception:                                                # noqa: BLE001 — it will age out in `PENDING_TTL`
             pass
 
@@ -371,8 +440,11 @@ class SpecConsole:
         self.gate = Gate(ctl.vars, self.wall, lambda: self.journal)   # who is calling, and may they (`access.py`)
         self.seen = IdempotencyKeys(ctl.vars, f"{self.spec.name}/idem/", self.wall)   # in the store: any instance answers a retry
         self.epoch_policy: dict[str, str] = {self.spec.name: self.spec.older_epochs}   # replaced by the Mount's shared one
+        self.clock = time.monotonic                      # ages the caches below; a test sets its own
         self._scan: tuple[float, dict] = (-1e9, {})
         self.scans = 0
+        self._epochs: tuple[float, dict] = (-1e9, {})
+        self.epoch_scans = 0
 
     # The operator's view of a window, which is NOT the index's view of it.
     #
@@ -427,6 +499,37 @@ class SpecConsole:
         if now - self._scan[0] >= 5.0:
             self._scan = (now, {w: a.units for w, a in self.ctl.assignments().items()}); self.scans += 1
         return self._scan[1]
+
+    # -- every subsystem's epochs, for the timeline's fence --------------------------------------
+    # `{(subsystem, unit): epoch}` from every `<sub>/epoch/<unit>` row — the one scan of the WHOLE store the
+    # console makes, and it made it on every `GET /events`: a thousand cameras, a page polling every three
+    # seconds, ten operators — thousands of reads a second to the store, the leases' CAS queueing behind
+    # them (the review's second pass, major). Cached for `EPOCH_CACHE` seconds of monotonic time, like the
+    # directory: an epoch that changed inside the window shows as current for those seconds and fenced on
+    # the next refresh, which is the lag the timeline already has from the resources' side.
+    EPOCH_CACHE = 3.0
+
+    def epochs(self) -> dict:
+        now = self.clock()
+        if now - self._epochs[0] >= self.EPOCH_CACHE:
+            vars_ = self.ctl.vars
+            self._epochs = (now, {(p.split("/")[0], p.rsplit("/", 1)[1]): current_epoch(vars_, p)
+                                  for p in vars_.list("") if "/epoch/" in p})
+            self.epoch_scans += 1
+        return self._epochs[1]
+
+    # The epochs of the units IN an answer — a camera's, or one unit's: a handful of rows read by name, no scan,
+    # and read now, so a fence that fell a moment ago shows. `pairs` is `{(subsystem, unit)}`.
+    def epochs_of(self, pairs) -> dict:
+        out = {}
+        for sub, unit in pairs:
+            try:
+                e = current_epoch(self.ctl.vars, f"{sub}/epoch/{unit}")
+            except (ValueError, KeyError):
+                continue                                 # no epoch row, or a torn one: the events stand as their resource marked them
+            if e:
+                out[(sub, unit)] = e
+        return out
 
     # Every worker whose assignment lists the unit, joined with `+` — a reassignment window shows as both.
     # Compared against the placement row in `/where`.
@@ -585,10 +688,12 @@ class SpecConsole:
 
     # -- writes ---------------------------------------------------------------------------------
     # `ctl.create(body)` → 201 with the row plus `worker: None` (placed by the controller's next pass, never
-    # by the console); `Refused` → 400 `{detail, error}`.
-    def create(self, body: dict) -> tuple[int, dict]:
+    # by the console); `Refused` → 400 `{detail, error}`. Under `key`, the new id goes into the claim first,
+    # and a claim taken over creates under the id it names (`IdempotencyKeys.reserve`).
+    def create(self, body: dict, key: str | None = None) -> tuple[int, dict]:
         try:
-            r = self.ctl.create(body)
+            r = self.ctl.create(body, uid=self.seen.reserved(key) if key else None,
+                                reserve=(lambda uid: self.seen.reserve(key, uid)) if key else None)
             # Masked, like every other way out. This reply is ALSO what `IdempotencyKeys` stores to answer a
             # retry, so an unmasked one puts a second copy of the secret in the config store under a key
             # nobody thinks to look at — which is exactly how this was got wrong the first time.
@@ -686,8 +791,10 @@ class SpecConsole:
     #   - `GET /servers` — `servers()`: per server, `archive` (what its workers record into — Nomad's `meta.archive`
     #     on a cluster), `resource` (`live | silent | unknown`), `workers`, `placeable` and `why`.
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
-    #         - `GET /events?from&to&cam|unit&kind&subsystem&limit&keep&class` — 503 if no index; else builds
-    #       `current_epochs` from every `<sub>/epoch/*` row and calls `index.query`. A numeric `unit` is
+    #         - `GET /events?from&to&cam|unit&kind&subsystem&limit&keep&class` — 503 if no index; else
+    #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and
+    #       `index.query`; with `cam` or `unit`, the query runs unfenced and the answer is fenced by the epochs of
+    #       the units in it (`epochs_of`, `refence`), read by name. A numeric `unit` is
     #       treated as `cam`; a non-numeric one is passed as `unit`. `keep` is "newest" (default) or
     #       "oldest", 400 if it is neither; the reply carries `truncated` when the window did not fit.
     #   - `GET /metrics` — `metrics_text()` as `text/plain`.
@@ -831,12 +938,19 @@ class SpecConsole:
             h.end_headers(); h.wfile.write(data)
         return True
 
-    def _idem(self, h):
+    # The claim names the caller (`X-User` — the name the gate proved, where there is a gate) and the body, so a
+    # replay by anybody else, or of anything else, is 422 and not the first caller's reply. The body is read here
+    # and put back, as `_named` does.
+    def _idem(self, h, required: bool = True):
         key = h.headers.get("Idempotency-Key")
         if not key:
-            h._send(400, {"detail": "Idempotency-Key header is required", "error": "Idempotency-Key required"}); return None
+            if required:
+                h._send(400, {"detail": "Idempotency-Key header is required", "error": "Idempotency-Key required"})
+            return None
+        raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
+        h.rfile = io.BytesIO(raw)
         try:
-            prior = self.seen.claim(key)
+            prior = self.seen.claim(key, h.headers.get("X-User", "operator"), raw)
         except Refused as e:
             h._send(400, {"detail": str(e), "error": str(e)}); return None
         except OSError as e:                                             # the store, not the request: a client told 400 does not retry
@@ -844,6 +958,18 @@ class SpecConsole:
         if prior is not None:
             h._send(*prior); return None
         return key
+
+    # The reply, remembered under the key — and sent whether or not it could be remembered. The write HAPPENED:
+    # a store that did not take the reply is a log line, not a 503 that sends the client back to make a second
+    # camera (the review's second pass, major). The claim stays pending; a retry inside `PENDING_TTL` waits on
+    # it, and past it takes it over — the one window left, and it needs the store to fail twice.
+    def _remember(self, key: str | None, resp: tuple) -> None:
+        if not key:
+            return
+        try:
+            self.seen.store(key, resp)
+        except OSError as e:
+            log.warning("%s: the reply to %s was sent but not remembered under its key: %s", self.spec.name, key, e)
 
     # A write that RAISED under a claimed key: the claim is let go — nothing was written that the key could
     # answer for — and the reply says whose fault it was. The store: 503, which a client retries. Anything
@@ -950,8 +1076,11 @@ class SpecConsole:
             if path == "/events":
                 if con.index is None:
                     return h._send(503, {"error": "no event index behind this console"})
-                cur = {(p.split("/")[0], p.rsplit("/", 1)[1]): current_epoch(ctl.vars, p) for p in ctl.vars.list("") if "/epoch/" in p}   # every subsystem's epochs: the timeline shows them all
                 cam = q.get("cam") or (q.get("unit") if (q.get("unit") or "").isdigit() else None)
+                # Every subsystem's epochs, from the cache — the timeline shows them all. A camera's or one unit's
+                # timeline reads only the epochs of the units in ITS answer, after the query, and fences again.
+                narrow = bool(cam or q.get("unit"))
+                cur = {} if narrow else con.epochs()
                 try:                                          # the operator's timeline: `limit` is theirs to set, and
                                                               # `keep` says which end of a busy hour they get
                     t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
@@ -961,6 +1090,8 @@ class SpecConsole:
                                           limit=min(int(q.get("limit", 1000)), MAX_LIMIT),
                                           epoch_policy=con.epoch_policy, keep=q.get("keep", "newest"),
                                           cls=q.get("class"), by=q.get("by", "t"))
+                    if narrow:
+                        refence(rep["events"], con.epochs_of({(e["subsystem"], e["unit"]) for e in rep["events"]}), con.epoch_policy)
                     sees = self._visible(h)
                     if sees is not None:                 # …and so are the events: a unit's, to whoever may view that unit;
                         known: dict = {}                 # what names no unit — the journal — to whoever may view the whole cluster
@@ -992,10 +1123,10 @@ class SpecConsole:
                 if path == "/marks":
                     resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
                 else:
-                    resp = con.create(h._body())
+                    resp = con.create(h._body(), key)
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
-            con.seen.store(key, resp); return h._send(*resp)
+            self._remember(key, resp); return h._send(*resp)
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
                 try:
@@ -1011,22 +1142,14 @@ class SpecConsole:
                 uid, _, field = rest.partition("/")
                 n = int(h.headers.get("Content-Length", 0))
                 return h._send(*con.put_blob(spec.parse_id(uid), field, h.rfile.read(n)))
-            key = h.headers.get("Idempotency-Key")
-            if key:
-                try:
-                    prior = con.seen.claim(key)
-                except Refused as e:
-                    return h._send(400, {"detail": str(e), "error": str(e)})
-                except OSError as e:
-                    return h._send(503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"})
-                if prior is not None:
-                    return h._send(*prior)
+            key = self._idem(h, required=False)                          # optional here: a PUT is its own retry
+            if key is None and h.headers.get("Idempotency-Key"):
+                return                                                   # a prior reply, a refused key or 503: already sent
             try:
                 resp = con.update(self._uid(path), h._body())
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
-            if key:
-                con.seen.store(key, resp)
+            self._remember(key, resp)
             return h._send(*resp)
         if method == "DELETE":
             if not path.startswith(rows_path + "/"):

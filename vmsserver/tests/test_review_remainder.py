@@ -231,8 +231,35 @@ def test_a_command_carries_a_deadline_and_a_near_one():
     from vms.worker import VmsWorker
     route = vms_routes(None, None, con)
     far = json.dumps({"unit": str(door), "action": "output", "port": 1, "valid_until": now + 601}).encode()
-    body = type("H", (), {"headers": {"Content-Length": str(len(far))}, "rfile": io.BytesIO(far)})()
-    assert route(body, "POST", "/requests", {})[0] == 400 and MAX_VALID_FOR == VmsWorker.MAX_VALID
+    body = type("H", (), {"headers": {"Content-Length": str(len(far)), "Idempotency-Key": "far-1"}, "rfile": io.BytesIO(far)})()
+    assert route(body, "POST", "/requests", {})[1]["error"] == "too far" and MAX_VALID_FOR == VmsWorker.MAX_VALID
+
+
+def test_a_command_retried_is_one_command():
+    """M17 of the platform review, left open in its second pass: `POST /requests` named the row by the clock, so a
+    retried click — the page's, a proxy's — filed a second command and the door pulsed twice. The `Idempotency-Key`
+    is required and is the row's name (unless the body names one); the row is written create-only, and the retry
+    finds it and is answered the same 202. Without the key: 400, before anything is looked at."""
+    from vms.console import vms_routes
+    box = Box(); con, door, w = _door(box)
+    route = vms_routes(None, None, con)
+
+    def post(key, **fields):
+        data = json.dumps({"unit": str(door), "action": "output", "port": 1, **fields}).encode()
+        headers = {"Content-Length": str(len(data)), **({"Idempotency-Key": key} if key else {})}
+        return route(type("H", (), {"headers": headers, "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
+
+    assert post(None)[0] == 400 and post(None)[1]["error"] == "Idempotency-Key required"
+    assert box.vars.list("vms/requests/") == []
+    first = post("click-1")
+    assert first[0] == 202 and first[1]["queued"]["id"] == "click-1"
+    box.wall.advance(3)
+    assert post("click-1") == first                                       # the same request: the row it filed, not a second one
+    assert box.vars.list("vms/requests/") == [SPEC.sub.request_key("click-1")]
+    assert post("click-2")[0] == 202 and len(box.vars.list("vms/requests/")) == 2   # another click is another command
+    assert post("a/b")[1]["error"] == "bad id"                            # a key is a name, not a path
+    assert post("click-3", id="by-name")[1]["queued"]["id"] == "by-name"  # a body may still name its request
+    assert [d["request"] for d in w.requests()] == ["by-name", "click-1", "click-2"] and w.commands["performed"] == 3
 
 
 def test_a_command_another_instance_began_is_not_performed_again():

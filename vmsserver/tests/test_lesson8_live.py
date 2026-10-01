@@ -191,6 +191,33 @@ def test_placement_by_label_a_stream_for_outside_viewers_needs_a_public_address(
         srv.shutdown(); srv.server_close()
 
 
+def test_a_label_no_gateway_carries_is_refused_and_a_stream_nobody_places_does_not_stand_for_ever():
+    """The review's second pass, major: `POST /whep/7?labels=nowhere` made a row nothing could place, and every next
+    viewer of camera 7 was told 503 "retry" — for ever. Two halves. The console accepts only labels some live
+    gateway carries, and says which it refused and which exist, so the row is never made. And a row that IS
+    unplaced — its controller away, its gateways gone — is deleted by any gateway that has seen it stand so for the
+    row's own `grace`, with the token that deletes idle fan-outs already; the next viewer makes a fresh one."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1", labels="rack-7")
+        code, body, _ = _whep(base, 1, path="/whep/1?labels=nowhere,rack-7")
+        assert code == 400 and "nowhere" in json.loads(body)["error"] and "rack-7" in json.loads(body)["detail"]
+        assert live_ctl.unit("1") is None                                                # no row: nothing to stand for ever
+        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503 and live_ctl.unit("1")["labels"] == ["rack-7"]
+        # a row the controller never placed (it is away): seen so for `grace`, the gateway deletes it
+        box.vars.put("live/streams/2", {"id": "2", "cam": "2", "labels": "nowhere", "grace": "30", "revision": "1"})   # a row from before this rule
+        assert g.reconcile_once() == [] and live_ctl.unit("2") is not None               # first seen: the count starts
+        box.wall.advance(20); g.reconcile_once()
+        assert live_ctl.unit("2") is not None and live_ctl.unit("1") is not None          # inside the grace: a pass away from placement, maybe
+        box.wall.advance(11); g.reconcile_once()
+        assert live_ctl.unit("2") is None and live_ctl.unit("1") is None                  # both unplaced for 31 s: gone; the next viewer makes a fresh row
+        assert _whep(base, 1, path="/whep/1?labels=rack-7")[0] == 503 and live_ctl.unit("1")["revision"] == 2
+        live_ctl.ensure_placed(); box.wall.advance(31); w.heartbeat_once(); g.reconcile_once()
+        assert live_ctl.unit("1") is not None and g.reconcile_once() == ["1"]            # placed on this gateway: not an orphan, whatever its age
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
     box, ctl, live_ctl, w, srv, base = _box()
     try:
@@ -369,6 +396,37 @@ def _try(fn):
         return fn()
     except Exception as e:                                             # noqa: BLE001
         return e
+
+
+def test_the_pass_reads_the_store_outside_the_lock_a_viewer_waits_for():
+    """The review's second pass, minor: the pass held the gateway's lock across its reads of the store — where every
+    camera is, each row's grace — and across its writes, and `offer` waits for the same lock. A store that answered
+    slowly held every viewer at the door for as long as it took. The store is read before the lock and written
+    after it; under it only the subscriptions and the sessions change."""
+    import threading
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        g = _gateway(box, "g-1")
+        _watched(base, live_ctl, g, viewers=0)
+        reading, go, inner = threading.Event(), threading.Event(), g.objects
+
+        class Slow:
+            """The object store, answering a heartbeat read only when the test says so."""
+            def get(self, key):
+                reading.set(); go.wait(10)
+                return inner.get(key)
+            def __getattr__(self, name): return getattr(inner, name)
+
+        g.objects = Slow()
+        t = threading.Thread(target=g.reconcile_once, daemon=True); t.start()
+        assert reading.wait(5)                                         # the pass is inside the store…
+        sid, _ = g.offer("1", OFFER)                                   # …and the viewer is answered without waiting for it
+        assert sid in g.sessions and t.is_alive()
+        go.set(); t.join(5)
+        assert not t.is_alive() and sid in g.sessions and g.upstreams["1"].peers      # the pass finished, and kept the viewer
+    finally:
+        g.objects = inner
+        srv.shutdown()
 
 
 
