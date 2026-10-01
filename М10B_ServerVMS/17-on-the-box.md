@@ -1,12 +1,12 @@
 # Урок 17 — На коробке
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/__main__.py` — десять точек входа, каждая со своим токеном; `deploy/` — тринадцать юнитов Quadlet, `Containerfile`, `vms.env.example`; `tests/test_deploy_units.py` — три теста, читающие юниты как код.
-**Время:** ~80 минут.
+**Вы напишете:** `vms/__main__.py` — десять точек входа, каждая со своим токеном; `deploy/` — по юниту Quadlet на процесс, `obsd.service` для движка архива, `Containerfile`, `vms.env.example`; `tests/test_deploy_units.py` — четыре теста, читающие юниты как код.
+**Время:** ~85 минут.
 
 ## Зачем этот урок
 
-Последний урок модуля, и в нём **нет ни одной новой мысли**. Всё, что в нём есть, — склейка написанного: какой процесс с каким токеном, что куда монтируется, что говорит `systemctl`.
+Последний урок модуля, и новых мыслей в нём почти нет. Всё, что в нём есть, — склейка написанного: какой процесс с каким токеном, что куда монтируется, что говорит `systemctl`.
 
 Проектная записка объясняет, почему это один урок, а не три:
 
@@ -14,35 +14,40 @@
 
 Но одна вещь в уроке важнее склейки, и ради неё он написан: **монтирования повторяют ACL**.
 
-Токен консоли не даёт писать размещение — и спул смонтирован ей только на чтение. Токен воркера не даёт писать строки камер — и спул ему не смонтирован вовсе. Одно и то же разграничение выражено дважды: в хранилище и в файловой системе.
+Токен контроллера не пишет ни строк камер, ни событий — и архива у него нет вовсе. Регистратор никогда не открывает камеру — и файлов камер ему не смонтировано. Видео не смонтировано никому: оно в томах, за демоном движка. Одно и то же разграничение выражено дважды: в хранилище и в файловой системе.
 
 Тест `test_who_may_write_where_is_in_the_mounts_too` проверяет это буквально, и его название — тезис урока: **«кто где может писать — это и в монтированиях тоже»**.
 
-Второе, ради чего урок написан: **юниты читаются как код**. Три теста разбирают `.container`-файлы и сверяют их с пакетом. Развёртывание перестаёт быть тем, что «правится на месте», и становится тем, что ломает сборку.
+Второе: **юниты читаются как код**. Четыре теста разбирают юниты и сверяют их с пакетом. Развёртывание перестаёт быть тем, что «правится на месте», и становится тем, что ломает сборку.
 
-> **Проверка без железа.** Три теста урока — да: они читают файлы и импортируют модуль. Настоящий запуск — коробка из М9 с podman.
+И третье, новое: **одна вещь на коробке — не контейнер**. Движок архива, `obsd`, — демон хоста со своим юнитом systemd. Почему не контейнер образа и почему один на коробку — шаг 5.
+
+> **Проверка без железа.** Четыре теста урока — да: они читают файлы и импортируют модуль. Настоящий запуск — коробка из М9 с podman и `obsd`, собранным из исходников ObjectStorage (шаг 5).
 
 ## Что нужно знать заранее
 
 - **Уроки 1–14** — все четыре подсистемы: урок их расставляет.
 - **М10A, урок 2** — ACL и токены: то, что здесь повторяется монтированиями.
 - **М9, урок 5** — A/B-корень и раздел данных: почему конфигурация лежит там, где лежит.
-- **Урок 6** — `StopTimeout` и открытый сегмент.
+- **Урок 6** — [`obsd`](06-objectstorage-the-engine.md): движок архива — процесс, один писатель на том на хосте, отцепленный писатель ждёт своего владельца.
+- **Урок 10** — [`after_stop`](10-recworker.md): писатель закрывается после сброса, и только потом отпускается захват тома.
 
 ## Чему вы научитесь
 
 1. Давать каждому процессу токен уже, чем весь префикс подсистемы.
 2. Выражать одно разграничение двумя механизмами.
 3. Читать шаблонный юнит и понимать, что означает имя экземпляра.
-4. Проверять развёртывание тестами, а не глазами.
-5. Собирать один образ на десять процессов.
+4. Ставить на хост демон, которым пользуются контейнеры, и решать, что в контейнере, а что нет.
+5. Выводить сроки остановки из того, что процесс делает при остановке.
+6. Проверять развёртывание тестами, а не глазами.
+7. Собирать один образ на все процессы.
 
 ---
 
 ## Шаг 1 — Десять точек входа
 
 ```python
-"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller — the box's processes."""
+"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller — the box's processes.
 ```
 
 Четыре подсистемы дают **десять процессов**:
@@ -54,20 +59,20 @@
 | `live` | `livecontroller` | `gateway` | — |
 | `det` | `detcontroller` | `detworker` | — |
 
-Четыре контроллера, четыре воркера, консоль и ресурс. **Шесть из десяти — один и тот же класс с другой спецификацией**: контроллеры это `SpecController`, различающиеся строкой YAML.
+Четыре контроллера, четыре воркера, консоль и ресурс. **Шесть из десяти — один и тот же класс с другой спецификацией**: контроллеры это `SpecController`, различающиеся строкой YAML. Уроки 20–25 добавят ещё три пары — сканы, наблюдение за чужими архивами, автоматизацию — тем же способом, и тест в шаге 9 перечисляет уже все шестнадцать.
 
 Докстрока модуля — **справочник по окружению**, и стоит заметить одну строку:
 
 ```
-CAPACITY=50                      cameras this worker can carry
-RECORDER_NAME=r-1                CAPACITY here is recordings — this server's disks and NIC
-GATEWAY_NAME=g-1                 CAPACITY here is viewers
-DET_NAME=d-1                     CAPACITY here is streams
+CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
+RECORDER_NAME=r-1                a recorder's slot (systemd: %i); CAPACITY here is recordings — this server's disks and NIC
+GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
+DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
 ```
 
 **Одна переменная, четыре значения.** Примечание к файлу это подчёркивает: `CAPACITY` означает разное в зависимости от глагола.
 
-Спорно ли это? Немного: `WORKER_CAPACITY`, `RECORDER_CAPACITY` были бы однозначнее. И выигрыш от одного имени — в том, что оно **общее для шаблона подсистемы**: воркер, рекордер, шлюз и детектор читают одну переменную, потому что они один класс. Различие — не в имени переменной, а в том, что каждая подсистема считает своей единицей ёмкости (уроки 4, 10, 13, 14).
+Спорно ли это? Немного: `WORKER_CAPACITY`, `RECORDER_CAPACITY` были бы однозначнее. Выигрыш от одного имени — в том, что оно **общее для шаблона подсистемы**: воркер, регистратор, шлюз и детектор читают одну переменную, потому что они один класс. Различие — не в имени переменной, а в том, что каждая подсистема считает своей единицей ёмкости (уроки 4, 10, 13, 14).
 
 Комментарий в файле окружения снимает двусмысленность: он говорит, чем ёмкость является для каждого.
 
@@ -76,14 +81,14 @@ DET_NAME=d-1                     CAPACITY here is streams
 # Dispatch table on `sys.argv[1]`
 ```
 
-Диспетчер — словарь. Ни `argparse`, ни подкоманд, ни справки: десять имён, одно из них первым аргументом.
+Диспетчер — словарь. Ни `argparse`, ни подкоманд, ни справки: имена глаголов, одно из них первым аргументом.
 
 И примечание к модулю: **`__main__.py` — это склейка и ничего больше.** Никакой своей логики за пределами сборки. Это видно по тому, что все предыдущие уроки написали работающие объекты, не зная, кто их создаст.
 
 ## Шаг 2 — Токен уже, чем префикс
 
 ```python
-# - Три токена, три процесса: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
+# - Three tokens, three processes: `vmsworker` (epochs, slots), `vmscontroller` (placement), `console`
 #   (the operator's rows). Together they partition `vms/*`; none of them can do another's job.
 ```
 
@@ -99,49 +104,58 @@ DET_NAME=d-1                     CAPACITY here is streams
 
 Обе ACL вырезаны из **одной спецификации** (`SPEC.acl_console()`, `SPEC.acl_controller()`, урок 10 М10A). Добавили поле — обе обновились; нового места для рассинхронизации не появилось.
 
+То же правило у регистратора, и урок 10 рассказал, как его однажды нарушили: процесс `recorder` открывал хранилище со списком прав, написанным руками, и без `rec/holds/*` не мог взять собственный том. Теперь его права — `REC_SPEC.sub.acl_worker()`, выведенные из спецификации (`test_the_recorder_process_holds_a_token_that_can_take_a_volume`).
+
 И примечание договаривает:
 
 > *The mounts in `deploy/` repeat the same split in bytes.*
 
 ## Шаг 3 — Монтирования как вторая ACL
 
-Вот тест целиком — он короче, чем объяснение:
+Вот тест — он короче, чем объяснение:
 
 ```python
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
-    The controller has no archive at all; the console cannot write the spool."""
-    assert "/data/archive" not in vols("vmscontroller.container") and "/data/spool" not in vols("vmscontroller.container")
-    assert vols("console.container")["/data/spool"].endswith(":ro,z")                # reads, never records
-    assert "/data/spool" not in vols("vmsworker@.container")                            # the worker records nothing: no spool
+    The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
+    vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
+    assert "/data/archive" not in vols("vmscontroller.container")
+    for n in os.listdir(DEPLOY):
+        if n.endswith(".container"):
+            assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
     assert vols("vmsworker@.container")["/data/archive"] == "/data/archive:z"          # its events, vms/<cam>/, on this box's resource
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
-    assert vols("recworker@.container")["/data/spool"] == "/data/spool:z"            # the recorder is the only writer of segments
+    assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]
+    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory — and the daemon's socket
     assert "/data/archive" not in vols("reccontroller.container")
-    assert vols("resource.container")["/data/spool"].endswith(":ro,z")               # the resource never records
+    assert vols("resource.container")["/data/platform"] == "/data/platform:z"       # the heartbeat is written; rows are only read
+    assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
+    assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
+    assert unit("resource.container")["Service"]["Restart"] == "always"             # a process, not a timer: the database lives in it
 ```
 
 Каждая строка — утверждение из модуля, выраженное монтированием.
 
-**У контроллера нет ни архива, ни спула.** Он вычисление над хранилищами (урок 1); байтов видео он не касается вовсе. Ошибка в контроллере не может испортить архив — не потому, что код правильный, а потому что архива у него нет.
+**У контроллера нет архива.** Он вычисление над хранилищами (урок 1); ни событий, ни видео он не касается. Ошибка в контроллере не может испортить архив — не потому, что код правильный, а потому что архива у него нет.
 
-**Консоль: спул только на чтение.** Она читает и никогда не записывает (урок 12). Архив у неё на запись — из-за отметок оператора, которые ложатся в её собственный бакет.
+**Спула нет ни у кого.** Это не строка про один юнит, а цикл по всем `.container` каталога. Видео не пишется в файлы, которые можно смонтировать: регистратор отдаёт кадры демону `obsd` через сокет, а демон пишет в том (урок 10). Цикл сторожит, чтобы локальная очередь не вернулась «на время» ни в одном юните.
 
-**У воркера нет спула.** Строка, в которой всё решение модуля: **воркер не пишет видео** (урок 4). Нет спула — нечем.
+**Воркеру архив на запись — только ради событий.** `vms/<cam>/`, бакеты событий камеры. В `rec/` он не пишет никогда, и это уже не монтирование, а дисциплина кода. Видео он не пишет вовсе (урок 4): стока в том в его конвейере нет (урок 9).
 
-Архив ему на запись — но только ради `vms/<cam>/`, бакетов событий. В `rec/` он не пишет никогда, и это уже не монтирование, а дисциплина кода.
+**Медиа воркеру только на чтение**, регистратору — **не смонтированы вовсе**, и комментарий объясняет: *он никогда не читает камеру, он подписывается на раздачу.* Регистратор, у которого нет доступа к файлам камер, физически не может открыть второе соединение.
 
-**Медиа воркеру только на чтение**, рекордеру — **не смонтированы вовсе**, и комментарий объясняет: *он никогда не читает камеру, он подписывается на раздачу.* Рекордер, у которого нет доступа к файлам камер, физически не может открыть второе соединение.
+**Регистратору архив на запись — по двум причинам.** Первая — его события: `archive.shallow`, `archive.keep.*` под `rec/` на ресурсе этого сервера. Вторая — путь собственного тома сервера, `$ARCHIVE/volume` (урок 10, шаг 8). Регистратор не пишет в этот каталог сам: он называет путь демону, и том открывает демон. Поэтому путь обязан совпадать на хосте и в контейнере — `/data/archive` смонтирован в тот же `/data/archive`. Объявленный локальный том — тоже путь на хосте, который открывает демон, и монтировать его регистратору не нужно вовсе.
 
-**`/run/vms` — и у воркера, и у рекордера**, одинаково на запись. Разделяемая память (урок 4): воркер пишет, рекордер читает. Комментарий в тесте отмечает: *tmpfs, не состояние* — единственное монтирование вне `/data`, и обновление системы не обязано его сохранять.
+**`/run/vms` — и у воркера, и у регистратора**, одинаково на запись. Там две вещи. Разделяемая память раздачи (урок 4): воркер пишет, регистратор на том же сервере читает. И сокет демона, `obsd.sock`: через него регистратор говорит с движком. Это tmpfs, а не состояние — единственное монтирование вне `/data`, и обновление системы не обязано его сохранять.
 
-**У контроллера записей нет архива.** Он тоже только вычисление, хотя его подсистема — про диски.
+**У контроллера записей нет архива.** Он тоже только вычисление, хотя его подсистема — про тома.
 
-**Ресурс: спул только на чтение.** Он ничего не записывает: перенос делает рекордер, а ресурс только конструирует объект архива.
+**Ресурсу хранилище платформы на запись** — ради heartbeat'а; строки он только читает.
 
-Десять утверждений, и каждое — **вторая линия обороны**. Первая — токен в хранилище, вторая — файловая система. Ошибка должна пробить обе.
+Две последние проверки — про регистратор и его остановку: `StopTimeout=40` и `After=obsd.service`. Откуда эти числа и этот порядок — шаг 5.
+
+Каждое утверждение — **вторая линия обороны**. Первая — токен в хранилище, вторая — файловая система. Ошибка должна пробить обе.
 
 ## Шаг 4 — Шаблон и слот
 
@@ -153,8 +167,12 @@ Description=VMS worker %i — holds its cameras: DriverPack, the fan-out, the ev
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms worker
 Environment=WORKER_NAME=%i
+Environment=RTSP_PORT=auto
+Environment=PLAYBACK_PORT=auto
 EnvironmentFile=/data/config/vms.env
 Volume=/data/platform:/data/platform:z
+Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
+Environment=SECRETS_KEY=/run/secrets/vms.key
 Volume=/data/archive:/data/archive:z
 Volume=/data/media:/data/media:ro,z
 Volume=/run/vms:/run/vms:z
@@ -176,9 +194,9 @@ Environment=WORKER_NAME=%i
 
 > *`claim_slot(prefer=…)` takes exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.*
 
-**Супервизор — авторитет по вопросу, кто сейчас `w-1`.** Не хранилище, не предыдущий держатель. Systemd перезапустил воркера — новый забирает слот, старый (если он ещё жив) обнаружит это при следующем продлении и отсечётся (урок 4).
+**Супервизор — авторитет по вопросу, кто сейчас `w-1`.** Не хранилище, не предыдущий держатель. Systemd перезапустил воркера — новый забирает слот, старый (если он ещё жив) обнаружит это при следующем продлении и отсечётся (урок 4). У регистратора то же самое, и урок 10 добавил к этому том: захват идёт за слотом, а писателя тома демон держит для того же владельца.
 
-`StopTimeout=20` — и комментарий связывает его с уроком 6: SIGTERM даёт актуатору послать EOS, `splitmuxsink` дописать сегмент, воркеру отпустить слот. SIGKILL через двадцать секунд теряет ровно открытый сегмент и **оставляет слот протухать** — то есть выглядит как падение, которое контроллер не перераспределяет (урок 4).
+`StopTimeout=20` — двадцать секунд на штатную остановку: SIGTERM даёт актуатору остановить конвейеры (EOS перед `NULL`, урок 9), а воркеру — отпустить слот. SIGKILL после двадцати секунд **оставляет слот протухать**, то есть выглядит как падение, которое контроллер не перераспределяет (урок 4). Видео у воркера нет, поэтому ни одного кадра этот срок не сторожит; у регистратора срок другой, и считается он от другого (шаг 5).
 
 `Network=host` — RTSP-раздача слушает свой порт на адресе коробки. Прокидывать порты бессмысленно: их столько, сколько воркеров.
 
@@ -195,7 +213,7 @@ Environment=RTSP_PORT=auto
 Environment=PLAYBACK_PORT=auto
 ```
 
-**Номер спрашивают у операционной системы, а адрес берут из heartbeat'а.** Ни один подписчик никогда не знал числа: рекордер, шлюз, детектор и консоль читают `live_url` и `playback_url` из статуса камеры — с четвёртого урока. Значит число может быть нулём, а публиковать надо то, что дала система:
+**Номер спрашивают у операционной системы, а адрес берут из heartbeat'а.** Ни один подписчик никогда не знал числа: регистратор, шлюз, детектор и консоль читают `live_url` и `playback_url` из статуса камеры — с четвёртого урока. Значит число может быть нулём, а публиковать надо то, что дала система:
 
 ```python
     def serve_playback(self, host="127.0.0.1", port=None):
@@ -203,7 +221,7 @@ Environment=PLAYBACK_PORT=auto
         self.playback_port = srv.server_address[1]          # что дал сокет, то и публикуем
 ```
 
-С раздачей то же самое, только спросить надо у того, кто её открыл: `GstRtspServer` знает свой порт (`get_bound_port()`), актуатор его сообщает, воркер публикует. Правило общее и стоит того, чтобы его назвать: **процесс, открывший дверь, — единственный, кто знает её номер; остальные читают адрес.**
+С раздачей то же самое, только спросить надо у того, кто её открыл: `GstRtspServer` знает свой порт (`get_bound_port()`), актуатор его сообщает, воркер публикует. Дверь архива регистратора устроена так же: `ARCHIVE_PORT` по умолчанию `0`, а адрес уходит в heartbeat как `archive_url`. Правило общее и стоит того, чтобы его назвать: **процесс, открывший дверь, — единственный, кто знает её номер; остальные читают адрес.**
 
 Умолчания при этом прежние (`8554`, `8083`, `8082`), так что коробка с одним воркером ведёт себя ровно как раньше; `auto` — это то, что делает второй экземпляр возможным, а drop-in с числом остаётся для того, кто хочет предсказуемый порт.
 
@@ -240,7 +258,100 @@ ExecStart=/usr/local/bin/vms-spares.sh
 
 Механизмов таких три — рука, этот таймер и (в кластере) автоскейлер или `vms-scaler`, — и в одной установке работает **ровно один**: два агента с мнением об одном числе дерутся. Сравнение целиком, с тем, что у всех трёх общего, — в [уроке 2 М11](../М11_ClusterVMS/04-a-name-is-a-slot.md), шаг 3.
 
-## Шаг 5 — Ресурс: процесс вместо таймера
+## Шаг 5 — Движок архива: демон хоста, а не контейнер
+
+```ini
+[Unit]
+Description=ObjectStorage daemon — the archive's engine, one per host
+After=local-fs.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/obsd --socket /run/vms/obsd.sock
+RuntimeDirectory=vms
+RuntimeDirectoryPreserve=yes
+Environment=OBSD_WRITER_GRACE_S=90
+Environment=OBSD_LOG_LEVEL=warning
+Restart=always
+RestartSec=2
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Шапка юнита говорит главное одной фразой:
+
+> *Not a container and not one of the VMS's processes: the engine the recorders write their footage through, over a unix socket in /run/vms (`w2cplatform/obsd.py`). One per host — it keeps one writer per volume, and that rule means something only if every recorder on the box asks the same daemon.*
+
+**Почему один на коробку.** Правило «один писатель на том» держит демон (урок 6). Второй демон на той же коробке о писателях первого не знает: два регистратора, спросившие два разных демона, получили бы двух писателей одного тома — и порчу вместо отказа. Поэтому демон — не часть процесса регистратора и не контейнер рядом с каждым регистратором, а роль хоста, как файловая система. Второй экземпляр на том же сокете демон и сам не запустит: README говорит, что он берёт `flock` на `<socket>.lock`.
+
+**Почему не контейнер образа.** Образ — это Python-пакеты курса (шаг 7), а `obsd` — программа на C++ из исходников ObjectStorage. И у демона другой жизненный цикл: регистраторы перезапускаются при каждом обновлении курса, а демон — нет, и пока он жив, писатели томов переживают перезапуски регистраторов.
+
+Теперь каждая строка.
+
+**`--socket /run/vms/obsd.sock`.** Сокет — в том же tmpfs, который каждый регистратор уже монтирует ради разделяемой памяти воркеров (шаг 3). Нового монтирования не понадобилось. `OBSD_SOCKET` не задан нигде, потому что это и есть путь по умолчанию на Linux — и у демона, и у клиента (`w2cplatform.obsd.default_socket`).
+
+**`RuntimeDirectory=vms` и `RuntimeDirectoryPreserve=yes`.** `/run/vms` существует до старта демона, а перезапуск демона не уносит с собой сокеты разделяемой памяти воркеров: каталог общий, и стереть его при остановке значило бы оборвать каждую раздачу на коробке.
+
+**`OBSD_WRITER_GRACE_S=90`** — сколько писатель, чей регистратор пропал, ждёт того же владельца (`rec:<том>`). Захват тома умершего процесса истекает за 45 секунд, и тот, кто возьмёт том следующим, назовёт того же владельца (урок 10, шаг 8). Ожидание длиннее — значит, он подберёт писателя целиком. У самого демона по умолчанию 60 секунд, у продукта на ящике было 20 — и писатель хозяина не дождался. Тест проверяет неравенство, а не число: `int(env["OBSD_WRITER_GRACE_S"]) > 45`.
+
+**`Restart=always`.** Демон, который ушёл, для каждого регистратора — `away`: тома остаются за ними, а следующий проход открывает их заново (урок 10, шаг 10).
+
+**`TimeoutStopSec=60`.** По SIGTERM демон закрывает каждого писателя чисто, и каждый может сбрасываться до 30 секунд. README демона так и просит: дайте супервизору не меньше 60 секунд на остановку.
+
+И одна строка README, которую стоит знать на коробке: пиру с другим uid демон отказывает. На коробке курса это выполняется само: системные юниты Quadlet запускают контейнеры от root, и `obsd.service` работает от root — `User=` нет ни там, ни там.
+
+Тест читает юнит так же, как контейнеры:
+
+```python
+def test_the_archives_engine_is_the_hosts_own_daemon():
+    """One obsd per host, not a container of the image: it keeps one writer per volume, and that means something
+    only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
+    from w2cplatform.obsd import default_socket
+    u = unit("obsd.service")
+    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms/obsd.sock"
+    assert u["Service"]["RuntimeDirectory"] == "vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
+    assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
+    import sys
+    if sys.platform != "darwin":
+        assert default_socket() == "/run/vms/obsd.sock"
+```
+
+### Откуда берётся `/usr/local/bin/obsd`
+
+Из исходников ObjectStorage, без SDK продукта и без сборочной системы монорепозитория:
+
+```bash
+ObjectStorage/standalone-build/build.sh /tmp/obsd-build          # копирует исходники движка, применяет патчи к копии, собирает
+install -m 755 /tmp/obsd-build/build/obsd /usr/local/bin/obsd
+systemctl daemon-reload && systemctl enable --now obsd
+```
+
+Скрипт не трогает дерево ObjectStorage: он копирует то, что нужно движку, в `<out>/src`, применяет патчи из `patches/` к копии и собирает `<out>/build/obsd` через CMake. С `--tests` он заодно собирает и прогоняет тесты демона (`obsd_ut`) и движка (`os_engine_ut`). Тот же бинарник нужен тестам курса: без него они падают с подсказкой — `OBSD_BIN=<out>/build/obsd` или `obsd` в `PATH`.
+
+### Регистратор ждёт сброса писателя
+
+Юнит регистратора называет демон в своём `[Unit]` и выводит срок остановки из того, что делает `after_stop` (урок 10, шаг 11):
+
+```ini
+[Unit]
+Description=VMS recorder %i — the recordings of its assignment, into this box's archive
+After=network.target obsd.service
+Wants=obsd.service
+
+[Container]
+…
+# SIGTERM: the pipelines stop, then the writer is closed — after its flush, up to thirty seconds by the
+# protocol — and only then is the hold let go (`RecWorker.after_stop`).
+StopTimeout=40
+```
+
+**`After=obsd.service` и `Wants=obsd.service`.** Регистратор, поднятый раньше демона, не сломается — он просто назовёт том `away` и откроет его на следующем проходе. Но порядок убирает этот лишний круг при каждой загрузке, а `Wants` поднимает демон, если его забыли включить.
+
+**`StopTimeout=40`.** Штатная остановка регистратора — это конвейеры, последний heartbeat, слот, а потом закрытие писателя, которое ждёт сброса: до тридцати секунд по протоколу (`WRITER_CLOSE` ждёт `long_timeout`). Сорок — это тридцать на сброс и запас на всё остальное. Срок короче — и SIGKILL придёт посреди сброса: остановка станет падением, захват не отпустится, и следующий держатель тома будет ждать 45 секунд.
+
+## Шаг 6 — Ресурс: процесс вместо таймера
 
 ```ini
 Description=VMS resource — the policy pass, the heartbeat, the event index
@@ -248,7 +359,6 @@ Exec=python3 -m vms resource
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
 Volume=/data/platform:/data/platform:z
-Volume=/data/spool:/data/spool:ro,z
 Volume=/data/archive:/data/archive:z
 
 [Service]
@@ -257,7 +367,7 @@ Restart=always
 
 Шапка юнита называет замену:
 
-> *It replaced `vms-archive-retain.timer`: the policy pass now runs every 600 s from the process's loop, and a oneshot could not hold a database.*
+> *It replaced vms-archive-retain.timer: the policy pass now runs every 600 s from the process's loop, and a oneshot could not hold a heartbeat.*
 
 Было: таймер systemd, раз в десять минут запускающий разовую задачу. Стало: процесс с циклом (урок 11).
 
@@ -265,7 +375,9 @@ Restart=always
 
 Тест проверяет `Restart=always` с комментарием: *процесс, а не таймер: база живёт в нём.*
 
-`RESOURCE_HOST=127.0.0.1` — на одной коробке к ресурсу обращается только консоль. Примечание говорит, что в М11 задача слушает адрес узла, потому что соседи шлют туда зеркала.
+Видео — не его дело, и примечание к юниту говорит это прямо: *Footage is not its business: it is in volumes, behind the host's obsd.* Под `/data/archive` лежит и собственный том сервера (`volume/`), но это том демона, а не бакет, и обход ресурса его не открывает.
+
+`RESOURCE_HOST=127.0.0.1` — на одной коробке к ресурсу обращается только консоль. Примечание говорит, что в М11 задача слушает адрес сервера, потому что соседи шлют туда зеркала.
 
 И примечание про индекс событий:
 
@@ -273,12 +385,12 @@ Restart=always
 
 **«Ничего, кроме кэша»** — проверка того, что у индекса нет ничего своего (урок 13 М10A). Пока здесь стояла база SQLite, примечание говорило, что перезапуск пересобирает её за секунды, — на годе хранения это были не секунды.
 
-## Шаг 6 — Один образ
+## Шаг 7 — Один образ
 
 ```dockerfile
 FROM docker.io/library/debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-gi python3-yaml \
+        python3 python3-gi python3-yaml python3-cryptography \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
         gir1.2-gst-plugins-base-1.0 curl \
     && rm -rf /var/lib/apt/lists/*
@@ -290,7 +402,7 @@ ENV PYTHONPATH=/app
 CMD ["python3", "-m", "vms", "worker"]
 ```
 
-**Один образ на десять процессов.** Не десять образов по глаголу: различие между процессами — в аргументе и в токене, а не в содержимом.
+**Один образ на все процессы.** Не образ на глагол: различие между процессами — в аргументе и в токене, а не в содержимом.
 
 Публиковать надо одно; версия одна; обновление атомарно для всей коробки.
 
@@ -299,10 +411,12 @@ CMD ["python3", "-m", "vms", "worker"]
 ```python
     copied = re.findall(r"^COPY (\S+) ", cf, re.M)
     assert copied == ["w2cplatform", "vms", "gstvms"]
-    assert "postgres" not in cf.lower()          # the per-box database is gone (М10 Lesson 1)
+    assert "postgres" not in cf.lower()                                                # the per-box database is gone (М10 Lesson 1)
 ```
 
 **Три пакета — и это граница модуля, проверяемая сборкой.** Появился четвёртый — тест падает, и надо объяснить, зачем он.
+
+**`obsd` в образе нет, и это тоже граница.** Клиент демона — `w2cplatform/obsd.py`, чистый Python над unix-сокетом, и он в образе. Сам движок — на хосте (шаг 5). Положи бинарник в образ — и каждый контейнер получит возможность запустить свой демон, то есть ровно то, от чего шаг 5 защищает.
 
 `postgres` в образе не должно быть ни в каком виде. В М9 на коробке был свой Postgres, хранивший желаемое состояние; М10 его убрала (правда теперь в хранилищах платформы). Тест сторожит, чтобы он не вернулся «на время».
 
@@ -310,7 +424,7 @@ CMD ["python3", "-m", "vms", "worker"]
 
 `CMD` по умолчанию — `worker`, и юниты всё равно повторяют `Exec=` явно. Дублирование намеренное: юнит должен читаться сам по себе, не требуя заглянуть в образ.
 
-## Шаг 7 — Конфигурация на разделе данных
+## Шаг 8 — Конфигурация на разделе данных
 
 ```
 # /data/config/vms.env — what every VMS unit on this box reads. On the data
@@ -324,89 +438,131 @@ CMD ["python3", "-m", "vms", "worker"]
 
 Конфигурация коробки — какая ёмкость, какой архив, какое имя — переживать обновление обязана. Поэтому она на разделе данных, который обновление не трогает.
 
-`vms.env.example` — то, что копируют на коробку, с комментарием у каждой переменной. И тест сторожит четыре обязательные:
+`vms.env.example` — то, что копируют на коробку, с комментарием у каждой переменной. Тест сторожит обязательные — и то, чего быть не должно:
 
 ```python
-    assert all(k in env for k in ("PLATFORM_DIR=/data/platform", "SPOOL=/data/spool", "ARCHIVE=/data/archive", "CAPACITY="))
+    env = open(os.path.join(DEPLOY, "vms.env.example")).read()
+    assert all(k in env for k in ("PLATFORM_DIR=/data/platform", "ARCHIVE=/data/archive", "CAPACITY="))
+    assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
 ```
+
+`SPOOL` и `SEGMENT_SECONDS` ушли вместе с файловым архивом: очереди на диске нет, а длину куска решает движок — блоками и последовательностями (урок 7). Вторая строка теста не даёт им вернуться в пример, который копируют на коробки.
+
+Пришли три переменные архива, все три закомментированы — у каждой есть разумное умолчание:
+
+```
+# the size of that volume when it is first formatted — a ring: it never grows past it, and gives up its oldest
+# minutes when full. Unset: four fifths of what is free under $ARCHIVE, leaving two gigabytes. A volume that
+# exists keeps its size until a declaration (`rec/volumes/<name>`) says another.
+# ARCHIVE_QUOTA_BYTES=
+# the host's ObjectStorage daemon. Unset: /run/vms/obsd.sock, where `obsd.service` puts it. How long a
+# recorder waits for one answer from it: shorter than a lease, or a silent daemon fences every recording.
+# OBSD_SOCKET=/run/vms/obsd.sock
+# OBSD_TIMEOUT=10
+```
+
+**`ARCHIVE_QUOTA_BYTES`** — размер собственного тома сервера, когда он форматируется впервые. Квота — это размер кольца (урок 10, шаг 3), и спрашивается она один раз: отформатированный том свой размер не меняет, пока объявление не скажет другой.
+
+**`OBSD_SOCKET`** — где демон. Задавать его на коробке незачем: умолчание клиента совпадает с тем, что `obsd.service` передаёт демону.
+
+**`OBSD_TIMEOUT`** — сколько регистратор ждёт одного ответа демона. Десять секунд — треть аренды. Поставь больше аренды — и один молчащий демон отсечёт регистратор со всеми записями (урок 10, шаг 10).
 
 Примечание перечисляет, чего **нет** в общем файле и почему: `WORKER_NAME=%i` — в юните воркера (это слот, а не настройка коробки); `CONSOLE_HOST`/`CONSOLE_PORT` — в юните консоли; `NOMAD_*` — их даёт М11.
 
-**Настройка коробки против настройки экземпляра** — разделение, которое стоит держать: первое в файле окружения, второе в юните.
+**Настройка коробки против настройки экземпляра** — разделение, которое стоит держать: первое в файле окружения, второе в юните. Демон движка в общий файл не смотрит вовсе: его настройки — в его юните, потому что он не процесс VMS.
 
-## Шаг 8 — Юниты как код
+## Шаг 9 — Юниты как код
 
 ```python
 def test_the_units_run_the_entrypoints_the_package_has():
-    from vms import __main__ as m
-    entrypoints = set(re.findall(r'"(\w+)": \w+', open(...).read().split("__main__")[-1]))
-    assert entrypoints == {"worker", "controller", "recorder", "reccontroller", "console", "resource",
-                           "gateway", "livecontroller", "detworker", "detcontroller"}
-    for name, entry in [("vmsworker@.container", "worker"), ...]:
+    from vms import __main__ as m  # noqa: F401  (imports the module without running it: no __name__ == "__main__")
+    entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
+    assert entrypoints == {"worker", "controller", "recorder", "reccontroller", "console", "resource", "gateway",
+                           "livecontroller", "detworker", "detcontroller", "detjobworker", "detjobcontroller",
+                           "surveyworker", "surveycontroller", "autoworker", "autocontroller"}
+    for name, entry in [("vmsworker@.container", "worker"), ("vmscontroller.container", "controller"), …]:
         u = unit(name)
-        assert u["Container"]["Image"] == "localhost/vmsserver:latest"
+        assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
-        assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"
-        for vol in ...:
-            assert vol.startswith("/data/") or vol.startswith("/run/vms:"), vol
+        assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
+        for vol in …:
+            assert vol.startswith("/data/") or vol.startswith("/run/vms:"), vol           # /run/vms: the shared-memory sockets — a tmpfs, not state
 ```
 
-**Таблица диспетчера извлекается регулярным выражением из исходника** и сверяется с юнитами.
+**Таблица диспетчера извлекается регулярным выражением из исходника** и сверяется с юнитами. Здесь видны все шестнадцать глаголов — десять этого урока и шесть, которые добавят уроки 20–25.
 
 Приём грубый — и он ловит то, что иначе не ловится ничем: юнит, зовущий несуществующий глагол, или глагол, которому не соответствует ни один юнит. Обе ошибки обнаруживаются при запуске на коробке, то есть в худший момент.
 
 `from vms import __main__ as m` — импорт **без запуска**: в модуле есть `if __name__ == "__main__"`, и при импорте он не срабатывает. Проверяется, что модуль вообще импортируется — то есть все подсистемы собираются.
 
-И последнее утверждение: **каждый том начинается с `/data/` или `/run/vms:`**. Ни одного монтирования из корня, ни `/etc`, ни `/var`, ни сокета докера. Всё состояние коробки — на разделе данных, плюс один tmpfs.
+И последнее утверждение: **каждый том начинается с `/data/` или `/run/vms:`**. Ни одного монтирования из корня, ни `/etc`, ни `/var`, ни сокета докера. Всё состояние коробки — на разделе данных, плюс один tmpfs. Сокет демона живёт в том же tmpfs, поэтому правило не понадобилось менять, когда появился `obsd`.
 
 Это правило, за которым стоит следить в любой системе: **если контейнер монтирует что-то из корня, объясните зачем.** Обычно объяснения нет.
 
-## Шаг 9 — Проверка здоровья из М9
+## Шаг 10 — Проверка здоровья
 
-Последнее соединение модуля: проверка здоровья коробки, написанная в М9, **читает архив этого регистратора**.
+Последнее соединение модуля: что читает проверка здоровья коробки.
 
-Она не менялась. В М9 она смотрела, что архив пополняется; сейчас пополняет его другой процесс, из другой подсистемы, размещённый контроллером, — а проверка та же, потому что смотрит она на **файлы и метрику**, а не на процесс.
+Своей проверки в `deploy/` нет. `curl` в образе положен ровно для неё — для `podman healthcheck` или ручной проверки `/metrics`, — а читать ей предлагается число, которое называет спецификация регистратора:
 
-`rec_recordings_running` (урок 10) — сколько записей действительно пишутся. Метрика, названная в YAML и отданная регистратором.
+```yaml
+console:
+  running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads
+```
 
-**Интерфейс наблюдаемости пережил полную перестройку системы.** М9 знала один процесс, пишущий видео; М10 разложила его на воркер, регистратор, ресурс и контроллеры. Проверка здоровья не заметила.
+`rec_recordings_running` — сколько записей **действительно пишутся**, а не сколько настроено. Консоль считает его по heartbeat'ам всех живых регистраторов и отдаёт на своём `/metrics` (урок 10, шаг 13).
+
+Смотреть на файлы архива, чтобы убедиться, что он пополняется, теперь не на что: видео в томе, за демоном, и каталог тома — не дерево файлов, которое кто-то обходит. Зато «пополняется» стало числами, которые регистратор публикует сам, и консоль отдаёт их рядом:
+
+- `rec_last_frame_age_seconds` — сколько секунд назад запись последний раз что-то получила от источника;
+- `rec_writer{state}` — доходит ли отданное писателю до кольца: `ok`, `stuck`, `losing`;
+- `rec_archive_failure{kind}` и `rec_archive_away_seconds` — том не берёт кадры, по какой причине и как долго;
+- `rec_volume_error` — регистратор держит том, который не открывается.
+
+**Интерфейс наблюдаемости пережил полную перестройку системы — и стал точнее.** М9 знала один процесс, пишущий видео в файлы; М10 разложила его на воркер, регистратор, ресурс, контроллеры и демон движка. Метрика «пишется» осталась той же, а вопрос «доходит ли» получил собственные числа вместо взгляда на каталог.
 
 ## Результат
 
 ```bash
+systemctl enable --now obsd
 systemctl enable --now resource vmscontroller reccontroller console
 systemctl enable --now vmsworker@w-1 recworker@r-1
 systemctl enable --now livecontroller liveworker@g-1
 systemctl enable --now detcontroller detworker@d-1
 ```
 
-Десять процессов, один образ, один файл окружения.
+Десять процессов, один образ, один файл окружения — и один демон хоста под ними.
 
 ```bash
 curl -X POST localhost:8080/cameras -H 'Idempotency-Key: a1' \
      -d '{"source":"driverpack://file/lobby.mp4"}'
 ```
 
-За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. Нажали «Запись» — за проход регистратора конвейер пишет в `<spool>/rec/1/e1/`; через десять минут первый сегмент в архиве со строкой в манифесте.
+За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. Нажали «Запись» — регистратор форматирует том сервера `/data/archive/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
 
 ```bash
 systemctl stop vmscontroller            # ничего работающее не останавливается
 systemctl kill -s KILL vmsworker@w-1    # регистратор переподписывается под новой эпохой
-systemctl kill -s KILL recworker@r-1  # открытый сегмент потерян, закрытый переносится на старте
+systemctl kill -s KILL recworker@r-1    # писатель ждёт в демоне; поднятый регистратор подбирает его целиком
+systemctl restart obsd                  # регистраторы держат тома как away и открывают их заново
 ```
 
-Три команды — три свойства, обещанные в начале модуля.
+Четыре команды — четыре свойства, обещанные в модуле.
 
 ## Что может пойти не так
 
 - **Конфигурация в корневом разделе.** Обновление системы поменяет, в какой архив пишет коробка.
-- **Образ на глагол.** Десять публикаций, десять версий и десять способов рассинхронизироваться.
+- **Образ на глагол.** Шестнадцать публикаций, шестнадцать версий и шестнадцать способов рассинхронизироваться.
 - **Токен на подсистему вместо токена на процесс.** Ошибка в консоли сможет переразместить камеры.
-- **Спул, смонтированный воркеру.** Решение модуля перестанет быть выраженным там, где его труднее всего обойти.
-- **Медиа, смонтированные рекордеру.** Второе соединение к камере станет возможным — и однажды случится.
-- **`StopTimeout` по умолчанию.** Последний сегмент теряется при каждой штатной перезагрузке.
+- **Медиа, смонтированные регистратору.** Второе соединение к камере станет возможным — и однажды случится.
+- **Демон движка внутри контейнера регистратора.** Два регистратора — два демона, два писателя одного тома и порча вместо отказа.
+- **Демон без `RuntimeDirectoryPreserve`.** Его перезапуск сотрёт `/run/vms` вместе с разделяемой памятью воркеров.
+- **`OBSD_WRITER_GRACE_S` короче истечения захвата.** Следующий держатель тома не застанет писателя.
+- **`StopTimeout` регистратора короче сброса писателя.** Штатная остановка станет падением, и том 45 секунд никто не возьмёт.
+- **`TimeoutStopSec` демона короче шестидесяти секунд.** Писатели не успеют закрыться чисто, и тома после остановки придётся восстанавливать.
+- **Путь собственного тома, смонтированный в контейнер по другому пути.** Регистратор назовёт демону путь, которого на хосте нет.
 - **Монтирование из корня.** Состояние коробки перестанет быть на разделе данных, и обновление начнёт его трогать.
-- **Таймер вместо процесса ресурса.** Ни heartbeat'а, ни порта, ни базы.
+- **Таймер вместо процесса ресурса.** Ни heartbeat'а, ни порта, ни индекса.
 - **Юниты, не проверяемые тестом.** Опечатка в `Exec=` обнаружится на коробке.
 - **`pip install` в образе.** Сборка пойдёт в интернет, а зависимости перестанут обновляться с системой.
 
@@ -414,32 +570,35 @@ systemctl kill -s KILL recworker@r-1  # открытый сегмент поте
 
 - Четыре подсистемы дают десять процессов; шесть из них — один класс с другой спецификацией.
 - Три токена разбивают `vms/*` на непересекающиеся части, и обе ACL вырезаны из одной YAML.
-- Монтирования повторяют ACL в байтах: у контроллера нет архива, у воркера нет спула, у рекордера нет медиа, у консоли спул на чтение.
+- Монтирования повторяют ACL в байтах: у контроллера нет архива, у регистратора нет медиа, спула нет ни у кого — видео за демоном.
 - Имя экземпляра systemd — это слот, и супервизор является авторитетом по вопросу, кто сейчас `w-1`.
-- `StopTimeout=20` — разница между потерянным и сохранённым последним сегментом; SIGKILL оставляет слот протухать, и контроллер читает это как падение.
-- Ресурс — процесс, а не таймер: у таймера не может быть ни heartbeat'а, ни порта, ни базы.
-- Один образ, три пакета, ни одного `pip install`; конфигурация на разделе данных, потому что обновление не должно менять, куда пишет коробка.
+- Движок архива — демон хоста, один на коробку: правило «один писатель на том» значит что-то, только если все регистраторы спрашивают один демон.
+- Сроки выводятся из того, что делает остановка: ожидание писателя (90 с) длиннее истечения захвата (45 с), остановка регистратора (40 с) длиннее сброса (30 с), остановка демона (60 с) — по README.
+- Ресурс — процесс, а не таймер: у таймера не может быть ни heartbeat'а, ни порта, ни индекса.
+- Один образ, три пакета, ни одного `pip install` и ни одного `obsd`; конфигурация на разделе данных, потому что обновление не должно менять, куда пишет коробка.
 - Юниты читаются тестами: опечатка в `Exec=` ломает сборку, а не коробку.
 
 ## Упражнения
 
 1. Перенесите `vms.env` в `/etc`. Проведите обновление системы через RAUC и посмотрите на `CAPACITY`.
-2. Смонтируйте воркеру спул. Напишите в его актуаторе `archivesink` и найдите, что теперь мешает воркеру писать видео.
-3. Смонтируйте рекордеру `/data/media`. Опишите, чем это опасно через год.
-4. Уберите `StopTimeout=20`. Перезагрузите коробку десять раз и посчитайте потерянные минуты.
-5. Соберите отдельный образ для консоли. Перечислите, что теперь надо делать при выпуске новой версии.
-6. Дайте консоли токен всей подсистемы. Напишите в ней вызов `place` и посмотрите, что произойдёт.
-7. Верните ресурс таймером. Перечислите, что при этом пропадёт, и как консоль будет получать события.
-8. Добавьте в `Containerfile` четвёртый `COPY`. Запустите тесты.
-9. Смонтируйте `/var/run/docker.sock`. Объясните зачем — и если объяснения нет, сформулируйте правило.
-10. Запустите `vmsworker@w-1` дважды под разными именами юнитов. Опишите, что покажет консоль и какой счётчик вырастет.
+2. Смонтируйте регистратору `/data/media`. Опишите, чем это опасно через год.
+3. Поставьте `StopTimeout=10` у `recworker@`. Остановите регистратор посреди записи и посмотрите, сколько ждал следующий держатель тома и что он нашёл в томе.
+4. Поставьте `OBSD_WRITER_GRACE_S=20`. Убейте регистратор `kill -9` и проследите, кто и когда возьмёт том.
+5. Уберите `RuntimeDirectoryPreserve=yes` и перезапустите демон при работающей записи через разделяемую память. Что стало с подпиской регистратора?
+6. Смонтируйте регистратору `/data/archive` как `/archive` и задайте `ARCHIVE=/archive`. Что регистратор назовёт демону и что ответит демон?
+7. Соберите образ с `obsd` внутри и запустите демон в каждом контейнере регистратора. Объявите сетевой том и поднимите два регистратора на одной коробке. Что пойдёт не так и почему ни один из двух этого не заметит?
+8. Соберите отдельный образ для консоли. Перечислите, что теперь надо делать при выпуске новой версии.
+9. Дайте консоли токен всей подсистемы. Напишите в ней вызов `place` и посмотрите, что произойдёт.
+10. Верните ресурс таймером. Перечислите, что при этом пропадёт, и как консоль будет получать события.
+11. Добавьте в `Containerfile` четвёртый `COPY`. Запустите тесты.
+12. Смонтируйте `/var/run/docker.sock`. Объясните зачем — и если объяснения нет, сформулируйте правило.
 
 ## Что дальше
 
-Коробка собрана: строка камеры, цикл сверки из М9, воркер, который держит устройство и не пишет его, два элемента GStreamer, архив с двумя деревьями, регистратор, ресурс, консоль, живое видео, детекторы, чужой архив и дозапись из края — и всё это как десять процессов на коробке из М9.
+Коробка собрана: строка камеры, цикл сверки из М9, воркер, который держит устройство и не пишет его, элемент GStreamer, движок архива за демоном, регистратор, ресурс, консоль, живое видео, детекторы, чужой архив и дозапись из края — и всё это как десять процессов и один демон на коробке из М9.
 
-**`w2cplatform/` за весь модуль не изменилась ни на строку.** Граница, проведённая в М10A по линии импорта, выдержала четыре подсистемы; тест чистоты зелёный.
+Граница, проведённая в М10A по линии импорта, выдержала четыре подсистемы: `test_the_platform_knows_nothing_about_video` зелёный — ни одного импорта из `vms/` под `w2cplatform/`. Клиент движка архива, `obsd.py`, лежит по ту сторону границы, в платформе: он говорит о томах, писателях и сэмплах, а не о камерах.
 
-Остался один вопрос, который коробка задаёт раньше кластера и на который мы пока не ответили: что делать, когда диск полон. [**Урок 18**](18-what-the-archive-gives-up-first.md) отвечает за подсистему на то, что платформа спросила в уроке 14 М10A.
+Остался один вопрос, который коробка задаёт раньше кластера: что архив отдаёт первым, когда кольцо замкнулось. [**Урок 18**](18-what-the-archive-gives-up-first.md) отвечает на него за подсистему.
 
 [**М11 — ClusterVMS**](../М11_ClusterVMS/README.md) начинает с того, что коробок несколько: те же контроллеры над Nomad Variables, те же воркеры под планировщиком, тот же ресурс системной задачей на каждом сервере — и автомасштабирование, суммирующее тот самый запас, который воркеры публикуют с урока 4.
