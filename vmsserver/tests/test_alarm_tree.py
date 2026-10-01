@@ -83,7 +83,6 @@ def test_deleting_a_camera_ends_its_observations_and_not_the_record_of_what_happ
 
 def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     from vms import keeps
-    from vms.archive import ArchiveResource
     from vms.resource import vms_resource
     box = Box()
     t = box.wall() - 5 * DAY
@@ -92,6 +91,6 @@ def test_a_keep_holds_the_alarms_tree_as_it_holds_the_other():
     for cam in ("7", "8"):
         box.vars.put(f"vms/alarms_retention/{cam}", {"days": 1})
     keeps.write(box.vars, {"cam": "7", "from": t, "to": t + 60}, ["7"], "anna", box.wall())
-    res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 1
     assert len(buckets_under(box.archive, "vms.alarms", "7", 600)) == 1 and buckets_under(box.archive, "vms.alarms", "8", 600) == []

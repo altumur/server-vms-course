@@ -8,8 +8,8 @@ import os
 # It used to be the other way round — a list of message names to DROP — and a list like that is wrong the day
 # GStreamer grows a message: on the product's box `rtpbin` posted `application/x-rtp-source-sdes` every few
 # seconds, and each went into the camera's event log as an event of the camera (feedback BL).
-OUR_ELEMENTS = ("driverpacksrc", "archivesink")
-PLUMBING = ("GstBinForwarded", "splitmuxsink-fragment-opened", "splitmuxsink-fragment-closed")
+OUR_ELEMENTS = ("driverpacksrc",)
+PLUMBING = ("GstBinForwarded",)
 
 
 def observes(factory: str, name: str, extra: tuple = ()) -> bool:

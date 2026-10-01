@@ -12,7 +12,6 @@ import tempfile
 import urllib.request
 
 from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, new_key_file, open_row, seal_items
-from vms.archive import ArchiveResource
 from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
@@ -62,7 +61,7 @@ def test_the_store_holds_ciphertext_and_the_holder_opens_it_for_the_pipeline_onl
         con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     finally:
         del os.environ["SECRETS_KEY"]
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
     try:
         body = json.dumps({"name": "gate", "source": "driverpack://file/gate.mp4", "cred_username": "admin", "cred_secret": secret}).encode()
         urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/cameras", data=body, method="POST",

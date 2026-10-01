@@ -7,7 +7,6 @@ import json
 import urllib.error
 import urllib.request
 
-from vms.archive import ArchiveResource
 from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
@@ -88,7 +87,7 @@ def test_the_console_never_hands_out_the_secret_and_the_store_holds_one_copy():
     secret = "Hunter2-not-in-any-reply"
     box = Box()
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
     port = srv.server_address[1]
     base = f"http://127.0.0.1:{port}"
     try:

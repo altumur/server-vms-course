@@ -445,15 +445,11 @@ class SpecConsole:
             return {"draining": "", "subsystem": ctl.spec.name}
         here = [w for w in heartbeats(ctl.objects, ctl.sub.name + "/") if ctl.server_of(w) == server]
         units = sum(len(ctl.assignment(w).units) for w in here)
-        pending = 0
-        for w in here:
-            hb = heartbeats(ctl.objects, ctl.sub.name + "/").get(w)
-            if hb is not None and now - hb.ts <= self.lost_after:
-                pending += int(hb.extra.get("spool", 0) or 0)
         strand = ctl.would_strand(server)
+        # Nothing waits on this machine to be moved somewhere: what a worker wrote is wherever it wrote it — a
+        # recorder's footage in its volume, closed when the writer was closed. No units left is the whole answer.
         return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here),
-                "units": units, "spool": pending, "would_strand": strand,
-                "safe": units == 0 and pending == 0}
+                "units": units, "would_strand": strand, "safe": units == 0}
 
     def servers(self) -> dict:
         ctl, now = self.ctl, self.wall()

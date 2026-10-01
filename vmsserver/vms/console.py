@@ -213,6 +213,14 @@ def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict
     return [v for k, v in sorted(stale.items()) if k not in live]
 
 
+def _rec_epoch(ctl, unit) -> int | None:
+    from w2cplatform.epoch import current_epoch
+    try:
+        return current_epoch(ctl.vars, f"rec/epoch/{unit}") or None
+    except OSError:
+        return None                                # the store did not answer: the doors' own word stands
+
+
 def _door(url: str, timeout: float):
     with urllib.request.urlopen(url, timeout=timeout) as r:
         return r.read()
@@ -353,6 +361,10 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         ours, unreachable = [], []
         doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
         for unit in recordings_of(rec_ctl, cid):
+            # Fenced against the RECORDING's epoch, which the store holds — a door knows only its own recorder's,
+            # and the zombie's stream may be in another volume than the survivor's. A copy (`e0`, a keep's) is
+            # nobody's writer and is never fenced.
+            cur = _rec_epoch(ctl, unit)
             for name, url, hb in doors:
                 try:
                     body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={min(t1, 1e11)}", DOOR_TIMEOUT))
@@ -360,8 +372,9 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     unreachable.append(name)
                     continue
                 for sp in body.get("spans", []):
-                    ours.append({**sp, "recording": unit, "recorder": name, "volume": hb.extra.get("volume", ""),
-                                 "media": f"/export/{cid}?rec={unit}"})
+                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < int(sp.get("epoch", 0)) < cur)
+                    ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
+                                 "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
         extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
         spans = sorted(ours + extra_, key=lambda d: (d["start"], d["epoch"]))
         gone = unserved_volumes(ctl.objects, con_wall()) if ctl is not None else []
