@@ -11,7 +11,8 @@ import os
 import tempfile
 import urllib.request
 
-from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, new_key_file, open_row, seal_items
+from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, new_key_file, open_row, seal_items, seal_stored
+from w2cplatform.spec import Refused
 from vms.config import SPEC
 from vms.console import serve
 from vms.controller import VmsController
@@ -138,7 +139,7 @@ def test_rows_written_before_the_key_are_sealed_when_the_console_starts_with_one
     sealer = Sealer.from_file(_key("k1"))
     assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 1
     after, _ = box.vars.get("vms/cameras/1")
-    assert is_sealed(after["cred_secret"]) and sealer.open("cred_secret", after["cred_secret"]) == "Hunter2"
+    assert is_sealed(after["cred_secret"]) and sealer.open("cred_secret", after["cred_secret"], "vms/cameras/1") == "Hunter2"   # bound to its row
     assert after["revision"] == before["revision"]                    # nothing the row means has changed
     assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 0       # once
     assert seal_stored(None, box.vars, ["vms/cameras/"]) == 0         # and nothing without a key
@@ -183,4 +184,73 @@ def test_a_volumes_secret_goes_into_the_store_sealed():
                              "quota_bytes": 10 ** 12},
                   sealer=sealer)
     row, _ = box.vars.get("rec/volumes/s3")
-    assert is_sealed(row["access_secret"]) and sealer.open("access_secret", row["access_secret"]) == "AKIA:xyz"
+    assert is_sealed(row["access_secret"]) and sealer.open("access_secret", row["access_secret"], volumes.key("s3")) == "AKIA:xyz"
+
+
+def _console_with_key(box, key):
+    os.environ["SECRETS_KEY"] = key
+    try:
+        return VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    finally:
+        del os.environ["SECRETS_KEY"]
+
+
+def test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_the_door():
+    """The review's second pass, blocker 3: `enc:v1:x` under one camera ended the holder's pass for every camera
+    after it. It is that camera's status now — and the door takes no value that looks sealed: a secret arrives
+    in the clear and is sealed by the console."""
+    key = _key("k1")
+    box = Box()
+    con = _console_with_key(box, key)
+    con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
+    con.create_camera({"name": "b", "source": "driverpack://file/b.mp4", "cred_secret": "Hunter3"})
+    items, idx = box.vars.get("vms/cameras/1")
+    box.vars.put("vms/cameras/1", {**items, "cred_secret": "enc:v1:x"}, cas=idx)             # a copy that lost its tail, past the console
+    VmsController(box.vars, box.objects, wall=box.wall).assign("w-1", ["1", "2"])
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, archive_root=box.archive, env={"SECRETS_KEY": key})
+    w.reconcile_once()
+    st = {s["id"]: s for s in w.status()}
+    assert st[1]["phase"] != "running" and "looks sealed" in st[1]["why"]
+    assert st[2]["phase"] == "running"                                                        # the camera after it started
+    for pasted in ("enc:v1:x", box.vars.get("vms/cameras/2")[0]["cred_secret"]):
+        try:
+            con.create_camera({"name": "c", "source": "driverpack://file/c.mp4", "cred_secret": pasted})
+            raise AssertionError("a sealed value was taken at the door")
+        except Refused as e:
+            assert "not taken" in str(e)
+    try:
+        con.update(2, {"cred_secret": "enc:v1:k1:aaaa:bbbb"})
+        raise AssertionError("a sealed value was taken at the door")
+    except Refused:
+        pass
+
+
+def test_a_ciphertext_opens_only_in_the_row_it_was_sealed_for():
+    """The review's second pass, major: with the field alone as associated data, camera 7's sealed password pasted
+    into camera 8's row opened for whoever reads camera 8. The row's key is in the ciphertext now; what was
+    sealed before that opens by the field alone, once, and `seal_stored` seals it again, to its row."""
+    key = _key("k1")
+    box = Box()
+    con = _console_with_key(box, key)
+    con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
+    con.create_camera({"name": "b", "source": "driverpack://file/b.mp4", "cred_secret": "Other"})
+    row1 = box.vars.get("vms/cameras/1")[0]
+    items2, idx2 = box.vars.get("vms/cameras/2")
+    box.vars.put("vms/cameras/2", {**items2, "cred_secret": row1["cred_secret"]}, cas=idx2)   # pasted past the console
+    sealer = Sealer.from_file(key)
+    assert open_row(sealer, {"id": 1, **row1}, "vms/cameras/1")["cred_secret"] == "Hunter2"
+    try:
+        open_row(sealer, {"id": 2, **box.vars.get("vms/cameras/2")[0]}, "vms/cameras/2")
+        raise AssertionError("another row's ciphertext opened")
+    except Sealed as e:
+        assert "another row" in str(e)
+    # sealed before the row was bound in: opens once by the field alone, and the console's start re-seals it
+    old = sealer.seal("cred_secret", "Legacy")
+    assert sealer.open("cred_secret", old, "vms/cameras/3") == "Legacy" and not sealer.bound("cred_secret", old, "vms/cameras/3")
+    con.create_camera({"name": "c", "source": "driverpack://file/c.mp4", "cred_secret": "Legacy"})
+    items3, idx3 = box.vars.get("vms/cameras/3")
+    box.vars.put("vms/cameras/3", {**items3, "cred_secret": old}, cas=idx3)
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 1
+    now = box.vars.get("vms/cameras/3")[0]["cred_secret"]
+    assert now != old and sealer.bound("cred_secret", now, "vms/cameras/3") and sealer.open("cred_secret", now, "vms/cameras/3") == "Legacy"
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 0                                 # nothing left to do

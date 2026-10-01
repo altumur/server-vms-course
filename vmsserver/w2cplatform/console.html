@@ -300,6 +300,17 @@ const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(pale
 const ROWS = () => '/' + spec.rows;
 const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
 const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
+// What the page draws, it draws through `h`: a tagged template whose every `${…}` is escaped — a unit's name,
+// an event's note, a volume's url are TEXT, whatever characters they hold. A fragment that IS markup (one `h`
+// inside another, a list of them joined) is a `Raw` and goes in as it is; `raw(s)` says so for a joined list.
+// A `<script>` in a mark's note or an `onerror=` in a name draws as the characters it is made of (the
+// review's second pass, blocker 2) — and the page's Content-Security-Policy, set by the console, is the wall
+// behind this one.
+class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = v => v instanceof Raw ? v.s : String(v ?? '').replace(/[&<>"']/g, c => ESC[c]);
+const h = (strs, ...vals) => new Raw(strs.reduce((out, part, i) => out + esc(vals[i - 1]) + part));
+const raw = s => new Raw(String(s));
 
 // -- the spec: the page's only knowledge of the subsystem ------------------------------------
 // `GET /spec`. Sets the document title, the rows heading, the add note (numbered by the controller vs.
@@ -346,8 +357,8 @@ async function loadUnits() {
   for (const c of units) {
     const li = document.createElement('li'); li.dataset.id = String(c.id);
     li.className = `${c.phase || 'silent'} ${c.worker_state === 'stale' ? 'stale' : ''} ${current === c.id ? 'on' : ''}`;
-    li.innerHTML = `<span><span class="dot"></span>${label(c)} <small>#${c.id}</small></span>` +
-                   `<small>${c.worker ? c.worker + (c.server ? ' · ' + c.server : '') : 'unplaced'}${c.age != null ? ' · ' + c.age + ' s' : ''}</small>`;
+    li.innerHTML = h`<span><span class="dot"></span>${label(c)} <small>#${c.id}</small></span>` +
+                   h`<small>${c.worker ? c.worker + (c.server ? ' · ' + c.server : '') : 'unplaced'}${c.age != null ? ' · ' + c.age + ' s' : ''}</small>`;
     li.onclick = () => select(c.id);
     ul.appendChild(li);
   }
@@ -436,11 +447,11 @@ async function fetchEvents(from, to) {
   } catch (_) { $('#evstate').textContent = 'no events'; $('#evstate').className = 'bad'; }
   const subs = [...new Set([...events, ...groups].map(e => e.subsystem))].sort();
   const sel = $('#evfilter'); const keep = evfilter;
-  sel.innerHTML = '<option value="">every subsystem</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+  sel.innerHTML = '<option value="">every subsystem</option>' + subs.map(s => h`<option value="${s}">${s}</option>`).join('');
   sel.value = subs.includes(keep) ? keep : ''; evfilter = sel.value;
   const count = s => groups.length ? groups.filter(g => g.subsystem === s).reduce((n, g) => n + g.count, 0)
                                    : events.filter(e => e.subsystem === s).length;
-  $('#evlegend small').innerHTML = subs.map(s => `<span class="sw" style="background:${subColor(s)}"></span>${s} (${count(s)})`).join(' ');
+  $('#evlegend small').innerHTML = subs.map(s => h`<span class="sw" style="background:${subColor(s)}"></span>${s} (${count(s)})`).join(' ');
 }
 // Re-fetches the events for the current window and redraws ticks and list — every 5 s while a unit is
 // selected, so a detector's line crossed a moment ago is on the timeline within one tail of the resource.
@@ -471,10 +482,10 @@ function drawEvents() {
   if (groups.length) {
     for (const g of groups.filter(g => !evfilter || g.subsystem === evfilter)) {
       const li = document.createElement('li');
-      li.innerHTML = `<span><span class="sw" style="background:${subColor(g.subsystem)}"></span>` +
-                     `<strong>${g.count}×</strong> ${g.kind} <small>${g.subsystem}/${g.unit}</small>` +
+      li.innerHTML = h`<span><span class="sw" style="background:${subColor(g.subsystem)}"></span>` +
+                     h`<strong>${g.count}×</strong> ${g.kind} <small>${g.subsystem}/${g.unit}</small>` +
                      (g.class === 'alarm' ? ' <strong>alarm</strong>' : '') + `</span>` +
-                     `<small>${fmt(g.since)} – ${fmt(g.until)}</small>`;
+                     h`<small>${fmt(g.since)} – ${fmt(g.until)}</small>`;
       li.onclick = () => seek(g.since);
       ul.appendChild(li);
     }
@@ -484,8 +495,8 @@ function drawEvents() {
     const li = document.createElement('li'); li.className = e.fenced ? 'fenced' : '';
     const extra = Object.entries(e).filter(([k]) => !['subsystem', 'unit', 'cam', 'epoch', 't', 'kind', 'server', 'bucket', 'fenced'].includes(k))
                         .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' ');
-    li.innerHTML = `<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.subsystem}/${e.unit}</small></span>` +
-                   `<small>${e.server || ''} · epoch ${e.epoch}${e.fenced ? ' (fenced)' : ''}${extra ? ' · ' + extra : ''}</small>`;
+    li.innerHTML = h`<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.subsystem}/${e.unit}</small></span>` +
+                   h`<small>${e.server || ''} · epoch ${e.epoch}${e.fenced ? ' (fenced)' : ''}${extra ? ' · ' + extra : ''}</small>`;
     li.onclick = () => seek(e.t);
     ul.appendChild(li);
   }
@@ -647,7 +658,7 @@ async function pollLive() {
   for (const e of (d.events || []).sort((a, b) => a.t - b.t)) {
     const k = `${e.server}|${e.bucket}|${e.t}|${e.kind}`; if (live.seen.has(k)) continue; live.seen.add(k);
     const el = document.createElement('div'); el.className = 'ev';
-    el.innerHTML = `<span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t).slice(11)} <strong>${e.kind}</strong> <small>${e.subsystem}${e.note ? ' · ' + e.note : ''}${e.score != null ? ' · ' + e.score : ''}${e.fenced ? ' · fenced' : ''}</small>`;
+    el.innerHTML = h`<span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t).slice(11)} <strong>${e.kind}</strong> <small>${e.subsystem}${e.note ? ' · ' + e.note : ''}${e.score != null ? ' · ' + e.score : ''}${e.fenced ? ' · fenced' : ''}</small>`;
     feed.insertBefore(el, feed.children[1] || null);
     while (feed.children.length > 31) feed.removeChild(feed.lastChild);
     live.since = Math.max(live.since, e.t - 1);
@@ -683,18 +694,18 @@ async function loadArchives() {
   let d;
   try { d = await (await fetch('/rec/volumes')).json(); } catch (_) { archives = []; return; }
   archives = (d.volumes || []).map(v => v.name);
-  $('#archives').innerHTML = archives.map(a => `<option value="${a}"></option>`).join('');
+  $('#archives').innerHTML = archives.map(a => h`<option value="${a}"></option>`).join('');
   $('#archbox').style.display = 'block';
   // `how` is the command, written out by the console in the words of whatever started it — systemd on a
   // box, the scheduler on a cluster. Not a button: a console that could run it would be a console with a
   // token to its orchestrator, and starting processes is the one thing this side never does.
-  $('#archstate').innerHTML = `<small${d.needed ? ' class="err"' : ''}>served ${d.serving}/${d.wanted} · ${d.spare} spare` +
-                              `${d.needed ? ` — ${d.needed} more recorder(s) needed: <code>${d.how}</code>` : ''}</small>`;
+  $('#archstate').innerHTML = (d.needed ? '<small class="err">' : '<small>') + h`served ${d.serving}/${d.wanted} · ${d.spare} spare` +
+                              (d.needed ? h` — ${d.needed} more recorder(s) needed: <code>${d.how}</code>` : '') + '</small>';
   const ul = $('#archlist'); ul.innerHTML = '';
   for (const v of d.volumes || []) {
     const li = document.createElement('li'); li.className = v.served_by ? 'running' : '';
-    li.innerHTML = `<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB · ${v.url}</small></span>` +
-                   `<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? ' · <span class="bad">' + v.writing + '</span>' : ''} <a href="#" data-act="del">delete</a></small>`;
+    li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB · ${v.url}</small></span>` +
+                   h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''} <a href="#" data-act="del">delete</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => {
       e.preventDefault();
       if (!confirm(`Stop using ${v.name}? The footage already written stays where it is — this removes the declaration, not the archive.`)) return;
@@ -705,7 +716,7 @@ async function loadArchives() {
   }
   for (const s of d.suggested || []) {                                // a disk nobody declared yet: one button, pre-filled
     const li = document.createElement('li');
-    li.innerHTML = `<span>${s.name} <small>${s.why}</small></span><small>${Math.round(s.quota_bytes / GB)} GB <a href="#" data-act="dec">declare</a></small>`;
+    li.innerHTML = h`<span>${s.name} <small>${s.why}</small></span><small>${Math.round(s.quota_bytes / GB)} GB <a href="#" data-act="dec">declare</a></small>`;
     li.querySelector('[data-act=dec]').onclick = async e => {
       e.preventDefault();
       try { await send('POST', '/rec/volumes', { name: s.name, kind: 'local', url: s.url, server: s.server, quota_bytes: s.quota_bytes }); }
@@ -739,9 +750,9 @@ async function loadRec(streams = true) {
   const ul = $('#reclist'); ul.innerHTML = '';
   for (const r of list) {
     const li = document.createElement('li'); li.className = r.phase === 'running' ? 'running' : '';
-    li.innerHTML = `<span><span class="dot"></span>${r.id} <small>${r.home ? 'archive ' + r.home : 'wherever there is room'}</small></span>` +
-                   `<small>${r.phase || 'placed'}${r.why ? ' · ' + r.why : ''}${r.worker ? ' · ' + r.worker + (r.server ? ' on ' + r.server : '') : ' · unplaced'}` +
-                   `${r.via ? ' · via ' + r.via : ''} · keep ${r.retention_days} days <a href="#" data-act="del">stop</a></small>`;
+    li.innerHTML = h`<span><span class="dot"></span>${r.id} <small>${r.home ? 'archive ' + r.home : 'wherever there is room'}</small></span>` +
+                   h`<small>${r.phase || 'placed'}${r.why ? ' · ' + r.why : ''}${r.worker ? ' · ' + r.worker + (r.server ? ' on ' + r.server : '') : ' · unplaced'}` +
+                   h`${r.via ? ' · via ' + r.via : ''} · keep ${r.retention_days} days <a href="#" data-act="del">stop</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => {
       e.preventDefault();
       if (!confirm(`Stop recording ${r.id}? The footage stays in its volume until the ring overwrites it.`)) return;
@@ -781,9 +792,9 @@ async function loadDets() {
   const ul = $('#detlist'); ul.innerHTML = '';
   for (const u of Object.values(byId)) {
     const li = document.createElement('li'); li.className = u.phase === 'running' ? 'running' : (u.phase === 'unsupported' ? 'failed' : '');
-    li.innerHTML = `<span><span class="dot"></span>${u.kind} <small>${u.id}${u.params ? ' · ' + u.params : ''}</small></span>` +
-                   `<small>${u.phase}${u.why ? ' · ' + u.why : ''}${u.worker ? ' · ' + u.worker : ' · unplaced'}${u.events != null ? ' · ' + u.events + ' events' : ''}` +
-                   ` <a href="#" data-act="toggle">${u.enabled === false ? 'enable' : 'disable'}</a> <a href="#" data-act="del">delete</a></small>`;
+    li.innerHTML = h`<span><span class="dot"></span>${u.kind} <small>${u.id}${u.params ? ' · ' + u.params : ''}</small></span>` +
+                   h`<small>${u.phase}${u.why ? ' · ' + u.why : ''}${u.worker ? ' · ' + u.worker : ' · unplaced'}${u.events != null ? ' · ' + u.events + ' events' : ''}` +
+                   h` <a href="#" data-act="toggle">${u.enabled === false ? 'enable' : 'disable'}</a> <a href="#" data-act="del">delete</a></small>`;
     li.querySelector('[data-act=toggle]').onclick = async e => { e.preventDefault(); try { await send('PUT', `/det/units/${u.id}`, { enabled: u.enabled === false }); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
     li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/det/units/${u.id}`); } catch (err) { $('#deterr').textContent = 'refused: ' + err.message; } loadDets(); };
     ul.appendChild(li);
@@ -822,8 +833,8 @@ async function loadAutos(rebuild) {
     const when = (sc.when || []).map(t => `${t.sub}${t.unit ? ' ' + t.unit : ''} ${t.kind}`).join(' + ');
     const then = (sc.then || []).map(a => `${a.sub}.${a.action} ${a.unit || a.cam}${a.port ? ' port ' + a.port : ''}${a.n ? ' #' + a.n : ''}`).join(', ');
     const said = sc.unfit ? ' · does not fit: ' + sc.unfit.join('; ') : (sc.unchecked ? ' · not checked: ' + sc.unchecked.join('; ') : '');
-    li.innerHTML = `<span><span class="dot"></span>${sc.id} <small>${when} → ${then}</small></span>` +
-                   `<small>${sc.phase}${said} <a href="#" data-act="del">delete</a></small>`;
+    li.innerHTML = h`<span><span class="dot"></span>${sc.id} <small>${when} → ${then}</small></span>` +
+                   h`<small>${sc.phase}${said} <a href="#" data-act="del">delete</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => { e.preventDefault(); try { await send('DELETE', `/auto/scenarios/${sc.id}`); } catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; } loadAutos(); };
     ul.appendChild(li);
   }
@@ -856,7 +867,7 @@ function buildAutoArg() {
   const can = (catalog.vms[$('#autotarget').value] || {}).can, a = $('#autoaction').value, box = $('#autoarg');
   const upto = a === 'output' ? (can && can.relays) : a === 'preset' ? (can && can.presets) : 0;
   box.innerHTML = (a === 'record' || a.includes(':')) ? '' : upto
-    ? `<select name="arg">${Array.from({ length: upto }, (_, i) => `<option>${i + 1}</option>`).join('')}</select>`
+    ? h`<select name="arg">${raw(Array.from({ length: upto }, (_, i) => h`<option>${i + 1}</option>`).join(''))}</select>`
     : `<input type="number" name="arg" min="1" value="1" style="width:4em">`;
 }
 $('#autoadd').onsubmit = async e => {
@@ -880,7 +891,7 @@ const POLICY_HELP = { shared: 'every worker carries units, two on one server inc
 function renderPolicy(p) {
   const box = $('#policy'); if (!p.servers) { box.innerHTML = ''; return; }
   if (!box.querySelector('select')) {
-    box.innerHTML = `<span>servers</span><select id="servers-policy"><option value="shared">shared</option><option value="distinct">distinct</option></select><small id="policy-help"></small>`;
+    box.innerHTML = h`<span>servers</span><select id="servers-policy"><option value="shared">shared</option><option value="distinct">distinct</option></select><small id="policy-help"></small>`;
     box.querySelector('select').onchange = async e => {
       try { await send('PUT', '/policy', { servers: e.target.value }); } catch (err) { $('#policy-help').textContent = 'refused: ' + err.message; return; }
       loadResources();
@@ -905,8 +916,8 @@ async function loadResources() {
     for (const [name, s] of Object.entries(sv)) {
       const el = document.createElement('div'); el.className = 'srv';
       const ws = s.workers.map(w => `${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}`).join(', ') || 'no workers';
-      el.innerHTML = `<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
-                     `<small>${ws}</small>` + (s.placeable ? '' : `<small class="bad">not placeable: ${s.why}</small>`);
+      el.innerHTML = h`<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
+                     h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`);
       box.appendChild(el);
     }
     if (!Object.keys(sv).length) box.textContent = 'no servers yet';
@@ -919,10 +930,10 @@ async function loadResources() {
       const d = await r.json();
       const el = document.createElement('div'); el.className = 'srv';
       const per = {}; for (const c of d.units || []) per[c.cluster] = (per[c.cluster] || 0) + 1;
-      const ms = Object.entries(d.members || {}).map(([n, m]) => `${n}: ${m.state === 'ok' ? (per[n] || 0) + ' units' : '<span class="bad">' + m.state + '</span>'}`).join(' · ');
-      el.innerHTML = `<strong>domain</strong> <small>${d.complete ? 'every member answered' : '<span class="bad">incomplete</span>'} · as of ${Math.round(d.age)} s ago</small>` +
-                     (d.silent ? `<small class="bad">the domain is silent — this is what it knew ${Math.round(d.age)} s ago</small>` : '') +
-                     `<small>${ms}</small>` + (d.causes || []).map(c => `<small class="bad">${c}</small>`).join('');
+      const ms = raw(Object.entries(d.members || {}).map(([n, m]) => h`${n}: ${m.state === 'ok' ? (per[n] || 0) + ' units' : raw('<span class="bad">' + esc(m.state) + '</span>')}`).join(' · '));
+      el.innerHTML = h`<strong>domain</strong> <small>${d.complete ? 'every member answered' : raw('<span class="bad">incomplete</span>')} · as of ${Math.round(d.age)} s ago</small>` +
+                     (d.silent ? h`<small class="bad">the domain is silent — this is what it knew ${Math.round(d.age)} s ago</small>` : '') +
+                     h`<small>${ms}</small>` + (d.causes || []).map(c => h`<small class="bad">${c}</small>`).join('');
       box.prepend(el);
     }
   } catch (_) {}
@@ -949,7 +960,7 @@ async function session() {
   if (!s.gated) { boot(); return; }
   if (s.user) {
     $('#gate').style.display = 'none';
-    $('#whoami').innerHTML = `${s.user} · <a href="#" id="signout">sign out</a>`;
+    $('#whoami').innerHTML = h`${s.user} · <a href="#" id="signout">sign out</a>`;
     $('#signout').onclick = async e => { e.preventDefault(); await fetch('/session', { method: 'DELETE' }); location.reload(); };
     if (s.until) setTimeout(session, Math.max(1000, (s.until - Date.now() / 1000) * 1000 + 500));   // the token ends: ask again
     boot(); return;

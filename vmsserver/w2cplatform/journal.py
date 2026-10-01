@@ -30,8 +30,9 @@
 # the line's own — `audit`, and the role that wrote it — and a field of the same name would answer for them
 # in every reader.
 #
-# "Who" is the name the caller gave (`X-User`). There is no authentication in this course, and the journal
-# does not pretend there is; when there is, it writes into the same place. The domain (М12) writes the same
+# "Who" is `X-User` — the name the caller gave, OR the name the console's gate proved from a token and wrote
+# over the header (`access.py`: a cluster in a domain holds a key set; a console that cannot check is shut).
+# Outside a domain there is no authentication, and the journal does not pretend there is. The domain (М12) writes the same
 # family, as role `domain`: who created, disabled or deleted a person, who changed the grants, who admitted a
 # member — the history that a row holding only its last editor loses (feedback CL).
 # ================================================================================================
@@ -57,7 +58,7 @@ class Journal:
         if self.log is None:
             return None
         try:
-            return self.log.append(self.wall(), kind, cls, **fields)
+            return self.log.append(self.wall(), kind, cls, durable=True, **fields)
         except OSError:
             log.exception("%s: %s could not be written to the journal", self.role, kind)
             return None

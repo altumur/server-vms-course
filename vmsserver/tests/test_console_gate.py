@@ -31,6 +31,11 @@ class Tokens:
             raise Denied(401, "token refused: nobody's")
         return {"sub": token}
 
+    def glass(self, who, why, password):
+        if password != "open-sesame":
+            raise Denied(403, "the emergency password is wrong")
+        return {"sub": "break-glass", "via": "break-glass", "who": who, "exp": 1e12}
+
     def may(self, payload, capability, unit, labels):
         if payload.get("via") == "break-glass":
             return True
@@ -98,6 +103,10 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
         assert code == 503 and "cannot verify a token" in body["detail"]   # `domain.access` is not installed beside this console
         assert _call(base, "DELETE", "/cameras/1")[0] == 503 and _call(base, "GET", "/rec/recordings")[0] == 503
         assert _call(base, "GET", "/metrics")[0] == 200                     # what monitoring reads stays open
+        # the key set deleted, or rolled back from a backup made before the cluster joined: NOT open again
+        box.vars.delete(TRUST_KEYS)
+        code, body = _call(base, "GET", "/cameras")
+        assert code == 503 and "has gone" in body["detail"]
     finally:
         srv.shutdown()
 
@@ -132,6 +141,16 @@ def test_the_gate_asks_who_and_the_grant_says_what():
         assert _call(base, "POST", "/marks", {"cam": 1, "note": "bag"}, token="guard")[0] == 201   # an action names its unit in the BODY
         assert _call(base, "POST", "/marks", {"cam": 2, "note": "bag"}, token="guard")[0] == 403   # …and this one is not the guard's
         assert _call(base, "POST", "/marks", {"cam": 1, "note": "bag"}, token="viewer")[0] == 403  # looking is not acting
+        # a body that names two units is refused, not checked on one and acted on the other (the review's second pass)
+        assert _call(base, "POST", "/marks", {"unit": 1, "cam": 2, "note": "bag"}, token="guard")[0] == 400
+        # a GET names its unit in the query the same way: the device's own footage of camera 2 is not the viewer's
+        assert _call(base, "GET", "/segment?cam=1&from=0&to=1", token="viewer")[0] in (200, 503)
+        assert _call(base, "GET", "/segment?cam=2&from=0&to=1", token="viewer")[0] == 403
+        assert _call(base, "GET", "/events?from=0&to=1&cam=2", token="viewer")[0] == 403
+        # …and an export of camera 1 cannot name a recording of camera 2 (blocker 1 of that pass)
+        assert _call(base, "POST", "/rec/recordings", {"name": "2-cloud", "cam": "2"}, token="admin")[0] == 201
+        assert _call(base, "GET", "/export/1?rec=2-cloud&from=0&to=60", token="viewer")[0] == 404
+        assert _call(base, "GET", "/export/2?rec=2-cloud&from=0&to=60", token="viewer")[0] == 403
 
         # a list shows a caller what their grants cover, and not the cluster's
         ids = lambda token: sorted(r["id"] for r in _call(base, "GET", "/cameras", token=token)[1]["configured"])
@@ -155,10 +174,13 @@ def test_the_gate_asks_who_and_the_grant_says_what():
         vol = {"name": "cold", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12}
         assert _call(base, "POST", "/rec/volumes", vol, token="guard")[0] == 403 and _call(base, "POST", "/rec/volumes", vol, token="admin")[0] == 201
 
-        # the one local account: admitted, and every use is an alarm with the person's name in it
+        # the one local account: admitted, and every use that ACTS is an alarm with the person's name in it — a
+        # read is not (the session's opening was the alarm for looking; a page polls every three seconds)
         assert _call(base, "GET", "/cameras", token="glass:carol")[0] == 200
-        alarms = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
-        assert [(e["kind"], e["user"]) for e in alarms] == [("access.break_glass", "break-glass(carol)")]
+        alarms = lambda: [(e["kind"], e["user"]) for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
+        assert alarms() == []
+        assert _call(base, "DELETE", "/cameras/1", token="glass:carol")[0] == 200
+        assert alarms() == [("access.break_glass", "break-glass(carol)")]
     finally:
         srv.shutdown()
 
@@ -230,3 +252,23 @@ def test_a_grant_on_labels_reaches_the_recordings_of_the_cameras_that_carry_them
     finally:
         srv.shutdown()
 
+
+
+def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
+    """The one account with rights to everything is the one password worth guessing — and every wrong guess was a
+    fsync'd alarm. Five refusals from one address in fifteen minutes close the door to it, with ONE alarm saying
+    so; the right password does not open it until the window has passed."""
+    box = Box()
+    ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
+    try:
+        glass = lambda pw: _call(base, "POST", "/session", {"glass": {"who": "carol", "why": "uplink down", "password": pw}})[0]
+        assert glass("open-sesame") == 200                                                        # the account works
+        assert [glass("wrong") for _ in range(5)] == [403] * 5
+        assert glass("wrong") == 429 and glass("open-sesame") == 429                              # closed, to the right password too
+        alarms = [e["kind"] for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", cls="alarm")["events"]]
+        assert alarms.count("access.break_glass.refused") == 5 and alarms.count("access.break_glass.limited") == 1
+        assert alarms.count("access.break_glass.opened") == 1                                     # nothing more for the guesses past the limit
+        box.wall.advance(901)
+        assert glass("open-sesame") == 200                                                        # the window passed
+    finally:
+        srv.shutdown()

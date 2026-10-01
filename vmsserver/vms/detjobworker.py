@@ -253,9 +253,13 @@ class DetJobWorker(Worker):
         stop = stop or threading.Event()
         while not stop.is_set():
             try:
-                self.reconcile_once(); self.heartbeat_once()
-            except Exception:                               # noqa: BLE001
+                self.reconcile_once()
+            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("scan pass failed")
+            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
+                self.heartbeat_once()
+            except Exception:                            # noqa: BLE001
+                log.exception("scan heartbeat failed")
             stop.wait(poll)
         for job in list(self.running):
             self._stop(job)

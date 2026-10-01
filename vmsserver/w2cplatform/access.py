@@ -111,10 +111,16 @@ class Gate:
     # a session held in THIS process's memory — no token, so nothing to steal from the store and nothing that
     # outlives the console. Shared by every console of the process (a mount's gate is another object).
     _glass: dict = {}
+    # …and its attempts, by the caller's address and for the process: the one account with rights to everything
+    # is the one password worth guessing, and a wrong guess is also a fsync'd alarm line. Past the limit the
+    # door says 429 and writes one alarm, not one per guess (the review's second pass, major).
+    GLASS_TRIES, GLASS_TRIES_ALL, GLASS_WINDOW = 5, 20, 900.0
+    _glass_tries: dict = {}
 
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
         self._said_open = False
+        self._seen_keys = False                          # a cluster that WAS in a domain does not become open again
         self._loaded: Access | None = None
 
     def access(self) -> Access | None:
@@ -124,6 +130,14 @@ class Gate:
             items, _ = self.vars.get(TRUST_KEYS)
         except OSError as e:
             raise Denied(503, f"this console cannot read the cluster's trust ({e}): it admits nobody until it can") from None
+        if not items and self._seen_keys:
+            # Deleted, or rolled back from a backup made before the cluster joined: the keys this console has
+            # already checked tokens against are gone. Open would be "an administrator under any name" for
+            # whoever did that (the review's second pass, major). Shut, until the agent brings them back.
+            raise Denied(503, f"the key set has gone from this cluster's store ({TRUST_KEYS}): this console admits "
+                              f"nobody until the domain's agent writes it again")
+        if items:
+            self._seen_keys = True
         if not items:
             if not self._said_open:
                 self._said_open = True
@@ -155,7 +169,7 @@ class Gate:
 
     # Open an emergency session: `(session id, payload)`. Every attempt is an alarm, the refused ones too — the
     # account exists to be used rarely and seen always.
-    def open_glass(self, who: str, why: str, password: str) -> tuple[str, dict]:
+    def open_glass(self, who: str, why: str, password: str, addr: str = "?") -> tuple[str, dict]:
         import secrets
         from .events import ALARM
         access = self.access()
@@ -165,11 +179,23 @@ class Gate:
             raise Denied(400, "an emergency entry says who is entering and why")
         if not hasattr(access, "glass"):
             raise Denied(501, "this cluster's access has no emergency account")
+        now = self.wall()
+        limits = {addr: self.GLASS_TRIES, "*": self.GLASS_TRIES_ALL}
+        for k, limit in limits.items():
+            tries = self._glass_tries[k] = [t for t in self._glass_tries.get(k, []) if now - t < self.GLASS_WINDOW]
+            if len(tries) >= limit:
+                raise Denied(429, f"too many emergency entries refused ({len(tries)} in {self.GLASS_WINDOW:.0f} s): "
+                                  f"the door is closed to {'this address' if k == addr else 'everybody'} for a while")
         try:
             payload = access.glass(who, why, password)
         except Denied:
+            for k, limit in limits.items():
+                self._glass_tries[k].append(now)
+                if len(self._glass_tries[k]) == limit and self.journal is not None:
+                    self.journal().say("access.break_glass.limited", cls=ALARM, user=f"break-glass({who})",
+                                       addr=addr, tries=limit, window=self.GLASS_WINDOW)
             if self.journal is not None:
-                self.journal().say("access.break_glass.refused", cls=ALARM, user=f"break-glass({who})", why=why)
+                self.journal().say("access.break_glass.refused", cls=ALARM, user=f"break-glass({who})", why=why, addr=addr)
             raise
         sid = secrets.token_urlsafe(24)
         self._glass[sid] = payload
@@ -191,7 +217,9 @@ class Gate:
         name = str(payload.get("sub", ""))
         if payload.get("via") == "break-glass":          # the one local account (М12 Lesson 4): every use is an alarm
             name = f"break-glass({payload.get('who', '?')})"
-            if self.journal is not None:
+            # …every use that ACTS. The session's opening is the alarm for looking (`open_glass`); a page that
+            # polls `/events` under it would write one every three seconds and bury the ones that matter.
+            if self.journal is not None and capability != "view":
                 from .events import ALARM
                 self.journal().say("access.break_glass", cls=ALARM, user=name, capability=capability, **({"target": unit} if unit else {}))
         if not access.may(payload, capability, unit, list(labels or [])):

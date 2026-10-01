@@ -238,8 +238,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # the console's own bucket, and a line in the log: who, which piece, from what address. A player asks
     # for one file in dozens of byte ranges, so the same piece by the same person is said once a minute.
     #
-    # "Who" is `X-User` — the name the caller gave. There is no authentication in this course, and the
-    # journal does not pretend otherwise; when there is, it writes into the same place.
+    # "Who" is `X-User` — the name the caller gave, or the one the gate proved from a token and wrote over
+    # the header (`w2cplatform/access.py`): in a domain the journal names who the token said.
     seen_reads: dict[tuple, float] = {}
     reads_lock = threading.Lock()
 
@@ -425,7 +425,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # caller can see.
         from w2cplatform.obsd import Sample
         from .archive import Span, authoritative
-        units = [str(q["rec"])] if q.get("rec") else recordings_of(rec_ctl, cid)
+        # `rec` picks ONE of this camera's recordings — never another camera's: the gate checked `view` on the
+        # camera in the path, and a recording named in the query must be hers (the review's second pass, blocker 1).
+        units = recordings_of(rec_ctl, cid)
+        if q.get("rec"):
+            units = [u for u in units if u == str(q["rec"])]
+            if not units:
+                return 404, {"detail": f"recording {q['rec']} is not a recording of camera {cid}", "error": "not hers"}
         doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
         got, unreachable = [], []
         for unit in units:

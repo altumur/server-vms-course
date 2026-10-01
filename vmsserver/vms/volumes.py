@@ -156,7 +156,7 @@ def write(vars_, fields: dict, sealer=None) -> Volume:
     name = str(fields["name"])
     _, idx = vars_.get(key(name))
     vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
-    vars_.put(key(name), seal_items(sealer, vol.to_items()), cas=idx)
+    vars_.put(key(name), seal_items(sealer, vol.to_items(), key(name)), cas=idx)
     return vol
 
 

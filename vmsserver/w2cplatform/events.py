@@ -276,7 +276,7 @@ class EventLog:
     #
     # Only an alarm is written down. Absent means `observation`, which is what nearly every line is, and
     # a class on every line would be a word repeated a million times to say "nothing special".
-    def append(self, t: float, kind: str, cls: str = OBSERVATION, **fields) -> str:
+    def append(self, t: float, kind: str, cls: str = OBSERVATION, durable: bool = False, **fields) -> str:
         if cls not in CLASSES:
             raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
         if "class" in fields:
@@ -302,7 +302,7 @@ class EventLog:
         # suppression above is what answers it.
         with open(p, "a") as f:
             f.write(json.dumps(line) + "\n"); f.flush()
-            if cls == ALARM:
+            if cls == ALARM or durable:              # `durable`: the journal's lines — a deletion's "who" (the review's second pass)
                 durably(f)
         # …and the directory entry that names the file, once per bucket this writer has touched.
         #
@@ -310,7 +310,7 @@ class EventLog:
         # for no barrier at all, so the entry can still be only in the cache while the alarm's bytes are
         # on the platter — the bytes safe and nothing pointing at them. What decides is whether THIS
         # writer has made this directory durable yet, and a set of paths answers that without a stat.
-        if cls == ALARM and os.path.dirname(p) not in self._synced_dirs:
+        if (cls == ALARM or durable) and os.path.dirname(p) not in self._synced_dirs:
             durable_dir(os.path.dirname(p))
             self._synced_dirs.add(os.path.dirname(p))
         return p

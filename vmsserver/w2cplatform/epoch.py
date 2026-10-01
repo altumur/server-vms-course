@@ -119,11 +119,17 @@ class Lease:
         t0 = self.clock()
         try:
             live = current_epoch(self.vars, self.key)
-        except Exception:                      # noqa: BLE001 — the store is unreachable: not a loss, and not a confirmation
+        except OSError:                        # the store is unreachable: not a loss, and not a confirmation
             self.store_errors += 1
             if self.silent_since is None and self.may_write():
                 self.silent_since = t0         # silence, established while the lease was still good
             return self.may_record()
+        except (ValueError, KeyError, TypeError):
+            # The store ANSWERED, with a row that is not an epoch. That is not silence to record through
+            # (the review's second pass): somebody wrote over the counter, and whoever did may have given the
+            # camera away too. Fenced, as a counter that moved; the instance takes a fresh slot and starts again.
+            self.fenced, self.conflicts = True, self.conflicts + 1
+            return False
         self.silent_since = None               # it answered: whatever it says now is an answer
         if live != self.epoch:
             self.fenced, self.conflicts = True, self.conflicts + 1

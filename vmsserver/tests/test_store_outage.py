@@ -255,3 +255,32 @@ def test_a_recorders_own_disk_stays_its_own_and_a_network_archive_is_let_go():
             box.clock.advance(8); box.wall.advance(8); r.lease_pass()
         assert (r.hold == "vol") is stays and (r.volume == "vol") is stays, kind
 
+
+
+def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last():
+    """The review's second pass, blocker 4. The recorder's pass began by reading the camera's holder — from the
+    object store, which on a cluster is the same store — and the OSError ended the pass: no restart of a pipeline
+    that fell over, no watch on the writer, for as long as the store was away. The store that does not answer
+    says nothing: the source read last stands, and the other parts of the pass run."""
+    from vms.config import live_shm
+    from vms.recworker import RecWorker
+    from tests.conftest import REC_ACL, TEST_BLOCK, TEST_QUOTA, TEST_READ, obsd_session
+    from tests.test_lesson5_recorder import _box
+    box, ctl, con, rec_con, rec_ctl, w = _box()
+    vars_, objects = Flaky(box.vars.as_writer("recworker-r-1", REC_ACL)), Flaky(box.objects)
+    act = FakeActuator()
+    r = RecWorker("r-1", vars_, objects, act, clock=box.clock, wall=box.wall, server="srv-1", archive_root=box.archive,
+                  block=TEST_BLOCK, read=TEST_READ, default_quota=TEST_QUOTA, obsd=obsd_session("rec-outage"),
+                  env={"ARCHIVE_VOLUME": f"file://{box.root}/vol-srv-1"})
+    r.lease_pass(); r.heartbeat_once()
+    rec_con.create({"name": "1-main", "cam": "1"}); rec_ctl.ensure_placed()
+    assert r.reconcile_once() == [("start", "1-main")] and act.started["1-main"]["source"] == live_shm(1)
+    vars_.down = objects.down = True
+    box.clock.advance(5); box.wall.advance(5)
+    assert r.reconcile_once() == []                                   # the store away: nothing stopped, nothing fenced
+    act.dead.append("1-main"); r.pump_once()                          # the pipeline falls over meanwhile
+    box.clock.advance(5); box.wall.advance(5)
+    assert r.reconcile_once() == [("start", "1-main")]                # restarted — on the source read last, under the held epoch
+    assert act.started["1-main"]["source"] == live_shm(1) and act.started["1-main"]["epoch"] == 1 and r.store_errors > 0
+    vars_.down = objects.down = False
+    assert r.reconcile_once() == [] and act.running == {"1-main"}

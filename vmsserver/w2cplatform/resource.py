@@ -71,6 +71,7 @@ home. No controller is involved in any of it.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import threading
@@ -80,6 +81,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .doors import MAX_LIMIT, safe_rel, safe_segment
+
+log = logging.getLogger(__name__)
 
 from .contract import BUILD, SCHEMA, check_schema
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
@@ -650,27 +653,50 @@ class Resource:
     # — so what is sent while the pass runs is the LAST heartbeat again, with the time moved on: bytes already
     # published, and nothing the pass is changing.
     PULSE_SECONDS = 10.0
+    # …and not for ever (the review's second pass): a pass stuck on a disk that never answers would be `live`
+    # with frozen numbers for as long as it hung. Four `lost_after` and the pulse stops; the pass is then what
+    # it is — silent — and the heartbeat says how long it has been running while it still beats.
+    PULSE_LIMIT = 4
 
     def pass_(self) -> dict:
         done = threading.Event()
+        started = self.wall()
 
         def pulse():
             while not done.wait(self.PULSE_SECONDS):
                 last = getattr(self, "_last_heartbeat", None)
+                running = self.wall() - started
+                if running > self.PULSE_LIMIT * self.lost_after:
+                    log.error("%s: the pass has run %.0f s — longer than %d × lost_after: the pulse stops, and this "
+                              "resource is reported silent until the pass ends", self.server, running, self.PULSE_LIMIT)
+                    return
                 if last is not None:
-                    self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps({**last, "ts": self.wall()}).encode())
+                    self.objects.put(f"{RESOURCES}/{self.server}/heartbeat",
+                                     json.dumps({**last, "ts": self.wall(), "pass_seconds": round(running, 1)}).encode())
 
         threading.Thread(target=pulse, daemon=True).start()
+        # Each part in a `try` of its own (the review's second pass): the promise (`retain`) reads the rows of
+        # what is kept, and a store that does not answer used to take the watermark and the mirror with it.
+        # What a part could not do is named in `errors`; the next pass tries again.
+        out, errors = {}, []
+        def part(name, fn, into=None):
+            try:
+                r = fn()
+                out.update(r if into is None else {into: r})
+            except OSError as e:
+                errors.append(f"{name}: {e}")
+                log.warning("%s: %s skipped this pass: %s", self.server, name, e)
         try:
-            out = {}
             for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
-                out.update({f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
-            out["removed"] = self.retain()
+                part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
+            part("retain", self.retain, "removed")
             self.last_usage, self.usage_at = self.usage(), self.wall()    # the one walk of the pass, not one per heartbeat
             self._volume_usage = {n: self.usage(n) for n in self.quotas}  # …and the same for the volumes with a ceiling
             out["usage"] = self.last_usage
-            out.update(self.relieve())
-            out.update(self.mirror())
+            part("relieve", self.relieve)
+            part("mirror", self.mirror)
+            if errors:
+                out["errors"] = errors
             return out
         finally:
             done.set()

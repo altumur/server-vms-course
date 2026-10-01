@@ -224,8 +224,13 @@ class GstRecActuator(GstActuator):
             return self._release(cam["id"])
         if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
             # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
-            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage.
-            self.sinks.pop(cam["id"]).finish()
+            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage. Closed AFTER
+            # the pipeline is down: a key frame handed to the sink between `finish` and NULL would open a sequence
+            # nobody closes (the review's first pass, blocker 4, in its obsd form).
+            sink = self.sinks.pop(cam["id"])
+            ok = super().__call__(verb, cam)
+            sink.finish()
+            return ok
         return super().__call__(verb, cam)
 
     # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And on every

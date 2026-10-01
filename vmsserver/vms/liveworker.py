@@ -356,9 +356,13 @@ class LiveWorker(Worker):
         stop = stop or threading.Event()
         while not stop.is_set():
             try:
-                self.reconcile_once(); self.heartbeat_once()
-            except Exception:                                       # noqa: BLE001
+                self.reconcile_once()
+            except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("gateway pass failed")
+            try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
+                self.heartbeat_once()
+            except Exception:                            # noqa: BLE001
+                log.exception("gateway heartbeat failed")
             stop.wait(poll)
         for cam in list(self.upstreams):
             self._drop(cam)

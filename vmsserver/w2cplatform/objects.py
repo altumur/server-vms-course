@@ -34,6 +34,7 @@ import os
 import tempfile
 from typing import Protocol
 
+from .events import durable_dir, durably
 from .limits import NO_CEILING, check
 
 
@@ -74,7 +75,7 @@ class FsObjectStore:
     # Creates parent directories, writes to `<path>.tmp`, then `os.replace` onto the final path. That rename
     # is the "whole or not at all" guarantee: a reader (a controller reading a heartbeat while the worker
     # writes it) sees the old bytes or the new bytes, never a truncated file.
-    def put(self, key: str, data: bytes) -> None:
+    def put(self, key: str, data: bytes, durable: bool = False) -> None:
         check(key, len(data), self.max_bytes)      # refused before the write: the old object survives intact
         p = self._p(key)
         os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -85,13 +86,23 @@ class FsObjectStore:
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)
+                if durable:
+                    f.flush(); durably(f)
             os.replace(tmp, p)
+            if durable:
+                durable_dir(os.path.dirname(p))
         except BaseException:
             try:
                 os.remove(tmp)
             except FileNotFoundError:
                 pass
             raise
+
+    # The bytes a ROW will name — a detector's mask, whose digest goes into a row written with fsync. Without the
+    # barrier the row survives the power going and the file does not, and the detector never starts (the review's
+    # second pass). Heartbeats and snapshots do not pay it: the next one replaces them anyway.
+    def put_durable(self, key: str, data: bytes) -> None:
+        self.put(key, data, durable=True)
 
     # Removes the file; a missing key is not an error, so a sweep that runs twice on the same candidate —
     # two consoles, a retry — does the same thing the second time.

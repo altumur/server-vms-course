@@ -600,7 +600,7 @@ class VmsWorker(Worker):
             # The device's password, opened at the last moment and only for the pipeline (`w2cplatform/sealing.py`):
             # the row in the store, in this process's memory and in its heartbeat stays sealed.
             try:
-                cam = open_row(self.sealer, cam)
+                cam = open_row(self.sealer, cam, self.SUB.config(self.ROWS, str(cam["id"])))
             except Sealed as e:
                 log.error("%s: camera %s not started: %s", self.name, unit, e)
                 self.sealed_errors[unit] = str(e)               # in its status, not only in this log (feedback CD)

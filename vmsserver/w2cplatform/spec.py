@@ -538,6 +538,14 @@ class SubsystemSpec:
         unknown = [k for k in fields if k not in self.fields]
         if unknown:
             raise Refused(f"unknown field(s) {unknown}")
+        # A secret arrives in the clear and is sealed HERE, on its way into the store. A value that already looks
+        # sealed is a copy from another row — camera 7's ciphertext under camera 8, for the holder to open for
+        # whoever reads 8 — or a typo that would stop the holder's pass (the review's second pass, blocker 3 and a
+        # major): refused at the door. Nothing a client types is `enc:v1:…`.
+        from .sealing import is_sealed, is_secret_field
+        pasted = [k for k, v in fields.items() if is_secret_field(k) and is_sealed(v)]
+        if pasted:
+            raise Refused(f"{pasted}: a secret is given in the clear and sealed by this console; a sealed value is not taken")
         # A `url` field may not carry a userinfo. `rtsp://root:hunter2@10.0.0.5/…` is how a password
         # reaches a row that is in the SNAPSHOT — out of the cluster, into М12's directory, and onto the
         # screen of every console, past a mask that only looks at `*_secret`. The credential fields are
@@ -653,9 +661,9 @@ class SpecController(Controller):
         self.sealer = Sealer.from_env()
 
     # The row as it goes into the store: `*_secret` values sealed, when this process holds the key.
-    def _sealed(self, items: dict) -> dict:
+    def _sealed(self, items: dict, uid) -> dict:
         from .sealing import seal_items
-        return seal_items(self.sealer, items)
+        return seal_items(self.sealer, items, self._row_key(uid))
 
     # `<name>/<rows>/<id>`.
     def _row_key(self, uid) -> str:
@@ -762,11 +770,11 @@ class SpecController(Controller):
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
-                self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r)), cas=idx)
+                self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
                 self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
-        self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r)), cas=0)
+        self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
         self._derived(r, uid)
         return r
 
@@ -783,7 +791,7 @@ class SpecController(Controller):
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
-            return self._sealed(self.spec.items(r))
+            return self._sealed(self.spec.items(r), uid)
         r = self.spec.row(self.write(self._row_key(uid), mutate))
         if any(f in fields for d in self.spec.derived for f in d.items.values()):
             self._derived(r, uid)
@@ -1485,7 +1493,8 @@ class SpecController(Controller):
         marked = json.loads((items or {}).get("digests", "[]"))
         if d in marked:
             self.vars.put(key, {**items, "digests": json.dumps([x for x in marked if x != d])}, cas=idx)
-        self.objects.put(self.sub.blob_key(d), data)
+        # On the platter before the row names it (`FsObjectStore.put_durable`); a store without the barrier puts as it can.
+        getattr(self.objects, "put_durable", self.objects.put)(self.sub.blob_key(d), data)
         return d
 
     # What a worker calls with the digest it read from its row. `None` when the object is not there, which

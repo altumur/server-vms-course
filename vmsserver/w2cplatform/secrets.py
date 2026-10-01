@@ -25,8 +25,10 @@ Everything between those two points renders it as `***`."""
 #   names a secret there, and leaves secrets out when the snapshot defaults to "every field". A refusal at
 #   load time rather than care at review time.
 #
-# What it does NOT buy, said plainly: the row in the store holds the secret in the clear, and the store's
-# ACL is about writers — anyone who may READ `<sub>/<rows>/*` reads every password. On one box that is the
+# What it does NOT buy, said plainly: this module is about what LEAVES — the page, the snapshot, the logs. The
+# row in the store holds the secret sealed when the console has a key (`sealing.py`, `SECRETS_KEY`) and in the
+# clear when it has none, with a warning said once; the store's ACL is about writers — anyone who may READ
+# `<sub>/<rows>/*` reads every row, sealed or not. On one box that is the
 # file under `PLATFORM_DIR`; on a cluster it is raft, encrypted at rest, with a policy per job. Narrowing
 # the readers is a change to the Variables contract, not to this file, and it has not been made.
 #

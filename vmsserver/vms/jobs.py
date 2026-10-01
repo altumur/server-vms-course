@@ -169,7 +169,7 @@ def _settings(det_ctl, cam: str, kind: str, it: dict) -> dict:
     if not out:
         for d in sorted(det_ctl.units(), key=lambda d: str(d["id"])):
             if str(d.get("cam")) == cam and str(d.get("kind")) == kind and not str(d["id"]).endswith(DETECT_KEY):
-                out = {f: d[f] for f in ("params", "mask") if d.get(f)}
+                out = {f: d[f] for f in ("params", "mask", "labels") if d.get(f)}
                 break
     return out
 
@@ -211,7 +211,7 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
     if job_ctl.vars.get(job_ctl.sub.config(job_ctl.spec.rows, jid))[0]:
         return 0                                            # made already, or deleted on purpose
     job_ctl.create({"name": jid, "cam": cam, "rec": rec, "kind": kind, "from": t0, "to": t1,
-                    **{k: v for k, v in same.items() if k in ("params", "mask")}})
+                    **{k: v for k, v in same.items() if k in ("params", "mask", "labels")}})
     log.info("%s: scanning %s [%.0f, %.0f) with %s — a scenario asked", job_ctl.spec.name, rec, t0, t1, kind)
     return 1
 
@@ -329,7 +329,7 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
                     continue                                # made already, or deleted on purpose
                 body = {"name": jid, "cam": cam, "rec": unit, "kind": str(d["kind"]),
                         "from": t0, "to": t1}
-                for f in ("params", "mask"):                # the same settings the live detector runs with
+                for f in ("params", "mask", "labels"):      # the same settings — and the same place — the live detector runs with
                     if d.get(f):
                         body[f] = d[f]
                 job_ctl.create(body)

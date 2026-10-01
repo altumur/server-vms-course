@@ -672,7 +672,21 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
         res.mirror = lambda: seen.update(resources_seen(box.objects)) or mirror()     # the last step of the pass
         res.pass_()
         assert seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()   # fresh, while the pass ran
-        assert {k: v for k, v in seen["srv-1"].items() if k != "ts"} == {k: v for k, v in first.items() if k != "ts"}
+        assert {k: v for k, v in seen["srv-1"].items() if k not in ("ts", "pass_seconds")} == {k: v for k, v in first.items() if k != "ts"}
+        assert seen["srv-1"]["pass_seconds"] >= 100                                     # …and says how long the pass has run
+        # …and not for ever (the review's second pass): a pass stuck past PULSE_LIMIT × lost_after stops pulsing,
+        # and the resource is what it is — silent — until the pass ends and the next heartbeat goes out.
+
+        class Stuck(Slow):
+            def pass_(self, now):
+                box.wall.advance(res.PULSE_LIMIT * res.lost_after + 1); time.sleep(0.2)
+                return {}
+
+        res.register("slow", Stuck())
+        res.pass_()
+        assert seen["srv-1"]["ts"] < box.wall() - res.lost_after and "srv-1" not in res.live_resources()
+        res.heartbeat()
+        assert "srv-1" in res.live_resources()
     finally:
         rsrv.shutdown()
 

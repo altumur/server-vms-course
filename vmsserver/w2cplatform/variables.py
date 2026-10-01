@@ -403,6 +403,7 @@ class FileVariables:
             except FileNotFoundError:
                 pass
             self._next_index()
+            self._durable_dirs()                    # the removal, too, survives the power going (the review's second pass)
 
     # Every stored path that starts with `prefix`, decoded from the filenames and sorted. Callers pass
     # prefixes ending in `/` (`"vms/workers/"`, `"vms/slots/"`, `"vms/idem/"`) to enumerate a row family.

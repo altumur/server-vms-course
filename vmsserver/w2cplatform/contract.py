@@ -686,7 +686,7 @@ class Worker:
             return True
         items, idx = self.vars.get(self.sub.slot_key(self.name))
         cur = Slot.from_items(self.name, items)
-        if cur.holder != self.instance:
+        if cur.holder != self.instance or cur.released:          # released: `retire` let go of it; a late renewal does not take it back
             return False
         new = Slot(self.name, self.instance, self.wall() + self.slot_ttl, False, cur.gen)
         try:

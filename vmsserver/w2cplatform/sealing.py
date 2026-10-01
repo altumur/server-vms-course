@@ -40,6 +40,7 @@ import os
 import secrets as _secrets
 
 from .secrets import is_secret_field
+from .variables import Conflict
 
 PREFIX = "enc:v1:"
 log = logging.getLogger("w2cplatform.sealing")
@@ -81,33 +82,58 @@ class Sealer:
         path = (os.environ if env is None else env).get("SECRETS_KEY", "")
         return cls.from_file(path) if path else None
 
-    def seal(self, field: str, value: str) -> str:
+    # The associated data binds the ciphertext to its place: the ROW (`<sub>/<rows>/<id>`, the store key) and the
+    # field. Without the row, camera 7's sealed password pasted into camera 8's row opens for whoever reads 8 —
+    # the holder does the opening, and does it for the row it was given (the review's second pass, a major).
+    # Values sealed before the row was part of it open by the field alone, once; `seal_stored` re-seals them.
+    @staticmethod
+    def _aad(field: str, ctx: str) -> bytes:
+        return f"{ctx}:{field}".encode() if ctx else field.encode()
+
+    def seal(self, field: str, value: str, ctx: str = "") -> str:
         if not value or is_sealed(value):
             return value
         nonce = _secrets.token_bytes(12)
-        ct = self._aead[self.current].encrypt(nonce, value.encode(), field.encode())
+        ct = self._aead[self.current].encrypt(nonce, value.encode(), self._aad(field, ctx))
         b = lambda x: base64.urlsafe_b64encode(x).decode().rstrip("=")
         return f"{PREFIX}{self.current}:{b(nonce)}:{b(ct)}"
 
-    def open(self, field: str, value: str) -> str:
+    def bound(self, field: str, value: str, ctx: str) -> bool:
+        """Whether a sealed value opens with its row in the associated data — or only by the field, the old way."""
+        try:
+            self.open(field, value, ctx, fallback=False)
+            return True
+        except Sealed:
+            return False
+
+    def open(self, field: str, value: str, ctx: str = "", fallback: bool = True) -> str:
         if not is_sealed(value):
             return value
-        kid, nonce, ct = value[len(PREFIX):].split(":")
+        # A value that only LOOKS sealed — `enc:v1:x`, a row somebody typed or a copy that lost its tail — is a
+        # `Sealed` like any other: this camera's status, not the end of the pass for every camera after it
+        # (the review's second pass, blocker 3).
+        parts = value[len(PREFIX):].split(":")
+        if len(parts) != 3 or not all(parts):
+            raise Sealed(f"{field} looks sealed and is not: `{PREFIX}<kid>:<nonce>:<ciphertext>` has {len(parts)} parts")
+        kid, nonce, ct = parts
         if kid not in self._aead:
             raise Sealed(f"{field} is sealed with key {kid!r}, which this process does not hold")
         d = lambda x: base64.urlsafe_b64decode(x + "=" * (-len(x) % 4))
-        try:
-            return self._aead[kid].decrypt(d(nonce), d(ct), field.encode()).decode()
-        except Exception:                                # noqa: BLE001 — InvalidTag: tampered, or another field's
-            raise Sealed(f"{field} does not open with key {kid!r}: altered, or copied from another field") from None
+        for aad in ([self._aad(field, ctx)] + ([field.encode()] if ctx and fallback else [])):
+            try:
+                return self._aead[kid].decrypt(d(nonce), d(ct), aad).decode()
+            except Exception:                            # noqa: BLE001 — InvalidTag: tampered, or another row's or field's
+                continue
+        raise Sealed(f"{field} does not open with key {kid!r}: altered, or copied from another row or field")
 
 
 # The two operations the platform performs, with or without a key.
 _said_clear = False
 
 
-def seal_items(sealer: Sealer | None, items: dict) -> dict:
-    """The row as it goes into the store: every `*_secret` value sealed — when there is a key."""
+def seal_items(sealer: Sealer | None, items: dict, ctx: str = "") -> dict:
+    """The row as it goes into the store: every `*_secret` value sealed — when there is a key. `ctx`: the row's
+    key in the store, bound into the ciphertext."""
     global _said_clear
     if sealer is None:
         if not _said_clear and any(is_secret_field(k) and v for k, v in items.items()):
@@ -115,17 +141,18 @@ def seal_items(sealer: Sealer | None, items: dict) -> dict:
             log.warning("secrets are stored in the CLEAR: this process has no SECRETS_KEY, and whoever reads or copies "
                         "the store reads every device password")
         return items
-    return {k: (sealer.seal(k, str(v)) if is_secret_field(k) and v else v) for k, v in items.items()}
+    return {k: (sealer.seal(k, str(v), ctx) if is_secret_field(k) and v else v) for k, v in items.items()}
 
 
-def open_row(sealer: Sealer | None, row: dict) -> dict:
-    """The row as the process that USES a secret needs it. A sealed value and no key raise `Sealed`."""
+def open_row(sealer: Sealer | None, row: dict, ctx: str = "") -> dict:
+    """The row as the process that USES a secret needs it. A sealed value and no key raise `Sealed`. `ctx`: the
+    row's key in the store — the one the holder was given, not one the row names."""
     out = dict(row)
     for k, v in row.items():
         if is_secret_field(k) and is_sealed(v):
             if sealer is None:
                 raise Sealed(f"{k} is sealed and this process has no key (SECRETS_KEY)")
-            out[k] = sealer.open(k, v)
+            out[k] = sealer.open(k, v, ctx)
     return out
 
 
@@ -137,22 +164,34 @@ def open_row(sealer: Sealer | None, row: dict) -> dict:
 def seal_stored(sealer: "Sealer | None", vars_, prefixes) -> int:
     if sealer is None:
         return 0
-    sealed = 0
+    sealed = skipped = 0
     for prefix in prefixes:
         for key in vars_.list(prefix):
             items, idx = vars_.get(key)
             if not items or items.get("deleted") == "true":
                 continue
+            # In the clear — or sealed before the row was bound into the ciphertext: opened by the field alone and
+            # sealed again, to this row.
             todo = {k: v for k, v in items.items() if is_secret_field(k) and v and not is_sealed(v)}
+            try:
+                todo.update({k: sealer.open(k, v, key) for k, v in items.items()
+                             if is_secret_field(k) and is_sealed(v) and not sealer.bound(k, v, key)})
+            except Sealed as e:
+                log.warning("%s: a sealed value this process cannot open is left as it is (%s)", key, e)
             if not todo:
                 continue
             try:
-                vars_.put(key, {**items, **{k: sealer.seal(k, str(v)) for k, v in todo.items()}}, cas=idx)
+                vars_.put(key, {**items, **{k: sealer.seal(k, str(v), key) for k, v in todo.items()}}, cas=idx)
                 sealed += 1
-            except Exception as e:                       # noqa: BLE001 — a row written meanwhile: sealed by its own write
+            except Conflict as e:                        # a row written meanwhile: sealed by its own write
                 log.info("%s changed while being sealed (%s): its own write sealed it", key, e)
+            except Exception as e:                       # noqa: BLE001 — the store refused or did not answer: said, not hidden
+                skipped += 1
+                log.warning("%s was NOT sealed (%s)", key, e)
     if sealed:
         log.warning("sealed the device secrets of %d row(s) written before this console had a key", sealed)
+    if skipped:
+        log.warning("%d row(s) with device secrets in the clear could not be sealed: the store refused or did not answer", skipped)
     return sealed
 
 

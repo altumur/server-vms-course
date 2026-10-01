@@ -257,6 +257,7 @@ class RecWorker(VmsWorker):
         self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
         self.sources: dict[str, str] = {}                                     # what each running pipeline subscribed to
+        self.last_source: dict[str, tuple[str, str]] = {}                     # camera -> (server, source) read last: the answer while the store is away
 
     # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
     # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
@@ -280,12 +281,24 @@ class RecWorker(VmsWorker):
         The source is the worker's shared-memory branch (`live_shm`, shm://…) when that worker is on
         THIS server — the same bytes with no RTSP hop, no fan-out process on the recording path — and
         its RTSP fan-out (`live_url`) otherwise."""
-        found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
+        # The store that does not answer says nothing — not "nobody holds it". A recorder whose camera's pipeline
+        # fell over during the outage restarts it on the source it read last (the review's second pass, blocker 4:
+        # the camera's worker is still there; what is away is the book). A camera never read stays unstartable.
+        try:
+            found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
+        except OSError as e:
+            self.store_errors += 1
+            last = self.last_source.get(str(cam))
+            log.warning("%s: the store did not answer for camera %s's holder (%s): %s", self.name, cam, e,
+                        f"its last source {last[1]} stands" if last else "and it was never read")
+            return last
         if found is None:
+            self.last_source.pop(str(cam), None)
             return None
         _, hb, st = found
         server = hb.extra.get("server", "?")
         if server == self.server and st.get("live_shm"):
+            self.last_source[str(cam)] = (server, st["live_shm"])
             return server, st["live_shm"]
         from .config import local_only
         if local_only(st["live_url"], server, self.server):
@@ -295,6 +308,7 @@ class RecWorker(VmsWorker):
             self.behind_loopback[str(cam)] = server
             return None
         self.behind_loopback.pop(str(cam), None)
+        self.last_source[str(cam)] = (server, st["live_url"])
         return server, st["live_url"]
 
     # A recording's pipeline needs a source — `rtspsrc location=<live_url>`, or the worker's shared memory — and a
@@ -543,9 +557,13 @@ class RecWorker(VmsWorker):
     def resubscribe(self, now: float | None = None) -> list[int]:
         now = self.now() if now is None else now
         moved = []
+        # Whose fan-out: the RECORDING's camera (`cam`), not the recording's own id — the two are the same string
+        # only while the recording is named after its camera, and `7-cloud` moved with its camera too.
+        cams = {str(r["id"]): str(r.get("cam") or r["id"]) for r in self.rows}
         for cid in list(self.reconciler.actual):
-            src = self.source(cid)
+            src = self.source(cams.get(str(cid), cid))
             if src is not None and self.sources.get(cid) not in (None, src[1]):
+                self._release_if_broken(cid)                      # the ring is the only copy of the break (CB): written before the stop
                 self.actuator("stop", {"id": cid})
                 self.reconciler.lost(cid, now)
                 self.sources.pop(cid, None)
@@ -553,11 +571,18 @@ class RecWorker(VmsWorker):
                 log.info("%s: camera %s is held elsewhere now (%s): re-subscribing", self.name, cid, src[1])
         return moved
 
+    # One pass, four parts, and the store away stops none of the others: a pipeline that fell over is restarted
+    # on its last source, the offline backups are judged by the rows read last, the writer is watched. What a
+    # part could not read it reports; it does not take the pass with it (the review's second pass, blocker 4).
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
         self.resubscribe(now)
         out = super().reconcile_once(now)
-        self.gate_pass()
-        self.writer_pass()
+        for part in (self.gate_pass, self.writer_pass):
+            try:
+                part()
+            except OSError as e:
+                self.store_errors += 1
+                log.warning("%s: %s skipped: the store did not answer (%s)", self.name, part.__name__, e)
         return out
 
     # -- is the writer writing (Lesson 10, feedback U) ------------------------------------------------------
@@ -598,6 +623,7 @@ class RecWorker(VmsWorker):
         if self.writer.reopen_due(wall):
             log.warning("%s: the writer is %s (%s) — reopening it", self.name, state["state"], state)
             for cid in running:
+                self._release_if_broken(cid)
                 self.actuator("stop", {"id": cid})
                 self.reconciler.lost(cid, self.now())
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass

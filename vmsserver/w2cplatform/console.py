@@ -117,10 +117,23 @@ log = logging.getLogger(__name__)
 PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 
 
+# The page's Content-Security-Policy: the one script the browser may run is the page's own, named by its
+# hash, and nothing else — not a `<script>` an event's note smuggled into the list, not an `onclick=` in a
+# camera's name. The page escapes what it draws (`esc`/`h` in `console.html`); this is the second wall, for
+# the place the escaping missed. The script is inline, so `'self'` would refuse it: the hash is the policy.
+def page_csp(path: str = PAGE) -> str:
+    import base64, hashlib, re
+    page = open(path, encoding="utf-8").read()
+    scripts = [m.group(1) for m in re.finditer(r"<script>(.*?)</script>", page, re.S)]
+    hashes = " ".join("'sha256-" + base64.b64encode(hashlib.sha256(s.encode("utf-8")).digest()).decode() + "'" for s in scripts)
+    return f"script-src {hashes}; object-src 'none'; base-uri 'none'"
+
+
 # A file, whole or by `Range` — what a `<video>` element asks for. Parses `bytes=a-b`, replies 206 with
 # `Content-Range` and `Accept-Ranges` when a range was asked, 200 otherwise. Used by the VMS's
-# page itself; a subsystem with files of its own to serve would call it the same way.
-def send_file(handler, path: str, content_type: str) -> dict:
+# page itself; a subsystem with files of its own to serve would call it the same way. `headers`: more of
+# them, in front of the file.
+def send_file(handler, path: str, content_type: str, headers=()) -> dict:
     """A file, whole or by Range — what a <video> element asks for. Returns what LEFT: `status`, `bytes`, and
     whether it was the whole file (`whole`, with `data` to take a digest of)."""
     size = os.path.getsize(path)
@@ -134,6 +147,8 @@ def send_file(handler, path: str, content_type: str) -> dict:
     with open(path, "rb") as f:
         f.seek(start); data = f.read(end - start + 1)
     handler.send_response(206 if rng else 200); handler.send_header("Content-Type", content_type)
+    for k, v in headers:
+        handler.send_header(k, v)
     handler.send_header("Accept-Ranges", "bytes"); handler.send_header("Content-Length", str(len(data)))
     if rng:
         handler.send_header("Content-Range", f"bytes {start}-{end}/{size}")
@@ -729,7 +744,20 @@ class SpecConsole:
     # The unit an ACTION names in its body (`unit`, or `cam`): a mark, a command and a keep are about one unit,
     # and an operator granted that unit must be able to make them. The body is read here and put back, so
     # whoever answers the request reads it again as if nobody had.
-    def _named(self, h, method: str, path: str) -> str | None:
+    #
+    # A GET names its unit in the query the same way (`?cam=`, `?unit=`): the device's own footage, the events
+    # of one camera. A route that names no unit anywhere is answered to any grant — a list, and the list is cut
+    # to what the caller may see; a route that names one in the query is about that unit (the review's second
+    # pass, blocker 1: `/segment?cam=7` was "any grant", and the footage of camera 7 went to the guard of camera 3).
+    # A body that names two units — `unit` one thing, `cam` another — is refused: the gate would check one and
+    # the action would go to the other (the same review, major).
+    def _named(self, h, method: str, path: str, q: dict | None = None) -> str | None:
+        if method == "GET":
+            q = q or {}
+            if "unit" in q and "cam" in q and str(q["unit"]) != str(q["cam"]):
+                raise Denied(400, "the query names two units: `unit` and `cam` must be the same one, or name one")
+            named = q.get("unit", q.get("cam"))
+            return str(named) if named not in (None, "") else None
         if method not in ("POST", "PUT") or not path.startswith(self.EDIT_ROUTES):
             return None
         raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
@@ -738,7 +766,11 @@ class SpecConsole:
             body = json.loads(raw or b"{}")
         except ValueError:
             return None
-        named = body.get("unit", body.get("cam")) if isinstance(body, dict) else None
+        if not isinstance(body, dict):
+            return None
+        if "unit" in body and "cam" in body and str(body["unit"]) != str(body["cam"]):
+            raise Denied(400, "the body names two units: `unit` and `cam` must be the same one, or name one")
+        named = body.get("unit", body.get("cam"))
         return str(named) if named not in (None, "") else None
 
     def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list]:
@@ -846,7 +878,8 @@ class SpecConsole:
             # a session in this process's memory, carried by a cookie of its own.
             g = body["glass"]
             try:
-                sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")))
+                sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")),
+                                                    addr=str(getattr(h, "client_address", ("?",))[0]))
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
             h._extra_headers = (("Set-Cookie", session_cookie(sid, float(payload.get("exp", 0)) - self.wall(), secure).replace(COOKIE, GLASS_COOKIE, 1)),)
@@ -874,12 +907,12 @@ class SpecConsole:
             return self.session(h, method)
         if path not in OPEN_ROUTES:                      # the gate: open while this cluster has no key set, shut when it cannot check
             try:
-                self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path)))
+                self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path, q)))
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
             if path in ("/", "/index.html"):
-                return send_file(h, PAGE, "text/html; charset=utf-8")
+                return send_file(h, PAGE, "text/html; charset=utf-8", headers=(("Content-Security-Policy", page_csp()),))
             if path == "/spec":
                 return h._send(200, con.describe())
             if path == rows_path:
