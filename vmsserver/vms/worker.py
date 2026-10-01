@@ -220,9 +220,26 @@ class FakeDevice:
         self.open.clear()
 
 
+# Frames a fake pipeline writes: one sample per `step` seconds, a key frame first and then every `gop` seconds,
+# `size` bytes of nothing — enough for the engine to cut sequences, index them and hand them back, and few enough
+# that an hour of footage is three thousand six hundred samples, not ninety thousand.
+def fake_samples(t0: float, t1: float, step: float = 1.0, gop: float = 2.0, size: int = 256) -> list:
+    from w2cplatform.obsd import archive_ms, video
+    out, t, since_key = [], float(t0), None
+    while t < t1 - 1e-9:
+        end = min(t + step, t1)
+        key = since_key is None or t - since_key >= gop - 1e-9
+        if key:
+            since_key = t
+        out.append(video(archive_ms(t), archive_ms(end), b"\x00" * size, key))
+        t = end
+    return out
+
+
 class FakeActuator:
     """М9 Lesson 6's print(), with a memory. `failing` is a set of camera ids
-    (or a predicate) whose start fails."""
+    (or a predicate) whose start fails. A recording's pipeline is handed a SINK — the volume's writer under the
+    recording's stream — and `feed` is what a test calls to have it write frames, as a camera would."""
 
     def __init__(self, failing=frozenset()):
         self.failing = failing
@@ -232,13 +249,12 @@ class FakeActuator:
         self.dead: list[int] = []
         self.posted: list[tuple[int, str, dict]] = []
         self.fetched: list[tuple] = []                   # what `record_range` was asked for
-        self.copied: list[tuple] = []                    # what `copy_range` was asked for (Lesson 26)
         self.available = None                            # (source, t0, t1) -> spans the source really holds; None: all
         self.range_error = ""                            # set by a real actuator whose range pipeline failed
         # The prebuffer (Lesson 26): pipelines running ON HOLD — recording into a ring of the last
         # `ring_seconds` and writing nothing — and what each release wrote. `gop` is the keyframe interval:
         # a release starts at the first keyframe still in the ring, never mid-GOP.
-        self.held: dict = {}                             # id -> {"since", "ring", "epoch", "spool"}
+        self.held: dict = {}                             # id -> {"since", "ring", "epoch", "sink"}
         self.released: list[tuple] = []                  # (id, start, end) of every ring written out
         self.gop = 2.0
         self.started: dict[int, dict] = {}
@@ -270,32 +286,44 @@ class FakeActuator:
         self.started[cid] = cam                     # what the pipeline was built from: the row plus what `enrich` added
         if cam.get("hold"):
             self.held[cid] = {"since": float(cam.get("now", 0)), "ring": float(cam.get("ring_seconds", 0)),
-                              "epoch": cam.get("epoch", 0), "spool": cam.get("spool", "")}
+                              "epoch": cam.get("epoch", 0), "sink": cam.get("sink")}
         else:
             self.held.pop(cid, None)
         return True
 
     # Open the ring: what it holds is written first — from the oldest keyframe still in it, which is at most
-    # `ring` seconds ago and never before the pipeline started — as one segment named by the time it was
-    # CAPTURED, then live footage follows. The real one removes a pad probe; this writes the file.
+    # `ring` seconds ago and never before the pipeline started — with the times it was CAPTURED, then live
+    # footage follows. The real one removes a pad probe; this writes the frames.
     def _release(self, cid, now: float) -> bool:
         import math
-        import os
-        from datetime import datetime, timezone
-        from .archive import segment_path
         h = self.held.pop(cid, None)
         if h is None:
             return False
         oldest = max(now - h["ring"], h["since"])
         start = math.ceil(oldest / self.gop) * self.gop       # the ring may begin mid-GOP; the copy may not
-        if start < now and h["spool"]:
-            p = segment_path(h["spool"], str(cid), h["epoch"], datetime.fromtimestamp(start, timezone.utc).replace(microsecond=0))
-            os.makedirs(os.path.dirname(p), exist_ok=True)
-            with open(p, "wb") as f:
-                f.write(b"\x00" * 16)
-            os.utime(p, (now, now))
+        if start < now and h["sink"] is not None:
+            for smp in fake_samples(start, now, gop=self.gop):
+                h["sink"].put(smp)
+            h["sink"].finish()
             self.released.append((cid, start, now))
         return True
+
+    # What a camera would do to a running recording: `[t0, t1)` of frames through its sink, the sequence
+    # finished at the end. Returns what the engine said of each, `{status: count}`.
+    def feed(self, cid, t0: float, t1: float, step: float = 1.0) -> dict:
+        from w2cplatform.obsd import ObsdError
+        sink = (self.started.get(cid) or {}).get("sink")
+        if sink is None or cid not in self.running:
+            raise RuntimeError(f"recording {cid} is not running here: nothing to feed")
+        said: dict = {}
+        for smp in fake_samples(t0, t1, step=step, gop=self.gop):
+            try:
+                st = sink.put(smp)
+            except ObsdError as e:
+                st = e.name
+            said[st] = said.get(st, 0) + 1
+        sink.finish()
+        return said
 
     # Returns and clears `dead` and `posted`; dead ids leave `running`. Same contract as `GstActuator.pump`.
     def pump(self) -> tuple[list[int], list[tuple[int, str, dict]]]:
@@ -311,41 +339,19 @@ class FakeActuator:
         """What an element would post on the bus."""
         self.posted.append((cid, kind, fields))
 
-    # Fetch a range out of a device's own archive and write it as segments in the spool, the way a live
-    # recording is written — the only difference is where the bytes came from. The real one is a pipeline on
-    # the holder's playback door; this one writes the files so the ordering and the manifest can be tested.
+    # Fetch a range out of a device's own archive: its frames, with the times they were recorded at, as a real
+    # actuator gets them from the holder's playback door. The recorder writes them into its volume.
     #
     # `available(source, t0, t1) -> [(a, b)]`, when a test sets it, is what the source ACTUALLY holds of the
     # range — a card with a hole in it (Lesson 16, and the feedback's point P: a summary cannot say where the
-    # holes are). Only those spans are written. Unset, the source has everything it is asked for.
-    def record_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        return self._write_range(cam, source, epoch, t0, t1, spool, seg, self.fetched)
-
-    # A range COPIED out of another archive of ours — a backup recording's segments (Lesson 26): the samples
-    # as they were stored, with the times they were recorded at, not a second recording of them through a
-    # pipeline. Here it is the same file-writing as `record_range`; the difference is what it is asked from
-    # and what `copied` remembers.
-    def copy_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        return self._write_range(cam, source, epoch, t0, t1, spool, seg, self.copied)
-
-    def _write_range(self, cam, source, epoch, t0, t1, spool, seg, log) -> list[str]:
-        import os
-        from datetime import datetime, timezone
-        from .archive import segment_path
+    # holes are). Only those spans come back. Unset, the source has everything it is asked for.
+    def record_range(self, cam, source: str, t0: float, t1: float) -> list:
         spans = [(t0, t1)] if self.available is None else [(max(a, t0), min(b, t1)) for a, b in self.available(source, t0, t1)
                                                           if b > t0 and a < t1]
         out = []
         for lo, hi in spans:
-            t = lo
-            while t < hi:
-                end = min(t + seg, hi)
-                p = segment_path(spool, str(cam), epoch, datetime.fromtimestamp(t, timezone.utc).replace(microsecond=0))
-                os.makedirs(os.path.dirname(p), exist_ok=True)
-                with open(p, "wb") as f:
-                    f.write(b"\x00" * 16)
-                os.utime(p, (end, end))                  # the segment ends where it ends: `promote` reads mtime
-                out.append(p); log.append((str(cam), t, end, source))
-                t = end
+            out += fake_samples(lo, hi, gop=self.gop)
+            self.fetched.append((str(cam), lo, hi, source))
         return out
 
     def stop_all(self) -> None:

@@ -1,102 +1,48 @@
-"""The archive as a resource — server-bound, no controller, a policy.
-
-    <spool>/rec/<unit>/e<epoch>/<start>Z.mp4       the open segment, and closed ones not yet promoted
-    <archive>/rec/<unit>/e<epoch>/<start>Z.mp4     promoted: the resource's media — the RECORDER's tree
-    <archive>/rec/<unit>/manifest.jsonl            one line per media segment: the index beside the footage
-    <archive>/vms/<cam>/e<epoch>/<start>Z.events.jsonl
-                                                   the camera's EVENT BUCKETS — the platform's event log
-                                                   (w2cplatform.events), written by the WORKER holding the
-                                                   camera, whether or not anything records it; on the
-                                                   worker's server, which need not be the recorder's
-
-Two subsystems, two trees, one camera. The worker (`vms`) holds the camera —
-one connection, one epoch, the fan-out — and writes what it observes into
-`vms/<cam>/`. The recorder (`rec`) is placed on a server with an archive,
-subscribes to the worker's fan-out, and writes footage under its own epoch
-into `rec/<unit>/` — the recording's own directory, named by the operator
-(`7`, `7-cloud`) and not by the camera. A camera that is watched and never recorded has buckets
-and no `rec/` tree; a camera whose recorder moved has footage under two
-servers' `rec/` trees, merged by the console. The manifest indexes media
-only; events are answered by the resource's event index, over their own buckets.
-
-The acknowledgement order is М9 Lesson 4's: a closed segment is PROMOTED
-(renamed into the archive, then a manifest line appended), and the spool
-copy is gone only after that. The manifest is append-only and rebuildable
-from the files.
-
-Retention is a policy, per kind. Media is the recorder's: `retain()` after
-the recording row's `retention_days`, files first then lines. Buckets are
-the PLATFORM's (w2cplatform.resource): the VMS controller writes
-`vms/retention/<cam> {days: events_retention_days}` and the resource job
-deletes the files — events are small and often kept a year where footage
-is kept a month.
-
-The layout is `<subsystem>/<unit>/...` — the platform resource's tree — so
-that every subsystem's data sits on the same server under its own prefix.
-`ArchivePolicy` is what the recorder registers with the platform's resource
-job: its own pass over its own part of the tree.
-"""
+"""The archive is ObjectStorage: a volume in `obsd`, and the recorder's names for what is in it."""
 # ================================================================================================
-# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
-# ================================================================================================
-# # archive.py — the archive resource: promotion, the manifest, repair, media retention; the recorder's tree
+# # archive.py — one volume, as the recorder and its readers see it
 #
-# **Role in the module.** Lesson 3 (the archive as a resource) and Lesson 6 (the recorder). Media lives under
-# `rec/<unit>/e<epoch>/` on the recorder's server; the camera's event buckets live under `vms/<cam>/e<epoch>/`
-# on the worker's server (`event_log`, the platform's `EventLog`). `segment_path`/`parse` name and read the
-# media paths; `Manifest` is the per-camera index beside the footage — media lines only, since the events
-# are answered by the resource's event index; `ArchiveResource` promotes closed segments from the spool,
-# repairs manifests from the files, retains media by days; `ArchivePolicy` is the hook the recorder
-# registers with the platform's resource job (`vms/resource.py`).
+# Footage is not files. It is ObjectStorage — the product's engine — behind the host's daemon `obsd`
+# (`w2cplatform/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences
+# that open on a key frame, packed into blocks of a size fixed when the volume was formatted. This module is
+# the course's vocabulary over that, and nothing more:
 #
-# ## Module-level names
-# - `SUB = "rec"` — the recorder's tree; `EVENTS_SUB = "vms"` — the worker's, for `event_log`.
-# - `SEGMENT`, `EPOCH_DIR` — the path grammar: `<sub>/<unit>/e<epoch>/<YYYYMMDDTHHMMSSZ>.mp4`.
+#   a stream       `<recording>/e<epoch>` — the epoch is part of the NAME, the only metadata a stream has.
+#                  What a fenced writer wrote and what the survivor wrote are two streams of one volume, and
+#                  the timeline tells them apart by name. Footage fetched into a gap is `<recording>/e<epoch>/
+#                  backfill`: where it came from is in the name too — there is no manifest line to carry it
+#   a span         what the index says one stream holds, `(unit, epoch, start, end, bytes, source)` — read
+#                  from the engine every time, never kept beside it
+#   visibility     a reader sees only CLOSED blocks, and only those closed when it mounted. So every question
+#                  is asked of a fresh reader, and what was written a minute ago may not be an answer yet: the
+#                  recorder plans by what it can SEE (`RecWorker.gaps`), and a writer is closed and opened again
+#                  (`Archive.seal`) when the minutes just written have to be readable now
+#   the ring       a volume is formatted at its quota and overwrites its oldest blocks when full. Nothing is
+#                  deleted by age: `retention_days` is a CEILING on what the doors show (`visible_from`), and
+#                  how deep the archive really is, is read off the index (`depth_days`)
 #
-# ## Notes
-# - `test_promote_then_line_then_spool_copy_gone`, `test_manifest_rebuilt_from_the_files_alone`,
-#   `test_retention_file_first_then_line`, `test_timeline_marks_a_fenced_epoch_and_spans_two_resources` walk
-#   these; `test_events_are_buckets_on_the_resource_recording_or_not` shows the two trees side by side.
-# - `_move` renames within a filesystem and copies-then-replaces across one: a segment appears in the archive
-#   whole or not at all, and the spool copy goes last.
+# Events are not here. They stay what they were — buckets of lines on the resource's tree, `vms/<cam>/` and
+# `rec/<name>/` (`event_log`, the platform's `EventLog`) — a file tree the platform retains, mirrors and
+# indexes, on the server of whoever wrote them.
 # ================================================================================================
 from __future__ import annotations
 
-import json
-import os
-import re
-import shutil
+import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from urllib.parse import urlsplit, unquote
 
-from w2cplatform.events import EventLog, unit_dir
+from w2cplatform.events import EventLog
+from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable, archive_ms, unix_s
 
-SUB = "rec"          # the recorder's tree: media and the manifest
+SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
 EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
-SEGMENT = re.compile(r"^(\d{8}T\d{6}Z)\.mp4$")
-EPOCH_DIR = re.compile(r"^e(\d+)$")
-
-
-# `<root>/rec/<unit>/e<epoch>/<start>Z.mp4` — the same grammar in the spool and the archive.
-#
-# The middle segment is the UNIT, not the camera. They were the same string for a long time, because
-# `rec.subsystem.yaml` said `id: cam` — a recording was named by the camera it recorded. The path code
-# never knew that, and the day a camera got a second archive the unit became `7` and `7-cloud` and this
-# grammar kept working unchanged. Naming the argument `cam` and casting it with `int()` is how that day
-# becomes a rewrite of four modules instead of one line of YAML.
-def segment_path(root: str, unit: str, epoch: int, start: datetime) -> str:
-    return os.path.join(root, SUB, str(unit), f"e{epoch}", start.strftime("%Y%m%dT%H%M%SZ") + ".mp4")
-
-
-# The inverse: `(unit, epoch, start)` or `None` for anything that is not a segment path under `root`.
-def parse(path: str, root: str) -> tuple[str, int, datetime] | None:
-    rel = os.path.relpath(path, root).split(os.sep)
-    if len(rel) != 4 or rel[0] != SUB or not rel[1] or not EPOCH_DIR.match(rel[2]):
-        return None
-    m = SEGMENT.match(rel[3])
-    if not m:
-        return None
-    return rel[1], int(rel[2][1:]), datetime.strptime(m.group(1), "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+STITCH = 2.0         # seconds: two spans closer than this are one run — the seam between two sequences is no gap
+# How a volume is formatted, unless its row says otherwise: the block, and the read size the engine cuts
+# sequences by. A block must hold a sequence — the read size plus up to one group of pictures — or a long group
+# is cut where the block is full and the rest is refused until the next key frame (the product's incident,
+# feedback Y): block ≥ read + 3 MB.
+BLOCK, READ = 8 << 20, 1 << 20
+NEVER, FOREVER = 0, 1 << 62           # the archive's milliseconds: before anything, after everything
 
 
 def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog:
@@ -105,279 +51,51 @@ def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog
     return EventLog(root, EVENTS_SUB, str(cam), epoch, bucket_seconds)
 
 
-# One promoted segment: `cam`, `epoch`, `start`/`end` (unix seconds), `path` (relative to the archive root),
-# `bytes`.
+def stream_name(unit, epoch: int, backfill: bool = False) -> str:
+    return f"{unit}/e{int(epoch)}" + ("/backfill" if backfill else "")
+
+
+def parse_stream(name: str) -> tuple[str, int, str] | None:
+    """`(unit, epoch, source)` — `live` or `backfill` — or None for a stream that is not a recording's."""
+    parts = name.split("/")
+    if len(parts) not in (2, 3) or not parts[0] or not parts[1].startswith("e") or not parts[1][1:].isdigit():
+        return None
+    if len(parts) == 3 and parts[2] != "backfill":
+        return None
+    return parts[0], int(parts[1][1:]), "backfill" if len(parts) == 3 else "live"
+
+
+# Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
+# published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
+# process that mounts the volume: М10A Lesson 18).
+def volume_params(url: str, secret: str = "") -> dict:
+    if "://" not in url:
+        return {"schema": "file", "path": url}           # a local volume's row names its directory
+    u = urlsplit(url)
+    if u.scheme == "file":
+        return {"schema": "file", "path": unquote(u.path)}
+    if u.scheme.startswith("s3"):
+        parts = [p for p in u.path.split("/") if p]
+        if len(parts) < 2:
+            raise ValueError(f"{url}: an s3 volume is s3://<host>/<region>/<bucket>[/<path>]")
+        return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(u.port)} if u.port else {}),
+                "region": parts[0], "bucket": parts[1], "path": "/".join(parts[2:]),
+                "access_key": unquote(u.username or ""), "secret_key": secret}
+    raise ValueError(f"{url}: not an archive this course opens (file://, s3://)")
+
+
 @dataclass(frozen=True)
-class Segment:
-    unit: str             # the recording this footage belongs to — `7`, or `7-cloud`: the operator's name
+class Span:
+    unit: str             # the recording — `7`, or `7-cloud`: the operator's name
     epoch: int
     start: float          # unix seconds
     end: float
-    path: str             # relative to the archive root
     bytes: int
-    # `live` (written from the fan-out) or `edge` (fetched from the camera's own card or its NVR — Lesson
-    # 16). It lives in the LINE, not in the path: the path grammar is what `repair` rebuilds a manifest
-    # from, and a repaired line loses `source` — a named cost, paid to keep that grammar untouched. The
-    # footage stays where it is and plays the same; only the provenance mark is gone.
-    source: str = "live"
+    source: str = "live"  # `live` (written from the fan-out) or `backfill` (fetched into a gap — Lesson 16)
 
-    def line(self) -> str:
-        return json.dumps({"kind": "media", "unit": self.unit, "epoch": self.epoch, "start": self.start, "end": self.end,
-                           "path": self.path, "bytes": self.bytes, "source": self.source})
-
-    @classmethod
-    def from_line(cls, line: str) -> "Segment":
-        d = json.loads(line)
-        unit = d.get("unit", d.get("cam"))        # `cam` is what a line written before the unit-keyed tree says
-        return cls(str(unit), int(d["epoch"]), float(d["start"]), float(d["end"]), d["path"], int(d["bytes"]),
-                   d.get("source", "live"))
-
-
-# Every segment a policy took off this archive, and why: `<archive>/deletions.jsonl`, one line each.
-#
-# A manifest says what is here. Nothing said what WAS here and who removed it: a segment deleted by
-# retention, one cut by the watermark and one that was never written all read the same afterwards — a gap
-# (the platform review, "deletions by policy are not journalled"; feedback BH). The line is written BEFORE
-# the file goes: a crash between the two leaves a line for a file that is still there, and the next pass
-# removes it and says so again. The other order leaves a deletion nobody recorded.
-#
-#   why   retention        older than the recording's `retention_days`
-#         pressure         cut by the watermark, above the floor
-#         pressure-kept    cut by the watermark although a keep named it: nothing else was left (`vms/keeps.py`)
-#         moved            sent to the server that writes the unit now, and confirmed there (`to`)
-#
-# Bounded: past `MAX_BYTES` the file becomes `deletions.jsonl.1` and a new one starts — two files, the
-# newest deletions always there. It is a journal of what a policy did, not a second archive.
-class Deletions:
-    MAX_BYTES = 4 << 20
-
-    def __init__(self, archive_root: str):
-        self.path = os.path.join(archive_root, "deletions.jsonl")
-
-    def append(self, seg: "Segment", why: str, now: float, **extra) -> None:
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        try:
-            if os.path.getsize(self.path) > self.MAX_BYTES:
-                os.replace(self.path, self.path + ".1")
-        except FileNotFoundError:
-            pass
-        with open(self.path, "a") as f:
-            f.write(json.dumps({"t": now, "why": why, "unit": seg.unit, "epoch": seg.epoch, "start": seg.start,
-                                "end": seg.end, "path": seg.path, "bytes": seg.bytes, **extra}) + "\n")
-            f.flush(); os.fsync(f.fileno())
-
-    def read(self, unit: str | None = None, limit: int = 1000) -> list[dict]:
-        """The newest `limit` lines, oldest first; one unit's, if named."""
-        out = []
-        for p in (self.path + ".1", self.path):
-            try:
-                with open(p) as f:
-                    for l in f:
-                        try:
-                            d = json.loads(l)
-                        except ValueError:
-                            continue                     # a line cut short by a crash
-                        if unit is None or str(d.get("unit")) == str(unit):
-                            out.append(d)
-            except FileNotFoundError:
-                pass
-        return out[-limit:]
-
-
-# Per unit, append-only, beside the footage: `<archive>/rec/<unit>/manifest.jsonl`. Media lines only.
-class Manifest:
-    """Per unit, append-only, beside the footage."""
-
-    def __init__(self, archive_root: str, unit):
-        self.path = os.path.join(unit_dir(archive_root, SUB, str(unit)), "manifest.jsonl")
-
-    def append(self, entry: Segment) -> None:
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        with open(self.path, "a") as f:
-            f.write(entry.line() + "\n")
-
-    def _lines(self) -> list[str]:
-        try:
-            with open(self.path) as f:
-                return [l for l in f if l.strip()]
-        except FileNotFoundError:
-            return []
-
-    def read(self) -> list[Segment]:
-        """The media lines — what a player needs."""
-        return [Segment.from_line(l) for l in self._lines() if json.loads(l).get("kind", "media") == "media"]
-
-    # Replaces the file atomically (write `.tmp`, `os.replace`), sorted by `(start, epoch)`.
-    def rewrite(self, segs: list[Segment]) -> None:
-        tmp = self.path + ".tmp"
-        with open(tmp, "w") as f:
-            for e in sorted(segs, key=lambda e: (e.start, e.epoch)):
-                f.write(e.line() + "\n")
-        os.replace(tmp, self.path)
-
-    # Spans overlapping `[t0, t1)` as `{start, end, media: path, epoch, fenced}`; `fenced` is true when
-    # `current_epoch` is given and the span's epoch is older — how the page shows a zombie's footage. Two
-    # resources' timelines simply concatenate and sort — the console merges manifests.
-    def timeline(self, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
-        """Media spans overlapping [t0, t1), each marked *fenced* if its epoch is
-        older than the recorder's current one. Events are not here: the resource's
-        event index answers them, and the console draws them over these spans."""
-        out = []
-        for s in self.read():
-            if s.end > t0 and s.start < t1:
-                out.append({"start": s.start, "end": s.end, "media": s.path, "epoch": s.epoch, "source": s.source,
-                            "fenced": current_epoch is not None and s.epoch < current_epoch})
-        return sorted(out, key=lambda d: (d["start"], d["epoch"]))
-
-
-# One server's archive: a spool root and an archive root, both created on construction.
-class ArchiveResource:
-    """One server's archive. `promote()` is what archivesink calls on
-    fragment-closed; `repair()` is what М11 called the re-index sweep."""
-
-    # `create=False` is a handle on an archive that is away right now: the spool is local and is made, the
-    # root is not touched. Promotion makes its own directories segment by segment, so a handle made this
-    # way starts working the moment the archive answers — which is what a recorder holding a volume through
-    # an outage needs (`RecWorker._write_into`).
-    def __init__(self, spool_root: str, archive_root: str, bucket_seconds: int = 600, wall=None, create: bool = True):
-        import time
-        self.spool, self.root, self.bucket_seconds = spool_root, archive_root, bucket_seconds
-        self.wall = wall or time.time
-        os.makedirs(self.spool, exist_ok=True)
-        if create:
-            os.makedirs(self.root, exist_ok=True)
-
-    # 1. the file into the archive (rename, or copy-then-replace across filesystems), 2. the manifest line,
-    # 3. the spool copy gone — the order that survives a crash at any point.
-    def promote(self, spool_path: str, end: float | None = None, source: str = "live") -> Segment:
-        parsed = parse(spool_path, self.spool)
-        if parsed is None:
-            raise ValueError(f"not a segment path: {spool_path}")
-        unit, epoch, start = parsed
-        st = os.stat(spool_path)
-        end = end if end is not None else st.st_mtime
-        rel = os.path.relpath(spool_path, self.spool)
-        dest = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        self._move(spool_path, dest)                    # 1. into the archive, atomically (same filesystem)
-        seg = Segment(unit, epoch, start.timestamp(), end, rel, st.st_size, source)
-        Manifest(self.root, unit).append(seg)           # 2. then the line
-        return seg
-
-    # The units with a `rec/<unit>/` directory. Strings, and sorted so that numeric names — which is most
-    # of them, a recording taking its camera's number unless it was given another — come out in numeric
-    # order rather than "1, 10, 2".
-    def units(self) -> list[str]:
-        try:
-            names = [d for d in os.listdir(os.path.join(self.root, SUB))
-                     if os.path.isdir(os.path.join(self.root, SUB, d))]
-        except FileNotFoundError:
-            return []
-        return sorted(names, key=lambda d: (0, int(d), "") if d.isdigit() else (1, 0, d))
-
-    @staticmethod
-    def _move(src: str, dest: str) -> None:
-        try:
-            os.rename(src, dest)
-        except OSError:
-            shutil.copy2(src, dest + ".tmp")            # different filesystem: copy, then appear whole
-            os.replace(dest + ".tmp", dest)
-            os.remove(src)                              # 3. the spool copy, last
-
-    def closed_in_spool(self, grace_seconds: float, now: float) -> list[str]:
-        """Segments in the spool older than the grace: closed, not yet promoted
-        (a recorder died between close and promote)."""
-        out = []
-        for d, _, files in os.walk(self.spool):
-            for f in files:
-                p = os.path.join(d, f)
-                if parse(p, self.spool) and now - os.path.getmtime(p) >= grace_seconds:
-                    out.append(p)
-        return sorted(out)
-
-    def repair(self) -> dict:
-        """Make the manifests agree with the files: add lines for files no
-        line names (with the epoch from the path), drop lines whose file is
-        gone. Idempotent."""
-        added = dropped = 0
-        for unit in self.units():
-            man = Manifest(self.root, unit)
-            lines = {s.path: s for s in man.read()}
-            present = {}
-            for d, _, files in os.walk(unit_dir(self.root, SUB, unit)):
-                for f in files:
-                    p = os.path.join(d, f)
-                    parsed = parse(p, self.root)
-                    if parsed:
-                        present[os.path.relpath(p, self.root)] = parsed
-            for rel, (u, epoch, start) in present.items():
-                if rel not in lines:
-                    st = os.stat(os.path.join(self.root, rel))
-                    lines[rel] = Segment(u, epoch, start.timestamp(), st.st_mtime, rel, st.st_size)
-                    added += 1
-            for rel in list(lines):
-                if rel not in present:
-                    del lines[rel]
-                    dropped += 1
-            man.rewrite(list(lines.values()))
-        return {"added": added, "dropped": dropped}
-
-    # `[(start, end), …]` of what the manifest says we have, adjacent runs merged. `stitch` is the tolerance
-    # that makes it work at all: between two segments there is always a seam — the fraction of a second it
-    # takes to close one and open the next. Count a seam as a gap and a day of continuous ten-minute
-    # recording has 144 of them.
-    def coverage(self, unit, stitch: float = 2.0) -> list[tuple[float, float]]:
-        runs: list[list[float]] = []
-        for s in sorted(Manifest(self.root, unit).read(), key=lambda s: s.start):
-            if runs and s.start <= runs[-1][1] + stitch:
-                runs[-1][1] = max(runs[-1][1], s.end)
-            else:
-                runs.append([s.start, s.end])
-        return [(a, b) for a, b in runs]
-
-    # The ONE way a policy takes a segment off this archive: said in the journal, then the file. The caller
-    # rewrites the manifest — it knows which lines stay.
-    def remove(self, seg: Segment, why: str, now: float, **extra) -> None:
-        Deletions(self.root).append(seg, why, now, **extra)
-        try:
-            os.remove(os.path.join(self.root, seg.path))
-        except FileNotFoundError:
-            pass
-
-    def retain(self, unit, days: float, now: float, kept: list | tuple = (), report: dict | None = None) -> int:
-        """Delete media older than `days`: the file first, then the line. The
-        buckets are the platform's to retain (vms/retention/<cam>, written by the
-        VMS controller); the resource's event index lets them go from its cache.
-
-        `kept` is the intervals somebody said to keep (`vms/keeps.py`): a segment
-        that overlaps one stays past its days, and `report["kept"]` counts them."""
-        from .keeps import held
-        cutoff = now - days * 86400
-        man = Manifest(self.root, unit)
-        keep, removed = [], 0
-        for s in man.read():
-            if s.end < cutoff and held(kept, s.start, s.end):
-                keep.append(s)
-                if report is not None:
-                    report["kept"] = report.get("kept", 0) + 1
-            elif s.end < cutoff:
-                self.remove(s, "retention", now, days=days)
-                removed += 1
-            else:
-                keep.append(s)
-        if removed:
-            man.rewrite(keep)
-        return removed
-
-    # Bytes of media under the root, for the heartbeat.
-    def usage(self) -> int:
-        total = 0
-        for d, _, files in os.walk(self.root):
-            for f in files:
-                p = os.path.join(d, f)
-                if parse(p, self.root):
-                    total += os.path.getsize(p)
-        return total
+    @property
+    def stream(self) -> str:
+        return stream_name(self.unit, self.epoch, self.source == "backfill")
 
 
 # `want` minus every range in `have`. The one subtraction two things use: the console draws device coverage
@@ -402,103 +120,208 @@ def overlaps(have: list[tuple[float, float]], span: tuple[float, float]) -> bool
     return any(a < span[1] and span[0] < b for a, b in have)
 
 
-class ArchivePolicy:
-    """What the recorder registers with the platform's resource job: repair the
-    manifests, retain media per unit from the recording rows
-    (`rec/recordings/<unit>`, `retention_days`; 30 for one with no row), and,
-    when the disk is over its watermark, free bytes — `vms/space.py` decides
-    which, and the platform only says how many."""
+def stitch(spans, gap: float = STITCH) -> list[tuple[float, float]]:
+    """Runs of `(start, end)`, adjacent ones merged: the seam between two sequences is not a hole."""
+    runs: list[list[float]] = []
+    for a, b in sorted((float(a), float(b)) for a, b in spans):
+        if runs and a <= runs[-1][1] + gap:
+            runs[-1][1] = max(runs[-1][1], b)
+        else:
+            runs.append([a, b])
+    return [(a, b) for a, b in runs]
 
-    def __init__(self, resource: ArchiveResource, vars_, objects=None, peers=None, server: str = "",
-                 volumes: dict | None = None):
-        # One archive tree per VOLUME on a box with several disks, and the resource says which one is
-        # short when it asks. The single-disk case is this dict with one entry and nobody naming it: the
-        # policy that was written before there were volumes reads exactly the same.
-        self.res, self.vars = resource, vars_
-        self.volumes = dict(volumes) if volumes else {}
-        # Only `free` needs these: the peers' heartbeats say who writes what and who has room, and the
-        # client carries the bytes. Absent, the policy still repairs and retains — an archive on a box
-        # with no neighbours has nowhere to evacuate to and does not pretend otherwise.
-        self.objects, self.peers, self.server = objects, peers, server
-        self.journal = None                          # the resource's journal, when there is one (`vms/resource.py`)
 
-    # The resource's watermark, answered in the recorder's own terms. Evacuate what is not ours, then cut
-    # above the floor, then report the shortfall — the order is in `vms/space.py`, and so is why.
-    def free(self, need: int, now: float, min_days: float = 3.0, volume: str | None = None) -> dict:
-        from .space import cut, evacuate
-        # The resource measured a DISK, so the answer has to come off that disk: bytes freed on another
-        # volume of the same box close nothing, because the recording that cannot write is on this one.
-        res = self.volumes.get(volume, self.res) if volume else self.res
-        freed, out = 0, {}
-        if self.objects is not None and self.peers is not None and self.server:
-            rep = evacuate(res, self.objects, self.peers, self.server, need, now, vars_=self.vars)
-            freed += rep["freed"]
-            out.update({"evacuated": rep["moved"], **({"skipped": rep["skipped"]} if "skipped" in rep else {})})
-        if freed < need:
-            rep = cut(res, need - freed, now, min_days, self.kept())
-            freed += rep["freed"]
-            out["cut"] = rep["removed"]
-            if rep.get("kept_cut"):                 # the ring reached what somebody said to keep: a number, and loud
-                out["kept_cut"] = rep["kept_cut"]
-                self._lost(rep["kept_lost"], now)
-        short = max(0, need - freed)
-        if short:                                   # everything on the floor: said out loud, not cut into
-            out["shortfall"] = short
-        return {"freed": freed, **out}
+# Every stretch of `[t0, t1)` the spans cover, each given to the HIGHEST EPOCH there. Two epochs overlap
+# whenever a writer was fenced with footage in flight; read both and those minutes come twice, drop every
+# older epoch and the minutes only it held disappear. So the unit of the decision is the stretch:
+# `[(span, lo, hi)]`, in time order.
+def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, float, float]]:
+    edges = sorted({t0, t1} | {s.start for s in spans} | {s.end for s in spans})
+    edges = [e for e in edges if t0 <= e <= t1]
+    out: list[list] = []
+    for lo, hi in zip(edges, edges[1:]):
+        if hi <= lo:
+            continue
+        covering = [s for s in spans if s.start <= lo and s.end >= hi]
+        if not covering:
+            continue
+        best = max(covering, key=lambda s: (s.epoch, s.source == "live"))
+        if out and out[-1][0] == best and out[-1][2] == lo:
+            out[-1][2] = hi
+        else:
+            out.append([best, lo, hi])
+    return [(s, a, b) for s, a, b in out]
 
-    # KEPT FOOTAGE THE RING TOOK IS AN ALARM (the product's question, feedback BR). It was a number in the
-    # pass's report, a warning in a log and a reason in the deletions journal — three places nobody is woken
-    # from. A keep is set so that the footage lives until somebody comes for it; its loss is the thing that
-    # somebody has to be told. One `archive.keep.lost` per recording, in the journal (`audit/resource`), class
-    # `alarm`: which recording, how many seconds, of what span.
-    def _lost(self, segments: list, now: float) -> None:
-        if self.journal is None:
-            return
-        from w2cplatform.events import ALARM
-        by_unit: dict[str, list] = {}
-        for s in segments:
-            by_unit.setdefault(str(s.unit), []).append(s)
-        for unit, segs in sorted(by_unit.items()):
-            self.journal.say("archive.keep.lost", cls=ALARM, of=SUB, target=unit, segments=len(segs),
-                             seconds=round(sum(s.end - s.start for s in segs), 1),
-                             **{"from": min(s.start for s in segs), "to": max(s.end for s in segs)})
 
-    # `unit -> [(since, until), …]`: what is kept of one recording, read ONCE for a pass. A keep names the
-    # recordings it found when it was set, and the camera; the recording's row says whose it is now.
-    #
-    # The read is not in a `try`. A store that does not answer raises, the pass fails, and nothing is
-    # deleted this time: "I could not read the keeps" is not "there are none".
-    def kept(self):
-        from . import keeps
-        all_, cams = keeps.declared(self.vars), {}
+def visible_from(row: dict | None, now: float) -> float:
+    """`retention_days` is a ceiling on what the doors show — the ring decides what is still THERE."""
+    days = float((row or {}).get("retention_days") or 30)
+    return now - days * 86400
 
-        def spans(unit: str) -> list:
-            if not all_:
-                return []
-            if unit not in cams:
-                items, _ = self.vars.get(f"{SUB}/recordings/{unit}")
-                cams[unit] = str(items.get("cam", "")) if items else ""
-            return keeps.spans_of(all_, str(unit), cams[unit])
-        return spans
 
-    def pass_(self, now: float) -> dict:
-        out, removed, rep_kept, skipped = {}, 0, {}, 0
-        spans = self.kept()
-        for res in (list(self.volumes.values()) or [self.res]):
-            rep = res.repair()
-            for k, v in rep.items():
-                out[k] = out.get(k, 0) + v if isinstance(v, int) else v
-            for unit in res.units():
-                # A row that could not be READ is not a row that is absent (feedback BI). Absent is thirty
-                # days; unread is unknown — and a recording kept for ninety would be cut to thirty by a store
-                # that blinked. The unit waits for the next pass; the others are not held up by it.
+class ArchiveError(Exception):
+    """A volume that will not open or take writes, by KIND — the recorder answers each differently:
+
+    wrong   only a person changes it: a path that is not a volume, no permission, a bucket that refuses the key.
+            The volume is handed back
+    away    a timeout, a network that is down, the daemon itself gone. Kept: it is back in a minute, and handing
+            it back would reshuffle every recording on it for a link that returns
+    busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
+            not let go yet, or one whose grace the daemon is still waiting out"""
+
+    def __init__(self, kind: str, detail: str):
+        self.kind, self.detail = kind, detail
+        super().__init__(f"{kind}: {detail}")
+
+
+WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY", "PATH_NOT_EMPTY",
+         "INVALID_ARGUMENT", "PROTECTED_VOLUME", "INVALID_CIPHER_KEY"}
+
+
+def classify(e: Exception) -> ArchiveError:
+    if isinstance(e, ArchiveError):
+        return e
+    if isinstance(e, Unavailable):
+        return ArchiveError("away", f"obsd is not answering: {e.detail}")
+    if isinstance(e, ObsdError):
+        if e.name == "ALREADY_LOCKED":
+            return ArchiveError("busy", str(e))
+        return ArchiveError("wrong" if e.name in WRONG else "away", str(e))
+    if isinstance(e, ValueError):
+        return ArchiveError("wrong", str(e))
+    return ArchiveError("away", str(e))
+
+
+class Archive:
+    """One volume through the host's `obsd`. `owner` is what the daemon remembers a writer by — the recorder
+    passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back."""
+
+    def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
+                 wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ):
+        self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
+        self.session = session or Session(client="vms-archive")
+        self.wall, self.secret, self.block, self.read = wall, secret, block, read
+        self.volume = None
+        self.writer = None
+        self._reader = None
+        self.formatted = False                     # this open formatted the volume: it was new
+        self.reattached = False                    # the daemon handed back a writer a vanished process left
+
+    def _open_volume(self):
+        if self.volume is None:
+            self.volume = self.session.open_volume(params=volume_params(self.url, self.secret))
+        return self.volume
+
+    # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a
+    # bucket nobody can reach. A volume that is not there yet is FORMATTED — at its quota, which is the size of
+    # the ring — and then mounted for writing under `owner`.
+    def open(self, write: bool = True) -> "Archive":
+        try:
+            vol = self._open_volume()
+            if not vol.exists():
+                if not self.quota:
+                    raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
+                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name)
+                self.formatted = True
+            if write and self.writer is None:
+                self.writer = vol.mount_rw(self.owner)
+                self.reattached = self.writer.reattached
+        except (ObsdError, ValueError) as e:
+            raise classify(e) from None
+        return self
+
+    def put(self, unit, epoch: int, sample: Sample, backfill: bool = False) -> str:
+        """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
+        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame."""
+        return self.writer.put(stream_name(unit, epoch, backfill), sample)
+
+    def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
+        return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
+
+    def resize(self, quota: int) -> None:
+        """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest."""
+        if self.writer is not None and quota and quota != self.quota:
+            self.writer.resize(quota)
+        self.quota = quota or self.quota
+
+    def seal(self) -> None:
+        """Close the writer and take it again: its last block is closed, and what was written is readable. What
+        a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = self._open_volume().mount_rw(self.owner)
+
+    def close(self) -> None:
+        """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
+        last minutes readable, and a volume released first would be somebody else's with a writer still in it."""
+        for h in (self._reader, self.writer, self.volume):
+            if h is not None:
                 try:
-                    items, _ = self.vars.get(f"{SUB}/recordings/{unit}")   # the unit's own row: its retention, not the camera's
-                    kept = spans(unit)
-                except OSError:
-                    skipped += 1
-                    continue
-                days = int(items.get("retention_days", 30)) if items else 30
-                removed += res.retain(unit, days, now, kept, rep_kept)
-        return {**out, "media_removed": removed, **({"media_kept": rep_kept["kept"]} if rep_kept else {}),
-                **({"media_unread": skipped} if skipped else {})}
+                    h.close()
+                except ObsdError:
+                    pass
+        self._reader = self.writer = self.volume = None
+
+    # -- reading: a fresh reader for every question -----------------------------------------------------
+    def reader(self):
+        if self._reader is not None:
+            try:
+                self._reader.close()
+            except ObsdError:
+                pass
+        try:
+            self._reader = self._open_volume().mount_ro()
+        except ObsdError as e:
+            raise classify(e) from None
+        return self._reader
+
+    def units(self) -> list[str]:
+        names = {p[0] for p in (parse_stream(s) for s in self.reader().streams()) if p}
+        return sorted(names, key=lambda d: (0, int(d), "") if d.isdigit() else (1, 0, d))
+
+    def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:
+        """What the index holds — of one recording, or of all — as spans, in time order. One question, one
+        reader: `reader` is the one the caller already mounted, if it is asking more than this."""
+        r = reader or self.reader()
+        lo = archive_ms(t0) if t0 is not None else NEVER
+        hi = archive_ms(t1) if t1 is not None else FOREVER
+        out = []
+        for name in r.streams():
+            p = parse_stream(name)
+            if p is None or (unit is not None and p[0] != str(unit)):
+                continue
+            for iv in r.timeline(name, lo, hi):
+                out.append(Span(p[0], p[1], unix_s(iv["start"]), unix_s(iv["end"]), int(iv.get("size", 0)), p[2]))
+        return sorted(out, key=lambda s: (s.start, s.epoch))
+
+    def timeline(self, unit, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
+        """Spans overlapping `[t0, t1)`, each marked `fenced` when its epoch is older than the current one — how
+        the page shows a zombie's footage, kept and told apart."""
+        return [{"start": s.start, "end": s.end, "epoch": s.epoch, "source": s.source, "bytes": s.bytes,
+                 "fenced": current_epoch is not None and s.epoch < current_epoch}
+                for s in self.spans(unit, t0, t1) if s.end > t0 and s.start < t1]
+
+    def coverage(self, unit, gap: float = STITCH) -> list[tuple[float, float]]:
+        return stitch(((s.start, s.end) for s in self.spans(unit)), gap)
+
+    def depth_days(self, unit, now: float) -> float:
+        cov = self.coverage(unit)
+        return max(0.0, (now - cov[0][0]) / 86400) if cov else 0.0
+
+    def samples(self, unit, t0: float, t1: float) -> list[Sample]:
+        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, starting on a key frame — what
+        an export, a scan or a copy into another volume takes."""
+        r = self.reader()
+        out: list[Sample] = []
+        for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
+            a, b = archive_ms(lo), archive_ms(hi)
+            got = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.end > a and s.begin < b]
+            while got and not got[0].key:
+                got.pop(0)                                   # a stretch cut mid-group opens on its next key frame
+            out += got
+        return out
+
+    def status(self) -> dict:
+        """The ring: `usedSize`, `availableSize`, `totalWritten`, `firstBlockId`, `numBlocks`. A first block
+        past nought is a ring that has closed: it has begun to overwrite."""
+        return dict(self.reader().status())
