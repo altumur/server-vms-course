@@ -117,12 +117,15 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
         for key in self.objects.list(self.sub.name + "/"):
             if key.endswith("/heartbeat"):
                 raw = self.objects.get(key)
-                if raw:
-                    hb = Heartbeat.from_bytes(raw)
-                    if now - hb.ts <= max_age:
-                        out[hb.worker] = hb
-                return out
+                hb = parse_heartbeat(key, raw) if raw else None    # garbled: skipped, counted, said once
+                if hb is not None and is_live(self.sub.name, hb.ts, now, max_age):
+                    out[hb.worker] = hb
+        return out
 ```
+
+**Heartbeat, который не разбирается, — беда одного воркера, не прохода.** Объект обрывается на полуслове — питание, зомби, писавший в тот же файл до BD, — и `Heartbeat.from_bytes` поднимал `ValueError` посреди `workers_seen`: ни одного воркера контроллер не видел, пока кто-нибудь не удалит объект (ревью платформы, M6; второе ревью). `parse_heartbeat` пропускает такой объект, считает его (`contract.GARBLED[sub]` → `<sub>_heartbeats_garbled` в `/metrics`) и пишет в лог один раз на ключ, пока тот не станет читаться; то же у `builds`, у `heartbeats` консоли и у `resources_seen` ресурса. Тест: `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs`.
+
+**Живость — по чужим часам, и это сказано.** `now - hb.ts` сравнивает часы контроллера с часами воркера; при перекосе в минуту живой воркер «молчит» или мёртвый «жив». `is_live` делает две вещи, которых не делало сравнение (ревью платформы, M9): heartbeat **из будущего** дальше `FUTURE_TOLERANCE` (5 с) живым не считается — часы одного из двух врут, и действовать по ним нельзя, — а наибольший перекос запоминается и уходит в `/metrics` как `<sub>_heartbeat_skew_seconds_max`: число, по которому видно, что NTP на сервере умер, раньше, чем по размещению. Допуск записан в `module-design.md`; сроки слотов и команд (`slot.until`, `valid_until`) по-прежнему сравниваются с часами читателя — метрика скажет, когда это станет проблемой. Тест: `test_review_remainder.py::test_a_heartbeat_from_the_future_is_not_live_and_the_skew_is_a_number`.
 
 Перечислить объекты префикса, отобрать heartbeat'ы, прочитать, отбросить старше сорока пяти секунд. Всё определение «воркер существует» — в этих шести строках, и вторая строка docstring объясняет, почему они такие: **не список, который контроллер ведёт, а факт, который он читает.**
 

@@ -440,14 +440,19 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
         rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
-        try:
-            self.ensure_placed()                      # deleted rows unplaced; new units onto the workers it sees
-            self.redistribute()                       # units of a RELEASED slot (scale-in) onto the rest
-            self.ensure_home(home_budget)             # a unit back to the server its row names, if it is back
+        errors = []
+        for step, run in (("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
+                          ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
+                          ("ensure_home", lambda: self.ensure_home(home_budget))): # a unit back to the server its row names, if it is back
+            try:
+                run()
+            except Exception as e:                    # noqa: BLE001
+                errors.append(f"{step}: {e}")
+                log.exception("%s: placement pass failed at %s", self.sub.name, step)
+        if errors:
+            rep.update(ok=False, error="; ".join(errors), failures=rep["failures"] + 1)
+        else:
             rep["last_success"] = now
-        except Exception as e:                        # noqa: BLE001
-            rep.update(ok=False, error=str(e), failures=rep["failures"] + 1)
-            log.exception("%s: placement pass failed", self.sub.name)
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
         try:
@@ -461,6 +466,8 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 Отчёт лежит в хранилище объектов (`<подсистема>/controller/pass`), как heartbeat: состояние наблюдения, а не конфигурация. Счётчик отказов тоже оттуда, а не из поля процесса, — перезапуск контроллера его не обнуляет, и второй экземпляр продолжает тот же счёт.
 
 В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки.
+
+**Три шага — три `try`.** В первой версии все три стояли в одном: `ensure_placed`, споткнувшись о строку, которая не разбирается, уносил с собой и `redistribute`, и `ensure_home` — отпущенный слот стоял с единицами, пока кто-нибудь не починит строку (ревью платформы, M7; второе ревью). Теперь каждый шаг в своём `try`, отчёт называет упавшие по имени (`error: "ensure_placed: …; ensure_home: …"`), а `last_success` ставится, только когда прошли все три. И сама строка, которая не разбирается, больше не роняет шаг: `units()` пропускает её, считает (`rows_garbled` → `<sub>_rows_garbled` в `/metrics`) и пишет в лог один раз — единица, которую никто не обслуживает, а не проход, который никто не делает. Тест: `test_placement_decides.py::test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each`.
 
 Отчёт, который не удалось записать, не роняет проход: старый отчёт останется лежать, и его возраст скажет то же самое. `pass_once` не бросает исключений — циклу процесса остаётся вызвать его и опубликовать снимок. Консоль отдаёт отчёт в `/metrics` (урок 15, шаг 11).
 

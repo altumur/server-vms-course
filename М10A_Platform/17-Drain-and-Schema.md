@@ -188,6 +188,8 @@ def check_schema(vars_) -> int:
 
 «Всё новое» — проверяемо, и проверять нечем новым: каждый процесс и так публикует свой номер.
 
+**И проверяется не один раз.** Старая сборка сверяла схему при старте и публиковала номер только с первым heartbeat'ом — после прохода. Стартовав в это окно, она проходила проверку `set_schema` (её ещё не видно) и дальше работала со старой схемой поверх новой (ревью платформы, m4). Теперь `renew_slot` сверяет схему перед каждым продлением (`check_schema`): хранилище ушло вперёд — `SchemaTooNew`, воркер отсекается (`lease_pass` → `fence`) и **не возвращается** (`rejoin` сверяет первым делом), пока его не обновят. Цена — одно чтение `platform/schema` на продление; в трассах стенда М11 оно теперь видно. Тест: `test_lesson1_platform.py::test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin`.
+
 ```python
     def heartbeat(self, status: list[dict], **extra) -> None:
         extra.setdefault("schema", SCHEMA)

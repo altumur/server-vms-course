@@ -152,7 +152,7 @@ r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer {'stat
 
 Лежит heartbeat там же, где heartbeat воркеров, — объектом в raft, `objects/rec/heartbeats/<регистратор>`, — и пишет его только регистратор своим токеном (урок 5).
 
-Дверь архива слушает адрес сервера: `ARCHIVE_HOST` — IP узла, `ARCHIVE_PORT` — 8084. А в heartbeat регистратор кладёт `ARCHIVE_URL` — тоже IP узла, а не имя (`deploy/recworker.nomad.hcl`):
+Дверь архива слушает адрес сервера: `ARCHIVE_HOST` — IP узла, `ARCHIVE_PORT` — 8084. Умолчание в `cluster/__main__.py` — не `0.0.0.0`: без `ARCHIVE_HOST` дверь привязывается к хосту из `ARCHIVE_URL`, а без него — к `127.0.0.1` (второе ревью: дверь без аутентификации, открытая на все интерфейсы по умолчанию, — то, что шаг 4 с mTLS ещё не закрыл, и умолчание не должно открывать её шире, чем объявлено). А в heartbeat регистратор кладёт `ARCHIVE_URL` — тоже IP узла, а не имя (`deploy/recworker.nomad.hcl`):
 
 ```hcl
         ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # what its archive door binds: the node's address

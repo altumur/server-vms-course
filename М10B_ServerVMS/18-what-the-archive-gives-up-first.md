@@ -246,6 +246,8 @@ class Keep:
 
 Метку ставит и снимает консоль: `GET /rec/keeps`, `POST /rec/keeps`, `DELETE /rec/keeps/<id>`. И то и другое — строка в журнале с именем: `archive.keep.made`, `archive.keep.lifted` (М10A, урок 15). Кто поставил, написано в самой метке. Кто **снял**, без журнала не узнать: строки уже нет.
 
+**Метка без тома `incidents` — метка, и консоль это говорит.** `POST /rec/keeps` отвечал 201 и тогда, когда тома вида `incidents` не объявлено: `keep_pass` выходил сразу, видео никто не копировал, оператор думал, что доказательство защищено (ревью платформы, B10). Ответ остаётся 201 — метка верна, двери её показывают, — но несёт `warning: no incidents volume: the keep is a mark, nothing is copied until one is declared`, а `rec_keeps_unprotected` в `/metrics` считает такие метки, пока тома нет. Тест в `test_keeps.py::test_the_console_sets_a_keep_lists_it_and_lifts_it`.
+
 Снятие метки ничего не стирает. Ответ `DELETE` говорит, что именно меняется:
 
 ```python

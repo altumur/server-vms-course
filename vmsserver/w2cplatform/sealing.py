@@ -54,6 +54,12 @@ def is_sealed(value) -> bool:
     return isinstance(value, str) and value.startswith(PREFIX)
 
 
+def kid_of(value: str) -> str:
+    """The key a sealed value names; '' when it is not sealed or not well formed."""
+    parts = value[len(PREFIX):].split(":") if is_sealed(value) else []
+    return parts[0] if len(parts) == 3 else ""
+
+
 class Sealer:
     def __init__(self, keys: dict[str, bytes], current: str):
         if current not in keys or any(len(k) != 32 for k in keys.values()):
@@ -170,12 +176,17 @@ def seal_stored(sealer: "Sealer | None", vars_, prefixes) -> int:
             items, idx = vars_.get(key)
             if not items or items.get("deleted") == "true":
                 continue
-            # In the clear — or sealed before the row was bound into the ciphertext: opened by the field alone and
-            # sealed again, to this row.
+            # In the clear — or sealed before the row was bound into the ciphertext (opened by the field alone and
+            # sealed again, to this row) — or sealed under an OLDER key: the rotation (the review's question 5). A
+            # new key goes on top of the file and seals what is written from then on; what was sealed before stays
+            # under the old kid for ever, and the old line could never leave the file. So the console, starting,
+            # re-seals those under the current key, the revision standing still. Order matters, and is the
+            # operator's: the holders restart first (they read the key file at start), THEN the console — a
+            # holder that does not know the new key yet cannot open what the console re-sealed with it.
             todo = {k: v for k, v in items.items() if is_secret_field(k) and v and not is_sealed(v)}
             try:
                 todo.update({k: sealer.open(k, v, key) for k, v in items.items()
-                             if is_secret_field(k) and is_sealed(v) and not sealer.bound(k, v, key)})
+                             if is_secret_field(k) and is_sealed(v) and (not sealer.bound(k, v, key) or kid_of(v) != sealer.current)})
             except Sealed as e:
                 log.warning("%s: a sealed value this process cannot open is left as it is (%s)", key, e)
             if not todo:

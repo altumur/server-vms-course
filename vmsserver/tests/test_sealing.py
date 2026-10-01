@@ -11,7 +11,7 @@ import os
 import tempfile
 import urllib.request
 
-from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, new_key_file, open_row, seal_items, seal_stored
+from w2cplatform.sealing import PREFIX, Sealed, Sealer, is_sealed, kid_of, new_key_file, open_row, seal_items, seal_stored
 from w2cplatform.spec import Refused
 from vms.config import SPEC
 from vms.console import serve
@@ -254,3 +254,31 @@ def test_a_ciphertext_opens_only_in_the_row_it_was_sealed_for():
     now = box.vars.get("vms/cameras/3")[0]["cred_secret"]
     assert now != old and sealer.bound("cred_secret", now, "vms/cameras/3") and sealer.open("cred_secret", now, "vms/cameras/3") == "Legacy"
     assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 0                                 # nothing left to do
+
+
+def test_a_rotated_key_reseals_what_the_old_one_sealed_so_the_old_line_can_go():
+    """The review's question 5. A new key on top of the file sealed only what was written after it; what was
+    sealed before stayed under the old kid for ever, and the old line could never be removed. The console's start
+    re-seals those under the current key — the revision standing still — once the holders have restarted with the
+    new file; then `secrets status` is the log line, and the old line goes."""
+    box = Box()
+    k1 = _key("k1")
+    con = _console_with_key(box, k1)
+    con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4", "cred_secret": "Hunter2"})
+    before, _ = box.vars.get("vms/cameras/1")
+    assert kid_of(before["cred_secret"]) == "k1"
+    k12 = _key("k1", "k2")                                             # the rotation: k2 on top, k1 still in the file
+    lines = open(k12).read().splitlines()
+    open(k12, "w").write("\n".join([lines[0], open(k1).read().strip()]) + "\n")   # the SAME k1 as before, under the new k2
+    sealer = Sealer.from_file(k12)
+    assert sealer.current == "k2" and sealer.open("cred_secret", before["cred_secret"], "vms/cameras/1") == "Hunter2"
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 1
+    after, _ = box.vars.get("vms/cameras/1")
+    assert kid_of(after["cred_secret"]) == "k2" and after["revision"] == before["revision"]
+    assert sealer.open("cred_secret", after["cred_secret"], "vms/cameras/1") == "Hunter2"
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 0                       # once
+    only_k2 = Sealer.from_file(_key("k2"))                                            # a file without the old line…
+    try:
+        only_k2.open("cred_secret", before["cred_secret"], "vms/cameras/1"); raise AssertionError("k1 opened without its key")
+    except Sealed:
+        pass

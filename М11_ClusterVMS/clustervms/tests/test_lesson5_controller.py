@@ -150,7 +150,9 @@ def test_the_console_over_http():
         except urllib.error.HTTPError as e: return e.code, e.read().decode()
     st, out = call("POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["vlan:cctv-b"]}, {"Idempotency-Key": "k1"})
     assert st == 201 and json.loads(out)["worker"] is None                    # the console wrote the row; placement is the controller's
-    assert call("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, {"Idempotency-Key": "k1"})[0] == 201 and len(ctl.cameras()) == 1
+    # the SAME request again — the same body under the same key: one camera (a different body under it is 422, the key is one caller's for one body)
+    assert call("POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["vlan:cctv-b"]}, {"Idempotency-Key": "k1"})[0] == 201 and len(ctl.cameras()) == 1
+    assert call("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, {"Idempotency-Key": "k1"})[0] == 422
     assert call("PUT", "/cameras/1", {"worker": "w-0"})[0] == 400
     placed = ctl.ensure_placed()[0].worker; assert placed in ("w-1", "w-2")   # the controller's pass, under the label
     ws[placed].reconcile_once(); ws[placed].heartbeat_once()
