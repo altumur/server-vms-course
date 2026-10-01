@@ -614,7 +614,13 @@ def vms_metrics(ctl):
             for k, v in (hb.extra.get("command_counts") or {}).items():
                 if k in total:
                     total[k] += int(v)
-        return ["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
+        # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
+        # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
+        # loop is late (the review's second pass).
+        from . import jobs
+        return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
+                + ["# TYPE vms_requests_expired_total counter"]
+                + [f'vms_requests_expired_total{{sub="{s}"}} {n}' for s, n in sorted(jobs.expired.items())])
     return lines
 
 

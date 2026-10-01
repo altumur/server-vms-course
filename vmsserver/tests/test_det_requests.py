@@ -108,9 +108,106 @@ def test_a_request_the_store_would_not_take_stays_for_the_next_pass():
 def test_the_console_runs_it_and_the_evaluator_may_file_it():
     """Written, tested and never called is the failure this project has had twice."""
     import vms.__main__ as m
-    loop = inspect.getsource(m._reap_loop)
+    loop = inspect.getsource(m._requests_loop)
     assert "detect_on_request(" in loop and "expire(det_ctl" in loop
+    assert "_requests_loop" in inspect.getsource(m.console)
     assert 'requests_acl("vms", "rec", "det")' in inspect.getsource(m.autoworker)
+
+
+def test_requests_are_looked_at_far_more_often_than_they_live():
+    """A request is valid for thirty seconds (`autoworker.valid_for`), and the loop that turned it into a row
+    ran every thirty: about one firing in six arrived expired and was dropped with a warning (the review's
+    second pass). The requests have a loop of their own now, and its period is a fraction of their life — and
+    the drops that still happen are a number on `/metrics`, not a line in a log."""
+    import vms.__main__ as m
+    from vms import jobs
+    from vms.console import vms_metrics
+    from vms.controller import VmsController
+    from vms.config import SPEC
+    assert inspect.signature(m._requests_loop).parameters["every"].default <= 2.0
+    assert inspect.signature(m._reap_loop).parameters["every"].default >= 30.0     # the reaper did not get faster for it
+    reaper = inspect.getsource(m._reap_loop)
+    assert "record_on_request(" not in reaper and "detect_on_request(" not in reaper   # moved, not copied
+
+    box = Box(); det, job, rec = _site(box)
+    before = jobs.expired["det"]
+    _ask(box, "f1-0", action="detect", cam="7", kind="lpr", minutes=10)
+    box.wall.advance(31)
+    assert detect_on_request(det, job, rec, box.wall()) == 0 and jobs.expired["det"] == before + 1
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    assert f'vms_requests_expired_total{{sub="det"}} {before + 1}' in vms_metrics(ctl)()
+
+
+def test_firings_that_overlap_widen_one_job_instead_of_making_a_job_each():
+    """A swaying camera fires every second; every firing used to be its own two-minute scan — each second
+    scanned a dozen times, thousands of rows a day, both of a worker's places taken by one minute (the review's
+    second pass). Two firings five seconds apart are ONE job, reaching to the later `after`."""
+    box = Box(); det, job, rec = _site(box)
+    at = box.wall()
+    _ask(box, "f1-0", action="scan", cam="7", kind="lpr", before=60, after=60)
+    assert detect_on_request(det, job, rec, box.wall()) == 1
+    box.wall.advance(5)
+    _ask(box, "f1-5", action="scan", cam="7", kind="lpr", before=60, after=60)
+    assert detect_on_request(det, job, rec, box.wall()) == 1
+    (j,) = job.units()
+    assert j["from"] == at - 60 and j["to"] == at + 65 and j["state"] == "queued"
+    assert box.vars.get("det/requests/f1-5")[0] is None                    # performed: nothing left to say
+    # inside what is already asked for: nothing to widen, and still one job
+    _ask(box, "f1-6", action="scan", cam="7", kind="lpr", before=30, after=30)
+    assert detect_on_request(det, job, rec, box.wall()) == 0 and len(job.units()) == 1
+    # another model is another job: the budgets and the results are per model
+    _ask(box, "f1-7", action="scan", cam="7", kind="motion", before=60, after=60)
+    assert detect_on_request(det, job, rec, box.wall()) == 1 and len(job.units()) == 2
+    # a job that ENDED is not widened — its worker let it go; a new firing is a new job
+    job.update(j["id"], {"state": "done"})
+    box.wall.advance(5)
+    _ask(box, "f1-10", action="scan", cam="7", kind="lpr", before=60, after=60)
+    assert detect_on_request(det, job, rec, box.wall()) == 1 and len(job.units()) == 3
+
+
+def test_a_job_the_worker_finished_before_it_was_widened_is_not_done():
+    """The reaper believes the worker's `done` only about the shape of the row the worker saw: a job widened
+    by a firing between the worker's last pass and the reaper's is still running."""
+    from w2cplatform.console import Heartbeat
+    from vms.jobs import reap
+    box = Box(); det, job, rec = _site(box)
+    adm = SpecController(DETJOB_SPEC, box.vars.as_writer("detjobcontroller", DETJOB_SPEC.acl_controller()), box.objects, wall=box.wall)
+    at = box.wall()
+    _ask(box, "f1-0", action="scan", cam="7", kind="lpr", before=60, after=60)
+    detect_on_request(det, job, rec, box.wall())
+    (j,) = job.units()
+    box.objects.put(DETJOB_SPEC.sub.heartbeat_key("j-1"), Heartbeat("j-1", box.wall(), [], {"server": "srv-1", "capacity": 2, "headroom": 2, "labels": "gpu"}).to_bytes())
+    adm.ensure_placed()
+    done = {"id": j["id"], "phase": "done", "from": at - 60, "to": at + 60, "covered": 120.0, "events": 1}
+    box.wall.advance(5)
+    _ask(box, "f1-5", action="scan", cam="7", kind="lpr", before=60, after=60)
+    detect_on_request(det, job, rec, box.wall())                            # widened to `at + 65`
+    box.objects.put(DETJOB_SPEC.sub.heartbeat_key("j-1"), Heartbeat("j-1", box.wall(), [done], {"server": "srv-1", "capacity": 2, "headroom": 2, "labels": "gpu"}).to_bytes())
+    assert reap(job) == {"done": 0, "failed": 0} and job.unit(j["id"])["state"] == "queued"
+    done["to"] = at + 65                                                    # the worker saw the new end and finished THAT
+    box.objects.put(DETJOB_SPEC.sub.heartbeat_key("j-1"), Heartbeat("j-1", box.wall(), [done], {"server": "srv-1", "capacity": 2, "headroom": 2, "labels": "gpu"}).to_bytes())
+    assert reap(job) == {"done": 1, "failed": 0}
+    row = job.unit(j["id"])
+    assert row["state"] == "done" and row["ended"] == box.wall()
+
+
+def test_a_job_finished_for_days_is_forgotten_and_a_running_one_never_is():
+    """Nothing removed a finished job's row before (the review's second pass): a scenario firing all night left
+    the operator a list of hundreds of `done`. Three days after the reaper saw it end, the row goes — by the
+    day it ENDED, not by its interval: a search over last month ends today."""
+    from vms.jobs import FINISHED_RETENTION_SECONDS, forget_finished
+    box = Box(); det, job, rec = _site(box)
+    W = box.wall()
+    job.create({"name": "old", "cam": "7", "rec": "7", "kind": "lpr", "from": W - 30 * 86400, "to": W - 29 * 86400})
+    job.create({"name": "live", "cam": "7", "rec": "7", "kind": "lpr", "from": W - 30 * 86400, "to": W - 29 * 86400})
+    job.update("old", {"state": "done", "ended": W})
+    box.wall.advance(FINISHED_RETENTION_SECONDS - 1)
+    assert forget_finished(job, box.wall()) == 0                            # an old interval, finished today: kept
+    box.wall.advance(2)
+    assert forget_finished(job, box.wall()) == 1
+    assert [r["id"] for r in job.units()] == ["live"]                       # still running: never, whatever its dates
+    import vms.__main__ as m
+    assert "forget_finished(" in inspect.getsource(m._reap_loop)
 
 
 def test_a_scenario_that_asks_for_what_cannot_be_is_refused_where_it_is_written():

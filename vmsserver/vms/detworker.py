@@ -22,7 +22,7 @@ import time
 from w2cplatform import runtime
 from w2cplatform.console import holder_of
 from w2cplatform.contract import Worker
-from w2cplatform.events import EventLog
+from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 from w2cplatform.variables import Variables
 
 from .config import DET_SPEC
@@ -65,6 +65,10 @@ class DetWorker(Worker):
         self.running: dict[str, object] = {}                                     # unit -> model
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
+        # What this subsystem declared about repeats (`events.suppress` in det.subsystem.yaml), held for as
+        # long as this worker runs the model — the VMS worker's arrangement, for its reason: the model's
+        # output is seen here before it is a file, and nowhere else (M12 of the review).
+        self.suppressor = Suppressor(DET_SPEC.suppress)
 
     # -- where the camera's RTP is: the VMS heartbeat, never a call to the worker ---------------------
     def rtp_source(self, cam: str):
@@ -102,16 +106,43 @@ class DetWorker(Worker):
                 self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "running", "events": 0, "server": src[0], "source": src[1]}
             if self.may_write(unit):
                 for kind, fields in self.running[unit].observe(now):           # what the model saw, into the unit's bucket under its epoch
-                    EventLog(self.archive_root, DET.name, unit, self.epochs[unit]).append(now, kind, **fields)
-                    self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1
+                    # Suppression stands between the model and the file, last before the write, as in the
+                    # VMS worker: everything above is about whether this worker may speak about this unit
+                    # at all, and that does not change because the scene moved twice.
+                    self._write(unit, row, self.suppressor.lines(now, unit, kind, fields))
+        self._flush_suppressed(now)
         for unit in list(self.running):
             if unit not in wanted:
                 self._stop(unit); self.status_by_unit.pop(unit, None); self.release(unit)
         for unit in list(self.status_by_unit):
             if unit not in wanted:
                 self.status_by_unit.pop(unit, None)
-        self.renew_leases()
         return sorted(self.running)
+
+    # The traffic class of one line: `alarm` when this DETECTOR's row lists the kind among its alarms, else
+    # `observation` (det.subsystem.yaml, `alarms`). The platform fixes the two words; which kinds are which is on
+    # the row, because it is about what the operator set the model up for.
+    @staticmethod
+    def class_of(row: dict, kind: str) -> str:
+        names = [str(n).strip() for n in (row.get("alarms") or []) if str(n).strip()]
+        return ALARM if kind in names else OBSERVATION
+
+    # Writes the lines the suppressor handed back — the observation, nothing, or the summary of a window that
+    # just closed and then the observation — each under its class, into the unit's bucket under its epoch.
+    def _write(self, unit: str, row: dict, lines) -> None:
+        log_ = EventLog(self.archive_root, DET.name, unit, self.epochs[unit])
+        for t, kind, fields in lines:
+            log_.append(t, kind, self.class_of(row, kind), **fields)
+            self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1
+
+    # Windows that closed with no observation left to carry the summary out: the scene went still. Once a pass,
+    # as the VMS worker does — without it a storm that ENDS is a storm nobody counted. A unit whose epoch this
+    # worker gave up drops its summary rather than writing it under an epoch that is not its own any more.
+    def _flush_suppressed(self, now: float) -> None:
+        for unit, t, kind, fields in self.suppressor.flush(now):
+            row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
+            if row is not None and self.may_write(unit):
+                self._write(unit, row, [(t, kind, fields)])
 
     def _stop(self, unit: str) -> None:
         m = self.running.pop(unit, None)
@@ -133,6 +164,10 @@ class DetWorker(Worker):
                 self.reconcile_once()
             except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("detector pass failed")
+            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
+                self.renew_leases()
+            except Exception:                            # noqa: BLE001
+                log.exception("detector lease renewal failed")
             try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
                 self.heartbeat_once()
             except Exception:                            # noqa: BLE001

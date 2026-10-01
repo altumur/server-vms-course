@@ -398,8 +398,7 @@ def _sweep_loop(controllers, every: float = 60.0) -> None:
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
 def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
     import time
-    from .jobs import (ask_for_footage, clear_requests, detect_on_request, expire, expire_recordings, keep_what_fired,
-                       reap, record_on_request, scan_what_arrived)
+    from .jobs import ask_for_footage, clear_requests, forget_finished, keep_what_fired, reap, scan_what_arrived
     while not stop.is_set():
         for c in controllers:
             try:
@@ -408,6 +407,12 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                     logging.info("%s: %d done, %d failed", c.spec.name, moved["done"], moved["failed"])
             except Exception:                         # noqa: BLE001
                 logging.exception("the job reaper failed in %s — finished jobs will stay open", c.spec.name)
+            try:
+                gone = forget_finished(c, time.time())    # finished for days: the row goes, the events stay
+                if gone:
+                    logging.info("%s: %d finished job(s) forgotten", c.spec.name, gone)
+            except Exception:                         # noqa: BLE001
+                logging.exception("forgetting finished jobs failed in %s — the list of scans keeps growing", c.spec.name)
         for c in controllers if rec_ctl is not None else ():
             try:
                 asked = ask_for_footage(c, rec_ctl)       # a job stuck on footage the DEVICE has: ask the recorder
@@ -436,11 +441,25 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                     logging.info("%s: %d request(s) fetched and cleared", c.spec.name, gone)
             except Exception:                         # noqa: BLE001
                 logging.exception("clearing requests failed in %s — they will be asked for again", c.spec.name)
+        stop.wait(every)
+
+
+# The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
+# reaper's (the review's second pass). A scenario's request is valid for thirty seconds (`autoworker.py`,
+# `valid_for`), and these four calls used to run at the end of the thirty-second loop above: about one firing
+# in six reached them after its `valid_until` and was dropped with a warning nobody reads, while the scenario
+# had already written `fired`. Two seconds is the evaluator's own pass, so neither side waits on the other;
+# what it costs is a listing of two request families and a pass over the rows with an `until`. The drops that
+# still happen are on `/metrics` (`jobs.expired`, `vms_requests_expired_total`).
+#
+# Turning a request into a recording or a detector is a write to CONFIGURATION, and of the three processes only
+# this one holds the token for it — a worker writes none, and the controller writes placement. Both ends of
+# each family here: the row that starts, and the row whose `until` has passed.
+def _requests_loop(rec_ctl=None, det_ctl=None, job_ctl=None, every: float = 2.0) -> None:
+    import time
+    from .jobs import detect_on_request, expire, expire_recordings, record_on_request
+    while not stop.is_set():
         if rec_ctl is not None:
-            # A scenario asked for ten minutes of a camera. Turning that into a recording is a write to
-            # CONFIGURATION, and of the three processes only this one holds the token for it — a worker
-            # writes none, and the controller writes placement. Both ends here: the row that starts, and
-            # the row whose `until` has passed.
             try:
                 started = record_on_request(rec_ctl, time.time())
                 ended = expire_recordings(rec_ctl, time.time())
@@ -449,11 +468,11 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
             except Exception:                         # noqa: BLE001
                 logging.exception("timed recordings failed — a scenario's minutes may not have started, "
                                   "or a finished one is still recording")
-        if det_ctl is not None and rec_ctl is not None and controllers:
+        if det_ctl is not None and rec_ctl is not None and job_ctl is not None:
             # The detectors' family, the same two ends: a request becomes a detector with an end, or a scan
-            # job (`controllers[0]` is the scans' controller); a detector whose `until` passed is deleted.
+            # job of `job_ctl`; a detector whose `until` passed is deleted.
             try:
-                made = detect_on_request(det_ctl, controllers[0], rec_ctl, time.time())
+                made = detect_on_request(det_ctl, job_ctl, rec_ctl, time.time())
                 ended = expire(det_ctl, time.time())
                 if made or ended:
                     logging.info("%s: %d asked for by scenarios, %d detector(s) ended", det_ctl.spec.name, made, ended)
@@ -501,6 +520,7 @@ def console() -> None:
     # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
     # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
     threading.Thread(target=_reap_loop, args=([job_ctl], [rec_ctl, ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
+    threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()
 

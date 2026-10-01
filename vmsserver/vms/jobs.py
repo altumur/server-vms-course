@@ -30,7 +30,22 @@ TERMINAL = ("done", "failed")
 # what SURVIVES the job being un-placed, and what the operator opened. `waiting`, `following` and `unsupported` are the
 # worker's news and stay in the heartbeat: nothing downstream acts on them.
 MIRRORED = ("fetching", "running") + TERMINAL
+# How long a finished job's row stays after the reaper saw it end. Its events are in the archive under the
+# archive's days and are found by `/events?cam=`; the ROW is the operator's list of what ran, and a list that
+# keeps every scan a scenario ever asked for is a list nobody can read. Three days is the window in which
+# somebody asks "did last night's search finish" (the review's second pass).
+FINISHED_RETENTION_SECONDS = 3 * 86400.0
 log = logging.getLogger("vms.jobs")
+
+# Requests that reached the console after their `valid_until` — dropped, and COUNTED, per family. A line in
+# a log is read by nobody; this number climbing says the requests' loop is running late, which is how it was
+# found (the review's second pass: a thirty-second request read every thirty seconds). One tally per process:
+# the console's loops and its `/metrics` are the same process (`vms.console.vms_metrics`).
+expired: dict[str, int] = {"rec": 0, "det": 0}
+
+
+def _expired(sub: str) -> None:
+    expired[sub] = expired.get(sub, 0) + 1
 
 
 # "Record this camera for ten minutes" — a request turned into a row, by the one token that may write
@@ -56,6 +71,7 @@ def record_on_request(rec_ctl, now: float) -> int:
         until = float(it.get("valid_until", 0) or 0)
         if until and now > until:
             rec_ctl.vars.delete(key)                        # asked for too late to mean what it meant
+            _expired(rec_ctl.spec.name)
             log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
             continue
         cam = str(it.get("cam") or it.get("unit") or "")
@@ -146,6 +162,7 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
         until = float(it.get("valid_until", 0) or 0)
         if until and now > until:
             det_ctl.vars.delete(key)                        # asked for too late to mean what it meant
+            _expired(det_ctl.spec.name)
             log.warning("%s: %s expired before it was turned into work", det_ctl.spec.name, rid)
             continue
         cam, kind = str(it.get("cam") or ""), str(it.get("kind") or "")
@@ -207,6 +224,23 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
         rec = cam if cam in recs else (recs[0] if recs else "")
     if not rec or rec_ctl.unit(rec) is None:
         raise Refused(f"nothing records camera {cam}: a scan reads the archive, and there is none to read")
+    # One job per (recording, model) at a time, not one per firing (the review's second pass). A swaying camera
+    # fires every second, and every firing used to be a two-minute job of its own: each second scanned a dozen
+    # times, thousands of rows a day, both of a worker's places taken by the same minute. A request whose
+    # interval overlaps or touches a job of the same recording and model that has not ended WIDENS that job to
+    # the union of the two; the worker re-plans from the row every pass, so the new minutes are simply more
+    # stretches, and a `done` it said about the old shape is not believed (`reap`).
+    for j in job_ctl.units():
+        if str(j.get("rec")) != rec or str(j.get("kind")) != kind or str(j.get("state", "")) in TERMINAL:
+            continue
+        if j["from"] <= t1 and t0 <= j["to"]:
+            wider = {f: v for f, v in (("from", min(j["from"], t0)), ("to", max(j["to"], t1))) if v != j[f]}
+            if not wider:
+                return 0                                    # inside a job that is already asked for
+            job_ctl.update(j["id"], wider)
+            log.info("%s: %s widened to [%.0f, %.0f) — a scenario asked again", job_ctl.spec.name, j["id"],
+                     wider.get("from", j["from"]), wider.get("to", j["to"]))
+            return 1
     jid = f"{rec}-{kind}-{int(t0)}-{int(t1)}"
     if job_ctl.vars.get(job_ctl.sub.config(job_ctl.spec.rows, jid))[0]:
         return 0                                            # made already, or deleted on purpose
@@ -245,10 +279,12 @@ def reap(ctl) -> dict:
     moved = {"done": 0, "failed": 0}
     placed: dict[str, str] = {}
     state: dict[str, str] = {}
+    ends: dict[str, float] = {}
     for row in ctl.units():
         if str(row.get("state", "")) in TERMINAL:
             continue                                        # already moved; the predicate un-places it, not us
         state[str(row["id"])] = str(row.get("state", ""))
+        ends[str(row["id"])] = float(row.get("to") or 0)
         p = ctl.placement(row["id"])
         if p is not None:
             placed[str(row["id"])] = p.worker
@@ -259,12 +295,41 @@ def reap(ctl) -> dict:
         if str(state.get(uid, "")) == phase:
             continue                                        # already says it: a row that moves every pass is a
                                                             # revision that moves every pass, for every reader downstream
-        ctl.update(uid, {"state": phase})
+        if phase in TERMINAL and "to" in st and float(st["to"]) != ends.get(uid):
+            continue                                        # finished an OLDER shape of the row: a scenario widened it
+                                                            # since (`_scan`), and the worker has not seen the new end
+        fields = {"state": phase}
+        if phase in TERMINAL:
+            fields["ended"] = ctl.wall()                    # when it was SEEN to end — `to` is media time, and a
+                                                            # search over last month ends today (`forget_finished`)
+        ctl.update(uid, fields)
         if phase in TERMINAL:
             moved[phase] += 1
             log.info("%s %s: %s (%.0f s of footage, %d event(s))", ctl.spec.name, uid, phase,
                      float(st.get("covered", 0)), int(st.get("events", 0)))
     return moved
+
+
+# The other end of a job's row: finished for longer than `FINISHED_RETENTION_SECONDS`, it goes. Until this the
+# rows of finished scans were never removed by anything (the review's second pass), and a scenario firing
+# all night left the operator a list of hundreds of `done`. The events stay — they are the archive's, under
+# its days — and the row is marked rather than removed, as every deleted row is: `_scan` and
+# `scan_what_arrived` read the mark as "made already, or deleted on purpose", and a request that names the
+# same interval again is not turned into the same job a second time.
+#
+# A row finished before `ended` was written has none; its `to` stands in — the shape the review named,
+# three days past the interval's end.
+def forget_finished(ctl, now: float) -> int:
+    gone = 0
+    for row in ctl.units():
+        if str(row.get("state", "")) not in TERMINAL:
+            continue
+        ended = float(row.get("ended") or 0) or float(row.get("to") or 0)
+        if now - ended > FINISHED_RETENTION_SECONDS:
+            ctl.delete(row["id"])
+            gone += 1
+            log.info("%s: %s finished %.0f days ago — forgotten", ctl.spec.name, row["id"], (now - ended) / 86400)
+    return gone
 
 
 # A job that cannot run because the footage is still on the device: ask the recorder for it.

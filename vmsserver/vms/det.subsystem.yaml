@@ -22,6 +22,14 @@ unit:
     mask:      {type: blob}                        # sha256-<hex>; the bytes are in the object store
     enabled:   {type: bool,   default: true}
     labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
+    # Which of this detector's event kinds are ALARMS: written down with fsync, kept in a tree of their own for
+    # the alarms' days, kept ahead of observations when a window overflows (`w2cplatform/events.py`). The VMS's
+    # field, on the row for the VMS's reason: the class is a fact about what the operator set the model up FOR,
+    # and the platform fixes only the two words. The default answers for the three models here (M12 of the
+    # review — every detector line used to be an observation): a line is drawn where crossing it matters and a
+    # plate list is kept for the plates on it, so `linecross` and an `lpr` hit are what somebody is called for;
+    # `motion` is the scene moving, which is all day — an observation, and a suppressed one (`events` below).
+    alarms:    {type: list,   default: ["linecross", "lpr"]}
     # WHEN THIS DETECTOR STOPS BEING ONE, in unix seconds; 0 — never, which is every detector an operator
     # creates by hand. The recording's field, for the recording's reason (rec.subsystem.yaml): a scenario
     # that asks "watch camera 7 for plates for ten minutes" asks for an END, and an end that lives in a
@@ -52,6 +60,25 @@ placement:
 snapshot: [name, cam, kind, enabled, until]
 console:
   running: units_running               # det_units_running
+events:
+  # Which of this subsystem's events collapse when they repeat — the VMS's rule (vms.subsystem.yaml), applied
+  # by the detector worker before the write (`Suppressor`). Until this every line a model produced went into the
+  # log (M12 of the review): a motion model re-reports for as long as the scene moves, which on a windy camera is
+  # all night, once a pass. The first line of a window is the news and goes in unchanged; what the window
+  # swallowed is said when it closes — one line with `repeats`, `since`, `until`.
+  #
+  # `by: [cam]`, and not every field: a model's fields drift between two looks at the same scene (a score, a box,
+  # a pass counter), and two lines that differ only there are not two observations. The unit is already one
+  # model on one camera, so this reads "any motion this detector saw inside the window".
+  #
+  # Not `linecross` and not `lpr`: those are alarms, and every one of them is a separate thing that happened —
+  # the second car over the line is the second car. An alarm swallowed is an alarm nobody was called for.
+  suppress:
+    motion:
+      window: 30                       # the VMS's number for a bouncing contact: long enough that a tree in the
+                                       # wind is one line a window, short enough that two people crossing a
+                                       # minute apart are two
+      by: [cam]
 # `det/requests/<id>` — what automation asks the detectors for (`vms/jobs.py`, `detect_on_request`). One
 # family, two kinds of asking, as the recorder's: `detect` (the stream, from now, for minutes) becomes a row
 # HERE; `scan` (an interval of the archive) becomes a job of `detjob`. One door, two budgets: a scan is

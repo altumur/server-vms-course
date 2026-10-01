@@ -90,10 +90,13 @@ def test_a_model_on_a_camera_is_placed_on_a_gpu_worker_and_writes_its_own_bucket
         gpu.heartbeat_once()
         st = call(base, "GET", "/det/units")[1]["rows"][0]
         assert st["phase"] == "running" and st["events"] == 2 and st["source"] == "rtsp://srv-1:8554/1" and st["worker"] == "d-2"
-        assert subsystems_under(box.archive) == {"det": ["1-linecross"]}                # its own prefix on the same resource
-        e1 = os.path.join(box.archive, "det", "1-linecross", "e1")
+        # its own prefix on the same resource — and a line crossed is an ALARM (det.subsystem.yaml, `alarms`), so the
+        # tree is the alarms' one, with the alarms' days (M12 of the review: these used to be observations)
+        assert subsystems_under(box.archive) == {"det.alarms": ["1-linecross"]}
+        e1 = os.path.join(box.archive, "det.alarms", "1-linecross", "e1")
         lines = [l for b in sorted(os.listdir(e1)) for l in read_bucket(os.path.join(e1, b))]
-        assert [(l["kind"], l["pass"], l["cam"]) for l in lines] == [("linecross", 3, 1), ("linecross", 6, 1)]
+        assert [(l["kind"], l["pass"], l["cam"], l["class"]) for l in lines] == [("linecross", 3, 1, "alarm"), ("linecross", 6, 1, "alarm")]
+        assert det_ctl.unit("1-linecross")["alarms"] == ["linecross", "lpr"]            # the row says which kinds; the operator may change it
         assert "det_units_running 1" in urllib.request.urlopen(f"{base}/det/metrics").read().decode()
         # disable from the page: the model stops, the row says pending; enable again: a new run under the SAME epoch (same writer)
         assert call(base, "PUT", "/det/units/1-linecross", {"enabled": False})[0] == 200
@@ -120,6 +123,35 @@ def test_a_camera_nobody_holds_leaves_the_model_waiting_not_failed():
         call(base, "POST", "/det/units", {"name": "1-face", "cam": "1", "kind": "face"}, {"Idempotency-Key": "k2"})
         det_ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once(); gpu.reconcile_once()
         assert gpu.status_by_unit["1-face"]["phase"] == "unsupported" and gpu.headroom() == 8   # nothing runs while the camera is down
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
+def test_motion_is_an_observation_and_its_repeats_collapse_into_one_line_and_a_summary():
+    """M12 of the review: every line a model produced went into the log as an observation, and a motion model
+    re-reports for as long as the scene moves. The subsystem now declares its repeats (det.subsystem.yaml,
+    `events.suppress`) and the worker applies them before the write, as the VMS worker does: the first line of
+    a window goes in, the rest are counted, and the count is written when the window closes — even when the
+    scene went still and no observation came to close it."""
+    box, ctl, det_ctl, w, srv, base = _box()
+    try:
+        gpu = _det(box, "d-1")
+        call(base, "POST", "/det/units", {"name": "1-motion", "cam": "1", "kind": "motion"}, {"Idempotency-Key": "k1"})
+        gpu.models["motion"] = lambda unit: FakeModel(unit, every=1)                   # the scene moves on every pass
+        det_ctl.ensure_placed(); gpu.reconcile_once()
+        for _ in range(10):
+            box.wall.advance(2); gpu.reconcile_once()                                  # eleven observations in twenty seconds
+        e1 = os.path.join(box.archive, "det", "1-motion", "e1")
+        lines = lambda: [l for b in sorted(os.listdir(e1)) for l in read_bucket(os.path.join(e1, b))]   # noqa: E731
+        assert [l["kind"] for l in lines()] == ["motion"] and "class" not in lines()[0]   # one line, an observation
+        assert gpu.status_by_unit["1-motion"]["events"] == 1
+        gpu.models["motion"] = lambda unit: FakeModel(unit, every=10 ** 6)             # the scene goes still…
+        gpu._stop("1-motion"); gpu.reconcile_once()
+        box.wall.advance(31); w.heartbeat_once(); gpu.reconcile_once()                 # …and the window closes with nothing to carry the summary
+        summary = lines()[-1]
+        assert len(lines()) == 2 and summary["kind"] == "motion" and summary["repeats"] == 10
+        assert summary["since"] == lines()[0]["t"] and summary["until"] == lines()[0]["t"] + 20
+        assert not os.path.isdir(os.path.join(box.archive, "det.alarms"))             # motion is nobody's alarm
     finally:
         srv.shutdown(); srv.server_close()
 

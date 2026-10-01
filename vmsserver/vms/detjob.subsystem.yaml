@@ -31,6 +31,10 @@ unit:
     from:    {type: float,  required: true}      # unix seconds, inclusive — MEDIA time, not the time the job was made
     to:      {type: float,  required: true}      # unix seconds, exclusive
     state:   {type: string, default: queued}     # queued | running | done | failed — see below
+    ended:   {type: float,  default: 0}          # unix seconds the reaper SAW the state become done|failed; 0 — not yet.
+                                                 # Wall time, where `from`/`to` are media time: a search over last
+                                                 # month ends today, and the row's days (`jobs.forget_finished`)
+                                                 # run from today
     labels:  {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
 placement:
   capacity:   {from: capacity, fallback: 2}      # scans a worker will carry at once — its OWN number, in its OWN
