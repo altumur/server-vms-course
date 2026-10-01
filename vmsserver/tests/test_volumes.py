@@ -128,6 +128,24 @@ def test_a_spare_picks_up_a_volume_whose_recorder_went_silent():
     assert a.volume_pass() == "" and a.hold is None and a.recording_allowed
 
 
+def test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once():
+    """Feedback CF. `r-1` is killed and systemd starts it again, under the same slot: it is the same worker. Its
+    slot follows at once (`claim_slot(prefer=…)`), and now its volume does too — it used to wait out the hold's
+    TTL, 45 s in which nothing on that volume was recorded. Anybody else still waits for the TTL, and the old
+    instance learns on its next pass that the place is not its own any more."""
+    box = Box()
+    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
+    old, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
+    assert old.volume_pass() == "s3-main" and spare.volume_pass() == ""
+    assert Slot.from_items("s3-main", box.vars.get("rec/holds/s3-main")[0]).by == "r-1"
+
+    box.wall.advance(5)                                                # kill -9, and up again five seconds later
+    again = _recorder(box, "r-1", "srv-a")
+    assert spare.volume_pass() == ""                                   # not the spare's: the hold has not lapsed
+    assert again.volume_pass() == "s3-main" and again.hold == "s3-main"
+    assert old.volume_pass() == "" and old.hold is None                # the old instance is a spare now
+
+
 def test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running():
     """The administrator deletes the archive. Whoever was writing into it has to
     stop — and keep its slot: this is a reassignment, not a zombie. The process

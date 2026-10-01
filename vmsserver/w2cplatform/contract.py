@@ -386,18 +386,20 @@ class Slot:
     until: float = 0.0
     released: bool = True
     gen: int = 0
+    by: str = ""                     # a HOLD's row: the slot of the worker holding the place (`claim_hold`)
 
     # Row conversion; `released` is stored as `"true"`/`"false"`. A missing row is `Slot(name)` — released,
     # no holder.
     def to_items(self) -> dict:
-        return {"holder": self.holder, "until": self.until, "released": "true" if self.released else "false", "gen": self.gen}
+        return {"holder": self.holder, "until": self.until, "released": "true" if self.released else "false", "gen": self.gen,
+                **({"by": self.by} if self.by else {})}
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Slot":
         if not items:
             return cls(name)
         return cls(name, items.get("holder", ""), float(items.get("until", 0)), items.get("released") == "true",
-                   int(items.get("gen", 0)))
+                   int(items.get("gen", 0)), str(items.get("by", "")))
 
     # Held, not released, and past `until`: the holder went silent — a crash.
     def lapsed(self, now: float) -> bool:
@@ -709,6 +711,16 @@ class Worker:
     # recorder puts its own server's disks before a network archive any box could serve). A `Conflict`
     # means somebody took this one between the read and the write — try the next candidate, and only
     # repeat the sweep if contention was the reason we ran out.
+    #
+    # THE PLACE FOLLOWS THE NAME (feedback CF). A recorder killed and started again by systemd is the same
+    # worker: it takes its slot back at once, from a holder that has not lapsed (`claim_slot(prefer=…)` —
+    # М10B Lesson 17: systemd is the authority on which process is the current `r-1`). Its volume did not
+    # follow: the hold waited out its TTL — 45 s in which nothing on that volume was recorded, by the very
+    # process that held it a moment ago. So a hold says WHOSE slot holds it (`by`), and the worker of that
+    # slot takes it back at once, before any other candidate. The previous instance finds out at its next
+    # `renew_hold` and stops writing there; its segments are fenced by the new epochs, as a slot's are.
+    # Anybody else still waits for the TTL — the product's own lesson, from its archive daemon: a place
+    # kept for its owner must be kept LONGER than the time the owner takes to come back.
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
         """Take one place out of a list somebody else wrote. None when they are
         all taken — a spare, not a failure."""
@@ -716,14 +728,21 @@ class Worker:
             if attempt:
                 cas_pause(attempt - 1)
             contended = False
-            for cand in candidates:
+            rows = {c: self.vars.get(self.sub.hold_key(c)) for c in candidates}
+            # Only while the slot IS this instance's: the instance systemd replaced has the same name, and must not
+            # take the place back from its successor on its way out. The slot is read only when a hold names it.
+            mine = [c for c in candidates if self.name and Slot.from_items(c, rows[c][0]).by == self.name]
+            named = bool(mine) and Slot.from_items(self.name, self.vars.get(self.sub.slot_key(self.name))[0]).holder == self.instance
+            mine = mine if named else []
+            for cand in mine + [c for c in candidates if c not in mine]:
                 key, now = self.sub.hold_key(cand), self.wall()
-                items, idx = self.vars.get(key)
+                items, idx = rows[cand]
                 cur = Slot.from_items(cand, items)
-                if not cur.claimable(now):
+                ours = named and cur.by == self.name and cur.holder != self.instance
+                if not cur.claimable(now) and not ours:
                     continue                                   # somebody live is writing there
                 try:
-                    self.vars.put(key, Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1).to_items(), cas=idx)
+                    self.vars.put(key, Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, self.name or "").to_items(), cas=idx)
                 except Conflict:
                     contended = True; continue
                 self.hold = cand
@@ -744,7 +763,7 @@ class Worker:
             self.hold = None
             return False
         try:
-            self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen).to_items(), cas=idx)
+            self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen, self.name or "").to_items(), cas=idx)
         except Conflict:
             self.hold = None
             return False
@@ -759,7 +778,7 @@ class Worker:
         cur = Slot.from_items(self.hold, items)
         if cur.holder == self.instance:
             try:
-                self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
+                self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall(), True, cur.gen, self.name or "").to_items(), cas=idx)
             except Conflict:
                 pass
         self.hold = None

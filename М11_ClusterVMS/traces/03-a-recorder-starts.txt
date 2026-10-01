@@ -62,7 +62,7 @@ GET /v1/var/rec/holds/disks-a?namespace=default
 
 # recworker (allocation 0 on srv-a)
 PUT /v1/var/rec/holds/disks-a?namespace=default&cas=0
-{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1"}}
+{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1", "by": "r-0"}}
 → 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1004}
 
 # recworker (allocation 0 on srv-a)
