@@ -349,16 +349,20 @@ class Archive:
         return max(0.0, (now - cov[0][0]) / 86400) if cov else 0.0
 
     def samples(self, unit, t0: float, t1: float) -> list[Sample]:
-        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, starting on a key frame — what
-        an export, a scan or a copy into another volume takes."""
+        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, each starting on the key frame AT
+        OR BEFORE its first moment — what an export, a scan or a copy into another volume takes. A stretch that
+        opens at 10:05 is inside a group of pictures that opened at 10:04:58, and without that key frame nothing
+        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`)."""
         r = self.reader()
         out: list[Sample] = []
         for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
             a, b = archive_ms(lo), archive_ms(hi)
-            got = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.end > a and s.begin < b]
-            while got and not got[0].key:
-                got.pop(0)                                   # a stretch cut mid-group opens on its next key frame
-            out += got
+            seq = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.begin < b]
+            first = next((i for i, s in enumerate(seq) if s.end > a), len(seq))
+            key = next((i for i in range(min(first, len(seq) - 1), -1, -1) if seq[i].key), None)
+            if key is None:                              # no key frame at or before: the stretch opens on its next one
+                key = next((i for i in range(first, len(seq)) if seq[i].key), len(seq))
+            out += seq[key:]
         return out
 
     def status(self) -> dict:

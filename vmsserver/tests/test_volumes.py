@@ -256,9 +256,9 @@ def test_the_console_offers_the_disk_this_box_already_records_into():
     r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
 
     _, view = route(None, "GET", "/volumes", {})
-    own = f"file://{box.archive}/volume"                            # the volume it formatted for itself
+    own = f"file://{box.root}/volume"                               # the volume it formatted for itself, beside the resource's tree
     assert view["wanted"] == 0 and view["suggested"] == [
-        {"name": "srv-a", "kind": "local", "url": own, "server": "srv-a", "quota_bytes": 4 * 10 ** 12,
+        {"name": "srv-a", "kind": "local", "url": own, "server": "srv-a", "quota_bytes": 64 << 20,   # the size it has
          "why": "this box records here and the disk is not declared as a volume"}]
 
     offer = {k: v for k, v in view["suggested"][0].items() if k != "why"}   # `why` is for the operator, not the row
@@ -513,7 +513,7 @@ def test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one()
     box.wall.advance(5)
     again = _recorder(box, "r-1", "srv-a")
     assert again.volume_pass() == "cloud" and again.store.url == cloud and again.store.reattached
-    assert not os.path.exists(os.path.join(box.archive, "volume"))  # the local default was never touched
+    assert not os.path.exists(os.path.join(box.root, "volume"))     # the local default was never touched
     again.store.seal()
     assert again.our_coverage("7") == [(t - 60, t)]
 

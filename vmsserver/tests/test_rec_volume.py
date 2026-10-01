@@ -44,7 +44,7 @@ def test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records
     r = recorder(box)
     r.heartbeat_once()
     _recording(box, rec_con, rec_ctl, r)
-    assert r.volume == "srv-1" and r.store.formatted and r.store.url == f"file://{box.archive}/volume"
+    assert r.volume == "srv-1" and r.store.formatted and r.store.url == f"file://{box.root}/volume"
     epoch = r.epochs["1"]
     assert r.actuator.feed("1", box.wall() - 120, box.wall()) == {"OK": 120}
     assert r.our_coverage("1") == []                                   # written is not visible: the block is open

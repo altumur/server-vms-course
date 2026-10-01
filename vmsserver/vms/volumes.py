@@ -202,7 +202,9 @@ def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0
         server, root = str(hb.extra.get("server", "")), str(hb.extra.get("archive", ""))
         if not server or not root or server in have or now - hb.ts > lost_after:
             continue
-        total = int(((res.get(server) or {}).get("space") or {}).get("total", 0))
+        # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
+        # with the resource's events: declared at the partition's size, the ring would be resized past the room.
+        total = int(hb.extra.get("archive_quota") or ((res.get(server) or {}).get("space") or {}).get("total", 0))
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
     return [out[k] for k in sorted(out)]

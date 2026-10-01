@@ -20,7 +20,7 @@ class Clock:
 
 
 class Box:
-    """The platform on one box, plus the resource's tree (`archive`): events, and the box's own volume under it."""
+    """The platform on one box, plus the resource's tree (`archive`). The box's own volume goes beside it."""
     def __init__(self):
         self.root = tempfile.mkdtemp(prefix="vmsserver-")
         self.vars = FileVariables(os.path.join(self.root, "config"))
@@ -136,7 +136,7 @@ def obsd_volume(session, size: int = 64 << 20, max_block: int = 4 << 20, optimal
 
 
 # A recorder on the box, with a session of its own on the test daemon, a small volume and a small block: what
-# every test that records builds. Its volume, unless one is declared, is `file://<box.archive>/volume`.
+# every test that records builds. Its volume, unless one is declared, is `file://<box.root>/volume`.
 TEST_QUOTA, TEST_BLOCK, TEST_READ = 64 << 20, 4 << 20, 512 << 10
 REC_ACL = ["rec/epoch/*", "rec/slots/*", "rec/holds/*"]
 

@@ -339,3 +339,40 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         assert [x[0] for x in said(3)] == ["anna", "boris", "anna"]
     finally:
         srv.shutdown(); rec_door.shutdown()
+
+
+def test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it():
+    """A span that began before the ceiling is cut at it — drawn from its start, it would be footage the page
+    shows and the door then refuses to play. And a keep is the operator's word that some minutes matter longer
+    than the recording's days: the door shows them past the ceiling — which is also how the recorder copying
+    keeps into an incidents volume can read them."""
+    from vms import keeps
+    from vms.recworker import archive_routes
+    box = Box()
+    r = recorder(box, acl=False)
+    r.lease_pass()
+    now = box.wall()
+    footage(r.store, "7", 1, now - 12 * DAY, now, step=600)             # twelve days, one span
+    box.vars.put("rec/recordings/7", {"id": "7", "name": "7", "cam": "7", "retention_days": 8})
+    routes = archive_routes(lambda: r.store, box.wall, visible_from=r._visible_from, kept=r._kept_of)
+
+    def spans():
+        return [(s["start"], s["end"]) for s in json.loads(routes("/timeline/7?from=0")[1])["spans"]]
+
+    assert spans() == [(now - 8 * DAY, now)]                           # cut at the ceiling, not drawn from twelve days ago
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] == b""
+    keeps.write(box.vars, {"cam": "7", "from": now - 11 * DAY, "to": now - 10 * DAY}, ["7"], "anna", now)
+    assert spans() == [(now - 11 * DAY, now - 10 * DAY), (now - 8 * DAY, now)]
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] != b""
+
+
+def test_a_read_starts_on_the_key_frame_before_the_moment_asked_for():
+    """The moment asked for is inside a group of pictures that opened earlier. Without that key frame nothing of
+    the moment decodes, so the read brings the lead-in, and whoever asked clips it (`Scan.accepts`)."""
+    from w2cplatform.obsd import unix_s
+    st = store()
+    t = Box().wall()
+    footage(st, "7", 1, t - 100, t, step=1)                            # a key frame every two seconds
+    got = st.samples("7", t - 51, t - 40)
+    assert got[0].key and unix_s(got[0].begin) == t - 52               # the group's key frame, a second before
+    assert all(unix_s(s.begin) < t - 40 for s in got)

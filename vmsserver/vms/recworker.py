@@ -183,14 +183,18 @@ class RecWorker(VmsWorker):
         # that volume's recorder until it stops or lapses (`volume_pass`). This is what makes a network
         # archive created on the console get served without anybody starting a process for it.
         #
-        # Nothing pinned and nothing declared — the SERVER's own volume, `file://$ARCHIVE/volume`, named after
-        # the server: what every single-disk box meant before any of this existed — one place, `home: srv-a`
-        # still true, `place_by: volume` behaving exactly like `place_by: server`.
+        # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
+        # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
+        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
+        # `/data/volume` next to `/data/archive`: inside, the resource's walks would take the ring for a
+        # subsystem, count its blocks as the tree's usage and mirror nothing of it (`ARCHIVE_VOLUME` to put it
+        # elsewhere).
         self.pinned = bool(env.get("VOLUME"))
         self.default_volume = str(self.server or "default")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{os.path.join(events_root, 'volume')}"
+        beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
+        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
         q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(events_root)
+        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
         self.volume = str(env.get("VOLUME") or self.default_volume)
         self.store: Archive | None = None            # the volume open for writing, if one is
         self.full_capacity = self.capacity           # what it reports while it has a place to record in
@@ -250,18 +254,21 @@ class RecWorker(VmsWorker):
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
         self.sources: dict[str, str] = {}                                     # what each running pipeline subscribed to
 
-    # A volume nobody declared, on a disk nobody measured: four fifths of what is free under the resource,
-    # leaving at least two gigabytes — the product's rule (feedback BM). Asked once, when it is first formatted;
-    # a volume that exists keeps the size it has.
+    # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
+    # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
+    # (`space_settings`, 0.75 by default) once the ring is full. The disk is shared with the resource's events,
+    # and a ring that filled it past the mark would leave the watermark short for good: nothing of the VMS's
+    # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
+    # formatted; a volume that exists keeps the size it has.
     @staticmethod
-    def _share_of_free(root: str) -> int:
+    def _share_of_free(root: str, low: float = 0.75) -> int:
         try:
             import shutil
             os.makedirs(root, exist_ok=True)
-            free = shutil.disk_usage(root).free
+            u = shutil.disk_usage(root)
         except OSError:
             return 4 << 30
-        return max(1 << 30, min(int(free * 0.8), free - (2 << 30)))
+        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
 
     # -- where a camera's stream is: the VMS heartbeat, never a call to the worker ------------------
     def source(self, cam) -> tuple[str, str] | None:
@@ -610,6 +617,7 @@ class RecWorker(VmsWorker):
                 # The box's own volume — where this recorder writes when nothing is declared. What the console
                 # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
                 "archive": self.default_url,
+                "archive_quota": self.default_quota,         # …and its size: what the console offers to declare it at
                 # Empty unless the volume this process holds will not open. Published because the alternative
                 # is the failure that looks like health: a fresh hold, a green console and nothing being
                 # written. Whatever reads it must not count that volume as served.
@@ -1090,12 +1098,26 @@ class RecWorker(VmsWorker):
             row = self._rows_seen.get(str(unit))
         return visible_from(row, self.wall())
 
+    # The intervals of a recording somebody said to keep (`vms/keeps.py`): the door shows them whatever the ceiling,
+    # because a keep is the operator's word that those minutes matter longer than the recording's days — and the
+    # recorder copying keeps into an incidents volume reads them through this very door. Not readable is none:
+    # the ceiling stands, which hides, and hiding is the side to err on.
+    def _kept_of(self, unit) -> list[tuple[float, float]]:
+        from . import keeps
+        try:
+            declared = keeps.declared(self.vars)
+        except OSError:
+            return []
+        row = self._rows_seen.get(str(unit)) or {}
+        return keeps.spans_of(declared, str(unit), str(row.get("cam", "")))
+
     # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
     # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
     # reads every recorder's to draw a camera's timeline and play it; any recorder may.
     def serve_archive(self, host: str = "127.0.0.1", port: int = 0):
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from)
+        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
+                                self._kept_of)
 
         class H(BaseHTTPRequestHandler):
             def log_message(self, *a):
@@ -1421,7 +1443,7 @@ class RecWorker(VmsWorker):
 #   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
 #                                  owns it, from a key frame (`Archive.samples`)
-def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0):
+def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0, kept=lambda unit: []):
     import json
     from urllib.parse import parse_qs, urlsplit
     from w2cplatform.doors import safe_segment
@@ -1442,13 +1464,27 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
                 t0, t1 = float(q.get("from", 0)), float(q.get("to", wall() + 86400))
             except ValueError:
                 return 400, b'{"error": "from and to are unix seconds"}', "application/json"
-            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
+            # Retention is a ceiling on what the door shows: from `visible_from` on, and whatever a keep holds. A span
+            # that began before the ceiling is CUT at it — drawn from its start, it would be footage the page shows
+            # and the door then refuses to play.
+            shown = stitch([(visible_from(unit), float("inf"))] + [tuple(k) for k in kept(unit)], 0.0)
             try:
                 if prefix == "/timeline/":
                     cur = current_epoch(unit)
-                    body = {"unit": unit, "spans": store.timeline(unit, t0, t1, cur), "current_epoch": cur}
+                    spans = []
+                    for sp in store.timeline(unit, t0, t1, cur):
+                        for a, b in shown:
+                            lo, hi = max(sp["start"], a), min(sp["end"], b)
+                            if hi > lo:
+                                spans.append({**sp, "start": lo, "end": hi})
+                    body = {"unit": unit, "spans": spans, "current_epoch": cur}
                     return 200, json.dumps(body).encode(), "application/json"
-                return 200, b"".join(smp.encode() for smp in store.samples(unit, t0, t1)), "application/octet-stream"
+                frames = b""
+                for a, b in shown:
+                    lo, hi = max(t0, a), min(t1, b)
+                    if hi > lo:
+                        frames += b"".join(smp.encode() for smp in store.samples(unit, lo, hi))
+                return 200, frames, "application/octet-stream"
             except ArchiveError as e:
                 return 503, json.dumps({"error": str(e)}).encode(), "application/json"
         return None
