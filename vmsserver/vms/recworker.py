@@ -60,15 +60,28 @@ REC = Subsystem("rec")
 # What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
 # sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
 # answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
+#
+# `store` is the recorder's CURRENT volume — a callable, asked on every sample — not the one open when the
+# pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed
+# volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
+# next key frame after a remount opens a sequence in the new writer, and the recording goes on.
 class RecSink:
-    def __init__(self, store: Archive, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
-        self.store, self.unit, self.epoch, self.on_lost, self.backfill = store, str(unit), int(epoch), on_lost, backfill
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+        self.store_of = store if callable(store) else (lambda: store)
+        self.unit, self.epoch, self.on_lost, self.backfill = str(unit), int(epoch), on_lost, backfill
         self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
         self.taken = self.refused = 0
 
+    @property
+    def store(self) -> Archive | None:
+        return self.store_of()
+
     def put(self, sample: Sample) -> str:
         try:
-            st = self.store.put(self.unit, self.epoch, sample, self.backfill)
+            store = self.store_of()
+            if store is None:
+                raise Unavailable("PUT_MEDIA", "no volume open")
+            st = store.put(self.unit, self.epoch, sample, self.backfill)
             self.taken += 1
             return st
         except Unavailable:
@@ -77,13 +90,18 @@ class RecSink:
             raise
         except ObsdError as e:
             self.refused += 1
-            if self.on_wrong is not None and classify(e).kind == "wrong":
+            if e.name == "WRITER_STOPPED" and self.on_lost is not None:
+                self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
+            elif self.on_wrong is not None and classify(e).kind == "wrong":
                 self.on_wrong(e)
             raise
 
     def finish(self) -> None:
+        store = self.store_of()
+        if store is None:
+            return
         try:
-            self.store.finish(self.unit, self.epoch, self.backfill)
+            store.finish(self.unit, self.epoch, self.backfill)
         except ObsdError:
             pass
 
@@ -189,6 +207,8 @@ class RecWorker(VmsWorker):
         # took — the ring's own count, `totalWritten`, from when this recorder opened it.
         self.writer = WriterWatch()
         self._written_at_open = 0
+        self._landed_before = 0                      # what landed under writers this recorder already closed: the count goes on
+        self._landed = 0
         # Backfill (Lesson 16): the hours in local time it may run in (None: any), how far back it may
         # reach, how fresh it must NOT touch, and the seam tolerance that stops 144 seams a day from
         # looking like 144 gaps.
@@ -285,7 +305,7 @@ class RecWorker(VmsWorker):
         # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
-                   sink=RecSink(self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
+                   sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
                                 on_wrong=self._volume_refuses))
         # A `when: offline` backup runs ON HOLD while its primary is written: the pipeline is up, subscribed,
         # and recording into a ring in memory, writing nothing (Lesson 26).
@@ -536,8 +556,9 @@ class RecWorker(VmsWorker):
     # says so. A recorder whose actuator does not measure says nothing — silence here
     # is "not measured", never "fine". When the watch says stuck or losing, the cure is to reopen the writer:
     # the pipelines are stopped and counted lost, and the reconciler starts them again, under a new epoch as
-    # any restart. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat says the state
-    # every pass regardless.
+    # any restart — and the volume is closed and opened again on the next pass, a new writer under the same
+    # owner, exactly as after a lost engine. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat
+    # says the state every pass regardless.
     def writer_pass(self, now: float | None = None) -> dict:
         wall = self.wall() if now is None else now
         measure = getattr(self.actuator, "offered", None)
@@ -557,7 +578,9 @@ class RecWorker(VmsWorker):
         if not any(v is not None for v in vals):
             return self.writer.state
         try:
-            landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open if self.store else 0
+            if self.store:
+                self._landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open
+            landed = self._landed_before + self._landed
         except ArchiveError:
             return self.writer.state                 # a volume that does not answer measures nothing this pass
         state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
@@ -566,6 +589,7 @@ class RecWorker(VmsWorker):
             for cid in running:
                 self.actuator("stop", {"id": cid})
                 self.reconciler.lost(cid, self.now())
+            self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
         return state
 
     # What this recorder adds to the heartbeat.
@@ -746,6 +770,7 @@ class RecWorker(VmsWorker):
             return None
         self.store, self.engine_lost = store, False
         try:
+            self._landed_before, self._landed = self._landed_before + self._landed, 0
             self._written_at_open = int(store.status().get("totalWritten", 0))
         except ArchiveError:
             self._written_at_open = 0

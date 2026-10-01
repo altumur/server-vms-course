@@ -1,5 +1,5 @@
-"""One box in a temp directory: the platform's two stores, a spool and an
-archive, a clock. No GStreamer — the actuator is the fake."""
+"""One box in a temp directory: the platform's two stores, the resource's tree, a clock — and, for the
+archive, a real obsd on a socket of its own. No GStreamer — the actuator is the fake."""
 from __future__ import annotations
 
 import json
@@ -20,12 +20,11 @@ class Clock:
 
 
 class Box:
-    """The platform on one box, plus the two directories the archive resource needs."""
+    """The platform on one box, plus the resource's tree (`archive`): events, and the box's own volume under it."""
     def __init__(self):
         self.root = tempfile.mkdtemp(prefix="vmsserver-")
         self.vars = FileVariables(os.path.join(self.root, "config"))
         self.objects = FsObjectStore(os.path.join(self.root, "objects"))
-        self.spool = os.path.join(self.root, "spool")
         self.archive = os.path.join(self.root, "archive")
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 

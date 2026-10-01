@@ -235,7 +235,10 @@ class Archive:
 
     def put(self, unit, epoch: int, sample: Sample, backfill: bool = False) -> str:
         """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
-        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame."""
+        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame — and
+        `Unavailable` when this volume is not open for writing any more (closed, or the engine went away)."""
+        if self.writer is None:
+            raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
         return self.writer.put(stream_name(unit, epoch, backfill), sample)
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:

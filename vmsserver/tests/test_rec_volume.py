@@ -14,7 +14,7 @@ from w2cplatform.spec import SpecController
 from vms import volumes
 from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC
 from vms.controller import VmsController
-from vms.worker import FakeActuator, VmsWorker
+from vms.worker import FakeActuator, VmsWorker, fake_samples
 from tests.conftest import OBSD_LINGER_MS, Box, recorder
 
 
@@ -169,3 +169,33 @@ def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole
         assert isinstance(body, list) and len(body) == 1                   # nothing to explain: a plain list
     finally:
         srv.shutdown()
+
+
+def test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost():
+    """A remount replaces the store. A pipeline's sink asks for the recorder's CURRENT volume on every sample —
+    one that kept the volume it started with would write into a closed one for as long as the pipeline ran, and
+    nothing restarts a pipeline for a remount. And `WRITER_STOPPED` — the engine stopped this writer — is a
+    remount too, not a refusal to skip past for ever."""
+    from w2cplatform.obsd import ObsdError
+    from vms.recworker import RecSink
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+    assert r.actuator.feed("1", t - 120, t - 60) == {"OK": 60}
+    first = r.store
+    r._lost_engine(); r.lease_pass()                                   # the next pass remounts
+    assert r.store is not first and first.writer is None
+    assert r.actuator.feed("1", t - 60, t) == {"OK": 60}               # the same pipeline, into the new writer
+    r.store.seal()
+    assert r.our_coverage("1") == [(t - 120, t)]
+
+    stopped = RecSink(r.store, "1", 1, on_lost=r._lost_engine)
+    r.engine_lost = False
+    r.store.writer.put = lambda *a, **k: (_ for _ in ()).throw(ObsdError(121, "PUT_MEDIA", "writer stopped"))
+    try:
+        stopped.put(fake_samples(t, t + 1)[0])
+    except ObsdError:
+        pass
+    assert r.engine_lost                                               # a new writer on the next pass
