@@ -57,11 +57,15 @@ def test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_consol
     primary.writer_pass()
     assert primary.heartbeat_extra()["writer"] == {"state": "ok"}
 
-    for _ in range(3):                                    # megabytes handed to the sink, nothing reaching the spool
+    for _ in range(3):                                    # megabytes handed to the sink, nothing reaching the volume
         box.wall.advance(30); act.offered_bytes["1"] += 4 * MB
         primary.writer_pass()
     assert primary.heartbeat_extra()["writer"]["state"] == "stuck"
     assert ("stop", "1") in act.calls and "1" not in primary.reconciler.actual   # reopened: the reconciler starts it again
+    first = primary.store
+    assert primary.engine_lost
+    primary.lease_pass()
+    assert primary.store is not first and primary.store.writer is not None       # …into a writer opened again
 
     from w2cplatform.contract import Slot                 # pinned by VOLUME here; on a cluster it holds the volume
     box.vars.put("rec/holds/disks", Slot("disks", primary.instance, box.wall() + 45, False, 1).to_items())

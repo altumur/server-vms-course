@@ -38,7 +38,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # `w2cplatform.contract.Worker` (see `contract.py` for `claim_slot`, `renew_slot`, `release_slot`,
 # `take_epoch`, `renew_leases`, `heartbeat`) and is the thing that knows what a camera is. It reads its
 # assignment `vms/workers/<me>` and the camera rows it names, runs М9's `Reconciler` over them
-# (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! archivesink` (`gstvms/actuator.py`;
+# (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
 # carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
@@ -220,9 +220,32 @@ class FakeDevice:
         self.open.clear()
 
 
+# Frames a fake pipeline writes: one sample per `step` seconds, a key frame first and then every `gop` seconds —
+# enough for the engine to cut sequences, index them and hand them back, and few enough that an hour of footage is
+# three thousand six hundred samples, not ninety thousand. Shaped like H.264 in Annex-B: a key frame carries a
+# parameter set pair and an IDR slice, the others a slice — so an export of fake footage is an MP4 (`fmp4.py`).
+FAKE_SPS = b"\x00\x00\x00\x01\x67\x42\x00\x1f\xe9\x01\x40\x7b\x20"
+FAKE_PPS = b"\x00\x00\x00\x01\x68\xce\x38\x80"
+
+
+def fake_samples(t0: float, t1: float, step: float = 1.0, gop: float = 2.0, size: int = 256) -> list:
+    from w2cplatform.obsd import archive_ms, video
+    out, t, since_key = [], float(t0), None
+    while t < t1 - 1e-9:
+        end = min(t + step, t1)
+        key = since_key is None or t - since_key >= gop - 1e-9
+        if key:
+            since_key = t
+        body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * size
+        out.append(video(archive_ms(t), archive_ms(end), body, key, 1280, 720))
+        t = end
+    return out
+
+
 class FakeActuator:
     """М9 Lesson 6's print(), with a memory. `failing` is a set of camera ids
-    (or a predicate) whose start fails."""
+    (or a predicate) whose start fails. A recording's pipeline is handed a SINK — the volume's writer under the
+    recording's stream — and `feed` is what a test calls to have it write frames, as a camera would."""
 
     def __init__(self, failing=frozenset()):
         self.failing = failing
@@ -232,13 +255,12 @@ class FakeActuator:
         self.dead: list[int] = []
         self.posted: list[tuple[int, str, dict]] = []
         self.fetched: list[tuple] = []                   # what `record_range` was asked for
-        self.copied: list[tuple] = []                    # what `copy_range` was asked for (Lesson 26)
         self.available = None                            # (source, t0, t1) -> spans the source really holds; None: all
         self.range_error = ""                            # set by a real actuator whose range pipeline failed
         # The prebuffer (Lesson 26): pipelines running ON HOLD — recording into a ring of the last
         # `ring_seconds` and writing nothing — and what each release wrote. `gop` is the keyframe interval:
         # a release starts at the first keyframe still in the ring, never mid-GOP.
-        self.held: dict = {}                             # id -> {"since", "ring", "epoch", "spool"}
+        self.held: dict = {}                             # id -> {"since", "ring", "epoch", "sink"}
         self.released: list[tuple] = []                  # (id, start, end) of every ring written out
         self.gop = 2.0
         self.started: dict[int, dict] = {}
@@ -270,32 +292,44 @@ class FakeActuator:
         self.started[cid] = cam                     # what the pipeline was built from: the row plus what `enrich` added
         if cam.get("hold"):
             self.held[cid] = {"since": float(cam.get("now", 0)), "ring": float(cam.get("ring_seconds", 0)),
-                              "epoch": cam.get("epoch", 0), "spool": cam.get("spool", "")}
+                              "epoch": cam.get("epoch", 0), "sink": cam.get("sink")}
         else:
             self.held.pop(cid, None)
         return True
 
     # Open the ring: what it holds is written first — from the oldest keyframe still in it, which is at most
-    # `ring` seconds ago and never before the pipeline started — as one segment named by the time it was
-    # CAPTURED, then live footage follows. The real one removes a pad probe; this writes the file.
+    # `ring` seconds ago and never before the pipeline started — with the times it was CAPTURED, then live
+    # footage follows. The real one removes a pad probe; this writes the frames.
     def _release(self, cid, now: float) -> bool:
         import math
-        import os
-        from datetime import datetime, timezone
-        from .archive import segment_path
         h = self.held.pop(cid, None)
         if h is None:
             return False
         oldest = max(now - h["ring"], h["since"])
         start = math.ceil(oldest / self.gop) * self.gop       # the ring may begin mid-GOP; the copy may not
-        if start < now and h["spool"]:
-            p = segment_path(h["spool"], str(cid), h["epoch"], datetime.fromtimestamp(start, timezone.utc).replace(microsecond=0))
-            os.makedirs(os.path.dirname(p), exist_ok=True)
-            with open(p, "wb") as f:
-                f.write(b"\x00" * 16)
-            os.utime(p, (now, now))
+        if start < now and h["sink"] is not None:
+            for smp in fake_samples(start, now, gop=self.gop):
+                h["sink"].put(smp)
+            h["sink"].finish()
             self.released.append((cid, start, now))
         return True
+
+    # What a camera would do to a running recording: `[t0, t1)` of frames through its sink, the sequence
+    # finished at the end. Returns what the engine said of each, `{status: count}`.
+    def feed(self, cid, t0: float, t1: float, step: float = 1.0) -> dict:
+        from w2cplatform.obsd import ObsdError
+        sink = (self.started.get(cid) or {}).get("sink")
+        if sink is None or cid not in self.running:
+            raise RuntimeError(f"recording {cid} is not running here: nothing to feed")
+        said: dict = {}
+        for smp in fake_samples(t0, t1, step=step, gop=self.gop):
+            try:
+                st = sink.put(smp)
+            except ObsdError as e:
+                st = e.name
+            said[st] = said.get(st, 0) + 1
+        sink.finish()
+        return said
 
     # Returns and clears `dead` and `posted`; dead ids leave `running`. Same contract as `GstActuator.pump`.
     def pump(self) -> tuple[list[int], list[tuple[int, str, dict]]]:
@@ -311,41 +345,19 @@ class FakeActuator:
         """What an element would post on the bus."""
         self.posted.append((cid, kind, fields))
 
-    # Fetch a range out of a device's own archive and write it as segments in the spool, the way a live
-    # recording is written — the only difference is where the bytes came from. The real one is a pipeline on
-    # the holder's playback door; this one writes the files so the ordering and the manifest can be tested.
+    # Fetch a range out of a device's own archive: its frames, with the times they were recorded at, as a real
+    # actuator gets them from the holder's playback door. The recorder writes them into its volume.
     #
     # `available(source, t0, t1) -> [(a, b)]`, when a test sets it, is what the source ACTUALLY holds of the
     # range — a card with a hole in it (Lesson 16, and the feedback's point P: a summary cannot say where the
-    # holes are). Only those spans are written. Unset, the source has everything it is asked for.
-    def record_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        return self._write_range(cam, source, epoch, t0, t1, spool, seg, self.fetched)
-
-    # A range COPIED out of another archive of ours — a backup recording's segments (Lesson 26): the samples
-    # as they were stored, with the times they were recorded at, not a second recording of them through a
-    # pipeline. Here it is the same file-writing as `record_range`; the difference is what it is asked from
-    # and what `copied` remembers.
-    def copy_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        return self._write_range(cam, source, epoch, t0, t1, spool, seg, self.copied)
-
-    def _write_range(self, cam, source, epoch, t0, t1, spool, seg, log) -> list[str]:
-        import os
-        from datetime import datetime, timezone
-        from .archive import segment_path
+    # holes are). Only those spans come back. Unset, the source has everything it is asked for.
+    def record_range(self, cam, source: str, t0: float, t1: float) -> list:
         spans = [(t0, t1)] if self.available is None else [(max(a, t0), min(b, t1)) for a, b in self.available(source, t0, t1)
                                                           if b > t0 and a < t1]
         out = []
         for lo, hi in spans:
-            t = lo
-            while t < hi:
-                end = min(t + seg, hi)
-                p = segment_path(spool, str(cam), epoch, datetime.fromtimestamp(t, timezone.utc).replace(microsecond=0))
-                os.makedirs(os.path.dirname(p), exist_ok=True)
-                with open(p, "wb") as f:
-                    f.write(b"\x00" * 16)
-                os.utime(p, (end, end))                  # the segment ends where it ends: `promote` reads mtime
-                out.append(p); log.append((str(cam), t, end, source))
-                t = end
+            out += fake_samples(lo, hi, gop=self.gop)
+            self.fetched.append((str(cam), lo, hi, source))
         return out
 
     def stop_all(self) -> None:
@@ -550,7 +562,8 @@ class VmsWorker(Worker):
     # is fenced (`recording_allowed` false); on `start`, or if no epoch is held for the unit,
     # `take_epoch(unit)` — a new epoch for a new writer — else reuse the held epoch (an edit's restart keeps
     # epoch 1); refuse if `may_write(unit)` is false (no lease, or a lost one); then call the actuator with
-    # `epoch` added to the row — the number archivesink puts in every path. For `stop`: call the actuator
+    # `epoch` added to the row — the number in the name of every stream a recorder writes (`<rec>/e<epoch>`) and
+    # every event bucket a worker does. For `stop`: call the actuator
     # and `release(unit)` (forget epoch and lease). `test_lease_expiry_without_renewal_stops_starts`: after
     # 26 s without renewal `may_write` is false; a later start takes epoch 2.
     def _actuate(self, verb: str, cam: dict) -> bool:
@@ -803,7 +816,7 @@ class VmsWorker(Worker):
     # The bus, drained: `actuator.pump()` gives `(dead, posted)`; every posted `(cid, kind, fields)` becomes
     # `observe(...)` — a line only if I still hold the epoch; every dead camera becomes
     # `reconciler.lost(cid, now)` (restart after backoff) plus `observe(cid, "silent")` — "the event with no
-    # segment open, by definition".
+    # picture behind it, by definition".
     def pump_once(self) -> None:
         """The bus, drained: what elements posted becomes events — if I still
         hold the epoch — and what died becomes `lost` and a `silent` event."""
@@ -812,7 +825,7 @@ class VmsWorker(Worker):
             self.observe(cid, kind, **fields)
         for cid in dead:
             self.reconciler.lost(cid, self.now())
-            self.observe(cid, "silent")                 # the event with no segment open, by definition
+            self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
         try:
             self.requests()                             # …and what somebody asked this device to DO
@@ -1051,10 +1064,6 @@ class VmsWorker(Worker):
                         **({"can": self.described[key]} if key in self.described else {})})
         return out
 
-    # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
-    # capacity here is still cameras, and an exhausted device is a 503 — the same admission control the
-    # gateway does for viewers (Lesson 13), one floor down. On a camera, this competes with live for the
-    # one uplink; on an NVR it usually does not.
     # Where the device's footage is, span by span, clipped to `[t0, t1)`. `None` means this driver cannot
     # list — which is not the same answer as "the device holds nothing here", and the caller must be able
     # to tell the two apart. Costs no playback session: listing is not reading.
@@ -1068,6 +1077,10 @@ class VmsWorker(Worker):
         lister = getattr(dev, "recordings", None)
         return None if lister is None else lister(cam, t0, t1)
 
+    # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
+    # capacity here is still cameras, and an exhausted device is a 503 — the same admission control the
+    # gateway does for viewers (Lesson 13), one floor down. On a camera, this competes with live for the
+    # one uplink; on an NVR it usually does not.
     def playback(self, cam, t0: float, t1: float) -> bytes:
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
         if row is None:
@@ -1135,8 +1148,10 @@ class VmsWorker(Worker):
                        **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
-                       archive=self.archive_root, devices=self.device_status(),                                    # the resource its events (a recorder: its footage) go to — Nomad's meta.archive, through $ARCHIVE
-                       **self.heartbeat_extra())
+                       devices=self.device_status(),
+                       # `archive`: the resource tree its events go to — Nomad's meta.archive, through $ARCHIVE. A
+                       # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
+                       **{"archive": self.archive_root, **self.heartbeat_extra()})
 
     # What a subclass adds to the heartbeat. `fetched` for everyone — the requests this worker has
     # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says
@@ -1207,7 +1222,7 @@ class VmsWorker(Worker):
     # The loop as a process. Every `poll` seconds: `reconcile_once`, `pump_once`, `lease_pass` every `max(1,
     # (lease_ttl − lease_margin)/3)` s (≈8.3 s by default, well inside the 25 s the lease allows),
     # `heartbeat_once` every 10 s; any exception is logged and the loop continues. On `stop`:
-    # `actuator.stop_all()` (with GStreamer, EOS lets each splitmuxsink finalize its open segment —
+    # `actuator.stop_all()` (with GStreamer, EOS lets the last access units reach each sink —
     # `vmsworker@.container` gives it `StopTimeout=20`), a last heartbeat, then `release_slot()` — "an
     # orderly stop says so; a crash says nothing", which is what lets the controller tell scale-in
     # (redistribute) from a crash (leave it to the scheduler).
@@ -1224,10 +1239,9 @@ class VmsWorker(Worker):
         last_lease, last_hb = 0.0, self.clock()
         while not stop.is_set():
             # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
-            # pipelines' buses, the devices' events, moving closed segments out of the spool — does not wait
-            # for the pass over the store to succeed (feedback BC). They shared a `try`, so a store that was
-            # away skipped the pump on every pass: a device's alarms piled up in memory, a pipeline that fell
-            # over was not noticed, the spool was not emptied.
+            # pipelines' buses, the devices' events — does not wait for the pass over the store to succeed
+            # (feedback BC). They shared a `try`, so a store that was away skipped the pump on every pass: a
+            # device's alarms piled up in memory, a pipeline that fell over was not noticed.
             try:
                 if not self.recording_allowed:
                     self.rejoin()                          # a fence is not for ever: a free slot, from nothing
@@ -1243,8 +1257,8 @@ class VmsWorker(Worker):
             # STAYING ALIVE, in a try of its own and never inside the one above. These two used to share
             # it, so anything the work raised skipped them — every pass, for as long as it kept raising.
             # A recorder whose archive went away stopped renewing its leases (fenced at 30 s) and stopped
-            # heartbeating (called dead at 45 s), and the outage the spool was there to absorb ended the
-            # recording instead. A pass that failed is a pass to retry; the process that ran it still holds
+            # heartbeating (called dead at 45 s), and an outage it could have waited out ended the recording
+            # instead. A pass that failed is a pass to retry; the process that ran it still holds
             # its units, and saying so is not something a failure elsewhere gets to switch off.
             try:
                 if self.clock() - last_lease >= lease_every:

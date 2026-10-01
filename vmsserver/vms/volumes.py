@@ -28,9 +28,10 @@ administrator's list, and the claim that makes one of them served."""
 # here and empty for the network kind — and it is why one spare per box absorbs one NETWORK volume per
 # box, not one per cluster: the spare that takes it may be anywhere.
 #
-# **Why `quota_bytes` and not free space.** `statvfs` on a bucket answers about the machine, not the
-# bucket. A network archive has no free-space number to read, so the operator gives it a ceiling and the
-# watermark counts against that. A local volume leaves it at zero and the probe reads the disk, as before.
+# **Why `quota_bytes` and not free space.** It is the SIZE of the volume: the engine formats it as a ring of
+# that many bytes, and the ring gives up its oldest minutes when it is full. `statvfs` on a bucket answers
+# about the machine, not the bucket, so the number has to be given; and on a disk it is what lets one
+# partition hold two volumes.
 #
 # **What is NOT here.** No mounting, no credentials handling beyond the `*_secret` suffix (the row names
 # the key; `secrets.py` keeps it out of every reply), and no uploading: what turns a path into a bucket
@@ -53,27 +54,28 @@ from w2cplatform.spec import Refused
 
 SUB = "rec"
 TABLE = "volumes"
-KINDS = ("local", "network", "backup", "edge")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_secret", "enabled")
+KINDS = ("local", "network", "backup", "edge", "incidents")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled")
 
 
 # The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
 # disk of a second server — and an ADDRESS any box may serve when it does not, like a network volume: a second
 # storage somewhere else, which is as independent of the primary's server as a second disk is. An EDGE volume
-# is the card in a camera that runs the platform: always one box, the camera itself.
+# is the card in a camera that runs the platform: always one box, the camera itself. An INCIDENTS volume —
+# where kept footage is copied to (`RecWorker.keep_pass`) — is either, like a backup one.
 def on_a_box(v: "Volume") -> bool:
-    return v.kind in ("local", "edge") or (v.kind == "backup" and bool(v.server))
+    return v.kind in ("local", "edge") or (v.kind in ("backup", "incidents") and bool(v.server))
 
 
 def any_box(v: "Volume") -> bool:
-    return v.kind == "network" or (v.kind == "backup" and not v.server)
+    return v.kind == "network" or (v.kind in ("backup", "incidents") and not v.server)
 
 
 @dataclass(frozen=True)
 class Volume:
     """One declared archive. `url` is a directory for a local volume and an
-    address for a network one; `quota_bytes` is the ceiling the watermark counts
-    against where there is no disk to ask."""
+    address for a network one; `quota_bytes` is its size — the ring the engine
+    formats it as."""
     name: str
     kind: str = "local"
     url: str = ""
@@ -81,17 +83,18 @@ class Volume:
     quota_bytes: int = 0
     access_secret: str = ""       # the `*_secret` suffix: never handed back by a console
     enabled: bool = True
+    access_key: str = ""          # a bucket's key ID — which key, not the key: shown, like a camera's login
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Volume":
         d = items or {}
         return cls(name, str(d.get("kind", "local")), str(d.get("url", "")), str(d.get("server", "")),
                    int(d.get("quota_bytes", 0) or 0), str(d.get("access_secret", "")),
-                   str(d.get("enabled", "true")) != "false")
+                   str(d.get("enabled", "true")) != "false", access_key=str(d.get("access_key", "")))
 
     def to_items(self) -> dict:
         return {"kind": self.kind, "url": self.url, "server": self.server,
-                "quota_bytes": self.quota_bytes, "access_secret": self.access_secret,
+                "quota_bytes": self.quota_bytes, "access_secret": self.access_secret, "access_key": self.access_key,
                 "enabled": "true" if self.enabled else "false"}
 
 
@@ -120,15 +123,13 @@ def refuse(fields: dict) -> None:
         raise Refused("an edge volume is the card in one camera: name it")
     if kind == "network" and str(fields.get("server", "")):
         raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
-    # EVERY declared volume has a ceiling, local ones included, and that is the change that lets a disk
-    # hold more than one. A volume without a quota means "this whole filesystem", and two of those on one
-    # partition both read the same free space and both believe it is theirs — the watermark then frees
-    # from one to make room the other immediately takes. A number each is what makes them two volumes and
-    # not two names for one. The console fills it with the partition's own size when it declares the first
-    # one, so the ordinary answer is a number the operator can then make smaller.
+    # EVERY declared volume has a size, local ones included, and that is what lets a disk hold more than one:
+    # the engine formats a ring of exactly that many bytes. "This whole filesystem" twice on one partition
+    # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
+    # already has when it declares the first one, so the ordinary answer is a number the operator can change.
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
-        raise Refused("a volume needs `quota_bytes` — how much of the disk is ITS, in bytes "
-                      "(the whole partition is a fine answer, and it is what the console offers)")
+        raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
+                      "(the console offers the size the box's own volume already has)")
     url = str(fields.get("url", ""))
     if not url:
         raise Refused("a volume needs a url: the directory it is, or the address it is at")
@@ -201,7 +202,9 @@ def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0
         server, root = str(hb.extra.get("server", "")), str(hb.extra.get("archive", ""))
         if not server or not root or server in have or now - hb.ts > lost_after:
             continue
-        total = int(((res.get(server) or {}).get("space") or {}).get("total", 0))
+        # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
+        # with the resource's events: declared at the partition's size, the ring would be resized past the room.
+        total = int(hb.extra.get("archive_quota") or ((res.get(server) or {}).get("space") or {}).get("total", 0))
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
     return [out[k] for k in sorted(out)]
@@ -283,7 +286,7 @@ def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str
 # -- the standby archives (М10B Lesson 26) ------------------------------------------------------------
 # Two kinds of volume hold a second recording of a camera, and the primary closes its gaps from either — a link
 # that dropped, the seconds its recorder took to move — the way Lesson 16 closes them from a device's archive,
-# except that this archive is OURS: a recording, with a manifest, served by a recorder.
+# except that this archive is OURS: a recording, in a volume, served by a recorder's door.
 #
 #     edge     the card in the camera itself. Written by the camera's own recorder from its own sensor: no
 #              network between them, so it records whatever the network does
@@ -298,6 +301,17 @@ STANDBY = ("backup", "edge")
 def backups(vars_) -> set[str]:
     """The names of the enabled standby volumes — backup and edge."""
     return {v.name for v in declared(vars_) if v.kind in STANDBY and v.enabled}
+
+
+# -- where kept footage goes (feedback BH; the product's design) -----------------------------------------------
+# A volume is a ring, and a ring cannot spare a range: what somebody said to KEEP is overwritten with the rest
+# when its turn comes. So a keep is not a flag on footage in place — it is a COPY, into a volume of its own kind,
+# `incidents`, which only keeps go into. The recorder that holds it copies every keep's minutes out of whichever
+# recorder's door holds them (`RecWorker.keep_pass`), and nothing is ever recorded into it: it is a place for
+# evidence, not a place to put a camera (`admit_recording`).
+def incidents(vars_) -> set[str]:
+    """The names of the enabled incidents volumes."""
+    return {v.name for v in declared(vars_) if v.kind == "incidents" and v.enabled}
 
 
 def edges(vars_) -> set[str]:
@@ -318,10 +332,12 @@ def is_backup(row: dict, vars_=None, names: set[str] | None = None) -> bool:
 # nowhere, and nothing else goes to a backup volume. `/unplaceable` then says so, which is the honest
 # answer to "the card is gone".
 def admit_recording(ctl, row: dict, worker: str) -> bool:
-    names = backups(ctl.vars)
-    if not names:
+    names, kept = backups(ctl.vars), incidents(ctl.vars)
+    if not names and not kept:
         return True
     place = ctl.place_of(worker)
+    if place in kept:
+        return False                                  # a place for what somebody kept, never one to record into
     home = str(row.get("home") or "")
     if home in names:
         return place == home

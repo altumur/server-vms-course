@@ -11,7 +11,6 @@ import json
 import os
 import tempfile
 import urllib.request
-from datetime import datetime, timezone
 
 from w2cplatform import variables
 from w2cplatform.contract import Heartbeat
@@ -22,9 +21,8 @@ from w2cplatform.resource import MIRROR_GRACE, MIRROR_KEY, SPACE_KEY, Resource, 
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import FileVariables, Forbidden, StoreBusy, cas_pause
 from vms import keeps
-from vms.archive import ArchivePolicy, ArchiveResource, Manifest, Segment, segment_path
 from vms.config import REC_SPEC, SPEC
-from tests.conftest import Box
+from tests.conftest import Box, door, footage, recorder, store
 from tests.test_group_by import _ctl, _holder, _worker
 from tests.test_store_outage import Flaky
 
@@ -160,41 +158,48 @@ def test_the_policy_sweeps_by_the_names_of_the_files_and_the_copies_age_too():
 def test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days():
     box = Box()
     box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75", "min_days": "3"}, cas=0)
-    store = Flaky(box.vars)
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    now = box.wall()
-    for unit, days in (("7", 40), ("8", 40)):
-        start = now - days * DAY
-        p = segment_path(box.archive, unit, 1, datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x" * 1000)
-        Manifest(box.archive, unit).append(Segment(unit, 1, start, start + 600, os.path.relpath(p, box.archive), 1000))
-    box.vars.put("rec/recordings/7", {"name": "7", "cam": "7", "retention_days": 90})
+    flaky = Flaky(box.vars)
 
     # the watermark: never read -> "unknown", and nothing freed; read once -> the last settings stand
-    res = Resource(box.archive, "srv-1", "http://srv-1", store, box.objects, wall=box.wall,
+    res = Resource(box.archive, "srv-1", "http://srv-1", flaky, box.objects, wall=box.wall,
                    space_probe=lambda root: (1_000_000, 100_000))
     asked = []
     res.register("rec", type("Hook", (), {"pass_": lambda s, now: {}, "free": lambda s, need, now, min_days, volume=None: (asked.append(need), {"freed": need})[1]})())
-    store.down = True
+    flaky.down = True
     assert res.relieve()["space"] == "unknown" and asked == []
-    store.down = False
+    flaky.down = False
     assert res.relieve()["space"] == "over" and asked == [150_000]
-    store.down = True
+    flaky.down = True
     assert res.relieve()["space"] == "over" and asked == [150_000, 150_000]      # on what it read last
 
-    # the recording's days: a row not READ is not a row that is absent
-    class RowAway:
+    # the recording's days: a row not READ is not a row that is absent. Forty days of footage of 7 and of 8; 7 is
+    # shown for ninety, 8 has no row and is shown for thirty — and a store that blinks changes neither.
+    r = recorder(box, acl=False)
+    r.lease_pass()
+    now = box.wall()
+    for unit in ("7", "8"):
+        footage(r.store, unit, 1, now - 40 * DAY, now - 40 * DAY + 600, step=10, seal=False)
+    r.store.seal()
+    box.vars.put("rec/recordings/7", {"id": "7", "name": "7", "cam": "7", "retention_days": 90})
+    from vms.recworker import archive_routes
+    routes = archive_routes(lambda: r.store, box.wall, visible_from=r._visible_from)
+
+    def shown(unit):
+        return len(json.loads(routes(f"/timeline/{unit}?from=0")[1])["spans"])
+
+    assert (shown("7"), shown("8")) == (1, 0)
+
+    class RowsAway:
         def __init__(self, inner): self.inner = inner
         def list(self, prefix): return self.inner.list(prefix)
         def get(self, key):
-            if key == "rec/recordings/7":
+            if key.startswith("rec/recordings/"):
                 raise PermissionError(13, "the store does not answer")
             return self.inner.get(key)
 
-    rep = ArchivePolicy(arch, RowAway(box.vars)).pass_(now)
-    assert (rep["media_removed"], rep["media_unread"]) == (1, 1)       # 8 has no row: thirty days, and its segment goes
-    assert len(Manifest(box.archive, "7").read()) == 1                 # 7 keeps ninety: not cut to thirty by a store that blinked
-    assert ArchivePolicy(arch, box.vars).pass_(now)["media_removed"] == 0
+    r.vars = RowsAway(box.vars)
+    assert shown("7") == 1                                             # ninety days still: not cut to thirty by a blink
+    assert shown("8") == 0
 
 
 # -- a command --------------------------------------------------------------------------------------------
@@ -267,13 +272,11 @@ def test_a_command_another_instance_began_is_not_performed_again():
 
 def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     from vms.console import _recorders
-    from vms.recworker import RecWorker
     from vms.worker import FakeActuator
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     act = FakeActuator()
-    r = RecWorker("r-1", box.vars, box.objects, act, archive=ArchiveResource(box.spool, box.archive, wall=box.wall),
-                  clock=box.clock, wall=box.wall, server="srv-1", env={})
+    r = recorder(box, actuator=act, acl=False)
     r.reconciler.actual = {"7": {"revision": 1}}
     r.rows = [{"id": "7", "cam": "7", "name": "7", "enabled": True, "revision": 1}]
     t0 = box.wall()
@@ -291,22 +294,24 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
 
 
 def test_who_read_the_archive_is_an_event_and_once_a_minute():
+    """Footage that leaves through the console is said: who, which interval, and — the piece having left whole
+    — its sha256 (feedback BI, BU). The same piece by the same person is said once a minute."""
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
+    st = store()
     start = box.wall() - 3600
-    p = segment_path(box.archive, "7", 3, datetime.fromtimestamp(start, timezone.utc))
-    os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x" * 4000)
-    rel = os.path.relpath(p, box.archive)
-    srv = serve(ctl, arch, port=0, wall=box.wall)
+    footage(st, "7", 3, start, start + 600)
+    rec_door = door(box, st)
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
     port = srv.server_address[1]
 
-    def read(user, rng):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/segment/{rel}", headers={"X-User": user, "Range": rng})
+    def read(user, a, b):
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={start + a}&to={start + b}",
+                                     headers={"X-User": user})
         with urllib.request.urlopen(req) as r:
-            return len(r.read())
+            return r.read()
 
     def said(n=None):                                                    # written after the reply has gone: ask until it lands
         import time
@@ -318,16 +323,56 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         return got
 
     def _said():
-        return [(e["user"], e["media"], e["recording"])                  # in the journal: `audit/console/…` (feedback BN)
+        return [(e["user"], e["media"], e["recording"], e.get("sha256"))   # in the journal: `audit/console/…` (feedback BN)
                 for b in buckets_under(box.archive, "audit", "console", 600)
                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
 
     try:
-        assert [read("anna", f"bytes={a}-{a + 999}") for a in (0, 1000, 2000)] == [1000] * 3   # a player: one file, many ranges
-        assert said(1) == [("anna", rel, "7")]                                  # …one line
-        assert read("boris", "bytes=0-99") == 100
-        box.wall.advance(61)
-        assert read("anna", "bytes=3000-3999") == 1000                          # a minute later it is said again
-        assert said(3) == [("anna", rel, "7"), ("boris", rel, "7"), ("anna", rel, "7")]
+        import hashlib
+        piece = f"rec/7/{start + 60:.0f}-{start + 120:.0f}"
+        data = [read("anna", 60, 120) for _ in range(3)]                       # the same minute, three times
+        digest = hashlib.sha256(data[0]).hexdigest()
+        assert said(1) == [("anna", piece, "7", digest)]                       # …one line, and what it was
+        read("boris", 60, 120)
+        box.wall.advance(61); rec_door.announce()
+        read("anna", 60, 120)                                                  # a minute later it is said again
+        assert [x[0] for x in said(3)] == ["anna", "boris", "anna"]
     finally:
-        srv.shutdown()
+        srv.shutdown(); rec_door.shutdown()
+
+
+def test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it():
+    """A span that began before the ceiling is cut at it — drawn from its start, it would be footage the page
+    shows and the door then refuses to play. And a keep is the operator's word that some minutes matter longer
+    than the recording's days: the door shows them past the ceiling — which is also how the recorder copying
+    keeps into an incidents volume can read them."""
+    from vms import keeps
+    from vms.recworker import archive_routes
+    box = Box()
+    r = recorder(box, acl=False)
+    r.lease_pass()
+    now = box.wall()
+    footage(r.store, "7", 1, now - 12 * DAY, now, step=600)             # twelve days, one span
+    box.vars.put("rec/recordings/7", {"id": "7", "name": "7", "cam": "7", "retention_days": 8})
+    routes = archive_routes(lambda: r.store, box.wall, visible_from=r._visible_from, kept=r._kept_of)
+
+    def spans():
+        return [(s["start"], s["end"]) for s in json.loads(routes("/timeline/7?from=0")[1])["spans"]]
+
+    assert spans() == [(now - 8 * DAY, now)]                           # cut at the ceiling, not drawn from twelve days ago
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] == b""
+    keeps.write(box.vars, {"cam": "7", "from": now - 11 * DAY, "to": now - 10 * DAY}, ["7"], "anna", now)
+    assert spans() == [(now - 11 * DAY, now - 10 * DAY), (now - 8 * DAY, now)]
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] != b""
+
+
+def test_a_read_starts_on_the_key_frame_before_the_moment_asked_for():
+    """The moment asked for is inside a group of pictures that opened earlier. Without that key frame nothing of
+    the moment decodes, so the read brings the lead-in, and whoever asked clips it (`Scan.accepts`)."""
+    from w2cplatform.obsd import unix_s
+    st = store()
+    t = Box().wall()
+    footage(st, "7", 1, t - 100, t, step=1)                            # a key frame every two seconds
+    got = st.samples("7", t - 51, t - 40)
+    assert got[0].key and unix_s(got[0].begin) == t - 52               # the group's key frame, a second before
+    assert all(unix_s(s.begin) < t - 40 for s in got)

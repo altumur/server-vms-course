@@ -12,7 +12,7 @@
 # seconds — `ensure_placed`, `redistribute`, `publish_snapshot`. Stateless, restart it freely; nothing asks
 # it anything, so no port. Its token writes placement only — `vms/workers/*`, `vms/placement/*`,
 # `vms/slots/*` (`SPEC.acl_controller()`) and the snapshot object — and never a camera's row. Checked by
-# `tests/test_deploy_units.py`, which also asserts it mounts neither the archive nor the spool.
+# `tests/test_deploy_units.py`, which also asserts it mounts no archive.
 #
 # - `Description=VMS controller — the only writer of placement`
 #
@@ -39,7 +39,7 @@ Exec=python3 -m vms controller
 # and `LOG_LEVEL`; the rest of the file is harmless to it.
 EnvironmentFile=/data/config/vms.env
 # the only mount: the config store for rows, assignments, placement, slots and the object store for
-# heartbeats (read) and the snapshot (write). No `/data/archive`, no `/data/spool`: "the ACL says which rows
+# heartbeats (read) and the snapshot (write). No `/data/archive`: "the ACL says which rows
 # each token writes; the mounts say which bytes" — the controller has no bytes to write.
 # `test_who_may_write_where_is_in_the_mounts_too` asserts both are absent.
 Volume=/data/platform:/data/platform:z

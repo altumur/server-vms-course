@@ -158,8 +158,8 @@ def main() -> int:
 Каждому тесту нужны два хранилища и часы. Заводить их в теле каждого теста — двадцать строк шума на файл, поэтому они собраны в одном месте:
 
 ```python
-"""One box in a temp directory: the platform's two stores, a spool and an
-archive, a clock. No GStreamer — the actuator is the fake."""
+"""One box in a temp directory: the platform's two stores, the resource's tree, a clock — and, for the
+archive, a real obsd on a socket of its own. No GStreamer — the actuator is the fake."""
 from __future__ import annotations
 
 import os
@@ -179,21 +179,20 @@ class Clock:
 
 
 class Box:
-    """The platform on one box, plus the two directories the archive resource needs."""
+    """The platform on one box, plus the resource's tree (`archive`). The box's own volume goes beside it."""
     def __init__(self):
         self.root = tempfile.mkdtemp(prefix="vmsserver-")
         self.vars = FileVariables(os.path.join(self.root, "config"))
         self.objects = FsObjectStore(os.path.join(self.root, "objects"))
-        self.spool = os.path.join(self.root, "spool")
         self.archive = os.path.join(self.root, "archive")
         self.clock, self.wall = Clock(), Clock(1_757_500_000.0)
 ```
 
 `Clock` — три строки, и они решают больше, чем любая другая фикстура курса. Это **вызываемый объект**: `clock()` возвращает число, `clock.advance(46)` двигает его вперёд. Каждый класс платформы, которому нужно время, принимает функцию времени аргументом — `clock=time.monotonic`, `wall=time.time` по умолчанию — и в тестах получает вот это. Поэтому тест «слот просрочился через 45 секунд» выполняется за микросекунду и не мигает: он не ждёт, он **передвигает часы**.
 
-Часов двое, и путать их нельзя. `clock` — монотонные, для интервалов: аренда, отступ, «сколько прошло с прошлого прохода». `wall` — настенные, для того, что записывается наружу: heartbeat, метка времени слота, `at` в размещении. Начальное значение `wall` — 1 757 500 000, то есть сентябрь 2025-го: осмысленная дата в путях и манифестах вместо 1970 года.
+Часов двое, и путать их нельзя. `clock` — монотонные, для интервалов: аренда, отступ, «сколько прошло с прошлого прохода». `wall` — настенные, для того, что записывается наружу: heartbeat, метка времени слота, `at` в размещении. Начальное значение `wall` — 1 757 500 000, то есть сентябрь 2025-го: осмысленная дата в путях и именах бакетов вместо 1970 года.
 
-`Box` создаёт временный каталог и четыре вещи в нём. Два хранилища — `config/` и `objects/` — это платформа; `spool/` и `archive/` в этом модуле не понадобятся ни разу и ждут М10B. Обратите внимание, что каталоги хранилищ передаются **разные**: одно хранилище не должно уметь наступить на файлы другого, даже случайно.
+`Box` создаёт временный каталог и три вещи в нём. Два хранилища — `config/` и `objects/` — это платформа; `archive/` в этом модуле не понадобится ни разу и ждёт М10B: там это дерево ресурса, а собственный том сервера ляжет рядом с ним. Обратите внимание, что каталоги хранилищ передаются **разные**: одно хранилище не должно уметь наступить на файлы другого, даже случайно.
 
 Каталог не удаляется. Это сознательно: после упавшего теста в `/tmp/vmsserver-*` остаётся ровно то состояние, на котором он упал, и его можно открыть и посмотреть. Цена — мусор в `/tmp`, который чистит ОС.
 

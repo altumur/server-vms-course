@@ -62,7 +62,7 @@ job "vmsworker" {
         image        = "localhost/clustervms:latest"
         network_mode = "host"
         args         = ["python3", "-m", "cluster", "worker"]
-        volumes      = ["/data/archive:/data/archive", "/data/media:/data/media", "/run/vms:/run/vms"]   # no spool: it writes events, never segments; /run/vms: the tee's shared-memory branch for subscribers on this server
+        volumes      = ["/data/archive:/data/archive", "/data/media:/data/media", "/run/vms:/run/vms"]   # it writes events, never footage; /run/vms: the tee's shared-memory branch for subscribers on this server
       }
       # The cluster's key (`w2cplatform/sealing.py`): rendered from the Nomad variable `secrets/vms` into this
       # task's secrets directory, which only this task sees. The policy lets this job and the worker's read it

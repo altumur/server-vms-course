@@ -8,21 +8,31 @@ two: a declaration is not a place until somebody is holding it."""
 import io
 import json
 import os
+import tempfile
 
 from w2cplatform.contract import Heartbeat, Slot
 from w2cplatform.spec import Refused, SpecController
 from vms import volumes
 from vms.config import REC_SPEC
 from vms.console import rec_routes
-from vms.recworker import RecWorker
-from tests.conftest import Box
+from tests.conftest import Box, footage, recorder
 
 
 def _recorder(box, name, server, **kw):
     """A recorder with nothing pinned: `env={}` is the box with no VOLUME set."""
-    from vms.archive import ArchiveResource
-    return RecWorker(name, box.vars, box.objects, archive=ArchiveResource(box.spool, box.archive, wall=box.wall),
-                     clock=box.clock, wall=box.wall, server=server, env={}, **kw)
+    return recorder(box, name, server, acl=False, **kw)
+
+
+def _net(box, name, **kw):
+    """A network volume. An address any box may serve — here a directory, which `obsd` opens like a bucket."""
+    volumes.write(box.vars, {"name": name, "kind": "network", "url": tempfile.mkdtemp(prefix=f"{name}-"),
+                             "quota_bytes": 64 << 20, **kw})
+
+
+def _disk(box, name, server="srv-a", url=None):
+    url = url or os.path.join(box.root, name)
+    volumes.write(box.vars, {"name": name, "kind": "local", "url": url, "server": server, "quota_bytes": 64 << 20})
+    return url
 
 
 def _resource(box, server, total=0):
@@ -34,8 +44,8 @@ def _resource(box, server, total=0):
 def test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server():
     """The two kinds differ in the one place it matters. A local volume is a
     disk, and a disk belongs to a machine. A network volume is an address any
-    machine can reach — but there is no `statvfs` for a bucket, so the ceiling
-    the watermark counts against has to be given, not read."""
+    machine can reach — and every volume is formatted as a ring of its quota,
+    which a bucket's `statvfs` could not tell anyway: the size is given, not read."""
     box = Box()
     for bad, why in (({"name": "vol-a", "kind": "local", "url": "/data/a", "quota_bytes": 1}, "server"),
                      ({"name": "s3", "kind": "network", "url": "s3://b/p"}, "quota_bytes"),
@@ -92,7 +102,7 @@ def test_a_declared_volume_is_taken_by_one_recorder_and_the_other_is_a_spare():
     one takes it and IS that archive's recorder; the other carries nothing and
     says so — a spare is a running process with no place, not a failure."""
     box = Box()
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
+    _net(box, "s3-main")
     a, b = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
 
     assert a.volume_pass() == "s3-main" and a.hold == "s3-main"
@@ -117,7 +127,7 @@ def test_a_spare_picks_up_a_volume_whose_recorder_went_silent():
     `s3-main` stops answering; the hold lapses; the spare takes it and the
     archive is served again — with nobody deciding anything."""
     box = Box()
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
+    _net(box, "s3-main")
     a, b = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
     assert a.volume_pass() == "s3-main" and b.volume_pass() == ""
 
@@ -134,7 +144,7 @@ def test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once()
     TTL, 45 s in which nothing on that volume was recorded. Anybody else still waits for the TTL, and the old
     instance learns on its next pass that the place is not its own any more."""
     box = Box()
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
+    _net(box, "s3-main")
     old, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
     assert old.volume_pass() == "s3-main" and spare.volume_pass() == ""
     assert Slot.from_items("s3-main", box.vars.get("rec/holds/s3-main")[0]).by == "r-1"
@@ -152,7 +162,7 @@ def test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running(
     is free to take another volume on the same pass it lost this one."""
     box = Box()
     for n in ("s3-cold", "s3-main"):
-        volumes.write(box.vars, {"name": n, "kind": "network", "url": f"s3://vms/{n}", "quota_bytes": 10 ** 12})
+        _net(box, n)
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "s3-cold"
     r.reconciler.actual["7-cold"] = {"id": "7-cold"}                   # pretend it is recording one into it
@@ -173,8 +183,7 @@ def test_the_console_says_which_archives_nobody_is_writing_into():
     not a silence: `home` is a preference, so the footage would go somewhere else
     without a word — the console has to say the word instead."""
     box = Box()
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
-    volumes.write(box.vars, {"name": "s3-cold", "kind": "network", "url": "s3://vms/y", "quota_bytes": 10 ** 12})
+    _net(box, "s3-main"); _net(box, "s3-cold")
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "s3-cold"                      # one recorder, two archives: it takes the first by name
 
@@ -206,8 +215,8 @@ def test_the_console_declares_a_volume_and_says_who_serves_it():
 
     assert "rec/volumes/*" in REC_SPEC.acl_console()                   # `tables: [volumes]`, and nothing else granted
 
-    status, body = route(_Body(json.dumps({"name": "s3-main", "kind": "network", "url": "s3://vms/x",
-                                           "quota_bytes": 10 ** 12, "access_secret": "AKIA"}).encode()),
+    status, body = route(_Body(json.dumps({"name": "s3-main", "kind": "network", "url": tempfile.mkdtemp(),
+                                           "quota_bytes": 64 << 20, "access_secret": "AKIA"}).encode()),
                          "POST", "/volumes", {})
     assert status == 201 and "access_secret" not in body["volume"]     # the reply never carries it back
 
@@ -247,14 +256,19 @@ def test_the_console_offers_the_disk_this_box_already_records_into():
     r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
 
     _, view = route(None, "GET", "/volumes", {})
+    own = f"file://{box.root}/volume"                               # the volume it formatted for itself, beside the resource's tree
     assert view["wanted"] == 0 and view["suggested"] == [
-        {"name": "srv-a", "kind": "local", "url": box.archive, "server": "srv-a", "quota_bytes": 4 * 10 ** 12,
+        {"name": "srv-a", "kind": "local", "url": own, "server": "srv-a", "quota_bytes": 64 << 20,   # the size it has
          "why": "this box records here and the disk is not declared as a volume"}]
 
     offer = {k: v for k, v in view["suggested"][0].items() if k != "why"}   # `why` is for the operator, not the row
     assert route(_Body(json.dumps(offer).encode()), "POST", "/volumes", {})[0] == 201
     _, view = route(None, "GET", "/volumes", {})
     assert view["wanted"] == 1 and view["suggested"] == []          # declared: nothing left to offer
+    # …and declaring it moved nothing: the same volume, under the same name, so the same owner — the recorder
+    # takes the declared row and goes on writing where it wrote
+    first = r.store
+    assert r.volume_pass() == "srv-a" and r.hold == "srv-a" and r.store is first and first.url == own
 
     # and now the disk can be split: half of it to a second volume beside the first
     status, _ = route(_Body(json.dumps({"name": "cold", "kind": "local", "url": box.archive + "/cold",
@@ -288,43 +302,6 @@ def test_a_quota_is_a_ceiling_and_not_a_reservation():
     assert res.space("vol-b")["free"] == 250
 
 
-def test_the_resource_sweeps_the_volumes_this_box_is_responsible_for():
-    """Which trees this server's resource repairs, retains and watches.
-
-    A LOCAL volume declared for it is its own by declaration — footage ages
-    whether anybody is recording into it or not. A NETWORK volume is its own
-    only while a recorder here holds it: exactly one box may sweep a bucket,
-    and the hold is what says which."""
-    from vms.archive import ArchiveResource
-    from vms.resource import archives_of, refresh_volumes, vms_resource
-
-    box = Box()
-    a, s3 = os.path.join(box.root, "vol-a"), os.path.join(box.root, "s3")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    volumes.write(box.vars, {"name": "vol-b", "kind": "local", "url": os.path.join(box.root, "vol-b"),
-                             "server": "srv-b", "quota_bytes": 10 ** 9})
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": s3, "quota_bytes": 10 ** 12})
-
-    res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-a", "http://srv-a",
-                       box.vars, box.objects, wall=box.wall)
-    refresh_volumes(res, box.vars, box.objects, REC_SPEC.sub, box.wall())
-    assert set(res.volumes) == {"vol-a"}                           # srv-b's disk is not ours; the bucket is nobody's yet
-    assert res.quotas["vol-a"] == 10 ** 9
-
-    r1, r2 = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
-    r1.volume_pass(); r1.heartbeat_once()                          # takes vol-a: its own disk first
-    r2.volume_pass(); r2.heartbeat_once()                          # takes the bucket
-    assert (r1.volume, r2.volume) == ("vol-a", "s3-main")
-
-    refresh_volumes(res, box.vars, box.objects, REC_SPEC.sub, box.wall())
-    assert set(res.volumes) == {"vol-a", "s3-main"}                # ours while this box holds it
-    assert set(res.hooks["rec"].volumes) == {"vol-a", "s3-main"}   # …and the media policy walks both trees
-
-    # the same cluster from srv-b's side: the bucket is not its business, and its own disk is
-    paths, _ = archives_of(box.vars, box.objects, REC_SPEC.sub, "srv-b", box.wall())
-    assert set(paths) == {"vol-b"}
-
-
 def test_the_console_writes_out_the_command_and_does_not_run_it():
     """The operator's knob, and the shape it is allowed to have.
 
@@ -337,7 +314,7 @@ def test_the_console_writes_out_the_command_and_does_not_run_it():
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     route = rec_routes(rec)
     for n in ("s3-a", "s3-b"):
-        volumes.write(box.vars, {"name": n, "kind": "network", "url": f"s3://vms/{n}", "quota_bytes": 10 ** 12})
+        _net(box, n)
 
     r = _recorder(box, "r-1", "srv-a"); r.volume_pass(); r.heartbeat_once()
     _, view = route(None, "GET", "/volumes", {})
@@ -352,7 +329,7 @@ def test_the_console_writes_out_the_command_and_does_not_run_it():
     assert view["needed"] == 0 and view["how"] is None
 
     # on a cluster the same number comes out in the scheduler's words
-    volumes.write(box.vars, {"name": "s3-c", "kind": "network", "url": "s3://vms/c", "quota_bytes": 10 ** 12})
+    _net(box, "s3-c")
     os.environ["NOMAD_ALLOC_ID"] = "alloc-1"
     try:
         _, view = route(None, "GET", "/volumes", {})
@@ -375,7 +352,7 @@ def test_the_numbers_a_scaling_policy_reads():
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     for n in ("s3-main", "s3-cold"):
-        volumes.write(box.vars, {"name": n, "kind": "network", "url": f"s3://vms/{n}", "quota_bytes": 10 ** 12})
+        _net(box, n)
     r, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
     r.volume_pass(); r.heartbeat_once()
     spare.volume_pass(); spare.heartbeat_once()
@@ -389,7 +366,7 @@ def test_the_numbers_a_scaling_policy_reads():
     assert "rec_spare_workers 0" in text
     assert 'rec_worker_load{worker="r-1"}' in text and 'rec_worker_load{worker="r-2"}' in text
 
-    volumes.write(box.vars, {"name": "s3-third", "kind": "network", "url": "s3://vms/z", "quota_bytes": 10 ** 12})
+    _net(box, "s3-third")
     text = con.metrics_text()
     assert "rec_volumes_declared 3" in text and "rec_volumes_unserved 1" in text   # declared, and nobody free
     assert "rec_recorders_needed 1" in text                        # …and no spare to take it: a process is missing
@@ -399,8 +376,7 @@ def test_the_numbers_a_scaling_policy_reads():
     # reading `unserved` would ask for a worker, and another, and another, to its ceiling — every one of
     # them a spare that cannot help. One spare is proof the shortage is not a shortage of processes.
     volumes.delete(box.vars, "s3-third")                           # everything a recorder here could take is taken
-    volumes.write(box.vars, {"name": "srv-b-disk", "kind": "local", "url": "/data/b", "server": "srv-b",
-                             "quota_bytes": 10 ** 9})
+    _disk(box, "srv-b-disk", "srv-b")
     idle = _recorder(box, "r-3", "srv-a")
     assert idle.volume_pass() == ""                                # nothing here for it: a spare
     idle.heartbeat_once()
@@ -414,34 +390,23 @@ def test_the_numbers_a_scaling_policy_reads():
 
 
 def test_the_recorder_writes_into_the_volume_it_took():
-    """Taking a place means writing into its tree. The archive a recorder
-    promotes into follows the hold — otherwise a spare that took the network
-    archive would go on filling the local disk, and the declaration would be a
-    label on nothing."""
-    from datetime import datetime, timezone
-    from vms.archive import segment_path
-
+    """Taking a place means writing into its volume. The writer follows the hold — otherwise a spare that took
+    the network archive would go on filling the local disk, and the declaration would be a label on nothing. And
+    a volume withdrawn mid-run keeps what was written into it: the writer is closed — its flush puts the last
+    minutes there — before the next volume is opened."""
+    from vms.archive import Archive
     box = Box()
-    a, b = os.path.join(box.root, "vol-a"), os.path.join(box.root, "vol-b")
-    for n, url in (("vol-a", a), ("vol-b", b)):
-        volumes.write(box.vars, {"name": n, "kind": "local", "url": url, "server": "srv-a", "quota_bytes": 10 ** 9})
-
+    a, b = _disk(box, "vol-a"), _disk(box, "vol-b")
     r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-a"
-    assert r.archive.root == a and r.archive_root == a             # …and the heartbeat says so too
-
-    # a segment closed in the spool while we held vol-a is promoted into vol-a, even though the volume is
-    # withdrawn in the same pass: we promote first, while we may still write there
+    assert r.volume_pass() == "vol-a" and r.store.url == a
     t = box.wall()
-    spool_seg = segment_path(r.archive.spool, "7", 1, datetime.fromtimestamp(t - 600, timezone.utc))
-    os.makedirs(os.path.dirname(spool_seg), exist_ok=True)
-    open(spool_seg, "wb").write(b"footage")
-    os.utime(spool_seg, (t - 600, t - 600))                        # closed ten minutes ago, by the box's clock
+    footage(r.store, "7", 1, t - 600, t, seal=False)                # written, its block still open
 
     volumes.delete(box.vars, "vol-a")
-    assert r.volume_pass() == "vol-b" and r.archive.root == b
-    assert os.path.isfile(os.path.join(a, "rec", "7", "e1", os.path.basename(spool_seg)))   # in vol-a's tree
-    assert not os.path.exists(os.path.join(b, "rec", "7"))                                   # and not in vol-b's
+    assert r.volume_pass() == "vol-b" and r.store.url == b
+    assert r.store.units() == []                                    # nothing of vol-a's in vol-b
+    left = Archive(a, "vol-a", 0, "", r.session).open(write=False)
+    assert left.coverage("7") == [(t - 600, t)]                     # in vol-a, readable: the close flushed it
 
 
 def test_a_volume_held_and_unwritable_is_not_served():
@@ -456,13 +421,12 @@ def test_a_volume_held_and_unwritable_is_not_served():
     box = Box()
     good, bad = os.path.join(box.root, "good"), os.path.join(box.root, "nope", "deeper")
     open(os.path.join(box.root, "nope"), "wb").write(b"")          # a FILE where a directory is declared
-    volumes.write(box.vars, {"name": "a-broken", "kind": "local", "url": bad, "server": "srv-a", "quota_bytes": 10 ** 9})
-    volumes.write(box.vars, {"name": "b-good", "kind": "local", "url": good, "server": "srv-a", "quota_bytes": 10 ** 9})
+    _disk(box, "a-broken", url=bad); _disk(box, "b-good", url=good)
 
     # `a-broken` sorts first, so it is tried first — and handed back, because there IS somewhere to go
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "b-good" and r.volume_error == ""
-    assert r.archive.root == good
+    assert r.store.url == good
     assert volumes.holders(box.vars, REC_SPEC.sub)["a-broken"].released    # let go at once, not sat on
 
     # the second recorder has nowhere else: it keeps the broken archive, reports why, and offers no room
@@ -504,29 +468,6 @@ def test_the_key_never_goes_into_the_address():
         volumes.refuse({"name": "v", "kind": "network", "url": ok, "quota_bytes": 1})
 
 
-def test_evacuation_reads_the_emptiest_volume_and_not_the_sum():
-    """A sum is the one number that cannot answer "can this box take a gigabyte".
-
-    The destination reports `space` across all its volumes, and the segments
-    land on ONE of them — whichever its recorder writes to. A box with one full
-    disk and one empty one reports half free, the "it is tight there" check
-    stops working, and back come the two servers trading gigabytes."""
-    from vms.space import room_on
-
-    half_full = {"space": {"total": 200, "free": 100},                 # the sum says: plenty
-                 "volumes": {"vol-a": {"total": 100, "free": 0},       # …and every byte of it is here
-                             "vol-b": {"total": 100, "free": 100}}}
-    assert room_on(half_full) == 100                                   # the emptiest, not the sum
-
-    tight = {"space": {"total": 200, "free": 20},
-             "volumes": {"vol-a": {"total": 100, "free": 10}, "vol-b": {"total": 100, "free": 10}}}
-    assert room_on(tight) == 10                                        # …and here the sum would have lied upward
-
-    # a resource that names no volumes was written before there were any: sum and volume are one number
-    assert room_on({"space": {"total": 100, "free": 40}}) == 40
-    assert room_on({}) == 0
-
-
 def test_a_recorder_that_holds_an_archive_is_not_a_spare():
     """Taking a volume and opening it are two moments, and on a bucket whose
     previous writer is still letting go the gap is most of a minute. A process
@@ -537,7 +478,7 @@ def test_a_recorder_that_holds_an_archive_is_not_a_spare():
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    volumes.write(box.vars, {"name": "s3-main", "kind": "network", "url": "s3://vms/x", "quota_bytes": 10 ** 12})
+    _net(box, "s3-main")
 
     r, s = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
     r.volume_pass(); s.volume_pass()
@@ -551,274 +492,149 @@ def test_a_recorder_that_holds_an_archive_is_not_a_spare():
     assert spare_workers(rec) == ["r-2"]                               # the hold says otherwise, and it wins
 
 
-# -- every segment knows its volume -------------------------------------------------------------------------
-#
-# A segment's path in the spool is `rec/<unit>/e<epoch>/<start>` — it does not name the volume it was recorded
-# for. That knowledge lived in the process (`self.hold`), and a process that dies takes it along. So the epoch
-# directory says it: `rec/<unit>/e<epoch>/.volume`. Not the spool — every recorder on a box shares one — but
-# the epoch, which exactly one recorder holds, for exactly one volume. Nothing is promoted anywhere else.
+# -- a restart, and the writer it left ------------------------------------------------------------------------
 
-def _closed_segment(box, r, cam="7", age=600, epoch=1):
-    """A segment the pipeline closed `age` seconds ago and nobody promoted — what a spool holds after an
-    outage, or after a process died with its last segment still in it. Its epoch directory is marked for
-    the volume `r` holds, the way starting the pipeline marks it."""
-    from datetime import datetime, timezone
-    from vms.archive import segment_path
-    r.mark_epoch(cam, epoch)
-    t = box.wall()
-    p = segment_path(r.archive.spool, cam, epoch, datetime.fromtimestamp(t - age, timezone.utc))
-    os.makedirs(os.path.dirname(p), exist_ok=True)
-    open(p, "wb").write(b"footage")
-    os.utime(p, (t - age, t - age))
-    return p
-
-
-def test_a_restart_does_not_pour_the_spool_into_the_wrong_archive():
-    """The constructor promoted "what the last instance closed but did not promote" — into `self.archive`,
-    which in a constructor is the LOCAL default, because no volume has been looked at yet. So every restart
-    of a recorder writing to a network archive filed its last segment, the last ten minutes, in the local
-    one; during an outage, the whole queue. Healthy network or not: the constructor runs before anything
-    asks where the recorder writes. And the first pass of the loop promoted before its first `volume_pass`,
-    which is the same door opened a second time."""
+def test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one():
+    """A recorder writing into a declared volume is killed and started again under its name. Nothing it wrote
+    can go anywhere else — there is no queue on this box any more, the frames went into the volume as they came —
+    and the new process looks at the volumes before it opens anything: it takes the same hold, names the same
+    owner, and the daemon hands back the very writer the dead one left. The box's own volume is never formatted."""
+    import time
+    from tests.conftest import OBSD_LINGER_MS
     box = Box()
-    cloud = os.path.join(box.root, "cloud")
-    volumes.write(box.vars, {"name": "cloud", "kind": "local", "url": cloud, "server": "srv-a", "quota_bytes": 10 ** 9})
+    cloud = _disk(box, "cloud")
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "cloud"
-    seg = _closed_segment(box, r)                                  # …and then the process died with it in the spool
+    t = box.wall()
+    footage(r.store, "7", 1, t - 60, t, seal=False)
+    r.session.vanish()                                              # kill -9
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
 
-    box.wall.advance(60); box.clock.advance(60)                    # its hold and its slot lapse
-    r2 = _recorder(box, "r-1", "srv-a")                            # a new process, which has looked at no volume
-    local = os.path.join(box.archive, "rec", "7")
-    assert not os.path.exists(local), "the constructor promoted a segment recorded for `cloud` into the local archive"
-    assert os.path.isfile(seg)
-
-    r2.pump_once()                                                 # the loop reaches promotion before volume_pass
-    assert not os.path.exists(local), "the first pass promoted it into the local archive before looking at volumes"
-
-    assert r2.volume_pass() == "cloud"                             # the volume the spool was recorded for
-    r2.promote_closed()
-    assert os.path.isfile(os.path.join(cloud, "rec", "7", "e1", os.path.basename(seg)))
-    assert not os.path.exists(local)
-
-
-def test_a_recorder_that_moves_on_leaves_the_old_volumes_footage_where_it_is():
-    """Mid-run, the same mistake by a different road. The recorder holds `vol-z`, the archive stops
-    answering with a segment still in the spool, and `vol-z` is taken from it. Looking for somewhere to
-    write, it finds `vol-a` — and the next promote moved `vol-z`'s footage into `vol-a`, with nothing to
-    say it happened, because nothing failed.
-
-    Forbidding the move would have cost a recorder: a process pinned by a queue it cannot send is a spare
-    doing nothing. So the recorder moves, and the footage does not: each segment says which volume it
-    belongs to, and one for `vol-z` waits for whoever holds `vol-z` next. Right even if nobody ever does —
-    footage in the wrong archive is found by nobody, footage waiting in a spool is found by the next
-    person who reads the heartbeat."""
-    box = Box()
-    z = os.path.join(box.root, "vol-z")
-    volumes.write(box.vars, {"name": "vol-z", "kind": "local", "url": z, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-z"
-    seg = _closed_segment(box, r)
-
-    def away(*a, **k):
-        raise OSError("network is unreachable")
-    r.archive.promote = away                                       # vol-z stops answering: the segment cannot go
-    a = os.path.join(box.root, "vol-a")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    volumes.delete(box.vars, "vol-z")                              # …and vol-z is taken away with its queue unsent
-
-    assert r.volume_pass() == "vol-a"                              # the recorder is free to move on…
-    r.pump_once()
-    assert not os.path.exists(os.path.join(a, "rec", "7")), "vol-z's footage was promoted into vol-a"
-    assert os.path.isfile(seg)                                     # …and the footage is not: it waits for vol-z
-    hb = r.heartbeat_extra()
-    assert hb["spool_for"] == {"vol-z": 1} and hb["spool"] == 1   # whose footage is waiting, and how much
-
-
-def test_a_drained_spool_lets_the_recorder_go_anywhere():
-    """The pin is a queue's, not a volume's. Once what the spool held has gone where it belonged, the
-    recorder is as free as it ever was — the rule must not outlive the reason for it."""
-    box = Box()
-    z = os.path.join(box.root, "vol-z")
-    volumes.write(box.vars, {"name": "vol-z", "kind": "local", "url": z, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-z"
-    _closed_segment(box, r)
-    r.promote_closed()                                             # it went across
-    assert r.heartbeat_extra()["spool_for"] == {}
-
-    a = os.path.join(box.root, "vol-a")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    volumes.delete(box.vars, "vol-z")
-    assert r.volume_pass() == "vol-a"
-
-
-def test_recorders_sharing_a_spool_each_promote_only_their_own():
-    """The spool is the BOX's, not a process's: the unit file is a template, and every recorder on a box
-    mounts the same `/data/spool` — three disks, three recorders, one spool. So `closed_in_spool` lists
-    every recorder's segments, and whichever recorder promoted first carried its neighbours' footage into
-    its own archive. With GStreamer running, `archivesink` promotes on its own as each segment closes and
-    this path only sweeps up stragglers — which is exactly the queue an outage leaves behind: when the link
-    came back, a box with three disks shuffled its backlog across the wrong ones.
-
-    This was true before any of the outage work; it is the same fix. Each segment knows its volume, and a
-    recorder promotes only what is its own."""
-    box = Box()
-    a, b = os.path.join(box.root, "vol-a"), os.path.join(box.root, "vol-b")
-    for n, url in (("vol-a", a), ("vol-b", b)):
-        volumes.write(box.vars, {"name": n, "kind": "local", "url": url, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r1, r2 = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")      # one box, one spool
-    assert (r1.volume_pass(), r2.volume_pass()) == ("vol-a", "vol-b")
-    one = _closed_segment(box, r1, cam="1")
-    two = _closed_segment(box, r2, cam="2")
-
-    r1.promote_closed()
-    assert os.path.isfile(os.path.join(a, "rec", "1", "e1", os.path.basename(one)))
-    assert os.path.isfile(two) and not os.path.exists(os.path.join(a, "rec", "2")), \
-        "r-1 promoted its neighbour's footage into its own archive"
-    r2.promote_closed()
-    assert os.path.isfile(os.path.join(b, "rec", "2", "e1", os.path.basename(two)))
+    box.wall.advance(5)
+    again = _recorder(box, "r-1", "srv-a")
+    assert again.volume_pass() == "cloud" and again.store.url == cloud and again.store.reattached
+    assert not os.path.exists(os.path.join(box.root, "volume"))     # the local default was never touched
+    again.store.seal()
+    assert again.our_coverage("7") == [(t - 60, t)]
 
 
 # -- away, or wrong: a transient failure and a permanent one are answered differently -----------------------
 #
-# The rule from section H — "an archive that will not open is handed back, if there is somewhere else to go" —
-# is right for a wrong key or a path that is a file, and wrong for a link that dropped for a minute: the
-# recorder gives the volume up, its recordings are reshuffled, and a minute later the link is back. And
-# everything that failed mid-run was treated as an outage, so a revoked key had the spool queueing for ever
-# for a place that was never coming back. The errno says which it is.
+# The rule "a volume that will not open is handed back, if there is somewhere else to go" is right for a wrong
+# key or a path that is a file, and wrong for a daemon that is restarting or a link that dropped for a minute:
+# the recorder gives the volume up, its recordings are reshuffled, and a minute later it is back. The engine's
+# status says which it is — and for a disk on this box, the kind of volume says the rest (`_write_into`).
 
-def _refusing_open(monkeypatch_target, url, err):
-    """Make opening the archive at `url` fail with `err`, the way a network volume fails at open."""
+def _away_at_open(url):
+    """Make opening the volume at `url` fail as a network volume does when its network is down."""
     import vms.recworker as rw
-    real = rw.ArchiveResource
+    from vms.archive import ArchiveError
+    real = rw.Archive
 
     class Opening(real):
-        def __init__(self, spool, root, *a, create=True, **k):
-            if root == url and create:
-                raise err
-            super().__init__(spool, root, *a, create=create, **k)
-    rw.ArchiveResource = Opening
-    return lambda: setattr(rw, "ArchiveResource", real)
+        def open(self, write=True):
+            if self.url == url:
+                raise ArchiveError("away", "VOLUME_MOUNT_RW: IO_ERROR — the network is unreachable", "IO_ERROR")
+            return real.open(self, write)
+    rw.Archive = Opening
+    return lambda: setattr(rw, "Archive", real)
 
 
-def test_an_archive_that_is_away_at_open_is_kept_and_buffered_into():
-    """A recorder that restarts in the middle of an outage opens its archive and gets a timeout. That is
-    "away", not "wrong": handing the volume back would reshuffle its recordings for a link that is back in a
-    minute. So the recorder keeps it — as a place, at full capacity — records into the spool as it always
-    does, and promotion keeps trying. It says the archive is away; it does not say the volume is not a place."""
-    import errno
+def test_an_archive_that_is_away_at_open_is_kept():
+    """A recorder that restarts in the middle of an outage opens its network archive and gets an I/O error. That
+    is "away", not "wrong": handing the volume back would reshuffle its recordings for a link that is back in a
+    minute. So the recorder keeps it — as a place, at full capacity — and the next pass tries again. It says the
+    archive is away; it does not say the volume is not a place."""
     box = Box()
-    cloud = os.path.join(box.root, "cloud")
-    volumes.write(box.vars, {"name": "cloud", "kind": "local", "url": cloud, "server": "srv-a", "quota_bytes": 10 ** 9})
-    restore = _refusing_open(None, cloud, OSError(errno.ETIMEDOUT, "Connection timed out"))
+    _net(box, "cloud")
+    url = volumes.declared(box.vars)[0].url
+    restore = _away_at_open(url)
     try:
         r = _recorder(box, "r-1", "srv-a")
-        assert r.volume_pass() == "cloud", "a volume that timed out at open was handed back"
+        assert r.volume_pass() == "cloud", "a volume that was away at open was handed back"
         assert r.capacity == r.full_capacity and r.volume_error == ""   # still a place: nothing moves off it
-        assert r.archive.root == cloud                                   # …and it points there, so segments go there
         hb = r.heartbeat_extra()
-        assert hb["archive_error"] and hb["archive_failure"] == "transient"
+        assert hb["archive_error"] and hb["archive_failure"] == "away" and r.store is None
     finally:
         restore()
+    assert r.volume_pass() == "cloud" and r.store is not None and r.archive_error == ""   # back: it opens
 
 
 def test_an_archive_that_refuses_writes_mid_run_is_handed_back():
-    """The other way round. The recorder holds `vol-a`, and promotion starts failing with "permission
-    denied" — a key that was revoked, a bucket policy that changed. Nothing will fix that but a person, so
-    buffering is waiting for nothing while the spool grows. The volume is handed back, its recordings are
-    free to go somewhere that works, and what was already recorded stays in the spool marked for `vol-a`.
+    """The other way round. The recorder holds `vol-a`, and the engine starts refusing samples with "permission
+    denied" — a key that was revoked, a volume made read-only. Nothing will fix that but a person, so recording
+    into it is recording into nothing. The volume is handed back and its recordings are free to go somewhere
+    that works.
 
-    And it does not take `vol-a` straight back on the next pass: opening may well succeed (the directories
-    are there) and the first write fail again — a recorder flapping between taking and dropping the same
-    broken archive. It is left alone for a while, long enough for somebody to fix it."""
-    import errno
+    And it does not take `vol-a` straight back on the next pass: opening may well succeed and the first write
+    fail again — a recorder flapping between taking and dropping the same broken archive. It is left alone for
+    a while, long enough for somebody to fix it."""
+    from w2cplatform.obsd import ObsdError
+    from vms.recworker import RecSink
+    from vms.worker import fake_samples
     box = Box()
-    a, b = os.path.join(box.root, "vol-a"), os.path.join(box.root, "vol-b")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
+    _disk(box, "vol-a")
     r = _recorder(box, "r-1", "srv-a")
     assert r.volume_pass() == "vol-a"
-    seg = _closed_segment(box, r)
-    volumes.write(box.vars, {"name": "vol-b", "kind": "local", "url": b, "server": "srv-a", "quota_bytes": 10 ** 9})
+    _disk(box, "vol-b")
 
     def refused(*a, **k):
-        raise OSError(errno.EACCES, "Permission denied")
-    r.archive.promote = refused
-    r.promote_closed()
-    assert r.heartbeat_extra()["archive_failure"] == "permanent"
+        raise ObsdError(2, "PUT_MEDIA", "permission denied")
+    r.store.put = refused
+    sink = RecSink(r.store, "7", 1, on_lost=r._lost_engine, on_wrong=r._volume_refuses)
+    try:
+        sink.put(fake_samples(0, 1)[0])
+        raise AssertionError("a refused sample was taken")
+    except ObsdError:
+        pass
+    assert r.heartbeat_extra()["archive_failure"] == "wrong"
 
-    assert r.volume_pass() == "vol-b", "a volume that refuses writes was kept, and the spool queues for nothing"
-    assert os.path.isfile(seg) and not os.path.exists(os.path.join(b, "rec", "7"))   # vol-a's footage waits for vol-a
+    assert r.volume_pass() == "vol-b", "a volume that refuses writes was kept"
+    assert "vol-a" in r.heartbeat_extra()["refused"]
     box.wall.advance(30)
     r.leave_volume("test: let go of vol-b")                         # free again, and vol-a sorts first…
     assert r.volume_pass() != "vol-a", "it took the broken archive straight back"
 
 
-def test_a_full_archive_is_kept_so_the_one_process_that_can_free_it_still_holds_it():
-    """"No space" looks permanent and is not. A full archive is emptied by its own watermark (Lesson 18),
-    and that pass is run by the recorder holding it — hand a full volume back and the one process that
-    could free it stops holding it, and it stays full. So a full archive is an outage: the recorder keeps it
-    and buffers, and the watermark makes the room."""
-    import errno
+def test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address():
+    """The url names the archive and nothing else (`refuse`); which key opens it is `access_key`, shown like a
+    camera's login, and the key itself is `access_secret`, sealed. Both reach the daemon as parameters."""
+    from vms.archive import volume_params
     box = Box()
-    a, b = os.path.join(box.root, "vol-a"), os.path.join(box.root, "vol-b")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-a"
-    _closed_segment(box, r)
-    volumes.write(box.vars, {"name": "vol-b", "kind": "local", "url": b, "server": "srv-a", "quota_bytes": 10 ** 9})
-
-    def full(*a, **k):
-        raise OSError(errno.ENOSPC, "No space left on device")
-    r.archive.promote = full
-    r.promote_closed()
-    assert r.heartbeat_extra()["archive_failure"] == "transient"
-    assert r.volume_pass() == "vol-a", "a full archive was handed back — and nobody is left to empty it"
+    v = volumes.write(box.vars, {"name": "s3", "kind": "network", "url": "s3://s3.example.com/eu-1/vms/site-7",
+                                 "quota_bytes": 1 << 30, "access_key": "AKIAEXAMPLE", "access_secret": "wJalr"})
+    assert volumes.declared(box.vars)[0].access_key == "AKIAEXAMPLE" and v.enabled
+    p = volume_params(v.url, "wJalr", v.access_key)
+    assert (p["access_key"], p["secret_key"], p["bucket"], p["path"]) == ("AKIAEXAMPLE", "wJalr", "vms", "site-7")
+    shown = volumes.served(box.vars, REC_SPEC.sub, box.wall())["volumes"][0]
+    assert shown["access_key"] == "AKIAEXAMPLE" and "access_secret" not in shown
 
 
-def test_an_archive_that_is_away_until_the_spool_is_full_is_handed_back():
-    """An archive that is AWAY is waited for — but the waiting has to end somewhere, and the honest place
-    is where waiting stops being free: the local spool running out. Until then every minute of outage is
-    footage kept; after it, every minute is the recordings that COULD be delivered losing their room to a
-    queue for a place that is not answering.
-
-    So an away archive becomes a wrong one when the spool's disk crosses the high mark — the watermark's
-    own number (Lesson 18), read even when the watermark is not switched on, because switching it on means
-    DELETING footage for room and this only means giving up the wait. The volume is handed back like any
-    wrong one; its recordings stop, the ones that can still be delivered keep their room, and what it
-    already holds stays in the spool, marked for it."""
-    import errno
+def test_a_pinned_recorder_whose_volume_will_not_open_is_not_a_place_to_put_a_recording():
+    """`$VOLUME` pins the volume: nothing to hand back, nowhere else to go. What the recorder CAN do is say so —
+    the error in its heartbeat and no capacity, as a spare — so the controller places nothing on it."""
     box = Box()
-    a, b = os.path.join(box.root, "vol-a"), os.path.join(box.root, "vol-b")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-a"
-    seg = _closed_segment(box, r)
-    volumes.write(box.vars, {"name": "vol-b", "kind": "local", "url": b, "server": "srv-a", "quota_bytes": 10 ** 9})
-
-    def away(*a, **k):
-        raise OSError(errno.ETIMEDOUT, "Connection timed out")
-    r.archive.promote = away
-    r.promote_closed()
-    assert r.archive_failure == "transient"
-
-    r.space_probe = lambda path: (100, 50)                         # half full: room to wait
-    assert r.volume_pass() == "vol-a", "an away archive was given up while the spool still had room"
-
-    r.space_probe = lambda path: (100, 5) if path == box.spool else (100, 50)   # the spool is past the high mark
-    assert r.volume_pass() == "vol-b", "the spool filled up and the recorder went on waiting for an archive that is away"
-    refused = r.heartbeat_extra()["refused"]
-    assert "vol-a" in refused and "spool" in refused["vol-a"]       # why it stopped waiting is said
-    assert os.path.isfile(seg)                                     # and vol-a's footage stays, marked for vol-a
+    open(os.path.join(box.root, "nope"), "wb").write(b"")                  # a FILE where the disk's directory should be
+    _disk(box, "bad", url=os.path.join(box.root, "nope", "deeper"))
+    r = recorder(box, "r-1", "srv-a", acl=False, env={"VOLUME": "bad"})
+    assert r.volume_pass() == "bad" and r.volume_error and r.capacity == 0
+    volumes.write(box.vars, {"name": "bad", "kind": "local", "url": os.path.join(box.root, "good"), "server": "srv-a",
+                             "quota_bytes": 64 << 20})                      # the administrator fixes the row
+    r.engine_lost = True                                                   # (the pinned branch opens again when asked to)
+    assert r.volume_pass() == "bad" and r.volume_error == "" and r.capacity == r.full_capacity
 
 
-def test_a_full_spool_with_a_healthy_archive_hands_nothing_back():
-    """The rule is about WAITING. A spool that is full while its archive is taking segments is a local
-    capacity problem — the watermark's to solve — and nothing is gained by giving up a volume that works."""
+def test_a_volume_another_writer_still_holds_is_said_to_be_busy():
+    """Busy is not away: the daemon answers, and it says somebody else's writer is in the volume — a recorder of
+    the same volume in its grace. Kept and said as busy, so the operator reads "wait" and not "the network"."""
+    import time
+    from tests.conftest import OBSD_LINGER_MS, store
     box = Box()
-    a = os.path.join(box.root, "vol-a")
-    volumes.write(box.vars, {"name": "vol-a", "kind": "local", "url": a, "server": "srv-a", "quota_bytes": 10 ** 9})
-    r = _recorder(box, "r-1", "srv-a")
-    assert r.volume_pass() == "vol-a"
-    r.space_probe = lambda path: (100, 1)                          # full, everywhere
-    assert r.volume_pass() == "vol-a"
+    url = _disk(box, "shared")
+    other = store("shared", path=url.replace("file://", ""), owner="rec:somebody-else")
+    r = recorder(box, "r-1", "srv-a", acl=False)
+    assert r.volume_pass() == "shared" and r.store is None
+    assert r.archive_failure == "busy" and r.heartbeat_extra()["archive_failure"] == "busy"
+    other.close()
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
+    assert r.volume_pass() == "shared" and r.store is not None and r.archive_failure == ""

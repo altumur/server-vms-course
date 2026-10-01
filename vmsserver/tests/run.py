@@ -67,7 +67,11 @@ def main() -> int:
     files = sorted(f for f in os.listdir(here) if f.startswith("test_") and f.endswith(".py"))
     passed = failed = skipped = 0
     for f in files:
-        mod = importlib.import_module(f"tests.{f[:-3]}")
+        try:
+            mod = importlib.import_module(f"tests.{f[:-3]}")
+        except Exception:                                  # noqa: BLE001 — a module that does not import fails, and the rest still run
+            print(f"{f} ... FAIL (does not import)"); traceback.print_exc(); failed += 1
+            continue
         mark = getattr(mod, "pytestmark", None)
         if mark is not None and getattr(mark, "name", "") == "skipif" and mark.args and mark.args[0]:
             print(f"{f}: skipped ({mark.kwargs.get('reason', '')})"); skipped += 1; continue

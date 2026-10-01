@@ -31,7 +31,8 @@ platform only promises that it comes from one issuer and increases.
 #   same key, `renew()` returns False, `fenced` is set and `conflicts == 1`.
 # - The fence is discovered at renewal, never pushed: a zombie keeps writing for at most `ttl − margin`
 #   after the new holder took the epoch. That bounded window is the RPO the archive lesson accepts, and the
-#   epoch in the path is what lets the manifest mark that window as fenced afterwards.
+#   epoch in the name — of a bucket, of a stream in a volume — is what lets the timeline mark that window as
+#   fenced afterwards.
 # ================================================================================================
 from __future__ import annotations
 

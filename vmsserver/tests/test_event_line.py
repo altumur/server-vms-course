@@ -140,9 +140,9 @@ def test_only_what_our_own_element_said_is_an_observation():
     every few seconds and each became an event of the camera. The question is who posted it."""
     import os
     from gstvms.observes import observes
-    assert observes("driverpacksrc", "motion") and observes("archivesink", "segment")
+    assert observes("driverpacksrc", "motion")
     assert not observes("rtpbin", "application/x-rtp-source-sdes") and not observes("", "motion")
-    assert not observes("archivesink", "splitmuxsink-fragment-closed") and not observes("splitmuxsink", "splitmuxsink-fragment-closed")
+    assert not observes("splitmuxsink", "splitmuxsink-fragment-closed") and not observes("appsink", "eos")
     assert observes("acmemotion", "motion", extra=("acmemotion",))
     os.environ["EVENT_ELEMENTS"] = "acmemotion,acmeface"
     try:

@@ -12,7 +12,6 @@ import urllib.request
 from w2cplatform.access import TRUST_KEYS, Denied, Gate, token_of
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.spec import SpecController
-from vms.archive import ArchiveResource
 from vms.config import REC_SPEC, SPEC
 from vms.console import make_console
 from vms.controller import VmsController
@@ -45,7 +44,7 @@ class Tokens:
 def _console(box, access=None):
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
-    m = make_console(ctl, ArchiveResource(box.spool, box.archive, wall=box.wall), box.wall, mounts={"rec": rec},
+    m = make_console(ctl, box.archive, box.wall, mounts={"rec": rec},
                      index=EventIndex(box.archive, "srv-1", wall=box.wall))       # this box's own events, read where they lie
     if access is not None:
         m.root.gate.impl = access

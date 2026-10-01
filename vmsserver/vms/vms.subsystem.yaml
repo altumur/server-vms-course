@@ -37,9 +37,8 @@ unit:
     # pending` for a disabled camera. `PUT {"enabled": false}` bumps `revision` and the worker stops the
     # pipeline.
     enabled:               {type: bool,   default: true}
-    # media retention: the VMS's own policy, applied by `ArchiveResource.retain` (`ArchivePolicy.pass_`
-    # reads it straight from `vms/cameras/<cam>`; `__main__.retain` reads it through `config.row`). The
-    # controller only stores it.
+    # media retention is the RECORDING's (`retention_days` in rec.subsystem.yaml), not the camera's: a camera
+    # may be written to several volumes with several ceilings.
     # bucket retention: the platform's, via the derived row below. Events are small and kept a year where
     # footage is kept a month.
     #

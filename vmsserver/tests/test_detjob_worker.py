@@ -5,11 +5,10 @@ import os
 
 from w2cplatform.events import read_bucket
 from w2cplatform.spec import SpecController
-from vms.archive import Manifest, Segment
 from vms.config import DETJOB_SPEC
 from vms.detjobworker import DetJobWorker
 from vms.scan import ScanLog
-from tests.conftest import Box
+from tests.conftest import Box, door, footage, store
 
 T = 1_757_500_000.0 - 7 * 24 * 3600      # the footage is a week older than the worker's clock
 
@@ -29,10 +28,19 @@ class Every:
     def close(self): pass
 
 
+def _site(doors=True):
+    """A box, and — unless told otherwise — a recorder's archive door over a volume of its own: where a scan
+    finds what was recorded. Nothing recorded in it yet."""
+    box = Box()
+    if doors:
+        box.st = store()
+        box.door = door(box, box.st)
+    return box
+
+
 def _footage(box, rec, epoch, a, b):
-    s = Segment(str(rec), epoch, m(a), m(b), f"rec/{rec}/e{epoch}/{int(m(a))}.mp4", 1000)
-    Manifest(box.archive, rec).append(s)
-    return s
+    """Minutes `a`–`b` of recording `rec`, a frame every ten seconds, visible through the door."""
+    footage(box.st, str(rec), epoch, m(a), m(b), step=10)
 
 
 def _worker(box, name="j-1", **kw):
@@ -49,7 +57,7 @@ def _job(box, name="7-lpr-1", frm=0, to=10, rec="7", cam="7"):
 
 
 def test_a_scan_writes_what_it_saw_into_its_own_tree_under_its_epoch():
-    box = Box(); _footage(box, "7", 1, 0, 10); _job(box)
+    box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
     w = _worker(box)
     w.reconcile_once(); w.heartbeat_once()
 
@@ -62,7 +70,7 @@ def test_a_scan_writes_what_it_saw_into_its_own_tree_under_its_epoch():
 def test_the_events_carry_media_time_not_the_clock():
     """A scan of last Tuesday writes events dated last Tuesday. The worker's own
     wall clock is thirty years away from the footage in this test, on purpose."""
-    box = Box(); _footage(box, "7", 1, 0, 10); _job(box)
+    box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
     w = _worker(box)
     w.reconcile_once()
     root = os.path.join(box.archive, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
@@ -72,9 +80,9 @@ def test_the_events_carry_media_time_not_the_clock():
 
 
 def test_what_the_operator_did_not_ask_for_does_not_become_an_event():
-    """The segment opens at 10:00 and the job asks from 10:05. The file is read
-    from its head — the model sees 10:00 — and none of it is in the answer."""
-    box = Box(); _footage(box, "7", 1, 0, 10); _job(box, frm=5, to=8)
+    """The footage opens at 10:00 and the job asks from 10:05. It is decoded from
+    its key frame — the model sees 10:00 — and none of it is in the answer."""
+    box = _site(); _footage(box, "7", 1, 0, 10); _job(box, frm=5, to=8)
     w = _worker(box)
     w.reconcile_once()
     root = os.path.join(box.archive, "detjob", "7-lpr-1", f"e{w.epochs['7-lpr-1']}")
@@ -83,30 +91,30 @@ def test_what_the_operator_did_not_ask_for_does_not_become_an_event():
     ts = [l["t"] for l in lines]
     assert ts and min(ts) >= m(5) and max(ts) < m(8)
     # …and the five minutes before it WERE decoded: the model's first reported look is not its first look.
-    assert lines[0]["looks"] > 1, "the model was handed the window, not the file — then nothing needed clipping"
+    assert lines[0]["looks"] > 1, "the model was handed the window, not the footage — then nothing needed clipping"
 
 
 def test_a_long_job_advances_by_a_budget_and_the_heartbeat_moves_each_pass():
     """Six stretches, four per pass. A pass that ran the job to the end is a
     worker that stops heartbeating while it does."""
-    box = Box()
+    box = _site()
     for i in range(6):
-        _footage(box, "7", 1, i * 10, (i + 1) * 10)
+        _footage(box, "7", 1, i * 10, i * 10 + 9)                                # a minute missing between each: six stretches
     _job(box, frm=0, to=60)
     w = _worker(box)
 
     w.reconcile_once(); first = w.status_by_unit["7-lpr-1"]
-    assert first["phase"] == "running" and first["done_through"] == m(40)       # four of six
+    assert first["phase"] == "running" and first["done_through"] == m(39)       # four of six
     w.reconcile_once(); second = w.status_by_unit["7-lpr-1"]
-    assert second["done_through"] == m(60) and second["events"] > first["events"]
+    assert second["done_through"] == m(59) and second["events"] > first["events"]
     w.reconcile_once()
     assert w.status_by_unit["7-lpr-1"]["phase"] == "done"
 
 
 def test_a_restarted_worker_resumes_and_does_not_double_the_events():
-    box = Box()
+    box = _site()
     for i in range(3):
-        _footage(box, "7", 1, i * 10, (i + 1) * 10)
+        _footage(box, "7", 1, i * 10, i * 10 + 9)
     _job(box, frm=0, to=30)
     w = _worker(box); w.reconcile_once()
     before = ScanLog(box.archive, "7-lpr-1").events()
@@ -117,21 +125,22 @@ def test_a_restarted_worker_resumes_and_does_not_double_the_events():
     assert w2.status_by_unit["7-lpr-1"]["phase"] == "done"
 
 
-def test_no_footage_here_is_not_no_events():
-    """`near` is a preference, so a job can be placed away from what it reads.
-    Saying which of the two silences it is, is the whole point of the phase."""
-    box = Box(); _job(box)                                                      # no manifest on this server
+def test_nobody_answering_is_not_no_events():
+    """What was recorded is behind the recorders' doors. With none answering the
+    scan cannot know — and saying which of the two silences it is, is the whole
+    point of the phase."""
+    box = _site(doors=False); _job(box)                                         # no recorder serves its archive
     w = _worker(box)
     w.reconcile_once()
     st = w.status_by_unit["7-lpr-1"]
-    assert st["phase"] == "waiting" and "another server" in st["why"]
+    assert st["phase"] == "waiting" and "archive door" in st["why"]
     assert not os.path.exists(os.path.join(box.archive, "detjob", "7-lpr-1"))
 
 
 def test_the_heartbeat_says_how_much_of_the_interval_had_footage():
     """Asked for an hour, recorded forty minutes: a finished scan with no events
     has to be able to say which nothing it is."""
-    box = Box()
+    box = _site()
     _footage(box, "7", 1, 0, 20); _footage(box, "7", 1, 40, 60)
     _job(box, frm=0, to=60)
     w = _worker(box)
@@ -144,9 +153,9 @@ def test_a_terminal_row_is_reported_and_not_worked_on():
     """Nothing in placement reads `done` yet, so the row stays assigned until the
     console's reaper moves it. An UNFINISHED job whose state went terminal must
     stop where it is — the operator cancelled it, or the reaper called it failed."""
-    box = Box()
+    box = _site()
     for i in range(6):
-        _footage(box, "7", 1, i * 10, (i + 1) * 10)
+        _footage(box, "7", 1, i * 10, i * 10 + 9)
     ctl = _job(box, frm=0, to=60)
     w = _worker(box); w.reconcile_once()
     done_after_one_pass = len(ScanLog(box.archive, "7-lpr-1").read())
@@ -165,9 +174,9 @@ def test_a_stretch_that_failed_halfway_is_not_recorded_as_done():
     stretch nobody will look at again. Written the other way round the failure
     is silent and permanent."""
     import vms.detjobworker as mod
-    box = Box()
+    box = _site()
     for i in range(3):
-        _footage(box, "7", 1, i * 10, (i + 1) * 10)
+        _footage(box, "7", 1, i * 10, i * 10 + 9)
     _job(box, frm=0, to=30)
     w = _worker(box)
 
@@ -211,7 +220,7 @@ def test_footage_the_device_has_and_we_do_not_is_a_step_not_a_dead_end():
     The console turns this into a request to the recorder; the scan never opens the
     device's own door, because those two sessions belong to the operator watching
     and to the recorder saving."""
-    box = Box(); _job(box)                                                  # no manifest on this server
+    box = _site(); _job(box)                                                # the door answers: nothing recorded
     _holder_of_camera(box, 7, {"from": m(-100), "to": m(100), "fragments": 5})
     w = _worker(box)
     w.reconcile_once()
@@ -221,7 +230,7 @@ def test_footage_the_device_has_and_we_do_not_is_a_step_not_a_dead_end():
 
 
 def test_nobody_recorded_it_is_a_different_answer():
-    box = Box(); _job(box)
+    box = _site(); _job(box)
     _holder_of_camera(box, 7, None)                                         # held, but the device has no archive
     w = _worker(box)
     w.reconcile_once()
@@ -231,7 +240,7 @@ def test_nobody_recorded_it_is_a_different_answer():
 def test_a_device_whose_coverage_misses_the_interval_is_not_asked():
     """The card keeps three days. A search over last month is not a fetch that will
     ever succeed, and saying `fetching` would leave the job hopeful for ever."""
-    box = Box(); _job(box, frm=0, to=10)
+    box = _site(); _job(box, frm=0, to=10)
     _holder_of_camera(box, 7, {"from": m(500), "to": m(900), "fragments": 5})
     w = _worker(box)
     w.reconcile_once()

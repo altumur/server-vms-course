@@ -1,7 +1,9 @@
-"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller — the box's processes.
+"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller|
+detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontroller — the box's processes.
 
     PLATFORM_DIR=/data/platform     the platform's stores (config/, objects/)
-    SPOOL=/data/spool  ARCHIVE=/data/archive  MEDIA_DIR=/data/media
+    ARCHIVE=/data/archive  MEDIA_DIR=/data/media   the resource's tree (events); the recorder's own volume under it
+    OBSD_SOCKET=/run/vms/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
                                      neither: the first free slot, a lapsed one first
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
@@ -31,13 +33,15 @@
 # Environment (from the docstring and the code):
 # - `PLATFORM_DIR` (default `/data/platform`) — the platform's stores: `<dir>/config` is `FileVariables`,
 #   `<dir>/objects` is `FsObjectStore`.
-# - `SPOOL` (`/data/spool`), `ARCHIVE` (`/data/archive`) — the archive resource's two roots. `MEDIA_DIR` is
-#   read by `gstvms/uri.py`, not here.
+# - `ARCHIVE` (`/data/archive`) — the resource's tree: every subsystem's events. A recorder with nothing declared
+#   formats its server's own volume beside it (`/data/volume` for `/data/archive`; `ARCHIVE_VOLUME` to put it elsewhere).
+#   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
+# - `OBSD_SOCKET` — the host's ObjectStorage daemon (`w2cplatform/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
+#   recorder waits for one answer from it — shorter than a lease.
 # - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `NOMAD_ALLOC_INDEX` → `w-<index>`; neither:
 #   `None`, which makes `VmsWorker` claim the first free slot, a lapsed one first.
 # - `CAPACITY` (default `50`) — cameras this worker can carry; exported as `headroom`. Also passed to the
 #   controller and console as the *fallback* for a worker whose heartbeat says nothing.
-# - `SEGMENT_SECONDS` (default `600`) — segment length handed to `GstActuator`.
 # - `CONSOLE_HOST` (`127.0.0.1`), `CONSOLE_PORT` (`8080`) — where the console listens
 #   (`console.container` sets `0.0.0.0`).
 # - `RESOURCE_HOST` (`127.0.0.1`), `RESOURCE_PORT` (`8090`), `RESOURCE_URL` — the resource process's HTTP and the URL
@@ -78,7 +82,6 @@ import threading
 from w2cplatform.objects import FsObjectStore
 from w2cplatform.variables import open_vars
 
-from .archive import ArchiveResource
 from .controller import VmsController
 from .worker import FakeActuator, VmsWorker
 
@@ -147,11 +150,13 @@ def worker() -> None:
 
 # Builds `recworker` — the fourth subsystem's worker, the only one placed on top of the archive:
 # - the slot: `RECORDER_NAME`, else `r-$NOMAD_ALLOC_INDEX`, else whichever is free; Variables as writer
-#   `recworker` with `["rec/epoch/*", "rec/slots/*"]`.
-# - `gstvms.actuator.GstRecActuator(spool, archive, SEGMENT_SECONDS)` — `rtspsrc ! archivesink` per
-#   recording, subscribed to the worker's fan-out; without GStreamer the fake, which records nothing.
-# - `RecWorker(...)`: promotes what the last instance closed but did not promote, then runs — the worker's
-#   loop, plus a re-subscription when a camera's holder moves, plus promotion on every pass.
+#   `recworker` with the platform's worker grant for `rec` — epochs, its slot and its hold.
+# - its session with the host's ObjectStorage daemon (`OBSD_SOCKET`): every volume it opens is a handle of it.
+# - `gstvms.actuator.GstRecActuator()` — `rtspsrc ! h264parse ! appsink` per recording, each access unit a
+#   sample into the volume's writer; without GStreamer the fake, which records nothing by itself.
+# - its archive door (`ARCHIVE_HOST`, loopback unless said otherwise; `ARCHIVE_PORT`, any): `/timeline` and
+#   `/samples` over the volume it holds — what the console draws and plays, and what a primary copies from a
+#   backup.
 def recorder() -> None:
     from .recworker import RecWorker
     # The platform's grant for a worker of `rec` — epochs, its slot AND its hold. The list here was written by
@@ -160,10 +165,9 @@ def recorder() -> None:
     from .config import REC_SPEC
     vars_ = open_vars(CONFIG_URL, writer="recworker", acl={"recworker": REC_SPEC.sub.acl_worker()})
     objects = FsObjectStore(os.path.join(root, "objects"))
-    spool, archive = os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive")
     try:
         from gstvms.actuator import GstRecActuator
-        act = GstRecActuator(spool, archive, int(os.environ.get("SEGMENT_SECONDS", "600")))
+        act = GstRecActuator()
     except ImportError:
         logging.warning("no GStreamer: the fake actuator records nothing")
         act = FakeActuator()
@@ -172,14 +176,15 @@ def recorder() -> None:
     # operator asks for.
     win = os.environ.get("BACKFILL_WINDOW", "")
     window = tuple(int(x) for x in win.split("-")) if "-" in win else None
-    r = RecWorker(None, vars_, objects, act, archive=ArchiveResource(spool, archive), capacity=int(os.environ.get("CAPACITY", "50")),
+    r = RecWorker(None, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")),
                   window=window, keep_days=float(os.environ.get("RETENTION_DAYS", "30")))
     r.backfill_budget = int(os.environ.get("BACKFILL_BUDGET", "1"))
-    # How many of its own segments one pass moves out of the spool — it matters only for the queue an outage
-    # leaves behind, and it paces the drain rather than capping bandwidth.
-    r.PROMOTE_BUDGET = int(os.environ.get("PROMOTE_BUDGET", str(r.PROMOTE_BUDGET)))
-    logging.info("recorder %s (instance %s) claimed its slot; promoted %d", r.name, r.instance, r.promoted)
-    r.run(stop=stop)
+    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "127.0.0.1"), int(os.environ.get("ARCHIVE_PORT", "0")))
+    logging.info("recorder %s (instance %s) claimed its slot; archive door %s", r.name, r.instance, r.archive_url)
+    try:
+        r.run(stop=stop)
+    finally:
+        srv.shutdown()
 
 
 def reccontroller() -> None:
@@ -363,8 +368,8 @@ def gateway() -> None:
 # - Variables as writer `console` with `SPEC.acl_console()` — `vms/cameras/*`, `vms/next_id`,
 #   `vms/idem/*`, `vms/retention/*`; never placement. It holds a `VmsController` over that token, so a write
 #   it must not make (`place`) is a `Forbidden` from the store, not a rule in the console.
-# - `ArchiveResource($SPOOL, $ARCHIVE)` so the console can serve `/timeline/<id>` and `/segment/<path>` from
-#   this box's archive and write operator marks into its own bucket.
+# - `$ARCHIVE` for the operator marks it writes into its own bucket. Footage it does not hold: `/timeline/<cam>`
+#   and `/export/<cam>` ask the recorders' archive doors, found by their heartbeats.
 # - `serve(ctl, archive, $CONSOLE_HOST, $CONSOLE_PORT)` from `vms/console.py` starts the
 #   `ThreadingHTTPServer` in a daemon thread; the main thread waits on `stop`, then `srv.shutdown()`.
 # Housekeeping the console owns BECAUSE THE ACL SAYS SO. `<sub>/blobs/*` is the console's to write
@@ -472,7 +477,7 @@ def console() -> None:
                                + SURVEY_SPEC.acl_console() + AUTO_SPEC.acl_console()})   # the operator's rows of EVERY subsystem it fronts
     objects = FsObjectStore(os.path.join(root, "objects"))
     ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
-    archive = ArchiveResource(os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive"))
+    archive = os.environ.get("ARCHIVE", "/data/archive")                    # its resource tree: where the operator's marks go
     srv = serve(ctl, archive, os.environ.get("CONSOLE_HOST", "127.0.0.1"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 live_ctl=SpecController(LIVE_SPEC, vars_, objects),
                 mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
@@ -501,45 +506,35 @@ def console() -> None:
 
 
 # The resource process — the platform's resource job on one box, the same as М11's `resource` job:
-# - `ArchiveResource($SPOOL, $ARCHIVE)`; Variables opened with *no* writer and no ACL — the resource only
-#   reads rows (the camera rows for media retention, `<sub>/retention/*` for buckets, `platform/mirror`).
-# - `vms_resource(archive, hostname, $RESOURCE_URL, vars_, objects)` — the platform's `Resource` with
-#   `ArchivePolicy` registered as the `vms` hook and an `EventIndex` over the tree.
-# - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT, extra=vms_routes(archive), extra_put=vms_writes(archive))` — `/buckets`, `/events`,
-#   `/mirrored`, `PUT /mirror`, plus the VMS's `/manifest/<cam>` and `/segment/<path>`.
+# - its tree, `$ARCHIVE`: EVENTS — the camera's buckets, a recorder's, the alarms', the journal's. Footage is
+#   not here: it is in volumes of ObjectStorage, through the host's `obsd`, each written by the recorder that
+#   holds it (`vms/archive.py`). Variables opened with *no* writer and no ACL — the resource only reads rows.
+# - `vms_resource(root, hostname, $RESOURCE_URL, vars_, objects)` — the platform's `Resource` with an
+#   `EventIndex` over the tree and the VMS's keeps for its bucket retention.
+# - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT)` — `/buckets`, `/events`, `/mirrored`, `PUT /mirror`.
 # - one heartbeat (`platform/resources/<server>/heartbeat` — how the console finds this process), then
-#   `restore()` (nothing to pull on one box: no peers) — and the loop: a heartbeat every 10 s, the policy pass every 600 s (`pass_`: repair,
-#   close buckets, media retention per camera row; then bucket retention by `vms/retention/<cam>`, which
-#   tells the index what it removed; then the mirror, off).
+#   `restore()` — and the loop: a heartbeat every 10 s, the policy pass every 600 s (retain buckets by each
+#   subsystem's row, the watermark over the tree, the mirror).
 def resource() -> None:
-    """The resource process: the archive has no controller — it has a policy pass, a
-    heartbeat, its HTTP, and the event index over its own tree."""
+    """The resource process: no controller — a policy pass, a heartbeat, its HTTP,
+    and the event index over its own tree."""
     import socket
     import time
     from w2cplatform.resource import serve
-    from .config import REC_SPEC
-    from .resource import refresh_volumes, vms_resource, vms_routes, vms_writes
-    archive = ArchiveResource(os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive"))
+    from .resource import vms_resource
     vars_ = open_vars(CONFIG_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(archive, socket.gethostname(), os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
-    srv = serve(res, host, port, extra=vms_routes(archive, objects, res.server), extra_put=vms_writes(archive))
+    res = vms_resource(os.environ.get("ARCHIVE", "/data/archive"), socket.gethostname(),
+                       os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
+    srv = serve(res, host, port)
     res.heartbeat(); logging.info("restore: %s", res.restore())
     logging.info("resource %s on %s", res.server, srv.server_address)
     last_policy = 0.0
     while not stop.is_set():
-        # Three jobs, three tries (feedback BI). They shared one, in this order, and the first of them reads
-        # the store: with the store away the resource stopped HEARTBEATING, was called silent, and the
-        # recordings were moved off a server whose disks were perfectly well.
-        try:
-            # The declared volumes are configuration and they change under a running process: a network
-            # archive created on the console, a disk split in two. Read before the heartbeat, so the
-            # spaces this box publishes are the spaces it is actually responsible for. Not read: the
-            # volumes stay what they were.
-            refresh_volumes(res, vars_, objects, REC_SPEC.sub, time.time())
-        except Exception:                                                 # noqa: BLE001
-            logging.exception("the declared volumes could not be read — keeping the ones this resource has")
+        # Two jobs, two tries (feedback BI): a pass that reads the store must not stop the heartbeat — with the
+        # store away the resource stopped HEARTBEATING, was called silent, and the recordings were moved off a
+        # server that was perfectly well.
         try:
             res.heartbeat()
         except Exception:                                                 # noqa: BLE001

@@ -24,7 +24,7 @@
 #   how "the zombie on one box" is reproduced by hand with two real processes (start `w-1` twice under
 #   different unit names, or pause one).
 # - What differs from the controller and console units is exactly the mounts: only this unit has
-#   `/data/media` and a writable `/data/spool`.
+#   `/data/media`.
 # ================================================================================================
 [Unit]
 # `%i` is substituted per instance in `systemctl status`.
@@ -43,7 +43,7 @@ Exec=python3 -m vms worker
 # exactly that slot by CAS, even from a holder that has not lapsed — systemd is the authority on which
 # process is the current `w-1`, and the old one finds out at its next `renew_slot` and fences.
 Environment=WORKER_NAME=%i
-# `PLATFORM_DIR`, `SPOOL`, `ARCHIVE`, `MEDIA_DIR`, `CAPACITY`, `SEGMENT_SECONDS`, `LOG_LEVEL` (see
+# `PLATFORM_DIR`, `ARCHIVE`, `MEDIA_DIR`, `CAPACITY`, `LOG_LEVEL` (see
 # `vms.env.example`); on the data partition, never a rootfs slot.
 # The worker's TWO doors, and neither may be a constant in a template: the RTSP fan-out and the playback
 # surface. A second `vmsworker@w-2` on the same box is the ordinary way to use capacity (the autoscaler
@@ -61,7 +61,7 @@ Volume=/data/platform:/data/platform:z
 # be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
 Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
 Environment=SECRETS_KEY=/run/secrets/vms.key
-# no spool: the worker records nothing — the recorder does (`recworker@.container`). Read-write here
+# the worker records nothing — the recorder does (`recworker@.container`). Read-write here
 # because the camera's event buckets, `vms/<cam>/e<epoch>/`, are the worker's, on this server's resource;
 # it never writes under `rec/`.
 Volume=/data/archive:/data/archive:z
@@ -74,12 +74,12 @@ Volume=/run/vms:/run/vms:z
 # host network: the RTSP fan-out listens on :8554 (`live_url` in the heartbeat) — what the recorder, the
 # gateways and the detectors subscribe to, from this box or another server.
 Network=host
-# SIGTERM lets every splitmuxsink finalize its open segment and the worker
-# release its slot; SIGKILL loses exactly that segment (М10 Lesson 3) and
-# leaves the slot to lapse (Lesson 4).
-# the comment says why: SIGTERM lets every `splitmuxsink` finalize its open segment (the actuator sends EOS
-# before NULL) and the worker `release_slot()`; SIGKILL after 20 s loses exactly that segment (М10 Lesson 3)
-# and leaves the slot to lapse (Lesson 4) — a crash, which the controller does not redistribute.
+# SIGTERM lets the pipelines end (EOS before NULL) and the worker release
+# its slot; SIGKILL leaves the slot to lapse (Lesson 4). The worker records
+# nothing, so there is no footage to lose either way.
+# the comment says why: SIGTERM lets the pipelines end (the actuator sends EOS before NULL) and the worker
+# `release_slot()`; SIGKILL after 20 s leaves the slot to lapse (Lesson 4) — a crash, which the controller
+# does not redistribute.
 StopTimeout=20
 
 [Service]

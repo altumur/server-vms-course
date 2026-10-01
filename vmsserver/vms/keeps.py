@@ -1,27 +1,27 @@
 """Footage and events somebody said to keep: `rec/keeps/<id>`, the second of `rec`'s tables."""
 # ================================================================================================
-# # keeps.py — a keep is an INTERVAL of one camera that the policies leave alone
+# # keeps.py — a keep is an INTERVAL of one camera somebody said to keep
 #
-# Retention by days deletes what is old, and the watermark deletes what is in the way. Neither knows that
-# ten minutes of camera 7 last Tuesday are evidence (the platform review, blocker 10; feedback BH). A keep
-# says so: camera, interval, a note, who set it. While the row stands —
+# Footage is in volumes, and a volume is a ring: it gives up its oldest minutes when it is full, whatever they
+# are. Ten minutes of camera 7 last Tuesday that are evidence go with the rest (the platform review, blocker
+# 10; feedback BH). A keep says so: camera, interval, a note, who set it. While the row stands —
 #
-#   retention by days     skips the segments and the event buckets that overlap it
-#   the watermark         cuts everything else first (`vms/space.py`)
+#   the footage    is COPIED into an incidents volume by the recorder that holds it (`RecWorker.keep_pass`),
+#                  out of whichever recorder's door has it, and stays there after the recording's own ring has
+#                  moved on. What was copied is an event with its sha256 (`archive.keep.copied`)
+#   the events     retention skips the camera's event buckets that overlap it (`vms/resource.kept_buckets`)
 #
-# …and that is all it promises. It is NOT "never deleted". A disk is a ring: when it is full and everything
-# that is not kept is already on the floor, the oldest KEPT footage goes, oldest first — counted, logged and
-# written into the deletions journal under its own reason. The alternative is a recorder that stops
-# recording today to protect last month, and nobody chose that. Evidence that has to outlive the disk is
-# exported; a keep buys the time to do it.
+# …and that is all it promises. It is NOT "never deleted": the incidents volume is a ring too, only one that
+# nothing but keeps writes into. When it is full the oldest kept footage goes — and that is an alarm,
+# `archive.keep.lost`, not a quiet cut. Evidence that has to outlive the volume is exported; a keep buys the
+# time to do it.
 #
-# The product keeps the same table and the same fields, and carries the footage out to a separate archive
-# instead of holding it in place: its archive is a ring that cannot spare a range. Ours is a directory with
-# a manifest, and can.
+# The product keeps the same table and the same fields, and carries the footage out to a separate archive the
+# same way: its archive is a ring that cannot spare a range, and so is ours now.
 #
-# THE RECORDINGS ARE WRITTEN INTO THE ROW. An archive knows footage by the recording's name (`7`, `7-cloud`),
+# THE RECORDINGS ARE WRITTEN INTO THE ROW. A volume knows footage by the recording's name (`7`, `7-cloud`),
 # not by the camera; the recording's row says whose it is. Delete the recording and the row is gone — and
-# with it the only thing that tied the tree to the camera. So the keep remembers the names it found when it
+# with it the only thing that tied the streams to the camera. So the keep remembers the names it found when it
 # was set, and also matches any recording whose row names the camera now.
 # ================================================================================================
 import json
@@ -33,7 +33,7 @@ from w2cplatform.spec import Refused
 SUB = "rec"
 TABLE = "keeps"
 # The interval is `from` / `to` in the row and at the door — the names every archive door already uses
-# (`/timeline`, `/segment`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
+# (`/timeline`, `/samples`, `/export`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
 # on a recording already means something else: how long a recording made on request goes on.
 FIELDS = ("cam", "from", "to", "note")
 MAX_NOTE = 500

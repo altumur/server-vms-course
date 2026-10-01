@@ -20,9 +20,10 @@
 # Kept as long as alarms are (`resource.retention_days`): the record of who deleted a camera is wanted for as
 # long as that camera's alarms are.
 #
-# What is NOT here: every segment a policy takes off an archive. That is `deletions.jsonl` beside the footage
-# (М10B Lesson 18) — a resource removes segments by the thousand, and a line each in the event log would be
-# the noise the journal exists to be read through.
+# What is NOT here: footage a ring overwrote. A volume gives up its oldest minutes by itself, by the thousand,
+# and a line each would be the noise the journal exists to be read through. What a person needs to hear about
+# — kept footage the incidents ring took, a recording shallower than it was promised — is an ALARM in the
+# recorder's own events (`archive.keep.lost`, `archive.shallow`).
 #
 # What a line is ABOUT is in `of` (a subsystem) and `target` (a unit). Not `subsystem` and `unit`: those are
 # the line's own — `audit`, and the role that wrote it — and a field of the same name would answer for them

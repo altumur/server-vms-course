@@ -8,11 +8,10 @@ recording until its end, instead of calling the job done on the footage that hap
 import inspect
 
 from w2cplatform.spec import SpecController
-from vms.archive import Manifest, Segment
 from vms.config import DET_SPEC, DETJOB_SPEC, REC_SPEC
 from vms.detjobworker import DetJobWorker
 from vms.jobs import detect_on_request, expire
-from tests.conftest import Box
+from tests.conftest import Box, door, footage, store
 
 
 def _ctl(box, spec):
@@ -135,11 +134,22 @@ class Every:
     def close(self): pass
 
 
-SEG = 300.0
+LAG = 300.0                  # how far behind the visible footage runs: a block's worth, at this bitrate
+
+
+def _recorded():
+    """A box with a recorder's archive door over a volume: where the follower reads what is recorded."""
+    box = Box()
+    box.st = store()
+    box.door = door(box, box.st)
+    return box
 
 
 def _footage(box, a, b, epoch=1):
-    Manifest(box.archive, "7").append(Segment("7", epoch, a, b, f"rec/7/e{epoch}/{int(a)}.mp4", 1000))
+    """Footage of recording 7, `[a, b)`, visible — a block that closed. The door's heartbeat said again: the
+    clock moved."""
+    footage(box.st, "7", epoch, a, b, step=10)
+    box.door.announce()
 
 
 def _follower(box, frm, to):
@@ -148,7 +158,7 @@ def _follower(box, frm, to):
     box.vars.put(DETJOB_SPEC.sub.assignment("j-1"), {"units": "7-lpr-f", "rev": 1}, cas=0)
     return DetJobWorker("j-1", box.vars.as_writer("detjobworker", DETJOB_SPEC.sub.acl_worker()), box.objects,
                         models={"lpr": Every}, clock=box.clock, wall=box.wall, server="srv-1",
-                        archive_root=box.archive, env={"LABELS": "gpu", "SEGMENT_SECONDS": str(SEG)}, step=60.0)
+                        archive_root=box.archive, env={"LABELS": "gpu", "VISIBLE_LAG_SECONDS": str(LAG)}, step=60.0)
 
 
 def _phase(w):
@@ -156,34 +166,37 @@ def _phase(w):
 
 
 def test_a_scan_into_the_future_follows_the_recording_and_ends_when_the_footage_does():
-    """Created at W for [W−600, W+300): ten minutes are on the disk, five are not yet. It scans what there is,
-    FOLLOWS, scans the segment that brings its end, and only then is done."""
-    box = Box(); W = box.wall()
+    """Created at W for [W−600, W+300): ten minutes are visible, five are not yet. It scans what there is,
+    FOLLOWS, scans the block that brings its end, and only then is done — and the ten minutes it scanned are
+    not scanned again when the span they were part of grows."""
+    box = _recorded(); W = box.wall()
     _footage(box, W - 600, W - 300); _footage(box, W - 300, W)
     w = _follower(box, W - 600, W + 300)
     w.reconcile_once()
     assert _phase(w) == "following" and w.status_by_unit["7-lpr-f"]["done_through"] == W
+    events = w.status_by_unit["7-lpr-f"]["events"]
     box.wall.advance(320); _footage(box, W, W + 300)
     w.reconcile_once()
     assert _phase(w) == "running" and w.status_by_unit["7-lpr-f"]["done_through"] == W + 300
+    assert w.status_by_unit["7-lpr-f"]["events"] == events + 5          # the new five minutes, a look a minute — and nothing twice
     w.reconcile_once()                                                  # as any job: done on the pass after its last stretch
     assert _phase(w) == "done"
 
 
 def test_an_interval_entirely_in_the_future_follows_and_does_not_wait_for_another_server():
-    box = Box(); W = box.wall()
+    box = _recorded(); W = box.wall()
     w = _follower(box, W + 60, W + 120)
     w.reconcile_once()
     assert _phase(w) == "following" and "following the recording" in w.status_by_unit["7-lpr-f"]["why"]
 
 
 def test_a_recording_that_stopped_does_not_keep_a_follower_for_ever():
-    """The camera went dark at W. Two segments after the end, what there is is the answer."""
-    box = Box(); W = box.wall()
+    """The camera went dark at W. Two lags after the end, what there is is the answer."""
+    box = _recorded(); W = box.wall()
     _footage(box, W - 300, W)
     w = _follower(box, W - 300, W + 300)
     w.reconcile_once()
     assert _phase(w) == "following"
-    box.wall.advance(300 + 2 * SEG + 1)
+    box.wall.advance(300 + 2 * LAG + 1); box.door.announce()
     w.reconcile_once()
     assert _phase(w) == "done" and w.status_by_unit["7-lpr-f"]["covered"] == 300.0

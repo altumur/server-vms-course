@@ -13,12 +13,11 @@ import urllib.request
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
 from w2cplatform.resource import resources_seen, serve as serve_resource
 from w2cplatform.spec import SpecController
-from vms.archive import ArchiveResource
 from vms.config import DET_SPEC, LIVE_SPEC, SPEC
 from vms.console import serve
 from vms.controller import VmsController
 from vms.detworker import DetWorker
-from vms.resource import vms_resource, vms_routes
+from vms.resource import vms_resource
 from vms.worker import FakeActuator, VmsWorker
 from tests.conftest import Box
 
@@ -43,8 +42,8 @@ def _console_over(box, db, per_minute: float = 0.0):
 def _resource_process(box):
     """What `python3 -m vms resource` does: the platform's Resource with the VMS registered,
     served over HTTP, heartbeating so the console can find it, its index over the tree."""
-    res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "", box.vars, box.objects, wall=box.wall)
-    rsrv = serve_resource(res, "127.0.0.1", 0, extra=vms_routes(ArchiveResource(box.spool, box.archive, wall=box.wall)))
+    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
+    rsrv = serve_resource(res, "127.0.0.1", 0)
     res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"
     res.heartbeat()
     return res, rsrv
@@ -60,7 +59,7 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
     w.heartbeat_once(); con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     res, rsrv = _resource_process(box)
     assert list(resources_seen(box.objects)) == ["srv-1"]                                  # the console finds the resource by its heartbeat
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall,
+    srv = serve(con, box.archive, port=0, wall=box.wall,
                 mounts={"det": SpecController(DET_SPEC, con_vars, box.objects, wall=box.wall)})   # no database here: the default MergedIndex asks srv-1
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
@@ -108,7 +107,7 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     box = Box(); t = box.wall() - 3 * 86400
     event_log(box.archive, 7, 1).append(t + 10, "motion", zone="gate")                  # three days old: past a 1-day policy
     event_log(box.archive, 7, 1).append(box.wall() - 100, "motion")                      # fresh
-    res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
     res.heartbeat()
     assert res.index.listing() == {"units": 1, "buckets": 2, "mirrored": [], "cached": 0} and res.index.state == "live"
     again = EventIndex(box.archive, "srv-1", wall=box.wall)
@@ -238,7 +237,7 @@ def test_the_operators_timeline_can_ask_for_its_own_window():
     _events(box, 10)
     res, rsrv = _resource_process(box)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         st, rep = call(base, "GET", "/events?from=0&to=1e12&limit=3")
@@ -501,7 +500,7 @@ def test_the_timeline_endpoint_hands_the_page_counts_and_says_why():
         log.append(t + i * 0.5, "stats", n=i)
     res, rsrv = _resource_process(box)
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     try:
         st, rep = call(base, "GET", f"/events?from={t}&to={t + 60}")
@@ -537,7 +536,7 @@ def test_the_consoles_records_outlive_what_they_refer_to():
     mark = marks.append(old, "mark", user="anna", note="checked")  # …and the record written the same day
     box.vars.put("vms/retention/7", {"days": "730"})
 
-    res = vms_resource(ArchiveResource(box.spool, box.archive, wall=box.wall), "srv-1", "", box.vars, box.objects, wall=box.wall)
+    res = vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall)
     assert res.retain() == 0                                       # neither is old enough yet
     assert os.path.exists(mark)
 

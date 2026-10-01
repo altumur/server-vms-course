@@ -5,10 +5,10 @@ and it is all of this:
                 JSON lines {t, kind, ...}, for a span of `bucket_seconds` starting at <start>
     its writer  the worker that holds that unit's epoch — one writer per file, by construction
     its fence   the epoch in the path: a stale instance writes into its own bucket, marked afterwards
-    its index   the manifest beside the unit's buckets, and (М11) a cluster-wide cache over every resource
+    its index   the resource's own over its tree (`eventdatabase.py`), and (М11) a cluster-wide cache over every resource
 
-Nothing here knows what a unit is. The VMS's unit has footage and its
-bucket sits beside it; a detector's unit is a model; a gateway's
+Nothing here knows what a unit is. The VMS's recording has footage — in a
+volume of its own — and its bucket is here; a detector's unit is a model; a gateway's
 unit is a fan-out. The word "event" means only: something a worker
 observed at a time, about a unit it holds.
 """
@@ -22,8 +22,7 @@ observed at a time, about a unit it holds.
 # root>/<subsystem>/<unit>/e<epoch>/<start>Z.events.jsonl`, holding JSON lines `{t, kind, ...}` for a span
 # of `bucket_seconds` starting at `<start>`; its writer is the worker holding that unit's epoch (one writer
 # per file by construction); its fence is the epoch in the path (a stale instance writes into its own
-# bucket, which is marked afterwards); its index is the manifest beside the unit's buckets (the VMS's, in
-# `vms/archive.py`) and `eventdatabase.py` on each resource. `resource.py` walks these paths for retention
+# bucket, which is marked afterwards); its index is `eventdatabase.py` on each resource, over its own tree. `resource.py` walks these paths for retention
 # and mirroring; `console.py` uses `EventLog` for operator marks under `console/<instance>/`; the VMS worker
 # uses it per camera. Nothing here knows what a unit is.
 #
@@ -80,8 +79,8 @@ def bucket_path(root: str, subsystem: str, unit: str, epoch: int, start: float) 
 
 
 # The inverse of `bucket_path`: relative to `root`, exactly four components, third matching `EPOCH_DIR`,
-# fourth matching `EVENTS`; the start is parsed back to a UTC timestamp. Anything else (a media file, a
-# manifest, a tmp file) is `None`, which is how the walkers below ignore whatever a subsystem keeps beside
+# fourth matching `EVENTS`; the start is parsed back to a UTC timestamp. Anything else (a scan's progress, a
+# tmp file) is `None`, which is how the walkers below ignore whatever a subsystem keeps beside
 # its buckets.
 def parse_bucket(path: str, root: str) -> tuple[str, str, int, float] | None:
     """-> (subsystem, unit, epoch, start) for a bucket path under root, else None."""

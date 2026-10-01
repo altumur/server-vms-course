@@ -164,19 +164,35 @@ class Entry:
         return dict(self.__dict__)
 
 
+# What is not sent a second time after the connection broke with the request already out: the daemon may have
+# done it, and done twice it is not the same thing (`Session.call`).
+NOT_RESENT = frozenset({"PUT_MEDIA", "FINISH_MEDIA", "VOLUME_FORMAT", "VOLUME_MOUNT_RW", "WRITER_CLOSE", "WRITER_RESIZE"})
+
+
 class Session:
     """One session with the daemon, over one connection. Thread-safe: one request at a time on the wire.
 
     A connection that breaks is opened again under the SAME session token — the daemon keeps a session whose
     connection is gone for `OBSD_SESSION_LINGER_MS`, handles and writers included — and the request is sent
     once more. A daemon that does not answer at all is `Unavailable`, which a recorder treats as "the engine
-    is lost": remount, at once (feedback CF)."""
+    is lost": remount, at once (feedback CF).
+
+    A daemon that takes the request and says nothing is `Unavailable` too, after `timeout` — and is NOT asked
+    again: a broken connection is a reason to resend, a silence is not, and asking twice would double the wait
+    of whoever is waiting. A caller that renews leases keeps `timeout` shorter than a lease; the one request the
+    protocol allows to take long — `WRITER_CLOSE`, after its flush — waits `long_timeout`.
+
+    And a request that was SENT before the connection broke is resent only if sending it twice is harmless. A
+    sample, a finish, a format or a mount may have been done by the daemon before the break; done twice, it is
+    a frame written twice or a volume formatted twice. Those raise `Unavailable` instead, and the caller decides."""
 
     def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
-                 timeout: float = 35.0, log_level: str = "warning"):
+                 timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
         self.path, self.client, self.timeout, self.log_level = path or default_socket(), client, timeout, log_level
+        self.long_timeout = max(long_timeout, timeout)
         self.token = token or f"{client}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
         self._sock: socket.socket | None = None
+        self._sent: str | None = None                # the op whose request went out on this attempt
         self._lock = threading.Lock()
         self._id = 0
         self.server: dict = {}
@@ -209,6 +225,7 @@ class Session:
         j = json.dumps(js or {}).encode() if js is not None else b""
         body = HEADER.pack(rid, OP[op], 0, 0, len(j)) + j + tail
         self._sock.sendall(struct.pack("<I", len(body)) + body)
+        self._sent = op
         while True:
             (n,) = struct.unpack("<I", self._recv(4))
             frame = self._recv(n)
@@ -220,18 +237,23 @@ class Session:
                 raise ObsdError(status, op, str(reply.get("detail", "")))
             return reply, frame[HEADER.size + jl:]
 
-    def call(self, op: str, js: dict | None = None, tail: bytes = b"") -> tuple[dict, bytes]:
+    def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False) -> tuple[dict, bytes]:
         with self._lock:
             for attempt in (0, 1):
+                self._sent = None
                 try:
                     if self._sock is None:
                         self._connect()
+                    self._sock.settimeout(self.long_timeout if long else self.timeout)
                     return self._exchange(op, js, tail)
                 except ObsdError:
                     raise
+                except socket.timeout:
+                    self._drop()
+                    raise Unavailable(op, f"no answer in {self.long_timeout if long else self.timeout:g} s") from None
                 except (OSError, ConnectionError) as e:
                     self._drop()
-                    if attempt:
+                    if attempt or (self._sent == op and op in NOT_RESENT):
                         raise Unavailable(op, str(e)) from None
         raise AssertionError("unreachable")
 
@@ -350,7 +372,7 @@ class Writer:
 
     def close(self) -> None:
         """After the flush — up to 30 s. What was written becomes readable: the last block is closed."""
-        self.session.call("WRITER_CLOSE", {"writer": self.handle})
+        self.session.call("WRITER_CLOSE", {"writer": self.handle}, long=True)
 
 
 @dataclass

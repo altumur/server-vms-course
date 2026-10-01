@@ -1,9 +1,8 @@
 """Is the writer writing — what the recorder handed its sink, against what reached the volume.
 
-The pipeline's watchdog (Lesson 10) sees frames ARRIVE. What happened to them after the sink, nothing in the
-course checked, and on the course's file archive nothing needed to: a file is written or the write fails.
-A real store has a queue and a policy of its own, and between "taken" and "on the volume" anything can
-happen. The product lost fifteen and twenty-seven minutes of recording that way, with every sign saying
+The pipeline's watchdog (Lesson 10) sees frames ARRIVE. What happened to them after the sink, nothing checked.
+The engine has a queue and a policy of its own — a sequence it lost, a group of pictures it cut — and between
+"taken" and "on the volume" anything can happen. The product lost fifteen and twenty-seven minutes of recording that way, with every sign saying
 "writing": the row running, the sink's counters growing, the heartbeat fresh (feedback, point U).
 
 So the recorder compares two numbers it can see — bytes OFFERED to the writer, bytes LANDED on the volume —
@@ -22,7 +21,7 @@ lost. The heartbeat goes on telling the truth either way.
 """
 from __future__ import annotations
 
-BLOCK = 1 << 20          # a volume block; "a few" of them outstanding is what stuck needs before it is said
+BLOCK = 1 << 20          # a megabyte — the unit "a few outstanding" is counted in before stuck is said (not the engine's block)
 STUCK_BLOCKS = 3
 STUCK_AFTER = 60.0       # seconds the volume may stand still with that much outstanding
 WINDOW = 300.0           # the window "losing" is measured over

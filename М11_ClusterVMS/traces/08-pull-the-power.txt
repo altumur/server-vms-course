@@ -102,8 +102,8 @@ GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
       "started": 1757500000.0,
       "previous_hb": 0.0,
       "previous_instance": "",
-      "archive": "/data/archive",
       "devices": [],
+      "archive": "/data/archive",
       "fetched": "",
       "schema": 1,
       "build": "dev"
@@ -273,8 +273,8 @@ PUT /v1/var/objects/vms/heartbeats/w-1?namespace=default
       "started": 1757500048.0,
       "previous_hb": 1757500000.0,
       "previous_instance": "alloc-A",
-      "archive": "/data/archive",
       "devices": [],
+      "archive": "/data/archive",
       "fetched": "",
       "schema": 1,
       "build": "dev"

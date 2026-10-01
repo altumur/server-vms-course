@@ -13,7 +13,6 @@ from w2cplatform.events import EventLog
 from w2cplatform.resource import Resource, retention_days
 from w2cplatform.spec import SpecController
 from vms import volumes
-from vms.archive import ArchiveResource
 from vms.config import REC_SPEC, SPEC
 from vms.console import serve
 from vms.controller import VmsController
@@ -33,7 +32,7 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     cam = ctl.create_camera({"source": "driverpack://file/1.mp4"})["id"]
     rec.create({"name": "1", "cam": "1"})
-    srv = serve(ctl, ArchiveResource(box.spool, box.archive, wall=box.wall), port=0, wall=box.wall, mounts={"rec": rec})
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
     base = f"http://127.0.0.1:{srv.server_address[1]}"
 
     def call(method, path, body=None, user="anna"):

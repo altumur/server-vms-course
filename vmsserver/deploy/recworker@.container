@@ -2,9 +2,9 @@
 # subsystem's worker and the only one placed on top of the archive.
 # `systemctl start recworker@r-1` — the instance name is the slot it claims.
 # It holds no camera: it subscribes to the fan-out of whichever worker does
-# (live_url from the VMS heartbeat) and writes footage into rec/<cam>/e<epoch>/
-# on this box's archive. In М11 this unit becomes recworker.nomad.hcl, a job
-# constrained to meta.archive, one per server by policy.
+# (live_url from the VMS heartbeat) and writes footage into the volume it holds,
+# as the stream <recording>/e<epoch>, through the host's obsd (obsd.service).
+# In М11 this unit becomes recworker.nomad.hcl, beside the obsd system job.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
@@ -12,11 +12,12 @@
 #
 # **Role.** The Quadlet unit for the `rec` subsystem's worker. `python3 -m vms recorder`: `RecWorker` claims
 # the slot `%i`, reads `rec/workers/<r>` and the recording rows it names, subscribes each to the camera's
-# `live_url`, takes `rec/epoch/<cam>`, and records with `GstRecActuator` (`rtspsrc ! archivesink`) into the
-# spool, promoting closed segments into the archive on every pass. The mounts are the recorder's: the spool
-# and the archive read-write — it is the ONLY writer of segments — the platform's stores read-write for its
-# slot, epochs and heartbeat; no media directory (it never reads a camera). Checked by
-# `tests/test_deploy_units.py`.
+# `live_url`, takes `rec/epoch/<cam>`, and records with `GstRecActuator` (`rtspsrc ! … ! appsink`): every
+# access unit a sample into the volume's writer, through the daemon's socket in /run/vms. The mounts are the
+# recorder's: /run/vms (the daemon's socket, and the workers' shared memory), the archive read-write for its
+# own events (`rec/<recording>/…`); the box's own volume, `/data/volume` beside it, is opened by the DAEMON on
+# the host and needs no mount here; the platform's stores read-write for its slot, epochs, holds and
+# heartbeat; no media directory (it never reads a camera). Checked by `tests/test_deploy_units.py`.
 #
 # ## Notes
 # - `CAPACITY` is recordings this box's disks and NIC can take: the recorder's own number, exported as
@@ -26,7 +27,8 @@
 # ================================================================================================
 [Unit]
 Description=VMS recorder %i — the recordings of its assignment, into this box's archive
-After=network.target
+After=network.target obsd.service
+Wants=obsd.service
 
 [Container]
 Image=localhost/vmsserver:latest
@@ -45,23 +47,24 @@ Environment=RECORDER_NAME=%i
 #   in one pass instead of one deploy. Start one per box: `systemctl start recworker@spare-1`.
 # - With nothing declared at all, an unpinned instance is the server's own name, exactly as before any of
 #   this existed.
-# `PLATFORM_DIR`, `SPOOL`, `ARCHIVE`, `CAPACITY`, `SEGMENT_SECONDS`, `LOG_LEVEL`. One file for the box: on
-# a box with several disks the per-instance `ARCHIVE` (`/data/archive/vol-a`) comes from a drop-in,
-# `/etc/containers/systemd/recworker@vol-a.container.d/`, which is what drop-ins are for.
+# `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY`, `LOG_LEVEL`, and the archive's own: `ARCHIVE_QUOTA_BYTES` (the size
+# of the box's own volume when it is first formatted; unset: four fifths of what is free) and `OBSD_TIMEOUT`.
+# A disk declared as a volume is a path on the host, opened by the daemon: nothing to mount here for it.
 EnvironmentFile=/data/config/vms.env
-# read-write: `rec/epoch/*`, `rec/slots/*` (its token) and its heartbeat object.
+# read-write: `rec/epoch/*`, `rec/slots/*`, `rec/holds/*` (its token) and its heartbeat object.
 Volume=/data/platform:/data/platform:z
-# where `archivesink` writes segments; `closed_in_spool` reads it at start and on every pass.
-Volume=/data/spool:/data/spool:z
-# read-write: the recorder is the only writer of segments (promote) and manifests, under `rec/`.
+# read-write: its events (`archive.shallow`, `archive.keep.*`) under `rec/`, on this server's resource. Footage
+# is not here: the box's own volume is `/data/volume`, which only the host's daemon opens.
 Volume=/data/archive:/data/archive:z
-# the workers' shared-memory branches on this box (`live_shm`): the recorder reads a camera held HERE from
-# its worker's tee with `shmsrc`; a camera held elsewhere it reads over RTSP. A tmpfs of sockets, not state.
+# a tmpfs of sockets, not state: the daemon's (`obsd.sock`), and the workers' shared-memory branches
+# (`live_shm`) — the recorder reads a camera held HERE from its worker's tee with `shmsrc`; one held elsewhere
+# over RTSP.
 Volume=/run/vms:/run/vms:z
 # host network: it subscribes to workers' RTSP fan-outs on other servers.
 Network=host
-# SIGTERM finalizes the open segment: archivesink closes it and the last pass promotes it.
-StopTimeout=20
+# SIGTERM: the pipelines stop, then the writer is closed — after its flush, up to thirty seconds by the
+# protocol — and only then is the hold let go (`RecWorker.after_stop`).
+StopTimeout=40
 
 [Service]
 Restart=always

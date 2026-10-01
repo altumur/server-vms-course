@@ -296,12 +296,11 @@ def test_a_record_request_the_recorder_sees_is_not_its_to_serve():
     """One family, two kinds of asking. A backfill names a RANGE and the worker
     fetches it; `record` names a DURATION and is nobody's to fetch. Before the
     skip, the recorder tripped over `it["from"]` every pass."""
-    from vms.archive import ArchiveResource
-    from vms.recworker import RecWorker
+    from tests.conftest import recorder
 
     box = Box()
-    r = RecWorker("r-1", box.vars, box.objects, archive=ArchiveResource(box.spool, box.archive, wall=box.wall),
-                  clock=box.clock, wall=box.wall, server="srv-a", env={})
+    r = recorder(box, "r-1", "srv-a", acl=False)
+    r.lease_pass()
     box.vars.put("rec/requests/x", {"action": "record", "cam": "7", "minutes": "10", "unit": "7"})
     assert r.requests() == [] and r.fetched == []             # not served, and not tripped over either
 

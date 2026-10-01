@@ -155,9 +155,10 @@ def test_the_console_over_http():
     con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)   # what the console process holds
     w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
     w.heartbeat_once()
-    from vms.archive import ArchiveResource
     from w2cplatform.events import read_bucket, subsystems_under
-    srv = serve(con, ArchiveResource(box.spool, box.archive), port=0, wall=box.wall); port = srv.server_address[1]
+    from tests.conftest import door, footage, store
+    srv = serve(con, box.archive, port=0, wall=box.wall); port = srv.server_address[1]
+    rec_door = None
     try:
         req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=json.dumps({"name": "gate", "source": "driverpack://file/gate.mp4"}).encode(),
                                      method="POST", headers={"Idempotency-Key": "k1"})
@@ -193,22 +194,21 @@ def test_the_console_over_http():
         assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
         assert ev == [{"t": box.wall(), "kind": "mark", "cam": 1, "user": "murat", "note": "left the bag"}]
         assert subsystems_under(box.archive) == {"console": [m["unit"]]}                          # not in vms/1/: that bucket has one writer
-        # the page, and the bytes it plays: three fetches and a Range
+        # the page, and what it plays: the timeline from the recorders' doors, and an interval of it as an MP4
         page = urllib.request.urlopen(f"http://127.0.0.1:{port}/").read().decode()
-        assert "/spec" in page and "/timeline/" in page and "/segment/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
-        from datetime import datetime, timezone
-        from vms.archive import segment_path
-        seg = segment_path(box.spool, 1, 1, datetime(2026, 9, 12, 10, 0, tzinfo=timezone.utc)); os.makedirs(os.path.dirname(seg), exist_ok=True)
-        open(seg, "wb").write(bytes(range(256))); ArchiveResource(box.spool, box.archive).promote(seg)
+        assert "/spec" in page and "/timeline/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
+        st = store()
+        t = box.wall() - 3600
+        footage(st, "1", 1, t, t + 600)
+        rec_door = door(box, st)                                                                 # a recorder serving its volume
         tl = json.load(urllib.request.urlopen(f"http://127.0.0.1:{port}/timeline/1"))
-        assert len(tl) == 1 and tl[0]["media"] == "rec/1/e1/20260912T100000Z.mp4"
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/segment/{tl[0]['media']}", headers={"Range": "bytes=10-19"})
-        with urllib.request.urlopen(req) as r:
-            assert r.status == 206 and r.read() == bytes(range(10, 20)) and r.headers["Content-Range"] == "bytes 10-19/256"
+        assert [(s["start"], s["end"], s["media"]) for s in tl] == [(t, t + 600, "/export/1?rec=1")]
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}{tl[0]['media']}&from={t + 60}&to={t + 120}") as r:
+            assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and r.read()[4:8] == b"ftyp"
         try:
-            urllib.request.urlopen(f"http://127.0.0.1:{port}/segment/vms/1/e1/nope.mp4"); raise AssertionError()
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/export/1?rec=1&from={t - 900}&to={t - 600}"); raise AssertionError()
         except urllib.error.HTTPError as e:
-            assert e.code == 404
+            assert e.code == 404                                                                 # nothing recorded there
         # the page's writes: disable, then delete — through the controller, refused where the controller refuses
         req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras/1", data=b'{"enabled": false}', method="PUT", headers={"Idempotency-Key": "k4"})
         assert json.load(urllib.request.urlopen(req))["enabled"] is False and ctl.camera(1)["revision"] == 2
@@ -221,6 +221,8 @@ def test_the_console_over_http():
             assert e.code == 404                                                                   # gone is gone
     finally:
         srv.shutdown(); srv.server_close()
+        if rec_door is not None:
+            rec_door.shutdown()
 
 
 def test_a_retry_that_lands_on_another_console_is_one_camera():

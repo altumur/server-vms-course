@@ -161,3 +161,58 @@ def test_two_writers_epochs_are_two_streams_in_one_volume():
     assert sorted(r.streams()) == ["7/e1", "7/e2"]
     assert _spans(r, "7/e1") == [(0, 2)] and _spans(r, "7/e2") == [(1, 3)]  # the minutes both held: two streams, both kept
     s.bye()
+
+
+def test_a_recording_a_month_deep_is_answered_whole():
+    """Seen, and not in the protocol's README: `READER_TIMELINE` over six days of footage or more is sometimes
+    answered `INTERNAL_ERROR` — the same question refused by one daemon and answered by the next. A recording is
+    a month deep, so `Archive` asks five days at a time, halves a window refused anyway, and puts the intervals
+    back together (`Archive._timeline`)."""
+    from tests.conftest import footage, store
+    now = 1_757_500_000.0
+    st = store()
+    footage(st, "7", 1, now - 30 * 86400, now - 15 * 86400 - 3600, step=3600, seal=False)
+    footage(st, "7", 1, now - 15 * 86400, now, step=600)
+    assert st.coverage("7") == [(now - 30 * 86400, now - 15 * 86400 - 3600), (now - 15 * 86400, now)]
+    assert round(st.depth_days("7", now), 3) == 30.0
+    assert [(s.start, s.end) for s in st.spans("7", now - 2 * 86400, now - 86400)][0][1] == now   # a window inside a span
+
+
+def test_a_new_quota_resizes_the_ring_without_stopping_the_writer():
+    """A quota is the size of the ring, and a new one is applied at once (`WRITER_RESIZE`): the writer goes on,
+    and what was written stays readable."""
+    from tests.conftest import footage, store
+    st = store(quota=64 << 20)
+    t = 1_757_500_000.0
+    footage(st, "7", 1, t - 600, t, step=10, seal=False)
+    st.resize(128 << 20)
+    assert st.quota == 128 << 20 and st.writer is not None
+    footage(st, "7", 1, t, t + 600, step=10)
+    assert st.coverage("7") == [(t - 600, t + 600)]
+
+
+def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
+    """The daemon may have taken the sample before the connection broke; sent again it is a frame twice. So
+    `PUT_MEDIA` and its kin are not resent — the caller hears `Unavailable` and decides — while a request that
+    never went out (the break came on connecting) is simply tried once more."""
+    import socket
+    from w2cplatform.obsd import NOT_RESENT, Session, Unavailable
+    from tests.conftest import ObsdDaemon
+    s = Session(ObsdDaemon.get().socket, client="t")
+    s.call("STATS")                                               # connected
+    assert "PUT_MEDIA" in NOT_RESENT and "WRITER_CLOSE" in NOT_RESENT and "STATS" not in NOT_RESENT
+    sent = []
+
+    class Breaks:                                                 # the request leaves; the answer never comes back
+        def __init__(self, inner): self.inner = inner
+        def sendall(self, data):
+            self.inner.sendall(data); sent.append(data); self.inner.shutdown(socket.SHUT_RDWR)
+        def __getattr__(self, name): return getattr(self.inner, name)
+    s._sock = Breaks(s._sock)
+    try:
+        s.call("PUT_MEDIA", None, b"\x00" * 10)
+        raise AssertionError("resent a sample the daemon may have taken")
+    except Unavailable:
+        pass
+    assert len(sent) == 1                                         # out once, never again
+    assert s.call("STATS")[0]                                     # a fresh connection: the session goes on

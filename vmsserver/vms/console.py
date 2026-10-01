@@ -1,48 +1,17 @@
 """The one-box console, standard library — the platform's SpecConsole run
-from the VMS spec, plus the two routes only a VMS has (the bytes):
+from the VMS spec, plus the routes only a VMS has (the footage):
 
-    GET  /timeline/<id>?from&to   segments from the archive resource's manifest, fenced ones marked
-    GET  /segment/<path>          the bytes of one promoted segment from this box's archive, Range honoured
+    GET  /timeline/<cam>?from&to          every recording of the camera, from every recorder's archive door,
+                                          fenced epochs marked; the device's own where ours has nothing
+    GET  /export/<cam>?rec&from&to        the frames of an interval as a fragmented MP4 — what the page plays
 
-Everything else — the page, /spec, /cameras, /where, /marks, /metrics, the
-POST/PUT/DELETE of a camera — is `w2cplatform.console.SpecConsole` reading
-`vms.subsystem.yaml`; nothing here knows what a camera's fields are. Its own
-process (`python3 -m vms console`), with its own token: the operator's rows —
-cameras, next_id, retention — and never placement.
+Footage is not on this box's disk to be served by path. It is in volumes of ObjectStorage, each written by the
+recorder that holds it, and every recorder serves its own (`archive_routes`, `vms/recworker.py`): the console
+asks them, the way it asks the resources for events. Everything else — the page, /spec, /cameras, /where,
+/marks, /metrics, the POST/PUT/DELETE of a camera — is `w2cplatform.console.SpecConsole` reading
+`vms.subsystem.yaml`; nothing here knows what a camera's fields are. Its own process (`python3 -m vms
+console`), with its own token: the operator's rows — cameras, next_id, retention — and never placement.
 """
-# ================================================================================================
-# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
-# ================================================================================================
-# # console.py — the one-box console: the platform's SpecConsole over the VMS spec, plus the two media
-# routes
-# only a VMS has
-#
-# **Role in the module.** Lesson 6. Everything an operator's console needs to list, create, edit and delete
-# cameras, show where they run, export metrics and take marks is `w2cplatform.console.SpecConsole` reading
-# `vms.subsystem.yaml` (see `w2cplatform/console.py`); nothing in this file knows what a camera's fields
-# are. What the VMS adds is the bytes: `GET /timeline/<id>?from&to` (segments and event buckets from this
-# box's archive manifest, fenced ones marked) and `GET /segment/<path>` (one promoted segment, `Range`
-# honoured, for the page's `<video>`). They are *registered* as the console's `extra` route function, not
-# subclassed. The console is its own process (`python3 -m vms console`, `deploy/console.container`) with
-# its own token — `vms/cameras/*`, `vms/next_id`, `vms/retention/*`, `vms/idem/*` — and never placement.
-# Depends on `archive.py` (`ArchiveResource`, `Manifest`) and `controller.py`.
-#
-# ## Module-level names
-# - `PAGE`, `send_file` — re-exported from `w2cplatform.console` (`noqa: F401`) for М11, which serves the
-#   same page and the same ranged file replies from a Nomad job.
-#
-# ## Notes
-# - `test_the_console_over_http` walks the whole surface through this `serve`: an idempotent POST is one
-#   camera; the console's `VmsController` cannot `place` (its token); `PUT {"worker": "w-9"}` is 400;
-#   `/cameras` shows `phase running`, `server srv-1`; `/where/1` agrees with the assignments; `/spec` says
-#   `rows cameras, media true`; `/metrics` has `vms_cameras_running 1`; a mark lands in
-#   `console/<unit>/e1/…` and `subsystems_under(archive)` shows only `console` — never `vms/1/`, whose
-#   bucket has one writer; the page never says "camera" outside its HTML comment; then `/timeline/1`, a
-#   ranged `/segment/`, a 404, a PUT that bumps `revision` to 2, and a DELETE whose placement waits for
-#   `unplace_deleted`.
-# - The archive mount in `console.container` is what lets `/segment/` serve bytes; `/data/spool` is
-#   mounted read-only there because the console reads and never records.
-# ================================================================================================
 from __future__ import annotations
 
 import os
@@ -58,7 +27,6 @@ import urllib.request
 from w2cplatform.access import token_of
 from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import slot_number
-from w2cplatform.doors import safe_rel
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
 
@@ -66,8 +34,11 @@ from . import keeps, volumes
 
 log = logging.getLogger("vms.console")
 READ_NOTE_EVERY = 60.0        # the same piece of archive, by the same person: one `archive.read` a minute
-from .archive import ArchiveResource, Manifest, subtract
+from .archive import subtract
 from .controller import VmsController
+
+EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
+DOOR_TIMEOUT = 5.0            # a recorder's door that does not answer in this is named, not waited for
 
 
 class LiveFront:
@@ -167,21 +138,15 @@ class LiveFront:
 
 
 # Builds the `extra(handler, method, path, q)` function `SpecConsole` calls for every request its built-in
-# routes do not claim. Returns `None` ("not ours") for anything but `GET`, or for any request when `archive`
-# is `None` (a console without a resource on its server — the second console in
-# `test_a_retry_that_lands_on_another_console_is_one_camera` is built that way). Otherwise:
+# routes do not claim. Returns `None` ("not ours") for anything it does not know, and for the footage when the
+# console has no media (`media=False`: a console that fronts no recorders). Otherwise:
 #
-# - `GET /segment/<rel>` — `rel` is joined under `archive.root`. If it contains `..` or is not a regular
-#   file the reply is `404 {detail, error: "no such segment"}`. Otherwise `send_file(handler, path,
-#   "video/mp4")` writes the reply itself (whole, or `206` with `Content-Range` when the request carried
-#   `Range`) and `extra` returns `()` — the console's signal that the reply was already served. The test
-#   asks `bytes=10-19` of a 256-byte segment and gets exactly those bytes with `Content-Range: bytes
-#   10-19/256`; a path that does not exist is 404.
-# - `GET /timeline/<id>?from&to` — `int` of the last path segment; `200` with `Manifest(archive.root,
-#   cid).timeline(from, to)` — `from` defaults to 0, `to` to `1e12`. Note `current_epoch` is not passed
-#   here, so on one box no span is marked `fenced` by this route; the `Manifest.timeline` fencing is
-#   exercised directly in `test_lesson3_archive.py`.
-# - anything else — `None`, so the console answers 404.
+# - `GET /timeline/<cam>?from&to` — every recording of the camera from every live recorder's archive door
+#   (`recorder_doors`), each span with `recording`, `recorder`, `volume`, `fenced` and `media` (the export to
+#   play it by); a door that did not answer makes the reply `{segments, unreachable, note}`.
+# - `GET /export/<cam>?rec&from&to` — the frames of the interval as one fragmented MP4, the reply written by
+#   this function itself (it returns `()`), and a line `archive.read` with the sha256 of what left.
+# - `GET /segment?cam=` — the DEVICE's own footage, through its holder's playback door.
 # The holder of a camera, resolved NOW — never written into a span when it was drawn. A camera that moved
 # between the drawing and the click would make a stored worker name a 404; resolving at request time costs
 # one heartbeat read and cannot go stale. The fourth consumer of the same move, after the recorder, the
@@ -220,10 +185,51 @@ def recordings_of(rec_ctl, cam) -> list[str]:
     return units or [str(cam)]                 # nothing declared: the camera's own name, so old footage still shows
 
 
-def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, ctl=None, rec_ctl=None):
-    """What the VMS adds to the generic console: the media — playback from the
-    archive we wrote and from the one we did not, and the WHEP door to the live
-    gateways. Returns None when a route is not ours, so the console answers 404."""
+# Every recorder that serves its archive, live: `[(name, url, heartbeat)]`. A recorder holds ONE volume and its
+# door answers for it — a camera recorded into two volumes, or one whose recording moved, is answered by two.
+def recorder_doors(objects, now: float, lost_after: float = 45.0) -> list:
+    out = []
+    for name, hb in sorted(heartbeats(objects, "rec/").items()):
+        url = str(hb.extra.get("archive_url") or "")
+        if url and now - hb.ts <= lost_after:
+            out.append((name, url.rstrip("/"), hb))
+    return out
+
+
+# The volumes nobody serves right now: a recorder went silent holding one, and no live recorder holds it since —
+# the server is down, its disk with it, or a network archive is waiting for a spare. Its footage is not LOST: it is
+# in that volume, and it is unavailable until a recorder holds the volume again. `[{volume, server, since}]`, from
+# the recorders' last heartbeats; the timeline names them instead of drawing a hole where they are (М11 lesson 6).
+def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict]:
+    live, stale = set(), {}
+    for name, hb in heartbeats(objects, "rec/").items():
+        vol = str(hb.extra.get("volume") or "")
+        if not vol:
+            continue                               # a spare holds nothing
+        if now - hb.ts <= lost_after:
+            live.add(vol)
+        elif vol not in stale or hb.ts > stale[vol]["since"]:
+            stale[vol] = {"volume": vol, "server": str(hb.extra.get("server", "")), "recorder": name, "since": hb.ts}
+    return [v for k, v in sorted(stale.items()) if k not in live]
+
+
+def _rec_epoch(ctl, unit) -> int | None:
+    from w2cplatform.epoch import current_epoch
+    try:
+        return current_epoch(ctl.vars, f"rec/epoch/{unit}") or None
+    except OSError:
+        return None                                # the store did not answer: the doors' own word stands
+
+
+def _door(url: str, timeout: float):
+    with urllib.request.urlopen(url, timeout=timeout) as r:
+        return r.read()
+
+
+def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_ctl=None):
+    """What the VMS adds to the generic console: the footage — from every recorder's archive and from the
+    device's own — and the WHEP door to the live gateways. Returns None when a route is not ours, so the
+    console answers 404."""
     ctl = ctl if ctl is not None else (live.ctl if live is not None else None)
     con_wall = (ctl.wall if ctl is not None else time.time)   # the catalogue needs "now" to know who is reachable
 
@@ -307,7 +313,7 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             return 202, {"queued": {"id": rid, **row},
                          "detail": "the worker holding this device performs it on its next pass; "
                                    "after valid_until it expires unperformed"}
-        if method == "POST" and path == "/backfill" and archive is not None:
+        if method == "POST" and path == "/backfill" and media:
             # This used to answer 202 and store nothing: the text below was true about what the recorder
             # WOULD do and false about anything having been asked. The request is a row now
             # (`rec/requests/<id>`), the recorder reads it, and the id is deterministic — a retried POST
@@ -332,37 +338,126 @@ def vms_routes(archive: ArchiveResource | None, live: LiveFront | None = None, c
             return 202, {"queued": {"id": rid, "unit": str(unit), "cam": cam, "from": t0, "to": t1},
                          "detail": "the recorder fetches it on its next pass — outside the budget and the window, "
                                    "because a person asked for it"}
-        if method != "GET" or archive is None:
+        if method != "GET" or not media:
             return None
         if (path == "/segment" or path == "/segment/") and ctl is not None:                 # the device's own footage, through its holder
             url = device_playback(ctl.objects, q.get("cam"), con_wall())
             if url is None:
                 return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
             return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
-        if path.startswith("/segment/"):
-            rel = path[len("/segment/"):]; p = os.path.join(archive.root, rel)
-            if not safe_rel(rel) or not os.path.isfile(p):   # `doors`: an absolute path used to read any file of the box
-                return 404, {"detail": "no such segment", "error": "no such segment"}
-            sent = send_file(handler, p, "video/mp4")
-            if sent["status"] != 416:                     # nothing left: nothing to say
-                note_read(handler, rel, sent)
-            return ()                                                     # served in full by send_file
         if path.startswith("/timeline/"):
-            cid = path.rsplit("/", 1)[1]                                      # a camera, as text: everything below compares as text
-            t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
-            ours = [sp for unit in recordings_of(rec_ctl, cid)                    # every recording of this camera…
-                    for sp in Manifest(archive.root, unit).timeline(t0, t1)]      # …merged into one timeline
-            extra = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
-            return 200, sorted(ours + extra,
-                               key=lambda d: (d["start"], d["epoch"]))
+            return timeline(path.rsplit("/", 1)[1], q)
+        if path.startswith("/export/"):
+            return export(handler, path.rsplit("/", 1)[1], q)
         return None
+
+    # A camera's timeline: every recording of it, from every recorder's door — each holds one volume, and what a
+    # recording wrote over its life may be in more than one. A door that does not answer is NAMED, not waited
+    # for: a timeline with a hole the page explains beats one that never comes. So is a volume nobody serves now
+    # (`unserved_volumes`): unavailable, not lost. Each span says whose it is and how to play it (`media`: the
+    # export of that recording; the page adds the minutes).
+    def timeline(cid: str, q: dict):
+        t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
+        ours, unreachable = [], []
+        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        for unit in recordings_of(rec_ctl, cid):
+            # Fenced against the RECORDING's epoch, which the store holds — a door knows only its own recorder's,
+            # and the zombie's stream may be in another volume than the survivor's. A copy (`e0`, a keep's) is
+            # nobody's writer and is never fenced.
+            cur = _rec_epoch(ctl, unit)
+            for name, url, hb in doors:
+                try:
+                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={min(t1, 1e11)}", DOOR_TIMEOUT))
+                except (OSError, ValueError):
+                    unreachable.append(name)
+                    continue
+                for sp in body.get("spans", []):
+                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < int(sp.get("epoch", 0)) < cur)
+                    ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
+                                 "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
+        extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
+        spans = sorted(ours + extra_, key=lambda d: (d["start"], d["epoch"]))
+        gone = unserved_volumes(ctl.objects, con_wall()) if ctl is not None else []
+        if unreachable or gone:
+            notes = []
+            if unreachable:
+                notes.append("a recorder's archive door did not answer: its footage is missing from this picture")
+            if gone:
+                notes.append("footage in " + ", ".join(f"{g['volume']} (on {g['server']})" for g in gone) +
+                             " is unavailable until a recorder holds it again — not lost")
+            return 200, {"segments": spans, "unreachable": sorted(set(unreachable)), "unavailable": gone,
+                         "note": "; ".join(notes)}
+        return 200, spans
+
+    # An interval as a fragmented MP4 (`fmp4.from_samples`): the frames from every door that holds them, each
+    # moment taken once — the first door's — and then, as everything that leaves through this console, a line
+    # `archive.read` with what was sent and its sha256: the answer to "is this the file you gave out".
+    def export(handler, cid: str, q: dict):
+        from .fmp4 import from_samples
+        try:
+            t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
+        except ValueError:
+            return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
+        if t1 <= t0 or t1 - t0 > EXPORT_MAX:
+            return 400, {"detail": f"an export is an interval of at most {EXPORT_MAX:.0f} s", "error": "bad range"}
+        # Each moment from the EPOCH that owns it, across every door — a door applies `authoritative` to the
+        # volume it holds, and a fenced writer's stream may be in another volume than the survivor's. So the doors'
+        # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
+        # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
+        # caller can see.
+        from w2cplatform.obsd import Sample
+        from .archive import Span, authoritative
+        units = [str(q["rec"])] if q.get("rec") else recordings_of(rec_ctl, cid)
+        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        got, unreachable = [], []
+        for unit in units:
+            spans, where = [], {}
+            for name, url, _ in doors:
+                try:
+                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT))
+                except (OSError, ValueError):
+                    unreachable.append(name)
+                    continue
+                for sp in body.get("spans", []):
+                    span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
+                                str(sp.get("source", "live")))
+                    spans.append(span)
+                    where.setdefault(span, url)
+            for span, lo, hi in authoritative(spans, t0, t1):
+                try:
+                    got += Sample.decode_all(_door(f"{where[span]}/samples/{unit}?from={lo}&to={hi}", 30.0))
+                except (OSError, ValueError):
+                    unreachable.append(next(n for n, u, _ in doors if u == where[span]))
+        frames, end = [], None
+        for smp in sorted(got, key=lambda s: s.begin):
+            if end is not None and smp.begin < end:
+                continue                                 # this moment came from another door already
+            if not frames and not smp.key:
+                continue
+            frames.append(smp)
+            end = smp.end
+        if not frames:
+            return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
+        try:
+            data = from_samples(frames)
+        except ValueError as e:
+            return 415, {"detail": str(e), "error": "not playable"}
+        handler.send_response(200)
+        handler.send_header("Content-Type", "video/mp4")
+        handler.send_header("Content-Length", str(len(data)))
+        if unreachable:
+            handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
+        handler.end_headers()
+        handler.wfile.write(data)
+        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
+        return ()
     return extra
 
 
-# `SpecConsole(ctl, marks_root=archive.root if archive else None, wall=wall, extra=vms_routes(archive),
-# media=archive is not None)`. With an archive: operator marks (`POST /marks`) go into the console's own
-# event log under `console/<hostname:pid>/e1/` on this server's resource, and `/spec` reports `media: true`
-# so the page draws a timeline and a player. Without one: no marks (503) and no media.
+# `SpecConsole(ctl, marks_root=archive_root, wall=wall, extra=vms_routes(media, …), media=media)`. With a
+# resource root on this server: operator marks (`POST /marks`) go into the console's own event log under
+# `console/<hostname:pid>/e1/` there. With media (the console fronts recorders): `/spec` reports `media: true`
+# so the page draws a timeline and a player.
 # What the `rec` mount adds to the generic console: the archives themselves. `GET /rec/volumes` is the
 # operator's answer to "where can this footage go, and is anybody writing there"; the POST and the DELETE
 # are the declaration. Three numbers ride along, and they are the point of the screen:
@@ -459,6 +554,11 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out += [f'rec_archive_away_seconds{{worker="{w}"}} '
             f'{round(now - float(hb.extra["archive_away_since"]), 1) if float(hb.extra.get("archive_away_since") or 0) else 0}'
             for w, hb in hbs]
+    # Why the volume stopped taking samples, by kind: `away` (the daemon, a network — waited for) or `wrong` (a
+    # person has to act — the volume is handed back). One line per recorder that has a failure, none otherwise.
+    out.append("# TYPE rec_archive_failure gauge")
+    out += [f'rec_archive_failure{{worker="{w}",kind="{hb.extra["archive_failure"]}"}} 1' for w, hb in hbs
+            if hb.extra.get("archive_failure")]
     out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
     out += [f'rec_writer{{worker="{w}",state="{(hb.extra.get("writer") or {}).get("state") or "ok"}"}} 1' for w, hb in hbs]
     # How long since each recording last took anything from its source (feedback BI; the review's
@@ -468,7 +568,7 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
             for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
-    # How far back each recording goes, and whether the watermark has cut inside the floor it was promised
+    # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")
     out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {st["depth_days"]}' for w, hb in hbs for st in hb.status if "depth_days" in st]
@@ -477,8 +577,6 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
     out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {st["unconfirmed_s"]}'
             for w, hb in hbs for st in hb.status if st.get("lease") == "unconfirmed"]
-    out.append("# TYPE rec_spool_segments gauge")                  # closed segments waiting to reach the archive
-    out += [f'rec_spool_segments{{worker="{w}"}} {hb.extra.get("spool", 0)}' for w, hb in hbs]
     return out
 
 
@@ -537,8 +635,9 @@ def rec_routes(rec_ctl: SpecController):
             journal.say(kind, user=(getattr(handler, "headers", None) or {}).get("X-User", "operator"), **fields)
 
     def extra(handler, method, path, q):
-        # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is —
-        # the resource that holds the footage reads it on its own pass, and nothing is sent anywhere.
+        # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is — the
+        # recorder holding an incidents volume copies what it names on its own pass, and the resource leaves the
+        # events it names in place.
         if method == "GET" and path in ("/keeps", "/keeps/"):
             # The list is what THIS caller may see (feedback CG): a keep says which camera, which minutes and why,
             # and lifting or checking one already asked by its camera — the list did not. A camera of another
@@ -566,8 +665,9 @@ def rec_routes(rec_ctl: SpecController):
                 return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
             keeps.delete(rec_ctl.vars, id_)
             said("archive.keep.lifted", handler, keep=id_)
-            return 200, {"deleted": id_, "detail": "the footage and the events are under their own retention again, "
-                                                   "from the next pass of the resource that holds them"}
+            return 200, {"deleted": id_, "detail": "the events are under their own retention again, from the resource's "
+                                                   "next pass; the copy in the incidents volume stays until its ring "
+                                                   "overwrites it"}
         if not path.startswith("/volumes"):
             return None
         if method == "GET" and path in ("/volumes", "/volumes/"):
@@ -590,7 +690,7 @@ def rec_routes(rec_ctl: SpecController):
                 vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
-            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the watermark frees the oldest
+            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the ring shrinks, its oldest minutes go
                 said("archive.volume.shrunk", handler, volume=vol.name, quota_bytes=vol.quota_bytes, was=was.quota_bytes)
             return 201, {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items()
                                     if not k.endswith("_secret")}}
@@ -621,8 +721,8 @@ def auto_routes(auto_ctl):
     return extra
 
 
-def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None, live_ctl: SpecController | None = None,
-                 mounts: dict[str, SpecController] | None = None, index=None) -> Mount:
+def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_ctl: SpecController | None = None,
+                 mounts: dict[str, SpecController] | None = None, index=None, media: bool | None = None) -> Mount:
     """One console process for the box: the VMS at `/` (the page, /cameras, the media routes, the WHEP door),
     and every other subsystem the console fronts under its name — `/live/…`, `/det/…` — each a SpecConsole over
     that subsystem's spec with the console's token. `live_ctl` opens the WHEP door and is mounted at /live;
@@ -630,15 +730,16 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
     live = LiveFront(ctl, live_ctl) if live_ctl is not None else None
     index = index or MergedIndex(ctl.objects, wall=wall or time.time)   # no database here: the resource process's, asked over HTTP
     rec_ctl = (mounts or {}).get("rec")                                  # the console fronts it anyway: the page's Record toggle
-    root = SpecConsole(ctl, marks_root=archive.root if archive else None, wall=wall,
-                       extra=vms_routes(archive, live, ctl, rec_ctl), media=archive is not None, index=index,
+    media = archive_root is not None if media is None else media         # footage to show: the recorders' doors
+    root = SpecConsole(ctl, marks_root=archive_root, wall=wall,
+                       extra=vms_routes(media, live, ctl, rec_ctl), media=media, index=index,
                        metrics_extra=vms_metrics(ctl))
     root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
     # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
     # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
     # which is the viewer's token on the live door.
     root.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/backfill",)
-    root.UNIT_ROUTES = SpecConsole.UNIT_ROUTES + ("timeline", "whep")
+    root.UNIT_ROUTES = SpecConsole.UNIT_ROUTES + ("timeline", "export", "whep")
     root.VIEW_POSTS = ("/whep/",)
     m = Mount(root)
     if live_ctl is not None:
@@ -666,6 +767,6 @@ def make_console(ctl: VmsController, archive: ArchiveResource | None, wall=None,
 
 # `make_console(...).serve(host, port)`: the server in a daemon thread, returned so the caller can
 # `shutdown()` it. `__main__.console` calls it with `$CONSOLE_HOST:$CONSOLE_PORT`; the tests with `port=0`.
-def serve(ctl: VmsController, archive: ArchiveResource | None, host: str = "127.0.0.1", port: int = 8080, wall=None,
+def serve(ctl: VmsController, archive_root: str | None, host: str = "127.0.0.1", port: int = 8080, wall=None,
           live_ctl: SpecController | None = None, mounts: dict[str, SpecController] | None = None, index=None) -> ThreadingHTTPServer:
-    return make_console(ctl, archive, wall, live_ctl, mounts, index).serve(host, port)
+    return make_console(ctl, archive_root, wall, live_ctl, mounts, index).serve(host, port)

@@ -1,22 +1,20 @@
 """Reading an INTERVAL of the archive, and remembering how far you got.
 
-    <archive>/rec/<unit>/manifest.jsonl        what the recorder wrote: the media index
-    <archive>/detjob/<job>/manifest.jsonl      what a scan has processed: one line per stretch
+    what was recorded      the recording's spans, from the archive doors of the recorders that hold its
+                           volumes (`recording_spans`) — the index of ObjectStorage, read fresh
+    <resource>/detjob/<job>/progress.jsonl     what a scan has processed: one line per stretch
 
-The live detector never needed this file. It reads a fan-out with no beginning
-and no end, and "where am I" is "now". A scan over recorded footage has both
-ends, so it needs the two things the live path never asked for: which segments
-cover `[from, to)`, and which of them are already behind it.
+The live detector never needed this. It reads a fan-out with no beginning and no end, and "where am I" is
+"now". A scan over recorded footage has both ends, so it needs the two things the live path never asked for:
+which stretches of the recording cover `[from, to)`, and which of them are already behind it.
 
-Both answers come out of the manifest and nothing else — no Variables, no
-heartbeat, no call to another server. That matters for footage from last March:
-who currently holds the recording says nothing about who won the race for those
-minutes, and the archive may be read on a box where no recorder runs at all.
+The first answer comes out of the volumes' index and nothing else — not the recording's row, not who holds
+it now: footage from last March is in whatever volume was written then, and who won the race for those
+minutes is in the stream names, not in a heartbeat.
 
-The progress file is the recorder's manifest again, in shape and for the same
-reasons (М10B Lesson 3): append-only, rebuildable from what it describes, and a
-crash between the work and the line costs a re-scan of one stretch rather than
-a wrong answer.
+The progress file is a scan's own, on the resource's tree where its events are: append-only, rebuildable
+from what it describes, and a crash between the work and the line costs a re-scan of one stretch rather
+than a wrong answer.
 """
 from __future__ import annotations
 
@@ -26,11 +24,11 @@ from dataclasses import dataclass
 
 from w2cplatform.events import unit_dir
 
-from .archive import Manifest, Segment
+from .archive import Span, authoritative
 
 SUB = "detjob"          # the scan's own tree, beside `rec/` and `vms/` on the same resource
 SURVEY = "survey"       # the standing survey's own tree, beside it
-MANIFEST = "manifest.jsonl"
+PROGRESS = "progress.jsonl"
 
 
 # -- the OTHER archive: what a device holds, span by span -------------------------------------------
@@ -64,69 +62,68 @@ def covered_by(spans: list[tuple[float, float]] | None, t0: float, t1: float) ->
     return sum(max(0.0, min(b, t1) - max(a, t0)) for a, b in spans)
 
 
-# One stretch of one segment: the footage, and the part of it this scan asked for.
+# One stretch of one span: the footage, and the part of it this scan asked for.
 @dataclass(frozen=True)
 class Scan:
-    seg: Segment
-    t0: float             # unix seconds; the stretch, not the segment — they differ at both ends
+    seg: Span
+    t0: float             # unix seconds; the stretch, not the span — they differ at both ends
     t1: float
 
     @property
     def seconds(self) -> float:
         return max(0.0, self.t1 - self.t0)
 
-    # Identity in the log. The PATH and the stretch, not the segment alone: a segment can appear twice
-    # with two stretches when a newer epoch owns the minutes between them, and a log keyed by path alone
-    # would call the second stretch done when only the first was.
+    # Identity in the log. The STREAM and the stretch, not the stream alone: one stream can come back in two
+    # stretches when a newer epoch owns the minutes between them, and a log keyed by stream alone would call the
+    # second stretch done when only the first was.
     def key(self) -> str:
-        return f"{self.seg.path}@{self.t0:.3f}-{self.t1:.3f}"
+        return f"{self.seg.stream}@{self.t0:.3f}-{self.t1:.3f}"
 
-    # Whether an event the model reports at `ts` belongs to this scan. Decoding starts at the segment's
-    # START — a segment opened at 10:00 must be decoded from 10:00 even when the operator asked from
-    # 10:05 — so the frames before `t0` are seen, and what they produce is not what was asked for. Without
-    # this the answer to "what happened between 10:05 and 10:12" quietly contains 10:00.
+    # Whether an event the model reports at `ts` belongs to this scan. Decoding starts at a KEY FRAME — the
+    # sequence that holds 10:05 may open at 10:04 — so the frames before `t0` are seen, and what they produce is
+    # not what was asked for. Without this the answer to "what happened between 10:05 and 10:12" quietly
+    # contains 10:04.
     def accepts(self, ts: float) -> bool:
         return self.t0 <= ts < self.t1
 
 
-# Every stretch of `[t0, t1)` that footage covers, each given to the HIGHEST EPOCH that covers it.
-#
-# Two epochs overlap in the archive whenever a recorder was fenced with footage in flight: the zombie's
-# segments and the survivor's describe the same minutes. Neither "read everything" nor "drop everything
-# fenced" is right. Read both and those minutes are scanned twice, so the operator gets every car counted
-# twice. Drop every segment belonging to an older epoch and the minutes BEFORE the takeover — which only
-# the older epoch ever held, and which are perfectly good footage — disappear from the answer.
-#
-# So the unit of the decision is the stretch, not the segment: walk the boundaries, and give each
-# elementary interval to the highest epoch present there. A segment can come back in two pieces, or in
-# none. Adjacent pieces of the same segment are merged back so the caller opens the file once.
-def _authoritative(segs: list[Segment], t0: float, t1: float) -> list[Scan]:
-    edges = sorted({t0, t1} | {s.start for s in segs} | {s.end for s in segs})
-    edges = [e for e in edges if t0 <= e <= t1]
-    out: list[list] = []
-    for lo, hi in zip(edges, edges[1:]):
-        if hi <= lo:
-            continue
-        covering = [s for s in segs if s.start <= lo and s.end >= hi]
-        if not covering:
-            continue                                     # a gap: nothing was recorded here, and a scan cannot invent it
-        best = max(covering, key=lambda s: s.epoch)
-        if out and out[-1][0] == best and out[-1][2] == lo:
-            out[-1][2] = hi                              # the same writer either side of a boundary: one stretch
-        else:
-            out.append([best, lo, hi])
-    return [Scan(s, a, b) for s, a, b in out]
+# Every stretch of `[t0, t1)` that footage covers, each given to the HIGHEST EPOCH that covers it
+# (`archive.authoritative`). Two epochs overlap whenever a recorder was fenced with footage in flight: the
+# zombie's stream and the survivor's describe the same minutes. Read both and those minutes are scanned twice,
+# so the operator gets every car counted twice; drop every older epoch and the minutes BEFORE the takeover —
+# which only the older epoch ever held — disappear from the answer. So the unit of the decision is the stretch.
+def plan(spans: list[Span], t0: float, t1: float) -> list[Scan]:
+    return [Scan(s, a, b) for s, a, b in authoritative(list(spans), float(t0), float(t1))]
 
 
-# What a scan of `[t0, t1)` on this recording has to read, in order.
-def plan(archive_root: str, unit, t0: float, t1: float) -> list[Scan]:
-    return _authoritative(Manifest(archive_root, unit).read(), float(t0), float(t1))
-
-
-# How far this recording's footage reaches: the end of its last segment, 0 when there is none. What a scan
+# How far this recording's VISIBLE footage reaches: the end of its last span, 0 when there is none. What a scan
 # whose interval runs into the future reads to know whether the footage has caught up with its end.
-def written_through(archive_root: str, unit) -> float:
-    return max((s.end for s in Manifest(archive_root, unit).read()), default=0.0)
+def written_through(spans: list[Span]) -> float:
+    return max((s.end for s in spans), default=0.0)
+
+
+# What was recorded of `unit` in `[t0, t1)`, as the volumes' index has it: asked of the archive door of every
+# live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
+# been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
+def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0) -> list[Span] | None:
+    import json as _json
+    import urllib.request
+    from w2cplatform.console import heartbeats
+    out, answered = set(), False
+    for _, hb in sorted(heartbeats(objects, "rec/").items()):
+        url = str(hb.extra.get("archive_url") or "")
+        if not url or now - hb.ts > 45.0:
+            continue
+        try:
+            with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
+                body = _json.loads(r.read())
+        except (OSError, ValueError):
+            continue
+        answered = True
+        for sp in body.get("spans", []):
+            out.add(Span(str(unit), int(sp["epoch"]), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
+                         str(sp.get("source", "live"))))
+    return sorted(out, key=lambda s: (s.start, s.epoch)) if answered else None
 
 
 # Seconds of `[t0, t1)` the plan actually covers. The operator asked for an hour; if forty minutes were
@@ -137,19 +134,19 @@ def covered(scans: list[Scan]) -> float:
 
 
 class ScanLog:
-    """What a scan has already processed: `<archive>/detjob/<job>/manifest.jsonl`,
+    """What a scan has already processed: `<resource>/detjob/<job>/progress.jsonl`,
     one line per stretch, appended AFTER the stretch is scanned and its events are
     written. Durable, so a worker restarting on this server resumes instead of
     starting again; and on the resource rather than in a row, because a worker's
     ACL is `[<name>/epoch/*, <name>/slots/*]` — it may not write configuration."""
 
     def __init__(self, archive_root: str, job):
-        self.path = os.path.join(unit_dir(archive_root, SUB, str(job)), MANIFEST)
+        self.path = os.path.join(unit_dir(archive_root, SUB, str(job)), PROGRESS)
 
     def append(self, scan: Scan, events: int, at: float) -> None:
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
         with open(self.path, "a") as f:
-            f.write(json.dumps({"kind": "scan", "key": scan.key(), "path": scan.seg.path, "epoch": scan.seg.epoch,
+            f.write(json.dumps({"kind": "scan", "key": scan.key(), "stream": scan.seg.stream, "epoch": scan.seg.epoch,
                                 "from": scan.t0, "to": scan.t1, "events": int(events), "at": float(at)}) + "\n")
 
     def read(self) -> list[dict]:
@@ -158,9 +155,6 @@ class ScanLog:
                 return [json.loads(l) for l in f if l.strip()]
         except FileNotFoundError:
             return []
-
-    def done(self) -> set[str]:
-        return {str(d["key"]) for d in self.read()}
 
     # For the operator's progress, and for nothing else. It is the far end of the furthest stretch
     # recorded, which is NOT a point everything before is finished at: resuming from it would skip a
@@ -233,7 +227,14 @@ class Frontier:
         os.replace(tmp, self.path)
 
 
-# The plan minus what the log says is behind us — what a restarted worker picks up.
+# The plan minus what the log says is behind us — what a restarted worker picks up, and what a follower scans
+# next. By TIME, per stream, not by key: the index draws a stream's sequences that touch as ONE span, so the span a
+# follower scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and
+# matching keys would scan its first five minutes again and count every car in them twice.
 def remaining(scans: list[Scan], log: ScanLog) -> list[Scan]:
-    done = log.done()
-    return [s for s in scans if s.key() not in done]
+    from .archive import subtract
+    done: dict[str, list[tuple[float, float]]] = {}
+    for d in log.read():
+        done.setdefault(str(d.get("stream", "")), []).append((float(d["from"]), float(d["to"])))
+    return [Scan(s.seg, a, b) for s in scans for a, b in subtract((s.t0, s.t1), done.get(s.seg.stream, []))
+            if b - a > 1e-6]

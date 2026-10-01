@@ -48,21 +48,21 @@ def test_the_units_run_the_entrypoints_the_package_has():
 
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
-    The controller has no archive at all; the console cannot write the spool."""
+    The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert "/data/archive" not in vols("vmscontroller.container") and "/data/spool" not in vols("vmscontroller.container")
-    assert vols("console.container")["/data/spool"].endswith(":ro,z")                # reads, never records
-    assert "/data/spool" not in vols("vmsworker@.container")                            # the worker records nothing: no spool
+    assert "/data/archive" not in vols("vmscontroller.container")
+    for n in os.listdir(DEPLOY):
+        if n.endswith(".container"):
+            assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
     assert vols("vmsworker@.container")["/data/archive"] == "/data/archive:z"          # its events, vms/<cam>/, on this box's resource
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
-    assert vols("recworker@.container")["/data/spool"] == "/data/spool:z"            # the recorder is the only writer of segments
-    assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"
+    assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory: written by the worker, read by the recorder beside it
+    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory — and the daemon's socket
     assert "/data/archive" not in vols("reccontroller.container")
     assert vols("resource.container")["/data/platform"] == "/data/platform:z"       # the heartbeat is written; rows are only read
-    assert vols("resource.container")["/data/spool"].endswith(":ro,z")               # the resource never records
-    assert unit("recworker@.container")["Container"]["StopTimeout"] == "20"          # SIGTERM finalizes the open segment
+    assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
+    assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
     assert unit("resource.container")["Service"]["Restart"] == "always"             # a process, not a timer: the database lives in it
 
 
@@ -73,4 +73,19 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     assert "postgres" not in cf.lower()                                                # the per-box database is gone (М10 Lesson 1)
     assert 'CMD ["python3", "-m", "vms", "worker"]' in cf
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
-    assert all(k in env for k in ("PLATFORM_DIR=/data/platform", "SPOOL=/data/spool", "ARCHIVE=/data/archive", "CAPACITY="))
+    assert all(k in env for k in ("PLATFORM_DIR=/data/platform", "ARCHIVE=/data/archive", "CAPACITY="))
+    assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
+
+
+def test_the_archives_engine_is_the_hosts_own_daemon():
+    """One obsd per host, not a container of the image: it keeps one writer per volume, and that means something
+    only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
+    from w2cplatform.obsd import default_socket
+    u = unit("obsd.service")
+    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms/obsd.sock"
+    assert u["Service"]["RuntimeDirectory"] == "vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
+    assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
+    import sys
+    if sys.platform != "darwin":
+        assert default_socket() == "/run/vms/obsd.sock"

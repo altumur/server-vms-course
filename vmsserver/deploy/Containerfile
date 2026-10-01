@@ -7,7 +7,7 @@
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # Containerfile — `localhost/vmsserver:latest`: one image, four entrypoints
+# # Containerfile — `localhost/vmsserver:latest`: one image, every entrypoint
 #
 # **Role.** Builds the single image every Quadlet unit in this directory runs
 # (`Image=localhost/vmsserver:latest`) and the image М11's Containerfile starts `FROM`, so "a Quadlet unit
@@ -28,8 +28,9 @@
 #   fake actuator.
 #
 # - `gstreamer1.0-plugins-base/good/bad` — `filesrc`, `qtdemux`, `h264parse`, `identity`, `tee`, `queue`,
-#   `fakesink` (base/good), `watchdog`, `splitmuxsink`, `mp4mux` (good/bad): every element the launch string
-#   in `gstvms/actuator.py` names.
+#   `appsink`, `fakesink` (base/good), `watchdog`, `rtspsrc`, `shmsrc`/`shmsink` (good/bad): every element the
+#   launch strings in `gstvms/actuator.py` name. The archive's engine is NOT in this image: `obsd` is the host's
+#   (`obsd.service`), reached over the socket in /run/vms.
 #
 # - `curl` — for a `podman healthcheck` or a hand check of `/metrics` on the box; nothing in the package
 #   calls it.
@@ -41,7 +42,7 @@
 # curl && rm -rf /var/lib/apt/lists/*`
 #
 # ## Notes
-# - Everything the four verbs import is in the apt line: the standard library, PyYAML for the spec, and the
+# - Everything the verbs import is in the apt line: the standard library, PyYAML for the spec, and the
 #   GStreamer stack for `gstvms`. Without the last, `__main__.worker` still runs, with the fake actuator.
 # - Nothing is configured in the image: stores, roots and capacity all come from `/data/config/vms.env`
 #   through the units — an OS or image update changes no data path (М9 Lesson 5).
@@ -49,7 +50,7 @@
 # A slim Debian base: the GStreamer stack comes from Debian's packages, so no compiling and one apt line.
 FROM docker.io/library/debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        # the runtime for all four verbs.
+        # the runtime for every verb.
         python3 python3-gi python3-yaml python3-cryptography \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
         gir1.2-gst-plugins-base-1.0 curl \

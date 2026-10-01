@@ -182,9 +182,8 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
     clk = Clock(1_757_500_000.0)
     vars_ = FakeVariables()
     archive = tempfile.mkdtemp(prefix="glass-")
-    from vms.archive import ArchiveResource
     ctl = VmsController(vars_, FsObjectStore(tempfile.mkdtemp(prefix="gate-")), wall=clk)
-    srv = make_console(ctl, ArchiveResource(tempfile.mkdtemp(), archive, wall=clk), clk).serve("127.0.0.1", 0)
+    srv = make_console(ctl, archive, clk).serve("127.0.0.1", 0)
     base = f"http://127.0.0.1:{srv.server_address[1]}"
     keys = itertools.count(1)
 

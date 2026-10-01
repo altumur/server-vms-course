@@ -51,6 +51,7 @@ GET /v1/var/rec/volumes/disks-a?namespace=default
     "server": "srv-a",
     "quota_bytes": "4000000000000",
     "access_secret": "",
+    "access_key": "",
     "enabled": "true"
   },
   "ModifyIndex": 1001
@@ -89,10 +90,11 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
       "started": 1757500000.0,
       "previous_hb": 0.0,
       "previous_instance": "",
-      "archive": "/data/srv-a/archive",
       "devices": [],
+      "archive": "file:///data/srv-a/volume",
       "fetched": "",
       "volume": "disks-a",
+      "archive_quota": 67108864,
       "volume_error": "",
       "archive_error": "",
       "archive_away_since": 0.0,
@@ -101,8 +103,6 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
         "state": "ok"
       },
       "refused": {},
-      "spool": 0,
-      "spool_for": {},
       "closed": "",
       "nowhere_seconds": 0,
       "schema": 1,

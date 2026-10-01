@@ -55,7 +55,7 @@ class Stand(Cluster):
     def recorder(self, index: int, server: str, capacity: int = 50, actuator=None, alloc=None) -> ClusterRecorder:
         v, o = self.as_process(f"recworker (allocation {index} on {server})", f"recworker-{index}", RECORDER_GRANTS)
         return ClusterRecorder(v, o, actuator or FakeActuator(), env=self.env(index, server, alloc),
-                               archive=self.servers[server].resource, clock=self.clock, wall=self.wall, capacity=capacity)
+                               **self.rec_kw(server, index), clock=self.clock, wall=self.wall, capacity=capacity)
 
     def resources_up(self, peers=None) -> dict:
         """Each server's resource job, heartbeating — what makes a server a place footage can go (lesson 6)."""
@@ -254,20 +254,6 @@ def _host(url: str) -> str:
     return url.split("//", 1)[1].split("/", 1)[0].split(":", 1)[0]
 
 
-class _Manifests:
-    """The console's manifest reader over the servers' directories instead of HTTP — `GET <resource>/manifest/<unit>`."""
-
-    def __init__(self, s):
-        self.s = s
-
-    def read(self, url, cam):
-        from vms.archive import Manifest
-        srv = self.s.servers[_host(url)]
-        if getattr(srv, "down", False):
-            raise ConnectionError(srv.name)
-        return Manifest(srv.archive, cam).read()
-
-
 def _peers(s):
     """The resources' peer client over directories instead of HTTP — the three calls `PeerClient` makes."""
     from tests.test_lesson3_events import DirReader
@@ -302,26 +288,43 @@ def an_edit_during_the_failover() -> str:
     return s.log.render(since=mark)
 
 
-def a_timeline_across_two_resources() -> str:
-    """Lesson 6: camera 7 was recorded on srv-a under epoch 3 until the failure, then on srv-b under epoch 4.
-    The console's timeline merges the two resources' manifests; srv-a goes silent and is NAMED; it comes back
-    and nothing was rebuilt. Not a store trace: the heartbeat, then what `/timeline/7` answers, three times."""
-    from cluster.resource import resources_seen
-    from cluster.timeline import merged_timeline
-    from tests.test_lesson3_resources import _segment
+def a_timeline_across_two_volumes() -> str:
+    """Lesson 6: camera 7 was recorded into srv-a's volume under epoch 3 until the failure, then into srv-b's under
+    epoch 4. The console's timeline asks every live recorder's archive door; srv-a's recorder goes silent and its
+    volume is NAMED unavailable; it comes back and nothing was rebuilt. Not a store trace: what the recorders say
+    of their volumes, then what `/timeline/7` answers, three times."""
+    from cluster.console import cluster_routes
+    from tests.conftest import footage
     s = Stand()
     t = s.wall()
-    _segment(s.servers["srv-a"], 7, 3, t - 1200); _segment(s.servers["srv-a"], 7, 3, t - 600)
-    _segment(s.servers["srv-b"], 7, 4, t - 300)
-    rs = s.resources_up()
-    out = ["# the heartbeat srv-a's resource publishes", "GET /v1/var/objects/platform/resources/srv-a/heartbeat → data:",
-           _json(resources_seen(s.objects)["srv-a"])]
-    ask = lambda: merged_timeline(resources_seen(s.objects), _Manifests(s), 7, t - 2000, t, current_epoch=4, now=s.wall())
-    out += ["", "# GET /timeline/7 — both resources answer", _json(ask())]
-    s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    out += ["", "# srv-a has been silent for 60 s", _json(ask())]
-    rs["srv-a"].heartbeat()
-    out += ["", "# srv-a is back — with its disks", _json(ask())]
+    s.base.put("rec/epoch/7", {"epoch": "4"})                          # the recording's writer is e4 now
+    recs = {}
+    for i, (server, epoch, spans) in enumerate((("srv-a", 3, ((t - 1200, t - 900), (t - 600, t - 450))),
+                                                ("srv-b", 4, ((t - 300, t),))), start=1):
+        r = s.recorder(i, server)
+        r.lease_pass()
+        for a, b in spans:
+            footage(r.store, "7", epoch, a, b, step=10, seal=False)
+        r.store.seal(); r.serve_archive(); r.heartbeat_once()
+        recs[server] = r
+    out = ["# what each recorder says of its volume (its heartbeat, the door's address left out)"]
+    for server, r in recs.items():
+        hb = r.heartbeat_extra()
+        out.append(f"{r.name} on {server}: volume {hb['volume']!r}, archive {hb['archive']!r}, writer {hb['writer']}")
+    routes = cluster_routes(s.controller())
+    keep = ("start", "end", "epoch", "fenced", "recording", "recorder", "volume", "media")
+    def ask():
+        _, body = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
+        if isinstance(body, list):
+            return [{k: sp[k] for k in keep} for sp in body]
+        return {**body, "segments": [{k: sp[k] for k in keep} for sp in body["segments"]]}
+    out += ["", "# GET /timeline/7 — both recorders answer", _json(ask())]
+    s.wall.advance(60); recs["srv-b"].heartbeat_once()
+    out += ["", "# srv-a's recorder has been silent for 60 s", _json(ask())]
+    recs["srv-a"].heartbeat_once()
+    out += ["", "# srv-a is back — its volume with it", _json(ask())]
+    for r in recs.values():
+        r.after_stop()
     return s.log._clean("\n".join(out)) + "\n"
 
 
@@ -565,7 +568,7 @@ SCENES = {"01-worker-starts": worker_starts,
           "04-what-the-autoscaler-reads": what_the_autoscaler_reads,
           "05-who-may-write-what": who_may_write_what,
           "06-an-edit-during-the-failover": an_edit_during_the_failover,
-          "06-a-timeline-across-two-resources": a_timeline_across_two_resources,
+          "06-a-timeline-across-two-volumes": a_timeline_across_two_volumes,
           "07-events-merged": events_merged,
           "07-the-events-mirror": the_events_mirror,
           "08-pull-the-power": pull_the_power,

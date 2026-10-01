@@ -8,7 +8,7 @@
 # the GPU but the two playback sessions the device allows, which it shares with
 # the operator watching and the recorder saving — so it waits and says so rather
 # than retrying into a wall. It mounts the archive because its EVENTS go there;
-# no spool, because it records nothing.
+# no footage, because it records nothing.
 [Unit]
 Description=VMS survey worker %i — models over an archive we do not own
 After=network.target

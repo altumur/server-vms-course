@@ -4,7 +4,7 @@ the way the gateway does (`live_url` from the VMS worker's heartbeat, never by
 calling it), decodes, runs the model, and writes what the model saw into the
 unit's bucket on the resource — `det/<unit>/e<epoch>/…events.jsonl`, under
 the epoch it holds, so a stale instance's events are identifiable like a
-stale writer's segments. Capacity is streams a GPU can carry; labels say
+stale writer's buckets. Capacity is streams a GPU can carry; labels say
 where it may run. The model is a `Model` — `FakeModel` here (fires on a
 schedule, so the events and their buckets can be tested), a decode-and-infer
 pipeline on a box.

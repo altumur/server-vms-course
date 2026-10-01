@@ -1,18 +1,20 @@
 """The recorder as an allocation — and it is М10's `RecWorker`, unchanged.
 The runtime hands it what it hands a worker (SLOT_INDEX → slot r-<i>,
-SERVER_NAME → the server whose archive it writes into, LABELS, INSTANCE_ID,
-CAPACITY); it claims `rec/slots/r-<i>` by CAS, reads the
-assignment the rec controller wrote, subscribes to each camera's fan-out from
-whichever worker holds it (the VMS heartbeat's `live_url`), and writes
-footage into rec/<cam>/e<epoch>/ on ITS server's archive.
+SERVER_NAME → the server it runs on, LABELS, INSTANCE_ID, CAPACITY); it claims
+`rec/slots/r-<i>` by CAS, takes a volume — a declared one it may serve, by CAS
+under `rec/holds/`, or its server's own — reads the assignment the rec
+controller wrote, subscribes to each camera's fan-out from whichever worker
+holds it (the VMS heartbeat's `live_url`), and writes footage into its volume
+through the HOST's obsd, as the stream `<recording>/e<epoch>`.
 
 The jobspec is the one with the archive constraint (`meta.archive is_set`)
 and `spread`; whether two recorders on one server both carry recordings is
 `rec/policy {servers}` — `distinct` by default, the one subsystem where a
 second process on the same disks is no second place to record. When the
 server dies, the rec controller moves its recordings to a server whose
-resource answers; the footage written before the move stays on the old
-disks under the old epoch, and the timeline names it unavailable — not lost.
+resource answers; the footage written before the move stays in the old
+server's volume under the old epoch, and the timeline names that volume
+unavailable — not lost — until a recorder holds it again.
 """
 from __future__ import annotations
 

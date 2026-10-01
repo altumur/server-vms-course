@@ -1,7 +1,9 @@
 # deploy/recworker.nomad.hcl — the recorder: the fourth subsystem's worker
 # and the ONLY job placed on top of the archive for footage. A worker holds the
 # camera (one connection, one fan-out); a recorder subscribes to that fan-out
-# and writes rec/<cam>/e<epoch>/ on ITS server's disks. count = N as for the
+# and writes into the volume it holds — its server's own, or a declared one —
+# through the host's obsd (`obsd.service`, the same unit as М10's box: host
+# infrastructure, like podman.socket, not a job). count = N as for the
 # worker: the operator's bounds, the Autoscaler's move; each allocation
 # claims slot r-<NOMAD_ALLOC_INDEX> by CAS (Lesson 2, the same proof).
 job "recworker" {
@@ -49,8 +51,9 @@ job "recworker" {
       }
     }
 
-    # a recorder writes into the resource on its own server: only servers that have one. This is the
-    # constraint that USED to be the worker's reason for the archive; it is the recorder's now.
+    # a recorder writes its events into the resource on its own server and its footage through that server's
+    # obsd: only servers that have both — `meta.archive` says so. This is the constraint that USED to be the
+    # worker's reason for the archive; it is the recorder's now.
     constraint {
       attribute = "${meta.archive}"
       operator  = "is_set"
@@ -62,8 +65,8 @@ job "recworker" {
     # spread, not distinct_hosts: a dead server's recorder comes back on a neighbour — and idles there by
     # default, because `rec/policy {servers: distinct}`: a second recorder on the same disks is no second
     # place to record. The rec CONTROLLER moves the dead server's recordings to a server whose resource
-    # answers (Lesson 4's two silences); the footage before the move stays on the old disks, unavailable
-    # until the server returns — not lost.
+    # answers (Lesson 4's two silences); the footage before the move stays in the old server's volume,
+    # named unavailable on the timeline until the server returns — not lost.
     spread {
       attribute = "${node.unique.id}"
     }
@@ -77,13 +80,13 @@ job "recworker" {
 
     task "recworker" {
       driver = "podman"
-      kill_timeout = "20s"                           # SIGTERM finalizes the open segment; the last pass promotes it
+      kill_timeout = "40s"                           # SIGTERM: the pipelines stop, the writer closes after its flush (up to 30 s), then the hold goes
       identity { env = true }
       config {
         image        = "localhost/clustervms:latest"
         network_mode = "host"                        # it subscribes to workers' RTSP fan-outs, on this server or elsewhere
         args         = ["python3", "-m", "cluster", "recorder"]
-        volumes      = ["/data/spool:/data/spool", "/data/archive:/data/archive", "/run/vms:/run/vms"]   # the only writer of segments; no /data/media: it never reads a camera; /run/vms: the workers' shared memory on this server
+        volumes      = ["/data/archive:/data/archive", "/run/vms:/run/vms"]   # its events, and its own volume's path (the daemon opens it); /run/vms: obsd's socket and the workers' shared memory; no /data/media: it never reads a camera
       }
       env {
         # The runtime's part of the seam (`w2cplatform/runtime.py`): the neutral names the loop
@@ -102,7 +105,10 @@ job "recworker" {
         INSTANCE_ID = "${NOMAD_ALLOC_ID}"
         OBJECTS   = "variables://objects"
         CAPACITY  = "50"                             # recordings this server's disks and NIC can take — its own number
-        ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder
+        ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder: its events; its own volume goes beside it, `/data/volume`
+        ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # what its archive door binds: the node's address
+        ARCHIVE_PORT = "8084"
+        ARCHIVE_URL  = "http://${attr.unique.network.ip-address}:8084"   # what the heartbeat says: an IP, as RESOURCE_URL is — no DNS between servers
       }
       resources { cpu = 1000  memory = 1024 }
     }

@@ -172,28 +172,28 @@ def test_the_console_over_http():
     assert call("PUT", "/rec/recordings/1", {"worker": "r-0"})[0] == 400
     assert call("DELETE", "/rec/recordings/1")[0] in (200, 204)
     st, out = call("GET", "/unplaceable"); assert json.loads(out) == []
-    # srv-a's resource job, over real HTTP: the platform's routes, the VMS's reads, and the event index over ITS tree
+    # srv-a's resource job, over real HTTP: the platform's routes and the event index over ITS tree
     from w2cplatform.resource import serve as serve_resource
-    from cluster.resource import cluster_resource, vms_routes
-    from tests.test_lesson3_resources import _segment
-    _segment(c.servers["srv-a"], 1, 1, c.wall() - 600, size=256)
+    from cluster.resource import cluster_resource
+    from tests.test_lesson3_resources import _recorder_with_footage
+    t = c.wall()
+    rec_a = _recorder_with_footage(c, 7, "srv-a", "1", 1, ((t - 600, t),))                   # and srv-a's recorder, serving its volume
     res = cluster_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
-    rsrv = serve_resource(res, "127.0.0.1", 0, extra=vms_routes(c.servers["srv-a"].resource)); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
+    rsrv = serve_resource(res, "127.0.0.1", 0); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
     # an operator's mark: the console's own bucket on srv-a's resource; the console has no index — it asks srv-a's, by HTTP, and finds the `cam` field
     st, out = call("POST", "/marks", {"cam": 1, "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
     m = json.loads(out); assert st == 201 and m["bucket"].startswith(f"console/{m['unit']}/e1/")
     st, out = call("GET", "/events?cam=1"); ev = json.loads(out)
     assert st == 200 and [(e["subsystem"], e["kind"], e["user"], e["server"]) for e in ev["events"]] == [("console", "mark", "murat", "srv-a")] and ev["state"] == "live"
-    # the page, and playback across the cluster: a segment on srv-a's resource, served through the console by server
-    assert "<video" in call("GET", "/")[1] and "/segment/" in call("GET", "/")[1]
-    st, out = call("GET", "/timeline/1"); seg = json.loads(out)["segments"][0]
-    assert st == 200 and seg["server"] == "srv-a"
-    req = urllib.request.Request(f"{base}/segment/{seg['path']}?server=srv-a", headers={"Range": "bytes=0-9"})
-    with urllib.request.urlopen(req) as r:
-        assert r.status == 206 and len(r.read()) == 10 and r.headers["Content-Range"] == "bytes 0-9/256"
-    assert call("GET", f"/segment/{seg['path']}?server=srv-b")[0] == 404          # srv-b has never heartbeaten
+    # the page, and playback across the cluster: footage in srv-a's volume, through its recorder's door and the console
+    assert "<video" in call("GET", "/")[1]
+    st, out = call("GET", "/timeline/1"); tl = json.loads(out)
+    assert st == 200 and [(s["recorder"], s["volume"]) for s in tl] == [(rec_a.name, "srv-a")]
+    with urllib.request.urlopen(f"{base}{tl[0]['media']}&from={t - 120}&to={t - 60}") as r:
+        assert r.status == 200 and r.headers["Content-Type"] == "video/mp4"
+    assert call("GET", f"/export/1?rec=1&from={t - 3000}&to={t - 2000}")[0] == 404   # nothing recorded there
     assert call("PUT", "/cameras/1", {"enabled": False})[0] == 200 and ctl.camera(1)["enabled"] is False
     assert call("DELETE", "/cameras/1")[0] == 200 and ctl.cameras() == [] and call("DELETE", "/cameras/1")[0] == 404
     assert ctl.unplace_deleted() == [1] and ctl.assignment(placed).units == []   # the controller takes the placement back
-    rsrv.shutdown()
+    rsrv.shutdown(); rec_a.after_stop()
     srv.shutdown()

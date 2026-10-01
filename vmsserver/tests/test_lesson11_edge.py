@@ -11,22 +11,20 @@ placement axis, not by different work.
 What IS the recorder's is copying it: the card exists because the camera kept
 recording while we could not, so replication is the difference between two
 coverages — Lesson 2's loop over time. What it fetches becomes ours: our
-manifest, our epoch, our retention, marked `source: edge`."""
+volume, our epoch, the recording's backfill stream `<recording>/e<epoch>/backfill`."""
 import os
 import time
 import urllib.request
 
 from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import Refused, SpecController
-from datetime import datetime, timezone
 
-from vms.archive import ArchiveResource, Manifest, Segment, segment_path, subtract
+from vms.archive import subtract
 from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC, device_of, channel_of
 from vms.console import device_spans, serve
 from vms.controller import VmsController
-from vms.recworker import RecWorker
 from vms.worker import FakeActuator, FakeDevice, VmsWorker
-from tests.conftest import Box
+from tests.conftest import Box, door, footage, recorder
 
 NVR = "driverpack://acme/10.0.0.50/ch/{}"
 CARD = "driverpack://acme/10.0.0.7"
@@ -149,14 +147,13 @@ def test_the_console_draws_the_device_only_where_we_have_nothing():
     ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
 
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
     ours = [{"start": 200.0, "end": 400.0}, {"start": 600.0, "end": 700.0}]
     spans = device_spans(box.objects, 1, ours, 0.0, 1000.0, box.wall())
     assert [(s["start"], s["end"]) for s in spans] == [(0.0, 200.0), (400.0, 600.0), (700.0, 1000.0)]
     assert all(s["source"] == "device" and s["media"] is None for s in spans)
 
     # and the whole timeline over HTTP: ours and the device's, sorted, in one answer
-    srv = serve(con, arch, port=0, wall=box.wall)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
     try:
         port = srv.server_address[1]
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/timeline/1?from=0&to=1000") as r:
@@ -170,13 +167,27 @@ def test_the_console_draws_the_device_only_where_we_have_nothing():
         srv.shutdown()
 
 
-def _ours(box, r, unit, spans):
-    """Footage of our own, already in the archive. Planned backfill closes holes INSIDE what a recording has
-    recorded (the feedback's point S), so a test of it starts with some."""
+def _ours(box, r, unit, spans, step: float = 10.0):
+    """Footage of our own, already on the volume and visible. Planned backfill closes holes INSIDE what a
+    recording has recorded (the feedback's point S), so a test of it starts with some. A frame every ten
+    seconds: an hour is 360 samples, and nothing here looks inside them."""
     for start, end in spans:
-        p = segment_path(box.archive, unit, r.epochs[str(unit)], datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(box.archive, unit).append(Segment(str(unit), r.epochs[str(unit)], start, end, os.path.relpath(p, box.archive), 1))
+        footage(r.store, str(unit), r.epochs[str(unit)], start, end, step=step, seal=False)
+    r.store.seal()
+
+
+def _rec(box, unit="1", **kw):
+    """A recorder on srv-1 holding recording `unit`, its volume open."""
+    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
+    r = recorder(box, **kw)
+    r.heartbeat_once(); rec_ctl.ensure_placed(); r.lease_pass(); r.reconcile_once()
+    assert r.store is not None and str(unit) in r.epochs
+    return r
+
+
+def _backfilled(r, unit="1"):
+    """The spans of a recording's backfill streams, as its volume shows them."""
+    return [s for s in r.store.spans(str(unit)) if s.stream.endswith("/backfill")]
 
 
 def _noon(now: float) -> float:
@@ -188,28 +199,20 @@ def _noon(now: float) -> float:
 def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
     """The card exists because the camera kept recording while we could not, so
     replication is the difference between two coverages — Lesson 2's loop over time.
-    What comes back is written as ours: our manifest, our epoch, our retention,
-    marked `source: edge`."""
+    What comes back is written as ours: our volume, our epoch, the recording's
+    backfill stream."""
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed()
     w.reconcile_once(); w.heartbeat_once()
 
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
     now = 1000000.0                                   # backfill takes its own `now`; the heartbeats keep the box's
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, window=(22, 6), keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, window=(22, 6), keep_days=1.0, settle=1000.0)
 
     # two recordings of ours with an hour missing between them
-    for start, end in ((now - 80000, now - 76400), (now - 70000, now - 66400)):
-        p = segment_path(box.archive, 1, r.epochs["1"], datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(box.archive, 1).append(Segment(1, r.epochs["1"], start, end, os.path.relpath(p, box.archive), 1))
+    _ours(box, r, 1, ((now - 80000, now - 76400), (now - 70000, now - 66400)))
 
     assert r.our_coverage(1) == [(now - 80000, now - 76400), (now - 70000, now - 66400)]
     gaps = r.gaps(1, {"from": 0.0, "to": now}, now)
@@ -219,12 +222,14 @@ def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
 
     assert r.backfill(budget=1, now=_noon(now)) == []                       # midday local: not the window
     done = r.backfill(budget=1, now=now, force=True)                        # the operator asked
-    assert done and done[0]["segments"] > 0
+    assert done and done[0]["groups"] > 0 and done[0]["source"] == "device"
 
-    edge = [s for s in Manifest(box.archive, 1).read() if s.source == "edge"]
+    r.store.seal()                                                          # its block closed: the volume shows it
+    edge = _backfilled(r)
     assert edge and all(s.epoch == r.epochs["1"] for s in edge)             # the recorder's CURRENT epoch
-    assert r.backfilled == len(edge) and "rec_segments_backfilled" in r.metrics_text()
-    assert r.archive.retain(1, 0.0, now + 10) >= len(edge)                  # ours: retention takes it like the rest
+    assert edge[0].stream == f"1/e{r.epochs['1']}/backfill"                 # ours, beside what live recording wrote
+    assert r.our_coverage(1) == [(now - 80000, now - 66400)]                # the hole is closed
+    assert r.backfilled == done[0]["groups"] and "rec_groups_backfilled" in r.metrics_text()
 
 
 def test_subtraction_is_one_rule():
@@ -335,9 +340,9 @@ def test_two_recordings_of_one_camera_are_a_yaml_edit():
     unchanged. If any of it still assumed "a recording is named by its camera", this test
     would not pass, and until the unit-keyed tree it would not have."""
     from w2cplatform.contract import Heartbeat
-    from vms.archive import Manifest, Segment, segment_path
     from vms.config import REC_SPEC
     from vms.console import recordings_of
+    from tests.conftest import store
 
     box, ctl, con, con_vars = _box()
     spec = _redundant_spec()
@@ -359,20 +364,19 @@ def test_two_recordings_of_one_camera_are_a_yaml_edit():
     main, backup = rec.placement("1-main"), rec.placement("1-backup")
     assert main and backup and rec.server_of(main.worker) != rec.server_of(backup.worker)   # the point of the exercise
 
-    # each copy writes its own tree, under its own name, with its own retention
+    # each copy writes its own streams, under its own name, with its own retention — here into one volume,
+    # to show that even then they are two recordings and not one
     t = box.wall()
+    st = store()
     for unit in ("1-main", "1-backup"):
-        p = segment_path(box.archive, unit, 1, datetime.fromtimestamp(t - 600, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(box.archive, unit).append(Segment(unit, 1, t - 600, t, os.path.relpath(p, box.archive), 1))
-
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    assert arch.units() == ["1-backup", "1-main"]                                  # two directories, not one
-    assert len(arch.coverage("1-main")) == 1 and len(arch.coverage("1-backup")) == 1
+        footage(st, unit, 1, t - 600, t, step=10, seal=False)
+    st.seal()
+    assert st.units() == ["1-backup", "1-main"]                                    # two recordings, not one
+    assert len(st.coverage("1-main")) == 1 and len(st.coverage("1-backup")) == 1
 
     # and the camera's timeline is both of them: the console resolves camera -> recordings
     assert sorted(recordings_of(rec, 1)) == ["1-backup", "1-main"]
-    spans = [sp for unit in recordings_of(rec, 1) for sp in Manifest(box.archive, unit).timeline(0, 1e12)]
+    spans = [sp for unit in recordings_of(rec, 1) for sp in st.timeline(unit, 0, 1e12)]
     assert len(spans) == 2
 
     # retention is per recording, because the row is per recording
@@ -386,8 +390,10 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     Every one of them was unreachable while `id: cam` held — which is exactly why they survived
     so long, and why the first `7-cloud` would have found all four at once. They are reachable
     now, in the shipped spec; here each one answers instead of raising."""
+    import json
     from vms.console import vms_routes as console_routes
-    from vms.resource import vms_routes as resource_routes
+    from vms.recworker import archive_routes
+    from tests.conftest import store
 
     box, ctl, con, con_vars = _box()
     spec = _redundant_spec()
@@ -403,113 +409,56 @@ def test_a_named_unit_reaches_the_places_that_still_assumed_a_number():
     rec.ensure_placed()
 
     t = box.wall()
+    st = store()
     for unit in ("1-main", "1-backup"):
-        p = segment_path(box.archive, unit, 1, datetime.fromtimestamp(t - 600, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(box.archive, unit).append(Segment(unit, 1, t - 600, t, os.path.relpath(p, box.archive), 1))
-    archive = ArchiveResource(box.spool, box.archive, wall=box.wall)
+        footage(st, unit, 1, t - 600, t, step=10, seal=False)
+    st.seal()
 
-    # 1. the resource's manifest: what a peer and М11's console read to draw a timeline
-    status, body = resource_routes(archive)("/manifest/1-backup", {})
-    assert status == 200 and '"unit": "1-backup"' in body.decode()
+    # 1. a recorder's archive door: what a primary copying from a backup and the console read
+    status, body, _ = archive_routes(lambda: st, box.wall)("/timeline/1-backup")
+    assert status == 200 and json.loads(body)["unit"] == "1-backup"
 
     # 2. the console's timeline: the CAMERA's id, and both of its recordings under it
-    status, spans = console_routes(archive, None, ctl, rec)(None, "GET", "/timeline/1", {})
-    assert status == 200 and len(spans) == 2
+    srv = door(box, st, "r-door", "srv-1")
+    try:
+        status, spans = console_routes(True, None, ctl, rec)(None, "GET", "/timeline/1", {})
+        assert status == 200 and len(spans) == 2
+    finally:
+        srv.shutdown()
 
     # 3. the lost lease: a reassignment names the unit the way the lease does — as text
-    r1 = RecWorker("r-1", box.vars, box.objects, archive=archive, clock=box.clock, wall=box.wall, server="srv-1")
-    r1.reconcile_once()
+    r1 = recorder(box, "r-1", "srv-1", acl=False)
+    r1.lease_pass(); r1.reconcile_once()
     held = sorted(r1.reconciler.actual)
     assert held and all(not str(u).isdigit() for u in held)                # the point: nothing here is a number
     rec.move(held[0], "r-2", "operator asked")
-    RecWorker("r-2", box.vars, box.objects, archive=archive, clock=box.clock, wall=box.wall, server="srv-2").reconcile_once()
+    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})
+    r2.lease_pass(); r2.reconcile_once()
     assert r1.lease_pass() == [held[0]] and r1.recording_allowed        # released, not fenced — and no ValueError
     assert held[0] not in r1.reconciler.actual
 
 
-# -- the watermark: what the archive does when the disk is full ---------------------------------------
+# -- a full disk: nothing for the recorder to watch ---------------------------------------------------
 
-def _space_box(days: float = 10.0, size: int = 50_000, n: int = 10):
-    """An archive with one unit `days` deep, and the knob on."""
-    from w2cplatform.resource import SPACE_KEY
-    box = Box()
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75", "min_days": "3"}, cas=0)
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    t = box.wall()
-    for i in range(n):
-        start = t - (days - i * days / n) * 86400
-        p = segment_path(box.archive, "1", 1, datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x" * size)
-        Manifest(box.archive, "1").append(Segment("1", 1, start, start + 600, os.path.relpath(p, box.archive), size))
-    return box, arch
-
-
-def test_the_watermark_is_a_floor_and_a_shortfall_not_a_quiet_cut():
-    """Retention by days is a promise; the watermark is what happens when it cannot be kept.
-
-    Freeing stops at the floor, and what could not be freed is a number in the report —
-    not a cut into yesterday that nobody asked for and nobody is told about."""
-    from vms.archive import ArchivePolicy
-    from vms.space import depth_days
-    box, arch = _space_box(days=10.0)
-    policy = ArchivePolicy(arch, box.vars)                      # no peers on this box: nowhere to evacuate to
-    assert round(depth_days(arch, "1", box.wall())) == 10
-
-    rep = policy.free(150_000, box.wall(), min_days=3)          # three segments' worth
-    assert rep == {"freed": 150_000, "cut": 3}
-    assert round(depth_days(arch, "1", box.wall())) == 7
-    assert len(Manifest(box.archive, "1").read()) == 7 and len(arch.coverage("1")) >= 1
-
-    rep = policy.free(10_000_000, box.wall(), min_days=3)       # more than there is above the floor
-    assert rep["shortfall"] > 0 and rep["freed"] < 10_000_000
-    left = Manifest(box.archive, "1").read()
-    assert left and 3 <= depth_days(arch, "1", box.wall()) <= 4   # AT the floor — not emptied, not below it
-
-
-def test_a_resource_over_the_mark_says_so_and_one_under_it_does_nothing():
-    """The two marks and the gap between them: a saw is what one mark alone gives."""
-    from w2cplatform.resource import Resource
-    box, arch = _space_box(days=10.0)
-    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall,
-                   space_probe=lambda root: (1_000_000, 500_000))
-    from vms.archive import ArchivePolicy
-    res.register("rec", ArchivePolicy(arch, box.vars))
-    assert res.relieve() == {"space": "ok", "full": 0.5}
-    assert res.heartbeat()["space"]["free"] == 500_000          # what a peer reads before sending anything here
-
-    res.space_probe = lambda root: (1_000_000, 100_000)         # 90 % full
-    rep = res.relieve()
-    assert rep["space"] == "over" and rep["need"] == 150_000    # down to the LOW mark, not to the high one
-    assert rep["freed"] == 150_000 and rep["short"] == 0 and rep["rec.cut"] == 3
-
-
-def test_backfill_stops_while_the_disk_is_over_the_mark():
-    """Otherwise the two chase each other for ever: the resource frees space, the recorder
-    fetches more of the same hours back. `keep_days` closes that trap in time; this closes
-    it in space, and not even an operator's `force` opens it."""
+def test_backfill_into_a_ring_waits_for_the_volume_and_not_for_the_disk():
+    """The footage is in a ring formatted at its quota: it cannot fill the disk, and what is fetched now is
+    written at the ring's head and overwritten last. So nothing chases anything, and backfill has one reason
+    to wait: a volume that takes nothing — away, or not open at all. Not even an operator's `force` opens
+    that: there is nowhere to land what it would fetch."""
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1_000_000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
-
-    from w2cplatform.resource import SPACE_KEY
+    r = _rec(box, keep_days=1.0, settle=1000.0)
     now = 1_000_000.0
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
     _ours(box, r, 1, ((now - 80000, now - 76400), (now - 70000, now - 66400)))   # an hour missing between two
-    r.space_probe = lambda root: (1_000_000, 100_000)                    # 90 % full
-    assert r.under_pressure()
+
+    r.archive_error, r.archive_failure = "obsd is not answering", "away"
+    assert r.archive_busy()
     assert r.backfill(budget=1, now=now, force=True) == []               # force does not open it either
 
-    r.space_probe = lambda root: (1_000_000, 500_000)                    # room again, and the same call fetches
-    assert not r.under_pressure()
+    r.archive_error, r.archive_failure = "", ""                          # it answers again, and the same call fetches
     assert r.backfill(budget=1, now=now, force=True)
 
 
@@ -533,37 +482,6 @@ def _rec_alive(box, worker, server, labels=(), volume=None):
                                                        "labels": ",".join(labels)}).to_bytes())
     box.objects.put(f"platform/resources/{server}/heartbeat",
                     json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}", "units": {}}).encode())
-
-
-def test_the_recorder_frees_bytes_on_the_disk_that_is_short():
-    """The resource measured a volume, so the answer has to come off that volume.
-
-    Two disks, one of them full. Freeing on the empty one would report a number and
-    change nothing: the recording that cannot write is on the full one."""
-    import tempfile
-    from vms.archive import ArchivePolicy, ArchiveResource
-    from vms.resource import vms_resource
-    from w2cplatform.resource import SPACE_KEY
-
-    box = Box()
-    archives = {v: ArchiveResource(tempfile.mkdtemp(prefix=v + "-spool-"),
-                                   tempfile.mkdtemp(prefix=v + "-"), wall=box.wall) for v in ("vol-a", "vol-b")}
-    res = vms_resource(archives["vol-a"], "srv-1", "http://srv-1", box.vars, box.objects,
-                       wall=box.wall, archives=archives)
-    sizes = {archives["vol-a"].root: (1_000_000, 10_000),      # 99 % full
-             archives["vol-b"].root: (1_000_000, 990_000)}
-    res.space_probe = lambda root: sizes[root]
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
-
-    asked = []
-    policy: ArchivePolicy = res.hooks["rec"]
-    real_free = policy.free
-    policy.free = lambda need, now, min_days=3.0, volume=None: (asked.append((volume, need)) or
-                                                                real_free(need, now, min_days, volume=volume))
-    rep = res.relieve()
-    assert [v for v, _ in asked] == ["vol-a"], "asked about the disk that is short, and only that one"
-    assert [v["volume"] for v in rep["volumes"]] == ["vol-a"]
-    assert res.spaces()["vol-b"]["full"] == 0.01               # the other disk was never touched
 
 
 def test_three_disks_are_three_places_to_record_on_one_server():
@@ -670,8 +588,8 @@ def test_a_recording_prefers_its_home_and_is_written_anywhere_when_it_is_down():
     A label is a filter: with `labels: [srv-a]` a recording whose server is down becomes
     unplaceable, and the recording stops — at exactly the moment it must not. `home` is a
     preference: at home when home is there, anywhere when it is not, and back, one a pass,
-    when it returns. The footage written meanwhile stays where it was written until that
-    server needs the room (`vms/space.py`)."""
+    when it returns. The footage written meanwhile stays in the volume it was written into, for as
+    long as that volume's ring holds it — and the console reads it there through that recorder's door."""
     box, rec = _rec_home_box()
     rec.create({"name": "1", "cam": "1", "home": "srv-a"})
     rec.ensure_placed()
@@ -832,9 +750,9 @@ def test_the_dry_run_answers_before_the_reboot_not_after():
 
 
 def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
-    """`safe` is the whole point: units gone from that machine AND nothing left unwritten in
-    a spool. A recorder whose units have left promotes what they closed on its next pump —
-    and only then is it safe to pull the power."""
+    """`safe` is the whole point: no units left on that machine. Nothing else waits there to be moved — a
+    recorder's footage is in its volume, closed when the writer was — so the moment the work has left, the
+    power may go."""
     box, ctl, con, con_vars = _box()
     from vms.console import make_console
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
@@ -843,15 +761,11 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
 
     rec_ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker("r-1", box.vars, box.objects, FakeActuator(), archive=arch, clock=box.clock,
-                  wall=box.wall, server="srv-1", env={})
-    arch2 = ArchiveResource(box.spool + "2", box.archive + "2", wall=box.wall)
-    r2 = RecWorker("r-2", box.vars, box.objects, FakeActuator(), archive=arch2, clock=box.clock,
-                   wall=box.wall, server="srv-2", env={})               # somewhere for the work to go
-    r.heartbeat_once(); r2.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once(); r.heartbeat_once()
+    r = recorder(box, "r-1", "srv-1", acl=False)
+    r2 = recorder(box, "r-2", "srv-2", acl=False, env={"ARCHIVE_VOLUME": "file://" + box.archive + "-2"})   # somewhere for the work to go
+    r.heartbeat_once(); r2.heartbeat_once(); rec_ctl.ensure_placed(); r.lease_pass(); r.reconcile_once(); r.heartbeat_once()
     assert rec_ctl.where("1") == "r-1"
-    m = make_console(con, arch, wall=box.wall, mounts={"rec": rec_ctl})   # the console's token: it may say "draining"
+    m = make_console(con, box.archive, wall=box.wall, mounts={"rec": rec_ctl})   # the console's token: it may say "draining"
 
     assert m.drain_route("GET", {})[1] == {"draining": "", "safe": True,
                                            "subsystems": {"vms": {"draining": "", "subsystem": "vms"},
@@ -865,23 +779,11 @@ def test_the_upgrade_script_polls_a_condition_instead_of_sleeping():
     _worker_on(box, "w-2", "srv-2")                                # give it somewhere, and the dry run goes quiet
     assert m.drain_route("GET", {})[1].get("would_strand", {}) == {}
 
-    # a spool file nobody promoted yet: not safe, whatever the assignments say
-    t = box.wall()
-    p = segment_path(box.spool, "1", 1, datetime.fromtimestamp(t - 60, timezone.utc))
-    os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-    os.utime(p, (t - 30, t - 30))                                   # the box's clock, not the machine's
-    r.heartbeat_once()
-    assert m.drain_route("GET", {})[1]["subsystems"]["rec"]["spool"] == 1
-
     assert [(mv[1], mv[2]) for mv in rec_ctl.redistribute()] == [("r-1", "r-2")]     # the work leaves, orderly
     assert [(mv[1], mv[2]) for mv in ctl.redistribute()] == [("w-1", "w-2")]
-    r.heartbeat_once()
-    mid = m.drain_route("GET", {})[1]["subsystems"]["rec"]          # nothing assigned here any more…
-    assert mid["units"] == 0 and mid["spool"] == 1 and mid["safe"] is False   # …and still not safe: a segment is unwritten
-    r.reconcile_once(); r.pump_once(); r.heartbeat_once()           # …and the pump promotes what was closed
+    r.lease_pass(); r.heartbeat_once()
     rep = m.drain_route("GET", {})[1]
-    assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["rec"]["spool"] == 0
-    assert rep["subsystems"]["vms"]["units"] == 0
+    assert rep["subsystems"]["rec"]["units"] == 0 and rep["subsystems"]["vms"]["units"] == 0
     assert rep["safe"] is True                                      # now the power may go
 
     assert m.drain_route("DELETE", {})[1] == {"draining": "", "safe": True,
@@ -898,15 +800,10 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
 
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
     con_rec.create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
     now = 1000000.0
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, window=(22, 6), keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, window=(22, 6), keep_days=1.0, settle=1000.0)
     r.backfill_budget = 0                                                  # the ordinary pass fetches nothing at all
 
     con_rec.vars.put(REC_SPEC.sub.request_key("1-a"),
@@ -914,7 +811,8 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
                       "at": str(now), "by": "anna"})
     r.pump_once()                                                           # the ORDINARY pass, not a direct call:
     assert r.fetched == ["1-a"]                                             # a pass nobody runs is the bug this project has had twice
-    assert [s.source for s in Manifest(box.archive, 1).read() if s.source == "edge"]
+    r.store.seal()
+    assert _backfilled(r)
 
     r.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
@@ -934,10 +832,8 @@ def test_a_request_for_somebody_elses_recording_is_left_alone():
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
     con_rec.create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1", env={})
-    r.heartbeat_once()                                                       # …and this recorder holds NOTHING
+    r = recorder(box)
+    r.lease_pass(); r.heartbeat_once()                                       # …and this recorder holds NOTHING
     assert r.rows == []
     assert r.device_source("1") is not None                                  # the device is right there, answering
 
@@ -947,31 +843,23 @@ def test_a_request_for_somebody_elses_recording_is_left_alone():
     assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-a"]   # still asked, for whoever holds it
 
 
-def test_a_request_waits_while_the_disk_is_over_the_mark():
-    """`force` does not open this door for backfill (above) and a person asking does
-    not open it either: a disk the resource is emptying this minute cannot be given
-    more, however politely."""
+def test_a_request_waits_while_the_volume_takes_nothing():
+    """A person asking does not open this door either: with the volume away there is nowhere to land the
+    range. The request is kept — a wait, not a refusal — and served the pass the volume answers again."""
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1_000_000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall); con_rec.create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, keep_days=1.0, settle=1000.0)
 
-    from w2cplatform.resource import SPACE_KEY
-    box.vars.put(SPACE_KEY, {"enabled": "true", "high": "0.85", "low": "0.75"}, cas=0)
-    r.space_probe = lambda root: (1_000_000, 100_000)                        # 90 % full
+    r.archive_error, r.archive_failure = "obsd is not answering", "away"
     con_rec.vars.put(REC_SPEC.sub.request_key("1-b"),
-                     {"unit": "1", "cam": "1", "from": "900000", "to": "930000", "at": "1", "by": "anna"})
+                     {"unit": "1", "cam": "1", "from": "900000", "to": "900600", "at": "1", "by": "anna"})
     assert r.requests() == [] and r.fetched == []
     assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-b"]   # kept: it is a wait, not a refusal
 
-    r.space_probe = lambda root: (1_000_000, 500_000)                        # room again, same request
+    r.archive_error, r.archive_failure = "", ""                              # it answers again, same request
     assert r.requests() and r.fetched == ["1-b"]
 
 
@@ -983,13 +871,8 @@ def test_a_request_the_recorder_could_not_serve_is_not_reported_as_served():
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1_000_000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall); con_rec.create({"name": "1", "cam": "1"})
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, keep_days=1.0, settle=1000.0)
     con_rec.vars.put(REC_SPEC.sub.request_key("1-c"),
                      {"unit": "1", "cam": "1", "from": "900000", "to": "930000", "at": "1", "by": "anna"})
     box.clock.advance(26)                                                    # past the lease, short of a renewal
@@ -1011,23 +894,18 @@ def test_the_hole_in_the_footage_and_the_hole_in_the_detections_close_together()
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
 
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall); con_rec.create({"name": "1", "cam": "1"})
     det = SpecController(DET_SPEC, con_vars, box.objects, wall=box.wall)
     det.create({"name": "1-lpr", "cam": "1", "kind": "lpr", "params": "plates"})
     # the console's token in this harness predates `detjob`; in the process it carries that grant too
     jobs = SpecController(DETJOB_SPEC, box.vars.as_writer("console2", DETJOB_SPEC.acl_console()), box.objects, wall=box.wall)
 
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
     now = 1_000_000.0
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, keep_days=1.0, settle=1000.0)
 
     _ours(box, r, 1, ((now - 80000, now - 76400), (now - 70000, now - 66400)))   # recorded, then a hole
     done = r.backfill(budget=1, now=now, force=True)                 # the link came back
-    assert done and done[0]["segments"] > 0
+    assert done and done[0]["groups"] > 0
     r.heartbeat_once()
 
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
@@ -1041,7 +919,7 @@ def test_the_hole_in_the_footage_and_the_hole_in_the_detections_close_together()
 
 def test_a_fetch_that_brought_nothing_new_queues_no_scan():
     """`kept == 0` usually means live recording reached those minutes while we were
-    fetching — the overlap check dropped every segment. Those minutes are already
+    fetching — the overlap check dropped every group. Those minutes are already
     ours AND were already watched by the live detector; reporting them as newly
     arrived would scan them a second time and double every event in them."""
     from vms.config import DET_SPEC, DETJOB_SPEC
@@ -1051,27 +929,20 @@ def test_a_fetch_that_brought_nothing_new_queues_no_scan():
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
 
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall); con_rec.create({"name": "1", "cam": "1"})
     det = SpecController(DET_SPEC, con_vars, box.objects, wall=box.wall)
     det.create({"name": "1-lpr", "cam": "1", "kind": "lpr"})
     jobs = SpecController(DETJOB_SPEC, box.vars.as_writer("console2", DETJOB_SPEC.acl_console()), box.objects, wall=box.wall)
 
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
     now = 1_000_000.0
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server="srv-1",
-                  env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, keep_days=1.0, settle=1000.0)
 
     # our own recording already covers these minutes
     start, end = now - 80000, now - 76400
-    pth = segment_path(box.archive, 1, r.epochs["1"], datetime.fromtimestamp(start, timezone.utc))
-    os.makedirs(os.path.dirname(pth), exist_ok=True); open(pth, "wb").write(b"x")
-    Manifest(box.archive, 1).append(Segment("1", r.epochs["1"], start, end, os.path.relpath(pth, box.archive), 1))
+    _ours(box, r, 1, ((start, end),))
 
     got = r.fetch("1", "1", "http://srv-1:8083/playback/1", start, end)
-    assert got["segments"] == 0                                        # everything overlapped what we have
+    assert got["groups"] == 0                                          # everything overlapped what we have
     r.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
     assert not hb.extra["closed"], "minutes we already had were announced as newly arrived"
@@ -1163,28 +1034,20 @@ def test_a_range_just_copied_is_neither_copied_again_nor_taken_for_what_the_sour
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1", "cam": "1"})
-    r = RecWorker("r-1", box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  FakeActuator(), archive=ArchiveResource(box.spool, box.archive, wall=box.wall), clock=box.clock,
-                  wall=box.wall, server="srv-1", env={}, keep_days=1.0, settle=1000.0)
-    r.heartbeat_once(); rec_ctl.ensure_placed(); r.reconcile_once()
+    r = _rec(box, keep_days=1.0, settle=1000.0)
     now = 1000000.0
-    for start, end in ((now - 80000, now - 76400), (now - 70000, now - 66400)):
-        p = segment_path(box.archive, 1, r.epochs["1"], datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(box.archive, 1).append(Segment(1, r.epochs["1"], start, end, os.path.relpath(p, box.archive), 1))
+    _ours(box, r, 1, ((now - 80000, now - 76400), (now - 70000, now - 66400)))
     before = r.our_coverage(1)
     hole = (now - 76400, now - 70000)
     assert hole in r.gaps(1, {"from": 0.0, "to": now}, now)
 
-    shown = r.our_coverage
-    r.our_coverage = lambda unit: before                               # the store has not shown the copy yet
     out = r.fetch_from(1, "1", {"kind": "device", "url": "http://srv-1/playback/1"}, *hole)
-    assert out["segments"] > 0
+    assert out["groups"] > 0
+    assert r.our_coverage(1) == before                                 # the block is open: the volume does not show the copy yet
     assert r.nowhere == {}                                             # everything asked for was delivered
     assert hole not in r.gaps(1, {"from": 0.0, "to": now}, now)        # …and is not copied a second time
 
-    r.our_coverage = shown                                             # the volume shows it now
+    r.store.seal()                                                     # the volume shows it now
     assert hole not in r.gaps(1, {"from": 0.0, "to": now}, now)          # ours, as the volume says
     assert r.landing.get("1") == []                                    # nothing left waiting to be shown

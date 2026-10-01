@@ -14,9 +14,7 @@ each half can only learn from the other:
      worker's heartbeat is the entire basis for the decision;
   2. the Go worker reads that placement out of its assignment row, takes the epoch, and says so in a
      heartbeat Python parses back into the console's read model;
-  3. a segment the Go recorder promotes is read by Python's Manifest, with the same path grammar, the
-     same line and the same numbers;
-  4. a planned stop (SIGTERM) releases the slot ON PURPOSE, which is a different row from a lapse — the
+  3. a planned stop (SIGTERM) releases the slot ON PURPOSE, which is a different row from a lapse — the
      thing М10A Lesson 22's rolling upgrade depends on.
 
 The Go half lives in the PRODUCT now, not in the course: `../vmsserver-go/` is kept as the product's
@@ -35,13 +33,11 @@ import subprocess
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
 
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from vms.archive import Manifest, Segment, segment_path  # noqa: E402
 from vms.controller import VmsController  # noqa: E402
 from w2cplatform.objects import FsObjectStore  # noqa: E402
 from w2cplatform.contract import Slot  # noqa: E402
@@ -151,43 +147,3 @@ def test_a_python_controller_places_a_camera_on_a_go_worker():
     #    Lesson 22's rolling upgrade is built on the difference.
     slot, _ = vars_.get("vms/slots/w-1")
     assert slot["released"] == "true", (slot, log)
-
-
-def test_a_segment_the_go_recorder_promotes_is_read_by_python():
-    """The archive tree is the SECOND contract the wide cut costs, and the only one that is a filesystem.
-
-    A recorder writes the tree; the resource process — Python — repairs, retains and evacuates over it.
-    They agree on three things: the path grammar rec/<unit>/e<epoch>/<stamp>.mp4, the manifest line, and
-    the order (the file first, the line after). This checks all three with the real binary."""
-    root = tempfile.mkdtemp(prefix="cross-")
-    archive, spool = os.path.join(root, "archive"), os.path.join(root, "spool")
-    binary = _build(root)
-    vars_ = FileVariables(os.path.join(root, "config"))
-    FsObjectStore(os.path.join(root, "objects"))
-
-    # what a killed instance leaves behind: a closed segment in the spool, older than the grace
-    start = datetime(2026, 9, 12, 10, 0, 0, tzinfo=timezone.utc)
-    pth = segment_path(spool, "1", 1, start)                  # Python's grammar, written by Python…
-    os.makedirs(os.path.dirname(pth), exist_ok=True)
-    with open(pth, "wb") as f:
-        f.write(b"x" * 4096)
-    old = time.time() - 120
-    os.utime(pth, (old, old))
-
-    r = _start(binary, "recorder", root, archive, spool, RECORDER_NAME="r-1")
-    try:
-        # …and promoted by Go on the way up, because a segment nobody indexed is footage nobody can find
-        line = _until(lambda: Manifest(archive, "1").read() or None, timeout=20)
-        assert line, "the Go recorder did not promote what the spool held"
-        seg = line[0]
-        assert isinstance(seg, Segment)
-        assert seg.unit == "1" and seg.epoch == 1 and seg.path == "rec/1/e1/20260912T100000Z.mp4"
-        assert seg.bytes == 4096 and seg.source == "live" and seg.start == start.timestamp()
-        assert os.path.isfile(os.path.join(archive, seg.path))    # the file is where the line says
-        assert not os.path.exists(pth)                            # and the spool copy went last
-        assert Manifest(archive, "1").read() == [seg]             # idempotent: one line, not two
-    finally:
-        _stop(r)
-
-    slot, _ = vars_.get("rec/slots/r-1")
-    assert slot and slot["released"] == "true", slot

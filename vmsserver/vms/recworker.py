@@ -8,29 +8,29 @@ and the row's `cam` field says whose footage this one holds. It does not
 hold the camera: it subscribes to the fan-out of whichever VMS worker does
 (`live_url` in the VMS heartbeat, found the way a gateway finds it — never
 by calling a worker, never a second connection to the camera) and writes
-footage into `rec/<name>/e<epoch>/` on the archive it is homed to, with the
-manifest beside it. The worker that holds
-the camera may be anywhere, `servers: shared`; the recorder must be where
-the disks are — `requires: resource`, `servers: distinct` by default — and
-when its server dies the controller moves its recordings to a server whose
-resource answers (Lesson 4's two silences). Footage from before the move
-stays where it was written, under the old epoch; the console's timeline
-merges the two.
+footage into the VOLUME it holds — a volume of ObjectStorage, through the
+host's daemon `obsd` (`vms/archive.py`), as the stream `<name>/e<epoch>`.
+
+The worker that holds the camera may be anywhere, `servers: shared`; the
+recorder must be where its volume can be served — `requires: resource`,
+one per volume — and when its server dies the controller moves its
+recordings to a recorder that holds a volume. Footage from before the move
+stays in the volume it was written to, under the old epoch; the console's
+timeline merges the two.
 
     RECORDER_NAME / SLOT_INDEX     -> the slot to claim: r-<index>
-    SERVER_NAME (or the hostname)  -> `server` in the heartbeat: whose archive it writes into
-    SPOOL, ARCHIVE                     -> the archive resource's two roots on this server
-    CAPACITY                           -> recordings this server's disks and NIC can take — its own number
+    SERVER_NAME (or the hostname)  -> `server` in the heartbeat
+    ARCHIVE                        -> this server's resource tree: where its EVENTS go (not its footage)
+    OBSD_SOCKET                    -> the host's ObjectStorage daemon
+    CAPACITY                       -> recordings this server's disks and NIC can take — its own number
 
 Same class as the worker (`VmsWorker` over the `rec` rows): the same
 reconciler, the same gate (an epoch per unit, a lease, the fence at the
 slot), the same heartbeat. What differs is what the pipeline needs — a
-source, not a camera — and that closed segments are promoted from the
-spool into the archive on every pass.
+source, not a camera — and a sink: the volume's one writer on this host.
 """
 from __future__ import annotations
 
-import errno
 import logging
 import os
 import threading
@@ -38,12 +38,12 @@ import time
 
 from w2cplatform.console import heartbeats, holder_of
 from w2cplatform.contract import Subsystem
+from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.objects import ObjectStore
-from w2cplatform.resource import disk_space, space_settings
 from w2cplatform.variables import Variables
 
 from . import volumes
-from .archive import ArchiveResource, overlaps, parse, subtract
+from .archive import Archive, ArchiveError, classify, overlaps, stitch, subtract
 from .config import rec_row
 from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
@@ -57,56 +57,66 @@ log = logging.getLogger("recworker")
 REC = Subsystem("rec")
 
 
-# An archive that fails is either AWAY or WRONG, and the two are answered differently: an archive that is
-# away is kept and buffered into, one that is wrong is handed back so its recordings can go somewhere that
-# works. The errno says which.
+# What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
+# sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
+# answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
 #
-# WRONG is only what nothing but a person will change: no permission (a key revoked, a policy changed), a
-# path component that is a file, a read-only filesystem. Everything else is AWAY — a timeout, a refused or
-# reset connection, a network that is down, an I/O error on a mount that went quiet — and so is whatever
-# nobody listed, because the cost of guessing wrong is lopsided: an away archive handed back reshuffles
-# recordings for a link that is back in a minute, while a wrong one kept is a spool that queues, visibly.
-#
-# Two that look wrong and are not. "No space" is an archive its OWN watermark empties (Lesson 18), and that
-# pass is run by the recorder holding it: hand it back and the one process that could free it stops
-# holding it. "No such file" is ambiguous at promotion — it is as likely the spool's copy that vanished as
-# the archive's directory — and a wrong guess there would hand back a working volume.
-PERMANENT = {errno.EACCES, errno.EPERM, errno.ENOTDIR, errno.EISDIR, errno.EROFS}
+# `store` is the recorder's CURRENT volume — a callable, asked on every sample — not the one open when the
+# pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed
+# volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
+# next key frame after a remount opens a sequence in the new writer, and the recording goes on.
+class RecSink:
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+        self.store_of = store if callable(store) else (lambda: store)
+        self.unit, self.epoch, self.on_lost, self.backfill = str(unit), int(epoch), on_lost, backfill
+        self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
+        self.taken = self.refused = 0
 
+    @property
+    def store(self) -> Archive | None:
+        return self.store_of()
 
-def failure_kind(e: BaseException) -> str:
-    """`permanent` when only a person can fix it, else `transient`."""
-    return "permanent" if getattr(e, "errno", None) in PERMANENT else "transient"
+    def put(self, sample: Sample) -> str:
+        try:
+            store = self.store_of()
+            if store is None:
+                raise Unavailable("PUT_MEDIA", "no volume open")
+            st = store.put(self.unit, self.epoch, sample, self.backfill)
+            self.taken += 1
+            return st
+        except Unavailable:
+            if self.on_lost is not None:
+                self.on_lost()
+            raise
+        except ObsdError as e:
+            self.refused += 1
+            if e.name == "WRITER_STOPPED" and self.on_lost is not None:
+                self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
+            elif self.on_wrong is not None and classify(e).kind == "wrong":
+                self.on_wrong(e)
+            raise
+
+    def finish(self) -> None:
+        store = self.store_of()
+        if store is None:
+            return
+        try:
+            store.finish(self.unit, self.epoch, self.backfill)
+        except ObsdError:
+            pass
 
 
 class RecWorker(VmsWorker):
     """A recorder: `VmsWorker` over `rec/recordings/*`, its pipelines fed by the
-    worker's fan-out, its segments promoted into this server's archive."""
+    worker's fan-out, writing into the volume it holds."""
 
     SUB = REC
     ROWS = "recordings"
-    # How long one pass waits on a promotion before moving on, and how long a promotion may run before it
-    # is reported stuck. The first keeps a healthy archive synchronous — a local disk or a live bucket
-    # finishes well inside it, so a pass that promotes still ends with the segment in the archive. The
-    # second is the only way a hang gets said at all: nothing raises, so the recorder has to notice the
-    # silence itself. Both in seconds.
-    PROMOTE_WAIT = 5.0
-    PROMOTE_STUCK = 60.0
-    # How many of its own segments one promotion moves. In ordinary running a pass finds nought or one, and
-    # this is never reached; it is for the queue an outage leaves behind. It keeps each promotion SHORT —
-    # so what the heartbeat says between passes is true — and it paces the drain rather than emptying an
-    # hour of footage in one go. It is a pace and not a bandwidth cap: shaping the uplink is bytes per
-    # second, and that is not this.
-    PROMOTE_BUDGET = 8
     # How long a volume that refused writes is left alone before this recorder tries it again. Opening it
     # may well succeed — the directories are there — and the first write fail again, so without a pause a
     # recorder flaps between taking and dropping the same broken archive. Long enough not to flap, short
     # enough that a key somebody fixed is picked up without a restart.
     REFUSED_FOR = 600.0
-    # How long `volume_pass` waits on OPENING an archive before calling it away. Opening is a `makedirs` on the
-    # root — near instant when the archive is there — and it happens inside `lease_pass`, so this wait is
-    # the most a hung mount may take from the renewals, once per volume taken.
-    OPEN_WAIT = 5.0
     # How many closed ranges the heartbeat carries. A window and not a queue: the console acts on what it
     # sees, and a range that scrolled out was either acted on or is gone — which is why the console's
     # decision has to be idempotent on its own (it is: the job's id is the range).
@@ -117,8 +127,8 @@ class RecWorker(VmsWorker):
     # number, from what a start takes on a real box.
     START_GRACE = 20.0
     # How long a released backup keeps writing after its primary is written again. The primary's first
-    # segment is not visible until it closes, and "running" in a heartbeat comes before the first frame on
-    # disk; stopping the backup at that word would leave the seam between them to nobody. With a minute of
+    # minutes are not visible until their block closes, and "running" in a heartbeat comes before the first
+    # frame on the volume; stopping the backup at that word would leave the seam between them to nobody. With a minute of
     # overlap the two archives overlap, and backfill finds the seam from both sides.
     HOLD_AFTER = 60.0
     # How much of the past a held backup keeps in memory (Lesson 26). When the primary is found missing —
@@ -142,17 +152,27 @@ class RecWorker(VmsWorker):
     SLOT_PREFIX, NAME_ENV = "r", "RECORDER_NAME"
     parse_row = staticmethod(rec_row)
 
-    def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None, archive: ArchiveResource | None = None,
+    def __init__(self, name: str | None, vars_: Variables, objects: ObjectStore, actuator=None,
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
                  server: str | None = None, capacity: int | None = None, instance: str | None = None, slot_ttl: float = 45.0,
-                 env: dict | None = None, grace_seconds: float = 30.0,
+                 env: dict | None = None, archive_root: str | None = None, obsd: Session | None = None,
+                 default_quota: int | None = None,
                  window: tuple[int, int] | None = None, keep_days: float = 30.0, settle: float = 900.0,
-                 stitch: float = 2.0):
+                 stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
-        self.archive = archive or ArchiveResource(env.get("SPOOL", "/data/spool"), env.get("ARCHIVE", "/data/archive"), wall=wall)
+        events_root = archive_root or env.get("ARCHIVE", "/data/archive")
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
-                         slot_ttl, archive_root=self.archive.root, env=env)
-        # WHICH ARCHIVE THIS RECORDER WRITES INTO — its place, in the sense `place_by: volume` means. Three
+                         slot_ttl, archive_root=events_root, env=env)
+        # The host's ObjectStorage daemon, and this process's one session with it. Every volume this recorder
+        # opens, every writer, every reader is a handle of THIS session — a token the daemon knows it by.
+        #
+        # Every call waits at most `OBSD_TIMEOUT` — ten seconds, a third of a lease. The calls a pass makes run on
+        # the thread that renews the leases, and a daemon that took a request and went quiet would otherwise hold
+        # that thread past the lease: the recorder fenced, every recording stopped, for one silent daemon. Silent
+        # is `away` (`ArchiveError`): the volume is kept, the pass goes on, the next one asks again.
+        self.session = obsd or Session(client=f"rec-{self.name}", timeout=float(env.get("OBSD_TIMEOUT", "10")))
+        self.block, self.read = block, read           # how a volume this recorder formats is cut (`vms/archive.py`)
+        # WHICH VOLUME THIS RECORDER WRITES INTO — its place, in the sense `place_by: volume` means. Three
         # ways to be told, in this order:
         #
         # `$VOLUME` — PINNED. A disk is bolted to one machine, so the unit file that knows which disk this
@@ -163,39 +183,40 @@ class RecWorker(VmsWorker):
         # that volume's recorder until it stops or lapses (`volume_pass`). This is what makes a network
         # archive created on the console get served without anybody starting a process for it.
         #
-        # Nothing pinned and nothing declared — the SERVER's own name, which is what every single-disk box
-        # meant before any of this existed: one place, named after the machine, `home: srv-a` still true,
-        # `place_by: volume` behaving exactly like `place_by: server`.
+        # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
+        # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
+        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
+        # `/data/volume` next to `/data/archive`: inside, the resource's walks would take the ring for a
+        # subsystem, count its blocks as the tree's usage and mirror nothing of it (`ARCHIVE_VOLUME` to put it
+        # elsewhere).
         self.pinned = bool(env.get("VOLUME"))
-        self.default_volume = str(self.server or os.path.basename(self.archive.root.rstrip("/")) or "default")
+        self.default_volume = str(self.server or "default")
+        beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
+        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
+        q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
+        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
         self.volume = str(env.get("VOLUME") or self.default_volume)
+        self.store: Archive | None = None            # the volume open for writing, if one is
         self.full_capacity = self.capacity           # what it reports while it has a place to record in
-        self.volume_error = ""                       # why the archive it holds will not open, if it will not
-        # Why the archive it DID open has stopped taking segments, and since when. Not `volume_error`: that
-        # one means "will not open" and costs the volume its capacity; this one means "opened, then went
-        # away", and the answer to it is a queue in the spool, not a different archive.
+        self.volume_error = ""                       # why the volume it holds will not open, if it will not
+        # Why the volume it DID open has stopped taking samples, and since when. Not `volume_error`: that one
+        # means "will not open" and costs the volume its capacity; this one means "opened, then went away" —
+        # the daemon stopped answering, the bucket's network is down — and the answer to it is to try again.
         self.archive_error, self.archive_away_since = "", 0.0
-        self.archive_failure = ""                    # "transient" (away) or "permanent" (wrong) while archive_error is set
+        self.archive_failure = ""                    # "away" or "wrong" while archive_error is set
+        self.engine_lost = False                     # a sink found the daemon gone: remount on the next pass
         self.refused: dict[str, tuple[float, str]] = {}   # volume -> (tried again after, why) — see REFUSED_FOR
-        # The one promotion in flight, and since when (0: none). ONE: a mount that stopped answering keeps
-        # the call it swallowed, and starting another behind it every pass would pile up threads that are
-        # all waiting on the same dead mount.
-        self._promoter: threading.Thread | None = None
         self._backfiller: threading.Thread | None = None
-        self._opener: threading.Thread | None = None     # the one open in flight — a hung one included
-        self.promoting_since = 0.0
-        self.last_progress = 0.0                     # when a promotion last moved a segment — what tells moving from stuck
-        # Is the WRITER writing (Lesson 10, feedback U): bytes offered to the sinks against bytes that reached
-        # the spool and the archive. `promoted_bytes` is what left the spool for the archive, so a promotion
-        # does not read as the volume going backwards.
+        # Is the WRITER writing (Lesson 10, feedback U): bytes offered to the sinks against what the volume
+        # took — the ring's own count, `totalWritten`, from when this recorder opened it.
         self.writer = WriterWatch()
-        self.promoted_bytes = 0
-        self.grace_seconds = grace_seconds
+        self._written_at_open = 0
+        self._landed_before = 0                      # what landed under writers this recorder already closed: the count goes on
+        self._landed = 0
         # Backfill (Lesson 16): the hours in local time it may run in (None: any), how far back it may
         # reach, how fresh it must NOT touch, and the seam tolerance that stops 144 seams a day from
         # looking like 144 gaps.
         self.window, self.keep_days, self.settle, self.stitch = window, keep_days, settle, stitch
-        self.space_probe = disk_space                # the disk under the archive; a test cannot fill one
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
@@ -208,29 +229,46 @@ class RecWorker(VmsWorker):
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
-        self.closed: list[str] = []                 # ranges promoted from a device: `<unit>|<from>|<to>`, for the console
+        self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
         # ends, never where its holes are; without this the same empty range is planned every pass, and each
         # plan opens one of the device's one or two sessions.
         self.nowhere: dict[tuple[str, str], list[tuple[float, float]]] = {}
-        # What a source DELIVERED that our volume does not show yet (feedback AE): a store that shows a block
-        # only once it is closed shows a range just copied minutes later. Until it does, the range is ours —
+        # What a source DELIVERED that our volume does not show yet (feedback AE): a reader sees a block only
+        # once it is closed, so a range just copied shows minutes later. Until it does, the range is ours —
         # neither a hole to copy again nor, worse, something the source did not have.
         self.landing: dict[str, list[tuple[float, float]]] = {}
         self.archive_url = ""                       # this recorder's archive door, once served (Lesson 26)
+        self._rows_seen: dict[str, dict | None] = {}   # recording -> its row as last read, for the door (`_visible_from`)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
         self._primary_back_since: dict[str, float] = {}  # released backup -> since when its primary is written again
-        self.promoted = 0
+        # KEEPS (feedback BH): a recorder holding an INCIDENTS volume copies into it what somebody said to keep
+        # (`keep_pass`). What each keep holds there, as last seen, and what the last pass found.
+        self.incidents = False                       # is the volume this recorder holds an incidents volume
+        self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
+        self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
+        self._keeper: threading.Thread | None = None
+        self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
         self.sources: dict[str, str] = {}                                     # what each running pipeline subscribed to
-        # What the last instance closed and did not promote — but ONLY into the archive it was recorded for.
-        # This used to be a plain loop into `self.archive`, which in a constructor is the local default: no
-        # volume has been looked at yet. So a recorder writing to a network archive filed its last segment
-        # in the local one on every restart, and during an outage its whole queue. `promote_closed` asks each
-        # segment whose footage it is, and one marked for another volume waits for whoever holds that volume.
-        self.promote_closed()
+
+    # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
+    # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
+    # (`space_settings`, 0.75 by default) once the ring is full. The disk is shared with the resource's events,
+    # and a ring that filled it past the mark would leave the watermark short for good: nothing of the VMS's
+    # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
+    # formatted; a volume that exists keeps the size it has.
+    @staticmethod
+    def _share_of_free(root: str, low: float = 0.75) -> int:
+        try:
+            import shutil
+            os.makedirs(root, exist_ok=True)
+            u = shutil.disk_usage(root)
+        except OSError:
+            return 4 << 30
+        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
 
     # -- where a camera's stream is: the VMS heartbeat, never a call to the worker ------------------
     def source(self, cam) -> tuple[str, str] | None:
@@ -255,8 +293,8 @@ class RecWorker(VmsWorker):
         self.behind_loopback.pop(str(cam), None)
         return server, st["live_url"]
 
-    # A recording's pipeline needs a source: `rtspsrc location=<live_url> ! archivesink` under this
-    # recorder's epoch. No source (the camera is held by nobody yet) means "cannot start now": the
+    # A recording's pipeline needs a source — `rtspsrc location=<live_url>`, or the worker's shared memory — and a
+    # sink: this volume's writer, under this recorder's epoch. No source (the camera is held by nobody yet) means "cannot start now": the
     # reconciler backs off and retries, and the status says `waiting`.
     def enrich(self, cam: dict) -> dict | None:
         # Two identities, and this is the one method where both are used in three lines: `cam["cam"]` is
@@ -266,13 +304,16 @@ class RecWorker(VmsWorker):
         if src is None:
             self.waiting.add(cam["id"])
             return None
+        if self.store is None or self.store.writer is None:
+            self.waiting.add(cam["id"])
+            return None                                  # no volume open to write into: the reconciler retries
         self.waiting.discard(cam["id"])
         self.sources[cam["id"]] = src[1]
-        # The pipeline is about to record this unit under this epoch, for the volume held now: say so in the
-        # epoch's own directory before the first segment lands there.
-        self.mark_epoch(cam["id"], cam.get("epoch", 0))
+        # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
+        # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
-                   spool=self.archive.spool, archive=self.archive.root)
+                   sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
+                                on_wrong=self._volume_refuses))
         # A `when: offline` backup runs ON HOLD while its primary is written: the pipeline is up, subscribed,
         # and recording into a ring in memory, writing nothing (Lesson 26).
         if self._offline_backup(cam):
@@ -320,8 +361,8 @@ class RecWorker(VmsWorker):
             if str(cam["id"]) in self.shallow:
                 out["shallow"] = True
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
-        # summary, cheap to carry in every heartbeat. The primary plans from it and asks the manifest before
-        # it copies anything (Lesson 26).
+        # summary, cheap to carry in every heartbeat. The primary plans from it, and what it copies is what the
+        # backup's door hands over (Lesson 26).
         if volumes.is_backup(cam, self.vars):
             ours = self.our_coverage(cam["id"])
             if ours:
@@ -374,8 +415,8 @@ class RecWorker(VmsWorker):
 
     # One pass of the gate, after the reconciler's. A held backup whose primary now needs cover is RELEASED:
     # the ring is written first, then live. A released one whose primary has been back for `HOLD_AFTER` is
-    # put on hold again — a restart under the same epoch, so the open segment is finalized and promoted, and
-    # the ring starts filling afresh.
+    # put on hold again — a restart under the same epoch, so its open sequence is finished, and the ring
+    # starts filling afresh.
     def gate_pass(self, now: float | None = None) -> list[tuple[str, str]]:
         now = self.wall() if now is None else now
         done = []
@@ -491,8 +532,7 @@ class RecWorker(VmsWorker):
         since = self._not_written_since.setdefault(key, now)    # still starting: every event begins this way
         return now - since >= self.START_GRACE
 
-    # -- the passes: the worker's, plus a re-subscription when the camera's holder moved, plus the
-    # promotion of closed segments ---------------------------------------------------------------------
+    # -- the passes: the worker's, plus a re-subscription when the camera's holder moved -------------------
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the
     # shared-memory branch. The pipeline reading the old source is stopped and counted lost, so the
     # reconciler starts it again on the new one, under a new rec epoch (a start is a new writer).
@@ -517,12 +557,15 @@ class RecWorker(VmsWorker):
         return out
 
     # -- is the writer writing (Lesson 10, feedback U) ------------------------------------------------------
-    # Offered: what the actuator says its pipelines handed their sinks. Landed: what is in the spool now plus
-    # what left it for the archive. A recorder whose actuator does not measure says nothing — silence here
+    # Offered: what the actuator says its pipelines handed their sinks. Landed: what the volume's ring says it
+    # took since this recorder opened it (`totalWritten`). Between the two is a queue and the engine's own
+    # policy — a sequence it lost, a group of pictures it cut — and "taken" is not "on the volume" until this
+    # says so. A recorder whose actuator does not measure says nothing — silence here
     # is "not measured", never "fine". When the watch says stuck or losing, the cure is to reopen the writer:
     # the pipelines are stopped and counted lost, and the reconciler starts them again, under a new epoch as
-    # any restart. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat says the state
-    # every pass regardless.
+    # any restart — and the volume is closed and opened again on the next pass, a new writer under the same
+    # owner, exactly as after a lost engine. At most every ten minutes (`WriterWatch.reopen_every`); the heartbeat
+    # says the state every pass regardless.
     def writer_pass(self, now: float | None = None) -> dict:
         wall = self.wall() if now is None else now
         measure = getattr(self.actuator, "offered", None)
@@ -541,20 +584,22 @@ class RecWorker(VmsWorker):
             del self.fed[c]
         if not any(v is not None for v in vals):
             return self.writer.state
-        landed = self.promoted_bytes + sum(os.path.getsize(os.path.join(d, f))
-                                           for d, _, fs in os.walk(self.archive.spool) for f in fs)
+        try:
+            if self.store:
+                self._landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open
+            landed = self._landed_before + self._landed
+        except ArchiveError:
+            return self.writer.state                 # a volume that does not answer measures nothing this pass
         state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
         if self.writer.reopen_due(wall):
             log.warning("%s: the writer is %s (%s) — reopening it", self.name, state["state"], state)
             for cid in running:
                 self.actuator("stop", {"id": cid})
                 self.reconciler.lost(cid, self.now())
+            self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
         return state
 
-    # What this recorder adds to the heartbeat: how many segments are in the spool and not yet in the
-    # archive. Normally nought or one — the fragment being written — and it is the answer to the only
-    # question a rolling upgrade really asks: is it safe to stop this machine now. A recorder whose units
-    # have left promotes what they closed on its next pump, and then this is zero.
+    # What this recorder adds to the heartbeat.
     def heartbeat_extra(self) -> dict:
         # `volume`: the archive this recorder writes into, and the place the policy counts in. A box with
         # three disks runs three recorders, and `servers: distinct` over `place_by: volume` puts one
@@ -569,17 +614,19 @@ class RecWorker(VmsWorker):
         # configuration — so it says which ones are done and the console removes them.
         return {**super().heartbeat_extra(),         # `fetched`: the same answer every worker gives
                 "volume": self.volume,
-                # Empty unless the archive this process holds will not open. Published because the
-                # alternative is the failure that looks like health: a fresh hold, a green console and
-                # nothing being written. Whatever reads it must not count that volume as served.
+                # The box's own volume — where this recorder writes when nothing is declared. What the console
+                # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
+                "archive": self.default_url,
+                "archive_quota": self.default_quota,         # …and its size: what the console offers to declare it at
+                # Empty unless the volume this process holds will not open. Published because the alternative
+                # is the failure that looks like health: a fresh hold, a green console and nothing being
+                # written. Whatever reads it must not count that volume as served.
                 "volume_error": self.volume_error,
-                # Empty while the archive takes segments. Otherwise the reason it stopped, and when — the
-                # spool count beside it is the queue that is waiting. Different from `volume_error` on
-                # purpose: an archive that went away is still this recorder's place, and it is not
-                # handed back for being away.
+                # Empty while the volume takes samples. Otherwise the reason it stopped, and since when.
+                # Different from `volume_error` on purpose: a volume that went AWAY is still this recorder's
+                # place, and it is not handed back for being away.
                 "archive_error": self.archive_error,
                 "archive_away_since": self.archive_away_since,
-                # AWAY ("transient") is kept and buffered into; WRONG ("permanent") is handed back.
                 "archive_failure": self.archive_failure,
                 # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stuck or losing.
                 # A fresh hold and a running row do not say it; only this does.
@@ -587,16 +634,14 @@ class RecWorker(VmsWorker):
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
                 # given, so that a key somebody fixes is picked up without a restart.
                 "refused": {n: why for n, (_, why) in self.refused.items()},
-                "spool": len(self.archive.closed_in_spool(0.0, self.wall())),
-                # …and whose footage those are, by volume. A volume here that no recorder holds is footage
-                # that is waiting — not lost and not misfiled — until somebody takes it.
-                "spool_for": self.spool_by_volume(),
                 "closed": ",".join(self.closed),
                 # Lesson 26: the door this recorder serves its archive at, for a primary backfilling from it.
                 **({"archive_url": self.archive_url} if self.archive_url else {}),
                 # Lesson 16: what a clean fetch found nowhere — ours missing it, the source missing it too.
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
-                "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans))}
+                "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
+                # A recorder holding an incidents volume: what each keep holds there (`keep_pass`).
+                **({"keeps": self.keep_state} if self.incidents else {})}
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.
@@ -614,22 +659,22 @@ class RecWorker(VmsWorker):
     # now — without fencing the instance, which would mean it could never take another.
     def volume_pass(self) -> str:
         if self.pinned:
+            if self.store is None or self.engine_lost:
+                rows = {v.name: v for v in volumes.declared(self.vars)}
+                vol = rows.get(self.volume) or volumes.Volume(self.volume, "local", self.default_url, self.server or "",
+                                                              self.default_quota)
+                self.volume_error = str(self._write_into(vol) or "")
+                self.capacity = 0 if self.volume_error else self.full_capacity    # will not open: not a place to put a recording
+                self._place_kind(vol)
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
         free = volumes.servable(list(rows.values()), self.server)
-        # An archive that refuses writes — WRONG, not away — is handed back: buffering into it waits for
-        # nothing while the spool grows, and its recordings should go somewhere that works. What it already
-        # holds stays in the spool, marked for it. And it is left alone for REFUSED_FOR, or the next pass
-        # would take it straight back: opening may succeed and the first write fail again.
+        # A volume that refuses writes — WRONG, not away — is handed back: its recordings should go somewhere
+        # that works. And it is left alone for REFUSED_FOR, or the next pass would take it straight back:
+        # opening may succeed and the first write fail again.
         now = self.wall()
-        # …and an archive that is only AWAY becomes a wrong one when waiting stops being free: the local spool
-        # running out. Until then every minute of outage is footage kept; after it, every minute is the
-        # recordings that COULD be delivered losing their room to a queue for a place that is not answering.
-        if self.hold is not None and self.archive_failure == "transient" and self.spool_full():
-            self.archive_error = f"the spool is full: stopped waiting for {self.hold} ({self.archive_error})"
-            self.archive_failure = "permanent"
-        if self.hold is not None and self.archive_failure == "permanent":
+        if self.hold is not None and self.archive_failure == "wrong":
             why = self.archive_error
             self.refused[self.hold] = (now + self.REFUSED_FOR, why)
             logging.error("%s: %s refuses writes (%s) — handing it back", self.name, self.hold, why)
@@ -640,10 +685,12 @@ class RecWorker(VmsWorker):
         if held is not None and (held not in free or not self.renew_hold()):
             self.leave_volume(f"volume {held} is not this recorder's any more")   # withdrawn, disabled, or taken from us
         if self.hold is None and not free:
-            # Nothing declared anywhere: the box as it was before volumes were rows — one place, named
-            # after the server. Note this is reached after letting go above, so withdrawing the last
-            # volume does not leave a process quietly writing into it.
-            self.volume, self.capacity, self.volume_error = self.default_volume, self.full_capacity, ""
+            # Nothing declared anywhere: the box as it was before volumes were rows — one place, named after
+            # the server, beside `$ARCHIVE`. Note this is reached after letting go above, so withdrawing
+            # the last volume does not leave a process quietly writing into it.
+            err = self._write_into(volumes.Volume(self.default_volume, "local", self.default_url, self.server or "",
+                                                  self.default_quota))
+            self.volume, self.capacity, self.volume_error = self.default_volume, self.full_capacity, str(err or "")
             return self.volume
         # Take one, and then OPEN it — the step that was missing. Holding a volume and being unable to
         # write into it is the worst failure this subsystem has, because every number says it is fine:
@@ -672,6 +719,7 @@ class RecWorker(VmsWorker):
             err = self._write_into(rows[self.hold])
             if err is None:
                 self.volume, self.capacity, self.volume_error = self.hold, self.full_capacity, ""
+                self._place_kind(rows[self.hold])
                 return self.volume
             logging.warning("%s: %s will not open (%s) — looking for another", self.name, self.hold, err)
             skipped.add(self.hold)
@@ -679,64 +727,96 @@ class RecWorker(VmsWorker):
             self.volume_error = str(err)
             self.release_hold()                                    # so somebody who CAN write there may take it
 
-    # Taking a volume means writing into ITS tree, so the archive this process promotes into follows the
-    # hold. The spool does not: it is local scratch, one per process, and what is in it belongs to the
-    # volume we were holding when it was recorded — which is why `leave_volume` promotes before letting
-    # go, while we may still write there.
-    # Returns None when the archive is open and writable, or the reason it is not. Opening is the only
-    # honest test: a declaration can name a path that does not exist, a mount that is gone or a bucket
-    # nobody can reach, and none of that is visible in the row.
+    # An INCIDENTS volume is a place for kept footage and never one to record into: the recorder holding it says
+    # so with its capacity — nought, like a spare — and copies keeps instead (`keep_pass`).
+    def _place_kind(self, vol) -> None:
+        self.incidents = vol.kind == "incidents"
+        if self.incidents:
+            self.capacity = 0
+
+    # Taking a volume means OPENING it through the host's daemon and becoming its writer. Returns None when it
+    # is open and writable, or the reason it is not. Opening is the only honest test: a declaration can name a
+    # path that does not exist, a mount that is gone or a bucket nobody can reach, and none of that is visible
+    # in the row. A volume that does not exist yet is formatted at its quota — the size of its ring.
     #
-    # A failure to open is answered by its KIND (`failure_kind`). WRONG — a key, a path, a read-only mount —
-    # is returned, and `volume_pass` hands the volume back: nobody can write there until a person fixes it.
-    # AWAY — a timeout, a refused connection — is not a reason to give the volume up: the recorder keeps it,
-    # at full capacity, and points at it anyway with a handle that does not touch the root. Recording goes
-    # into the local spool as it always does, marked for this volume, and promotion keeps trying; the
-    # heartbeat says the archive is away. Handing it back instead would reshuffle every recording on it for
-    # a link that is back in a minute — the restart-during-an-outage case, which is exactly when opening
-    # fails this way.
-    def _write_into(self, vol) -> OSError | None:
-        if not vol.url or vol.url == self.archive.root:
+    # A failure is answered by its KIND (`vms/archive.py`, `ArchiveError`). WRONG — not a volume, no permission —
+    # is returned, and `volume_pass` hands the volume back: nobody can write there until a person fixes it. AWAY
+    # — the daemon not answering, a network that is down — and BUSY — a writer the daemon still holds for
+    # somebody — are not reasons to give the volume up: the recorder keeps it and tries again next pass. Handing
+    # it back would reshuffle every recording on it for a link that is back in a minute.
+    #
+    # The writer is mounted under the owner `rec:<volume>`. A recorder killed and started again — or the next
+    # recorder to hold the volume — names the same owner, and the daemon hands back the very writer the dead
+    # process left (`reattached`): no lock waited out, nothing recovered (feedback CF).
+    def _write_into(self, vol) -> ArchiveError | None:
+        if self.store is not None and self.store.url == vol.url and self.store.writer is not None and not self.engine_lost:
+            if vol.quota_bytes and vol.quota_bytes != self.store.quota:
+                try:
+                    self.store.resize(vol.quota_bytes)   # a new quota is a new size of the ring, without stopping
+                except ObsdError as e:
+                    log.warning("%s: could not resize %s to %d bytes: %s", self.name, vol.name, vol.quota_bytes, e)
             return None
-        e = self._open(vol.url)
-        if e is not None and failure_kind(e) == "permanent":
-            return e
-        # Opened — or away: either way a handle that does not touch the root. When it opened, the thread
-        # already made it; when it is away, promotion makes its directories segment by segment once it answers.
-        archive = ArchiveResource(self.archive.spool, vol.url, wall=self.wall, create=False)
-        if e is not None:
+        if self.store is not None:
+            self._close_store(quiet=True)
+        secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
+        store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
+                        secret=secret, access_key=vol.access_key,
+                        **{k: v for k, v in (("block", self.block), ("read", self.read)) if v})
+        try:
+            store.open()
+        except ArchiveError as e:
+            # A DISK on this box that cannot be formatted or mounted — a file where the directory should be, a
+            # path nobody may create — is not a link that comes back in a minute. The engine says it as an I/O or
+            # a generic error, the same words a network volume uses for a network that is down, so the kind of
+            # volume decides: on a box, wrong; at an address, away.
+            if e.kind == "away" and e.name in ("IO_ERROR", "GENERIC_ERROR") and volumes.on_a_box(vol):
+                e = ArchiveError("wrong", e.detail, e.name)
+            if e.kind == "wrong":
+                return e
             if not self.archive_error:
                 self.archive_away_since = self.wall()
-                logging.warning("%s: %s is away at open (%s) — keeping it and recording into the spool",
-                                self.name, vol.name, e)
-            self.archive_error, self.archive_failure = str(e), "transient"
-        self.archive, self.archive_root = archive, vol.url
-        logging.info("%s: writing into %s (%s)", self.name, vol.name, vol.url)
+                log.warning("%s: %s is %s at open (%s) — keeping it and trying again", self.name, vol.name, e.kind, e.detail)
+            self.archive_error, self.archive_failure = e.detail, e.kind     # `away` or `busy`: kept, said as what it is
+            return None
+        self.store, self.engine_lost = store, False
+        try:
+            self._landed_before, self._landed = self._landed_before + self._landed, 0
+            self._written_at_open = int(store.status().get("totalWritten", 0))
+        except ArchiveError:
+            self._written_at_open = 0
+        if self.archive_error:
+            log.info("%s: %s answers again after %.0f s", self.name, vol.name, self.wall() - self.archive_away_since)
+        self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
+        log.info("%s: writing into %s (%s)%s%s", self.name, vol.name, vol.url, " — formatted" if store.formatted else "",
+                 " — the writer a previous process left, picked up again" if store.reattached else "")
         return None
 
-    # Open an archive — make its root — on a thread of its own, and wait `OPEN_WAIT` for it. Opening is where a
-    # mount that went quiet hangs, and it used to hang right here, inside `lease_pass`, stopping the very
-    # renewals that keep this process's epochs. So: the error it raised, None if it opened, or — when it has
-    # not come back — a `TimeoutError` with `ETIMEDOUT`, which `failure_kind` reads as AWAY like any other
-    # timeout. A hung call is not cancelled, only left; and while one is still in flight, no second is
-    # started behind it, the way promotion keeps one.
-    def _open(self, url: str) -> OSError | None:
-        if self._opener is not None and self._opener.is_alive():
-            return TimeoutError(errno.ETIMEDOUT, f"an earlier open has not returned; not starting another for {url}")
-        result: dict = {}
+    # A sink found the daemon gone. Nothing is torn down here, on the pipeline's thread: the next pass closes
+    # what is left of the store and opens it again (`volume_pass`) — at once, not after the writer watch's ten
+    # minutes, because there is nothing to wait for: the engine is not there, a new session is (feedback CF).
+    def _lost_engine(self) -> None:
+        if not self.engine_lost:
+            log.warning("%s: obsd stopped answering — remounting %s on the next pass", self.name, self.volume)
+        self.engine_lost = True
 
-        def attempt():
-            try:
-                ArchiveResource(self.archive.spool, url, wall=self.wall)
-            except OSError as e:
-                result["error"] = e
+    # The volume took the sample and REFUSED it for good — no permission, read-only, a key that no longer opens
+    # it. Only a person changes that, so the volume is handed back on the next pass (`volume_pass`, REFUSED_FOR)
+    # and its recordings go somewhere that works. Said here, on the pipeline's thread; acted on there.
+    def _volume_refuses(self, e) -> None:
+        if self.archive_failure != "wrong":
+            log.error("%s: %s refuses writes: %s", self.name, self.volume, e)
+            self.archive_error, self.archive_failure = str(e), "wrong"
+            self.archive_away_since = self.archive_away_since or self.wall()
 
-        self._opener = threading.Thread(target=attempt, name=f"{self.name}-open", daemon=True)
-        self._opener.start()
-        self._opener.join(timeout=self.OPEN_WAIT)
-        if self._opener.is_alive():
-            return TimeoutError(errno.ETIMEDOUT, f"opening {url} has not returned in {self.OPEN_WAIT:.0f} s")
-        return result.get("error")
+    def _close_store(self, quiet: bool = False) -> None:
+        if self.store is None:
+            return
+        try:
+            self.store.close()
+        except Exception as e:                           # noqa: BLE001 — closing a volume that went away says nothing new
+            if not quiet:
+                log.warning("%s: closing %s: %s", self.name, self.store.name, e)
+        self.store = None
 
     # Stop writing into a volume that is no longer ours — the administrator withdrew it, or the hold
     # lapsed and somebody else took it. Every recording of that archive is stopped and released, which is
@@ -744,33 +824,23 @@ class RecWorker(VmsWorker):
     # running, and may take another volume on the next pass.
     def leave_volume(self, why: str) -> None:
         logging.warning("%s: %s — stopping its recordings", self.name, why)
-        if self._promoter is not None and self._promoter.is_alive():
-            # A promotion into this archive has not come back. Promoting again here, on the loop's thread,
-            # would hang the loop on the same dead mount — inside `lease_pass`, of all places. The spool
-            # keeps what it has.
-            logging.warning("%s: a promotion into %s is still in flight — the spool keeps its segments",
-                            self.name, self.archive.root)
-        else:
-            # What we can move while we still hold it, bounded by the budget: this runs on the loop's thread,
-            # inside `lease_pass`, and it no longer has to drain everything — a segment left behind is marked
-            # for this volume and waits for whoever holds it next.
-            try:
-                self.promote_closed(limit=self.PROMOTE_BUDGET)
-            except OSError as e:                     # a volume that went away under us: the footage is where it is
-                logging.warning("%s: could not promote the spool into %s: %s", self.name, self.archive.root, e)
         for uid in list(self.reconciler.actual):
             self._release_if_broken(uid)
             self.actuator("stop", {"id": uid})
             self.reconciler.actual.pop(uid, None)
             self.release(str(uid))
+        # The writer is closed while the volume is still ours — its flush is what puts the last minutes on the
+        # volume — and only then is the hold let go: released first, the next holder would mount a volume with
+        # our writer still in it.
+        self._close_store(quiet=True)
         try:
             self.release_hold()
         except OSError:                              # the store is silent: the hold lapses by itself
             self.hold = None
-        self.volume, self.capacity = "", 0
-        # What the archive's state said was about the archive we just left. The next one starts clean — and
-        # a promotion still in flight into the old one will not write over it (`promote_closed`).
+        self.volume, self.capacity, self.incidents = "", 0, False
+        # What the archive's state said was about the volume we just left. The next one starts clean.
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
+        self.keep_held, self.keep_state = {}, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -778,20 +848,19 @@ class RecWorker(VmsWorker):
     # lapsed, and whoever was to write there next waited out `slot_ttl` — forty-five seconds of no recording
     # on every restart and every rolling update, for nothing: the process that held it had said goodbye.
     #
-    # The ORDER is the point. A released place is taken at once, and whoever takes it opens the archive. So
-    # the hold goes LAST: the pipelines are stopped, the last heartbeat said so, the slot is released — and
-    # then what they closed is moved out of the spool while the archive is still ours, and only then is the
-    # hold let go. Released together with the slot, there would be a moment with two writers in one archive.
+    # The ORDER is the point. A released place is taken at once, and whoever takes it mounts the volume for
+    # writing. So the hold goes LAST: the pipelines are stopped, the last heartbeat said so, the slot is
+    # released — and then the writer is closed, its flush putting the last minutes on the volume, and only then
+    # is the hold let go. Released together with the slot, the next recorder would find our writer still there.
     #
-    # A crash does none of this, and the hold lapses by itself, as before.
+    # A crash does none of this. The hold lapses by itself, and the daemon keeps the writer DETACHED for its
+    # grace — longer than the hold takes to lapse — so whoever takes the volume next, under the same owner
+    # `rec:<volume>`, picks the writer up whole (feedback CF).
     def after_stop(self) -> None:
-        if self.hold is None:
-            return
-        try:
-            self.promote_closed(limit=self.PROMOTE_BUDGET)
-        except OSError as e:                         # an archive that went away: the spool keeps what it has, marked for it
-            logging.warning("%s: could not promote the spool into %s on the way out: %s", self.name, self.hold, e)
         held = self.hold
+        self._close_store()
+        if held is None:
+            return
         try:
             self.release_hold()
             logging.info("%s: released %s on the way out", self.name, held)
@@ -800,38 +869,34 @@ class RecWorker(VmsWorker):
 
     # HOW DEEP EACH RECORDING IS, AND WHETHER THAT IS LESS THAN IT WAS PROMISED (feedback BM).
     #
-    # `retention_days` is a ceiling. The row's `min_depth_days` is the floor — and the floor is not enforced
-    # by anybody: the watermark has its own, one for the whole disk (`platform/space`, `min_days`), and cuts
-    # down to that. So the recorder WATCHES. Once a minute it reads, per recording:
+    # `retention_days` is a ceiling on what is shown. The row's `min_depth_days` is the floor — and nothing
+    # enforces it: the volume is a ring, and a ring gives up its oldest minutes when it is full, whatever was
+    # promised. So the recorder WATCHES. Once a minute it reads, per recording:
     #
-    #   depth_days   from the manifest: how far back the footage goes. In the status and on `/metrics`
-    #   shallow      the watermark deleted footage that would still be inside this recording's floor — read
-    #                from the archive's deletions journal, where every cut is a line with its reason
+    #   depth_days   from the index: how far back the footage goes. In the status and on `/metrics`
+    #   shallow      the ring has CLOSED — it has begun to overwrite (`firstBlockId` past nought) — and the
+    #                recording holds less than its floor. A young archive is shallow because it is young, and
+    #                that is not this: nothing was overwritten yet
     #
-    # A young archive is shallow because it is young, and that is not this: nothing was deleted. The alarm
-    # `archive.shallow` is raised when it begins and once a day while it lasts — an alarm, because a recording
-    # that holds four days of a promised thirty is the thing somebody is asked about afterwards.
+    # The alarm `archive.shallow` is raised when it begins and once a day while it lasts — an alarm, because a
+    # recording that holds four days of a promised thirty is the thing somebody is asked about afterwards. The
+    # answer is a larger quota, or fewer recordings on the volume.
     DEPTH_EVERY, SHALLOW_AGAIN = 60.0, 86400.0
 
     def depth_pass(self, now: float | None = None) -> dict:
         from w2cplatform.events import ALARM, EventLog
-        from .archive import Deletions
-        from .space import depth_days
-        if self.clock() - self._depth_at < self.DEPTH_EVERY:
+        if self.store is None or self.clock() - self._depth_at < self.DEPTH_EVERY:
             return self.depths
         self._depth_at, now = self.clock(), self.wall() if now is None else now
         try:
-            cut: dict[str, float] = {}               # recording -> the newest end of what pressure took from it
-            for d in Deletions(self.archive.root).read():
-                if str(d.get("why", "")).startswith("pressure"):
-                    cut[str(d["unit"])] = max(cut.get(str(d["unit"]), 0.0), float(d["end"]))
-            depths = {str(r["id"]): round(depth_days(self.archive, str(r["id"]), now), 2) for r in self.rows}
-        except OSError:                              # an archive that is away says nothing about depth
+            closed = int(self.store.status().get("firstBlockId", 0)) > 0
+            depths = {str(r["id"]): round(self.store.depth_days(str(r["id"]), now), 2) for r in self.rows}
+        except ArchiveError:                         # a volume that is away says nothing about depth
             return self.depths
         self.depths = depths
         for row in self.rows:
             unit, floor = str(row["id"]), float(row.get("min_depth_days") or 0)
-            if not floor or cut.get(unit, 0.0) <= now - floor * 86400:
+            if not floor or not closed or depths[unit] >= floor:
                 self.shallow.pop(unit, None)
                 continue
             if now - self.shallow.get(unit, -1e18) < self.SHALLOW_AGAIN or unit not in self.epochs:
@@ -839,8 +904,8 @@ class RecWorker(VmsWorker):
             self.shallow[unit] = now
             EventLog(self.archive_root, REC.name, unit, self.epochs[unit]).append(
                 now, "archive.shallow", cls=ALARM, cam=row.get("cam"), depth_days=depths[unit], min_depth_days=floor)
-            logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the watermark cut inside its floor",
-                            self.name, unit, depths[unit], floor)
+            logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the ring of %s has closed",
+                            self.name, unit, depths[unit], floor, self.volume)
         return self.depths
 
     # THE PLACE, WHILE THE STORE IS SILENT (feedback BK). `volume_pass` reads the declared volumes and renews the
@@ -873,197 +938,50 @@ class RecWorker(VmsWorker):
             self.depth_pass()
         return lost
 
-    # Move what has closed from the spool into the archive — and survive the archive being away.
+    # The volume is taking nothing: it said so (`archive_error`), or nothing is open. Backfill — planned or asked
+    # for — waits then: there is nowhere to land what it would fetch.
     #
-    # The spool is local and the pipeline never touches the network, so an archive that stops answering
-    # costs nothing but a queue: the segment stays where it is and goes across when the link returns. What
-    # it must not cost is the rest of the pass. A promote that raised used to take the lease renewal and
-    # the heartbeat down with it — every pass, for as long as the archive was away — so in thirty seconds
-    # the recorder lost its epochs and in forty-five its controller called it dead: the recording the
-    # spool could have carried through the outage was stopped by the outage.
-    #
-    # In ORDER, stopping at the first failure: segments are promoted oldest first, and one that could not
-    # go makes the next wait behind it rather than jump the queue. Only `OSError` is an outage — a path
-    # that does not parse is a bug, and swallowing it here would hide it for as long as the box ran.
-    def promote_closed(self, archive: ArchiveResource | None = None, volume: str | None = None,
-                       limit: int | None = None) -> int:
-        archive = archive or self.archive
-        volume = self.volume if volume is None else volume
-        n, failed = 0, False
-        for p in archive.closed_in_spool(self.grace_seconds, self.wall()):
-            if limit is not None and n >= limit:
-                break                                    # the budget: the rest waits for the next pass, in order
-            owner = self.volume_of(p)
-            if owner and owner != volume:
-                continue                                 # another volume's footage — skipped, and NOT counted
-            try:                                         # what leaves the spool, so the writer watch does not see it vanish
-                size = os.path.getsize(p if os.path.isabs(p) else os.path.join(archive.spool, p))
-            except (OSError, AttributeError, TypeError):
-                size = 0
-            try:
-                archive.promote(p)
-                self.promoted_bytes += size
-            except OSError as e:
-                failed = True
-                if volume == self.volume:                   # still ours: a late answer about a volume we left says nothing now
-                    if not self.archive_error:              # said once, when it starts — not every pass
-                        self.archive_away_since = self.wall()
-                        logging.warning("%s: the archive %s does not answer (%s) — keeping segments in the "
-                                        "spool until it does", self.name, archive.root, e)
-                    self.archive_error, self.archive_failure = str(e), failure_kind(e)
-                break
-            n += 1
-            if volume == self.volume:
-                self.last_progress = self.wall()         # a segment went across: whatever this is, it is not a hang
-        # Back only when a segment actually went across. An empty spool proves nothing about an archive
-        # that was away: nothing was asked of it.
-        if n and not failed and self.archive_error and volume == self.volume:
-            logging.info("%s: the archive %s answers again after %.0f s", self.name, archive.root,
-                         self.wall() - self.archive_away_since)
-            self.archive_error, self.archive_away_since, self.archive_failure = "", 0.0, ""
-        self.promoted += n
-        return n
-
-    # -- whose footage a segment is ----------------------------------------------------------------------
-    #
-    # A segment's path is `rec/<unit>/e<epoch>/<start>`: it does not name the volume it was recorded for.
-    # That lived in the process (`self.hold`), and a process that dies takes it along. So the directory says
-    # it, in one line beside the segments: `rec/<unit>/e<epoch>/.volume`.
-    #
-    # The EPOCH directory, and not the spool, because the spool is not one process's. The unit file is a
-    # template and every recorder on a box mounts the same `/data/spool` — three disks, three recorders, one
-    # spool. What IS one writer's is a unit's epoch: exactly one recorder holds it, for exactly one volume,
-    # and the fence already guarantees nobody else writes there. Ownership follows the thing that is
-    # already exclusive.
-    #
-    # With it, promotion asks each segment where it belongs, and nobody promotes footage into an archive it
-    # was not recorded for — not a process that restarted and has not looked at a volume yet, not one that
-    # moved to another volume, not a neighbour on the same box. A recorder stays free to take any volume;
-    # what it can no longer do is carry someone else's footage there.
-    EPOCH_MARK = ".volume"
-
-    def mark_epoch(self, unit, epoch) -> None:
-        if not self.volume:
-            return
-        d = os.path.join(self.archive.spool, "rec", str(unit), f"e{epoch}")
-        try:
-            os.makedirs(d, exist_ok=True)
-            with open(os.path.join(d, self.EPOCH_MARK), "w") as f:
-                f.write(self.volume + "\n")
-        except OSError as e:                             # a spool we cannot write to has bigger news than this
-            logging.warning("%s: could not mark %s for %s: %s", self.name, d, self.volume, e)
-
-    # The volume a segment was recorded for, or "" for one from before the mark existed — whose that is, is
-    # unknown, as it always was, and it is promoted the way it always was.
-    def volume_of(self, segment_path: str) -> str:
-        try:
-            with open(os.path.join(os.path.dirname(segment_path), self.EPOCH_MARK)) as f:
-                return f.read().strip()
-        except OSError:
-            return ""
-
-    # What is waiting in the spool, by the volume it belongs to: `{volume: segments}`. The spool is the
-    # box's, so this is the box's picture as this recorder sees it — a neighbour's segment shows here for
-    # the pass it takes the neighbour to promote it, and footage for a volume nobody holds shows here until
-    # somebody does. That last is the one to act on: it is not lost and not misfiled, it is waiting.
-    def spool_by_volume(self) -> dict[str, int]:
-        out: dict[str, int] = {}
-        for p in self.archive.closed_in_spool(0.0, self.wall()):
-            v = self.volume_of(p) or "?"
-            out[v] = out.get(v, 0) + 1
-        return out
-
-    # The same promotion, off the loop's thread — because an archive can fail by NOT RETURNING.
-    #
-    # A network mount that goes quiet does not raise: `rename` and `write` into it wait in the kernel with
-    # no timeout to give them, for as long as the mount is gone. The two `try`s in `run` cannot help, there
-    # is no exception to catch; there is only a call that has not come back, and while it has not, the
-    # thread it was made on renews nothing. So the call is made on a thread of its own.
-    #
-    # The pass waits on it for `PROMOTE_WAIT` and no longer. That is what keeps a HEALTHY archive
-    # synchronous: a local disk or a live bucket finishes well inside it, and a pass that promotes still
-    # ends with the segment in the archive — everything that reads the archive after a pass sees the same
-    # thing it always did. Only a hung call outlives the wait, and then the pass moves on without it.
-    #
-    # One in flight. A hung call is not cancelled — a thread waiting in the kernel on a dead mount cannot
-    # be — so the next pass does not start another behind it; it finds the first still running and leaves
-    # it. The archive the promotion writes into is the one held when it STARTED: a volume switch meanwhile
-    # does not redirect segments recorded for the old one.
-    def promote_in_background(self) -> None:
-        if self._promoter is not None and self._promoter.is_alive():
-            return
-        archive, volume = self.archive, self.volume
-
-        def promote():
-            try:
-                self.promote_closed(archive, volume, limit=self.PROMOTE_BUDGET)
-            except Exception:                                  # noqa: BLE001 — a thread has nobody to raise to
-                logging.exception("%s: promotion failed", self.name)
-            finally:
-                self.promoting_since = 0.0
-
-        self.promoting_since = self.last_progress = self.wall()
-        self._promoter = threading.Thread(target=promote, name=f"{self.name}-promote", daemon=True)
-        self._promoter.start()
-        self._promoter.join(timeout=self.PROMOTE_WAIT)
-
-    # A hang has no exception to report it, so the recorder notices the silence itself — and the silence it
-    # listens for is PROGRESS, not age. The first version asked how long a promotion had been running, and
-    # a promotion was the whole queue: an hour of footage after an outage drains for minutes on a healthy
-    # link, so a minute in it said "has not returned" about a drain that was moving the whole time — the
-    # same words it uses for a dead mount. A hang and a slow drain differ in one thing: a dead mount moves
-    # nothing, a drain finishes a segment every so often. So a promotion is stuck when nothing has gone
-    # across for `PROMOTE_STUCK`, which therefore has to be longer than one segment takes on the slowest
-    # link this box will see.
-    #
-    # Written into the same field an outage that raises uses: whatever reads the heartbeat learns the same
-    # thing either way — the archive is not taking segments, since when, and the spool count behind it.
-    def watch_promotion(self) -> None:
-        if not self.promoting_since or self.wall() - self.last_progress <= self.PROMOTE_STUCK:
-            return
-        stuck = self.wall() - self.last_progress
-        if not self.archive_error.startswith("promotion into"):
-            logging.warning("%s: a promotion into %s has moved nothing for %.0f s", self.name, self.archive.root, stuck)
-        self.archive_away_since = self.archive_away_since or self.last_progress
-        self.archive_error = f"promotion into {self.archive.root} has not returned for {stuck:.0f} s"
-        self.archive_failure = "transient"               # a mount gone quiet is away, not wrong
-
-    # The archive is taking nothing: it said so (`archive_error`), or a promotion into it is still in
-    # flight. Either way it cannot be given more.
+    # What it does NOT wait for is a full disk. The footage is in a ring formatted at its quota: it never grows
+    # past it, and a range fetched now is written at the ring's head, the newest block, overwritten last. The
+    # chase the watermark used to guard against — the resource freeing hours, backfill fetching the same hours
+    # back — has nothing to chase.
     def archive_busy(self) -> bool:
-        return bool(self.archive_error) or bool(self.promoting_since)
+        return bool(self.archive_error) or self.store is None or self.store.writer is None
 
     def pump_once(self) -> None:
         super().pump_once()                         # …which now includes `requests()`: the base serves the
                                                     # family for every subsystem, and this one overrides
                                                     # the method, not the call — asking twice a pass would
                                                     # spend the budget twice
-        self.promote_in_background()                # on its own thread: an archive can hang as well as fail
-        self.watch_promotion()
-        # Bounded, inside the window — it shares the device's uplink — and never while the archive is taking
-        # nothing: a fetched range would only pile into the spool behind the queue, and its own promote
-        # would be one more call waiting on the dead mount, made on this thread.
+        # Bounded, inside the window — it shares the device's uplink — and never while the volume is taking
+        # nothing.
         if self.backfill_budget and not self.archive_busy():
             self.backfill_in_background()
+        if self.incidents and not self.archive_busy():
+            self.keeps_in_background()
 
     # -- backfill: closing our gaps from the device's own archive (Lesson 16) ---------------------------
     # The card exists because the camera kept recording while we could not, so replication is not "copy
-    # everything" — it is the difference between two coverages. Desired: continuous. Actual: the manifest.
-    # The difference is the work. Lesson 2's loop, over time instead of pipelines.
+    # everything" — it is the difference between two coverages. Desired: continuous. Actual: what the volume's
+    # index shows, every stream of the recording — live and fetched, every epoch. The difference is the work.
+    # Lesson 2's loop, over time instead of pipelines.
     def our_coverage(self, unit) -> list[tuple[float, float]]:
-        return self.archive.coverage(str(unit), self.stitch)
+        if self.store is None:
+            return []
+        try:
+            return self.store.coverage(str(unit), self.stitch)
+        except ArchiveError:
+            return []
 
-    # What a source has and we do not, bounded at both ends. Not older than our own retention — otherwise
-    # backfill and retention chase each other round the clock, for ever.
+    # What a source has and we do not, bounded at both ends. Not older than what the doors would SHOW — the
+    # row's `retention_days` (`visible_from`) — nor than `keep_days`: a range fetched past the ceiling is a range
+    # nobody will be shown.
     #
-    # Not newer than what we can SEE (the feedback's Q). Everything after the end of our visible coverage is
-    # either being written this minute or written and not yet in the manifest, and there is no need to tell
-    # the two apart: neither is a gap. `settle` alone used to stand for that, and it held only while
-    # `settle > segment + grace` — true for the defaults, written nowhere, and false the day somebody sets
-    # twenty-minute segments: the recorder then fetched from the card what it was recording that minute,
-    # and the overlap check before `promote` could not catch it, because the live segment was not in the
-    # manifest yet. The visible end is the lag MEASURED; `settle` stays as the floor, and is all there is
-    # for a recording with nothing visible.
+    # Not newer than what we can SEE (the feedback's Q). A reader sees only closed blocks, and a block closes
+    # when the next begins — minutes, at a low bitrate. Everything after the end of our visible coverage is
+    # either being written this minute or written and not yet visible, and there is no need to tell the two
+    # apart: neither is a gap. The visible end is the lag MEASURED; `settle` stays as the floor, and is all
+    # there is for a recording with nothing visible.
     #
     # PLANNED backfill starts at our first visible second (the feedback's S). Before it the recording was not
     # running by design — created yesterday, or a recording on events — and filling it from the card would
@@ -1072,8 +990,10 @@ class RecWorker(VmsWorker):
     #
     # And never what a clean fetch from THIS source already found nowhere.
     def gaps(self, unit, coverage: dict, now: float, planned: bool = True, source: str = "device") -> list[tuple[float, float]]:
+        from .archive import visible_from
         ours = self.our_coverage(unit)
-        lo = max(float(coverage["from"]), now - self.keep_days * 86400)
+        row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
+        lo = max(float(coverage["from"]), now - self.keep_days * 86400, visible_from(row, now))
         hi = min(float(coverage["to"]), now - self.settle, ours[-1][1] if ours else now)
         if planned:
             if not ours:
@@ -1089,24 +1009,6 @@ class RecWorker(VmsWorker):
         for sp in pending:
             holes = [h for hole in holes for h in subtract(hole, [sp])]
         return holes
-
-    # The disk is over its high mark: the resource is freeing space this minute, and backfill exists to
-    # bring more in. Without this line they chase each other for ever on a full disk — the same trap
-    # `keep_days` closes in time, closed here in space. Not a `force` override either: an operator asking
-    # for a range cannot be given one the resource is about to delete.
-    def under_pressure(self) -> bool:
-        knob = space_settings(self.vars)
-        if not knob["enabled"]:
-            return False
-        total, free = self.space_probe(self.archive.root)
-        return bool(total) and (total - free) > total * knob["high"]
-
-    # The spool's disk is past the high mark — the watermark's own number (Lesson 18), read whether or not the
-    # watermark is switched on. Switching it on means DELETING footage to make room; this only decides that
-    # waiting for an away archive has stopped being free, and giving up a wait deletes nothing.
-    def spool_full(self) -> bool:
-        total, free = self.space_probe(self.archive.spool)
-        return bool(total) and (total - free) > total * space_settings(self.vars)["high"]
 
     # Local time, and the one place in the course where that is right: "at night" is night where the camera
     # is, not where the server is. `(22, 6)` wraps midnight — without that branch it would never arrive.
@@ -1173,35 +1075,66 @@ class RecWorker(VmsWorker):
             out.append({"key": "device", "kind": "device", "url": dev[0], "coverage": dev[1]})
         return out + self.backup_sources(row)
 
-    # The backup's MANIFEST, through its recorder's door: the exact list of what it holds, where the
-    # heartbeat had only a summary. The plan comes from the summary; what is copied comes from this.
-    def read_manifest(self, url: str, unit: str):
+    # The backup's FRAMES, through its recorder's door: the samples of a range as its volume holds them, with
+    # the times they were recorded at — what goes into our own volume as they are. The plan came from the
+    # summary in the heartbeat; what is copied is what the door hands over.
+    def read_samples(self, url: str, unit: str, t0: float, t1: float) -> list[Sample]:
         import urllib.parse
         import urllib.request
-        from .archive import Segment
-        with urllib.request.urlopen(f"{url}/manifest/{urllib.parse.quote(str(unit))}", timeout=10) as r:
-            return [Segment.from_line(l) for l in r.read().decode().splitlines() if l.strip()]
+        q = urllib.parse.urlencode({"from": t0, "to": t1})
+        with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
+            return Sample.decode_all(r.read())
 
-    # This recorder's archive, served — `/manifest/<unit>` and `/segment/<path>`, the resource's two reads
-    # (`vms/resource.py`), over the archive THIS process writes. A backup recorder serves it so a primary
-    # can copy from it; any recorder may.
+    # How far back the doors show a recording: its row's `retention_days` (`visible_from`). A ceiling — the ring
+    # decides what is still there; this decides what is SHOWN, and for some installations it is the promise that
+    # matters: "nobody sees more than a week". A recording whose row is gone shows thirty days.
+    #
+    # A row the store did not GIVE is not a row that is gone (feedback BI). Read as "gone" it would show a week's
+    # recording for thirty days, or hide ninety days' recording past thirty, for as long as the store blinked. So
+    # the door answers on what the row said last; thirty days only for a recording it has never read.
+    def _visible_from(self, unit) -> float:
+        from .archive import visible_from
+        if self.incidents:
+            return 0.0                                # everything in an incidents volume is there because somebody kept it
+        try:
+            items, _ = self.vars.get(self.SUB.config(self.ROWS, str(unit)))
+            row = self._rows_seen[str(unit)] = items if items and items.get("deleted") != "true" else None
+        except OSError:
+            row = self._rows_seen.get(str(unit))
+        return visible_from(row, self.wall())
+
+    # The intervals of a recording somebody said to keep (`vms/keeps.py`): the door shows them whatever the ceiling,
+    # because a keep is the operator's word that those minutes matter longer than the recording's days — and the
+    # recorder copying keeps into an incidents volume reads them through this very door. Not readable is none:
+    # the ceiling stands, which hides, and hiding is the side to err on.
+    def _kept_of(self, unit) -> list[tuple[float, float]]:
+        from . import keeps
+        try:
+            declared = keeps.declared(self.vars)
+        except OSError:
+            return []
+        row = self._rows_seen.get(str(unit)) or {}
+        return keeps.spans_of(declared, str(unit), str(row.get("cam", "")))
+
+    # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
+    # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
+    # reads every recorder's to draw a camera's timeline and play it; any recorder may.
     def serve_archive(self, host: str = "127.0.0.1", port: int = 0):
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-        from .resource import vms_routes
-        routes = vms_routes(self.archive)
+        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
+                                self._kept_of)
 
         class H(BaseHTTPRequestHandler):
             def log_message(self, *a):
                 pass
 
             def do_GET(self):
-                got = routes(self.path, self.headers)
+                got = routes(self.path)
                 if got is None:
                     self.send_response(404); self.end_headers(); return
-                status, body, *extra = got
+                status, body, ctype = got
                 self.send_response(status)
-                for k, v in (extra[0] if extra else ()):
-                    self.send_header(k, v)
+                self.send_header("Content-Type", ctype)
                 self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
 
         srv = ThreadingHTTPServer((host, port), H)
@@ -1214,15 +1147,15 @@ class RecWorker(VmsWorker):
     #
     # The ordinary pass is bounded by a budget and an hour because backfill competes with live for the
     # device's uplink. A range a PERSON asked for is different work: they are looking at that gap now, and
-    # the night is not a useful answer. So these are fetched outside both — but not outside
-    # `under_pressure`, because a disk that is being emptied this minute cannot be given more.
+    # the night is not a useful answer. So these are fetched outside both — but not while the volume takes
+    # nothing (`archive_busy`): the request waits, it is not refused.
     #
     # The request is not cleared here. A worker's token writes its slot and its epochs, never configuration
     # (М10A Lesson 10), so the recorder REPORTS what it fetched in its heartbeat and the console's reaper
     # removes the row — the same division as a scan that finishes (М10B Lesson 21).
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
-        if self.under_pressure():
+        if self.archive_busy():
             return []
         mine = {str(r["id"]) for r in self.rows}
         done: list[dict] = []
@@ -1243,10 +1176,23 @@ class RecWorker(VmsWorker):
             rid = key.rsplit("/", 1)[1]
             if not srcs:
                 continue                                     # nobody holds the device and no backup answers; ask again next pass
-            r = self.fetch_from(unit, cam, srcs[0], float(it["from"]), float(it["to"]))
-            if r.get("skipped"):
-                continue                                     # not fetched: reporting it would have the console
-                                                             # delete a request nobody served
+            # Not past what we can see, while the recording is live: those minutes are in a block being written,
+            # and fetching them would write them twice. A recording that is not running may be asked for anything.
+            t0, t1 = float(it["from"]), float(it["to"])
+            ours = self.our_coverage(unit)
+            if unit in self.reconciler.actual:
+                t1 = min(t1, ours[-1][1] if ours else now - self.settle)
+            if t1 <= t0:
+                continue
+            # Each source in turn until one serves it. A source that FAILED says nothing about the range — the
+            # request stays, for the next pass; reported as fetched, the console would delete what nobody served.
+            r = {}
+            for src in srcs:
+                r = self.fetch_from(unit, cam, src, t0, t1)
+                if not r.get("error"):
+                    break
+            if r.get("skipped") or r.get("error"):
+                continue
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
@@ -1258,7 +1204,7 @@ class RecWorker(VmsWorker):
     # A fetch is a pipeline on the device's playback door, run to the end of the range: minutes, on a camera's
     # slow card — and it ran on the loop's thread, where the leases are renewed and the heartbeat goes out. A card
     # that took longer than the lease fenced the recorder and stopped the live recording of every camera it had,
-    # to fetch an hour of one (the platform review; feedback BE). So it runs where `promote_closed` runs — on a
+    # to fetch an hour of one (the platform review; feedback BE). So it runs on a
     # thread of its own, one at a time, the pass waiting `BACKFILL_WAIT` for it and no longer.
     BACKFILL_WAIT = 0.5
 
@@ -1278,9 +1224,7 @@ class RecWorker(VmsWorker):
 
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
-        if not (force or self.in_window(now)):
-            return []
-        if self.under_pressure():
+        if not (force or self.in_window(now)) or self.archive_busy():
             return []
         done: list[dict] = []
         names = volumes.backups(self.vars)
@@ -1296,10 +1240,9 @@ class RecWorker(VmsWorker):
                     break
         return done
 
-    # One range from one source. From the device: a pipeline on its playback door, as Lesson 16 wrote it.
-    # From a backup recording: its manifest first — the exact spans, where the heartbeat had a summary — and
-    # then each of its segments that falls in the range COPIED, cut to the range, with the times it was
-    # recorded at. Either way what lands is promoted as ours.
+    # One range from one source. From the device: its playback door, as Lesson 16 wrote it — the actuator
+    # hands back the frames. From a backup recording: its door's frames, with the times they were recorded at.
+    # Either way what lands goes into OUR volume as ours, into the recording's backfill stream.
     def fetch_from(self, unit, cam, src: dict, t0: float, t1: float) -> dict:
         if src["kind"] == "device":
             return self.fetch(unit, cam, src["url"], t0, t1)
@@ -1307,53 +1250,68 @@ class RecWorker(VmsWorker):
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
         try:
-            segs = self.read_manifest(src["url"], src["recording"])
+            samples = self.read_samples(src["url"], src["recording"], t0, t1)
         except OSError as e:
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
         self.actuator.range_error = ""
-        paths = []
-        for seg in sorted(segs, key=lambda x: x.start):
-            lo, hi = max(t0, seg.start), min(t1, seg.end)
-            if hi > lo:
-                paths += self.actuator.copy_range(unit, f"{src['url']}/segment/{seg.path}#{seg.start}",
-                                                  self.epochs.get(unit, 0), lo, hi, self.archive.spool)
-        return self._land(unit, cam, paths, t0, t1, "backup", src["key"])
+        return self._land(unit, cam, samples, t0, t1, src["key"])
 
-    # One range from the device: fetch it, and promote what came back as OURS — `source: edge`, our epoch,
-    # our manifest, our retention.
+    # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
         unit = str(unit)
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
         self.actuator.range_error = ""
-        paths = self.actuator.record_range(unit, f"{url}?from={t0}&to={t1}", self.epochs.get(unit, 0),
-                                           t0, t1, self.archive.spool)
-        return self._land(unit, cam, paths, t0, t1, "edge", "device")
+        samples = self.actuator.record_range(unit, f"{url}?from={t0}&to={t1}", t0, t1)
+        return self._land(unit, cam, samples, t0, t1, "device")
 
-    # What a fetch brought, landed. The overlap is checked a second time here because live recording may
-    # have reached the same minutes while we were fetching; a segment that would land on top of one we
-    # already have is dropped rather than written. Then, if the fetch was CLEAN, whatever of the range is
-    # still not ours is remembered as nowhere for this source — never after a fetch that failed half way,
-    # which says nothing about what the source holds.
-    # What was NOT on the source is what it did not deliver — not what our volume does not show after the
-    # fetch (feedback AE). On the course's file archive the two are the same; on a store that shows a block
-    # only once it is closed, a range just copied is invisible for minutes, and was being remembered as "not on
-    # the card either" and never planned again. Delivered is what came back: landed, or dropped because live
-    # recording had it already.
-    def _land(self, unit: str, cam, paths: list[str], t0: float, t1: float, origin: str, source: str) -> dict:
-        have, kept, delivered = self.our_coverage(unit), 0, []
-        for p in paths:
-            parsed = parse(p, self.archive.spool)
-            span = (parsed[2].timestamp(), os.path.getmtime(p)) if parsed else (t0, t1)
-            delivered.append(span)
-            if overlaps(have, span):
-                os.remove(p); continue                   # live recording got there while we were fetching
-            self.archive.promote(p, source=origin); kept += 1
+    # What a fetch brought, landed. The overlap is checked a second time here, by GROUP OF PICTURES — from one
+    # key frame to the next — because live recording may have reached the same minutes while we were fetching;
+    # a group that would land on top of what we already have is dropped rather than written. Then, if the fetch
+    # was CLEAN, whatever of the range the source did not deliver is remembered as nowhere for this source —
+    # never after a fetch that failed half way, which says nothing about what the source holds.
+    #
+    # What was NOT on the source is what it did not DELIVER — not what our volume does not show after the fetch
+    # (feedback AE): a range just copied is invisible until its block closes, and was being remembered as "not
+    # on the card either" and never planned again. Delivered is what came back: landed, or dropped because live
+    # recording had it already. And what landed and is not visible yet is `landing` — ours, not a hole.
+    def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str) -> dict:
+        from w2cplatform.obsd import unix_s
+        have = stitch(self.our_coverage(unit) + self.landing.get(unit, []), self.stitch)   # landing is ours: not twice
+        kept, groups = 0, []
+        for smp in samples:
+            if smp.key or not groups:
+                groups.append([smp])
+            else:
+                groups[-1].append(smp)
+        delivered = stitch([(unix_s(g[0].begin), unix_s(g[-1].end)) for g in groups], self.stitch)
+        epoch = self.epochs.get(unit, 0)
+        last = None                                      # where the sequence being written ends
+        for g in groups:
+            span = (unix_s(g[0].begin), unix_s(g[-1].end))
+            if overlaps(have, span) or not g[0].key:
+                continue                                 # live recording got there while we were fetching
+            try:
+                # A sequence is CONTINUOUS to the index: a hole inside one is drawn as footage. So what the source
+                # did not have — or what was dropped above — ends the sequence, and the next group opens another.
+                if last is not None and span[0] - last > self.stitch:
+                    self.store.finish(unit, epoch, backfill=True)
+                last = span[1]
+                for smp in g:
+                    self.store.put(unit, epoch, smp, backfill=True)
+                kept += 1
+            except Unavailable:
+                self._lost_engine()
+                break
+            except ObsdError as e:                       # the engine refused the group: the next one opens on its key
+                log.warning("%s: %s refused a fetched group at %.0f: %s", self.name, unit, span[0], e.name)
+        if kept:
+            self.store.finish(unit, epoch, backfill=True)
         self.backfilled += kept
-        self.landing[unit] = sorted(self.landing.get(unit, []) + delivered)
+        self.landing[unit] = stitch(self.landing.get(unit, []) + delivered, self.stitch)
         failed = getattr(self.actuator, "range_error", "")
         if not failed:
-            missing = subtract((t0, t1), sorted(delivered))
+            missing = subtract((t0, t1), delivered)
             if missing:
                 self.nowhere[(unit, source)] = sorted(self.nowhere.get((unit, source), []) + missing)
         if kept:
@@ -1362,12 +1320,191 @@ class RecWorker(VmsWorker):
             # scan (М10B Lesson 22), so the two holes close together. Reported here and not written
             # anywhere: a worker's token writes no configuration.
             self.closed = (self.closed + [f"{unit}|{t0:.0f}|{t1:.0f}"])[-self.CLOSED_REPORTED:]
-        out = {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "segments": kept, "source": source}
+        out = {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "groups": kept, "source": source}
         if failed:
             out["error"] = failed
         return out
 
+    # -- keeps: a COPY in the incidents volume (feedback BH; the product's design) ---------------------------
+    #
+    # A volume is a ring, and a ring cannot spare a range: when its turn comes, kept footage is overwritten with
+    # the rest. So the recorder holding an INCIDENTS volume copies every keep's minutes into it — out of whichever
+    # recorder's door holds them, every recording of the keep's camera (`Keep.recordings` and any row naming the
+    # camera now), as the stream `<recording>/e0`. Epoch nought: a copy is nobody's lease, and where the live
+    # footage still exists its own epoch owns those minutes (`authoritative`); where the ring took it, the copy
+    # is what is left. What one pass could not get — a door that is down, a recorder that moved — the next asks for
+    # again: the keep stands until somebody lifts it.
+    #
+    #   archive.keep.copied   an event, when a pass copied something: the recording, the seconds, and the sha256
+    #                         of the frames as the incidents volume now holds them — "is this what was kept"
+    #   archive.keep.lost     an ALARM, when footage a keep held in the incidents volume is no longer there: its
+    #                         own ring, full, took it. The answer is a larger quota, or an export
+    #
+    # A keep is still not "for ever": the incidents volume is a ring too. It is only one that nothing else writes
+    # into, so it turns as slowly as keeps arrive.
+    KEEP_EVERY = 60.0
+
+    def keeps_in_background(self) -> None:
+        if self._keeper is not None and self._keeper.is_alive():
+            return
+        if self.clock() - self._keep_at < self.KEEP_EVERY:
+            return
+        self._keep_at = self.clock()
+
+        def run():
+            try:
+                self.keep_pass()
+            except Exception:                            # noqa: BLE001 — a thread has nobody to raise to
+                logging.exception("%s: copying keeps failed", self.name)
+
+        self._keeper = threading.Thread(target=run, name=f"{self.name}-keeps", daemon=True)
+        self._keeper.start()
+        self._keeper.join(timeout=self.BACKFILL_WAIT)
+
+    def keep_pass(self, now: float | None = None) -> dict:
+        import hashlib
+        from w2cplatform.events import ALARM, EventLog
+        from . import keeps
+        from .console import recorder_doors
+        if not self.incidents or self.store is None:
+            return {}
+        now = self.wall() if now is None else now
+        declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
+        cams: dict[str, set] = {}
+        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
+            items, _ = self.vars.get(key)
+            if items and items.get("deleted") != "true":
+                row = self.parse_row(items)
+                cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
+        doors = [(n, u) for n, u, _ in recorder_doors(self.objects, now) if n != self.name]
+        state: dict[str, dict] = {}
+
+        def inside(k, rec) -> float:                     # seconds of the keep this volume holds for `rec`
+            return sum(min(b, k.until) - max(a, k.since) for a, b in self.store.coverage(rec) if b > k.since and a < k.until)
+
+        for k in declared:
+            got = missing = 0.0
+            touched: list[str] = []
+            for rec in sorted(set(k.recordings) | cams.get(k.cam, set())):
+                # First what is GONE — before anything is copied, or a copy taken again from the recording's own
+                # volume would hide that the incidents ring is too small to hold what it was given.
+                now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
+                if now_in + 1.0 < before:
+                    lost = round(before - now_in, 1)
+                    EventLog(self.archive_root, REC.name, rec, 0).append(
+                        now, "archive.keep.lost", cls=ALARM, cam=k.cam, keep=k.id, recording=rec, seconds=lost,
+                        volume=self.volume)
+                    logging.error("%s: %.0f s of keep %s (%s) are gone from %s: its ring took them",
+                                  self.name, lost, k.id, rec, self.volume)
+                for a, b in subtract((k.since, k.until), self.store.coverage(rec)):
+                    for name, url in doors:
+                        try:
+                            samples = self.read_samples(url, rec, a, b)
+                        except OSError:
+                            continue                     # that door is down: another may have it, the next pass asks again
+                        if samples and self._copy_in(rec, samples):
+                            touched.append(rec)
+                            break
+                if rec in touched:
+                    self.store.seal()                    # what was copied is readable now — and counted below
+                self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                got += held
+                missing += sum(b - a for a, b in subtract((k.since, k.until), self.store.coverage(rec)))
+            entry = {"copied": round(got, 1), "missing": round(missing, 1)}
+            for rec in sorted(set(touched)):
+                frames = b"".join(s.encode() for s in self.store.samples(rec, k.since, k.until))
+                digest = hashlib.sha256(frames).hexdigest()
+                EventLog(self.archive_root, REC.name, rec, 0).append(
+                    now, "archive.keep.copied", cam=k.cam, keep=k.id, recording=rec, bytes=len(frames),
+                    sha256=digest, volume=self.volume)
+                entry.setdefault("sha256", {})[rec] = digest
+            if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
+                entry["sha256"] = self.keep_state[k.id]["sha256"]
+            state[k.id] = entry
+        self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self.keep_state = state
+        return state
+
+    # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
+    # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
+    def _copy_in(self, rec: str, samples: list) -> bool:
+        from w2cplatform.obsd import unix_s
+        last, kept = None, 0
+        for smp in samples:
+            if last is None and not smp.key:
+                continue
+            if last is not None and unix_s(smp.begin) - last > self.stitch:
+                self.store.finish(rec, 0)
+                if not smp.key:
+                    last = None
+                    continue
+            try:
+                self.store.put(rec, 0, smp)
+                kept += 1
+                last = unix_s(smp.end)
+            except Unavailable:
+                self._lost_engine()
+                return False
+            except ObsdError:
+                last = None                              # refused: the next group opens on its key
+        if kept:
+            self.store.finish(rec, 0)
+        return kept > 0
+
     def metrics_text(self) -> str:
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
-                f"# TYPE rec_segments_promoted counter\nrec_segments_promoted {self.promoted}\n"
-                f"# TYPE rec_segments_backfilled counter\nrec_segments_backfilled {self.backfilled}\n")
+                f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n")
+
+
+# A recorder's archive door, over the volume it holds: what a primary copies from a backup, and what the console
+# draws and plays. Two reads, both from a FRESH reader — a reader sees what was closed when it mounted:
+#
+#   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
+#   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
+#                                  owns it, from a key frame (`Archive.samples`)
+def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0, kept=lambda unit: []):
+    import json
+    from urllib.parse import parse_qs, urlsplit
+    from w2cplatform.doors import safe_segment
+
+    def routes(path: str):
+        u = urlsplit(path)
+        q = {k: v[0] for k, v in parse_qs(u.query).items()}
+        for prefix in ("/timeline/", "/samples/"):
+            if not u.path.startswith(prefix):
+                continue
+            unit = u.path[len(prefix):]
+            if not safe_segment(unit):
+                return 404, b"", "text/plain"
+            store = store_of()
+            if store is None:
+                return 503, b'{"error": "no volume open here"}', "application/json"
+            try:
+                t0, t1 = float(q.get("from", 0)), float(q.get("to", wall() + 86400))
+            except ValueError:
+                return 400, b'{"error": "from and to are unix seconds"}', "application/json"
+            # Retention is a ceiling on what the door shows: from `visible_from` on, and whatever a keep holds. A span
+            # that began before the ceiling is CUT at it — drawn from its start, it would be footage the page shows
+            # and the door then refuses to play.
+            shown = stitch([(visible_from(unit), float("inf"))] + [tuple(k) for k in kept(unit)], 0.0)
+            try:
+                if prefix == "/timeline/":
+                    cur = current_epoch(unit)
+                    spans = []
+                    for sp in store.timeline(unit, t0, t1, cur):
+                        for a, b in shown:
+                            lo, hi = max(sp["start"], a), min(sp["end"], b)
+                            if hi > lo:
+                                spans.append({**sp, "start": lo, "end": hi})
+                    body = {"unit": unit, "spans": spans, "current_epoch": cur}
+                    return 200, json.dumps(body).encode(), "application/json"
+                frames = b""
+                for a, b in shown:
+                    lo, hi = max(t0, a), min(t1, b)
+                    if hi > lo:
+                        frames += b"".join(smp.encode() for smp in store.samples(unit, lo, hi))
+                return 200, frames, "application/octet-stream"
+            except ArchiveError as e:
+                return 503, json.dumps({"error": str(e)}).encode(), "application/json"
+        return None
+    return routes
