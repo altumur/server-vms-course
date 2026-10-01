@@ -321,7 +321,7 @@ class Subsystem:
 # the narrowness is the point. Not `vms/*`, which would let it edit cameras; not `vms/requests/*` by
 # accident of a wildcard, but by a grant that names the targets out loud in the process's token:
 #
-#     open_vars(url, writer="autoworker", acl={"autoworker": AUTO.acl_worker() + requests_acl("vms", "rec")})
+#     open_vars(url, writer="autoworker", acl={"autoworker": AUTO.acl_worker() + requests_acl("vms", "rec", "det")})
 #
 # `requests` is the right family to open because of what it already is: bounded work, addressed to a unit,
 # performed by whoever holds it, cleared when done. A grant on it cannot change configuration, cannot

@@ -271,17 +271,17 @@ def autocontroller() -> None:
 
 def autoworker() -> None:
     """A scenario evaluator. Its token is the only one in the course that reaches across a subsystem's
-    name — `requests_acl("vms", "rec")` — and it reaches exactly one family: bounded work, addressed to a
-    unit, performed by whoever holds it. It cannot write a camera, a recording or a placement."""
+    name — `requests_acl("vms", "rec", "det")` — and it reaches exactly one family: bounded work, addressed
+    to a unit or turned into one by the console. It cannot write a camera, a recording, a detector or a placement."""
     from w2cplatform.contract import requests_acl
     from .autoworker import AutoWorker
     from .config import AUTO_SPEC
-    acl = AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec")
+    acl = AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")
     vars_ = open_vars(CONFIG_URL, writer="autoworker", acl={"autoworker": acl})
     a = AutoWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                    capacity=int(os.environ.get("CAPACITY", "50")),
                    archive_root=os.environ.get("ARCHIVE", "/data/archive"))
-    logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-2:]))
+    logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-3:]))
     a.run(stop=stop)
 
 
@@ -393,8 +393,8 @@ def _sweep_loop(controllers, every: float = 60.0) -> None:
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
 def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
     import time
-    from .jobs import (ask_for_footage, clear_requests, expire_recordings, keep_what_fired, reap,
-                       record_on_request, scan_what_arrived)
+    from .jobs import (ask_for_footage, clear_requests, detect_on_request, expire, expire_recordings, keep_what_fired,
+                       reap, record_on_request, scan_what_arrived)
     while not stop.is_set():
         for c in controllers:
             try:
@@ -444,6 +444,17 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
             except Exception:                         # noqa: BLE001
                 logging.exception("timed recordings failed — a scenario's minutes may not have started, "
                                   "or a finished one is still recording")
+        if det_ctl is not None and rec_ctl is not None and controllers:
+            # The detectors' family, the same two ends: a request becomes a detector with an end, or a scan
+            # job (`controllers[0]` is the scans' controller); a detector whose `until` passed is deleted.
+            try:
+                made = detect_on_request(det_ctl, controllers[0], rec_ctl, time.time())
+                ended = expire(det_ctl, time.time())
+                if made or ended:
+                    logging.info("%s: %d asked for by scenarios, %d detector(s) ended", det_ctl.spec.name, made, ended)
+            except Exception:                         # noqa: BLE001
+                logging.exception("detector requests failed — a scenario's detection may not have started, "
+                                  "or a finished one is still running")
         stop.wait(every)
 
 

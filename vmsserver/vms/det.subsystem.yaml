@@ -22,6 +22,12 @@ unit:
     mask:      {type: blob}                        # sha256-<hex>; the bytes are in the object store
     enabled:   {type: bool,   default: true}
     labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
+    # WHEN THIS DETECTOR STOPS BEING ONE, in unix seconds; 0 — never, which is every detector an operator
+    # creates by hand. The recording's field, for the recording's reason (rec.subsystem.yaml): a scenario
+    # that asks "watch camera 7 for plates for ten minutes" asks for an END, and an end that lives in a
+    # process's timer dies with the process. The console's loop deletes the row when the time comes
+    # (`jobs.expire`); the controller unplaces it, the worker stops the model.
+    until:     {type: float,  default: 0}          # unix seconds; 0 — never
 placement:
   capacity:   {from: capacity, fallback: 8}        # streams per worker — its own number, from its heartbeat
   headroom:   {from: headroom}
@@ -43,6 +49,10 @@ placement:
   # a field nobody maintains. The affinity above is the whole of its topology.
   tie_break:  most-free-capacity
   rebalance:  {dead_band: 0.10}
-snapshot: [name, cam, kind, enabled]
+snapshot: [name, cam, kind, enabled, until]
 console:
   running: units_running               # det_units_running
+# `det/requests/<id>` — what automation asks the detectors for (`vms/jobs.py`, `detect_on_request`). One
+# family, two kinds of asking, as the recorder's: `detect` (the stream, from now, for minutes) becomes a row
+# HERE; `scan` (an interval of the archive) becomes a job of `detjob`. One door, two budgets: a scan is
+# still placed by its own subsystem and never spends a stream live detection runs on (Lesson 21).

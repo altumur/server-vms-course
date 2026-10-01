@@ -37,7 +37,7 @@ from w2cplatform.variables import Variables
 
 from .config import DETJOB_SPEC
 from .detworker import FakeModel
-from .scan import ScanLog, covered, covered_by, device_recordings, plan, remaining
+from .scan import ScanLog, covered, covered_by, device_recordings, plan, remaining, written_through
 
 DETJOB = DETJOB_SPEC.sub
 TERMINAL = ("done", "failed")
@@ -57,6 +57,12 @@ class DetJobWorker(Worker):
 
     SLOT_PREFIX = "j"                            # a slot it has to make is `j-<n>`, like the ones it is given
 
+    # A job whose interval reaches past what is RECORDED follows the recording: the footage of its last
+    # minutes is written while it runs. Done is when the footage has reached the end (`written_through`),
+    # or — the recorder stopped, the camera went dark — when the end is older than this many segments:
+    # a segment lands in the manifest when it closes, so the footage of `to` is at most one segment behind.
+    FOLLOW_SEGMENTS = 2
+
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  archive_root: str | None = None, env: dict | None = None, step: float | None = None):
@@ -69,6 +75,7 @@ class DetJobWorker(Worker):
         self.labels = runtime.labels(env, "gpu")
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
         self.step = self.STEP if step is None else float(step)
+        self.segment = float(env.get("SEGMENT_SECONDS", "600"))   # the recorder's segment: how far behind the footage runs
         self.running: dict[str, object] = {}                # job -> model, kept between passes
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
@@ -130,6 +137,15 @@ class DetJobWorker(Worker):
 
             scans = plan(self.archive_root, row["rec"], row["from"], row["to"])
             log_ = ScanLog(self.archive_root, job)
+            # FOLLOWING: the interval runs past what is recorded, and the end may yet be written. A scenario
+            # asking for the minute after the alarm asks for footage that does not exist when it asks.
+            following = (written_through(self.archive_root, row["rec"]) < row["to"]
+                         and now < row["to"] + self.FOLLOW_SEGMENTS * self.segment)
+            if not scans and following and not (row["from"] < now and self.device_has(row["cam"], row["from"], min(row["to"], now))):
+                self._stop(job)
+                self.status_by_unit[job] = self._status(job, row, "following", log=log_,
+                                                        why="the interval reaches past what is recorded — following the recording to its end")
+                continue
             if not scans:
                 # Not "no events": no FOOTAGE, here. Two different silences, and which one it is decides
                 # what happens next — so the worker says which.
@@ -150,6 +166,12 @@ class DetJobWorker(Worker):
                 continue
 
             left = remaining(scans, log_)
+            if not left and following:
+                # Everything recorded so far is behind it; the rest is being written. The model stays loaded —
+                # the next segment is minutes away, not a new job — and the row says nothing new.
+                self.status_by_unit[job] = self._status(job, row, "following", scans=scans, log=log_,
+                                                        why="the interval reaches past what is recorded — following the recording to its end")
+                continue
             if not left:
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "done", scans=scans, log=log_)
@@ -169,7 +191,10 @@ class DetJobWorker(Worker):
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
                     self.events_written += n
-            self.status_by_unit[job] = self._status(job, row, "running", scans=scans, log=log_)
+            caught_up = following and not remaining(scans, log_)   # this pass took it to the edge of what is written
+            self.status_by_unit[job] = self._status(job, row, "following" if caught_up else "running", scans=scans, log=log_,
+                                                    **({"why": "the interval reaches past what is recorded — following "
+                                                               "the recording to its end"} if caught_up else {}))
 
         for job in list(self.running):
             if job not in wanted:

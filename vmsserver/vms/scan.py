@@ -123,6 +123,12 @@ def plan(archive_root: str, unit, t0: float, t1: float) -> list[Scan]:
     return _authoritative(Manifest(archive_root, unit).read(), float(t0), float(t1))
 
 
+# How far this recording's footage reaches: the end of its last segment, 0 when there is none. What a scan
+# whose interval runs into the future reads to know whether the footage has caught up with its end.
+def written_through(archive_root: str, unit) -> float:
+    return max((s.end for s in Manifest(archive_root, unit).read()), default=0.0)
+
+
 # Seconds of `[t0, t1)` the plan actually covers. The operator asked for an hour; if forty minutes were
 # recorded, a finished scan that found nothing has to be able to say WHICH — "nothing happened" and
 # "nothing was recorded" are different answers and only one of them is about the footage.

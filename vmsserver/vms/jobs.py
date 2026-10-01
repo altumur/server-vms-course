@@ -27,18 +27,12 @@ from w2cplatform.spec import Refused
 TERMINAL = ("done", "failed")
 # What a job's row may say, and what the worker's phase is allowed to move it to. The console mirrors the
 # phase into the row not because the row is a better heartbeat — it is a worse one — but because the row is
-# what SURVIVES the job being un-placed, and what the operator opened. `waiting` and `unsupported` are the
+# what SURVIVES the job being un-placed, and what the operator opened. `waiting`, `following` and `unsupported` are the
 # worker's news and stay in the heartbeat: nothing downstream acts on them.
 MIRRORED = ("fetching", "running") + TERMINAL
 log = logging.getLogger("vms.jobs")
 
 
-# The other half of `<name>/requests/<id>`: the worker fetched it and said so in its heartbeat; the row goes.
-#
-# Same division as `reap` below, and for the same reason — a worker writes no configuration. Here it is
-# cheaper still, because a request has no state to move: once the work named in it is done the row has
-# nothing left to say, and a store that keeps every range anyone ever asked for is a store that grows
-# without anybody deciding it should.
 # "Record this camera for ten minutes" — a request turned into a row, by the one token that may write
 # rows: the CONSOLE's. Run in the console process's loop, beside the reaper that clears requests.
 #
@@ -100,17 +94,134 @@ def record_on_request(rec_ctl, now: float) -> int:
 # reached by a clock instead of by a click.
 #
 # `until: 0` is every recording an operator made by hand, and this function never touches one.
-def expire_recordings(rec_ctl, now: float) -> int:
+#
+# Any subsystem whose row has an `until` ends the same way — a detector asked for ten minutes too
+# (`detect_on_request`) — so the function is the field's, not the recorder's.
+def expire(ctl, now: float) -> int:
     gone = 0
-    for row in rec_ctl.units():
+    for row in ctl.units():
         until = float(row.get("until") or 0)
         if until and now > until:
-            rec_ctl.delete(row["id"])
+            ctl.delete(row["id"])
             gone += 1
-            log.info("%s: %s reached its end", rec_ctl.spec.name, row["id"])
+            log.info("%s: %s reached its end", ctl.spec.name, row["id"])
     return gone
 
 
+expire_recordings = expire                              # the name the recorder's callers know it by
+
+
+# What automation asks the DETECTORS for: `det/requests/<id>`, turned into rows by the console, beside
+# `record_on_request` and for its reasons — a worker writes no configuration, and both answers are
+# configuration. The recorder's family has two kinds of asking, and so does this one:
+#
+#   detect   {cam, kind, minutes}        the STREAM, from now: a detector row `<cam>-<kind>-auto` with an
+#                                         `until`. A second request while it runs extends it. A camera whose
+#                                         `kind` already runs by the operator's hand, with no end, is
+#                                         watched already: a second model would count every car twice
+#   scan     {cam, kind, before, after}  an INTERVAL around the moment the scenario fired — `at − before`
+#                                         to `at + after`: a job of `detjob`. With `after` the interval
+#                                         reaches into the future, and the job FOLLOWS the recording until
+#                                         its end (`DetJobWorker`) — the archive as it is being written
+#
+# Two answers, two subsystems, ONE door — which is the whole of what the two have in common. The budgets stay
+# apart (Lesson 21): a scan placed on a GPU is still placed against the scans that GPU will carry, never
+# against its streams.
+#
+# The settings travel with the request, or — when it names none — are copied from a detector the operator
+# made for the same camera and model: "the plates on camera 7" means the plates as camera 7 is set up for.
+# A refusal is an answer and the request goes; a store that did not answer is not, and it stays.
+DETECT_KEY = "-auto"
+SCAN_BEFORE, SCAN_AFTER = 60.0, 60.0
+
+
+def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
+    made = 0
+    for key in sorted(det_ctl.vars.list(det_ctl.sub.requests_prefix())):
+        it, _ = det_ctl.vars.get(key)
+        rid = key.rsplit("/", 1)[1]
+        if not it:
+            continue
+        action = str(it.get("action", ""))
+        until = float(it.get("valid_until", 0) or 0)
+        if until and now > until:
+            det_ctl.vars.delete(key)                        # asked for too late to mean what it meant
+            log.warning("%s: %s expired before it was turned into work", det_ctl.spec.name, rid)
+            continue
+        cam, kind = str(it.get("cam") or ""), str(it.get("kind") or "")
+        try:
+            if not cam or not kind or action not in ("detect", "scan"):
+                raise Refused(f"a request names a camera, a model and detect|scan: {dict(it)}")
+            same = _settings(det_ctl, cam, kind, it)
+            made += _detect(det_ctl, cam, kind, it, same, now) if action == "detect" else \
+                _scan(job_ctl, rec_ctl, cam, kind, it, same, now)
+        except Refused as e:                                # a refusal is an answer, and it is ours to log
+            log.warning("%s: %s refused: %s", det_ctl.spec.name, rid, e)
+        except Exception as e:                              # noqa: BLE001 — not an answer: stays, and is tried again
+            log.warning("%s: %s could not be turned into work this pass: %s", det_ctl.spec.name, rid, e)
+            continue
+        det_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
+    return made
+
+
+def _settings(det_ctl, cam: str, kind: str, it: dict) -> dict:
+    out = {f: it[f] for f in ("params",) if it.get(f)}
+    if not out:
+        for d in sorted(det_ctl.units(), key=lambda d: str(d["id"])):
+            if str(d.get("cam")) == cam and str(d.get("kind")) == kind and not str(d["id"]).endswith(DETECT_KEY):
+                out = {f: d[f] for f in ("params", "mask") if d.get(f)}
+                break
+    return out
+
+
+def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:
+    minutes = float(it.get("minutes", 0) or 0)
+    if minutes <= 0:
+        raise Refused(f"detect asks for no minutes: {dict(it)}")
+    for d in det_ctl.units():
+        if str(d.get("cam")) == cam and str(d.get("kind")) == kind and d.get("enabled", True) \
+                and not float(d.get("until") or 0):
+            log.info("%s: camera %s is watched for %s already (%s) — nothing to start", det_ctl.spec.name, cam, kind, d["id"])
+            return 0
+    name, ends = f"{cam}-{kind}{DETECT_KEY}", now + minutes * 60
+    row = det_ctl.unit(name)
+    if row is None:
+        det_ctl.create({"name": name, "cam": cam, "kind": kind, "until": ends, **same})
+        return 1
+    if float(row.get("until") or 0) < ends:
+        det_ctl.update(name, {"until": ends})               # keep watching, not watch twice
+        return 1
+    return 0
+
+
+def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:
+    at = float(it.get("at", 0) or now)
+    before = float(it.get("before", SCAN_BEFORE) or 0)
+    after = float(it.get("after", SCAN_AFTER) or 0)
+    t0, t1 = at - before, at + after
+    if t1 <= t0:
+        raise Refused(f"scan asks for an empty interval: before {before}, after {after}")
+    rec = str(it.get("rec") or "")
+    if not rec:
+        recs = sorted(str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam)
+        rec = cam if cam in recs else (recs[0] if recs else "")
+    if not rec or rec_ctl.unit(rec) is None:
+        raise Refused(f"nothing records camera {cam}: a scan reads the archive, and there is none to read")
+    jid = f"{rec}-{kind}-{int(t0)}-{int(t1)}"
+    if job_ctl.vars.get(job_ctl.sub.config(job_ctl.spec.rows, jid))[0]:
+        return 0                                            # made already, or deleted on purpose
+    job_ctl.create({"name": jid, "cam": cam, "rec": rec, "kind": kind, "from": t0, "to": t1,
+                    **{k: v for k, v in same.items() if k in ("params", "mask")}})
+    log.info("%s: scanning %s [%.0f, %.0f) with %s — a scenario asked", job_ctl.spec.name, rec, t0, t1, kind)
+    return 1
+
+
+# The other half of `<name>/requests/<id>`: the worker fetched it and said so in its heartbeat; the row goes.
+#
+# Same division as `reap` below, and for the same reason — a worker writes no configuration. Here it is
+# cheaper still, because a request has no state to move: once the work named in it is done the row has
+# nothing left to say, and a store that keeps every range anyone ever asked for is a store that grows
+# without anybody deciding it should.
 def clear_requests(ctl) -> int:
     from w2cplatform.console import heartbeats
     fetched: set[str] = set()

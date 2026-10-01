@@ -132,7 +132,7 @@ def test_the_catalogue_is_the_boundary():
     """What automation may ask for is narrower than what the subsystems can do,
     and the narrow list is the point: every entry is a request somebody has to
     have written a performer for."""
-    assert set(ACTIONS) == {("vms", "output"), ("vms", "preset"), ("rec", "record")}
+    assert set(ACTIONS) == {("vms", "output"), ("vms", "preset"), ("rec", "record"), ("det", "detect"), ("det", "scan")}
     for (sub, action), spec in ACTIONS.items():
         assert spec["need"], f"{sub}.{action} names no required field"
 
@@ -269,7 +269,7 @@ def test_the_form_is_built_from_the_catalogue():
     box = Box(); con = _con(box)
     box.vars.put("vms/cameras/20", {"id": "20", "name": "gate", "source": "driverpack://acme/10.0.0.20/ch/1"})
     code, cat = auto_routes(con)(None, "GET", "/catalog", {})
-    assert code == 200 and set(cat["actions"]) == {"vms.output", "vms.preset", "rec.record"}
+    assert code == 200 and set(cat["actions"]) == {"vms.output", "vms.preset", "rec.record", "det.detect", "det.scan"}
     assert cat["vms"]["12"]["can"]["relays"] == 2 and "io.input" in cat["vms"]["12"]["can"]["events"]
     assert cat["vms"]["7"]["can"]["presets"] == 5 and cat["vms"]["20"]["can"] is None
     assert cat["det"] == {"7-motion": {"cam": "7", "raises": ["motion"]}}

@@ -826,19 +826,28 @@ function buildAutoAction() {
   if (!can || can.relays) action.appendChild(opt('output', 'pulse a relay'));
   if (!can || can.ptz) action.appendChild(opt('preset', 'go to a preset'));
   action.appendChild(opt('record', 'record 10 minutes'));
+  // The detectors' two (`det.detect`, `det.scan`): the models this unit's detectors run, else the course's three.
+  const cam = $('#autotarget').value, kinds = [...new Set(Object.values(catalog.det).filter(d => d.cam === cam).flatMap(d => d.raises))];
+  for (const k of (kinds.length ? kinds : ['motion', 'linecross', 'lpr'])) {
+    action.appendChild(opt(`detect:${k}`, `detect ${k} 10 minutes`));
+    action.appendChild(opt(`scan:${k}`, `scan ${k} in the archive, a minute either side`));
+  }
   action.onchange = buildAutoArg; buildAutoArg();
 }
 function buildAutoArg() {
   const can = (catalog.vms[$('#autotarget').value] || {}).can, a = $('#autoaction').value, box = $('#autoarg');
   const upto = a === 'output' ? (can && can.relays) : a === 'preset' ? (can && can.presets) : 0;
-  box.innerHTML = a === 'record' ? '' : upto
+  box.innerHTML = (a === 'record' || a.includes(':')) ? '' : upto
     ? `<select name="arg">${Array.from({ length: upto }, (_, i) => `<option>${i + 1}</option>`).join('')}</select>`
     : `<input type="number" name="arg" min="1" value="1" style="width:4em">`;
 }
 $('#autoadd').onsubmit = async e => {
   e.preventDefault(); $('#autoerr').textContent = '';
   const f = Object.fromEntries(new FormData(e.target)), [sub, unit, kind] = f.when.split('|');
+  const [verb, model] = f.action.split(':');
   const then = f.action === 'record' ? { sub: 'rec', action: 'record', cam: f.target, minutes: 10 }
+             : verb === 'detect' ? { sub: 'det', action: 'detect', cam: f.target, kind: model, minutes: 10 }
+             : verb === 'scan' ? { sub: 'det', action: 'scan', cam: f.target, kind: model, before: 60, after: 60 }
              : { sub: 'vms', action: f.action, unit: f.target, [f.action === 'output' ? 'port' : 'n']: parseInt(f.arg, 10) };
   try { await send('POST', '/auto/scenarios', { name: f.name, when: [{ sub, unit, kind }], then: [then] }); e.target.reset(); loadAutos(true); }
   catch (err) { $('#autoerr').textContent = 'refused: ' + err.message; }

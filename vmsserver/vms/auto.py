@@ -61,6 +61,9 @@ ACTIONS = {
     ("vms", "output"): {"need": ("unit", "port"), "may": ("state", "pulse_ms")},
     ("vms", "preset"): {"need": ("unit", "n"), "may": ()},
     ("rec", "record"): {"need": ("cam", "minutes"), "may": ("archive",)},
+    # The detectors' two: the stream for minutes from now, or the archive around the moment (`vms/jobs.py`).
+    ("det", "detect"): {"need": ("cam", "kind", "minutes"), "may": ("params",)},
+    ("det", "scan"): {"need": ("cam", "kind"), "may": ("before", "after", "rec", "params")},
 }
 
 # A scenario may not ask for the world. The ceiling is on the SHAPE — how many triggers, how long a window
@@ -113,6 +116,15 @@ class Catalog:
             if it and it.get("deleted") != "true":
                 out[key.rsplit("/", 1)[1]] = it
         return out
+
+    def recordings_of(self, cam: str, rec: str = "") -> list[str]:
+        from .config import REC_SPEC
+        out = []
+        for key in self.vars.list(REC_SPEC.sub.config(REC_SPEC.rows, "")):
+            it, _ = self.vars.get(key)
+            if it and it.get("deleted") != "true" and str(it.get("cam", key.rsplit("/", 1)[1])) == cam:
+                out.append(key.rsplit("/", 1)[1])
+        return [r for r in out if not rec or r == rec]
 
     def cameras(self) -> dict[str, dict]:
         out = {}
@@ -169,6 +181,14 @@ class Catalog:
         if (sub, name) == ("rec", "record"):
             if self.camera(a.get("cam")) is None:
                 misfit.append(f"there is no camera {a.get('cam')} to record")
+            return
+        if sub == DET_SPEC.name:
+            cam = str(a.get("cam", ""))
+            if self.camera(cam) is None:
+                misfit.append(f"there is no camera {cam} to {name}")
+            elif name == "scan" and not self.recordings_of(cam, str(a.get("rec") or "")):
+                misfit.append(f"nothing records camera {cam}: a scan reads the archive" if not a.get("rec") else
+                              f"there is no recording {a.get('rec')} of camera {cam}")
             return
         if sub != VMS_SPEC.name:
             return
