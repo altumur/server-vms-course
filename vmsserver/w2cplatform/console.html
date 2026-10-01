@@ -10,7 +10,7 @@
      subsystem, coloured by subsystem, each click seeking the player; as a
      live feed beside the live picture, polled while watching; and as a
      Mark button, the operator's own event — /timeline/<id>, /events?cam=,
-     /segment/<path>, /marks (one box: a list; a cluster: {segments,
+     each span's `media` route, /marks (one box: a list; a cluster: {segments,
      unreachable, note}, each span naming its server; the events reply's
      `state` names a resource that did not answer). -->
 <!--
@@ -24,8 +24,8 @@ whether there is media — and builds the unit list, the add form and the edit f
 page names a camera: the VMS is the spec that says `rows: cameras`, `media: true`; live and det are other specs
 and the same page (`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http`
 asserts the word "camera" does not appear outside the leading comment). With media the page adds the
-timeline and the player, using the routes the subsystem registered (`/timeline/<id>`, `/segment/<path>`)
-plus the platform's `/events?cam=`. Writes go through the console with a fresh `Idempotency-Key` per attempt
+timeline and the player, using the routes the subsystem registered (`/timeline/<id>`, and the `media` each span
+names — the VMS: `/export/<id>?rec=…`, an interval as an MP4) plus the platform's `/events?cam=`. Writes go through the console with a fresh `Idempotency-Key` per attempt
 so a retried click is one unit; refusals are shown as the server's `detail`.
 
 ## `<style>`
@@ -96,8 +96,9 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 ## Routes the page uses
 - `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
-- `GET /timeline/<id>?from&to`, `GET /segment/<path>[?server=]` — only when `spec.media`; registered by the
-  subsystem.
+- `GET /timeline/<id>?from&to`, and each span's `media` with `from&to` (the VMS: `/export/<id>?rec=…`) — only
+  when `spec.media`; registered by the subsystem. A span whose `media` is a file path is played as
+  `/segment/<path>[?server=]`, for a subsystem that still serves files.
 - `GET /events?from&to&cam=<id>` — the resources' event databases, merged by the console, tolerated when absent;
   `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
 
@@ -494,9 +495,9 @@ function drawEvents() {
 function seek(t) {
   const i = spans.findIndex(s => s.media && s.start <= t && t < s.end);
   if (i < 0) { $('#playing small').textContent = `${fmt(t)} · not recorded at that moment`; return; }
-  play(i);
+  play(i, t);
   const v = $('#player');
-  v.addEventListener('loadedmetadata', () => { v.currentTime = Math.max(0, t - spans[i].start); }, { once: true });
+  v.addEventListener('loadedmetadata', () => { v.currentTime = Math.max(0, t - (playing ? playing.from : spans[i].start)); }, { once: true });
 }
 $('#evfilter').onchange = e => { evfilter = e.target.value; drawEvents(); };
 $('#mark').onsubmit = async e => {
@@ -568,15 +569,27 @@ function fillEdit(c) {
   if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
 }
 
-// `/segment/<media path>`, with `?server=` when the span names another server (a cluster).
-function segmentURL(s) { return `/segment/${s.media}` + (s.server ? `?server=${encodeURIComponent(s.server)}` : ''); }
+// What to play a piece by. A span whose `media` is a route (`/export/<id>?rec=…`, the subsystem's) is asked for
+// the minutes of the piece; an older one names a file (`/segment/<path>`).
+function segmentURL(s, p) {
+  if (s.media && s.media.startsWith('/')) return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
+  return `/segment/${s.media}` + (s.server ? `?server=${encodeURIComponent(s.server)}` : '');
+}
 
-// One segment at a time, the next when this one ends. Gapless playback of
-// fragmented MP4 through MSE is the gateway's job (М12); the console plays
-// what the resource serves.
-// Queue every span from index `i` onward that has media, then `next()`.
-function play(i) {
-  queue = spans.map((s, j) => j).filter(j => j >= i && spans[j].media);
+// One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
+// interval the subsystem turns into an MP4. Gapless playback through MSE is the gateway's job (М12); the console
+// plays what the archive hands it. Queue every piece of every span from index `i` onward that has media.
+const PIECE = 600;
+let playing = null;                                                   // the piece on the player now: {i, from, to}
+function play(i, at) {
+  queue = [];
+  spans.forEach((s, j) => {
+    if (j < i || !s.media) return;
+    for (let a = s.start; a < s.end; a += PIECE) {
+      const p = { i: j, from: a, to: Math.min(a + PIECE, s.end) };
+      if (at === undefined || p.to > at) queue.push(p);              // a seek starts at the piece holding the moment
+    }
+  });
   next();
 }
 // Pop the next index, outline that span as playing, write the caption (times, epoch, "from <server>"), set
@@ -585,10 +598,10 @@ function play(i) {
 function next() {
   if (!queue.length) return;
   stopLive();
-  const i = queue.shift(); const s = spans[i];
+  const p = playing = queue.shift(); const i = p.i; const s = spans[i];
   [...$('#timeline').children].forEach((el, j) => el.classList.toggle('playing', j === i));
-  $('#playing small').textContent = `${fmt(s.start)} – ${fmt(s.end)} · epoch ${s.epoch}${s.server ? ' · from ' + s.server : ''}`;
-  const v = $('#player'); v.src = segmentURL(s); v.play().catch(() => {});
+  $('#playing small').textContent = `${fmt(p.from)} – ${fmt(p.to)} · epoch ${s.epoch}${s.recorder ? ' · from ' + s.recorder : s.server ? ' · from ' + s.server : ''}`;
+  const v = $('#player'); v.src = segmentURL(s, p); v.play().catch(() => {});
 }
 $('#player').onended = next;
 

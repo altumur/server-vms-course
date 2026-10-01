@@ -128,13 +128,12 @@ def test_a_backfill_request_is_a_row_and_not_a_202():
     import json
     from vms.config import REC_SPEC
     from vms.console import vms_routes
-    from vms.archive import ArchiveResource
     from w2cplatform.spec import SpecController
 
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
     rec.create({"name": "7", "cam": "7"})
-    routes = vms_routes(ArchiveResource(box.spool, box.archive), None, None, rec)
+    routes = vms_routes(True, None, None, rec)
 
     class H:                                                        # the handler surface the route uses
         headers = {"Content-Length": "48", "X-User": "anna"}

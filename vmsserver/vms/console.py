@@ -495,6 +495,11 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out += [f'rec_archive_away_seconds{{worker="{w}"}} '
             f'{round(now - float(hb.extra["archive_away_since"]), 1) if float(hb.extra.get("archive_away_since") or 0) else 0}'
             for w, hb in hbs]
+    # Why the volume stopped taking samples, by kind: `away` (the daemon, a network — waited for) or `wrong` (a
+    # person has to act — the volume is handed back). One line per recorder that has a failure, none otherwise.
+    out.append("# TYPE rec_archive_failure gauge")
+    out += [f'rec_archive_failure{{worker="{w}",kind="{hb.extra["archive_failure"]}"}} 1' for w, hb in hbs
+            if hb.extra.get("archive_failure")]
     out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
     out += [f'rec_writer{{worker="{w}",state="{(hb.extra.get("writer") or {}).get("state") or "ok"}"}} 1' for w, hb in hbs]
     # How long since each recording last took anything from its source (feedback BI; the review's
@@ -504,7 +509,7 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
             for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
-    # How far back each recording goes, and whether the watermark has cut inside the floor it was promised
+    # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")
     out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {st["depth_days"]}' for w, hb in hbs for st in hb.status if "depth_days" in st]
