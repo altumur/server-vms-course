@@ -43,6 +43,7 @@ STITCH = 2.0         # seconds: two spans closer than this are one run — the s
 # feedback Y): block ≥ read + 3 MB.
 BLOCK, READ = 8 << 20, 1 << 20
 NEVER, FOREVER = 0, 1 << 62           # the archive's milliseconds: before anything, after everything
+TIMELINE_WINDOW = 5 * 86400 * 1000    # how much of a stream one timeline question covers (`Archive._timeline`)
 
 
 def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog:
@@ -290,9 +291,30 @@ class Archive:
             p = parse_stream(name)
             if p is None or (unit is not None and p[0] != str(unit)):
                 continue
-            for iv in r.timeline(name, lo, hi):
+            for iv in self._timeline(r, name, lo, hi):
                 out.append(Span(p[0], p[1], unix_s(iv["start"]), unix_s(iv["end"]), int(iv.get("size", 0)), p[2]))
         return sorted(out, key=lambda s: (s.start, s.epoch))
+
+    # A stream's timeline, asked IN WINDOWS. The engine answers `INTERNAL_ERROR` for a timeline over six days of
+    # footage or more (obsd protocol v1, seen and not documented): a recording a month deep cannot be asked in
+    # one question. So the question is cut to what the stream holds — its first and last sequence — and asked
+    # five days at a time; intervals that touch across a cut are put back together.
+    def _timeline(self, r, name: str, lo: int, hi: int) -> list[dict]:
+        first, last = r.find(name, lo), r.find(name, hi, backwards=True)
+        if first is None or last is None:
+            return []
+        lo, hi = max(lo, min(first.start, hi)), min(hi, max(last.end, lo))
+        out: list[dict] = []
+        t = lo
+        while t < hi:
+            for iv in r.timeline(name, t, min(t + TIMELINE_WINDOW, hi)):
+                if out and iv["start"] <= out[-1]["end"]:
+                    if iv["end"] > out[-1]["end"]:
+                        out[-1] = {**out[-1], "end": iv["end"], "size": out[-1].get("size", 0) + iv.get("size", 0)}
+                    continue
+                out.append(dict(iv))
+            t += TIMELINE_WINDOW
+        return out
 
     def timeline(self, unit, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
         """Spans overlapping `[t0, t1)`, each marked `fenced` when its epoch is older than the current one — how

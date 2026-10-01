@@ -161,3 +161,22 @@ def test_two_writers_epochs_are_two_streams_in_one_volume():
     assert sorted(r.streams()) == ["7/e1", "7/e2"]
     assert _spans(r, "7/e1") == [(0, 2)] and _spans(r, "7/e2") == [(1, 3)]  # the minutes both held: two streams, both kept
     s.bye()
+
+
+def test_a_timeline_over_six_days_is_refused_so_the_archive_asks_in_windows():
+    """Seen, and not in the protocol's README: `READER_TIMELINE` over six days of footage or more answers
+    `INTERNAL_ERROR`. A recording is a month deep, so `Archive` asks five days at a time and puts the intervals
+    back together (`Archive._timeline`). If this test starts failing, the engine has stopped refusing — and the
+    windows can go."""
+    from tests.conftest import footage, store
+    now = 1_757_500_000.0
+    st = store()
+    footage(st, "7", 1, now - 9 * 86400, now, step=3600)
+    r = st.reader()
+    assert r.timeline("7/e1", archive_ms(now - 5 * 86400), archive_ms(now))          # five days: answered
+    try:
+        r.timeline("7/e1", archive_ms(now - 9 * 86400), archive_ms(now))
+        raise AssertionError("the engine answered a nine-day timeline: Archive._timeline's windows can go")
+    except ObsdError as e:
+        assert e.name == "INTERNAL_ERROR"
+    assert st.coverage("7") == [(now - 9 * 86400, now)]                              # …and the archive answers it whole

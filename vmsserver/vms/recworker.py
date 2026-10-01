@@ -1164,11 +1164,17 @@ class RecWorker(VmsWorker):
                 groups[-1].append(smp)
         delivered = stitch([(unix_s(g[0].begin), unix_s(g[-1].end)) for g in groups], self.stitch)
         epoch = self.epochs.get(unit, 0)
+        last = None                                      # where the sequence being written ends
         for g in groups:
             span = (unix_s(g[0].begin), unix_s(g[-1].end))
             if overlaps(have, span) or not g[0].key:
                 continue                                 # live recording got there while we were fetching
             try:
+                # A sequence is CONTINUOUS to the index: a hole inside one is drawn as footage. So what the source
+                # did not have — or what was dropped above — ends the sequence, and the next group opens another.
+                if last is not None and span[0] - last > self.stitch:
+                    self.store.finish(unit, epoch, backfill=True)
+                last = span[1]
                 for smp in g:
                     self.store.put(unit, epoch, smp, backfill=True)
                 kept += 1

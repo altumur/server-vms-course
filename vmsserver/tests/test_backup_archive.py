@@ -8,18 +8,15 @@ card of a camera that runs this platform. The primary closes any hole from the b
 dropped, the seconds its own recorder took to move — by COPYING the backup's footage, cut to the hole, with
 the times it was recorded at. The mechanism is Lesson 16's, over a second kind of source.
 """
-import os
 import tempfile
-from datetime import datetime, timezone
 
 from vms import volumes
-from vms.archive import ArchiveResource, Manifest, Segment, segment_path
 from vms.config import REC_SPEC, SPEC
 from vms.controller import VmsController
-from vms.recworker import RecWorker
 from vms.worker import FakeActuator, FakeDevice
 from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import Refused, SpecController
+from tests.conftest import footage, recorder
 from tests.test_lesson11_edge import CARD, _box, _holder
 
 
@@ -29,21 +26,27 @@ def _resource(box, server):
                     json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}", "units": {}}).encode())
 
 
-def _recorder(box, name, server, volume, act=None):
-    arch = ArchiveResource(tempfile.mkdtemp(prefix=f"{name}-spool-"), tempfile.mkdtemp(prefix=f"{name}-arch-"), wall=box.wall)
-    r = RecWorker(name, box.vars.as_writer(f"recworker-{name}", ["rec/epoch/*", "rec/slots/*"]), box.objects,
-                  act or FakeActuator(), archive=arch, clock=box.clock, wall=box.wall, server=server,
-                  env={"VOLUME": volume}, keep_days=1.0, settle=60.0)
+def _recorder(box, name, server, volume, act=None, opened=True):
+    """A recorder PINNED to a declared volume (`$VOLUME`), the volume open — unless another recorder has it
+    open already (`opened=False`: a test of placement, where nothing is written)."""
+    r = recorder(box, name, server, act, keep_days=1.0, settle=60.0, env={"VOLUME": volume})
     _resource(box, server)
-    r.heartbeat_once()
+    r.lease_pass(); r.heartbeat_once()
+    assert r.store is not None or not opened, r.volume_error or r.archive_error
     return r
 
 
+def _volume(box, name, kind, server):
+    """A declared volume, in a directory of its own: `/data/a` on a box is a temp directory here."""
+    url = tempfile.mkdtemp(prefix=f"{name}-")
+    volumes.write(box.vars, {"name": name, "kind": kind, "server": server, "url": url, "quota_bytes": 64 << 20})
+
+
 def _footage(r, unit, spans):
+    """A frame every ten seconds, visible."""
     for start, end in spans:
-        p = segment_path(r.archive.root, unit, r.epochs[unit], datetime.fromtimestamp(start, timezone.utc))
-        os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x")
-        Manifest(r.archive.root, unit).append(Segment(unit, r.epochs[unit], start, end, os.path.relpath(p, r.archive.root), 1))
+        footage(r.store, unit, r.epochs[unit], start, end, step=10, seal=False)
+    r.store.seal()
 
 
 # The two recorders of `_site` are on srv-a and srv-b, and this test runs both on ONE machine, where the backup's
@@ -65,8 +68,8 @@ def _site(when="always", backup_act=None, card=None):
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": card} if card else None))   # by default a card we cannot read
     con.create_camera({"name": "front", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    volumes.write(box.vars, {"name": "disks", "kind": "local", "server": "srv-a", "url": "/data/a", "quota_bytes": 10**12})
-    volumes.write(box.vars, {"name": "copy", "kind": "backup", "server": "srv-b", "url": "/data/b", "quota_bytes": 10**12})
+    _volume(box, "disks", "local", "srv-a")
+    _volume(box, "copy", "backup", "srv-b")
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
     con_rec.create({"name": "1", "cam": "1", "home": "disks"})
     con_rec.create({"name": "1-copy", "cam": "1", "home": "copy", "when": when})
@@ -83,8 +86,8 @@ def test_the_primary_closes_its_gap_from_the_backup_recording():
     """The primary's recorder moved, and a hundred seconds are missing from it. The backup recording has
     them. The primary finds the backup in the heartbeats — a recording of the same camera, homed on a backup
     volume, whose recorder says what it holds and serves its archive — and copies exactly the hundred
-    seconds, cut out of the backup's segment, with the times they were recorded at. What lands is ours:
-    our manifest, our epoch, `source: backup`."""
+    seconds, cut out of the backup's volume, with the times they were recorded at. What lands is ours:
+    our volume, our epoch, the recording's backfill stream."""
     with _OneMachine():
         box, rec_ctl, primary, backup, _ = _site()
         now = box.wall()
@@ -95,18 +98,20 @@ def test_the_primary_closes_its_gap_from_the_backup_recording():
         src = primary.backup_sources({"id": "1", "cam": "1", "home": "disks"})
         assert [(s["recording"], s["recorder"]) for s in src] == [("1-copy", "r-2")]
         done = primary.backfill(budget=1, now=now, force=True)
-        assert done == [{"unit": "1", "cam": "1", "from": now - 4000, "to": now - 3900, "segments": 1, "source": "backup:1-copy"}]
-        assert [(c[1], c[2]) for c in primary.actuator.copied] == [(now - 4000, now - 3900)]      # cut to the hole
-        assert primary.actuator.fetched == []                                                    # nothing re-recorded
-        copied = [s for s in Manifest(primary.archive.root, "1").read() if s.source == "backup"]
-        assert copied and copied[0].epoch == primary.epochs["1"]
+        assert [{k: d[k] for k in ("unit", "cam", "from", "to", "source")} for d in done] == [
+            {"unit": "1", "cam": "1", "from": now - 4000, "to": now - 3900, "source": "backup:1-copy"}]
+        assert done[0]["groups"] > 0 and primary.actuator.fetched == []                         # nothing re-recorded
+        primary.store.seal()
+        copied = [s for s in primary.store.spans("1") if s.stream.endswith("/backfill")]
+        assert [(c.start, c.end) for c in copied] == [(now - 4000, now - 3900)]                 # cut to the hole
+        assert copied[0].epoch == primary.epochs["1"]
         assert primary.our_coverage("1") == [(now - 7200, now - 600)]
 
 
-def test_the_backups_manifest_decides_what_is_copied_not_its_summary():
-    """The backup's heartbeat says it holds two hours — a summary, start and end. Its manifest says there is
-    a hole in it too. The primary plans from the summary, copies from the manifest, and remembers what the
-    backup did not have, so the next pass does not ask it again."""
+def test_the_backups_volume_decides_what_is_copied_not_its_summary():
+    """The backup's heartbeat says it holds two hours — a summary, start and end. Its volume says there is
+    a hole in it too. The primary plans from the summary, copies what the backup's door hands over, and
+    remembers what the backup did not have, so the next pass does not ask it again."""
     with _OneMachine():
         box, rec_ctl, primary, backup, _ = _site()
         now = box.wall()
@@ -115,7 +120,9 @@ def test_the_backups_manifest_decides_what_is_copied_not_its_summary():
         backup.serve_archive(); backup.heartbeat_once()
 
         primary.backfill(budget=1, now=now, force=True)
-        assert sorted((c[1], c[2]) for c in primary.actuator.copied) == [(now - 4000, now - 3960), (now - 3920, now - 3900)]
+        primary.store.seal()
+        copied = sorted((c.start, c.end) for c in primary.store.spans("1") if c.stream.endswith("/backfill"))
+        assert copied == [(now - 4000, now - 3960), (now - 3920, now - 3900)]
         assert primary.nowhere[("1", "backup:1-copy")] == [(now - 3960, now - 3920)]
         assert primary.backfill(budget=1, now=now, force=True) == []
 
@@ -140,8 +147,8 @@ def test_a_backup_volume_holds_its_own_recordings_and_nothing_else():
     only srv-b answers, are placed one on srv-b and one nowhere — unplaceable, said out loud — and when srv-a
     comes back the primary lands there. Without the rule the primary goes to srv-b "away from home"."""
     box, ctl, con, con_vars = _box()
-    volumes.write(box.vars, {"name": "disks", "kind": "local", "server": "srv-a", "url": "/data/a", "quota_bytes": 10**12})
-    volumes.write(box.vars, {"name": "copy", "kind": "backup", "server": "srv-b", "url": "/data/b", "quota_bytes": 10**12})
+    _volume(box, "disks", "local", "srv-a")
+    _volume(box, "copy", "backup", "srv-b")
     backup = _recorder(box, "r-2", "srv-b", "copy")
     rec_ctl = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
@@ -156,7 +163,7 @@ def test_a_backup_volume_holds_its_own_recordings_and_nothing_else():
 
     con_rec.create({"name": "3-copy", "cam": "3", "home": "copy"})
     box.wall.advance(120); _resource(box, "srv-a")
-    _recorder(box, "r-3", "srv-a", "disks")                           # srv-b silent: only disks answer
+    _recorder(box, "r-3", "srv-a", "disks", opened=False)             # srv-b silent: only disks answer
     rec_ctl.ensure_placed()
     assert rec_ctl.placement("3-copy") is None                        # the backup waits for ITS volume
 
@@ -203,7 +210,8 @@ def test_an_offline_backup_runs_on_hold_and_writes_nothing():
     assert "1-copy" in backup.actuator.held and backup.holding["1-copy"] is True
     st = next(st for st in backup.status() if st["id"] == "1-copy")
     assert st["phase"] == "standby" and "held in memory" in st["why"]
-    assert backup.archive.closed_in_spool(0.0, box.wall() + 1) == []
+    box.wall.advance(60); backup.store.seal()
+    assert backup.store.spans("1-copy") == []                          # not a frame on the volume
 
 
 def _primary_stops(box, primary, backup, holder, after: float = 100.0):
@@ -234,17 +242,15 @@ def test_a_released_backup_writes_the_seconds_before_anybody_noticed():
     assert released_at - backup.PREBUFFER <= start < stopped            # footage from BEFORE the failure
     assert start % backup.actuator.gop == 0                             # from a keyframe, never mid-GOP
     assert backup.holding["1-copy"] is False
-    box.wall.advance(backup.grace_seconds + 1)                         # the recorder's own pause before promoting
-    backup.promote_closed()
-    segs = Manifest(backup.archive.root, "1-copy").read()
-    assert [(s.start, s.end) for s in segs] == [(start, released_at)]   # in the archive, at its own time
+    backup.store.seal()
+    assert backup.our_coverage("1-copy") == [(start, released_at)]     # on the volume, at its own time
 
 
 def test_the_backup_goes_back_on_hold_a_minute_after_the_primary_is_back():
     """The primary is written again — by its heartbeat. Its first segment is not on disk yet, and will not be
     visible until it closes; stopping the backup at that word would leave the seam to nobody. So the backup
     keeps writing for a minute, the two archives overlap, and only then is it put back on hold: a restart
-    under the same epoch, its open segment finalized and kept, the ring filling afresh for next time."""
+    under the same epoch, its sequence finished and kept, the ring filling afresh for next time."""
     box, rec_ctl, primary, backup, w = _site(when="offline")
     _primary_stops(box, primary, backup, w)
     box.wall.advance(backup.START_GRACE + 1)
@@ -294,7 +300,7 @@ def _camera_cluster():
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
     con.create_camera({"name": "gate", "source": CARD, "ref": "SN1"})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    volumes.write(box.vars, {"name": "card", "kind": "edge", "server": "srv-1", "url": "/data/card", "quota_bytes": 10**10})
+    _volume(box, "card", "edge", "srv-1")
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
     card = _recorder(box, "r-1", "srv-1", "card")
     SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()

@@ -57,7 +57,7 @@ def test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_consol
     primary.writer_pass()
     assert primary.heartbeat_extra()["writer"] == {"state": "ok"}
 
-    for _ in range(3):                                    # megabytes handed to the sink, nothing reaching the spool
+    for _ in range(3):                                    # megabytes handed to the sink, nothing reaching the volume
         box.wall.advance(30); act.offered_bytes["1"] += 4 * MB
         primary.writer_pass()
     assert primary.heartbeat_extra()["writer"]["state"] == "stuck"
