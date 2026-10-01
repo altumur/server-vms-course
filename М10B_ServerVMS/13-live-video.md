@@ -388,9 +388,13 @@ class GstPeer:
         stop = stop or threading.Event()
         while not stop.is_set():
             try:
-                self.reconcile_once(); self.heartbeat_once()
+                self.reconcile_once()
             except Exception:
                 log.exception("gateway pass failed")
+            try:                                         # a pass that raises still heartbeats: alive, with a failing pass, is the truth
+                self.heartbeat_once()
+            except Exception:
+                log.exception("gateway heartbeat failed")
             stop.wait(poll)
         for cam in list(self.upstreams):
             self._drop(cam)

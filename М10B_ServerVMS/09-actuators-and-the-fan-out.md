@@ -397,9 +397,14 @@ class GstRecActuator(GstActuator):
         if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
             # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
             # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage.
-            self.sinks.pop(cam["id"]).finish()
+            sink = self.sinks.pop(cam["id"])
+            ok = super().__call__(verb, cam)              # the pipeline down first…
+            sink.finish()                                 # …then the sequence closed: nothing arrives after this
+            return ok
         return super().__call__(verb, cam)
 ```
+
+Порядок — сначала конвейер в `NULL`, потом `finish` — не случаен: ключевой кадр, пришедший в сток между `finish` и `NULL`, открыл бы последовательность, которую никто не закроет (ревью платформы, B4, в его форме для `obsd`).
 
 **Конструктору больше нечего знать.** Ни каталога спула, ни архива, ни длины сегмента: куда писать, приходит в строке записи (`cam["sink"]`) от регистратора, который держит том. Актуатор не знает, какой это том и открыт ли он; знает регистратор (урок 10, шаги 6 и 8).
 

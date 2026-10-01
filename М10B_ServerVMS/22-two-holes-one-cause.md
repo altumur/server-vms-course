@@ -97,10 +97,10 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
 
 Одна задача на **пару** (диапазон × детектор). «Дыры в сработках нет» значит, что за те минуты отработала каждая модель, которая работает на этой камере живьём, — не одна и не «главная».
 
-И с её собственными настройками:
+И с её собственными настройками — и метками: детектор оператора стоит там, где есть его модель (`labels`, урок 14), и работа, которая их не унаследовала, села бы на умолчание спеки и ждала бы места, которого нет (второе ревью). То же в `_detect` и `_scan` сценариев (урок 25).
 
 ```python
-                for f in ("params", "mask"):                # the same settings the live detector runs with
+                for f in ("params", "mask", "labels"):      # the same settings — and the same place — the live detector runs with
                     if d.get(f):
                         body[f] = d[f]
 ```
