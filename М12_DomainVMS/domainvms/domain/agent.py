@@ -151,6 +151,8 @@ class DomainAgent:
             self._carry(KEYS_PATH, items)
             return "carried"
         doc = json.loads(items["doc"])
+        if pinned is not None and doc.get("root") != pinned.hex():
+            return "refused: signed by a root this member did not pin"   # said first: it is the reason a person can act on
         root = pinned if pinned is not None else bytes.fromhex(doc.get("root", ""))
         try:
             verify(doc, KeySet(current="", keys={ROOT_KID: root}), self.now())

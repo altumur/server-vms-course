@@ -211,3 +211,35 @@ def test_the_signers_backup_of_lessons_4_and_7_cannot_answer_a_theft():
         raise AssertionError("the signer's backup must not claim to answer a theft")
     except ValueError as e:
         assert "root off the holder" in str(e)
+
+
+def test_a_member_that_pinned_another_root_is_named_and_not_accepted():
+    """Feedback BX. A member pins the root of the first key set it is given, so whoever answers its agent first
+    becomes its root. SN9's first pass reached an impostor with a root of its own; afterwards its agent reaches
+    the real domain, refuses every key set the real root signed — and still reports. The domain shows which root
+    each member pinned, and an admin cannot accept SN9: it would be listed and take nothing this domain signs."""
+    from domain.api import ApiError
+    wall = Clock()
+    fed, devices, root, holder, agents, _ = _site(wall)
+    impostor_fed, x0 = Federation(), DeviceCluster("X0", FakeVariables(), wall=wall)
+    x0.boot()
+    impostor_fed.add(x0.cluster(domain=True))
+    install(impostor_fed, "cam-X0", DOMAIN, DomainRoot(DOMAIN, now=wall), wall=wall, objects=x0.disk)
+    sn9 = DeviceCluster("SN9", FakeVariables(), wall=wall)
+    sn9.boot()
+    DomainAgent(sn9.name, impostor_fed.clusters["cam-X0"].vars, sn9.flash, now=wall, domain_objects=x0.disk_door(),
+                published=sn9.local_objects()).sync()                    # the first answer: the impostor's
+    real = DomainAgent(sn9.name, holder.vars, sn9.flash, now=wall, domain_objects=devices["cam-SN0"].disk_door(),
+                       published=sn9.local_objects())
+    real.sync()
+    assert real.keys == "refused: signed by a root this member did not pin"
+    members = Members(holder.vars, wall)
+    knock = {k["name"]: k for k in members.knocking(devices["cam-SN0"].disk_door())}
+    assert knock["cam-SN9"]["root"] == "another"
+    assert members.pinned("cam-SN1", devices["cam-SN0"].disk_door()) == {"root": "this", "keys_rev": 1}
+    try:
+        members.accept("cam-SN9", by="anna", domain_objects=devices["cam-SN0"].disk_door())
+        raise AssertionError("a member that pinned another root must not be accepted")
+    except ApiError as e:
+        assert e.status == 409 and "another root" in e.detail
+    assert "cam-SN9" not in members.names()

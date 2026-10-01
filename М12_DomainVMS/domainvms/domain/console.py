@@ -7,7 +7,8 @@ the domain holder runs the same one pointed at every cluster.
     GET  /api/where/<camera>                    the directory of directories, incompleteness included
     PUT  /api/cameras/<camera>                  proxied to the owning cluster's console; Idempotency-Key required;
                                                 refuses placement fields
-    GET  /api/members                           the domain's members: who, admitted how and when, and who is knocking
+    GET  /api/members                           the domain's members: who, admitted how and when, which root each
+                                                pinned (`pinned`), and who is knocking
     POST /api/members                           {name} — accept one that is knocking: an admin of the domain holder only
     DELETE /api/members/<name>                  a member leaves: an admin of the domain holder only
     GET  /api/catalog                           what a scenario between cameras may name: the actions one camera may
@@ -98,8 +99,12 @@ class Console:
                         from .scenario import catalog
                         return self._send(200, catalog(console.crossings))
                     if u.path == "/api/members" and console.members is not None:
-                        knocking = console.members.knocking(console.publish_to) if console.publish_to is not None else []
-                        return self._send(200, {**console.members.read(), "knocking": knocking})
+                        doc = console.members.read()
+                        if console.publish_to is None:
+                            return self._send(200, {**doc, "knocking": []})
+                        own = console.members.own_root()
+                        pinned = {n: console.members.pinned(n, console.publish_to, own) for n in doc["members"]}
+                        return self._send(200, {**doc, "pinned": pinned, "knocking": console.members.knocking(console.publish_to)})
                     if u.path.startswith("/api/where/"):
                         a = console.directory.where(u.path.rsplit("/", 1)[1])
                         return self._send(200 if a.found else (404 if a.complete else 503),
@@ -134,7 +139,7 @@ class Console:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):
                         raise ApiError(403, f"{subject} is not an admin of the domain holder: members are the domain's")
-                    console.members.add(str(body["name"]), how=f"accepted by {subject}", by=subject)
+                    console.members.accept(str(body["name"]), by=subject, domain_objects=console.publish_to)
                     self._send(200, console.members.read())
                 except KeyError:
                     self._send(400, {"detail": "name the cluster to accept"})

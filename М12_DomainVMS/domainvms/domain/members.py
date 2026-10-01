@@ -102,21 +102,59 @@ class Members:
         self._refuse_domain(name)
         return self._change(lambda m: m.pop(name, None) is not None)
 
+    # WHICH ROOT A MEMBER PINNED (Lesson 15, feedback BX). A member pins the root of the first key set its agent
+    # is given — in the course, and in the product until enrollment brings the root with it (Lesson 6). So the
+    # first pass is a window: whoever answers the agent first becomes its root. The domain cannot close that
+    # window; it can SEE what came through it. A member that pinned another root still reports here — it refuses
+    # this domain's key set and holder record, and says so — and its report carries the root it holds
+    # (`domain/root`, `uplink._rows`). The domain names it, and nobody accepts it: such a member is enrolled
+    # again, not admitted. Where the domain has no root (Lessons 4–14) there is nothing to compare.
+    def own_root(self) -> str | None:
+        from .agent import KEYS_PATH
+        items, _ = self.vars.get(KEYS_PATH)
+        if not items or "doc" not in items:
+            return None
+        return json.loads(items["doc"]).get("root") or None
+
+    def pinned(self, name: str, domain_objects, own: str | None = None) -> dict:
+        """{"root": "this" | "another" | None, "keys_rev": n | None}, from the member's last report."""
+        from .agent import KEYS_PATH, ROOT_PATH
+        from .uplink import base
+        own = self.own_root() if own is None else own
+
+        def row(path):
+            raw = domain_objects.get(base(name) + "v/" + path)
+            return (json.loads(raw).get("items") or {}) if raw else {}
+        pub, keys = row(ROOT_PATH).get("pub"), row(KEYS_PATH)
+        rev = json.loads(keys["doc"]).get("rev") if keys.get("doc") else None
+        return {"root": None if not (own and pub) else ("this" if pub == own else "another"), "keys_rev": rev}
+
+    def accept(self, name: str, by: str | None, domain_objects=None) -> bool:
+        """A person accepts a cluster that is knocking. Refused (409) when its report says it pinned another root:
+        accepting it would list a member that takes nothing this domain signs."""
+        from .api import ApiError
+        if domain_objects is not None and self.pinned(name, domain_objects)["root"] == "another":
+            raise ApiError(409, f"{name} pinned another root than this domain's: it refuses this domain's key set. "
+                                f"Enroll it again; accepting it would not make it a member")
+        return self.add(name, how=f"accepted by {by}", by=by)
+
     def knocking(self, domain_objects) -> list[dict]:
         """Clusters that report into the domain's store and are not on the list — once the list is written.
-        Each with when it last reported (its own clock) and how many reports it has left."""
+        Each with when it last reported (its own clock), how many reports it has left, and which root it
+        pinned (`pinned`)."""
         from .uplink import REPORTED, UPLINK
         doc = self.read()
         if doc["rev"] == 0:
             return []
-        out = []
+        out, own = [], self.own_root()
         for key in domain_objects.list(f"{UPLINK}/"):
             name, _, sub = key[len(UPLINK) + 1:].partition("/")
             if sub != REPORTED or name in doc["members"] or name == self.domain:
                 continue
             raw = domain_objects.get(key)
             mark = json.loads(raw) if raw else {}
-            out.append({"name": name, "reported": mark.get("ts"), "reports": mark.get("seq")})
+            out.append({"name": name, "reported": mark.get("ts"), "reports": mark.get("seq"),
+                        **self.pinned(name, domain_objects, own)})
         return sorted(out, key=lambda x: x["name"])
 
 

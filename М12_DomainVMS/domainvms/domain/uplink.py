@@ -53,10 +53,13 @@ OBJECTS = ("vms/heartbeats/", "vms/snapshot/", "rec/heartbeats/", "rec/snapshot/
 def _rows() -> tuple[str, ...]:
     """The rows the domain reads of a member: named where they are defined, collected here (imported late —
     those modules import the agent, and the agent imports this)."""
+    from .agent import KEYS_PATH, ROOT_PATH
     from .pending import OUTCOMES_PATH
     from .shared import POINTER, REFUSED
     from .term import BACKUP, HOLDER
-    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP, "vms/epoch/")
+    # The root this member pinned and the key set it holds (Lesson 15): what the domain compares with its own
+    # before anybody accepts the member (`Members.pinned`, feedback BX).
+    return (OUTCOMES_PATH, POINTER, REFUSED, HOLDER, BACKUP, ROOT_PATH, KEYS_PATH, "vms/epoch/")
 
 
 def base(member: str) -> str:
