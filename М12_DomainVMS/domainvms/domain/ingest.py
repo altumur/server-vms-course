@@ -49,6 +49,16 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  each other: a want at any of them is a want at all, and the one the camera pushes to pushes on
                  to a peer that has a subscriber (`PeerLink`) — a stream, cut clean to a keyframe when the peer
                  falls behind, never a viewer's leaky queue: a recorder is behind it (AG, AJ)
+    a break      a camera that was PUSHING and lost its road continues the stream when the road comes back,
+                 instead of leaving the break to the card and to backfill (feedback CB). Every poll answer
+                 carries `have`: how far this cluster's recorder WROTE the camera — on the camera's clock,
+                 from the recorder's own word in its heartbeat (`written_through`), not from what this
+                 ingest received: frames a recorder's queue dropped must be sent again, and a camera that
+                 comes back to ANOTHER ingest of the cluster, or to one that restarted, must still be told.
+                 The camera starts its next push at the first keyframe after `have` — off its card, then out
+                 of the ring it kept through the break — and nothing the recorder has goes twice; the
+                 ingest drops what is not newer than `have`. Backfill is for minutes and hours (it plans
+                 nothing fresher than its settle); a break of seconds is the stream's own business
     asks         a scenario between cameras — "vehicle at the gate: yard camera to preset 3" (Lesson 12) — is
                  worth something NOW. Neither camera can be reached; both keep a long poll open. So the camera
                  whose event fired leaves the ask at the ingest of the cluster that records the target — the
@@ -122,13 +132,16 @@ class Ingest:
     `peers()` are the other ingests of the same cluster (AG) — on a real cluster, found through its store."""
 
     def __init__(self, cluster: str, urls: list[str], keys, revoked=lambda: set(), wall=time.time,
-                 name: str | None = None, peers=lambda: [], should=None):
+                 name: str | None = None, peers=lambda: [], should=None, written=None):
         """`should(ref) -> bool | None`: whether THIS cluster should be recording the camera now — from its own
         rec rows (`should_from_snapshot`). Given it, every poll also says whether the recording is UNCOVERED:
         it should be written and no recorder here takes the stream. The camera needs no domain to know that its
         primary does not take its stream (М11 lesson 1)."""
         self.cluster, self.urls, self.keys, self.revoked, self.wall = cluster, list(urls), keys, revoked, wall
         self.name, self.peers, self.should = name or (urls[0] if urls else cluster), peers, should
+        # `written(ref) -> float | None`: how far this cluster's recorder WROTE the camera, on the cluster's clock
+        # (`written_from_heartbeats`) — the `have` every poll answer carries (feedback CB).
+        self.written = written
         # A recorder that lets go of a camera — or dies — wakes nobody: nothing here changes. So a held poll that
         # has a word to say about coverage looks again at least this often (feedback AP: the product does 5 s).
         self.recheck = 5.0
@@ -253,13 +266,23 @@ class Ingest:
                         for aid, a in asks.items()}}
         if uncovered is not None:
             out["uncovered"] = uncovered
+        have = self.written(ref) if self.written is not None else None
+        if have is not None:
+            # Not part of `said`: it moves with every frame written, and a poll held for news must not wake for it.
+            out["have"] = float(have) - cam.offset
         if version is not None and version == cam.version:
             out["held"] = True                                   # nothing changed: the real ingest holds the request
         return out
 
     def push(self, token: str, ref: str, frames: list, camera_now: float | None = None) -> int:
         self._check(token, ref, camera_now)
-        return self._take(ref, _shift(frames, self._cam(ref).offset))
+        frames = _shift(frames, self._cam(ref).offset)
+        have = self.written(ref) if self.written is not None else None
+        if have is not None:
+            # What the recorder already wrote does not go to it twice (CB). `have` is conservative — a heartbeat
+            # old — so the writer still drops a frame not newer than its own last; this takes the bulk.
+            frames = [f for f in frames if not (isinstance(f, dict) and "t" in f and float(f["t"]) <= have)]
+        return self._take(ref, frames)
 
     def _take(self, ref: str, frames: list) -> int:
         live = self.tees.setdefault((str(ref), "live"), LiveTee(ref))
@@ -554,9 +577,15 @@ class _Tees:
 # in the book is tried. `frames_now` is what the sensor produced since the last pass, each with its capture
 # time on the camera's clock (`t`); `card(t0, t1)` reads a range off the card, on that clock too. `clock` is
 # the camera's own clock, stated in every request (AC). `ring_seconds`: the ring kept while nobody wants the
-# stream, flushed first — marked — when somebody does (AC).
+# stream, flushed first — marked — when somebody does (AC). `hold_seconds`: how much of a BREAK it keeps in
+# memory — while it was pushing and lost its road — to continue the stream from when the road comes back (CB).
+# It has to reach as far back as the card's gate waits before it writes (`RecWorker.defer_for` plus how late the
+# break is noticed: the card's own ring, 30 s): a break that ends while the card still waits is in memory
+# ONLY, and a shorter hold here would lose its beginning. Longer breaks: the card wrote them, from before
+# the break, and the continuation reads them off it.
 class CameraPusher:
-    def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None):
+    def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
+                 hold_seconds: float = 30.0):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
         what happened: "performed", or "refused: <why>"."""
         self.serial, self.flash, self.dial, self.card = str(serial), flash, dial, card or (lambda t0, t1: [])
@@ -566,6 +595,13 @@ class CameraPusher:
         self.pushing, self.ring, self.road = None, [], None            # the road it pushes on, if any
         self.uncovered: bool | None = None                             # the primary does not take the stream
         self.state = "no book yet"
+        # A BREAK (CB): the road was lost while pushing. `broken_at` — the capture time of the last frame pushed;
+        # while it is set, the ring keeps what the break held, `hold_seconds` of it, not the event ring's window.
+        self.hold_seconds, self.broken_at, self.last_pushed = hold_seconds, None, None
+        # What it SENT in the last `hold_seconds`, while pushing: sent is not written — a recorder's queue may have
+        # dropped some of it — so at a break this becomes the start of what is kept, and `have` decides.
+        self.tail: list = []
+        self.resumed = 0                                               # frames sent again after breaks, for the tests and a metric
 
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
@@ -585,8 +621,23 @@ class CameraPusher:
 
     def _keep(self, frames: list) -> None:
         now = self.clock()
+        window = self.hold_seconds if self.broken_at is not None else self.ring_seconds
         self.ring = [f for f in self.ring + [f for f in frames if isinstance(f, dict) and "t" in f]
-                     if float(f["t"]) >= now - self.ring_seconds]
+                     if float(f["t"]) >= now - window]
+
+    # The continuation of a broken push (CB): everything after `have` — the recorder's own word, on this camera's
+    # clock — that the camera still holds, from the first keyframe: off the card up to where the ring begins,
+    # then the ring. Without `have` (an ingest that cannot say) it is the ring, as at an event's start.
+    def _continuation(self, have) -> list:
+        if have is None:
+            return list(self.ring)
+        have = float(have)
+        first = float(self.ring[0]["t"]) if self.ring else self.clock()
+        older = [f for f in self.card(have, first) if isinstance(f, dict) and "t" in f] if have < first else []
+        out = [f for f in older + self.ring if float(f["t"]) > have]
+        while out and not out[0].get("key", True):
+            out.pop(0)                                                 # a continuation starts on a keyframe, never mid-GOP
+        return out
 
     def _poll(self, road: dict, key: str, wait: float):
         """The first ingest of a road that answers, and what it said — or (None, None)."""
@@ -605,11 +656,22 @@ class CameraPusher:
         pushed = 0
         if work["push"]:
             batch = list(frames_now)
-            if self.pushing != key and self.ring:                      # a start, here: the ring first, marked
+            if self.broken_at is not None:                             # a break ends here: continue, don't restart
+                more = self._continuation(work.get("have"))
+                self.resumed += len(more)
+                batch = [dict(f, ring=True) for f in more] + batch
+                self.ring, self.broken_at = [], None
+            elif self.pushing != key and self.ring:                    # a start, here: the ring first, marked
                 batch = [dict(f, ring=True) for f in self.ring] + batch
                 self.ring = []
             pushed = ing.push(token, self.serial, batch, camera_now=self.clock())
             self.pushing = key
+            timed = [f for f in batch if isinstance(f, dict) and "t" in f]
+            if timed:
+                self.last_pushed = max(float(f["t"]) for f in timed)
+                floor = self.clock() - self.hold_seconds
+                self.tail = [f for f in self.tail + [{k: v for k, v in f.items() if k != "ring"} for f in timed]
+                             if float(f["t"]) >= floor]
         uploaded = []
         for rid, (t0, t1) in work["ranges"].items():
             ing.upload(token, self.serial, rid, self.card(t0, t1), camera_now=self.clock())
@@ -652,9 +714,14 @@ class CameraPusher:
                 p, u, a = self._serve(bing, backup["ingest"]["token"], bwork, frames_now, "backup")
                 pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
                 road = ("backup", burl, bwork["push"])
+        if road is None and self.pushing is not None and self.broken_at is None:
+            self.broken_at = self.last_pushed if self.last_pushed is not None else self.clock()   # it broke while pushing (CB)
+            self.ring = list(self.tail)                                # what was sent and may not have been written
+        if road is not None and not road[2]:
+            self.broken_at, self.tail = None, []                       # back, and nobody wants it now: nothing to continue
         if road is None or not road[2]:
             self.pushing = None
-            if self.ring_seconds:
+            if self.ring_seconds or self.broken_at is not None:
                 self._keep(frames_now)                                 # nobody takes it now: keep it for who will
         if road is None:
             self.state = f"no ingest of {e['cluster']} answered" + (" nor of its backup" if backup else "")
@@ -724,6 +791,24 @@ def should_from_snapshot(objects, wall=time.time, sources=None):
         return any(bool(r.get("enabled", True)) and (float(r.get("until") or 0) == 0 or float(r.get("until")) > now)
                    for r in rows)
     return should
+
+
+def written_from_heartbeats(objects, wall=time.time, fresh: float = 45.0):
+    """`written(ref)` for an ingest, from its own cluster's recorders: the furthest `written_through` a fresh
+    recorder heartbeat says for a recording of `ref:<ref>` — what the cluster's recorder has, whichever ingest
+    the camera comes back to, and whatever restarted meanwhile (feedback CB)."""
+    from w2cplatform.console import heartbeats
+
+    def written(ref) -> float | None:
+        now, best = wall(), None
+        for hb in heartbeats(objects, "rec/").values():
+            if now - hb.ts > fresh:
+                continue
+            for st in hb.status:
+                if str(st.get("cam")) == f"ref:{ref}" and st.get("written_through") is not None:
+                    best = max(best or float("-inf"), float(st["written_through"]))
+        return best
+    return written
 
 
 def backup_gate(ingest):

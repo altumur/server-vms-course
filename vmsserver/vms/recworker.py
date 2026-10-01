@@ -125,6 +125,16 @@ class RecWorker(VmsWorker):
     # `START_GRACE` after it went quiet, plus a pass — the ring is written first, so the backup's footage
     # starts BEFORE the moment anybody noticed. Thirty seconds covers the grace, a pass and a keyframe.
     PREBUFFER = 30.0
+    # MEMORY FIRST (feedback CB). A camera that pushes its own stream can CONTINUE it after a break: its ingest
+    # says how far the recording got (`have`) and the camera sends the rest from memory (`CameraPusher`). For such
+    # a stream the card need not start the moment the break is noticed — a ten-second Wi-Fi drop would write
+    # the card and then be backfilled from it, every time, and wear the card out for breaks that ended before
+    # anybody noticed them. So the release WAITS: the ring minus how late a break is noticed minus a margin.
+    # A stream that comes back sooner leaves the card untouched; a longer break releases the ring, which still
+    # reaches back past the break's start. Where nobody can continue the stream (a camera a server pulls over
+    # RTSP), there is nothing to wait for, and the card writes at once, as before.
+    DETECTION = 10.0                                 # how late a break is noticed: the pusher's poll, a pass
+    DEFER_MARGIN = 5.0                               # a keyframe and a pass of the gate
     # How old the agent's last contact with the domain may be before the book of primaries it carried stops
     # counting (М12 Lesson 13). The same 45 s a heartbeat gets: past it, the backup cannot know whether the
     # primary in the other cluster is written, and records.
@@ -196,6 +206,8 @@ class RecWorker(VmsWorker):
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._hold_confirmed = self.clock()          # when `volume_pass` last ran to its end
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
+        self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
+        self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
         self.closed: list[str] = []                 # ranges promoted from a device: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
@@ -280,6 +292,14 @@ class RecWorker(VmsWorker):
         else:
             self.unreachable_sources[str(unit)] = reason
 
+    # How far the recording GOT (feedback CB): the capture time, on this cluster's clock, of the last frame the
+    # sink took. Said in the heartbeat as `written_through`, and read by the ingest a camera pushes to — it is the
+    # `have` a camera continues after, after a break. Written, not received: frames a recorder's queue dropped
+    # are frames the camera must send again, and only the writer knows which those were. The pipeline's sink
+    # calls this (a pad probe on a real box); the tests do.
+    def note_written(self, unit, capture_t: float) -> None:
+        self.written_through[str(unit)] = max(float(capture_t), self.written_through.get(str(unit), float("-inf")))
+
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
@@ -293,6 +313,8 @@ class RecWorker(VmsWorker):
             out.update(source_unreachable=True, why=f"source unreachable: {why}")
         if cam["id"] in self.fed:
             out["last_frame_at"] = self.fed[cam["id"]][1]
+        if str(cam["id"]) in self.written_through:
+            out["written_through"] = self.written_through[str(cam["id"])]
         if str(cam["id"]) in self.depths:
             out["depth_days"] = self.depths[str(cam["id"])]
             if str(cam["id"]) in self.shallow:
@@ -313,7 +335,28 @@ class RecWorker(VmsWorker):
                 st["phase"] = "waiting"
             if st["phase"] == "running" and self.holding.get(str(st["id"])):
                 st["phase"], st["why"] = "standby", f"the primary recording is being written; the last {self.PREBUFFER:.0f} s are held in memory"
+                if str(st["id"]) in self._cover_since:
+                    st["why"] = (f"the stream broke {self.wall() - self._cover_since[str(st['id'])]:.0f} s ago; held in "
+                                 f"memory for {self.defer_for():.0f} s before the card writes — the camera may continue it")
         return out
+
+    # STOPPED DURING A BREAK (feedback CB). A held ring inside its deferral is the ONLY copy of the break: the
+    # stream has not come back and the card has not written. Stopped the old way — dropped — it is gone, which was
+    # right for "the primary is written and we hold for nothing" and is wrong for "it broke and we are waiting".
+    # So it is written first, then stopped.
+    def _release_if_broken(self, uid) -> None:
+        key = str(uid)
+        if self.holding.get(key) and key in self._cover_since:
+            if self.actuator("release", {"id": uid, "now": self.wall()}):
+                log.warning("%s: %s stopped during a break — the ring held in memory is written to the card first",
+                            self.name, key)
+            self.holding[key] = False
+            self._cover_since.pop(key, None)
+
+    def _actuate(self, verb: str, cam: dict) -> bool:
+        if verb == "stop":
+            self._release_if_broken(cam["id"])
+        return super()._actuate(verb, cam)
 
     # -- a backup that records only for a primary that is down (Lesson 26) -----------------------------
     # `when: offline` on a backup recording: record only while the camera's PRIMARY recording should be
@@ -343,9 +386,17 @@ class RecWorker(VmsWorker):
             need = self.primary_needs_cover(row, now)
             if need:
                 self._primary_back_since.pop(uid, None)
+            if need and self.holding.get(uid) and self.resumes is not None and self.resumes(row):
+                since = self._cover_since.setdefault(uid, now)
+                if now - since < self.defer_for():
+                    continue                                 # held in memory: the camera may yet continue the stream
+            if not need and uid in self._cover_since:
+                self._cover_since.pop(uid, None)            # back before the card had to write: nothing written (CB)
+                done.append((uid, "back from memory"))
             if need and self.holding.get(uid):
                 if self.actuator("release", {"id": row["id"], "now": now}):
                     self.holding[uid] = False
+                    self._cover_since.pop(uid, None)
                     done.append((uid, "released"))
                     log.warning("%s: the primary of %s is not being written — recording from %.0f s ago",
                                 self.name, uid, self.PREBUFFER)
@@ -362,6 +413,12 @@ class RecWorker(VmsWorker):
     # primary; so does a backup that watches the primary's recorder on the site's LAN. None: it cannot say —
     # decide by the book, as before. The domain is not on this path: it may be the thing that died.
     stream_says = None                                   # (row) -> bool | None, set by whoever runs this recorder
+    # Whether the stream this backup stands in for can be CONTINUED from memory after a break (feedback CB): a
+    # camera that pushes it, and says how far its ingest got. Set by whoever runs this recorder, like the above.
+    resumes = None                                       # (row) -> bool
+
+    def defer_for(self) -> float:
+        return max(0.0, self.PREBUFFER - self.DETECTION - self.DEFER_MARGIN)
 
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
         now = self.wall() if now is None else now
@@ -702,6 +759,7 @@ class RecWorker(VmsWorker):
             except OSError as e:                     # a volume that went away under us: the footage is where it is
                 logging.warning("%s: could not promote the spool into %s: %s", self.name, self.archive.root, e)
         for uid in list(self.reconciler.actual):
+            self._release_if_broken(uid)
             self.actuator("stop", {"id": uid})
             self.reconciler.actual.pop(uid, None)
             self.release(str(uid))

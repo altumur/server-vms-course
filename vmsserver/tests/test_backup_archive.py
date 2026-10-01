@@ -407,3 +407,64 @@ def test_a_recorder_says_when_it_cannot_reach_its_source():
     assert st["source_unreachable"] is True and st["why"] == "source unreachable: connection refused"
     card.note_source_unreachable(row["id"], None)
     assert "source_unreachable" not in card.status_extra(row)
+
+
+# -- memory first: a card that waits for a stream the camera can continue (feedback CB) ---------------------
+def test_a_short_break_of_a_pushed_stream_never_touches_the_card():
+    """The camera pushes its stream and can continue it after a break. A ten-second drop: the card's gate
+    waits `defer_for`, the stream comes back, and nothing was written — no card wear, no backfill."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    card.resumes = lambda r: True
+    card.stream_says = lambda r: True                          # the break: the primary does not take the stream
+    card.gate_pass()
+    assert card.holding["1-card"] is True and card.actuator.released == []
+    assert "held in memory" in next(s for s in card.status() if s["id"] == "1-card")["why"]
+    box.wall.advance(10)
+    card.stream_says = lambda r: False                         # back before the card had to write
+    assert ("1-card", "back from memory") in card.gate_pass()
+    assert card.actuator.released == [] and card.holding["1-card"] is True
+
+
+def test_a_long_break_releases_the_ring_from_before_the_break():
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    box.wall.advance(100)                                      # the ring is full
+    card.resumes = lambda r: True
+    card.stream_says = lambda r: True
+    broke = box.wall()
+    card.gate_pass()
+    box.wall.advance(card.defer_for() + 1)
+    card.gate_pass()
+    [(uid, start, end)] = card.actuator.released
+    assert uid == "1-card" and start <= broke - card.DETECTION      # still reaching back past the break
+    assert card.holding["1-card"] is False
+
+
+def test_where_nobody_can_continue_the_stream_the_card_writes_at_once():
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    box.wall.advance(100)                                      # the ring is full
+    card.resumes = lambda r: False                             # a camera a server pulls: nothing to continue
+    card.stream_says = lambda r: True
+    card.gate_pass()
+    assert len(card.actuator.released) == 1
+
+
+def test_a_card_stopped_during_a_break_writes_what_it_held():
+    """Inside the deferral the ring is the ONLY copy of the break. Stopping used to drop it."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    box.wall.advance(100)
+    card.resumes = lambda r: True
+    card.stream_says = lambda r: True
+    card.gate_pass()
+    assert card.actuator.released == []
+    card._actuate("stop", row)
+    assert len(card.actuator.released) == 1
+
+
+def test_a_recorder_says_how_far_it_wrote():
+    box, card, row, carry = _camera_cluster()
+    card.note_written("1-card", 1000.0); card.note_written("1-card", 990.0)   # never backwards
+    assert next(s for s in card.status() if s["id"] == "1-card")["written_through"] == 1000.0
