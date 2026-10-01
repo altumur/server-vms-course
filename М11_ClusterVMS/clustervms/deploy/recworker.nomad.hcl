@@ -106,8 +106,9 @@ job "recworker" {
         OBJECTS   = "variables://objects"
         CAPACITY  = "50"                             # recordings this server's disks and NIC can take — its own number
         ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder: its events, and `$ARCHIVE/volume`
-        ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # its archive door, on the node's address: the console and a primary
-        ARCHIVE_PORT = "8084"                              # copying from a backup reach it there; the heartbeat says so
+        ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # what its archive door binds: the node's address
+        ARCHIVE_PORT = "8084"
+        ARCHIVE_URL  = "http://${attr.unique.network.ip-address}:8084"   # what the heartbeat says: an IP, as RESOURCE_URL is — no DNS between servers
       }
       resources { cpu = 1000  memory = 1024 }
     }

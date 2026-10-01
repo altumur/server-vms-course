@@ -76,3 +76,37 @@ def test_archive_read_says_what_left_and_the_digest_of_what_left():
         assert said(2)[-1] == ("boris", 200, len(body), digest)         # whoever holds the file takes its digest and compares
     finally:
         srv.shutdown(); dsrv.shutdown()
+
+
+def test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it():
+    """A fenced writer's stream and the survivor's may be in two volumes. Each door applies the rule to its own
+    volume only, so the console asks every door's timeline, runs `authoritative` over all of them, and reads each
+    stretch from the door of its owner — not from whichever door happens to sort first."""
+    import urllib.request
+    from vms.console import serve
+    from vms.controller import VmsController
+    from vms.worker import fake_samples
+    from vms.config import SPEC
+    from tests.conftest import door, footage, store
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    t = box.wall() - 3600
+    old, new = store("a"), store("b")
+    footage(old, "7", 1, t, t + 600, step=10)                          # the zombie's e1, in volume a
+    for smp in fake_samples(t + 300, t + 600, step=10, size=4096):    # the survivor's e2, in volume b — bigger frames
+        new.put("7", 2, smp)
+    new.finish("7", 2); new.seal()
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    url = f"http://127.0.0.1:{srv.server_address[1]}/export/7?rec=7&from={t}&to={t + 600}"
+    da = door(box, old, "r-a", "srv-a")
+    try:
+        only_old = len(urllib.request.urlopen(url).read())
+        db = door(box, new, "r-b", "srv-b")
+        try:
+            both = urllib.request.urlopen(url)
+            assert both.headers.get("X-Archive-Unreachable") is None
+            assert len(both.read()) > only_old + 25 * 3000              # minutes 5–10 from e2, though r-a sorts first
+        finally:
+            db.shutdown()
+    finally:
+        da.shutdown(); srv.shutdown()

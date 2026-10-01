@@ -54,7 +54,7 @@ from w2cplatform.spec import Refused
 SUB = "rec"
 TABLE = "volumes"
 KINDS = ("local", "network", "backup", "edge", "incidents")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_secret", "enabled")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled")
 
 
 # The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
@@ -82,17 +82,18 @@ class Volume:
     quota_bytes: int = 0
     access_secret: str = ""       # the `*_secret` suffix: never handed back by a console
     enabled: bool = True
+    access_key: str = ""          # a bucket's key ID — which key, not the key: shown, like a camera's login
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Volume":
         d = items or {}
         return cls(name, str(d.get("kind", "local")), str(d.get("url", "")), str(d.get("server", "")),
                    int(d.get("quota_bytes", 0) or 0), str(d.get("access_secret", "")),
-                   str(d.get("enabled", "true")) != "false")
+                   str(d.get("enabled", "true")) != "false", access_key=str(d.get("access_key", "")))
 
     def to_items(self) -> dict:
         return {"kind": self.kind, "url": self.url, "server": self.server,
-                "quota_bytes": self.quota_bytes, "access_secret": self.access_secret,
+                "quota_bytes": self.quota_bytes, "access_secret": self.access_secret, "access_key": self.access_key,
                 "enabled": "true" if self.enabled else "false"}
 
 

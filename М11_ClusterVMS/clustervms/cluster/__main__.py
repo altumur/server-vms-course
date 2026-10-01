@@ -13,8 +13,9 @@ the host's obsd — the `obsd` system job, which is not a Python process).
     ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
                                        recorder's own volume under it, `$ARCHIVE/volume`, when nothing is declared
     OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (default /run/vms/obsd.sock)
-    ARCHIVE_HOST, ARCHIVE_PORT         recorder: its archive door — the node's address, so the console and a primary
-                                       backfilling from a backup can reach it
+    ARCHIVE_HOST, ARCHIVE_PORT         recorder: what its archive door binds
+    ARCHIVE_URL                        recorder: what its heartbeat says the door is — the node's IP, so the console and
+                                       a primary backfilling from a backup reach it with no DNS between servers
     RESOURCE_URL                       resource: how the console reaches this server's events
     CAPACITY                           worker: cameras it can carry on this server
 """
@@ -75,6 +76,7 @@ def recorder() -> None:
         logging.warning("no GStreamer: the fake actuator records nothing"); act = None
     r = ClusterRecorder(open_vars(CONFIG_URL), objects, act, archive_root=archive)
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "0.0.0.0"), int(os.environ.get("ARCHIVE_PORT", "8084")))
+    r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the job says how to reach it: an address, no DNS between servers
     logging.info("recorder %s on %s (alloc %s) claimed its slot; labels %s; archive door %s",
                  r.name, r.server, r.alloc, r.labels, r.archive_url)
     try:

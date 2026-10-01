@@ -400,15 +400,34 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
         if t1 <= t0 or t1 - t0 > EXPORT_MAX:
             return 400, {"detail": f"an export is an interval of at most {EXPORT_MAX:.0f} s", "error": "bad range"}
+        # Each moment from the EPOCH that owns it, across every door — a door applies `authoritative` to the
+        # volume it holds, and a fenced writer's stream may be in another volume than the survivor's. So the doors'
+        # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
+        # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
+        # caller can see.
+        from w2cplatform.obsd import Sample
+        from .archive import Span, authoritative
         units = [str(q["rec"])] if q.get("rec") else recordings_of(rec_ctl, cid)
-        got = []
+        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        got, unreachable = [], []
         for unit in units:
-            for name, url, _ in (recorder_doors(ctl.objects, con_wall()) if ctl is not None else []):
+            spans, where = [], {}
+            for name, url, _ in doors:
                 try:
-                    from w2cplatform.obsd import Sample
-                    got += Sample.decode_all(_door(f"{url}/samples/{unit}?from={t0}&to={t1}", 30.0))
+                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT))
                 except (OSError, ValueError):
+                    unreachable.append(name)
                     continue
+                for sp in body.get("spans", []):
+                    span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
+                                str(sp.get("source", "live")))
+                    spans.append(span)
+                    where.setdefault(span, url)
+            for span, lo, hi in authoritative(spans, t0, t1):
+                try:
+                    got += Sample.decode_all(_door(f"{where[span]}/samples/{unit}?from={lo}&to={hi}", 30.0))
+                except (OSError, ValueError):
+                    unreachable.append(next(n for n, u, _ in doors if u == where[span]))
         frames, end = [], None
         for smp in sorted(got, key=lambda s: s.begin):
             if end is not None and smp.begin < end:
@@ -426,9 +445,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         handler.send_response(200)
         handler.send_header("Content-Type", "video/mp4")
         handler.send_header("Content-Length", str(len(data)))
+        if unreachable:
+            handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
         handler.end_headers()
         handler.wfile.write(data)
-        note_read(handler, f"rec/{units[0]}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
+        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
         return ()
     return extra
 

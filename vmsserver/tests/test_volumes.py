@@ -594,3 +594,17 @@ def test_an_archive_that_refuses_writes_mid_run_is_handed_back():
     box.wall.advance(30)
     r.leave_volume("test: let go of vol-b")                         # free again, and vol-a sorts first…
     assert r.volume_pass() != "vol-a", "it took the broken archive straight back"
+
+
+def test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address():
+    """The url names the archive and nothing else (`refuse`); which key opens it is `access_key`, shown like a
+    camera's login, and the key itself is `access_secret`, sealed. Both reach the daemon as parameters."""
+    from vms.archive import volume_params
+    box = Box()
+    v = volumes.write(box.vars, {"name": "s3", "kind": "network", "url": "s3://s3.example.com/eu-1/vms/site-7",
+                                 "quota_bytes": 1 << 30, "access_key": "AKIAEXAMPLE", "access_secret": "wJalr"})
+    assert volumes.declared(box.vars)[0].access_key == "AKIAEXAMPLE" and v.enabled
+    p = volume_params(v.url, "wJalr", v.access_key)
+    assert (p["access_key"], p["secret_key"], p["bucket"], p["path"]) == ("AKIAEXAMPLE", "wJalr", "vms", "site-7")
+    shown = volumes.served(box.vars, REC_SPEC.sub, box.wall())["volumes"][0]
+    assert shown["access_key"] == "AKIAEXAMPLE" and "access_secret" not in shown

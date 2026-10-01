@@ -164,6 +164,11 @@ class Entry:
         return dict(self.__dict__)
 
 
+# What is not sent a second time after the connection broke with the request already out: the daemon may have
+# done it, and done twice it is not the same thing (`Session.call`).
+NOT_RESENT = frozenset({"PUT_MEDIA", "FINISH_MEDIA", "VOLUME_FORMAT", "VOLUME_MOUNT_RW", "WRITER_CLOSE", "WRITER_RESIZE"})
+
+
 class Session:
     """One session with the daemon, over one connection. Thread-safe: one request at a time on the wire.
 
@@ -175,7 +180,11 @@ class Session:
     A daemon that takes the request and says nothing is `Unavailable` too, after `timeout` — and is NOT asked
     again: a broken connection is a reason to resend, a silence is not, and asking twice would double the wait
     of whoever is waiting. A caller that renews leases keeps `timeout` shorter than a lease; the one request the
-    protocol allows to take long — `WRITER_CLOSE`, after its flush — waits `long_timeout`."""
+    protocol allows to take long — `WRITER_CLOSE`, after its flush — waits `long_timeout`.
+
+    And a request that was SENT before the connection broke is resent only if sending it twice is harmless. A
+    sample, a finish, a format or a mount may have been done by the daemon before the break; done twice, it is
+    a frame written twice or a volume formatted twice. Those raise `Unavailable` instead, and the caller decides."""
 
     def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
                  timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
@@ -183,6 +192,7 @@ class Session:
         self.long_timeout = max(long_timeout, timeout)
         self.token = token or f"{client}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
         self._sock: socket.socket | None = None
+        self._sent: str | None = None                # the op whose request went out on this attempt
         self._lock = threading.Lock()
         self._id = 0
         self.server: dict = {}
@@ -215,6 +225,7 @@ class Session:
         j = json.dumps(js or {}).encode() if js is not None else b""
         body = HEADER.pack(rid, OP[op], 0, 0, len(j)) + j + tail
         self._sock.sendall(struct.pack("<I", len(body)) + body)
+        self._sent = op
         while True:
             (n,) = struct.unpack("<I", self._recv(4))
             frame = self._recv(n)
@@ -229,6 +240,7 @@ class Session:
     def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False) -> tuple[dict, bytes]:
         with self._lock:
             for attempt in (0, 1):
+                self._sent = None
                 try:
                     if self._sock is None:
                         self._connect()
@@ -241,7 +253,7 @@ class Session:
                     raise Unavailable(op, f"no answer in {self.long_timeout if long else self.timeout:g} s") from None
                 except (OSError, ConnectionError) as e:
                     self._drop()
-                    if attempt:
+                    if attempt or (self._sent == op and op in NOT_RESENT):
                         raise Unavailable(op, str(e)) from None
         raise AssertionError("unreachable")
 

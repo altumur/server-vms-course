@@ -71,7 +71,7 @@ def parse_stream(name: str) -> tuple[str, int, str] | None:
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
 # process that mounts the volume: М10A Lesson 18).
-def volume_params(url: str, secret: str = "") -> dict:
+def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "://" not in url:
         return {"schema": "file", "path": url}           # a local volume's row names its directory
     u = urlsplit(url)
@@ -83,7 +83,7 @@ def volume_params(url: str, secret: str = "") -> dict:
             raise ValueError(f"{url}: an s3 volume is s3://<host>/<region>/<bucket>[/<path>]")
         return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(u.port)} if u.port else {}),
                 "region": parts[0], "bucket": parts[1], "path": "/".join(parts[2:]),
-                "access_key": unquote(u.username or ""), "secret_key": secret}
+                "access_key": access_key, "secret_key": secret}   # the key's id from the row's `access_key`, never the url
     raise ValueError(f"{url}: not an archive this course opens (file://, s3://)")
 
 
@@ -200,10 +200,10 @@ class Archive:
     passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
-                 wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ):
+                 wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = ""):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
         self.session = session or Session(client="vms-archive")
-        self.wall, self.secret, self.block, self.read = wall, secret, block, read
+        self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.volume = None
         self.writer = None
         self._reader = None
@@ -212,7 +212,7 @@ class Archive:
 
     def _open_volume(self):
         if self.volume is None:
-            self.volume = self.session.open_volume(params=volume_params(self.url, self.secret))
+            self.volume = self.session.open_volume(params=volume_params(self.url, self.secret, self.access_key))
         return self.volume
 
     # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a

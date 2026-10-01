@@ -94,3 +94,18 @@ def test_planned_backfill_fills_holes_inside_what_was_recorded_and_not_before_it
     assert r.fetched == ["1-morning"]
     r.store.seal()
     assert any(s.start == NOW - 30000 for s in _backfilled(r))
+
+
+def test_a_request_a_source_failed_to_serve_stays_for_the_next_pass():
+    """A fetch that failed says nothing about the range. Reported as fetched, the console would delete the
+    operator's request and the range would never arrive."""
+    class Broken(FakeActuator):
+        def record_range(self, *a, **kw):
+            self.range_error = "the playback session was refused"
+            return []
+    box, r, con_rec = _recorder(Broken())
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-x"),
+                     {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28000), "at": str(NOW), "by": "anna"})
+    assert r.requests(now=NOW) == [] and r.fetched == []
+    assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-x"]

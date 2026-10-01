@@ -664,6 +664,7 @@ class RecWorker(VmsWorker):
                 vol = rows.get(self.volume) or volumes.Volume(self.volume, "local", self.default_url, self.server or "",
                                                               self.default_quota)
                 self.volume_error = str(self._write_into(vol) or "")
+                self.capacity = 0 if self.volume_error else self.full_capacity    # will not open: not a place to put a recording
                 self._place_kind(vol)
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
@@ -759,7 +760,8 @@ class RecWorker(VmsWorker):
             self._close_store(quiet=True)
         secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
-                        secret=secret, **{k: v for k, v in (("block", self.block), ("read", self.read)) if v})
+                        secret=secret, access_key=vol.access_key,
+                        **{k: v for k, v in (("block", self.block), ("read", self.read)) if v})
         try:
             store.open()
         except ArchiveError as e:
@@ -774,7 +776,7 @@ class RecWorker(VmsWorker):
             if not self.archive_error:
                 self.archive_away_since = self.wall()
                 log.warning("%s: %s is %s at open (%s) — keeping it and trying again", self.name, vol.name, e.kind, e.detail)
-            self.archive_error, self.archive_failure = e.detail, "away"
+            self.archive_error, self.archive_failure = e.detail, e.kind     # `away` or `busy`: kept, said as what it is
             return None
         self.store, self.engine_lost = store, False
         try:
@@ -987,8 +989,10 @@ class RecWorker(VmsWorker):
     #
     # And never what a clean fetch from THIS source already found nowhere.
     def gaps(self, unit, coverage: dict, now: float, planned: bool = True, source: str = "device") -> list[tuple[float, float]]:
+        from .archive import visible_from
         ours = self.our_coverage(unit)
-        lo = max(float(coverage["from"]), now - self.keep_days * 86400)
+        row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
+        lo = max(float(coverage["from"]), now - self.keep_days * 86400, visible_from(row, now))
         hi = min(float(coverage["to"]), now - self.settle, ours[-1][1] if ours else now)
         if planned:
             if not ours:
@@ -1171,10 +1175,23 @@ class RecWorker(VmsWorker):
             rid = key.rsplit("/", 1)[1]
             if not srcs:
                 continue                                     # nobody holds the device and no backup answers; ask again next pass
-            r = self.fetch_from(unit, cam, srcs[0], float(it["from"]), float(it["to"]))
-            if r.get("skipped"):
-                continue                                     # not fetched: reporting it would have the console
-                                                             # delete a request nobody served
+            # Not past what we can see, while the recording is live: those minutes are in a block being written,
+            # and fetching them would write them twice. A recording that is not running may be asked for anything.
+            t0, t1 = float(it["from"]), float(it["to"])
+            ours = self.our_coverage(unit)
+            if unit in self.reconciler.actual:
+                t1 = min(t1, ours[-1][1] if ours else now - self.settle)
+            if t1 <= t0:
+                continue
+            # Each source in turn until one serves it. A source that FAILED says nothing about the range — the
+            # request stays, for the next pass; reported as fetched, the console would delete what nobody served.
+            r = {}
+            for src in srcs:
+                r = self.fetch_from(unit, cam, src, t0, t1)
+                if not r.get("error"):
+                    break
+            if r.get("skipped") or r.get("error"):
+                continue
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
@@ -1259,7 +1276,8 @@ class RecWorker(VmsWorker):
     # recording had it already. And what landed and is not visible yet is `landing` — ours, not a hole.
     def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str) -> dict:
         from w2cplatform.obsd import unix_s
-        have, kept, groups = self.our_coverage(unit), 0, []
+        have = stitch(self.our_coverage(unit) + self.landing.get(unit, []), self.stitch)   # landing is ours: not twice
+        kept, groups = 0, []
         for smp in samples:
             if smp.key or not groups:
                 groups.append([smp])

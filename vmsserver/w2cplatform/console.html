@@ -69,8 +69,8 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
 - `units` — the merged list from `/<rows>` (configured rows overlaid by heartbeat rows).
 - `current` — the selected unit id.
 - `window_` — `[from, to]` for the timeline, or `null` for everything.
-- `spans` — the timeline's segments as normalised objects `{start, end, epoch, fenced, events, media,
-  server}`.
+- `spans` — the timeline's spans as normalised objects `{start, end, epoch, fenced, events, media, server,
+  recorder}`.
 - `queue` — indexes into `spans` still to play.
 - `events` — the last `/events` reply's rows for the current unit and window; `evfilter` — the subsystem
   shown, or "" for all; `palette` — subsystem → colour, assigned in order of first sight.
@@ -81,7 +81,7 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
   refusal show `refused: …` in `#adderr`.
 - `#edit` submit — `PUT /<rows>/<current>` with the edit fields; reload and reselect; errors to `#editerr`.
 - `#toggle` click — `PUT /<rows>/<current>` with `{enabled: !current.enabled}`.
-- `#del` click — confirm (mentioning that footage stays on the resource until retention if media), then
+- `#del` click — confirm (mentioning, if media, that the recordings' footage stays in its volumes), then
   `DELETE /<rows>/<current>`; clears the selection and the timeline, reloads.
 - `#player.onended` — `next()`.
 - `#last24` click — window = last 24 h and reload the timeline; `#all` — no window.
@@ -97,8 +97,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 - `GET /spec`, `GET /<rows>`, `GET /metrics`, `GET /where/<id>` — the platform console.
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
 - `GET /timeline/<id>?from&to`, and each span's `media` with `from&to` (the VMS: `/export/<id>?rec=…`) — only
-  when `spec.media`; registered by the subsystem. A span whose `media` is a file path is played as
-  `/segment/<path>[?server=]`, for a subsystem that still serves files.
+  when `spec.media`; registered by the subsystem.
 - `GET /events?from&to&cam=<id>` — the resources' event databases, merged by the console, tolerated when absent;
   `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
 
@@ -380,7 +379,7 @@ async function select(id) {
   if (spec.media && streams) await loadTimeline();
 }
 
-// -- media: only when the spec says so (the subsystem registered /timeline and /segment) ----------
+// -- media: only when the spec says so (the subsystem registered /timeline and its media route) ------
 // `GET /timeline/<current>?from&to` (the subsystem's route). Accepts a plain list (one box) or `{segments,
 // unreachable, note}` (a cluster), showing `note` in `#note`. Normalises spans; tries `GET
 // /events?from&to&cam=<current>` and ignores a failure (503 without an index). Computes the visible range:
@@ -396,7 +395,7 @@ async function loadTimeline() {
   const raw = Array.isArray(d) ? d : (d.segments || []);          // one box: a list; a cluster: {segments, unreachable, note}
   $('#note').textContent = (!Array.isArray(d) && d.note) ? d.note : '';
   spans = raw.map(s => ({ start: s.start, end: s.end, epoch: s.epoch, fenced: !!s.fenced, events: s.events || 0,
-                          media: s.media ?? s.path ?? null, server: s.server || null }));
+                          media: s.media ?? null, server: s.server || null, recorder: s.recorder || null }));
   await fetchEvents(from, to);
   const lo = window_ ? from : Math.min(...spans.map(s => s.start), ...events.map(e => e.t), now - 3600);
   const hi = window_ ? to : Math.max(...spans.map(s => s.end), ...events.map(e => e.t), now);
@@ -552,7 +551,7 @@ $('#toggle').onclick = async () => {
 };
 $('#del').onclick = async () => {
   const c = units.find(x => x.id === current); if (!c) return;
-  if (!confirm(`Delete ${label(c)}?${spec.media ? ' Its footage stays on the resource until retention removes it.' : ''}`)) return;
+  if (!confirm(`Delete ${label(c)}?${spec.media ? ' Its recordings are not deleted with it: their footage stays in its volumes until the ring overwrites it.' : ''}`)) return;
   try { await send('DELETE', `${ROWS()}/${encodeURIComponent(current)}`); current = null; $('#edit').style.display = 'none'; $('#title').textContent = 'Pick one'; $('#meta').textContent = ''; $('#timeline').innerHTML = ''; await loadUnits(); }
   catch (err) { $('#editerr').textContent = 'refused: ' + err.message; }
 };
@@ -569,32 +568,36 @@ function fillEdit(c) {
   if (hasEnabled()) $('#toggle').textContent = c.enabled === false ? 'Enable' : 'Disable';
 }
 
-// What to play a piece by. A span whose `media` is a route (`/export/<id>?rec=…`, the subsystem's) is asked for
-// the minutes of the piece; an older one names a file (`/segment/<path>`).
+// What to play a piece by: the span's `media` is a route (`/export/<id>?rec=…`, the subsystem's), asked for the
+// minutes of the piece.
 function segmentURL(s, p) {
-  if (s.media && s.media.startsWith('/')) return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
-  return `/segment/${s.media}` + (s.server ? `?server=${encodeURIComponent(s.server)}` : '');
+  return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
 }
 
 // One piece at a time, the next when this one ends — a span cut into pieces of at most ten minutes, each an
 // interval the subsystem turns into an MP4. Gapless playback through MSE is the gateway's job (М12); the console
-// plays what the archive hands it. Queue every piece of every span from index `i` onward that has media.
+// plays what the archive hands it. Queue every piece of every span from index `i` onward that has media —
+// each moment once: a fenced span (an older epoch) is played only when it is the one clicked, and minutes two
+// spans share (two volumes, a keep's copy) are queued from the first of them. An export takes each moment from
+// the epoch that owns it whichever span asked.
 const PIECE = 600;
 let playing = null;                                                   // the piece on the player now: {i, from, to}
 function play(i, at) {
   queue = [];
+  let until = -Infinity;                                              // the end of what is queued already
   spans.forEach((s, j) => {
-    if (j < i || !s.media) return;
-    for (let a = s.start; a < s.end; a += PIECE) {
+    if (j < i || !s.media || (s.fenced && j !== i)) return;
+    for (let a = Math.max(s.start, until); a < s.end; a += PIECE) {
       const p = { i: j, from: a, to: Math.min(a + PIECE, s.end) };
       if (at === undefined || p.to > at) queue.push(p);              // a seek starts at the piece holding the moment
     }
+    until = Math.max(until, s.end);
   });
   next();
 }
-// Pop the next index, outline that span as playing, write the caption (times, epoch, "from <server>"), set
+// Pop the next index, outline that span as playing, write the caption (times, epoch, "from <recorder>"), set
 // the video source to `segmentURL` and play. One segment at a time, the next when this one ends; gapless
-// MSE playback of fragmented MP4 is the gateway's job (М12) — the console plays what the resource serves.
+// MSE playback of fragmented MP4 is the gateway's job (М12) — the console plays what the archive hands it.
 function next() {
   if (!queue.length) return;
   stopLive();
@@ -739,7 +742,7 @@ async function loadRec(streams = true) {
                    `${r.via ? ' · via ' + r.via : ''} · keep ${r.retention_days} days <a href="#" data-act="del">stop</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => {
       e.preventDefault();
-      if (!confirm(`Stop recording ${r.id}? The footage stays on the archive until retention removes it.`)) return;
+      if (!confirm(`Stop recording ${r.id}? The footage stays in its volume until the ring overwrites it.`)) return;
       try { await send('DELETE', `/rec/recordings/${encodeURIComponent(r.id)}`); } catch (err) { $('#recerr').textContent = 'refused: ' + err.message; }
       loadRec();
     };
