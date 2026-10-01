@@ -6,8 +6,9 @@
 # Same box, same GPU and the same models as detworker@ — a separate unit because
 # it carries a separate BUDGET (SCAN_CAPACITY, two by default against eight
 # streams): a retro-search must not be able to spend what live detection is
-# running on. It reads the archive, so it mounts it; it writes its events into
-# detjob/<job>/e<epoch>/ and its progress into detjob/<job>/manifest.jsonl beside
+# running on. It reads recorded footage through the recorders' archive doors; it
+# mounts the archive because it writes its events into
+# detjob/<job>/e<epoch>/ and its progress into detjob/<job>/progress.jsonl beside
 # them, because its token may not write the row. In М11 a service job placed by
 # constraint on GPU servers, scaled on detjob_jobs_running.
 [Unit]

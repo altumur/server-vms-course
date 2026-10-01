@@ -2,9 +2,10 @@
 # the API, its own process on this box (a system job on every server in М11,
 # nothing in front). Its token writes the operator's rows only — vms/cameras/*,
 # vms/next_id, vms/retention/*, vms/idem/* — and never placement; a camera
-# created here is placed by the controller's next pass. The spool is mounted
-# read-only (the console never records); the archive is writable because an
-# operator's marks are the console's own buckets, console/<instance>/…, on it.
+# created here is placed by the controller's next pass. It holds no footage: a
+# timeline and an export are asked of the recorders' archive doors. The archive
+# is writable because an operator's marks are the console's own buckets,
+# console/<instance>/…, on it.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
@@ -13,13 +14,13 @@
 # never placement
 #
 # **Role.** The Quadlet unit for `console` at `/etc/containers/systemd/console.container`. It runs
-# `python3 -m vms console`: `SpecConsole` over the VMS spec with the VMS's two media routes, on
+# `python3 -m vms console`: `SpecConsole` over the VMS spec with the VMS's media routes, on
 # `0.0.0.0:8080`. Its own process (a system job on every server in М11, nothing in front) with its own token
 # — `vms/cameras/*`, `vms/next_id`, `vms/retention/*`, `vms/idem/*` (`SPEC.acl_console()`) — and never
 # placement: a camera created here is placed by the controller's next pass. The header comment states the
-# mounts' reasoning: the spool is read-only (the console never records); the archive is writable because an
-# operator's marks are the console's own buckets, `console/<instance>/…`, on it — segments it only serves.
-# Checked by `tests/test_deploy_units.py` (`/data/spool` ends with `:ro,z`).
+# mounts' reasoning: no footage is mounted — `/timeline` and `/export` ask the recorders' doors — and the
+# archive is writable because an operator's marks are the console's own buckets, `console/<instance>/…`, on it.
+# Checked by `tests/test_deploy_units.py`.
 #
 # - `Description=VMS console — the operator's rows, the read model, the page`
 #
@@ -43,16 +44,16 @@ After=network.target
 
 [Container]
 Image=localhost/vmsserver:latest
-# the `console` verb: a `VmsController` opened as writer `console` with the console ACL, an
-# `ArchiveResource($SPOOL, $ARCHIVE)`, and `vms.console.serve(...)`.
+# the `console` verb: a `VmsController` opened as writer `console` with the console ACL, and
+# `vms.console.serve(...)` over `$ARCHIVE` for its marks.
 Exec=python3 -m vms console
 # listen on every interface (the code's default is `127.0.0.1`); with `Network=host` this is the box's
 # :8080.
 Environment=CONSOLE_HOST=0.0.0.0
 # the port the README's `PLATFORM_DIR=… python3 -m vms controller  # the console on :8080` line refers to;
-# the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/timeline`, `/segment` all live here.
+# the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/timeline`, `/export` all live here.
 Environment=CONSOLE_PORT=8080
-# `PLATFORM_DIR`, `SPOOL`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
+# `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
 EnvironmentFile=/data/config/vms.env
 # read-write: the console's token writes camera rows, `next_id`, derived retention rows and idempotency
@@ -63,12 +64,9 @@ Volume=/data/platform:/data/platform:z
 # be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
 Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
 Environment=SECRETS_KEY=/run/secrets/vms.key
-# read-only. The console constructs an `ArchiveResource` with the spool root (which `makedirs` it — already
-# present on the box) but serves only from the archive; the mount says it cannot record.
-Volume=/data/spool:/data/spool:ro,z
 # read-write, as the header says: operator marks are the console's own event buckets,
 # `console/<hostname:pid>/e1/…` on this server's resource (`POST /marks` → `SpecConsole.mark`), and that is
-# the one thing it writes there; segments are only read (`/segment/<path>`, with `Range`). It never touches
+# the one thing it writes there. It never touches
 # `vms/<cam>/…`, whose buckets have one writer, the worker holding the epoch.
 Volume=/data/archive:/data/archive:z
 # the port is the box's own; no mapping.

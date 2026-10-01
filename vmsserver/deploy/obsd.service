@@ -1,0 +1,43 @@
+# /etc/systemd/system/obsd.service — ObjectStorage, the archive's engine, as the box's own daemon.
+# Not a container and not one of the VMS's processes: the engine the recorders write their footage
+# through, over a unix socket in /run/vms (`w2cplatform/obsd.py`). One per host — it keeps one writer per
+# volume, and that rule means something only if every recorder on the box asks the same daemon.
+# ================================================================================================
+# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
+# ================================================================================================
+# # obsd.service — the host's ObjectStorage daemon
+#
+# **Role.** The archive is ObjectStorage, and ObjectStorage is a process: `obsd`, built from the
+# ObjectStorage sources (`standalone-build/build.sh <out>`, then `install -m 755 <out>/build/obsd
+# /usr/local/bin/obsd`). The recorders (`recworker@.container`) open volumes, write and read through it; the
+# volumes themselves — a directory on a disk, a bucket — are opened BY THE DAEMON, by the paths and addresses
+# the declarations name. So a local volume's url is a path on THIS HOST, and the recorder that writes into it
+# needs no mount of it at all.
+#
+# - `ExecStart=… --socket /run/vms/obsd.sock` — the socket in the tmpfs every recorder already mounts for the
+#   workers' shared memory; `OBSD_SOCKET` is not set anywhere because this is its default on Linux.
+# - `RuntimeDirectory=vms` + `RuntimeDirectoryPreserve=yes` — /run/vms exists before the daemon starts, and a
+#   restart of the daemon does not take the workers' shared-memory sockets with it.
+# - `OBSD_WRITER_GRACE_S=90` — how long a writer whose recorder vanished waits for the same owner
+#   (`rec:<volume>`). Longer than a hold takes to lapse (45 s), so whoever takes the volume next picks the
+#   writer up whole (feedback CF).
+# - `Restart=always`. A daemon that went away is `away` to every recorder: they keep their volumes, and the
+#   next pass opens them again.
+# - `TimeoutStopSec=60` — SIGTERM closes every writer, each after its flush.
+# ================================================================================================
+[Unit]
+Description=ObjectStorage daemon — the archive's engine, one per host
+After=local-fs.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/obsd --socket /run/vms/obsd.sock
+RuntimeDirectory=vms
+RuntimeDirectoryPreserve=yes
+Environment=OBSD_WRITER_GRACE_S=90
+Environment=OBSD_LOG_LEVEL=warning
+Restart=always
+RestartSec=2
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target
