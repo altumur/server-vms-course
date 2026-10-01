@@ -342,10 +342,10 @@ class AutoController(SpecController):
     # The platform's check runs FIRST, and the order is not tidiness: it answers "is this JSON, and does it
     # fit", and everything below assumes the answer is yes. Ask what a trigger means before knowing it
     # parsed and the operator gets a sentence about triggers for a missing brace.
-    def create(self, fields: dict) -> dict:
+    def create(self, fields: dict, **reserved) -> dict:
         self.spec.refuse(fields)
         refuse_scenario(fields, self.catalog)
-        return super().create(fields)
+        return super().create(fields, **reserved)
 
     def update(self, uid, fields: dict) -> dict:
         row = self.unit(uid)

@@ -265,34 +265,123 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 
 
+def _console_with_its_own_clock(box, ctl):
+    """A console over `ctl` whose idempotency keys age by `box.clock` and never sleep between polls — so a test
+    can make thirty seconds pass, or none, without waiting."""
+    from vms.console import make_console
+    m = make_console(ctl, None, box.wall)
+    m.root.seen.clock, m.root.seen.sleep = box.clock, (lambda s: None)
+    srv = m.serve("127.0.0.1", 0)
+    return m, srv, srv.server_address[1]
+
+
+def _post(port, key, name="gate", user=None, body=None):
+    data = json.dumps(body if body is not None else {"name": name, "source": "driverpack://file/g.mp4"}).encode()
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=data, method="POST",
+                                 headers={"Idempotency-Key": key, **({"X-User": user} if user else {})})
+    try:
+        with urllib.request.urlopen(req) as r: return r.status, json.load(r)
+    except urllib.error.HTTPError as e: return e.code, json.load(e)
+
+
+def test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_another_consoles_at():
+    """The review's second pass, major: the age of a pending claim was `wall() − at`, and `at` was written by
+    ANOTHER console with its own wall clock. A console a minute behind its neighbour read every fresh claim as
+    stale, took it over and made the second camera. Now a claim is nobody's only once THIS process has seen the
+    same revision of it stand for `PENDING_TTL` of its own monotonic clock; a claim re-made meanwhile is a new
+    revision and the count starts again. And the reply is sent even when the store would not remember it: the
+    write happened, so 201 — not a 503 that sends the client back for a second camera.
+
+    The id is reserved IN the claim before the row is written (the product's `Reserve`/`CreateAs`, feedback CS):
+    a take-over creates under that id, or finds the unit created and answers with it — so a lost reply and a
+    write never made, the same claim from outside, end as one camera either way."""
+    from vms.config import SPEC
+    box = Box()
+    a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    m, srv, port = _console_with_its_own_clock(box, a)
+    try:
+        # the neighbour's clock is ninety seconds behind: its `at` says "old", and it is not
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall() - 90}, cas=0)
+        assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # in flight: waited, served nothing, wrote nothing
+        box.clock.advance(20)
+        assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds of standing still: not yet
+        # …re-made by somebody meanwhile (a new revision): the count starts again
+        box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall()})
+        assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # twenty seconds since the first claim, none since this revision
+        box.clock.advance(20)
+        assert _post(port, "k-1")[0] == 409 and a.cameras() == []          # forty since the first, twenty of this one
+        box.clock.advance(11)
+        assert _post(port, "k-1")[0] == 201 and len(a.cameras()) == 1      # thirty-one of the same revision: nobody's — taken over
+        assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
+        # the store takes the camera and refuses the reply: the client still hears 201, once, for one camera
+        store = m.root.seen.store
+        m.root.seen.store = lambda key, resp: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
+        code, body = _post(port, "k-2")
+        assert code == 201 and body["id"] == 2 and len(a.cameras()) == 2
+        claim = box.vars.get("vms/idem/k-2")[0]
+        assert claim["state"] == "pending" and claim["id"] == "2"           # left standing, naming its camera: a retry waits on it…
+        m.root.seen.store = store
+        assert _post(port, "k-2")[0] == 409
+        box.clock.advance(31)
+        assert _post(port, "k-2") == (code, body) and len(a.cameras()) == 2   # …and past the TTL takes it over: camera 2 exists, so camera 2 is the answer
+        # the first attempt died between reserving the id and writing the row: the retry creates under the reserved id
+        box.vars.put("vms/idem/k-3", {"state": "pending", "at": box.wall(), "id": "9"}, cas=0)
+        assert _post(port, "k-3")[0] == 409
+        box.clock.advance(31)
+        assert _post(port, "k-3")[1]["id"] == 9 and [c["id"] for c in a.cameras()] == [1, 2, 9]
+        assert _post(port, "k-4")[1]["id"] == 3                            # the counter was never touched by the take-over
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
+def test_an_idempotency_key_is_one_callers_for_one_body():
+    """The review's second pass, minor: a replay under a known key was answered with the stored reply to anybody —
+    a stranger got anna's 201, and anna's own second mark under a reused key was silently not written. The claim
+    carries who (`X-User`, the name the gate proved where there is one) and the sha256 of the body; a replay by
+    another caller or with another body is 422. The same caller with the same body is the same request."""
+    from vms.config import SPEC
+    box = Box()
+    a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    m, srv, port = _console_with_its_own_clock(box, a)
+    try:
+        first = _post(port, "k-1", user="anna")
+        assert first[0] == 201 and _post(port, "k-1", user="anna") == first and len(a.cameras()) == 1
+        code, body = _post(port, "k-1", user="boris")
+        assert code == 422 and body["error"] == "key reused" and len(a.cameras()) == 1   # not anna's reply, not a camera
+        code, body = _post(port, "k-1", user="anna", name="yard")
+        assert code == 422 and body["error"] == "key reused" and len(a.cameras()) == 1   # anna, another body: said so, not swallowed
+        # …and while the first caller's claim is still pending on another console, the stranger is told at once
+        box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall(), "sub": "anna", "sha256": "0" * 64}, cas=0)
+        assert _post(port, "k-2", user="boris")[0] == 422
+        assert box.vars.get("vms/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("vms/idem/k-1")[0]["sha256"]) == 64
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
     """A console claims the key, then crashes — or its write raises — before it stores the reply. The claim stood
     for the key's whole day and every correct retry got 409 "in flight" (the platform review; feedback BG). A
-    pending claim older than thirty seconds is nobody's: the next request takes it over and does the work. A 5xx
-    is not remembered under the key — "the store is away" is not an answer to the request — and a write that
-    raised lets its claim go at once. The store failing at the claim is 503, which a client retries, not 400."""
+    pending claim that has stood still for thirty seconds is nobody's: the next request takes it over and does the
+    work. A 5xx is not remembered under the key — "the store is away" is not an answer to the request — and a write
+    that raised lets its claim go at once. The store failing at the claim is 503, which a client retries, not 400."""
     from vms.config import SPEC
     from w2cplatform.console import IdempotencyKeys
     box = Box()
     a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
-    srv = serve(a, None, port=0, wall=box.wall)
-    port = srv.server_address[1]
+    m, srv, port = _console_with_its_own_clock(box, a)
 
     def post(key, name="gate"):
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=json.dumps({"name": name, "source": "driverpack://file/g.mp4"}).encode(),
-                                     method="POST", headers={"Idempotency-Key": key})
-        try:
-            with urllib.request.urlopen(req) as r: return r.status, json.load(r)
-        except urllib.error.HTTPError as e: return e.code, json.load(e)
+        return _post(port, key, name)
 
     try:
         box.vars.put("vms/idem/k-1", {"state": "pending", "at": box.wall()}, cas=0)   # claimed by a console that then died
-        box.wall.advance(31)
+        assert post("k-1")[0] == 409                                                   # seen once: in flight, for all this console knows
+        box.clock.advance(31)
         assert post("k-1")[0] == 201 and len(a.cameras()) == 1                          # taken over: the work is done
         assert box.vars.get("vms/idem/k-1")[0]["state"] == "done"
 
         create = a.create
-        a.create = lambda body: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
+        a.create = lambda body, **kw: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
         code, body = post("k-2")
         assert code == 503 and body["error"] == "store unavailable"
         assert box.vars.get("vms/idem/k-2")[0] is None                                 # the claim was let go, not left pending

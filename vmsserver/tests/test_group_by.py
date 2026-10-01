@@ -193,8 +193,8 @@ def test_a_device_with_no_picture_is_a_unit_like_any_other():
 
 
 class _Body:
-    def __init__(self, payload: bytes):
-        self.headers, self.rfile = {"Content-Length": str(len(payload))}, io.BytesIO(payload)
+    def __init__(self, payload: bytes, key: str = "k"):
+        self.headers, self.rfile = {"Content-Length": str(len(payload)), "Idempotency-Key": key}, io.BytesIO(payload)   # a command is filed under a key (M17)
 
 
 def _holder(box, server="srv-a", **devkw):
@@ -351,7 +351,7 @@ def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
 
     for bad, why in (({"unit": 999, "action": "output"}, "no such unit"),
                      ({"unit": door, "action": "reboot"}, "unknown action")):
-        st, b = route(_Body(json.dumps(bad).encode()), "POST", "/requests", {})
+        st, b = route(_Body(json.dumps(bad).encode(), key="bad"), "POST", "/requests", {})
         assert st in (400, 404) and b["error"] == why
 
 

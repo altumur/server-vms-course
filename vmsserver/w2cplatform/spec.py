@@ -749,10 +749,19 @@ class SpecController(Controller):
     # already exist), build the row with `new_row`, write it with `cas=0` (create-only), write derived rows,
     # return the row. Placement is not done here — the controller's pass does it; the console reports
     # `worker: None`.
-    def create(self, fields: dict) -> dict:
+    #
+    # `uid` and `reserve` are the console's (`IdempotencyKeys`): the id is RESERVED in the request's claim before the
+    # row is written (`reserve(uid)`), so a retry that takes over a stale claim creates under the same id — or finds
+    # the unit created and answers with it. "The reply was lost" and "the write was never made" look the same from
+    # outside; the reserved id tells them apart (the review's second pass; the product's `CreateAs`, feedback CS).
+    def create(self, fields: dict, uid=None, reserve=None) -> dict:
         self.spec.refuse(fields)
+        if uid is not None:
+            old = self.unit(uid)
+            if old is not None:
+                return old                                              # created by the attempt whose reply was lost: the row is the answer
         if self.spec.numeric:
-            uid = self._next_id()
+            uid = self._next_id() if uid is None else self.spec.parse_id(uid)
         else:
             uid = str(fields.get(self.spec.id) or "")
             if not uid:
@@ -764,6 +773,9 @@ class SpecController(Controller):
             # 400 to the person who typed it rather than a 500 from the store.
             if "/" in uid or uid in (".", ".."):
                 raise Refused(f"a {self.spec.name} {self.spec.id} is a name, not a path: {uid!r}")
+        if reserve is not None:
+            reserve(uid)                                                # into the claim, before the row exists
+        if not self.spec.numeric:
             old, idx = self.vars.get(self._row_key(uid))
             if old and old.get("deleted") != "true":
                 raise Refused(f"{self.spec.name} unit {uid} exists")
