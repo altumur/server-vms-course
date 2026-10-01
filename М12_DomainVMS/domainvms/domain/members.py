@@ -93,6 +93,10 @@ class Members:
         `key`: the public key its LDevID was issued for (hex) — what a new holder signs again when the issuing
         certificate that signed it is revoked (Lesson 15, step 9), and the one key it will sign for this member."""
         self._refuse_domain(name)
+        if key and key in self._revoked_keys():
+            from .api import ApiError
+            raise ApiError(409, f"{name}: this key was revoked by the domain's root after a theft — "
+                                f"a machine that came home makes a new key and is admitted with it")
 
         def mutate(m):
             if name in m:
@@ -100,6 +104,12 @@ class Members:
             m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by, **({"key": key} if key else {})}
             return True
         return self._change(mutate)
+
+    def _revoked_keys(self) -> set:
+        from .agent import KEYS_PATH
+        from .tokens import KeySet
+        items, _ = self.vars.get(KEYS_PATH)
+        return KeySet.from_items(items).revoked_members if items else set()
 
     def remove(self, name: str, by: str | None = None) -> bool:
         self._refuse_domain(name)

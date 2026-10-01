@@ -381,12 +381,13 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
             new_vars.put(path, items, cas=idx)
         for key, text in best[1].get("objects", {}).items():
             objects_of(new).put(key, text.encode())      # the alarm history, as of the backup
-        _keep_member_key(new_vars, best[1], new, wall)
+        _keep_member_key(new_vars, best[1], new, wall, revoked=keys.revoked_members)
     keys_rev = None
     if root is None:
         DomainPublisher(new_vars).publish_keys(keys)
     else:
-        items, keys_rev = _next_key_set(root, keys, signer, now, stolen)
+        items, keys_rev = _next_key_set(root, keys, signer, now, stolen,
+                                        stolen_key=_member_key_of(new_vars, top_holder, best) if stolen else None)
         DomainPublisher(new_vars).publish_keys(items)
     # The shared document (Lesson 12): its pointer came back with the state, but the object it names was in the
     # old holder's store. Every member holds that document, verified by the same key — the new holder first among
@@ -426,7 +427,10 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     # feedback CH): skipped, the key stayed in its row, and the next theft — of somebody else — signed it again.
     if stolen and top_holder:
         _revoke_member_key(new_vars, top_holder, wall)
-    reissued = reissue_ldevids(signer, new_vars, skip={top_holder} if top_holder else set()) if stolen else []
+    from .agent import KEYS_PATH
+    revoked_now = KeySet.from_items(new_vars.get(KEYS_PATH)[0] or {"current": ""}).revoked_members
+    reissued = reissue_ldevids(signer, new_vars, skip={top_holder} if top_holder else set(),
+                               revoked=revoked_now) if stolen else []
     rev = holder.backup_rev
     report = {"term": holder.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
               "shared_from": shared_from, "keys_rev": keys_rev, "stolen": stolen, "reissued": reissued,
@@ -461,11 +465,22 @@ def _revoke_member_key(domain_vars, name: str, wall) -> None:
     Members(domain_vars, wall)._change(mutate)
 
 
-def _keep_member_key(domain_vars, backup: dict, new: str, wall) -> None:
+def _member_key_of(domain_vars, name: str | None, best) -> str | None:
+    """The member key of the holder being replaced: from its row, else from the backup it wrote itself."""
+    from .members import Members
+    if not name:
+        return None
+    key = (Members(domain_vars).read()["members"].get(name) or {}).get("key")
+    if not key and best and best[1].get("holder") == name:
+        key = best[1].get("holder_key")
+    return key
+
+
+def _keep_member_key(domain_vars, backup: dict, new: str, wall, revoked=frozenset()) -> None:
     from .members import Members
     old, key = backup.get("holder"), backup.get("holder_key")
-    if not old or not key or old == new:
-        return
+    if not old or not key or old == new or key in revoked:
+        return                                           # a key the root revoked never comes back from a backup (CK)
     m = Members(domain_vars, wall)
 
     def mutate(members):
@@ -503,7 +518,8 @@ def _trusted_keys(fed, new: str, root: DomainRoot, now: float) -> KeySet:
 # The next key set: the new holder's token key, current. The old holder's keys stay an hour after a planned
 # move and not at all after a theft — and then every issuing certificate the domain had so far is revoked with
 # them: the thief holds one of them, and nobody can say which others he copied.
-def _next_key_set(root: DomainRoot, old: KeySet, signer: Signer, now: float, stolen: bool) -> tuple[dict, int]:
+def _next_key_set(root: DomainRoot, old: KeySet, signer: Signer, now: float, stolen: bool,
+                  stolen_key: str | None = None) -> tuple[dict, int]:
     ks = signer.tokens.keyset()
     mine = str(signer.root.cert.serial_number)
     if stolen:
@@ -514,8 +530,13 @@ def _next_key_set(root: DomainRoot, old: KeySet, signer: Signer, now: float, sto
                 ks.keys[kid] = pub
                 ks.retire_at[kid] = min(old.retire_at.get(kid) or now + OLD_KEYS_OVERLAP, now + OLD_KEYS_OVERLAP)
         issuing, revoked = old.issuing | {mine}, set(old.revoked_ca)
-    rev = old.rev + 1
-    return root.key_set(ks, rev, revoked, issuing), rev
+    # The revision only grows, and the move cannot see every member: one that took a later set may be off now.
+    # Built from what the reachable members hold, `old.rev + 1` could be no larger than what that one holds, and
+    # it would refuse the new set for good (the product's question, feedback CK). So the revision is also at
+    # least the root's clock, in seconds: a move made later signs a larger number than any move made before it.
+    rev = max(old.rev + 1, int(now))
+    revoked_members = set(old.revoked_members) | ({stolen_key} if stolen and stolen_key else set())
+    return root.key_set(ks, rev, revoked, issuing, revoked_members), rev
 
 
 # The shared document (Lesson 12) was signed by the old holder's token key, and members check it again every time
@@ -540,15 +561,15 @@ def _sign_shared_again(domain_vars, domain_objects, signer: Signer, term: int) -
 # After a theft: every member's LDevID was signed by an issuing certificate the root has just revoked. The new
 # holder signs again the key each member was admitted with (`domain/members`, written by the registrar) — never
 # a key a member merely presents now, which a thief could present too. Carried home by each member's agent.
-def reissue_ldevids(signer: Signer, domain_vars, skip=frozenset()) -> list[str]:
+def reissue_ldevids(signer: Signer, domain_vars, skip=frozenset(), revoked=frozenset()) -> list[str]:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
     from .agent import LDEVID_PATH
     from .members import Members
     from .signer import _pem
     out = []
     for name, m in sorted(Members(domain_vars).read()["members"].items()):
-        if not m.get("key") or name in skip:
-            continue
+        if not m.get("key") or name in skip or m["key"] in revoked:
+            continue                                     # revoked by the root (CK): a list restored from an old backup cannot bring it back
         cert = signer.issue(m.get("serial") or name, "ldevid", Ed25519PublicKey.from_public_bytes(bytes.fromhex(m["key"])))
         _, idx = domain_vars.get(f"{LDEVID_PATH}/{name}")
         domain_vars.put(f"{LDEVID_PATH}/{name}", {"cert": _pem(cert).decode(), "chain": _pem(signer.root.cert).decode()},

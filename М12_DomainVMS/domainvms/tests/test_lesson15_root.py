@@ -124,13 +124,13 @@ def test_after_a_theft_the_move_drops_the_old_keys_and_signs_every_ldevid_again(
     devices["cam-SN0"].power_off()
 
     new, report = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
-    assert report["keys_rev"] == 2 and new.signer.tokens.kid != holder.signer.tokens.kid
+    assert report["keys_rev"] > 1 and new.signer.tokens.kid != holder.signer.tokens.kid
     assert sorted(report["reissued"]) == ["cam-SN1", "cam-SN2", "cam-SN3"]
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
     a2.sync()
     trust = ClusterTrust(devices["cam-SN2"].flash)
     keys = trust.keyset()
-    assert keys.rev == 2
+    assert keys.rev == report["keys_rev"]
     try:
         verify(stolen_token, keys, now=wall()); raise AssertionError("the stolen key must be refused")
     except TokenError:
@@ -186,15 +186,16 @@ def test_a_key_set_only_goes_forward():
     old_items, _ = holder.vars.get("domain/keys")
     holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
     devices["cam-SN0"].power_off()
-    move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    _, report = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    rev = report["keys_rev"]
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall)
     a2.sync()
-    assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == 2
+    assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == rev > 1
     devices["cam-SN0"].boot()
     holder.vars.put("domain/keys", old_items)
     agents["cam-SN2"].sync()                                            # still pointed at the old holder
-    assert agents["cam-SN2"].keys == "holding rev 2"
-    assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == 2
+    assert agents["cam-SN2"].keys == f"holding rev {rev}"
+    assert ClusterTrust(devices["cam-SN2"].flash).keyset().rev == rev
 
 
 def test_the_signers_backup_of_lessons_4_and_7_cannot_answer_a_theft():
@@ -271,3 +272,44 @@ def test_the_holder_becomes_a_member_with_the_key_it_was_admitted_with():
     devices["cam-SN2"].power_off()                                      # a second theft, of somebody else
     _, report = move_domain(fed, "cam-SN3", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert "cam-SN1" not in report["reissued"] and "cam-SN0" in report["reissued"]   # the first thief's key stays dead
+
+
+
+def test_a_revoked_member_key_survives_a_backup_from_before_the_theft():
+    """Feedback CK. The revocation lived in the list of members, and the list travels in backups: a move restored
+    from a copy made BEFORE the theft brought the thief's key back. Now it is also in the key set the root signs,
+    which every member holds and which only goes forward — and the move reads that, not the copy, to decide."""
+    wall = Clock()
+    fed, devices, root, holder, agents, ldevids = _site(wall)
+    pub = lambda c: c.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()   # noqa: E731
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    second, _ = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
+    a3 = _agent(fed, devices, "cam-SN3", "cam-SN1", wall); a3.sync()
+    second.backup(["cam-SN3"], devices["cam-SN1"].disk_door()); a3.sync()   # a copy from BEFORE the theft, on SN3
+    devices["cam-SN1"].power_off()                                      # SN1 is stolen
+    third, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    assert pub(ldevids["cam-SN1"]) in ClusterTrust(third.vars).keyset().revoked_members
+    for name in ("cam-SN0", "cam-SN3"):
+        _agent(fed, devices, name, "cam-SN2", wall).sync()              # the members carry the new key set home
+    devices["cam-SN2"].power_off()                                      # SN2 stolen too, and it backed up nowhere
+    fourth, report = move_domain(fed, "cam-SN3", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    assert "cam-SN1" not in report["reissued"]                          # the old copy's list had its key: the key set says no
+    assert pub(ldevids["cam-SN1"]) in ClusterTrust(fourth.vars).keyset().revoked_members
+    try:
+        Members(fourth.vars, wall).add("cam-SN1b", "approved by anna", key=pub(ldevids["cam-SN1"]))
+        raise AssertionError("a revoked key admitted under another name")
+    except Exception as e:
+        assert getattr(e, "status", None) == 409
+
+
+def test_a_move_signs_a_revision_larger_than_any_a_member_out_of_reach_may_hold():
+    """Feedback CK, the question. The next revision was the reachable members' plus one; a member that took a
+    later set and is off now would hold a larger number and refuse the new set for good. The revision is also at
+    least the root's clock: a move made later always signs more."""
+    wall = Clock()
+    fed, devices, root, holder, agents, _ = _site(wall)
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    _, first = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
+    wall.advance(10)
+    _, later = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall)
+    assert later["keys_rev"] > first["keys_rev"] >= 1000

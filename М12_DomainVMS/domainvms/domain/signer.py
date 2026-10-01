@@ -199,13 +199,14 @@ class DomainRoot:
                 .add_extension(x509.BasicConstraints(ca=True, path_length=0), critical=True)
                 .sign(self.key, None))
 
-    def key_set(self, ks: "KeySet", rev: int, revoked_ca=(), issuing=()) -> dict:
+    def key_set(self, ks: "KeySet", rev: int, revoked_ca=(), issuing=(), revoked_members=()) -> dict:
         """The key set members take, signed: the token keys, this root's public key, a revision that only
         grows, the holders' issuing certificates so far, and those no longer trusted. Items for `domain/keys`."""
         from .shared import sign
         doc = sign({"rev": int(rev), "keys": {k: v for k, v in ks.to_items().items() if k != f"key:{ROOT_KID}"},
                     "root": self.public_bytes.hex(), "revoked_ca": sorted(str(r) for r in revoked_ca),
-                    "issuing": sorted(str(i) for i in issuing)}, self)
+                    "issuing": sorted(str(i) for i in issuing),
+                    **({"revoked_members": sorted(str(k) for k in revoked_members)} if revoked_members else {})}, self)
         return {"doc": json.dumps(doc, sort_keys=True)}
 
     def recovery(self) -> bytes:

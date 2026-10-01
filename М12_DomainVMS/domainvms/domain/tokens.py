@@ -102,6 +102,10 @@ class KeySet:
     rev: int = 0
     revoked_ca: set[str] = field(default_factory=set)
     issuing: set[str] = field(default_factory=set)             # serials of the holders' issuing certificates so far
+    # Member keys revoked by a theft (feedback CK): the stolen holder's own. In the key set and not only in the
+    # list of members, because the list travels in backups and an older backup does not know of the theft; the
+    # key set every member holds, signed by the root, only goes forward.
+    revoked_members: set[str] = field(default_factory=set)
 
     @property
     def root(self) -> bytes | None:
@@ -122,6 +126,7 @@ class KeySet:
             ks = cls.from_items(d["keys"])
             ks.keys[ROOT_KID] = bytes.fromhex(d["root"])
             ks.rev, ks.revoked_ca, ks.issuing = int(d["rev"]), set(d.get("revoked_ca", [])), set(d.get("issuing", []))
+            ks.revoked_members = set(d.get("revoked_members", []))
             return ks
         ks = cls(current=items["current"])
         for k, v in items.items():
