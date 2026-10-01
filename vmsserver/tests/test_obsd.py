@@ -163,20 +163,16 @@ def test_two_writers_epochs_are_two_streams_in_one_volume():
     s.bye()
 
 
-def test_a_timeline_over_six_days_is_refused_so_the_archive_asks_in_windows():
-    """Seen, and not in the protocol's README: `READER_TIMELINE` over six days of footage or more answers
-    `INTERNAL_ERROR`. A recording is a month deep, so `Archive` asks five days at a time and puts the intervals
-    back together (`Archive._timeline`). If this test starts failing, the engine has stopped refusing — and the
-    windows can go."""
+def test_a_recording_a_month_deep_is_answered_whole():
+    """Seen, and not in the protocol's README: `READER_TIMELINE` over six days of footage or more is sometimes
+    answered `INTERNAL_ERROR` — the same question refused by one daemon and answered by the next. A recording is
+    a month deep, so `Archive` asks five days at a time, halves a window refused anyway, and puts the intervals
+    back together (`Archive._timeline`)."""
     from tests.conftest import footage, store
     now = 1_757_500_000.0
     st = store()
-    footage(st, "7", 1, now - 9 * 86400, now, step=3600)
-    r = st.reader()
-    assert r.timeline("7/e1", archive_ms(now - 5 * 86400), archive_ms(now))          # five days: answered
-    try:
-        r.timeline("7/e1", archive_ms(now - 9 * 86400), archive_ms(now))
-        raise AssertionError("the engine answered a nine-day timeline: Archive._timeline's windows can go")
-    except ObsdError as e:
-        assert e.name == "INTERNAL_ERROR"
-    assert st.coverage("7") == [(now - 9 * 86400, now)]                              # …and the archive answers it whole
+    footage(st, "7", 1, now - 30 * 86400, now - 15 * 86400 - 3600, step=3600, seal=False)
+    footage(st, "7", 1, now - 15 * 86400, now, step=600)
+    assert st.coverage("7") == [(now - 30 * 86400, now - 15 * 86400 - 3600), (now - 15 * 86400, now)]
+    assert round(st.depth_days("7", now), 3) == 30.0
+    assert [(s.start, s.end) for s in st.spans("7", now - 2 * 86400, now - 86400)][0][1] == now   # a window inside a span

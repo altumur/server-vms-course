@@ -295,24 +295,37 @@ class Archive:
                 out.append(Span(p[0], p[1], unix_s(iv["start"]), unix_s(iv["end"]), int(iv.get("size", 0)), p[2]))
         return sorted(out, key=lambda s: (s.start, s.epoch))
 
-    # A stream's timeline, asked IN WINDOWS. The engine answers `INTERNAL_ERROR` for a timeline over six days of
-    # footage or more (obsd protocol v1, seen and not documented): a recording a month deep cannot be asked in
-    # one question. So the question is cut to what the stream holds — its first and last sequence — and asked
-    # five days at a time; intervals that touch across a cut are put back together.
+    # A stream's timeline, asked IN WINDOWS. The engine answers `INTERNAL_ERROR` to some timeline questions over
+    # six days of footage or more (obsd protocol v1 — seen, not documented, and not every time: the same question
+    # is refused by one daemon and answered by the next). Five days has never been refused. A recording is a
+    # month deep, so the question is cut to what the stream holds — its first and last sequence — and asked five
+    # days at a time; a window refused anyway is asked again in halves, down to an hour. Intervals that touch
+    # across a cut are put back together.
     def _timeline(self, r, name: str, lo: int, hi: int) -> list[dict]:
         first, last = r.find(name, lo), r.find(name, hi, backwards=True)
         if first is None or last is None:
             return []
         lo, hi = max(lo, min(first.start, hi)), min(hi, max(last.end, lo))
         out: list[dict] = []
-        t = lo
-        while t < hi:
-            for iv in r.timeline(name, t, min(t + TIMELINE_WINDOW, hi)):
+
+        def ask(a: int, b: int) -> None:
+            try:
+                got = r.timeline(name, a, b)
+            except ObsdError as e:
+                if e.name != "INTERNAL_ERROR" or b - a <= 3600_000:
+                    raise
+                ask(a, (a + b) // 2); ask((a + b) // 2, b)
+                return
+            for iv in got:
                 if out and iv["start"] <= out[-1]["end"]:
                     if iv["end"] > out[-1]["end"]:
                         out[-1] = {**out[-1], "end": iv["end"], "size": out[-1].get("size", 0) + iv.get("size", 0)}
                     continue
                 out.append(dict(iv))
+
+        t = lo
+        while t < hi:
+            ask(t, min(t + TIMELINE_WINDOW, hi))
             t += TIMELINE_WINDOW
         return out
 
