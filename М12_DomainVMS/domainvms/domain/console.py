@@ -38,7 +38,7 @@ from .readview import ReadView
 
 class Console:
     def __init__(self, directory: DomainDirectory, view: ReadView, api: ConsoleAPI, refresh_interval: float = 5.0,
-                 publish_to=None, crossings=None, pending=None, topology=None, admin=None, members=None):
+                 publish_to=None, crossings=None, pending=None, topology=None, admin=None, members=None, viewer=None):
         """`publish_to`: the domain holder's object store — each pass leaves the view there as `domain/view`,
         for that cluster's own console to draw (feedback X). `crossings`: Lesson 13's, to say who records what."""
         self.directory, self.view, self.api, self.refresh_interval = directory, view, api, refresh_interval
@@ -46,6 +46,9 @@ class Console:
         # The operator's topology, and `admin(subject) -> bool`: who may edit it. Each pass also makes the domain's
         # copy of every reporting member read where the topology says it reports.
         self.topology, self.admin, self.members = topology, admin, members
+        # `viewer(subject) -> bool`: who may LOOK (feedback CA). Given, every `GET /api/*` asks for a token and a
+        # `view` on the domain; not given, reading stays open as the earlier lessons left it.
+        self.viewer = viewer
         self._stop = threading.Event()
 
     def _refresher(self):
@@ -88,6 +91,10 @@ class Console:
                 try:
                     if u.path == "/healthz":
                         return self._send(200, {"ok": True, "passes": console.view.passes})
+                    if console.viewer is not None and u.path.startswith("/api/"):
+                        subject = console.api._subject(self._token())
+                        if subject is not None and not console.viewer(subject):
+                            return self._send(403, {"detail": f"{subject} may not look at the domain: no `view` on it"})
                     if u.path == "/api/cameras":
                         return self._send(200, console.view.list(q.get("q", ""), int(q.get("page", 1)),
                                                                  int(q.get("size", 50)), q.get("cluster")))
@@ -110,6 +117,8 @@ class Console:
                         return self._send(200 if a.found else (404 if a.complete else 503),
                                           a.__dict__ | {"complete": a.complete, "sentence": a.sentence()})
                     self._send(404, {"detail": "no such route"})
+                except ApiError as e:
+                    self._send(e.status, {"detail": e.detail})
                 except Exception as e:                     # noqa: BLE001
                     self._send(500, {"detail": str(e)})
 
@@ -231,8 +240,15 @@ def main() -> None:
     from .crossing import Crossings
     from .topology import Topology
 
-    def admin(subject: str) -> bool:                  # an `admin` grant in the domain holder itself
-        return any(g.subject == subject and g.capability == "admin" for g in trust.grants())
+    # The domain's own grants (`domain/grants/domain`, feedback CA) — not the carried grants of whichever cluster
+    # holds the domain today, which a move would change.
+    from .grants import domain_may
+
+    def admin(subject: str) -> bool:
+        return domain_may(fed.domain_holder.vars, subject, "admin", time.time())
+
+    def viewer(subject: str) -> bool:
+        return domain_may(fed.domain_holder.vars, subject, "view", time.time())
 
     from .members import Members
     from .uplink import _CopyObjects
@@ -242,7 +258,7 @@ def main() -> None:
     console = Console(directory, view, api, refresh_interval=float(os.environ.get("REFRESH_INTERVAL", "5")),
                       publish_to=fed.domain_holder.objects,
                       crossings=Crossings(fed.domain_holder.vars, view, topology=topology),
-                      pending=pending, topology=topology, admin=admin, members=members)
+                      pending=pending, topology=topology, admin=admin, members=members, viewer=viewer)
     srv = console.serve(os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8443")))
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

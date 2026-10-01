@@ -62,9 +62,12 @@ class Members:
         return self.read()["rev"] == 0 and self._change(lambda members: True)
 
     def _refuse_domain(self, name: str) -> None:
+        from .api import ApiError
+        from .grants import DOMAIN_SCOPE
         if self.domain and name == self.domain:
-            from .api import ApiError
             raise ApiError(400, f"{name} is the domain's holder: it is neither admitted nor removed")
+        if name == DOMAIN_SCOPE:                         # `domain/grants/domain` is the domain's own, not a cluster's
+            raise ApiError(400, f"no cluster may be called {name!r}: the name is the domain's own scope")
 
     def _change(self, mutate) -> bool:
         for _ in range(10):

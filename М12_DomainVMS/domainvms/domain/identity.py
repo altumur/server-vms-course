@@ -44,6 +44,11 @@ def _check(password: str, stored: str) -> bool:
     return secrets.compare_digest(_hash(password, bytes.fromhex(salt)).split(":")[1], h)
 
 
+# What a login for a user who does not exist is checked against: the same scrypt, so "no such user" takes as long
+# as "wrong password" and the door does not tell a stranger which names are real (the product, feedback BZ).
+_NOBODY = _hash(secrets.token_hex(16))
+
+
 @dataclass
 class User:
     id: str
@@ -118,7 +123,8 @@ class IdentityStore:
     # -- authentication: ends in a token naming the subject and nothing else ---
     def login(self, uid: str, password: str) -> str:
         u = self.get(uid)
-        if not u or u.kind != "local" or not _check(password, u.pwhash):
+        known = bool(u) and u.kind == "local"
+        if not _check(password, u.pwhash if known else _NOBODY) or not known:
             raise AuthError("bad credentials")
         return self.signer.tokens.issue(uid, TOKEN_LIFETIME, now=self.now())
 

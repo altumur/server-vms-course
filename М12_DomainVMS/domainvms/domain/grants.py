@@ -89,6 +89,46 @@ def grants_from_items(items: dict | None) -> list[Grant]:
     return out
 
 
+# THE DOMAIN'S OWN GRANTS (feedback CA). Who may look at the domain's door and who may change what it decided —
+# members, topology, scenarios between cameras, shared settings. The first answer was "an admin of the cluster
+# that holds the domain", read from that cluster's carried grants. It does not survive Lesson 15: the holder
+# moves from cluster to cluster, and the domain's administrators would change with it — whoever administers
+# the camera the domain moved to. So the domain keeps its own: `domain/grants/domain`, in the holder's store,
+# exported in the backup with everything the domain decided (`term.EXPORTED` has `domain/grants/`). No agent
+# carries it: no cluster is called `domain` (`Members` refuses the name).
+#
+#   whole domain only   no camera, no labels: the domain's door is not a camera's
+#   valid_until 0       never lapses — the holder's own grants are not renewed by anybody, so nothing would
+#                       renew them; a number is an end, as everywhere else
+#   the last admin      a write that leaves no `admin` is refused: the door would close for everybody, and only
+#                       a command on the holder could open it again
+DOMAIN_SCOPE = "domain"
+DOMAIN_GRANTS = f"domain/grants/{DOMAIN_SCOPE}"
+
+
+def domain_may(vars_, subject: str, capability: str, now: float) -> bool:
+    from w2cplatform.access import RANK
+    items, _ = vars_.get(DOMAIN_GRANTS)
+    for g in grants_from_items(items):
+        if g.subject != subject or g.camera is not None or g.labels:
+            continue
+        if (g.valid_until == 0 or now < g.valid_until) and RANK.get(g.capability, -1) >= RANK[capability]:
+            return True
+    return False
+
+
+class LastAdmin(ValueError):
+    """A write that would leave the domain with nobody who may change it."""
+
+
+def set_domain_grants(vars_, grants: list[Grant], now: float) -> None:
+    if not any(g.capability == "admin" and g.camera is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
+               for g in grants):
+        raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
+    _, idx = vars_.get(DOMAIN_GRANTS)
+    vars_.put(DOMAIN_GRANTS, grants_to_items(grants), cas=idx)
+
+
 def revocation_window(token_lifetime: float, grant_lifetime: float) -> float:
     """The shorter of the two bounds the window. Most people answer the token."""
     return min(token_lifetime, grant_lifetime)
@@ -117,3 +157,21 @@ class ClusterAuthoriser:
         if not self.grants.may(subject, capability, camera):
             raise PermissionError(f"{subject} has no {capability} grant on camera {camera} in {self.grants.cluster}")
         return subject
+
+
+# The FIRST administrator of the domain: a command on the holder, as the product has it (feedback CA) — whoever
+# can write the holder's store is an administrator already, so the door is not where the first one comes from.
+#   CONFIG_URL=… python3 -m domain.grants domain <subject> [view|edit|admin]
+if __name__ == "__main__":
+    import os
+    import sys
+
+    import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
+    from w2cplatform.variables import open_vars
+    if len(sys.argv) not in (3, 4) or sys.argv[1] != DOMAIN_SCOPE:
+        sys.exit("usage: python3 -m domain.grants domain <subject> [view|edit|admin]")
+    store = open_vars(os.environ["CONFIG_URL"])
+    have = [g for g in grants_from_items(store.get(DOMAIN_GRANTS)[0]) if g.subject != sys.argv[2]]
+    set_domain_grants(store, have + [Grant(sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else "admin", None, 0.0)],
+                      time.time())
+    print(f"{sys.argv[2]}: {sys.argv[3] if len(sys.argv) == 4 else 'admin'} on the domain")
