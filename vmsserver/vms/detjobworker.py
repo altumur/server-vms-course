@@ -88,7 +88,7 @@ class DetJobWorker(Worker):
         return DETJOB_SPEC.row(it) if it and it.get("deleted") != "true" else None
 
     # Whether the camera's own device holds any of `[t0, t1)`. The summary in the HOLDER's heartbeat —
-    # `from`, `to`, `fragments` — never an index: the device has no manifest and this is all anyone gets
+    # `from`, `to`, `fragments` — never an index: the device's own archive is behind its door, and this is all a heartbeat carries
     # (М10B Lesson 15). Enough to tell "nobody recorded this" from "somebody did, just not us".
     def device_has(self, cam, t0: float, t1: float) -> bool:
         found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage")

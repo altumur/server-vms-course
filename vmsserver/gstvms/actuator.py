@@ -3,15 +3,15 @@
     GstActuator     the WORKER's: `driverpacksrc ! h264parse ! watchdog ! tee`, the tee's branch RTP to the
                     loopback port the RTSP fan-out (`livesrv.py`) serves as rtsp://<server>:8554/<cam>. It holds
                     the camera and records nothing.
-    GstRecActuator  the RECORDER's: `rtspsrc location=<live_url> ! rtph264depay ! h264parse ! archivesink` —
-                    subscribed to the fan-out, writing segments into the spool under the recorder's epoch.
+    GstRecActuator  the RECORDER's: `rtspsrc location=<live_url> ! rtph264depay ! h264parse ! appsink` —
+                    subscribed to the fan-out, every access unit a sample into the volume's writer (ObjectStorage,
+                    through the host's `obsd`) under the recorder's epoch.
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # actuator.py — the worker's verb → pipeline: `driverpacksrc ! h264parse ! watchdog ! tee ! archivesink`
-# per
-# camera, the bus drained into (dead, posted)
+# # actuator.py — the worker's verb → pipeline: `driverpacksrc ! h264parse ! watchdog ! tee` per camera, and
+# the recorder's `… ! appsink` into the volume; the bus drained into (dead, posted)
 #
 # **Role in the module.** Lesson 4, Track 2 (needs `gi`). The real actuator `VmsWorker` runs its reconciler
 # against when GStreamer is present (`vms/__main__.worker` tries to import it and falls back to
@@ -20,8 +20,7 @@
 # `Gst.Pipeline` per camera from a launch string, keeps them in a dict, and turns bus messages into two
 # lists the worker drains on every pass: cameras whose pipeline errored (`dead`) and element messages that
 # are observations (`posted`). "The element never knows about buckets or epochs: it posts what it saw; the
-# worker, which holds the epoch, turns it into a line." Importing `archivesink` and `driverpacksrc` here
-# registers both elements.
+# worker, which holds the epoch, turns it into a line." Importing `driverpacksrc` here registers the element.
 #
 # ## Module-level names
 # - `log` — logger `gstvms`.
@@ -29,17 +28,17 @@
 #   timeout={watchdog} ! tee name=t`, then two leaky branches: `rtph264pay ! udpsink 127.0.0.1:{port}` (the
 #   loopback RTP the RTSP fan-out re-serves as rtsp://<server>:8554/<cam> — subscribers on any server) and
 #   `shmsink socket-path=<SHM_DIR>/<cam>.shm` (the same bytes in shared memory — subscribers on THIS server,
-#   the recorder first, read it with `shmsrc`: no RTSP hop, no fan-out process on the recording path). No
-#   `archivesink`: the worker records nothing. `watchdog` posts an error if no buffer passes for `timeout`
+#   the recorder first, read it with `shmsrc`: no RTSP hop, no fan-out process on the recording path). The worker
+#   records nothing. `watchdog` posts an error if no buffer passes for `timeout`
 #   ms, which is how a stalled source becomes a dead camera.
 # - `REC_DESC` / `REC_SHM_DESC` — the recorder's: `rtspsrc location=<live_url> ! rtph264depay` or
 #   `shmsrc socket-path=<…>.shm` (the source the recorder chose by where the worker is), then `h264parse !
-#   watchdog ! archivesink camera={cam} epoch={epoch} …` under the RECORDER's epoch.
+#   watchdog ! appsink` — each access unit a sample into the volume's writer under the RECORDER's epoch.
 #
 # ## Notes
 # - Verified where: the README says `gstvms/` is written to GStreamer's Python binding and not exercised in
-#   the test run; the logic it calls (`promote`, `resolve`) is. The zombie with two real worker processes
-#   and `kill -9` mid-segment on real files are the box's exercises.
+#   the test run; the logic it calls (`resolve`, the recorder's sink into a live `obsd`) is. The zombie with two
+#   real worker processes and `kill -9` mid-recording are the box's exercises.
 # - Bus callbacks run on the GLib main context; since the worker runs no GLib main loop, `add_signal_watch`
 #   delivery depends on the default main context being iterated — the code as written relies on it, and the
 #   worker's loop only reads the lists `pump` hands back.
@@ -54,7 +53,7 @@ import gi
 gi.require_version("Gst", "1.0")
 from gi.repository import Gst  # noqa: E402
 
-from . import archivesink, driverpacksrc  # noqa: E402,F401 — registers the elements
+from . import driverpacksrc  # noqa: E402,F401 — registers the element
 from .observes import observes      # noqa: E402 — which bus messages are observations; no GStreamer needed to test it
 
 log = logging.getLogger("gstvms")
@@ -69,21 +68,26 @@ DESC = ("driverpacksrc name=src ! h264parse ! watchdog timeout={watchdog} ! tee 
 SHM = "shmsink socket-path={path} shm-size=20000000 wait-for-connection=false sync=false"      # the tee's same-server branch: any number of shmsrc readers
 LIVE = "rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port={port} sync=false"   # the tee's branch: RTP to the loopback port
 IDLE = "fakesink sync=false"                                                                    # the RTSP fan-out (livesrv) serves from
-REC_SINK = "h264parse ! watchdog timeout={watchdog} ! {ring}archivesink name=sink camera={cam} epoch={epoch} spool={spool} archive={archive} segment-seconds={seg}{capture}"
+# The recorder's sink is not a file: every access unit leaves the pipeline through `appsink` and goes into the
+# volume's writer as one sample (`RecSink`, `vms/recworker.py`) — byte-stream, one access unit per buffer, the
+# parameter sets on every key frame (`config-interval=-1`), so a sequence the engine opens on a key frame can be
+# played on its own.
+REC_SINK = ("h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,alignment=au ! "
+            "watchdog timeout={watchdog} ! {ring}appsink name=sink emit-signals=true sync=false max-buffers=200")
 # The prebuffer of a `when: offline` backup (Lesson 26): a queue that holds the last N seconds and drops the
 # oldest when full — `leaky=downstream` — with its source pad blocked while the backup is on hold. Released,
 # it pushes what it holds into the sink first. After the watchdog, so a held pipeline is still watched.
 RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-bytes=0 leaky=downstream ! "
 REC_DESC = "rtspsrc location={source} latency=200 protocols=tcp name=src ! rtph264depay ! " + REC_SINK       # another server's worker: its fan-out
-# Backfill (Lesson 16): a range out of the holder's playback door, written as segments in the spool exactly
-# the way a live recording is. `souphttpsrc` because the door is HTTP — a browser has to seek it too — and
-# the range is in the query, so nothing here knows how the vendor addresses time.
-REC_RANGE_DESC = ("souphttpsrc location={source} ! qtdemux ! h264parse ! "
-                  "archivesink name=sink camera={cam} epoch={epoch} spool={spool} archive={archive} segment-seconds={seg}")
+# Backfill (Lesson 16): a range out of the holder's playback door, its access units collected as samples the
+# way a live recording's are. `souphttpsrc` because the door is HTTP — a browser has to seek it too — and the
+# range is in the query, so nothing here knows how the vendor addresses time.
+REC_RANGE_DESC = ("souphttpsrc location={source} ! qtdemux ! h264parse config-interval=-1 ! "
+                  "video/x-h264,stream-format=byte-stream,alignment=au ! appsink name=sink emit-signals=true sync=false")
 REC_SHM_DESC = "shmsrc socket-path={path} is-live=true do-timestamp=true name=src ! video/x-h264,stream-format=byte-stream ! " + REC_SINK   # this server's worker: its tee, directly
 
 
-# State: `spool`, `archive`, `seg` (segment seconds), `watchdog` (ms), `pipelines` (`{camera id:
+# State: `watchdog` (ms), `pipelines` (`{camera id:
 # Gst.Pipeline}`), `dead` (ids whose bus posted an error since the last pump), `posted` (`(camera, kind,
 # fields)` since the last pump).
 class GstActuator:
@@ -98,11 +102,11 @@ class GstActuator:
         self.dead: list[int] = []
         self.posted: list[tuple[int, str, dict]] = []   # what elements posted on the bus: (camera, kind, fields)
 
-    # The reconciler's actuator. For `stop` or `restart` with a running pipeline: pop it, send EOS (lets
-    # `splitmuxsink` finalize the open segment, so it is promoted rather than lost), then `NULL`. `stop`
+    # The reconciler's actuator. For `stop` or `restart` with a running pipeline: pop it, send EOS (lets the
+    # last access units reach the sink), then `NULL`. `stop`
     # returns True there. For `start`/`restart`: format `DESC` with the row's `source` as the URI, the
-    # watchdog, the camera id, `cam["epoch"]` (added by `VmsWorker._actuate`; 0 if absent), the roots and
-    # the segment length; `Gst.parse_launch` — an exception (a refused URI from `uri.resolve`, a missing
+    # watchdog, the camera id, `cam["epoch"]` (added by `VmsWorker._actuate`; 0 if absent) and the ports;
+    # `Gst.parse_launch` — an exception (a refused URI from `uri.resolve`, a missing
     # plugin) is logged and returns False, which the reconciler counts as a failure with backoff. Then a
     # signal watch on the bus: `message::error` appends the camera to `dead`; `message::element` goes to
     # `_posted`. `set_state(PLAYING)` returning `FAILURE` is False. Success stores the pipeline and returns
@@ -111,7 +115,7 @@ class GstActuator:
         cid = cam["id"]
         if verb in ("stop", "restart") and cid in self.pipelines:
             p = self.pipelines.pop(cid)
-            p.send_event(Gst.Event.new_eos())            # lets splitmuxsink finalize the open segment
+            p.send_event(Gst.Event.new_eos())            # lets the last access units reach the sink
             p.set_state(Gst.State.NULL)
         if verb == "stop":
             self._unpublish(cid)
@@ -205,26 +209,61 @@ class GstActuator:
 
 
 class GstRecActuator(GstActuator):
+    """The recorder's: `rtspsrc` on the camera's fan-out URL — or `shmsrc` on the worker's shared-memory
+    branch when the worker is on this server — then `appsink`, each access unit a sample into the volume's
+    writer under the recorder's epoch. No fan-out of its own; nothing here reads a camera."""
+
+    def __init__(self, watchdog_ms: int = 8000):
+        self.watchdog = watchdog_ms
+        self.fanout = None
+        self.range_error = ""                            # why the last range pipeline failed, if it did (Lesson 16)
+        self.pipelines, self.dead, self.posted = {}, [], []
+
     # `release` opens a held pipeline's ring; every other verb is the worker's.
     def __call__(self, verb: str, cam: dict) -> bool:
         if verb == "release":
             return self._release(cam["id"])
+        if verb == "stop" and cam["id"] in getattr(self, "sinks", {}):
+            self.sinks.pop(cam["id"]).finish()            # the open sequence closed: what was taken is kept
         return super().__call__(verb, cam)
 
-    # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And, on
-    # every recorder pipeline, count what reaches the sink — the writer watch's "offered" (Lesson 10). A held
-    # ring passes nothing, so a held backup offers nothing and is never "stuck".
+    # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And on every
+    # recorder pipeline: count what reaches the sink — the writer watch's "offered" (Lesson 10) — and hand each
+    # access unit to the volume's writer, with the time it was CAPTURED: the pipeline's running time turned into
+    # the wall clock, so a released ring lands thirty seconds back where it belongs, not now. A sample the engine
+    # refused makes the sink skip to the next key frame — the engine opens a sequence on nothing else.
     def _before_play(self, p, cam: dict) -> None:
+        import time as _time
+        from w2cplatform.obsd import ObsdError, archive_ms, video
         sink = p.get_by_name("sink")
-        if sink is not None:
+        if sink is not None and cam.get("sink") is not None:
             self.offered_bytes = getattr(self, "offered_bytes", {})
             self.offered_bytes.setdefault(cam["id"], 0)
+            self.sinks = getattr(self, "sinks", {})
+            self.sinks[cam["id"]] = writer = cam["sink"]
+            skipping = {"until_key": False}
 
-            def count(pad_, info, cid=cam["id"]):
-                self.offered_bytes[cid] += info.get_buffer().get_size()
-                return Gst.PadProbeReturn.OK
+            def on_sample(appsink, cid=cam["id"]):
+                smp = appsink.emit("pull-sample")
+                buf = smp.get_buffer()
+                data = buf.extract_dup(0, buf.get_size())
+                self.offered_bytes[cid] += len(data)
+                key = not buf.has_flags(Gst.BufferFlags.DELTA_UNIT)
+                clock = p.get_clock()
+                running = (clock.get_time() - p.get_base_time()) if clock is not None else 0
+                ago = max(0, running - buf.pts) / Gst.SECOND if buf.pts != Gst.CLOCK_TIME_NONE else 0.0
+                begin = _time.time() - ago
+                dur = buf.duration / Gst.SECOND if buf.duration != Gst.CLOCK_TIME_NONE else 0.04
+                if skipping["until_key"] and not key:
+                    return Gst.FlowReturn.OK
+                try:
+                    writer.put(video(archive_ms(begin), archive_ms(begin + dur), data, key))
+                    skipping["until_key"] = False
+                except ObsdError:
+                    skipping["until_key"] = True          # refused: the rest of this group is lost, the next key opens anew
+                return Gst.FlowReturn.OK
 
-            sink.get_static_pad("sink").add_probe(Gst.PadProbeType.BUFFER, count)
+            sink.connect("new-sample", on_sample)
         if cam.get("hold"):
             pad = p.get_by_name("ring").get_static_pad("src")
             self.blocks = getattr(self, "blocks", {})
@@ -234,8 +273,8 @@ class GstRecActuator(GstActuator):
         return getattr(self, "offered_bytes", {}).get(cid)
 
     # Unblock — and drop what the ring pushes until its first KEYFRAME: the leaky queue dropped its oldest
-    # buffers one at a time, so it may begin mid-GOP, and the muxer cannot start a file there. The product
-    # measured the result on a box: recording began 28.5 s before the hold was lifted.
+    # buffers one at a time, so it may begin mid-GOP, and the engine opens a sequence only on a key frame. The
+    # product measured the result on a box: recording began 28.5 s before the hold was lifted.
     def _release(self, cid) -> bool:
         p = self.pipelines.get(cid)
         probe = getattr(self, "blocks", {}).pop(cid, None)
@@ -252,33 +291,32 @@ class GstRecActuator(GstActuator):
         pad.remove_probe(probe)
         return True
 
-    """The recorder's: `rtspsrc` on the camera's fan-out URL — or `shmsrc` on the worker's shared-memory
-    branch when the worker is on this server — then `archivesink` into the spool under the recorder's
-    epoch. No fan-out of its own; nothing here reads a camera."""
+    # One range from the device's own archive, run to completion: the pipeline ends by itself at EOS, and every
+    # access unit came out of `appsink` as a sample, its time the range's start plus its own timestamp. The
+    # recorder lands them (`RecWorker._land`), dropping any group live recording reached first. (Not run against
+    # GStreamer here.)
+    def record_range(self, cam, source: str, t0: float, t1: float) -> list:
+        from w2cplatform.obsd import archive_ms, video
+        out = []
+        p = Gst.parse_launch(REC_RANGE_DESC.format(source=source))
+        sink = p.get_by_name("sink")
 
-    def __init__(self, spool: str, archive: str, segment_seconds: int = 600, watchdog_ms: int = 8000):
-        self.spool, self.archive, self.seg, self.watchdog = spool, archive, segment_seconds, watchdog_ms
-        self.fanout = None
-        self.range_error = ""                            # why the last range pipeline failed, if it did (Lesson 16)
-        self.pipelines, self.dead, self.posted = {}, [], []
+        def on_sample(appsink):
+            smp = appsink.emit("pull-sample")
+            buf = smp.get_buffer()
+            begin = t0 + (buf.pts / Gst.SECOND if buf.pts != Gst.CLOCK_TIME_NONE else 0.0)
+            dur = buf.duration / Gst.SECOND if buf.duration != Gst.CLOCK_TIME_NONE else 0.04
+            out.append(video(archive_ms(begin), archive_ms(begin + dur), buf.extract_dup(0, buf.get_size()),
+                             not buf.has_flags(Gst.BufferFlags.DELTA_UNIT)))
+            return Gst.FlowReturn.OK
 
-    # One range from the device's own archive, run to completion: the pipeline ends by itself at EOS, and
-    # every fragment it closed was promoted with `source="edge"` by the caller. Returns what landed in the
-    # spool, so `RecWorker.fetch` can drop anything live recording reached first.
-    def record_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        import os
-        from vms.archive import parse
-        before = {os.path.join(d, f) for d, _, fs in os.walk(spool) for f in fs}
-        p = Gst.parse_launch(REC_RANGE_DESC.format(source=source, cam=int(cam), epoch=epoch, spool=spool,
-                                                   archive=self.archive, seg=seg))
+        sink.connect("new-sample", on_sample)
         p.set_state(Gst.State.PLAYING)
         # A deadline, not for ever (feedback BE): a device that stops answering in the middle of a range would keep
         # this call — and whoever waits for it — as long as the TCP connection cared to. Generous, because a card
-        # is slow: the length of the range, and a minute, and never less than five. (Not run against GStreamer
-        # here.)
+        # is slow: the length of the range, and a minute, and never less than five.
         deadline = max(300.0, (t1 - t0) + 60.0)
         msg = p.get_bus().timed_pop_filtered(int(deadline * Gst.SECOND), Gst.MessageType.EOS | Gst.MessageType.ERROR)
-        p.send_event(Gst.Event.new_eos())                # finalize whatever fragment is open
         p.set_state(Gst.State.NULL)
         self.range_error = ""
         if msg is None:
@@ -289,45 +327,12 @@ class GstRecActuator(GstActuator):
             # Said, not only logged: a range that failed half way is not a range the source does not have,
             # and the recorder must not remember it as "nowhere" (Lesson 16).
             self.range_error = str(msg.parse_error()[0])
-        after = {os.path.join(d, f) for d, _, fs in os.walk(spool) for f in fs}
-        return sorted(p for p in after - before if parse(p, spool))
+        return out
 
-    # A range copied out of ANOTHER archive of ours — a backup recording's segment, served by its recorder's
-    # door (Lesson 26). `source` is the segment's URL and `#<start>` the time its file begins at; the range
-    # is the part of it to take. The same demux into the same sink as `record_range`, seeked to the range, so
-    # the copy is the footage as stored and not a re-encode. Not exercised by the test suite, which has no
-    # GStreamer; the fake writes the files.
-    def copy_range(self, cam, source: str, epoch: int, t0: float, t1: float, spool: str, seg: int = 600) -> list[str]:
-        import os
-        from vms.archive import parse
-        url, _, start = source.partition("#")
-        begins = float(start or t0)
-        before = {os.path.join(d, f) for d, _, fs in os.walk(spool) for f in fs}
-        p = Gst.parse_launch(REC_RANGE_DESC.format(source=url, cam=cam, epoch=epoch, spool=spool,
-                                                   archive=self.archive, seg=seg))
-        p.set_state(Gst.State.PAUSED)
-        p.get_state(Gst.CLOCK_TIME_NONE)
-        p.seek(1.0, Gst.Format.TIME, Gst.SeekFlags.FLUSH | Gst.SeekFlags.ACCURATE, Gst.SeekType.SET,
-               int((t0 - begins) * Gst.SECOND), Gst.SeekType.SET, int((t1 - begins) * Gst.SECOND))
-        p.set_state(Gst.State.PLAYING)
-        msg = p.get_bus().timed_pop_filtered(Gst.CLOCK_TIME_NONE, Gst.MessageType.EOS | Gst.MessageType.ERROR)
-        p.send_event(Gst.Event.new_eos())
-        p.set_state(Gst.State.NULL)
-        self.range_error = ""
-        if msg is not None and msg.type == Gst.MessageType.ERROR:
-            log.error("recording %s: copy %s-%s: %s", cam, t0, t1, msg.parse_error()[0])
-            self.range_error = str(msg.parse_error()[0])
-        after = {os.path.join(d, f) for d, _, fs in os.walk(spool) for f in fs}
-        return sorted(p for p in after - before if parse(p, spool))
-
-    # The ring is in the pipeline only for a backup that may be held, and so is naming segments by the time
-    # their first frame was CAPTURED: a ring released now holds footage from thirty seconds ago, and a
-    # segment named by the time it was opened would put that footage thirty seconds late on the timeline.
+    # The ring is in the pipeline only for a backup that may be held.
     def describe(self, cam: dict) -> str:
         ring = cam.get("ring_seconds")
-        kw = dict(watchdog=self.watchdog, cam=cam["id"], epoch=cam.get("epoch", 0), spool=self.spool, archive=self.archive, seg=self.seg,
-                  ring=RING.format(ring_ns=int(float(ring) * Gst.SECOND)) if ring else "",
-                  capture=" capture-times=true" if ring else "")
+        kw = dict(watchdog=self.watchdog, ring=RING.format(ring_ns=int(float(ring) * Gst.SECOND)) if ring else "")
         if cam["source"].startswith("shm://"):                                 # the worker is on this server: read its tee's shared memory
             return REC_SHM_DESC.format(path=cam["source"][len("shm://"):], **kw)
         return REC_DESC.format(source=cam["source"], **kw)

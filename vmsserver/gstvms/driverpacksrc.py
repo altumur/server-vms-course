@@ -19,7 +19,7 @@ does with a vendor SDK's clock — which is why it is built and tested here.
 # to zero while carrying a running offset forward so the pipeline's running time never goes backwards. The
 # docstring says why this file exists at all: the rebasing is "the one non-mechanical part of any source
 # element — the part a real DriverPack does with a vendor SDK's clock". Everything downstream (`h264parse`,
-# `watchdog`, `archivesink`) sees one monotonic stream. The Lesson 2 deliverable is this element running for
+# `watchdog`, the recorder's sink) sees one monotonic stream. The Lesson 2 deliverable is this element running for
 # an hour with monotonic PTS (README: "the hour on a box with GStreamer"). Used by `actuator.py` through
 # `Gst.parse_launch`; try it with `gst-launch-1.0 driverpacksrc uri=driverpack://file/lobby.mp4 ! h264parse
 # ! fakesink -v`.
@@ -35,8 +35,8 @@ does with a vendor SDK's clock — which is why it is built and tested here.
 # ## Notes
 # - The `1/25 s` step assumes a 25 fps source; a file at another rate still loops and stays monotonic, only
 #   the gap at the seam differs.
-# - Nothing here knows about cameras, epochs or the archive: the element is a source. The epoch is a
-#   property of `archivesink`, set by the worker.
+# - Nothing here knows about cameras, epochs or the archive: the element is a source. The epoch is the
+#   recorder's, in the name of the stream its sink writes.
 # ================================================================================================
 from __future__ import annotations
 
@@ -73,8 +73,8 @@ class DriverPackSrc(Gst.Bin):
     # Creates and adds the four elements; links `filesrc → qtdemux` statically, `h264parse → identity`
     # statically, and `qtdemux → h264parse` dynamically on `pad-added` (a demuxer's pads appear once it has
     # read the file). `identity sync=True` is the pacing: a file has no clock, so buffers are held until the
-    # pipeline clock reaches their PTS — this is what makes a file behave like a live camera and gives
-    # `archivesink` real ten-minute segments. Adds two pad probes on the identity's src pad: a BUFFER probe
+    # pipeline clock reaches their PTS — this is what makes a file behave like a live camera, and gives a
+    # recorder frames at the camera's own pace. Adds two pad probes on the identity's src pad: a BUFFER probe
     # (`_rebase`) and a downstream EVENT probe (`_on_event`).
     def __init__(self):
         super().__init__()
@@ -131,7 +131,7 @@ class DriverPackSrc(Gst.Bin):
     # The downstream EVENT probe: on EOS, do not let it through — set `offset = last_pts + 1/25 s` (one
     # frame past the last buffer, so the next file start lands strictly after it), flush-seek `filesrc` back
     # to 0 on a key unit, and `DROP` the event. Every other event passes. Because the EOS never reaches
-    # downstream, `splitmuxsink` keeps its segment open across the loop and `watchdog` sees no gap; because
+    # downstream, a recording's sequence stays open across the loop and `watchdog` sees no gap; because
     # `offset` grows by the file's length each time, PTS keeps increasing for as long as the process runs.
     def _on_event(self, pad, info):
         ev = info.get_event()

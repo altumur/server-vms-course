@@ -284,7 +284,7 @@ def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str
 # -- the standby archives (М10B Lesson 26) ------------------------------------------------------------
 # Two kinds of volume hold a second recording of a camera, and the primary closes its gaps from either — a link
 # that dropped, the seconds its recorder took to move — the way Lesson 16 closes them from a device's archive,
-# except that this archive is OURS: a recording, with a manifest, served by a recorder.
+# except that this archive is OURS: a recording, in a volume, served by a recorder's door.
 #
 #     edge     the card in the camera itself. Written by the camera's own recorder from its own sensor: no
 #              network between them, so it records whatever the network does

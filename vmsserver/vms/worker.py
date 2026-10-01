@@ -38,7 +38,7 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # `w2cplatform.contract.Worker` (see `contract.py` for `claim_slot`, `renew_slot`, `release_slot`,
 # `take_epoch`, `renew_leases`, `heartbeat`) and is the thing that knows what a camera is. It reads its
 # assignment `vms/workers/<me>` and the camera rows it names, runs М9's `Reconciler` over them
-# (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! archivesink` (`gstvms/actuator.py`;
+# (`reconciler.py`) with an actuator that builds `driverpacksrc ! tee ! …` (`gstvms/actuator.py`;
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
 # carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
@@ -562,7 +562,8 @@ class VmsWorker(Worker):
     # is fenced (`recording_allowed` false); on `start`, or if no epoch is held for the unit,
     # `take_epoch(unit)` — a new epoch for a new writer — else reuse the held epoch (an edit's restart keeps
     # epoch 1); refuse if `may_write(unit)` is false (no lease, or a lost one); then call the actuator with
-    # `epoch` added to the row — the number archivesink puts in every path. For `stop`: call the actuator
+    # `epoch` added to the row — the number in the name of every stream a recorder writes (`<rec>/e<epoch>`) and
+    # every event bucket a worker does. For `stop`: call the actuator
     # and `release(unit)` (forget epoch and lease). `test_lease_expiry_without_renewal_stops_starts`: after
     # 26 s without renewal `may_write` is false; a later start takes epoch 2.
     def _actuate(self, verb: str, cam: dict) -> bool:
@@ -815,7 +816,7 @@ class VmsWorker(Worker):
     # The bus, drained: `actuator.pump()` gives `(dead, posted)`; every posted `(cid, kind, fields)` becomes
     # `observe(...)` — a line only if I still hold the epoch; every dead camera becomes
     # `reconciler.lost(cid, now)` (restart after backoff) plus `observe(cid, "silent")` — "the event with no
-    # segment open, by definition".
+    # picture behind it, by definition".
     def pump_once(self) -> None:
         """The bus, drained: what elements posted becomes events — if I still
         hold the epoch — and what died becomes `lost` and a `silent` event."""
@@ -824,7 +825,7 @@ class VmsWorker(Worker):
             self.observe(cid, kind, **fields)
         for cid in dead:
             self.reconciler.lost(cid, self.now())
-            self.observe(cid, "silent")                 # the event with no segment open, by definition
+            self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
         try:
             self.requests()                             # …and what somebody asked this device to DO
@@ -1221,7 +1222,7 @@ class VmsWorker(Worker):
     # The loop as a process. Every `poll` seconds: `reconcile_once`, `pump_once`, `lease_pass` every `max(1,
     # (lease_ttl − lease_margin)/3)` s (≈8.3 s by default, well inside the 25 s the lease allows),
     # `heartbeat_once` every 10 s; any exception is logged and the loop continues. On `stop`:
-    # `actuator.stop_all()` (with GStreamer, EOS lets each splitmuxsink finalize its open segment —
+    # `actuator.stop_all()` (with GStreamer, EOS lets the last access units reach each sink —
     # `vmsworker@.container` gives it `StopTimeout=20`), a last heartbeat, then `release_slot()` — "an
     # orderly stop says so; a crash says nothing", which is what lets the controller tell scale-in
     # (redistribute) from a crash (leave it to the scheduler).
@@ -1238,10 +1239,9 @@ class VmsWorker(Worker):
         last_lease, last_hb = 0.0, self.clock()
         while not stop.is_set():
             # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
-            # pipelines' buses, the devices' events, moving closed segments out of the spool — does not wait
-            # for the pass over the store to succeed (feedback BC). They shared a `try`, so a store that was
-            # away skipped the pump on every pass: a device's alarms piled up in memory, a pipeline that fell
-            # over was not noticed, the spool was not emptied.
+            # pipelines' buses, the devices' events — does not wait for the pass over the store to succeed
+            # (feedback BC). They shared a `try`, so a store that was away skipped the pump on every pass: a
+            # device's alarms piled up in memory, a pipeline that fell over was not noticed.
             try:
                 if not self.recording_allowed:
                     self.rejoin()                          # a fence is not for ever: a free slot, from nothing
@@ -1257,8 +1257,8 @@ class VmsWorker(Worker):
             # STAYING ALIVE, in a try of its own and never inside the one above. These two used to share
             # it, so anything the work raised skipped them — every pass, for as long as it kept raising.
             # A recorder whose archive went away stopped renewing its leases (fenced at 30 s) and stopped
-            # heartbeating (called dead at 45 s), and the outage the spool was there to absorb ended the
-            # recording instead. A pass that failed is a pass to retry; the process that ran it still holds
+            # heartbeating (called dead at 45 s), and an outage it could have waited out ended the recording
+            # instead. A pass that failed is a pass to retry; the process that ran it still holds
             # its units, and saying so is not something a failure elsewhere gets to switch off.
             try:
                 if self.clock() - last_lease >= lease_every:

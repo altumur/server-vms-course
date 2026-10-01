@@ -3,7 +3,7 @@ as the server exists. It knows the shape of what every subsystem leaves on
 a server's disks and nothing about what it means:
 
     <root>/<subsystem>/<unit>/e<epoch>/...          each subsystem's tree: its buckets, and whatever else it
-                                                    keeps beside them (the VMS: media and a manifest — its own)
+                                                    keeps beside them (a scan's progress, say — its own)
     <root>/.mirror/<server>/<subsystem>/<unit>/...  copies of another server's closed buckets (the knob)
 
     platform/resources/<server>/heartbeat   {server, ts, url, usage, space: {total, free}, units: {sub: [unit]}, mirrors: {server: n}}
@@ -36,10 +36,11 @@ home. No controller is involved in any of it.
 #
 # **Role in the module.** Lesson 3. One resource per server, pinned there for as long as the server exists.
 # It knows the shape of what every subsystem leaves on the server's disks —
-# `<root>/<subsystem>/<unit>/e<epoch>/...` — and nothing about what it means; the VMS keeps media and a
-# manifest beside its buckets and the resource neither reads nor names them. It writes its own heartbeat
+# `<root>/<subsystem>/<unit>/e<epoch>/...` — and nothing about what it means; a subsystem may keep files of its
+# own beside its buckets (a scan's progress) and the resource neither reads nor names them. Footage is not
+# here at all: the VMS writes it into volumes of ObjectStorage, through the host's daemon. It writes its own heartbeat
 # object (`platform/resources/<server>/heartbeat`), serves buckets over HTTP, and runs a policy pass on a
-# timer: each subsystem's registered hook first (the VMS registers repair, close and media retention via
+# timer: each subsystem's registered hook first (a subsystem with files of its own registers its pass via
 # `Resource.register`), then bucket retention by each subsystem's own `<sub>/retention[/<unit>]` row, then
 # the mirror. Mirroring is a knob (`platform/mirror`), and peers are chosen by a rule — the next `copies`
 # live resources after mine in sorted order — so nobody assigns them. `restore` is the reverse, run by the
@@ -476,12 +477,12 @@ class Resource:
 
     # -- the policy pass ------------------------------------------------------------------
     # For each subsystem and unit, delete bucket files whose `end` is older than `retention_days` — files
-    # only; a subsystem that indexes its buckets (the VMS's manifest) drops the lines in its own hook. The
+    # only; a subsystem that indexes its buckets in a file of its own drops the lines in its own hook. The
     # resource's own index forgets each removed path. Returns the count. The test sets `other/retention {days: 1}`, advances three days and sees exactly the
     # `other` bucket go.
     def retain(self) -> int:
         """Each subsystem's buckets by its own days. Files only: a subsystem that
-        indexes its buckets (the VMS's manifest) drops the lines in its own pass."""
+        indexes its buckets in a file of its own drops the lines in its own pass."""
         removed = []
         # What each unit keeps, decided before anything is swept, because the console's floor is read off
         # the others (`console_floor`).
@@ -675,7 +676,7 @@ class Resource:
 
 
 # The resource over HTTP, in a daemon thread. `extra(path, headers) -> (status, bytes[, headers]) | None`
-# lets a subsystem add its own reads (the VMS: manifests and footage).
+# lets a subsystem add its own reads (the VMS adds none: its footage is behind the recorders' doors).
 #
 # #### `class H(BaseHTTPRequestHandler)` (nested)
 # - `log_message` — silenced.
@@ -696,9 +697,8 @@ class Resource:
 #       (a copy appears whole or not at all); 204. Any other PUT is 404.
 def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=None, extra_put=None) -> ThreadingHTTPServer:
     """The resource over HTTP. `extra(path) -> (status, bytes) | None` lets a
-    subsystem add its own reads (the VMS: manifests and footage), and
-    `extra_put(path, headers, rfile)` its own writes (the VMS: a segment
-    arriving from the resource that is giving it up)."""
+    subsystem add its own reads, and `extra_put(path, headers, rfile)` its
+    own writes."""
     root = resource.root
 
     class H(BaseHTTPRequestHandler):

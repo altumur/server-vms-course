@@ -10,7 +10,9 @@
 #   a stream       `<recording>/e<epoch>` — the epoch is part of the NAME, the only metadata a stream has.
 #                  What a fenced writer wrote and what the survivor wrote are two streams of one volume, and
 #                  the timeline tells them apart by name. Footage fetched into a gap is `<recording>/e<epoch>/
-#                  backfill`: where it came from is in the name too — there is no manifest line to carry it
+#                  backfill`: where it came from is in the name too — there is no manifest line to carry it.
+#                  A keep's copy in an incidents volume is `<recording>/e0`: nobody's lease, so wherever the live
+#                  footage still exists its own epoch owns those minutes (`RecWorker.keep_pass`)
 #   a span         what the index says one stream holds, `(unit, epoch, start, end, bytes, source)` — read
 #                  from the engine every time, never kept beside it
 #   visibility     a reader sees only CLOSED blocks, and only those closed when it mounted. So every question

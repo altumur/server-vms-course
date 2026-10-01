@@ -718,7 +718,7 @@ class Worker:
     # follow: the hold waited out its TTL — 45 s in which nothing on that volume was recorded, by the very
     # process that held it a moment ago. So a hold says WHOSE slot holds it (`by`), and the worker of that
     # slot takes it back at once, before any other candidate. The previous instance finds out at its next
-    # `renew_hold` and stops writing there; its segments are fenced by the new epochs, as a slot's are.
+    # `renew_hold` and stops writing there; what it wrote in between is fenced by the new epochs, as a slot's is.
     # Anybody else still waits for the TTL — the product's own lesson, from its archive daemon: a place
     # kept for its owner must be kept LONGER than the time the owner takes to come back.
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:

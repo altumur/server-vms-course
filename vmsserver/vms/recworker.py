@@ -266,8 +266,8 @@ class RecWorker(VmsWorker):
         self.behind_loopback.pop(str(cam), None)
         return server, st["live_url"]
 
-    # A recording's pipeline needs a source: `rtspsrc location=<live_url> ! archivesink` under this
-    # recorder's epoch. No source (the camera is held by nobody yet) means "cannot start now": the
+    # A recording's pipeline needs a source — `rtspsrc location=<live_url>`, or the worker's shared memory — and a
+    # sink: this volume's writer, under this recorder's epoch. No source (the camera is held by nobody yet) means "cannot start now": the
     # reconciler backs off and retries, and the status says `waiting`.
     def enrich(self, cam: dict) -> dict | None:
         # Two identities, and this is the one method where both are used in three lines: `cam["cam"]` is
