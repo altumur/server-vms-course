@@ -2,21 +2,19 @@
 top of the archive. A recording is a unit named by its camera; the recorder
 subscribes to the fan-out of whichever worker holds the camera — from the
 heartbeat, never a second connection — takes its own epoch, and writes
-footage into rec/<cam>/e<epoch>/ on ITS server's archive. The worker that
-holds the camera may be anywhere; the recorder must be where the disks are.
-Two trees, two writers, one camera."""
+footage into the stream <cam>/e<epoch> of the volume ITS server holds. The
+worker that holds the camera may be anywhere; the recorder must be where the
+disks are. Two writers, one camera: events on the resource, footage in the volume."""
 import os
-from datetime import datetime, timezone
 
 from w2cplatform.events import subsystems_under
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Forbidden
-from vms.archive import ArchiveResource, Manifest, segment_path
 from vms.config import DET_SPEC, LIVE_SPEC, REC_SPEC, SPEC, live_shm, live_url
 from vms.controller import VmsController
-from vms.recworker import RecWorker
-from vms.worker import FakeActuator, VmsWorker
-from tests.conftest import Box
+from vms.recworker import RecSink
+from vms.worker import FakeActuator, VmsWorker, fake_samples
+from tests.conftest import Box, recorder
 
 
 def _box():
@@ -32,10 +30,9 @@ def _box():
 
 
 def _recorder(box, name="r-1", server="srv-1", capacity=50):
-    arch = ArchiveResource(box.spool, box.archive, wall=box.wall)
-    r = RecWorker(name, box.vars.as_writer("recworker", ["rec/epoch/*", "rec/slots/*"]), box.objects, FakeActuator(), archive=arch,
-                  clock=box.clock, wall=box.wall, server=server, capacity=capacity, env={})
-    r.heartbeat_once()
+    """A recorder on `server`, its server's volume open — a directory of its own per server, as two boxes have."""
+    r = recorder(box, name, server, capacity=capacity, env={"ARCHIVE_VOLUME": f"file://{os.path.join(box.root, 'vol-' + server)}"})
+    r.lease_pass(); r.heartbeat_once()
     return r
 
 
@@ -62,19 +59,18 @@ def test_a_recording_is_a_unit_placed_on_the_archive_and_fed_by_the_workers_fan_
     assert started["source"] == live_shm(1) == "shm:///run/vms/1.shm" and started["via"] == "shm" and started["source_server"] == "srv-1"
     assert live_url("srv-1", 1) == "rtsp://srv-1:8554/1"                                           # what a recorder on another server would read
     assert started["epoch"] == 1 and box.vars.get("rec/epoch/1")[0] == {"epoch": "1"} and w.epochs == {"1": 1}   # two epochs, two writers, one camera
-    assert started["spool"] == box.spool and started["archive"] == box.archive
+    sink = started["sink"]                                                                          # what it writes into: its volume's writer, as `1/e1`
+    assert isinstance(sink, RecSink) and sink.store is r.store and (sink.unit, sink.epoch) == ("1", 1)
     r.heartbeat_once()
     st = rec_ctl.workers_seen()["r-1"].status[0]
     assert st["phase"] == "running" and st["cam"] == "1" and st["source"] == "shm:///run/vms/1.shm" and st["via"] == "shm" and st["epoch"] == 1
     assert "rec_recordings_running 1" in r.metrics_text()
-    # a segment the pipeline closed is promoted into rec/<cam>/e<epoch>/ and indexed beside it — the worker's tree stays events-only
-    t = datetime.fromtimestamp(box.wall() - 1200, timezone.utc)
-    p = segment_path(box.spool, 1, 1, t); os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "wb").write(b"x" * 100)
-    os.utime(p, (box.wall() - 600, box.wall() - 600))
-    r.pump_once()
-    assert r.promoted == 1 and not os.path.exists(p) and Manifest(box.archive, 1).read()[0].path == "rec/1/e1/" + t.strftime("%Y%m%dT%H%M%SZ") + ".mp4"
+    # what the pipeline hands its sink lands in the volume, as the stream `1/e1` — and the resource's tree stays events-only
+    assert r.actuator.feed("1", box.wall() - 600, box.wall()) == {"OK": 600}
+    r.store.seal()
+    assert [(s.stream, s.start, s.end) for s in r.store.spans("1")] == [("1/e1", box.wall() - 600, box.wall())]
     w.observe(1, "motion")
-    assert subsystems_under(box.archive) == {"rec": ["1"], "vms": ["1"]}
+    assert subsystems_under(box.archive) == {"vms": ["1"]}
     # the camera's worker fails over to srv-2: the recorder re-subscribes — to the RTSP fan-out now, the worker is on another
     # server — same recorder, same disks, same tree; a new pipeline is a new epoch (e1 before the move, e2 after, both here)
     w2 = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2", archive_root=box.archive)
@@ -121,25 +117,35 @@ def test_a_recording_waits_while_nobody_holds_the_camera_and_records_when_someon
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()                                   # the worker takes it
     box.clock.advance(10)
     assert r.reconcile_once() == [("start", "2")] and r.actuator.started["2"]["source"] == "shm:///run/vms/2.shm"   # held here: the tee's shared memory
-    # a camera with no recording is watched, not recorded: it is held (live, detection, events), and has no rec/ tree
+    # a camera with no recording is watched, not recorded: it is held (live, detection, events), and has no stream
     assert rec_ctl.units() == [{"id": "2", "name": "2", "cam": "2", "retention_days": 30, "enabled": True, "labels": [], "home": "", "until": 0.0, "min_depth_days": 0.0, "when": "always", "revision": 1}]
     assert [c["id"] for c in ctl.cameras()] == [1, 2] and subsystems_under(box.archive) == {}
     w.observe(1, "motion")
     assert subsystems_under(box.archive) == {"vms": ["1"]}
-    # stop recording: the row goes, the placement is taken back on the next pass, the footage stays until retention
+    # stop recording: the row goes, the placement is taken back on the next pass, the footage stays until the ring needs the room
     rec_con.delete("2"); rec_ctl.unplace_deleted()
     assert rec_ctl.assignment("r-1").units == [] and r.reconcile_once() == [("stop", "2")]
 
 
-def test_starting_a_recording_marks_its_epoch_with_the_volume_it_records_for():
-    """The volume tests mark the epoch directory through the recorder's own `mark_epoch`; this is the proof
-    that the real start does it too — the pass that builds the pipeline, before the first segment lands.
-    Without it every one of those tests would be testing a helper, and a recorder in the field would write
-    unmarked segments that promote wherever they happen to be, which is the bug the mark exists to end."""
+def test_a_recording_started_twice_writes_two_streams_and_overwrites_nothing():
+    """The epoch is in the stream's NAME. A pipeline restarted is a new epoch and a new stream — and a zombie that
+    went on writing for a moment under the old one wrote its own stream, not over the survivor's. The volume
+    keeps both; the index says which epoch owns which minutes (Lesson 3)."""
     box, ctl, con, rec_con, rec_ctl, w = _box()
     r = _recorder(box)
-    rec_con.create({"name": "1", "cam": "1", "retention_days": 7})
+    rec_con.create({"name": "1", "cam": "1"})
     rec_ctl.ensure_placed()
     assert r.reconcile_once() == [("start", "1")]
-    mark = os.path.join(box.spool, "rec", "1", "e1", RecWorker.EPOCH_MARK)
-    assert open(mark).read().strip() == r.volume == "srv-1"
+    t = box.wall()
+    r.actuator.feed("1", t - 120, t - 60)
+    old = r.actuator.started["1"]["sink"]
+    r.actuator("stop", {"id": "1"}); r.reconciler.lost("1", r.now())
+    box.clock.advance(10)
+    assert r.reconcile_once() == [("start", "1")] and r.actuator.started["1"]["epoch"] == 2
+    r.actuator.feed("1", t - 60, t)
+    for smp in fake_samples(t - 60, t - 30):
+        old.put(smp)                                                                               # the zombie, a moment late
+    old.finish()
+    r.store.seal()
+    assert sorted({s.stream for s in r.store.spans("1")}) == ["1/e1", "1/e2"]
+    assert [(x["epoch"], x["fenced"]) for x in r.store.timeline("1", t - 120, t, current_epoch=2)] == [(1, True), (2, False)]
