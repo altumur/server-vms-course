@@ -201,7 +201,7 @@ class Ingest:
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
         try:
-            p = verify(token, ks, self.revoked(), now=self.wall())
+            p = verify(token, ks, self.revoked(), now=self.wall(), kind="stream")
         except TokenError as e:
             raise Refused(f"stream token refused: {e}")
         if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
@@ -320,7 +320,7 @@ class Ingest:
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet")
         try:
-            p = verify(token, ks, self.revoked(), now=self.wall())
+            p = verify(token, ks, self.revoked(), now=self.wall(), kind="ask")
         except TokenError as e:
             raise Refused(f"ask token refused: {e}")
         if p.get("aud") != audience(self.cluster) or str(p.get("ask")) != str(target):
@@ -895,7 +895,7 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         if old and old["urls"] == urls and old.get("acts") == acts and old.get("up") == up \
                 and float(old["until"]) - now > lifetime / 2 and kid_of(old.get("token", "")) == crossings.issuer.kid:
             return old
-        claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, **({"up": up} if up else {})}
+        claims = {"aud": audience(cluster), "ask": b, "by": a, "acts": acts, "kind": "ask", **({"up": up} if up else {})}
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
                 "token": crossings.issuer.issue(sub, lifetime, now=now, **claims)}
 

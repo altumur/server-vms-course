@@ -147,7 +147,7 @@ class ClusterAuthoriser:
         self.keyset, self.revoked = keyset, revoked
 
     def subject(self, token: str) -> str:
-        return verify(token, self.keyset, self.revoked, now=self.now())["sub"]
+        return verify(token, self.keyset, self.revoked, now=self.now(), kind="person")["sub"]   # a viewer, never a camera (CE)
 
     def authorise(self, token: str, capability: str, camera: int) -> str:
         try:

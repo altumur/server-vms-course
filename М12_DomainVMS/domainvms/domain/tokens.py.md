@@ -51,3 +51,4 @@ Offline; returns the payload. Steps, in order: split into three parts and decode
 ## Notes
 - Items are strings on the way through Variables; `from_items` casts `retire:`/exp values back with `float()`.
 - Nothing in the token says what Alice may do: `test_login_ends_in_a_token_naming_the_subject_and_nothing_else` asserts `"roles" not in payload and "grants" not in payload`.
+- **`kind`** (feedback CE): every token says what it is for — `person` (consoles, the domain's door, the live gateway), `stream` (an ingest), `ask` (an ingest's door for asks). `verify(..., kind=)` refuses another kind with `WrongKind`; `kind_of(payload)` reads a token issued before the claim by its shape (`ask` → ask, `aud` → stream, neither → person). One key signs all four, so a door that checks only the signature takes a camera's stream token for a user of the camera's name.

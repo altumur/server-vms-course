@@ -80,7 +80,7 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
             entry = old
         else:
             entry = {"urls": urls, "mode": mode, "until": now + lifetime,
-                     "token": crossings.issuer.issue(on, lifetime, now=now, aud=audience(centre), ref=ref)}
+                     "token": crossings.issuer.issue(on, lifetime, now=now, aud=audience(centre), ref=ref, kind="stream")}
         books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
     for on, book in books.items():
         path = f"{UPSTREAM_PATH}/{on}"

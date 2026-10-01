@@ -349,7 +349,7 @@ class Crossings:
         if old and old.get("urls") == urls and float(old["until"]) - now > self.token_lifetime / 2 \
                 and kid_of(old.get("token", "")) == self.issuer.kid:
             return old
-        token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref)
+        token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref, kind="stream")
         return {"urls": urls, "token": token, "until": now + self.token_lifetime}
 
     # Lesson 16, step 8: the book of polls. A camera that pushes and that nobody records polls nothing, and an

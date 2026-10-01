@@ -30,7 +30,7 @@ class ClusterAccess:
         if keys is None:
             raise Denied(503, "the key set has gone from this cluster's store: nobody can be checked")
         try:
-            return verify(token, keys, self.trust.revoked(), now=self.wall())
+            return verify(token, keys, self.trust.revoked(), now=self.wall(), kind="person")   # a person's door (CE)
         except TokenError as e:
             raise Denied(401, f"token refused: {e}") from None
 

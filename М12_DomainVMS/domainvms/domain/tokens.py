@@ -47,6 +47,34 @@ class BadSignature(TokenError):
     pass
 
 
+class WrongKind(TokenError):
+    pass
+
+
+# WHAT A TOKEN IS FOR (the product, feedback CE). One key signs a person's token, a camera's stream token, the token
+# a camera asks another with, and a relay's token to the centre. Read by signature alone, any of them is "a token
+# for `sub`": a stream token off a camera's flash would pass a console's gate as the user `cam-SN5001`, a relay's
+# as the user `south` — and whoever has grants under such a name has them. So every token says what it is for
+# (`kind`), and every door accepts its own:
+#
+#   person   a console, the domain's door, the live gateway             (`identity`, `BreakGlass`)
+#   stream   an ingest: poll, push, upload, take a stream               (`Crossings`, the relay's upstream book)
+#   ask      an ingest's door for asks between cameras                  (the book of asks)
+#
+# A token issued before the claim existed says it by its shape: `ask` names a target, `aud` names an ingest, and a
+# person's token has neither.
+KINDS = ("person", "stream", "ask")
+
+
+def kind_of(payload: dict) -> str:
+    k = payload.get("kind")
+    if k:
+        return str(k)
+    if "ask" in payload:
+        return "ask"
+    return "stream" if "aud" in payload else "person"
+
+
 def _b64(b: bytes) -> str:
     return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
 
@@ -158,8 +186,9 @@ class TokenIssuer:
 
 
 def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float | None = None,
-           skew: float = 60.0) -> dict:
-    """Offline. Returns the payload (the subject is payload["sub"])."""
+           skew: float = 60.0, kind: str | None = None) -> dict:
+    """Offline. Returns the payload (the subject is payload["sub"]). `kind`: what this door accepts (`KINDS`);
+    a token for something else is refused however good its signature."""
     now = time.time() if now is None else now
     try:
         h, p, s = token.split(".")
@@ -179,6 +208,8 @@ def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float
         raise BadSignature(f"issued {payload['iat'] - now:.0f}s in the future — clock skew")
     if payload["jti"] in revoked:
         raise Revoked(payload["jti"])
+    if kind is not None and kind_of(payload) != kind:
+        raise WrongKind(f"a {kind_of(payload)} token, not a {kind} token: this door takes {kind} tokens only")
     return payload
 
 

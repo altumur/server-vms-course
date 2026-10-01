@@ -126,7 +126,7 @@ class IdentityStore:
         known = bool(u) and u.kind == "local"
         if not _check(password, u.pwhash if known else _NOBODY) or not known:
             raise AuthError("bad credentials")
-        return self.signer.tokens.issue(uid, TOKEN_LIFETIME, now=self.now())
+        return self.signer.tokens.issue(uid, TOKEN_LIFETIME, now=self.now(), kind="person")
 
     def login_federated(self, idp_assertion: dict) -> str:
         """The IdP authenticated Alice; the signer issues a DOMAIN token naming
@@ -134,7 +134,7 @@ class IdentityStore:
         subj = idp_assertion["sub"]
         for u in self.users():
             if u.kind == "idp" and u.idp_subject == subj:
-                return self.signer.tokens.issue(u.id, TOKEN_LIFETIME, now=self.now())
+                return self.signer.tokens.issue(u.id, TOKEN_LIFETIME, now=self.now(), kind="person")
         raise AuthError(f"no domain user for IdP subject {subj}")
 
     # -- publish-then-point: the identity set as one object ------------------------
@@ -205,7 +205,7 @@ class BreakGlass:
         if not ok:
             raise AuthError("break-glass: bad password")
         self.used_since_rotation += 1
-        return self.signer.tokens.issue("break-glass", TOKEN_LIFETIME, now=now, via="break-glass", who=who)
+        return self.signer.tokens.issue("break-glass", TOKEN_LIFETIME, now=now, via="break-glass", who=who, kind="person")
 
     def rotate(self, new_password: str) -> None:
         self.pwhash, self.used_since_rotation = _hash(new_password), 0

@@ -222,7 +222,7 @@ def main() -> None:
         ks = trust.keyset()
         if ks is None:
             raise ApiError(503, "no signer key set in this cluster yet (is the domain agent running?)")
-        return verify(token, ks, trust.revoked())["sub"]
+        return verify(token, ks, trust.revoked(), kind="person")["sub"]     # the domain's door is a person's (CE)
 
     def consoles(cluster: str):
         # Forwarding to a member's console needs a connection TO the member, and the domain opens none
