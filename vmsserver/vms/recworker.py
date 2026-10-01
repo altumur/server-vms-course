@@ -216,6 +216,7 @@ class RecWorker(VmsWorker):
         # neither a hole to copy again nor, worse, something the source did not have.
         self.landing: dict[str, list[tuple[float, float]]] = {}
         self.archive_url = ""                       # this recorder's archive door, once served (Lesson 26)
+        self._rows_seen: dict[str, dict | None] = {}   # recording -> its row as last read, for the door (`_visible_from`)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
         self._primary_back_since: dict[str, float] = {}  # released backup -> since when its primary is written again
@@ -1047,17 +1048,22 @@ class RecWorker(VmsWorker):
             return Sample.decode_all(r.read())
 
     # How far back the doors show a recording: its row's `retention_days` (`visible_from`). A ceiling — the ring
-    # decides what is still there; this decides what is SHOWN. A recording whose row is gone, or a row the store
-    # did not give, shows thirty days: unread is not "for ever".
+    # decides what is still there; this decides what is SHOWN, and for some installations it is the promise that
+    # matters: "nobody sees more than a week". A recording whose row is gone shows thirty days.
+    #
+    # A row the store did not GIVE is not a row that is gone (feedback BI). Read as "gone" it would show a week's
+    # recording for thirty days, or hide ninety days' recording past thirty, for as long as the store blinked. So
+    # the door answers on what the row said last; thirty days only for a recording it has never read.
     def _visible_from(self, unit) -> float:
         from .archive import visible_from
         if self.incidents:
             return 0.0                                # everything in an incidents volume is there because somebody kept it
         try:
             items, _ = self.vars.get(self.SUB.config(self.ROWS, str(unit)))
+            row = self._rows_seen[str(unit)] = items if items and items.get("deleted") != "true" else None
         except OSError:
-            items = None
-        return visible_from(items if items and items.get("deleted") != "true" else None, self.wall())
+            row = self._rows_seen.get(str(unit))
+        return visible_from(row, self.wall())
 
     # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
     # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
