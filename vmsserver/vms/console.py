@@ -196,6 +196,23 @@ def recorder_doors(objects, now: float, lost_after: float = 45.0) -> list:
     return out
 
 
+# The volumes nobody serves right now: a recorder went silent holding one, and no live recorder holds it since —
+# the server is down, its disk with it, or a network archive is waiting for a spare. Its footage is not LOST: it is
+# in that volume, and it is unavailable until a recorder holds the volume again. `[{volume, server, since}]`, from
+# the recorders' last heartbeats; the timeline names them instead of drawing a hole where they are (М11 lesson 8).
+def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict]:
+    live, stale = set(), {}
+    for name, hb in heartbeats(objects, "rec/").items():
+        vol = str(hb.extra.get("volume") or "")
+        if not vol:
+            continue                               # a spare holds nothing
+        if now - hb.ts <= lost_after:
+            live.add(vol)
+        elif vol not in stale or hb.ts > stale[vol]["since"]:
+            stale[vol] = {"volume": vol, "server": str(hb.extra.get("server", "")), "recorder": name, "since": hb.ts}
+    return [v for k, v in sorted(stale.items()) if k not in live]
+
+
 def _door(url: str, timeout: float):
     with urllib.request.urlopen(url, timeout=timeout) as r:
         return r.read()
@@ -328,8 +345,9 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
 
     # A camera's timeline: every recording of it, from every recorder's door — each holds one volume, and what a
     # recording wrote over its life may be in more than one. A door that does not answer is NAMED, not waited
-    # for: a timeline with a hole the page explains beats one that never comes. Each span says whose it is and
-    # how to play it (`media`: the export of that recording; the page adds the minutes).
+    # for: a timeline with a hole the page explains beats one that never comes. So is a volume nobody serves now
+    # (`unserved_volumes`): unavailable, not lost. Each span says whose it is and how to play it (`media`: the
+    # export of that recording; the page adds the minutes).
     def timeline(cid: str, q: dict):
         t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
         ours, unreachable = [], []
@@ -346,9 +364,16 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                                  "media": f"/export/{cid}?rec={unit}"})
         extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
         spans = sorted(ours + extra_, key=lambda d: (d["start"], d["epoch"]))
-        if unreachable:
-            return 200, {"segments": spans, "unreachable": sorted(set(unreachable)),
-                         "note": "a recorder's archive door did not answer: its footage is missing from this picture"}
+        gone = unserved_volumes(ctl.objects, con_wall()) if ctl is not None else []
+        if unreachable or gone:
+            notes = []
+            if unreachable:
+                notes.append("a recorder's archive door did not answer: its footage is missing from this picture")
+            if gone:
+                notes.append("footage in " + ", ".join(f"{g['volume']} (on {g['server']})" for g in gone) +
+                             " is unavailable until a recorder holds it again — not lost")
+            return 200, {"segments": spans, "unreachable": sorted(set(unreachable)), "unavailable": gone,
+                         "note": "; ".join(notes)}
         return 200, spans
 
     # An interval as a fragmented MP4 (`fmp4.from_samples`): the frames from every door that holds them, each
