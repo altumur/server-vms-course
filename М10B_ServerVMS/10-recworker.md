@@ -183,6 +183,7 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
                 vol = rows.get(self.volume) or volumes.Volume(self.volume, "local", self.default_url, self.server or "",
                                                               self.default_quota)
                 self.volume_error = str(self._write_into(vol) or "")
+                self.capacity = 0 if self.volume_error else self.full_capacity    # will not open: not a place to put a recording
                 self._place_kind(vol)
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
@@ -201,6 +202,8 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
 ```
 
 Ветка «ничего не объявлено» стоит **после** отпускания захвата, и комментарий в коде говорит зачем: снятие последнего объявленного тома не должно оставить процесс, тихо пишущий в него дальше.
+
+**Закреплённый регистратор, чей том не открылся, — не место.** Отдать закреплённый том ему некуда: `VOLUME` назначил его сюда. Но ёмкость он обнуляет так же, как незакреплённый со сломанным томом (ниже): иначе контроллер ставил бы записи туда, где писать нельзя. Том открылся — ёмкость полная снова.
 
 **Кто какой том может взять — асимметрия, и в ней вся арифметика.** Том на коробке (`local`, `edge`, а также `backup` и `incidents` с названным сервером — `volumes.on_a_box`) может взять только регистратор **его сервера**. Том по адресу (`network`, а также `backup` и `incidents` без сервера — `volumes.any_box`) может взять любой, а пишет ровно один, потому что `servers: distinct` над `place_by: volume` — это один регистратор на место. Поэтому один запасной на коробку принимает один сетевой том на коробку: кластер из пяти коробок впитывает пять новых архивов, не раскатывая ничего. Виды томов целиком — [урок 27](27-volumes.md); проверяет это `test_who_may_serve_what`.
 
@@ -274,8 +277,10 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
 # process that mounts the volume: М10A Lesson 18).
-def volume_params(url: str, secret: str = "") -> dict:
+def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 ```
+
+Идентификатор ключа бакета (`access_key`) — тоже поле строки, а не часть адреса. Он не секрет и показывается, как логин камеры; сам ключ остаётся в `access_secret` ([урок 27](27-volumes.md), `test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address`).
 
 Всё, что том показывает, показывает его **имя**. `volumes.refuse` отказывает адресу с `@` в части authority: это единственное место, где систему ещё можно об этом предупредить (`test_the_key_never_goes_into_the_address`).
 
@@ -413,7 +418,7 @@ class RecWorker(VmsWorker):
         # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
-                   sink=RecSink(self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
+                   sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
                                 on_wrong=self._volume_refuses))
         …
         return out
@@ -425,7 +430,7 @@ class RecWorker(VmsWorker):
 
 Никакого специального механизма ожидания. Уже написанный откат делает ровно то, что нужно.
 
-**Сток конвейера — объект, а не путь.** Раньше `enrich` отдавал актуатору каталоги, и элемент GStreamer писал файлы сам. Теперь он отдаёт `RecSink` — писателя тома под именем и эпохой этой записи. Что с ним делает актуатор, — урок 9; что делает сам сток, — шаг 8.
+**Сток конвейера — объект, а не путь.** Раньше `enrich` отдавал актуатору каталоги, и элемент GStreamer писал файлы сам. Теперь он отдаёт `RecSink` — писателя тома под именем и эпохой этой записи. Том сток получает функцией, `lambda: self.store`, а не значением: после перемонтирования (шаг 8) он пишет в новый том, а не в закрытый. Что с ним делает актуатор, — урок 9; что делает сам сток, — шаг 8.
 
 Одна вещь добавлена ради экрана — **множество `waiting`**:
 
@@ -502,13 +507,14 @@ class RecWorker(VmsWorker):
             self._close_store(quiet=True)
         secret = …
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
-                        secret=secret, …)
+                        secret=secret, access_key=vol.access_key, …)
         try:
             store.open()
         except ArchiveError as e:
             …                                            # by its KIND (шаг 9)
         self.store, self.engine_lost = store, False
         try:
+            self._landed_before, self._landed = self._landed_before + self._landed, 0
             self._written_at_open = int(store.status().get("totalWritten", 0))
         except ArchiveError:
             self._written_at_open = 0
@@ -543,7 +549,7 @@ class RecWorker(VmsWorker):
 
 **Писатель монтируется под владельцем `rec:<том>`.** Не `rec:r-1`, не токен процесса — имя тома. Почему так — ниже, в «Держать».
 
-`_written_at_open` — сколько кольцо уже записало к моменту открытия (`totalWritten`). От этой отметки сторож писателя считает «дошедшее» (шаг 12).
+`_written_at_open` — сколько кольцо уже записало к моменту открытия (`totalWritten`). От этой отметки сторож писателя считает «дошедшее» (шаг 12). А дошедшее под прежними писателями этого регистратора копится в `_landed_before`: счёт идёт дальше через переоткрытие, а не начинается с нуля.
 
 ### Какой том открыть, когда ничего не объявлено
 
@@ -592,10 +598,15 @@ class RecWorker(VmsWorker):
 
 ```python
 class RecSink:
-    …
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+        self.store_of = store if callable(store) else (lambda: store)
+        …
     def put(self, sample: Sample) -> str:
         try:
-            st = self.store.put(self.unit, self.epoch, sample, self.backfill)
+            store = self.store_of()
+            if store is None:
+                raise Unavailable("PUT_MEDIA", "no volume open")
+            st = store.put(self.unit, self.epoch, sample, self.backfill)
             self.taken += 1
             return st
         except Unavailable:
@@ -604,20 +615,20 @@ class RecSink:
             raise
         except ObsdError as e:
             self.refused += 1
-            if self.on_wrong is not None and classify(e).kind == "wrong":
+            if e.name == "WRITER_STOPPED" and self.on_lost is not None:
+                self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
+            elif self.on_wrong is not None and classify(e).kind == "wrong":
                 self.on_wrong(e)
             raise
-
-    def finish(self) -> None:
-        try:
-            self.store.finish(self.unit, self.epoch, self.backfill)
-        except ObsdError:
-            pass
 ```
 
 Комментарий над классом: *A sample the engine did not take raises, and the pipeline skips to the next key frame.* Движок открывает последовательность только на ключевом кадре (урок 7), поэтому остаток группы кадров после отказа бесполезен.
 
-Отказ отказу рознь, и сток различает два случая. Демон перестал отвечать (`Unavailable`) — это ответ не про кадр, а про движок: сток говорит регистратору `on_lost`. Том отказал по-настоящему (`wrong`) — сток говорит `on_wrong`. Сам сток ничего не чинит: он работает на потоке конвейера, а решает регистратор, на своём проходе.
+И второй абзац того же комментария:
+
+> *`store` is the recorder's CURRENT volume — a callable, asked on every sample — not the one open when the pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount.*
+
+Отказ отказу рознь, и сток различает три случая. Демон перестал отвечать (`Unavailable`, в том числе «том закрыт» из `Archive.put`) — это ответ не про кадр, а про движок: сток говорит регистратору `on_lost`. Движок остановил самого писателя (`WRITER_STOPPED`) — тоже `on_lost`: этот писатель больше ничего не возьмёт, нужен новый. Том отказал по-настоящему (`wrong`) — сток говорит `on_wrong`. Сам сток ничего не чинит: он работает на потоке конвейера, а решает регистратор, на своём проходе.
 
 ### Перемонтировать
 
@@ -632,6 +643,8 @@ class RecSink:
 ```
 
 Флаг, и больше ничего. Следующий `_write_into` видит `engine_lost`, закрывает то, что осталось от старого тома, и открывает том заново, новой сессией. Сразу, а не через десять минут, которые выдерживает сторож писателя (шаг 12): у сторожа причина может быть в том, чем кормят писателя, а здесь ждать нечего — движка просто нет.
+
+Конвейеры перемонтирование не трогает. Их стоки спрашивают текущий том на каждом кадре, и первый ключевой кадр после перемонтирования открывает последовательность в новом писателе. `test_rec_volume.py::test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost` пишет минуту, перемонтирует том (`_lost_engine` и проход) и пишет вторую тем же конвейером: у старого `Archive` писателя больше нет, а покрытие — обе минуты, `[(t - 120, t)]`. Вторая половина теста отвечает стоку `WRITER_STOPPED` и проверяет, что `engine_lost` поднят.
 
 На ящике продукта это выглядело так: `kill -9` демона, все восемь регистраторов заметили его за 5–10 секунд и перемонтировали тома за 16–20.
 
@@ -663,7 +676,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 
 - **`wrong`** — том отдаётся (если есть куда идти — шаг 3), его записи уходят туда, где всё работает;
 - **`away`** — том остаётся за регистратором, с полной ёмкостью; heartbeat говорит `archive_error` и с какого момента (`archive_away_since`); следующий проход пробует снова (`test_an_archive_that_is_away_at_open_is_kept`);
-- **`busy`** — то же, что `away`: писателя держит предыдущий регистратор этого тома, и он вот-вот его отпустит.
+- **`busy`** — то же, что `away`: писателя держит предыдущий регистратор этого тома, и он вот-вот его отпустит. Но heartbeat называет его своим словом, `archive_failure: busy`, а не `away`: «демона нет» и «том держит другой писатель» лечатся по-разному, и оператор должен видеть, какой из двух случаев перед ним.
 
 ### Диск на коробке, который не открывается, — неверен
 
@@ -683,7 +696,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
             if not self.archive_error:
                 self.archive_away_since = self.wall()
                 …
-            self.archive_error, self.archive_failure = e.detail, "away"
+            self.archive_error, self.archive_failure = e.detail, e.kind     # `away` or `busy`: kept, said as what it is
             return None
 ```
 
@@ -731,7 +744,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
         # is `away` (`ArchiveError`): the volume is kept, the pass goes on, the next one asks again.
 ```
 
-Две детали в `w2cplatform/obsd.py` делают это правдой. Молчание — `Unavailable`, и его **не переспрашивают**: оборванное соединение — повод отправить запрос ещё раз, а тишина нет, и второй вопрос удвоил бы ожидание. И один запрос протокол разрешает длинный: `WRITER_CLOSE` возвращается после сброса, до тридцати секунд (README демона). Только он ждёт `long_timeout`. Оба числа проверяет `test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_its_flush`, а минуту работы против демона, который принимает соединения и не отвечает никогда, — `test_a_daemon_that_says_nothing_does_not_stop_the_recorder_living`.
+Две детали в `w2cplatform/obsd.py` делают это правдой. Молчание — `Unavailable`, и его **не переспрашивают**: оборванное соединение — повод отправить запрос ещё раз, а тишина нет, и второй вопрос удвоил бы ожидание. Да и после обрыва не всякий запрос повторяется: кадр, формат или монтирование, ушедшие до обрыва, демон мог уже выполнить, и они дают `Unavailable` (`NOT_RESENT`, урок 6) — а сток на это перемонтирует том. И один запрос протокол разрешает длинный: `WRITER_CLOSE` возвращается после сброса, до тридцати секунд (README демона). Только он ждёт `long_timeout`. Оба числа проверяет `test_the_recorders_calls_wait_less_than_a_lease_and_only_a_close_waits_for_its_flush`, а минуту работы против демона, который принимает соединения и не отвечает никогда, — `test_a_daemon_that_says_nothing_does_not_stop_the_recorder_living`.
 
 **Поддержание жизни не разделяет судьбу с работой.** Это правило урока 4, и в цикле `run` оно записано буквально: три `try`, а не один. Сверка — в своём, `pump_once` — в своём, продление аренд и heartbeat — в третьем. Ошибка, которой никто не ждал, в любой работе не выключает продления (`test_no_failure_in_the_work_can_stop_the_recorder_living` — с `RuntimeError`, а не `OSError`, намеренно: гарантия для того, что никто не предвидел).
 
@@ -806,13 +819,15 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
         measure = getattr(self.actuator, "offered", None)
         …
         try:
-            landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open if self.store else 0
+            if self.store:
+                self._landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open
+            landed = self._landed_before + self._landed
         except ArchiveError:
             return self.writer.state                 # a volume that does not answer measures nothing this pass
         state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
 ```
 
-**Отдано** — сколько байт конвейеры передали стокам; `GstRecActuator` считает их на `appsink` (урок 9). **Дошло** — что сказало само кольцо: `totalWritten` из `READER_STATUS` минус отметка на момент открытия. Решает чистая логика в `vms/writerwatch.py`:
+**Отдано** — сколько байт конвейеры передали стокам; `GstRecActuator` считает их на `appsink` (урок 9). **Дошло** — что сказало само кольцо: `totalWritten` из `READER_STATUS` минус отметка на момент открытия, плюс то, что дошло под прежними писателями этого регистратора (`_landed_before`). Без этой суммы каждое переоткрытие обнуляло бы «дошло», а «отдано» — нет, и сторож увидел бы потерю, которой не было. Решает чистая логика в `vms/writerwatch.py`:
 
 | Состояние | Когда | Почему так |
 |---|---|---|
@@ -822,9 +837,20 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 
 Состояние уходит в heartbeat отдельным полем `writer`, а консоль пишет его на томе: *writing stuck: 8 MB not landed for 61 s*, *losing writes: 67 % landing over 300 s*.
 
-Лечение одно — открыть писателя заново: конвейеры останавливаются и считаются потерянными, сверка поднимает их с новой эпохой. И не чаще раза в десять минут (`REOPEN_EVERY`). Если причина не в писателе, а в том, что ему дают, перезапуск каждую минуту только добавит к потере время, за которое писатель отпускает том. Heartbeat при этом говорит правду на каждом проходе. Исполнитель, который не умеет считать отданное, не говорит ничего: молчание здесь значит «не измерено», а не «всё хорошо».
+Лечение одно — открыть писателя заново:
 
-Тесты — `tests/test_writer_watch.py`: `test_a_quiet_camera_is_not_stuck_and_a_standing_volume_with_megabytes_waiting_is`, `test_a_volume_that_moves_but_takes_two_thirds_is_losing`, `test_the_writer_is_reopened_once_in_ten_minutes_however_long_it_stays_wrong`, `test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_console_says_it_on_the_volume`, `test_an_actuator_that_does_not_measure_says_nothing`.
+```python
+        if self.writer.reopen_due(wall):
+            log.warning("%s: the writer is %s (%s) — reopening it", self.name, state["state"], state)
+            for cid in running:
+                self.actuator("stop", {"id": cid})
+                self.reconciler.lost(cid, self.now())
+            self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
+```
+
+Конвейеры останавливаются и считаются потерянными, сверка поднимает их с новой эпохой. А сам писатель закрывается и открывается снова на следующем проходе — тем же путём, что после пропавшего демона (`engine_lost`): новый писатель под тем же владельцем. Остановить одни конвейеры мало: если застрял писатель, новые конвейеры писали бы в него же. И не чаще раза в десять минут (`REOPEN_EVERY`). Если причина не в писателе, а в том, что ему дают, перезапуск каждую минуту только добавит к потере время, за которое писатель отпускает том. Heartbeat при этом говорит правду на каждом проходе. Исполнитель, который не умеет считать отданное, не говорит ничего: молчание здесь значит «не измерено», а не «всё хорошо».
+
+Тесты — `tests/test_writer_watch.py`: `test_a_quiet_camera_is_not_stuck_and_a_standing_volume_with_megabytes_waiting_is`, `test_a_volume_that_moves_but_takes_two_thirds_is_losing`, `test_the_writer_is_reopened_once_in_ten_minutes_however_long_it_stays_wrong`, `test_the_recorder_says_it_in_its_heartbeat_reopens_the_writer_and_the_console_says_it_on_the_volume` (в нём после переоткрытия `engine_lost` поднят, а следующий `lease_pass` открывает новый `Archive` с писателем), `test_an_actuator_that_does_not_measure_says_nothing`.
 
 ## Шаг 13 — Глубина и числа
 
@@ -848,7 +874,7 @@ rec_con.create({"name": "1", "cam": "1"})   # оператор нажал «За
 rec_ctl.ensure_placed()
 r.lease_pass()                          # ничего не объявлено: том сервера, отформатирован на квоту
 r.reconcile_once()                      # [('start', '1')]
-r.volume, r.store.url                   # ('srv-1', 'file://<ARCHIVE>/volume')
+r.volume, r.store.url                   # ('srv-1', 'file://<box.root>/volume') — рядом с деревом ресурса <box.root>/archive
 
 r.actuator.feed("1", t - 120, t)        # {'OK': 120} — сто двадцать кадров взяты
 r.our_coverage("1")                     # [] — взято не значит видно: блок открыт
@@ -904,6 +930,8 @@ again.store.reattached                  # True — писатель, котор�
 - **Отпустить захват раньше, чем закрыт писатель.** Следующий держатель найдёт в томе чужого писателя.
 - **Верить счётчикам стока.** Они растут, когда кадры приходят, а не когда ложатся в том.
 - **Перезапускать писателя на каждом проходе.** Если виноват не он, каждая минута добавит к потере время на его остановку.
+- **Лечить застрявшего писателя одними конвейерами.** Новые конвейеры пишут в того же застрявшего писателя; закрыть и открыть надо и его.
+- **Сток с томом, запомненным на старте конвейера.** После перемонтирования конвейер пишет в закрытый том, пока его кто-нибудь не перезапустит.
 
 ## Итог
 
@@ -918,10 +946,10 @@ again.store.reattached                  # True — писатель, котор�
 - «Камеру никто не держит» и «тома нет» — состояния, а не ошибки: `enrich` возвращает `None`, откат делает остальное, фаза `waiting` объясняет.
 - Переезд держателя обнаруживается сравнением адресов и приводит к новой эпохе — новому потоку в томе.
 - Писатель тома живёт в демоне под владельцем `rec:<том>`: убитый регистратор оставляет его отцепленным, следующий держатель подбирает целиком.
-- Отказ тома называют по виду: `wrong` отдают и не берут обратно `REFUSED_FOR`, `away` и `busy` держат; диск на коробке, который не открывается, — `wrong`.
-- Каждый вызов к демону ждёт меньше аренды; пропавший демон — перемонтирование на следующем проходе.
+- Отказ тома называют по виду: `wrong` отдают и не берут обратно `REFUSED_FOR`, `away` и `busy` держат и называют в heartbeat'е каждый своим словом; диск на коробке, который не открывается, — `wrong`, и закреплённый регистратор с таким томом сообщает нулевую ёмкость.
+- Каждый вызов к демону ждёт меньше аренды; пропавший демон и `WRITER_STOPPED` — перемонтирование на следующем проходе, а стоки спрашивают текущий том на каждом кадре и пишут дальше в новый.
 - С тома уходят в одном порядке: конвейеры, писатель со своим сбросом, захват.
-- «Держит и может писать» ещё не «пишет»: регистратор сравнивает отданное писателю с дошедшим до кольца и говорит «застрял» или «теряет».
+- «Держит и может писать» ещё не «пишет»: регистратор сравнивает отданное писателю с дошедшим до кольца и говорит «застрял» или «теряет»; лечение — новые конвейеры и новый писатель, а счёт дошедшего идёт дальше через переоткрытие.
 
 ## Упражнения
 

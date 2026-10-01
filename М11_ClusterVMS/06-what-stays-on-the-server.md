@@ -144,19 +144,33 @@ r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/volume', writer {'stat
 | Поле heartbeat'а регистратора | Кто читает |
 |---|---|
 | `volume` | контроллер записей: это место для записи (`place_by: volume`); консоль: какой том остался без регистратора, когда тот замолчал |
-| `archive_url` | консоль: дверь архива — куда идти за таймлайном и кадрами; основная запись, которая берёт отрезки у резервной (М10B, урок 26) |
+| `archive_url` | консоль: дверь архива — куда идти за таймлайном и кадрами; основная запись, которая берёт отрезки у резервной (М10B, урок 26). На кластере это `ARCHIVE_URL` задания — IP узла |
 | `archive` | консоль: собственный том сервера, который можно объявить томом с квотой (`volumes.suggest`) |
 | `writer` | консоль и `/metrics`: доходит ли поток до тома — `ok`, `stuck` или `losing` |
-| `volume_error`, `archive_error`, `archive_failure` | консоль: том не открылся (`wrong`) или ушёл (`away`) |
+| `volume_error`, `archive_error`, `archive_failure` | консоль: том не открылся (`wrong`), ушёл (`away`) или его писателя ещё держит другой (`busy`) |
 | `ts` | все: регистратор старше 45 секунд молчит, его дверь не спрашивают |
 
 Лежит heartbeat там же, где heartbeat воркеров, — объектом в raft, `objects/rec/heartbeats/<регистратор>`, — и пишет его только регистратор своим токеном (урок 5).
 
-Дверь архива — на адресе сервера, порт `ARCHIVE_PORT` (8084 в `deploy/recworker.nomad.hcl`):
+Дверь архива слушает адрес сервера: `ARCHIVE_HOST` — IP узла, `ARCHIVE_PORT` — 8084. А в heartbeat регистратор кладёт `ARCHIVE_URL` — тоже IP узла, а не имя (`deploy/recworker.nomad.hcl`):
+
+```hcl
+        ARCHIVE_HOST = "${attr.unique.network.ip-address}"   # what its archive door binds: the node's address
+        ARCHIVE_PORT = "8084"
+        ARCHIVE_URL  = "http://${attr.unique.network.ip-address}:8084"   # what the heartbeat says: an IP, as RESOURCE_URL is — no DNS between servers
+```
+
+Почему отдельная переменная, а не адрес, который дверь вывела сама. Без неё `serve_archive` объявляет имя сервера (`announce_host`), и консоль на другом сервере пошла бы к двери по имени. Имена серверов между собой кластер не разрешает: DNS между серверами нет. Поэтому задание называет адрес явно — так же, как `RESOURCE_URL` для двери ресурса. `cluster/__main__.py` берёт его поверх выведенного:
+
+```python
+    r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the job says how to reach it: an address, no DNS between servers
+```
+
+Что отдаёт дверь:
 
 ```
-GET http://srv-a:8084/timeline/7?from&to     отрезки записи 7 в томе этого регистратора, с эпохами
-GET http://srv-a:8084/samples/7?from&to      кадры этих отрезков — единственный путь, которым ходит видео
+GET http://<IP srv-a>:8084/timeline/7?from&to     отрезки записи 7 в томе этого регистратора, с эпохами
+GET http://<IP srv-a>:8084/samples/7?from&to      кадры этих отрезков — единственный путь, которым ходит видео
 ```
 
 У ресурса `srv-a` по-прежнему свой heartbeat (`objects/platform/resources/srv-a/heartbeat`) и свои маршруты: `/buckets`, `/events` (урок 7). Но видео на нём нет. Ресурс — задание **платформы**: heartbeat, HTTP над корзинами событий всех подсистем, зеркало и проход хранения по строкам `<подсистема>/retention` каждой подсистемы. VMS добавляет к нему только одно — какие корзины событий кто-то велел сохранить (`kept_buckets`). Чинить, удалять по сроку и освобождать под видео ему нечего: видео в томах, за дверями регистраторов.

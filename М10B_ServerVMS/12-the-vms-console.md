@@ -34,7 +34,7 @@ asks them, the way it asks the resources for events.
 
 **Дерево монтирования.** `Mount` из урока 15 М10A получает своё применение: VMS на корне, остальные подсистемы — путями. Один процесс, один порт, одна страница.
 
-> **Проверка без железа.** Весь урок. Таймлайн и экспорт идут против настоящего `obsd` (`conftest.py`: `store`, `footage`, `door` — дверь регистратора над томом и heartbeat, который её объявляет); GStreamer не нужен. Тесты: `test_lesson6_controller.py::test_the_console_over_http` (вся поверхность на настоящем порту), `test_rec_volume.py::test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole`, `test_slot_and_read.py::test_archive_read_says_what_left_and_the_digest_of_what_left`, `test_review_remainder.py::test_who_read_the_archive_is_an_event_and_once_a_minute`, `test_doors.py::test_the_consoles_export_asks_for_an_interval_and_never_a_path`; в М11 — `clustervms/tests/test_lesson3_resources.py::test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves`.
+> **Проверка без железа.** Весь урок. Таймлайн и экспорт идут против настоящего `obsd` (`conftest.py`: `store`, `footage`, `door` — дверь регистратора над томом и heartbeat, который её объявляет); GStreamer не нужен. Тесты: `test_lesson6_controller.py::test_the_console_over_http` (вся поверхность на настоящем порту), `test_rec_volume.py::test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole`, `test_slot_and_read.py::test_archive_read_says_what_left_and_the_digest_of_what_left`, `test_slot_and_read.py::test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it`, `test_review_remainder.py::test_who_read_the_archive_is_an_event_and_once_a_minute`, `test_doors.py::test_the_consoles_export_asks_for_an_interval_and_never_a_path`; в М11 — `clustervms/tests/test_lesson3_resources.py::test_a_timeline_spans_two_volumes_and_names_the_one_nobody_serves`.
 
 ## Что нужно знать заранее
 
@@ -249,7 +249,8 @@ def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: floa
 
 ```javascript
 function segmentURL(s, p) {
-  if (s.media && s.media.startsWith('/')) return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
+  return `${s.media}${s.media.includes('?') ? '&' : '?'}from=${p.from}&to=${p.to}`;
+}
 ```
 
 ```javascript
@@ -274,18 +275,41 @@ const PIECE = 600;
 **Интервал, и ограниченный.** `EXPORT_MAX = 3600.0`: страница просит минуты, человек — до часа. Экспорт собирается в памяти целиком, и запрос «с 1970 года» без потолка стал бы способом уронить консоль. Концы в неправильном порядке и интервал длиннее часа — 400.
 
 ```python
+        # Each moment from the EPOCH that owns it, across every door — a door applies `authoritative` to the
+        # volume it holds, and a fenced writer's stream may be in another volume than the survivor's. So the doors'
+        # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
+        # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
+        # caller can see.
+        from w2cplatform.obsd import Sample
+        from .archive import Span, authoritative
         units = [str(q["rec"])] if q.get("rec") else recordings_of(rec_ctl, cid)
-        got = []
+        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        got, unreachable = [], []
         for unit in units:
-            for name, url, _ in (recorder_doors(ctl.objects, con_wall()) if ctl is not None else []):
+            spans, where = [], {}
+            for name, url, _ in doors:
                 try:
-                    from w2cplatform.obsd import Sample
-                    got += Sample.decode_all(_door(f"{url}/samples/{unit}?from={t0}&to={t1}", 30.0))
+                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT))
                 except (OSError, ValueError):
+                    unreachable.append(name)
                     continue
+                for sp in body.get("spans", []):
+                    span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
+                                str(sp.get("source", "live")))
+                    spans.append(span)
+                    where.setdefault(span, url)
+            for span, lo, hi in authoritative(spans, t0, t1):
+                try:
+                    got += Sample.decode_all(_door(f"{where[span]}/samples/{unit}?from={lo}&to={hi}", 30.0))
+                except (OSError, ValueError):
+                    unreachable.append(next(n for n, u, _ in doors if u == where[span]))
 ```
 
-**Кадры — от всех дверей.** По той же причине, что таймлайн: интервал записи может лежать в двух томах. Каждая дверь отдаёт свои кадры, уже выбранные по старшей эпохе внутри своего тома (`Archive.samples`, урок 8). Таймаут здесь 30 секунд, а не 5: дверь читает кадры, а не индекс.
+**Каждый момент — от эпохи, которая им владеет, через все двери.** Интервал записи может лежать в двух томах: поток отсечённого писателя в одном, поток выжившего в другом. Каждая дверь применяет `authoritative` только к своему тому (`Archive.samples`, урок 8). Спроси консоль `/samples` у всех дверей и возьми кадры того, кто отсортировался первым, — минуты перекрытия пришли бы от зомби, если его дверь стоит в списке раньше. Поэтому консоль сначала спрашивает таймлайны всех дверей (быстро, `DOOR_TIMEOUT`), запускает `authoritative` над всеми спанами сразу и запоминает, какая дверь держит какой спан (`where`). Потом каждый отрезок читается у двери его владельца. Таймаут чтения кадров — 30 секунд, а не 5: дверь читает кадры, а не индекс.
+
+`test_slot_and_read.py::test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it` кладёт `e1` зомби в том `a`, а `e2` выжившего — в том `b`, с минуты 5 по 10 и с кадрами крупнее. С одной дверью `a` экспорт берёт всё из `e1`. С обеими он длиннее больше чем на 25 крупных кадров: минуты 5–10 пришли из `e2`, хотя дверь `r-a` стоит в списке первой.
+
+**Дверь, которая не ответила, названа.** Её имя попадает в `unreachable` — и когда не ответил таймлайн, и когда не пришли кадры отрезка. Экспорт всё равно отдаётся, с тем, что есть, а заголовок `X-Archive-Unreachable` перечисляет молчавшие двери. Кусок с дырой, о которой вызывающий знает, лучше, чем отказ целиком, и лучше, чем дыра молча.
 
 ```python
         frames, end = [], None
@@ -300,7 +324,7 @@ const PIECE = 600;
             return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
 ```
 
-**Каждый момент — один раз.** Кадры всех дверей сортируются по времени. Кадр, который начинается раньше конца уже взятого, пропускается: этот момент уже пришёл.
+**Каждый момент — один раз.** Кадры всех отрезков сортируются по времени. Кадр, который начинается раньше конца уже взятого, пропускается: этот момент уже пришёл. Нужно это и после `authoritative`: дверь начинает каждый отрезок с ключевого кадра на его первом моменте или раньше (урок 8), и подводка следующего отрезка ложится на конец предыдущего.
 
 **Файл начинается с ключевого кадра.** Иначе плеер ничего не покажет до первого ключевого.
 
@@ -319,15 +343,17 @@ const PIECE = 600;
         handler.send_response(200)
         handler.send_header("Content-Type", "video/mp4")
         handler.send_header("Content-Length", str(len(data)))
+        if unreachable:
+            handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
         handler.end_headers()
         handler.wfile.write(data)
-        note_read(handler, f"rec/{units[0]}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
+        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
         return ()
 ```
 
 `return ()` — вторая форма протокола `extra`: ответ уже отправлен, платформа ничего не дописывает.
 
-**Кто читал архив.** Видео уходит через эту дверь, и раньше об этом не оставалось ничего (ревью платформы, блокер 1 — та его часть, которой не нужен вход по паролю; обратная связь BI). `note_read` пишет событие `archive.read` в журнал консоли — `audit/console/…`, рядом с «кто удалил» и «кто поставил метку», — и строку в лог: кто, какой интервал, с какого адреса.
+**Кто читал архив.** Видео уходит через эту дверь, и раньше об этом не оставалось ничего (ревью платформы, блокер 1 — та его часть, которой не нужен вход по паролю; обратная связь BI). `note_read` пишет событие `archive.read` в журнал консоли — `audit/console/…`, рядом с «кто удалил» и «кто поставил метку», — и строку в лог: кто, какой интервал, с какого адреса. Записи в имени — все, из которых собран экспорт (`rec/7,7-cloud/…`), а не первая: экспорт без `rec` берёт все записи камеры.
 
 **Что ушло, а не что спросили.** Строка пишется после ответа и говорит статус, число байт и sha256 отданного (обратная связь BU). Тогда на вопрос «этот ли файл вы выдали» отвечает журнал: у кого файл, тот считает сумму и сравнивает. Экспорт всегда уходит целиком, поэтому сумма у него есть всегда.
 
@@ -339,7 +365,8 @@ const PIECE = 600;
 
 - `test_slot_and_read.py::test_archive_read_says_what_left_and_the_digest_of_what_left` — экспорт начинается с `ftyp`, тот же интервал даёт тот же файл, `anna` дважды за минуту — одна строка, `boris` через минуту — вторая строка с тем же sha256;
 - `test_review_remainder.py::test_who_read_the_archive_is_an_event_and_once_a_minute` — три чтения одной минуты дают одну строку `("anna", "rec/7/…", "7", digest)`, через минуту строка пишется снова;
-- `test_doors.py::test_the_consoles_export_asks_for_an_interval_and_never_a_path` — `400` на перевёрнутый интервал и на интервал длиннее часа, `404` там, где ничего не записано.
+- `test_doors.py::test_the_consoles_export_asks_for_an_interval_and_never_a_path` — `400` на перевёрнутый интервал и на интервал длиннее часа, `404` там, где ничего не записано;
+- `test_slot_and_read.py::test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it` — минуты двух эпох в двух томах: каждая берётся у двери своего владельца, а `X-Archive-Unreachable` нет, когда ответили все.
 
 ## Шаг 7 — Дверь в живое видео
 
@@ -516,7 +543,8 @@ GET  /spec                        → rows: cameras, media: true
 GET  /cameras                     → rows + configured
 GET  /timeline/7?from&to          → спаны всех записей камеры из дверей регистраторов
                                     (или {segments, unreachable, unavailable, note})
-GET  /export/7?rec=7&from&to      → video/mp4, фрагментированный; 404, если ничего не записано
+GET  /export/7?rec=7&from&to      → video/mp4, фрагментированный, каждая минута от своей эпохи;
+                                    X-Archive-Unreachable: r-2, если дверь не ответила; 404, если ничего не записано
 GET  /segment?cam=7&from&to       → {playback: …} — дверь воспроизведения устройства
 POST /whep/7                      → 201 + SDP, Location: /whep/session/<id>?gateway=g-1
                                     (или 503 «no gateway holds this stream yet»)
@@ -538,6 +566,8 @@ GET  /live/streams                → вещания
 - **Отсекать по пометке двери.** Поток зомби в томе другого сервера будет нарисован как законная запись.
 - **Ждать неответившую дверь.** Таймлайн не придёт вовсе вместо того, чтобы прийти с объяснением.
 - **Рисовать молчащий том как дыру.** Оператор будет искать на карте камеры или списывать как потерянное видео, которое лежит на выключенном сервере.
+- **Брать кадры у первой ответившей двери.** Минуты, которые две эпохи держат в двух томах, придут от зомби, если его дверь стоит в списке раньше.
+- **Молча пропустить неответившую дверь в экспорте.** Файл с дырой выглядит как запись без дыры.
 - **Экспорт без потолка длины.** Один запрос «за год» соберёт в памяти консоли год видео.
 - **Пустой файл вместо 404.** Плеер покажет испорченный файл там, где записи просто нет.
 - **Писать `archive.read` до ответа.** Журнал скажет, что видео ушло, когда оно не ушло, и не скажет, что именно ушло.
@@ -553,7 +583,7 @@ GET  /live/streams                → вещания
 - Видео консоль берёт у дверей регистраторов, найденных по heartbeat'ам, — у всех, потому что запись может лежать в нескольких томах.
 - Отсечение — по строке эпохи записи в хранилище: дверь знает только эпоху своего регистратора. Копия удержания `e0` не отсекается.
 - Дверь, которая не ответила, и том, который никто не держит, называются в ответе: недоступно, не потеряно.
-- Экспорт — интервал не длиннее часа, кадры от всех дверей, каждый момент один раз, с ключевого кадра, в фрагментированный MP4. После ответа в журнал уходит `archive.read` с sha256 отданного.
+- Экспорт — интервал не длиннее часа: таймлайны всех дверей, `authoritative` над ними всеми, каждый отрезок у двери его владельца, каждый момент один раз, с ключевого кадра, в фрагментированный MP4. Неответившие двери названы в `X-Archive-Unreachable`. После ответа в журнал уходит `archive.read` с sha256 отданного.
 - `/segment` отвечает только про устройство: адрес двери воспроизведения его держателя.
 - Консоль не несёт живое медиа; `503` с `retry_after` — ответ на «ещё не разместили»; состояние сессии вынесено в URL.
 - `Mount` даёт один процесс, один порт и одну страницу; общий `MergedIndex` и общий журнал сводят подсистемы вместе.
@@ -567,7 +597,7 @@ GET  /live/streams                → вещания
 4. Ждите неответившую дверь без таймаута. Остановите один регистратор процессом `kill -STOP` и откройте таймлайн.
 5. Уберите `unserved_volumes` из ответа. Выключите сервер с локальным томом и опишите, что увидит оператор и что он сделает.
 6. Снимите потолок `EXPORT_MAX`. Попросите экспорт за сутки и замерьте память консоли.
-7. Сравните экспорт минут, которые две двери отдают под разными эпохами. Чьи кадры возьмёт консоль и почему? Сравните с тем, что сделал бы `authoritative` внутри одного тома.
+7. Верните экспорту прежний путь: `/samples` у каждой двери за весь интервал, без таймлайнов и `authoritative`. Запустите `test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it` и объясните, чьи кадры консоль взяла за минуты 5–10 и почему.
 8. Пишите `archive.read` до отправки. Оборвите соединение на середине и прочитайте журнал.
 9. Отвечайте 404 вместо 503 при неразмещённой единице вещания. Опишите, что сделает страница из урока 16 М10A.
 

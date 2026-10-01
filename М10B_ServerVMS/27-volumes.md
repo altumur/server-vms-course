@@ -49,14 +49,14 @@
 SUB = "rec"
 TABLE = "volumes"
 KINDS = ("local", "network", "backup", "edge", "incidents")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_secret", "enabled")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled")
 ```
 
 Том — это две записи, и держать их врозь и есть решение:
 
 ```
-rec/volumes/<имя>    ЗАЯВЛЕНИЕ: kind, url, server, quota_bytes, access_secret, enabled   ← пишет консоль
-rec/holds/<имя>      ФАКТ: кто пишет туда сейчас                                          ← пишет регистратор
+rec/volumes/<имя>    ЗАЯВЛЕНИЕ: kind, url, server, quota_bytes, access_key, access_secret, enabled   ← пишет консоль
+rec/holds/<имя>      ФАКТ: кто пишет туда сейчас                                                      ← пишет регистратор
 ```
 
 Строку пишут на консоли. Кто именно обслуживает том в эту секунду — факт о кластере, и консоль его знать не может. Поэтому факт — отдельная запись того же вида, что слот воркера: держатель, срок, флаг «отпущен», поколение, CAS (М10A, урок 7). Заголовок `volumes.py` говорит так:
@@ -146,7 +146,14 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 
 Спрашивается это **один раз**, при форматировании. Существующий том хранит свой размер, и перезапуск регистратора на заполненном диске не сожмёт кольцо.
 
-Третий путь — `$VOLUME` в юните: том прибит к этому экземпляру. Так говорят про диск, который знает юнит-файл. Прибитый регистратор захвата не берёт и не отдаёт.
+Третий путь — `$VOLUME` в юните: том прибит к этому экземпляру. Так говорят про диск, который знает юнит-файл. Прибитый регистратор захвата не берёт и не отдаёт. Но если его том не открывается (`wrong`), он сообщает нулевую ёмкость, как и незакреплённый со сломанным томом (шаг 9):
+
+```python
+                self.volume_error = str(self._write_into(vol) or "")
+                self.capacity = 0 if self.volume_error else self.full_capacity    # will not open: not a place to put a recording
+```
+
+Отдать том ему некуда, а место, куда нельзя писать, не должно получать записей.
 
 Тесты: `test_volumes.py::test_nothing_declared_is_the_box_as_it_always_was` и `test_rec_volume.py::test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it` — регистратор форматирует том сервера рядом с деревом ресурса (`file://<корень коробки>/volume`) и пишет в него поток `1/e<эпоха>`.
 
@@ -214,7 +221,7 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
 # process that mounts the volume: М10A Lesson 18).
-def volume_params(url: str, secret: str = "") -> dict:
+def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "://" not in url:
         return {"schema": "file", "path": url}           # a local volume's row names its directory
     u = urlsplit(url)
@@ -224,7 +231,7 @@ def volume_params(url: str, secret: str = "") -> dict:
         ...
         return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(u.port)} if u.port else {}),
                 "region": parts[0], "bucket": parts[1], "path": "/".join(parts[2:]),
-                "access_key": unquote(u.username or ""), "secret_key": secret}
+                "access_key": access_key, "secret_key": secret}   # the key's id from the row's `access_key`, never the url
     raise ValueError(f"{url}: not an archive this course opens (file://, s3://)")
 ```
 
@@ -238,17 +245,30 @@ def volume_params(url: str, secret: str = "") -> dict:
                       "`access_secret` — this string is printed on the page and published in heartbeats")
 ```
 
-Ключ — значение среди значений, `access_secret`. Консоль кладёт его в хранилище запечатанным, как пароль камеры (`write(..., sealer=…)`, обратная связь CD). Распечатывает его только процесс, который прямо сейчас открывает том:
+У ключа бакета две части, и строка тома держит их в двух полях. **Какой** это ключ — `access_key`, идентификатор ключа. Он не секрет, поэтому показывается, как логин камеры:
+
+```python
+    access_key: str = ""          # a bucket's key ID — which key, not the key: shown, like a camera's login
+```
+
+Сам ключ — `access_secret`, значение среди значений. Консоль кладёт его в хранилище запечатанным, как пароль камеры (`write(..., sealer=…)`, обратная связь CD). Распечатывает его только процесс, который прямо сейчас открывает том, и оба поля доходят до демона параметрами:
 
 ```python
         secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
-                        secret=secret, ...)
+                        secret=secret, access_key=vol.access_key, ...)
 ```
 
-Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address` и `test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server` — второй заодно проверяет, что `served` не отдаёт `access_secret` никогда.
+Раньше идентификатора ключа в строке не было, а `volume_params` искал его в адресе до `@` — там, куда `refuse` его не пускает. Объявленный s3-том доходил до демона без `access_key`. Теперь идентификатор — поле строки, и адрес по-прежнему не несёт ничего, кроме того, где архив.
 
-> **Расхождение, которое стоит видеть.** `volume_params` берёт идентификатор ключа (`access_key`) из части адреса до `@`, а `refuse` такой адрес не пропустит. Объявленный s3-том доходит до демона только с `secret_key`. На каталогах, которыми тесты изображают сетевой том, этого не видно.
+Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address`, `test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server` — заодно проверяет, что `served` не отдаёт `access_secret` никогда, — и `test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address`:
+
+```python
+    p = volume_params(v.url, "wJalr", v.access_key)
+    assert (p["access_key"], p["secret_key"], p["bucket"], p["path"]) == ("AKIAEXAMPLE", "wJalr", "vms", "site-7")
+    shown = volumes.served(box.vars, REC_SPEC.sub, box.wall())["volumes"][0]
+    assert shown["access_key"] == "AKIAEXAMPLE" and "access_secret" not in shown
+```
 
 ## Шаг 6 — Захват, запасной и возврат по имени
 
@@ -368,7 +388,13 @@ def volume_params(url: str, secret: str = "") -> dict:
 
 **`away` — держать.** Том остаётся местом, с полной ёмкостью, а регистратор говорит `archive_error` и `archive_failure: away` и пробует на следующем проходе. Отдать его значило бы перетасовать все записи тома ради связи, которая вернётся (`test_an_archive_that_is_away_at_open_is_kept`, `test_rec_volume.py::test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place`).
 
-**`busy` — держать.** Писателя держит демон: прошлый регистратор ещё не отпустил его, или идёт отсрочка. Это пройдёт само.
+**`busy` — держать.** Писателя держит демон: прошлый регистратор ещё не отпустил его, или идёт отсрочка. Это пройдёт само. Heartbeat при этом говорит `archive_failure: busy`, а не `away`:
+
+```python
+            self.archive_error, self.archive_failure = e.detail, e.kind     # `away` or `busy`: kept, said as what it is
+```
+
+Ответ один — держать и пробовать снова, — а причины разные. «Демона нет» ищут на хосте, «том держит другой писатель» — у прошлого регистратора этого тома. Метрика `rec_archive_failure{kind}` разводит их по виду.
 
 ### Молчащий демон не останавливает жизнь регистратора
 
@@ -488,6 +514,8 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Сломанный том отдают, даже когда больше некуда.** Коробка перестаёт писать совсем из-за диагностики.
 - **Отказавший посреди работы том берут назад на следующем проходе.** Регистратор мигает между «взял» и «отдал». Нужна пауза `REFUSED_FOR`.
 - **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста.
+- **Идентификатор ключа из адреса.** Адрес с `@` не пройдёт `refuse`, и s3-том дойдёт до демона без `access_key`. Идентификатор — своё поле строки.
+- **Закреплённый регистратор с неоткрывшимся томом сообщает полную ёмкость.** Контроллер ставит записи туда, где писать нельзя.
 - **`home` предпочтением для резервного тома.** Основная переезжает на него при перезагрузке своего сервера, и копий становится одна.
 - **Запись на томе `incidents`.** Камера крутит кольцо улик своим потоком, и отмеченное уходит за часы. Двойная защита: `admit_recording` и нулевая ёмкость.
 - **Квота во весь раздел.** `refuse` её пропустит, но кольцо делит раздел с деревом событий ресурса и уведёт диск выше отметки ватерлинии. Консоль поэтому предлагает тот размер, который у тома уже есть.
@@ -500,10 +528,10 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - Регистратор берёт сначала свои диски, потом адреса. Всё занято — запасной: процесс без места и с нулевой ёмкостью.
 - Ничего не объявлено — собственный том сервера, `/data/volume` рядом с деревом ресурса, на четыре пятых свободного места и не выше нижней отметки ватерлинии. Консоль предлагает его объявить с тем размером, который у него есть, и объявление ничего не двигает.
 - Квота — размер кольца. Новый том форматируется на неё, новая квота меняет размер на ходу, уменьшение отдаёт старейшее и попадает в журнал.
-- Том открывается по параметрам. Ключ — значение `access_secret`, запечатанное, и в адрес не попадает никогда.
+- Том открывается по параметрам. Какой ключ — поле `access_key`, его показывают; сам ключ — значение `access_secret`, запечатанное. Ни то ни другое в адрес не попадает никогда.
 - Захват идёт за именем слота, писатель — за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.
 - При молчащем хранилище диск остаётся, адрес отпускается через `slot_ttl − margin`: два писателя в одном томе — порча.
-- `wrong` — отдать, `away` и `busy` — держать. Для тома на коробке `IO_ERROR` и `GENERIC_ERROR` — `wrong`, для тома по адресу — `away`.
+- `wrong` — отдать (закреплённый не отдаёт, но сообщает нулевую ёмкость), `away` и `busy` — держать, и heartbeat называет каждый своим словом. Для тома на коробке `IO_ERROR` и `GENERIC_ERROR` — `wrong`, для тома по адресу — `away`.
 - Для `backup` и `edge` `home` — фильтр в обе стороны, воркер камеры стоит у резервной записи, `when: offline` пишет за сбой.
 - На `incidents` не ставится ничего: туда копируются метки, и это тоже кольцо.
 - Том, который никто не обслуживает, недоступен, а не потерян, и таймлайн говорит это словами.

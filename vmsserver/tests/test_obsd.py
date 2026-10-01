@@ -189,3 +189,30 @@ def test_a_new_quota_resizes_the_ring_without_stopping_the_writer():
     assert st.quota == 128 << 20 and st.writer is not None
     footage(st, "7", 1, t, t + 600, step=10)
     assert st.coverage("7") == [(t - 600, t + 600)]
+
+
+def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
+    """The daemon may have taken the sample before the connection broke; sent again it is a frame twice. So
+    `PUT_MEDIA` and its kin are not resent — the caller hears `Unavailable` and decides — while a request that
+    never went out (the break came on connecting) is simply tried once more."""
+    import socket
+    from w2cplatform.obsd import NOT_RESENT, Session, Unavailable
+    from tests.conftest import ObsdDaemon
+    s = Session(ObsdDaemon.get().socket, client="t")
+    s.call("STATS")                                               # connected
+    assert "PUT_MEDIA" in NOT_RESENT and "WRITER_CLOSE" in NOT_RESENT and "STATS" not in NOT_RESENT
+    sent = []
+
+    class Breaks:                                                 # the request leaves; the answer never comes back
+        def __init__(self, inner): self.inner = inner
+        def sendall(self, data):
+            self.inner.sendall(data); sent.append(data); self.inner.shutdown(socket.SHUT_RDWR)
+        def __getattr__(self, name): return getattr(self.inner, name)
+    s._sock = Breaks(s._sock)
+    try:
+        s.call("PUT_MEDIA", None, b"\x00" * 10)
+        raise AssertionError("resent a sample the daemon may have taken")
+    except Unavailable:
+        pass
+    assert len(sent) == 1                                         # out once, never again
+    assert s.call("STATS")[0]                                     # a fresh connection: the session goes on

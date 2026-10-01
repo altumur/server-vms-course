@@ -200,6 +200,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
         <div class="row">
           <label>server <input type="text" name="server" placeholder="local only" style="width:8em"></label>
           <label>capacity <input type="number" name="quota_gb" min="1" required style="width:6em"> GB</label>
+          <label>key id <input name="access_key" placeholder="network only" style="width:8em"></label>
           <label>key <input type="password" name="access_secret" placeholder="network only" style="width:8em"></label>
           <button type="submit">Declare</button>
         </div>
@@ -719,6 +720,7 @@ $('#archadd').onsubmit = async e => {
   const f = Object.fromEntries(new FormData(e.target));
   const body = { name: f.name, kind: f.kind, url: f.url, quota_bytes: Math.round(parseFloat(f.quota_gb) * GB) };
   if (f.server) body.server = f.server;
+  if (f.access_key) body.access_key = f.access_key;
   if (f.access_secret) body.access_secret = f.access_secret;
   try { await send('POST', '/rec/volumes', body); e.target.reset(); loadArchives(); }
   catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }

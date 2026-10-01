@@ -1,7 +1,7 @@
 # Урок 8 — Видимость, срок хранения, таймлайн
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** вторую половину `vms/archive.py` — `visible_from`, `authoritative`, `Archive.spans` с `_timeline` (вопрос окнами по пять дней), `Archive.timeline`, `coverage`, `depth_days`, `samples`; и в `vms/recworker.py` — дверь архива `archive_routes`, `RecWorker.serve_archive` и `RecWorker._visible_from`.
+**Вы напишете:** вторую половину `vms/archive.py` — `visible_from`, `authoritative`, `Archive.spans` с `_timeline` (вопрос окнами по пять дней), `Archive.timeline`, `coverage`, `depth_days`, `samples`; и в `vms/recworker.py` — дверь архива `archive_routes`, `RecWorker.serve_archive`, `RecWorker._visible_from` и `RecWorker._kept_of`.
 **Время:** ~75 минут.
 
 ## Зачем этот урок
@@ -16,7 +16,7 @@
 
 И последнее: всё это выходит наружу через **дверь архива** — HTTP регистратора над томом, который он держит. Её читают консоль (урок 12), скан (урок 20), резервная запись (урок 26) и копирование удержаний.
 
-> **Проверка без железа.** Весь урок идёт против настоящего `obsd`: `tests/conftest.py` поднимает демон (`ObsdDaemon`) с коротким `OBSD_WRITER_GRACE_S`, а без бинарника тест падает с подсказкой, как его собрать (`ObjectStorage/standalone-build/build.sh`, `OBSD_BIN`). GStreamer не нужен: кадры даёт `vms.worker.fake_samples`, а `footage` из `conftest.py` пишет их в поток. Тесты урока: `test_lesson3_archive.py`, `test_obsd.py`, `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames`, `test_review_remainder.py::test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days`, `test_scan.py::test_two_epochs_over_the_same_minutes_the_later_one_owns_them`, `test_doors.py::test_a_recorders_archive_door_names_a_recording_and_nothing_else`.
+> **Проверка без железа.** Весь урок идёт против настоящего `obsd`: `tests/conftest.py` поднимает демон (`ObsdDaemon`) с коротким `OBSD_WRITER_GRACE_S`, а без бинарника тест падает с подсказкой, как его собрать (`ObjectStorage/standalone-build/build.sh`, `OBSD_BIN`). GStreamer не нужен: кадры даёт `vms.worker.fake_samples`, а `footage` из `conftest.py` пишет их в поток. Тесты урока: `test_lesson3_archive.py`, `test_obsd.py`, `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames`, `test_review_remainder.py::test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days`, `test_review_remainder.py::test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it`, `test_review_remainder.py::test_a_read_starts_on_the_key_frame_before_the_moment_asked_for`, `test_scan.py::test_two_epochs_over_the_same_minutes_the_later_one_owns_them`, `test_doors.py::test_a_recorders_archive_door_names_a_recording_and_nothing_else`.
 
 ## Что нужно знать заранее
 
@@ -168,19 +168,56 @@ def visible_from(row: dict | None, now: float) -> float:
 
 Записи без строки достаются тридцать дней, а не «всё». Строки нет, например, когда запись только что удалили. Показать всё, что ещё лежит в кольце, значило бы открыть то, что строка ограничивала.
 
-Дверь применяет потолок одной строкой, к началу вопроса:
+Дверь применяет потолок к **ответу**, а не к вопросу. Сначала она собирает, что можно показывать: всё от `visible_from` и всё, что держат удержания:
 
 ```python
-            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
+            # Retention is a ceiling on what the door shows: from `visible_from` on, and whatever a keep holds. A span
+            # that began before the ceiling is CUT at it — drawn from its start, it would be footage the page shows
+            # and the door then refuses to play.
+            shown = stitch([(visible_from(unit), float("inf"))] + [tuple(k) for k in kept(unit)], 0.0)
 ```
+
+Потом каждый спан таймлайна обрезается по этим интервалам, а кадры читаются только внутри них (шаг 7).
+
+Почему не обрезать начало вопроса, `t0 = max(t0, visible_from(unit))`? Так дверь работала раньше, и у этого была дыра. Движок отдаёт интервал целиком, если тот пересекает окно. Непрерывная запись, начавшаяся раньше потолка, возвращалась одним спаном со своим настоящим началом. Страница рисовала двенадцать дней, а `/samples` за первые четыре не отдавал ни кадра: видео на экране есть, а играть нечего.
 
 Тест `test_lesson3_archive.py::test_retention_is_a_ceiling_on_what_is_shown_and_the_ring_decides_what_is_there` пишет три отрезка: 1, 10 и 19 октября. При `retention_days: 8` и «сейчас» 20 октября дверь показывает один отрезок, а `st.spans("7")` по-прежнему находит три. Там же проверено умолчание: `visible_from(None, now) == now - 30 * 86400`.
 
-Честное примечание к этой строке. Потолок обрезает начало **вопроса**, а не спаны ответа. Движок отдаёт интервал целиком, если тот пересекает окно. Поэтому непрерывная запись, начавшаяся раньше потолка, вернётся одним спаном со своим настоящим началом. Кадров раньше потолка `/samples` при этом не отдаст: там обрезается тот же `t0`, а `samples` берёт только отрезки внутри `[t0, t1)`.
+`test_review_remainder.py::test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it` пишет двенадцать дней одним спаном и ставит `retention_days: 8`:
 
-Два исключения из потолка стоит знать.
+```python
+    assert spans() == [(now - 8 * DAY, now)]                           # cut at the ceiling, not drawn from twelve days ago
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] == b""
+```
 
-Том вида `incidents` показывает всё:
+Три исключения из потолка стоит знать.
+
+**Удержание видно за потолком.** Удержание — слово оператора, что эти минуты важнее срока записи:
+
+```python
+    # The intervals of a recording somebody said to keep (`vms/keeps.py`): the door shows them whatever the ceiling,
+    # because a keep is the operator's word that those minutes matter longer than the recording's days — and the
+    # recorder copying keeps into an incidents volume reads them through this very door. Not readable is none:
+    # the ceiling stands, which hides, and hiding is the side to err on.
+    def _kept_of(self, unit) -> list[tuple[float, float]]:
+        from . import keeps
+        try:
+            declared = keeps.declared(self.vars)
+        except OSError:
+            return []
+        row = self._rows_seen.get(str(unit)) or {}
+        return keeps.spans_of(declared, str(unit), str(row.get("cam", "")))
+```
+
+Через эту же дверь регистратор тома `incidents` копирует удержания. Поэтому удержание старше срока записи тоже доходит до копии, пока кольцо его не перезаписало ([урок 18](18-what-the-archive-gives-up-first.md)). Удержания не прочитались — их нет, и потолок стоит: спрятать безопаснее, чем показать лишнее. Вторая половина того же теста ставит удержание на минуты одиннадцать–десять дней назад, и дверь показывает его отдельным спаном и отдаёт его кадры:
+
+```python
+    keeps.write(box.vars, {"cam": "7", "from": now - 11 * DAY, "to": now - 10 * DAY}, ["7"], "anna", now)
+    assert spans() == [(now - 11 * DAY, now - 10 * DAY), (now - 8 * DAY, now)]
+    assert routes(f"/samples/7?from={now - 11 * DAY}&to={now - 10 * DAY}")[1] != b""
+```
+
+**Том `incidents` показывает всё:**
 
 ```python
         if self.incidents:
@@ -189,7 +226,7 @@ def visible_from(row: dict | None, now: float) -> float:
 
 Всё, что лежит в таком томе, кто-то отметил к удержанию. Прятать это по сроку обычной записи значило бы прятать улики.
 
-И потолок не обещает глубины. Сколько дней запись должна **держать**, говорит поле `min_depth_days`, и его никто не исполняет: кольцо отдаёт старое, что бы ни обещали. Регистратор это наблюдает и поднимает тревогу `archive.shallow`, когда кольцо замкнулось, а запись держит меньше обещанного (`depth_pass`; [урок 18](18-what-the-archive-gives-up-first.md)).
+**И потолок не обещает глубины.** Сколько дней запись должна **держать**, говорит поле `min_depth_days`, и его никто не исполняет: кольцо отдаёт старое, что бы ни обещали. Регистратор это наблюдает и поднимает тревогу `archive.shallow`, когда кольцо замкнулось, а запись держит меньше обещанного (`depth_pass`; [урок 18](18-what-the-archive-gives-up-first.md)).
 
 События живут по третьему правилу, и в `archive.py` их нет. Бакеты событий удаляет платформенный ресурс по строке `vms/retention/<cam>` (М10A, урок 14; [урок 11](11-the-resource-process.md)). Тест `test_lesson3_archive.py::test_events_are_buckets_on_the_resource_recording_or_not` проверяет обе стороны: проход ресурса удаляет два старых бакета, а покрытие записи после него то же, что было до.
 
@@ -357,20 +394,31 @@ def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, f
 
 ```python
     def samples(self, unit, t0: float, t1: float) -> list[Sample]:
-        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, starting on a key frame — what
-        an export, a scan or a copy into another volume takes."""
+        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, each starting on the key frame AT
+        OR BEFORE its first moment — what an export, a scan or a copy into another volume takes. A stretch that
+        opens at 10:05 is inside a group of pictures that opened at 10:04:58, and without that key frame nothing
+        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`)."""
         r = self.reader()
         out: list[Sample] = []
         for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
             a, b = archive_ms(lo), archive_ms(hi)
-            got = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.end > a and s.begin < b]
-            while got and not got[0].key:
-                got.pop(0)                                   # a stretch cut mid-group opens on its next key frame
-            out += got
+            seq = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.begin < b]
+            first = next((i for i, s in enumerate(seq) if s.end > a), len(seq))
+            key = next((i for i in range(min(first, len(seq) - 1), -1, -1) if seq[i].key), None)
+            if key is None:                              # no key frame at or before: the stretch opens on its next one
+                key = next((i for i in range(first, len(seq)) if seq[i].key), len(seq))
+            out += seq[key:]
         return out
 ```
 
-Отрезок, обрезанный посреди группы кадров, начинается со следующего ключевого кадра. Декодер не начнёт с промежуточного кадра, а движок не примет последовательность без ключевого (`SEQUENCE_NEEDS_KEY_SAMPLE`), если эти кадры копируют в другой том.
+**Отрезок начинается с ключевого кадра на его первом моменте или раньше.** Момент, о котором спросили, лежит внутри группы кадров, открытой раньше. Декодер не начнёт с промежуточного кадра, а движок не примет последовательность без ключевого (`SEQUENCE_NEEDS_KEY_SAMPLE`), если эти кадры копируют в другой том. Начать со следующего ключевого — значит потерять начало отрезка: до целой группы кадров на каждом стыке эпох и в начале каждого вопроса. Поэтому `samples` отступает назад до ключевого кадра, и подводка приходит вместе с ответом. Обрезает её тот, кто спросил: скан считает только то, что попало в `[t0, t1)` (`Scan.accepts`, урок 20). Следующий ключевой берётся, только если раньше ключевого нет вовсе.
+
+`test_review_remainder.py::test_a_read_starts_on_the_key_frame_before_the_moment_asked_for` пишет сто секунд с ключевым кадром каждые две и спрашивает с `t - 51`:
+
+```python
+    got = st.samples("7", t - 51, t - 40)
+    assert got[0].key and unix_s(got[0].begin) == t - 52               # the group's key frame, a second before
+```
 
 Правило проверяет `test_scan.py::test_two_epochs_over_the_same_minutes_the_later_one_owns_them`: план скана строится тем же `authoritative` (урок 20).
 
@@ -385,7 +433,7 @@ def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, f
 #   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
 #                                  owns it, from a key frame (`Archive.samples`)
-def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0):
+def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0, kept=lambda unit: []):
 ```
 
 Почему регистратор, а не ресурс сервера, как раньше? Том открывается через `obsd` того хоста, где он смонтирован, а держит его один регистратор. Читатель в другом процессе того же хоста тоже был бы возможен. Но регистратор уже держит том, знает эпохи своих записей и читает их строки. Дверь в нём пользуется этим, а не заводит второй источник тех же сведений, который мог бы с первым разойтись.
@@ -417,30 +465,45 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
 Ответы:
 
 ```python
-            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
+            shown = stitch([(visible_from(unit), float("inf"))] + [tuple(k) for k in kept(unit)], 0.0)
             try:
                 if prefix == "/timeline/":
                     cur = current_epoch(unit)
-                    body = {"unit": unit, "spans": store.timeline(unit, t0, t1, cur), "current_epoch": cur}
+                    spans = []
+                    for sp in store.timeline(unit, t0, t1, cur):
+                        for a, b in shown:
+                            lo, hi = max(sp["start"], a), min(sp["end"], b)
+                            if hi > lo:
+                                spans.append({**sp, "start": lo, "end": hi})
+                    body = {"unit": unit, "spans": spans, "current_epoch": cur}
                     return 200, json.dumps(body).encode(), "application/json"
-                return 200, b"".join(smp.encode() for smp in store.samples(unit, t0, t1)), "application/octet-stream"
+                frames = b""
+                for a, b in shown:
+                    lo, hi = max(t0, a), min(t1, b)
+                    if hi > lo:
+                        frames += b"".join(smp.encode() for smp in store.samples(unit, lo, hi))
+                return 200, frames, "application/octet-stream"
             except ArchiveError as e:
                 return 503, json.dumps({"error": str(e)}).encode(), "application/json"
 ```
+
+Таймлайн и кадры режутся одними и теми же интервалами `shown`. Поэтому всё, что страница нарисовала, дверь и сыграет, а за потолком нет ни спана, ни кадра — кроме удержанного.
 
 `/samples` отдаёт записи `SMPL` подряд — тот же формат, что ходит между процессом и `obsd`. Получатель разбирает их `Sample.decode_all` и получает кадры с теми временами, с которыми они были записаны. Резервная запись кладёт их в свой том как есть, консоль собирает из них MP4 (урок 12).
 
 `current_epoch` двери — эпоха **этого** регистратора для записи: `lambda unit: self.epochs.get(str(unit))` в `serve_archive`. Дверь знает только свою эпоху. Запись, которую держит другой регистратор, дверь не отсекает; это делает консоль по строке эпохи записи в хранилище (урок 12).
 
-`serve_archive` поднимает дверь и объявляет её адрес:
+`serve_archive` поднимает дверь со всеми функциями регистратора и объявляет её адрес:
 
 ```python
+        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
+                                self._kept_of)
         self.archive_url = f"http://{announce_host(host, self.server)}:{srv.server_address[1]}"   # what it bound: loopback, or this server's name — never `0.0.0.0`
 ```
 
 Адрес уходит в heartbeat регистратора как `archive_url`, рядом с именем тома. По нему двери находят все читатели — тем же приёмом, каким регистратор находит камеру. Регистратор с другого сервера не пойдёт на дверь, объявленную на loopback чужого сервера (`local_only` в `backup_sources`).
 
-Тест `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames` проходит дверь целиком: таймлайн за двести секунд даёт один спан без отсечения, а `/samples` за сорок секунд начинается с ключевого кадра не раньше начала окна и кончается не позже чем через секунду после его конца.
+Тест `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames` проходит дверь целиком: таймлайн за двести секунд даёт один спан без отсечения, а `/samples` за сорок секунд начинается с ключевого кадра и кончается не позже чем через секунду после конца окна.
 
 ## Результат
 
@@ -474,15 +537,18 @@ st.spans("7")             # всё, что в кольце, — и то, что 
 - **Отбрасывать старшие эпохи целиком при чтении кадров.** Исчезнут минуты до смены владельца, которые держала только старая эпоха.
 - **Брать все эпохи при чтении кадров.** Скан посчитает минуты перекрытия дважды.
 - **Путь двери, доходящий до диска.** Через имя записи можно будет прочитать любой файл машины.
+- **Потолок на начало вопроса, а не на спаны ответа.** Запись, начавшаяся до потолка, нарисована целиком, а дверь не играет ничего до потолка.
+- **Потолок и для удержаний.** Оператор удержал минуты, а дверь их прячет, и копия в томе `incidents` не получает того, что старше срока записи.
+- **Начинать отрезок со следующего ключевого кадра.** На каждом стыке и в начале каждого вопроса пропадает до целой группы кадров.
 
 ## Итог
 
 - Курсу нечего чинить: спан читается у движка каждый раз и нигде не хранится, вернувшегося писателя отдаёт демон, нечистый том восстанавливает движок.
 - Читатель видит только закрытые блоки и только те, что были закрыты при его монтировании. Поэтому каждый вопрос — свежему читателю, регистратор планирует по видимому, а `seal` делает записанное видимым сейчас.
-- Том — кольцо: что в нём есть, решает квота. `retention_days` — потолок того, что показывают двери; `min_depth_days` — пол, который наблюдают, а не исполняют.
+- Том — кольцо: что в нём есть, решает квота. `retention_days` — потолок того, что показывают двери: спан, начавшийся раньше, обрезается по нему, а удержанное видно и за ним. `min_depth_days` — пол, который наблюдают, а не исполняют.
 - Строка, которую хранилище не отдало, — не отсутствующая строка: дверь отвечает по последней прочитанной.
 - Таймлайн строится по всем потокам записи, окнами по пять дней, с половинением отвергнутого окна до часа.
-- Таймлайн показывает обе эпохи и помечает отсечённую. Кадры каждого отрезка берутся от старшей эпохи, начиная с ключевого кадра.
+- Таймлайн показывает обе эпохи и помечает отсечённую. Кадры каждого отрезка берутся от старшей эпохи, начиная с ключевого кадра на его первом моменте или раньше; подводку обрезает тот, кто спросил.
 - Дверь архива называет запись и ничего больше; её адрес лежит в heartbeat регистратора.
 
 ## Упражнения
@@ -492,7 +558,7 @@ st.spans("7")             # всё, что в кольце, — и то, что 
 3. Уберите из `gaps` границу по видимому концу покрытия. Опишите, что регистратор будет тянуть с карты каждую минуту.
 4. Замените в `_visible_from` ветку `except OSError` на `row = None`. Повторите вторую половину `test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days` и объясните, какое из двух утверждений упало.
 5. Спросите `READER_TIMELINE` о тридцати днях одним вопросом на нескольких запусках демона. Запишите, сколько раз он отказал.
-6. Запишите непрерывно двенадцать дней и поставьте `retention_days: 8`. Сравните начало спана в `/timeline` с тем, что отдаёт `/samples` за первые четыре дня. Предложите, где и как обрезать спан, и что это изменит для страницы.
+6. Верните в `archive_routes` старую строку `t0 = max(t0, visible_from(unit))` вместо `shown`. Запустите `test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it` и объясните оба упавших утверждения: что увидит страница и чего не получит копия удержаний.
 7. Замените в `authoritative` выбор старшей эпохи на выбор младшей. Какие минуты экспорт возьмёт у зомби?
 8. Отдайте отсечённые спаны из `timeline` без пометки `fenced`. Опишите, что увидит оператор после смены владельца посреди записи.
 

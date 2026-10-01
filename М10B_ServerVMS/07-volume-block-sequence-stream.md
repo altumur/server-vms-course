@@ -262,21 +262,24 @@ def classify(e: Exception) -> ArchiveError:
 
 Два флага говорят, что произошло: `formatted` — том был новым, `reattached` — демон вернул писателя, которого оставил исчезнувший процесс (шаг 12). Читателям писатель не нужен: консоль и другие открывают том с `open(write=False)`.
 
-`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера `file://<ARCHIVE>/volume` и пишет в него поток `1/e<эпоха>`.
+`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера — `volume` рядом с деревом ресурса, `file:///data/volume` возле `/data/archive` (урок 10), — и пишет в него поток `1/e<эпоха>`.
 
 ## Шаг 8 — Положить кадр, закончить поток, изменить размер
 
 ```python
     def put(self, unit, epoch: int, sample: Sample, backfill: bool = False) -> str:
         """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
-        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame."""
+        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame — and
+        `Unavailable` when this volume is not open for writing any more (closed, or the engine went away)."""
+        if self.writer is None:
+            raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
         return self.writer.put(stream_name(unit, epoch, backfill), sample)
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
         return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
 ```
 
-`put` — имя потока и вызов писателя. Граница «взят — не взят» из урока 6 проходит сквозь него без изменений: статус — кадр на томе, исключение — нет.
+`put` — имя потока и вызов писателя. Граница «взят — не взят» из урока 6 проходит сквозь него без изменений: статус — кадр на томе, исключение — нет. Закрытый том (`writer is None`) — не отказ кадра, а `Unavailable`: писать больше некуда, и тот, кто пишет, должен узнать это как «движка нет», а не как «пропусти до ключевого» (шаг 13).
 
 ```python
     def resize(self, quota: int) -> None:
@@ -333,15 +336,24 @@ def classify(e: Exception) -> ArchiveError:
 # What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
 # sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
 # answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
+#
+# `store` is the recorder's CURRENT volume — a callable, asked on every sample — not the one open when the
+# pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed
+# volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
+# next key frame after a remount opens a sequence in the new writer, and the recording goes on.
 class RecSink:
-    def __init__(self, store: Archive, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
-        self.store, self.unit, self.epoch, self.on_lost, self.backfill = store, str(unit), int(epoch), on_lost, backfill
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+        self.store_of = store if callable(store) else (lambda: store)
+        self.unit, self.epoch, self.on_lost, self.backfill = str(unit), int(epoch), on_lost, backfill
         self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
         self.taken = self.refused = 0
 
     def put(self, sample: Sample) -> str:
         try:
-            st = self.store.put(self.unit, self.epoch, sample, self.backfill)
+            store = self.store_of()
+            if store is None:
+                raise Unavailable("PUT_MEDIA", "no volume open")
+            st = store.put(self.unit, self.epoch, sample, self.backfill)
             self.taken += 1
             return st
         except Unavailable:
@@ -350,35 +362,45 @@ class RecSink:
             raise
         except ObsdError as e:
             self.refused += 1
-            if self.on_wrong is not None and classify(e).kind == "wrong":
+            if e.name == "WRITER_STOPPED" and self.on_lost is not None:
+                self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
+            elif self.on_wrong is not None and classify(e).kind == "wrong":
                 self.on_wrong(e)
             raise
 ```
+
+**Приёмник спрашивает текущий том на каждом кадре.** `store` — не `Archive`, а функция, которая возвращает том, открытый у регистратора сейчас. Перемонтирование (шаг 13) заменяет `Archive` целиком. Приёмник, запомнивший том на старте конвейера, писал бы в закрытый том, пока конвейер жив, а перемонтирование конвейер не перезапускает. С функцией первый ключевой кадр после перемонтирования открывает последовательность в новом писателе, и запись идёт дальше. Нет тома вовсе — это тоже `Unavailable`.
 
 Приёмник получает регистратор в `enrich`, вместе с эпохой записи:
 
 ```python
         # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
+        out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
+                   sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
+                                on_wrong=self._volume_refuses))
 ```
 
 Три исхода.
 
 **Взят.** `OK` или `SEQUENCE_LOST`. Оба означают, что этот кадр на томе. `SEQUENCE_LOST` сообщает о потере в прошлом потока, и пропускать ничего не нужно.
 
-**Отвергнут.** `ObsdError`, и приёмник пробрасывает его конвейеру, а тот пропускает до ключевого кадра (шаг 11). Отказ кадра — обычное дело: `SEQUENCE_NEEDS_KEY_SAMPLE` после обрезанной группы, `SEQUENCE_TOO_LARGE`. Но если отказ — `wrong` (`PERMISSION_DENIED`, `READ_ONLY`), том больше не возьмёт ничего. Приёмник говорит об этом регистратору через `on_wrong`, и на следующем проходе регистратор отдаёт том. Говорит здесь, на потоке конвейера, а действует там, в проходе. `test_an_archive_that_refuses_writes_mid_run_is_handed_back` доказывает и отдачу, и паузу `REFUSED_FOR`, без которой регистратор взял бы тот же сломанный том обратно.
+**Отвергнут.** `ObsdError`, и приёмник пробрасывает его конвейеру, а тот пропускает до ключевого кадра (шаг 11). Отказ кадра — обычное дело: `SEQUENCE_NEEDS_KEY_SAMPLE` после обрезанной группы, `SEQUENCE_TOO_LARGE`. Один отказ — особый: `WRITER_STOPPED` значит, что движок остановил самого писателя, и этот писатель больше ничего не возьмёт. Пропускать до ключевого бесполезно — следующий ключевой получит тот же отказ. Поэтому приёмник зовёт `on_lost`, как при пропавшем демоне, и на следующем проходе регистратор открывает нового писателя. Если отказ — `wrong` (`PERMISSION_DENIED`, `READ_ONLY`), том больше не возьмёт ничего. Приёмник говорит об этом регистратору через `on_wrong`, и на следующем проходе регистратор отдаёт том. Говорит здесь, на потоке конвейера, а действует там, в проходе. `test_an_archive_that_refuses_writes_mid_run_is_handed_back` доказывает и отдачу, и паузу `REFUSED_FOR`, без которой регистратор взял бы тот же сломанный том обратно.
 
 **Движка нет.** `Unavailable` — не ответ о кадре (урок 6, шаг 4). Приёмник зовёт `on_lost`, это `RecWorker._lost_engine`, и пробрасывает исключение — для конвейера это тоже «не взят». Шаг 13 разбирает, что дальше.
 
 ```python
     def finish(self) -> None:
+        store = self.store_of()
+        if store is None:
+            return
         try:
-            self.store.finish(self.unit, self.epoch, self.backfill)
+            store.finish(self.unit, self.epoch, self.backfill)
         except ObsdError:
             pass
 ```
 
-`finish` глотает ошибку. Его зовут при остановке конвейера, и остановка не должна падать из-за тома, который уже ушёл.
+`finish` глотает ошибку и молча возвращается, если тома нет. Его зовут при остановке конвейера, и остановка не должна падать из-за тома, который уже ушёл.
 
 ## Шаг 11 — `appsink`: кадр, время захвата, пропуск до ключевого
 
@@ -424,12 +446,16 @@ class RecSink:
 
 `offered_bytes` считает, что дошло до приёмника. Сторож писателя сравнивает это с `totalWritten` тома и замечает писателя, который берёт меньше, чем ему дают (урок 10).
 
-При остановке записи актуатор закрывает открытую последовательность:
+При остановке и перезапуске записи актуатор закрывает открытую последовательность:
 
 ```python
-        if verb == "stop" and cam["id"] in getattr(self, "sinks", {}):
-            self.sinks.pop(cam["id"]).finish()            # the open sequence closed: what was taken is kept
+        if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
+            # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
+            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage.
+            self.sinks.pop(cam["id"]).finish()
 ```
+
+Перезапуск — тоже конец последовательности. Конвейер вернулся на удержание или сменил источник, и между последним кадром до перезапуска и первым после — промежуток. Если бы следующие кадры продолжили ту же последовательность, дыра оказалась бы внутри неё, и таймлайн нарисовал бы эту дыру как запись.
 
 В тестах камеру заменяет `FakeActuator.feed`. Он шлёт в приёмник кадры `fake_samples` с ключевым каждые две секунды, считает статусы и в конце зовёт `finish`. Поэтому `r.actuator.feed("1", t - 120, t)` возвращает `{"OK": 120}`.
 
@@ -487,7 +513,16 @@ class RecSink:
         self.engine_lost = True
 ```
 
-На потоке конвейера ничего не разбирается: там только флаг. Следующий проход видит `engine_lost`, закрывает остатки хранилища и открывает том заново. Сразу, а не через десять минут сторожа писателя: ждать нечего.
+На потоке конвейера ничего не разбирается: там только флаг. Следующий проход видит `engine_lost`, закрывает остатки хранилища и открывает том заново. Сразу, а не через десять минут сторожа писателя: ждать нечего. Конвейеры при этом не останавливаются: их приёмники спрашивают текущий том (шаг 10) и со следующего ключевого кадра пишут в нового писателя. `test_rec_volume.py::test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost` проверяет оба пути. Минута записана, `_lost_engine` и проход перемонтировали том — у старого `Archive` писателя нет, а тот же конвейер пишет следующую минуту в новый, и видна вся запись целиком: `[(t - 120, t)]`:
+
+```python
+    first = r.store
+    r._lost_engine(); r.lease_pass()                                   # the next pass remounts
+    assert r.store is not first and first.writer is None
+    assert r.actuator.feed("1", t - 60, t) == {"OK": 60}               # the same pipeline, into the new writer
+```
+
+Во второй половине теста писатель отвечает `WRITER_STOPPED`, и `engine_lost` снова поднят: новый писатель — на следующем проходе.
 
 Пока демона нет, том остаётся местом регистратора. Это `away`, а не `wrong`: том не отдаётся, ёмкость не обнуляется. `test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place` проверяет это на сокете, где никто не слушает. `test_a_daemon_that_is_not_there_does_not_stop_the_recorder` гоняет минуту цикла без демона: аренды продлеваются, heartbeat идёт и говорит `archive_failure: away`. `test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over` — обратный конец: демон вернулся, следующий проход открыл том, ошибка очистилась.
 
@@ -521,6 +556,8 @@ class RecSink:
 - **Останавливать конвейер на отвергнутом кадре.** Потеря одной группы превращается в потерю всего, что идёт следом.
 - **Время прихода вместо времени захвата.** Открытое кольцо резервной записи ляжет на полминуты позже, чем было снято.
 - **Отпустить аренду тома раньше, чем закрыт писатель.** Следующий регистратор найдёт в томе чужого писателя.
+- **Приёмник с томом, запомненным на старте.** После перемонтирования конвейер пишет в закрытый том, пока его не перезапустят, а перемонтирование его не перезапускает.
+- **`WRITER_STOPPED` как обычный отказ кадра.** Приёмник пропускает до ключевого, ключевой получает тот же отказ, и запись стоит, пока кто-то не перезапустит писателя.
 
 ## Итог
 
@@ -531,7 +568,7 @@ class RecSink:
 - Отказ тома имеет вид: `wrong` отдают, `away` и `busy` держат. Для локального диска вид тома решает больше, чем статус.
 - Открытие — единственная честная проверка. Новый том форматируется по квоте, писатель монтируется под владельцем `rec:<том>`.
 - Записанное становится видимым, когда закрыт блок. `seal` закрывает писателя и берёт его снова; каждый вопрос задаётся свежему читателю.
-- Отвергнутый кадр — пропуск до ключевого, без остановки конвейера. Пропавший демон — перемонтирование на следующем проходе.
+- Отвергнутый кадр — пропуск до ключевого, без остановки конвейера. Пропавший демон и `WRITER_STOPPED` — перемонтирование на следующем проходе, а приёмник спрашивает текущий том на каждом кадре и продолжает запись в новый.
 - Убитый регистратор не теряет записанного: демон закрывает последовательности и отдаёт писателя тому же владельцу. Аккуратная остановка закрывает писателя раньше, чем отпускает том.
 
 ## Упражнения

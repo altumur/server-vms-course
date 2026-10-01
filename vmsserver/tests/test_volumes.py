@@ -608,3 +608,33 @@ def test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_ad
     assert (p["access_key"], p["secret_key"], p["bucket"], p["path"]) == ("AKIAEXAMPLE", "wJalr", "vms", "site-7")
     shown = volumes.served(box.vars, REC_SPEC.sub, box.wall())["volumes"][0]
     assert shown["access_key"] == "AKIAEXAMPLE" and "access_secret" not in shown
+
+
+def test_a_pinned_recorder_whose_volume_will_not_open_is_not_a_place_to_put_a_recording():
+    """`$VOLUME` pins the volume: nothing to hand back, nowhere else to go. What the recorder CAN do is say so —
+    the error in its heartbeat and no capacity, as a spare — so the controller places nothing on it."""
+    box = Box()
+    open(os.path.join(box.root, "nope"), "wb").write(b"")                  # a FILE where the disk's directory should be
+    _disk(box, "bad", url=os.path.join(box.root, "nope", "deeper"))
+    r = recorder(box, "r-1", "srv-a", acl=False, env={"VOLUME": "bad"})
+    assert r.volume_pass() == "bad" and r.volume_error and r.capacity == 0
+    volumes.write(box.vars, {"name": "bad", "kind": "local", "url": os.path.join(box.root, "good"), "server": "srv-a",
+                             "quota_bytes": 64 << 20})                      # the administrator fixes the row
+    r.engine_lost = True                                                   # (the pinned branch opens again when asked to)
+    assert r.volume_pass() == "bad" and r.volume_error == "" and r.capacity == r.full_capacity
+
+
+def test_a_volume_another_writer_still_holds_is_said_to_be_busy():
+    """Busy is not away: the daemon answers, and it says somebody else's writer is in the volume — a recorder of
+    the same volume in its grace. Kept and said as busy, so the operator reads "wait" and not "the network"."""
+    import time
+    from tests.conftest import OBSD_LINGER_MS, store
+    box = Box()
+    url = _disk(box, "shared")
+    other = store("shared", path=url.replace("file://", ""), owner="rec:somebody-else")
+    r = recorder(box, "r-1", "srv-a", acl=False)
+    assert r.volume_pass() == "shared" and r.store is None
+    assert r.archive_failure == "busy" and r.heartbeat_extra()["archive_failure"] == "busy"
+    other.close()
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
+    assert r.volume_pass() == "shared" and r.store is not None and r.archive_failure == ""
