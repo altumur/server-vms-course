@@ -2,8 +2,9 @@
 # allocation on every server that declares meta.archive, pinned there for
 # as long as the server exists. It serves every subsystem's buckets, takes
 # mirrors from its peers, retains buckets by each subsystem's own policy,
-# runs the passes subsystems register on it (the VMS: manifests, media
-# retention), and reads its own tree as the event index — nothing to rebuild,
+# runs the passes subsystems register on it (the VMS registers none: its
+# footage is in volumes, behind the host's obsd), and reads its own tree as
+# the event index — nothing to rebuild,
 # a bounded cache of what it read — served as GET /events; the console merges these.
 # The same process М10 runs on a box (python3 -m vms resource).
 # No controller. Its heartbeat is platform/resources/<server>.
@@ -19,7 +20,7 @@ job "resource" {
   group "resource" {
     network {
       mode = "host"
-      port "manifests" { static = 8090 }
+      port "resource" { static = 8090 }
     }
     task "resource" {
       driver = "podman"
@@ -28,7 +29,7 @@ job "resource" {
         image        = "localhost/clustervms:latest"
         network_mode = "host"
         args         = ["python3", "-m", "cluster", "resource"]
-        volumes      = ["/data/spool:/data/spool", "/data/archive:/data/archive"]
+        volumes      = ["/data/archive:/data/archive"]
       }
       env {
         # The runtime's part of the seam (`w2cplatform/runtime.py`): the neutral names the loop
@@ -39,12 +40,12 @@ job "resource" {
         LABELS      = "${meta.labels}"
         INSTANCE_ID = "${NOMAD_ALLOC_ID}"
         OBJECTS      = "variables://objects"       # its heartbeat as a Variable; no MinIO on this cluster
-        RESOURCE_URL = "http://${attr.unique.network.ip-address}:8090"   # where peers PUT mirrors and the console asks /events, /manifest, /segment
+        RESOURCE_URL = "http://${attr.unique.network.ip-address}:8090"   # where peers PUT mirrors and the console asks /events
         NOMAD_NODE_NAME = "${node.unique.name}"
       }
       service {                                    # peers find each other here; verify-bench uses it
         name = "resource"
-        port = "manifests"
+        port = "resource"
       }
       resources { cpu = 200  memory = 384 }             # the tree, the passes, and the event index's cache (64 MiB) over this server's buckets
     }

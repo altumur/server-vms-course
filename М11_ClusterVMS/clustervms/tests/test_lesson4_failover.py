@@ -127,32 +127,31 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     (`distinct` by default): a rescheduled r-1 on srv-b would idle beside r-2 by
     policy, so the rec controller moves the recording to the recorder that is
     there, and it re-subscribes to the camera's new fan-out. The footage written
-    on srv-a stays on srv-a's disks under e1 — unavailable until it returns,
-    never rebuilt, never lost; the timeline names both."""
-    import os
-    from datetime import datetime, timezone
-    from cluster.resource import cluster_resource, resources_seen
-    from cluster.timeline import merged_timeline
+    on srv-a stays in srv-a's volume under e1 — unavailable until it returns,
+    never rebuilt, never lost; the timeline names it."""
+    import time
+    from cluster.console import cluster_routes
+    from cluster.resource import cluster_resource
     from w2cplatform.spec import SpecController
-    from vms.archive import Manifest, Segment, segment_path
     from vms.config import REC_SPEC, live_shm, live_url
+    from tests.conftest import VMS_TESTS
     c, ctl, a, act_a = _recording(1)
     rs = {s: cluster_resource(srv.resource, s, f"http://{s}", c.vars, c.objects, wall=c.wall) for s, srv in c.servers.items()}
     for r in rs.values(): r.heartbeat()
     rec = SpecController(REC_SPEC, c.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), c.objects, wall=c.wall)
     assert rec.policy() == {"servers": "distinct"} and ctl.policy() == {"servers": "shared"}   # each subsystem's own default
-    r1, r2 = c.recorder(1, "srv-a"), c.recorder(2, "srv-b"); r1.heartbeat_once(); r2.heartbeat_once()
+    r1, r2 = c.recorder(1, "srv-a"), c.recorder(2, "srv-b")
+    for r in (r1, r2):
+        r.lease_pass(); r.serve_archive(); r.heartbeat_once()                # each its server's own volume, open and served
     SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall).create({"name": "1", "cam": "1"})           # the operator: record camera 1
     pl = rec.ensure_placed()[0]
     assert pl.worker == "r-1" and r1.reconcile_once() == [("start", "1")]   # placed where the disks are; the camera comes to it (a recording's unit id is a name, not a number)
     assert r1.actuator.started["1"]["source"] == live_shm(1) and r1.actuator.started["1"]["via"] == "shm" and r1.actuator.started["1"]["epoch"] == 1   # so it reads the worker's tee, not RTSP
+    t = c.wall()
+    assert r1.actuator.feed("1", t - 600, t, step=10) == {"OK": 60}                           # ten minutes into srv-a's volume, as 1/e1
     r1.heartbeat_once()
-    t = c.wall(); srv_a = c.servers["srv-a"]
-    p = segment_path(srv_a.archive, "1", 1, datetime.fromtimestamp(t - 600, timezone.utc)); os.makedirs(os.path.dirname(p), exist_ok=True)
-    open(p, "wb").write(b"x" * 1000); Manifest(srv_a.archive, "1").append(Segment("1", 1, t - 600, t, os.path.relpath(p, srv_a.archive), 1000))
-    rs["srv-a"].heartbeat()
-    assert resources_seen(c.objects)["srv-a"]["units"] == {"rec": ["1"]}                       # footage: the recorder's tree
     # srv-a dies: w-1 and r-1 both silent, and so is srv-a's resource. Nomad's replacement w-1 comes up on srv-b
+    r1.session.vanish()                                                                         # no BYE: the writer is left detached
     c.wall.advance(LOST_AFTER + 3); r2.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
     act_b = FakeActuator(); b = c.worker(1, "srv-b", actuator=act_b)
     assert b.name == "w-1" and b.reconcile_once() == [("start", 1)] and act_b.epochs == {1: 2}   # the worker: Nomad's slot, the next epoch
@@ -167,13 +166,18 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     r2.heartbeat_once()
     assert rec.workers_seen()["r-2"].status[0]["via"] == "shm" and rec.where("1") == "r-2"
     assert live_url("srv-b", 1) == "rtsp://srv-b:8554/1"                                        # what r-2 would read had w-1 landed on srv-c
-    # the timeline: e1 on srv-a unavailable by name; e2 will be on srv-b — and srv-a's footage comes back with its disks
-    class R:
-        def read(self, url, cam): return Manifest(c.servers[url.rsplit("/", 1)[1]].archive, cam).read()
-    tl = merged_timeline(resources_seen(c.objects), R(), 1, t - 2000, t + 1, current_epoch=2, now=c.wall())
-    assert tl["segments"] == [] and tl["unreachable"] == ["srv-a"] and "not lost" in tl["note"]
-    rs["srv-a"].heartbeat()
-    tl = merged_timeline(resources_seen(c.objects), R(), 1, t - 2000, t + 1, current_epoch=2, now=c.wall())
-    assert [(s["server"], s["epoch"], s["fenced"]) for s in tl["segments"]] == [("srv-a", 1, True)] and tl["unreachable"] == []
-    a2 = c.recorder(1, "srv-a"); a2.heartbeat_once()
-    assert a2.name == "r-1" and a2.reconcile_once() == [] and rec.redistribute() == [] and rec.where("1") == "r-2"   # a place to record returned; nothing moves back
+    # the timeline: e1 in srv-a's volume unavailable by name; e2 will be in srv-b's — and srv-a's footage comes back with its disks
+    routes = cluster_routes(ctl)
+    _, tl = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    assert [s for s in tl["segments"] if s["epoch"] == 1] == []
+    assert [(g["volume"], g["server"]) for g in tl["unavailable"]] == [("srv-a", "srv-a")] and "not lost" in tl["note"]
+    time.sleep(VMS_TESTS.OBSD_LINGER_MS / 1000 + 0.3)                                            # the daemon notices r-1's session is gone
+    a2 = c.recorder(1, "srv-a"); a2.lease_pass(); a2.serve_archive(); a2.heartbeat_once()       # srv-a is back: r-1 again, on its own disks
+    assert a2.name == "r-1" and a2.store.reattached                                             # the writer the dead one left, picked up whole
+    a2.store.seal()
+    _, tl = routes(None, "GET", "/timeline/1", {"from": t - 2000, "to": t + 1})
+    spans = tl if isinstance(tl, list) else tl["segments"]
+    assert [(s["volume"], s["epoch"], s["fenced"]) for s in spans] == [("srv-a", 1, True)]      # e1, kept and told apart: e2 is the writer now
+    assert a2.reconcile_once() == [] and rec.redistribute() == [] and rec.where("1") == "r-2"  # a place to record returned; nothing moves back
+    for r in (r2, a2):
+        r.after_stop()

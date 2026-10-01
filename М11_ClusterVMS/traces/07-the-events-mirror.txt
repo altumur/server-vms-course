@@ -111,7 +111,7 @@ srv-c index -> {'units': 2, 'buckets': 2, 'mirrored': ['srv-b'], 'cached': 0}
   ]
 }
 
-# srv-a back with an EMPTY disk: restore -> {'pulled': 1, 'rec.added': 0, 'rec.dropped': 0, 'rec.media_removed': 0}
+# srv-a back with an EMPTY disk: restore -> {'pulled': 1}
 {
   "state": "live",
   "events": [

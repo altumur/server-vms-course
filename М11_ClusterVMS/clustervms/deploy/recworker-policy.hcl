@@ -10,10 +10,9 @@ namespace "default" {
     path "rec/holds/*"   { capabilities = ["write", "read", "list"] }   # the volume it took (М10B Lesson 10): a claim about this process, like its slot
     path "objects/rec/heartbeats/*" { capabilities = ["write", "read", "list"] }   # its heartbeat, as an object-as-Variable
     path "objects/rec/*" { capabilities = ["read", "list"] }            # the snapshot and the blobs: read, never written by a recorder
-    path "rec/*"         { capabilities = ["read", "list"] }
+    path "rec/*"         { capabilities = ["read", "list"] }            # its rows, the volumes, the keeps it copies into an incidents volume
     path "objects/vms/*" { capabilities = ["read", "list"] }            # the workers' heartbeats: live_url
     path "vms/*"         { capabilities = ["read", "list"] }
-    path "platform/space" { capabilities = ["read"] }                   # the watermark: a backfill does not fill a disk that is being emptied (М10B Lesson 18)
     # М12 Lesson 13: a camera that is a cluster of its own, recorded by another cluster. The backup on its
     # card reads the book of primaries its domain agent carried home, and when the agent last reached the
     # domain. Read only: the agent writes both.

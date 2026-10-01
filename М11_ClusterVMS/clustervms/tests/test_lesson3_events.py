@@ -5,10 +5,9 @@ it by being deleted and rebuilt — and merged by the console, which holds
 none; unavailable — by name — when the resource is, never lost; a detector's
 event about camera 7 found by a field, not by living in camera 7's bucket."""
 import os
-from datetime import datetime, timezone
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
 from cluster.resource import cluster_resource, peers_of, resources_seen
-from vms.archive import Manifest, event_log, segment_path
+from vms.archive import event_log
 from w2cplatform.events import EventLog, buckets_under, subsystems_under
 from tests.conftest import Cluster
 
@@ -31,15 +30,6 @@ class DirReader:
         with open(dest, "wb") as f: f.write(data)
     def get(self, url, server, path):
         with open(os.path.join(self._srv(url).archive, ".mirror", server, path), "rb") as f: return f.read()
-
-
-def _media(c, server, cam, epoch, start):
-    srv = c.servers[server]
-    p = segment_path(srv.spool, cam, epoch, datetime.fromtimestamp(start, timezone.utc))
-    os.makedirs(os.path.dirname(p), exist_ok=True)
-    with open(p, "wb") as f: f.write(b"x" * 1000)
-    os.utime(p, (start + B, start + B))
-    return srv.resource.promote(p)
 
 
 def _observe(c, server, sub, unit, epoch, t, kind, **fields):
@@ -71,7 +61,6 @@ def _merged(c, rs):
 
 def test_events_are_indexed_by_each_resource_and_merged_by_the_console_which_holds_none():
     c = Cluster(); t = c.wall() - 3600
-    _media(c, "srv-a", 7, 3, t)
     _observe(c, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")            # the VMS worker, recording camera 7
     _observe(c, "srv-a", "vms", "7", 3, t + 40, "silent")
     _observe(c, "srv-b", "vms", "7", 4, t + 1205, "motion")                        # after a failover: next epoch, other server, not recording
@@ -136,8 +125,8 @@ def test_the_resource_policy_retains_each_subsystems_buckets_by_its_own_row():
     res = cluster_resource(srv.resource, "srv-a", "http://srv-a", c.vars, c.objects, wall=c.wall)
     rep = res.pass_()
     assert rep["removed"] == 2 and os.path.exists(p2) and not os.path.exists(p1) and not os.path.exists(p3)
-    assert rep["rec.added"] == 0 and rep["rec.media_removed"] == 0 and Manifest(srv.archive, 1).read() == []   # the recorder's pass: no footage here, nothing to do
-    assert not os.path.exists(os.path.join(srv.archive, "rec"))                   # events are the worker's tree (vms/); footage would be the recorder's (rec/)
+    assert not any(k.startswith("rec.") for k in rep)                            # no footage here: nothing of the recorder's to pass over
+    assert not os.path.exists(os.path.join(srv.archive, "rec"))                   # events are the worker's tree (vms/); footage is in a volume
 
 
 def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
@@ -182,7 +171,7 @@ def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
     shutil.rmtree(c.servers["srv-a"].archive); os.makedirs(c.servers["srv-a"].archive)
     hbs["srv-a"].heartbeat()
     r = pol["srv-a"].restore()
-    assert r["pulled"] == 2 and r["rec.added"] == 0                                                  # its two closed buckets are home; no footage was ever here (rec/ is the recorder's)
+    assert r["pulled"] == 2 and not any(k.startswith("rec.") for k in r)                             # its two closed buckets are home; footage is never here (it is in volumes)
     assert [b.path for b in buckets_under(c.servers["srv-a"].archive, "vms", "7", B)] == [ev[0]["bucket"]]
     hbs["srv-a"].heartbeat()
     assert _index(c, rs, "srv-a")["buckets"] == 2                                                    # its job restarts: the index over the restored tree

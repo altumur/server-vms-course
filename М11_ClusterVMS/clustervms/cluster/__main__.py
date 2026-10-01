@@ -1,5 +1,6 @@
 """python3 -m cluster worker | controller | recorder | reccontroller | console | resource — the jobs
-(each resource keeps the event index over its own tree; the recorder is the only writer of footage).
+(each resource keeps the event index over its own tree; the recorder is the only writer of footage, through
+the host's obsd — the `obsd` system job, which is not a Python process).
 
     CONFIG_URL                         the store, as a URL: nomad://host:port here, k8s://ns/prefix at a k8s site,
                                        file:///path on a bench. Defaults from NOMAD_ADDR; NOMAD_TOKEN is the task's
@@ -9,9 +10,12 @@
     SLOT_INDEX, SERVER_NAME, LABELS    worker, recorder: the slot to claim (w-<i>, r-<i>), the server, what it can reach —
                                        neutral names (`w2cplatform/runtime.py`); the jobspec maps NOMAD_ALLOC_INDEX,
                                        node.unique.name and meta.labels into them, a k8s manifest the ordinal and a fieldRef
-    ARCHIVE                            worker: where its events go (the resource on its server); recorder and resource: the same disks
-    SPOOL                              recorder: where its pipelines write before promotion
-    RESOURCE_URL                       resource: how the console reaches this server's manifests and events
+    ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
+                                       recorder's own volume under it, `$ARCHIVE/volume`, when nothing is declared
+    OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (default /run/vms/obsd.sock)
+    ARCHIVE_HOST, ARCHIVE_PORT         recorder: its archive door — the node's address, so the console and a primary
+                                       backfilling from a backup can reach it
+    RESOURCE_URL                       resource: how the console reaches this server's events
     CAPACITY                           worker: cameras it can carry on this server
 """
 from __future__ import annotations
@@ -39,12 +43,12 @@ stop = threading.Event()
 for s in (signal.SIGTERM, signal.SIGINT):
     signal.signal(s, lambda *_: stop.set())
 objects = open_store(os.environ.get("OBJECTS", "variables://objects"))
-spool, archive = os.environ.get("SPOOL", "/data/spool"), os.environ.get("ARCHIVE", "/data/archive")
+archive = os.environ.get("ARCHIVE", "/data/archive")
 
 
 def worker() -> None:
     """holds the camera: one connection, one epoch, one fan-out (rtsp://<server>:8554/<cam>), its events into
-    the resource on its server. No spool, no footage: recording is the recorder's."""
+    the resource on its server. No footage: recording is the recorder's."""
     from cluster.worker import ClusterWorker
     try:
         from gstvms.actuator import GstActuator
@@ -61,18 +65,22 @@ def worker() -> None:
 
 
 def recorder() -> None:
-    """the only writer of footage: subscribes to the worker's fan-out, writes rec/<cam>/e<epoch>/ on THIS server's
-    archive, promotes closed segments from the spool on every pass."""
-    from vms.archive import ArchiveResource
+    """the only writer of footage: subscribes to the worker's fan-out and writes into the volume it holds, through
+    the host's obsd; serves that volume at its archive door."""
     from cluster.recworker import ClusterRecorder
     try:
         from gstvms.actuator import GstRecActuator
-        act = GstRecActuator(spool, archive, int(os.environ.get("SEGMENT_SECONDS", "600")))
+        act = GstRecActuator()
     except ImportError:
         logging.warning("no GStreamer: the fake actuator records nothing"); act = None
-    r = ClusterRecorder(open_vars(CONFIG_URL), objects, act, archive=ArchiveResource(spool, archive))
-    logging.info("recorder %s on %s (alloc %s) claimed its slot; labels %s", r.name, r.server, r.alloc, r.labels)
-    r.run(stop=stop)
+    r = ClusterRecorder(open_vars(CONFIG_URL), objects, act, archive_root=archive)
+    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "0.0.0.0"), int(os.environ.get("ARCHIVE_PORT", "8084")))
+    logging.info("recorder %s on %s (alloc %s) claimed its slot; labels %s; archive door %s",
+                 r.name, r.server, r.alloc, r.labels, r.archive_url)
+    try:
+        r.run(stop=stop)
+    finally:
+        srv.shutdown()
 
 
 def reccontroller() -> None:
@@ -122,14 +130,12 @@ def console() -> None:
 
 def resource() -> None:
     """М10's resource process as a job: the platform's Resource with the VMS registered on it, and the event index over its own tree."""
-    from vms.archive import ArchiveResource
-    from cluster.resource import cluster_resource, vms_routes
+    from cluster.resource import cluster_resource
     from w2cplatform.resource import serve
-    arch = ArchiveResource(spool, archive)
     server = runtime.server(os.environ)
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
-    res = cluster_resource(arch, server, url, open_vars(CONFIG_URL), objects)
-    srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")), extra=vms_routes(arch))
+    res = cluster_resource(archive, server, url, open_vars(CONFIG_URL), objects)
+    srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")))
     res.heartbeat(); logging.info("restore: %s", res.restore())    # back with an empty disk? pull my buckets from my peers first
     last_policy = 0.0
     while not stop.is_set():

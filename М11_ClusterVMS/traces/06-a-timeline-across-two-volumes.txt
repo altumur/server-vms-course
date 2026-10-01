@@ -1,0 +1,97 @@
+# what each recorder says of its volume (its heartbeat, the door's address left out)
+r-1 on srv-a: volume 'srv-a', archive 'file:///data/srv-a/archive/volume', writer {'state': 'ok'}
+r-2 on srv-b: volume 'srv-b', archive 'file:///data/srv-b/archive/volume', writer {'state': 'ok'}
+
+# GET /timeline/7 — both recorders answer
+[
+  {
+    "start": 1757498800.0,
+    "end": 1757499100.0,
+    "epoch": 3,
+    "fenced": true,
+    "recording": "7",
+    "recorder": "r-1",
+    "volume": "srv-a",
+    "media": "/export/7?rec=7"
+  },
+  {
+    "start": 1757499400.0,
+    "end": 1757499550.0,
+    "epoch": 3,
+    "fenced": true,
+    "recording": "7",
+    "recorder": "r-1",
+    "volume": "srv-a",
+    "media": "/export/7?rec=7"
+  },
+  {
+    "start": 1757499700.0,
+    "end": 1757500000.0,
+    "epoch": 4,
+    "fenced": false,
+    "recording": "7",
+    "recorder": "r-2",
+    "volume": "srv-b",
+    "media": "/export/7?rec=7"
+  }
+]
+
+# srv-a's recorder has been silent for 60 s
+{
+  "segments": [
+    {
+      "start": 1757499700.0,
+      "end": 1757500000.0,
+      "epoch": 4,
+      "fenced": false,
+      "recording": "7",
+      "recorder": "r-2",
+      "volume": "srv-b",
+      "media": "/export/7?rec=7"
+    }
+  ],
+  "unreachable": [],
+  "unavailable": [
+    {
+      "volume": "srv-a",
+      "server": "srv-a",
+      "recorder": "r-1",
+      "since": 1757500000.0
+    }
+  ],
+  "note": "footage in srv-a (on srv-a) is unavailable until a recorder holds it again — not lost"
+}
+
+# srv-a is back — its volume with it
+[
+  {
+    "start": 1757498800.0,
+    "end": 1757499100.0,
+    "epoch": 3,
+    "fenced": true,
+    "recording": "7",
+    "recorder": "r-1",
+    "volume": "srv-a",
+    "media": "/export/7?rec=7"
+  },
+  {
+    "start": 1757499400.0,
+    "end": 1757499550.0,
+    "epoch": 3,
+    "fenced": true,
+    "recording": "7",
+    "recorder": "r-1",
+    "volume": "srv-a",
+    "media": "/export/7?rec=7"
+  },
+  {
+    "start": 1757499700.0,
+    "end": 1757500000.0,
+    "epoch": 4,
+    "fenced": false,
+    "recording": "7",
+    "recorder": "r-2",
+    "volume": "srv-b",
+    "media": "/export/7?rec=7"
+  }
+]
