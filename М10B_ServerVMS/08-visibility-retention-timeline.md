@@ -1,292 +1,503 @@
-# Урок 8 — Архив II: починка, хранение, таймлайн
+# Урок 8 — Видимость, срок хранения, таймлайн
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** вторую половину `vms/archive.py` — `ArchiveResource.repair`, `retain`, `Manifest.timeline` и `ArchivePolicy` с его `pass_`.
+**Вы напишете:** вторую половину `vms/archive.py` — `visible_from`, `authoritative`, `Archive.spans` с `_timeline` (вопрос окнами по пять дней), `Archive.timeline`, `coverage`, `depth_days`, `samples`; и в `vms/recworker.py` — дверь архива `archive_routes`, `RecWorker.serve_archive` и `RecWorker._visible_from`.
 **Время:** ~75 минут.
 
 ## Зачем этот урок
 
-Три функции и один класс, и каждая отвечает на вопрос, который возникает после того, как система проработала месяц.
+Прежний урок 8 отвечал на три вопроса, которые возникают после месяца работы. Индекс разошёлся с файлами — как починить? Диски кончаются — как удалять старое? Что видит оператор — как построить таймлайн? Видео теперь лежит в томах ObjectStorage (уроки 6 и 7), и ответы на два первых вопроса поменялись целиком.
 
-**`repair`** — манифест разошёлся с файлами. Падение между переносом и строкой, ручное удаление, замена диска, восстановление из бэкапа. Функция приводит индекс в соответствие с тем, что есть, — **из одних файлов**, ничего ни у кого не спрашивая. Это оплата того векселя, который был выписан в уроке 7: путь — самодостаточная запись, значит индекс восстановим.
+**Чинить нечего.** Индекс тома ведёт движок, а не курс. Рядом с томом курс не хранит ни одной строки, которая могла бы с ним разойтись.
 
-**`retain`** — диски кончаются. Удаление старого, и снова в правильном порядке: файл, потом строка.
+**Удалять по сроку тоже нечего.** Том — кольцо: заполнился — отдаёт старейшие блоки сам. Поле `retention_days` теперь значит другое: это **потолок видимости**, то есть насколько далеко назад двери показывают запись. Что в томе ещё есть, решает кольцо.
 
-**`timeline`** — то, что видит оператор: интервалы записи, и среди них — бледные, отсечённые эпохой. Момент, когда механизм отсечения из урока 6 М10A становится картинкой на экране.
+**Таймлайн остался, и он стал интереснее.** Его строят из индекса тома, по всем потокам записи, а индекс отвечает только про закрытые блоки. Две эпохи над одними минутами таймлайн показывает обе, а при чтении кадров каждую минуту получает одна эпоха — старшая.
 
-**`ArchivePolicy`** — и это, пожалуй, главное в уроке. У архива **нет своего процесса**. Есть класс с одним методом `pass_`, который регистратор **вешает** на платформенный ресурс из урока 16 М10A. Таймер, цикл, heartbeat, HTTP — всё платформенное; подсистема приносит сорок строк своего прохода.
+И последнее: всё это выходит наружу через **дверь архива** — HTTP регистратора над томом, который он держит. Её читают консоль (урок 12), скан (урок 20), резервная запись (урок 26) и копирование удержаний.
 
-Убывание стоимости подсистемы, о котором говорит проектная записка, видно здесь буквально: чтобы у VMS появилось хранение видео, не понадобилось ни одного нового процесса.
-
-> **Проверка без железа.** Весь урок: `test_manifest_rebuilt_from_the_files_alone`, `test_retention_file_first_then_line`, `test_timeline_marks_a_fenced_epoch_and_spans_two_resources` — настоящие файлы, временный каталог, поддельные часы.
+> **Проверка без железа.** Весь урок идёт против настоящего `obsd`: `tests/conftest.py` поднимает демон (`ObsdDaemon`) с коротким `OBSD_WRITER_GRACE_S`, а без бинарника тест падает с подсказкой, как его собрать (`ObjectStorage/standalone-build/build.sh`, `OBSD_BIN`). GStreamer не нужен: кадры даёт `vms.worker.fake_samples`, а `footage` из `conftest.py` пишет их в поток. Тесты урока: `test_lesson3_archive.py`, `test_obsd.py`, `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames`, `test_review_remainder.py::test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days`, `test_scan.py::test_two_epochs_over_the_same_minutes_the_later_one_owns_them`, `test_doors.py::test_a_recorders_archive_door_names_a_recording_and_nothing_else`.
 
 ## Что нужно знать заранее
 
-- **Урок 7** — `parse`, `Manifest`, `rewrite`, порядок подтверждения.
-- **Урок 6 М10A** — эпоха: то, что здесь превращается в бледный интервал.
-- **М10A, урок 14** — `Resource.register` и `pass_`: дверь, в которую входит `ArchivePolicy`.
-- **Урок 1** — два срока хранения и производная строка: почему видео и события живут по разным правилам.
+- **[Урок 6](06-objectstorage-the-engine.md)** — `obsd`, сессия, `Volume`, `Writer`, `Reader`, `Sample`; время архива в миллисекундах с 1900 года (`archive_ms`, `unix_s`).
+- **[Урок 7](07-volume-block-sequence-stream.md)** — том, блок, последовательность, поток; `stream_name`, `parse_stream`, `Span`, `Archive.open`.
+- **[Урок 10](10-recworker.md)** — регистратор держит один том; его эпохи (`self.epochs`) и порядок ухода с тома.
+- **М10A, урок 6** — эпоха: то, что здесь становится бледным интервалом.
+- **М10A, урок 14** — ресурс и срок хранения бакетов: события живут по своему правилу, и в этом уроке их нет.
 
 ## Чему вы научитесь
 
-1. Приводить индекс в соответствие с данными, не обращаясь ни к какому внешнему источнику.
-2. Писать идемпотентную починку и понимать, почему это требование, а не удобство.
-3. Удалять по сроку в порядке, который переживает падение.
-4. Показывать отсечённые данные вместо того, чтобы их прятать или удалять.
-5. Давать подсистеме проход по чужому таймеру и ничего для этого не запускать.
+1. Отличать «записано» от «видно» и строить планы по тому, что видно.
+2. Объяснять, почему курсу нечего чинить в томе.
+3. Отделять «сколько показываем» от «сколько есть».
+4. Отвечать по последней прочитанной строке, когда хранилище молчит, а не по умолчанию.
+5. Строить таймлайн из индекса тома окнами, которые движок не отвергает.
+6. Показывать обе эпохи над одними минутами и при этом отдавать каждую минуту одной.
+7. Открывать том наружу дверью, которая называет запись и ничего больше.
 
 ---
 
-## Шаг 1 — Починка
+## Шаг 1 — Чинить нечего
+
+Прежний `repair` сверял две вещи: строки манифеста и файлы на диске. Расхождение было возможно, потому что индекс лежал рядом с данными и писался отдельным шагом.
+
+Теперь отдельного индекса у курса нет. Шапка `vms/archive.py` говорит это одной строкой:
 
 ```python
-    def repair(self) -> dict:
-        """Make the manifests agree with the files: add lines for files no
-        line names (with the epoch from the path), drop lines whose file is
-        gone. Idempotent."""
+#   a span         what the index says one stream holds, `(unit, epoch, start, end, bytes, source)` — read
+#                  from the engine every time, never kept beside it
 ```
 
-Докстрока перечисляет две правки и одно свойство.
+Спан (то, что индекс тома говорит об одном потоке) курс каждый раз спрашивает у движка и нигде не сохраняет. Значит, сохранённой копии, которая разошлась бы с томом, не существует.
 
-**Дописать строки для файлов, которых никто не называет.** Файл в архиве, строки нет — падение между шагами 1 и 2 из урока 7, или ручное копирование.
+Остаётся вопрос, который `repair` закрывал вторым: что с записью, если процесс упал посреди неё. Его закрывает демон. Тест `test_obsd.py::test_one_writer_per_volume_and_a_vanished_one_waits_for_its_owner` убивает сессию регистратора без `BYE` и проверяет три вещи:
 
-**Выбросить строки, чьих файлов нет.** Строка есть, файла нет — удалили руками, потеряли на сбое диска, восстановили частично.
+- демон закрывает открытые последовательности сам, и взятое не теряется;
+- писатель остаётся смонтированным, *отсоединённым*, и ждёт `OBSD_WRITER_GRACE_S` того же `owner`;
+- регистратор, запущенный заново с `rec:<volume>`, получает того же писателя (`reattached: true`), и шва в записи нет.
 
-**Идемпотентна.** Второй вызов ничего не меняет. Это требование, а не удобство: проход вешается на таймер и будет выполняться каждую минуту, каждую минуту следующие десять лет. Функция, чей второй вызов отличается от первого, в такой позиции накопит расхождение.
+Если владелец не вернулся, демон по истечении срока закрывает писателя чисто, и следующий монтирующий находит чистый том (`test_after_the_grace_the_volume_is_clean_for_anybody`). Том, оставшийся нечистым после падения самого хоста, движок восстанавливает при монтировании; это его работа, и курс её не повторяет.
+
+На долю курса остаётся порядок ухода с тома. Его держит `Archive.close`:
 
 ```python
-        added = dropped = 0
-        for unit in self.units():
-            man = Manifest(self.root, unit)
-            lines = {s.path: s for s in man.read()}
-            present = {}
-            for d, _, files in os.walk(unit_dir(self.root, SUB, unit)):
-                for f in files:
-                    p = os.path.join(d, f)
-                    parsed = parse(p, self.root)
-                    if parsed:
-                        present[os.path.relpath(p, self.root)] = parsed
+    def close(self) -> None:
+        """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
+        last minutes readable, and a volume released first would be somebody else's with a writer still in it."""
 ```
 
-Два словаря по относительному пути: что **сказано** и что **есть**.
+Сначала закрыть писателя, потом отпустить удержание тома. Обратный порядок даёт два писателя в одном томе. Подробно это разобрано в [уроке 10](10-recworker.md) (`test_rec_volume.py::test_leaving_a_volume_closes_its_writer_before_the_hold_goes`).
 
-Ключ — относительный путь, и это тот же путь, что лежит в строке манифеста (урок 7). Одно и то же выражение с обеих сторон, сравнение — по словарю.
+## Шаг 2 — Записано не значит видно
 
-`parse(p, self.root)` снова отсеивает не-сегменты: манифест, лежащий в этом же каталоге, в `present` не попадёт.
+Это правило движка, и половина логики регистратора выводится из него. Шапка `archive.py`:
 
 ```python
-            for rel, (c, epoch, start) in present.items():
-                if rel not in lines:
-                    st = os.stat(os.path.join(self.root, rel))
-                    lines[rel] = Segment(c, epoch, start.timestamp(), st.st_mtime, rel, st.st_size)
-                    added += 1
+#   visibility     a reader sees only CLOSED blocks, and only those closed when it mounted. So every question
+#                  is asked of a fresh reader, and what was written a minute ago may not be an answer yet: the
+#                  recorder plans by what it can SEE (`RecWorker.gaps`), and a writer is closed and opened again
+#                  (`Archive.seal`) when the minutes just written have to be readable now
 ```
 
-Вот он, обещанный вексель. **Строка манифеста собирается целиком из файла.**
+Читатель видит только закрытые блоки. Блок закрывается, когда начинается следующий или когда писателя закрывают. `WRITER_FLUSH` кладёт хвост на носитель, но блок не закрывает. Тест `test_obsd.py::test_a_reader_sees_only_closed_blocks_and_only_what_was_there_when_it_mounted` проверяет это по шагам: после `flush` читатель не видит ничего, после `close` новый читатель видит всё, а читатель, смонтированный раньше, по-прежнему не видит ничего.
 
-`c`, `epoch`, `start` — из пути. `end` — из `mtime`. `bytes` — из `st_size`. Ни одного поля, которое пришлось бы у кого-то спрашивать.
-
-Именно поэтому в уроке 7 эпоха пошла в каталог, а время старта — в имя. Если бы эпоха лежала в базе, эта строка была бы невозможна, и восстановление после потери манифеста требовало бы восстановления базы. Здесь достаточно диска.
+Из последнего пункта следует первое решение: **каждый вопрос задаётся свежему читателю**.
 
 ```python
-            for rel in list(lines):
-                if rel not in present:
-                    del lines[rel]
-                    dropped += 1
-            man.rewrite(list(lines.values()))
-        return {"added": added, "dropped": dropped}
+    def reader(self):
+        if self._reader is not None:
+            try:
+                self._reader.close()
+            except ObsdError:
+                pass
+        try:
+            self._reader = self._open_volume().mount_ro()
+        except ObsdError as e:
+            raise classify(e) from None
+        return self._reader
 ```
 
-Вторая правка симметрична. `rewrite` (урок 7) записывает через временный файл с атомарной заменой и сортировкой.
+Держать одного читателя долго было бы дешевле. Но такой читатель застыл бы в моменте своего монтирования, и таймлайн через час показывал бы часовой давности картинку.
 
-`rewrite` вызывается **всегда**, даже когда ничего не изменилось. Лишняя запись файла раз в минуту на камеру — заметно, если камер тысяча; на сорока — нет. Оптимизация очевидна (`if added or dropped`), и то, что её не сделали, стоит понимать как выбор: `rewrite` заодно **сортирует и нормализует** файл, и манифест, дописывавшийся не по порядку, приводится в порядок.
-
-Возврат — счётчики. Их складывает `pass_`, и они попадают в статус ресурса: ненулевой `added` месяц спустя означает, что что-то регулярно падает между переносом и строкой, и это стоит увидеть.
-
-## Шаг 2 — Хранение
+Второе решение — `seal`, для случаев, когда только что записанное нужно увидеть сейчас:
 
 ```python
-    def retain(self, unit, days: float, now: float, kept: list | tuple = (), report: dict | None = None) -> int:
-        cutoff = now - days * 86400
-        man = Manifest(self.root, unit)
-        keep, removed = [], 0
-        for s in man.read():
-            if s.end < cutoff and held(kept, s.start, s.end):
-                keep.append(s)
-                if report is not None:
-                    report["kept"] = report.get("kept", 0) + 1
-            elif s.end < cutoff:
-                self.remove(s, "retention", now, days=days)
-                removed += 1
-            else:
-                keep.append(s)
-        if removed:
-            man.rewrite(keep)
-        return removed
+    def seal(self) -> None:
+        """Close the writer and take it again: its last block is closed, and what was written is readable. What
+        a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = self._open_volume().mount_rw(self.owner)
 ```
 
-`self.remove` — это `os.remove` файла с проглоченным `FileNotFoundError`, перед которым пишется строка в журнал удалений. А `kept` — интервалы, которые кто-то сказал сохранить: сегмент под меткой остаётся и после срока. И то и другое — урок 18, шаги 10 и 11; здесь достаточно знать, что без меток и без журнала функция делает ровно то, что написано ниже.
-
-**Файл первым, потом строка** — и это, на первый взгляд, противоречит уроку 7, где строка писалась после файла. На самом деле правило одно и то же, просто применённое к удалению.
-
-Правило: **между двумя состояниями допустимо только то промежуточное, которое чинится.**
-
-При добавлении: файл без строки — чинится (`repair` допишет). Строка без файла — ложь на экране.
-При удалении: **файла нет, строка есть** — снова чинится (`repair` выбросит). Файл есть, строки нет — тоже чинится, но это значит, что удаление не довелось до конца и файл проживёт до следующего прохода.
-
-Из двух починимых вариантов выбран тот, где **место освобождается сразу**. Хранение существует ради дисков; порядок, при котором падение оставляет файл на диске, работает против своей цели.
-
-`FileNotFoundError` проглатывается: файла уже нет, строку всё равно надо убрать. Удаление идемпотентно по своей природе.
-
-`if removed:` — здесь перезапись условная, в отличие от `repair`. Ничего не удалили — файл не трогаем.
-
-Докстрока договаривает разделение из урока 1: **это только видео.** Бакеты событий удаляет платформенный ресурс по строке `vms/retention/<cam>`, которую пишет контроллер VMS из поля `events_retention_days`. Два срока, два механизма, два владельца — и в этой функции второго нет вовсе.
-
-## Шаг 3 — Таймлайн
+В коде регистратора `seal` зовёт копирование удержаний: скопированное должно быть видно, чтобы его посчитать и взять от него sha256.
 
 ```python
-    def timeline(self, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
-        """Media spans overlapping [t0, t1), each marked *fenced* if its epoch is
-        older than the recorder's current one. Events are not here: the resource's
-        event index answers them, and the console draws them over these spans."""
+                if rec in touched:
+                    self.store.seal()                    # what was copied is readable now — and counted below
+```
+
+Тесты зовут `seal` постоянно, и `footage` из `conftest.py` делает это по умолчанию. Тест `test_lesson3_archive.py::test_written_is_readable_once_its_block_is_closed` показывает разницу в две строки: после записи `coverage("7") == []`, после `seal()` — `[(t, t + 600)]`.
+
+Третье следствие касается того, как регистратор планирует. Его собственный взгляд на запись — `our_coverage`, и это тоже вопрос свежему читателю:
+
+```python
+    def our_coverage(self, unit) -> list[tuple[float, float]]:
+        if self.store is None:
+            return []
+        try:
+            return self.store.coverage(str(unit), self.stitch)
+        except ArchiveError:
+            return []
+```
+
+Дыры для дозаписи (урок 16) регистратор ищет только до конца видимого покрытия. Комментарий над `gaps` объясняет почему:
+
+```python
+    # Not newer than what we can SEE (the feedback's Q). A reader sees only closed blocks, and a block closes
+    # when the next begins — minutes, at a low bitrate. Everything after the end of our visible coverage is
+    # either being written this minute or written and not yet visible, and there is no need to tell the two
+    # apart: neither is a gap.
+```
+
+Без этой границы регистратор принимал бы за дыру то, что сам пишет прямо сейчас, и тянул бы эти минуты с карты камеры повторно. Та же причина у памяти `landing`: только что скопированный диапазон невидим, пока не закрылся его блок, и он не дыра (`test_rec_volume.py::test_footage_fetched_into_a_gap_goes_into_the_backfill_stream_and_waits_to_be_seen`).
+
+## Шаг 3 — Срок хранения — это потолок
+
+Тест `test_obsd.py::test_the_volume_is_a_ring_and_its_oldest_minutes_go_first` пишет 22 МБ в том на 16 МБ. Никто ничего не удалял, а первых секунд в томе больше нет: кольцо перезаписало свои старейшие блоки. Признак замкнутого кольца — `firstBlockId > 0` в `READER_STATUS`.
+
+Шапка `archive.py`:
+
+```python
+#   the ring       a volume is formatted at its quota and overwrites its oldest blocks when full. Nothing is
+#                  deleted by age: `retention_days` is a CEILING on what the doors show (`visible_from`), and
+#                  how deep the archive really is, is read off the index (`depth_days`)
+```
+
+Движок по сроку ничего не удаляет. Сколько дней видео лежит в томе, решает его размер — квота, заданная при форматировании. Поэтому поле `retention_days` в строке записи больше не управляет удалением. Оно задаёт, насколько далеко назад двери **показывают** запись:
+
+```python
+def visible_from(row: dict | None, now: float) -> float:
+    """`retention_days` is a ceiling on what the doors show — the ring decides what is still THERE."""
+    days = float((row or {}).get("retention_days") or 30)
+    return now - days * 86400
+```
+
+Зачем потолок, если удалить по нему нельзя? У части установок обещание звучит так: «никто не видит больше недели». Это обещание о видимом, и дверь может его сдержать, даже когда кольцо держит месяц.
+
+Записи без строки достаются тридцать дней, а не «всё». Строки нет, например, когда запись только что удалили. Показать всё, что ещё лежит в кольце, значило бы открыть то, что строка ограничивала.
+
+Дверь применяет потолок одной строкой, к началу вопроса:
+
+```python
+            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
+```
+
+Тест `test_lesson3_archive.py::test_retention_is_a_ceiling_on_what_is_shown_and_the_ring_decides_what_is_there` пишет три отрезка: 1, 10 и 19 октября. При `retention_days: 8` и «сейчас» 20 октября дверь показывает один отрезок, а `st.spans("7")` по-прежнему находит три. Там же проверено умолчание: `visible_from(None, now) == now - 30 * 86400`.
+
+Честное примечание к этой строке. Потолок обрезает начало **вопроса**, а не спаны ответа. Движок отдаёт интервал целиком, если тот пересекает окно. Поэтому непрерывная запись, начавшаяся раньше потолка, вернётся одним спаном со своим настоящим началом. Кадров раньше потолка `/samples` при этом не отдаст: там обрезается тот же `t0`, а `samples` берёт только отрезки внутри `[t0, t1)`.
+
+Два исключения из потолка стоит знать.
+
+Том вида `incidents` показывает всё:
+
+```python
+        if self.incidents:
+            return 0.0                                # everything in an incidents volume is there because somebody kept it
+```
+
+Всё, что лежит в таком томе, кто-то отметил к удержанию. Прятать это по сроку обычной записи значило бы прятать улики.
+
+И потолок не обещает глубины. Сколько дней запись должна **держать**, говорит поле `min_depth_days`, и его никто не исполняет: кольцо отдаёт старое, что бы ни обещали. Регистратор это наблюдает и поднимает тревогу `archive.shallow`, когда кольцо замкнулось, а запись держит меньше обещанного (`depth_pass`; [урок 18](18-what-the-archive-gives-up-first.md)).
+
+События живут по третьему правилу, и в `archive.py` их нет. Бакеты событий удаляет платформенный ресурс по строке `vms/retention/<cam>` (М10A, урок 14; [урок 11](11-the-resource-process.md)). Тест `test_lesson3_archive.py::test_events_are_buckets_on_the_resource_recording_or_not` проверяет обе стороны: проход ресурса удаляет два старых бакета, а покрытие записи после него то же, что было до.
+
+## Шаг 4 — Строка, которую хранилище не отдало
+
+Дверь читает строку записи на каждый вопрос: её срок могли поменять минуту назад. Значит, хранилище может не ответить посреди вопроса. Наивный код прочитал бы отказ как «строки нет» и показал бы тридцать дней.
+
+```python
+    # A row the store did not GIVE is not a row that is gone (feedback BI). Read as "gone" it would show a week's
+    # recording for thirty days, or hide ninety days' recording past thirty, for as long as the store blinked. So
+    # the door answers on what the row said last; thirty days only for a recording it has never read.
+    def _visible_from(self, unit) -> float:
+        from .archive import visible_from
+        if self.incidents:
+            return 0.0                                # everything in an incidents volume is there because somebody kept it
+        try:
+            items, _ = self.vars.get(self.SUB.config(self.ROWS, str(unit)))
+            row = self._rows_seen[str(unit)] = items if items and items.get("deleted") != "true" else None
+        except OSError:
+            row = self._rows_seen.get(str(unit))
+        return visible_from(row, self.wall())
+```
+
+Ошибка по умолчанию стоила бы двух разных неприятностей. Запись со сроком в неделю на время сбоя показала бы тридцать дней, и обещание «не больше недели» нарушилось бы. Запись со сроком в девяносто дней спрятала бы два месяца, и оператор решил бы, что их нет.
+
+Поэтому три случая различаются явно:
+
+- хранилище ответило, строка есть — её срок, и строка запоминается в `_rows_seen`;
+- хранилище ответило, строки нет (или она помечена `deleted`) — тридцать дней, и это тоже запоминается;
+- хранилище не ответило — последняя прочитанная строка; тридцать дней только для записи, которую дверь не читала ни разу.
+
+Тест `test_review_remainder.py::test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days` пишет по сорок дней записей `7` и `8`. У `7` срок девяносто дней, у `8` строки нет. Потом хранилище перестаёт отдавать `rec/recordings/*`, а дверь по-прежнему показывает `7` и не показывает `8`. Первая половина того же теста проверяет то же правило у ватерлинии ресурса (М10A, урок 14): «не прочитал настройку» не значит «настройка выключена».
+
+## Шаг 5 — Таймлайн из индекса
+
+```python
+    def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:
+        """What the index holds — of one recording, or of all — as spans, in time order. One question, one
+        reader: `reader` is the one the caller already mounted, if it is asking more than this."""
+        r = reader or self.reader()
+        lo = archive_ms(t0) if t0 is not None else NEVER
+        hi = archive_ms(t1) if t1 is not None else FOREVER
         out = []
-        for s in self.read():
-            if s.end > t0 and s.start < t1:
-                out.append({"start": s.start, "end": s.end, "media": s.path, "epoch": s.epoch,
-                            "fenced": current_epoch is not None and s.epoch < current_epoch})
-        return sorted(out, key=lambda d: (d["start"], d["epoch"]))
+        for name in r.streams():
+            p = parse_stream(name)
+            if p is None or (unit is not None and p[0] != str(unit)):
+                continue
+            for iv in self._timeline(r, name, lo, hi):
+                out.append(Span(p[0], p[1], unix_s(iv["start"]), unix_s(iv["end"]), int(iv.get("size", 0)), p[2]))
+        return sorted(out, key=lambda s: (s.start, s.epoch))
 ```
 
-Пересечение с окном: `s.end > t0 and s.start < t1`. Строгие неравенства с обеих сторон — сегмент, кончившийся ровно в `t0`, не пересекается с окном, начинающимся в `t0`.
+**Все потоки записи.** У одной записи в томе может быть несколько потоков: `7/e3` и `7/e4` после смены владельца, `7/e4/backfill` с дозаписанным из карты, `7/e0` с копией удержания. Таймлайн записи — это все они. `parse_stream` отсеивает потоки, которые не принадлежат записям; имя записи сравнивается как строка, поэтому `7-cloud` работает так же, как `7`.
 
-И главное:
+**Один вопрос — один читатель.** Параметр `reader` нужен `samples`: он спрашивает спаны и тут же читает кадры, и оба шага должны видеть одну и ту же картину тома.
+
+**Сортировка по `(start, epoch)`.** Один интервал может быть записан дважды разными эпохами, и порядок обязан быть определённым.
+
+Теперь `_timeline` — место, где курс обходит поведение движка, которого нет в документации протокола.
 
 ```python
-"fenced": current_epoch is not None and s.epoch < current_epoch
+    # A stream's timeline, asked IN WINDOWS. The engine answers `INTERNAL_ERROR` to some timeline questions over
+    # six days of footage or more (obsd protocol v1 — seen, not documented, and not every time: the same question
+    # is refused by one daemon and answered by the next). Five days has never been refused. A recording is a
+    # month deep, so the question is cut to what the stream holds — its first and last sequence — and asked five
+    # days at a time; a window refused anyway is asked again in halves, down to an hour. Intervals that touch
+    # across a cut are put back together.
+    def _timeline(self, r, name: str, lo: int, hi: int) -> list[dict]:
+        first, last = r.find(name, lo), r.find(name, hi, backwards=True)
+        if first is None or last is None:
+            return []
+        lo, hi = max(lo, min(first.start, hi)), min(hi, max(last.end, lo))
 ```
 
-**Отсечение — одно сравнение чисел.** Эпоха сегмента меньше текущей эпохи записи — значит, писал процесс, который к моменту записи уже не был законным держателем.
+`READER_TIMELINE` над шестью днями записи и больше иногда отвечает `INTERNAL_ERROR`. Иногда — то есть один демон отказывает, а следующий на тот же вопрос отвечает. Повторять тот же вопрос поэтому бесполезно: нельзя знать, повезёт ли.
 
-Ни базы, ни списка зомби, ни журнала инцидентов. Число в имени каталога против числа в хранилище (урок 6 М10A). Ровно тот механизм, который проектировался четырнадцать уроков назад, применённый в одну строку.
+Решение в три части, и у каждой своя причина.
 
-`current_epoch is not None` — когда эпоха не передана, ничего не отсекается. Так таймлайн строится и для случая, когда текущая эпоха неизвестна (регистратор не работает): показать всё, ничего не объявляя недостоверным.
+**Сначала вопрос обрезается по самому потоку.** `READER_FIND` находит первую и последнюю последовательность. Вопрос «с 1900 года до бесконечности» превращается в вопрос о том, что поток держит на самом деле, и окон становится столько, сколько нужно.
 
-**Отсечённое показывается, а не прячется.** Бледным интервалом (урок 19 М10A), кликабельным, проигрываемым. Это настоящее видео настоящей камеры: зомби писал реальный поток, он просто не имел на это права. Скрыв его, вы потеряете запись, которая может оказаться единственной; удалив — тем более.
+**Потом окна по пять дней.** `TIMELINE_WINDOW = 5 * 86400 * 1000` — миллисекунды архива. Пять дней не отвергались ни разу.
 
-Последнее замечание докстроки: **событий здесь нет.** Интервалы — это видео; события рисует консоль поверх них, взяв их у индекса событий (урок 13 М10A). Два источника, соединяемые по времени на экране, — та же форма, что в живой ленте из урока 4.
-
-И примечание к классу: *таймлайны двух ресурсов просто склеиваются и сортируются — консоль сливает манифесты.* Регистратор переехал, видео лежит на двух серверах — консоль запрашивает оба, складывает списки, сортирует. Ни координации, ни глобального индекса: формат ответа таков, что склейка тривиальна.
-
-## Шаг 4 — Проход без процесса
+**Отвергнутое окно спрашивается половинами, до часа:**
 
 ```python
-class ArchivePolicy:
-    """What the recorder registers with the platform's resource job: repair the
-    manifests, retain media per unit from the recording rows
-    (`rec/recordings/<unit>`, `retention_days`; 30 for one with no row).
-    Runs on the resource's timer beside the platform's own pass."""
-
-    def __init__(self, resource: ArchiveResource, vars_):
-        self.res, self.vars = resource, vars_
-
-    def pass_(self, now: float) -> dict:
-        rep = self.res.repair()
-        removed = 0
-        for unit in self.res.units():
-            items, _ = self.vars.get(f"{SUB}/recordings/{unit}")   # строка самой единицы: её хранение, а не камеры
-            days = int(items.get("retention_days", 30)) if items else 30
-            removed += self.res.retain(unit, days, now)
-        return {**rep, "media_removed": removed}
+        def ask(a: int, b: int) -> None:
+            try:
+                got = r.timeline(name, a, b)
+            except ObsdError as e:
+                if e.name != "INTERNAL_ERROR" or b - a <= 3600_000:
+                    raise
+                ask(a, (a + b) // 2); ask((a + b) // 2, b)
+                return
 ```
 
-Двенадцать строк, и в них — вся выгода от того, что ресурс был написан в платформе.
+Половинить имеет смысл только этот отказ и только на длинном окне. Любой другой статус и `INTERNAL_ERROR` на окне в час — уже не тот случай, и ошибка поднимается дальше: прятать её значило бы рисовать дыру, которой нет.
 
-**Ни процесса, ни таймера, ни цикла, ни heartbeat'а, ни HTTP.** Один метод `pass_(now)`, который платформенный ресурс зовёт на своём таймере рядом со своим собственным проходом (урок 16 М10A). Регистратор при старте делает `resource.register(ArchivePolicy(archive, vars_))` — и хранение видео начинает работать.
+Последняя часть — склейка. Интервал, разрезанный границей окна, приходит двумя кусками. Код соединяет куски, которые касаются, и складывает их размеры. Без этого месячная непрерывная запись рисовалась бы шестью отрезками с подозрительными швами каждые пять дней.
 
-Сравните с тем, чем это было бы иначе: отдельный процесс-уборщик, его юнит, его размещение, его наблюдаемость, его перезапуск, его отдельный heartbeat. Всё это уже есть у ресурса, и подсистеме остаётся принести свои двенадцать строк.
+Тест `test_obsd.py::test_a_recording_a_month_deep_is_answered_whole` пишет тридцать дней с одной дырой и проверяет, что покрытие — ровно два отрезка, а `depth_days` — ровно `30.0`.
 
-**Срок хранения читается из строки записи**, а не из строки камеры:
+Над спанами строятся три ответа.
 
 ```python
-items, _ = self.vars.get(f"{SUB}/recordings/{unit}")
-days = int(items.get("retention_days", 30)) if items else 30
+    def timeline(self, unit, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
+        """Spans overlapping `[t0, t1)`, each marked `fenced` when its epoch is older than the current one — how
+        the page shows a zombie's footage, kept and told apart."""
+        return [{"start": s.start, "end": s.end, "epoch": s.epoch, "source": s.source, "bytes": s.bytes,
+                 "fenced": current_epoch is not None and s.epoch < current_epoch}
+                for s in self.spans(unit, t0, t1) if s.end > t0 and s.start < t1]
 ```
 
-`rec/recordings/<unit>` — единица подсистемы записи (урок 10), и обратите внимание: `unit`, а не `cam`. Срок хранения принадлежит **записи**, и у камеры с двумя записями — на локальных дисках и в сетевом архиве — их два: неделя в одном ряду, год в другом. Это и есть разделение из урока 1, доведённое до конца: **сколько хранить видео — свойство записи, а не камеры.** Камеру можно смотреть и не писать; у такой камеры нет строки записи и нет срока хранения видео, потому что нет видео.
+**`timeline`** — для страницы. Пересечение с окном строгое с обеих сторон: спан, кончившийся ровно в `t0`, в окно не попадает. Отсечение — одно сравнение чисел: эпоха потока меньше текущей эпохи записи. Эпоха лежит в имени потока, и другого места для неё нет. Без `current_epoch` ничего не помечается: если текущая эпоха неизвестна, честнее показать всё, чем объявить что-то недостоверным.
 
-`30` для единицы без строки — тридцать дней. Не ноль: отсутствие строки записи может означать «запись только что выключили», и удалять её архив немедленно было бы разрушительно. Оператор выключил запись — архив живёт месяц, потом уходит.
+**`coverage`** — для регистратора: спаны всех потоков, склеенные `stitch` с зазором `STITCH = 2.0` секунды.
 
-И заметьте, чего в `pass_` нет: **обращения к контроллеру**. Ресурс читает строку из хранилища напрямую, своим токеном, на чтение. Никто никому не звонит.
+```python
+STITCH = 2.0         # seconds: two spans closer than this are one run — the seam between two sequences is no gap
+```
+
+Шов между двумя последовательностями — не дыра. Без допуска каждый шов стал бы задачей для дозаписи.
+
+**`depth_days`** — сколько дней назад уходит запись, от первого отрезка покрытия. Это число регистратор кладёт в статус и на `/metrics` (`rec_archive_depth_days`).
+
+## Шаг 6 — Две эпохи над одними минутами
+
+Регистратор, отсечённый посреди записи, ещё какое-то время пишет свой поток. Рядом выживший пишет свой, под следующей эпохой. Тест `test_lesson3_archive.py::test_the_timeline_marks_a_fenced_epoch_and_spans_two_volumes` строит ровно это: `7/e3` с 0 до 900 секунд и `7/e4` с 600 до 1200.
+
+```python
+    tl = st.timeline("7", t + 300, t + 1800, current_epoch=4)
+    assert [(x["epoch"], x["start"] - t, x["end"] - t, x["fenced"]) for x in tl] == [(3, 0, 900, True), (4, 600, 1200, False)]
+```
+
+**Таймлайн показывает обе эпохи.** Ничего не перезаписано: это два потока одного тома. Минуты зомби — настоящее видео настоящей камеры, у писавшего просто не было на них права. Страница рисует их бледным интервалом. Спрятать их значит потерять запись, которая может оказаться единственной.
+
+Вторая половина теста — второй том, с записью под эпохой 5. Таймлайны двух томов складываются и сортируются, и получается `[3, 4, 5]`. Так консоль собирает таймлайн из дверей нескольких регистраторов ([урок 12](12-the-vms-console.md)).
+
+**Кадры же нужны по одному на момент.** Экспорт, скан и копия удержания не могут взять минуты 600–900 дважды. Это решает `authoritative`:
+
+```python
+# Every stretch of `[t0, t1)` the spans cover, each given to the HIGHEST EPOCH there. Two epochs overlap
+# whenever a writer was fenced with footage in flight; read both and those minutes come twice, drop every
+# older epoch and the minutes only it held disappear. So the unit of the decision is the stretch:
+# `[(span, lo, hi)]`, in time order.
+def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, float, float]]:
+    edges = sorted({t0, t1} | {s.start for s in spans} | {s.end for s in spans})
+    edges = [e for e in edges if t0 <= e <= t1]
+    out: list[list] = []
+    for lo, hi in zip(edges, edges[1:]):
+        if hi <= lo:
+            continue
+        covering = [s for s in spans if s.start <= lo and s.end >= hi]
+        if not covering:
+            continue
+        best = max(covering, key=lambda s: (s.epoch, s.source == "live"))
+```
+
+Комментарий называет оба неверных решения. Взять все эпохи — минуты перекрытия придут дважды, и скан посчитает каждую машину два раза. Отбросить старшие эпохи целиком — исчезнут минуты 0–600, которые держала только эпоха 3.
+
+Поэтому единица решения — **отрезок** (часть спана, отданная одному читателю): интервал между двумя соседними границами любых спанов. Каждый отрезок получает старшую эпоху из покрывающих его. При равной эпохе живой поток побеждает дозаписанный. Соседние отрезки одного спана склеиваются.
+
+У этого правила есть следствие для удержаний. Копия в томе `incidents` пишется в поток `<запись>/e0`. Эпоха ноль — ничья аренда. Где живая запись ещё существует, её эпоха старше и владеет этими минутами. Где кольцо её уже забрало, остаётся копия.
+
+`samples` читает кадры по этим отрезкам:
+
+```python
+    def samples(self, unit, t0: float, t1: float) -> list[Sample]:
+        """The frames of `[t0, t1)`, each stretch from the epoch that owns it, starting on a key frame — what
+        an export, a scan or a copy into another volume takes."""
+        r = self.reader()
+        out: list[Sample] = []
+        for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
+            a, b = archive_ms(lo), archive_ms(hi)
+            got = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.end > a and s.begin < b]
+            while got and not got[0].key:
+                got.pop(0)                                   # a stretch cut mid-group opens on its next key frame
+            out += got
+        return out
+```
+
+Отрезок, обрезанный посреди группы кадров, начинается со следующего ключевого кадра. Декодер не начнёт с промежуточного кадра, а движок не примет последовательность без ключевого (`SEQUENCE_NEEDS_KEY_SAMPLE`), если эти кадры копируют в другой том.
+
+Правило проверяет `test_scan.py::test_two_epochs_over_the_same_minutes_the_later_one_owns_them`: план скана строится тем же `authoritative` (урок 20).
+
+## Шаг 7 — Дверь архива
+
+Регистратор держит том, и только он открывает его на запись. Читать нужно многим: консоли, скану, резервной записи, копированию удержаний. Дверь архива — HTTP регистратора над его томом:
+
+```python
+# A recorder's archive door, over the volume it holds: what a primary copies from a backup, and what the console
+# draws and plays. Two reads, both from a FRESH reader — a reader sees what was closed when it mounted:
+#
+#   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
+#   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
+#                                  owns it, from a key frame (`Archive.samples`)
+def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0):
+```
+
+Почему регистратор, а не ресурс сервера, как раньше? Том открывается через `obsd` того хоста, где он смонтирован, а держит его один регистратор. Читатель в другом процессе того же хоста тоже был бы возможен. Но регистратор уже держит том, знает эпохи своих записей и читает их строки. Дверь в нём пользуется этим, а не заводит второй источник тех же сведений, который мог бы с первым разойтись.
+
+Разбор пути:
+
+```python
+        for prefix in ("/timeline/", "/samples/"):
+            if not u.path.startswith(prefix):
+                continue
+            unit = u.path[len(prefix):]
+            if not safe_segment(unit):
+                return 404, b"", "text/plain"
+            store = store_of()
+            if store is None:
+                return 503, b'{"error": "no volume open here"}', "application/json"
+            try:
+                t0, t1 = float(q.get("from", 0)), float(q.get("to", wall() + 86400))
+            except ValueError:
+                return 400, b'{"error": "from and to are unix seconds"}', "application/json"
+```
+
+**Путь называет запись, и только её.** `safe_segment` (из `w2cplatform/doors.py`) пропускает одно имя без слэшей и без `..`. Ни одна часть пути не доходит до диска: регистратор спрашивает том про поток записи. Тест `test_doors.py::test_a_recorders_archive_door_names_a_recording_and_nothing_else` проверяет `404` на `/timeline/..` и `/samples/a/b`, `400` на `from=x` и `404` на старый `/manifest/7`.
+
+**Тома нет — `503`, а не `404`.** Регистратор может стоять запасным или ждать удержания. Это «сейчас нельзя», а не «записи нет».
+
+`store_of` — функция, а не том. Регистратор меняет том (переоткрывает после потери демона, отдаёт неверный, берёт новый), и дверь каждый раз спрашивает текущий.
+
+Ответы:
+
+```python
+            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
+            try:
+                if prefix == "/timeline/":
+                    cur = current_epoch(unit)
+                    body = {"unit": unit, "spans": store.timeline(unit, t0, t1, cur), "current_epoch": cur}
+                    return 200, json.dumps(body).encode(), "application/json"
+                return 200, b"".join(smp.encode() for smp in store.samples(unit, t0, t1)), "application/octet-stream"
+            except ArchiveError as e:
+                return 503, json.dumps({"error": str(e)}).encode(), "application/json"
+```
+
+`/samples` отдаёт записи `SMPL` подряд — тот же формат, что ходит между процессом и `obsd`. Получатель разбирает их `Sample.decode_all` и получает кадры с теми временами, с которыми они были записаны. Резервная запись кладёт их в свой том как есть, консоль собирает из них MP4 (урок 12).
+
+`current_epoch` двери — эпоха **этого** регистратора для записи: `lambda unit: self.epochs.get(str(unit))` в `serve_archive`. Дверь знает только свою эпоху. Запись, которую держит другой регистратор, дверь не отсекает; это делает консоль по строке эпохи записи в хранилище (урок 12).
+
+`serve_archive` поднимает дверь и объявляет её адрес:
+
+```python
+        self.archive_url = f"http://{announce_host(host, self.server)}:{srv.server_address[1]}"   # what it bound: loopback, or this server's name — never `0.0.0.0`
+```
+
+Адрес уходит в heartbeat регистратора как `archive_url`, рядом с именем тома. По нему двери находят все читатели — тем же приёмом, каким регистратор находит камеру. Регистратор с другого сервера не пойдёт на дверь, объявленную на loopback чужого сервера (`local_only` в `backup_sources`).
+
+Тест `test_rec_volume.py::test_the_archive_door_hands_out_timelines_and_frames` проходит дверь целиком: таймлайн за двести секунд даёт один спан без отсечения, а `/samples` за сорок секунд начинается с ключевого кадра не раньше начала окна и кончается не позже чем через секунду после его конца.
 
 ## Результат
 
-Регистратор при старте:
+```
+GET /timeline/7?from=…&to=…   (дверь регистратора r-1, том srv-1)
+→ {"unit": "7", "current_epoch": 4,
+   "spans": [{"start": …, "end": …, "epoch": 3, "source": "live", "bytes": …, "fenced": true},
+             {"start": …, "end": …, "epoch": 4, "source": "live", "bytes": …, "fenced": false},
+             {"start": …, "end": …, "epoch": 4, "source": "backfill", "bytes": …, "fenced": false}]}
 
-```python
-archive = ArchiveResource(spool, root)
-resource = Resource(root, vars_, objects, server=me)     # платформенный, из урока 16 М10A
-resource.register(ArchivePolicy(archive, vars_))
-for p in archive.closed_in_spool(900, time.time()):
-    archive.promote(p)
+GET /samples/7?from=…&to=…
+→ SMPL SMPL SMPL …   каждая минута от своей эпохи, первый кадр — ключевой
 ```
 
-Пять строк — и работает: перенос недоехавшего, починка манифестов на таймере, удаление по сроку, учёт.
-
 ```python
-man = Manifest(root, 7)
-man.timeline(t0, t1, current_epoch=3)
-# [{'start': …, 'end': …, 'media': 'rec/7/e2/…', 'epoch': 2, 'fenced': True},
-#  {'start': …, 'end': …, 'media': 'rec/7/e3/…', 'epoch': 3, 'fenced': False}]
+st.coverage("7")          # [(…, …), (…, …)] — склеено через швы последовательностей
+st.depth_days("7", now)   # 30.0 — из индекса, а не из настройки
+st.spans("7")             # всё, что в кольце, — и то, что дверь уже не показывает
 ```
-
-Проверка восстановимости:
-
-```python
-os.remove(Manifest(root, 7).path)     # манифеста нет
-res.repair()                          # {'added': 144, 'dropped': 0}
-man.timeline(t0, t1) == before        # тот же ответ
-```
-
-**Удалить индекс и собрать заново к тому же ответу** — то, ради чего путь стал записью.
 
 ## Что может пойти не так
 
-- **Неидемпотентная починка.** Проход по таймеру превратит мелкое расхождение в накопленное.
-- **Починка, обращающаяся к базе или контроллеру.** Восстановление после замены диска станет возможным только при живой базе — то есть перестанет быть восстановлением.
-- **Строка перед файлом при удалении.** Падение оставит файл на диске, и место не освободится — при том что вся функция ради места.
-- **`FileNotFoundError` как ошибка при удалении.** Один отсутствующий файл остановит весь проход хранения.
-- **Прятать или удалять отсечённое.** Потеряете единственную запись момента, ради которого архив и держат.
-- **Срок хранения по строке камеры.** У камеры, которую смотрят и не пишут, появится срок хранения несуществующего видео; у камеры с выключенной записью архив уйдёт не тогда, когда решили.
-- **Ноль дней для камеры без строки записи.** Выключили запись — архив исчез в тот же проход.
-- **Отдельный процесс-уборщик.** Юнит, размещение, наблюдаемость, перезапуск — всё заново, при том что у ресурса это уже есть.
-- **Нестрогое сравнение в пересечении окна.** Сегмент, кончившийся ровно на границе, попадёт в оба соседних окна.
+- **Один долгоживущий читатель.** Он видит том на момент своего монтирования, и таймлайн стареет вместе с ним.
+- **Считать записанное видимым.** Регистратор примет за дыру то, что пишет сейчас, и потянет те же минуты с карты.
+- **Удалять по `retention_days`.** Движок по сроку не удаляет, а кольцо уже держит ровно столько, сколько помещается.
+- **Считать потолок обещанием глубины.** Запись с потолком в тридцать дней на маленьком томе держит четыре, и узнать об этом можно только по `archive.shallow`.
+- **Тридцать дней, когда хранилище не ответило.** Неделя показана месяцем или девяносто дней спрятаны за тридцатью, пока хранилище моргает.
+- **Один вопрос таймлайна на весь месяц.** Движок иногда отвечает `INTERNAL_ERROR`, и запись выглядит пустой.
+- **Половинить любую ошибку.** Настоящий отказ тома превратится в пустой таймлайн вместо ошибки.
+- **Прятать отсечённое.** Потеряете единственную запись момента, ради которого архив держат.
+- **Отбрасывать старшие эпохи целиком при чтении кадров.** Исчезнут минуты до смены владельца, которые держала только старая эпоха.
+- **Брать все эпохи при чтении кадров.** Скан посчитает минуты перекрытия дважды.
+- **Путь двери, доходящий до диска.** Через имя записи можно будет прочитать любой файл машины.
 
 ## Итог
 
-- Манифест приводится в соответствие с файлами из одних файлов: строка собирается из пути, `mtime` и размера.
-- Починка идемпотентна, потому что стоит на таймере навсегда.
-- При удалении файл идёт первым: из двух починимых промежуточных состояний выбрано то, что освобождает место.
-- Отсечение на экране — одно сравнение чисел; отсечённое показывается бледным, а не прячется и не удаляется.
-- Таймлайны двух ресурсов склеиваются и сортируются: слияние тривиально по построению формата.
-- Хранение видео — двенадцать строк, повешенных на платформенный ресурс: ни процесса, ни таймера, ни heartbeat'а.
-- Срок хранения видео живёт у записи, а не у камеры; тридцать дней по умолчанию, чтобы выключение записи не стирало архив немедленно.
+- Курсу нечего чинить: спан читается у движка каждый раз и нигде не хранится, вернувшегося писателя отдаёт демон, нечистый том восстанавливает движок.
+- Читатель видит только закрытые блоки и только те, что были закрыты при его монтировании. Поэтому каждый вопрос — свежему читателю, регистратор планирует по видимому, а `seal` делает записанное видимым сейчас.
+- Том — кольцо: что в нём есть, решает квота. `retention_days` — потолок того, что показывают двери; `min_depth_days` — пол, который наблюдают, а не исполняют.
+- Строка, которую хранилище не отдало, — не отсутствующая строка: дверь отвечает по последней прочитанной.
+- Таймлайн строится по всем потокам записи, окнами по пять дней, с половинением отвергнутого окна до часа.
+- Таймлайн показывает обе эпохи и помечает отсечённую. Кадры каждого отрезка берутся от старшей эпохи, начиная с ключевого кадра.
+- Дверь архива называет запись и ничего больше; её адрес лежит в heartbeat регистратора.
 
 ## Упражнения
 
-1. Сделайте `repair` неидемпотентной (например, дописывающей строку без проверки). Прогоните её сто раз и посмотрите на манифест.
-2. Удалите манифест камеры с недельным архивом, запустите `repair` и сравните `timeline` до и после. Что не совпало и почему?
-3. Поменяйте порядок в `retain`: сначала строка, потом файл. Убейте процесс между ними и посчитайте занятое место.
-4. Уберите `try/except FileNotFoundError`. Удалите один сегмент руками и запустите проход хранения.
-5. Стройте `timeline` без `fenced`. Смоделируйте зомби, писавший десять минут, и опишите, что увидит оператор.
-6. Спрячьте отсечённые интервалы. Придумайте сценарий, в котором это стоит расследования.
-7. Читайте `retention_days` из строки камеры. Опишите, что будет с камерой, которую смотрят и не пишут.
-8. Поставьте умолчание в ноль дней. Выключите запись и посмотрите на архив через минуту.
-9. Напишите `ArchivePolicy` как отдельный процесс. Перечислите всё, что придётся добавить, и сравните с двенадцатью строками.
+1. Держите одного читателя на всё время жизни `Archive`. Запишите десять минут, закройте писателя и спросите таймлайн. Что вы увидите и почему?
+2. Уберите `seal()` из `keep_pass`. Что станет с `archive.keep.copied` и его sha256 после первого прохода?
+3. Уберите из `gaps` границу по видимому концу покрытия. Опишите, что регистратор будет тянуть с карты каждую минуту.
+4. Замените в `_visible_from` ветку `except OSError` на `row = None`. Повторите вторую половину `test_a_store_that_did_not_answer_is_not_a_knob_that_is_off_nor_thirty_days` и объясните, какое из двух утверждений упало.
+5. Спросите `READER_TIMELINE` о тридцати днях одним вопросом на нескольких запусках демона. Запишите, сколько раз он отказал.
+6. Запишите непрерывно двенадцать дней и поставьте `retention_days: 8`. Сравните начало спана в `/timeline` с тем, что отдаёт `/samples` за первые четыре дня. Предложите, где и как обрезать спан, и что это изменит для страницы.
+7. Замените в `authoritative` выбор старшей эпохи на выбор младшей. Какие минуты экспорт возьмёт у зомби?
+8. Отдайте отсечённые спаны из `timeline` без пометки `fenced`. Опишите, что увидит оператор после смены владельца посреди записи.
 
 ## Что дальше
 
-Архив готов принимать. Элементы написаны. Между ними пока ничего: строку конвейера никто не собирает.
+Том пишется, читается и открыт наружу дверью. Писать в него пока нечем: строку конвейера, которая превращает поток камеры в кадры для `RecSink`, никто не собирает.
 
-Ретенция по дням, написанная здесь, — обещание оператору, и оно выполнимо ровно пока хватает места; что делать, когда не хватает, — [**урок 18**](18-what-the-archive-gives-up-first.md).
-
-[**Урок 9**](09-actuators-and-the-fan-out.md) пишет `gstvms/actuator.py` и `gstvms/livesrv.py`: `GstActuator` с двумя ветвями `tee`, `GstRecActuator` с двумя источниками на выбор, `FanOut` на `GstRtspServer` — и отвечает, почему раздача сделана через RTSP, а не через multicast, и когда она становится разделяемой памятью.
+[**Урок 9**](09-actuators-and-the-fan-out.md) пишет `gstvms/actuator.py` и `gstvms/livesrv.py`: актуаторы, раздачу и путь кадра от камеры до тома.

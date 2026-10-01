@@ -1,393 +1,552 @@
-# Урок 7 — Архив I: два дерева и перенос
+# Урок 7 — Том, блок, последовательность, поток
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** первую половину `vms/archive.py` — грамматику путей (`segment_path`, `parse`, `event_log`), `Segment`, `Manifest` (`append`, `read`, `rewrite`), `ArchiveResource.__init__`, `promote`, `_move`, `units`, `closed_in_spool`, `usage`.
+**Вы напишете:** первую половину `vms/archive.py` — имена потоков (`stream_name`, `parse_stream`), `event_log`, `volume_params`, `Span`, `ArchiveError` и `classify`, `Archive` (`open`, `put`, `finish`, `resize`, `seal`, `close`, `reader`, `units`, `spans`); и путь записи регистратора — `RecSink` в `vms/recworker.py` и колбэк `appsink` в `GstRecActuator._before_play` (`gstvms/actuator.py`).
 **Время:** ~85 минут.
 
 ## Зачем этот урок
 
-Элемент из урока 6 зовёт `promote`. Урок пишет то, что за этим вызовом.
+Урок 6 дал слова движка: том, блок, последовательность, поток. Том — кольцо размером с квоту. Блок — кусок тома фиксированного размера, который читатель видит, только когда тот закрыт. Последовательность — кадры от ключевого, единица индекса. Поток — именованная череда последовательностей, и имя — единственное, что у потока есть.
 
-Начинается он с картинки, которая объясняет модуль лучше любого текста, — **две ветки на одном ресурсе**:
+Этот урок даёт слова курса поверх них. Начнём с картинки, которая объясняет модуль лучше текста, — **два места, два писателя, одна камера**:
 
 ```
-<archive>/rec/<unit>/e<epoch>/<start>Z.mp4         видео: пишет РЕГИСТРАТОР
-<archive>/rec/<unit>/manifest.jsonl                индекс видео, рядом с ним
-<archive>/vms/<cam>/e<epoch>/<start>Z.events.jsonl события: пишет ДЕРЖАТЕЛЬ камеры
+том (через obsd)    <запись>/e<эпоха>                         видео: пишет РЕГИСТРАТОР, под своей эпохой
+                    <запись>/e<эпоха>/backfill                дозапись в дыру (урок 16)
+том incidents       <запись>/e0                               копия удержания (урок 18)
+ресурс сервера      vms/<cam>/e<epoch>/<start>Z.events.jsonl  события: пишет ДЕРЖАТЕЛЬ камеры
 ```
 
-Одна камера, два дерева, **два разных процесса, каждый со своей эпохой**. И два дерева могут оказаться на **разных серверах**: держатель пишет события на ресурс своей машины, регистратор — видео на ресурс своей.
+Видео пишет регистратор, события — держатель камеры. Это два разных процесса, у каждого своя эпоха, и они могут работать на разных серверах. Отсюда три нормальных состояния:
 
-Отсюда три состояния, каждое из которых нормально:
+- камеру смотрят и не пишут: бакеты событий есть, потока в томе нет;
+- регистратор переехал: видео лежит в двух томах под двумя эпохами, консоль сливает ответы их дверей;
+- держатель переехал: бакеты лежат на двух серверах, консоль сливает ответы их индексов событий.
 
-- камеру смотрят и не пишут: есть бакеты, дерева `rec/` нет вовсе;
-- регистратор переехал: видео лежит под `rec/` на двух серверах, консоль сливает;
-- держатель переехал: бакеты лежат под `vms/` на двух серверах, консоль сливает ответы их индексов.
+Вторая половина урока — **путь записи**. Кадр уходит из `appsink` в писателя тома, и у этого пути три исхода: кадр взят, кадр отвергнут, движка нет. На каждый исход регистратор отвечает по-своему. И отдельно — убитый регистратор: что остаётся на томе и кто это подбирает.
 
-Вторая половина урока — **порядок подтверждения**, названный в уроке 6 и здесь разобранный по вариантам: что теряется при каждой перестановке трёх действий.
-
-> **Проверка без железа.** Весь урок: настоящие файлы во временном каталоге. `test_promote_then_line_then_spool_copy_gone`, `test_manifest_rebuilt_from_the_files_alone` и учёт убийства на седьмой минуте — без GStreamer.
+> **Проверка без железа.** `vms/archive.py`, `RecSink` и регистратор целиком проверяются против живого `obsd` (урок 6) с поддельным актуатором: `FakeActuator.feed` кормит приёмник кадрами, как камера. Колбэк `appsink` в `GstRecActuator` написан к биндингу GStreamer и в обычном прогоне не исполняется; проверяется то, что он зовёт, — `RecSink` и движок.
 
 ## Что нужно знать заранее
 
-- **Урок 6** — `archivesink` и `fragment-closed`: кто зовёт `promote` и когда.
+- **Урок 6** — `obsd`, клиент `w2cplatform/obsd.py` и свойства движка: этот урок опирается на каждое.
 - **Урок 4** — почему видео пишет не тот процесс, что держит камеру.
-- **М10A, урок 12** — `EventLog` и `unit_dir`: дерево событий, к которому это дерево пристраивается.
-- **М10A, урок 14** — `Resource` и `register`: куда в уроке 8 встанет `ArchivePolicy`.
+- **М10A, урок 6** — эпоха: число, которое здесь попадёт в имя потока.
+- **М10A, урок 12** — `EventLog` и бакеты: дерево событий, которое остаётся на ресурсе.
 
 ## Чему вы научитесь
 
-1. Раскладывать данные двух подсистем на одном ресурсе так, чтобы у каждой был один писатель.
-2. Делать путь самодостаточной записью и разбирать его обратно.
-3. Держать индекс рядом с данными, а не в базе.
-4. Переносить файл между файловыми системами так, чтобы он появлялся целиком или никак.
-5. Выбирать порядок подтверждения по тому, какую потерю вы согласны иметь.
-6. Подбирать то, что осталось от умершего процесса, не зная, что именно он не успел.
+1. Разносить видео и события по местам так, чтобы у каждого места был один писатель.
+2. Класть отсекающую величину в имя потока и отделять записи зомби одним сравнением чисел.
+3. Читать индекс движка как источник истины, ничего не храня рядом с ним.
+4. Называть отказ тома по виду — `wrong`, `away`, `busy` — потому что ответ на каждый свой.
+5. Открывать том: форматировать новый по квоте и монтировать писателя под владельцем.
+6. Делать записанное видимым и задавать каждый вопрос свежему читателю.
+7. Отвечать на отказ кадра пропуском до ключевого, а на пропавший демон — перемонтированием.
+8. Отличать аккуратную остановку от убийства по тому, что осталось на томе.
 
 ---
 
-## Шаг 1 — Раскладка
+## Шаг 1 — Два места, два писателя
 
-```
-<spool>/rec/<cam>/e<epoch>/<start>Z.mp4        the open segment, and closed ones not yet promoted
-<archive>/rec/<cam>/e<epoch>/<start>Z.mp4      promoted: the resource's media — the RECORDER's tree
-<archive>/rec/<cam>/manifest.jsonl             one line per media segment: the index beside the footage
-<archive>/vms/<cam>/e<epoch>/<start>Z.events.jsonl
-                                               the camera's EVENT BUCKETS — the platform's event log
-```
+Комментарий в начале `vms/archive.py` начинается с отказа от файлов:
+
+> *Footage is not files. It is ObjectStorage — the product's engine — behind the host's daemon `obsd` (`w2cplatform/obsd.py`), and what a volume holds is STREAMS of samples, cut by the engine into sequences that open on a key frame, packed into blocks of a size fixed when the volume was formatted. This module is the course's vocabulary over that, and nothing more.*
+
+И кончается тем, что в томе не лежит:
+
+> *Events are not here. They stay what they were — buckets of lines on the resource's tree, `vms/<cam>/` and `rec/<name>/` (`event_log`, the platform's `EventLog`) — a file tree the platform retains, mirrors and indexes, on the server of whoever wrote them.*
 
 ```python
-SUB = "rec"          # the recorder's tree: media and the manifest
+SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
 EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
-```
 
-Две константы, и они закрепляют то, что в уроке 4 было свойством процессов: **видео принадлежит подсистеме `rec`, события — подсистеме `vms`.**
 
-Раскладка — платформенная: `<subsystem>/<unit>/…`, та же, что у ресурса в уроке 16 М10A. Не «специальный каталог для видео», а обычное дерево подсистемы на ресурсе, рядом с которым завтра встанет дерево детекторов.
-
-Правило «один писатель на префикс», которое в М10A держало хранилище конфигурации, здесь держит **файловую систему**. В `rec/<unit>/` пишет один процесс — регистратор, держащий эпоху этой записи. В `vms/<cam>/` — один процесс, держатель камеры. Никакой координации между ними не нужно, потому что они не пересекаются.
-
-```python
-def event_log(root: str, cam: int, epoch: int, bucket_seconds: int = 600) -> EventLog:
+def event_log(root: str, cam, epoch: int, bucket_seconds: int = 600) -> EventLog:
     """The camera's event log on this resource: what the worker holding the
     camera's epoch writes into, recording or not — `vms/<cam>/`, not `rec/`."""
     return EventLog(root, EVENTS_SUB, str(cam), epoch, bucket_seconds)
 ```
 
-Функция в две строки, существующая **ради докстроки**: чтобы читающий код видел, что события идут в `vms/`, а не в `rec/`, и что они пишутся независимо от записи.
+`event_log` — функция в одну строку, которая существует ради докстроки. Читающий код видит: события идут в `vms/`, и пишутся они независимо от записи.
 
-## Шаг 2 — Путь как запись
+Правило «один писатель на префикс» из М10A здесь держат две разные вещи. В томе — движок: один писатель на том на хосте (урок 6, шаг 12). На ресурсе — дерево: в `vms/<cam>/` пишет только держатель камеры. Координации между регистратором и держателем не нужно, потому что их места не пересекаются.
 
-```python
-SEGMENT = re.compile(r"^(\d{8}T\d{6}Z)\.mp4$")
-EPOCH_DIR = re.compile(r"^e(\d+)$")
+`test_events_are_buckets_on_the_resource_recording_or_not` проверяет всю картинку. Докстрока:
 
+> *Two places, two writers, one camera: a camera that is watched and never recorded has buckets and no stream; the volume's index answers for media, the resource's event index for the buckets; each is kept by its own rule. No controller wrote any of it.*
 
-def segment_path(root: str, unit: str, epoch: int, start: datetime) -> str:
-    return os.path.join(root, SUB, str(unit), f"e{epoch}", start.strftime("%Y%m%dT%H%M%SZ") + ".mp4")
-```
-
-Средний сегмент — **единица**, а не камера, и на этом стоит остановиться, потому что долгое время это была одна и та же строка. `rec.subsystem.yaml` говорил `id: cam`: запись названа камерой, которую записывает. Значит `rec/7/` — и путь, и камера, и единица одновременно.
-
-Но код путей знать об этом не должен — и не знал. Когда у камеры появился второй архив (сетевое хранилище рядом с дисками), единицами стали `7` и `7-cloud`, и грамматика не изменилась ни на символ: поменялась одна строка YAML, а `segment_path`, `parse`, `Manifest`, `repair`, `retain` и `coverage` остались как были. Назвать параметр `cam` и обернуть его в `int()` — ровно то, что превратило бы тот день в переписывание четырёх модулей.
-
-Это общее правило, и оно повторяется в курсе: **платформа знает единицу, подсистема знает, что единица — камера.** Здесь оно спускается на уровень ниже — в имена каталогов.
-
-`root` — параметр, и **одна и та же функция строит путь в спуле и в архиве**. Грамматика одинакова, значит перенос — это смена корня и ничего больше. Увидим это в `promote`.
-
-Формат `%Y%m%dT%H%M%SZ` — компактный ISO без разделителей: `20260915T141000Z`. Без двоеточий, потому что двоеточие в имени файла — беда на половине файловых систем; `Z` в конце — потому что время UTC, и об этом должно быть написано в самом имени.
+Три строки теста стоит увидеть:
 
 ```python
-def parse(path: str, root: str) -> tuple[str, int, datetime] | None:
-    rel = os.path.relpath(path, root).split(os.sep)
-    if len(rel) != 4 or rel[0] != SUB or not rel[1] or not EPOCH_DIR.match(rel[2]):
-        return None
-    m = SEGMENT.match(rel[3])
-    if not m:
-        return None
-    return rel[1], int(rel[2][1:]), datetime.strptime(m.group(1), "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+    assert subsystems_under(box.archive) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
+    ...
+    assert subsystems_under(box.archive) == {"vms": ["7"]}         # the resource's tree holds no footage at all
+    ...
+    assert st.coverage("7") == [(t0 + 600, t0 + 1200)]             # the footage, untouched: the ring decides for it
 ```
 
-Обратная функция, и это **центр всей отказоустойчивости архива**.
+Платформа удаляет старые бакеты по своему сроку хранения (`Resource.retain`). Видео на её дереве нет, поэтому трогать ей нечего. Сколько видео помнит том, решает кольцо.
 
-Ровно четыре сегмента пути: подсистема, единица, эпоха, файл. Каждый проверяется — и единица проверяется только на непустоту, а не на «состоит из цифр»: `7-backup` такой же законный каталог, как `7`. Всё, что не подходит, — `None`, а не исключение: `parse` применяется к результату обхода каталога, где лежат и манифесты, и временные файлы, и чужое, и «не сегмент» — это нормальный ответ, а не ошибка.
+## Шаг 2 — Эпоха в имени потока
 
-Что даёт обратимость. **Из одного файла восстанавливается вся строка манифеста, кроме размера и конца — и те берутся из `os.stat`.** Значит, манифест — не источник истины, а кэш. Потеряли, повредили, заменили диск — обошли каталоги и собрали заново (`repair` в уроке 8).
+```python
+def stream_name(unit, epoch: int, backfill: bool = False) -> str:
+    return f"{unit}/e{int(epoch)}" + ("/backfill" if backfill else "")
 
-Это то же решение, что `actual` в памяти (урок 2) и вычисляемый статус (урок 4), применённое к диску: **то, что выводится, не является источником истины.**
 
-## Шаг 3 — Строка манифеста
+def parse_stream(name: str) -> tuple[str, int, str] | None:
+    """`(unit, epoch, source)` — `live` or `backfill` — or None for a stream that is not a recording's."""
+```
+
+У потока нет метаданных, кроме имени (урок 6, шаг 13). Поэтому всё, что регистратору нужно знать о потоке без чтения кадров, лежит в имени: чья это запись, под какой эпохой, откуда кадры.
+
+Первая часть — **запись**, а не камера. `test_a_stream_is_named_by_its_recording_and_its_epoch` говорит об этом в комментарии:
+
+```python
+    # The first part is the RECORDING, and it comes back as a string: the grammar never knew that a recording
+    # tended to be named after a camera, and `7-backup` parses exactly the same way.
+```
+
+У камеры бывает две записи, например основная и резервная (урок 26). Тогда потоки — `7/e3` и `7-backup/e1`, и грамматика не меняется ни на символ. Платформа знает единицу, подсистема знает, что единица — запись камеры. Имя потока ничего не знает о камерах.
+
+`parse_stream` возвращает `None` для всего, что не похоже на поток записи: `"7"`, `"7/5"`, `"7/e5/x"`. Это нормальный ответ, а не ошибка: в томе могут лежать потоки, которые не курс писал, и читать их не наше дело.
+
+**Что даёт эпоха в имени.** Процесс A завис, его сочли мёртвым, подняли B. B взял эпоху 4. Пока A не заметил своей смерти, он пишет — в `7/e3`. B пишет в `7/e4`. Кадры не смешиваются и не перезаписывают друг друга: это два потока одного тома.
+
+Отсечение — сравнение чисел. Таймлайн сравнивает эпоху из имени потока с текущей эпохой записи:
+
+```python
+    def timeline(self, unit, t0: float, t1: float, current_epoch: int | None = None) -> list[dict]:
+        """Spans overlapping `[t0, t1)`, each marked `fenced` when its epoch is older than the current one — how
+        the page shows a zombie's footage, kept and told apart."""
+        return [{"start": s.start, "end": s.end, "epoch": s.epoch, "source": s.source, "bytes": s.bytes,
+                 "fenced": current_epoch is not None and s.epoch < current_epoch}
+```
+
+Ни базы, ни запроса, ни консультации с кем-либо: число в имени потока против числа в хранилище. `test_the_timeline_marks_a_fenced_epoch_and_spans_two_volumes` пишет зомби в `7/e3` поверх минут `7/e4` и получает `[(3, 0, 900, True), (4, 600, 1200, False)]`. `test_a_recording_started_twice_writes_two_streams_and_overwrites_nothing` делает то же через регистратор: старый приёмник пишет после перезапуска конвейера, и в томе остаются `1/e1` и `1/e2`.
+
+**Ничего не удаляется.** Записи зомби остаются в томе и видны на таймлайне отсечёнными. Это настоящее видео настоящей камеры; его писал процесс, у которого в тот момент не было права. Удалить его — потерять то, что может понадобиться. Какая эпоха владеет минутой, которую писали обе, решает правило «старшая эпоха» — [урок 8](08-visibility-retention-timeline.md) и урок 20.
+
+## Шаг 3 — Ещё два потока: дозапись и копия
+
+Комментарий модуля называет оба:
+
+> *Footage fetched into a gap is `<recording>/e<epoch>/backfill`: where it came from is in the name too — there is no manifest line to carry it. A keep's copy in an incidents volume is `<recording>/e0`: nobody's lease, so wherever the live footage still exists its own epoch owns those minutes (`RecWorker.keep_pass`)*
+
+**`…/backfill`.** Кадры, скачанные с карты камеры в дыру записи, — наши: наш том, наша эпоха. Но откуда они пришли, тоже надо знать: дозапись не должна выдавать себя за живую запись. Других мест для этого знания нет, поэтому оно в имени. Как дыры находятся и заполняются — [урок 16](16-backfill-from-the-edge.md).
+
+**`…/e0`.** Копия удержанного интервала в томе вида `incidents`. Эпоха 0 меньше любой настоящей. Поэтому там, где живая запись ещё есть, её эпоха владеет минутами, а копия отвечает только за то, что кольцо уже перезаписало. Удержания — [урок 18](18-what-the-archive-gives-up-first.md).
+
+## Шаг 4 — Отрезок: из индекса каждый раз
 
 ```python
 @dataclass(frozen=True)
-class Segment:
-    unit: str             # the recording this footage belongs to — `7`, or `7-cloud`: the operator's name
+class Span:
+    unit: str             # the recording — `7`, or `7-cloud`: the operator's name
     epoch: int
     start: float          # unix seconds
     end: float
-    path: str             # relative to the archive root
     bytes: int
+    source: str = "live"  # `live` (written from the fan-out) or `backfill` (fetched into a gap — Lesson 16)
 
-    def line(self) -> str:
-        return json.dumps({"kind": "media", "unit": self.unit, "epoch": self.epoch, "start": self.start, "end": self.end,
-                           "path": self.path, "bytes": self.bytes})
+    @property
+    def stream(self) -> str:
+        return stream_name(self.unit, self.epoch, self.source == "backfill")
 ```
 
-Шесть полей. Стоит заметить три решения.
+Комментарий модуля говорит главное об отрезке:
 
-`path` — **относительный** корня архива. Абсолютные пути в индексе означают, что архив нельзя перемонтировать в другую точку, скопировать на другой сервер или восстановить из бэкапа в другом месте. Относительный путь переживает всё это.
+> *read from the engine every time, never kept beside it*
 
-`kind: "media"` в каждой строке. Сейчас других видов нет — и поле уже есть, потому что добавить его в формат, у которого есть читатели, дороже, чем нести с самого начала. `read` фильтрует по нему, с умолчанием `"media"` для строк, записанных до появления поля.
+Индекс тома — единственный источник истины о том, что записано. Курс не держит рядом с томом ни списка, ни кэша. Любая копия индекса расходится с ним при первом же сбое между двумя записями, и тогда нужен код, который их сверяет. Нет копии — нечего сверять.
 
-`frozen=True` — неизменяемый. Строка манифеста описывает уже случившееся; менять её нечего.
+Время в `Span` — секунды Unix. Перевод из миллисекунд архива происходит в `spans` одним вызовом `unix_s` (урок 6, шаг 5), и остальной курс времени архива не видит.
 
-## Шаг 4 — Манифест
+## Шаг 5 — Где том: параметры, а не адрес с ключом
 
 ```python
-class Manifest:
-    """Per camera, append-only, beside the footage."""
-
-    def __init__(self, archive_root: str, cam: int):
-        self.path = os.path.join(unit_dir(archive_root, SUB, str(cam)), "manifest.jsonl")
+# Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
+# published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
+# process that mounts the volume: М10A Lesson 18).
+def volume_params(url: str, secret: str = "") -> dict:
+    if "://" not in url:
+        return {"schema": "file", "path": url}           # a local volume's row names its directory
 ```
 
-Три слова докстроки — три решения.
+Адрес тома печатают на странице, пишут в лог, публикуют в heartbeat. Ключ в адресе оказался бы во всех трёх местах. Поэтому регистратор передаёт демону параметры, а ключ добавляет отдельно: `secret_key` открывает только процесс, который монтирует том. Демон, со своей стороны, узнаёт том по `schema://host/path` и никогда не по учётным данным (урок 6, шаг 12).
 
-**Per camera** — на камеру, а не на сервер. Индекс сорока камер в одном файле означал бы, что все сорок регистраторов пишут в один файл (а они могут быть разными процессами) и что чтение одной камеры читает всё. По файлу на камеру: один писатель, чтение пропорционально нужному.
+`file://` и голый путь — локальный том, `s3://<host>/<region>/<bucket>[/<path>]` — бакет. Всё остальное — `ValueError`, а значит `wrong` (шаг 6). Виды томов и кто какой держит — [урок 27](27-volumes.md).
 
-**Append-only** — дописывание. Открыли на `a`, написали строку, закрыли. Дописывание строки в конец файла — атомарная операция в пределах разумного размера строки, и это то, что переживает падение в любой момент: либо строка есть, либо её нет, недописанной не бывает.
-
-**Beside the footage** — рядом с видео, в том же дереве, на том же диске. Забрали диск — забрали видео вместе с индексом. Скопировали каталог — скопировали всё. Индекс в базе на другой машине означал бы, что видео без базы бесполезно, а база без видео врёт.
+## Шаг 6 — Отказ по виду
 
 ```python
-    def append(self, entry: Segment) -> None:
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        with open(self.path, "a") as f:
-            f.write(entry.line() + "\n")
+class ArchiveError(Exception):
+    """A volume that will not open or take writes, by KIND — the recorder answers each differently:
 
-    def read(self) -> list[Segment]:
-        """The media lines — what a player needs."""
-        return [Segment.from_line(l) for l in self._lines() if json.loads(l).get("kind", "media") == "media"]
+    wrong   only a person changes it: a path that is not a volume, no permission, a bucket that refuses the key.
+            The volume is handed back
+    away    a timeout, a network that is down, the daemon itself gone. Kept: it is back in a minute, and handing
+            it back would reshuffle every recording on it for a link that returns
+    busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
+            not let go yet, or one whose grace the daemon is still waiting out"""
 ```
 
-`read` читает файл целиком. Сутки записи одной камеры — 144 сегмента по десять минут; месяц — около четырёх тысяч строк. Файл в полмегабайта, читаемый за миллисекунды. Индекса не нужно.
+Вид нужен потому, что ответы противоположны. Неверный том регистратор отдаёт: писать туда некому, пока человек не исправит. Недоступный том регистратор держит: связь вернётся через минуту, а отдача тома перетасовала бы все записи на нём. Занятый том тоже держит: писатель вот-вот освободится или вернётся к своему владельцу.
 
 ```python
-    def rewrite(self, segs: list[Segment]) -> None:
-        tmp = self.path + ".tmp"
-        with open(tmp, "w") as f:
-            for e in sorted(segs, key=lambda e: (e.start, e.epoch)):
-                f.write(e.line() + "\n")
-        os.replace(tmp, self.path)
+WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY", "PATH_NOT_EMPTY",
+         "INVALID_ARGUMENT", "PROTECTED_VOLUME", "INVALID_CIPHER_KEY"}
+
+
+def classify(e: Exception) -> ArchiveError:
+    if isinstance(e, ArchiveError):
+        return e
+    if isinstance(e, Unavailable):
+        return ArchiveError("away", f"obsd is not answering: {e.detail}", e.name)
+    if isinstance(e, ObsdError):
+        if e.name == "ALREADY_LOCKED":
+            return ArchiveError("busy", str(e), e.name)
+        return ArchiveError("wrong" if e.name in WRONG else "away", str(e), e.name)
+    if isinstance(e, ValueError):
+        return ArchiveError("wrong", str(e))
+    return ArchiveError("away", str(e))
 ```
 
-Единственная операция, которая не дописывает, — и она через **временный файл и атомарную замену**. Тот же приём, что в `FileVariables` (урок 2 М10A) и в `FsObjectStore` (урок 4): `os.replace` атомарен, и читатель видит либо старый файл целиком, либо новый целиком.
+`wrong` — закрытый список. Всё, чего в нём нет, считается `away`. Ошибиться в эту сторону дешевле: недоступный том регистратор попробует снова на следующем проходе, а ошибочно отданный том стоит перетасовки записей.
 
-Сортировка по `(start, epoch)`: сначала время, потом эпоха. Два сегмента с одним временем старта — это как раз зомби и настоящий писатель, и порядок между ними определён.
-
-`rewrite` зовут двое, и оба в уроке 8: починка и срок хранения.
-
-## Шаг 5 — Перенос
+Одно исключение живёт не здесь, а в `RecWorker._write_into`, потому что требует знать вид тома:
 
 ```python
-    def promote(self, spool_path: str, end: float | None = None) -> Segment:
-        parsed = parse(spool_path, self.spool)
-        if parsed is None:
-            raise ValueError(f"not a segment path: {spool_path}")
-        cam, epoch, start = parsed
-        st = os.stat(spool_path)
-        end = end if end is not None else st.st_mtime
-        rel = os.path.relpath(spool_path, self.spool)
-        dest = os.path.join(self.root, rel)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        self._move(spool_path, dest)                    # 1. into the archive, atomically (same filesystem)
-        seg = Segment(cam, epoch, start.timestamp(), end, rel, st.st_size)
-        Manifest(self.root, cam).append(seg)            # 2. then the line
-        return seg
+            # A DISK on this box that cannot be formatted or mounted — a file where the directory should be, a
+            # path nobody may create — is not a link that comes back in a minute. The engine says it as an I/O or
+            # a generic error, the same words a network volume uses for a network that is down, so the kind of
+            # volume decides: on a box, wrong; at an address, away.
+            if e.kind == "away" and e.name in ("IO_ERROR", "GENERIC_ERROR") and volumes.on_a_box(vol):
+                e = ArchiveError("wrong", e.detail, e.name)
 ```
 
-`rel = os.path.relpath(spool_path, self.spool)` и `dest = os.path.join(self.root, rel)` — **перенос есть смена корня**. Относительный путь один и тот же в обоих деревьях: `rec/7/e3/20260915T141000Z.mp4`. Никакого преобразования, никакой таблицы соответствий.
+Движок ведёт себя так на живом демоне. `VOLUME_EXISTS` отвечает «есть» для пути под обычным файлом, и монтирование потом падает с `GENERIC_ERROR`. Путь, который нельзя создать, роняет форматирование с `IO_ERROR`. Те же слова сетевой том говорит, когда сеть лежит. Различает их не статус, а вид тома. `test_a_volume_held_and_unwritable_is_not_served` объявляет том по пути, где вместо каталога лежит файл, и регистратор отдаёт его, раз есть куда идти.
 
-`end` по умолчанию — время изменения файла. Последняя запись в файл произошла при закрытии последнего кадра, значит `mtime` — это конец сегмента с точностью до дописывания индекса. Достаточно для таймлайна.
+Как регистратор отвечает на каждый вид — проходы, аренда тома, `REFUSED_FOR` — [урок 10](10-recworker.md).
 
-`st.st_size` снимается **до** переноса. После переноса файл на месте, но лишний `stat` не нужен, а при копировании между файловыми системами промежуточное состояние могло бы дать другой размер.
-
-И два пронумерованных комментария, задающих порядок.
-
-## Шаг 6 — Порядок, и что даёт каждая перестановка
-
-Докстрока класса формулирует:
-
-> *1. the file into the archive, 2. the manifest line, 3. the spool copy gone — the order that survives a crash at any point.*
-
-Разберём **все варианты**, потому что интуиция здесь подводит.
-
-**Порядок как есть: файл → строка → удаление из спула.**
-
-| Падение | Состояние | Чинится |
-|---|---|---|
-| до переноса | файл в спуле, строки нет | `closed_in_spool` подберёт на старте |
-| между переносом и строкой | файл в архиве, строки нет | `repair` допишет строку из пути |
-| после строки | всё на месте | — |
-
-**Ни в одном случае ничего не потеряно.** Худшее — файл, который есть, но не проиндексирован, и это чинится обходом каталога.
-
-**Перестановка: строка → файл.** Падение между ними даёт **строку без файла**. Плеер увидит запись на таймлайне, попросит сегмент и получит 404. Хуже предыдущего варианта тем, что обещание дано, а выполнить его нечем; чинится тоже (`repair` выбросит строку), но в промежутке оператор видит ложь.
-
-**Перестановка: удалить из спула до переноса.** Падение — и **файла нет нигде**. Единственный вариант с настоящей потерей, и потому единственный запрещённый.
-
-Правило, которое из этого выводится и которое стоит унести за пределы этого файла:
-
-**Сначала создай новое, потом объяви о нём, потом удали старое.** Падение между первым и вторым даёт неучтённое — чинится. Падение между вторым и третьим даёт дубликат — чинится. Удаление раньше создания даёт потерю — не чинится.
-
-## Шаг 7 — Перемещение между файловыми системами
+## Шаг 7 — Открыть том
 
 ```python
-    @staticmethod
-    def _move(src: str, dest: str) -> None:
+    # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a
+    # bucket nobody can reach. A volume that is not there yet is FORMATTED — at its quota, which is the size of
+    # the ring — and then mounted for writing under `owner`.
+    def open(self, write: bool = True) -> "Archive":
         try:
-            os.rename(src, dest)
-        except OSError:
-            shutil.copy2(src, dest + ".tmp")            # different filesystem: copy, then appear whole
-            os.replace(dest + ".tmp", dest)
-            os.remove(src)                              # 3. the spool copy, last
+            vol = self._open_volume()
+            if not vol.exists():
+                if not self.quota:
+                    raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
+                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name)
+                self.formatted = True
+            if write and self.writer is None:
+                self.writer = vol.mount_rw(self.owner)
+                self.reattached = self.writer.reattached
+        except (ObsdError, ValueError) as e:
+            raise classify(e) from None
+        return self
 ```
 
-Два пути в семи строках.
+**Открытие — единственная честная проверка.** Строка тома может назвать что угодно. Пока демон не открыл том, ничего о нём не известно.
 
-**Одна файловая система:** `os.rename`. Атомарно, мгновенно, независимо от размера. Файл либо в спуле, либо в архиве, промежуточного состояния нет.
+**Нового тома нет — его форматируют по квоте.** Квота — размер кольца, и задать его можно только сейчас. Нет квоты — нечем форматировать, и это `wrong`: исправит только человек. Блок и размер чтения берутся из `BLOCK, READ = 8 << 20, 1 << 20` — блок должен вмещать размер чтения плюс одну группу кадров (урок 6, шаг 10).
 
-**Разные файловые системы:** `rename` выбрасывает `OSError`, и начинается настоящее копирование. Спул на системном диске, архив на массиве — обычная конфигурация, и здесь она встречается.
+**Писатель монтируется под владельцем.** Регистратор передаёт `rec:<том>`, и докстрока класса объясняет зачем:
 
-Копирование не атомарно: гигабайтный файл копируется секундами, и всё это время он в архиве **неполный**. Решение — копировать в `.tmp` и переименовывать: `os.replace` в пределах одной файловой системы атомарен, и под настоящим именем файл появляется **целиком или никак**.
+> *`owner` is what the daemon remembers a writer by — the recorder passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back.*
 
-Примечание к модулю формулирует это как свойство: *сегмент появляется в архиве целиком или не появляется, а копия в спуле уходит последней.*
+Два флага говорят, что произошло: `formatted` — том был новым, `reattached` — демон вернул писателя, которого оставил исчезнувший процесс (шаг 12). Читателям писатель не нужен: консоль и другие открывают том с `open(write=False)`.
 
-`os.remove(src)` — третий шаг порядка, выполненный в самом конце. При `rename` он не нужен: переименование и есть перенос.
+`test_a_recorder_with_nothing_declared_formats_its_servers_volume_and_records_into_it`: ничего не объявлено, регистратор форматирует том своего сервера `file://<ARCHIVE>/volume` и пишет в него поток `1/e<эпоха>`.
 
-`shutil.copy2`, а не `copy`: сохраняет `mtime`. Мелочь, и без неё `end` сегмента стал бы временем копирования, а не временем последнего кадра.
-
-## Шаг 8 — Подбор за умершим
+## Шаг 8 — Положить кадр, закончить поток, изменить размер
 
 ```python
-    def closed_in_spool(self, grace_seconds: float, now: float) -> list[str]:
-        """Segments in the spool older than the grace: closed, not yet promoted
-        (a recorder died between close and promote)."""
-        out = []
-        for d, _, files in os.walk(self.spool):
-            for f in files:
-                p = os.path.join(d, f)
-                if parse(p, self.spool) and now - os.path.getmtime(p) >= grace_seconds:
-                    out.append(p)
-        return sorted(out)
+    def put(self, unit, epoch: int, sample: Sample, backfill: bool = False) -> str:
+        """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
+        lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame."""
+        return self.writer.put(stream_name(unit, epoch, backfill), sample)
+
+    def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
+        return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
 ```
 
-Регистратор умер между закрытием сегмента и его переносом. Файл остался в спуле, целый и валидный. Эта функция его находит.
-
-**Зачем отсрочка (`grace_seconds`).** В спуле лежит и **открытый** сегмент — тот, который пишется прямо сейчас. Его переносить нельзя: он неполный, индекс MP4 не дописан. Отличить открытый от закрытого изнутри файла можно (разобрать структуру MP4), но это медленно и требует знания формата.
-
-Отсрочка решает проще: **файл, который не менялся дольше отсрочки, — закрыт**. Открытый сегмент пишется постоянно, его `mtime` обновляется; закрытый — нет. Отсрочка берётся заведомо больше длины сегмента.
-
-Приближение? Да. Достаточное? Да — и это тот случай, когда простое правило с ясным основанием лучше точного разбора формата, который придётся сопровождать.
-
-Обратите внимание: `parse(p, self.spool)` отсеивает всё, что не является сегментом, — та же функция, что строит и разбирает пути.
+`put` — имя потока и вызов писателя. Граница «взят — не взят» из урока 6 проходит сквозь него без изменений: статус — кадр на томе, исключение — нет.
 
 ```python
-    def units(self) -> list[str]:
+    def resize(self, quota: int) -> None:
+        """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest."""
+```
+
+Новая квота — новый размер кольца, сразу и без остановки записи. `RecWorker._write_into` зовёт `resize`, когда квота в строке тома изменилась, а писатель уже открыт.
+
+## Шаг 9 — Сделать видимым, спросить свежего
+
+Читатель видит только закрытые блоки, и только те, что были закрыты, когда он смонтирован (урок 6, шаг 8). Из этого правила — два метода.
+
+```python
+    def seal(self) -> None:
+        """Close the writer and take it again: its last block is closed, and what was written is readable. What
+        a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
+        if self.writer is not None:
+            self.writer.close()
+            self.writer = self._open_volume().mount_rw(self.owner)
+```
+
+`flush` блок не закрывает. Закрывает его следующий блок или закрытие писателя. Поэтому, когда записанное должно стать ответом сейчас, регистратор закрывает писателя и берёт его снова. `test_written_is_readable_once_its_block_is_closed`:
+
+```python
+    footage(st, "7", 3, t, t + 600, seal=False)
+    assert st.coverage("7") == []                                  # written, in an open block
+    st.seal()
+    assert st.coverage("7") == [(t, t + 600)]
+```
+
+```python
+    def reader(self):
+        if self._reader is not None:
+            try:
+                self._reader.close()
+            except ObsdError:
+                pass
         try:
-            names = [d for d in os.listdir(os.path.join(self.root, SUB))
-                     if os.path.isdir(os.path.join(self.root, SUB, d))]
-        except FileNotFoundError:
-            return []
-        return sorted(names, key=lambda d: (0, int(d), "") if d.isdigit() else (1, 0, d))
+            self._reader = self._open_volume().mount_ro()
+        except ObsdError as e:
+            raise classify(e) from None
+        return self._reader
 ```
 
-Список камер — это **список каталогов**. Не запрос к контроллеру, не чтение конфигурации: ресурс знает о камерах ровно то, что у него на диске. Камера, удалённая из конфигурации, здесь ещё есть — и должна быть, пока её видео не истекло по сроку хранения.
+**Свежий читатель на каждый вопрос.** Читатель, смонтированный минуту назад, держит картину минутной давности и не увидит блоков, закрытых после. Старый читатель закрывается, новый монтируется. `spans` берёт одного читателя на один вопрос, а вызывающий, который спрашивает больше, передаёт своего: `spans(..., reader=r)`.
 
-`FileNotFoundError` → пустой список: свежий ресурс, на котором ещё ничего не писали.
+`units()` — список записей тома: имена потоков, разобранные `parse_stream`. Тот же принцип, что у отрезка: никакого списка рядом, том сам знает, что в нём.
 
-## Шаг 9 — Учёт
+Что из этого следует для плана регистратора — дыры считаются по видимому, только что скачанное помнится как «в пути», таймлайн спрашивается окнами — [урок 8](08-visibility-retention-timeline.md).
+
+## Шаг 10 — `RecSink`: три исхода кадра
 
 ```python
-    def usage(self) -> int:
-        total = 0
-        for d, _, files in os.walk(self.root):
-            for f in files:
-                p = os.path.join(d, f)
-                if parse(p, self.root):
-                    total += os.path.getsize(p)
-        return total
+# What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
+# sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
+# answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
+class RecSink:
+    def __init__(self, store: Archive, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+        self.store, self.unit, self.epoch, self.on_lost, self.backfill = store, str(unit), int(epoch), on_lost, backfill
+        self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
+        self.taken = self.refused = 0
+
+    def put(self, sample: Sample) -> str:
+        try:
+            st = self.store.put(self.unit, self.epoch, sample, self.backfill)
+            self.taken += 1
+            return st
+        except Unavailable:
+            if self.on_lost is not None:
+                self.on_lost()
+            raise
+        except ObsdError as e:
+            self.refused += 1
+            if self.on_wrong is not None and classify(e).kind == "wrong":
+                self.on_wrong(e)
+            raise
 ```
 
-Байты видео, для heartbeat'а ресурса. Считаются **только сегменты**: `parse` отсекает манифесты, бакеты событий и всё прочее. Это ответ на вопрос «сколько занимает видео», а не «сколько занято на диске» — последнее даёт `df` и показывает не то.
-
-## Результат: убийство на седьмой минуте
-
-Сегменты по десять минут. Регистратор убит `kill -9` на седьмой минуте текущего сегмента. Что где:
-
-```
-/data/archive/rec/7/e3/20260915T140000Z.mp4    ✓ перенесён, строка в манифесте
-/data/archive/rec/7/e3/20260915T141000Z.mp4    ✓ перенесён, строка в манифесте
-/data/spool/rec/7/e3/20260915T142000Z.mp4      ✗ открытый — потерян
-```
-
-Потеряно: **семь минут**, ровно открытый сегмент. Не запись целиком, не сутки, не «архив повреждён».
-
-Тот же случай, но регистратор умер *после* закрытия сегмента и *до* переноса:
-
-```
-/data/spool/rec/7/e3/20260915T142000Z.mp4      ✓ закрытый, ждёт
-```
-
-Следующий старт: `closed_in_spool(grace, now)` его находит, `promote` переносит, строка дописывается. **Потеряно ноль.**
-
-И третий: умер между переносом и строкой. Файл в архиве, строки нет — `repair` из урока 8 допишет её, прочитав путь.
+Приёмник получает регистратор в `enrich`, вместе с эпохой записи:
 
 ```python
-res = ArchiveResource("/data/spool", "/data/archive")
-for p in res.closed_in_spool(grace_seconds=900, now=time.time()):
-    res.promote(p)
+        # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
+        # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
 ```
 
-Две строки на старте регистратора — и всё, что закрылось, но не доехало, доезжает.
+Три исхода.
+
+**Взят.** `OK` или `SEQUENCE_LOST`. Оба означают, что этот кадр на томе. `SEQUENCE_LOST` сообщает о потере в прошлом потока, и пропускать ничего не нужно.
+
+**Отвергнут.** `ObsdError`, и приёмник пробрасывает его конвейеру, а тот пропускает до ключевого кадра (шаг 11). Отказ кадра — обычное дело: `SEQUENCE_NEEDS_KEY_SAMPLE` после обрезанной группы, `SEQUENCE_TOO_LARGE`. Но если отказ — `wrong` (`PERMISSION_DENIED`, `READ_ONLY`), том больше не возьмёт ничего. Приёмник говорит об этом регистратору через `on_wrong`, и на следующем проходе регистратор отдаёт том. Говорит здесь, на потоке конвейера, а действует там, в проходе. `test_an_archive_that_refuses_writes_mid_run_is_handed_back` доказывает и отдачу, и паузу `REFUSED_FOR`, без которой регистратор взял бы тот же сломанный том обратно.
+
+**Движка нет.** `Unavailable` — не ответ о кадре (урок 6, шаг 4). Приёмник зовёт `on_lost`, это `RecWorker._lost_engine`, и пробрасывает исключение — для конвейера это тоже «не взят». Шаг 13 разбирает, что дальше.
+
+```python
+    def finish(self) -> None:
+        try:
+            self.store.finish(self.unit, self.epoch, self.backfill)
+        except ObsdError:
+            pass
+```
+
+`finish` глотает ошибку. Его зовут при остановке конвейера, и остановка не должна падать из-за тома, который уже ушёл.
+
+## Шаг 11 — `appsink`: кадр, время захвата, пропуск до ключевого
+
+В конвейере регистратора кадры выходят из `appsink`, и колбэк кладёт каждый в приёмник. Строку конвейера целиком собирает [урок 9](09-actuators-and-the-fan-out.md). Здесь — только колбэк из `GstRecActuator._before_play`:
+
+```python
+    # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And on every
+    # recorder pipeline: count what reaches the sink — the writer watch's "offered" (Lesson 10) — and hand each
+    # access unit to the volume's writer, with the time it was CAPTURED: the pipeline's running time turned into
+    # the wall clock, so a released ring lands thirty seconds back where it belongs, not now. A sample the engine
+    # refused makes the sink skip to the next key frame — the engine opens a sequence on nothing else.
+```
+
+```python
+            skipping = {"until_key": False}
+
+            def on_sample(appsink, cid=cam["id"]):
+                smp = appsink.emit("pull-sample")
+                buf = smp.get_buffer()
+                data = buf.extract_dup(0, buf.get_size())
+                self.offered_bytes[cid] += len(data)
+                key = not buf.has_flags(Gst.BufferFlags.DELTA_UNIT)
+                clock = p.get_clock()
+                running = (clock.get_time() - p.get_base_time()) if clock is not None else 0
+                ago = max(0, running - buf.pts) / Gst.SECOND if buf.pts != Gst.CLOCK_TIME_NONE else 0.0
+                begin = _time.time() - ago
+                dur = buf.duration / Gst.SECOND if buf.duration != Gst.CLOCK_TIME_NONE else 0.04
+                if skipping["until_key"] and not key:
+                    return Gst.FlowReturn.OK
+                try:
+                    writer.put(video(archive_ms(begin), archive_ms(begin + dur), data, key))
+                    skipping["until_key"] = False
+                except ObsdError:
+                    skipping["until_key"] = True          # refused: the rest of this group is lost, the next key opens anew
+                return Gst.FlowReturn.OK
+```
+
+**Время — когда кадр сняли, а не когда он дошёл.** `running - buf.pts` — сколько кадр шёл по конвейеру. Обычно это доли секунды. Но резервная запись держит в памяти кольцо последних тридцати секунд (урок 26), и при его открытии кадры выходят с опозданием в полминуты. Время прихода положило бы их «сейчас», время захвата кладёт их туда, где они были сняты.
+
+**Отвергнутый кадр — пропуск до ключевого.** После отказа движок не откроет последовательность ни на чём, кроме ключевого кадра (урок 6, шаг 9). Слать ему остаток группы — получить столько же отказов. Колбэк ставит `until_key` и молча пропускает зависимые кадры, а первый ключевой снова идёт в писателя.
+
+**Колбэк всегда возвращает `Gst.FlowReturn.OK`.** Отвергнутый кадр — потеря одной группы, а не причина останавливать конвейер. Конвейер, остановленный из-за тома, потерял бы всё, что идёт следом.
+
+`offered_bytes` считает, что дошло до приёмника. Сторож писателя сравнивает это с `totalWritten` тома и замечает писателя, который берёт меньше, чем ему дают (урок 10).
+
+При остановке записи актуатор закрывает открытую последовательность:
+
+```python
+        if verb == "stop" and cam["id"] in getattr(self, "sinks", {}):
+            self.sinks.pop(cam["id"]).finish()            # the open sequence closed: what was taken is kept
+```
+
+В тестах камеру заменяет `FakeActuator.feed`. Он шлёт в приёмник кадры `fake_samples` с ключевым каждые две секунды, считает статусы и в конце зовёт `finish`. Поэтому `r.actuator.feed("1", t - 120, t)` возвращает `{"OK": 120}`.
+
+## Шаг 12 — Убитый регистратор
+
+Регистратор убит `kill -9` посреди записи. Что на томе?
+
+`test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left`:
+
+```python
+    """No stale lock to wait out and nothing to recover: the daemon kept the writer DETACHED, and the recorder
+    started again under the same slot names the same owner, `rec:<volume>`."""
+    ...
+    r.actuator.feed("1", box.wall() - 60, box.wall())
+    r.session.vanish()                                                 # kill -9: no BYE, no close
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)                            # the daemon notices the session is gone
+    box.wall.advance(5)
+    again = recorder(box)
+    again.lease_pass()
+    assert again.store is not None and again.store.reattached and again.store.formatted is False
+    again.store.seal()
+    assert again.our_coverage("1") == [(box.wall() - 65, box.wall() - 5)]   # nothing the dead one wrote was lost
+```
+
+Сессия убитого процесса исчезла без `BYE`. Демон закрыл её открытые последовательности, как сделал бы `FINISH_MEDIA`, и оставил писателя отсоединённым (урок 6, шаг 12). Новый процесс под тем же слотом открывает тот же том под тем же владельцем `rec:<том>` и получает того же писателя: `reattached`, не `formatted`. Минута, записанная убитым, на месте целиком.
+
+Сравните с регистратором, который сам пишет видео файлами-сегментами. Убийство теряет у него открытый сегмент: файл, у которого не дописан индекс. Чем длиннее сегмент, тем больше потеря, и длину сегмента приходится выбирать между потерей при убийстве и числом файлов. Здесь выбирать нечего. Последовательности держит демон, и при исчезновении сессии он их закрывает. Теряется только то, что не успело дойти до сокета, — кадры в памяти самого регистратора.
+
+`test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` повторяет это на объявленном томе. Новый процесс сначала смотрит на тома, а потом открывает: берёт ту же аренду, называет того же владельца и получает писателя назад. Том сервера по умолчанию при этом не форматируется вовсе.
+
+А если регистратор не вернулся? Аренда тома истекает за 45 секунд, следующий регистратор берёт том под тем же `rec:<том>` и получает писателя — отсрочка в `obsd.service` девяносто секунд, дольше аренды. Отсрочка истекла, а никто не пришёл — демон закрывает писателя чисто, и взятое остаётся на томе (`test_after_the_grace_the_volume_is_clean_for_anybody`).
+
+**Аккуратная остановка** — другая история, и в ней важен порядок:
+
+```python
+    # The ORDER is the point. A released place is taken at once, and whoever takes it mounts the volume for
+    # writing. So the hold goes LAST: the pipelines are stopped, the last heartbeat said so, the slot is
+    # released — and then the writer is closed, its flush putting the last minutes on the volume, and only then
+    # is the hold let go. Released together with the slot, the next recorder would find our writer still there.
+```
+
+Сначала писатель закрывается — его сброс кладёт последние минуты на том, — и только потом аренда отпускается. `Archive.close` держит тот же порядок внутри себя: сначала читатель и писатель, потом том. На закрытие юнит даёт `StopTimeout=40`: протокол разрешает `WRITER_CLOSE` до тридцати секунд. `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` проверяет порядок `["close", "release"]` и то, что следующий регистратор монтирует чистый том (`not b.store.reattached`) и видит последние минуты. Аренды томов, спейры и передача тома — [урок 10](10-recworker.md).
+
+## Шаг 13 — Демон пропал
+
+`RecSink` получил `Unavailable` и позвал `_lost_engine`:
+
+```python
+    # A sink found the daemon gone. Nothing is torn down here, on the pipeline's thread: the next pass closes
+    # what is left of the store and opens it again (`volume_pass`) — at once, not after the writer watch's ten
+    # minutes, because there is nothing to wait for: the engine is not there, a new session is (feedback CF).
+    def _lost_engine(self) -> None:
+        if not self.engine_lost:
+            log.warning("%s: obsd stopped answering — remounting %s on the next pass", self.name, self.volume)
+        self.engine_lost = True
+```
+
+На потоке конвейера ничего не разбирается: там только флаг. Следующий проход видит `engine_lost`, закрывает остатки хранилища и открывает том заново. Сразу, а не через десять минут сторожа писателя: ждать нечего.
+
+Пока демона нет, том остаётся местом регистратора. Это `away`, а не `wrong`: том не отдаётся, ёмкость не обнуляется. `test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place` проверяет это на сокете, где никто не слушает. `test_a_daemon_that_is_not_there_does_not_stop_the_recorder` гоняет минуту цикла без демона: аренды продлеваются, heartbeat идёт и говорит `archive_failure: away`. `test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over` — обратный конец: демон вернулся, следующий проход открыл том, ошибка очистилась.
+
+## Результат
+
+Что лежит где после дня работы одной камеры с одним перезапуском конвейера и одной дырой, заполненной с карты:
+
+```
+том srv-1, писатель rec:srv-1
+  7/e3              живая запись до перезапуска — и минута зомби после него:
+                    на таймлайне отсечена, в томе цела
+  7/e4              живая запись после перезапуска
+  7/e4/backfill     дыра, скачанная с карты камеры
+ресурс srv-1
+  vms/7/e<n>/<start>Z.events.jsonl    события держателя камеры, под его эпохой
+```
+
+Убейте регистратор посреди записи — новый процесс под тем же слотом получит того же писателя, и минуты до убийства на месте. Остановите аккуратно — писатель закроется со сбросом, и только потом том получит следующий.
 
 ## Что может пойти не так
 
-- **Одно дерево на видео и события.** Два писателя в один префикс, и правило, которое держало всю М10A, нарушено там, где его труднее всего заметить, — на файловой системе.
-- **Абсолютные пути в манифесте.** Архив нельзя перемонтировать, скопировать или восстановить в другую точку.
-- **Индекс в базе на другой машине.** Видео без базы бесполезно, база без видео врёт, и забрать диск целиком уже нельзя.
-- **Один манифест на сервер.** Несколько писателей в один файл и чтение всего ради одной камеры.
-- **Строка перед файлом.** Оператор видит на таймлайне запись, которой нет.
-- **Удаление из спула до переноса.** Единственный порядок с настоящей потерей.
-- **`copy` вместо `copy2`.** `mtime` станет временем копирования, и конец сегмента уедет.
-- **Копирование прямо в целевое имя.** В архиве появится растущий файл — ровно то, ради чего заводили спул.
-- **`closed_in_spool` без отсрочки.** Откроете на перенос сегмент, который пишется прямо сейчас.
-- **`usage` через `du`.** Ответ на другой вопрос: с бакетами, манифестами и мусором.
+- **Эпоха рядом с потоком, а не в имени.** У потока нет другого места для метаданных: зомби и выживший пишут в один поток, и кадры смешиваются.
+- **Удалять отсечённые потоки.** Это настоящее видео настоящей камеры. Отметьте и оставьте.
+- **Хранить список записей рядом с томом.** Он разойдётся с индексом при первом сбое, и понадобится код, который их сверяет.
+- **Ключ в адресе тома.** Секрет окажется на странице, в логе и в heartbeat.
+- **Считать неизвестный статус `wrong`.** Сетевой том, у которого на минуту пропала сеть, отдаётся, и записи на нём перетасовываются.
+- **Статус вместо вида тома для локального диска.** `IO_ERROR` от диска, на котором вместо каталога файл, считается `away`, и регистратор держит том, в который никогда не запишет.
+- **Монтировать писателя без владельца.** Перезапущенный регистратор получает `ALREADY_LOCKED` и ждёт отсрочку вместо того, чтобы забрать своего писателя.
+- **Переиспользовать старого читателя.** Он не видит блоков, закрытых после его монтирования, и регистратор считает дырой то, что уже записано.
+- **Слать движку остаток группы после отказа.** Каждый кадр будет отвергнут, и лог заполнится отказами без пользы.
+- **Останавливать конвейер на отвергнутом кадре.** Потеря одной группы превращается в потерю всего, что идёт следом.
+- **Время прихода вместо времени захвата.** Открытое кольцо резервной записи ляжет на полминуты позже, чем было снято.
+- **Отпустить аренду тома раньше, чем закрыт писатель.** Следующий регистратор найдёт в томе чужого писателя.
 
 ## Итог
 
-- Два дерева на одном ресурсе: `rec/` пишет регистратор, `vms/` — держатель камеры. Один писатель на префикс, теперь на файловой системе.
-- Путь — самодостаточная запись: `parse` восстанавливает камеру, эпоху и начало, и потому манифест является кэшем, а не истиной.
-- Манифест на камеру, только дописывание, рядом с видео: диск уносится целиком и остаётся полным.
-- Перенос — смена корня; относительный путь одинаков в спуле и архиве.
-- Порядок: создать новое, объявить о нём, удалить старое. Первые две перестановки чинятся, третья теряет.
-- Между файловыми системами — копия во временное имя и атомарная замена: целиком или никак.
-- Закрытый сегмент отличается от открытого отсрочкой по `mtime`; следующий старт подбирает всё, что не доехало.
+- Видео и события — в разных местах и у разных писателей. Видео — потоки в томе, их пишет регистратор. События — бакеты на ресурсе, их пишет держатель камеры.
+- Поток — `<запись>/e<эпоха>`. Эпоха в имени, потому что у потока нет других метаданных. Записи зомби отделены одним сравнением чисел и не удаляются.
+- `…/backfill` говорит, откуда кадры, а `…/e0` — копия удержания, уступающая любой живой эпохе.
+- Отрезок читается из индекса каждый раз. Рядом с томом не лежит ничего, что могло бы с ним разойтись.
+- Отказ тома имеет вид: `wrong` отдают, `away` и `busy` держат. Для локального диска вид тома решает больше, чем статус.
+- Открытие — единственная честная проверка. Новый том форматируется по квоте, писатель монтируется под владельцем `rec:<том>`.
+- Записанное становится видимым, когда закрыт блок. `seal` закрывает писателя и берёт его снова; каждый вопрос задаётся свежему читателю.
+- Отвергнутый кадр — пропуск до ключевого, без остановки конвейера. Пропавший демон — перемонтирование на следующем проходе.
+- Убитый регистратор не теряет записанного: демон закрывает последовательности и отдаёт писателя тому же владельцу. Аккуратная остановка закрывает писателя раньше, чем отпускает том.
 
 ## Упражнения
 
-1. Положите события в `rec/<cam>/`. Найдите два процесса, которые теперь пишут в один префикс, и придумайте, чем их развести.
-2. Сделайте `path` в `Segment` абсолютным. Скопируйте архив в другой каталог и попробуйте проиграть запись.
-3. Поменяйте местами шаги 1 и 2 в `promote`. Убейте процесс между ними и опишите, что увидит оператор.
-4. Удалите файл из спула до переноса. Убейте процесс между удалением и переносом.
-5. Замените `copy2` на `copy` и посмотрите, что стало с `end` перенесённых сегментов на таймлайне.
-6. Копируйте сразу в целевое имя, без `.tmp`. Перенесите гигабайтный сегмент и попробуйте прочитать его в середине копирования.
-7. Уберите отсрочку из `closed_in_spool`. Запустите регистратор при работающей записи и опишите судьбу открытого сегмента.
-8. Сделайте один манифест на сервер. Опишите, что будет при двух регистраторах на одной машине.
-9. Убейте регистратор на седьмой минуте и на одиннадцатой. Посчитайте потерю в обоих случаях.
+1. Положите эпоху в метку тома вместо имени потока. Смоделируйте зомби, как в `test_the_timeline_marks_a_fenced_epoch_and_spans_two_volumes`, и опишите, как теперь отличить его кадры.
+2. Добавьте `"NO_SPACE"` в `WRONG`. Что станет с регистратором, если сетевое хранилище на минуту переполнится?
+3. Уберите исключение для локального диска из `_write_into` и запустите `test_a_volume_held_and_unwritable_is_not_served`. Что сломалось и почему?
+4. Монтируйте писателя с `owner=""`. Запустите `test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left` и назовите вид отказа, который получил новый процесс.
+5. Сделайте `Archive.reader` ленивым: монтировать один раз и переиспользовать. Найдите тест, который это ловит.
+6. Уберите `until_key` из колбэка `appsink`. Сколько отказов движок вернёт на одну обрезанную группу из двадцати пяти кадров?
+7. Поменяйте местами `_close_store` и `release_hold` в `after_stop`. Запустите `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` и опишите, что увидел следующий регистратор.
+8. Убейте регистратор, подождите дольше отсрочки демона и запустите новый. Что на томе и чем это отличается от случая внутри отсрочки?
 
 ## Что дальше
 
-Сегменты переносятся, манифест ведётся. Но манифест можно потерять, видео надо когда-то удалять, а на экране нужен таймлайн с отсечёнными эпохами.
+Кадры ложатся в поток, эпоха в имени, отказы разобраны по видам. Но читатель видит не всё записанное, срок хранения больше ничего не удаляет, а на экране нужен таймлайн, где каждая минута принадлежит одной эпохе.
 
-[**Урок 8**](08-the-archive-repair-retention-timeline.md) дописывает `archive.py`: `repair` из одних файлов, `retain` по строке записи, `timeline` с отсечёнными эпохами — и `ArchivePolicy`, проход, который регистратор вешает на платформенный ресурс, не написав ни одного собственного процесса.
+[**Урок 8**](08-visibility-retention-timeline.md) разбирает видимость, срок хранения как потолок того, что показывают двери, и таймлайн из индекса тома.
