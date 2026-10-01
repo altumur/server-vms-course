@@ -69,10 +69,23 @@ class ConsoleAPI:
                                 f"controller places on a worker, each with a stored reason; epoch, phase and "
                                 f"observed_revision are the worker's; revision is the controller's")
 
+    # A DEVICE'S PASSWORD IS NOT THE DOMAIN'S TO CARRY (the product, feedback CD). An edit through the domain for a
+    # cluster that is off is KEPT (Lesson 9): in the holder's store, in every backup of it (Lesson 15), in the
+    # books a relay carries (Lesson 17), and its fields in the journal. A `*_secret` among them is in the clear in
+    # all of those — past the cluster's key, which seals a secret only on the way into the cluster's own store
+    # (М10A Lesson 18). So the domain refuses it, kept or forwarded: a password is set in the camera's cluster.
+    def _refuse_secrets(self, fields: dict) -> None:
+        from w2cplatform.secrets import is_secret_field
+        bad = sorted(k for k in fields if is_secret_field(k))
+        if bad:
+            raise ApiError(400, f"{', '.join(bad)}: a device's password is set in the camera's own cluster — the domain "
+                                f"keeps, backs up and relays its edits, and a password would be in the clear in all of those")
+
     def update_camera(self, camera: int, fields: dict, idempotency_key: str, token: str | None = None) -> dict:
         if idempotency_key in self._seen:
             return self._seen[idempotency_key]                # the same PUT, not a second edit
         self._refuse_placement(fields)
+        self._refuse_secrets(fields)
         subject = self._subject(token)
         ans = self.directory.where(camera)
         if not ans.found:

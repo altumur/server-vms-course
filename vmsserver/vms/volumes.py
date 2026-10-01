@@ -142,15 +142,20 @@ def refuse(fields: dict) -> None:
                       "`access_secret` — this string is printed on the page and published in heartbeats")
 
 
-def write(vars_, fields: dict) -> Volume:
+def write(vars_, fields: dict, sealer=None) -> Volume:
     """Create or replace a declaration. Last write wins on purpose: this is a
     list of archives, not a unit with an epoch — nobody is writing into two
-    versions of it at once, and the hold is what makes it exclusive."""
+    versions of it at once, and the hold is what makes it exclusive.
+
+    `sealer`: the console's key (`w2cplatform/sealing.py`) — `access_secret` goes into the store sealed, as a
+    camera's password does (feedback CD: the product's volumes have the same field and the same rule). The
+    process that would open a network volume opens it; the course mounts none."""
+    from w2cplatform.sealing import seal_items
     refuse(fields)
     name = str(fields["name"])
     _, idx = vars_.get(key(name))
     vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
-    vars_.put(key(name), vol.to_items(), cas=idx)
+    vars_.put(key(name), seal_items(sealer, vol.to_items()), cas=idx)
     return vol
 
 

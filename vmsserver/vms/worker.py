@@ -413,6 +413,7 @@ class VmsWorker(Worker):
         super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl)
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
+        self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -589,7 +590,9 @@ class VmsWorker(Worker):
                 cam = open_row(self.sealer, cam)
             except Sealed as e:
                 log.error("%s: camera %s not started: %s", self.name, unit, e)
+                self.sealed_errors[unit] = str(e)               # in its status, not only in this log (feedback CD)
                 return False
+            self.sealed_errors.pop(unit, None)
             return self.actuator(verb, cam)
         ok = self.actuator("stop", cam)
         self.release(unit)
@@ -1022,6 +1025,8 @@ class VmsWorker(Worker):
                         **({"lease": "unconfirmed", "unconfirmed_s": round(lease.unconfirmed(), 1)}
                            if lease is not None and lease.unconfirmed() > 0 else {}),
                         **self.status_extra(cam)})
+            if str(cid) in self.sealed_errors and phase != "running":
+                out[-1]["why"] = f"its password cannot be opened: {self.sealed_errors[str(cid)]}"
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"

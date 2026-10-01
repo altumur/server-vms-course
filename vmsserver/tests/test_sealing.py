@@ -123,3 +123,65 @@ def test_without_a_key_secrets_are_written_as_before_and_that_is_said():
     finally:
         g["_said_clear"] = was
         logging.getLogger("w2cplatform.sealing").removeHandler(h)
+
+
+# -- feedback CD --------------------------------------------------------------------------------------------
+def test_rows_written_before_the_key_are_sealed_when_the_console_starts_with_one():
+    """A camera nobody edits is never written again: its password would lie in the clear for years. The console,
+    starting with a key, seals what is stored — the value only, in place: the revision does not move, so no
+    pipeline restarts for a password it already has."""
+    from w2cplatform.sealing import seal_stored
+    box = Box()
+    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)   # no key yet
+    con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4", "cred_secret": "Hunter2"})
+    before, _ = box.vars.get("vms/cameras/1")
+    assert before["cred_secret"] == "Hunter2"
+    sealer = Sealer.from_file(_key("k1"))
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 1
+    after, _ = box.vars.get("vms/cameras/1")
+    assert is_sealed(after["cred_secret"]) and sealer.open("cred_secret", after["cred_secret"]) == "Hunter2"
+    assert after["revision"] == before["revision"]                    # nothing the row means has changed
+    assert seal_stored(sealer, box.vars, ["vms/cameras/"]) == 0       # once
+    assert seal_stored(None, box.vars, ["vms/cameras/"]) == 0         # and nothing without a key
+
+
+def test_the_key_is_never_made_inside_the_store_nor_over_another():
+    store = tempfile.mkdtemp(prefix="platform-")
+    try:
+        new_key_file(os.path.join(store, "secrets.key"), store=store)
+        raise AssertionError("a key beside the rows it protects protects nothing")
+    except ValueError as e:
+        assert "inside the store" in str(e)
+    path = _key("k1")
+    try:
+        new_key_file(path, store=store)
+        raise AssertionError("a key lost is every password sealed with it")
+    except FileExistsError:
+        pass
+
+
+def test_a_camera_whose_password_cannot_be_opened_says_why_in_its_status():
+    key = _key("k1")
+    box = Box()
+    os.environ["SECRETS_KEY"] = key
+    try:
+        con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    finally:
+        del os.environ["SECRETS_KEY"]
+    con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4", "cred_secret": "Hunter2"})
+    VmsController(box.vars, box.objects, wall=box.wall).assign("w-1", ["1"])
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, archive_root=box.archive, env={})
+    w.reconcile_once()
+    st = next(s for s in w.status() if s["id"] == 1)
+    assert st["phase"] != "running" and "SECRETS_KEY" in st["why"]
+
+
+def test_a_volumes_secret_goes_into_the_store_sealed():
+    from vms import volumes
+    box = Box()
+    sealer = Sealer.from_file(_key("k1"))
+    volumes.write(box.vars, {"name": "s3", "kind": "network", "url": "s3://archive.example/bucket", "access_secret": "AKIA:xyz",
+                             "quota_bytes": 10 ** 12},
+                  sealer=sealer)
+    row, _ = box.vars.get("rec/volumes/s3")
+    assert is_sealed(row["access_secret"]) and sealer.open("access_secret", row["access_secret"]) == "AKIA:xyz"

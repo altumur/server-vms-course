@@ -580,7 +580,7 @@ def rec_routes(rec_ctl: SpecController):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             was = next((v for v in volumes.declared(rec_ctl.vars) if v.name == str(body.get("name", ""))), None)
             try:
-                vol = volumes.write(rec_ctl.vars, body)
+                vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
             if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the watermark frees the oldest

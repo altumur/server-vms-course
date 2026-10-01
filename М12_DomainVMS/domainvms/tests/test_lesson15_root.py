@@ -243,3 +243,24 @@ def test_a_member_that_pinned_another_root_is_named_and_not_accepted():
     except ApiError as e:
         assert e.status == 409 and "another root" in e.detail
     assert "cam-SN9" not in members.names()
+
+
+def test_the_holder_becomes_a_member_with_the_key_it_was_admitted_with():
+    """Feedback CC. A holder is on no list while it holds; after a move it was written in without a key, and the
+    next theft did not sign its LDevID again — enrolled from the start. Its key travels in its backups, and the
+    move writes it into its row."""
+    wall = Clock()
+    fed, devices, root, holder, agents, ldevids = _site(wall)
+    pub = lambda c: c.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()   # noqa: E731
+    holder.member_key = pub(ldevids["cam-SN0"])
+    holder.backup(["cam-SN1"], devices["cam-SN0"].disk_door()); agents["cam-SN1"].sync()
+    new, _ = move_domain(fed, "cam-SN1", root.recovery(), DOMAIN, _objects(devices), wall)
+    members = Members(new.vars, wall).read()["members"]
+    assert members["cam-SN0"]["key"] == pub(ldevids["cam-SN0"])
+    assert new.member_key == pub(ldevids["cam-SN1"])                    # its own, for its own backups
+    a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall); a2.sync()
+    new.backup(["cam-SN2"], devices["cam-SN1"].disk_door()); a2.sync()
+    devices["cam-SN1"].power_off()                                      # now SN1 is stolen
+    _, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    assert "cam-SN0" in report["reissued"]                              # the former holder, by the key it was admitted with
+    assert "cam-SN1" not in report["reissued"]                          # never the stolen one: the thief has its key

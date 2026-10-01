@@ -95,13 +95,15 @@ def read_holder(vars_, keys, now: float) -> dict | None:
 # Step 9's cold start: a domain whose root is off the holder from the first day. The installer holds the root
 # for the minutes this takes — the holder's issuing certificate, the first key set, the record of term 1 — and
 # then hands it to the operator as the recovery file. Nothing of it is written on the holder.
-def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, objects=None) -> "DomainHolder":
+def install(fed, name: str, domain_id: str, root: DomainRoot, wall=time.time, objects=None,
+            member_key: str | None = None) -> "DomainHolder":
     vars_ = fed.clusters[name].vars
     signer = Signer(domain_id, vars_, now=wall, root=root)
     DomainPublisher(vars_).publish_keys(root.key_set(signer.tokens.keyset(), rev=1,
                                                      issuing=[signer.root.cert.serial_number]))
     record = sign({"term": 1, "holder": name, "at": wall()}, root)
     holder = DomainHolder(fed, name, signer, 1, wall, objects=objects, record=record)
+    holder.member_key = member_key
     holder.claim()
     return holder
 
@@ -120,6 +122,10 @@ class DomainHolder:
         self.restored_from: dict | None = None           # {term, rev} of the backup this term started from
         self.deposed_by: dict | None = None
         self.frozen_for: str | None = None               # the member a planned handover is moving the domain to
+        # The key this cluster was admitted with as a MEMBER (hex) — the holder is on nobody's list while it holds
+        # (`Members` refuses it), so its key travels in its backups instead (`holder_key`), and the next holder
+        # writes it into the list when this one becomes a member like the others (the product, feedback CC).
+        self.member_key: str | None = None
 
     @property
     def vars(self):
@@ -181,7 +187,8 @@ class DomainHolder:
         self.backups = objects
         self.backup_rev += 1
         doc = sign({"term": self.term, "rev": self.backup_rev, "holder": self.name, "at": self.wall(),
-                    "state": self.export(), "objects": self.export_objects()}, self.signer.tokens)
+                    "state": self.export(), "objects": self.export_objects(),
+                    **({"holder_key": self.member_key} if self.member_key else {})}, self.signer.tokens)
         raw = json.dumps(doc, sort_keys=True, ensure_ascii=False).encode()
         key = f"backup/rev-{self.backup_rev}"
         objects.put(key, raw)
@@ -349,7 +356,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     else:
         keys = _trusted_keys(fed, new, root, now)        # what members trust NOW — the old holder's keys, under the root
         signer = Signer.issued(domain_id, new_vars, root, now=wall)
-    top_term, best, ignored = 0, None, []
+    top_term, top_holder, best, ignored = 0, None, None, []
     for name, c in fed.clusters.items():
         try:
             rec = read_holder(c.vars, keys, now)
@@ -357,8 +364,8 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
             raw = objects_of(name).get(BACKUP) if ptr else None
         except Unreachable:
             continue
-        if rec:
-            top_term = max(top_term, int(rec["term"]))
+        if rec and int(rec["term"]) > top_term:
+            top_term, top_holder = int(rec["term"]), rec["holder"]   # the holder being replaced: after a theft, the thief's
         if raw is None:
             continue
         try:
@@ -374,6 +381,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
             new_vars.put(path, items, cas=idx)
         for key, text in best[1].get("objects", {}).items():
             objects_of(new).put(key, text.encode())      # the alarm history, as of the backup
+        _keep_member_key(new_vars, best[1], new, wall)
     keys_rev = None
     if root is None:
         DomainPublisher(new_vars).publish_keys(keys)
@@ -408,10 +416,14 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     record = None if root is None else sign({"term": term, "holder": new, "at": now,
                                               **({"from": restored_from} if restored_from else {})}, root)
     holder = DomainHolder(fed, new, signer, term, wall, objects=objects_of(new), record=record)
+    from .members import Members
+    holder.member_key = (Members(new_vars, wall).read()["members"].get(new) or {}).get("key")   # its own, for its backups
     holder.backup_rev = int(best[1]["rev"]) if best else 0
     holder.restored_from = restored_from
     holder.claim()
-    reissued = reissue_ldevids(signer, new_vars) if stolen else []
+    # Never the stolen holder itself: whoever has it has its member key too, and a new LDevID for that key would hand the
+    # thief a fresh identity in the domain that is moving away from him.
+    reissued = reissue_ldevids(signer, new_vars, skip={top_holder} if top_holder else set()) if stolen else []
     rev = holder.backup_rev
     report = {"term": holder.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
               "shared_from": shared_from, "keys_rev": keys_rev, "stolen": stolen, "reissued": reissued,
@@ -422,6 +434,28 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
                           + (f"; the old holder's keys are no longer trusted (key set rev {keys_rev}) and "
                              f"{len(reissued)} member(s) have a new LDevID" if stolen else "")}
     return holder, report
+
+
+# THE HOLDER THAT BECOMES A MEMBER (the product, feedback CC). A holder is on no list while it holds, so after a move
+# the old one was written into the list without a key — and every rule that names a member by the key it was
+# admitted with skipped it: after the NEXT theft its LDevID is not signed again (`reissue_ldevids`), and it has to
+# be enrolled from the start. The backup carries the holder's member key, under its signature; the move writes it
+# into the old holder's row when that row has none. A row with a key keeps it: a key presented later is never
+# taken over the one a member was admitted with.
+def _keep_member_key(domain_vars, backup: dict, new: str, wall) -> None:
+    from .members import Members
+    old, key = backup.get("holder"), backup.get("holder_key")
+    if not old or not key or old == new:
+        return
+    m = Members(domain_vars, wall)
+
+    def mutate(members):
+        row = members.get(old)
+        if row is not None and row.get("key"):
+            return False
+        members[old] = {**(row or {"how": "former holder", "serial": None, "since": wall(), "by": None}), "key": key}
+        return True
+    m._change(mutate)
 
 
 # The newest key set the ROOT signed that any reachable member holds — verified against the root in the
@@ -487,14 +521,14 @@ def _sign_shared_again(domain_vars, domain_objects, signer: Signer, term: int) -
 # After a theft: every member's LDevID was signed by an issuing certificate the root has just revoked. The new
 # holder signs again the key each member was admitted with (`domain/members`, written by the registrar) — never
 # a key a member merely presents now, which a thief could present too. Carried home by each member's agent.
-def reissue_ldevids(signer: Signer, domain_vars) -> list[str]:
+def reissue_ldevids(signer: Signer, domain_vars, skip=frozenset()) -> list[str]:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
     from .agent import LDEVID_PATH
     from .members import Members
     from .signer import _pem
     out = []
     for name, m in sorted(Members(domain_vars).read()["members"].items()):
-        if not m.get("key"):
+        if not m.get("key") or name in skip:
             continue
         cert = signer.issue(m.get("serial") or name, "ldevid", Ed25519PublicKey.from_public_bytes(bytes.fromhex(m["key"])))
         _, idx = domain_vars.get(f"{LDEVID_PATH}/{name}")

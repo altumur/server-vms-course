@@ -482,6 +482,12 @@ def console() -> None:
                         # written, which is here, and the refusal has to be the subsystem's own words.
                         "auto": AutoController(vars_, objects)})
     logging.info("console on %s", srv.server_address)                     # no event index here: /events asks the resource process
+    # Rows written before this console had a key: sealed now, not at their next write — a camera nobody edits is
+    # never written again (feedback CD). Every subsystem's rows this console writes, and the declared volumes.
+    from w2cplatform.sealing import Sealer, seal_stored
+    seal_stored(Sealer.from_env(), vars_, [s.sub.config(s.rows, "") for s in
+                                           (SPEC, LIVE_SPEC, DET_SPEC, REC_SPEC, DETJOB_SPEC, SURVEY_SPEC, AUTO_SPEC)]
+                + ["rec/volumes/"])
     det_ctl, rec_ctl = SpecController(DET_SPEC, vars_, objects), SpecController(REC_SPEC, vars_, objects)
     job_ctl = SpecController(DETJOB_SPEC, vars_, objects)
     survey_ctl = SpecController(SURVEY_SPEC, vars_, objects)

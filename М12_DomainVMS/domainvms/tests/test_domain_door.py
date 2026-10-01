@@ -117,3 +117,15 @@ def test_a_name_that_does_not_exist_costs_as_much_as_a_wrong_password():
         assert len(calls) == 2                                           # one hash each, known or not
     finally:
         ident._hash = real
+
+
+def test_a_devices_password_is_not_the_domains_to_carry():
+    """Feedback CD: an edit for a cluster that is off is KEPT — in the holder's store, its backups, a relay's
+    books — and a password there would be in the clear past the cluster's key. Refused before anything is kept."""
+    api = ConsoleAPI(None, None)
+    try:
+        api.update_camera(7, {"name": "gate", "cred_secret": "Hunter2"}, "k1")
+        raise AssertionError("refused")
+    except ApiError as e:
+        assert e.status == 400 and "cred_secret" in e.detail and "Hunter2" not in e.detail
+    assert api._seen == {}
