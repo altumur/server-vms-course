@@ -183,7 +183,6 @@ class SurveyWorker(Worker):
         for unit in list(self.status_by_unit):
             if unit not in wanted:
                 self.status_by_unit.pop(unit, None)
-        self.renew_leases()
         return sorted(self.running)
 
     def _watch(self, model, a: float, b: float):
@@ -229,6 +228,10 @@ class SurveyWorker(Worker):
                 self.reconcile_once()
             except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("survey pass failed")
+            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
+                self.renew_leases()
+            except Exception:                            # noqa: BLE001
+                log.exception("survey lease renewal failed")
             try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
                 self.heartbeat_once()
             except Exception:                            # noqa: BLE001

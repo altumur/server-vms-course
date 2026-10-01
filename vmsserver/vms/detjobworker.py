@@ -217,7 +217,6 @@ class DetJobWorker(Worker):
         for job in list(self.status_by_unit):
             if job not in wanted:
                 self.status_by_unit.pop(job, None)
-        self.renew_leases()
         return sorted(self.running)
 
     # What the console and the controller read. `done_through` and `covered` are here and not computed by
@@ -256,6 +255,10 @@ class DetJobWorker(Worker):
                 self.reconcile_once()
             except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("scan pass failed")
+            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
+                self.renew_leases()
+            except Exception:                            # noqa: BLE001
+                log.exception("scan lease renewal failed")
             try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
                 self.heartbeat_once()
             except Exception:                            # noqa: BLE001

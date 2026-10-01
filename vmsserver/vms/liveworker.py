@@ -154,7 +154,6 @@ class LiveWorker(Worker):
                     row = self.ctl.unit(cam)
                     if row is not None and now - up.idle_since >= int(row.get("grace", 30)):
                         self.ctl.delete(cam)                        # the controller's next pass takes the placement back
-        self.renew_leases()
         return sorted(self.upstreams)
 
     # A session ends with DELETE — when the viewer says so. A tab closed, a laptop lid shut, an offer whose
@@ -359,6 +358,10 @@ class LiveWorker(Worker):
                 self.reconcile_once()
             except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("gateway pass failed")
+            try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
+                self.renew_leases()
+            except Exception:                            # noqa: BLE001
+                log.exception("gateway lease renewal failed")
             try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
                 self.heartbeat_once()
             except Exception:                            # noqa: BLE001
