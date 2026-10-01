@@ -172,6 +172,10 @@ class RecWorker(VmsWorker):
         # is `away` (`ArchiveError`): the volume is kept, the pass goes on, the next one asks again.
         self.session = obsd or Session(client=f"rec-{self.name}", timeout=float(env.get("OBSD_TIMEOUT", "10")))
         self.block, self.read = block, read           # how a volume this recorder formats is cut (`vms/archive.py`)
+        # How soon written is visible (feedback CP): the writer's two flush periods, `WRITER_CONFIGURE`d at every open.
+        from .archive import BLOCK_FLUSH_S, SEQUENCE_FLUSH_MS
+        self.sequence_flush_ms = int(env.get("SEQUENCE_FLUSH_MS", SEQUENCE_FLUSH_MS))
+        self.block_flush_s = int(env.get("BLOCK_FLUSH_S", BLOCK_FLUSH_S))
         # WHICH VOLUME THIS RECORDER WRITES INTO — its place, in the sense `place_by: volume` means. Three
         # ways to be told, in this order:
         #
@@ -761,6 +765,7 @@ class RecWorker(VmsWorker):
         secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
                         secret=secret, access_key=vol.access_key,
+                        sequence_flush_ms=self.sequence_flush_ms, block_flush_s=self.block_flush_s,
                         **{k: v for k, v in (("block", self.block), ("read", self.read)) if v})
         try:
             store.open()
@@ -977,8 +982,8 @@ class RecWorker(VmsWorker):
     # row's `retention_days` (`visible_from`) — nor than `keep_days`: a range fetched past the ceiling is a range
     # nobody will be shown.
     #
-    # Not newer than what we can SEE (the feedback's Q). A reader sees only closed blocks, and a block closes
-    # when the next begins — minutes, at a low bitrate. Everything after the end of our visible coverage is
+    # Not newer than what we can SEE (the feedback's Q). A reader sees only blocks written to the volume — when one
+    # fills, or `BLOCK_FLUSH_S` after a sequence reached the writer's queue (feedback CP). Everything after the end of our visible coverage is
     # either being written this minute or written and not yet visible, and there is no need to tell the two
     # apart: neither is a gap. The visible end is the lag MEASURED; `settle` stays as the floor, and is all
     # there is for a recording with nothing visible.

@@ -75,8 +75,9 @@ class FakeStore:
 #
 # Two numbers are shorter than in production, so that a test of them does not wait a minute: how long a
 # vanished session's writer waits for its owner, and how long a session with no connection survives.
-OBSD_HINT = ("the archive's tests need obsd, the ObjectStorage daemon: build it with "
-             "`ObjectStorage/standalone-build/build.sh <out>` and set OBSD_BIN=<out>/build/obsd (or put obsd on PATH)")
+OBSD_HINT = ("the archive's tests need obsd, the ObjectStorage daemon, with the patches of `standalone-build/patches/` "
+             "(04: a block flushes by its period; 05: a timeline window of any length): build it with `ObjectStorage/standalone-build/build.sh <out>` and set "
+             "OBSD_BIN=<out>/build/obsd (or put obsd on PATH)")
 OBSD_GRACE_S = 3
 OBSD_LINGER_MS = 300
 

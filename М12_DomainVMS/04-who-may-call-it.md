@@ -78,6 +78,8 @@ south vars after agent sync: ['domain/keys']
 
 А набор идентичностей публикуется сначала объектом, затем указателем: `IdentityStore.publish()` пишет весь набор одним объектом, затем сдвигает указатель — `identity/pointer → identity/rev-N` — не реже заданного интервала. Потеря держателя домена откатывает пользователей только до последней публикации, а `IdentityStore.restore()` на другом кластере — это восстановление М11 с другими существительными: ключ подписывающего из резервной копии, затем объект, на который показывает указатель. RPO для пользователей — интервал публикации, и он заявлен.
 
+**Кто менял людей — строка в журнале держателя.** Запись держала только «кто и когда менял последним», а история терялась (обратная связь CL). `IdentityStore(journal=)` пишет в журнал держателя домена (семья `audit`, роль `domain`) строку на каждое изменение: `domain.user.created` (`account` — `local` или `idp`), `domain.user.password` (`set_password`), `domain.user.roles` (`roles`, `was`), `domain.user.deleted` (`grants_taken`); права — `domain.grants.changed` с `added` и `removed` (шаг 5); членство — `domain.member.admitted` с ключом, который видел оператор, и `domain.member.left` (урок 15); `domain.break_glass.set` (шаг 7). Кто — `by`, имя, проверенное воротами двери. Паролей в строках нет, и это проверяет тест: `test_who_changed_the_people_the_grants_and_the_members_is_a_line_in_the_holders_journal`. Чего нет — правок командой на держателе мимо двери: у команды журнала нет.
+
 ## Шаг 4 — Домен недоступен
 
 ```

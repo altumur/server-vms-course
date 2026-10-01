@@ -273,11 +273,29 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
 
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
+            # WHO WATCHED, LIVE (feedback CL). Reading the archive was a journal line; watching the camera now was
+            # not, and that is one of the two things authentication exists for. A viewer admitted — the gateway
+            # answered the offer — is `live.view`: who, which camera, the session, the gateway, from where; a viewer
+            # who hung up is `live.view.ended`. One who left without a word is the gateway's grace (Lesson 13), and
+            # has no line: the console never heard.
+            journal = getattr(extra, "journal", None)
+            who = handler.headers.get("X-User", "operator")
+            addr = (getattr(handler, "client_address", None) or ("",))[0]
             if method == "POST" and not path.startswith("/whep/session/"):
+                cam = path[len("/whep/"):]
                 sdp = handler.rfile.read(int(handler.headers.get("Content-Length", 0))).decode()
-                return live.offer(path[len("/whep/"):], sdp, [l for l in q.get("labels", "").split(",") if l], token_of(handler.headers))
+                r = live.offer(cam, sdp, [l for l in q.get("labels", "").split(",") if l], token_of(handler.headers))
+                if journal is not None and r[0] == 201:
+                    loc = dict(r[2]).get("Location", "")
+                    journal.say("live.view", user=who, target=cam, session=loc.rsplit("/", 1)[-1].split("?")[0],
+                                gateway=loc.rsplit("gateway=", 1)[-1], addr=addr)
+                return r
             if method == "DELETE" and path.startswith("/whep/session/"):
-                return live.hangup(path[len("/whep/session/"):], q.get("gateway", ""), token_of(handler.headers))
+                sid = path[len("/whep/session/"):]
+                r = live.hangup(sid, q.get("gateway", ""), token_of(handler.headers))
+                if journal is not None and r[0] in (200, 204):
+                    journal.say("live.view.ended", user=who, session=sid, gateway=q.get("gateway", ""), addr=addr)
+                return r
             if method == "GET" and not path.startswith("/whep/session/"):
                 return 200, live.status(path[len("/whep/"):])           # GET /whep/<cam>: the stream, its gateway, that gateway's word
             return None

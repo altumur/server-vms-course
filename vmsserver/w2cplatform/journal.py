@@ -13,6 +13,7 @@
 #
 #   unit.deleted              console    a camera, a recording, any unit was deleted: which, and who
 #   archive.read              console    a piece of footage was served through the console: who, which, from where
+#   live.view / live.view.ended  console  a viewer was admitted to a camera's live stream, and hung up: who, which, where from (feedback CL)
 #   archive.keep.made/lifted  console    a keep was set or lifted: who
 #   archive.volume.shrunk/withdrawn  console    a volume's quota was lowered, or the volume withdrawn: who
 #   events.removed            resource   the retention pass removed buckets: whose, how many, of what period
@@ -30,7 +31,9 @@
 # in every reader.
 #
 # "Who" is the name the caller gave (`X-User`). There is no authentication in this course, and the journal
-# does not pretend there is; when there is, it writes into the same place.
+# does not pretend there is; when there is, it writes into the same place. The domain (М12) writes the same
+# family, as role `domain`: who created, disabled or deleted a person, who changed the grants, who admitted a
+# member — the history that a row holding only its last editor loses (feedback CL).
 # ================================================================================================
 import logging
 

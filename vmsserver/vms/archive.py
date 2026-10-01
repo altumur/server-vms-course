@@ -29,6 +29,8 @@
 # ================================================================================================
 from __future__ import annotations
 
+import logging
+
 import time
 from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
@@ -44,7 +46,16 @@ STITCH = 2.0         # seconds: two spans closer than this are one run — the s
 # is cut where the block is full and the rest is refused until the next key frame (the product's incident,
 # feedback Y): block ≥ read + 3 MB.
 BLOCK, READ = 8 << 20, 1 << 20
+log = logging.getLogger("vms.archive")
 NEVER, FOREVER = 0, 1 << 62           # the archive's milliseconds: before anything, after everything
+# HOW LONG WRITTEN STAYS INVISIBLE (feedback CP). A reader sees only blocks written to the volume, and a block is
+# written when it is full — or, since the engine's patch 04, when the writer's queue is not empty and
+# `blockFlushPeriodSec` has passed. A sequence reaches that queue when it is finished: by `FINISH_MEDIA`, or by the
+# engine on a key frame once it is open longer than `sequenceFlushPeriodMs`. So a thin stream — 7 KB/s against a
+# 4 MB block — is visible after sequence flush + block flush, about fifteen seconds with the product's numbers,
+# and not after the ten minutes the block takes to fill. The engine's own default for the block is a minute, and
+# before the patch its timer never fired at all. The product sets both through `WRITER_CONFIGURE`; so does this.
+SEQUENCE_FLUSH_MS, BLOCK_FLUSH_S = 10_000, 5
 TIMELINE_WINDOW = 5 * 86400 * 1000    # how much of a stream one timeline question covers (`Archive._timeline`)
 
 
@@ -200,10 +211,12 @@ class Archive:
     passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
-                 wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = ""):
+                 wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = "",
+                 sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
+        self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
         self.volume = None
         self.writer = None
         self._reader = None
@@ -229,9 +242,22 @@ class Archive:
             if write and self.writer is None:
                 self.writer = vol.mount_rw(self.owner)
                 self.reattached = self.writer.reattached
+                self._configure()
         except (ObsdError, ValueError) as e:
             raise classify(e) from None
         return self
+
+    # The writer's settings, before its first sample: how a sequence is cut by time and how long a block may wait
+    # (`SEQUENCE_FLUSH_MS`, `BLOCK_FLUSH_S`), and how a volume this recorder formats is cut. A writer picked up again
+    # (`reattached`) keeps the settings it had; the engine says so, and that is not a failure to open.
+    def _configure(self) -> None:
+        settings = {k: v for k, v in (("maxBlockSize", self.block), ("optimalReadSize", self.read),
+                                      ("sequenceFlushPeriodMs", self.sequence_flush_ms),
+                                      ("blockFlushPeriodSec", self.block_flush_s)) if v}
+        try:
+            self.writer.configure(**settings)
+        except ObsdError as e:
+            log.warning("%s: the writer keeps its own settings (%s)", self.name, e.name)
 
     def put(self, unit, epoch: int, sample: Sample, backfill: bool = False) -> str:
         """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
@@ -256,6 +282,7 @@ class Archive:
         if self.writer is not None:
             self.writer.close()
             self.writer = self._open_volume().mount_rw(self.owner)
+            self._configure()
 
     def close(self) -> None:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
@@ -300,12 +327,13 @@ class Archive:
                 out.append(Span(p[0], p[1], unix_s(iv["start"]), unix_s(iv["end"]), int(iv.get("size", 0)), p[2]))
         return sorted(out, key=lambda s: (s.start, s.epoch))
 
-    # A stream's timeline, asked IN WINDOWS. The engine answers `INTERNAL_ERROR` to some timeline questions over
-    # six days of footage or more (obsd protocol v1 — seen, not documented, and not every time: the same question
-    # is refused by one daemon and answered by the next). Five days has never been refused. A recording is a
-    # month deep, so the question is cut to what the stream holds — its first and last sequence — and asked five
-    # days at a time; a window refused anyway is asked again in halves, down to an hour. Intervals that touch
-    # across a cut are put back together.
+    # A stream's timeline, asked IN WINDOWS. An engine before patch 05 answered `INTERNAL_ERROR` to a timeline over
+    # six days of footage or more: it reads the index an hour at a time and handed every read to the volume's
+    # pool at once, whose queue holds 128 — five days fit, six did not, and what the cache already held decided
+    # the rest (the engine's session found and fixed it: the reads go in portions now). The windows stay as
+    # insurance against an older daemon: a recording a month deep is asked five days at a time, cut to what the
+    # stream holds — its first and last sequence — and a window refused anyway is asked again in halves, down to
+    # an hour. Intervals that touch across a cut are put back together.
     def _timeline(self, r, name: str, lo: int, hi: int) -> list[dict]:
         first, last = r.find(name, lo), r.find(name, hi, backwards=True)
         if first is None or last is None:

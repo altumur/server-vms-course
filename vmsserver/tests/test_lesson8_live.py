@@ -370,3 +370,35 @@ def _try(fn):
     except Exception as e:                                             # noqa: BLE001
         return e
 
+
+
+def test_who_watched_a_camera_live_is_a_line_in_the_journal():
+    """Feedback CL. Reading the archive was journalled; watching the camera NOW was not — and that is one of the
+    two things authentication exists for. A viewer the gateway admitted is `live.view`: who, which camera, the
+    session, the gateway, from where. The viewer who hangs up is `live.view.ended`. A console with no resource
+    root writes no journal, so this one is served over the box's."""
+    import json
+    import os
+    from w2cplatform.events import buckets_under
+    box, ctl, live_ctl, w, srv, base = _box()
+    srv.shutdown(); srv.server_close()
+    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
+    srv = serve(VmsController(con_vars, box.objects, wall=box.wall), box.archive, port=0, wall=box.wall,
+                live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def said():
+        return [{k: e[k] for k in ("kind", "user", "target", "session", "gateway") if k in e}
+                for b in buckets_under(box.archive, "audit", "console", 600)
+                for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith("live.view")]
+    try:
+        g = _gateway(box, "g-1")
+        _whep(base, 1); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+        code, _, loc = _whep(base, 1, headers={"X-User": "anna"})
+        assert code == 201
+        sid = loc.rsplit("/", 1)[-1].split("?")[0]
+        assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "session": sid, "gateway": "g-1"}]
+        assert _whep(base, 1, headers={"X-User": "anna"}, method="DELETE", path=loc)[0] in (200, 204)
+        assert [e["kind"] for e in said()] == ["live.view", "live.view.ended"] and said()[1]["user"] == "anna"
+    finally:
+        srv.shutdown(); srv.server_close()

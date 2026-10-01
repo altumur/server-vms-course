@@ -121,12 +121,20 @@ class LastAdmin(ValueError):
     """A write that would leave the domain with nobody who may change it."""
 
 
-def set_domain_grants(vars_, grants: list[Grant], now: float) -> None:
+def set_domain_grants(vars_, grants: list[Grant], now: float, journal=None, by: str | None = None) -> None:
+    """The domain's grants, whole. With a `journal`, the change is a line (feedback CL): who, which rows came and
+    which went — the history a row that holds only its last editor loses."""
     if not any(g.capability == "admin" and g.camera is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
                for g in grants):
         raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
-    _, idx = vars_.get(DOMAIN_GRANTS)
-    vars_.put(DOMAIN_GRANTS, grants_to_items(grants), cas=idx)
+    items, idx = vars_.get(DOMAIN_GRANTS)
+    new = grants_to_items(grants)
+    vars_.put(DOMAIN_GRANTS, new, cas=idx)
+    if journal is not None:
+        was = items or {}
+        added, removed = sorted(k for k in new if k not in was), sorted(k for k in was if k not in new)
+        if added or removed:
+            journal.say("domain.grants.changed", user=by or "?", target=DOMAIN_SCOPE, added=",".join(added), removed=",".join(removed))
 
 
 def revocation_window(token_lifetime: float, grant_lifetime: float) -> float:

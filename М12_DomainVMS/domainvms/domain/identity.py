@@ -69,10 +69,18 @@ class User:
 
 
 class IdentityStore:
-    def __init__(self, signer: Signer, vars_: Variables, objects, publish_floor: float = 60.0, now=time.time):
+    # WHO CHANGED THE PEOPLE (feedback CL). A record held who edited it last and when; the history was lost. Every
+    # change here is a line in the holder's journal — role `domain` — naming the actor the domain's door verified
+    # (`by`), the record, and what changed. Never a password: the line says the password changed, and that is all.
+    def __init__(self, signer: Signer, vars_: Variables, objects, publish_floor: float = 60.0, now=time.time, journal=None):
         self.signer, self.vars, self.objects, self.now = signer, vars_, objects, now
         self.floor, self._last_publish, self._dirty = publish_floor, -1e9, False
         self.published_rev, self.publishes = 0, 0
+        self.journal = journal
+
+    def _say(self, what: str, uid: str, by: str | None, **fields) -> None:
+        if self.journal is not None:
+            self.journal.say(what, user=by or "?", target=uid, **fields)
 
     # -- records ----------------------------------------------------------------
     def _path(self, uid: str) -> str:
@@ -87,36 +95,49 @@ class IdentityStore:
         self.vars.put(self._path(u.id), u.to_items(), cas=idx)
         self._dirty = True
 
-    def create_local(self, uid: str, password: str, roles: list[str]) -> User:
+    def create_local(self, uid: str, password: str, roles: list[str], by: str | None = None) -> User:
         if self.get(uid) and self.get(uid).kind != "deleted":
             raise ValueError(f"user {uid} exists")
         u = User(uid, "local", roles, pwhash=_hash(password), created=self.now())
         self._put(u)
+        self._say("domain.user.created", uid, by, account="local", roles=",".join(roles))
         return u
 
-    def create_federated(self, uid: str, idp_subject: str, roles: list[str]) -> User:
+    def create_federated(self, uid: str, idp_subject: str, roles: list[str], by: str | None = None) -> User:
         """The customer has an IdP: the record holds a subject, not a person, and no secret."""
         u = User(uid, "idp", roles, idp_subject=idp_subject, created=self.now())
         self._put(u)
+        self._say("domain.user.created", uid, by, account="idp", roles=",".join(roles))
         return u
 
-    def set_roles(self, uid: str, roles: list[str]) -> None:
+    def set_password(self, uid: str, password: str, by: str | None = None) -> None:
+        u = self.get(uid)
+        if not u or u.kind != "local":
+            raise KeyError(uid)
+        u.pwhash = _hash(password)
+        self._put(u)
+        self._say("domain.user.password", uid, by)       # that it changed — never what to
+
+    def set_roles(self, uid: str, roles: list[str], by: str | None = None) -> None:
         u = self.get(uid)
         if not u:
             raise KeyError(uid)
+        was = u.roles
         u.roles = roles
         self._put(u)
+        self._say("domain.user.roles", uid, by, roles=",".join(roles), was=",".join(was))
 
     # A user deleted takes every grant that names them, on every cluster and on the domain (the product, feedback
     # CG). Grants name a SUBJECT, not a record: left behind, they would go to whoever is next created under the
     # same name. The domain's last admin is not deleted (`set_domain_grants` refuses), and nothing is changed then.
-    def delete(self, uid: str) -> None:
+    def delete(self, uid: str, by: str | None = None) -> None:
         from .agent import GRANTS_PATH
         from .grants import DOMAIN_GRANTS, grants_from_items, set_domain_grants
         items, _ = self.vars.get(DOMAIN_GRANTS)
         mine = [g for g in grants_from_items(items) if g.subject == uid]
         if mine:
-            set_domain_grants(self.vars, [g for g in grants_from_items(items) if g.subject != uid], self.now())
+            set_domain_grants(self.vars, [g for g in grants_from_items(items) if g.subject != uid], self.now(),
+                              journal=self.journal, by=by)
         for path in self.vars.list(GRANTS_PATH + "/"):
             if path == DOMAIN_GRANTS:
                 continue
@@ -127,6 +148,7 @@ class IdentityStore:
         _, idx = self.vars.get(self._path(uid))
         self.vars.put(self._path(uid), {"id": uid, "kind": "deleted"}, cas=idx)
         self._dirty = True
+        self._say("domain.user.deleted", uid, by, grants_taken=len(mine))
 
     def users(self) -> list[User]:
         out = []
@@ -223,5 +245,7 @@ class BreakGlass:
         self.used_since_rotation += 1
         return self.signer.tokens.issue("break-glass", TOKEN_LIFETIME, now=now, via="break-glass", who=who, kind="person")
 
-    def rotate(self, new_password: str) -> None:
+    def rotate(self, new_password: str, by: str | None = None, journal=None) -> None:
         self.pwhash, self.used_since_rotation = _hash(new_password), 0
+        if journal is not None:
+            journal.say("domain.break_glass.set", user=by or "?")  # that it was set — never what to

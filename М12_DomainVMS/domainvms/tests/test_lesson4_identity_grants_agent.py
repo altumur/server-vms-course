@@ -2,6 +2,8 @@
 worker; the agent carries keys, revocations and the cluster's grants and
 nothing else; grants are cluster-local with expiry; the revocation window
 is stated then measured; break-glass is one account, audited."""
+import json
+
 from cluster.variables import Forbidden
 from domain.agent import KEYS_PATH, DomainAgent, DomainPublisher, ClusterTrust
 from domain.grants import GRANT_LIFETIME, ClusterAuthoriser, ClusterGrants, Grant, revocation_window
@@ -199,3 +201,45 @@ def test_break_glass_is_one_account_audited_and_alarmed():
     assert p["sub"] == "break-glass" and p["via"] == "break-glass" and p["who"] == "carol"
     assert len(bg.audit) == 2 and bg.alarm[-1].startswith("BREAK-GLASS used by carol") and bg.used_since_rotation == 1
     bg.rotate("new-pw"); assert bg.used_since_rotation == 0
+
+
+def test_who_changed_the_people_the_grants_and_the_members_is_a_line_in_the_holders_journal():
+    """Feedback CL. A record held who edited it last, and the history was lost. Every change to a person, to the
+    domain's grants and to the list of members is a line of the `audit` family on the holder's resource, as the
+    role `domain`: the actor the door verified, the record, what changed — and never a password."""
+    import os
+    import tempfile
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.journal import Journal
+    from domain.grants import DOMAIN_GRANTS, Grant, grants_from_items, set_domain_grants
+    from domain.members import Members
+    clk = Clock(1_757_500_000.0)
+    fed, _, dc, signer = _domain(clk)
+    root = tempfile.mkdtemp(prefix="holder-")
+    journal = Journal(root, "domain", clk)
+    users = IdentityStore(signer, dc.vars, dc.objects, now=clk, journal=journal)
+    set_domain_grants(dc.vars, [Grant("alice", "admin", None, 0)], clk(), journal=journal, by="setup")
+    users.create_local("bob", "s3cret-pw", ["operator"], by="alice")
+    users.set_password("bob", "0ther-pw", by="alice")
+    users.set_roles("bob", ["operator", "viewer"], by="alice")
+    have = grants_from_items(dc.vars.get(DOMAIN_GRANTS)[0])
+    set_domain_grants(dc.vars, have + [Grant("bob", "view", None, 0)], clk(), journal=journal, by="alice")
+    users.delete("bob", by="alice")
+    members = Members(dc.vars, wall=clk, journal=journal)
+    members.add("cam-SN9001", how="accepted by alice", by="alice", key="ab" * 32)
+    members.remove("cam-SN9001", by="alice")
+    bg = BreakGlass.create(signer, "emergency-pw")
+    bg.rotate("new-pw", by="alice", journal=journal)
+
+    lines = EventIndex(root, "holder", wall=clk).query(0, clk() + 1, subsystem="audit", unit="domain")["events"]
+    assert [(e["kind"], e["user"], e.get("target")) for e in lines] == [
+        ("domain.grants.changed", "setup", "domain"),
+        ("domain.user.created", "alice", "bob"), ("domain.user.password", "alice", "bob"), ("domain.user.roles", "alice", "bob"),
+        ("domain.grants.changed", "alice", "domain"),
+        ("domain.grants.changed", "alice", "domain"), ("domain.user.deleted", "alice", "bob"),   # deleting bob takes his grant with him
+        ("domain.member.admitted", "alice", "cam-SN9001"), ("domain.member.left", "alice", "cam-SN9001"),
+        ("domain.break_glass.set", "alice", None)]
+    assert lines[4]["added"] == "bob|view|" and lines[5]["removed"] == "bob|view|"
+    assert lines[7]["key"] == "ab" * 32                                 # the key the person saw (CJ)
+    text = json.dumps(lines)
+    assert "s3cret" not in text and "0ther" not in text and "new-pw" not in text and "emergency" not in text

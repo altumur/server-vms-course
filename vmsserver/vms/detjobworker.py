@@ -61,9 +61,10 @@ class DetJobWorker(Worker):
     # A job whose interval reaches past what is RECORDED follows the recording: the footage of its last
     # minutes is written while it runs. Done is when the footage has reached the end (`written_through`),
     # or — the recorder stopped, the camera went dark — when the end is older than this many LAGS: a reader sees a
-    # block once it is closed, and a block closes when the next one starts, so the footage of `to` is at most one
-    # block's worth of time behind (`VISIBLE_LAG_SECONDS`: the block size over the bitrate — the product's worst
-    # path from a frame to an answer).
+    # block once it is written, and a block is written when it fills or `BLOCK_FLUSH_S` after its sequence was
+    # finished, so the footage of `to` is at most one block's worth of time behind (`VISIBLE_LAG_SECONDS`: the block
+    # size over the bitrate, for a stream that fills blocks faster than the flush period — the worst path from a
+    # frame to an answer; feedback CP).
     FOLLOW_LAGS = 2
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,

@@ -42,7 +42,8 @@ def member_name(serial: str) -> str:
 
 
 class Members:
-    def __init__(self, domain_vars, wall=time.time, configured=None, domain: str | None = None):
+    def __init__(self, domain_vars, wall=time.time, configured=None, domain: str | None = None, journal=None):
+        self.journal = journal                        # who admitted whom, with the key the person saw (feedback CL, CJ)
         """`configured()`: the reporting members the configuration names — carried into the list by its first
         write. `domain`: the domain's holder, which is not a member to admit or remove."""
         self.vars, self.wall = domain_vars, wall
@@ -103,7 +104,10 @@ class Members:
                 return False
             m[name] = {"how": how, "serial": serial, "since": self.wall(), "by": by, **({"key": key} if key else {})}
             return True
-        return self._change(mutate)
+        done = self._change(mutate)
+        if done and self.journal is not None:
+            self.journal.say("domain.member.admitted", user=by or how, target=name, how=how, **({"key": key} if key else {}))
+        return done
 
     def _revoked_keys(self) -> set:
         from .agent import KEYS_PATH
@@ -113,7 +117,10 @@ class Members:
 
     def remove(self, name: str, by: str | None = None) -> bool:
         self._refuse_domain(name)
-        return self._change(lambda m: m.pop(name, None) is not None)
+        done = self._change(lambda m: m.pop(name, None) is not None)
+        if done and self.journal is not None:
+            self.journal.say("domain.member.left", user=by or "?", target=name)
+        return done
 
     # WHICH ROOT A MEMBER PINNED (Lesson 15, feedback BX). A member pins the root of the first key set its agent
     # is given — in the course, and in the product until enrollment brings the root with it (Lesson 6). So the

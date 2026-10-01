@@ -164,10 +164,10 @@ def test_two_writers_epochs_are_two_streams_in_one_volume():
 
 
 def test_a_recording_a_month_deep_is_answered_whole():
-    """Seen, and not in the protocol's README: `READER_TIMELINE` over six days of footage or more is sometimes
-    answered `INTERNAL_ERROR` — the same question refused by one daemon and answered by the next. A recording is
-    a month deep, so `Archive` asks five days at a time, halves a window refused anyway, and puts the intervals
-    back together (`Archive._timeline`)."""
+    """An engine before patch 05 answered `INTERNAL_ERROR` to `READER_TIMELINE` over six days of footage or more:
+    one index read per hour, all handed to a pool whose queue holds 128. A recording is a month deep, so `Archive`
+    asks five days at a time, halves a window refused anyway, and puts the intervals back together
+    (`Archive._timeline`) — insurance against an older daemon, and the same answer on a fixed one."""
     from tests.conftest import footage, store
     now = 1_757_500_000.0
     st = store()
@@ -216,3 +216,28 @@ def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
         pass
     assert len(sent) == 1                                         # out once, never again
     assert s.call("STATS")[0]                                     # a fresh connection: the session goes on
+
+
+def test_a_thin_stream_is_visible_after_the_flush_periods_and_not_when_its_block_fills():
+    """Feedback CP. A thin stream — a few kilobytes a second against a block of megabytes — took ten minutes to
+    reach a reader: the block was written only when full, because the engine's flush timer never fired (patch
+    04). With the writer told its two periods, a finished sequence is on the volume after `blockFlushPeriodSec`,
+    and an open one is cut by the engine `sequenceFlushPeriodMs` after it opened — without anybody closing the
+    writer. Left at nought, the block waits for the engine's own minute: this test would wait with it."""
+    import time
+    from tests.conftest import store
+    from vms.worker import fake_samples
+    st = store()                                                       # the course's periods: 10 s and 5 s
+    st.seal()                                                          # (a fresh writer, configured)
+    assert st.block_flush_s == 5 and st.sequence_flush_ms == 10_000
+    quick = store("quick")
+    quick.writer.configure(sequenceFlushPeriodMs=1000, blockFlushPeriodSec=1)
+    t = 1_757_500_000.0
+    for smp in fake_samples(t - 30, t, step=1, size=256):             # thirty seconds, eight kilobytes: no block fills
+        quick.put("7", 1, smp)
+    deadline = time.monotonic() + 6
+    while time.monotonic() < deadline and not quick.coverage("7"):
+        time.sleep(0.25)
+    seen = quick.coverage("7")
+    assert seen and seen[0][0] == t - 30 and seen[0][1] >= t - 2        # the sequence the engine cut, on the volume
+    assert quick.status()["numBlocks"] >= 1
