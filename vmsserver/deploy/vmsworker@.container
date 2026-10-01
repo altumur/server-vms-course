@@ -74,12 +74,12 @@ Volume=/run/vms:/run/vms:z
 # host network: the RTSP fan-out listens on :8554 (`live_url` in the heartbeat) — what the recorder, the
 # gateways and the detectors subscribe to, from this box or another server.
 Network=host
-# SIGTERM lets every splitmuxsink finalize its open segment and the worker
-# release its slot; SIGKILL loses exactly that segment (М10 Lesson 3) and
-# leaves the slot to lapse (Lesson 4).
-# the comment says why: SIGTERM lets every `splitmuxsink` finalize its open segment (the actuator sends EOS
-# before NULL) and the worker `release_slot()`; SIGKILL after 20 s loses exactly that segment (М10 Lesson 3)
-# and leaves the slot to lapse (Lesson 4) — a crash, which the controller does not redistribute.
+# SIGTERM lets the pipelines end (EOS before NULL) and the worker release
+# its slot; SIGKILL leaves the slot to lapse (Lesson 4). The worker records
+# nothing, so there is no footage to lose either way.
+# the comment says why: SIGTERM lets the pipelines end (the actuator sends EOS before NULL) and the worker
+# `release_slot()`; SIGKILL after 20 s leaves the slot to lapse (Lesson 4) — a crash, which the controller
+# does not redistribute.
 StopTimeout=20
 
 [Service]

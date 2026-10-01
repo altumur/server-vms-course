@@ -22,8 +22,8 @@ policy; relieve the disk if it is over the high mark — the resource measures
 and says how many bytes to free, each subsystem decides what to give up;
 mirror closed buckets to the next live resource(s) after this one
 in sorted order — nobody assigns peers, the rule is the assignment; and any
-subsystem-specific pass a subsystem registered (the VMS registers its
-media repair and retention). `restore` is the reverse of mirror, run by
+subsystem-specific pass a subsystem registered (the VMS registers none: its
+footage is in volumes of ObjectStorage, not on this tree). `restore` is the reverse of mirror, run by
 the owner at start: a server back with an empty disk pulls its buckets
 home. No controller is involved in any of it.
 """
@@ -403,8 +403,8 @@ class Resource:
         return out
 
     # Total bytes under `root` — every file, not only the ones some subsystem accounts for. A walk, and
-    # therefore NOT something to do on a timer: at fifty cameras and ten-minute segments a month of
-    # archive is a quarter of a million files, and walking them touches every inode in the tree. Measured
+    # therefore NOT something to do on a timer: a year of event buckets for a few hundred units is a great many
+    # files, and walking them touches every inode in the tree. Measured
     # once per policy pass (`pass_`), published from the cache with the time it was taken (`usage_at`).
     # What decides anything is `space()` — one `statvfs`, cheap enough for every heartbeat.
     def usage(self, volume: str | None = None) -> int:
@@ -433,7 +433,7 @@ class Resource:
         return cached
 
     # (total, free) of the disk, and how full it is. `free` is what a peer reads before sending anything
-    # here: an evacuation onto a disk that is itself tight only moves the problem.
+    # here: a copy onto a disk that is itself tight only moves the problem.
     def space(self, volume: str | None = None) -> dict:
         """One volume's disk, or every volume summed when none is named. The sum
         is what a fleet view wants; what DECIDES anything is a single volume —
@@ -585,9 +585,10 @@ class Resource:
     # decides what to give up, because only it knows what its files mean. Nothing here knows what a camera
     # is, and nothing here deletes a subsystem's file.
     #
-    # Over `high`, free down to `low`. Slowness resolves itself: a hook that can only start something
-    # (evacuating footage to the server that now writes it, say) returns what it managed and is asked again
-    # on the next pass — which is why there is no third, "critical" mark and no separate schedule.
+    # Over `high`, free down to `low`. Slowness resolves itself: a hook that can only start something (a move
+    # to another disk, say) returns what it managed and is asked again on the next pass — which is why there is
+    # no third, "critical" mark and no separate schedule. With nothing registered to answer — the VMS's footage
+    # is in rings that never outgrow their quota — what is short is said as a shortfall, and nothing is cut.
     def relieve(self) -> dict:
         """Over the high mark, ask each subsystem to free bytes down to the low one.
 

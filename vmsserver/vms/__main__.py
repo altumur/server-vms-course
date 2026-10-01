@@ -1,8 +1,9 @@
-"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller — the box's processes.
+"""python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller|
+detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontroller — the box's processes.
 
     PLATFORM_DIR=/data/platform     the platform's stores (config/, objects/)
     ARCHIVE=/data/archive  MEDIA_DIR=/data/media   the resource's tree (events); the recorder's own volume under it
-    OBSD_SOCKET=/run/obsd/obsd.sock  the host's ObjectStorage daemon — every recorder writes its footage through it
+    OBSD_SOCKET=/run/vms/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
                                      neither: the first free slot, a lapsed one first
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler
@@ -511,8 +512,8 @@ def console() -> None:
 #   `EventIndex` over the tree and the VMS's keeps for its bucket retention.
 # - `serve(res, $RESOURCE_HOST, $RESOURCE_PORT)` — `/buckets`, `/events`, `/mirrored`, `PUT /mirror`.
 # - one heartbeat (`platform/resources/<server>/heartbeat` — how the console finds this process), then
-#   `restore()` — and the loop: a heartbeat every 10 s, the policy pass every 600 s (close buckets, retain
-#   them by `vms/retention/<cam>`, the watermark over the tree, the mirror).
+#   `restore()` — and the loop: a heartbeat every 10 s, the policy pass every 600 s (retain buckets by each
+#   subsystem's row, the watermark over the tree, the mirror).
 def resource() -> None:
     """The resource process: no controller — a policy pass, a heartbeat, its HTTP,
     and the event index over its own tree."""

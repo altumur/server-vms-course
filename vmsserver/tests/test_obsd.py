@@ -176,3 +176,16 @@ def test_a_recording_a_month_deep_is_answered_whole():
     assert st.coverage("7") == [(now - 30 * 86400, now - 15 * 86400 - 3600), (now - 15 * 86400, now)]
     assert round(st.depth_days("7", now), 3) == 30.0
     assert [(s.start, s.end) for s in st.spans("7", now - 2 * 86400, now - 86400)][0][1] == now   # a window inside a span
+
+
+def test_a_new_quota_resizes_the_ring_without_stopping_the_writer():
+    """A quota is the size of the ring, and a new one is applied at once (`WRITER_RESIZE`): the writer goes on,
+    and what was written stays readable."""
+    from tests.conftest import footage, store
+    st = store(quota=64 << 20)
+    t = 1_757_500_000.0
+    footage(st, "7", 1, t - 600, t, step=10, seal=False)
+    st.resize(128 << 20)
+    assert st.quota == 128 << 20 and st.writer is not None
+    footage(st, "7", 1, t, t + 600, step=10)
+    assert st.coverage("7") == [(t - 600, t + 600)]

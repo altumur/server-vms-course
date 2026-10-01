@@ -247,8 +247,8 @@ def test_a_released_backup_writes_the_seconds_before_anybody_noticed():
 
 
 def test_the_backup_goes_back_on_hold_a_minute_after_the_primary_is_back():
-    """The primary is written again — by its heartbeat. Its first segment is not on disk yet, and will not be
-    visible until it closes; stopping the backup at that word would leave the seam to nobody. So the backup
+    """The primary is written again — by its heartbeat. Its first minutes are not on the volume yet, and will not be
+    visible until their block closes; stopping the backup at that word would leave the seam to nobody. So the backup
     keeps writing for a minute, the two archives overlap, and only then is it put back on hold: a restart
     under the same epoch, its sequence finished and kept, the ring filling afresh for next time."""
     box, rec_ctl, primary, backup, w = _site(when="offline")

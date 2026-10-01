@@ -199,7 +199,7 @@ def recorder_doors(objects, now: float, lost_after: float = 45.0) -> list:
 # The volumes nobody serves right now: a recorder went silent holding one, and no live recorder holds it since —
 # the server is down, its disk with it, or a network archive is waiting for a spare. Its footage is not LOST: it is
 # in that volume, and it is unavailable until a recorder holds the volume again. `[{volume, server, since}]`, from
-# the recorders' last heartbeats; the timeline names them instead of drawing a hole where they are (М11 lesson 8).
+# the recorders' last heartbeats; the timeline names them instead of drawing a hole where they are (М11 lesson 6).
 def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict]:
     live, stale = set(), {}
     for name, hb in heartbeats(objects, "rec/").items():
@@ -635,8 +635,9 @@ def rec_routes(rec_ctl: SpecController):
             journal.say(kind, user=(getattr(handler, "headers", None) or {}).get("X-User", "operator"), **fields)
 
     def extra(handler, method, path, q):
-        # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is —
-        # the resource that holds the footage reads it on its own pass, and nothing is sent anywhere.
+        # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is — the
+        # recorder holding an incidents volume copies what it names on its own pass, and the resource leaves the
+        # events it names in place.
         if method == "GET" and path in ("/keeps", "/keeps/"):
             # The list is what THIS caller may see (feedback CG): a keep says which camera, which minutes and why,
             # and lifting or checking one already asked by its camera — the list did not. A camera of another
@@ -664,8 +665,9 @@ def rec_routes(rec_ctl: SpecController):
                 return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
             keeps.delete(rec_ctl.vars, id_)
             said("archive.keep.lifted", handler, keep=id_)
-            return 200, {"deleted": id_, "detail": "the footage and the events are under their own retention again, "
-                                                   "from the next pass of the resource that holds them"}
+            return 200, {"deleted": id_, "detail": "the events are under their own retention again, from the resource's "
+                                                   "next pass; the copy in the incidents volume stays until its ring "
+                                                   "overwrites it"}
         if not path.startswith("/volumes"):
             return None
         if method == "GET" and path in ("/volumes", "/volumes/"):
@@ -688,7 +690,7 @@ def rec_routes(rec_ctl: SpecController):
                 vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
-            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the watermark frees the oldest
+            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the ring shrinks, its oldest minutes go
                 said("archive.volume.shrunk", handler, volume=vol.name, quota_bytes=vol.quota_bytes, was=was.quota_bytes)
             return 201, {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items()
                                     if not k.endswith("_secret")}}

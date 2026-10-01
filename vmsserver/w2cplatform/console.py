@@ -27,7 +27,7 @@ show them. So the console is one class, run from the same spec:
 
 What a subsystem adds is registered, not subclassed: `extra(handler, method,
 path, query) -> reply | None` gets every request the routes above do not
-claim (the VMS: /timeline and /segment); a reply is `(status, dict)`,
+claim (the VMS: /timeline and /export); a reply is `(status, dict)`,
 `(status, bytes)`, `(status, bytes, headers)` or `()` when the extra wrote
 it itself. The console holds the subsystem's
 SpecController with the console's token — the operator's rows, never
@@ -47,7 +47,7 @@ rule in this file.
 # `/events` (if a `MergedIndex` — anything with `query(t0, t1, cam, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
 # POST `/marks` — with idempotency keys stored in Variables so a retry answered by another console instance
 # is the same request. What a subsystem adds is registered, not subclassed: `extra(handler, method, path,
-# query)` gets every request the built-in routes do not claim (the VMS: `/timeline` and `/segment`). The
+# query)` gets every request the built-in routes do not claim (the VMS: `/timeline` and `/export`). The
 # console holds the subsystem's `SpecController` with the *console's* token (the operator's rows, never
 # placement), so a write it should not make is a 403 from the store, not a rule in this file.
 # `vms/console.py` builds it via `make_console`; the deploy unit `console.container` runs it as its own
@@ -69,8 +69,8 @@ rule in this file.
 #   console's controller cannot `place` (`Forbidden`); PUT `{"worker": "w-9"}` is 400; `/cameras` rows show
 #   `phase running` and `server srv-1`; `/where/1` agrees with the directory; `/spec` says `rows cameras,
 #   media true`; `/metrics` contains `vms_cameras_running 1`; `/marks` writes to `console/<instance>/e1/`;
-#   the page mentions `/spec`, `/timeline/`, `/segment/`, `<video>` and never the word camera outside its
-#   comment; `/timeline/1` and a ranged `/segment/` come from the VMS extra; PUT `{"enabled": false}` bumps
+#   the page mentions `/spec`, `/timeline/`, `<video>` and never the word camera outside its comment;
+#   `/timeline/1` and an `/export` of it come from the VMS extra, through a recorder's door; PUT `{"enabled": false}` bumps
 #   revision to 2; DELETE marks the row and the placement waits for `unplace_deleted`.
 # - Idempotency covers POST always, PUT optionally, DELETE never; the page sends a fresh key with every
 #   request (including DELETE, where it is ignored).
@@ -119,7 +119,7 @@ PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "console.html")
 
 # A file, whole or by `Range` — what a `<video>` element asks for. Parses `bytes=a-b`, replies 206 with
 # `Content-Range` and `Accept-Ranges` when a range was asked, 200 otherwise. Used by the VMS's
-# `/segment/<path>` extra; the test asks `bytes=10-19` and gets 206 with `Content-Range: bytes 10-19/256`.
+# page itself; a subsystem with files of its own to serve would call it the same way.
 def send_file(handler, path: str, content_type: str) -> dict:
     """A file, whole or by Range — what a <video> element asks for. Returns what LEFT: `status`, `bytes`, and
     whether it was the whole file (`whole`, with `data` to take a digest of)."""
@@ -330,7 +330,7 @@ class IdempotencyKeys:
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
     holding the console's token; `media` says the page may draw a timeline and
-    play (the subsystem's `extra` serves /timeline and /segment)."""
+    play (the subsystem's `extra` serves /timeline and a media route)."""
 
     def __init__(self, ctl: SpecController, marks_root: str | None = None, index=None, worst_failover: float = 0.0,
                  wall=None, extra=None, media: bool = False, lost_after: float = 45.0, metrics_extra=None,

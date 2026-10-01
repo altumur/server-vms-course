@@ -28,9 +28,10 @@ administrator's list, and the claim that makes one of them served."""
 # here and empty for the network kind — and it is why one spare per box absorbs one NETWORK volume per
 # box, not one per cluster: the spare that takes it may be anywhere.
 #
-# **Why `quota_bytes` and not free space.** `statvfs` on a bucket answers about the machine, not the
-# bucket. A network archive has no free-space number to read, so the operator gives it a ceiling and the
-# watermark counts against that. A local volume leaves it at zero and the probe reads the disk, as before.
+# **Why `quota_bytes` and not free space.** It is the SIZE of the volume: the engine formats it as a ring of
+# that many bytes, and the ring gives up its oldest minutes when it is full. `statvfs` on a bucket answers
+# about the machine, not the bucket, so the number has to be given; and on a disk it is what lets one
+# partition hold two volumes.
 #
 # **What is NOT here.** No mounting, no credentials handling beyond the `*_secret` suffix (the row names
 # the key; `secrets.py` keeps it out of every reply), and no uploading: what turns a path into a bucket
@@ -73,8 +74,8 @@ def any_box(v: "Volume") -> bool:
 @dataclass(frozen=True)
 class Volume:
     """One declared archive. `url` is a directory for a local volume and an
-    address for a network one; `quota_bytes` is the ceiling the watermark counts
-    against where there is no disk to ask."""
+    address for a network one; `quota_bytes` is its size — the ring the engine
+    formats it as."""
     name: str
     kind: str = "local"
     url: str = ""
@@ -122,12 +123,10 @@ def refuse(fields: dict) -> None:
         raise Refused("an edge volume is the card in one camera: name it")
     if kind == "network" and str(fields.get("server", "")):
         raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
-    # EVERY declared volume has a ceiling, local ones included, and that is the change that lets a disk
-    # hold more than one. A volume without a quota means "this whole filesystem", and two of those on one
-    # partition both read the same free space and both believe it is theirs — the watermark then frees
-    # from one to make room the other immediately takes. A number each is what makes them two volumes and
-    # not two names for one. The console fills it with the partition's own size when it declares the first
-    # one, so the ordinary answer is a number the operator can then make smaller.
+    # EVERY declared volume has a size, local ones included, and that is what lets a disk hold more than one:
+    # the engine formats a ring of exactly that many bytes. "This whole filesystem" twice on one partition
+    # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
+    # already has when it declares the first one, so the ordinary answer is a number the operator can change.
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
         raise Refused("a volume needs `quota_bytes` — how much of the disk is ITS, in bytes "
                       "(the whole partition is a fine answer, and it is what the console offers)")

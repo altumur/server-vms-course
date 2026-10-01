@@ -44,8 +44,8 @@ def _resource(box, server, total=0):
 def test_a_network_volume_needs_a_quota_and_a_local_one_needs_a_server():
     """The two kinds differ in the one place it matters. A local volume is a
     disk, and a disk belongs to a machine. A network volume is an address any
-    machine can reach — but there is no `statvfs` for a bucket, so the ceiling
-    the watermark counts against has to be given, not read."""
+    machine can reach — and every volume is formatted as a ring of its quota,
+    which a bucket's `statvfs` could not tell anyway: the size is given, not read."""
     box = Box()
     for bad, why in (({"name": "vol-a", "kind": "local", "url": "/data/a", "quota_bytes": 1}, "server"),
                      ({"name": "s3", "kind": "network", "url": "s3://b/p"}, "quota_bytes"),

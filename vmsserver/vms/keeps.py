@@ -33,7 +33,7 @@ from w2cplatform.spec import Refused
 SUB = "rec"
 TABLE = "keeps"
 # The interval is `from` / `to` in the row and at the door — the names every archive door already uses
-# (`/timeline`, `/segment`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
+# (`/timeline`, `/samples`, `/export`, a backfill), and the product's (feedback BQ). It was `since` / `until`, and `until`
 # on a recording already means something else: how long a recording made on request goes on.
 FIELDS = ("cam", "from", "to", "note")
 MAX_NOTE = 500

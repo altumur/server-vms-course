@@ -229,7 +229,7 @@ class RecWorker(VmsWorker):
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
-        self.closed: list[str] = []                 # ranges fetched from a device: `<unit>|<from>|<to>`, for the console
+        self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
         # ends, never where its holes are; without this the same empty range is planned every pass, and each
@@ -973,8 +973,9 @@ class RecWorker(VmsWorker):
         except ArchiveError:
             return []
 
-    # What a source has and we do not, bounded at both ends. Not older than our own retention — otherwise
-    # backfill and retention chase each other round the clock, for ever.
+    # What a source has and we do not, bounded at both ends. Not older than what the doors would SHOW — the
+    # row's `retention_days` (`visible_from`) — nor than `keep_days`: a range fetched past the ceiling is a range
+    # nobody will be shown.
     #
     # Not newer than what we can SEE (the feedback's Q). A reader sees only closed blocks, and a block closes
     # when the next begins — minutes, at a low bitrate. Everything after the end of our visible coverage is

@@ -1064,10 +1064,6 @@ class VmsWorker(Worker):
                         **({"can": self.described[key]} if key in self.described else {})})
         return out
 
-    # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
-    # capacity here is still cameras, and an exhausted device is a 503 — the same admission control the
-    # gateway does for viewers (Lesson 13), one floor down. On a camera, this competes with live for the
-    # one uplink; on an NVR it usually does not.
     # Where the device's footage is, span by span, clipped to `[t0, t1)`. `None` means this driver cannot
     # list — which is not the same answer as "the device holds nothing here", and the caller must be able
     # to tell the two apart. Costs no playback session: listing is not reading.
@@ -1081,6 +1077,10 @@ class VmsWorker(Worker):
         lister = getattr(dev, "recordings", None)
         return None if lister is None else lister(cam, t0, t1)
 
+    # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
+    # capacity here is still cameras, and an exhausted device is a 503 — the same admission control the
+    # gateway does for viewers (Lesson 13), one floor down. On a camera, this competes with live for the
+    # one uplink; on an NVR it usually does not.
     def playback(self, cam, t0: float, t1: float) -> bytes:
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
         if row is None:

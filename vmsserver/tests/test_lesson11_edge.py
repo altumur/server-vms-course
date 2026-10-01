@@ -199,8 +199,8 @@ def _noon(now: float) -> float:
 def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
     """The card exists because the camera kept recording while we could not, so
     replication is the difference between two coverages — Lesson 2's loop over time.
-    What comes back is written as ours: our manifest, our epoch, our retention,
-    marked `source: edge`."""
+    What comes back is written as ours: our volume, our epoch, the recording's
+    backfill stream."""
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (0.0, 1000000.0, 5)}))
     con.create_camera({"name": "front", "source": CARD})
@@ -919,7 +919,7 @@ def test_the_hole_in_the_footage_and_the_hole_in_the_detections_close_together()
 
 def test_a_fetch_that_brought_nothing_new_queues_no_scan():
     """`kept == 0` usually means live recording reached those minutes while we were
-    fetching — the overlap check dropped every segment. Those minutes are already
+    fetching — the overlap check dropped every group. Those minutes are already
     ours AND were already watched by the live detector; reporting them as newly
     arrived would scan them a second time and double every event in them."""
     from vms.config import DET_SPEC, DETJOB_SPEC

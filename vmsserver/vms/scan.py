@@ -156,9 +156,6 @@ class ScanLog:
         except FileNotFoundError:
             return []
 
-    def done(self) -> set[str]:
-        return {str(d["key"]) for d in self.read()}
-
     # For the operator's progress, and for nothing else. It is the far end of the furthest stretch
     # recorded, which is NOT a point everything before is finished at: resuming from it would skip a
     # stretch that failed while a later one succeeded. `remaining` is the authoritative answer.
