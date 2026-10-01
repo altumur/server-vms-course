@@ -76,6 +76,33 @@ def test_a_named_store_is_shared_and_a_bare_one_is_private():
     assert b.get("k") == (None, 0), "two bare memory:// opens share a store"
 
 
+def test_the_acl_is_the_handles_and_as_writer_touches_nobody_elses():
+    """The review's second pass, m3. The ACL lived on the shared state, so `as_writer` on one handle rewrote
+    what every handle of the same name might write: a worker opening `memory://dev` with its own prefixes
+    narrowed the console's, or an identity granted twice kept the second grant for both. `FileVariables`
+    carries the ACL on the handle and copies it in `as_writer`; so does this one now."""
+    from w2cplatform import memvariables
+    con = open_vars("memory://acl-test", writer="console", acl={"console": ["vms/cameras/*"]})
+    wrk = con.as_writer("vmsworker", ["vms/epoch/*"])
+    assert con.acl == {"console": ["vms/cameras/*"]} and wrk.acl == {"console": ["vms/cameras/*"], "vmsworker": ["vms/epoch/*"]}
+    assert not hasattr(memvariables._NAMED["acl-test"], "acl"), "the shared state carries an ACL again"
+
+    narrower = con.as_writer("console", ["nothing/*"])                      # the same identity, granted less — on ITS handle
+    assert con.put("vms/cameras/1", {"id": "1"}) > 0                        # this handle writes what it was opened with
+    try:
+        narrower.put("vms/cameras/2", {"id": "2"})
+        raise AssertionError("the narrower handle wrote outside its grant")
+    except Forbidden:
+        pass
+    other = open_vars("memory://acl-test", writer="vmsworker", acl={"vmsworker": ["vms/slots/*"]})
+    assert other.put("vms/slots/w-1", {"holder": "x"}) > 0                  # a second open with its own ACL: not `wrk`'s
+    try:
+        wrk.put("vms/slots/w-1", {"holder": "y"})
+        raise AssertionError("one handle's grant leaked into another's")
+    except Forbidden:
+        pass
+
+
 def test_an_index_is_never_reused_inside_one_store():
     """A deleted path that comes back must not come back with an index somebody is still holding.
 

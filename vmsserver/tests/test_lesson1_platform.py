@@ -446,3 +446,26 @@ def test_the_schema_is_raised_after_the_upgrade_and_never_during_it():
         ctl.set_schema(SCHEMA); raise AssertionError("the schema went back")
     except SchemaTooNew as e:
         assert "does not go back" in str(e)
+
+
+def test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin():
+    """The review's second pass, m4. `set_schema` looks for LIVE builds that understand less, and a build that
+    passed its check at construction and has not heartbeaten yet is not live to it: the version is raised under a
+    process that was told a moment ago it may run. It used to run on, reading rows in a layout it does not know.
+    Now the check is repeated where the slot is renewed: the instance fences with the reason, and a fenced
+    instance does not rejoin while the store stays ahead of it."""
+    from w2cplatform.contract import SCHEMA, SCHEMA_KEY, Controller, SchemaTooNew, Subsystem
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    ctl = Controller(Subsystem("vms"), box.vars, box.objects, wall=box.wall)
+    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    assert w.name == "w-1" and w.lease_pass() == []                  # claimed its slot, checked the schema — and has not heartbeaten
+    ctl.set_schema(SCHEMA + 1)                                       # nobody live understands less: raised
+    try:
+        w.renew_slot(); raise AssertionError("the slot was renewed against a store this build does not understand")
+    except SchemaTooNew:
+        pass
+    assert w.lease_pass() == [] and not w.recording_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
+    assert w.rejoin() is None and not w.recording_allowed             # nobody to rejoin as while the store is ahead
+    box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA)}, cas=box.vars.get(SCHEMA_KEY)[1])    # the operator rolled it back
+    assert w.rejoin() is not None and w.recording_allowed

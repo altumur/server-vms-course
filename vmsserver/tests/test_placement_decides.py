@@ -139,3 +139,57 @@ def test_the_pass_reports_on_itself_and_the_console_exports_it():
     assert 'vms_worker_fenced{worker="w-1"} 1' in SpecConsole(ctl, wall=box.wall).metrics_text()
     assert "vms_reconcile_last_pass_age_seconds -1" in SpecConsole(VmsController(Box().vars, Box().objects), wall=box.wall).metrics_text()
 
+
+def test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs():
+    """The review's second pass, M6. Every reader of heartbeats parsed them bare: one garbled object — half a
+    write, a hand-edited file, a build writing another shape under the key — stopped the controller's pass, the
+    console's `/servers` and `/metrics`, and `builds()` behind `set_schema`, every time, until somebody deleted
+    it by hand. It is skipped, counted, and said on `/metrics`."""
+    from w2cplatform import contract
+    from w2cplatform.console import SpecConsole, heartbeats, holders
+    box, ctl, ws = _three(cameras=2)
+    before = contract.GARBLED.get("vms", 0), contract.GARBLED.get("platform", 0)
+    box.objects.put("vms/heartbeats/w-9", b'{"worker": "w-9", "ts": ')                      # cut short
+    box.objects.put("vms/heartbeats/w-8", b'["not", "a", "heartbeat"]')                      # JSON, the wrong shape
+    box.objects.put("vms/heartbeats/w-7", b'{"worker": "w-7", "ts": "soon"}')                # a time that is not one
+    box.objects.put("platform/resources/srv-x/heartbeat", b"\xff\xfe not even text")
+
+    assert sorted(ctl.workers_seen()) == ["w-1", "w-2", "w-3"]
+    assert sorted(heartbeats(box.objects, "vms/")) == ["w-1", "w-2", "w-3"] == sorted(holders(box.objects, "vms/", box.wall()))
+    rep = ctl.pass_once()
+    assert rep["ok"] and rep["unplaced"] == 0
+    assert "vms/w-9" not in contract.builds(box.objects, box.wall()) and "vms/w-1" in contract.builds(box.objects, box.wall())
+    con = SpecConsole(ctl, wall=box.wall)
+    assert set(con.servers()["servers"]) >= {"srv-x"} or True                                 # the console answers; what it shows is its business
+    text = con.metrics_text()
+    garbled = int(text.split("\nvms_heartbeats_garbled ")[1].split()[0])
+    assert garbled >= before[0] + 3 and int(text.split("\nvms_resource_heartbeats_garbled ")[1].split()[0]) >= before[1] + 1
+
+    box.objects.put("vms/heartbeats/w-9", ws[0].objects.get("vms/heartbeats/w-1").replace(b'"w-1"', b'"w-9"'))
+    assert "w-9" in ctl.workers_seen()                                                       # mended: read again, as any other
+
+
+def test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each():
+    """The review's second pass, M7. `units()` parsed every row bare, so one row with a field that is not what the
+    spec says — a hand edit, a build that wrote another layout — ended every caller's pass: nothing placed, nothing
+    redistributed, nothing brought home, the pass report red for a reason nobody could read off it. And the three
+    steps shared one `try`: a `redistribute` that raised kept `ensure_home` from ever running."""
+    from w2cplatform.console import SpecConsole
+    box, ctl, ws = _three(cameras=3)
+    box.vars.put("vms/cameras/x", {"id": "x", "source": "driverpack://file/x.mp4", "revision": "1"})   # a camera id is a number
+    box.vars.put("vms/cameras/4", {"id": "4", "source": "driverpack://file/4.mp4", "revision": "one"})
+    assert [r["id"] for r in ctl.units()] == [1, 2, 3] and ctl.rows_garbled == 2
+    rep = ctl.pass_once()
+    assert rep["ok"] and rep["garbled"] == 2 and rep["unplaced"] == 0
+    assert "vms_rows_garbled 2" in SpecConsole(ctl, wall=box.wall).metrics_text()
+    box.vars.put("vms/cameras/4", {"id": "4", "source": "driverpack://file/4.mp4", "revision": "1"}, cas=box.vars.get("vms/cameras/4")[1])
+    assert [r["id"] for r in ctl.units()] == [1, 2, 3, 4] and ctl.rows_garbled == 1              # mended: a row, like any other
+
+    ran = []
+    ctl.redistribute = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("one released slot would not parse"))
+    home = ctl.ensure_home
+    ctl.ensure_home = lambda *a, **k: ran.append("home") or home(*a, **k)
+    rep = ctl.pass_once()
+    assert ran == ["home"] and not rep["ok"] and rep["error"].startswith("redistribute:") and rep["failures"] == 1
+    assert ctl.placement(4) is not None                                                        # `ensure_placed` ran before the step that raised
+

@@ -92,7 +92,8 @@ from urllib.parse import parse_qs, urlsplit
 from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
-from .contract import HEARTBEATS, SCHEMA, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds, schema_version
+from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
+                       is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
 from .events import ALARM, EventLog
 
@@ -195,8 +196,8 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
     out = {}
     for key in objects.list(sub.rstrip("/") + "/" + HEARTBEATS + "/"):
         raw = objects.get(key)
-        if raw:
-            hb = Heartbeat.from_bytes(raw)
+        hb = parse_heartbeat(key, raw) if raw else None    # one that does not parse is skipped and counted (the review's second pass, M6)
+        if hb is not None:
             out[hb.worker] = hb
     return out
 
@@ -211,7 +212,7 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
 # reason Consul put it in the query: a filter that callers apply by hand is a filter callers forget.
 def holders(objects, prefix: str, now: float, lost_after: float = 45.0) -> dict[str, Heartbeat]:
     """The heartbeats fresh enough to act on."""
-    return {w: hb for w, hb in heartbeats(objects, prefix).items() if now - hb.ts <= lost_after}
+    return {w: hb for w, hb in heartbeats(objects, prefix).items() if is_live(prefix.rstrip("/"), hb.ts, now, lost_after)}
 
 
 # `(worker, its heartbeat, the unit's status entry)` for the process holding `unit` right now, or None.
@@ -478,7 +479,7 @@ class SpecConsole:
                                  # for almost everyone, the volume for the recorder. The page needs it to offer the
                                  # archives that exist when a recording is created — `home` names one of these.
                                  "place": ctl.place_of(w),
-                                 "state": "live" if now - hb.ts <= self.lost_after else "stale", "idle_by_policy": False})
+                                 "state": "live" if is_live(ctl.sub.name, hb.ts, now, self.lost_after) else "stale", "idle_by_policy": False})
         for w in ctl.idle_by_policy(list(heartbeats(ctl.objects, ctl.sub.name + "/"))):    # servers: distinct — one worker per server carries units
             for s in out.values():
                 for row in s["workers"]:
@@ -500,7 +501,7 @@ class SpecConsole:
     def metrics_text(self) -> str:
         p = self.spec.name
         hbs = heartbeats(self.ctl.objects, p + "/"); now = self.wall()
-        live = {w: hb for w, hb in hbs.items() if now - hb.ts <= self.lost_after}
+        live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
         res = resources_seen(self.ctl.objects)
         lines = [f"# TYPE {p}_workers_live gauge", f"{p}_workers_live {len(live)}",
                  f"# TYPE {p}_worker_headroom gauge",
@@ -518,7 +519,13 @@ class SpecConsole:
                  f"# TYPE {p}_epoch_conflicts counter",
                  *[f'{p}_epoch_conflicts{{worker="{w}"}} {hb.extra.get("conflicts", 0)}' for w, hb in hbs.items()],
                  f"# TYPE {p}_failover_seconds gauge", f'{p}_failover_seconds{{kind="worst"}} {self.worst_failover}',
-                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if now - float(hb['ts']) <= self.lost_after)}",
+                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
+                 # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
+                 # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
+                 # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
+                 f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
+                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}",
+                 f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
                  f"# TYPE {p}_{self.spec.running_gauge} gauge",
                  f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
         # How far behind the copy the layer above reads is. The controller publishes every pass and has no
@@ -549,6 +556,7 @@ class SpecConsole:
                   f"# TYPE {p}_reconcile_failures counter", f"{p}_reconcile_failures {rep.get('failures', 0)}",
                   f"# TYPE {p}_units_unplaced gauge", f"{p}_units_unplaced {rep.get('unplaced', 0)}",
                   f"# TYPE {p}_units_diverged gauge", f"{p}_units_diverged {rep.get('diverged', 0)}",
+                  f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {rep.get('garbled', 0)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.
                   f"# TYPE {p}_worker_fenced gauge",
@@ -929,7 +937,7 @@ class SpecConsole:
                                                     "directory": con.where(uid), "scans": con.scans})
             if path == "/resources":
                 now = con.wall()
-                return h._send(200, {s: {**hb, "state": "live" if now - float(hb["ts"]) <= con.lost_after else "silent"}
+                return h._send(200, {s: {**hb, "state": "live" if is_live("platform", float(hb["ts"]), now, con.lost_after) else "silent"}
                                      for s, hb in resources_seen(ctl.objects).items()})
             if path == "/servers":
                 return h._send(200, con.servers())

@@ -13,9 +13,11 @@ the host's obsd — the `obsd` system job, which is not a Python process).
     ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
                                        recorder's own volume goes beside it (`/data/volume`) when nothing is declared
     OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (default /run/vms/obsd.sock)
-    ARCHIVE_HOST, ARCHIVE_PORT         recorder: what its archive door binds
     ARCHIVE_URL                        recorder: what its heartbeat says the door is — the node's IP, so the console and
                                        a primary backfilling from a backup reach it with no DNS between servers
+    ARCHIVE_HOST, ARCHIVE_PORT         recorder: what its archive door binds. The host defaults to the address
+                                       ARCHIVE_URL names, else loopback — never every interface: the door has no
+                                       authentication, so it opens exactly where the job said it is reachable
     RESOURCE_URL                       resource: how the console reaches this server's events
     CAPACITY                           worker: cameras it can carry on this server
 """
@@ -27,6 +29,7 @@ import signal
 import sys
 import threading
 import time
+from urllib.parse import urlsplit
 
 import cluster  # noqa: F401  — puts М10's vmsserver on sys.path
 from w2cplatform import runtime
@@ -75,7 +78,10 @@ def recorder() -> None:
     except ImportError:
         logging.warning("no GStreamer: the fake actuator records nothing"); act = None
     r = ClusterRecorder(open_vars(CONFIG_URL), objects, act, archive_root=archive)
-    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "0.0.0.0"), int(os.environ.get("ARCHIVE_PORT", "8084")))
+    # The door binds where the job says it is reachable (`ARCHIVE_URL`), else loopback — `0.0.0.0` was the
+    # default, and a door with no authentication on every interface is what the review's second pass found.
+    announced = urlsplit(os.environ.get("ARCHIVE_URL", "")).hostname
+    srv = r.serve_archive(os.environ.get("ARCHIVE_HOST") or announced or "127.0.0.1", int(os.environ.get("ARCHIVE_PORT", "8084")))
     r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the job says how to reach it: an address, no DNS between servers
     logging.info("recorder %s on %s (alloc %s) claimed its slot; labels %s; archive door %s",
                  r.name, r.server, r.alloc, r.labels, r.archive_url)

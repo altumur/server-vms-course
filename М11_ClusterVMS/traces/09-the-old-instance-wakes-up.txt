@@ -1,4 +1,8 @@
 # vmsworker (allocation 1 on srv-a)
+GET /v1/var/platform/schema?namespace=default
+→ 404
+
+# vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/slots/w-1?namespace=default
 → 200 {
   "Path": "vms/slots/w-1",

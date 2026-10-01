@@ -186,7 +186,14 @@ def test_the_console_sets_a_keep_lists_it_and_lifts_it():
     status, made = route(_Body(body, user="anna"), "POST", "/keeps", {})
     assert status == 201 and made["keep"]["id"] == f"7-{int(t - 900)}-{int(t - 300)}"
     assert (made["keep"]["by"], made["keep"]["at"], made["keep"]["recordings"]) == ("anna", t, ["7", "7-cloud"])
-    assert route(_Body(body, user="boris"), "POST", "/keeps", {})[0] == 201          # the same interval: the same row
+    # …and with no incidents volume declared it is ONLY a mark (the review's second pass, B10): said in the
+    # answer, counted on `/metrics`, and 201 all the same — the mark is valid, nothing copies it yet.
+    from vms.console import rec_metrics
+    assert "no incidents volume" in made["warning"] and "rec_keeps_unprotected 1" in rec_metrics(rec)()
+    volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1", "url": tempfile.mkdtemp(prefix="evidence-"),
+                             "quota_bytes": TEST_QUOTA})
+    status, again = route(_Body(body, user="boris"), "POST", "/keeps", {})        # the same interval: the same row
+    assert status == 201 and "warning" not in again and "rec_keeps_unprotected 0" in rec_metrics(rec)()
     status, view = route(None, "GET", "/keeps", {})
     assert status == 200 and [k["id"] for k in view["keeps"]] == [made["keep"]["id"]]
 

@@ -65,6 +65,7 @@ shape is generic by running a subsystem that counts seconds through it.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import socket
 import time
@@ -75,6 +76,8 @@ from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
 from .variables import Conflict, Variables, cas_pause
+
+log = logging.getLogger(__name__)
 
 # What layout of the store this build understands. A rolling upgrade means old and new processes read and
 # write the same rows for a while, so adding a field is free and changing what one MEANS is not: that is a
@@ -145,18 +148,61 @@ def check_schema(vars_) -> int:
 # `<subsystem>/heartbeats/<worker>` and `platform/resources/<server>/heartbeat`; nothing else matches, so
 # one scan answers "what is running in this cluster" across subsystems.
 def builds(objects, now: float, lost_after: float = 45.0) -> dict[str, dict]:
+    def parse(raw: bytes) -> dict:                    # a worker's or a resource's: the three fields this reads, checked
+        d = dict(json.loads(raw))
+        return {"schema": int(d.get("schema", SCHEMA)), "build": d.get("build", "?"), "ts": float(d.get("ts", 0))}
+
     out = {}
     for key in objects.list(""):
         if not is_heartbeat_key(key):
             continue
         raw = objects.get(key)
-        if not raw:
-            continue
-        d = json.loads(raw)
-        ts = float(d.get("ts", 0))
-        out[heartbeat_owner(key)] = {"schema": int(d.get("schema", SCHEMA)), "build": d.get("build", "?"),
-                                          "ts": ts, "live": now - ts <= lost_after}
+        d = parse_heartbeat(key, raw, parse) if raw else None
+        if d is not None:
+            out[heartbeat_owner(key)] = {**d, "live": is_live(key.split("/", 1)[0], d["ts"], now, lost_after)}
     return out
+
+
+# -- reading heartbeats: one that does not parse, and whose clock its time is (the review's second pass, M6, M9) --
+# Every reader of a heartbeat object comes through these two.
+#
+# A heartbeat that does not parse — a build that wrote something else under the key, a bad disk — is ONE
+# object's trouble: skipped and counted, never the end of the pass that read it. A controller's pass used to
+# stop at it, every pass, until somebody deleted the file by hand. The count is on `/metrics` as
+# `<sub>_heartbeats_garbled`; the log names the key, once per object until it parses again.
+GARBLED: dict[str, int] = {}                      # subsystem -> heartbeat objects that did not parse, this process
+_garbled_keys: set[str] = set()
+
+
+def parse_heartbeat(key: str, raw: bytes, parse=None):
+    """The object parsed, or None — skipped, counted, and logged once."""
+    try:
+        hb = (parse or Heartbeat.from_bytes)(raw)
+    except (ValueError, KeyError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        GARBLED[sub] = GARBLED.get(sub, 0) + 1
+        if key not in _garbled_keys:
+            _garbled_keys.add(key)
+            log.warning("%s: heartbeat does not parse; skipped", key)
+        return None
+    _garbled_keys.discard(key)
+    return hb
+
+
+# Liveness is `now - ts`, and the two numbers come from two machines' clocks. The skew is measured where it
+# is judged — the largest `ts - now` seen per subsystem, on `/metrics` as `<sub>_heartbeat_skew_seconds_max`
+# — and a `ts` from the FUTURE by more than the tolerance is not live: a worker whose clock ran ahead would
+# stay "live" that long after it died. NTP keeps a cluster within fractions of a second; the tolerance is what
+# a box without it still gets away with, and the metric is what says the tolerance is being approached.
+FUTURE_TOLERANCE = 5.0
+SKEW_MAX: dict[str, float] = {}
+
+
+def is_live(sub: str, ts: float, now: float, lost_after: float) -> bool:
+    skew = ts - now
+    if skew > SKEW_MAX.get(sub, 0.0):
+        SKEW_MAX[sub] = skew
+    return -FUTURE_TOLERANCE <= now - ts <= lost_after
 
 
 # The one row that says which server is going away for a while. It is the platform's, not a subsystem's —
@@ -461,10 +507,9 @@ class Controller:
         # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
         for key in self.objects.list(self.sub.heartbeats_prefix()):
             raw = self.objects.get(key)
-            if raw:
-                hb = Heartbeat.from_bytes(raw)
-                if now - hb.ts <= max_age:
-                    out[hb.worker] = hb
+            hb = parse_heartbeat(key, raw) if raw else None
+            if hb is not None and is_live(self.sub.name, hb.ts, now, max_age):
+                out[hb.worker] = hb
         return out
 
     # Reads one worker's row.
@@ -684,6 +729,11 @@ class Worker:
         instance is fenced as a whole. Extends `until` by CAS otherwise."""
         if self.slot is None:
             return True
+        # The store's schema, again (the review's second pass, m4). `set_schema` refuses while a LIVE build
+        # understands less, and a build that checked at construction and has not heartbeaten yet is not live to
+        # it: the version is raised under a process that passed its check a moment ago. So the check is repeated
+        # where the slot is renewed, and the worker fences on it as it would on a slot held by somebody else.
+        check_schema(self.vars)
         items, idx = self.vars.get(self.sub.slot_key(self.name))
         cur = Slot.from_items(self.name, items)
         if cur.holder != self.instance or cur.released:          # released: `retire` let go of it; a late renewal does not take it back

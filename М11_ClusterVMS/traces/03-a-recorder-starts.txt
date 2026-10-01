@@ -20,6 +20,10 @@ GET /v1/var/objects/rec/heartbeats/r-0?namespace=default
 → 404
 
 # recworker (allocation 0 on srv-a)
+GET /v1/var/platform/schema?namespace=default
+→ 404
+
+# recworker (allocation 0 on srv-a)
 GET /v1/var/rec/slots/r-0?namespace=default
 → 200 {
   "Path": "rec/slots/r-0",

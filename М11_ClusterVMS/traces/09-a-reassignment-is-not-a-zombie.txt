@@ -78,6 +78,10 @@ PUT /v1/var/vms/epoch/2?namespace=default&cas=1019
 → 200 {"Path": "vms/epoch/2", "ModifyIndex": 1027}
 
 # vmsworker (allocation 1 on srv-a)
+GET /v1/var/platform/schema?namespace=default
+→ 404
+
+# vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/slots/w-1?namespace=default
 → 200 {
   "Path": "vms/slots/w-1",

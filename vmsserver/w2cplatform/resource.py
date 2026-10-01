@@ -84,7 +84,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 log = logging.getLogger(__name__)
 
-from .contract import BUILD, SCHEMA, check_schema
+from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
@@ -206,12 +206,17 @@ def peers_of(server: str, live: list[str], copies: int) -> list[str]:
 # Every resource heartbeat under `platform/resources/`, keyed by `server`, whatever its age. Callers filter
 # by `ts`.
 def resources_seen(objects) -> dict[str, dict]:
+    def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
+        hb = dict(json.loads(raw))
+        hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it
+        return hb
+
     out = {}
     for key in objects.list(RESOURCES + "/"):
         if key.endswith("/heartbeat"):
             raw = objects.get(key)
-            if raw:
-                hb = json.loads(raw)
+            hb = parse_heartbeat(key, raw, parse) if raw else None
+            if hb is not None:
                 out[hb["server"]] = hb
     return out
 
@@ -476,7 +481,7 @@ class Resource:
     # `resources_seen` filtered to heartbeats younger than `lost_after`.
     def live_resources(self) -> dict[str, dict]:
         now = self.wall()
-        return {s: hb for s, hb in resources_seen(self.objects).items() if now - float(hb["ts"]) <= self.lost_after}
+        return {s: hb for s, hb in resources_seen(self.objects).items() if is_live("platform", float(hb["ts"]), now, self.lost_after)}
 
     # -- the policy pass ------------------------------------------------------------------
     # For each subsystem and unit, delete bucket files whose `end` is older than `retention_days` — files

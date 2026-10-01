@@ -215,6 +215,46 @@ def test_the_decision_is_cleared_before_anything_is_deleted():
         "the CAS was lost AFTER the delete: the bytes of a row still in flight are gone"
 
 
+def test_a_blob_uploaded_again_while_the_sweep_is_deleting_is_not_deleted():
+    """The review's second pass, m5. The row was cleared BEFORE the deletes, so a `put_blob` of a marked digest in
+    the seconds they took found an empty list, took nothing off it, and its bytes went under a row about to name
+    them. The decision now stays on the row while the bytes go — `state: deleting` — and `put_blob` takes the
+    digest off it as before the decision; the sweeper reads the row back before each delete and leaves what is
+    gone from it alone."""
+    box = Box()
+    ctl, _ = _det(box)
+    other, _ = _det(box)
+    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})
+    ctl.sweep_blobs()                                     # A is marked
+    box.wall.advance(301)
+
+    class Store:                                          # the sweeper's own store, with one read intercepted
+        def __init__(self, real): self._r = real; self.raced = False
+        def __getattr__(self, n): return getattr(self._r, n)
+        def get(self, path):
+            items, idx = self._r.get(path)
+            if path == "det/sweep" and (items or {}).get("state") == "deleting" and not self.raced:
+                self.raced = True                         # the decision is written; the bytes are about to go
+                other.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
+                other.update("8-linecross", {"mask": other.put_blob(MASK_A)})
+                return self._r.get(path)
+            return items, idx
+    ctl.vars = Store(box.vars)
+
+    assert ctl.sweep_blobs() == {"marked": 0, "deleted": 0, "waiting": 0} and ctl.vars.raced
+    from w2cplatform.blobs import digest
+    assert box.objects.get(f"det/blobs/{digest(MASK_A)}") == MASK_A and other.blob(digest(MASK_A)) == MASK_A
+    assert json.loads(box.vars.get("det/sweep")[0]["digests"]) == [] and "state" not in box.vars.get("det/sweep")[0]
+
+    # …and a sweeper that died with the decision written leaves nothing undone: the next pass reads it as marked
+    other.update("8-linecross", {"mask": other.put_blob(MASK_C)})          # A is an orphan again
+    box.vars.put("det/sweep", {"at": str(box.wall() - 301), "digests": json.dumps([digest(MASK_A)]), "state": "deleting"},
+                 cas=box.vars.get("det/sweep")[1])
+    assert other.sweep_blobs() == {"marked": 0, "deleted": 1, "waiting": 0} and box.objects.get(f"det/blobs/{digest(MASK_A)}") is None
+
+
 def test_the_console_process_actually_runs_the_sweep():
     """The bug this catches is the one that was actually made: `sweep_blobs` was
     written, tested, and left UNCALLED in the Go port for a day — every test green,

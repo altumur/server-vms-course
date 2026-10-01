@@ -104,6 +104,30 @@ class FsObjectStore:
     def put_durable(self, key: str, data: bytes) -> None:
         self.put(key, data, durable=True)
 
+    # Creates the object only if there is none; `True` when THIS call made it. The file system's create-or-
+    # tell-me-it-exists (`link` onto the final name, which fails on a name that is taken) — the one CAS a
+    # store of last-writer-wins objects can offer, and the one a worker's command mark needs: two holders of
+    # one device must not both believe they were first (the review's second pass). A store without it is
+    # read back after the write instead (`VmsWorker.requests`).
+    def put_new(self, key: str, data: bytes) -> bool:
+        check(key, len(data), self.max_bytes)
+        p = self._p(key)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(data)
+            try:
+                os.link(tmp, p)
+            except FileExistsError:
+                return False
+            return True
+        finally:
+            try:
+                os.remove(tmp)
+            except FileNotFoundError:
+                pass
+
     # Removes the file; a missing key is not an error, so a sweep that runs twice on the same candidate —
     # two consoles, a retry — does the same thing the second time.
     def delete(self, key: str) -> bool:
