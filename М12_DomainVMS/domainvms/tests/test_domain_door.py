@@ -129,3 +129,29 @@ def test_a_devices_password_is_not_the_domains_to_carry():
     except ApiError as e:
         assert e.status == 400 and "cred_secret" in e.detail and "Hunter2" not in e.detail
     assert api._seen == {}
+
+
+def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays():
+    """Feedback CG: grants name a subject, not a record — left behind, they go to the next user of that name."""
+    import tempfile
+    from cluster.objectstore import FsObjectStore
+    from domain.agent import DomainPublisher, GRANTS_PATH
+    from domain.identity import IdentityStore
+    from domain.signer import Signer
+    v = FakeVariables()
+    users = IdentityStore(Signer("acme", FakeVariables(), now=Clock()), v, FsObjectStore(tempfile.mkdtemp()), now=Clock())
+    for u in ("anna", "bob"):
+        users.create_local(u, "pw", ["operator"])
+    set_domain_grants(v, [Grant("anna", "admin", None, 0.0), Grant("bob", "view", None, 0.0)], 1000.0)
+    DomainPublisher(v).publish_grants("south", [Grant("bob", "edit", 7, 2000.0), Grant("carol", "view", None, 2000.0)])
+    users.delete("bob")
+    assert not domain_may(v, "bob", "view", 1000.0) and domain_may(v, "anna", "admin", 1000.0)
+    assert [k.split("|")[0] for k in v.get(f"{GRANTS_PATH}/south")[0]] == ["carol"]
+    try:
+        users.delete("anna")
+        raise AssertionError("the domain's last admin")
+    except LastAdmin:
+        pass
+    assert users.get("anna").kind == "local"                            # nothing changed
+    users.create_local("bob", "new", ["operator"])                       # the name is free again — and holds nothing
+    assert not domain_may(v, "bob", "view", 1000.0)

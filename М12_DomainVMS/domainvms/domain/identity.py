@@ -88,7 +88,7 @@ class IdentityStore:
         self._dirty = True
 
     def create_local(self, uid: str, password: str, roles: list[str]) -> User:
-        if self.get(uid):
+        if self.get(uid) and self.get(uid).kind != "deleted":
             raise ValueError(f"user {uid} exists")
         u = User(uid, "local", roles, pwhash=_hash(password), created=self.now())
         self._put(u)
@@ -107,7 +107,23 @@ class IdentityStore:
         u.roles = roles
         self._put(u)
 
+    # A user deleted takes every grant that names them, on every cluster and on the domain (the product, feedback
+    # CG). Grants name a SUBJECT, not a record: left behind, they would go to whoever is next created under the
+    # same name. The domain's last admin is not deleted (`set_domain_grants` refuses), and nothing is changed then.
     def delete(self, uid: str) -> None:
+        from .agent import GRANTS_PATH
+        from .grants import DOMAIN_GRANTS, grants_from_items, set_domain_grants
+        items, _ = self.vars.get(DOMAIN_GRANTS)
+        mine = [g for g in grants_from_items(items) if g.subject == uid]
+        if mine:
+            set_domain_grants(self.vars, [g for g in grants_from_items(items) if g.subject != uid], self.now())
+        for path in self.vars.list(GRANTS_PATH + "/"):
+            if path == DOMAIN_GRANTS:
+                continue
+            row, idx = self.vars.get(path)
+            kept = {k: v for k, v in (row or {}).items() if k.split("|", 1)[0] != uid}
+            if row is not None and kept != row:
+                self.vars.put(path, kept, cas=idx)
         _, idx = self.vars.get(self._path(uid))
         self.vars.put(self._path(uid), {"id": uid, "kind": "deleted"}, cas=idx)
         self._dirty = True

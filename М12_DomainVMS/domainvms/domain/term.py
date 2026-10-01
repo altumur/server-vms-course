@@ -422,7 +422,10 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
     holder.restored_from = restored_from
     holder.claim()
     # Never the stolen holder itself: whoever has it has its member key too, and a new LDevID for that key would hand the
-    # thief a fresh identity in the domain that is moving away from him.
+    # thief a fresh identity in the domain that is moving away from him. Not skipped once but REVOKED (the product,
+    # feedback CH): skipped, the key stayed in its row, and the next theft — of somebody else — signed it again.
+    if stolen and top_holder:
+        _revoke_member_key(new_vars, top_holder, wall)
     reissued = reissue_ldevids(signer, new_vars, skip={top_holder} if top_holder else set()) if stolen else []
     rev = holder.backup_rev
     report = {"term": holder.term, "restored_from": best[0] if best else None, "rev": rev, "ignored": ignored,
@@ -442,6 +445,22 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
 # be enrolled from the start. The backup carries the holder's member key, under its signature; the move writes it
 # into the old holder's row when that row has none. A row with a key keeps it: a key presented later is never
 # taken over the one a member was admitted with.
+def _revoke_member_key(domain_vars, name: str, wall) -> None:
+    """The member key of a stolen holder goes to `revoked_keys` in its row: no LDevID is signed for it again, and a
+    backup that still carries it (`holder_key`) does not put it back. A machine that comes home makes a new key and
+    is admitted again."""
+    from .members import Members
+
+    def mutate(members):
+        row = members.get(name)
+        if row is None or not row.get("key"):
+            return False
+        members[name] = {**{k: v for k, v in row.items() if k != "key"},
+                         "revoked_keys": sorted(set(row.get("revoked_keys", [])) | {row["key"]})}
+        return True
+    Members(domain_vars, wall)._change(mutate)
+
+
 def _keep_member_key(domain_vars, backup: dict, new: str, wall) -> None:
     from .members import Members
     old, key = backup.get("holder"), backup.get("holder_key")
@@ -451,8 +470,8 @@ def _keep_member_key(domain_vars, backup: dict, new: str, wall) -> None:
 
     def mutate(members):
         row = members.get(old)
-        if row is not None and row.get("key"):
-            return False
+        if row is not None and (row.get("key") or key in row.get("revoked_keys", [])):
+            return False                                 # a key it has, or one revoked after a theft, stays as it is
         members[old] = {**(row or {"how": "former holder", "serial": None, "since": wall(), "by": None}), "key": key}
         return True
     m._change(mutate)

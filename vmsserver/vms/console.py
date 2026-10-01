@@ -540,7 +540,14 @@ def rec_routes(rec_ctl: SpecController):
         # What somebody said to keep (`vms/keeps.py`): a list, a POST, a DELETE. The row is all there is —
         # the resource that holds the footage reads it on its own pass, and nothing is sent anywhere.
         if method == "GET" and path in ("/keeps", "/keeps/"):
-            return 200, {"keeps": [k.shown() for k in keeps.declared(rec_ctl.vars)]}
+            # The list is what THIS caller may see (feedback CG): a keep says which camera, which minutes and why,
+            # and lifting or checking one already asked by its camera — the list did not. A camera of another
+            # cluster (`ref:…`) has no labels here, as at every gate.
+            sees = getattr(handler, "sees", None)
+            shown = keeps.declared(rec_ctl.vars)
+            if sees is not None:
+                shown = [k for k in shown if sees(str(k.cam), handler.labels_for(k.cam))]
+            return 200, {"keeps": [k.shown() for k in shown]}
         if method == "POST" and path in ("/keeps", "/keeps/"):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             try:

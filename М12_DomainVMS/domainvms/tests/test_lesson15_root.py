@@ -261,6 +261,13 @@ def test_the_holder_becomes_a_member_with_the_key_it_was_admitted_with():
     a2 = _agent(fed, devices, "cam-SN2", "cam-SN1", wall); a2.sync()
     new.backup(["cam-SN2"], devices["cam-SN1"].disk_door()); a2.sync()
     devices["cam-SN1"].power_off()                                      # now SN1 is stolen
-    _, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    third, report = move_domain(fed, "cam-SN2", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
     assert "cam-SN0" in report["reissued"]                              # the former holder, by the key it was admitted with
     assert "cam-SN1" not in report["reissued"]                          # never the stolen one: the thief has its key
+    row = Members(third.vars, wall).read()["members"]["cam-SN1"]
+    assert "key" not in row and pub(ldevids["cam-SN1"]) in row["revoked_keys"]   # revoked, not merely skipped (CH)
+    a3 = _agent(fed, devices, "cam-SN3", "cam-SN2", wall); a3.sync()
+    third.backup(["cam-SN3"], devices["cam-SN2"].disk_door()); a3.sync()
+    devices["cam-SN2"].power_off()                                      # a second theft, of somebody else
+    _, report = move_domain(fed, "cam-SN3", root.recovery(), DOMAIN, _objects(devices), wall, stolen=True)
+    assert "cam-SN1" not in report["reissued"] and "cam-SN0" in report["reissued"]   # the first thief's key stays dead

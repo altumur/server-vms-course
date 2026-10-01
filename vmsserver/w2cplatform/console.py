@@ -776,6 +776,9 @@ class SpecConsole:
         return list((row or {}).get("labels") or [])
 
     def _extra(self, h, method, path, q):
+        # What a subsystem's own routes need to filter a LIST the way this console filters its rows (the product,
+        # feedback CG): `h.sees(unit, labels)`, None when the console is open, and `h.labels_for(unit)`.
+        h.sees, h.labels_for = self._visible(h), (lambda unit: self._labels(str(unit), None))
         r = self.extra(h, method, path, q) if self.extra else None
         if r is None:
             return False

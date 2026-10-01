@@ -208,3 +208,25 @@ def test_a_keep_written_before_its_fields_were_renamed_still_holds():
     [k] = keeps.declared(box.vars)
     assert (k.since, k.until) == (100.0, 200.0) and keeps.spans_of([k], "7") == [(100.0, 200.0)]
 
+
+
+def test_the_list_of_keeps_is_what_the_caller_may_see():
+    """Feedback CG: a keep says which camera, which minutes and why. Lifting or checking one asked by its camera;
+    the LIST did not, and showed every keep to whoever could see one camera."""
+    from types import SimpleNamespace
+    from w2cplatform.spec import SpecController
+    from vms import keeps as K
+    from vms.config import REC_SPEC
+    from vms.console import rec_routes
+    from tests.conftest import Box
+    box = Box()
+    rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    for cam in ("1", "3", "ref:SN-A"):
+        K.write(box.vars, {"cam": cam, "from": 100.0, "to": 200.0}, [], "anna", box.wall())
+    route = rec_routes(rec)
+    labels = {"3": ["hall"]}
+    boris = SimpleNamespace(headers={}, sees=lambda unit, lab: unit == "1", labels_for=lambda u: labels.get(u, []))
+    vera = SimpleNamespace(headers={}, sees=lambda unit, lab: "hall" in lab, labels_for=lambda u: labels.get(u, []))
+    open_ = SimpleNamespace(headers={}, sees=None, labels_for=lambda u: [])
+    cams = lambda h: sorted(k["cam"] for k in route(h, "GET", "/keeps", {})[1]["keeps"])   # noqa: E731
+    assert cams(boris) == ["1"] and cams(vera) == ["3"] and cams(open_) == ["1", "3", "ref:SN-A"]
