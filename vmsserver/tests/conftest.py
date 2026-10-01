@@ -65,3 +65,72 @@ def cam(i, revision=1, enabled=True, **kw):
 class FakeStore:
     def __init__(self, rows): self.rows = rows
     def desired(self): return self.rows
+
+
+# -- the archive's engine: a live `obsd`, one per test run ------------------------------------------------
+#
+# The archive is ObjectStorage, and ObjectStorage is a process (`w2cplatform/obsd.py`). The tests do not
+# imitate it: they start the real daemon, once, on a socket of their own, with volumes in temp directories —
+# never the box's daemon, never its socket. Without the daemon the archive cannot be tested, and the tests
+# that need it say how to get it rather than pass for want of it.
+#
+# Two numbers are shorter than in production, so that a test of them does not wait a minute: how long a
+# vanished session's writer waits for its owner, and how long a session with no connection survives.
+OBSD_HINT = ("the archive's tests need obsd, the ObjectStorage daemon: build it with "
+             "`ObjectStorage/standalone-build/build.sh <out>` and set OBSD_BIN=<out>/build/obsd (or put obsd on PATH)")
+OBSD_GRACE_S = 3
+OBSD_LINGER_MS = 300
+
+
+class ObsdDaemon:
+    _one = None
+
+    def __init__(self):
+        import atexit
+        import shutil
+        import subprocess
+        import time
+        binary = os.environ.get("OBSD_BIN") or shutil.which("obsd")
+        if not binary or not os.access(binary, os.X_OK):
+            raise RuntimeError(OBSD_HINT)
+        self.dir = tempfile.mkdtemp(prefix="obsd-")              # the system's temp dir: a unix socket path is short
+        self.socket = os.path.join(self.dir, "run", "obsd.sock")
+        if len(self.socket.encode()) > 100:
+            raise RuntimeError(f"the socket path {self.socket} is longer than unix sockets allow; set TMPDIR shorter")
+        env = dict(os.environ, OBSD_WRITER_GRACE_S=str(OBSD_GRACE_S), OBSD_SESSION_LINGER_MS=str(OBSD_LINGER_MS),
+                   OBSD_LOG_LEVEL=os.environ.get("OBSD_LOG_LEVEL", "error"))
+        self.log = open(os.path.join(self.dir, "obsd.log"), "w")
+        self.proc = subprocess.Popen([binary, "--socket", self.socket], env=env, stdout=self.log, stderr=subprocess.STDOUT)
+        deadline = time.monotonic() + 10
+        while not os.path.exists(self.socket):
+            if self.proc.poll() is not None or time.monotonic() > deadline:
+                raise RuntimeError(f"obsd did not start: see {self.log.name}")
+            time.sleep(0.05)
+        atexit.register(self.stop)
+
+    def stop(self) -> None:
+        if self.proc.poll() is None:
+            self.proc.terminate()
+            try:
+                self.proc.wait(timeout=60)
+            except Exception:                                    # noqa: BLE001
+                self.proc.kill()
+
+    @classmethod
+    def get(cls) -> "ObsdDaemon":
+        if cls._one is None:
+            cls._one = cls()
+        return cls._one
+
+
+def obsd_session(client: str = "test", token: str | None = None):
+    from w2cplatform.obsd import Session
+    return Session(ObsdDaemon.get().socket, client=client, token=token)
+
+
+def obsd_volume(session, size: int = 64 << 20, max_block: int = 4 << 20, optimal_read: int = 512 << 10, label: str = "test"):
+    """A fresh volume in a temp directory, formatted: `(volume, path)`."""
+    path = tempfile.mkdtemp(prefix="vol-")
+    vol = session.open_volume(params={"schema": "file", "path": path})
+    vol.format(size, max_block=max_block, optimal_read=optimal_read, label=label)
+    return vol, path
