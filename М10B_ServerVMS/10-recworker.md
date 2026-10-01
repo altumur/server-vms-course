@@ -836,10 +836,16 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
             landed = self._landed_before + self._landed
         except ArchiveError:
             return self.writer.state                 # a volume that does not answer measures nothing this pass
-        state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
+        for c, v in zip(running, vals):
+            if v is None:
+                continue
+            seen = self._offered_seen.get(c)
+            self._offered_total += v - seen if seen is not None and v >= seen else v
+            self._offered_seen[c] = v
+        state = self.writer.observe(self._offered_total + self._offered_extra, landed, wall)
 ```
 
-**Отдано** — сколько байт конвейеры передали стокам; `GstRecActuator` считает их на `appsink` (урок 9). **Дошло** — что сказало само кольцо: `totalWritten` из `READER_STATUS` минус отметка на момент открытия, плюс то, что дошло под прежними писателями этого регистратора (`_landed_before`). Без этой суммы каждое переоткрытие обнуляло бы «дошло», а «отдано» — нет, и сторож увидел бы потерю, которой не было. Решает чистая логика в `vms/writerwatch.py`:
+**Отдано** — сколько байт конвейеры передали стокам, суммой **приращений** по каждой записи, а не суммой текущих счётчиков: запись, которая остановилась, уносила свой счётчик из суммы, `outstanding` уходил в минус, и том, не взявший из этих мегабайт ничего, застрявшим не назывался (второе ревью). К отданному прибавляется и то, что регистратор пишет в писателя сам — выкачанные диапазоны и копии удержаний (`_offered_extra`), иначе садящаяся дозапись маскировала бы застрявшую живую запись. Тест: `test_what_was_offered_stays_offered_when_a_recording_stops`. `GstRecActuator` считает отданное на `appsink` (урок 9); `GstRecActuator` считает их на `appsink` (урок 9). **Дошло** — что сказало само кольцо: `totalWritten` из `READER_STATUS` минус отметка на момент открытия, плюс то, что дошло под прежними писателями этого регистратора (`_landed_before`). Без этой суммы каждое переоткрытие обнуляло бы «дошло», а «отдано» — нет, и сторож увидел бы потерю, которой не было. Решает чистая логика в `vms/writerwatch.py`:
 
 | Состояние | Когда | Почему так |
 |---|---|---|

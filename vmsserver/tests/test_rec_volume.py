@@ -199,3 +199,33 @@ def test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_l
     except ObsdError:
         pass
     assert r.engine_lost                                               # a new writer on the next pass
+
+
+def test_a_fetched_range_lands_under_its_lease_into_the_volume_it_was_fetched_for_and_landing_is_what_landed():
+    """The review's second pass. A fetch takes minutes; `_land` used to write into whatever volume was open when it
+    ended, under epoch 0 when the lease had gone, and to remember the whole DELIVERED range as landing — the groups
+    the engine refused or that began without a key frame included, so they were never asked for again."""
+    import dataclasses
+    from w2cplatform.obsd import FLAG_NEED_KEY_FRAME
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+    r.actuator.feed("1", t - 600, t - 400)
+    r.store.seal()
+    # the first group's key frame is not one: that group opens on nothing and stays a hole; the rest lands
+    samples = fake_samples(t - 400, t - 300, gop=10.0)
+    samples[0] = dataclasses.replace(samples[0], flags=samples[0].flags | FLAG_NEED_KEY_FRAME)
+    out = r._land("1", "1", samples, t - 400, t - 300, "device")
+    assert out["groups"] == 9 and r.landing["1"] == [(t - 390, t - 300)]
+    assert r.nowhere == {}                                                      # the source DID deliver it: not "nowhere"
+    r.store.seal()                                                              # …a hole, asked again once what landed is visible
+    assert r.gaps("1", {"from": t - 600, "to": t - 300}, t + r.settle, planned=False) == [(t - 400, t - 390)]   # (past `settle`, which bounds a gap above)
+    # a fetch that began on another volume lands nowhere; nor does one whose lease is gone
+    before = r.backfilled
+    out = r._land("1", "1", fake_samples(t - 300, t - 200), t - 300, t - 200, "device", store=object())
+    assert out["skipped"] and r.backfilled == before and r.landing["1"] == []      # (what landed is visible now: nothing pending)
+    r.release("1")
+    out = r._land("1", "1", fake_samples(t - 300, t - 200), t - 300, t - 200, "device")
+    assert out["skipped"] and r.backfilled == before

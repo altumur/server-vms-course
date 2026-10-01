@@ -79,3 +79,22 @@ def test_an_actuator_that_does_not_measure_says_nothing():
     box, rec_ctl, primary, backup, holder = _site()
     box.wall.advance(600)
     assert primary.writer_pass() == {"state": "ok"} and primary.writer.samples == []
+
+
+def test_what_was_offered_stays_offered_when_a_recording_stops():
+    """Offered was the SUM over the running recordings: one that stopped took its megabytes out of the sum,
+    `outstanding` went negative, and a volume that had taken nothing of them was never called stuck (the review's
+    second pass). Offered is summed by deltas now, and nothing is taken back."""
+    from w2cplatform.spec import SpecController
+    box, rec_ctl, primary, backup, holder = _site()
+    SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall).create({"name": "2", "cam": "1", "home": "disks"})
+    rec_ctl.ensure_placed()
+    assert primary.reconcile_once() == [("start", "2")]
+    act = primary.actuator
+    act.offered_bytes["1"] = act.offered_bytes["2"] = 0
+    primary.writer_pass()
+    act.offered_bytes["1"] += 2 * MB; act.offered_bytes["2"] += 2 * MB           # four megabytes, nothing landing
+    box.wall.advance(30); primary.writer_pass()
+    primary._actuate("stop", {"id": "1"}); primary.reconciler.actual.pop("1", None)   # one recording stops
+    box.wall.advance(31)
+    assert primary.writer_pass()["state"] == "stuck"                                 # the four megabytes are still owed

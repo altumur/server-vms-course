@@ -218,9 +218,14 @@
         ...
         for g in groups:
             span = (unix_s(g[0].begin), unix_s(g[-1].end))
-            if overlaps(have, span) or not g[0].key:
-                continue                                 # live recording got there while we were fetching
+            if overlaps(have, span):
+                ours.append(span)                        # live recording got there while we were fetching: ours already
+                continue
+            if not g[0].key:
+                continue                                 # no key frame to open on: a hole, asked for again
 ```
+
+**И под своей арендой, в свой том.** Выкачка идёт минуты, а за минуты том могли отдать и взять другой, аренду — отпустить. Первая версия `_land` писала в тот том, что открыт **сейчас**, и под эпохой `epochs.get(unit, 0)` — после отпускания это ноль, эпоха копий удержаний, не дозаписи (второе ревью). Теперь `fetch` запоминает том, для которого выкачивает, и `_land` пишет только в него, только пока он открыт и пока аренда на запись есть; иначе — `skipped`, и диапазон остаётся дырой до следующего прохода. `leave_volume` даёт выкачке в полёте несколько секунд закончить группу, а не режет её посередине. Тест: `test_a_fetched_range_lands_under_its_lease_into_the_volume_it_was_fetched_for_and_landing_is_what_landed`.
 
 Вычитание **дважды**: при планировании и при посадке. Дёшево и снимает гонку, которая иначе воспроизводилась бы раз в месяц. Группа, которая не начинается с ключевого кадра, тоже отбрасывается: последовательность с неё не открыть.
 
@@ -279,6 +284,8 @@ POST /backfill {"cam": 41, "rec": "41-cloud", "from": …}  →  202, в наз�
 
 **Источники — по очереди, пока один не обслужит.** Сначала устройство, потом резервные записи (`sources_of`, урок 26). Устройство не отдало — спрашивается следующий источник, а не бросается заявка.
 
+**Не в потоке цикла.** Заявка — час с карты камеры, минуты выкачки; базовый `pump_once` обслуживает заявки на потоке цикла (`serve_requests`), и для воркера это верно — импульс реле мгновенен. У регистратора `serve_requests` ничего не делает, а `requests()` зовётся первым делом в потоке дозаписи (`backfill_in_background`), перед плановыми диапазонами: проход ждёт его `BACKFILL_WAIT` и идёт дальше, аренды продлеваются, heartbeat уходит (ревью платформы, B3; шов — `VmsWorker.serve_requests`). Тест: `test_an_operators_request_is_served_off_the_loops_thread`.
+
 Удалить строку регистратор не может: токен воркера не пишет конфигурацию (урок 10 М10A). Поэтому он **сообщает** сделанное в heartbeat (`fetched`), а строку убирает консоль (`clear_requests`). Заявку, которую он не смог обслужить — аренда истекла, источника нет, все источники ответили ошибкой, — он не называет сделанной, иначе консоль удалила бы то, чего никто не выкачал. Ошибка источника ничего не говорит о диапазоне: сессию отказали, сеть оборвалась. Строка остаётся и ждёт следующего прохода.
 
 Тесты: `test_a_request_is_fetched_outside_the_window_and_the_budget`, `test_a_request_for_somebody_elses_recording_is_left_alone`, `test_a_request_the_recorder_could_not_serve_is_not_reported_as_served`, `test_backfill_bounds.py::test_a_request_a_source_failed_to_serve_stays_for_the_next_pass` — исполнитель, у которого выкачка падает с `range_error`: `requests` ничего не сделал, `fetched` пуст, а строка `rec/requests/1-x` на месте.
@@ -330,10 +337,10 @@ POST /backfill {"cam": 41, "rec": "41-cloud", "from": …}  →  202, в наз�
 ```python
         delivered = stitch([(unix_s(g[0].begin), unix_s(g[-1].end)) for g in groups], self.stitch)
         ...
-        self.landing[unit] = stitch(self.landing.get(unit, []) + delivered, self.stitch)
+        self.landing[unit] = stitch(self.landing.get(unit, []) + ours, self.stitch)
 ```
 
-Отданное (`delivered`) — всё, что вернул источник: и то, что легло, и то, что отброшено, потому что живая запись уже это имела. Оно помнится как **садящееся** (`landing`), и `gaps` вычитает его, пока том его не покажет:
+Отданное (`delivered`) — всё, что вернул источник, и по нему считается «не нашлось». Садящееся (`landing`) — уже: то, что **легло**, и то, что отброшено, потому что живая запись уже это имела. Не одно и то же (второе ревью): первая версия клала в `landing` всё отданное — и группу, которую движок отверг, и группу без ключевого кадра, — и `gaps` вычитал их до перезапуска процесса, хотя в томе их не было и не будет. Такая группа — дыра, и её спрашивают снова. `gaps` вычитает садящееся, пока том его не покажет:
 
 ```python
         pending = [sp for sp in self.landing.get(str(unit), []) if subtract(sp, ours)]   # still not shown by the volume

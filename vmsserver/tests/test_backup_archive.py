@@ -474,3 +474,29 @@ def test_a_recorder_says_how_far_it_wrote():
     box, card, row, carry = _camera_cluster()
     card.note_written("1-card", 1000.0); card.note_written("1-card", 990.0)   # never backwards
     assert next(s for s in card.status() if s["id"] == "1-card")["written_through"] == 1000.0
+
+
+def test_a_break_the_book_reports_is_written_at_once_not_deferred():
+    """The deferral (CB) is for a break the STREAM reports — noticed within `DETECTION`. A break the book reports is
+    noticed late already; deferring on top of it would reach past the ring, and the start of the break — the one
+    thing the ring is for — would be gone (the review's second pass)."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    box.wall.advance(100)                                      # the ring is full
+    card.resumes = lambda r: True                              # the camera could continue the stream…
+    carry(written=False)                                       # …but it is the book that says the room stopped writing
+    card.gate_pass()
+    assert len(card.actuator.released) == 1 and card.holding["1-card"] is False
+
+
+def test_an_orderly_stop_writes_the_rings_held_through_a_break():
+    """`stop_all` goes past `_actuate`: the hook before it writes what the rings hold (the review's second pass)."""
+    box, card, row, carry = _camera_cluster()
+    carry(written=True)
+    box.wall.advance(100)
+    card.resumes = lambda r: True
+    card.stream_says = lambda r: True
+    card.gate_pass()
+    assert card.actuator.released == []
+    card.before_stop_all()
+    assert len(card.actuator.released) == 1

@@ -249,16 +249,21 @@ class GstActuator:
 `except Exception` ловит всё: отказанный URI из урока 5, отсутствующий плагин, синтаксическую ошибку в строке. Логируется, возвращается `False`, цикл сверки уходит в откат.
 
 ```python
-        bus = p.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message::error", lambda b, m, c=cid: self.dead.append(c))
-        bus.connect("message::element", lambda b, m, c=cid: self._posted(c, m))
+        self._watch_bus(p, cid)
         if p.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
             return False
         self.pipelines[cid] = p
         self._publish(cid, cam)
         return True
+
+    def _watch_bus(self, p, cid) -> None:
+        bus = p.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message::error", lambda b, m, c=cid: self.dead.append(c))
+        bus.connect("message::element", lambda b, m, c=cid: self._posted(c, m))
 ```
+
+**Сигнальный сторож работает только при живом цикле GLib.** У воркера он есть — раздача требует `GLib.MainLoop` (шаг 5), и сообщения шины доставляются из него. У `GstRecActuator` раздачи нет и цикла нет — и `add_signal_watch` там не срабатывал никогда: ошибка конвейера и `watchdog` ложились на шину, `dead` оставался пустым, заглохшая запись не перезапускалась (ревью платформы, B5). Поэтому шину читают по-разному: `_watch_bus` у регистратора пуст, а его `pump` на каждом проходе **опрашивает** шину каждого конвейера — `bus.pop_filtered(ERROR | ELEMENT)` до пустоты, ошибка — в `dead`, сообщение элемента — в `_posted`, — и только потом отдаёт списки базе. Без GStreamer в прогоне это не проверить; проверяется на коробке: оборванный поток регистратора через `watchdog_ms` даёт `dead` и перезапуск.
 
 `c=cid` в лямбдах — связывание значения на момент создания. Без него все лямбды захватили бы одну переменную цикла, и все сообщения приписались бы последней камере. Классическая ловушка замыканий, и здесь она стоила бы часов отладки.
 

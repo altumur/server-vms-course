@@ -828,10 +828,16 @@ class VmsWorker(Worker):
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
         try:
-            self.requests()                             # …and what somebody asked this device to DO
+            self.serve_requests()                       # …and what somebody asked this device to DO
         except OSError as e:                            # the requests are rows in the store: no store, none this pass
             self.store_errors += 1
             log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
+
+    # Where the requests are served: here, on the loop's thread — a pulse and a preset take a moment. A recorder's
+    # request is an hour off a camera's card and takes minutes: it serves them on its backfill thread
+    # (`RecWorker.serve_requests`), so the leases and the heartbeat are not kept waiting (the review's second pass).
+    def serve_requests(self) -> None:
+        self.requests()
 
     # -- commands: `<sub>/requests/<id>`, done by whoever holds the device ------------------------------
     # The other half of what a device is. Until now a holder only OBSERVED: one connection, a fan-out,
@@ -1268,10 +1274,16 @@ class VmsWorker(Worker):
             except Exception:                              # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed; will retry", self.name)
             stop.wait(poll)
+        self.before_stop_all()
         self.actuator.stop_all()
         self.heartbeat_once()
         self.release_slot()                           # an orderly stop says so; a crash says nothing
         self.after_stop()
+
+    # What a subsystem's worker does before its pipelines are stopped on an ORDERLY stop: nothing here. A recorder
+    # writes the rings it holds through a break first (`RecWorker.before_stop_all`).
+    def before_stop_all(self) -> None:
+        pass
 
     # What a subsystem's worker lets go of on an ORDERLY stop, after the slot: nothing here. A recorder: its
     # place (`RecWorker.after_stop`).

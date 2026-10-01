@@ -257,6 +257,9 @@ class RecWorker(VmsWorker):
         self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
         self.sources: dict[str, str] = {}                                     # what each running pipeline subscribed to
+        self._offered_seen: dict[str, int] = {}                               # per pipeline: the actuator's counter as last read
+        self._offered_total = 0                                               # …summed by DELTAS, so a pipeline that stops takes nothing back
+        self._offered_extra = 0                                               # what this process wrote into the writer itself: fetched ranges, keeps
         self.last_source: dict[str, tuple[str, str]] = {}                     # camera -> (server, source) read last: the answer while the store is away
 
     # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
@@ -417,6 +420,12 @@ class RecWorker(VmsWorker):
             self._release_if_broken(cam["id"])
         return super()._actuate(verb, cam)
 
+    # An orderly stop goes through `stop_all`, past `_actuate`: the rings held through a break are written first here
+    # (the review's second pass) — the ring is the only copy of the break, and the restart would not have it.
+    def before_stop_all(self) -> None:
+        for uid in list(self.reconciler.actual):
+            self._release_if_broken(uid)
+
     # -- a backup that records only for a primary that is down (Lesson 26) -----------------------------
     # `when: offline` on a backup recording: record only while the camera's PRIMARY recording should be
     # written and is not. "Should be" is the whole rule, and the feedback's point S is why: a primary that is
@@ -445,7 +454,11 @@ class RecWorker(VmsWorker):
             need = self.primary_needs_cover(row, now)
             if need:
                 self._primary_back_since.pop(uid, None)
-            if need and self.holding.get(uid) and self.resumes is not None and self.resumes(row):
+            # Deferred only when the STREAM reported the break: a break the book reports is reported `START_GRACE`
+            # late, and the deferral on top of it would reach past the ring — the start of the break gone, which is
+            # what the ring is for (the review's second pass).
+            by_stream = self.stream_says is not None and self.stream_says(row) is True
+            if need and by_stream and self.holding.get(uid) and self.resumes is not None and self.resumes(row):
                 since = self._cover_since.setdefault(uid, now)
                 if now - since < self.defer_for():
                     continue                                 # held in memory: the camera may yet continue the stream
@@ -619,7 +632,17 @@ class RecWorker(VmsWorker):
             landed = self._landed_before + self._landed
         except ArchiveError:
             return self.writer.state                 # a volume that does not answer measures nothing this pass
-        state = self.writer.observe(sum(v or 0 for v in vals), landed, wall)
+        # Offered is summed by DELTAS per pipeline, not as the sum of the running ones: a recording that stops took
+        # its count out of the sum, `outstanding` went negative and `stuck` never came (the review's second pass).
+        # And what this process wrote into the writer itself — fetched ranges, keeps — is offered too, else it
+        # masks a stall for as long as it lands.
+        for c, v in zip(running, vals):
+            if v is None:
+                continue
+            seen = self._offered_seen.get(c)
+            self._offered_total += v - seen if seen is not None and v >= seen else v
+            self._offered_seen[c] = v
+        state = self.writer.observe(self._offered_total + self._offered_extra, landed, wall)
         if self.writer.reopen_due(wall):
             log.warning("%s: the writer is %s (%s) — reopening it", self.name, state["state"], state)
             for cid in running:
@@ -860,6 +883,10 @@ class RecWorker(VmsWorker):
             self.actuator("stop", {"id": uid})
             self.reconciler.actual.pop(uid, None)
             self.release(str(uid))
+        # A fetch in flight lands into the volume it STARTED on (`_land` checks) and finds it gone; it is given a
+        # moment to finish its group rather than be cut in the middle of one.
+        if self._backfiller is not None and self._backfiller.is_alive():
+            self._backfiller.join(timeout=5.0)
         # The writer is closed while the volume is still ours — its flush is what puts the last minutes on the
         # volume — and only then is the hold let go: released first, the next holder would mount a volume with
         # our writer still in it.
@@ -980,16 +1007,19 @@ class RecWorker(VmsWorker):
         return bool(self.archive_error) or self.store is None or self.store.writer is None
 
     def pump_once(self) -> None:
-        super().pump_once()                         # …which now includes `requests()`: the base serves the
-                                                    # family for every subsystem, and this one overrides
-                                                    # the method, not the call — asking twice a pass would
-                                                    # spend the budget twice
+        super().pump_once()
         # Bounded, inside the window — it shares the device's uplink — and never while the volume is taking
-        # nothing.
-        if self.backfill_budget and not self.archive_busy():
+        # nothing. The operator's requests go the same way (`serve_requests`).
+        if not self.archive_busy():
             self.backfill_in_background()
         if self.incidents and not self.archive_busy():
             self.keeps_in_background()
+
+    # Not on the loop's thread: an operator's request is a range off the camera's card, minutes long, and it ran
+    # where the leases are renewed and the heartbeat goes out (the review's first pass, B3). It is served on the
+    # backfill thread, before the planned ranges — a person asked for that hour.
+    def serve_requests(self) -> None:
+        pass
 
     # -- backfill: closing our gaps from the device's own archive (Lesson 16) ---------------------------
     # The card exists because the camera kept recording while we could not, so replication is not "copy
@@ -1245,8 +1275,16 @@ class RecWorker(VmsWorker):
 
         def fetch():
             try:
-                self.backfill(self.backfill_budget)
+                self.requests()
+            except OSError as e:                         # the requests are rows in the store: no store, none this pass
+                self.store_errors += 1
+                logging.warning("%s: the store did not answer for the requests (%s)", self.name, e)
             except Exception:                            # noqa: BLE001 — a thread has nobody to raise to
+                logging.exception("%s: requests failed", self.name)
+            try:
+                if self.backfill_budget:
+                    self.backfill(self.backfill_budget)
+            except Exception:                            # noqa: BLE001
                 logging.exception("%s: backfill failed", self.name)
 
         self._backfiller = threading.Thread(target=fetch, name=f"{self.name}-backfill", daemon=True)
@@ -1280,12 +1318,13 @@ class RecWorker(VmsWorker):
         unit = str(unit)
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
+        store = self.store                               # the volume this fetch is FOR (`_land`)
         try:
             samples = self.read_samples(src["url"], src["recording"], t0, t1)
         except OSError as e:
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
         self.actuator.range_error = ""
-        return self._land(unit, cam, samples, t0, t1, src["key"])
+        return self._land(unit, cam, samples, t0, t1, src["key"], store)
 
     # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
@@ -1293,8 +1332,9 @@ class RecWorker(VmsWorker):
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
         self.actuator.range_error = ""
+        store = self.store                               # the volume this fetch is FOR (`_land`)
         samples = self.actuator.record_range(unit, f"{url}?from={t0}&to={t1}", t0, t1)
-        return self._land(unit, cam, samples, t0, t1, "device")
+        return self._land(unit, cam, samples, t0, t1, "device", store)
 
     # What a fetch brought, landed. The overlap is checked a second time here, by GROUP OF PICTURES — from one
     # key frame to the next — because live recording may have reached the same minutes while we were fetching;
@@ -1306,40 +1346,55 @@ class RecWorker(VmsWorker):
     # (feedback AE): a range just copied is invisible until its block closes, and was being remembered as "not
     # on the card either" and never planned again. Delivered is what came back: landed, or dropped because live
     # recording had it already. And what landed and is not visible yet is `landing` — ours, not a hole.
-    def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str) -> dict:
+    #
+    # Landed into the volume the fetch STARTED on, under the lease this recorder still holds — not into whatever is
+    # open now (the review's second pass): a fetch takes minutes, and in minutes the volume may have been handed
+    # back and another taken, or the lease let go. After a release `epochs.get(unit)` is None, not 0 — epoch nought
+    # is a keep's copy, never a backfill's. And `landing` is what LANDED, plus what live recording had already: a
+    # group the engine refused, or one that began without a key frame, stays a hole and is asked for again.
+    def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str, store=None) -> dict:
         from w2cplatform.obsd import unix_s
+        store = self.store if store is None else store
+        epoch = self.epochs.get(unit)
+        if store is None or store is not self.store or epoch is None or not self.may_record(unit):
+            log.warning("%s: a range of %s fetched for a volume or a lease this recorder no longer holds is dropped", self.name, unit)
+            return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "the volume or the lease changed during the fetch"}
         have = stitch(self.our_coverage(unit) + self.landing.get(unit, []), self.stitch)   # landing is ours: not twice
-        kept, groups = 0, []
+        kept, groups, ours = 0, [], []
         for smp in samples:
             if smp.key or not groups:
                 groups.append([smp])
             else:
                 groups[-1].append(smp)
         delivered = stitch([(unix_s(g[0].begin), unix_s(g[-1].end)) for g in groups], self.stitch)
-        epoch = self.epochs.get(unit, 0)
         last = None                                      # where the sequence being written ends
         for g in groups:
             span = (unix_s(g[0].begin), unix_s(g[-1].end))
-            if overlaps(have, span) or not g[0].key:
-                continue                                 # live recording got there while we were fetching
+            if overlaps(have, span):
+                ours.append(span)                        # live recording got there while we were fetching: ours already
+                continue
+            if not g[0].key:
+                continue                                 # no key frame to open on: a hole, asked for again
             try:
                 # A sequence is CONTINUOUS to the index: a hole inside one is drawn as footage. So what the source
                 # did not have — or what was dropped above — ends the sequence, and the next group opens another.
                 if last is not None and span[0] - last > self.stitch:
-                    self.store.finish(unit, epoch, backfill=True)
+                    store.finish(unit, epoch, backfill=True)
                 last = span[1]
                 for smp in g:
-                    self.store.put(unit, epoch, smp, backfill=True)
+                    store.put(unit, epoch, smp, backfill=True)
+                    self._offered_extra += len(smp.body)
                 kept += 1
+                ours.append(span)
             except Unavailable:
                 self._lost_engine()
                 break
             except ObsdError as e:                       # the engine refused the group: the next one opens on its key
                 log.warning("%s: %s refused a fetched group at %.0f: %s", self.name, unit, span[0], e.name)
         if kept:
-            self.store.finish(unit, epoch, backfill=True)
+            store.finish(unit, epoch, backfill=True)
         self.backfilled += kept
-        self.landing[unit] = stitch(self.landing.get(unit, []) + delivered, self.stitch)
+        self.landing[unit] = stitch(self.landing.get(unit, []) + ours, self.stitch)
         failed = getattr(self.actuator, "range_error", "")
         if not failed:
             missing = subtract((t0, t1), delivered)
@@ -1471,6 +1526,7 @@ class RecWorker(VmsWorker):
                     continue
             try:
                 self.store.put(rec, 0, smp)
+                self._offered_extra += len(smp.body)
                 kept += 1
                 last = unix_s(smp.end)
             except Unavailable:

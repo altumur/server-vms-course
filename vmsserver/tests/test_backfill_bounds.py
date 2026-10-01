@@ -109,3 +109,17 @@ def test_a_request_a_source_failed_to_serve_stays_for_the_next_pass():
                      {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28000), "at": str(NOW), "by": "anna"})
     assert r.requests(now=NOW) == [] and r.fetched == []
     assert box.vars.list(REC_SPEC.sub.requests_prefix()) == ["rec/requests/1-x"]
+
+
+def test_an_operators_request_is_served_off_the_loops_thread():
+    """A request is an hour off the camera's card and takes minutes; it ran on the loop's thread, where the leases
+    are renewed and the heartbeat goes out (the review's first pass, B3). It is served on the backfill thread now,
+    and the pass waits `BACKFILL_WAIT` for it and no longer."""
+    box, r, con_rec = _recorder()
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-x"),
+                     {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28000), "at": str(NOW), "by": "anna"})
+    r.pump_once()
+    assert r._backfiller is not None
+    r._backfiller.join(10.0)
+    assert r.fetched == ["1-x"] and r.actuator.fetched

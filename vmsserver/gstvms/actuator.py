@@ -131,16 +131,23 @@ class GstActuator:
         except Exception as e:                        # noqa: BLE001
             log.error("camera %s: %s", cid, e)        # the message may name the URI; it can no longer name the password
             return False
-        bus = p.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message::error", lambda b, m, c=cid: self.dead.append(c))
-        bus.connect("message::element", lambda b, m, c=cid: self._posted(c, m))     # motion, person, ...: an element saw something
+        self._watch_bus(p, cid)
         self._before_play(p, cam)
         if p.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
             return False
         self.pipelines[cid] = p
         self._publish(cid, cam)
         return True
+
+    # How the bus is read. The worker has a GLib main loop (the fan-out server needs one), so a signal watch does it:
+    # `message::error` appends the camera to `dead`, `message::element` goes to `_posted`. The recorder has no loop
+    # and polls instead (`GstRecActuator.pump`): a signal watch without a loop fires never, and `dead` stayed empty
+    # for a stalled recording (the review's first pass, B5).
+    def _watch_bus(self, p, cid) -> None:
+        bus = p.get_bus()
+        bus.add_signal_watch()
+        bus.connect("message::error", lambda b, m, c=cid: self.dead.append(c))
+        bus.connect("message::element", lambda b, m, c=cid: self._posted(c, m))     # motion, person, ...: an element saw something
 
     # What a subclass does to a built pipeline before it plays — the recorder blocks its ring here, so that
     # not one buffer reaches the sink of a pipeline that starts on hold.
@@ -217,6 +224,24 @@ class GstRecActuator(GstActuator):
         self.fanout = None
         self.range_error = ""                            # why the last range pipeline failed, if it did (Lesson 16)
         self.pipelines, self.dead, self.posted = {}, [], []
+
+    # No GLib loop here: the buses are POLLED on every pump — an error (the watchdog's, after `watchdog_ms` without a
+    # frame; a source that closed) makes the recording dead, an element's message an observation.
+    def _watch_bus(self, p, cid) -> None:
+        pass
+
+    def pump(self):
+        for cid, p in list(self.pipelines.items()):
+            bus = p.get_bus()
+            while True:
+                msg = bus.pop_filtered(Gst.MessageType.ERROR | Gst.MessageType.ELEMENT)
+                if msg is None:
+                    break
+                if msg.type == Gst.MessageType.ERROR:
+                    self.dead.append(cid)
+                else:
+                    self._posted(cid, msg)
+        return super().pump()
 
     # `release` opens a held pipeline's ring; every other verb is the worker's.
     def __call__(self, verb: str, cam: dict) -> bool:
