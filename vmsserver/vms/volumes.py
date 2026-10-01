@@ -53,20 +53,21 @@ from w2cplatform.spec import Refused
 
 SUB = "rec"
 TABLE = "volumes"
-KINDS = ("local", "network", "backup", "edge")
+KINDS = ("local", "network", "backup", "edge", "incidents")
 FIELDS = ("kind", "url", "server", "quota_bytes", "access_secret", "enabled")
 
 
 # The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
 # disk of a second server — and an ADDRESS any box may serve when it does not, like a network volume: a second
 # storage somewhere else, which is as independent of the primary's server as a second disk is. An EDGE volume
-# is the card in a camera that runs the platform: always one box, the camera itself.
+# is the card in a camera that runs the platform: always one box, the camera itself. An INCIDENTS volume —
+# where kept footage is copied to (`RecWorker.keep_pass`) — is either, like a backup one.
 def on_a_box(v: "Volume") -> bool:
-    return v.kind in ("local", "edge") or (v.kind == "backup" and bool(v.server))
+    return v.kind in ("local", "edge") or (v.kind in ("backup", "incidents") and bool(v.server))
 
 
 def any_box(v: "Volume") -> bool:
-    return v.kind == "network" or (v.kind == "backup" and not v.server)
+    return v.kind == "network" or (v.kind in ("backup", "incidents") and not v.server)
 
 
 @dataclass(frozen=True)
@@ -300,6 +301,17 @@ def backups(vars_) -> set[str]:
     return {v.name for v in declared(vars_) if v.kind in STANDBY and v.enabled}
 
 
+# -- where kept footage goes (feedback BH; the product's design) -----------------------------------------------
+# A volume is a ring, and a ring cannot spare a range: what somebody said to KEEP is overwritten with the rest
+# when its turn comes. So a keep is not a flag on footage in place — it is a COPY, into a volume of its own kind,
+# `incidents`, which only keeps go into. The recorder that holds it copies every keep's minutes out of whichever
+# recorder's door holds them (`RecWorker.keep_pass`), and nothing is ever recorded into it: it is a place for
+# evidence, not a place to put a camera (`admit_recording`).
+def incidents(vars_) -> set[str]:
+    """The names of the enabled incidents volumes."""
+    return {v.name for v in declared(vars_) if v.kind == "incidents" and v.enabled}
+
+
 def edges(vars_) -> set[str]:
     """The names of the enabled edge volumes — cards in cameras."""
     return {v.name for v in declared(vars_) if v.kind == "edge" and v.enabled}
@@ -318,10 +330,12 @@ def is_backup(row: dict, vars_=None, names: set[str] | None = None) -> bool:
 # nowhere, and nothing else goes to a backup volume. `/unplaceable` then says so, which is the honest
 # answer to "the card is gone".
 def admit_recording(ctl, row: dict, worker: str) -> bool:
-    names = backups(ctl.vars)
-    if not names:
+    names, kept = backups(ctl.vars), incidents(ctl.vars)
+    if not names and not kept:
         return True
     place = ctl.place_of(worker)
+    if place in kept:
+        return False                                  # a place for what somebody kept, never one to record into
     home = str(row.get("home") or "")
     if home in names:
         return place == home

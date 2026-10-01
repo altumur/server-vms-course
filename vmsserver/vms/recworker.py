@@ -216,6 +216,13 @@ class RecWorker(VmsWorker):
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
         self.holding: dict[str, bool] = {}          # `when: offline` recording -> is its pipeline on hold now
         self._primary_back_since: dict[str, float] = {}  # released backup -> since when its primary is written again
+        # KEEPS (feedback BH): a recorder holding an INCIDENTS volume copies into it what somebody said to keep
+        # (`keep_pass`). What each keep holds there, as last seen, and what the last pass found.
+        self.incidents = False                       # is the volume this recorder holds an incidents volume
+        self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
+        self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
+        self._keeper: threading.Thread | None = None
+        self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
         self.sources: dict[str, str] = {}                                     # what each running pipeline subscribed to
 
@@ -592,7 +599,9 @@ class RecWorker(VmsWorker):
                 **({"archive_url": self.archive_url} if self.archive_url else {}),
                 # Lesson 16: what a clean fetch found nowhere — ours missing it, the source missing it too.
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
-                "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans))}
+                "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
+                # A recorder holding an incidents volume: what each keep holds there (`keep_pass`).
+                **({"keeps": self.keep_state} if self.incidents else {})}
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.
@@ -615,6 +624,7 @@ class RecWorker(VmsWorker):
                 vol = rows.get(self.volume) or volumes.Volume(self.volume, "local", self.default_url, self.server or "",
                                                               self.default_quota)
                 self.volume_error = str(self._write_into(vol) or "")
+                self._place_kind(vol)
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
@@ -668,12 +678,20 @@ class RecWorker(VmsWorker):
             err = self._write_into(rows[self.hold])
             if err is None:
                 self.volume, self.capacity, self.volume_error = self.hold, self.full_capacity, ""
+                self._place_kind(rows[self.hold])
                 return self.volume
             logging.warning("%s: %s will not open (%s) — looking for another", self.name, self.hold, err)
             skipped.add(self.hold)
             broken.append((self.hold, str(err)))
             self.volume_error = str(err)
             self.release_hold()                                    # so somebody who CAN write there may take it
+
+    # An INCIDENTS volume is a place for kept footage and never one to record into: the recorder holding it says
+    # so with its capacity — nought, like a spare — and copies keeps instead (`keep_pass`).
+    def _place_kind(self, vol) -> None:
+        self.incidents = vol.kind == "incidents"
+        if self.incidents:
+            self.capacity = 0
 
     # Taking a volume means OPENING it through the host's daemon and becoming its writer. Returns None when it
     # is open and writable, or the reason it is not. Opening is the only honest test: a declaration can name a
@@ -761,9 +779,10 @@ class RecWorker(VmsWorker):
             self.release_hold()
         except OSError:                              # the store is silent: the hold lapses by itself
             self.hold = None
-        self.volume, self.capacity = "", 0
+        self.volume, self.capacity, self.incidents = "", 0, False
         # What the archive's state said was about the volume we just left. The next one starts clean.
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
+        self.keep_held, self.keep_state = {}, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -880,6 +899,8 @@ class RecWorker(VmsWorker):
         # nothing.
         if self.backfill_budget and not self.archive_busy():
             self.backfill_in_background()
+        if self.incidents and not self.archive_busy():
+            self.keeps_in_background()
 
     # -- backfill: closing our gaps from the device's own archive (Lesson 16) ---------------------------
     # The card exists because the camera kept recording while we could not, so replication is not "copy
@@ -1008,6 +1029,8 @@ class RecWorker(VmsWorker):
     # did not give, shows thirty days: unread is not "for ever".
     def _visible_from(self, unit) -> float:
         from .archive import visible_from
+        if self.incidents:
+            return 0.0                                # everything in an incidents volume is there because somebody kept it
         try:
             items, _ = self.vars.get(self.SUB.config(self.ROWS, str(unit)))
         except OSError:
@@ -1207,6 +1230,132 @@ class RecWorker(VmsWorker):
         if failed:
             out["error"] = failed
         return out
+
+    # -- keeps: a COPY in the incidents volume (feedback BH; the product's design) ---------------------------
+    #
+    # A volume is a ring, and a ring cannot spare a range: when its turn comes, kept footage is overwritten with
+    # the rest. So the recorder holding an INCIDENTS volume copies every keep's minutes into it — out of whichever
+    # recorder's door holds them, every recording of the keep's camera (`Keep.recordings` and any row naming the
+    # camera now), as the stream `<recording>/e0`. Epoch nought: a copy is nobody's lease, and where the live
+    # footage still exists its own epoch owns those minutes (`authoritative`); where the ring took it, the copy
+    # is what is left. What one pass could not get — a door that is down, a recorder that moved — the next asks for
+    # again: the keep stands until somebody lifts it.
+    #
+    #   archive.keep.copied   an event, when a pass copied something: the recording, the seconds, and the sha256
+    #                         of the frames as the incidents volume now holds them — "is this what was kept"
+    #   archive.keep.lost     an ALARM, when footage a keep held in the incidents volume is no longer there: its
+    #                         own ring, full, took it. The answer is a larger quota, or an export
+    #
+    # A keep is still not "for ever": the incidents volume is a ring too. It is only one that nothing else writes
+    # into, so it turns as slowly as keeps arrive.
+    KEEP_EVERY = 60.0
+
+    def keeps_in_background(self) -> None:
+        if self._keeper is not None and self._keeper.is_alive():
+            return
+        if self.clock() - self._keep_at < self.KEEP_EVERY:
+            return
+        self._keep_at = self.clock()
+
+        def run():
+            try:
+                self.keep_pass()
+            except Exception:                            # noqa: BLE001 — a thread has nobody to raise to
+                logging.exception("%s: copying keeps failed", self.name)
+
+        self._keeper = threading.Thread(target=run, name=f"{self.name}-keeps", daemon=True)
+        self._keeper.start()
+        self._keeper.join(timeout=self.BACKFILL_WAIT)
+
+    def keep_pass(self, now: float | None = None) -> dict:
+        import hashlib
+        from w2cplatform.events import ALARM, EventLog
+        from . import keeps
+        from .console import recorder_doors
+        if not self.incidents or self.store is None:
+            return {}
+        now = self.wall() if now is None else now
+        declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
+        cams: dict[str, set] = {}
+        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
+            items, _ = self.vars.get(key)
+            if items and items.get("deleted") != "true":
+                row = self.parse_row(items)
+                cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
+        doors = [(n, u) for n, u, _ in recorder_doors(self.objects, now) if n != self.name]
+        state: dict[str, dict] = {}
+
+        def inside(k, rec) -> float:                     # seconds of the keep this volume holds for `rec`
+            return sum(min(b, k.until) - max(a, k.since) for a, b in self.store.coverage(rec) if b > k.since and a < k.until)
+
+        for k in declared:
+            got = missing = 0.0
+            touched: list[str] = []
+            for rec in sorted(set(k.recordings) | cams.get(k.cam, set())):
+                # First what is GONE — before anything is copied, or a copy taken again from the recording's own
+                # volume would hide that the incidents ring is too small to hold what it was given.
+                now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
+                if now_in + 1.0 < before:
+                    lost = round(before - now_in, 1)
+                    EventLog(self.archive_root, REC.name, rec, 0).append(
+                        now, "archive.keep.lost", cls=ALARM, cam=k.cam, keep=k.id, recording=rec, seconds=lost,
+                        volume=self.volume)
+                    logging.error("%s: %.0f s of keep %s (%s) are gone from %s: its ring took them",
+                                  self.name, lost, k.id, rec, self.volume)
+                for a, b in subtract((k.since, k.until), self.store.coverage(rec)):
+                    for name, url in doors:
+                        try:
+                            samples = self.read_samples(url, rec, a, b)
+                        except OSError:
+                            continue                     # that door is down: another may have it, the next pass asks again
+                        if samples and self._copy_in(rec, samples):
+                            touched.append(rec)
+                            break
+                if rec in touched:
+                    self.store.seal()                    # what was copied is readable now — and counted below
+                self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                got += held
+                missing += sum(b - a for a, b in subtract((k.since, k.until), self.store.coverage(rec)))
+            entry = {"copied": round(got, 1), "missing": round(missing, 1)}
+            for rec in sorted(set(touched)):
+                frames = b"".join(s.encode() for s in self.store.samples(rec, k.since, k.until))
+                digest = hashlib.sha256(frames).hexdigest()
+                EventLog(self.archive_root, REC.name, rec, 0).append(
+                    now, "archive.keep.copied", cam=k.cam, keep=k.id, recording=rec, bytes=len(frames),
+                    sha256=digest, volume=self.volume)
+                entry.setdefault("sha256", {})[rec] = digest
+            if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
+                entry["sha256"] = self.keep_state[k.id]["sha256"]
+            state[k.id] = entry
+        self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self.keep_state = state
+        return state
+
+    # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
+    # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
+    def _copy_in(self, rec: str, samples: list) -> bool:
+        from w2cplatform.obsd import unix_s
+        last, kept = None, 0
+        for smp in samples:
+            if last is None and not smp.key:
+                continue
+            if last is not None and unix_s(smp.begin) - last > self.stitch:
+                self.store.finish(rec, 0)
+                if not smp.key:
+                    last = None
+                    continue
+            try:
+                self.store.put(rec, 0, smp)
+                kept += 1
+                last = unix_s(smp.end)
+            except Unavailable:
+                self._lost_engine()
+                return False
+            except ObsdError:
+                last = None                              # refused: the next group opens on its key
+        if kept:
+            self.store.finish(rec, 0)
+        return kept > 0
 
     def metrics_text(self) -> str:
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
