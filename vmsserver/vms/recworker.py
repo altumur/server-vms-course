@@ -40,7 +40,6 @@ from w2cplatform.console import heartbeats, holder_of
 from w2cplatform.contract import Subsystem
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.objects import ObjectStore
-from w2cplatform.resource import disk_space, space_settings
 from w2cplatform.variables import Variables
 
 from . import volumes
@@ -186,7 +185,6 @@ class RecWorker(VmsWorker):
         # reach, how fresh it must NOT touch, and the seam tolerance that stops 144 seams a day from
         # looking like 144 gaps.
         self.window, self.keep_days, self.settle, self.stitch = window, keep_days, settle, stitch
-        self.space_probe = disk_space                # the disk under the resource; a test cannot fill one
         self.backfill_budget = 0                    # ranges per pass; 0 = only what an operator asks for
         self.backfilled = 0
         self.fetched: list[str] = []                # request ids this worker has fetched — the heartbeat carries them
@@ -858,8 +856,13 @@ class RecWorker(VmsWorker):
             self.depth_pass()
         return lost
 
-    # The volume is taking nothing: it said so (`archive_error`), or nothing is open. Backfill is not given
-    # more then.
+    # The volume is taking nothing: it said so (`archive_error`), or nothing is open. Backfill — planned or asked
+    # for — waits then: there is nowhere to land what it would fetch.
+    #
+    # What it does NOT wait for is a full disk. The footage is in a ring formatted at its quota: it never grows
+    # past it, and a range fetched now is written at the ring's head, the newest block, overwritten last. The
+    # chase the watermark used to guard against — the resource freeing hours, backfill fetching the same hours
+    # back — has nothing to chase.
     def archive_busy(self) -> bool:
         return bool(self.archive_error) or self.store is None or self.store.writer is None
 
@@ -919,17 +922,6 @@ class RecWorker(VmsWorker):
         for sp in pending:
             holes = [h for hole in holes for h in subtract(hole, [sp])]
         return holes
-
-    # The disk is over its high mark: the resource is freeing space this minute, and backfill exists to
-    # bring more in. Without this line they chase each other for ever on a full disk — the same trap
-    # `keep_days` closes in time, closed here in space. Not a `force` override either: an operator asking
-    # for a range cannot be given one the resource is about to delete.
-    def under_pressure(self) -> bool:
-        knob = space_settings(self.vars)
-        if not knob["enabled"]:
-            return False
-        total, free = self.space_probe(self.archive_root)
-        return bool(total) and (total - free) > total * knob["high"]
 
     # Local time, and the one place in the course where that is right: "at night" is night where the camera
     # is, not where the server is. `(22, 6)` wraps midnight — without that branch it would never arrive.
@@ -1006,12 +998,23 @@ class RecWorker(VmsWorker):
         with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
             return Sample.decode_all(r.read())
 
+    # How far back the doors show a recording: its row's `retention_days` (`visible_from`). A ceiling — the ring
+    # decides what is still there; this decides what is SHOWN. A recording whose row is gone, or a row the store
+    # did not give, shows thirty days: unread is not "for ever".
+    def _visible_from(self, unit) -> float:
+        from .archive import visible_from
+        try:
+            items, _ = self.vars.get(self.SUB.config(self.ROWS, str(unit)))
+        except OSError:
+            items = None
+        return visible_from(items if items and items.get("deleted") != "true" else None, self.wall())
+
     # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
     # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
     # reads every recorder's to draw a camera's timeline and play it; any recorder may.
     def serve_archive(self, host: str = "127.0.0.1", port: int = 0):
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)))
+        routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from)
 
         class H(BaseHTTPRequestHandler):
             def log_message(self, *a):
@@ -1036,15 +1039,15 @@ class RecWorker(VmsWorker):
     #
     # The ordinary pass is bounded by a budget and an hour because backfill competes with live for the
     # device's uplink. A range a PERSON asked for is different work: they are looking at that gap now, and
-    # the night is not a useful answer. So these are fetched outside both — but not outside
-    # `under_pressure`, because a disk that is being emptied this minute cannot be given more.
+    # the night is not a useful answer. So these are fetched outside both — but not while the volume takes
+    # nothing (`archive_busy`): the request waits, it is not refused.
     #
     # The request is not cleared here. A worker's token writes its slot and its epochs, never configuration
     # (М10A Lesson 10), so the recorder REPORTS what it fetched in its heartbeat and the console's reaper
     # removes the row — the same division as a scan that finishes (М10B Lesson 21).
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
-        if self.under_pressure():
+        if self.archive_busy():
             return []
         mine = {str(r["id"]) for r in self.rows}
         done: list[dict] = []
@@ -1100,9 +1103,7 @@ class RecWorker(VmsWorker):
 
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
-        if not (force or self.in_window(now)):
-            return []
-        if self.under_pressure():
+        if not (force or self.in_window(now)) or self.archive_busy():
             return []
         done: list[dict] = []
         names = volumes.backups(self.vars)
@@ -1207,7 +1208,7 @@ class RecWorker(VmsWorker):
 #   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
 #                                  owns it, from a key frame (`Archive.samples`)
-def archive_routes(store_of, wall, current_epoch=lambda unit: None):
+def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0):
     import json
     from urllib.parse import parse_qs, urlsplit
     from w2cplatform.doors import safe_segment
@@ -1228,6 +1229,7 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None):
                 t0, t1 = float(q.get("from", 0)), float(q.get("to", wall() + 86400))
             except ValueError:
                 return 400, b'{"error": "from and to are unix seconds"}', "application/json"
+            t0 = max(t0, visible_from(unit))                 # retention is a ceiling on what the door shows
             try:
                 if prefix == "/timeline/":
                     cur = current_epoch(unit)
