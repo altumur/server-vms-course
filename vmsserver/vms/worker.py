@@ -220,9 +220,14 @@ class FakeDevice:
         self.open.clear()
 
 
-# Frames a fake pipeline writes: one sample per `step` seconds, a key frame first and then every `gop` seconds,
-# `size` bytes of nothing — enough for the engine to cut sequences, index them and hand them back, and few enough
-# that an hour of footage is three thousand six hundred samples, not ninety thousand.
+# Frames a fake pipeline writes: one sample per `step` seconds, a key frame first and then every `gop` seconds —
+# enough for the engine to cut sequences, index them and hand them back, and few enough that an hour of footage is
+# three thousand six hundred samples, not ninety thousand. Shaped like H.264 in Annex-B: a key frame carries a
+# parameter set pair and an IDR slice, the others a slice — so an export of fake footage is an MP4 (`fmp4.py`).
+FAKE_SPS = b"\x00\x00\x00\x01\x67\x42\x00\x1f\xe9\x01\x40\x7b\x20"
+FAKE_PPS = b"\x00\x00\x00\x01\x68\xce\x38\x80"
+
+
 def fake_samples(t0: float, t1: float, step: float = 1.0, gop: float = 2.0, size: int = 256) -> list:
     from w2cplatform.obsd import archive_ms, video
     out, t, since_key = [], float(t0), None
@@ -231,7 +236,8 @@ def fake_samples(t0: float, t1: float, step: float = 1.0, gop: float = 2.0, size
         key = since_key is None or t - since_key >= gop - 1e-9
         if key:
             since_key = t
-        out.append(video(archive_ms(t), archive_ms(end), b"\x00" * size, key))
+        body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * size
+        out.append(video(archive_ms(t), archive_ms(end), body, key, 1280, 720))
         t = end
     return out
 
@@ -1141,8 +1147,10 @@ class VmsWorker(Worker):
                        **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
-                       archive=self.archive_root, devices=self.device_status(),                                    # the resource its events (a recorder: its footage) go to — Nomad's meta.archive, through $ARCHIVE
-                       **self.heartbeat_extra())
+                       devices=self.device_status(),
+                       # `archive`: the resource tree its events go to — Nomad's meta.archive, through $ARCHIVE. A
+                       # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).
+                       **{"archive": self.archive_root, **self.heartbeat_extra()})
 
     # What a subclass adds to the heartbeat. `fetched` for everyone — the requests this worker has
     # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says

@@ -170,8 +170,8 @@ class ArchiveError(Exception):
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out"""
 
-    def __init__(self, kind: str, detail: str):
-        self.kind, self.detail = kind, detail
+    def __init__(self, kind: str, detail: str, name: str = ""):
+        self.kind, self.detail, self.name = kind, detail, name    # `name`: the engine's status, or UNAVAILABLE
         super().__init__(f"{kind}: {detail}")
 
 
@@ -183,11 +183,11 @@ def classify(e: Exception) -> ArchiveError:
     if isinstance(e, ArchiveError):
         return e
     if isinstance(e, Unavailable):
-        return ArchiveError("away", f"obsd is not answering: {e.detail}")
+        return ArchiveError("away", f"obsd is not answering: {e.detail}", e.name)
     if isinstance(e, ObsdError):
         if e.name == "ALREADY_LOCKED":
-            return ArchiveError("busy", str(e))
-        return ArchiveError("wrong" if e.name in WRONG else "away", str(e))
+            return ArchiveError("busy", str(e), e.name)
+        return ArchiveError("wrong" if e.name in WRONG else "away", str(e), e.name)
     if isinstance(e, ValueError):
         return ArchiveError("wrong", str(e))
     return ArchiveError("away", str(e))

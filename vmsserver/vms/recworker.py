@@ -61,8 +61,9 @@ REC = Subsystem("rec")
 # sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
 # answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
 class RecSink:
-    def __init__(self, store: Archive, unit, epoch: int, on_lost=None, backfill: bool = False):
+    def __init__(self, store: Archive, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
         self.store, self.unit, self.epoch, self.on_lost, self.backfill = store, str(unit), int(epoch), on_lost, backfill
+        self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
         self.taken = self.refused = 0
 
     def put(self, sample: Sample) -> str:
@@ -74,8 +75,10 @@ class RecSink:
             if self.on_lost is not None:
                 self.on_lost()
             raise
-        except ObsdError:
+        except ObsdError as e:
             self.refused += 1
+            if self.on_wrong is not None and classify(e).kind == "wrong":
+                self.on_wrong(e)
             raise
 
     def finish(self) -> None:
@@ -281,7 +284,8 @@ class RecWorker(VmsWorker):
         # The sink: this volume's writer, as the stream `<recording>/e<epoch>`. The epoch is in the stream's
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
-                   sink=RecSink(self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine))
+                   sink=RecSink(self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
+                                on_wrong=self._volume_refuses))
         # A `when: offline` backup runs ON HOLD while its primary is written: the pipeline is up, subscribed,
         # and recording into a ring in memory, writing nothing (Lesson 26).
         if self._offline_backup(cam):
@@ -578,6 +582,9 @@ class RecWorker(VmsWorker):
         # configuration — so it says which ones are done and the console removes them.
         return {**super().heartbeat_extra(),         # `fetched`: the same answer every worker gives
                 "volume": self.volume,
+                # The box's own volume — where this recorder writes when nothing is declared. What the console
+                # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
+                "archive": self.default_url,
                 # Empty unless the volume this process holds will not open. Published because the alternative
                 # is the failure that looks like health: a fresh hold, a green console and nothing being
                 # written. Whatever reads it must not count that volume as served.
@@ -723,6 +730,12 @@ class RecWorker(VmsWorker):
         try:
             store.open()
         except ArchiveError as e:
+            # A DISK on this box that cannot be formatted or mounted — a file where the directory should be, a
+            # path nobody may create — is not a link that comes back in a minute. The engine says it as an I/O or
+            # a generic error, the same words a network volume uses for a network that is down, so the kind of
+            # volume decides: on a box, wrong; at an address, away.
+            if e.kind == "away" and e.name in ("IO_ERROR", "GENERIC_ERROR") and volumes.on_a_box(vol):
+                e = ArchiveError("wrong", e.detail, e.name)
             if e.kind == "wrong":
                 return e
             if not self.archive_error:
@@ -749,6 +762,15 @@ class RecWorker(VmsWorker):
         if not self.engine_lost:
             log.warning("%s: obsd stopped answering — remounting %s on the next pass", self.name, self.volume)
         self.engine_lost = True
+
+    # The volume took the sample and REFUSED it for good — no permission, read-only, a key that no longer opens
+    # it. Only a person changes that, so the volume is handed back on the next pass (`volume_pass`, REFUSED_FOR)
+    # and its recordings go somewhere that works. Said here, on the pipeline's thread; acted on there.
+    def _volume_refuses(self, e) -> None:
+        if self.archive_failure != "wrong":
+            log.error("%s: %s refuses writes: %s", self.name, self.volume, e)
+            self.archive_error, self.archive_failure = str(e), "wrong"
+            self.archive_away_since = self.archive_away_since or self.wall()
 
     def _close_store(self, quiet: bool = False) -> None:
         if self.store is None:
