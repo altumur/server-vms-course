@@ -1,16 +1,17 @@
 """The scan worker — the fifth subsystem's worker, and the first whose work ENDS.
 
 A unit is a job: one model over one interval of one recording. The worker does
-not subscribe to anything. It plans the interval out of the recording's manifest
-(`vms/scan.py`), decodes each stretch in turn, writes what the model saw into the
-job's own bucket on the resource, and appends a line to the job's manifest for
-every stretch it finishes:
+not subscribe to anything. It plans the interval out of the recording's spans —
+the volumes' index, asked of the recorders' archive doors (`vms/scan.py`) —
+decodes each stretch in turn, writes what the model saw into the job's own bucket
+on the resource, and appends a line to the job's progress for every stretch it
+finishes:
 
     detjob/jobs/<job>          the job: cam, rec, kind, from, to, state — written by the console
     detjob/workers/<j>         the assignment, written by the detjob controller
     detjob/<j>/heartbeat       capacity, headroom, labels; per-job status: phase, done_through, events
     <archive>/detjob/<job>/e<epoch>/…events.jsonl   what the model saw
-    <archive>/detjob/<job>/manifest.jsonl           how far it got — durable, so a restart resumes
+    <archive>/detjob/<job>/progress.jsonl           how far it got — durable, so a restart resumes
 
 Three things separate it from `DetWorker`, and all three come from the work
 having both ends. It runs a BUDGET of stretches per pass rather than a frame:
@@ -37,7 +38,7 @@ from w2cplatform.variables import Variables
 
 from .config import DETJOB_SPEC
 from .detworker import FakeModel
-from .scan import ScanLog, covered, covered_by, device_recordings, plan, remaining, written_through
+from .scan import ScanLog, covered, covered_by, device_recordings, plan, recording_spans, remaining, written_through
 
 DETJOB = DETJOB_SPEC.sub
 TERMINAL = ("done", "failed")
@@ -59,9 +60,11 @@ class DetJobWorker(Worker):
 
     # A job whose interval reaches past what is RECORDED follows the recording: the footage of its last
     # minutes is written while it runs. Done is when the footage has reached the end (`written_through`),
-    # or — the recorder stopped, the camera went dark — when the end is older than this many segments:
-    # a segment lands in the manifest when it closes, so the footage of `to` is at most one segment behind.
-    FOLLOW_SEGMENTS = 2
+    # or — the recorder stopped, the camera went dark — when the end is older than this many LAGS: a reader sees a
+    # block once it is closed, and a block closes when the next one starts, so the footage of `to` is at most one
+    # block's worth of time behind (`VISIBLE_LAG_SECONDS`: the block size over the bitrate — the product's worst
+    # path from a frame to an answer).
+    FOLLOW_LAGS = 2
 
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
@@ -75,7 +78,7 @@ class DetJobWorker(Worker):
         self.labels = runtime.labels(env, "gpu")
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
         self.step = self.STEP if step is None else float(step)
-        self.segment = float(env.get("SEGMENT_SECONDS", "600"))   # the recorder's segment: how far behind the footage runs
+        self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
         self.running: dict[str, object] = {}                # job -> model, kept between passes
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
@@ -107,13 +110,16 @@ class DetJobWorker(Worker):
         except Exception:                                 # noqa: BLE001 — the holder is there and not answering
             return True
 
-    # -- one stretch, decoded from the file's head and reported only inside the window ------------------
+    # -- one stretch, decoded from its key frame and reported only inside the window -----------------------
     #
-    # `ts` starts at the SEGMENT's start and not the stretch's: a file opened at 10:00 has to be decoded
-    # from 10:00 even when the operator asked from 10:05, because there is no other way into it. So the
-    # model sees those five minutes, and `accepts` is what keeps what it saw there out of the answer.
+    # `ts` starts BEFORE the stretch, not where it does: the group of pictures holding 10:05 opens on a key frame
+    # at 10:04:5x, and there is no other way into it. So the model sees those seconds, and `accepts` is what keeps
+    # what it saw there out of the answer. How far back: a reader starts on the key frame before `t0`
+    # (`Archive.samples`); this model has no frames, and reaches back `KEY_REACH` — no further than the footage.
+    KEY_REACH = 60.0
+
     def _stretch(self, model, sc):
-        ts = sc.seg.start
+        ts = max(sc.seg.start, sc.t0 - self.KEY_REACH)
         while ts < sc.t1:
             for kind, fields in model.observe(ts):
                 if sc.accepts(ts):
@@ -135,12 +141,20 @@ class DetJobWorker(Worker):
                 self.status_by_unit[job] = self._status(job, row, row["state"])
                 continue
 
-            scans = plan(self.archive_root, row["rec"], row["from"], row["to"])
+            # What was recorded: the recording's spans, from the archive doors of the recorders holding its volumes.
+            # Nobody answering is not "nothing recorded": the job waits, and says why.
+            seen = recording_spans(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall())
             log_ = ScanLog(self.archive_root, job)
+            if seen is None:
+                self._stop(job)
+                self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
+                                                        why="no recorder's archive door answered: what was recorded is not known")
+                continue
+            scans = plan(seen, row["from"], row["to"])
             # FOLLOWING: the interval runs past what is recorded, and the end may yet be written. A scenario
             # asking for the minute after the alarm asks for footage that does not exist when it asks.
-            following = (written_through(self.archive_root, row["rec"]) < row["to"]
-                         and now < row["to"] + self.FOLLOW_SEGMENTS * self.segment)
+            following = (written_through(seen) < row["to"]
+                         and now < row["to"] + self.FOLLOW_LAGS * self.lag)
             if not scans and following and not (row["from"] < now and self.device_has(row["cam"], row["from"], min(row["to"], now))):
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "following", log=log_,
@@ -162,13 +176,13 @@ class DetJobWorker(Worker):
                                                             why="the device has these minutes and we do not — asking the recorder")
                 else:
                     self.status_by_unit[job] = self._status(job, row, "waiting",
-                                                            why="no footage for that interval on this server — the recording may be on another server")
+                                                            why="nothing recorded in that interval, in any volume")
                 continue
 
             left = remaining(scans, log_)
             if not left and following:
                 # Everything recorded so far is behind it; the rest is being written. The model stays loaded —
-                # the next segment is minutes away, not a new job — and the row says nothing new.
+                # the next block is minutes away, not a new job — and the row says nothing new.
                 self.status_by_unit[job] = self._status(job, row, "following", scans=scans, log=log_,
                                                         why="the interval reaches past what is recorded — following the recording to its end")
                 continue
