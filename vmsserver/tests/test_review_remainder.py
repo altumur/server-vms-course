@@ -266,13 +266,18 @@ def test_a_command_another_instance_began_is_not_performed_again():
     """The answer to a request is said in the heartbeat, after the device was called. A worker that died in
     between left a request that looked untouched — and the next holder pulsed the door a second time. The mark
     is written before the call; a request carrying another instance's mark is answered `unknown`."""
+    import threading
     box = Box(); con, door, w = _door(box)
     req = {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)}
     con.vars.put(SPEC.sub.request_key("r1"), req)
-    assert [d["request"] for d in w.requests()] == ["r1"]
+    gate = threading.Event()                                              # the device takes its time to answer…
+    dev = w.devices["acme/10.0.0.90"]
+    slow, dev.output = dev.output, lambda *a, **k: (gate.wait(5), slow(*a, **k))[1]
+    assert w.requests() == []                                             # …the call is in flight
     mark = json.loads(box.objects.get("vms/commands/r1"))
     assert mark["instance"] == w.instance and mark["unit"] == str(door)   # said before the device was called
-    # …and the worker dies before its heartbeat: the row is still there, and another instance holds the device
+    assert "outcome" not in mark                                          # and how it went is not known yet
+    # …and the worker dies before the device answers: the row is still there, and another instance holds the device
 
     w2 = _holder(box, relays=2)
     w2.reconcile_once()
@@ -281,6 +286,7 @@ def test_a_command_another_instance_began_is_not_performed_again():
     assert [d["request"] for d in done] == ["r1"] and done[0]["error"].startswith("unknown: an earlier instance")
     assert w.instance in done[0]["error"] and w2.devices["acme/10.0.0.90"].did == []      # the door was not touched again
     assert w2.commands["unknown"] == 1 and "command.failed" in [k for _, _, k in w2.observed]
+    gate.set()
 
     # the request is cleared by the console; its mark goes on a later pass, and not before
     box.clock.advance(31)

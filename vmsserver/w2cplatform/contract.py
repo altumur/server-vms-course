@@ -1402,7 +1402,7 @@ class Worker:
     # ordinary pass, reading what it would have read at the end of its wait. An answer that never comes costs the
     # wait it would have saved; a flood of them is one early pass per `WAKE_GAP`.
     #
-    #   wants()         what this worker watches: pairs `(subsystem, kind)`. Its subsystem's to say
+    #   wants()         what this worker watches: `(subsystem, kind, unit)`, a unit of "" for any. Its subsystem's to say
     #   poll_events()   the process asks for the long poll, before the loop: `resources()` is `{server: url}`,
     #                   the resources this worker asks anyway. `LONG_POLL=0`: nothing is asked, nothing changes
     #   wait_next()     the loop's wait between passes: `stop.wait(poll)`, cut short by an answer
@@ -1412,7 +1412,7 @@ class Worker:
     def poll_events(self, resources, env=None) -> LongPoll | None:
         if self.long_poll is None and long_poll_enabled(os.environ if env is None else env):
             self.wake = Wake()
-            self.long_poll = LongPoll(self.wake, resources, self.wants)
+            self.long_poll = LongPoll(self.wake, resources, self.wants, client=self.instance)   # one held request per instance
         return self.long_poll
 
     def wait_next(self, poll: float, stop) -> bool:
