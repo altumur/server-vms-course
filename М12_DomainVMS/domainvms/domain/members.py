@@ -32,6 +32,7 @@ import json
 import time
 
 from cluster.variables import Conflict
+from w2cplatform.rows import PARSE_ERRORS
 
 MEMBERS = "domain/members"
 
@@ -54,7 +55,6 @@ class Members:
     # dropped — and says so (`unreadable`), logged once. It is never written over by `settle` or a change: the list is
     # a record, and a record nobody can read is mended by a person, not replaced by the configuration.
     def read(self) -> dict:
-        from w2cplatform.rows import PARSE_ERRORS
         from .federation import MEMBER_OBJECTS
         items, _ = self.vars.get(MEMBERS)
         try:
@@ -127,9 +127,14 @@ class Members:
 
     def _revoked_keys(self) -> set:
         from .agent import KEYS_PATH
+        from .api import ApiError
         from .tokens import KeySet
         items, _ = self.vars.get(KEYS_PATH)
-        return KeySet.from_items(items).revoked_members if items else set()
+        try:
+            return KeySet.from_items(items).revoked_members if items else set()
+        except PARSE_ERRORS as e:                        # not known is not "none revoked": the admission waits (the review's eighth pass)
+            raise ApiError(503, f"the domain's key set does not parse ({e}): whether this key was revoked after a theft "
+                                f"cannot be checked, so nobody is admitted with a key until it is mended") from None
 
     def remove(self, name: str, by: str | None = None) -> bool:
         self._refuse_domain(name)
@@ -152,7 +157,7 @@ class Members:
             return None
         try:
             return json.loads(items["doc"]).get("root") or None
-        except (ValueError, TypeError, AttributeError):
+        except PARSE_ERRORS:
             return None                                  # a root nobody can read is no root to compare with (the seventh review)
 
     def pinned(self, name: str, domain_objects, own: str | None = None) -> dict:
@@ -165,13 +170,13 @@ class Members:
             raw = domain_objects.get(base(name) + "v/" + path)
             try:
                 got = (json.loads(raw).get("items") or {}) if raw else {}
-            except (ValueError, TypeError, AttributeError):
+            except PARSE_ERRORS:
                 got = {}                                 # that report's row does not parse: it says nothing (the seventh review)
             return got if isinstance(got, dict) else {}
         pub, keys = row(ROOT_PATH).get("pub"), row(KEYS_PATH)
         try:
             rev = json.loads(keys["doc"]).get("rev") if keys.get("doc") else None
-        except (ValueError, TypeError, AttributeError):
+        except PARSE_ERRORS:
             rev = None
         return {"root": None if not (own and pub) else ("this" if pub == own else "another"), "keys_rev": rev}
 

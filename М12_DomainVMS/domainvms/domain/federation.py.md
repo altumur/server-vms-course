@@ -29,8 +29,9 @@ Lists `objects` under `vms/`, keeps keys that end in `/heartbeat` and have exact
 - `cluster: str | None` — the owning cluster, `None` when not found.
 - `searched: list[str]` — clusters whose snapshot was read (sorted).
 - `unreachable: list[str]` — clusters that raised `Unreachable` (sorted).
+- `contested: list[str]` — clusters that each claim the camera (sorted; empty unless two do).
 
-### `complete` (property) → `not self.unreachable`.
+### `complete` (property) → `not self.unreachable and not self.contested`.
 ### `found` (property) → `self.cluster is not None`.
 ### `sentence(self) -> str`
 The four honest sentences: found and complete — `camera 7 is on w-0 (srv-9) in south`; found but incomplete — the same plus `(and south could not be asked)`; not found and complete — `camera 7 is in no cluster of the domain (2 clusters searched)`; not found and incomplete — `camera 7 was not found in the 1 cluster(s) I could reach; south unreachable — not 'not anywhere'`. `no worker yet` stands in when the row is unplaced. The console's `/api/where` and the API's 404/503 detail carry this text verbatim.
@@ -52,7 +53,7 @@ The single `Cluster` with `is_domain_holder=True`. Zero or more than one raises 
 One `snapshot()` per cluster. A cluster without a snapshot yet counts as `{"cameras": [], "ts": 0}` (reached, empty); one that raises `Unreachable` goes into the `down` list and is absent from the dict. Everything else in the class is built on this pair.
 
 ### `where(self, camera) -> Answer`
-The docstring is the identity rule of the whole module: `camera` is the *domain's* name — the `ref` the domain gave the cluster when it forwarded the create (an operator field in М10's schema, `vms.subsystem.yaml.md`) — never a cluster's own `id`, because two clusters both have an id 7. It compares `str(row["ref"]) == str(camera)` across every reached snapshot. Two clusters both claiming the ref is `RuntimeError("… a placement failure, not a tie")` (`test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie`) — the directory refuses to pick. One hit returns the row's `worker`/`server`/cluster with `searched`/`unreachable` sorted; none returns an `Answer` with `cluster=None` and the same two lists, so the caller (and `sentence()`) can tell "nowhere" from "nowhere I could reach".
+The docstring is the identity rule of the whole module: `camera` is the *domain's* name — the `ref` the domain gave the cluster when it forwarded the create (an operator field in М10's schema, `vms.subsystem.yaml.md`) — never a cluster's own `id`, because two clusters both have an id 7. It compares `str(row["ref"]) == str(camera)` across every reached snapshot. Two clusters both claiming the ref is an answer that names both (`contested`), not found and not complete, whose sentence says "a placement failure, not a tie" (`test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie`) — the directory refuses to pick. It raised `RuntimeError` until the review's eighth pass: one member naming another's camera made `/api/where` and every edit of it a 500. One hit returns the row's `worker`/`server`/cluster with `searched`/`unreachable` sorted; none returns an `Answer` with `cluster=None` and the same two lists, so the caller (and `sentence()`) can tell "nowhere" from "nowhere I could reach".
 
 ### `holdings(self) -> ({cluster: {worker: [refs]}}, list[str])`
 The domain-wide holdings from the snapshots: per cluster, per worker (an unplaced row goes under `"(unplaced)"`), the list of refs; a row without a `ref` is listed as `<cluster>/<id>` so it is still visible and still unique. The second element is the silent clusters. `test_where_across_three_clusters…` asserts `holdings["south"] == {"w-0": ["7"]}`.

@@ -42,7 +42,14 @@ from __future__ import annotations
 import json
 import time
 
+from w2cplatform.rows import PARSE_ERRORS, finite
+
 from .federation import MEMBER_OBJECTS, Cluster, Unreachable
+
+# What a member reported is read with the platform's one list of what a parse raises (`PARSE_ERRORS`), not a list of
+# this file's own: the lists here left out `KeyError` in one place, `OverflowError` (`"seq": 1e999`) and `RecursionError`
+# (a mark nested ten thousand deep) everywhere — and what they left out raised out of the member's every read (the
+# review's eighth pass).
 
 UPLINK = "domain/members"
 REPORTED = "reported"
@@ -110,7 +117,7 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
     prev = domain_objects.get(b + REPORTED)
     try:
         seq = (int(json.loads(prev).get("seq", 0)) if prev else 0) + 1
-    except (ValueError, TypeError, AttributeError):
+    except PARSE_ERRORS:
         seq = int(now * 1000)
     domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want)}).encode())   # last: the report is whole
     return written + 1
@@ -121,7 +128,7 @@ def reported_at(member: str, domain_objects) -> float | None:
     raw = domain_objects.get(base(member) + REPORTED)
     try:
         return float(json.loads(raw)["ts"]) if raw else None
-    except (ValueError, TypeError, KeyError):
+    except PARSE_ERRORS:
         return None                                                  # a mark nobody can read says no time (the seventh review)
 
 
@@ -139,8 +146,8 @@ class _Fresh:
             raise Unreachable(f"{self.member} has never reported to the domain")
         try:
             mark, now = json.loads(raw), self.wall()
-            ts = float(mark["ts"])
-        except (ValueError, TypeError, KeyError) as e:
+            ts = finite(mark["ts"])                                  # `nan` would make every time of the member `nan`
+        except PARSE_ERRORS as e:
             # Not a report the domain can read: as if the member had not reported (М10's seventh review) — it raised a
             # `ValueError` out of every read of the member, which nothing above takes for a silent member.
             raise Unreachable(f"{self.member}'s last report mark does not parse ({e}): the member writes it again "
@@ -171,7 +178,7 @@ class _CopyObjects:
                 if isinstance(d, dict) and "ts" in d:
                     d["ts"] = self.f.domain_time(d["ts"])
                     raw = json.dumps(d).encode()
-            except (ValueError, TypeError):                          # `ts: null` too: handed on as it is, the reader decides
+            except PARSE_ERRORS:                          # `ts: null` too: handed on as it is, the reader decides
                 pass
         return raw
 
@@ -201,7 +208,7 @@ class _CopyVars:
         try:
             d = json.loads(raw)
             return d["items"], d["idx"]
-        except (ValueError, TypeError, KeyError) as e:
+        except PARSE_ERRORS as e:
             # A row of the copy that does not parse is not a row that is gone: this read is as one the member did not
             # answer (М10's seventh review) — said, counted, and each reader's own "not reached" decides.
             MEMBER_OBJECTS.garbled(f"{self.f.member}/{path}", e)
@@ -245,23 +252,28 @@ class NewerRoad:
     def __init__(self, member: str, direct, bundled, lost_after: float = 45.0, wall=time.time):
         self.member, self.roads, self.lost_after, self.wall = member, {"direct": direct, "via": bundled}, lost_after, wall
         self.seen: dict[str, tuple] = {}                  # road -> (its report number, when the domain first saw it)
+        self.unread: set[str] = set()                     # roads that could not be read on the last pick
 
     def _pick(self) -> str:
-        now, marks = self.wall(), {}
+        now, marks, self.unread = self.wall(), {}, set()
         for name, road in self.roads.items():
-            raw = road.get(base(self.member) + REPORTED)
-            if not raw:
+            try:
+                raw = road.get(base(self.member) + REPORTED)
+            except Unreachable:
+                self.unread.add(name)
+                continue                               # a relay whose bundle cannot be read is no road this pass — the
+            if not raw:                                  # member's own report still is (the review's eighth pass)
                 continue
             try:
                 mark = json.loads(raw)
-                float(mark.get("ts", 0))
-            except (ValueError, TypeError, AttributeError):
+                finite(mark.get("ts", 0))
+            except PARSE_ERRORS:
                 continue                                 # a road whose mark does not parse is no road this pass (the seventh review)
             if self.seen.get(name, (None,))[0] != mark.get("seq"):
                 self.seen[name] = (mark.get("seq"), now)
             marks[name] = mark
         if not marks:
-            return "direct"
+            return "direct" if "via" not in self.unread else "via"   # neither road reads: the bundle's own words, if it is that
         alive = [n for n in marks if now - self.seen[n][1] <= self.lost_after] or \
                 [max(marks, key=lambda n: self.seen[n][1])]          # both silent: the one heard last
         return max(alive, key=lambda n: (float(marks[n].get("ts", 0)), self.seen[n][1]))
@@ -273,7 +285,7 @@ class NewerRoad:
             try:
                 mark = json.loads(raw)
                 mark["seq"] = f"{name}:{mark.get('seq')}"
-            except (ValueError, TypeError, AttributeError):
+            except PARSE_ERRORS:
                 return raw                               # as it is: `_Fresh` reads it as no report, with the words
             return json.dumps(mark).encode()
         return raw
@@ -310,15 +322,35 @@ def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=
         p = json.loads(raw)
         if not isinstance(p, dict):
             raise TypeError("a page is not an object")
-    except (ValueError, TypeError) as e:
+        for k in ("from", "to", "known_until"):
+            if p.get(k) is not None:
+                p[k] = f.domain_time(finite(p[k]))
+        events = p.get("events", [])
+        if not isinstance(events, list):
+            raise TypeError("its events are not a list")
+    except PARSE_ERRORS as e:
         MEMBER_OBJECTS.garbled(f"{member}/p/{name}", e)
         raise Unreachable(f"{member}'s page {name} does not parse ({e})") from None
-    for k in ("from", "to", "known_until"):
-        if p.get(k) is not None:
-            p[k] = f.domain_time(p[k])
-    for e in p.get("events", []):
+    MEMBER_OBJECTS.parsed(f"{member}/p/{name}")
+    # One line of the page that is not a line — no object, a time that is a word — is that line's (the review's eighth
+    # pass, minor: `{"t": "x"}` from one camera raised out of the domain's whole list of alarms). Skipped, counted once.
+    kept, bad = [], None
+    for e in events:
+        try:
+            if not isinstance(e, dict):
+                raise TypeError("a line is not an object")
+            t = finite(e["t"])
+        except PARSE_ERRORS as err:
+            bad = err
+            continue
         # `t_src` keeps the line's own time, on the member's clock: the shift to ours is taken afresh with every
         # report and moves with how late the domain read it, so a line compared by its shifted time is a new line
         # on every report (feedback AZ). Whatever remembers lines — the week of history — keys them on this.
-        e["t_src"], e["t"] = e["t"], f.domain_time(e["t"])
+        e["t_src"], e["t"] = e["t"], f.domain_time(t)
+        kept.append(e)
+    if bad is not None:
+        MEMBER_OBJECTS.garbled(f"{member}/p/{name}#line", bad)
+    else:
+        MEMBER_OBJECTS.parsed(f"{member}/p/{name}#line")
+    p["events"] = kept
     return p

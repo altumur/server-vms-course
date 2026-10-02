@@ -45,7 +45,7 @@ Offline; returns the payload. Steps, in order: split into three parts and decode
 ### `revoke(self, payload)` — records the token's `jti` with its `exp` (the caller `verify`s the token first to get the payload — `signer_service` `/revoke`).
 ### `prune(self, now)` — drops entries whose token has expired anyway.
 ### `to_items(self) -> dict` — one item `jtis = "j1:e1,j2:e2,…"` sorted, so the whole list is one Variable write.
-### `from_items(cls, items) -> RevocationList` — the inverse; tolerates `None`.
+### `from_items(cls, items, where) -> RevocationList` — the inverse; tolerates `None`. Entry by entry: an entry whose expiry is not a number, or that has none, stays revoked with no end (`inf`), counted in `TRUST_ROWS`; a row that is not an object of a string raises `TypeError`.
 ### `jtis` (property) — the set `verify` takes as `revoked`.
 
 ## Notes

@@ -19,9 +19,11 @@ the operator's topology (`domain/topology`); CENTRE and STAR only stand where th
 from __future__ import annotations
 
 import json
+import logging
 import os
 import signal
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from cluster.objectstore import open_store
@@ -33,7 +35,10 @@ from .signer import DomainRoot, Signer
 from .tokens import RevocationList, verify
 import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
 from w2cplatform.console import Deadlined, open_doors, read_body
+from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.variables import open_vars
+
+log = logging.getLogger("domain.signer")
 
 
 def main() -> None:
@@ -56,7 +61,7 @@ def main() -> None:
         if not signer.chain:
             pub.publish_keys(signer.tokens.keyset())
     ids = IdentityStore(signer, vars_, objects, publish_floor=float(os.environ.get("IDENTITY_PUBLISH_FLOOR", "60")))
-    revoked = RevocationList.from_items(vars_.get("domain/revoked")[0])
+    revoked = revocations(vars_)
     books = None
     if os.environ.get("CLUSTERS"):
         from .books import Books
@@ -114,7 +119,7 @@ def main() -> None:
 
         def do_GET(self):
             if self.path == "/healthz":
-                return self._send(200, {"ok": True})
+                return self._send(200, {"ok": True, **loop.said()})       # what is failing in its loop, said (the eighth pass)
             if self.path == "/keys":
                 return self._send(200, vars_.get(KEYS_PATH)[0] or signer.tokens.keyset().to_items())
             self._send(404, {"detail": "no such route"})
@@ -137,24 +142,44 @@ def main() -> None:
         def log_message(self, *a):
             pass
 
+    from .steps import Steps
+    loop = Steps("domain signer", 5.0, log)
     srv = open_doors(os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445")), H,
                      unix_env="SIGNER_UNIX", say=False)
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
     while not stop.is_set():
-        try:
-            ids.publish()                                     # object first, then the pointer, on a floor
-            revoked.prune(__import__("time").time())
-        except Exception:                                     # noqa: BLE001
-            pass
-        try:
-            if books is not None:
-                books.pass_once()                             # the books the agents carry home
-        except Exception:                                     # noqa: BLE001 — a bad pass leaves the last books, which is their point
-            pass
+        loop.run(*signer_steps(ids, revoked, books))
         stop.wait(5)
     srv.shutdown()
+
+
+# THE SIGNER'S LOOP, STEP BY STEP (the review's eighth pass, major). It was two `try` blocks with `except Exception: pass`
+# — the same silence the domain console's loop had and lost in the seventh pass: one torn relay bundle stopped the pass
+# over the books, and nobody saw it; and a failed publication of the identity set skipped the pruning of the
+# revocation list behind it. Now each is a step of its own (`Steps`): what raises is logged with its trace once until
+# it works again, counted, named on `/healthz`, and the steps after it run. The books are steps of their own inside
+# `Books.pass_once`, so one book that cannot be written leaves the others written.
+def signer_steps(ids, revoked, books) -> list:
+    steps = [("publishing the identity set", ids.publish),        # object first, then the pointer, on a floor
+             ("pruning the revocation list", lambda: revoked.prune(time.time()))]
+    if books is not None:
+        steps.append(("the pass over the books", books.pass_once))   # the books the agents carry home
+    return steps
+
+
+# The revocation list the signer starts from (the review's seventh pass left the signer's start open: one torn entry
+# and it did not start — nobody logged in anywhere). Entry by entry: an entry whose expiry is not a number stays
+# revoked, with no end (`RevocationList.from_items`). A row of another shape altogether is said, and the signer starts
+# with an empty list — revocations last as long as the tokens they name, and a signer that does not start lets nobody in.
+def revocations(vars_) -> RevocationList:
+    try:
+        return RevocationList.from_items(vars_.get("domain/revoked")[0])
+    except PARSE_ERRORS as e:
+        log.error("domain/revoked does not parse (%s): the signer starts with no revocations; tokens revoked before now "
+                  "are honoured again until they expire — revoke them again", e)
+        return RevocationList()
 
 
 if __name__ == "__main__":
