@@ -16,7 +16,7 @@ from domain.ingest import LINGER, CameraPusher, Ingest, IngestLiveEndpoint, Refu
 from domain.readview import ReadView
 from domain.signer import Signer
 from domain.uplink import member_copy
-from tests.conftest import Clock, make_cluster
+from tests.conftest import Clock, make_cluster, real_card
 
 SERIAL = "SN5001"
 URLS = ["srt://srv-1.south:9000", "srt://srv-2.south:9000"]
@@ -53,13 +53,32 @@ def _site(wall, down=()):
             raise Unreachable(f"{url} did not answer")
         return ingest
 
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=lambda t0, t1: [("card", t0, t1)], clock=wall)
+    pusher = CameraPusher(SERIAL, cam.flash, dial, card=_card_from(wall()), clock=wall)
 
     def domain_pass():
         view.refresh(); crossings.publish(); crossings.publish_primaries(); cam_agent.sync(); room_agent.sync()
 
     domain_pass()
     return fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass
+
+
+def _card_from(start: float, seconds: float = 600.0):
+    """The reader of a REAL card (`vms.card.CardBuffer`) holding `seconds` of recording `1-card` from `start` on, a
+    frame a second — as a pusher takes it: `card(recording, t0, t1, max_bytes)` gives the range in pieces. The card
+    is made when it is first read: most tests of a site never ask for a range."""
+    made = []
+
+    def read(recording, t0, t1, max_bytes):
+        if not made:
+            made.append(real_card(start, start + seconds))
+        return made[0].pieces(recording, t0, t1, max_bytes)
+    return read
+
+
+def _times(samples) -> list:
+    """When each sample record of an answer began, in unix seconds."""
+    from w2cplatform.obsd import unix_s
+    return [unix_s(s.begin) for s in samples]
 
 
 def test_the_camera_learns_where_to_push_from_its_book_and_the_book_does_not_churn():
@@ -134,7 +153,8 @@ def test_backfill_and_card_playback_are_ranges_the_camera_uploads_on_request():
     assert ingest.answer(SERIAL, rid) is None                          # asked, not answered
     out = pusher.pass_once([])
     assert out["uploaded"] == [(1000.0, 1600.0)] and ingest.landed(SERIAL) == [(1000.0, 1600.0)]
-    assert ingest.answer(SERIAL, rid) == [("card", 1000.0, 1600.0)]   # the answer to THAT request, by its id (AD)
+    got = ingest.answer(SERIAL, rid)                                   # the answer to THAT request, by its id (AD):
+    assert got[0].key and _times(got) == [float(t) for t in range(1000, 1600)]   # the card's own sample records
     assert pusher.pass_once([])["uploaded"] == []                      # asked once, uploaded once
 
 
@@ -172,7 +192,7 @@ def test_a_frame_carries_its_capture_time_and_the_ingest_moves_it_between_the_cl
     fast = Clock(wall() + 90)
     *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
     pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=fast,
-                          card=lambda t0, t1: [{"t": t0, "k": True}, {"t": t1 - 1}])
+                          card=_card_from(fast() - 700, 700))          # the card, written on the camera's clock
     ingest.want(SERIAL, "recorder:r-0")
     q = ingest.subscribe(SERIAL, "recorder:r-0")
     pusher.pass_once([{"t": fast(), "k": True}])
@@ -180,7 +200,8 @@ def test_a_frame_carries_its_capture_time_and_the_ingest_moves_it_between_the_cl
     assert abs(f["t"] - wall()) < 1e-6                                 # on the cluster's clock
     rid = ingest.request_range(SERIAL, wall() - 600, wall() - 300)
     assert pusher.pass_once([])["uploaded"] == [(fast() - 600, fast() - 300)]   # on the camera's clock
-    assert [round(s["t"] - wall()) for s in ingest.answer(SERIAL, rid)] == [-600, -301]   # and back
+    back = [round(t - wall()) for t in _times(ingest.answer(SERIAL, rid))]
+    assert (back[0], back[-1], len(back)) == (-600, -301, 300)        # and back
 
 
 def test_the_ring_lives_on_the_camera_the_recorder_gets_it_and_the_viewer_does_not():
@@ -230,14 +251,14 @@ def test_two_ingests_of_one_cluster_pass_the_stream_to_each_other():
     a = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[0], peers=lambda: [b])
     b = Ingest("south", URLS, keys=keys, wall=wall, name=URLS[1], peers=lambda: [a])
     by_url = {URLS[0]: a, URLS[1]: b}
-    pusher = CameraPusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=lambda t0, t1: [("card", t0, t1)])
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: by_url[url], clock=wall, card=_card_from(100.0, 100.0))
     b.want(SERIAL, "recorder:srv-2")                                   # the recorder is on the second server
     rq = b.subscribe(SERIAL, "recorder:srv-2")
     assert pusher.pass_once(["x1", "x2"])["pushed"] == 2 and pusher.state == f"pushing to {URLS[0]}"
     assert rq.drain() == ["x1", "x2"]                                  # pushed on to b as it arrived: nobody drains a queue (AJ)
     rid = b.request_range(SERIAL, 100.0, 200.0)
     pusher.pass_once([])                                               # asked at b, polled and answered at a
-    assert b.answer(SERIAL, rid) == [("card", 100.0, 200.0)]
+    assert _times(b.answer(SERIAL, rid)) == [float(t) for t in range(100, 200)]
 
 
 # -- asks between cameras: a scenario's action, fast, over the long poll ------------------------------------

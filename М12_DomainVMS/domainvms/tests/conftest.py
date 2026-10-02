@@ -25,6 +25,18 @@ class Clock:
     def advance(self, s): self.t += s
 
 
+def real_card(t0: float, t1: float, recording: str = "1-card", step: float = 1.0, size: int = 256, card=None):
+    """A REAL card — `vms.card.CardBuffer`, the camera's buffer of segment files, no engine — holding `[t0, t1)` of
+    `recording`: a frame every `step` seconds of `size` bytes, a key frame every two seconds. Its reader for a pusher
+    is `card.pieces` (the sixth review: the tests of the card ran on fakes that returned what no card returns)."""
+    from vms.card import CardBuffer
+    from vms.worker import fake_samples
+    card = card or CardBuffer(tempfile.mkdtemp(prefix="card-"))
+    for s in fake_samples(t0, t1, step=step, gop=2.0, size=size):
+        card.append(f"{recording}/e1", s)
+    return card
+
+
 class Link:
     """One switch per cluster: when down, every read raises Unreachable."""
     def __init__(self): self.up = True

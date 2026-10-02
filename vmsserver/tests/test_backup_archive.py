@@ -128,6 +128,35 @@ def test_the_backups_volume_decides_what_is_copied_not_its_summary():
         assert primary.backfill(budget=1, now=now, force=True) == []
 
 
+def test_a_backup_door_that_failed_a_range_is_not_asked_again_at_once():
+    """The sixth review found it on the camera's card — a range that failed was asked again on the very next pass —
+    and the door of a backup recorder is the neighbour on the same path: a door whose volume is away read the same
+    minute for every pass that asked. A source that failed a range is not a source for a backoff, with jitter; the
+    range is not remembered as "not on the source"; and when the door answers, the copy lands."""
+    with _OneMachine():
+        box, rec_ctl, primary, backup, _ = _site()
+        now = box.wall()
+        _footage(backup, "1-copy", ((now - 7200, now - 600),))
+        _footage(primary, "1", ((now - 7200, now - 4000), (now - 3900, now - 600)))
+        backup.serve_archive(); backup.heartbeat_once()
+        read, asked = primary.read_samples, []
+
+        def away(url, unit, t0, t1):
+            asked.append((t0, t1))
+            raise OSError("the door answered 503: its volume is away")
+        primary.read_samples = away
+        [done] = primary.backfill(budget=1, now=now, force=True)
+        assert "503" in done["error"] and len(asked) == 1 and not primary.nowhere
+        assert primary.backfill(budget=1, now=now, force=True) == [] and len(asked) == 1     # not asked again at once
+        assert primary.backup_sources({"id": "1", "cam": "1", "home": "disks"}) == []
+        primary.read_samples = read
+        box.clock.advance(2 * primary.SOURCE_BACKOFF)
+        for r in (primary, backup):
+            r.lease_pass(); r.heartbeat_once()
+        [done] = primary.backfill(budget=1, now=now, force=True)
+        assert "error" not in done and done["groups"] > 0 and primary._source_asks == {}
+
+
 def test_a_backup_fetches_from_nobody():
     """The backup exists to be copied from. A backup that backfilled — from the primary, or from the card —
     would fill ITS holes with footage the primary also has, and the two archives would stop being two

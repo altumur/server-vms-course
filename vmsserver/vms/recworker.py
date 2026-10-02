@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import logging
 import os
+import random
 import threading
 import time
 
@@ -315,6 +316,7 @@ class RecWorker(VmsWorker):
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
         self._kept_until: dict = {}                 # held backup -> its ring stays kept until then: a break over without the card
+        self._source_asks: dict[str, tuple[int, float]] = {}   # a source that failed a range -> (times in a row, not asked before)
         self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
@@ -517,7 +519,8 @@ class RecWorker(VmsWorker):
             if st["phase"] != "running" and st["id"] in self.waiting and st["enabled"]:
                 st["phase"] = "waiting"
             if st["phase"] == "running" and self.holding.get(str(st["id"])):
-                st["phase"], st["why"] = "standby", f"the primary recording is being written; the last {self.PREBUFFER:.0f} s are held in memory"
+                st["phase"], st["why"] = "standby", (f"the primary recording is being written; the last "
+                                                     f"{self.prebuffered(st['id']):.0f} s are held in memory")
                 if str(st["id"]) in self._cover_since:
                     st["why"] = (f"the stream broke {self.wall() - self._cover_since[str(st['id'])]:.0f} s ago; held in "
                                  f"memory for {self.defer_for():.0f} s before the card writes — the camera may continue it")
@@ -593,6 +596,7 @@ class RecWorker(VmsWorker):
                 self._kept_until.pop(uid, None)
                 self._keep(uid, False)
             if need and self.holding.get(uid):
+                held = self.prebuffered(uid)                 # what the ring holds as it is released: the log says THAT
                 if self.actuator("release", {"id": row["id"], "now": now}):
                     self.holding[uid] = False
                     self._cover_since.pop(uid, None)
@@ -600,7 +604,7 @@ class RecWorker(VmsWorker):
                     self._keep(uid, False)                   # released: what the kept ring held goes to the card first
                     done.append((uid, "released"))
                     log.warning("%s: the primary of %s is not being written — recording from %.0f s ago",
-                                self.name, uid, self.PREBUFFER)
+                                self.name, uid, held)
             elif not need and self.holding.get(uid) is False:
                 back = self._primary_back_since.setdefault(uid, now)
                 if now - back >= self.HOLD_AFTER and self._actuate("restart", row):
@@ -621,10 +625,18 @@ class RecWorker(VmsWorker):
     def defer_for(self) -> float:
         return max(0.0, min(self.PREBUFFER, self.CONTINUE_REACH) - self.DETECTION - self.DEFER_MARGIN)
 
+    # What a held backup holds in memory NOW, in seconds — what its status says, and what the log says a release
+    # began from. A server's pipeline holds the ring it was started with; the camera's card says what its ring really
+    # holds, which at an ordinary bitrate is less than its window (`CardRecorder.prebuffered`; the review's sixth pass).
+    def prebuffered(self, uid=None) -> float:
+        return self.PREBUFFER
+
     # A KEPT ring (feedback CB; the product's `Keeper`): while a break is held in memory the ring lets go of nothing by
     # its window, and what it must let go of past its byte ceiling goes to the card instead of being dropped. Only an
     # actuator that can keep is asked — the camera's card (`vms/card.py`, `CardActuator.keep`); a server's pipeline
-    # holds its ring in a GStreamer queue and has no such mode.
+    # holds its ring in a GStreamer queue and has no such mode. The ring is kept BY THIS RECORDING — two recordings on
+    # one card keep and let go apart — and after a release the actuator lets the ring go when its writer has taken
+    # it, not at the gate's word, which comes in the same pass as the release (the review's sixth pass).
     def _keep(self, uid, keep: bool) -> None:
         keeper = getattr(self.actuator, "keep", None)
         if keeper is not None:
@@ -1609,7 +1621,29 @@ class RecWorker(VmsWorker):
     # Lesson 16). `card_range(src, t0, t1)` is that request, set by whoever runs this recorder — the ingest; unset,
     # nobody here can ask the camera, and the card is not a source. A card that could not read the range raises
     # (`OSError`): the copy fails and is asked again on a later pass — never an empty answer taken for "not on the card".
+    # `src["recording"]` is the recording ON THE CARD the range is of, and whoever asks the camera must say it: a card
+    # holds as many recordings as its camera has rows homed on it (the review's sixth pass).
+    #
+    # ASKED AGAIN, BUT NOT AT ONCE (the review's sixth pass). A range that failed was asked again on the next pass, and
+    # the pass after: a camera that answers a second later than it is waited for read its card four times for four
+    # failures. A source that failed a range is not a source for a while — `SOURCE_BACKOFF`, doubling to
+    # `SOURCE_BACKOFF_MAX`, with jitter, so a site's cameras that failed together are not asked together — and the pass
+    # goes on to the recording's other sources and to other recordings meanwhile. One range landed forgets it. The
+    # same for a backup recorder's door, the neighbour on this path: a door whose volume is away read the same minute
+    # for every pass that asked it.
     card_range = None                                    # (src, t0, t1) -> [Sample], set by whoever runs this recorder
+    SOURCE_BACKOFF, SOURCE_BACKOFF_MAX = 5.0, 600.0
+
+    def _source_waits(self, key: str) -> bool:
+        return self.clock() < self._source_asks.get(key, (0, float("-inf")))[1]
+
+    def _source_answered(self, key: str, failed: bool) -> None:
+        if not failed:
+            self._source_asks.pop(key, None)
+            return
+        n = self._source_asks.get(key, (0, 0.0))[0] + 1
+        delay = min(self.SOURCE_BACKOFF * 2 ** n, self.SOURCE_BACKOFF_MAX) * (0.5 + random.random() * 0.5)
+        self._source_asks[key] = (n, self.clock() + delay)
 
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
@@ -1642,6 +1676,8 @@ class RecWorker(VmsWorker):
                 kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
                 if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
                     continue                  # no door to a backup, nobody to ask the camera: not a source from here
+                if self._source_waits(f"{kind}:{st['id']}"):
+                    continue                  # it failed a range just now: not asked again yet (`_source_answered`)
                 out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
                             "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
                             "coverage": st["coverage"]})
@@ -1911,9 +1947,12 @@ class RecWorker(VmsWorker):
                 return self.card_range(src, a, b)        # the camera's answer to a range of its card
             return self.read_samples(src["url"], src["recording"], a, b)
         try:
-            return self._land_pieces(unit, cam, read, t0, t1, src["key"])
+            out = self._land_pieces(unit, cam, read, t0, t1, src["key"])
         except OSError as e:
+            self._source_answered(src["key"], failed=True)
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
+        self._source_answered(src["key"], failed=False)
+        return out
 
     # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
