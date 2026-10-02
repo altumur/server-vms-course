@@ -292,16 +292,25 @@ class PeerClient:
             return r.read()
 
 
-# One server's resource: its tree, its heartbeat, its policy pass.
-# A subsystem's `free` is asked with the volume that is short, and older hooks do not take one. Both are
-# right: a subsystem whose files are all on one disk has nothing to choose, and one that spreads them does.
-# The resource asks the richer way first and falls back, rather than making every subsystem change on the
-# day the second disk arrives.
-def _ask_to_free(free, need: int, now: float, min_days: float, volume: str) -> dict:
+# A subsystem's hook is called with what it takes of the optional words, and nothing it does not: `volume` (the
+# disk that is short — older hooks do not take one) and `progressed` (the pass's pulse: a hook that works for
+# minutes says it is moving, or the pulse calls it stuck — the review's fourth pass). Both are right to leave out:
+# a subsystem whose files are all on one disk has nothing to choose, and a hook that returns in a second has
+# nothing to say. Asked by the signature and not by trying: a `TypeError` raised INSIDE a hook used to be read
+# as "it does not take a volume", and the hook was run a second time.
+def _call_hook(fn, *args, **optional):
+    import inspect
     try:
-        return free(need, now, min_days, volume=volume)
-    except TypeError:
-        return free(need, now, min_days)
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return fn(*args)
+    if any(p.kind is p.VAR_KEYWORD for p in params.values()):
+        return fn(*args, **optional)
+    return fn(*args, **{k: v for k, v in optional.items() if k in params})
+
+
+def _ask_to_free(free, need: int, now: float, min_days: float, volume: str, progressed=None) -> dict:
+    return _call_hook(free, need, now, min_days, volume=volume, progressed=progressed or (lambda: None))
 
 
 class Resource:
@@ -390,7 +399,8 @@ class Resource:
         return os.path.join(self.volumes[self.place_volume()], rel)
 
     # A subsystem installs an object with `pass_(now) -> dict` for its own part of the tree — the same "code
-    # under a name" door `spec.register_constraint` opens.
+    # under a name" door `spec.register_constraint` opens. A hook that may run long takes `progressed` too —
+    # `pass_(now, progressed)`, `free(…, progressed=…)` — and calls it as it goes (`_call_hook`).
     def register(self, subsystem: str, hook) -> None:
         self.hooks[subsystem] = hook
 
@@ -408,6 +418,7 @@ class Resource:
         out = []
         for sub, units in self.units().items():
             for unit in units:
+                self._progressed()                      # it opens every file of the unit: the mirror's walk moves too
                 for path in self.volumes.values():
                     out += [b for b in buckets_under(path, sub, unit, self.bucket_seconds) if b.end <= self.wall()]
         return out
@@ -572,12 +583,17 @@ class Resource:
         n = 0
         for peer in peers:
             have = {b.path for b in self.peers.mirrored(live[peer]["url"], self.server)}
+            self._progressed()
             for b in self.closed_buckets():
                 if b.path in have:
                     continue
                 with open(self.path_of(b.path), "rb") as f:
                     self.peers.put(live[peer]["url"], self.server, b.path, f.read())
                 n += 1
+                # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
+                # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
+                # "stuck" to the pulse after four `lost_after` — the resource silent, its recordings moved.
+                self._progressed()
         return {"enabled": True, "mirrored": n, "peers": peers}
 
     # The reverse, run by the owner: for every live peer whose heartbeat lists me under `mirrors`, pull each
@@ -599,7 +615,8 @@ class Resource:
                 with open(dest + ".tmp", "wb") as f:
                     f.write(self.peers.get(hb["url"], self.server, path))
                 os.replace(dest + ".tmp", dest); pulled += 1
-        hooks = {sub: h.pass_(self.wall()) for sub, h in self.hooks.items()} if pulled else {}
+        hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
+                 for sub, h in self.hooks.items()} if pulled else {}
         return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
 
     # -- the watermark -------------------------------------------------------------------
@@ -638,6 +655,7 @@ class Resource:
             return {"space": "off"}
         out, worst, over = {}, 0.0, []
         for name in self.volumes:
+            self._progressed()                               # a volume measured is a step (the review's fourth pass)
             sp = self.space(name)
             worst = max(worst, sp["full"])
             if not sp["total"] or sp["used"] <= sp["total"] * knob["high"]:
@@ -647,7 +665,8 @@ class Resource:
                 free = getattr(h, "free", None)
                 if free is None:
                     continue                                 # a subsystem that keeps only buckets: `retain` is its whole policy
-                rep = _ask_to_free(free, need - freed, self.wall(), knob["min_days"], name)
+                rep = _ask_to_free(free, need - freed, self.wall(), knob["min_days"], name, self._progressed)
+                self._progressed()                           # …and so is each subsystem's answer
                 freed += int(rep.get("freed", 0))
                 out.update({f"{sub}.{k}": v for k, v in rep.items()} if len(self.volumes) == 1
                            else {f"{sub}.{name}.{k}": v for k, v in rep.items()})
@@ -683,6 +702,11 @@ class Resource:
     # now. It measured by the WALL clock, which NTP steps: by a monotonic one (`clock`). And it stopped at four `lost_after`
     # of TOTAL time, which a year of archive legitimately takes: it stops at four `lost_after` with no progress —
     # the walk, the retention and each part say they moved (`_progressed`) — which is what "stuck" means.
+    #
+    # …and every part says it, not only the walk and the retention (the review's fourth pass): the mirror marks
+    # each bucket a peer took, `relieve` each volume and each subsystem's answer, and a subsystem's hook is handed
+    # `progressed` to call as it goes. A part that moves the whole time keeps the pulse; one that hangs — a peer
+    # that takes nothing, a disk that does not answer — stops it, as before.
     PULSE_LIMIT = 4
 
     def pass_(self) -> dict:
@@ -730,7 +754,8 @@ class Resource:
             return usage
         try:
             for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
-                part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
+                part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in
+                                                _call_hook(h.pass_, self.wall(), progressed=self._progressed).items()})
             part("retain", self.retain, "removed")
             part("usage", measure, "usage")
             part("relieve", self.relieve)

@@ -174,6 +174,45 @@ def test_deleting_the_camera_does_not_erase_the_events_somebody_marked():
     assert len(left) == 1 and left[0].start <= t0 + 10 < left[0].end and buckets_under(box.archive, "vms", "8", 600) == []
 
 
+def test_a_keep_holds_every_subsystems_events_about_its_camera():
+    """The review's fourth pass (B10 of the first review). Only the `vms` and `rec` trees were held: the detector's
+    alarm at the gate, a scan's hits, a survey's, the scenario that fired — inside the keep, and deleted by their own
+    days. Each unit's ROW says which camera it is about: a detector, a watch and a scan by `cam` (a deleted row too),
+    a scenario by the units its triggers and actions name. A unit whose camera cannot be told is held by any keep;
+    another camera's units go."""
+    import json as _json
+    from w2cplatform.events import ALARM, EventLog, subsystems_under
+    from vms.resource import vms_resource
+    box = Box()
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    t0 = box.wall() - 5 * DAY
+    box.vars.put("det/units/7-motion", {"name": "7-motion", "cam": "7", "kind": "motion", "deleted": "true"})  # deleted: {days: 0}
+    box.vars.put("det/units/8-motion", {"name": "8-motion", "cam": "8", "kind": "motion"})
+    box.vars.put("detjob/jobs/7-lpr-1", {"name": "7-lpr-1", "cam": "7", "rec": "7", "kind": "lpr", "from": t0, "to": t0 + 60})
+    box.vars.put("survey/watches/7-lpr", {"name": "7-lpr", "cam": "7", "kind": "lpr"})
+    box.vars.put("rec/recordings/7-cloud", {"name": "7-cloud", "cam": "7"})        # made after the keep: not in its names
+    box.vars.put("auto/scenarios/gate", {"name": "gate", "when": _json.dumps([{"sub": "det", "kind": "motion", "unit": "7-motion"}]),
+                                         "then": _json.dumps([{"sub": "vms", "action": "output", "unit": "12", "port": 1}])})
+    box.vars.put("auto/scenarios/yard", {"name": "yard", "when": _json.dumps([{"sub": "vms", "kind": "motion", "unit": "8"}]),
+                                         "then": _json.dumps([{"sub": "rec", "action": "record", "cam": "8", "minutes": 1}])})
+    box.vars.put("auto/scenarios/anywhere", {"name": "anywhere", "when": _json.dumps([{"sub": "vms", "kind": "silent"}]),
+                                             "then": "[]"})                    # any camera: cannot be told
+    units = [("det", "7-motion"), ("det", "8-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"),
+             ("auto", "gate"), ("auto", "yard"), ("auto", "anywhere"), ("det", "orphan")]
+    for sub, unit in units:
+        EventLog(box.archive, sub, unit, 1).append(t0 + 10, "seen", ALARM)            # the alarms' tree…
+        EventLog(box.archive, sub, unit, 1).append(t0 + 10, "stats")                  # …and the observations'
+        box.vars.put(f"{sub}/retention/{unit}", {"days": 0}); box.vars.put(f"{sub}/alarms_retention/{unit}", {"days": 0})
+    keeps.write(box.vars, {"cam": "7", "from": t0, "to": t0 + 60}, ["7"], "anna", box.wall())
+
+    res.retain()
+    left = {(sub, u) for sub, us in subsystems_under(box.archive).items() for u in us if sub != "audit"   # the pass's own journal
+            if any(f.endswith(".events.jsonl") for _, _, fs in __import__("os").walk(f"{box.archive}/{sub}/{u}") for f in fs)}
+    held = {("det", "7-motion"), ("detjob", "7-lpr-1"), ("survey", "7-lpr"), ("rec", "7-cloud"), ("auto", "gate"),
+            ("auto", "anywhere"), ("det", "orphan")}
+    assert left == held | {(s + ".alarms", u) for s, u in held}                 # camera 8's, in both trees, are gone
+
+
 def test_the_console_sets_a_keep_lists_it_and_lifts_it():
     box = Box()
     rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)

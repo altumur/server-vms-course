@@ -303,3 +303,44 @@ def test_one_watch_failing_is_that_watchs_trouble_and_not_the_passs():
     st = w2.status_by_unit["7-lpr"]
     assert st["phase"] == "waiting" and "500" in st["why"]
     assert Frontier(box.archive, "7-lpr").read() == m(10)            # the end of what WAS watched
+
+
+def test_a_model_that_dies_half_way_through_a_stretch_leaves_the_frontier_where_it_died():
+    """The review's fourth pass (minor). The stretch was put in `watched` before the model looked at it, so a model
+    that failed half way moved the frontier to the stretch's END: the rest of it was never looked at, and nothing said
+    so. A stretch is watched once the model has looked at all of it; a failure leaves the frontier past the last moment
+    the model finished with — its events written once — and the next pass watches the rest."""
+    box = Box(); spans = _holder(box); _watch(box, start="earliest")
+    w = _worker(box, spans); w.SECONDS_PER_PASS = m(100) - m(0)
+
+    class DiesAtThree(Every):
+        def observe(self, now):
+            if now >= m(3):
+                raise RuntimeError("the model ran out of memory")
+            return super().observe(now)
+    w.models = {"lpr": DiesAtThree}
+    w.reconcile_once()
+    assert w.status_by_unit["7-lpr"]["phase"] == "failed"
+    assert Frontier(box.archive, "7-lpr").read() == m(3)                # not m(10): minutes 3–10 were never looked at
+    w.models = {"lpr": Every}
+    w.reconcile_once()
+    assert w.reads[-2:] == [(m(3), m(10)), (m(50), m(60))]              # the rest of the stretch, then the next
+    root = os.path.join(box.archive, "survey", "7-lpr")
+    ts = sorted(l["t"] for d, _, fs in os.walk(root) for f in fs if f.endswith(".events.jsonl")
+                for l in read_bucket(os.path.join(d, f)))
+    assert ts[:10] == [m(i) for i in range(10)] and len(ts) == len(set(ts))   # every minute once: none lost, none twice
+
+
+def test_one_watchs_garbled_epoch_row_is_that_watchs_trouble_and_not_the_passs():
+    """The review's fourth pass (minor). `take_epoch` stood outside the unit's `try`: a garbled `survey/epoch/<unit>`
+    raised out of the pass and every watch after it was not looked at. That watch says `failed` and why."""
+    box = Box(); spans = _holder(box)
+    ctl = _watch(box, name="7-lpr", start="earliest")
+    ctl.create({"name": "7-motion", "cam": "7", "kind": "motion", "start": "earliest"})
+    box.vars.put(SURVEY_SPEC.sub.assignment("s-1"), {"units": "7-lpr,7-motion", "rev": 2}, cas=box.vars.get(SURVEY_SPEC.sub.assignment("s-1"))[1])
+    box.vars.put("survey/epoch/7-lpr", {"epoch": "one"})                # a hand edit; `7-lpr` comes first in the pass
+    w = _worker(box, spans); w.SECONDS_PER_PASS = m(100) - m(0); w.models = {"lpr": Every, "motion": Every}
+    w.reconcile_once()
+    st = w.status_by_unit["7-lpr"]
+    assert st["phase"] == "failed" and "epoch could not be taken" in st["why"]
+    assert w.status_by_unit["7-motion"]["phase"] == "running" and w.events_written > 0

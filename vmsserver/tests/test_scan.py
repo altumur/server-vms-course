@@ -146,7 +146,9 @@ def test_minutes_scanned_under_one_epoch_are_not_scanned_again_under_the_epoch_t
 
 def test_the_read_says_which_doors_were_silent_and_which_volumes_nobody_read():
     """One door answering is a partial answer, and says so: the recorder whose door was asked and did not answer,
-    the declared volumes no answering door serves. A disabled volume is nobody's and is not waited for."""
+    and the volumes that held this recording and nobody serves now — the last recorder of each went silent naming it
+    (the review's fourth pass: not every declared volume). A volume of another recording, or a disabled one, is not
+    waited for."""
     from w2cplatform.contract import Heartbeat
     from vms import volumes
     from vms.config import REC_SPEC
@@ -155,16 +157,20 @@ def test_the_read_says_which_doors_were_silent_and_which_volumes_nobody_read():
     st = store()
     footage(st, "7", 1, m(0), m(10), step=10)
     srv = door(box, st)
-    box.objects.put(REC_SPEC.sub.heartbeat_key("r-gone"), Heartbeat("r-gone", box.wall() - 3600, [], {
-        "archive_url": "http://127.0.0.1:9", "volume": "old"}).to_bytes())    # silent for an hour: not asked
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-gone"), Heartbeat("r-gone", box.wall() - 3600, [{"id": "9"}], {
+        "archive_url": "http://127.0.0.1:9", "volume": "old"}).to_bytes())    # silent for an hour: not asked, and not 7's
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-warm"), Heartbeat("r-warm", box.wall() - 3600, [{"id": "7"}], {
+        "archive_url": "http://127.0.0.1:9", "volume": "warm"}).to_bytes())   # silent, and it was recording 7
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-off"), Heartbeat("r-off", box.wall() - 3600, [{"id": "7"}], {
+        "archive_url": "http://127.0.0.1:9", "volume": "off"}).to_bytes())    # …on a volume since disabled
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-mute"), Heartbeat("r-mute", box.wall(), [], {
         "archive_url": "http://127.0.0.1:9", "volume": "b"}).to_bytes())      # alive, its door does not answer
-    for name, on in ((st.name, True), ("b", True), ("off", False)):
+    for name, on in ((st.name, True), ("b", True), ("never", True), ("off", False)):   # `never`: declared, nobody's ever
         volumes.write(box.vars, {"name": name, "kind": "local", "server": "srv-1", "url": "/x/" + name,
                                  "quota_bytes": 1 << 30, "enabled": "true" if on else "false"})
     try:
         got = recording_read(box.objects, "7", m(0), m(30), box.wall(), vars_=box.vars)
-        assert got.answered and got.partial and got.silent == ["r-mute"] and got.unread == ["b"]
+        assert got.answered and got.partial and got.silent == ["r-mute"] and got.unread == ["warm"]
         assert [(s.epoch, s.start, s.end) for s in got.spans] == [(1, m(0), m(10))]
     finally:
         srv.shutdown()

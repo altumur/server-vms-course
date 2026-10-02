@@ -41,6 +41,12 @@ POLL_PATH = "domain/poll"
 # The emergency account's password HASH for one cluster (Lesson 4, step 7): set at the domain, carried home, checked
 # at the cluster's console with the domain away — which is the only time it is for.
 BREAK_GLASS_PATH = "domain/break_glass"
+# That this cluster IS a member — written on every pass that leaves a key set here, so the cluster's console can tell
+# "the keys were lost" from "there never were any" (`w2cplatform/access.py`, `DOMAIN_MARKS`). The other marks are each
+# conditional — `domain/root` only with a root-signed key set, grants and the rest only when the domain has some for
+# this cluster — and a member with none of them looked, keys gone, like a cluster that never joined: open (the review's
+# fourth pass). This one has no condition but the keys themselves.
+MEMBER_PATH = "domain/member"
 PER_CLUSTER = (SOURCES_PATH, PRIMARIES_PATH, UPSTREAM_PATH, ASKS_PATH, POLL_PATH, LDEVID_PATH, BREAK_GLASS_PATH)
 
 
@@ -249,6 +255,8 @@ class DomainAgent:
         # and, on the members chosen to keep it, the backup of the domain's state, carried like the settings.
         from .term import BACKUP, carry_holder
         keyset = ClusterTrust(self.cluster_vars).keyset()
+        if keyset is not None:
+            self._carry(MEMBER_PATH, {"cluster": self.cluster})   # written when missing — after a rollback too — and only then
         try:
             self.holder = carry_holder(self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet"
             if self.domain_objects is not None and self.cluster_objects is not None:

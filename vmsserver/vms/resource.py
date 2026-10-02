@@ -39,19 +39,89 @@ def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, pe
 
 # Which event buckets a keep holds (`vms/keeps.py`), for the platform's retention pass. The camera's events
 # are in `vms/<cam>/`; whatever a recorder wrote about a recording is in `rec/<name>/`. Read once a pass.
+#
+# …and every other subsystem's events about the camera too (the review's fourth pass; B10 of the first review). Only
+# the `vms` and `rec` trees were held: the detector's alarm at the gate, the scan's hits, the survey's, the scenario
+# that opened the door — all inside the keep's interval, all deleted by their own days, and the evidence was the
+# footage with nothing saying what happened in it. A unit of those subsystems is not named after a camera, so its
+# ROW says which: a detector, a watch and a scan name their `cam`; a scenario names units in its triggers and its
+# actions, each of which is a camera or names one. A deleted row is read too — `{days: 0}` after a delete is exactly
+# when a keep matters — and a unit whose camera cannot be told (no row, a trigger on any camera, JSON that does not
+# parse) is held by EVERY keep: not knowing whose it is is not "nobody's".
+ANY = None
+CAM_FIELD = (("det", "units"), ("survey", "watches"), ("detjob", "jobs"))
+
+
+def _rows(vars_, sub: str, table: str) -> dict[str, dict]:
+    prefix = f"{sub}/{table}/"
+    out = {}
+    for path in vars_.list(prefix):
+        items, _ = vars_.get(path)
+        if items:
+            out[path[len(prefix):]] = items          # deleted rows included: their `cam` is what a keep needs
+    return out
+
+
+def cameras_of_units(vars_) -> dict[tuple[str, str], set | None]:
+    """`{(subsystem, unit): {cam, …} | ANY}` for the subsystems whose units are about cameras without being named after one."""
+    import json
+    out: dict[tuple[str, str], set | None] = {}
+    by_sub = {sub: {u: str(it.get("cam", "")) for u, it in _rows(vars_, sub, table).items()} for sub, table in CAM_FIELD}
+    for sub, units in by_sub.items():
+        for unit, cam in units.items():
+            out[(sub, unit)] = {cam} if cam else ANY
+    recs = {u: str(it.get("cam") or u) for u, it in _rows(vars_, "rec", "recordings").items()}
+
+    def cams_of(sub: str, unit: str) -> set | None:
+        if not unit:
+            return ANY                                # a trigger on any camera's events
+        if sub == "vms":
+            return {unit}
+        if sub == "det":
+            return {by_sub["det"][unit]} if by_sub["det"].get(unit) else ANY
+        if sub == "rec":
+            return {recs.get(unit, unit)}
+        return ANY
+
+    for unit, it in _rows(vars_, "auto", "scenarios").items():
+        try:
+            when = json.loads(it.get("when") or "[]")
+            then = json.loads(it.get("then") or "[]")
+            named: set | None = set()
+            for t in when:
+                c = cams_of(str(t.get("sub", "")), str(t.get("unit") or ""))
+                named = ANY if c is ANY or named is ANY else named | c
+            for a in then:                            # `vms.output`/`vms.preset` name a camera as `unit`, the others as `cam`
+                c = cams_of("vms", str(a.get("cam") or a.get("unit") or ""))
+                named = ANY if c is ANY or named is ANY else named | c
+            out[("auto", unit)] = named if named else ANY
+        except (ValueError, TypeError, AttributeError):
+            out[("auto", unit)] = ANY
+    return out
+
+
 def kept_buckets(vars_):
     from . import keeps
 
     def once():
         all_ = keeps.declared(vars_)
+        if not all_:
+            return lambda sub, unit, start, end: False
+        cams = cameras_of_units(vars_)
+        recs = {u: str(it.get("cam") or u) for u, it in _rows(vars_, "rec", "recordings").items()}
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
             from w2cplatform.events import tree_owner
             sub = tree_owner(sub)[0]                 # a keep holds the alarms' tree as it holds the other
             if sub == "vms":
                 return keeps.held(keeps.spans_of_cam(all_, str(unit)), start, end)
-            if sub == "rec":
-                return keeps.held(keeps.spans_of(all_, str(unit)), start, end)
+            if sub == "rec":                         # named in the keep, or a recording of its camera made since
+                return keeps.held(keeps.spans_of(all_, str(unit), recs.get(str(unit), "")), start, end)
+            if sub in ("det", "survey", "detjob", "auto"):
+                of = cams.get((sub, str(unit)), ANY)
+                spans = [(k.since, k.until) for k in all_] if of is ANY else \
+                    [sp for cam in of for sp in keeps.spans_of_cam(all_, cam)]
+                return keeps.held(spans, start, end)
             return False
         return kept
     return once

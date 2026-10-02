@@ -694,6 +694,7 @@ class VmsWorker(Worker):
             # The store was raised past this build while it ran (the review's second pass, m4): the rows it
             # would read next are not what it thinks they are. Fenced, as a build older than the store does
             # not start — and it stays fenced (`rejoin` checks the same thing) until somebody restarts it new.
+            self.schema_seen = None                   # what it read is not the store's layout any more (`rejoin`)
             self.fence(str(e))
             return list(self.epochs)
         if not mine:
@@ -729,8 +730,13 @@ class VmsWorker(Worker):
     def rejoin(self) -> str | None:
         if self.recording_allowed:
             return self.name
+        # A store raised past this build: nobody to rejoin as (the review's second pass, m4). With the version it last
+        # read whole (the review's fourth pass): `rejoin` asked bare, and a row that does not parse is "never read" to a
+        # bare check — a worker fenced for any other reason never came back while one field was garbled, though
+        # `renew_slot` keeps running on the same row with what it read. A worker fenced FOR the schema has no version
+        # to keep (`lease_pass` forgets it): a garbled row is not proof the store came back to its layout.
         try:
-            check_schema(self.vars)                   # a store raised past this build: nobody to rejoin as (the review's second pass, m4)
+            self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))
         except SchemaTooNew:
             return None
         except OSError:
