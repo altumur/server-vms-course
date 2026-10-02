@@ -1878,8 +1878,8 @@ class SpecController(Controller):
             if not raw:
                 continue
             try:
-                ts = float(json.loads(raw).get("ts", 0))
-            except (ValueError, TypeError, AttributeError):
+                ts = finite(json.loads(raw).get("ts", 0))   # `nan` passes every `min` and read as fresh (the review's eighth pass)
+            except PARSE_ERRORS:
                 ts = 0.0                              # a shard that does not parse has no age: the oldest there can be
             oldest = ts if oldest is None else min(oldest, ts)
         if oldest is None:

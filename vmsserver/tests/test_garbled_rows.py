@@ -173,6 +173,9 @@ def test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh()
     assert ctl.snapshot_age() == box.wall()
     ctl.publish_snapshot()
     assert ctl.snapshot_age() == 0                                                          # the next publish mends it
+    for ts in ("nan", "inf", "-inf"):                                                     # a number that is no time is no age either
+        box.objects.put("vms/snapshot/w-1", json.dumps({"ts": ts, "cameras": []}).encode())
+        assert ctl.snapshot_age() == box.wall(), ts
 
 
 # -- the sweep's list ------------------------------------------------------------------------------------------
