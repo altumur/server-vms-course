@@ -42,6 +42,8 @@ from __future__ import annotations
 import json
 import threading
 
+from w2cplatform.rows import PARSE_ERRORS
+
 from .federation import Unreachable
 from .tokens import kid_of
 from .uplink import REPORTED, UPLINK, base
@@ -52,8 +54,14 @@ from .agent import UPSTREAM_PATH       # in a recording cluster: where its strea
 # -- the domain's side: the book of a recording cluster's upstream ----------------------------------------
 # For every camera a cluster records, the centre's ingest and a token to push to it — or, for a star relay,
 # a token to PULL from it. Tokens are the domain signer's, re-issued past their half-life (Lesson 16).
+#
+# The centre's announcement and the books' own entries are read past what does not parse (the eighth review's sibling,
+# left here by the М12 pass): a torn announcement keeps the road each entry already names — tokens are still re-issued
+# on it — and a torn entry is issued anew. Either raised out of the whole pass, and a day later every relay's token to
+# push up had run out.
 def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float = 86400.0) -> dict[str, dict]:
-    from .ingest import INGEST, audience
+    from .federation import published
+    from .ingest import BOOKS, INGEST, _an_object, _urls, audience
     now, books = crossings.wall(), {}
     c = crossings.view.fed.clusters.get(centre)
     raw = None
@@ -64,7 +72,8 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
             raw = None
     if raw is None or crossings.issuer is None:
         return {}
-    urls = json.loads(raw)["urls"]
+    said = published(centre, INGEST, raw, _urls)
+    urls = said["urls"] if said is not None else None             # torn: each entry keeps the road it names
     # Every camera a relay records — and every camera that only POLLS a relay (nobody records it, and it
     # reaches only that relay, Lesson 16 step 8): the centre must have a road down to it too, for asks, and for
     # a viewer in the centre, whose want the relay's forwarder carries down like any other.
@@ -74,12 +83,20 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
             continue
         mode = "pull" if on in star else "push"
         have, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
-        old = json.loads((have or {}).get(ref, "{}"))
-        if old.get("urls") == urls and old.get("mode") == mode and float(old.get("until", 0)) - now > lifetime / 2 \
-                and kid_of(old.get("token", "")) == crossings.issuer.kid:
+        raw_old = (have or {}).get(ref)
+        old = BOOKS.read(f"{UPSTREAM_PATH}/{on}/{ref}", lambda: _an_object(json.loads(raw_old)), {}) if raw_old else {}
+        road = urls if urls is not None else old.get("urls")
+        if not isinstance(road, list):
+            continue                                                  # no road known to the centre: none to give
+        try:
+            fresh = float(old.get("until", 0)) - now > lifetime / 2
+        except PARSE_ERRORS:
+            fresh = False
+        if old.get("urls") == road and old.get("mode") == mode and fresh \
+                and kid_of(str(old.get("token", ""))) == crossings.issuer.kid:
             entry = old
         else:
-            entry = {"urls": urls, "mode": mode, "until": now + lifetime,
+            entry = {"urls": road, "mode": mode, "until": now + lifetime,
                      "token": crossings.issuer.issue(on, lifetime, now=now, aud=audience(centre), ref=ref, kind="stream")}
         books.setdefault(on, {})[ref] = json.dumps(entry, sort_keys=True)
     for on, book in books.items():
@@ -91,6 +108,18 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
 
 
 # -- the relay's side: the forwarder ------------------------------------------------------------------------
+# WHAT THE FORWARDER HOLDS FOR THE CENTRE, STATED (the eighth review, a minor: "does not lose frames when a push fails"
+# held for about a second and a half — thirty frames in its subscription, fifty kept — and what it dropped was counted
+# where nobody looked). A push the centre did not take is pushed again: up to `FORWARD_HOLD` seconds of the stream, never
+# more than `FORWARD_BYTES`, cut clean to a key frame; and what waits between two pushes is up to `FORWARD_FRAMES` — the
+# same seconds at thirty frames a second. Past them it is dropped, counted per camera (`dropped`, `queue_dropped`) and
+# said in the camera's state and in `stats`. Longer than that the centre's copy is backfill's, out of this relay's
+# archive (Lesson 17, "ranges").
+FORWARD_HOLD = 10.0
+FORWARD_BYTES = 16 << 20
+FORWARD_FRAMES = 300
+
+
 # One pass. For every camera in this cluster's upstream book: PUSH mode — poll the centre's ingest; if it wants
 # the stream, want it here too (that is the want travelling down to the camera) and push up what arrived;
 # upload any range the centre asked for, out of this cluster's archive; carry down any ask left there for the camera
@@ -114,20 +143,45 @@ class Forwarder:
         self.carried: dict[tuple, tuple] = {}                    # asks carried DOWN: (ref, id) -> (centre, token, deadline)
         # THE CAMERA'S RULE, ONE LEVEL UP (the seventh review: state moved before the push was taken). Frames drained
         # from this cluster's ingest and not taken by the centre — its push failed — are pushed again first, not lost
-        # with the failure (`unsent`, a stream: past `PEER_BUFFER` frames it is cut clean to a keyframe, counted in
-        # `dropped`); and a pull remembers the last batch it got (`pulled`), so the centre hands a batch whose answer
-        # was lost on its way down over again (`Ingest.pull`).
+        # with the failure (`unsent`, a stream: past `FORWARD_HOLD` it is cut clean to a keyframe, counted in
+        # `dropped`); and a pull remembers the mark of the last batch it got (`pulled`), so the centre hands a batch whose
+        # answer was lost on its way down over again (`Ingest.pull`).
         self.unsent: dict[str, list] = {}
         self.dropped: dict[str, int] = {}
-        self.pulled: dict[str, int] = {}
+        self.pulled: dict[str, tuple] = {}
+        self._read_last: dict[tuple[str, str], dict] = {}        # (book, entry) -> the entry as read last (`_entries`)
         self._lock = threading.RLock()
         self.woken = threading.Event()                           # set by the local ingest: something changed here
         self.pending = threading.Event()                         # set when an ask went up: an outcome to wait for
         local.listen(self.woken.set)
 
+    # The books the relay's agent carried, read entry by entry (the eighth review's sibling): an entry that does not
+    # parse is the one read last — or none, when there never was one — counted (`ingest.BOOKS`); it raised out of the
+    # whole pass, every camera of the relay with it.
+    def _entries(self, path: str, keep, check) -> dict[str, dict]:
+        from .ingest import BOOKS
+        items, _ = self.vars.get(path)
+        out = {}
+        for k, raw in (items or {}).items():
+            if not keep(k):
+                continue
+            e = BOOKS.read(f"{path}/{k}", lambda: check(json.loads(raw)))
+            if e is not None:
+                self._read_last[(path, k)] = e
+            e = self._read_last.get((path, k)) if e is None else e
+            if e is not None:
+                out[k] = e
+        return out
+
     def book(self) -> dict[str, dict]:
-        items, _ = self.vars.get(UPSTREAM_PATH)
-        return {ref: json.loads(raw) for ref, raw in (items or {}).items()}
+        from .ingest import _a_road, _an_object
+
+        def entry(e):
+            _a_road(_an_object(e))
+            if e.get("mode") not in ("push", "pull"):
+                raise ValueError(f"its mode is {e.get('mode')!r}")
+            return e
+        return self._entries(UPSTREAM_PATH, lambda k: True, entry)
 
     def _centre(self, e: dict):
         for url in e["urls"]:
@@ -157,7 +211,7 @@ class Forwarder:
         self.versions[ref], self.forwarding[ref] = work["version"], work["push"]
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
-            q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up))
+            q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up, maxsize=FORWARD_FRAMES))
             frames = self.unsent.pop(ref, []) + q.drain()       # what the centre did not take last time, first
             if frames:
                 try:
@@ -165,7 +219,8 @@ class Forwarder:
                 except Unreachable:
                     self.unsent[ref] = self._kept(ref, frames)
                     raise
-            said = f"forwarding {len(frames)} frame(s) up"
+            lost = self.dropped.get(ref, 0) + getattr(q, "dropped", 0)
+            said = f"forwarding {len(frames)} frame(s) up" + (f"; {lost} dropped so far, past what it holds" if lost else "")
         else:
             self.local.release(ref, self.up)
             self.unsent.pop(ref, None)                          # nobody up there wants it: nothing to send again
@@ -206,9 +261,16 @@ class Forwarder:
 
     def asks_book(self) -> dict[str, dict]:
         """What the domain let this relay carry up: {"<target>|<asker>": {"roads": [...]}}, one token per pair."""
-        from .ingest import ASKS_PATH
-        items, _ = self.vars.get(ASKS_PATH)
-        return {k: json.loads(v) for k, v in (items or {}).items() if "|" in k}
+        from .ingest import ASKS_PATH, _a_road, _an_object
+
+        def entry(e):
+            roads = _an_object(e).get("roads")
+            if not isinstance(roads, list):
+                raise TypeError("its roads are not a list")
+            for road in roads:
+                _a_road(road)
+            return e
+        return self._entries(ASKS_PATH, lambda k: "|" in k, entry)
 
     def lift(self) -> dict[str, str]:
         """One round of the asks' work, run whenever the local ingest says something changed: new asks up to
@@ -323,24 +385,37 @@ class Forwarder:
         return started
 
     def _kept(self, ref: str, frames: list) -> list:
-        """What is kept to push again: a stream, so at most `PEER_BUFFER` frames, from a keyframe — the rest dropped,
-        counted, as a peer that falls behind is cut (`PeerLink`)."""
-        from .ingest import PEER_BUFFER, _is_key
-        if len(frames) <= PEER_BUFFER:
-            return frames
-        kept = frames[-PEER_BUFFER:]
-        while kept and not _is_key(kept[0]):
-            kept.pop(0)
+        """What is kept to push again: a stream, so the last `FORWARD_HOLD` seconds of it, at most `FORWARD_BYTES` and
+        `FORWARD_FRAMES`, from a keyframe — the rest dropped, counted, as a peer that falls behind is cut (`PeerLink`)."""
+        from .ingest import _is_key, _t, _weight
+        newest = next((_t(f) for f in reversed(frames) if _t(f) is not None), None)
+        i, size = len(frames), 0
+        while i > 0 and len(frames) - i < FORWARD_FRAMES and size + _weight(frames[i - 1]) <= FORWARD_BYTES and (
+                newest is None or _t(frames[i - 1]) is None or newest - _t(frames[i - 1]) <= FORWARD_HOLD):
+            i -= 1
+            size += _weight(frames[i])
+        kept = frames[i:]
+        if i:
+            while kept and not _is_key(kept[0]):
+                kept.pop(0)
         self.dropped[ref] = self.dropped.get(ref, 0) + len(frames) - len(kept)
         return kept
+
+    def stats(self) -> dict[str, dict]:
+        """Per camera: its state, and what was dropped past what the forwarder holds — kept to push again
+        (`dropped`), and waiting between two pushes (`queue_dropped`)."""
+        return {ref: {"state": self.state.get(ref, ""), "dropped": self.dropped.get(ref, 0),
+                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0)}
+                for ref in sorted(set(self.state) | set(self.queues))}
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):
             return "nobody here wants it"
-        # calling in; the centre wants it from the camera — and says which batch it last GOT: a pull whose answer was
-        # lost on the way down is answered with that batch again, first
-        frames = ing.pull(e["token"], ref, self.up, have=self.pulled.get(ref, 0))
-        self.pulled[ref] = getattr(frames, "seq", 0)
+        # calling in; the centre wants it from the camera — and says which batch it last GOT, by the batch's mark
+        # `(boot, n)`: a pull whose answer was lost on the way down is answered with that batch again, first, and a
+        # mark from before the centre restarted is never taken for one of after (the eighth review, blocker 2)
+        frames = ing.pull(e["token"], ref, self.up, have=self.pulled.get(ref, ()))
+        self.pulled[ref] = getattr(frames, "have", ())
         self.local.inject(ref, frames)
         return f"pulled {len(frames)} frame(s) down"
 
