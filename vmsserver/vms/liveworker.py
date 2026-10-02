@@ -324,6 +324,10 @@ class LiveWorker(Worker):
         gw = self
 
         class H(SendMixin, BaseHTTPRequestHandler):
+            # A socket that says nothing is let go, as at the console (the review's fourth pass): an offer is one
+            # request and one answer, and a client that sends half of it must not hold a gateway thread for ever.
+            timeout = float(os.environ.get("CONSOLE_TIMEOUT", 30.0))
+
             def log_message(self, *a): pass
 
             def do_POST(self):

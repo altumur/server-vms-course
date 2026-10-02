@@ -202,10 +202,16 @@ def local_only(url: str, holder_server: str, my_server: str) -> bool:
     return holder_server != my_server and is_loopback(urlsplit(url).hostname or "")
 
 
-def opened_beyond_loopback(what: str, host: str, log) -> None:
+def opened_beyond_loopback(what: str, host: str, log, asks: str = "") -> None:
+    """Said once, at start, for a door bound beyond loopback. `asks`: what the door DOES check, when it checks
+    something (the device's playback door: a console-signed address, in a gated cluster) — said instead of
+    "asks nobody", which would then be untrue."""
     if not is_loopback(host):
-        log.warning("%s is open on %s and asks nobody who they are: there is no authentication at this door — "
-                    "it is for a network that is already closed", what, host)
+        if asks:
+            log.warning("%s is open on %s; it asks %s", what, host, asks)
+        else:
+            log.warning("%s is open on %s and asks nobody who they are: there is no authentication at this door — "
+                        "it is for a network that is already closed", what, host)
 
 
 def playback_url(server: str, cid, port: int = PLAYBACK_PORT) -> str:

@@ -1353,7 +1353,8 @@ class VmsWorker(Worker):
         self.playback_key = getattr(self, "playback_key", None) or new_key()   # the door's own, announced in the heartbeat
         host = (self.playback_host or LOOPBACK) if host is None else host
         self.playback_host = host                        # what it is bound to is what the heartbeat announces
-        opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log)
+        opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log,
+                               asks="for an address the console signed, in a cluster in a domain (`vms/playback.py`); outside one, nobody")
         srv = ThreadingHTTPServer((host, self.playback_port if port is None else port), self.playback_handler())
         self.playback_port = srv.server_address[1]
         threading.Thread(target=srv.serve_forever, daemon=True).start()
