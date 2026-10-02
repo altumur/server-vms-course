@@ -466,7 +466,8 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
 
 def test_who_read_the_archive_is_an_event_and_once_a_minute():
     """Footage that leaves through the console is said: who, which interval, and — the piece having left whole
-    — its sha256 (feedback BI, BU). The same piece by the same person is said once a minute."""
+    — its sha256 (feedback BI, BU). A whole file is said every time it leaves (the review's fourth pass, minor: the
+    second file of the same minute need not be the first); a part — a player that moved on — once a minute."""
     from vms.console import serve
     from vms.controller import VmsController
     box = Box()
@@ -503,11 +504,9 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         piece = f"rec/7/{start + 60:.0f}-{start + 120:.0f}"
         data = [read("anna", 60, 120) for _ in range(3)]                       # the same minute, three times
         digest = hashlib.sha256(data[0]).hexdigest()
-        assert said(1) == [("anna", piece, "7", digest)]                       # …one line, and what it was
+        assert said(3) == [("anna", piece, "7", digest)] * 3                   # …three files left: three lines, and what each was
         read("boris", 60, 120)
-        box.wall.advance(61); rec_door.announce()
-        read("anna", 60, 120)                                                  # a minute later it is said again
-        assert [x[0] for x in said(3)] == ["anna", "boris", "anna"]
+        assert [x[0] for x in said(4)] == ["anna", "anna", "anna", "boris"]
     finally:
         srv.shutdown(); rec_door.shutdown()
 
@@ -571,3 +570,46 @@ def test_a_read_starts_on_the_key_frame_before_the_moment_asked_for():
     got = st.samples("7", t - 51, t - 40)
     assert got[0].key and unix_s(got[0].begin) == t - 52               # the group's key frame, a second before
     assert all(unix_s(s.begin) < t - 40 for s in got)
+
+
+def test_a_shrink_is_requested_until_the_recorder_applies_it_and_an_uncopied_keep_is_a_number():
+    """The review's fourth pass, two majors, the console's half. A smaller quota declared without `shrink_confirmed`
+    left the ring as it was, while the page showed the new size and the journal said `shrunk`: the volumes list now
+    carries the size the RING has and the shrink pending, from the recorder holding it; the write is journalled
+    `archive.volume.shrink_requested`, confirmed or not, and an unconfirmed one says so in the reply. And a keep the
+    recorder could not copy is `rec_keep_missing_seconds{keep}` on `/metrics`, from the recorder's `keep_missing`."""
+    from vms.console import serve
+    from vms.controller import VmsController
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    T = 10 ** 12
+
+    def call(method, path, body=None):
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method,
+                                     headers={"Content-Type": "application/json", "X-User": "anna"})
+        with urllib.request.urlopen(req) as r:
+            return r.read().decode() if path.endswith("metrics") else json.loads(r.read())
+    try:
+        vol = {"name": "big", "kind": "local", "url": "/data/big", "server": "srv-1", "quota_bytes": 8 * T}
+        call("POST", "/rec/volumes", vol)
+        box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [], {
+            "server": "srv-1", "volume": "big", "archive": "/data/big", "archive_quota": 8 * T,
+            "quota_note": "big is 8000000000000 bytes and declared 4000000000000: not done until shrink_confirmed",
+            "keep_missing": {"7-100-200": 100.0, "8-1-2": 0}}).to_bytes())
+        out = call("POST", "/rec/volumes", {**vol, "quota_bytes": 4 * T})
+        assert "keeps its size" in out["warning"]
+        row = next(v for v in call("GET", "/rec/volumes")["volumes"] if v["name"] == "big")
+        assert row["quota_bytes"] == 4 * T and row["size_bytes"] == 8 * T and row["shrink_pending"] is True
+        assert "shrink_confirmed" in row["quota_note"]
+        assert "warning" not in call("POST", "/rec/volumes", {**vol, "quota_bytes": 2 * T, "shrink_confirmed": 2 * T})
+        lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
+                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"].startswith("archive.volume")]
+        assert [(e["kind"], e["quota_bytes"], e["confirmed"]) for e in lines] == [
+            ("archive.volume.shrink_requested", 4 * T, False), ("archive.volume.shrink_requested", 2 * T, True)]
+        metrics = call("GET", "/rec/metrics")
+        assert 'rec_keep_missing_seconds{keep="7-100-200"} 100.0' in metrics and 'keep="8-1-2"' not in metrics
+    finally:
+        srv.shutdown()

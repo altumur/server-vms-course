@@ -70,10 +70,10 @@ def test_archive_read_says_what_left_and_the_digest_of_what_left():
         assert code == 200 and ctype == "video/mp4" and body[4:8] == b"ftyp"
         assert get()[2] == body                                        # the same frames: the same file
         digest = hashlib.sha256(body).hexdigest()
-        assert said(1) == [("anna", 200, len(body), digest)]           # one line a minute, per person and piece
+        assert said(2) == [("anna", 200, len(body), digest)] * 2       # every whole file that left (the review's fourth pass)
         box.wall.advance(61); dsrv.announce()
         assert get(user="boris")[2] == body
-        assert said(2)[-1] == ("boris", 200, len(body), digest)         # whoever holds the file takes its digest and compares
+        assert said(3)[-1] == ("boris", 200, len(body), digest)         # whoever holds the file takes its digest and compares
     finally:
         srv.shutdown(); dsrv.shutdown()
 
@@ -171,9 +171,11 @@ def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_whe
     route = vc.vms_routes(True, None, ctl, None)
     t = box.wall()
     out = []
+    class As:                                                        # a caller, by name: one person makes one export at a time
+        def __init__(self, who): self.headers = {"X-User": who}
     try:
-        busy = [threading.Thread(target=lambda: out.append(route(None, "GET", "/export/7", {"from": t - 60, "to": t})[0]))
-                for _ in range(vc.EXPORTS_AT_ONCE)]
+        busy = [threading.Thread(target=lambda i=i: out.append(route(As(f"u{i}"), "GET", "/export/7", {"from": t - 60, "to": t})[0]))
+                for i in range(vc.EXPORTS_AT_ONCE)]
         [b.start() for b in busy]
         for _ in busy:
             assert entered.acquire(timeout=5)                         # both in flight
@@ -184,3 +186,118 @@ def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_whe
         assert route(None, "GET", "/export/7", {"from": t - 60, "to": t})[0] == 404   # a place again
     finally:
         vc._door = door_; held.set()
+
+
+def _export_box(size=256):
+    """A console that fronts `rec`, with recordings `7` and `7-cloud` of camera 7, both on one door."""
+    from w2cplatform.spec import SpecController
+    from vms.config import REC_SPEC
+    from vms.worker import fake_samples
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    rec.create({"name": "7", "cam": "7"}); rec.create({"name": "7-cloud", "cam": "7"})
+    t = box.wall() - 3600
+    st = store("a")
+    for unit, (a, b) in (("7", (t, t + 300)), ("7-cloud", (t + 300, t + 600))):
+        for smp in fake_samples(a, b, step=1, size=size):
+            st.put(unit, 1, smp)
+        st.finish(unit, 1)
+    st.seal()
+    return box, ctl, rec, st, t
+
+
+def _journal(box):
+    return [json.loads(line) for b in buckets_under(box.archive, "audit", "console", 600)
+            for line in open(os.path.join(box.archive, b.path))]
+
+
+def test_an_export_of_a_camera_with_two_recordings_and_no_rec_is_both_of_them():
+    """The review's fourth pass, major: `GET /export/7` with recordings `7` and `7-cloud` and no `rec` broke the
+    connection — the merge ran a generator that looked every recording's stretches up in the LAST recording's map
+    (`KeyError`), and there was no reply and no line. Each recording's stream binds its own name and map now: the
+    file is both recordings' minutes, merged by time, and the journal names both."""
+    box, ctl, rec, st, t = _export_box()
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        whole = urllib.request.urlopen(f"{base}/export/7?from={t}&to={t + 600}").read()
+        first = urllib.request.urlopen(f"{base}/export/7?rec=7&from={t}&to={t + 600}").read()
+        second = urllib.request.urlopen(f"{base}/export/7?rec=7-cloud&from={t}&to={t + 600}").read()
+        assert whole[4:8] == b"ftyp" and len(whole) > max(len(first), len(second)) + 250 * 200   # both halves
+        assert f"rec/7,7-cloud/{t:.0f}-{t + 600:.0f}" in [e.get("media") for e in _journal(box) if e["kind"] == "archive.read"]
+    finally:
+        da.shutdown(); srv.shutdown()
+
+
+def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one_slot():
+    """The review's fourth pass, major: two sockets that asked for an export and read nothing held both slots until
+    the console restarted, and every other export was 503. The console's sockets have a timeout (`CONSOLE_TIMEOUT`):
+    a client that reads nothing for that long is let go, and its slot with it. One person makes one export at a time
+    (`EXPORTS_PER_USER`), and an export longer than `EXPORT_BUDGET` is cut off there, and says so in the journal.
+    The timeout covers the request's own line and headers too: half a request line is let go the same way."""
+    import socket
+    import time
+    import urllib.error
+    box, ctl, rec, st, t = _export_box(size=32768)                   # some 20 MB: more than any socket's buffers hold
+    was = {k: os.environ.get(k) for k in ("CONSOLE_TIMEOUT", "EXPORT_BUDGET")}
+    os.environ["CONSOLE_TIMEOUT"] = "1"
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    port = srv.server_address[1]
+
+    def silent(who):                                                 # asks, and never reads a byte of the answer
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        s.connect(("127.0.0.1", port))
+        s.sendall(f"GET /export/7?from={t}&to={t + 600} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
+        return s
+
+    def export(who):
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={t}&to={t + 60}", headers={"X-User": who})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, r.read()
+        except urllib.error.HTTPError as e:
+            return e.code, e.read()
+    held = []
+    try:
+        held = [silent("anna"), silent("boris")]
+        time.sleep(0.3)                                              # both in flight, their buffers full
+        assert export("carol")[0] == 503                             # every slot held by somebody who does not read
+        half = socket.create_connection(("127.0.0.1", port))
+        half.sendall(b"GET /cam")                                    # and half a request line
+        for _ in range(100):                                         # …until the socket's timeout lets them go
+            code, body = export("carol")
+            if code == 200:
+                break
+            time.sleep(0.1)
+        assert code == 200 and body[4:8] == b"ftyp"
+        half.settimeout(5)
+        assert half.recv(100) == b""                                 # closed by the console, not waited on for ever
+        cut = {e["user"] for e in _journal(box) if e["kind"] == "archive.read" and "sha256" not in e}
+        assert cut >= {"anna", "boris"}                              # cut off: no digest of a file that did not leave whole
+
+        held = [silent("dave")]                                      # one person, one export at a time
+        time.sleep(0.3)
+        code, body = export("dave")
+        assert code == 503 and b"dave is making 1 export" in body
+        for s in held:
+            s.close()
+        held = []
+        time.sleep(1.5)
+        os.environ["EXPORT_BUDGET"] = "0"                            # …and an export past its budget stops there
+        code, body = export("erin")
+        assert code == 200 and len(body) < 10000
+        mine = [e for e in _journal(box) if e.get("user") == "erin"]
+        assert mine and "sha256" not in mine[-1] and "budget" in mine[-1].get("broken", "")
+    finally:
+        for s in held:
+            s.close()
+        for k, v in was.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        da.shutdown(); srv.shutdown()

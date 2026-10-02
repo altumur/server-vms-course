@@ -331,7 +331,7 @@ def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
     """The one account with rights to everything is the one password worth guessing — and every wrong guess was a
     fsync'd alarm. Five refusals from one address in fifteen minutes close the door to it, with ONE alarm saying
     so; the right password does not open it until the window has passed."""
-    Gate._glass_tries.clear(); Gate._glass_limited.clear()                # the counts are the process's
+    Gate.forget_glass()                # the counts are the process's
     box = Box()
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
     try:
@@ -352,12 +352,11 @@ def test_an_emergency_attempt_is_reserved_before_its_password_and_counted_by_the
     """The review's third pass, major. The limit was a check and then a count: thirty parallel guesses all passed the
     check. An attempt is reserved under a lock before the password is looked at, and given back only when it was
     right — so at most five guesses from one address are ever checked. Behind a proxy every caller was the proxy;
-    `X-Forwarded-For` is taken from a proxy named in `TRUSTED_PROXY` and from nobody else. And while a window is
-    full — the address's, or the process's — the right password is 429 too: a limit that lets the right guess in
-    limits nothing."""
+    `X-Forwarded-For` is taken from a proxy named in `TRUSTED_PROXY` and from nobody else. And while an address's
+    window is full the right password from it is 429 too: a limit that lets the right guess in limits nothing."""
     import threading
     import time
-    Gate._glass_tries.clear(); Gate._glass_limited.clear()
+    Gate.forget_glass()
     box = Box()
 
     class Slow(Tokens):
@@ -381,15 +380,10 @@ def test_an_emergency_attempt_is_reserved_before_its_password_and_counted_by_the
     assert out == [429]                                                  # this address's window is full: the right password too
     out.clear(); guess("10.0.0.1", "open-sesame"); guess("10.0.0.1", "open-sesame")
     assert out == [200, 200]                                             # another address; and the right password is no guess
-    for i in range(3):                                                   # spread over addresses: the process's window fills
-        for _ in range(5):
-            guess(f"10.0.1.{i}")
-    out.clear(); guess("10.0.2.1", "open-sesame")
-    assert out == [429]                                                  # 20 refused in the window: shut to everybody
     assert caller_addr({"X-Forwarded-For": "1.2.3.4"}, "10.0.0.5") == "10.0.0.5"   # nobody said to trust anybody
 
     # over HTTP, behind a proxy: five wrong from one person close it to that person, not to the next one
-    Gate._glass_tries.clear(); Gate._glass_limited.clear()
+    Gate.forget_glass()
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
 
     def glass(pw, xff):
@@ -414,7 +408,58 @@ def test_an_emergency_attempt_is_reserved_before_its_password_and_counted_by_the
         os.environ.pop("TRUSTED_PROXY", None)
         if was is not None:
             os.environ["TRUSTED_PROXY"] = was
-        Gate._glass_tries.clear(); Gate._glass_limited.clear()
+        Gate.forget_glass()
+
+
+def test_the_emergency_doors_limit_across_addresses_is_a_pace_and_a_trickle_cannot_hold_it_shut():
+    """The review's fourth pass, major: the process's limit was a window — twenty wrong passwords from anywhere shut
+    the door to everybody, the right password too, and one wrong guess every 45 s from four addresses kept it shut
+    for good (the product's own check). It is a pace now: at most `GLASS_RATE` checks a minute, a check past it WAITS
+    its turn, and only one that would wait more than `GLASS_WAIT` is 429 with `Retry-After`. Twenty wrong from four
+    addresses, then the right one from a fifth: in, within a turn. A trickle never fills the pace: in at once. A
+    flood is told when to come back, and the alarm says the pace was full — once."""
+    clock = {"t": 1000.0}
+    waited = []
+    Gate.forget_glass()
+    real = Gate._glass_clock, Gate._glass_sleep
+    Gate._glass_clock = staticmethod(lambda: clock["t"])
+    Gate._glass_sleep = staticmethod(lambda s: (waited.append(s), clock.__setitem__("t", clock["t"] + s)))
+    box = Box()
+    gate = Gate(box.vars, box.wall, impl=Tokens({}))
+
+    def guess(addr, pw="wrong"):
+        try:
+            gate.open_glass("x", "testing", pw, addr=addr)
+            return 200, None
+        except Denied as e:
+            return e.status, e.retry_after
+    try:
+        got = [guess(f"10.0.1.{i % 4}")[0] for i in range(20)]
+        assert got == [403] * 20                                       # all checked — at the pace, not refused
+        assert len(waited) == 10 and max(waited) <= Gate.GLASS_WAIT    # ten at once, ten in their turns
+        before = len(waited)
+        assert guess("10.0.2.1", "open-sesame")[0] == 200              # the right one, from an address not refused
+        assert sum(waited[before:]) <= 60.0 / Gate.GLASS_RATE          # …within one turn
+        assert guess("10.0.1.0", "open-sesame")[0] == 429              # an address refused five times is still refused
+
+        Gate.forget_glass(); waited.clear()                            # a trickle: one wrong every 45 s from four addresses, for hours
+        for i in range(400):
+            clock["t"] += 45; box.wall.advance(45)
+            guess(f"10.0.3.{i % 4}")
+        n = len(waited)
+        assert guess("10.0.4.1", "open-sesame")[0] == 200 and len(waited) == n   # in at once: the trickle never filled the pace
+
+        Gate.forget_glass(); waited.clear()                            # a flood: forty at the same moment, from many addresses
+        Gate._glass_sleep = staticmethod(lambda s: waited.append(s))   # all of them in flight at once: nobody's wait has passed
+        codes = [guess(f"10.1.{i // 5}.{i % 5}") for i in range(40)]
+        refused = [c for c in codes if c[0] == 429]
+        assert refused and all(0 < r <= 60.0 for _, r in refused)      # told when the next turn is
+        assert guess("10.0.5.1", "open-sesame")[0] == 429              # the right password competes for a turn…
+        clock["t"] += 60; box.wall.advance(60)
+        assert guess("10.0.5.1", "open-sesame")[0] == 200              # …and gets the next one
+    finally:
+        Gate._glass_clock, Gate._glass_sleep = staticmethod(real[0]), staticmethod(real[1])
+        Gate.forget_glass()
 
 
 def test_the_gate_and_the_route_read_the_unit_from_the_same_segment():
@@ -503,3 +548,136 @@ def test_drain_schema_and_mounts_ask_the_gate_too():
         assert not [s for s in said if s[0].startswith(("drain.", "schema.")) and s[1] != "admin"]
     finally:
         srv.shutdown()
+
+
+def test_a_row_cannot_be_moved_to_another_camera_by_an_edit():
+    """The review's fourth pass, major: the gate checks the camera a row names NOW, and `PUT /rec/recordings/1-cloud
+    {"cam": "2"}` with `admin` on camera 1 passed on camera 1 and moved the recording to camera 2 — the recorder wrote
+    camera 2 into the tree camera 1's viewers read; a detector took its alarms along. `cam` is fixed at creation:
+    400, naming why, for anybody — the same value is no change. Every subsystem whose rows name a camera."""
+    from vms.config import DET_SPEC
+    box = Box()
+    access = Tokens({"one": [("admin", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        for i in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-cloud", "cam": "1"}, token="admin")[0] == 201
+        code, body = _call(base, "PUT", "/rec/recordings/1-cloud", {"cam": "2"}, token="one")
+        assert code == 400 and "fixed" in body["detail"] and rec.unit("1-cloud")["cam"] == "1"
+        assert _call(base, "PUT", "/rec/recordings/1-cloud", {"cam": "2"}, token="admin")[0] == 400   # rights on both: still not a move
+        assert _call(base, "PUT", "/rec/recordings/1-cloud", {"cam": "1", "retention_days": 3}, token="one")[0] == 200
+        assert rec.unit("1-cloud")["retention_days"] == 3
+        det = SpecController(DET_SPEC, box.vars.as_writer("console", DET_SPEC.acl_console()), box.objects, wall=box.wall)
+        det.create({"name": "1-motion", "cam": "1", "kind": "motion"})
+        try:
+            det.update("1-motion", {"cam": "2"})
+            raise AssertionError("a detector moved to another camera")
+        except Exception as e:
+            assert "fixed" in str(e) and det.unit("1-motion")["cam"] == "1"
+        assert all(c.labels_of is not None for n, c in m.mounts.items() if "cam" in c.spec.fields)
+    finally:
+        srv.shutdown()
+
+
+def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_name():
+    """The review's fourth pass, major: a camera with no recording of its own falls back to the tree named after it —
+    and a recording NAMED «1» that records camera 2 made `/timeline/1` and `/export/1` serve camera 2's frames to camera
+    1's viewers, journalled as camera 1, and `POST /backfill` for camera 1 wrote into camera 2's tree. The fallback is
+    taken only when no recording of that name says it is another camera's — alive or deleted; a keep likewise.
+    And a backfill asks for a day at most, a keep for a week."""
+    from tests.conftest import door, footage, store
+    from vms import keeps
+    box = Box()
+    access = Tokens({"guard": [("edit", "1", ())], "other": [("edit", "2", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    st = store()
+    t = box.wall()
+    footage(st, "1", 1, t - 900, t - 300)                              # the tree «1»: camera 2's footage
+    rdoor = door(box, st)
+    try:
+        for i in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "2"}, token="admin")[0] == 201
+        code, spans = _call(base, "GET", f"/timeline/1?from={t - 1000}&to={t}", token="guard")
+        assert code == 200 and not [s for s in (spans if isinstance(spans, list) else spans["segments"]) if s.get("recording")]
+        assert _call(base, "GET", f"/export/1?from={t - 900}&to={t - 300}", token="guard")[0] == 404
+        assert _call(base, "GET", f"/timeline/2?from={t - 1000}&to={t}", token="other")[0] == 200   # it IS camera 2's
+        assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 900, "to": t - 300}, token="guard")[0] == 404
+        assert not box.vars.list("rec/requests/")
+        rec.delete("1")                                                 # deleted, the tombstone still says whose it was
+        assert _call(base, "GET", f"/export/1?from={t - 900}&to={t - 300}", token="guard")[0] == 404
+        assert _call(base, "POST", "/rec/keeps", {"cam": "1", "from": t - 900, "to": t - 300}, token="guard")[0] == 201
+        assert [k.recordings for k in keeps.declared(box.vars) if k.cam == "1"] == [()]
+
+        code, body = _call(base, "POST", "/backfill", {"cam": "2", "from": t - 40 * 365 * 86400, "to": t}, token="other")
+        assert code == 400 and "86400" in body["detail"]                 # a day at most
+        code, body = _call(base, "POST", "/rec/keeps", {"cam": "2", "from": t - 30 * 86400, "to": t}, token="other")
+        assert code == 400 and "7 days" in body["detail"]                # a week at most
+    finally:
+        rdoor.shutdown(); srv.shutdown()
+
+
+def _get(url, headers=None):
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {})) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+
+
+def test_the_devices_own_door_opens_only_to_what_the_console_signed():
+    """The review's fourth pass, blocker 4. The console checked `view` and journalled `archive.read`, and handed the
+    browser the holder's door as it is; the door asked nobody, so a viewer of camera 1 edited `1` into `2` and took
+    camera 2's card. Now the console signs what it allowed — camera, minutes, expiry, viewer — with the door's own key
+    from its heartbeat, and in a gated cluster the door serves only that: the camera edited, the minutes stretched,
+    the address unsigned or expired is 403 and a line; the signed one is 200 and a line naming the viewer. A process
+    of the cluster reads by a per-camera capability derived from the same key, and an open cluster's door is open."""
+    from vms.playback import process_url
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    from w2cplatform.console import holder_of
+    box = Box()
+    access = Tokens({"viewer": [("view", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 1000.0)}, max_playbacks=4)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive, device_factory=lambda k: dev)
+    w.heartbeat_once()
+    door = w.serve_playback("127.0.0.1", 0)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+        bare = f"http://127.0.0.1:{door.server_address[1]}/playback/2?from=0&to=5"
+        assert _get(bare)[0] == 200                                    # no key set in the store: open, as the console is
+
+        box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the door asks
+        code, body = _call(base, "GET", "/segment?cam=1&from=0&to=5", token="viewer")
+        assert code == 200 and "&sig=" in body["playback"] and "&v=viewer" in body["playback"], body
+        url = body["playback"]
+        assert _get(url)[0] == 200                                     # what the console signed
+        assert _get(url.replace("/playback/1?", "/playback/2?"))[0] == 403          # the camera edited
+        assert _get(url.replace("to=5.000", "to=900.000"))[0] == 403               # the minutes stretched
+        assert _get(url.replace("v=viewer", "v=admin"))[0] == 403                  # somebody else's name
+        assert _get(bare)[0] == 403                                               # unsigned
+        assert _call(base, "GET", "/segment?cam=2&from=0&to=5", token="viewer")[0] == 403   # the console's gate, as before
+
+        found = holder_of(box.objects, "vms/", "2", box.wall(), field="playback_url")
+        cap = process_url(found)                                     # the recorder's and the survey's address for camera 2
+        assert _get(f"{cap}?from=0&to=5")[0] == 200
+        assert _get(f"{cap.replace('/playback/2/', '/playback/1/')}?from=0&to=5")[0] == 403   # one camera's capability is not another's
+
+        box.wall.advance(301)
+        assert _get(url)[0] == 403                                   # five minutes on: ask the console again
+
+        audit = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
+        at_door = [e for e in audit if e.get("unit") == "door-w-1"]
+        reads = [(e["user"], e["target"]) for e in at_door if e["kind"] == "archive.read"]
+        assert reads and set(reads) == {("viewer", "1")}             # the door says the address was USED, and by whom
+        assert sum(e["kind"] == "access.denied" for e in at_door) == 6
+        handed = [(e["user"], e["target"], e["source"], bool(e.get("until"))) for e in audit
+                  if e["kind"] == "archive.read" and e.get("unit") == "console"]
+        assert handed == [("viewer", "1", "device", True)]
+    finally:
+        door.shutdown(); srv.shutdown()

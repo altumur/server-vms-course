@@ -107,6 +107,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
+CONSOLE_TIMEOUT = 30.0        # seconds a console's socket waits on a client that sends or reads nothing (`CONSOLE_TIMEOUT`)
 from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, caller_addr, session_cookie, token_of
 from .journal import Journal
 from .resource import resources_seen
@@ -792,6 +793,9 @@ class SpecConsole:
             return 409, {"detail": f"the request was taken over by another console, which created it ({e})", "error": "taken over"}
 
     # `ctl.update` → 200 with the row; `Refused` → 400; `TooLarge` → 413; `KeyError` → 404.
+    #
+    # A row's `cam` is fixed at its creation (`SpecController.update`, the review's fourth pass): the gate checked the
+    # grant on the camera the row names now, and a PUT that changed it moved the unit past that check.
     def update(self, uid, body: dict, user: str = "operator") -> tuple[int, dict]:
         try:
             row = self.ctl.update(uid, body)
@@ -1145,7 +1149,10 @@ class SpecConsole:
                 sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")),
                                                     addr=caller_addr(h.headers, str(getattr(h, "client_address", ("?",))[0])))
             except Denied as e:
-                return h._send(e.status, {"detail": e.why, "error": "denied"})
+                if e.retry_after is not None:                            # the emergency door's pace: when the next turn is
+                    h._extra_headers = (("Retry-After", str(max(1, int(e.retry_after + 0.999)))),)
+                return h._send(e.status, {"detail": e.why, "error": "denied",
+                                          **({"retry_after": round(e.retry_after, 1)} if e.retry_after is not None else {})})
             h._extra_headers = (("Set-Cookie", session_cookie(sid, float(payload.get("exp", 0)) - self.wall(), secure).replace(COOKIE, GLASS_COOKIE, 1)),)
             return h._send(200, {"gated": True, "user": f"break-glass({payload.get('who')})", "until": payload.get("exp"), "login": login})
         token = (body.get("token") if method == "POST" else token_of(h.headers)) or ""
@@ -1437,6 +1444,12 @@ class Mount:
         mnt = self
 
         class H(SendMixin, BaseHTTPRequestHandler):
+            # A SOCKET THAT SAYS NOTHING IS LET GO (the review's fourth pass, major). The console's connections had no
+            # timeout at all: a client that sent half a request line, or asked for an export and read nothing, held its
+            # thread — and an export's slot — until the console restarted. `timeout` is the socket's, for every read
+            # and write: the request line and headers (slowloris) as much as an export's body.
+            timeout = float(os.environ.get("CONSOLE_TIMEOUT", CONSOLE_TIMEOUT))
+
             def log_message(self, *a): pass
 
             def _route(self, method):

@@ -1329,7 +1329,8 @@ class RecWorker(VmsWorker):
         from .config import local_only
         if local_only(found[2]["playback_url"], found[1].extra.get("server", "?"), self.server):
             return None                       # the holder's archive door is on ITS loopback: not a source from here
-        return found[2]["playback_url"], found[2]["coverage"]
+        from .playback import process_url     # the door asks a gated cluster's processes for this camera's capability
+        return process_url(found), found[2]["coverage"]
 
     # -- the backup archive: a recording of the same camera on a backup volume (Lesson 26) ----------------
     # Found the way everything here is found — in heartbeats: a recording of this camera, homed on a backup

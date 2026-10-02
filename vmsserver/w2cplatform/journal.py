@@ -15,7 +15,8 @@
 #   archive.read              console    a piece of footage was served through the console: who, which, from where
 #   live.view / live.view.ended  console  a viewer was admitted to a camera's live stream, and hung up: who, which, where from (feedback CL)
 #   archive.keep.made/lifted  console    a keep was set or lifted: who
-#   archive.volume.shrunk/withdrawn  console    a volume's quota was lowered, or the volume withdrawn: who
+#   archive.volume.shrink_requested/withdrawn  console    a volume's quota was lowered (confirmed or not), or the volume withdrawn: who
+#   archive.read, access.denied  door-<worker>   the device's own footage served through a signed address, or refused (`vms/playback.py`)
 #   events.removed            resource   the retention pass removed buckets: whose, how many, of what period
 #
 # Kept as long as alarms are (`resource.retention_days`): the record of who deleted a camera is wanted for as
