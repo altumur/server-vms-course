@@ -370,8 +370,10 @@ def clear_requests(ctl, sweep: bool = True) -> int:
     for _, hb in heartbeats(ctl.objects, ctl.spec.name + "/").items():
         fetched |= {r for r in str(hb.extra.get("fetched", "")).split(",") if r}
     gone, now = 0, ctl.wall()
+    from .config import said_id
     for key in keys:
-        if key.rsplit("/", 1)[1] in fetched:
+        rid = key.rsplit("/", 1)[1]
+        if rid in fetched or said_id(rid) in fetched:       # a long id is said by its digest (the eighth pass)
             ctl.vars.delete(key)
             gone += 1
             continue

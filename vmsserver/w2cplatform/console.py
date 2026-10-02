@@ -301,20 +301,38 @@ class NoSuchRoute(Exception):
 # socket's own timeout, and past the deadline the read is a `TimeoutError` — which `BaseHTTPRequestHandler` answers
 # by closing the connection. Only READS: what the console writes back (an export) is the socket timeout's, and the
 # export's own rule (`vms/console.py`).
+#
+# …AND A BODY HAS A FLOOR ON ITS PACE, NOT ONLY A DEADLINE (the review's eighth pass; a run). The deadline of a body was
+# proportional to the length it DECLARED: 64 MiB was given 1054 s, and a sender of a byte every few seconds held its
+# connection that long — 32 of them an address's share of the resource's door, two addresses all of it. So past a
+# grace a body arrives at `rate` on average or its read is late (`pace`): by `grace + got / rate` seconds after it
+# began, `got` bytes are in. A body that comes at the rate the deadline always assumed is not touched — the deadline
+# was this floor's last point; a trickle is let go at the grace, not at the end of what it declared.
 class DeadlineReader(io.RawIOBase):
     def __init__(self, sock, deadline, op_timeout: float):
         self.sock, self.deadline, self.op = sock, deadline, op_timeout
+        self.got, self.floor = 0, None                   # bytes received; (since, grace, rate, got then) while a body is read
 
     def readable(self) -> bool:
         return True
 
+    def pace(self, grace: float, rate: float) -> None:
+        self.floor = (time.monotonic(), float(grace), float(rate), self.got)
+
     def readinto(self, b) -> int:
-        left = self.deadline() - time.monotonic()
+        now = time.monotonic()
+        left = self.deadline() - now
+        if self.floor is not None:
+            since, grace, rate, base = self.floor
+            left = min(left, since + grace + (self.got - base) / rate - now)
         if left <= 0:
-            raise TimeoutError("the request did not arrive whole within its deadline")
+            raise TimeoutError("the request did not arrive whole within its deadline" if self.floor is None else
+                               f"the body came slower than the {self.floor[2]:.0f} bytes a second a body is given")
         self.sock.settimeout(min(self.op, left))
         try:
-            return self.sock.recv_into(b)
+            n = self.sock.recv_into(b)
+            self.got += n
+            return n
         finally:
             self.sock.settimeout(self.op)
 
@@ -363,12 +381,20 @@ class DeadlineReader(io.RawIOBase):
 # from 16 the reserve is gone too, and over TCP only the listed monitors are answered (`/metrics`, `/healthz`) — and
 # the box, through its unix socket, on every route. A door cannot tell the honest from the many before it has read a
 # request; what it can do is make "many" a number that is written down.
+#
+# THE MONITORS' LANE HAS A SHARE PER ADDRESS TOO (the review's eighth pass, major; a run): М11's job listed
+# `10.0.0.0/8`, and eight addresses of the cluster's network sending half a line took the common slots, the reserve and
+# all four places of the lane — Prometheus had 503 in 15 of 15 and the autoscaler went blind. An address holds
+# `MONITOR_PER_ADDRESS` of the lane (a scraper and a health check on one box), so it takes as many listed addresses as
+# the lane has places halved to fill it; and a listed address is trusted — the list is the addresses that scrape, not
+# the network they live in (the jobs say which: М11's `console.nomad.hcl`, М12's).
 BUSY = (b"HTTP/1.0 503 Service Unavailable\r\nContent-Type: application/json\r\nRetry-After: 1\r\nConnection: close\r\n"
         b"Content-Length: %d\r\n\r\n%s")
 CONSOLE_PER_ADDRESS = 8       # of `CONSOLE_CONNECTIONS`, how many one address holds at once (`CONSOLE_PER_ADDRESS`)
 CONSOLE_RESERVE = 16          # connections kept for the door in and `/healthz` once the common ones are gone (`CONSOLE_RESERVE`)
 RESERVE_PER_ADDRESS = 1       # …of which one address holds this many
 CONSOLE_MONITOR_RESERVE = 4   # …and for the addresses in `CONSOLE_MONITORS`, theirs alone (`CONSOLE_MONITOR_RESERVE`)
+MONITOR_PER_ADDRESS = 2       # …of which one address holds this many: a scraper and a health check on one box
 CONSOLE_BOX_RESERVE = 4       # …and for the caller on the box, through the unix socket (`CONSOLE_BOX_RESERVE`)
 CONSOLE_HEADER_TIMEOUT = 5.0  # seconds a request's line and headers may take, whole (`CONSOLE_HEADER_TIMEOUT`)
 RESERVE_HEADERS = 2.0         # …on a connection of the reserve or the monitors' lane
@@ -443,7 +469,8 @@ class Bounds:
                 lane = "common"
             elif local:
                 lane = "box" if self.used["box"] < self.box else None
-            elif self.used["monitor"] < self.monitor and self.is_monitor(addr):
+            elif self.used["monitor"] < self.monitor and self.is_monitor(addr) \
+                    and self.by_addr.get(("monitor", key), 0) < MONITOR_PER_ADDRESS:
                 lane = "monitor"                         # a listed monitor: past the common slots, its own lane
             elif full and self.used["reserve"] < self.reserve \
                     and self.by_addr.get(("reserve", key), 0) < RESERVE_PER_ADDRESS:
@@ -475,32 +502,47 @@ class Bounds:
 # reserve's 503). So a connection is closed in two steps: `SHUT_WR` (our answer is finished, a FIN after it), then
 # what the client still sends is read and dropped until it closes too, or `LINGER` seconds pass — by one thread for
 # the whole door (`linger`), not by the thread that accepts: a flood of refusals must not slow the accepting of the
-# next. At most `LINGER_MAX` sockets wait so, each read up to `LINGER_BYTES`; past that one is closed at once, as
-# before. A connection whose request was read whole is closed at once: there is nothing to reset it with.
+# next. Each is read up to `LINGER_BYTES`. A connection whose request was read whole is closed at once: there is
+# nothing to reset it with.
+#
+# …AND A FLOOD OF REFUSALS DOES NOT TAKE THE WAITING ROOM (the review's eighth pass, minor; a run): the flood went on
+# sending after its 503s, the 256 places of the queue were all its own, and every refusal after that was closed at once
+# — reset, for the honest client too (`ConnectionResetError` in 30–35 of 48 at sixteen addresses). So an address holds
+# at most `LINGER_PER_ADDRESS` of `LINGER_MAX` places — sixteen flooding addresses hold 64 — and a refusal past them is
+# not dropped bare either: what has arrived of it is read and dropped there and then (`_drain_close`), and closed — a
+# FIN when nothing was left unread, so the 503 stays readable; abortively (`SO_LINGER` 0) only for a client still
+# sending past `LINGER_BYTES`, which a close would reset anyway — and then the kernel holds nothing of it. What a place
+# costs is a socket and a dictionary entry: what arrives is read and dropped, never kept.
 LINGER = 1.0
-LINGER_MAX = 256
+LINGER_MAX = 512
+LINGER_PER_ADDRESS = 4
 LINGER_BYTES = 1 << 20
 
 
 class _Linger:
     def __init__(self):
         self.lock = threading.Lock()
-        self.socks: dict = {}                            # socket -> (deadline, bytes read from it)
+        self.socks: dict = {}                            # socket -> (deadline, bytes read from it, its address)
+        self.by_addr: dict[str, int] = {}                # address -> sockets of it waiting here
         self.thread = None
 
-    def add(self, sock) -> None:
+    def add(self, sock, addr: str = "") -> None:
         try:
             sock.shutdown(socket.SHUT_WR)
             sock.setblocking(False)
         except OSError:
             return _close(sock)
+        key = addr_key(addr) if addr else ""
         with self.lock:
-            if len(self.socks) >= LINGER_MAX:
-                return _close(sock)
-            self.socks[sock] = (time.monotonic() + LINGER, 0)
-            if self.thread is None:
-                self.thread = threading.Thread(target=self._run, daemon=True, name="door-linger")
-                self.thread.start()
+            room = len(self.socks) < LINGER_MAX and self.by_addr.get(key, 0) < LINGER_PER_ADDRESS
+            if room:
+                self.socks[sock] = (time.monotonic() + LINGER, 0, key)
+                self.by_addr[key] = self.by_addr.get(key, 0) + 1
+                if self.thread is None:
+                    self.thread = threading.Thread(target=self._run, daemon=True, name="door-linger")
+                    self.thread.start()
+        if not room:
+            _drain_close(sock)
 
     # Every socket read (non-blocking — no `select`, which fails past descriptor 1024) every 50 ms until it is done.
     def _run(self) -> None:
@@ -510,8 +552,8 @@ class _Linger:
                     self.thread = None
                     return
                 socks = list(self.socks.items())
-            now, done = time.monotonic(), []
-            for s, (deadline, read) in socks:
+            now, done, over = time.monotonic(), [], []
+            for s, (deadline, read, key) in socks:
                 try:
                     while read < LINGER_BYTES:
                         got = s.recv(65536)
@@ -526,15 +568,50 @@ class _Linger:
                     got = b""
                 if not got or got == b"over" or now >= deadline:
                     done.append(s)                       # the client finished too, or had its time
+                    if got == b"over":
+                        over.append(s)
                 else:
                     with self.lock:
-                        self.socks[s] = (deadline, read)
+                        self.socks[s] = (deadline, read, key)
             with self.lock:
                 for s in done:
-                    self.socks.pop(s, None)
+                    held = self.socks.pop(s, None)
+                    if held is not None:
+                        left = self.by_addr.get(held[2], 1) - 1
+                        if left > 0:
+                            self.by_addr[held[2]] = left
+                        else:
+                            self.by_addr.pop(held[2], None)
             for s in done:
+                if s in over:
+                    _abort(s)
                 _close(s)
             time.sleep(0.05)
+
+
+# A refusal with no place to wait in: what has arrived is read and dropped now, and the socket closed — a FIN when
+# nothing is left unread; at once, abortively, when the client is still sending past `LINGER_BYTES`.
+def _drain_close(sock) -> None:
+    read = 0
+    try:
+        while read < LINGER_BYTES:
+            got = sock.recv(65536)
+            if not got:
+                break
+            read += len(got)
+        else:
+            _abort(sock)
+    except OSError:                                      # BlockingIOError: drained, nothing more yet
+        pass
+    _close(sock)
+
+
+def _abort(sock) -> None:
+    import struct
+    try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
+    except OSError:
+        pass
 
 
 def _close(sock) -> None:
@@ -592,7 +669,7 @@ class Bounded:
             except OSError:
                 _close(request)
                 return
-            linger.add(request)                          # its request unread: finished, not reset
+            linger.add(request, addr)                    # its request unread: finished, not reset
             return
         self.lanes[request] = (addr, lane)
         try:
@@ -615,7 +692,7 @@ class Bounded:
     # A handler that answered without reading all it was sent (a 413, the reserve's 503): finished, not reset.
     def shutdown_request(self, request):
         if _unread(request):
-            linger.add(request)
+            linger.add(request, (self.lanes.get(request) or ("",))[0])
             return
         super().shutdown_request(request)
 
@@ -732,6 +809,9 @@ class Deadlined:
 
     def handle_one_request(self):
         self.deadline = time.monotonic() + self._headers   # each request of a connection that is kept: its own headers' time
+        reader = getattr(self.rfile, "raw", None)
+        if isinstance(reader, DeadlineReader):
+            reader.floor = None                          # …and no body's floor from the request before
         super().handle_one_request()
 
     # Past the headers the request is its handler's: each operation has the socket's own timeout, and a body is given
@@ -823,6 +903,15 @@ def start_stream(handler, status: int, ctype: str, headers=()) -> bool:
     return chunked
 
 
+# The reader's half: whether an answer has a framing that tells whole from cut — chunks, or a length that IS one.
+# `http.client` says so itself: `chunked` only for `Transfer-Encoding: chunked` alone, `length` only for a
+# `Content-Length` that is a number and not below zero. Asking whether the header is THERE (the review's eighth pass,
+# minor) took `Content-Length: ten`, `-1` and `Transfer-Encoding: gzip, chunked` for framed, and an answer cut by the
+# connection's close for a whole one. Asked before the body is read: `length` counts down as it is.
+def framed(r) -> bool:
+    return bool(getattr(r, "chunked", False)) or getattr(r, "length", None) is not None
+
+
 class ClaimLost(Exception):
     """The idempotency claim this console held was taken over by another: it must not write under it (409)."""
 
@@ -848,11 +937,15 @@ class SendMixin:
 
 
 def body_deadline(h, n: int) -> None:
-    """Give a body of `n` bytes its deadline, whole: the handler's `timeout` and a second for every `BODY_RATE` bytes.
-    Every door that reads a body past its headers sets it — `read_body`, and a door that streams one to a file
-    (the resource's `PUT /mirror`)."""
+    """Give a body of `n` bytes its deadline, whole: the handler's `timeout` and a second for every `BODY_RATE` bytes —
+    and, read through a `DeadlineReader`, a floor on its pace past that grace (`pace`). Every door that reads a body
+    past its headers sets it — `read_body`, and a door that streams one to a file (the resource's `PUT /mirror`)."""
     if hasattr(h, "deadline"):
-        h.deadline = time.monotonic() + float(getattr(h, "timeout", None) or CONSOLE_TIMEOUT) + max(0, n) / BODY_RATE
+        grace = float(getattr(h, "timeout", None) or CONSOLE_TIMEOUT)
+        h.deadline = time.monotonic() + grace + max(0, n) / BODY_RATE
+        reader = getattr(getattr(h, "rfile", None), "raw", None)
+        if isinstance(reader, DeadlineReader):
+            reader.pace(grace, BODY_RATE)                # …and a floor on its pace past the grace (the eighth pass)
 
 
 # A request's body, read once and bounded — the one place a door of this code base reads one (the review's sixth pass:

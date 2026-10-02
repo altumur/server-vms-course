@@ -28,7 +28,7 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
+from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.eventdatabase import MergedIndex
@@ -302,9 +302,7 @@ def _rec_epoch(ctl, unit) -> int | None:
 def _door(url: str, timeout: float):
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
-            framed = r.headers.get("Content-Length") is not None or \
-                "chunked" in (r.headers.get("Transfer-Encoding") or "").lower()
-            if not framed:
+            if not framed(r):                            # …and a length that is a number (the eighth pass): `framed`
                 raise ConnectionError(f"{url}: the door's answer has neither chunks nor a length — whether it is whole "
                                       f"cannot be told")
             return r.read()
@@ -696,6 +694,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
         row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
                "valid_until": str(until)}
+        # The device the rights were asked on (`command_cams`): the holder performs the command only on that device
+        # (`VmsWorker.requests`) — a camera moved onto a recorder in the ten minutes a command may wait is not the
+        # camera the person had the right to command (the review's eighth pass).
+        from .config import device_of
+        src = str((ctl.camera(unit) or {}).get("source") or "")
+        if src:
+            row["device"] = device_of(src)
         for f in ("port", "state", "pulse_ms", "n"):
             if body.get(f) is not None:
                 row[f] = str(body[f])
@@ -1283,8 +1288,22 @@ def vms_metrics(ctl):
         return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]
                 + [f'vms_requests_expired_total{{sub="{s}"}} {n}' for s, n in sorted(jobs.expired.items())]
-                + road)
+                + road + beat_lines(sub, hbs))
     return lines
+
+
+# What a holder's beat waits on, per holder, from its heartbeat (the review's eighth pass, minor: none of it was on
+# `/metrics`): devices whose last call did not answer inside `PERFORM_GRACE` — a look does not wait for them —
+# calls into devices not back yet, and the answers said again after a restart instead of performed twice
+# (`VmsWorker._answered_before`). A holder says each only when it is not zero: a line for every holder, 0 when unsaid.
+def beat_lines(sub: str, hbs: dict) -> list[str]:
+    out = []
+    for metric, field, kind in (("vms_devices_slow", "devices_slow", "gauge"),
+                                ("vms_commands_in_flight", "commands_in_flight", "gauge"),
+                                ("vms_commands_reanswered_total", "commands_reanswered", "counter")):
+        out.append(f"# TYPE {metric} {kind}")
+        out += [f'{metric}{{worker="{w}"}} {_n(sub, w, field, hb.extra.get(field) or 0, int)}' for w, hb in sorted(hbs.items())]
+    return out
 
 
 # What automation adds: each evaluator's last pass, from its heartbeat — how long it took, how many queries it
@@ -1512,19 +1531,51 @@ def recording_cams(vars_):
 # …and `ref`, the name the domain knows the camera by (М12): changed, the camera is another camera to the layer above
 # — its book of primaries, the edits it kept — which is nobody's to decide with rights on one camera: `"*"`, the
 # cluster's grant.
-def source_cams(ctl):
-    from .config import device_of
+#
+# …ONE DEVICE BY ITS ONE SPELLING, AND BY ITS OWN WORD (the review's eighth pass, major; a run): `…/10.0.0.50:80/ch/2`,
+# `…/ACME/…`, `…/10.0.0.50./…` were other devices than `…/10.0.0.50/…`, and the move asked about nobody else's camera.
+# Devices are compared by `device_of` (one spelling) and, where a holder has opened them, by what the device says it
+# is (`config.one_device`) — a DNS name and its address are then one device too.
+#
+# …AND THE SCENARIOS THAT COMMAND THE CAMERA (the same pass, minor). A scenario's `output` on a camera that was its
+# device's only channel was checked against that camera alone; moved onto a recorder's channel, the same scenario
+# pulsed the RECORDER's relay — a port chosen by somebody with no right on the recorder. Rights are asked when a row is
+# written, and a scenario is not rewritten when the camera under it moves. So the move asks for them: whoever moves a
+# camera to another device answers for every scenario that commands it — `admin` on each camera such a scenario
+# reaches (`scenario_cams`), the cluster's grant for one that watches any camera. `scenarios`: the scenarios' rows and
+# their reach, when the console fronts `auto`.
+def source_cams(ctl, scenarios=None):
+    from .config import device_of, one_device
 
     def cams(old: dict, new: dict) -> set:
         out = set()
         if str(old.get("ref") or "") != str(new.get("ref") or ""):
             out.add("*")
         a, b = str(old.get("source") or ""), str(new.get("source") or "")
-        if volumes.source_key(a) != volumes.source_key(b):
-            devices = {device_of(s) for s in (a, b) if s}
-            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) in devices}
+        if a == b:
+            return out                                   # the source as it was: nothing moved, nothing to look up
+        same = one_device(ctl.vars)
+        if volumes.source_key(a, same) != volumes.source_key(b, same):
+            devices = {same(device_of(s)) for s in (a, b) if s}
+            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) in devices}
+            if scenarios is not None and same(device_of(a)) != same(device_of(b)):
+                rows, reach = scenarios
+                for row in rows():
+                    if str(old.get("id")) in commanded(row):
+                        out |= reach(row)
         return out
     return cams
+
+
+# The cameras a scenario COMMANDS — `output`, `preset` on a camera (`then`, `sub: vms`).
+def commanded(row: dict) -> set:
+    then = row.get("then")
+    try:
+        then = json.loads(then or "[]") if isinstance(then, (str, bytes)) else then
+    except ValueError:
+        return {"*"}
+    return {str(a.get("unit")) for a in (then or []) if isinstance(a, dict) and str(a.get("sub", "")) == "vms"
+            and str(a.get("action", "")) in ("output", "preset") and a.get("unit")}
 
 
 # THE CAMERAS A COMMAND TO A DEVICE REACHES (the review's seventh pass, major; a run: a guard with `edit` on camera 1 of
@@ -1537,14 +1588,18 @@ def source_cams(ctl):
 # only channel — a camera with a card, a file — asks for nothing more than it did. The way out, when a site needs a
 # guard to press one relay of a recorder: a binding in the device's description (`relay → channel`, `preset →
 # channel`) which this function would read, and which no driver here gives yet.
+#
+# The device is the one `source_cams` compares by (the eighth pass): one spelling, and the device's own word once a
+# holder has opened it — the recorder under `nvr50.local` and under `10.0.0.50` is one recorder.
 def device_cams(ctl, cam) -> set:
-    from .config import device_of
+    from .config import device_of, one_device
     row = ctl.camera(cam)
     src = str((row or {}).get("source") or "")
     if not src:
         return {str(cam)}
-    dev = device_of(src)
-    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) == dev}
+    same = one_device(ctl.vars)
+    dev = same(device_of(src))
+    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
 
 
 def command_cams(ctl):
@@ -1648,11 +1703,13 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
     root.VIEW_POSTS = ("/whep/",)
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
-    root.moved_cams = source_cams(ctl)
+    # …and, moved to another device, every camera of every scenario that commands it (the eighth pass).
+    controllers = {name: con.ctl for name, con in m.mounts.items()}
+    auto = controllers.get("auto")
+    root.moved_cams = source_cams(ctl, (auto.units, scenario_cams(auto.vars, controllers, ctl)) if auto is not None else None)
     # …and a command to a device reaches every camera of the device (`command_cams`).
     root.body_cams = command_cams(ctl)
     root.labels_of = cam_labels
-    controllers = {name: con.ctl for name, con in m.mounts.items()}
     for name, con in m.mounts.items():
         c = con.ctl
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"

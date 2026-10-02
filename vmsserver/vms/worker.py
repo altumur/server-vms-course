@@ -107,7 +107,7 @@ from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
-                     device_row, live_shm, live_url,
+                     device_row, identity_of, live_shm, live_url, said_id,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
@@ -186,8 +186,9 @@ class FakeDevice:
     """A held device: its channels, its own footage, and how many playbacks it allows at once."""
 
     def __init__(self, key: str, channels=(), coverage=None, max_playbacks: int = 2, bps: int = 1, index=None,
-                 rays: int = 0, relays: int = 0, ptz: bool = False, presets: int = 0, events=()):
+                 rays: int = 0, relays: int = 0, ptz: bool = False, presets: int = 0, events=(), identity: str = ""):
         self.key, self._channels = key, [str(c) for c in channels]
+        self.identity = identity                                 # what the hardware says it is: a serial number, a MAC
         self._coverage = {str(k): v for k, v in (coverage or {}).items()}   # camera -> (from, to[, fragments])
         self._index = {str(k): [(float(a), float(b)) for a, b in v] for k, v in (index or {}).items()}
         self.max_playbacks, self.bps = max_playbacks, bps
@@ -210,7 +211,7 @@ class FakeDevice:
     # The worker adds what it says about every unit it holds — `describe` below.
     def capabilities(self) -> dict:
         return {"rays": self.rays, "relays": self.relays, "ptz": self.ptz, "presets": self.presets,
-                "events": list(self.events)}
+                "events": list(self.events), **({"identity": self.identity} if self.identity else {})}
 
     def output(self, port: int, state: str, ms: int = 0) -> None:
         if not 1 <= int(port) <= self.relays:
@@ -515,6 +516,7 @@ class VmsWorker(Worker):
         self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
         self._beat_failed = False                        # the look at the requests between passes is failing: said once (`beat_once`)
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
+        self._marks_owed: dict[str, bytes] = {}          # request -> its answered mark, not yet taken by the store (`_confirm`)
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
         self.actuator = actuator or FakeActuator()
         self.rows: list[dict] = []
@@ -523,6 +525,7 @@ class VmsWorker(Worker):
         self.device_factory = device_factory or (lambda key: None)
         self.devices: dict[str, object] = {}
         self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
+        self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -598,7 +601,7 @@ class VmsWorker(Worker):
                 self.devices[key] = dev
         for key in set(self.devices) - want:
             dev = self.devices.pop(key)
-            self.described.pop(key, None)
+            self.described.pop(key, None); self.identities.pop(key, None)
             if hasattr(dev, "close"):
                 dev.close()
         self.describe_devices()
@@ -608,18 +611,24 @@ class VmsWorker(Worker):
     # with the store, every later one with memory, so a worker that holds a camera for a year writes its row
     # once. A device that described nothing is left alone: silence is "unknown", and a row saying "no relays"
     # would be a lie that refuses scenarios.
+    #
+    # …and WHICH DEVICE it is, in its own word (`identity`; the review's eighth pass): a DNS name and the address it
+    # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. The
+    # console reads it back to tell the two spellings apart (`config.one_device`).
     def describe_devices(self) -> int:
         wrote = 0
+        idents = self.identities
         for key, dev in self.devices.items():
-            desc = describe(dev.capabilities() if hasattr(dev, "capabilities") else None)
-            if desc is None or self.described.get(key) == desc:
+            caps = dev.capabilities() if hasattr(dev, "capabilities") else None
+            desc, ident = describe(caps), identity_of(caps)
+            if desc is None or (self.described.get(key) == desc and idents.get(key, "") == ident):
                 continue
-            path, row = self.SUB.config(DEVICES, key), device_row(desc)
+            path, row = self.SUB.config(DEVICES, key), device_row(desc, ident)
             items, _ = self.vars.get(path)
             if items != row:
                 self.vars.put(path, row)
                 wrote += 1
-            self.described[key] = desc
+            self.described[key], idents[key] = desc, ident
         return wrote
 
     # The same description, per unit, as it is carried in the heartbeat (`can`). The row is for this
@@ -1107,6 +1116,7 @@ class VmsWorker(Worker):
     COMMANDS_PER_LOOK = HUNG_DEVICES                # every device of such a holder, commanded at once, called in one look
     REQUESTS_HOLD = 0.5                             # seconds one `requests` call may hold the loop's thread
     FETCHED_BYTES = 8192                            # the answered ids one heartbeat carries, oldest first
+    FETCHED_COUNT = COMMANDS_BURST * 10             # …at most so many: the burst, for the ten seconds between two heartbeats
     SKEW_SLACK = 1.0                                # a filing this much before our previous listing: the writer's clock is behind
 
     @staticmethod
@@ -1192,6 +1202,8 @@ class VmsWorker(Worker):
         self._first_seen = {r: t for r, t in self._first_seen.items() if r in present}
         self._requests_read = {r: v for r, v in self._requests_read.items() if r in present}
         self._marks_looked &= present
+        if self._marks_owed:
+            self._confirm_owed(present)                  # answers the store did not take the first time (`_confirm`)
         # When each row first appeared, as "after our previous listing" — what a filing that says otherwise is checked
         # against (`_measure`, `behind`). The first listing of a process knows of no before.
         self._appeared = {r: t for r, t in self._appeared.items() if r in present}
@@ -1266,6 +1278,17 @@ class VmsWorker(Worker):
                 done.append({"request": rid, "unit": row["id"], "expired": True})
                 self.commands["expired"] += 1
                 log.warning("%s: request %s expired unperformed (%.0fs late)", self.name, rid, now - until)
+                continue
+            # RIGHTS ARE THE DEVICE'S THE COMMAND WAS FILED FOR (the review's eighth pass, minor). The console asks for them on
+            # every camera of the device (`command_cams`) and writes that device into the row (`device`); a command
+            # waits up to `MAX_VALID`, and a camera moved onto a recorder's channel meanwhile would have the recorder
+            # pulse a relay nobody with a right on it chose. Performed only on the device it was filed for. A row with
+            # no `device` — a scenario's (asked again when its camera moves: `vms/console.py`, `source_cams`) or an
+            # older console's — is performed as before.
+            filed_for = str(it.get("device") or "")
+            if filed_for and filed_for != device_of(str(row.get("source") or "")):
+                self._refused(rid, row, it, f"camera {unit} was moved to another device after this command was given: it "
+                                            f"was not performed — give it again if it is still wanted", done)
                 continue
             dev = self.device_of_row(row)
             if dev is None:
@@ -1369,15 +1392,37 @@ class VmsWorker(Worker):
     # "an earlier instance began it" (`requests`). A call that did not answer leaves its mark as it was: whether the
     # device acted is not known, and `unknown` is then the truth. A store that does not take the write costs the
     # same: the next instance says `unknown`, as it did before; the answer already given stands.
+    #
+    # …AND AN ANSWER THE STORE DID NOT TAKE IS OWED, NOT DROPPED (the review's eighth pass, minor; 5 of 5): one failed write
+    # and a restart in the ten seconds after was a false `command.failed` — the next instance found the bare mark and
+    # said `unknown`. The mark is kept (`_marks_owed`) and written again at every look until the store takes it, or the
+    # request's row is gone (`requests`); what stays open is a restart while the store is still not taking it.
+    MARKS_OWED_PER_LOOK = 16
+
     def _confirm(self, rid: str, row: dict, outcome: str, it: dict) -> None:
+        mark = json.dumps({"instance": self.instance, "slot": self.name, "unit": str(row["id"]), "outcome": outcome,
+                           "action": str(it.get("action", "")), "at": self.wall()}).encode()
         try:
-            self.objects.put(self.command_key(rid), json.dumps(
-                {"instance": self.instance, "slot": self.name, "unit": str(row["id"]), "outcome": outcome,
-                 "action": str(it.get("action", "")), "at": self.wall()}).encode())
+            self.objects.put(self.command_key(rid), mark)
+            self._marks_owed.pop(rid, None)
         except Exception as e:                           # noqa: BLE001
             self.store_errors += 1
-            log.warning("%s: the answer to request %s could not be written into its mark (%s); a restart would "
-                        "call it unknown", self.name, rid, e)
+            self._marks_owed[rid] = mark
+            log.warning("%s: the answer to request %s could not be written into its mark (%s); written again at the next "
+                        "look", self.name, rid, e)
+
+    def _confirm_owed(self, present: set) -> int:
+        self._marks_owed = {r: m for r, m in self._marks_owed.items() if r in present}   # a row gone: its mark is swept
+        wrote = 0
+        for rid, mark in list(self._marks_owed.items())[:self.MARKS_OWED_PER_LOOK]:
+            try:
+                self.objects.put(self.command_key(rid), mark)
+            except Exception:                            # noqa: BLE001 — still not taking it: the next look
+                self.store_errors += 1
+                break
+            del self._marks_owed[rid]
+            wrote += 1
+        return wrote
 
     # The mark, create-only: `True` when this instance made it, `False` when somebody else did — the store says so
     # (`put_new`: a directory's `link`, М11's Variables by CAS on index 0). A store WITHOUT create-only answers
@@ -1563,18 +1608,36 @@ class VmsWorker(Worker):
     PLAYBACK_BUDGET_WAIT = 5.0
     PLAYBACK_PER_SIGNATURE = 2
 
-    def playback_signature(self, sig: str, step: int) -> bool:
-        """Count a connection on a signed address in (`+1`: False when it has its `PLAYBACK_PER_SIGNATURE`) or out."""
-        sigs = self.__dict__.setdefault("_playback_sigs", {})          # one, whichever connection asks first
+    # …AND ONE PERSON HOLDS A SHARE OF IT, NOT ALL OF IT (the review's eighth pass, major; a run). The bound was per signed
+    # address, and every `/segment` with another `from` is another signature: a viewer with `view` on one camera took
+    # sixteen, opened them from two addresses and read at 80 kB/s — above `Paced`'s floor — and in fifteen seconds the
+    # door's 64 MiB were his; everybody else's playback was 503, or ended at its next piece. So a signed viewer — the
+    # name the console signed (`check_signed`), never a `v` that nobody checked, and in an open cluster nobody — holds
+    # `PLAYBACK_PER_PERSON` connections at once whatever he was signed: a connection holds one piece at a time, so a
+    # person holds `PLAYBACK_PER_PERSON × PLAYBACK_PIECE_BYTES` of the budget (16 of 64 MiB at the defaults), and three
+    # quarters of it are other people's. A process of the cluster (a capability per camera) is held by the signature
+    # bound alone, as before.
+    PLAYBACK_PER_PERSON = 4
+
+    def _playback_count(self, table: str, key: str, step: int, limit: int) -> bool:
+        counts = self.__dict__.setdefault(table, {})            # one, whichever connection asks first
         with self.__dict__.setdefault("_playback_sigs_lock", threading.Lock()):
-            n = sigs.get(sig, 0)
-            if step > 0 and n >= self.PLAYBACK_PER_SIGNATURE:
+            n = counts.get(key, 0)
+            if step > 0 and n >= limit:
                 return False
             if n + step > 0:
-                sigs[sig] = n + step
+                counts[key] = n + step
             else:
-                sigs.pop(sig, None)
+                counts.pop(key, None)
             return True
+
+    def playback_signature(self, sig: str, step: int) -> bool:
+        """Count a connection on a signed address in (`+1`: False when it has its `PLAYBACK_PER_SIGNATURE`) or out."""
+        return self._playback_count("_playback_sigs", sig, step, self.PLAYBACK_PER_SIGNATURE)
+
+    def playback_person(self, who: str, step: int) -> bool:
+        """Count a connection of a signed viewer in (`+1`: False when he has his `PLAYBACK_PER_PERSON`) or out."""
+        return self._playback_count("_playback_people", who, step, self.PLAYBACK_PER_PERSON)
 
     def playback_budget(self) -> "ByteBudget":
         return self.__dict__.setdefault("_playback_budget", ByteBudget(self.PLAYBACK_BUDGET))
@@ -1687,19 +1750,32 @@ class VmsWorker(Worker):
     # commands a second the standing rows went 45 → 174 and on without a bound. Now as many as fit in `FETCHED_BYTES`
     # (a heartbeat is one object under the store's ceiling), oldest first: what is cleared leaves `fetched` with its
     # row, and the next heartbeat carries the next ones — a cursor that is the list itself.
+    #
+    # …AND BY COUNT, NOT BY THE LENGTH OF A NAME (the review's eighth pass, minor; a run): the ceiling was bytes, so a
+    # heartbeat cleared `FETCHED_BYTES / (len(id) + 1)` — forty ids of an operator's 200 characters, four commands a
+    # second, and the rows grew past it (30 a second: 1108 standing in 90 s). A long id, or one with a comma or a control
+    # character in it, is said by its digest (`config.said_id`, which the console's `clear_requests` matches the same
+    # way): every answer costs at most 41 bytes, and a heartbeat carries `FETCHED_COUNT` of them — 16 a second cleared,
+    # the burst the beat allows, whatever the names. Faster than that for long is past the design (2 a second).
     def fetched_said(self) -> str:
         out, size = [], 0
-        for rid in self.fetched:
-            size += len(rid) + 1
+        for rid in self.fetched[:self.FETCHED_COUNT]:
+            said = said_id(rid)
+            size += len(said) + 1
             if size > self.FETCHED_BYTES:
                 break
-            out.append(rid)
+            out.append(said)
         return ",".join(out)
 
     def heartbeat_extra(self) -> dict:
         return {"fetched": self.fetched_said(),
                 **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
                 **({"commands_reanswered": self.reanswered} if self.reanswered else {}),
+                # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer
+                # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
+                # and `vms_commands_in_flight` (`vms/console.py`, `beat_lines`).
+                **({"devices_slow": len(self._slow)} if self._slow else {}),
+                **({"commands_in_flight": len(self._performing)} if self._performing else {}),
                 # The road to the device, as histograms since this process started (`_measure`).
                 **({"command_road": self.road, "command_request": self.request_road, "command_wait": self.wait}
                    if self.wait["count"] else {}),
@@ -1746,6 +1822,7 @@ class VmsWorker(Worker):
     PLAYBACK_PER_ADDRESS = 8         # …of which one address holds this many: a browser, a recorder, a survey
     PLAYBACK_MIN_RATE = STREAM_MIN_RATE   # bytes a second a client takes on average, over the time spent writing to it
     PLAYBACK_GRACE = STREAM_GRACE         # …counted once that time is past this many seconds
+    PLAYBACK_SNDBUF = 256 << 10           # the kernel's send buffer a connection gets: a LAN's bandwidth × delay, not 4 MB
 
     def playback_journal(self):
         from w2cplatform.journal import Journal
@@ -1753,8 +1830,9 @@ class VmsWorker(Worker):
             self._playback_journal = Journal(self.archive_root, f"door-{self.name}", self.wall)
         return self._playback_journal
 
-    # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`.
-    def playback_refusal(self, cam: str, rest: str, q: dict, addr: str):
+    # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`. `seen`,
+    # when given, is told who the signed viewer is (`who`) — only once the signature over that name was checked.
+    def playback_refusal(self, cam: str, rest: str, q: dict, addr: str, seen: dict | None = None):
         from w2cplatform.access import Denied, Gate
         from . import playback as pb
         if getattr(self, "_playback_gate", None) is None:
@@ -1775,6 +1853,8 @@ class VmsWorker(Worker):
         else:
             try:
                 who = pb.check_signed(key, cam, q, self.wall())
+                if seen is not None:
+                    seen["who"] = who
                 self.playback_journal().say("archive.read", user=who, source="device", target=cam, addr=addr,
                                             **{"from": q.get("from"), "to": q.get("to"), "worker": self.name})
                 return None
@@ -1791,6 +1871,16 @@ class VmsWorker(Worker):
             timeout = gw.PLAYBACK_TIMEOUT
 
             def log_message(self, *a): pass
+
+            # The kernel's share of a connection, capped (`PLAYBACK_SNDBUF`; the review's eighth pass): left to itself
+            # the send buffer grows to megabytes under a reader that is slow — and each connection cut for its pace
+            # left that much footage in the kernel for as long as the socket lingered, outside the door's budget.
+            def setup(self):
+                super().setup()
+                try:
+                    self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, gw.PLAYBACK_SNDBUF)
+                except OSError:
+                    pass
 
             def do_GET(self):
                 u = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(u.query).items()}
@@ -1812,20 +1902,31 @@ class VmsWorker(Worker):
                 if len(segs) not in (3, 4) or segs[1] != "playback" or not segs[2]:
                     return self._send(404, {"detail": "no such route", "error": "no such path"})
                 cam = segs[2]
-                refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]))
+                seen: dict = {}
+                refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]), seen)
                 if refused is not None:
                     return self._send(refused[0], {"detail": refused[1], "error": "denied"})
                 # One signed address — or one camera's capability — holds `PLAYBACK_PER_SIGNATURE` connections at once
-                # (`playback_pieces`): eight on one address were eight pieces of one viewer's interval.
+                # (`playback_pieces`): eight on one address were eight pieces of one viewer's interval. And one VIEWER —
+                # the name the console signed, never a `v` nobody checked — holds `PLAYBACK_PER_PERSON` across every
+                # address he was signed (the review's eighth pass, major).
                 held = q.get("sig") or (segs[3] if len(segs) == 4 else "")
+                who = seen.get("who")
                 if held and not gw.playback_signature(held, +1):
                     return self._send(503, {"detail": f"this address is being read {gw.PLAYBACK_PER_SIGNATURE} times "
                                                       f"at once already — one viewer, one interval", "error": "busy"})
+                if who is not None and not gw.playback_person(who, +1):
+                    if held:
+                        gw.playback_signature(held, -1)
+                    return self._send(503, {"detail": f"{who} is reading {gw.PLAYBACK_PER_PERSON} pieces of footage at "
+                                                      f"once already — close one first", "error": "busy"})
                 try:
                     return self._play(cam, q)
                 finally:
                     if held:
                         gw.playback_signature(held, -1)
+                    if who is not None:
+                        gw.playback_person(who, -1)
 
             def _play(self, cam, q):
                 try:

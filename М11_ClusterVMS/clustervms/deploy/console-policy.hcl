@@ -48,5 +48,16 @@ namespace "default" {
     # until the policies were checked against the code.
     path "platform/drain"  { capabilities = ["write", "read"] }
     path "platform/*"      { capabilities = ["read", "list"] }
+    # WHAT THE GATE READS (М10's eighth review: no policy let anybody read `domain/*`, and the stand enforces no read
+    # ACL — on a real Nomad the gate was a 403 and failed shut). On every request the key set, and while there is none
+    # the rows that say this cluster is a member all the same (`w2cplatform/access.py`, `TRUST_KEYS`, `DOMAIN_MARKS`);
+    # a domain's image reads the grants by cluster too. Read only: the domain's agent writes them.
+    path "domain/keys"          { capabilities = ["read"] }
+    path "domain/member"        { capabilities = ["read"] }
+    path "domain/root"          { capabilities = ["read"] }
+    path "domain/grants"        { capabilities = ["read"] }
+    path "domain/grants/*"      { capabilities = ["read", "list"] }
+    path "domain/revoked"       { capabilities = ["read"] }
+    path "domain/break_glass"   { capabilities = ["read"] }
   }
 }

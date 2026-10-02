@@ -355,6 +355,28 @@ def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_an
             os.environ["CONSOLE_MONITORS"] = was
 
 
+def test_what_the_doors_open_in_code_the_jobs_turn_on_and_a_monitor_is_an_address_not_a_network():
+    """М10's eighth review, minor: the domain's console and the signer had the reserve, the box's own door and the
+    monitors' lane in code, and their jobs set none of it — Nomad's own check of `/healthz` failed under a flood from
+    sixteen addresses. The jobs name the unix sockets (in the directory the host makes at boot, mounted) and the
+    monitors: the node's loopback and address, and the scrapers the operator names. And the cluster's console job
+    lists the addresses that scrape, not `10.0.0.0/8` (the same review, major)."""
+    import os
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    console = open(os.path.join(here, "deploy", "console.nomad.hcl")).read()
+    signer = open(os.path.join(here, "deploy", "signer.nomad.hcl")).read()
+    monitors = 'CONSOLE_MONITORS=127.0.0.1,{{ env "attr.unique.network.ip-address" }},${var.monitors}'
+    assert "DOMAIN_CONSOLE_UNIX=/run/vms-console/domain-console.sock" in console and monitors in console
+    assert "SIGNER_UNIX=/run/vms-console/signer.sock" in signer and monitors in signer
+    for job in (console, signer):
+        assert '"/run/vms-console:/run/vms-console"' in job and 'variable "monitors"' in job
+    tmpfiles = open(os.path.join(here, "..", "..", "vmsserver", "deploy", "vms.tmpfiles")).read()
+    assert "d /run/vms-console 0700 root root" in tmpfiles
+    cluster = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "console.nomad.hcl")).read()
+    assert "10.0.0.0/8" not in cluster.split("CONSOLE_MONITORS =", 1)[1].split("\n", 1)[0]
+    assert 'CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"' in cluster
+
+
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A

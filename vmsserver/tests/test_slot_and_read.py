@@ -487,14 +487,17 @@ def test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one
     """The review's seventh pass, minor: `_door` took an answer that ended where its connection ended — no chunks, no
     `Content-Length` — as whole; such an answer cut half way (a door that spoke HTTP/1.0, a proxy that took the framing
     off) looked exactly like one that had nothing more. Both readers of a recorder's frames — the console's export and a
-    recorder copying from a backup — refuse it; with a length, or in chunks, it is read as before."""
+    recorder copying from a backup — refuse it; with a length, or in chunks, it is read as before. And a header is not
+    a framing (the eighth pass, minor): `Content-Length: ten`, `-1`, `Transfer-Encoding: gzip, chunked` on an answer
+    the connection's end cut were taken for whole — what is asked now is whether `http.client` reads a length or chunks
+    out of them (`framed`)."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from vms import console as vc
     from vms.recworker import RecWorker
     from vms.worker import fake_samples
     frames = b"".join(s.encode() for s in fake_samples(1000.0, 1004.0))
-    state = {"length": False}
+    state = {"length": False, "header": None}
 
     class H(BaseHTTPRequestHandler):                                  # HTTP/1.0: the connection's end is the answer's end
         def log_message(self, *a):
@@ -505,8 +508,10 @@ def test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one
             self.send_header("Content-Type", "application/octet-stream")
             if state["length"]:
                 self.send_header("Content-Length", str(len(frames)))
+            if state["header"]:
+                self.send_header(*state["header"])
             self.end_headers()
-            self.wfile.write(frames)
+            self.wfile.write(frames[:len(frames) // 2] if state["header"] else frames)   # …and cut half way
     srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     url = f"http://127.0.0.1:{srv.server_address[1]}"
@@ -518,6 +523,16 @@ def test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one
                 raise AssertionError("an answer with no framing read as whole")
             except OSError as e:
                 assert "neither chunks nor a length" in str(e)
+        for header in (("Content-Length", "ten"), ("Content-Length", "-1"), ("Transfer-Encoding", "gzip, chunked")):
+            state["header"] = header
+            for read in (lambda: vc._door(f"{url}/samples/7?from=1000&to=1004", 5.0),
+                         lambda: RecWorker.read_samples(None, url, "7", 1000.0, 1004.0)):
+                try:
+                    read()
+                    raise AssertionError(f"{header}: a cut answer read as whole")
+                except OSError as e:
+                    assert "neither chunks nor a length" in str(e), (header, e)
+        state["header"] = None
         state["length"] = True
         assert vc._door(f"{url}/samples/7?from=1000&to=1004", 5.0) == frames
         assert len(RecWorker.read_samples(None, url, "7", 1000.0, 1004.0)) == 4

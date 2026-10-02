@@ -138,6 +138,118 @@ def test_every_write_grant_is_one_the_code_asked_for():
         assert not unexplained, f"{policy} grants write to {sorted(unexplained)}, which no acl_* in the spec asks for"
 
 
+# -- READS (М10's eighth review, the sweep of the three-cameras notes) -----------------------------------------------
+# The file checked writes only, and the stand enforces no read ACL: the console's gate reads `domain/keys` and the rows
+# that mark a member on every request, the holder's playback door the same, and every process `platform/schema` when
+# it starts — and no policy but the console's let anybody read `platform/*`, and none `domain/*`. On a real Nomad each
+# of those is a 403: the gate fails shut, the schema check fails. So the reads are checked against the code too, the way
+# the writes are: every read the processes MAKE — the module's stand, every scene, under each process's own name, and
+# the doors the scenes do not knock on — is granted by that process's policy; and the cluster's key is read by the
+# three jobs that open a device's password and by nobody else.
+def may(policy: str, cap: str, key: str) -> bool:
+    return any(cap in caps for pat, caps in rules(policy) if matches(pat, key))
+
+
+ROLES = {"console": "console-policy.hcl", "vmsworker": "vmsworker-policy.hcl", "recworker": "recworker-policy.hcl",
+         "resource": "resource-policy.hcl", "vmscontroller": "vmscontroller-policy.hcl",
+         "reccontroller": "reccontroller-policy.hcl"}
+
+
+def _doors(s) -> None:
+    """What the scenes do not do: a request at the console's door and at the holder's playback door (each asks its
+    gate), and the recorder controller's passes."""
+    import urllib.request
+    from cluster.console import serve
+    from cluster.worker import ClusterWorker
+    from vms.worker import FakeActuator, FakeDevice
+    from w2cplatform.spec import SpecController
+    s.resources_up()
+    from cluster.controller import ClusterController
+    v, o = s.as_process("console (gate)", "console", SPEC.acl_console() + REC_SPEC.acl_console())
+    con, ctl = ClusterController(v, o, wall=s.wall), s.controller()
+    con.create_camera({"source": "driverpack://acme/10.0.0.50/ch/1"})
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 100.0)})
+    v, o = s.as_process("vmsworker (allocation 0 on srv-a)", "vmsworker-0", WORKER_ACL + [OBJECTS + p for p in WORKER_OBJECTS])
+    w = ClusterWorker(v, o, FakeActuator(), env=s.env(0, "srv-a"), clock=s.clock, wall=s.wall, device_factory=lambda k: dev)
+    w.heartbeat_once(); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+    door = w.serve_playback("127.0.0.1", 0)
+    rec_con = SpecController(REC_SPEC, con.vars, con.objects, wall=s.wall)
+    srv = serve(con, port=0, rec_ctl=rec_con)
+    try:
+        for url in (f"http://127.0.0.1:{door.server_address[1]}/playback/1?from=0&to=1",
+                    f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
+            with urllib.request.urlopen(url) as r:
+                r.read()
+    finally:
+        door.shutdown(); srv.shutdown()
+    rec_con.create({"name": "1", "cam": "1"})
+    v, o = s.as_process("reccontroller", "reccontroller", REC_SPEC.acl_controller())
+    rc = SpecController(REC_SPEC, v, o, wall=s.wall)
+    rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
+
+
+def code_reads() -> dict[str, set[tuple[str, str]]]:
+    """`{policy: {("read" | "list", path)}}`: every read of the store each process made."""
+    from urllib.parse import unquote
+    import tests.stand as stand
+    made, real = [], stand.Stand.__init__
+
+    def init(self, *a, **k):
+        real(self, *a, **k)
+        made.append(self)
+    stand.Stand.__init__ = init
+    try:
+        for scene in stand.SCENES.values():
+            scene()
+        _doors(stand.Stand())
+    finally:
+        stand.Stand.__init__ = real
+    out: dict[str, set] = {}
+    for s in made:
+        for c in s.log.calls:
+            role = c.who.split()[0]
+            if c.method != "GET" or c.who == "console" or role not in ROLES:
+                continue                                 # `console` alone is the scene's own hand, not a process
+            if c.url.startswith("/v1/vars?prefix="):
+                op, path = "list", unquote(c.url[len("/v1/vars?prefix="):].split("&", 1)[0])
+            else:
+                op, path = "read", unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
+            out.setdefault(ROLES[role], set()).add((op, path))
+    return out
+
+
+def test_every_row_the_code_reads_is_granted():
+    """Direction one, for reads: every GET and every listing a process made in the stand is allowed by its policy."""
+    reads = code_reads()
+    assert set(reads) == set(ROLES.values()), sorted(set(ROLES.values()) - set(reads))   # every process was run
+    for policy, made in sorted(reads.items()):
+        for op, path in sorted(made):
+            key = path + "x" if op == "list" else path   # a listing is of a prefix: what lies under it
+            assert may(policy, op, key), f"{policy} does not let it {op} {path}"
+
+
+def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():
+    """The same from the code's constants, for what the stand reaches only in part: the gate asks for the key set and
+    every row that marks a member (`TRUST_KEYS`, `DOMAIN_MARKS`) at the console and at the holder's door; a domain's
+    image reads the grants by cluster (`domain/grants/<cluster>`); every process checks `platform/schema` first."""
+    from w2cplatform.access import DOMAIN_MARKS, TRUST_KEYS
+    from w2cplatform.contract import SCHEMA_KEY
+    for policy in ("console-policy.hcl", "vmsworker-policy.hcl"):
+        for key in (TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/acme"):
+            assert may(policy, "read", key), f"{policy} does not let it read {key}"
+    for policy in set(ROLES.values()):
+        assert may(policy, "read", SCHEMA_KEY), f"{policy} does not let it read {SCHEMA_KEY}"
+
+
+def test_the_clusters_key_is_read_by_the_three_jobs_that_open_a_password_and_nobody_else():
+    """`secrets/vms` — the console seals, the holder and the recorder open (`w2cplatform/sealing.py`). The controllers
+    had `path "*"` read, which reads it too, against the console's own comment; they read what they read now."""
+    for policy in ROLES.values():
+        opens = policy in ("console-policy.hcl", "vmsworker-policy.hcl", "recworker-policy.hcl")
+        assert may(policy, "read", "secrets/vms") == opens, policy
+        assert all(pat != "*" for pat, _ in rules(policy)), f"{policy} still reads everything"
+
+
 def test_the_exact_path_that_broke_it_stays_broken_as_a_pattern():
     """Kept as a named case because it cost nothing to write and would have cost a
     production morning: Nomad's path is a glob, and a glob without a `*` is exact."""

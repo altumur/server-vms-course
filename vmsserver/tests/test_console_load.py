@@ -435,6 +435,118 @@ def test_a_refusal_is_read_by_the_client_not_reset_under_it():
         srv.shutdown(); _restore(was)
 
 
+def test_sixteen_addresses_that_go_on_sending_after_their_refusal_leave_the_honest_refusal_readable():
+    """The review's eighth pass, minor — a run: the flood went on sending after its 503s, the 256 places of the waiting
+    room (`linger`) were all its own, and the next refusals were closed at once — reset: an honest client got
+    `ConnectionResetError` in 30–35 of 48 at sixteen addresses. An address holds `LINGER_PER_ADDRESS` places, and a
+    refusal past them has what arrived of it read and dropped before it is closed (`_drain_close`). Sixteen addresses
+    hold sixty-four places of `LINGER_MAX`; the honest client's refusal waits in a place of its own and is read whole."""
+    from w2cplatform import console as wc
+    was = _env(CONSOLE_CONNECTIONS=2, CONSOLE_PER_ADDRESS=2, CONSOLE_RESERVE=0, CONSOLE_HEADER_TIMEOUT=30)
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    port, who, stop, held = srv.server_address[1], {}, threading.Event(), []
+    srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
+    junk = b"x" * (64 << 10)
+    flooders = [f"203.0.113.{i}" for i in range(16)]
+
+    def flood():                                                      # 20 connections an address, each sending on and
+        socks = []                                                    # left open; one the door let go is opened again
+        while not stop.is_set():
+            alive = []
+            for a, s in socks:
+                try:
+                    s.setblocking(False)
+                    if s.recv(65536) == b"":
+                        s.close()
+                        continue
+                    alive.append((a, s))
+                except BlockingIOError:
+                    alive.append((a, s))
+                except OSError:
+                    s.close()
+            socks = alive
+            for a in flooders:
+                try:
+                    while sum(1 for b, _ in socks if b == a) < 20:
+                        s = _as(who, a, port)
+                        s.setblocking(False)
+                        try:
+                            s.send(junk)
+                        except OSError:
+                            pass
+                        socks.append((a, s))
+                except OSError:
+                    pass
+            stop.wait(0.02)
+        for _, s in socks:
+            s.close()
+    try:
+        for _ in range(2):
+            s = _as(who, "192.0.2.1", port); s.sendall(b"GET /cam"); held.append(s)   # the door's two connections, held
+        time.sleep(0.2)
+        t = threading.Thread(target=flood, daemon=True)
+        t.start()
+        for _ in range(100):
+            if len(wc.linger.socks) >= 16 * wc.LINGER_PER_ADDRESS - 8:
+                break
+            time.sleep(0.05)
+        assert all(n <= wc.LINGER_PER_ADDRESS for n in dict(wc.linger.by_addr).values()), wc.linger.by_addr
+        body, resets = b"y" * (256 << 10), 0
+        for i in range(48):
+            s = _as(who, "198.51.100.77", port)
+            s.settimeout(5)
+            try:
+                s.sendall(b"POST /marks HTTP/1.1\r\nHost: x\r\nContent-Length: %d\r\n\r\n" % len(body) + body)
+            except OSError:
+                pass                                                  # the door may finish before all of it went
+            out = b""
+            try:
+                while True:
+                    got = s.recv(65536)
+                    if not got:
+                        break
+                    out += got
+            except ConnectionResetError:
+                resets += 1
+            s.close()
+            assert resets or out.startswith(b"HTTP/1.0 503"), out[:80]
+            time.sleep(0.1)                                           # a client that retries, sooner than `Retry-After`
+        assert resets == 0, f"{resets} of 48 refusals were reset"
+    finally:
+        stop.set()
+        for s in held:
+            s.close()
+        srv.shutdown(); _restore(was)
+
+
+def test_one_listed_monitor_holds_two_places_of_its_lane_and_another_listed_one_is_answered():
+    """The review's eighth pass, major — a run: М11 listed `10.0.0.0/8`, and eight addresses of the cluster's network
+    took the common slots, the reserve and all four places of the monitors' lane: Prometheus had 503 in 15 of 15. An
+    address holds `MONITOR_PER_ADDRESS` of the lane; the jobs list the addresses that scrape, not their network."""
+    from w2cplatform import console as wc
+    was = _env(CONSOLE_CONNECTIONS=2, CONSOLE_PER_ADDRESS=2, CONSOLE_RESERVE=0, CONSOLE_HEADER_TIMEOUT=30,
+               CONSOLE_MONITORS="198.18.0.0/24")
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    port, who, held = srv.server_address[1], {}, []
+    srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
+    try:
+        for _ in range(2):
+            s = _as(who, "203.0.113.9", port); s.sendall(b"GET /cam"); held.append(s)   # the common slots, gone
+        for _ in range(4):
+            s = _as(who, "198.18.0.5", port); s.sendall(b"GET /met"); held.append(s)    # a listed address, half a line ×4
+        time.sleep(0.3)
+        assert srv.bounds.by_addr.get(("monitor", "198.18.0.5")) == wc.MONITOR_PER_ADDRESS
+        assert srv.bounds.used["monitor"] == wc.MONITOR_PER_ADDRESS
+        metrics = _ask(_as(who, "198.18.0.6", port), b"GET /metrics HTTP/1.1\r\nHost: x\r\n\r\n")
+        assert metrics.startswith(b"HTTP/1.0 200") and b"vms_" in metrics, metrics[:120]           # another listed one
+    finally:
+        for s in held:
+            s.close()
+        srv.shutdown(); _restore(was)
+
+
 def test_a_connection_nobody_knows_yet_has_seconds_for_its_headers_not_the_sockets_timeout():
     """The same finding: each of those connections held its slot for `CONSOLE_TIMEOUT` — thirty seconds of a thread for
     half a request line. The request line and headers have `CONSOLE_HEADER_TIMEOUT`, whatever the socket's timeout
@@ -724,6 +836,110 @@ def test_the_holders_door_holds_a_budget_of_footage_not_a_minute_a_connection_an
         door.shutdown()
 
 
+def test_one_viewer_holds_a_share_of_the_holders_door_however_many_addresses_he_was_signed():
+    """The review's eighth pass, major — a run: the bound was per signed address, and every `/segment` with another
+    `from` is another signature. A viewer with `view` on one camera took sixteen, read nothing — or just above the
+    floor — and the door's budget was his: everybody else's playback was 503. A signed viewer (the name the console
+    signed, `check_signed`) holds `PLAYBACK_PER_PERSON` connections at once whatever he was signed, and so at most that
+    many pieces of the budget; another viewer is served. In an open cluster nobody is anybody: a `v` nobody checked is
+    not a person (`test_the_holders_door_holds_a_budget…` is that door)."""
+    from vms import playback as pb
+    from w2cplatform.access import TRUST_KEYS
+    from vms.worker import FakeDevice
+    box = Box()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 3600.0)}, max_playbacks=64, bps=1_000_000)
+    piece, budget = 1 << 20, 8 << 20                              # a second of this camera a piece; eight pieces
+    w, door = _holder(box, dev, PLAYBACK_PIECE_BYTES=piece, PLAYBACK_BUDGET=budget, PLAYBACK_FIRST=1.0,
+                      PLAYBACK_BUDGET_WAIT=0.5, PLAYBACK_CONNECTIONS=32, PLAYBACK_PER_ADDRESS=32)
+    box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # a cluster in a domain: the door asks
+    port = door.server_address[1]
+    signed = lambda who, t0, t1: f"/playback/1?{pb.signed_query(w.playback_key, '1', t0, t1, who, box.wall())}"
+
+    def nobody_reads(path: str) -> socket.socket:
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        s.connect(("127.0.0.1", port))
+        s.sendall(f"GET {path} HTTP/1.1\r\nHost: x\r\n\r\n".encode())
+        return s
+    idle, refused = [], 0
+    try:
+        for i in range(16):                                           # sixteen signatures, one viewer
+            s = nobody_reads(signed("mallory", i * 60.0, i * 60.0 + 600))
+            s.settimeout(0.3)
+            head = b""
+            try:
+                while b"busy" not in head and len(head) < 400:
+                    got = s.recv(512)
+                    if not got:
+                        break
+                    head += got
+            except socket.timeout:
+                pass
+            if head.startswith(b"HTTP/1.0 503"):
+                assert b"pieces of footage at once" in head, head
+                refused += 1
+                s.close()
+            else:
+                idle.append(s)
+        assert len(idle) == w.PLAYBACK_PER_PERSON and refused == 16 - w.PLAYBACK_PER_PERSON
+        assert w.playback_budget().used <= w.PLAYBACK_PER_PERSON * piece + piece    # his share, not the door's
+        reply, _ = _raw(port, f"GET {signed('anna', 0.0, 2.0)} HTTP/1.1\r\nHost: x\r\n\r\n".encode(), wait=10.0)
+        assert reply.startswith(b"HTTP/1.1 200") and reply.endswith(b"0\r\n\r\n"), reply[:120]   # another viewer: served
+    finally:
+        for s in idle:
+            s.close()
+        door.shutdown()
+
+
+def test_a_viewer_slower_than_the_floor_is_let_go_by_the_floor_not_by_a_sockets_timeout():
+    """The review's eighth pass: no test reached `PLAYBACK_MIN_RATE` — in the one there was, the socket's one-second
+    timeout cut the trickle first. Here the socket waits thirty seconds and the viewer reads steadily, every write
+    taken within it: what lets him go is the floor (`Paced`), and says so. The kernel's share of the connection is
+    capped (`PLAYBACK_SNDBUF`), so what he leaves behind in it is a quarter of a megabyte, not four."""
+    import logging
+    from vms.worker import FakeDevice
+    box = Box()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 600.0)}, max_playbacks=4, bps=1_000_000)
+    w, door = _holder(box, dev, PLAYBACK_TIMEOUT=30.0, PLAYBACK_MIN_RATE=2_000_000, PLAYBACK_GRACE=1.0)
+    port = door.server_address[1]
+    said: list[str] = []
+
+    class Catch(logging.Handler):
+        def emit(self, record):
+            said.append(record.getMessage())
+    catch = Catch()
+    logging.getLogger("vmsworker").addHandler(catch)
+    try:
+        let_go = _released(door, dev, wait=25.0)
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192)
+        s.connect(("127.0.0.1", port))
+        s.sendall(b"GET /playback/1?from=0&to=600 HTTP/1.1\r\nHost: x\r\n\r\n")
+        s.settimeout(5.0)
+        began, got = time.monotonic(), 0
+        while not let_go.is_set() and time.monotonic() - began < 25.0:   # 200 kB/s, steadily: every write taken in time
+            try:
+                data = s.recv(4096)
+            except socket.timeout:
+                break
+            if not data:
+                break
+            got += len(data)
+            if got == len(data):                                      # the door's side of this connection, once
+                bufs = [c.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF) for c in list(door.lanes)]
+                assert bufs and max(bufs) <= 2 * w.PLAYBACK_SNDBUF, bufs   # capped (Linux reports it doubled)
+            ahead = got / 200_000 - (time.monotonic() - began)
+            if ahead > 0:
+                time.sleep(ahead)
+        s.close()
+        assert let_go.wait(5.0) and let_go.took < 15.0, let_go.took      # the floor, long before thirty seconds
+        assert any("slower than the 2000000 bytes a second" in m for m in said), said
+        assert let_go.dev_open == 0 and not dev.open
+    finally:
+        logging.getLogger("vmsworker").removeHandler(catch)
+        door.shutdown()
+
+
 def test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles():
     """The sixth pass's sweep of every place a body is read: the gateway read `Content-Length` bytes of an offer,
     whatever that said, into the process every viewer's stream goes through. An offer past `MAX_OFFER` is 413 and
@@ -833,6 +1049,76 @@ def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsyst
         assert seen["got"] == b"abc"                                   # a body in time: as before
     finally:
         srv.shutdown()
+
+
+def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared():
+    """The review's eighth pass — a run: the body's deadline was proportional to the length it DECLARED, with no floor
+    on its pace: 60 MB was given 945 s and 64 MiB 1054 s, and a byte every few seconds held the connection that long —
+    32 of them an address's share of the resource's door, two addresses all of it. Past the door's `timeout` a body
+    arrives at `BODY_RATE` on average or it is late (`DeadlineReader.pace`, set by `body_deadline`): 60 MB declared
+    and trickled is 408 at the grace; a mirrored bucket that comes at the rate the deadline always assumed is taken
+    whole. The same floor for every door that reads a body: a subsystem's own write at the resource, and the console's
+    (`read_body`)."""
+    from w2cplatform import resource as wr
+    box = Box()
+    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
+    srv = wr.serve(res, "127.0.0.1", 0, extra_put=lambda path, headers, rfile: (rfile.read(int(headers["Content-Length"])), (204, b""))[1])
+    wr.DOOR_TIMEOUT = was
+    port = srv.server_address[1]
+    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+
+    def trickle(p: int, target: str, n: int, head: bytes = b"PUT") -> tuple[bytes, float]:
+        s = socket.create_connection(("127.0.0.1", p))
+        s.sendall(head + f" {target} HTTP/1.1\r\nHost: x\r\nContent-Length: {n}\r\n\r\n".encode())
+        began, out = time.monotonic(), b""
+        s.settimeout(0.5)
+        try:
+            while time.monotonic() - began < 15:
+                try:
+                    s.sendall(b"x")                                   # a byte, inside the socket's timeout of each read
+                except OSError:
+                    break
+                try:
+                    got = s.recv(4096)
+                    if not got:
+                        break
+                    out += got
+                    break
+                except socket.timeout:
+                    pass
+        finally:
+            s.close()
+        return out, time.monotonic() - began
+    try:
+        reply, took = trickle(port, path, 60_000_000)                 # declared: 1 s and 915 s; the floor: 1 s
+        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
+        assert not os.path.exists(copy) and not os.path.exists(copy + ".tmp")
+        reply, took = trickle(port, "/theirs/1", 60_000_000)          # a subsystem's own write: the same floor
+        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
+        # a bucket at three times the floor, in pieces: taken whole
+        body = b"{}\n" * (400 << 10 // 3)
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(f"PUT {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {len(body)}\r\n\r\n".encode())
+        for off in range(0, len(body), 48 << 10):
+            s.sendall(body[off:off + (48 << 10)])
+            time.sleep(0.25)                                          # 192 KiB a second
+        s.settimeout(5)
+        assert s.recv(4096).startswith(b"HTTP/1.0 204")
+        s.close()
+        assert open(copy, "rb").read() == body
+    finally:
+        srv.shutdown()
+    # …and the console's door, which reads its bodies through `read_body`
+    was = _env(CONSOLE_TIMEOUT=1)
+    box = Box()
+    ctl, rec, m, csrv, base = _console(box)
+    try:
+        reply, took = trickle(csrv.server_address[1], "/marks", 1_000_000, head=b"POST")   # declared: 1 s and 15 s
+        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
+    finally:
+        csrv.shutdown(); _restore(was)
 
 
 def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():

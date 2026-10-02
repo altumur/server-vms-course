@@ -1204,6 +1204,106 @@ def test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_an
         srv.shutdown()
 
 
+def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of_it():
+    """The review's eighth pass, major — a run: with `admin` on a file camera of her own, a user set its `source` to
+    `driverpack://ACME/10.0.0.50/ch/2` (or `:80`, `10.0.0.50.`) — channel 2 of a recorder whose cameras were not hers:
+    200, and then her `output` to port 1 was 202, the recorder pulsed. `device_of` took the address as typed. It is
+    canonical now — scheme and host in lower case, no trailing dot, an address in the form the resolver dials (`012.0.0.50`
+    is `10.0.0.50`), no default port, no credentials — so every spelling is the recorder, for the move (`source_cams`), for the command
+    (`device_cams`) and for "one channel, one camera" (`refuse_camera`, `…/ch/02` being `…/ch/2`). A command carries the
+    device its rights were asked on (`device`)."""
+    from vms.config import channel_key, device_of
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "DRIVERPACK://acme/10.0.0.50:80/ch/2", "driverpack://acme/10.0.0.50./ch/2",
+                  "driverpack://acme/012.0.0.50/ch/2", "driverpack://acme/10.50/ch/2", "driverpack://acme/[::ffff:10.0.0.50]/ch/2",
+                  "driverpack://acme/admin:pw@10.0.0.50:0080/ch/2"):
+        assert device_of(spelt) == "acme/10.0.0.50", spelt
+    assert device_of("driverpack://acme/10.0.0.050/ch/2") == "acme/10.0.0.40"               # octal, as the resolver reads it
+    assert device_of("driverpack://acme/10.0.0.50:8000/ch/2") == "acme/10.0.0.50:8000"       # another port: another door
+    assert device_of("rtsp://u:p@CAM-7.local.:554/Stream1") == "rtsp://cam-7.local/Stream1"  # the path is the vendor's, as typed
+    assert device_of("driverpack://file/Lobby.mp4") == "file/Lobby.mp4"                         # a file's name, as typed
+    assert channel_key(f"{nvr}02") == channel_key("driverpack://acme/10.0.0.50/CH/2") == "2"
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "guard": [("edit", "3", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201   # hers
+        for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "driverpack://acme/10.0.0.50:80/ch/9",
+                      "driverpack://acme/10.0.0.50./ch/9", "driverpack://acme/012.0.0.50/ch/9"):
+            assert _call(base, "PUT", "/cameras/3", {"source": spelt}, token="three")[0] == 403, spelt   # the recorder's
+        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50.:80/ch/02"}, token="admin")
+        assert code == 400 and "camera 2 is that source already" in body["detail"], (code, body)        # one channel
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50:80/ch/9"}, token="admin")[0] == 200
+        for cmd in ({"unit": "3", "action": "output", "port": 1}, {"unit": "3", "action": "preset", "n": 2}):
+            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # camera 3 is the recorder's now
+        assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1, "id": "r-1"}, token="admin")[0] == 202
+        assert box.vars.get("vms/requests/r-1")[0]["device"] == "acme/10.0.0.50"       # what the rights were asked on
+    finally:
+        srv.shutdown()
+
+
+def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it():
+    """The same finding, the part syntax cannot say: `nvr50.local` and `10.0.0.50` are two keys and one recorder. The
+    holder learns what the device IS when it opens it (`identity` — a serial number, a MAC; `FakeDevice(identity=)`)
+    and writes it into the device's row; rights and "one channel, one camera" compare by it where it is known
+    (`config.one_device`). What stays open is a spelling no holder has opened yet: it is its key alone until then."""
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
+            "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["2"], relays=2, identity="ACME-SN-0042")}
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"     # the holder said what it is
+        # the name, never opened: its key alone — the window this leaves is the lesson's to say
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/7"}, token="three")[0] == 200
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()                          # …and a holder opens it
+        assert box.vars.get("vms/devices/acme/nvr50.local")[0]["identity"] == "ACME-SN-0042"
+        assert _call(base, "POST", "/requests", {"unit": "3", "action": "output", "port": 1}, token="three")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"name": "now hers no more"}, token="three")[0] == 200   # nothing moved
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
+        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")
+        assert code == 400 and "camera 2 is that source already" in body["detail"], (code, body)
+    finally:
+        srv.shutdown()
+
+
+def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios_that_command_it():
+    """The review's eighth pass, minor: rights on an action are asked when the scenario is written, and a scenario is
+    not rewritten when its camera moves. `output` on a camera that was its device's only channel, the camera then
+    moved onto a recorder's channel: the scenario pulsed the RECORDER's relay — a port chosen by somebody with no right
+    on it. Whoever moves a camera to another device answers for every scenario that commands it: `admin` on every
+    camera such a scenario reaches (`source_cams`, `scenario_cams`). A move inside one device asks for nothing more."""
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    box = Box()
+    access = Tokens({"mover": [("admin", c, ()) for c in ("1", "2", "3")],
+                     "both": [("admin", c, ()) for c in ("1", "2", "3", "4")], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        for f in ("3", "4"):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 200   # no scenario yet
+        gate = {"name": "gate", "when": [{"sub": "vms", "kind": "motion", "unit": "4"}],
+                "then": [{"sub": "vms", "action": "output", "unit": "3", "port": 1}]}
+        assert _call(base, "POST", "/auto/scenarios", gate, token="admin")[0] == 201
+        assert _call(base, "PUT", "/cameras/3", {"source": f"{nvr}7"}, token="mover")[0] == 403   # the scenario watches camera 4
+        assert _call(base, "PUT", "/cameras/3", {"source": f"{nvr}7"}, token="both")[0] == 200    # every camera of it hers
+        assert _call(base, "PUT", "/cameras/3", {"source": f"{nvr}8"}, token="mover")[0] == 200   # within the device: as before
+    finally:
+        srv.shutdown()
+
+
 def test_a_backfill_of_a_time_nothing_could_hold_is_refused():
     """The review's seventh pass, minor: `{"from": 0, "to": 600}` — 1970 — and even `false`/`true` were rows, each
     holding one of its person's seven places for a day. A range that ends before anything the recording shows (its

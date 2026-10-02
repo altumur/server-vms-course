@@ -1079,6 +1079,12 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
         # addresses the whole door: `/events`, `/events/wait` and the mirror were 503. Now the body has the door's
         # `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`, `read_body`'s rule), here and for a
         # subsystem's own writes (`extra_put`); one that does not arrive in time is 408 and leaves no copy.
+        #
+        # …and a floor on its pace past the door's `timeout` (the review's eighth pass): the deadline was proportional to
+        # the length declared, so 64 MiB held its connection 1054 s for a byte every few seconds. Now `got` bytes are in
+        # by `timeout + got / BODY_RATE` seconds or the body is late — `DeadlineReader.pace`, which `body_deadline` sets
+        # for every door that reads a body. A trickle is let go at the grace; a copy at the rate the deadline assumed is
+        # not touched. What a holder of the door's share must now SEND is `BODY_RATE` a connection.
         def do_PUT(self):
             try:
                 n = int(self.headers.get("Content-Length", 0))
