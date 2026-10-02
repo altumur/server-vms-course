@@ -869,7 +869,8 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
         t = box.wall()
         assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
         a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1),
-                      env={"ARCHIVE_LOCK_REFRESH_S": "2"})             # the same slot: it takes the NAME at once
+                      env={"ARCHIVE_LOCK_REFRESH_S": "2"}, instance="box-b:7:a2a2a2")   # the same slot, ANOTHER host:
+        # it takes the NAME at once
         os.kill(da.proc.pid, signal.SIGSTOP)
         try:
             a2.lease_pass()
@@ -1164,3 +1165,263 @@ def test_a_lock_under_our_owner_held_by_another_process_is_not_this_sessions_orp
     held.close(); stranger.bye()
     r2.lease_pass()
     assert r2.store is not None
+
+
+# -- the review's seventh pass: a pinned network volume, and the hold on its holder's host -------------------------
+
+def _pinned_over_one_network_volume():
+    """Two daemons — two hosts — and a network volume `net` both may serve. Recorder A on daemon A is PINNED to it
+    (`VOLUME=net`), holds it and records camera 1. The volume's engine lock goes stale after 2 s."""
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
+    box, rec_con, rec_ctl = _site()
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    a = recorder(box, "r-1", "srv-1", obsd=Session(da.socket, client="rec-r-1", timeout=1), instance="box-a:1:aaaaaa",
+                 env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})
+    a.lease_pass(); a.heartbeat_once()
+    assert a.hold == "net" and a.volume == "net" and a.store is not None and a.store.writer is not None
+    _recording(box, rec_con, rec_ctl, a)
+    return box, da, db, a
+
+
+def test_a_pinned_network_volume_is_held_and_a_free_recorder_on_another_box_does_not_take_it():
+    """Blocker 2 of the seventh pass, the review's probe p8. A recorder pinned to a network volume took no hold: a free
+    recorder on another box saw the volume unheld, took it, and when A's daemon stood still for six seconds mounted it —
+    A's writer stopped by the engine, `lock_lost`, and nothing said: no `archive_failure`, no `volume_error`, no dropped
+    seconds. Pinning says which volume this recorder writes and never grants it: A holds the hold like anybody, B is a
+    spare, and six seconds of A's daemon standing still give B nothing."""
+    import os
+    import signal
+    from w2cplatform.contract import Slot
+    from w2cplatform.obsd import Session
+    box, da, db, a = _pinned_over_one_network_volume()
+    try:
+        assert Slot.from_items("net", box.vars.get("rec/holds/net")[0]).by == "r-1"
+        b = recorder(box, "r-2", "srv-2", obsd=Session(db.socket, client="rec-r-2", timeout=1), instance="box-b:2:bbbbbb",
+                     env={"ARCHIVE_LOCK_REFRESH_S": "2"})
+        b.lease_pass()
+        assert b.hold is None and b.volume == "" and b.store is None   # a spare while A holds it
+        t = box.wall()
+        assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        os.kill(da.proc.pid, signal.SIGSTOP)
+        try:
+            for _ in range(6):                                         # A's daemon stands still for six seconds
+                time.sleep(1)
+                box.clock.advance(1); box.wall.advance(1)
+                b.lease_pass()
+                assert b.hold is None and b.store is None
+            assert [w for w in Session(db.socket, client="peek").stats()["writers"] if w["owner"] == "rec:net"] == []
+        finally:
+            os.kill(da.proc.pid, signal.SIGCONT)
+        a.lease_pass()
+        assert a.hold == "net" and a.actuator.feed("1", t - 30, t) == {"OK": 30}   # the only writer, and it writes on
+        assert not a.store.lock_lost and a.archive_failure == "" and a.dropped_seconds == 0
+    finally:
+        da.stop(); db.stop()
+
+
+def test_a_pinned_network_volume_whose_lock_another_writer_took_is_a_volume_error_counted_said_and_mounted_again():
+    """The other half of blocker 2: `lock_lost` on a pinned volume was nothing — the writer stayed, stopped, its frames
+    lost without a word. Now it is what it is on any network volume: the writer given up writing nothing, what it had
+    taken and not written an alarm in the recording's journal and seconds in the heartbeat, `archive_failure` set —
+    and the recorder takes the hold again and mounts the volume once the other writer has let it go. (Another writer
+    is made here bypassing the holds — the engine's lock is the second line, and this is that line answering.)"""
+    import os
+    import signal
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.obsd import ObsdError, Session
+    from vms.archive import Archive
+    from tests.conftest import TEST_BLOCK, TEST_READ, footage
+    box, da, db, a = _pinned_over_one_network_volume()
+    try:
+        t = box.wall()
+        assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        os.kill(da.proc.pid, signal.SIGSTOP)
+        try:
+            time.sleep(4)                                              # A's engine lock goes stale
+            b = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", Session(db.socket, client="b", timeout=2),
+                        block=TEST_BLOCK, read=TEST_READ, lock_refresh=2)
+            deadline = time.monotonic() + 15
+            while b.writer is None:
+                try:
+                    b.open()
+                except Exception:                                      # noqa: BLE001 — busy until A's lock is stale
+                    assert time.monotonic() < deadline
+                    time.sleep(0.5)
+            footage(b, "9", 1, t - 20, t, seal=False)
+        finally:
+            os.kill(da.proc.pid, signal.SIGCONT)
+        sink, said = a.actuator.started["1"]["sink"], []
+        for smp in fake_samples(t - 30, t, step=0.2, size=256 << 10):  # enough for a block: the engine checks before one
+            try:
+                said.append(sink.put(smp))
+            except ObsdError as e:
+                said.append(e.name)
+            time.sleep(0.01)
+        assert "WRITER_STOPPED" in said and a.store.lock_lost, said
+        assert set(said[said.index("WRITER_STOPPED") + 1:]) <= {"FENCED"}   # nothing more sent
+        b.seal()
+        assert b.coverage("9") == [(t - 20, t)]                       # nothing of A's landed beside B's
+        a.lease_pass()                                                 # the other writer still has the volume open
+        assert a.dropped_seconds >= 30 and a.heartbeat_extra()["archive_dropped_seconds"] >= 30
+        events = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+        [lost] = [e for e in events if e["kind"] == "archive.footage.dropped"]
+        assert (lost["class"], lost["volume"], lost["since"]) == ("alarm", "net", t - 60)
+        assert a.hold == "net" and a.volume_wait == ""                 # the hold taken again: released, so at once
+        if a.store is None:                                            # B's lock still fresh: said, and waited out
+            assert a.archive_failure and "another writer took net" in a.archive_error, a.archive_error
+            assert [w for w in Session(da.socket, client="peek").stats()["writers"] if w["owner"] == "rec:net"] == []
+        b.close()                                                      # the other writer lets the volume go
+        deadline = time.monotonic() + 15
+        while a.store is None or a.store.writer is None:
+            assert time.monotonic() < deadline, (a.archive_failure, a.archive_error, a.volume_wait)
+            a.lease_pass()
+            time.sleep(0.5)
+        assert a.volume == "net" and a.archive_failure == "" and a.volume_wait == ""
+        assert a.heartbeat_extra()["archive_remounted"]["why"] == "another writer took net"   # said after the remount too
+        assert a.reconcile_once() == [("start", "1")]                  # its recording back, writing into the volume
+        assert a.actuator.feed("1", t, t + 10) == {"OK": 10}
+    finally:
+        da.stop(); db.stop()
+
+
+def test_a_second_instance_pinned_to_the_same_network_volume_on_another_box_waits_for_the_hold():
+    """Blocker 2, the review's probe p7: two instances of `r-1` with one `VOLUME=net`, on two boxes. The second mounted
+    one second after it started, with no wait, and thirty frames the first had written `OK` were lost and not counted.
+    Pinned, the second waits for the hold like any instance on another host — `slot_ttl + HOLD_SKEW` of a row standing
+    still — and says what it waits for; the first, woken, is the only writer; handed over on purpose, at once."""
+    import os
+    import signal
+    from w2cplatform.obsd import Session
+    box, da, db, a = _pinned_over_one_network_volume()
+    try:
+        t = box.wall()
+        assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1), instance="box-b:7:a2a2a2",
+                      env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})
+        os.kill(da.proc.pid, signal.SIGSTOP)
+        try:
+            a2.lease_pass()
+            assert a2.hold is None and a2.store is None and a2.volume == "" and a2.capacity == 0
+            assert "net is being written by r-1" in a2.heartbeat_extra()["volume_wait"]
+            box.clock.advance(13); box.wall.advance(13)
+            time.sleep(5)                                              # A's engine lock is stale by now: only the hold stands
+            a2.lease_pass()
+            assert a2.hold is None and a2.store is None
+            assert [w for w in Session(db.socket, client="peek").stats()["writers"] if w["owner"] == "rec:net"] == []
+        finally:
+            os.kill(da.proc.pid, signal.SIGCONT)
+        assert a.actuator.feed("1", t - 30, t) == {"OK": 30}           # A wakes inside its window — the only writer
+        a.store.seal()
+        a.leave_volume("test: an orderly hand-over")                   # the writer closed, the hold released
+        a2.lease_pass()
+        assert a2.hold == "net" and a2.store is not None and a2.store.writer is not None and a2.volume_wait == ""
+        assert a2.our_coverage("1") == [(t - 60, t)]                   # one writer wrote it, and all of it is there
+    finally:
+        da.stop(); db.stop()
+
+
+def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_on_another():
+    """The seventh pass's open item (feedback CF, undone by the sixth pass's blocker 2): a recorder restarted on the same
+    box waited fifty seconds before it wrote its network volume again. The hold's `holder` is `host:pid:rnd`, and on
+    the holder's own host the same daemon lets one writer hold the volume at a time — so the new instance takes the
+    hold at once; its mount is refused while the old instance's writer is attached, and picks that writer up once the
+    old one is gone. An instance of the name on ANOTHER host still waits out the hold."""
+    from w2cplatform.contract import Slot
+    from tests.conftest import ObsdDaemon
+    from w2cplatform.obsd import Session
+    box, rec_con, rec_ctl = _site()
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    old = recorder(box, "r-1", "srv-1", instance="box-a:100:aaaaaa")
+    old.lease_pass(); old.heartbeat_once()
+    assert old.hold == "net"
+    _recording(box, rec_con, rec_ctl, old)
+    t = box.wall()
+    assert old.actuator.feed("1", t - 60, t) == {"OK": 60}
+    again = recorder(box, "r-1", "srv-1", instance="box-a:101:bbbbbb")   # systemd started it again, the old one not dead yet
+    again.lease_pass()
+    assert again.hold == "net" and Slot.from_items("net", box.vars.get("rec/holds/net")[0]).holder == "box-a:101:bbbbbb"
+    assert again.store is None and again.archive_failure                # one writer per volume on this daemon: not mounted
+    old.session.vanish()                                               # now it is gone: kill -9, no BYE
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
+    box.clock.advance(5); box.wall.advance(5)
+    again.lease_pass()
+    assert again.store is not None and again.store.reattached          # five seconds, not fifty: the writer picked up
+    again.store.seal()
+    assert again.our_coverage("1") == [(t - 60, t)]                    # nothing the old one wrote was lost
+
+    elsewhere = recorder(box, "r-1", "srv-2", obsd=Session(ObsdDaemon.get().socket, client="rec-r-1-b"),
+                         instance="box-c:5:cccccc")                    # the same name on another host: it waits
+    elsewhere.lease_pass()
+    assert elsewhere.hold is None and elsewhere.store is None
+
+
+def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_go_with_an_alarm():
+    """The review's open item: `busy` from a live daemon had no deadline. A network volume this recorder holds and
+    cannot mount, because another writer still has it open — a recorder elsewhere stuck with its writer mounted — was
+    held, recorded nothing and said `busy` for ever. Past `BUSY_FOR` it is let go, left alone for `REFUSED_FOR`, raised as
+    an alarm and said in words an operator can act on; the recorder records into its own disk meanwhile, and nothing is
+    done to the other writer. Once that writer is gone and the pause is over, the volume is taken again."""
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.obsd import Session
+    from vms.archive import Archive
+    from vms.config import REC_SPEC
+    from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon
+    box, rec_con, rec_ctl = _site()
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    stuck = Session(ObsdDaemon.get().socket, client="rec-r-1")         # a recorder of the volume that never lets it go
+    stuck.pid = 99999
+    theirs = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
+    r = recorder(box)
+    for _ in range(int(r.BUSY_FOR / 10)):                              # ten minutes of passes
+        r.lease_pass()
+        assert r.hold == "net" and r.store is None and r.archive_failure == "busy"
+        box.clock.advance(10); box.wall.advance(10)
+    r.lease_pass()
+    assert r.hold is None and r.volume == "srv-1" and r.store is not None   # let go; its own disk meanwhile
+    why = r.heartbeat_extra()["refused"]["net"]
+    assert "net has been in use by another writer for 10 minutes" in why and "check obsd and the recorders" in why
+    assert "ALREADY_LOCKED" not in why and "BUSY_FOR" not in why       # an operator's words
+    [alarm] = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+               if e["kind"] == "archive.volume.busy"]
+    assert alarm["class"] == "alarm" and alarm["volume"] == "net" and alarm["seconds"] == r.BUSY_FOR
+    r.heartbeat_once()
+    [row] = volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]
+    assert row["served_by"] is None and "r-1 does not take it" in row["why"]
+    assert theirs.writer is not None                                   # the other writer untouched
+    theirs.close(); stuck.bye()
+    box.clock.advance(r.REFUSED_FOR); box.wall.advance(r.REFUSED_FOR)
+    r.lease_pass()
+    assert r.hold == "net" and r.volume == "net" and r.store is not None and r.store.writer is not None
+
+
+def test_a_new_quota_is_a_write_into_the_volume_and_goes_under_the_same_fence():
+    """The seventh pass's sweep of the paths that write into a network volume: `put`, `finish` and `seal` were fenced,
+    `resize` — a new size of the ring, applied on the pass — was not. It is a write like the others now: past the hold's
+    window, or with the engine's lock another writer's, nothing is sent."""
+    from vms.archive import Archive, Fenced
+
+    class Writer:
+        def __init__(self):
+            self.sizes = []
+
+        def resize(self, quota):
+            self.sizes.append(quota)
+    ok = [True]
+    st = Archive("file:///net", "net", 64 << 20, fence=lambda: ok[0])
+    st.writer = Writer()
+    st.resize(128 << 20)
+    assert st.writer.sizes == [128 << 20] and st.quota == 128 << 20
+    ok[0] = False
+    try:
+        st.resize(256 << 20)
+        raise AssertionError("a resize went out past the hold's window")
+    except Fenced:
+        assert st.writer.sizes == [128 << 20] and st.quota == 128 << 20
+    ok[0], st.lock_lost = True, True
+    try:
+        st.resize(256 << 20)
+        raise AssertionError("a resize went out with the engine's lock another writer's")
+    except Fenced:
+        assert st.writer.sizes == [128 << 20]

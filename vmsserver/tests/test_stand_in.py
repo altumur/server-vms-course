@@ -312,7 +312,7 @@ def test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_
 
     def worker(box, instance):
         w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance)
-        w.hold_follows_name = lambda place: place != "net"         # what a recorder says of a network volume
+        w.hold_follows_name = lambda place, holder: place != "net"  # what a recorder says of a network volume held elsewhere
         w.claim_slot(prefer="t-1")
         return w
     box = Box()

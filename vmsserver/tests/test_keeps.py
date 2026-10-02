@@ -29,12 +29,13 @@ class _Body:
         self.headers, self.rfile = {"Content-Length": str(len(raw)), **({"X-User": user} if user else {})}, io.BytesIO(raw)
 
 
-def _site(quota: int = TEST_QUOTA, source: bool = True):
-    """A recording's volume behind its recorder's door, and a recorder holding the incidents volume `evidence`."""
+def _site(quota: int = TEST_QUOTA, source: bool = True, held: dict | None = None):
+    """A recording's volume behind its recorder's door, and a recorder holding the incidents volume `evidence`.
+    `held`: `{recording: since}` the source's recorder writes into its volume (the door's `held_since`)."""
     box = Box()
     if source:
         box.src = store("disks")
-        box.src_door = door(box, box.src, "r-disks", "srv-1")
+        box.src_door = door(box, box.src, "r-disks", "srv-1", held=held)
     volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1",
                              "url": tempfile.mkdtemp(prefix="evidence-"), "quota_bytes": quota})
     k = recorder(box, "r-keep", "srv-1", acl=False)
@@ -114,9 +115,12 @@ def test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not
     """The review's fifth pass, a major. Every recording of the keep's camera was counted over the keep's whole
     interval: camera 7 recorded for an hour as `7` and for a minute as `7-ev`, a ten-minute keep copied whole — and
     `7-ev` was nine minutes short for ever, `archive.keep.uncopied` and `rec_keep_missing_seconds` with it. Short is
-    only what a source's door shows and the incidents volume does not hold."""
-    box, k = _site()
+    only what a source's door shows and the incidents volume does not hold — the rest of `7-ev`'s interval its own
+    recorder, writing it there for two hours, has nothing of (`held_since`; the seventh pass)."""
+    held = {}
+    box, k = _site(held=held)
     t = box.wall()
+    held["7-ev"] = t - 7200
     box.vars.put("rec/recordings/7-ev", {"id": "7-ev", "name": "7-ev", "cam": "7"})
     footage(box.src, "7", 1, t - 3600, t, step=10, seal=False)
     footage(box.src, "7-ev", 1, t - 1500, t - 1440, step=10, seal=False)      # one minute, inside the keep
@@ -164,19 +168,21 @@ def test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_non
 
 def test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remembered():
     """The other side of the same rule, and the fifth pass's class kept closed: `7-ev` records on events and has
-    nothing in the keep's interval. Its own recorder's door says so — the recording is in that recorder's heartbeat —
-    and the keep is not short of it; nor after the recording is deleted and no recorder names it any more: what a
-    door that held it said is remembered."""
+    nothing in the keep's interval. Its own recorder's door says so — it has written `7-ev` into its volume since
+    before the keep's interval (`held_since`, the seventh pass) — and the keep is not short of it; nor after the
+    recording is deleted and no recorder writes it any more: what a door that held it said is remembered."""
     box = Box()
     src = store("disks")
-    names = [{"id": "7", "phase": "running"}, {"id": "7-ev", "phase": "pending"}]
-    srv = door(box, src, "r-disks", "srv-1", status=names)
+    names = [{"id": "7", "phase": "running"}, {"id": "7-ev", "phase": "running"}]
+    held = {}
+    srv = door(box, src, "r-disks", "srv-1", status=names, held=held)
     volumes.write(box.vars, {"name": "evidence", "kind": "incidents", "server": "srv-1",
                              "url": tempfile.mkdtemp(prefix="evidence-"), "quota_bytes": TEST_QUOTA})
     k = recorder(box, "r-keep", "srv-1", acl=False)
     k.lease_pass()
     try:
         t = box.wall()
+        held["7-ev"] = t - 7200                                        # written here for two hours, under its epoch
         box.vars.put("rec/recordings/7-ev", {"id": "7-ev", "name": "7-ev", "cam": "7"})
         footage(src, "7", 1, t - 3600, t, step=10)                     # `7-ev` has no footage at all
         kp = _keep(box, "7", t - 1800, t - 1200, recordings=["7", "7-ev"])
@@ -191,6 +197,44 @@ def test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remem
         assert state[kp.id]["missing"] == 0 and _events(box, "archive.keep.uncopied") == []
     finally:
         srv.shutdown()
+
+
+def test_a_recording_that_moved_is_not_said_to_be_missing_from_its_source_by_its_new_holder():
+    """The review's seventh pass, a major. The kept minutes of `7` are on `v1`, and `v1`'s door is down; `7` is held
+    now by `r-v2`, which has written it into `v2` only since afterwards. `r-v2` truthfully has none of the kept
+    minutes — and was believed as "the source has none": `copied 0, missing 0`, no alarm, exactly when the keep
+    mattered most. A door speaks only for what its volume could hold — each epoch it shows, first to last moment, and
+    the holder from when it took its epoch: the keep is short, said, and then an alarm; copied whole once `v1`'s door
+    answers. And inside what the holder DID hold, a hole is believed: nobody has it."""
+    box, k = _site(source=False)
+    t = box.wall()
+    v1, v2 = store("v1"), store("v2")
+    footage(v1, "7", 1, t - 3600, t - 900, step=10)                    # epoch 1, in v1
+    footage(v2, "7", 2, t - 600, t - 450, step=10, seal=False)         # epoch 2, in v2 since t-600 — with a hole:
+    footage(v2, "7", 2, t - 350, t, step=10)                           # the camera dark for 100 s
+    down = door(box, v1, "r-v1", "srv-1")
+    down.shutdown(); down.server_close()
+    now = door(box, v2, "r-v2", "srv-1", status=[{"id": "7", "phase": "running"}], held={"7": t - 600})
+    try:
+        kept = _keep(box, "7", t - 1800, t - 1200)                     # on v1 only
+        dark = _keep(box, "7", t - 500, t - 300)                       # in v2's time, over the hole
+        state = k.keep_pass()
+        assert state[kept.id]["copied"] == 0 and state[kept.id]["missing"] == 600, state
+        assert state[dark.id]["copied"] == 100 and state[dark.id]["missing"] == 0, state   # the hole: nobody has it
+        for _ in range(5):                                             # past KEEP_UNCOPIED_AFTER: said, not swallowed
+            box.wall.advance(k.KEEP_EVERY); now.announce(); down.announce()
+            k.keep_pass()
+        [alarm] = _events(box, "archive.keep.uncopied")
+        assert alarm["keep"] == kept.id and alarm["seconds"] == 600
+        back = door(box, v1, "r-v1", "srv-1")                          # v1's door answers again
+        try:
+            now.announce()
+            state = k.keep_pass()
+            assert state[kept.id]["copied"] == 600 and state[kept.id]["missing"] == 0
+        finally:
+            back.shutdown()
+    finally:
+        now.shutdown()
 
 
 def test_kept_footage_the_incidents_ring_took_is_an_alarm():

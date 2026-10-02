@@ -194,7 +194,8 @@ class ArchiveError(Exception):
 
     A volume ANY box may serve has one (the review's sixth pass): while this host's engine answers nothing, the hold is
     renewed for `RecWorker.ENGINE_SILENT_FOR` and no longer — then the volume is let go, for a box whose engine does
-    answer (`RecWorker.volume_pass`)."""
+    answer (`RecWorker.volume_pass`). And `busy` under this recorder's own hold — another host's writer that does not
+    let go — lasts `RecWorker.BUSY_FOR` and no longer (the seventh pass): let go, with an alarm."""
 
     def __init__(self, kind: str, detail: str, name: str = ""):
         self.kind, self.detail, self.name = kind, detail, name    # `name`: the engine's status, or UNAVAILABLE
@@ -531,8 +532,10 @@ class Archive:
             self.lost = True
 
     def resize(self, quota: int) -> None:
-        """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest."""
+        """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest. A write
+        into the volume like any other: under the same fence (the review's seventh pass, the sweep of writing paths)."""
         if self.writer is not None and quota and quota != self.quota:
+            self._fenced("WRITER_RESIZE")
             self.writer.resize(quota)
         self.quota = quota or self.quota
 
