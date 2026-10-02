@@ -275,6 +275,16 @@ def path_id(path: str) -> str:
     return segs[2] if len(segs) >= 3 else ""
 
 
+# A LABEL VALUE ON `/metrics` IS TEXT SOMEBODY ELSE WROTE (the review's eighth pass, part 4). A worker's name, a server's,
+# a recording's, a keep's id, a table's, a kind of failure — each went into `{label="…"}` as it stood, and a recording
+# named `7"x`, or with a newline in it, made a line the text format cannot read: Prometheus refuses the whole scrape
+# for one such line, and every alert of the subsystem goes with it. New names with `"`, `|` or a newline are refused
+# where they are created; the ones already stored are written here as the format says — `\` as `\\`, `"` as `\"`, a
+# newline as `\n` — by this one function, in every metrics function of the platform and the VMS.
+def label(value) -> str:
+    return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
 # WHERE IT LISTENS, SAID (the review's third pass, minor: the unit binds `0.0.0.0` over plain HTTP, and the module's
 # notes speak of loopback). The deploy unit keeps `0.0.0.0` — on one box the page is opened from the operator's own
 # machine, and the course ships no TLS proxy to stand in front — so the console says so at every start, in the one
@@ -1392,6 +1402,7 @@ class SpecConsole:
         live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
         res = resources_seen(self.ctl.objects)
         hk = self.ctl.sub.heartbeat_key
+        failover = self.ctl.failover_seconds()
 
         def n(w: str, field: str, kind=float, default=0):                # a worker's field
             return number(f"{hk(w)}#{field}", hbs[w].extra.get(field), kind, default)
@@ -1400,20 +1411,27 @@ class SpecConsole:
             return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
         lines = [f"# TYPE {p}_workers_live gauge", f"{p}_workers_live {len(live)}",
                  f"# TYPE {p}_worker_headroom gauge",
-                 *[f'{p}_worker_headroom{{worker="{w}",server="{hb.extra.get("server", "?")}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
+                 *[f'{p}_worker_headroom{{worker="{label(w)}",server="{label(hb.extra.get("server", "?"))}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
                  f"{p}_headroom {sum(n(w, self.spec.headroom_from, int) for w in live)}",
                  f"# TYPE {p}_worker_load gauge",              # assigned / capacity: what a target-value policy scales on
                  # …over the workers that ARE a place. A worker holding no place (`place_of` empty) is a
                  # spare: it carries nothing and reports zero capacity, which this formula would read as
                  # fully loaded — and a target-value policy would then scale out for ever, one spare
                  # demanding the next. A spare is counted below instead, as what it is.
-                 *[f'{p}_worker_load{{worker="{w}"}} {1 - n(w, self.spec.headroom_from, int) / max(1, n(w, self.spec.capacity_from, int, 1)):.3f}'
+                 *[f'{p}_worker_load{{worker="{label(w)}"}} {1 - n(w, self.spec.headroom_from, int) / max(1, n(w, self.spec.capacity_from, int, 1)):.3f}'
                    for w in live if self.ctl.place_of(w) != ""],
                  f"# TYPE {p}_spare_workers gauge",            # running, holding no place, ready to take one
                  f'{p}_spare_workers {sum(1 for w in live if self.ctl.place_of(w) == "")}',
                  f"# TYPE {p}_epoch_conflicts counter",
-                 *[f'{p}_epoch_conflicts{{worker="{w}"}} {n(w, "conflicts", int)}' for w in hbs],
-                 f"# TYPE {p}_failover_seconds gauge", f'{p}_failover_seconds{{kind="worst"}} {self.worst_failover}',
+                 *[f'{p}_epoch_conflicts{{worker="{label(w)}"}} {n(w, "conflicts", int)}' for w in hbs],
+                 # MEASURED, NOT ONLY SAID (the review's eighth pass, found by the coordinator): `worst` was the number the
+                 # console was built with — on a cluster nothing, 0.0 after any failover. Each worker's last failover
+                 # is measured from what its instances wrote (`SpecController.failover_seconds`: the start of this
+                 # instance less the last heartbeat of the one before), said per worker as `last`, and `worst` is the
+                 # largest of those and of the number the console was given (a drill's datasheet figure).
+                 f"# TYPE {p}_failover_seconds gauge",
+                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, *failover.values()])}',
+                 *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
                  f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
@@ -1436,19 +1454,38 @@ class SpecConsole:
         # to free and could not (feedback BM). The second is the state nothing mends by itself — everything on
         # the floor, or nothing of the subsystems' on that disk at all — and it used to be a line in a log.
         lines += [f"# TYPE {p}_resource_full gauge",
-                  *[f'{p}_resource_full{{server="{s}"}} {round(rn(s, "space.full", (hb.get("space") if isinstance(hb.get("space"), dict) else {}).get("full")), 3)}'
+                  *[f'{p}_resource_full{{server="{label(s)}"}} {round(rn(s, "space.full", (hb.get("space") if isinstance(hb.get("space"), dict) else {}).get("full")), 3)}'
                     for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_short_bytes gauge",
-                  *[f'{p}_resource_short_bytes{{server="{s}"}} {rn(s, "short", hb.get("short"), int)}' for s, hb in sorted(res.items())]]
+                  *[f'{p}_resource_short_bytes{{server="{label(s)}"}} {rn(s, "short", hb.get("short"), int)}' for s, hb in sorted(res.items())]]
         # The requests each resource holds for the readers of its events (`/events/wait`, `longpoll.Watch.counts`): held
         # now, and since it started — held, refused for want of room, replaced by their own client's next. `full`
         # climbing is an evaluator back on its two-second pass, and nothing else would say so (the review's seventh pass).
         waits = {s: hb["waits"] for s, hb in sorted(res.items()) if isinstance(hb.get("waits"), dict)}
         lines += [f"# TYPE {p}_resource_waits gauge",
-                  *[f'{p}_resource_waits{{server="{s}"}} {rn(s, "waits.waiting", w.get("waiting"), int)}' for s, w in waits.items()]]
+                  *[f'{p}_resource_waits{{server="{label(s)}"}} {rn(s, "waits.waiting", w.get("waiting"), int)}' for s, w in waits.items()]]
         for key in ("held", "full", "replaced"):
             lines += [f"# TYPE {p}_resource_waits_{key}_total counter",
-                      *[f'{p}_resource_waits_{key}_total{{server="{s}"}} {rn(s, "waits." + key, w.get(key), int)}' for s, w in waits.items()]]
+                      *[f'{p}_resource_waits_{key}_total{{server="{label(s)}"}} {rn(s, "waits." + key, w.get(key), int)}' for s, w in waits.items()]]
+        # What each resource could not read and could not copy (the review's eighth pass): the rows of its tables that do
+        # not parse, by table, and whether its watermark acts on a row that does not (`rows_garbled`, `space_garbled` —
+        # in the heartbeat only, a minor); the mirror's buckets a peer did not take and those too big for any; the
+        # restore's buckets still with peers and its failures. `restore_left` not falling is a replaced disk whose events
+        # have not come back; `mirror_too_big` is a bucket copied nowhere.
+        said = lambda hb, key: hb.get(key) if isinstance(hb.get(key), dict) else {}
+        lines += [f"# TYPE {p}_resource_rows_garbled counter",
+                  *[f'{p}_resource_rows_garbled{{server="{label(s)}",table="{label(t)}"}} {rn(s, "rows_garbled." + str(t), c, int)}'
+                    for s, hb in sorted(res.items()) for t, c in sorted(said(hb, "rows_garbled").items(), key=lambda x: str(x[0]))],
+                  f"# TYPE {p}_resource_space_garbled gauge",
+                  *[f'{p}_resource_space_garbled{{server="{label(s)}"}} {1 if hb.get("space_garbled") else 0}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_restore_left gauge",
+                  *[f'{p}_resource_restore_left{{server="{label(s)}"}} {rn(s, "restore.left", said(hb, "restore").get("left"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_restore_failures_total counter",
+                  *[f'{p}_resource_restore_failures_total{{server="{label(s)}"}} {rn(s, "restore.failed", said(hb, "restore").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_mirror_failures_total counter",
+                  *[f'{p}_resource_mirror_failures_total{{server="{label(s)}"}} {rn(s, "mirror.failed", said(hb, "mirror").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_mirror_too_big_total counter",
+                  *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
         # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
         # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
         # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.
@@ -1468,19 +1505,19 @@ class SpecConsole:
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.
                   f"# TYPE {p}_worker_fenced gauge",
-                  *[f'{p}_worker_fenced{{worker="{w}"}} {1 if str(hb.extra.get("fenced")).lower() == "true" else 0}' for w, hb in hbs.items()],
+                  *[f'{p}_worker_fenced{{worker="{label(w)}"}} {1 if str(hb.extra.get("fenced")).lower() == "true" else 0}' for w, hb in hbs.items()],
                   f"# TYPE {p}_worker_store_errors counter",
-                  *[f'{p}_worker_store_errors{{worker="{w}"}} {n(w, "store_errors", int)}' for w in hbs],
+                  *[f'{p}_worker_store_errors{{worker="{label(w)}"}} {n(w, "store_errors", int)}' for w in hbs],
                   # Units a worker is recording past their lease's end, the store silent (feedback BK): data goes
                   # on, actions wait. Not zero for long is a store that is away, seen from the workers' side.
                   f"# TYPE {p}_worker_unconfirmed gauge",
-                  *[f'{p}_worker_unconfirmed{{worker="{w}"}} {n(w, "unconfirmed", int)}' for w in hbs],
+                  *[f'{p}_worker_unconfirmed{{worker="{label(w)}"}} {n(w, "unconfirmed", int)}' for w in hbs],
                   f"# TYPE {p}_worker_pass_failures counter",
-                  *[f'{p}_worker_pass_failures{{worker="{w}"}} {n(w, "pass_failures", int)}' for w in hbs],
+                  *[f'{p}_worker_pass_failures{{worker="{label(w)}"}} {n(w, "pass_failures", int)}' for w in hbs],
                   # Slot rows this worker could not read while looking for one (`contract.read_slot`; the review's
                   # sixth pass): each is a name nobody can take or be seen holding — capacity lost without a word.
                   f"# TYPE {p}_worker_slots_garbled counter",
-                  *[f'{p}_worker_slots_garbled{{worker="{w}"}} {n(w, "slots_garbled", int)}' for w in hbs]]
+                  *[f'{p}_worker_slots_garbled{{worker="{label(w)}"}} {n(w, "slots_garbled", int)}' for w in hbs]]
         # …and the rows of the other tables a worker could not read, by table (`rows.Table`; the review's seventh
         # pass, a minor: `holds_garbled` was in the heartbeat and not here) — `holds_garbled`, a place nobody can take;
         # `assignments_garbled`; a recorder's `volumes_garbled`, `keeps_garbled`. Rows, each once until it parses
@@ -1490,11 +1527,11 @@ class SpecConsole:
             field = f"{name}s_garbled"
             if field != "slots_garbled":                                  # above, under the name it always had
                 lines += [f"# TYPE {p}_worker_{field} counter",
-                          *[f'{p}_worker_{field}{{worker="{w}"}} {n(w, field, int)}' for w in hbs]]
+                          *[f'{p}_worker_{field}{{worker="{label(w)}"}} {n(w, field, int)}' for w in hbs]]
         # …and this console's own: the rows of this subsystem IT could not read (the requests it files, the keeps it
         # shows, the fields of heartbeats read as not said just above), by table.
         lines += [f"# TYPE {p}_console_rows_garbled counter",
-                  *[f'{p}_console_rows_garbled{{table="{name}"}} {tables[name].get(p, 0)}' for name in sorted(tables)]]
+                  *[f'{p}_console_rows_garbled{{table="{label(name)}"}} {tables[name].get(p, 0)}' for name in sorted(tables)]]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix
         # listing and one row — deliberately NOT `blobs_referenced()`, which walks every unit's row: a
         # gauge scraped every fifteen seconds must not cost a full scan of the configuration.

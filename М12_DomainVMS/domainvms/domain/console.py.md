@@ -8,7 +8,7 @@
 The three collaborators and the refresh period; `_stop` is the event that ends the refresher.
 
 ### `_refresher(self)`
-The loop on the `readview` thread: `view.refresh()` every `refresh_interval` seconds until stopped. Any exception is swallowed — the comment: a bad pass is a stale view, not a dead console (the rows keep their last age and the view keeps serving).
+The loop on the `readview` thread, every `refresh_interval` seconds until stopped: five steps (members, topology, the view's pass, publishing it, collecting kept edits), each in `domain.steps.Steps` — one that raises is logged once until it works again, counted (`refresh_failures`), and the others run; a bad step is a stale part of the view, not a dead console.
 
 ### `handler(self) -> type`
 Builds and returns the request handler class closed over this console.
@@ -17,11 +17,11 @@ Builds and returns the request handler class closed over this console.
 - `_send(status, body)` — JSON body with `Content-Type` and `Content-Length`.
 - `_token()` — the bearer token from `Authorization: Bearer …`, else `None` (passed to the API, which decides whether one is required).
 - `do_GET`:
-  - `GET /healthz` → `200 {"ok": true, "passes": <view.passes>}` — the check `console.nomad.hcl` polls; `passes` says whether the refresher has run.
+  - `GET /healthz` → `200 {"ok": true, "passes": <view.passes>, "step_failures", "failing", "garbled"?}` (`Console.health`) — the check `console.nomad.hcl` polls; `passes` says whether the refresher has run, `failing` which steps fail now, `garbled` how many members' objects, grants, user records and trust rows did not parse.
   - `GET /api/cameras?q=&page=&size=&cluster=` → `200` and `view.list(q, page, size, cluster)` (defaults `""`, 1, 50, `None`): rows with `as_of`, the `clusters` state map and `complete`.
   - `GET /api/causes` → `200` and a list of each `Cause`'s fields plus its `sentence`.
   - `GET /api/where/<camera>` → `directory.where(<last path segment>)` (a string ref); status `200` if found, else `404` when complete, `503` when a cluster was unreachable — the same rule as the API; body is the `Answer`'s fields plus `complete` and `sentence`.
-  - anything else → `404 {"detail": "no such route"}`; any exception → `500 {"detail": str(e)}` (so a two-cluster claim on one ref is reported, not dropped).
+  - anything else → `404 {"detail": "no such route"}`; any exception → `500 {"detail": str(e)}`. A ref two members claim is an answer now (`Answer.contested`): `503` with the sentence naming both.
 - `do_PUT`:
   - only `/api/cameras/<camera>`; else 404.
   - `Idempotency-Key` header required, else `400` with the sentence "a retried PUT must be the same PUT".

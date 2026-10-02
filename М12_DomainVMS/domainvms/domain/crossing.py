@@ -129,12 +129,22 @@ class Crossings:
     # from its own description, a server cluster's camera from its holder's, М10B Lesson 25). The newest
     # heartbeat that says it wins; a member that went silent keeps what it last said, because "the yard camera
     # has five presets" is not less true while it reboots. None — nobody has said.
+    #
+    # A `can` that is not an object, or whose `events` are not a list of names, says nothing (the review's eighth pass,
+    # minor: `can_a['events']` and `int("five")` raised out of the pass over the books, every camera's books with it):
+    # counted once, and the camera reads as one that has not said — named on every pass by `unchecked`.
     def can_of(self, ref: str) -> dict | None:
+        from .federation import MEMBER_OBJECTS
         best = None
-        for (_cluster, _worker), s in self.view.snapshots.items():
+        for (cluster, worker), s in self.view.snapshots.items():
             for st in s.status:
                 if str(st.get("ref", "")) == str(ref) and st.get("can") is not None and (best is None or s.ts > best[0]):
-                    best = (s.ts, st["can"])
+                    can = st["can"]
+                    if not isinstance(can, dict) or not isinstance(can.get("events", []), list) \
+                            or not all(isinstance(k, str) for k in can.get("events", [])):
+                        MEMBER_OBJECTS.garbled(f"{cluster}/vms/heartbeats/{worker}#{ref}/can", TypeError("not a description"))
+                        continue
+                    best = (s.ts, can)
         return best[1] if best else None
 
     def unrecorded(self) -> dict[str, str]:

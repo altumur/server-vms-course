@@ -12,7 +12,7 @@ The domain's side. One Variable per cluster, one item per camera by the DOMAIN's
 Merge an edit into the entry, by CAS, retried on `Conflict`. A new field: `{old: base[f], new}`. A field the camera reported as a conflict: `{old: that conflict, new}` — a person resolving it, measured against what the camera holds now. A waiting field with a different value: its previous `new` goes into `via` (it may already be on the camera, applied and not yet reported) and it takes the new one. `rev` +1, `subject` and `since` set, any refusal dropped (a new edit is a new decision).
 ### `reconcile(self, cluster, outcomes)`
 Fold a cluster's `domain/outcomes` in — only an outcome whose `rev` equals the entry's: never by clock. `gone` drops the entry; `refused` annotates it; applied and already-there fields go; conflicts are annotated with `conflict: <current>`; an empty entry goes.
-### `collect(self, fed)` — for every cluster with something waiting, read its `domain/outcomes` through its stores; a silent cluster keeps its edits waiting.
+### `collect(self, fed)` — for every cluster with something waiting, read its `domain/outcomes` through its stores; a silent cluster keeps its edits waiting. Each member in its own try and each outcome item alone (`_load` through `MEMBER_OBJECTS`, the review's eighth pass): one that does not parse or does not fit leaves its camera's edit waiting, counted; the others are reconciled. An item of the domain's own row that does not parse is written back as it was (`_unread`).
 
 ## Functions
 ### `apply_pending(entries, current, console, now) -> dict`

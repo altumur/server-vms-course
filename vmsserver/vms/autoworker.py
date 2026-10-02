@@ -134,6 +134,7 @@ class AutoWorker(Worker):
         self._asked: dict[tuple[str, str, str], dict] = {}
         self._needed: dict[tuple[str, str, str], float] = {}
         self._watched: set[tuple[str, str, str]] = set()   # (subsystem, kind, unit) of every trigger held: what `wants` says
+        self.wants_folded = 0                         # triples folded to their kinds for the long poll (`wants`), 0: none
         self._keys_of: dict[str, set] = {}            # scenario -> its triggers' keys (last full pass): what an answer touches
         self._fit: dict[str, tuple] = {}              # scenario -> (misfit, unchecked), as of the last full pass
         self._refused = False                         # a resource did not answer this pass: early passes back off (`Wake.pace`)
@@ -290,8 +291,22 @@ class AutoWorker(Worker):
     # THE UNIT IS IN THE WANT (the review's seventh pass, M8). It was not — "the list stays a handful" — and a site
     # with one busy camera kept every evaluator in four passes a second, each a query per kind to every resource: eight
     # times the queries of the ordinary pass, up against `EVENTS_INFLIGHT`, whose refusals hold the cursors.
+    #
+    # …AND FOLDED TO ITS KINDS PAST `WANTS_MAX` (the review's eighth pass, part 3): more triples than one request may name
+    # were refused at every request, and the long poll was off for good with 65 scenarios. Folded (`longpoll.fold`), the
+    # request is held for those kinds on any unit; how many triples were folded is in the heartbeat (`wants_folded`) and
+    # on `/metrics` (`auto_wants_folded`).
     def wants(self) -> list[tuple[str, str, str]]:
-        return sorted(self._watched)
+        from w2cplatform.longpoll import WANTS_MAX, fold
+        out, folded = fold(self._watched)
+        if folded != self.wants_folded:
+            if folded:
+                log.warning("%s: its triggers watch %d (subsystem, kind, unit), more than the %d one request names: %s",
+                            self.name, folded, WANTS_MAX,
+                            f"folded to {len(out)} kinds on any unit" if out else "more kinds than that too — no wait is "
+                            "held, the pass looks every poll")
+            self.wants_folded = folded
+        return out
 
     # The resources this evaluator's index asks — the same list, read the same way (`MergedIndex.seen`, cached
     # there): those live by their heartbeats, each with the address its `/events` is asked at. The long poll is
@@ -561,7 +576,8 @@ class AutoWorker(Worker):
     def long_poll_stats(self) -> dict:
         lp = self.long_poll
         return {} if lp is None else {"waits": lp.waits, "woken": lp.woken, "early_passes": self.wake.early,
-                                      "wait_errors": lp.errors, "wake_gap": round(self.wake.gap, 3)}   # the gap as paced now
+                                      "wait_errors": lp.errors, "wake_gap": round(self.wake.gap, 3),   # the gap as paced now
+                                      "wants_folded": self.wants_folded}
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines

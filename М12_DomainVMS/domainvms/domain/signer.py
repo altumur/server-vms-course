@@ -246,13 +246,21 @@ class Signer:
         items, _ = vars_.get("domain/signer")
         self.vars = vars_
         self.chain: list[x509.Certificate] = []
-        if items and "ca_key" not in items:
+        # A row that is there and holds no keys, or keys that do not parse, is NOT "no keys" (the review's eighth pass;
+        # the product found its signer taking a store it could not read for an empty one): new keys written over it
+        # would orphan every member that holds the old ones. The signer refuses to start, and says what to do. Only an
+        # absent row is a first start.
+        if items is not None and "ca_key" not in items:
             raise RuntimeError(f"this cluster no longer holds the domain's keys ({items.get('forgotten', 'forgotten')})")
-        if items:
-            key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["ca_key"]))
-            self.root = Root(x509.load_pem_x509_certificate(items["ca_cert"].encode()), key)
-            self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key"])), items["kid"])
-            self.generation = int(items.get("gen", "1"))
+        if items is not None:
+            try:
+                key = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["ca_key"]))
+                self.root = Root(x509.load_pem_x509_certificate(items["ca_cert"].encode()), key)
+                self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key"])), items["kid"])
+                self.generation = int(items.get("gen", "1"))
+            except (ValueError, TypeError, KeyError, AttributeError) as e:
+                raise RuntimeError(f"the domain's keys in domain/signer do not parse ({e}): the signer does not start "
+                                   f"rather than make new ones — restore the row from the holder's backup") from None
             if items.get("issued") == "true":
                 self.chain = [self.root.cert]
         elif root is not None:

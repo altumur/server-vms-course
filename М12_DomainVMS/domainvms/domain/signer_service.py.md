@@ -16,7 +16,7 @@ Environment: `DOMAIN_ID` (default `domain`; the token `iss` and the root CN pref
   - anything else 404.
 - `log_message` silenced.
 
-Then a `ThreadingHTTPServer` on a daemon thread, SIGTERM/SIGINT handlers, and the main loop every 5 s: `ids.publish()` (honours the floor and the dirty flag — "object first, then the pointer, on a floor") and `revoked.prune(time.time())`; exceptions swallowed. On stop, `srv.shutdown()`.
+Then a `ThreadingHTTPServer` on a daemon thread, SIGTERM/SIGINT handlers, and the main loop every 5 s: `ids.publish()` (honours the floor and the dirty flag — "object first, then the pointer, on a floor") and `revoked.prune(time.time())`, and given CLUSTERS the pass over the books — each a step of `domain.steps.Steps` (`signer_steps`): one that raises is logged with its trace once until it works again, counted, and named on `/healthz` (`step_failures`, `failing`); the others run (the review's eighth pass — they were `except Exception: pass`). The revocation list it starts from is read entry by entry (`revocations`). On stop, `srv.shutdown()`.
 
 ## Notes
 - `prune` trims the in-memory list, but the pruned list is only republished on the next `/revoke`; the Variable can carry expired jtis until then (harmless — `verify` rejects an expired token before consulting the list).

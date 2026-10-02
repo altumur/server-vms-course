@@ -310,6 +310,7 @@ class RecWorker(VmsWorker):
         self._lost_why, self._lost_at = "", 0.0      # why, and since when, the engine is lost (`_lost_engine`)
         self._taken_over = ""                        # …or the volume's lock was another writer's: said till, and at, the remount
         self._vol_last = None                        # the volume row last opened: what a silent store remounts by
+        self._vol_unread = None                      # (since, alarm said at) while the held volume's row does not parse
         self._volume_garbled_said = ""               # the last row trouble the volume step logged (`lease_pass`), said once
         self.refused: dict[str, tuple[float, str]] = {}   # volume -> (tried again after, why) — see REFUSED_FOR
         self._backfiller: threading.Thread | None = None
@@ -1094,10 +1095,34 @@ class RecWorker(VmsWorker):
         last = self._vol_last
         if mine in unread and last is not None and last.name == mine:
             rows[mine] = last
+            self._row_unread(mine)
         elif mine in unread and self.pinned:
             raise ValueError(f"the row of volume {mine} ({volumes.key(mine)}) does not parse, and this recorder never "
                              f"read it whole: it has nothing to open — mend the row")
+        else:
+            self._vol_unread = None
         return rows
+
+    # KEPT BY THE ROW READ LAST — FOR HOW LONG (the review's eighth pass, part 4, a minor). The volume this recorder writes
+    # stays as it was opened while its row does not parse — and a row garbled together with `enabled: false`, or a new
+    # quota, was a recorder writing for hours into a volume its administrator had switched off, `rec_volume_error` 0, seen
+    # only in `*_volumes_garbled`. Past `ROW_UNREAD_AFTER` it is an ALARM, `archive.volume.unreadable`, once a day while
+    # it lasts: what it means for the recording and what to do, in words.
+    ROW_UNREAD_AFTER = 600.0
+
+    def _row_unread(self, name: str) -> None:
+        from w2cplatform.events import ALARM, EventLog
+        now = self.wall()
+        since, said = self._vol_unread or (now, None)
+        if now - since >= self.ROW_UNREAD_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
+            EventLog(self.archive_root, REC.name, name, 0).append(now, "archive.volume.unreadable", cls=ALARM, volume=name,
+                                                                  since=since, seconds=round(now - since))
+            log.error("%s: the settings of volume %s have not been readable for %.0f minutes: this recorder goes on writing it "
+                      "as it was set when last read, and a change made since — switched off, a new size — does not reach "
+                      "it. Correct the volume's settings on the volumes page, or delete and declare it again",
+                      self.name, name, (now - since) / 60)
+            said = now
+        self._vol_unread = (since, said)
 
     # PINNED TO A VOLUME ANY BOX MAY SERVE, AND NOT HOLDING IT (the review's seventh pass, blocker 2). Another recorder
     # holds it — a free one that took it first, or the previous instance of this name on another host whose hold has
@@ -1457,8 +1482,12 @@ class RecWorker(VmsWorker):
         self.archive_error, self.archive_failure = e.detail, e.kind
         if self._taken_over:                         # what happened before the wait is still the news (`volume_pass`)
             self.archive_error = f"{self._taken_over}. Now: {e.detail}"
-        if e.kind == "busy":
-            self._busy_since = self._busy_since or self.clock()
+        # `BUSY_FOR` counts UNBROKEN busy (the review's eighth pass, part 2): the mark was set by a `busy` and cleared only
+        # by a mount or by leaving, so one `busy` pass — a predecessor's writer still closing — followed by ten minutes of
+        # a network that is down (`away`, waited for without a deadline) let a volume that was merely unreachable go with
+        # an alarm sending the operator to look for somebody else's recorder, and a pinned recorder wrote nothing for ten
+        # minutes after the store came back. Any refusal that is not `busy` ends the count.
+        self._busy_since = (self._busy_since or self.clock()) if e.kind == "busy" else 0.0
         if e.name == "UNAVAILABLE" and volumes.any_box(vol) and self._engine_silent_since is None:
             self._engine_silent_since = self.clock()
         return None
@@ -2702,8 +2731,8 @@ class RecWorker(VmsWorker):
         for _, url in doors:
             try:
                 spans, held = self._door_timeline(url, rec, since, until)
-            except (OSError, ValueError, KeyError, TypeError):
-                continue                                 # that door is down: it says nothing about what it has
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                continue                                 # that door is down, or said nothing readable: nothing about what it has
             shown[url] = stitch([(sp["start"], sp["end"]) for sp in spans], 0.0)
             speaks += self._speaks_for(spans, held)
         return shown, stitch(speaks, 0.0)
@@ -2715,7 +2744,7 @@ class RecWorker(VmsWorker):
     def _speaks_for(spans: list[dict], held) -> list[tuple[float, float]]:
         runs: dict[int, tuple[float, float]] = {}
         for sp in spans:
-            e = int(sp.get("epoch") or 0)
+            e = sp["epoch"]                              # read by `scan.door_spans`: an int
             if e <= 0 or sp.get("source", "live") != "live":
                 continue
             a, b = runs.get(e, (sp["start"], sp["end"]))
@@ -2723,17 +2752,38 @@ class RecWorker(VmsWorker):
         return list(runs.values()) + ([(float(held), float("inf"))] if held is not None else [])
 
     # A door's timeline of one recording: `([{start, end, epoch, source, …}], held_since)`.
-    @staticmethod
-    def _door_timeline(url: str, unit: str, t0: float, t1: float) -> tuple[list[dict], float | None]:
+    #
+    # Each span read alone, through the scan's parser (`scan.door_spans`; the review's eighth pass, part 4): `_speaks_for`
+    # read `int(sp["epoch"])` outside the door's `try`, and one door answering `{"epoch": "e3"}` raised out of
+    # `keep_pass` — no keep copied, none checked, `archive.keep.lost` never raised. A span that does not parse is passed
+    # by and counted: this door then shows less and speaks for less, and what it would have covered stays short — the
+    # side a keep must err on. An answer that is not `{spans: [...]}`, or larger than `rows.ANSWER_MAX`, is the door not
+    # answering (`ValueError`, which `_doors_show` takes so).
+    #
+    # `held_since` IS THE DOOR'S CLOCK (the review's eighth pass, part 2, a minor): its recorder's wall when it took the
+    # epoch, compared here with the keep's interval by this recorder's. A door 1200 s behind said it held the recording
+    # 1200 s before it did, and spoke for minutes it never had — the shortfall halved (`missing 300` for 600). The door
+    # says its own `now` beside it; `now - held_since` is an age neither clock skews, and it is laid on this recorder's
+    # clock, read after the answer came — later than the door's moment, so the door speaks for less, never for more. A
+    # door of an older build without `now` is taken as it stands.
+    def _door_timeline(self, url: str, unit: str, t0: float, t1: float) -> tuple[list[dict], float | None]:
         import json
         import urllib.parse
         import urllib.request
+        from w2cplatform.rows import answer, number
+        from .scan import door_spans
         q = urllib.parse.urlencode({"from": t0, "to": t1})
-        with urllib.request.urlopen(f"{url}/timeline/{urllib.parse.quote(str(unit))}?{q}", timeout=10) as r:
-            body = json.loads(r.read() or b"{}")
-        spans = [{**sp, "start": float(sp["start"]), "end": float(sp["end"])} for sp in body.get("spans", [])]
-        held = body.get("held_since")
-        return spans, (float(held) if held is not None else None)
+        try:
+            with urllib.request.urlopen(f"{url}/timeline/{urllib.parse.quote(str(unit))}?{q}", timeout=10) as r:
+                body = json.loads(answer(r) or b"{}")
+        except RecursionError as e:
+            raise ValueError(f"{url}: a timeline nested too deep to read") from e
+        spans, _ = door_spans(f"{REC.name}/doors/{url}#{unit}", body)
+        held = number(f"{REC.name}/doors/{url}#held_since", body.get("held_since"), float, None)
+        said_at = number(f"{REC.name}/doors/{url}#now", body.get("now"), float, None)
+        if held is not None and said_at is not None:
+            held = self.wall() - max(0.0, said_at - held)
+        return spans, held
 
     # A KEEP THAT STAYS SHORT (the review's fourth pass). What a pass could not copy it asked for again on the next,
     # and said nowhere but in `missing`: the recording's door on another server's loopback, every pass `copied = []`,
@@ -2839,10 +2889,15 @@ class RecWorker(VmsWorker):
                 pass
         return kept > 0
 
+    # A keep's id is a row's name, and a name stored before names were checked may hold a quote or a newline: written as
+    # a label value by the one function that escapes it (`w2cplatform.console.label`; the review's eighth pass). And
+    # whether this recorder waits for the volume it is pinned to (`volume_wait`), as the console's page says it.
     def metrics_text(self) -> str:
-        keeps = "".join(f'rec_keep_missing_seconds{{keep="{kid}"}} {e.get("missing", 0)}\n'
+        from w2cplatform.console import label
+        keeps = "".join(f'rec_keep_missing_seconds{{keep="{label(kid)}"}} {e.get("missing", 0)}\n'
                         for kid, e in sorted(self.keep_state.items()))
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
+                f"# TYPE rec_volume_wait gauge\nrec_volume_wait {1 if self.volume_wait else 0}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
                 f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"
                 + (f"# TYPE rec_keep_missing_seconds gauge\n{keeps}" if keeps else ""))
@@ -2936,7 +2991,8 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
                                 spans.append({**sp, "start": lo, "end": hi})
                     # …and since when this recorder writes the recording into this volume, if it does: what a keep's
                     # copier lets this door speak for beyond the footage it shows (`RecWorker._speaks_for`)
-                    body = {"unit": unit, "spans": spans, "current_epoch": cur, "held_since": held_since(unit)}
+                    body = {"unit": unit, "spans": spans, "current_epoch": cur, "held_since": held_since(unit),
+                            "now": wall()}             # the clock `held_since` is on, for a reader on another (`_door_timeline`)
                     return 200, json.dumps(body).encode(), "application/json"
                 def frames():
                     for a, b in shown:

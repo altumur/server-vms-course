@@ -588,7 +588,10 @@ def resource() -> None:
     res = vms_resource(os.environ.get("ARCHIVE", "/data/archive"), socket.gethostname(),
                        os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port)
-    res.heartbeat()
+    try:                                                                  # a store away at the start does not end the process
+        res.heartbeat()                                                   # (the review's eighth pass, beside М11's minor)
+    except Exception:                                                     # noqa: BLE001
+        logging.exception("resource heartbeat failed")
     # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
     # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
     try:
@@ -611,6 +614,13 @@ def resource() -> None:
                 logging.info("policy: %s", res.pass_())
         except Exception:                                                 # noqa: BLE001
             logging.exception("resource pass failed")
+        # What the restore left with peers — a peer that did not answer, a bucket that did not come — is asked for again,
+        # its pause doubling up to ten minutes (`Resource.restore_due`; the review's eighth pass): it ran once, at the start.
+        try:
+            if res.restore_due():
+                logging.info("restore again: %s", res.restore())
+        except Exception:                                                 # noqa: BLE001
+            logging.exception("restore failed again; asked again later")
         stop.wait(10)
     srv.shutdown()
 

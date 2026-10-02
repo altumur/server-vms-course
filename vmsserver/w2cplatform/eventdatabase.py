@@ -80,6 +80,7 @@ from datetime import datetime, timezone
 from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, alarm_tree, bucket_path,
                      bucket_start, subsystems_under, tree_owner, when)
 from .resource import MIRROR_DIR, mirrored_servers, resources_seen
+from .rows import PARSE_ERRORS, Table, answer, finite
 
 # Up to a day of buckets, the candidate files are COMPUTED from the window — a name from a time, and a stat
 # that says whether it is there. Wider than that, the epoch's directory is listed and its names filtered:
@@ -374,6 +375,39 @@ def refence(events: list, current_epochs: dict | None, epoch_policy: dict | None
     return events
 
 
+# A RESOURCE'S ANSWER IS ANOTHER PROCESS'S WORDS (the review's eighth pass, part 4, a sibling of the peers' doors). The
+# merge read `rep.get`, `rep["events"]`, `e["server"]` bare, after the fan-out's `try`: one resource of another build
+# answering a list, or one line without `t`, raised out of `query` — automation's pass and the console's `/events` for
+# every reader, every time. An answer that is not `{events: [...]}` is that resource not answering (`None`: the window
+# incomplete, said); a line the merge cannot order, dedupe or fence is passed by and counted (`PEER_EVENTS`), and the
+# rest of that resource's answer stands.
+def _event_line(e: dict) -> dict:
+    finite(e["t"]); str(e["server"]); str(e["kind"]); str(e["unit"]); str(e["subsystem"]); int(e["epoch"])
+    if "occurred" in e:
+        finite(e["occurred"])
+    if not e.get("id"):
+        e["bucket"]                                       # what a copy without a name is told apart by
+    return e
+
+
+def _answer(server: str, rep) -> dict | None:
+    if not isinstance(rep, dict) or not isinstance(rep.get("events", None), list):
+        return None
+    events = []
+    for e in rep["events"]:
+        if not isinstance(e, dict):
+            PEER_EVENTS.garbled(f"platform/events/{server}", "a line that is not an object")
+            continue
+        try:
+            events.append(_event_line(e))
+        except PARSE_ERRORS as err:
+            PEER_EVENTS.garbled(f"platform/events/{server}", err)
+    return {**rep, "events": events}
+
+
+PEER_EVENTS = Table("peer_event", "that line is left out of the merged window", "line a resource answered")
+
+
 # What stands behind a console's `/events`: nothing of its own. `query` asks every LIVE resource's
 # `GET /events` (each answers from the index over its own tree — own buckets and mirror copies), merges by
 # time, dedupes a dead server's copies when two peers hold them, drops a copy when the owner is live (it
@@ -420,13 +454,13 @@ class MergedIndex:
 
     def _http(self, url: str, params: dict) -> dict:
         with urllib.request.urlopen(f"{url}/events?{urllib.parse.urlencode(params)}", timeout=self.timeout) as r:
-            return json.loads(r.read())
+            return json.loads(answer(r))                        # up to a bound (`rows.answer`; the review's eighth pass)
 
     def _fan_out(self, servers: list[str], seen: dict, params: dict) -> dict:
         """{server: its answer, or None if it did not give one} — asked in parallel, `lanes` at a time."""
         def one(server):
             try:
-                return self.fetch(seen[server]["url"], params)
+                return _answer(server, self.fetch(seen[server]["url"], params))
             except Exception:                                   # noqa: BLE001 — any failure is "did not answer"
                 return None
         if len(servers) <= 1:

@@ -21,7 +21,7 @@ Re-derives with the stored salt and compares in constant time.
 - `idp_subject: str = ""` — idp only.
 - `created: float = 0.0`.
 ### `to_items(self) -> dict` — flat string items for a Variable (roles comma-joined).
-### `from_items(cls, it) -> User` — the inverse, tolerant of missing keys.
+### `from_items(cls, it) -> User` — the inverse, tolerant of missing keys. `users()` reads each record through the table `user`: one that does not parse is skipped, counted, logged once (the review's eighth pass). `create_local`/`create_federated` refuse a name with `|`, `"` or a control character (`grants.refuse_name`).
 
 ## `class IdentityStore`
 

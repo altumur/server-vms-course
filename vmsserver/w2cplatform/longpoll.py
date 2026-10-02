@@ -68,6 +68,7 @@ import urllib.parse
 import urllib.request
 
 from .doors import safe_segment
+from .rows import answer
 from .events import EPOCH_DIR, alarm_tree, bucket_start, _stamp
 
 log = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ WAIT_MAX = 30.0               # the longest a request is held; a reader asks aga
 # design number of 2 October 2026), and the default is twice that. `LONG_POLL_WAITERS` changes it.
 EVALUATORS_EXPECTED = 8
 WAITERS_MAX = 2 * EVALUATORS_EXPECTED
-WANTS_MAX = 64                # `(subsystem, kind, unit)` one request may name; more is 400
+WANTS_MAX = 64                # `(subsystem, kind, unit)` one request may name; more is 400 — a reader folds past it (`fold`)
 RESCAN = 1.0                  # how often the watcher looks for a unit or an epoch that appeared (by the directories' mtime)
 LINGER = 2.0                  # how long the sizes are remembered after the last waiter left
 PREVIOUS_FOR = 5.0            # how long after a bucket's boundary the bucket before it is still looked at
@@ -99,6 +100,23 @@ def waiters_from(env) -> int:
 def wanted(pairs) -> frozenset:
     """`(subsystem, kind)` or `(subsystem, kind, unit)` -> triples; a unit of `""` is any unit of that kind."""
     return frozenset((str(p[0]), str(p[1]), str(p[2]) if len(p) > 2 and p[2] else "") for p in pairs)
+
+
+# MORE THAN ONE REQUEST MAY NAME IS FOLDED, NOT REFUSED FOR GOOD (the review's eighth pass, part 3: a regression of the
+# seventh's M8). An evaluator with 65 scenarios on 65 cameras sent 65 triples, every request was 400, and its long poll
+# was off for good — the road from an event to a request back at two seconds, seen only in `auto_wait_errors_total`.
+# More than `WANTS_MAX` scenarios on one evaluator are expected (the coordinator's decision of 2 October). Past the
+# bound the triples are folded to their `(subsystem, kind)` with any unit: the request is held, any unit of those kinds
+# answers it, and the answer's `touched` still names the units that changed — so the early pass still evaluates only
+# the scenarios they touch. What folding costs is the watcher's look at every unit of the kind, and an early pass for a
+# camera nobody watches. `(wants, folded)`: `folded` is how many triples were folded, 0 when none. More kinds than the
+# bound — no request can hold them — is `([], n)`: the reader's pass, every `poll`, is all there is then.
+def fold(wants) -> tuple[list, int]:
+    wants = sorted(set(wants))
+    if len(wants) <= WANTS_MAX:
+        return wants, 0
+    kinds = sorted({(w[0], w[1], "") for w in wants})
+    return (kinds if len(kinds) <= WANTS_MAX else []), len(wants)
 
 
 def matches(wants: frozenset, seen: tuple) -> bool:
@@ -489,7 +507,7 @@ class LongPoll:
         q = {"want": ",".join("/".join(str(x) for x in w if x != "") for w in wants), "timeout": f"{timeout:g}",
              **({"since": since} if since is not None else {}), **({"client": self.client} if self.client else {})}
         with urllib.request.urlopen(f"{url}/events/wait?{urllib.parse.urlencode(q)}", timeout=timeout + 5.0) as r:
-            return json.loads(r.read())
+            return json.loads(answer(r))                 # up to a bound (`rows.answer`; the review's eighth pass)
 
     # What the answers since the last call said changed — `(subsystem, kind, unit)` — and forgotten: the pass that
     # follows evaluates what these touch. None when an answer said `changed` without saying what (a resource of an
@@ -540,6 +558,8 @@ class LongPoll:
             self.waits += 1
             try:
                 rep = self.fetch(url, wants, self.timeout, since)
+                if not isinstance(rep, dict):            # an answer of another shape is a wait that failed, not the thread's end
+                    raise ValueError(f"the answer is a {type(rep).__name__}, not an object")
             except Exception as e:                   # noqa: BLE001 — the resource is away, or does not know the route
                 self.errors += 1
                 log.debug("%s did not hold a wait (%s); the pass looks, as it did", server, e)

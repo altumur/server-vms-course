@@ -76,6 +76,12 @@ def published(cluster: str, key: str, raw, check=None, default=None):
     return MEMBER_OBJECTS.read(f"{cluster}/{key}", parse, default)
 
 
+def _names(v) -> None:
+    """A list of names (strings): a string in its place is not read as a list of its letters."""
+    if not isinstance(v, list) or not all(isinstance(n, str) for n in v):
+        raise TypeError("not a list of names")
+
+
 def a_heartbeat(hb: dict) -> None:
     """The shape every reader of a worker's heartbeat relies on: a finite `ts`, a list of status entries."""
     finite(hb.get("ts", 0))
@@ -98,7 +104,7 @@ class Cluster:
             raw = self.objects.get(REACHES)
         except Unreachable:
             raw = None
-        said = published(self.name, REACHES, raw, lambda v: frozenset(v.get("networks", []))) or {}
+        said = published(self.name, REACHES, raw, lambda v: _names(v.get("networks", []))) or {}
         return self.reaches | frozenset(said.get("networks", []))       # what does not parse says no network (the seventh review)
 
     def snapshot(self) -> dict | None:
@@ -164,10 +170,14 @@ class Answer:
     cluster: str | None
     searched: list[str]
     unreachable: list[str]
+    # Members that each claim the camera (the review's eighth pass, minor): a member naming another's camera in its
+    # snapshot made `where` raise — a 500 on `/api/where/<ref>` and on every edit of that camera through the domain.
+    # Now the answer says who claims it and is not complete: the domain cannot tell which of them is right.
+    contested: list[str] = field(default_factory=list)
 
     @property
     def complete(self) -> bool:
-        return not self.unreachable
+        return not self.unreachable and not self.contested
 
     @property
     def found(self) -> bool:
@@ -177,6 +187,9 @@ class Answer:
         if self.found:
             s = f"camera {self.camera} is on {self.worker or 'no worker yet'} ({self.server or '?'}) in {self.cluster}"
             return s if self.complete else s + f" (and {', '.join(self.unreachable)} could not be asked)"
+        if self.contested:
+            return (f"camera {self.camera} is claimed by {', '.join(self.contested)}: a placement failure, not a tie — "
+                    f"the domain cannot tell which of them holds it")
         if self.complete:
             return f"camera {self.camera} is in no cluster of the domain ({len(self.searched)} clusters searched)"
         return (f"camera {self.camera} was not found in the {len(self.searched)} cluster(s) I could reach; "
@@ -222,7 +235,7 @@ class DomainDirectory:
         scan, down = self.scan()
         hits = [(cl, row) for cl, snap in scan.items() for row in snap.get("cameras", []) if str(row.get("ref", "")) == str(camera)]
         if len(hits) > 1:
-            raise RuntimeError(f"camera {camera} claimed by {[h[0] for h in hits]}: a placement failure, not a tie")
+            return Answer(camera, None, None, None, sorted(scan), sorted(down), contested=sorted({h[0] for h in hits}))
         if hits:
             cl, row = hits[0]
             return Answer(camera, row.get("worker"), row.get("server"), cl, sorted(scan), sorted(down))

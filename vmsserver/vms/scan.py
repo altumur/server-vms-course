@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from w2cplatform.events import unit_dir
+from w2cplatform.rows import PARSE_ERRORS, Table, answer, finite
 
 from .archive import Span, authoritative
 
@@ -45,12 +46,21 @@ def device_recordings(url: str, t0: float, t1: float, timeout: float = 10.0) -> 
     import urllib.request
     try:
         with urllib.request.urlopen(f"{url}?from={t0}&to={t1}", timeout=timeout) as r:
-            body = _json.loads(r.read() or b"{}")
+            body = _json.loads(answer(r) or b"{}")
     except urllib.error.HTTPError as e:
         if e.code == 501:
             return None                                  # this driver cannot list; the summary is all there is
         raise
-    return [(float(sp["from"]), float(sp["to"])) for sp in body.get("spans", [])]
+    except (*PARSE_ERRORS, RecursionError):
+        return None                                      # an answer that does not parse lists nothing: the summary stands
+    # Each span alone (the review's eighth pass): one that does not parse is that span's — counted, and the others
+    # stand; `float(sp["from"])` bare took the whole listing, and with it the job's or the survey's step.
+    out = []
+    for sp in (body.get("spans", []) if isinstance(body, dict) and isinstance(body.get("spans", []), list) else []):
+        got = DOOR_SPANS.read(f"vms/recordings@{url}", lambda sp=sp: (finite(sp["from"]), finite(sp["to"])))
+        if got is not None:
+            out.append(got)
+    return out
 
 
 # The seconds of `[t0, t1)` a device actually holds. `spans` is what `device_recordings` returned, and the
@@ -132,10 +142,40 @@ class Read:
     answered: bool                 # at least one door answered
     silent: list[str]              # recorders whose door was asked and did not answer
     unread: list[str]              # volumes that held this recording and nobody serves now
+    garbled: list = field(default_factory=list)   # recorders whose door answered spans that do not parse (`door_spans`)
 
     @property
     def partial(self) -> bool:
-        return bool(self.silent or self.unread)
+        return bool(self.silent or self.unread or self.garbled)
+
+
+# A SPAN A DOOR ANSWERED IS READ ALONE (the review's eighth pass, part 4). `int(sp["epoch"])` stood outside the door's
+# `try`: a door of another build or a proxy answering `{"epoch": "e3"}` raised out of the read, the scan worker moved no
+# job at all (it is called with no `try` per job), and the span of the good door beside it was lost too. Now an answer
+# that is not `{spans: [...]}` is that door not answering (`silent`), and a span that does not parse is that span's:
+# skipped, counted once per door and recording (`DOOR_SPANS`), and the door named in `garbled` — the read is partial,
+# so the scan does not end `done` without the minutes it could not read. The keeps' copier reads its doors through the
+# same parser (`RecWorker._door_timeline`).
+DOOR_SPANS = Table("door_span", "that stretch is passed by until the door says it whole", "span a door answered")
+
+
+def door_spans(key: str, body) -> tuple[list[dict], bool]:
+    """The spans of a door's `/timeline` answer, each read alone — `([{start, end, epoch, bytes, source, …}], whole)`;
+    `ValueError` when the answer is not `{spans: [...]}` at all."""
+    if not isinstance(body, dict) or not isinstance(body.get("spans", []), list):
+        raise ValueError("a timeline is {spans: [...]}")
+    out, whole = [], True
+    for sp in body.get("spans", []):
+        try:
+            out.append({**sp, "epoch": int(finite(sp.get("epoch") or 0)), "start": finite(sp["start"]),
+                        "end": finite(sp["end"]), "bytes": int(finite(sp.get("bytes") or 0)),
+                        "source": str(sp.get("source", "live"))})
+        except PARSE_ERRORS as e:
+            DOOR_SPANS.garbled(key, e)
+            whole = False
+    if whole:
+        DOOR_SPANS.parsed(key)
+    return out, whole
 
 
 def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0) -> Read:
@@ -143,7 +183,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     import urllib.request
     from w2cplatform.console import heartbeats
     from w2cplatform.contract import is_live
-    out, answered, silent, read = set(), False, [], set()
+    out, answered, silent, read, garbled = set(), False, [], set(), []
     every = heartbeats(objects, "rec/")
     for w, hb in sorted(every.items()):
         url = str(hb.extra.get("archive_url") or "")
@@ -151,16 +191,17 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
             continue
         try:
             with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
-                body = _json.loads(r.read())
-        except (OSError, ValueError):
+                spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
+        except (OSError, *PARSE_ERRORS, RecursionError):
             silent.append(w)
             continue
         answered = True
-        if hb.extra.get("volume"):
-            read.add(str(hb.extra["volume"]))
-        for sp in body.get("spans", []):
-            out.add(Span(str(unit), int(sp["epoch"]), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
-                         str(sp.get("source", "live"))))
+        if not whole:
+            garbled.append(w)
+        if hb.extra.get("volume") and whole:
+            read.add(str(hb.extra["volume"]))            # a volume read in part is not read: it stays `unread` if nobody else
+        for sp in spans:
+            out.add(Span(str(unit), sp["epoch"], sp["start"], sp["end"], sp["bytes"], sp["source"]))
     unread = []
     if vars_ is not None:
         from . import volumes
@@ -172,7 +213,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
             return hb is not None and any(str(st.get("id")) == str(unit) for st in hb.status if isinstance(st, dict))
         unread = [g["volume"] for g in unserved_volumes(objects, now)
                   if g["volume"] not in read and g["volume"] not in off and held_it(g["recorder"])]
-    return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread)
+    return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread, garbled)
 
 
 # Seconds of `[t0, t1)` the plan actually covers. The operator asked for an hour; if forty minutes were
@@ -180,6 +221,13 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
 # "nothing was recorded" are different answers and only one of them is about the footage.
 def covered(scans: list[Scan]) -> float:
     return sum(s.seconds for s in scans)
+
+
+PROGRESS_LINES = Table("progress_line", "the stretch it names is scanned again", "line of a scan's progress")
+
+
+def _progress_line(d) -> dict:
+    return {**d, "from": finite(d["from"]), "to": finite(d["to"]), "events": int(finite(d.get("events") or 0))}
 
 
 class ScanLog:
@@ -198,12 +246,22 @@ class ScanLog:
             f.write(json.dumps({"kind": "scan", "key": scan.key(), "stream": scan.seg.stream, "epoch": scan.seg.epoch,
                                 "from": scan.t0, "to": scan.t1, "events": int(events), "at": float(at)}) + "\n")
 
+    # A line that does not parse — the half line a crash between the write and its end leaves — is that line's (the
+    # review's eighth pass, a sibling of the doors' spans): read whole, it raised out of every pass of the job for good.
+    # Passed by and counted (`PROGRESS_LINES`): the stretch it named is scanned again, which costs a re-scan of one
+    # stretch, as the file's own rule says.
     def read(self) -> list[dict]:
         try:
             with open(self.path) as f:
-                return [json.loads(l) for l in f if l.strip()]
+                lines = [l for l in f if l.strip()]
         except FileNotFoundError:
             return []
+        out = []
+        for i, l in enumerate(lines):
+            d = PROGRESS_LINES.read(f"{SUB}/progress/{self.path}#{i}", lambda l=l: _progress_line(json.loads(l)))
+            if d is not None:
+                out.append(d)
+        return out
 
     # For the operator's progress, and for nothing else. It is the far end of the furthest stretch
     # recorded, which is NOT a point everything before is finished at: resuming from it would skip a

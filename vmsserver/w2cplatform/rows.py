@@ -13,7 +13,8 @@
 #
 # This is the one reader. A table is a `Table`: its name and what not reading a row of it means. `read(key,
 # parse, default)` runs `parse()`; what a parse raises — `ValueError` (a `JSONDecodeError` is one), `TypeError`,
-# `KeyError`, `AttributeError`, `OverflowError` (`int(float("inf"))`) — makes the row garbled: `default` is
+# `KeyError`, `AttributeError`, `OverflowError` (`int(float("inf"))`), `RecursionError` (JSON nested ten thousand
+# deep: `json.loads` gives up on it, and it fits a Variable — the review's eighth pass) — makes the row garbled: `default` is
 # returned, the row is counted ONCE until it parses again (`counts`, by subsystem — the key's first segment),
 # logged once with what not reading it means, and its key is in `bad` for whoever names it on a page. A row
 # that parses again leaves `bad`; garbled again later, it is counted again — a new spell, not a re-read.
@@ -34,13 +35,14 @@
 #   twice — `tests/test_portability.py` rebuilds `sys.modules` — makes a second table of the same name, and a registry
 #   keyed by name kept only the last); `garbled_counts(sub)` — `{"<name>s_garbled": n}`, what a heartbeat carries;
 #   `forget()` — clears every count (tests).
+# - `answer(r, limit)` — the body of another process's door, read up to `ANSWER_MAX` bytes, else `ValueError`.
 # ================================================================================================
 import logging
 import math
 
 log = logging.getLogger(__name__)
 
-PARSE_ERRORS = (ValueError, TypeError, KeyError, AttributeError, OverflowError)
+PARSE_ERRORS = (ValueError, TypeError, KeyError, AttributeError, OverflowError, RecursionError)
 
 TABLES: list["Table"] = []
 
@@ -121,3 +123,19 @@ def forget() -> None:
     for t in TABLES:
         t.counts.clear()
         t.bad.clear()
+
+
+# AN ANSWER OF ANOTHER PROCESS'S DOOR IS READ UP TO A BOUND (the review's eighth pass, a sibling the product team found):
+# a peer's `/mirrored`, a recorder's `/timeline`, a resource's `/events` and `/events/wait` were read whole whatever
+# their size — a door of another build, a proxy's page, a door gone wrong was memory without a ceiling in the reader.
+# `answer(r, limit)` reads at most `limit` bytes and raises `ValueError` past it — one of `PARSE_ERRORS`: an answer too
+# big to read is an answer that does not parse, and every reader of a door takes it as that door not answering.
+ANSWER_MAX = 16 << 20
+
+
+def answer(r, limit: int = ANSWER_MAX) -> bytes:
+    """At most `limit` bytes of `r` (a response), or `ValueError`."""
+    data = r.read(limit + 1)
+    if len(data) > limit:
+        raise ValueError(f"the answer is over {limit} bytes: not read")
+    return data

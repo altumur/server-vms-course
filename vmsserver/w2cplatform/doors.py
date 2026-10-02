@@ -27,6 +27,15 @@ def safe_segment(name: str) -> bool:
     return bool(name) and name not in (".", "..") and "/" not in name and "\\" not in name and "\0" not in name
 
 
+# The characters a NAME may not hold, beyond what makes it a path (the review's eighth pass): `"` and `|` — a name goes
+# whole into a label value on `/metrics` and into `|`-joined fields of heartbeats — and the control, line and paragraph
+# separator characters (Unicode Cc, Zl, Zp). The rule the domain keeps for a user's name (`domain/grants.py`). Returns
+# the characters found, sorted; empty when the name may stand.
+def unnamable(name: str) -> list[str]:
+    import unicodedata
+    return sorted({c for c in str(name) if c in '|"' or unicodedata.category(c) in ("Cc", "Zl", "Zp")})
+
+
 def safe_rel(rel: str) -> bool:
     return bool(rel) and all(safe_segment(s) for s in rel.split("/"))
 
