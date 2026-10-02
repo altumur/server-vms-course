@@ -566,8 +566,12 @@ def test_a_hang_up_of_an_unknown_session_reads_the_whole_day_once_and_then_asks_
     """The review's fifth pass, minor: `DELETE /whep/session/<any id>` asked the journals of every server for a day, each
     time, and past `MAX_LIMIT` views a day an old session was 404. The day is read a window at a time, newest first,
     until the session is found — the oldest of more views than a window holds is found; an id that was not found is
-    not looked up again for `SESSION_MISS_TTL`; and one caller's look-ups that find nothing are `SESSION_MISSES` a
-    minute — past them, 404 without asking."""
+    not looked up again for `SESSION_MISS_TTL`; and one caller's look-ups are `SESSION_MISSES` a minute.
+
+    The review's sixth pass, minor (a run: thirty DELETEs of somebody else's old session were six hundred windows):
+    only look-ups that found NOTHING were kept and counted. A session found — the caller's or not — is kept in the
+    console's table and not looked for again; and every look-up that asks the journal spends the caller's budget,
+    whatever it finds: past it the answer is 429, not "no such session" — the journal was not asked."""
     from w2cplatform.doors import MAX_LIMIT
     from vms import console as vc
     box = Box()
@@ -601,10 +605,14 @@ def test_a_hang_up_of_an_unknown_session_reads_the_whole_day_once_and_then_asks_
     Index.asked = 0
     assert route(H("boris"), "DELETE", "/whep/session/s5", {})[0] == 403             # found, and not his
     Index.asked = 0
+    assert all(route(H("boris"), "DELETE", "/whep/session/s5", {})[0] == 403 for _ in range(30))
+    assert Index.asked == 0                                           # found once: thirty more refusals ask nobody
     assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3
     assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3   # not asked again
-    for i in range(vc.SESSION_MISSES - 1):
-        route(H("boris"), "DELETE", f"/whep/session/x{i}", {})
+    for i in range(vc.SESSION_MISSES - 2):                            # with `s5` and `nope`: his ten look-ups of the minute
+        assert route(H("boris"), "DELETE", f"/whep/session/x{i}", {})[0] == 404
     before = Index.asked
-    assert route(H("boris"), "DELETE", "/whep/session/x-more", {})[0] == 404 and Index.asked == before   # his budget spent
+    for sid in ("x-more", "s7"):                                      # past the budget nothing is asked: not a miss, not a hit
+        r = route(H("boris"), "DELETE", f"/whep/session/{sid}", {})
+        assert r[0] == 429 and dict(r[2])["Retry-After"] == "60" and Index.asked == before
     assert route(H("anna"), "DELETE", "/whep/session/y", {})[0] == 404 and Index.asked > before         # hers is not

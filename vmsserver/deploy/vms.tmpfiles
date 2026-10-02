@@ -21,7 +21,12 @@
 #   `StateDirectory=` (/var/lib, on the slot). A volume declared on another path of this box is chowned by
 #   `install-obsd.sh <path>`. `d` sets the directory's owner and mode only; a ring formatted when the daemon ran as
 #   root is moved over once, by the install script, not at every boot.
+# - `/run/vms-console` — the console's unix socket, the box's own door (`CONSOLE_UNIX`, `console.container`; the
+#   review's sixth pass): 0700 root, and the socket in it 0660 — who may open it is this mode, which is the point of
+#   it. A directory of its own and not one under /run/vms: that one is mounted whole into the holder's and the
+#   recorder's containers, and the console's door is not theirs to open.
 # ================================================================================================
-d /run/vms     0755 root root    -
-d /run/obsd    0750 obsd vms-rec -
-d /data/volume 0750 obsd vms-rec -
+d /run/vms         0755 root root    -
+d /run/vms-console 0700 root root    -
+d /run/obsd        0750 obsd vms-rec -
+d /data/volume     0750 obsd vms-rec -

@@ -159,7 +159,8 @@ def _held(box, key_source, **devkw):
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     from w2cplatform.contract import Heartbeat
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
-    cid = con.create_camera({"name": "lobby", "source": key_source})["id"]
+    have = next((c for c in con.cameras() if c.get("source") == key_source), None)   # a restart: the camera is there already
+    cid = (have or con.create_camera({"name": "lobby", "source": key_source}))["id"]
     box.objects.put(VMS.sub.heartbeat_key("w-1"), Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50,
                                                                                     "headroom": 50}).to_bytes())
     box.objects.put("platform/resources/srv-a/heartbeat",

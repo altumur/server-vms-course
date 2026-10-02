@@ -41,7 +41,9 @@ job "console" {
         image        = var.image
         network_mode = "host"
         args         = ["python3", "-m", "cluster", "console"]
-        volumes      = ["/data/archive:/data/archive"]
+        # /run/vms-console: the directory of the console's unix socket — the box's own door (`CONSOLE_UNIX` below;
+        # М10's sixth review). 0700 root on the host, made by `vms.tmpfiles` (`install-obsd.sh`), like /run/obsd.
+        volumes      = ["/data/archive:/data/archive", "/run/vms-console:/run/vms-console"]
       }
       # The cluster's key (`w2cplatform/sealing.py`): rendered from the Nomad variable `secrets/vms` into this
       # task's secrets directory, which only this task sees. The policies let the console, the worker and the recorder read it
@@ -63,6 +65,11 @@ job "console" {
         OBJECTS      = "variables://objects"
         ARCHIVE      = "/data/archive"
         CONSOLE_PORT = "8080"
+        # Who is "on the box" is whoever came through this socket — the emergency entry's own turns, and connections
+        # of its own when the port is flooded. On a server: `curl --unix-socket /run/vms-console/console.sock
+        # http://console/session …`, or `ssh -L 8080:/run/vms-console/console.sock`. A TCP peer of 127.0.0.1 is the
+        # network's, like any other (`w2cplatform/access.py`, `is_local`).
+        CONSOLE_UNIX = "/run/vms-console/console.sock"
         CLUSTER      = "room-a"
       }
       service {                                      # what the autoscaler scrapes, what М12's read model and a browser reach
@@ -70,7 +77,13 @@ job "console" {
         port = "console"
         tags = ["metrics"]
       }
-      resources { cpu = 300  memory = 128 }             # the page and the API; no event index here
+      # MEMORY, COUNTED (М10's sixth review, a run: four `PUT …/mask` of 32 MiB took this task to its 128 MiB and it
+      # was killed — by a token that held no grant at all). Two things changed: rights are asked before the body, so a
+      # caller with no right to the unit is refused with nothing read; and `BLOBS_AT_ONCE` (2) blobs are read at a
+      # time, each `CONSOLE_MAX_BLOB` (32 MiB) while it is read and again while it is stored. So the worst an
+      # administrator of a unit can ask of this process is some 75 MiB of its own (the page, the heartbeats it reads)
+      # and 2 × 2 × 32 MiB of blobs: 256. A site whose masks are kilobytes may lower `CONSOLE_MAX_BLOB` and this with it.
+      resources { cpu = 300  memory = 256 }             # the page and the API; no event index here
     }
   }
 }

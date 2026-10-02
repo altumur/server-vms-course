@@ -119,17 +119,20 @@ def trusted_proxies() -> set:
     return {a.strip() for a in os.environ.get("TRUSTED_PROXY", "").split(",") if a.strip()}
 
 
-# Whether the caller is ON THIS BOX: the socket's own peer is a loopback address, and not a proxy this console was
-# told to trust (whose callers are wherever the proxy says). A TCP peer of 127.0.0.1 is not something a caller on the
-# network can write — unlike `X-Forwarded-For`. The emergency door's local lane (`Gate.open_glass`).
+# Whether the caller is ON THIS BOX: the connection came through the console's unix socket (`console.UnixConsoleServer`,
+# whose peers are named `unix…`). The emergency door's local lane (`Gate.open_glass`), and the box's own connections
+# (`console.Bounds`).
+#
+# NOT A LOOPBACK ADDRESS (the review's sixth pass, minor). It was "a TCP peer of 127.0.0.1 that is no trusted proxy" —
+# true of nobody on the network, and wrong twice on the box: behind a proxy on the same machine the proxy is that
+# peer, so the lane was every caller's (the proxy not named in `TRUSTED_PROXY`) or nobody's (named); and any process
+# on the box could take the lane's turns. The socket is a file under a directory only root opens: who reaches it is
+# decided by the file's mode, a proxy does not go through it, and nothing a caller writes in a header names it.
+UNIX_PEER = "unix"
+
+
 def is_local(peer: str) -> bool:
-    import ipaddress
-    try:
-        ip = ipaddress.ip_address(str(peer).split("%", 1)[0])
-    except ValueError:
-        return False
-    ip = getattr(ip, "ipv4_mapped", None) or ip
-    return ip.is_loopback and str(peer) not in trusted_proxies()
+    return str(peer).startswith(UNIX_PEER)
 
 
 def cookie(headers, name: str) -> str | None:
@@ -181,14 +184,16 @@ class Gate:
     # no try of the address — and so forty addresses, each inside its five a window, keep every network turn
     # taken for good: the right password competed with them for each one, and the reviewer's simulation left the
     # operator outside for an hour. Three ways out were named; the one taken is a separate pace for the caller on
-    # the box itself (`is_local`: a loopback peer that is no trusted proxy — on the console's host, or through an
-    # SSH tunnel to it). Nobody on the network can take its turns, and guessing from the network stays exactly as
-    # slow as it was. The other two were not: counting pace refusals against the address shuts out the operator
+    # the box itself (`is_local`: a connection through the console's unix socket — on the console's host, or through
+    # an SSH tunnel to that socket; it was a loopback TCP peer until the review's sixth pass). Nobody on the network
+    # can take its turns, and guessing from the network stays exactly as slow as it was. The other two were not: counting pace refusals against the address shuts out the operator
     # whose own attempts the flood turned into refusals — five of them, and a quarter of an hour; a queue for
     # addresses with no wrong attempt gives every FRESH address an unpaced guess, and a flood is fresh addresses.
     # What stays: an operator who can reach neither the box nor an unflooded network still competes, and the
     # alarm `access.break_glass.limited` says the door is under a flood. The per-address limit holds for the box
-    # too — five wrong guesses from loopback close loopback for the window; whoever is on the box is not a stranger.
+    # too — five wrong guesses through the socket close it to that user for the window (the "address" is the peer's
+    # uid, where the kernel says it); whoever is on the box is not a stranger. A console with no unix socket
+    # (`CONSOLE_UNIX` not set) has no such lane, and says so when it starts.
     GLASS_TRIES, GLASS_WINDOW = 5, 900.0
     GLASS_RATE, GLASS_BURST, GLASS_WAIT = 10.0, 10, 10.0
     _glass_tries: dict = {}
@@ -324,8 +329,8 @@ class Gate:
                                    rate=self.GLASS_RATE, all=True, lane="box" if local else "network")
             raise Denied(429, f"the emergency door checks {self.GLASS_RATE:.0f} passwords a minute and every turn is "
                               f"taken: retry in {wait:.0f} s"
-                              + ("" if local else " — on the box itself (or through an SSH tunnel to its loopback) the "
-                                                  "door has turns of its own"), retry_after=wait)
+                              + ("" if local else " — on the box itself, through the console's unix socket "
+                                                  "(CONSOLE_UNIX), the door has turns of its own"), retry_after=wait)
         if wait > 0:
             self._glass_sleep(wait)                      # its turn: a pace, not a refusal
         try:

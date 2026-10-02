@@ -305,16 +305,43 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
 # cheaper still, because a request has no state to move: once the work named in it is done the row has
 # nothing left to say, and a store that keeps every range anyone ever asked for is a store that grows
 # without anybody deciding it should.
+#
+# …AND AN ASK NOBODY ANSWERED HAS AN END TOO (the review's sixth pass, minor). A backfill carries no `valid_until` —
+# footage fetched an hour late is still the footage — so a range no recorder could ever fetch (its recording gone,
+# its source never holding it) stood for good, and with it one of the places its person may ask from
+# (`vms/console.py`, `BACKFILLS_OPEN`). A backfill that has stood for `BACKFILL_TTL` is ended here and counted with
+# the requests that expired (`vms_requests_expired_total`); a job still waiting for that footage asks again
+# (`ask_for_footage`), a person sees the hole still there and may. A person's list of asks (`asks-…`) that nobody
+# has touched for that long holds nothing live, and goes with them.
+BACKFILL_TTL = 86400.0
+
+
 def clear_requests(ctl) -> int:
     from w2cplatform.console import heartbeats
     fetched: set[str] = set()
     for _, hb in heartbeats(ctl.objects, ctl.spec.name + "/").items():
         fetched |= {r for r in str(hb.extra.get("fetched", "")).split(",") if r}
-    gone = 0
+    gone, now = 0, ctl.wall()
     for key in ctl.vars.list(ctl.sub.requests_prefix()):
         if key.rsplit("/", 1)[1] in fetched:
             ctl.vars.delete(key)
             gone += 1
+            continue
+        it, idx = ctl.vars.get(key)
+        if not it or it.get("action") or not (("from" in it and "to" in it) or "asks" in it):
+            continue                                        # a command or a `record`: its own `valid_until` ends it
+        try:
+            old = now - float(it.get("at", now) or now) > BACKFILL_TTL
+        except (TypeError, ValueError):
+            old = False
+        if old:
+            try:
+                ctl.vars.delete(key, cas=idx)               # by CAS: asked again this instant, it is a new ask
+            except Exception:                               # noqa: BLE001 — changed meanwhile, or the store: the next pass
+                continue
+            if "asks" not in it:
+                _expired(ctl.spec.name)
+                log.warning("%s: backfill %s stood for a day unanswered and was ended", ctl.spec.name, key.rsplit("/", 1)[1])
     return gone
 
 

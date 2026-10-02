@@ -31,6 +31,8 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
+from w2cplatform.console import Bounds, ConsoleServer, Deadlined, read_body
+
 from .api import ApiError, ConsoleAPI
 from .federation import DomainDirectory
 from .readview import ReadView
@@ -72,7 +74,14 @@ class Console:
     def handler(self):
         console = self
 
-        class H(BaseHTTPRequestHandler):
+        # BOUNDED LIKE EVERY DOOR (М10's sixth review: "every HTTP door in the code base"). It was a thread for every
+        # connection with no bound, no deadline on a request, and bodies read to whatever `Content-Length` said —
+        # before the caller's token was looked at. The server and the handler's reading are the platform's
+        # (`ConsoleServer`, `Deadlined`): so many connections at once and so many to one address, the request line
+        # and headers under a deadline, a body of at most `MAX_BODY`.
+        class H(Deadlined, BaseHTTPRequestHandler):
+            MAX_BODY = 1 << 20
+
             def _send(self, status: int, body: dict | list):
                 raw = json.dumps(body).encode()
                 self.send_response(status)
@@ -131,6 +140,8 @@ class Console:
                 key = self.headers.get("Idempotency-Key")
                 if not key:
                     return self._send(400, {"detail": "Idempotency-Key header is required: a retried PUT must be the same PUT"})
+                if not read_body(self, self.MAX_BODY):
+                    return
                 n = int(self.headers.get("Content-Length", 0))
                 fields = json.loads(self.rfile.read(n) or b"{}")
                 try:
@@ -143,6 +154,8 @@ class Console:
                 u = urlsplit(self.path)
                 if not (u.path == "/api/members" and console.members is not None):
                     return self._send(404, {"detail": "no such route"})
+                if not read_body(self, self.MAX_BODY):
+                    return
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
                 try:
                     subject = console.api._subject(self._token())
@@ -172,6 +185,8 @@ class Console:
 
             def _topology(self):
                 from cluster.variables import Conflict
+                if not read_body(self, self.MAX_BODY):
+                    return
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
                 try:
                     subject = console.api._subject(self._token())
@@ -193,7 +208,7 @@ class Console:
 
     def serve(self, host: str = "127.0.0.1", port: int = 8090) -> ThreadingHTTPServer:
         threading.Thread(target=self._refresher, daemon=True, name="readview").start()
-        srv = ThreadingHTTPServer((host, port), self.handler())
+        srv = ConsoleServer((host, port), self.handler(), bounds=Bounds(64, 16, reserve=0, box=0))
         threading.Thread(target=srv.serve_forever, daemon=True, name="console").start()
         return srv
 

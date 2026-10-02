@@ -261,7 +261,10 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         keys = IdempotencyKeys(box.vars, "vms/idem/", box.wall, clock=box.clock)
         box.wall.advance(90000); box.clock.advance(61)
         assert keys.prune() == 2 and box.vars.list("vms/idem/") == [] and keys.prune() == 0
-        assert post(p2, "k-1")[1]["id"] == 2                                 # a forgotten key is a new request, by design
+        # a forgotten key is a new request, by design — and what stops the second camera then is the rule about
+        # sources (`volumes.refuse_camera`, the review's sixth pass): camera 1 is that channel already
+        code, body = post(p2, "k-1")
+        assert code == 400 and "camera 1 is that source already" in body["detail"] and len(a.cameras()) == 1
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 
@@ -277,7 +280,7 @@ def _console_with_its_own_clock(box, ctl):
 
 
 def _post(port, key, name="gate", user=None, body=None):
-    data = json.dumps(body if body is not None else {"name": name, "source": "driverpack://file/g.mp4"}).encode()
+    data = json.dumps(body if body is not None else {"name": name, "source": f"driverpack://file/{key}.mp4"}).encode()   # a source per key: one channel is one camera
     req = urllib.request.Request(f"http://127.0.0.1:{port}/cameras", data=data, method="POST",
                                  headers={"Idempotency-Key": key, **({"X-User": user} if user else {})})
     try:

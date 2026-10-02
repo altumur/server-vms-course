@@ -622,12 +622,23 @@ def register_constraint(name: str, fn) -> None:
 # recordings of one camera), which one to stand beside. Smallest first; ties by their id, so two passes
 # agree. The VMS registers one for `vms`: beside the BACKUP recording, which is the one that must survive
 # the primary's server.
+#
+# `refuse(ctl, uid, old, new)` — may this row be WRITTEN: raises `Refused`. Called by `create` and `update` with the
+# row as it was (None for a create) and as it will be, before anything is stored — for a rule about what a field
+# POINTS AT, which the spec's types cannot state and which must hold for every writer of rows, a scenario's request
+# turned into a row as much as an operator's edit (the review's sixth pass: a recording's `home` on another camera's
+# card; a camera's `source` on a channel another camera already is). The gate asks who may; this says what may be.
 ADMIT: dict[str, object] = {}
 NEAR_RANK: dict[str, object] = {}
+REFUSE: dict[str, object] = {}
 
 
 def register_admit(spec_name: str, fn) -> None:
     ADMIT[spec_name] = fn
+
+
+def register_refuse(spec_name: str, fn) -> None:
+    REFUSE[spec_name] = fn
 
 
 def register_near_rank(spec_name: str, fn) -> None:
@@ -780,6 +791,8 @@ class SpecController(Controller):
                 raise Refused(f"a {self.spec.name} {self.spec.id} is a name, not a path: {uid!r}")
         if reserve is not None:
             reserve(uid)                                                # into the claim, before the row exists
+        if self.spec.name in REFUSE:                                   # the subsystem's own rule about what the row points at
+            REFUSE[self.spec.name](self, uid, None, self.spec.new_row(uid, fields))
         if not self.spec.numeric:
             old, idx = self.vars.get(self._row_key(uid))
             if old and old.get("deleted") != "true":
@@ -826,8 +839,11 @@ class SpecController(Controller):
             if "cam" in fields and "cam" in r and str(self.spec.fields["cam"].parse(fields["cam"])) != str(r["cam"]):
                 raise Refused(f"`cam` is fixed when the unit is created: {uid} is about {r['cam']} — create one for "
                               f"{fields['cam']} under another name (this one stays {r['cam']}'s, deleted or not)")
+            was = dict(r)
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
+            if self.spec.name in REFUSE:             # the subsystem's own rule about what the row points at, old and new
+                REFUSE[self.spec.name](self, uid, was, r)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
             return self._sealed(self.spec.items(r), uid)
         r = self.spec.row(self.write(self._row_key(uid), mutate))

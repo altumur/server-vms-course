@@ -55,7 +55,7 @@ from w2cplatform.spec import Refused
 SUB = "rec"
 TABLE = "volumes"
 KINDS = ("local", "network", "backup", "edge", "incidents")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled", "shrink_confirmed")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled", "shrink_confirmed", "cam")
 
 
 # The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
@@ -95,6 +95,10 @@ class Volume:
     # only when this says the same number — the operator's second word (`RecWorker._apply_quota`; the review's third
     # pass). Absent, the ring keeps its size and the heartbeat says why.
     shrink_confirmed: int = 0
+    # An edge volume is the card IN a camera, and says which: the camera's id in this cluster's `vms/cameras`. A
+    # recording is homed on a card only if it is that camera's (`refuse_recording`): the card's recorder writes the
+    # frames of its own camera's ring, whatever the recording's row says (the review's sixth pass, major).
+    cam: str = ""
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Volume":
@@ -102,13 +106,14 @@ class Volume:
         return cls(name, str(d.get("kind", "local")), str(d.get("url", "")), str(d.get("server", "")),
                    int(d.get("quota_bytes", 0) or 0), str(d.get("access_secret", "")),
                    str(d.get("enabled", "true")) != "false", access_key=str(d.get("access_key", "")),
-                   shrink_confirmed=int(d.get("shrink_confirmed", 0) or 0))
+                   shrink_confirmed=int(d.get("shrink_confirmed", 0) or 0), cam=str(d.get("cam", "") or ""))
 
     def to_items(self) -> dict:
         return {"kind": self.kind, "url": self.url, "server": self.server,
                 "quota_bytes": self.quota_bytes, "access_secret": self.access_secret, "access_key": self.access_key,
                 "enabled": "true" if self.enabled else "false",
-                **({"shrink_confirmed": self.shrink_confirmed} if self.shrink_confirmed else {})}
+                **({"shrink_confirmed": self.shrink_confirmed} if self.shrink_confirmed else {}),
+                **({"cam": self.cam} if self.cam else {})}
 
 
 def key(name: str) -> str:
@@ -134,6 +139,14 @@ def refuse(fields: dict) -> None:
         raise Refused("a local volume is a disk on one server: name it")
     if kind == "edge" and not str(fields.get("server", "")):
         raise Refused("an edge volume is the card in one camera: name it")
+    # …and names the camera too — `cam`, its id among this cluster's cameras; `server` is the box the card's recorder
+    # runs on, which says nothing of whose frames it writes (the review's sixth pass, major: a recording of camera 1
+    # homed on camera 2's card was written from camera 2's ring). No other kind is a camera's.
+    if kind == "edge" and not str(fields.get("cam", "") or ""):
+        raise Refused("an edge volume is the card in one camera: say which — `cam`, the camera's id here; only that "
+                      "camera's recordings are homed on it")
+    if kind != "edge" and str(fields.get("cam", "") or ""):
+        raise Refused(f"`cam` is an edge volume's — the camera whose card it is; a {kind} volume is no camera's")
     # A card is a directory on the camera, written by the camera's recorder without an engine (`vms/card.py`): an
     # address — a bucket, a share — or a key to one is something no card reader can open.
     if kind == "edge" and ("://" in str(fields.get("url", "")).replace("file://", "", 1)
@@ -176,6 +189,14 @@ def write(vars_, fields: dict, sealer=None) -> Volume:
     name = str(fields["name"])
     _, idx = vars_.get(key(name))
     vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
+    # The other order of `refuse_recording`: a card declared — or declared again as another camera's — under a name
+    # recordings are homed on already. They are that camera's, or the declaration is refused.
+    if vol.kind == "edge":
+        for path in vars_.list(f"{SUB}/recordings/"):
+            row, _ = vars_.get(path)
+            if row and row.get("deleted") != "true" and str(row.get("home") or "") == name and str(row.get("cam") or "") != vol.cam:
+                raise Refused(f"{path.rsplit('/', 1)[1]} is homed on {name} and is camera {row.get('cam')}'s: a card "
+                              f"holds its own camera's recordings — move that recording first")
     vars_.put(key(name), seal_items(sealer, vol.to_items(), key(name)), cas=idx)
     return vol
 
@@ -380,10 +401,80 @@ def rank_near_recording(ctl, recording_id: str) -> int:
     return 0 if items and str(items.get("home") or "") in names else 1
 
 
+# -- what a row may point at (the review's sixth pass, two majors of one class) -----------------------------------------
+# The gate checks the camera a row is ABOUT. Two fields point at something else, and through each an administrator of
+# one camera reached another:
+#
+#     rec.home      `PUT /rec/recordings/1-b {"home": "card2"}` with `admin` on camera 1 — and the card in camera 2,
+#                   whose recorder writes the frames of ITS camera's ring whatever the row says, wrote camera 2 into
+#                   camera 1's recording and spent its own budget on it. The same through a scenario's `record`
+#                   with `archive: card2` (`jobs.record_on_request`, the console's token)
+#     vms.source    `PUT /cameras/1 {"source": "…/ch/2"}` — the credentials are the device's, so the holder opened
+#                   channel 2 as camera 1: its viewers and its archive got camera 2's picture
+#
+# Rights on the camera are not enough for either, and the rule is in two places because it has two halves. WHAT MAY BE
+# is here, at the one door every writer of rows goes through (`spec.register_refuse`): a card holds only its own
+# camera's recordings; a channel is one camera. WHO MAY is the gate's (`vms/console.py`: `recording_cams`,
+# `source_cams`): the camera behind `home`, and every camera of the device a `source` leaves or moves to.
+def volume_named(vars_, name: str) -> "Volume | None":
+    items, _ = vars_.get(key(name))
+    return Volume.from_items(name, items) if items else None
+
+
+def refuse_recording(ctl, uid, old: dict | None, new: dict) -> None:
+    home = str(new.get("home") or "")
+    vol = volume_named(ctl.vars, home) if home else None
+    if vol is None or vol.kind != "edge":
+        return
+    if not vol.cam:
+        # A card declared before cards named their camera: what is homed on it stays as it was; nothing new is.
+        if old is None or str(old.get("home") or "") != home:
+            raise Refused(f"{home} is a camera's card that does not say whose it is: declare it again with `cam`, "
+                          f"and then home that camera's recording on it")
+        return
+    if str(new.get("cam") or "") != vol.cam:
+        raise Refused(f"{home} is the card in camera {vol.cam}: only that camera's recordings are homed on it, and "
+                      f"{uid} is camera {new.get('cam')}'s")
+
+
+# What two sources are the same camera by: the device and the channel on it, as the holder groups them
+# (`config.device_of`, `channel_of`) — `…/ch/2` and `…/ch/2/` are one channel.
+def source_key(source: str) -> tuple:
+    from .config import channel_of, device_of
+    return device_of(str(source)), channel_of(str(source)) or ""
+
+
+# A camera's `source` is nobody else's. Asked only when the source is new to this row — a camera being created, or
+# moved — so rows that were doubles before this rule stay editable in everything else. One read of every camera per
+# such write; two administrators filing the same channel in the same instant can still both pass — they are not
+# checked against each other, only against what is written.
+#
+# …and so is its `ref`, the name the layer above knows it by (М12): the domain's book of primaries, the edits it keeps
+# for a cluster that is off and its directory all find a camera by it, so two cameras under one `ref` are one camera
+# to the domain — and whichever it finds first gets the other's edits. The same rule, for the same reason.
+def refuse_camera(ctl, uid, old: dict | None, new: dict) -> None:
+    src, ref = str(new.get("source") or ""), str(new.get("ref") or "")
+    new_src = bool(src) and (old is None or source_key(str(old.get("source") or "")) != source_key(src))
+    new_ref = bool(ref) and (old is None or str(old.get("ref") or "") != ref)
+    if not new_src and not new_ref:
+        return
+    mine = source_key(src)
+    for row in ctl.units():
+        if str(row["id"]) == str(uid):
+            continue
+        if new_src and row.get("source") and source_key(str(row["source"])) == mine:
+            raise Refused(f"camera {row['id']} is that source already: one channel of a device is one camera — "
+                          f"change that camera, or delete it first")
+        if new_ref and str(row.get("ref") or "") == ref:
+            raise Refused(f"camera {row['id']} is `ref` {ref} already: the layer above knows one camera by one name")
+
+
 def _register() -> None:
-    from w2cplatform.spec import register_admit, register_near_rank
+    from w2cplatform.spec import register_admit, register_near_rank, register_refuse
     register_admit(SUB, admit_recording)
     register_near_rank("vms", rank_near_recording)
+    register_refuse(SUB, refuse_recording)
+    register_refuse("vms", refuse_camera)
 
 
 _register()

@@ -32,7 +32,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from w2cplatform import runtime
 from w2cplatform.access import Denied, Gate
-from w2cplatform.console import SendMixin, heartbeats, holder_of
+from w2cplatform.console import Deadlined, SendMixin, door_server, heartbeats, holder_of, read_body
 from w2cplatform.contract import Worker
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Variables
@@ -333,10 +333,12 @@ class LiveWorker(Worker):
     def handler(self):
         gw = self
 
-        class H(SendMixin, BaseHTTPRequestHandler):
+        class H(SendMixin, Deadlined, BaseHTTPRequestHandler):
             # A socket that says nothing is let go, as at the console (the review's fourth pass): an offer is one
             # request and one answer, and a client that sends half of it must not hold a gateway thread for ever.
+            # …and its request line and headers have a deadline, whole (`Deadlined`; the sixth pass).
             timeout = float(os.environ.get("CONSOLE_TIMEOUT", 30.0))
+            MAX_OFFER = 256 << 10                       # an SDP offer is kilobytes: the most this door reads of a body
 
             def log_message(self, *a): pass
 
@@ -345,6 +347,11 @@ class LiveWorker(Worker):
                     return self._send(404, {"error": "no such path"})
                 cam = self.path[len("/whep/"):].split("?")[0]
                 if not self._admitted(cam):
+                    self.close_connection = True         # refused before the body: it is not read
+                    return
+                # The offer, bounded (the sixth pass: "every place a body is read"): it was `Content-Length` bytes,
+                # whatever that said, in the memory of the process every viewer's stream goes through.
+                if not read_body(self, self.MAX_OFFER):
                     return
                 sdp = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode()
                 try:
@@ -392,8 +399,10 @@ class LiveWorker(Worker):
 
         return H
 
+    # Bounded like every door (`w2cplatform.console.door_server`; the review's sixth pass): so many connections at
+    # once and so many to one address — the console's, which carries every viewer's offer here.
     def serve(self, host: str = "127.0.0.1", port: int = 8082) -> ThreadingHTTPServer:
-        srv = ThreadingHTTPServer((host, port), self.handler())
+        srv = door_server((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         if not self.url:
             self.url = f"http://{host}:{srv.server_address[1]}"

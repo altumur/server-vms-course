@@ -1660,15 +1660,21 @@ class RecWorker(VmsWorker):
     # the times they were recorded at — what goes into our own volume as they are. The plan came from the
     # summary in the heartbeat; what is copied is what the door hands over.
     # A PIECE of a range, not a range (`_pieces`): what is read here is held whole. The door streams its answer, and a
-    # stream cut short — the door's volume went away half way — is a record cut in the middle: an error, never a
-    # shorter range taken for what the source holds.
+    # stream cut short — the door's volume went away half way — is an error, never a shorter range taken for what
+    # the source holds: the door writes its last chunk only when the stream was whole (`send_route`), and an answer
+    # without it is `IncompleteRead` here (the review's sixth pass: a cut between two sequences left whole records,
+    # and nothing said they were not all).
     def read_samples(self, url: str, unit: str, t0: float, t1: float) -> list[Sample]:
+        import http.client
         import struct
         import urllib.parse
         import urllib.request
         q = urllib.parse.urlencode({"from": t0, "to": t1})
-        with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
-            data = r.read()
+        try:
+            with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
+                data = r.read()
+        except http.client.HTTPException as e:
+            raise OSError(f"{url}: the frames of {unit} came cut short ({e!r})") from None
         try:
             return Sample.decode_all(data)
         except (ValueError, struct.error) as e:
@@ -1727,19 +1733,25 @@ class RecWorker(VmsWorker):
     # This recorder's archive, served: `/timeline/<unit>` and `/samples/<unit>?from&to` over the volume THIS
     # process holds (`archive_routes`). A backup recorder serves it so a primary can copy from it; the console
     # reads every recorder's to draw a camera's timeline and play it; any recorder may.
+    #
+    # Bounded like every door (the review's sixth pass: the protections were the console's alone): so many
+    # connections at once and so many to one address, the next answered 503 (`door_server`); the request line and
+    # headers under a deadline, a socket that says nothing let go (`Deadlined`). It asks nobody who they are — a door
+    # between processes, until mutual TLS.
     def serve_archive(self, host: str = "127.0.0.1", port: int = 0):
-        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        from http.server import BaseHTTPRequestHandler
+        from w2cplatform.console import Deadlined, door_server
         routes = archive_routes(lambda: self.store, self.wall, lambda unit: self.epochs.get(str(unit)), self._visible_from,
                                 self._kept_of)
 
-        class H(BaseHTTPRequestHandler):
+        class H(Deadlined, BaseHTTPRequestHandler):
             def log_message(self, *a):
                 pass
 
             def do_GET(self):
                 send_route(self, routes(self.path))
 
-        srv = ThreadingHTTPServer((host, port), H)
+        srv = door_server((host, port), H)
         threading.Thread(target=srv.serve_forever, daemon=True, name="archive-door").start()
         from .config import announce_host
         self.archive_url = f"http://{announce_host(host, self.server)}:{srv.server_address[1]}"   # what it bound: loopback, or this server's name — never `0.0.0.0`
@@ -2362,23 +2374,31 @@ def frames_of(body) -> bytes:
 
 
 # A route's answer, onto the wire. Bytes go with their length; an iterable of frames goes as it comes, with no
-# length, the connection closed at its end (HTTP/1.0) — and a volume that fails half way closes it early: a reader
-# of the door gets a record cut in the middle, which is an error (`RecWorker.read_samples`), never a shorter range.
+# length — and a volume that fails half way ends it early.
+#
+# AN ANSWER CUT SHORT SAYS SO (the review's sixth pass: the console's export took a door that failed for a file that
+# ended). The stream had no framing: the connection's end was the answer's end, and the door writes a SEQUENCE at a
+# time — so a volume that failed between two sequences left a reader with whole records and nothing to tell them
+# from all there was: a shorter range, taken for what the source holds, by the console's export and by a recorder
+# copying from a backup alike. To a client that speaks HTTP/1.1 — every reader here does — the frames go in chunks,
+# and the last chunk is written only when the stream ended whole: a reply without it is an error to the reader
+# (`http.client.IncompleteRead`; `RecWorker.read_samples`, the console's `_door`). In pieces, to a client that takes
+# them (`w2cplatform.console.Paced`). An HTTP/1.0 client has only the end of the connection, as before.
 def send_route(handler, got) -> None:
+    from w2cplatform.console import Paced, start_stream
     if got is None:
         handler.send_response(404); handler.end_headers(); return
     status, body, ctype = got
-    handler.send_response(status)
-    handler.send_header("Content-Type", ctype)
     if isinstance(body, bytes):
+        handler.send_response(status)
+        handler.send_header("Content-Type", ctype)
         handler.send_header("Content-Length", str(len(body))); handler.end_headers(); handler.wfile.write(body)
         return
-    handler.send_header("Connection", "close")
-    handler.close_connection = True
-    handler.end_headers()
+    out = Paced(handler, start_stream(handler, status, ctype))
     try:
         for chunk in body:
-            handler.wfile.write(chunk)
+            out.write(chunk)
+        out.end()
     except (ArchiveError, OSError) as e:
         log.warning("archive door: %s cut short: %s", handler.path, e)
     finally:

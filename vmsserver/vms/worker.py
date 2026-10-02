@@ -97,7 +97,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform import runtime
-from w2cplatform.console import SendMixin
+from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
 from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
 from w2cplatform.variables import Variables
@@ -1193,6 +1193,13 @@ class VmsWorker(Worker):
     # The first piece is read before anything is sent (the door takes it with `next`), so "no such archive" (404) and
     # "the device is full" (503) are still answers; a device that fails later ends the reply short, and the client
     # sees it (`playback_handler`).
+    #
+    # …AND THE DEVICE'S SESSION IS CLOSED BEFORE THE PIECE IS HANDED ON (the review's sixth pass, major). The piece was
+    # yielded with the session still open, so the session was held for as long as the client took to read that piece:
+    # two slow connections — from one address — held both playback sessions of a recorder that has two, and the
+    # recorder closing a gap got 503. A session is now open only while the DEVICE is read: the piece is taken whole
+    # (a driver that streams is read to the end of the piece — it is one piece, `PLAYBACK_PIECE` seconds, either
+    # way), the session closed, and only then does the piece go to whoever is waiting for it.
     PLAYBACK_PIECE = 60.0
 
     def playback_pieces(self, cam, t0: float, t1: float):
@@ -1212,12 +1219,10 @@ class VmsWorker(Worker):
                 sid = dev.open_playback(cam, at, b)      # OverflowError when the device is full
                 try:
                     got = dev.read(sid)
-                    if isinstance(got, (bytes, bytearray, memoryview)):
-                        yield bytes(got)
-                    else:
-                        yield from got                   # a driver that streams
+                    got = [bytes(got)] if isinstance(got, (bytes, bytearray, memoryview)) else [bytes(c) for c in got]
                 finally:
-                    dev.close_playback(sid)
+                    dev.close_playback(sid)              # before a byte of the piece is sent
+                yield from got
                 at = b
         return pieces()
 
@@ -1313,8 +1318,22 @@ class VmsWorker(Worker):
     # survey: `playback.process_url`). Neither: 403, and an `access.denied` line. A viewer's read is a line too,
     # `archive.read` with `source=device` — the console said it handed the address out; this says it was used,
     # by whom and from where. The listing and the device list stay as they were: where the footage is, not the
-    # footage — a door between processes until mutual TLS.
+    # footage — a door between processes until mutual TLS. (The review's sixth pass asked for a signature on
+    # `/devices` and `/recordings/<cam>` too; authentication between processes is put off to the mutual-TLS step by
+    # the owner's decision. Until then whoever reaches this door on the network reads, unasked: the devices held,
+    # their channels, how many playback sessions each has in use, and the spans every camera's card holds.)
+    #
+    # WHAT THE CONSOLE'S DOOR HAS, THIS ONE HAS (the same pass, major). The protections were the console's alone:
+    # three hundred slow connections here were three hundred and two threads in the holder — the process holding
+    # every camera of its server. The server is the console's (`door_server`: `PLAYBACK_CONNECTIONS` at once,
+    # `PLAYBACK_PER_ADDRESS` to one address, the next answered 503 on the spot), the handler reads its request line
+    # and headers under a deadline (`Deadlined`), and the footage goes out in pieces to a client that takes them
+    # (`Paced`: `STREAM_PIECE` a write, `STREAM_MIN_RATE` on average) — with the device's session already closed.
     PLAYBACK_TIMEOUT = 30.0          # a client that sends or reads nothing for this long lets its thread go
+    PLAYBACK_CONNECTIONS = 32        # connections the door serves at once: a holder's threads are its cameras' too
+    PLAYBACK_PER_ADDRESS = 8         # …of which one address holds this many: a browser, a recorder, a survey
+    PLAYBACK_MIN_RATE = STREAM_MIN_RATE   # bytes a second a client takes on average, over the time spent writing to it
+    PLAYBACK_GRACE = STREAM_GRACE         # …counted once that time is past this many seconds
 
     def playback_journal(self):
         from w2cplatform.journal import Journal
@@ -1356,7 +1375,7 @@ class VmsWorker(Worker):
     def playback_handler(self):
         gw = self
 
-        class H(SendMixin, BaseHTTPRequestHandler):
+        class H(SendMixin, Deadlined, BaseHTTPRequestHandler):
             timeout = gw.PLAYBACK_TIMEOUT
 
             def log_message(self, *a): pass
@@ -1366,7 +1385,13 @@ class VmsWorker(Worker):
                 if u.path == "/devices":
                     return self._send(200, gw.device_status())
                 if u.path.startswith("/recordings/"):
-                    spans = gw.recordings(u.path.rsplit("/", 1)[1], float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    try:
+                        spans = gw.recordings(u.path.rsplit("/", 1)[1], float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    except KeyError:                             # no such camera here, or no archive of its own: said
+                        return self._send(404, {"detail": "this camera has no archive of its own here",
+                                                "error": "no device archive"})
+                    except ValueError:
+                        return self._send(400, {"detail": "from and to are unix seconds", "error": "bad range"})
                     if spans is None:
                         return self._send(501, {"detail": "this driver cannot list what the device holds",
                                                 "error": "no index"})
@@ -1384,29 +1409,23 @@ class VmsWorker(Worker):
                 except KeyError:
                     return self._send(404, {"detail": "this camera has no archive of its own here",
                                             "error": "no device archive"})
+                except ValueError:
+                    return self._send(400, {"detail": "from and to are unix seconds", "error": "bad range"})
                 except OverflowError as e:                       # the device's ceiling, not ours
                     return self._send(503, {"detail": str(e), "error": str(e)})
                 # A stream, and its end said (`playback_pieces`): to a client that speaks HTTP/1.1, chunks and the last
                 # one only when every piece went — a device that failed half way is a reply that ends short, which
-                # the client SEES; to an HTTP/1.0 one, the bytes until the connection closes, as before.
-                chunked = self.request_version == "HTTP/1.1"
-                if chunked:
-                    self.protocol_version = "HTTP/1.1"
-                self.send_response(200); self.send_header("Content-Type", "video/mp4")
-                self.send_header("Transfer-Encoding" if chunked else "Connection", "chunked" if chunked else "close")
-                if chunked:
-                    self.send_header("Connection", "close")
-                self.end_headers()
-                self.close_connection = True
+                # the client SEES; to an HTTP/1.0 one, the bytes until the connection closes, as before. Written a
+                # piece of the wire's size at a time, to a client that keeps the pace (`Paced`).
+                out = Paced(self, start_stream(self, 200, "video/mp4"), gw.PLAYBACK_MIN_RATE, gw.PLAYBACK_GRACE)
                 try:
                     for piece in ([first] if first else []):
-                        self.wfile.write(b"%x\r\n%s\r\n" % (len(piece), piece) if chunked else piece)
+                        out.write(piece)
                     for piece in pieces:
                         if piece:
-                            self.wfile.write(b"%x\r\n%s\r\n" % (len(piece), piece) if chunked else piece)
-                    if chunked:
-                        self.wfile.write(b"0\r\n\r\n")
-                except (OSError, OverflowError, KeyError) as e:  # the client went, or the device failed after the first byte
+                            out.write(piece)
+                    out.end()
+                except (OSError, OverflowError, KeyError) as e:  # the client went or fell behind, or the device failed after the first byte
                     log.warning("%s: playback of camera %s ended short: %s", gw.name, cam, e)
                 finally:
                     pieces.close()
@@ -1425,7 +1444,8 @@ class VmsWorker(Worker):
         self.playback_host = host                        # what it is bound to is what the heartbeat announces
         opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log,
                                asks="for an address the console signed, in a cluster in a domain (`vms/playback.py`); outside one, nobody")
-        srv = ThreadingHTTPServer((host, self.playback_port if port is None else port), self.playback_handler())
+        srv = door_server((host, self.playback_port if port is None else port), self.playback_handler(),
+                          self.PLAYBACK_CONNECTIONS, self.PLAYBACK_PER_ADDRESS)
         self.playback_port = srv.server_address[1]
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         log.info("%s: playback door on %s:%d", self.name, host, self.playback_port)

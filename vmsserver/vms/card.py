@@ -697,10 +697,12 @@ class CardActuator:
 
 
 # -- the platform's recorder over the card ---------------------------------------------------------------------------
-def declare_card(vars_, server: str, path: str, budget: int = CARD_BUDGET, name: str = "card") -> volumes.Volume:
-    """The card as the camera's own cluster declares it — `kind: edge`, `server` the camera — as the product's camera
+def declare_card(vars_, server: str, path: str, budget: int = CARD_BUDGET, name: str = "card", cam: str = "") -> volumes.Volume:
+    """The card as the camera's own cluster declares it — `kind: edge`, `server` the camera's box, `cam` the camera's
+    id among the cluster's cameras (an edge volume says whose card it is: `volumes.refuse`) — as the product's camera
     process does at its start: a place for placement and the gate, written by the card buffer, never by an engine."""
-    return volumes.write(vars_, {"name": name, "kind": "edge", "server": server, "url": path, "quota_bytes": int(budget)})
+    return volumes.write(vars_, {"name": name, "kind": "edge", "server": server, "url": path, "quota_bytes": int(budget),
+                                 "cam": str(cam)})
 
 
 class CardRecorder(RecWorker):
@@ -717,6 +719,8 @@ class CardRecorder(RecWorker):
         self.PREBUFFER = ring.window                         # the ring IS the pre-record: its window, not a server's number
         self.card: CardBuffer | None = None
         self.card_error, self.card_tries, self.card_since = "", 0, self.wall()
+        self.card_cam = ""                                   # the camera whose card this is (the held volume's `cam`)
+        self.not_ours: dict[str, str] = {}                   # recordings placed here that are another camera's -> why not recorded
         self._card_retry_at = float("-inf")
         self._coverage: dict[str, tuple[float, list]] = {}
 
@@ -726,7 +730,20 @@ class CardRecorder(RecWorker):
 
     # Started only with a card open. A camera whose card would not open records nothing on it — and is a camera all
     # the same: the ring and the pusher do not need the card; a break longer than the ring is then lost.
+    #
+    # …and only a recording of THIS camera (the review's sixth pass, major). The card's recorder writes its own ring
+    # into whatever recording it is given: a recording of camera 1 homed on camera 2's card (`PUT … {"home":
+    # "card2"}`) was camera 2's frames under camera 1's name, out of camera 2's budget. The row is refused at the
+    # door now (`volumes.refuse_recording`); one that got here all the same — written before the rule, or past it —
+    # is not recorded, and its status says why.
     def enrich(self, cam: dict) -> dict | None:
+        mine = self.card_cam
+        if mine and str(cam.get("cam") or "") != mine:
+            self.waiting.add(cam["id"])
+            self.not_ours[str(cam["id"])] = (f"this is the card in camera {mine}, and the recording is camera "
+                                             f"{cam.get('cam')}'s: a card records its own camera")
+            return None
+        self.not_ours.pop(str(cam["id"]), None)
         if self.card is None:
             self.waiting.add(cam["id"])
             return None
@@ -755,6 +772,7 @@ class CardRecorder(RecWorker):
                 self.volume_error = "" if rows else "no card is declared for this camera"
                 return self.volume
         vol = rows[self.hold]
+        self.card_cam = vol.cam
         if self.card is None and self.clock() >= self._card_retry_at:
             self.card_tries += 1
             try:
@@ -803,6 +821,8 @@ class CardRecorder(RecWorker):
         out.update(self.actuator.stats(cam["id"]))
         if self.card is None and self.card_error and cam["id"] not in self.reconciler.actual:
             out["why"] = f"the card would not open: {self.card_error}"
+        if str(cam["id"]) in self.not_ours:
+            out["why"] = self.not_ours[str(cam["id"])]
         return out
 
     # What a camera's recorder says: its place, the card, and the camera's frames. None of the engine's fields — no

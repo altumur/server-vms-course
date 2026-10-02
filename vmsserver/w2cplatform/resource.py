@@ -89,7 +89,8 @@ from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bu
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
-EVENTS_INFLIGHT = 8          # `/events` answered at once by one resource; past it, 503 with Retry-After
+MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
+EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
 SPACE_KEY = "platform/space"
 RESOURCES = "platform/resources"
@@ -861,11 +862,30 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             server, _, path = rel.partition("/")
             if not safe_segment(server) or not safe_rel(path) or not path.endswith(".events.jsonl"):
                 return self._raw(400, b"")
+            # A bucket's copy, bounded and never held whole (the review's sixth pass, "every place a body is read"): it
+            # was `Content-Length` bytes read into memory, whatever that said, by a door that asks nobody. Past
+            # `MIRROR_MAX` it is 413 and nothing is read; within it the bytes go to the file a piece at a time; a
+            # body that ends early leaves no copy.
+            try:
+                n = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                return self._raw(400, b"")
+            if n < 0 or n > MIRROR_MAX:
+                self.close_connection = True
+                return self._raw(413, b"")
             dest = os.path.join(root, MIRROR_DIR, server, path)
             os.makedirs(os.path.dirname(dest), exist_ok=True)
-            n = int(self.headers.get("Content-Length", 0))
+            left = n
             with open(dest + ".tmp", "wb") as f:
-                f.write(self.rfile.read(n))
+                while left > 0:
+                    part = self.rfile.read(min(left, 1 << 16))
+                    if not part:
+                        break
+                    f.write(part); left -= len(part)
+            if left:
+                os.remove(dest + ".tmp")
+                self.close_connection = True
+                return self._raw(400, b"")
             os.replace(dest + ".tmp", dest)                     # a copy appears whole or not at all
             self._raw(204, b"")
 
