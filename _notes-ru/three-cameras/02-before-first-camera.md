@@ -168,7 +168,7 @@ Items.data:
   "status": [],
   "server": "srv-1",
   "instance": "srv-1:1841:9f3c2a",
-  "alloc": "srv-1:1841:9f3c2a",
+  "alloc": "",
   "labels": "vlan:cctv",
   "assignment_rev": 0,
   "fenced": false,
