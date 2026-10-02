@@ -82,6 +82,14 @@ rule in this file.
 #   `CONSOLE_TIMEOUT` (`DeadlineReader`); and `CONSOLE_CONNECTIONS` are served at once, the next answered 503
 #   (`ConsoleServer`). A row that reaches a camera through another field says so (`cams_of`), and a write to it asks
 #   for the route's capability on every such camera, before and after (`admit_cams`).
+# - …and what the sixth pass found left of it. WHOSE the connections are (`Bounds`): one address holds a share of
+#   them (`CONSOLE_PER_ADDRESS`), the door in and monitoring have a reserve (`CONSOLE_RESERVE`, `RESERVE_ROUTES`), and
+#   the caller on the box — through the unix socket `CONSOLE_UNIX` (`UnixConsoleServer`) — a lane of its own; the
+#   request line and headers have `CONSOLE_HEADER_TIMEOUT`, not the socket's timeout (`Deadlined`). RIGHTS BEFORE THE
+#   BODY (`dispatch`): everything the path decides is asked first, the body read after, and only a blob route of the
+#   spec reads up to `MAX_BLOB`, `BLOBS_AT_ONCE` at a time (`blob_route`). A CHANGE that reaches other units says so
+#   (`moved_cams`, beside `cams_of`). And the same server, deadline and bounded body are every door's, not the
+#   console's alone: `door_server`, `Deadlined`, `read_body`, and for what a door streams `Paced` and `start_stream`.
 # ================================================================================================
 from __future__ import annotations
 
@@ -452,6 +460,16 @@ class Bounded:
         held = self.lanes.pop(request, None)
         if held is not None:
             self.bounds.give(*held)
+
+    # A client that went away, or was let go at its deadline, is not a fault of the door's: `socketserver` prints a
+    # traceback for every exception out of a handler, and a flood would write the log full of them.
+    def handle_error(self, request, client_address):
+        import sys
+        e = sys.exc_info()[1]
+        if isinstance(e, OSError):
+            log.debug("a connection from %s ended: %s", client_address, e)
+            return
+        super().handle_error(request, client_address)
 
 
 class ConsoleServer(Bounded, ThreadingHTTPServer):
@@ -1168,7 +1186,11 @@ class SpecConsole:
                   f"# TYPE {p}_worker_unconfirmed gauge",
                   *[f'{p}_worker_unconfirmed{{worker="{w}"}} {hb.extra.get("unconfirmed", 0)}' for w, hb in hbs.items()],
                   f"# TYPE {p}_worker_pass_failures counter",
-                  *[f'{p}_worker_pass_failures{{worker="{w}"}} {hb.extra.get("pass_failures", 0)}' for w, hb in hbs.items()]]
+                  *[f'{p}_worker_pass_failures{{worker="{w}"}} {hb.extra.get("pass_failures", 0)}' for w, hb in hbs.items()],
+                  # Slot rows this worker could not read while looking for one (`contract.read_slot`; the review's
+                  # sixth pass): each is a name nobody can take or be seen holding — capacity lost without a word.
+                  f"# TYPE {p}_worker_slots_garbled counter",
+                  *[f'{p}_worker_slots_garbled{{worker="{w}"}} {hb.extra.get("slots_garbled", 0)}' for w, hb in hbs.items()]]
         # The sweep's backlog, for subsystems that have blobs to collect. Two cheap reads — a prefix
         # listing and one row — deliberately NOT `blobs_referenced()`, which walks every unit's row: a
         # gauge scraped every fifteen seconds must not cost a full scan of the configuration.

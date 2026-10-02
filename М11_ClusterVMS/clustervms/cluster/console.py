@@ -29,7 +29,7 @@ from w2cplatform.console import Mount, SpecConsole, heartbeats   # noqa: F401
 from w2cplatform.eventdatabase import MergedIndex          # noqa: F401  (re-exported: the console's view of the event indexes)
 from w2cplatform.spec import SpecController
 
-from vms.console import vms_routes
+from vms.console import rec_metrics, rec_routes, vms_routes, wire_vms
 
 from .controller import ClusterController
 
@@ -39,6 +39,13 @@ def cluster_routes(ctl: ClusterController, rec_ctl: SpecController | None = None
     return vms_routes(True, None, ctl, rec_ctl)
 
 
+# THE SAME CONSOLE MEANS THE SAME GATE (М10's sixth review, found while sweeping every door). This function built the
+# two consoles itself and wired nothing of what М10's `make_console` wires: `/timeline/<cam>` and `/export/<cam>` were
+# not routes that name a camera here, so in a cluster that asks who is calling a viewer of camera 1 was given camera
+# 2's timeline and its footage for any grant at all; a recording's grant was matched on its own placement labels; what
+# left through this console was in no journal; and the recorder's mount had neither the archives (`/rec/volumes`,
+# `/rec/keeps`) nor the numbers the recorder's scaling check asks for (`rec_recorders_needed`,
+# `recworker.nomad.hcl`). One function wires a console of the VMS, whoever builds it: `vms.console.wire_vms`.
 def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None, archive_root: str | None = None,
                  rec_ctl: SpecController | None = None) -> Mount:
     """The VMS at `/` and, when the console fronts it, the recorder at `/rec/…` (the page's Record toggle:
@@ -47,8 +54,9 @@ def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None
     root = SpecConsole(ctl, marks_root=archive_root, index=index, worst_failover=worst_failover, extra=cluster_routes(ctl, rec_ctl), media=True)
     m = Mount(root)
     if rec_ctl is not None:
-        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index))
-    return m
+        m.mount("rec", SpecConsole(rec_ctl, wall=ctl.wall, index=index, extra=rec_routes(rec_ctl),
+                                   metrics_extra=rec_metrics(rec_ctl)))
+    return wire_vms(m, ctl, index)
 
 
 def metrics_text(ctl: ClusterController, worst_failover: float) -> str:

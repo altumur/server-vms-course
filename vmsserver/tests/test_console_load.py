@@ -243,11 +243,11 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
     t.start()
     try:
         time.sleep(0.6)
-        assert srv.bounds.by_addr[("common", "203.0.113.9")] == wc.CONSOLE_PER_ADDRESS     # its share, and not one more
-        assert srv.refused > 40                                       # the rest: 503 on the spot, no thread
         # one address did not take the door: another one's monitoring and its ordinary requests are answered
         assert _ask(_as(who, "192.0.2.7", port), get("/metrics")).startswith(b"HTTP/1.0 200")
         assert _ask(_as(who, "192.0.2.7", port), get("/cameras", "admin")).startswith(b"HTTP/1.0 200")
+        assert srv.bounds.by_addr[("common", "203.0.113.9")] == wc.CONSOLE_PER_ADDRESS     # its share, and not one more
+        assert srv.refused > 40                                       # the rest: 503 on the spot, no thread
         # the emergency entry from the box, through the unix socket — and then work under it, on any route
         code, _, headers = _unix(sock, "POST", "/session", glass)
         assert code == 200 and "w2c_glass=" in headers.get("Set-Cookie", ""), (code, headers)
@@ -317,7 +317,7 @@ def test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a
     mounts, srv, base = _console_with_jobs(box, access)
     port = srv.server_address[1]
     was = _env(BLOBS_AT_ONCE=2)
-    wc._blobs.clear()
+    getattr(wc, "_blobs", []).clear()                               # the bound is read when it is first needed
     held = []
 
     def head(method, path, token, n, more=""):
@@ -371,7 +371,7 @@ def test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a
     finally:
         for s in held:
             s.close()
-        srv.shutdown(); _restore(was); wc._blobs.clear()
+        srv.shutdown(); _restore(was); getattr(wc, "_blobs", []).clear()
 
 
 # -- the sixth pass: the other doors -----------------------------------------------------------------------------------
@@ -506,5 +506,37 @@ def test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles():
         assert reply.startswith(b"HTTP/1.0 413") and took < 2.0
         assert _raw(port, b"POST /whep/1 HTTP/1.1\r\nHost: x\r\nContent-Length: lots\r\n\r\n")[0].startswith(b"HTTP/1.0 400")
         assert isinstance(srv, ConsoleServer) and srv.bounds.reserve == 0 and srv.bounds.box == 0   # a door between processes
+    finally:
+        srv.shutdown()
+
+
+def test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole():
+    """The same sweep, at the resource: `PUT /mirror/…` read `Content-Length` bytes into memory, whatever that said,
+    at a door that asks nobody. Past `MIRROR_MAX` it is 413 and nothing is read; within it the copy goes to the file
+    a piece at a time, and a body that ends early leaves no copy at all. The door is the bounded one, and the
+    requests it holds (`WAITERS_MAX`) with the queries it answers at once fit inside one address's share."""
+    from w2cplatform import longpoll, resource as wr
+    from w2cplatform.console import ConsoleServer
+    box = Box()
+    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    srv = wr.serve(res, "127.0.0.1", 0)
+    port = srv.server_address[1]
+    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+    put = lambda n, body=b"": f"PUT {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {n}\r\n\r\n".encode() + body
+    try:
+        assert isinstance(srv, ConsoleServer)
+        assert longpoll.WAITERS_MAX + wr.EVENTS_INFLIGHT < srv.bounds.per_address <= srv.bounds.limit
+        reply, took = _raw(port, put(wr.MIRROR_MAX + 1))
+        assert reply.startswith(b"HTTP/1.0 413") and took < 2.0 and not os.path.exists(copy)
+        lines = b'{"t": 1, "kind": "motion"}\n' * 5000                # more than one piece of the copy
+        assert _raw(port, put(len(lines), lines))[0].startswith(b"HTTP/1.0 204")
+        assert open(copy, "rb").read() == lines
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(put(len(lines) * 2, lines)); s.shutdown(socket.SHUT_WR)   # half of what it declared, and gone
+        s.settimeout(5)
+        assert s.recv(100).startswith(b"HTTP/1.0 400")
+        s.close()
+        assert open(copy, "rb").read() == lines and not os.path.exists(copy + ".tmp")   # the copy that was there stands; no half of one
     finally:
         srv.shutdown()

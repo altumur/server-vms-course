@@ -1167,5 +1167,5 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
             assert con.moved_cams is not None, (sub, field)
         if RULE in how:
             assert sub in REFUSE or type(con.ctl) is not SpecController, (sub, field)   # a rule of the subsystem's own
-        if FIXED in how and field == "cam" and sub != "live":
+        if FIXED in how and field == "cam":
             assert "cam" in con.spec.fields and con.labels_of is not None, (sub, field)   # the gate reads the camera's own labels

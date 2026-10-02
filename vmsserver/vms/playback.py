@@ -29,6 +29,15 @@
 # derives for one camera, so an address that leaked opens that camera's card and no other. What stays open is
 # what stays open at every door between processes until mutual TLS: whoever has the store has the key.
 #
+# WHAT THIS DOOR DOES NOT ASK, AND UNTIL WHEN (the review's sixth pass asked for a signature on the two other routes
+# of the holder's door; the owner's decision: authentication between processes waits for the mutual-TLS step). The
+# footage — `/playback/<cam>` — is asked for as above. `/devices` and `/recordings/<cam>` are asked for nothing:
+# whoever reaches the door on the network reads which devices this holder has open, their channels and how many of
+# each device's playback sessions are in use, and the spans every camera's card holds — where the footage is, never
+# the footage. What the door has since that pass without asking anybody: a bound on connections and on one
+# address's share of them, a deadline on a request's headers, and a stream written in pieces to a client that
+# takes them (`vms/worker.py`, `playback_handler`; `w2cplatform/console.py`).
+#
 # Asked only when the cluster is gated — in a domain, its store holding a key set (`Gate.gated`): a console that
 # is open hands out what anybody could ask it for, and a door that refused would protect nothing. The same rule
 # as the console's and the gateway's.

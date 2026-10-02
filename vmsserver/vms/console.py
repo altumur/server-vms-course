@@ -1480,9 +1480,31 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     root = SpecConsole(ctl, marks_root=archive_root, wall=wall,
                        extra=vms_routes(media, live, ctl, rec_ctl), media=media, index=index,
                        metrics_extra=vms_metrics(ctl))
-    root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
-    root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
-    root.extra.index = index             # where a live session another console handed out is found (`live.view`)
+    m = Mount(root)
+    if live_ctl is not None:
+        m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
+    for name, c in (mounts or {}).items():
+        m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
+                                  extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
+                                         auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
+                                  metrics_extra=(rec_metrics(c) if name == "rec" else
+                                                 auto_metrics(c) if name == "auto" else None)))
+    return wire_vms(m, ctl, index)
+
+
+# WHAT THE VMS'S ROUTES NEED OF THE CONSOLE THAT SERVES THEM — in one place, for every console that does (the review's
+# sixth pass, found while sweeping "every door"). All of this was written inside `make_console`, and М11's console is
+# built by a function of its own (`cluster/console.py`), which had none of it: `/timeline/<cam>` and `/export/<cam>`
+# were not routes that name a unit there, so the gate asked for any grant at all — a viewer of camera 1 was given
+# camera 2's timeline and its footage; a recording's labels were its own placement labels; and nothing that left
+# through that console was written into the journal. A console built anywhere is wired here, or it is not the VMS's.
+def wire_vms(m: Mount, ctl, index=None) -> Mount:
+    root = m.root
+    cam_labels = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+    if root.extra is not None:
+        root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
+        root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
+        root.extra.index = index or root.index   # where a live session another console handed out is found (`live.view`)
     # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
     # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
     # which is the viewer's token on the live door.
@@ -1493,16 +1515,10 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
     root.moved_cams = source_cams(ctl)
-    root.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
-    m = Mount(root)
-    if live_ctl is not None:
-        m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
-    for name, c in (mounts or {}).items():
-        con = SpecConsole(c, wall=wall, index=index,                     # every mount answers /events from the same merge
-                          extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
-                                 auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
-                          metrics_extra=(rec_metrics(c) if name == "rec" else
-                                         auto_metrics(c) if name == "auto" else None))
+    root.labels_of = cam_labels
+    controllers = {name: con.ctl for name, con in m.mounts.items()}
+    for name, con in m.mounts.items():
+        c = con.ctl
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
         # belongs beside "who deleted camera 7".
         con.journal = root.journal
@@ -1512,9 +1528,10 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         if "cam" in c.spec.fields:
             # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
             # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).
-            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass): by
-            # the field, not by a list of names that the next subsystem is missing from.
-            con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass), and
+            # a live stream, whose own labels say which gateway serves it (the sixth): by the field, not by a list
+            # of names that the next subsystem is missing from.
+            con.labels_of = cam_labels
         # …and the rows that reach a camera through ANOTHER field (the review's fifth pass, major): a scan through its
         # recording, a scenario through its triggers and actions. The gate checks every camera such a row names,
         # before and after the write (`SpecConsole.admit_cams`).
@@ -1523,11 +1540,10 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         if name == "detjob":
             con.cams_of = job_cams(c.vars)
         if name == "auto":
-            con.cams_of = scenario_cams(c.vars, mounts or {})
-            con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+            con.cams_of = scenario_cams(c.vars, controllers)
+            con.labels_of = cam_labels
         if con.extra is not None:
             con.extra.journal = root.journal
-        m.mount(name, con)
     return m
 
 

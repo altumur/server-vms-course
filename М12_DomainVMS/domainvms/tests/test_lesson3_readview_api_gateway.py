@@ -251,6 +251,51 @@ def test_console_over_http():
         con.stop(srv)
 
 
+def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceiling_on_a_body():
+    """М10's sixth review, its sweep of every HTTP door: this one was a thread for every connection, with no deadline
+    on a request, and it read a body to whatever `Content-Length` said before it looked at the caller's token. It is
+    served by the platform's bounded server now (`ConsoleServer`: so many connections, so many to one address), reads
+    its request line and headers under a deadline (`Deadlined`), and a body past `MAX_BODY` is 413 with nothing read."""
+    import socket
+    import time
+    from w2cplatform.console import ConsoleServer
+    fed, _ = make_domain({"north": (), "south": ()}, "north")
+    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=lambda: 1002.0), api, refresh_interval=0.05)
+    srv = con.serve(port=0)
+    port = srv.server_address[1]
+
+    def raw(data: bytes) -> tuple[bytes, float]:
+        s = socket.create_connection(("127.0.0.1", port)); s.settimeout(5)
+        began = time.monotonic(); s.sendall(data); out = b""
+        try:
+            while True:
+                got = s.recv(65536)
+                if not got:
+                    break
+                out += got
+        except socket.timeout:
+            pass
+        s.close()
+        return out, time.monotonic() - began
+    try:
+        assert isinstance(srv, ConsoleServer) and srv.bounds.per_address < srv.bounds.limit
+        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: 104857600\r\n\r\n")
+        assert reply.startswith(b"HTTP/1.0 413") and took < 2.0          # a hundred megabytes declared: not read, not waited for
+        reply, took = raw(b"PUT /api/cameras/7 HTTP/1.1\r\nHost: x\r\nIdempotency-Key: k\r\nContent-Length: lots\r\n\r\n")
+        assert reply.startswith(b"HTTP/1.0 400")
+        held = [socket.create_connection(("127.0.0.1", port)) for _ in range(srv.bounds.per_address)]
+        for s in held:
+            s.sendall(b"GET /api")                                       # half a request line each: this address's share
+        time.sleep(0.2)
+        reply, took = raw(b"GET /healthz HTTP/1.1\r\nHost: x\r\n\r\n")
+        assert reply.startswith(b"HTTP/1.0 503") and took < 1.0          # the next from it: 503 on the spot, no thread
+        for s in held:
+            s.close()
+    finally:
+        con.stop(srv)
+
+
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A

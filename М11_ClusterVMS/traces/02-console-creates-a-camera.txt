@@ -12,6 +12,10 @@ PUT /v1/var/vms/next_id?namespace=default&cas=0
 → 200 {"Path": "vms/next_id", "ModifyIndex": 1001}
 
 # console
+GET /v1/vars?prefix=vms/cameras/&namespace=default
+→ 200 []
+
+# console
 PUT /v1/var/vms/cameras/1?namespace=default&cas=0
 {
   "Items": {

@@ -43,7 +43,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith("/data/") or vol.startswith("/run/vms:") or vol.startswith("/run/obsd:"), vol   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
 
 
 def test_who_may_write_where_is_in_the_mounts_too():

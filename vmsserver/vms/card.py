@@ -60,7 +60,8 @@ or `network` volume like a server's — and is not built here.
 #   t0, t1)`, `stats()`, `err`, `close()`. Raises `CardError` (an `OSError`): `NeedKey`, `Backwards`, a read cut short.
 # - `CardActuator(ring, card)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`, `stats(cid)`.
 # - `CardRecorder(name, vars_, objects, ring, ...)` — a `RecWorker` whose volume is the card; `answer_range`.
-# - `declare_card(vars_, server, path, budget)` — the card as the camera's own cluster declares it (`kind: edge`).
+# - `declare_card(vars_, server, path, budget, cam=…)` — the card as the camera's own cluster declares it (`kind: edge`,
+#   `cam`: whose card it is — only that camera's recordings are homed on it).
 # ================================================================================================
 from __future__ import annotations
 

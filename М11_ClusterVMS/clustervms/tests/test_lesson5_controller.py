@@ -192,10 +192,72 @@ def test_the_console_over_http():
     st, out = call("GET", "/timeline/1"); tl = json.loads(out)
     assert st == 200 and [(s["recorder"], s["volume"]) for s in tl] == [(rec_a.name, "srv-a")]
     with urllib.request.urlopen(f"{base}{tl[0]['media']}&from={t - 120}&to={t - 60}") as r:
-        assert r.status == 200 and r.headers["Content-Type"] == "video/mp4"
-    assert call("GET", f"/export/1?rec=1&from={t - 3000}&to={t - 2000}")[0] == 404   # nothing recorded there
+        assert r.status == 200 and r.headers["Content-Type"] == "video/mp4" and r.read()[4:8] == b"ftyp"   # read to its end: the last chunk comes when its slot is free again
+    st, out = call("GET", f"/export/1?rec=1&from={t - 3000}&to={t - 2000}"); assert st == 404, (st, out)   # nothing recorded there
     assert call("PUT", "/cameras/1", {"enabled": False})[0] == 200 and ctl.camera(1)["enabled"] is False
     assert call("DELETE", "/cameras/1")[0] == 200 and ctl.cameras() == [] and call("DELETE", "/cameras/1")[0] == 404
     assert ctl.unplace_deleted() == [1] and ctl.assignment(placed).units == []   # the controller takes the placement back
     rsrv.shutdown(); rec_a.after_stop()
     srv.shutdown()
+
+
+def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does():
+    """М10's sixth review, found while sweeping every door: this module's console is built by a function of its own
+    (`cluster.console.make_console`), which wired nothing of what М10's does — `/timeline/<cam>` and `/export/<cam>`
+    were not routes that name a camera, so in a cluster that asks who is calling a viewer of camera 1 was given camera
+    2's timeline and footage for any grant at all; a backfill was an administrator's, not an operator's; the
+    recorder's mount served neither the archives nor the number its scaling check asks for. One function wires a
+    console of the VMS, whoever builds it (`vms.console.wire_vms`)."""
+    from cluster.console import make_console
+    from w2cplatform.access import Denied
+    from w2cplatform.spec import SpecController
+    from vms.config import REC_SPEC
+
+    class Tokens:                                                     # an `Access` with no cryptography: a token is a name
+        grants = {"viewer": [("view", "1")], "guard": [("edit", "1")], "admin": [("admin", None)]}
+
+        def who(self, token):
+            if token not in self.grants:
+                raise Denied(401, "nobody's token")
+            return {"sub": token}
+
+        def may(self, payload, capability, unit, labels):
+            rank = {"view": 0, "edit": 1, "admin": 2}
+            mine = self.grants[payload["sub"]]
+            if unit is None and capability == "view":
+                return bool(mine)
+            return any(rank[c] >= rank[capability] and u in (unit, None) for c, u in mine)
+
+    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
+    m = make_console(ctl, rec_ctl=rec)
+    for con in (m.root, *m.mounts.values()):
+        con.gate.impl = Tokens()
+    srv = m.serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def call(method, path, token, body=None, key=[0]):
+        key[0] += 1
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode() if body is not None else None, method=method,
+                                     headers={"Authorization": f"Bearer {token}", "Idempotency-Key": f"k{key[0]}",
+                                              "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req) as r: return r.status, r.read().decode()
+        except urllib.error.HTTPError as e: return e.code, e.read().decode()
+    try:
+        for i in (1, 2):
+            assert call("POST", "/cameras", "admin", {"source": f"driverpack://file/{i}.mp4"})[0] == 201
+            assert call("POST", "/rec/recordings", "admin", {"name": str(i), "cam": str(i)})[0] == 201
+        t = c.wall()
+        assert call("GET", "/timeline/1", "viewer")[0] == 200
+        assert call("GET", "/timeline/2", "viewer")[0] == 403                           # it was 200: any grant at all
+        assert call("GET", f"/export/2?from={t - 120}&to={t - 60}", "viewer")[0] == 403    # …and the footage with it
+        assert call("POST", "/backfill", "viewer", {"cam": "1", "from": t - 120, "to": t - 60})[0] == 403   # to act, `edit`
+        assert call("POST", "/backfill", "guard", {"cam": "1", "from": t - 120, "to": t - 60})[0] == 202    # …on her camera
+        assert call("POST", "/backfill", "guard", {"cam": "2", "from": t - 120, "to": t - 60})[0] == 403
+        assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
+        assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
+        assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `recworker.nomad.hcl` scales on
+        assert m.root.extra.journal is m.root.journal and m.mounts["rec"].cams_of is not None
+    finally:
+        srv.shutdown()
