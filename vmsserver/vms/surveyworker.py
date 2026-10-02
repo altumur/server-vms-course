@@ -100,7 +100,12 @@ class SurveyWorker(Worker):
         now = self.wall() if now is None else now
         wanted = set(self.assignment().units)
         for unit in sorted(wanted):
-            row = self.watch_row(unit)
+            try:
+                row = self.watch_row(unit)
+                self.row_parsed(unit)
+            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this watch's trouble (`row_garbled`)
+                self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": self.row_garbled(unit, e)}
+                continue
             if row is None:
                 continue
             if not row["enabled"]:

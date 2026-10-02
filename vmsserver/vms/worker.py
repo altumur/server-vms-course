@@ -438,6 +438,7 @@ class VmsWorker(Worker):
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
         self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
+        self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -486,6 +487,7 @@ class VmsWorker(Worker):
         self.recording_allowed = True
         self.fenced_reason: str | None = None
         self.was_fenced: str | None = None               # why it was fenced last, once it has rejoined
+        self.conflicts_carried = 0                       # epoch conflicts it met as a zombie, under the name it lost (`rejoin`)
         self._performing: dict[int, dict] = {}           # device -> the one command in flight into it
         self.store_errors = 0                            # passes and renewals the store did not answer
         self.pass_failures = 0                           # parts of the loop that raised, since the process started
@@ -525,12 +527,23 @@ class VmsWorker(Worker):
         nothing and reads everything; nothing about what is running is stored."""
         a = self.assignment()
         self.assignment_rev = a.rev
-        rows = []
+        rows, errors = [], {}
         for unit in a.units:
             items, _ = self.vars.get(self.SUB.config(self.ROWS, unit))
             if items and items.get("deleted") != "true":
-                rows.append(self.parse_row(items))
-        self.rows = rows
+                try:
+                    rows.append(self.parse_row(items))
+                    self.row_parsed(unit)
+                except (ValueError, KeyError, TypeError) as e:
+                    # One row that does not parse is that unit's (`Worker.row_garbled`; the sixth pass, the follow-up),
+                    # and it is not a unit taken away: what runs under the row read last keeps running, and a unit
+                    # never read whole is not started. Raised out of here, it froze the whole worker at the rows of
+                    # the pass before.
+                    errors[unit] = self.row_garbled(unit, e)
+                    last = next((r for r in self.rows if str(r["id"]) == unit), None)
+                    if last is not None:
+                        rows.append(last)
+        self.rows, self.row_errors = rows, errors
         self._refresh_devices()
 
     # One connection per device, however many of its channels are assigned: an NVR with thirty-two cameras
@@ -780,6 +793,10 @@ class VmsWorker(Worker):
         except OSError:
             return None                               # not known: a fenced instance can wait a pass
         was = self.name
+        # What the epochs said of the zombie goes with it to its next name. The leases that counted the conflicts are
+        # let go on the next line, and under the name it lost it says nothing now — the number `vms_epoch_conflicts`
+        # is there to show (М11 Lesson 9) would be shown by nobody (the sixth pass, the follow-up).
+        self.conflicts_carried += super().conflicts()
         self.release_all()
         self.rows, self.assignment_rev = [], 0
         self.reconciler.clear()
@@ -795,6 +812,9 @@ class VmsWorker(Worker):
         log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
         self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
         return name
+
+    def conflicts(self) -> int:
+        return super().conflicts() + self.conflicts_carried
 
     # A fenced instance is nobody: the stand-in renews nothing for it — not the slot row that may still name it (a store
     # raised past this build fences it with its slot in hand), not its leases (feedback DD).
@@ -1233,6 +1253,8 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"its password cannot be opened: {self.sealed_errors[str(cid)]}"
             elif str(cid) in self.epoch_errors and phase != "running":
                 out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
+            elif str(cid) in self.row_errors:              # running or not: it is not following its row
+                out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"

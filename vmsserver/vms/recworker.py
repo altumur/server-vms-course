@@ -667,11 +667,7 @@ class RecWorker(VmsWorker):
                     else:
                         vanished[str(st.get("id"))] = max(hb.ts, vanished.get(str(st.get("id")), hb.ts))
         need = False
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if not items or items.get("deleted") == "true":
-                continue
-            other = self.parse_row(items)
+        for other in self._recordings():
             if str(other["id"]) == str(row["id"]) or str(other["cam"]) != str(row["cam"]) or volumes.is_backup(other, names=names):
                 continue
             until = float(other.get("until") or 0)
@@ -1645,24 +1641,32 @@ class RecWorker(VmsWorker):
         delay = min(self.SOURCE_BACKOFF * 2 ** n, self.SOURCE_BACKOFF_MAX) * (0.5 + random.random() * 0.5)
         self._source_asks[key] = (n, self.clock() + delay)
 
+    # Every recording's row, parsed — and one that does not parse passed by (`Worker.row_garbled`; the sixth pass, the
+    # follow-up). The recorder walks ALL of them to answer a question about one — who else records this camera,
+    # which backup holds it, what a keep names — and parsed each bare: one garbled row, and no backup's pipeline
+    # started, no range was fetched and no keep was copied, for any recording.
+    def _recordings(self, deleted: bool = False):
+        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
+            items, _ = self.vars.get(key)
+            if not items or (not deleted and items.get("deleted") == "true"):
+                continue
+            try:
+                yield self.parse_row(items)
+            except (ValueError, KeyError, TypeError) as e:
+                self.row_garbled(key.rsplit("/", 1)[1], e)
+
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         names = volumes.backups(self.vars)
         if not names or volumes.is_backup(row, names=names):
             return []
         recs = set()
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items and items.get("deleted") != "true":
-                other = self.parse_row(items)
-                if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
-                    recs.add(str(other["id"]))
+        for other in self._recordings():
+            if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
+                recs.add(str(other["id"]))
         out, edge_homes, homes = [], volumes.edges(self.vars), {}
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items:
-                other = self.parse_row(items)
-                homes[str(other["id"])] = str(other.get("home") or "")
+        for other in self._recordings(deleted=True):
+            homes[str(other["id"])] = str(other.get("home") or "")
         from .config import local_only
         for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
             if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
@@ -2163,11 +2167,8 @@ class RecWorker(VmsWorker):
         now = self.wall() if now is None else now
         declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
         cams: dict[str, set] = {}
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items and items.get("deleted") != "true":
-                row = self.parse_row(items)
-                cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
+        for row in self._recordings():
+            cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
         # Not a door on another server's loopback (the review's fourth pass): announced truthfully and not reachable from
         # here, it was asked every pass, refused, and the keep stayed uncopied with nothing to say why.
         from .config import local_only

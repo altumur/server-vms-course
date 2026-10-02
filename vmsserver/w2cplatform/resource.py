@@ -359,6 +359,7 @@ class Resource:
         self.journal = Journal(self.root, "resource", wall)     # what the policy removed (`journal.py`)
         self.short: dict[str, int] = {}
         self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
+        self.retention_garbled: list[str] = []     # `<sub>/<unit>` whose days the last `retain` could not read: kept, not swept
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
@@ -539,12 +540,17 @@ class Resource:
         removed = []
         # What each unit keeps, decided before anything is swept, because the console's floor is read off
         # the others (`console_floor`).
-        days_of = {}
+        #
+        # A ROW OF DAYS THAT DOES NOT PARSE IS THAT UNIT'S (the sixth pass, the follow-up). Every unit's days are read
+        # in this one loop, and one row with a word for `days` raised out of it: nothing of anybody's was swept, every
+        # pass. Not knowing a unit's days is not "zero days" — that unit is left alone this pass (`inf`), named in
+        # `retention_garbled` and in the log, and the others are swept by theirs.
+        days_of, garbled = {}, []
         for sub, units in self.units().items():
             for unit in units:
-                days_of[(sub, unit)] = retention_days(self.vars, sub, unit)
+                days_of[(sub, unit)] = self._days(sub, unit, garbled)
                 self._progressed()                                      # a row read per unit: each is a step
-        floor = console_floor(days_of)
+        floor = console_floor({k: d for k, d in days_of.items() if d != float("inf")})
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: whoever built
         # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
         # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
@@ -588,7 +594,7 @@ class Resource:
                 base = os.path.join(path, MIRROR_DIR, server)
                 for sub, units in subsystems_under(base).items():
                     for unit in units:
-                        days = retention_days(self.vars, sub, unit)
+                        days = self._days(sub, unit, garbled)
                         days = max(days, floor) if tree_owner(sub)[0] == CONSOLE else days
                         self._progressed()
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
@@ -598,7 +604,19 @@ class Resource:
                                 self._progressed()
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
+        self.retention_garbled = sorted(set(garbled))
         return len(removed)
+
+    # One unit's days, or `inf` — kept, not swept — when its row does not parse (`retain`).
+    def _days(self, sub: str, unit: str, garbled: list) -> float:
+        try:
+            return retention_days(self.vars, sub, unit)
+        except (ValueError, TypeError) as e:
+            if f"{sub}/{unit}" not in garbled:
+                log.warning("%s: the retention row of %s/%s does not parse (%s): its buckets are kept this pass",
+                            self.server, sub, unit, e)
+            garbled.append(f"{sub}/{unit}")
+            return float("inf")
 
     # The knob. If disabled, `{enabled: False, mirrored: 0, peers: []}`. Otherwise, for each peer from
     # `peers_of`, ask what it already holds and `put` every closed bucket it lacks — any subsystem's,

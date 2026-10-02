@@ -522,6 +522,34 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
     return slot
 
 
+# An assignment row is the same (the sixth pass, the follow-up) — and it has one number in it, `rev`. Read bare, a
+# `rev` with a word in it raised out of `Controller.assignments()`, which is under everything the controller's pass
+# does (the sync of assignments with their placement rows, every move, `/where`): one worker's row, and no unit of
+# the subsystem was placed. And out of that worker's own pass, every pass.
+#
+# What the row DECIDES is `units` — a list of names, which cannot fail to parse — and it is read as it stands, with
+# `rev 0`: counted (`ASSIGNMENTS_GARBLED`; in the pass report and in a worker's heartbeat as `assignments_garbled`)
+# and logged once. The controller's next change to the row writes it whole; `rev` starts again, which costs nothing
+# — it is published, never compared across writes.
+ASSIGNMENTS_GARBLED: dict[str, int] = {}          # subsystem -> assignment rows that did not parse, this process
+_garbled_assignments: set[str] = set()
+
+
+def read_assignment(key: str, worker: str, items) -> "Assignment":
+    """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
+    try:
+        a = Assignment.from_items(worker, items)
+    except (ValueError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        ASSIGNMENTS_GARBLED[sub] = ASSIGNMENTS_GARBLED.get(sub, 0) + 1
+        if key not in _garbled_assignments:
+            _garbled_assignments.add(key)
+            log.error("%s: the assignment row does not parse (%r); read for the units it names", key, items)
+        return Assignment(worker, [u for u in str(items.get("units", "")).split(",") if u])
+    _garbled_assignments.discard(key)
+    return a
+
+
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
 # so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
 # and the reason the controller is never on the recovery path.
@@ -571,17 +599,20 @@ class Controller:
                 out[hb.worker] = hb
         return out
 
-    # Reads one worker's row.
+    # Reads one worker's row. One whose `rev` does not parse is read for the units it names (`read_assignment`).
     def assignment(self, worker: str) -> Assignment:
         items, _ = self.vars.get(self.sub.assignment(worker))
-        return Assignment.from_items(worker, items)
+        return self._assignment(worker, items)
+
+    def _assignment(self, worker: str, items) -> Assignment:
+        return read_assignment(self.sub.assignment(worker), worker, items)
 
     # Replaces the worker's assignment with the sorted, de-duplicated list and bumps `rev`.
     def assign(self, worker: str, units: list[str]) -> Assignment:
         def mutate(items):
-            rev = int(items.get("rev", 0)) + 1
+            rev = self._assignment(worker, items).rev + 1
             return Assignment(worker, sorted(set(units), key=str), rev).to_items()
-        return Assignment.from_items(worker, self.write(self.sub.assignment(worker), mutate))
+        return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Read-modify-write adding one unit; returns `None` from the mutator (no write) if already present. Two
     # controllers adding different units to one worker at once both land.
@@ -589,20 +620,20 @@ class Controller:
         """Read-modify-write: two controllers adding different units to one
         worker at once both land."""
         def mutate(items):
-            a = Assignment.from_items(worker, items)
+            a = self._assignment(worker, items)
             if unit in a.units:
                 return None
             return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items()
-        return Assignment.from_items(worker, self.write(self.sub.assignment(worker), mutate))
+        return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # The mirror of `assign_add`.
     def assign_remove(self, worker: str, unit: str) -> Assignment:
         def mutate(items):
-            a = Assignment.from_items(worker, items)
+            a = self._assignment(worker, items)
             if unit not in a.units:
                 return None
             return Assignment(worker, [u for u in a.units if u != unit], a.rev + 1).to_items()
-        return Assignment.from_items(worker, self.write(self.sub.assignment(worker), mutate))
+        return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Every row under `<name>/workers/`.
     def assignments(self) -> dict[str, Assignment]:
@@ -691,12 +722,18 @@ class Controller:
         redistribution takes it from there. The controller never decides this
         on its own from ONE silence — a subsystem that requires a resource may
         act on two, the slot's and its server's resource's (spec.gone_servers)."""
+        key = self.sub.slot_key(worker)
+
         def mutate(items):
-            s = Slot.from_items(worker, items)
+            s = read_slot(key, worker, items)
+            if s is None:
+                # A row that does not parse is the slot an operator most wants gone, and `retire` raised on it (the
+                # sixth pass, the follow-up). Their word is written over it, whole: released, and nobody's.
+                return Slot(worker, "", self.wall(), True, 0).to_items()
             if s.released:
                 return None
             return Slot(worker, s.holder, s.until, True, s.gen).to_items()
-        return Slot.from_items(worker, self.write(self.sub.slot_key(worker), mutate))
+        return Slot.from_items(worker, self.write(key, mutate))
 
 
 # Runs its assignment and reports. Reads `<name>/workers/<me>` and the units it names; writes its heartbeat
@@ -1024,12 +1061,14 @@ class Worker:
                     pass
             self.slot = None
 
-    # Reads my row.
+    # Reads my row. One whose `rev` does not parse is read for the units it names (`read_assignment`): the pass is
+    # a pass, and what the row decides is carried out.
     def assignment(self) -> Assignment:
         if self.seeking is not None:
             return Assignment(self.name, [])      # the row under that name is the other instance's now (`keep_slot`)
-        items, _ = self.vars.get(self.sub.assignment(self.name))
-        return Assignment.from_items(self.name, items)
+        key = self.sub.assignment(self.name)
+        items, _ = self.vars.get(key)
+        return read_assignment(key, self.name, items)
 
     # Called when the worker starts a unit: `next_epoch` on `<name>/epoch/<unit>`, record it in `epochs`,
     # and open a `Lease` on it. A second worker starting the same unit gets the next number, and the first
@@ -1346,10 +1385,28 @@ class Worker:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
         if SLOTS_GARBLED.get(self.sub.name):
             extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
+        if ASSIGNMENTS_GARBLED.get(self.sub.name):
+            extra.setdefault("assignments_garbled", ASSIGNMENTS_GARBLED[self.sub.name])   # …and its own assignment (`read_assignment`)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),
                          Heartbeat(self.name, self.wall(), status, extra).to_bytes())
+
+    # A UNIT'S OWN ROW THAT DOES NOT PARSE (the sixth pass, the follow-up). The controller has passed such a row by
+    # since the second pass (`SpecController.units`); the workers read the rows of the units they were assigned in
+    # one loop, bare, and a row garbled AFTER it was placed raised out of the pass: nothing after it started, nothing
+    # taken away stopped, every pass. Every worker's loop catches it at its unit and comes here: said once per row
+    # until it parses again, and the words for the unit's status. What the unit does meanwhile is the subsystem's —
+    # what runs under the row read last keeps running (not knowing is not "no"), what never started does not start.
+    def row_garbled(self, unit, e) -> str:
+        said = self.__dict__.setdefault("_rows_garbled_said", set())
+        if str(unit) not in said:
+            said.add(str(unit))
+            log.error("%s: the row of %s does not parse (%s); passed by until it does", self.name, unit, e)
+        return f"its row does not parse: {e}"
+
+    def row_parsed(self, unit) -> None:
+        self.__dict__.get("_rows_garbled_said", set()).discard(str(unit))
 
     # what a subsystem implements
     # Abstract: what a subsystem implements (the VMS's is М9 Lesson 6's loop).

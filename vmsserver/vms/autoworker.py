@@ -137,7 +137,14 @@ class AutoWorker(Worker):
         started = self.clock()
         acted: list[str] = []
         units = sorted(self.assignment().units)
-        rows = {u: self.scenario(u) for u in units}
+        rows = {}
+        for u in units:
+            try:
+                rows[u] = self.scenario(u)
+                self.row_parsed(u)
+            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this scenario's trouble (`row_garbled`)
+                rows[u] = None
+                self.status_by_unit[u] = {"id": u, "phase": "failed", "why": self.row_garbled(u, e)}
         self._plan(rows, now)
         self.pass_stats.update(queries=0, lag_seconds=0.0, latency_seconds=0.0)
         for unit in units:

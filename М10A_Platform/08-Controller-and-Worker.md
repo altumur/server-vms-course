@@ -140,11 +140,18 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 ## Шаг 5 — Назначение
 
 ```python
+    def assignment(self, worker: str) -> Assignment:
+        items, _ = self.vars.get(self.sub.assignment(worker))
+        return self._assignment(worker, items)
+
+    def _assignment(self, worker: str, items) -> Assignment:
+        return read_assignment(self.sub.assignment(worker), worker, items)
+
     def assign(self, worker: str, units: list[str]) -> Assignment:
         def mutate(items):
-            rev = int(items.get("rev", 0)) + 1
+            rev = self._assignment(worker, items).rev + 1
             return Assignment(worker, sorted(set(units), key=str), rev).to_items()
-        return Assignment.from_items(worker, self.write(self.sub.assignment(worker), mutate))
+        return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 ```
 
 Полная замена списка. `set` убирает дубликаты, `sorted(…, key=str)` даёт устойчивый порядок (по строковому виду, потому что единицы — строки, и числовые идентификаторы сортируются как `"1", "10", "2"`; для хранения это неважно, важна только стабильность). Ревизия растёт.
@@ -154,11 +161,11 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
         """Read-modify-write: two controllers adding different units to one
         worker at once both land."""
         def mutate(items):
-            a = Assignment.from_items(worker, items)
+            a = self._assignment(worker, items)
             if unit in a.units:
                 return None
             return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items()
-        return Assignment.from_items(worker, self.write(self.sub.assignment(worker), mutate))
+        return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 ```
 
 Добавление **одной** единицы — и docstring объясняет, зачем отдельный метод, когда есть `assign`. Два контроллера, размещающие две разные камеры на один воркер одновременно: с `assign` каждый записал бы свой список, и второй затёр бы камеру первого (его список был прочитан до). С `assign_add` каждый добавляет своё к тому, что нашёл **внутри мутатора**, то есть к свежим данным, — и обе камеры остаются.
@@ -168,6 +175,52 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 `if unit in a.units: return None` — тот самый приём. Повторное добавление не создаёт ревизию: проход контроллера, ничего не изменивший, не должен выглядеть как изменение, иначе `assignment_rev` в консоли будет расти сам по себе и потеряет смысл.
 
 `assign_remove` — зеркальный, с той же отменой при отсутствии.
+
+**Строка назначения, которая не разбирается, — беда одного воркера.** В строке одно число, `rev`, и первая версия разбирала его голым `int`. `rev` со словом вместо числа (правка руками, оборванная запись) бросал `ValueError` из `assignments()` — а на нём стоит весь проход контроллера: сверка назначений со строками размещения, каждый перенос, `/where`. Одна строка одного воркера, и ни одна единица подсистемы не размещалась; сам воркер падал на ней каждый проход (шестое ревью, найдено при обходе соседей битой строки слота). Теперь строку читает `read_assignment`:
+
+```python
+def read_assignment(key: str, worker: str, items) -> "Assignment":
+    """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
+    try:
+        a = Assignment.from_items(worker, items)
+    except (ValueError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        ASSIGNMENTS_GARBLED[sub] = ASSIGNMENTS_GARBLED.get(sub, 0) + 1
+        if key not in _garbled_assignments:
+            _garbled_assignments.add(key)
+            log.error("%s: the assignment row does not parse (%r); read for the units it names", key, items)
+        return Assignment(worker, [u for u in str(items.get("units", "")).split(",") if u])
+    _garbled_assignments.discard(key)
+    return a
+```
+
+То, что строка **решает**, — список `units`, а список имён не может не разобраться. Он читается как есть, с `rev 0`; строка считается (`assignments_garbled` в отчёте прохода и в heartbeat'е воркера) и один раз попадает в лог. Следующая запись контроллера в эту строку пишет её целиком, и `rev` начинается заново — это ничего не стоит: ревизию публикуют, но нигде не сравнивают между записями. Тесты: `test_garbled_rows.py::test_a_garbled_assignment_row_is_that_workers_trouble_and_the_pass_goes_on`, `test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names`; каталог М11 читает те же строки тем же `read_assignment`.
+
+**Тот же вопрос — каждой строке, которую читают контроллер и воркер.** Битая эпоха, потом битый слот, потом битое назначение: три прохода ревью находили одно и то же в новом месте. Поэтому вот все строки хранилища, которые платформа разбирает, и что происходит, когда строка не разбирается. Правило одно: что строка ещё говорит — используется; строка считается и один раз попадает в лог; проход идёт дальше; и ничто не читается как «нет» только потому, что не разобралось.
+
+| Строка | Кто читает | Не разбирается — что происходит | Тест |
+|---|---|---|---|
+| слот `<подсистема>/slots/<имя>` | захват (`_claim_slot`) | не кандидат; считается (`slots_garbled`) | `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` |
+| слот | своя строка: продление, уход (`_own_slot`) | читается как записанная последней; продление пишет её целиком | `test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names` |
+| слот | контроллер: `slots()` | пропускается | там же |
+| слот | оператор: `retire` | бросал `ValueError` → пишется целиком: отпущен, ничей | `test_garbled_rows.py::test_retiring_a_slot_whose_row_is_garbled_writes_it_released` |
+| назначение `<подсистема>/workers/<имя>` | контроллер, воркер, каталог М11 | обрывал проход всех → читается список единиц, `rev 0` | два теста выше |
+| эпоха `<подсистема>/epoch/<единица>` | выдача (`next_epoch`), семь вызовов `take_epoch` | отказ одной единицы или одной команды (урок 6; М10B, урок 4) | `test_epoch_refused.py` |
+| эпоха | продление аренды (`Lease.renew`) | эта аренда отсечена (урок 6, шаг 8) | `test_garbled_rows.py::test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone` |
+| эпоха | консоль: `epochs`, `epochs_of` | события этой единицы не помечаются отсечёнными | `test_lesson10_events.py::test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_only_its_own` |
+| heartbeat (объект) | `workers_seen`, `builds`, `resources_seen` | пропускается, считается (`parse_heartbeat`) | `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs` |
+| числа внутри heartbeat'а | `capacity_of`, `headroom`, `failover_seconds` | `capacity_of` ронял размещение каждой единицы → «не сказал»: ёмкость по умолчанию | `test_garbled_rows.py::test_a_heartbeat_whose_numbers_are_words_is_that_workers_trouble` |
+| схема `platform/schema` | `check_schema` | работающий держит последнюю прочитанную; новый не стартует (урок 17) | `test_lesson1_platform.py::test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_starts_nobody_new` |
+| вывод сервера `platform/drain` | `draining` | чисел в строке нет: `server` — имя | — |
+| размещение `<подсистема>/placement/<единица>` | `placement()` и всё, что на нём стоит | ронял проход → читается `worker`; `at` и `rev` — нули (урок 10) | `test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass` |
+| строка единицы | контроллер: `units()`, `_parsed` | пропускается, считается (урок 10) | `test_placement_decides.py::test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each` |
+| строка единицы | воркеры: цикл по своим единицам | ронял проход воркера → единица пропускается (`row_garbled`), остальные идут | `test_the_holder_goes_on_with_the_row_it_read_last_and_runs_the_rest` и три соседних |
+| отчёт прохода (объект) | `pass_report` | ронял цикл контроллера → `None`, проход пишет его заново | `test_a_garbled_pass_report_does_not_stop_the_controllers_loop` |
+| срез снимка (объект) | `snapshot_age` | ронял `/metrics` → возраст «старше некуда» (урок 19) | `test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh` |
+| список сборки блобов `<подсистема>/sweep` | `put_blob`, `sweep_blobs` | ронял каждую загрузку блоба → списка нет; ничего не удаляется по его слову (урок 20) | `test_a_garbled_sweep_list_stops_no_upload_and_deletes_nothing_on_its_word` |
+| срок хранения `<подсистема>/retention[/<единица>]` | ресурс: `retain` | ронял хранение всех единиц → эта единица не метётся (урок 14) | `test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_are_swept` |
+
+Что оставлено как есть, потому что беда не выходит за свою строку. `set_schema` на битой строке схемы бросает исключение оператору: поднять версию поверх строки, которую не прочитать, значит не знать, не понижаешь ли. Счётчик `next_id` со словом вместо числа отказывает в создании новой единицы — выдать номер поверх него значило бы, возможно, повторить номер. Ручки ресурса (`platform/space`, `platform/mirror`) роняют только свою часть прохода, и она названа в `errors`. Строки холдов (`<подсистема>/holds/<место>`) читаются пока голо — это отдельная находка про сетевой том (М10B, урок 10).
 
 ## Шаг 6 — Чтение слотов и назначений
 

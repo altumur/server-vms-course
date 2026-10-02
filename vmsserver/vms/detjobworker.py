@@ -139,7 +139,12 @@ class DetJobWorker(Worker):
         now = self.wall() if now is None else now
         wanted = set(self.assignment().units)
         for job in sorted(wanted):
-            row = self.job_row(job)
+            try:
+                row = self.job_row(job)
+                self.row_parsed(job)
+            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this job's trouble (`row_garbled`)
+                self.status_by_unit[job] = {"id": job, "phase": "failed", "why": self.row_garbled(job, e)}
+                continue
             if row is None:
                 continue
             if row["kind"] not in self.models:
