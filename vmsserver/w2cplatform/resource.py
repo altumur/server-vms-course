@@ -94,6 +94,7 @@ from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
+DOOR_TIMEOUT = 30.0          # seconds the door's socket waits on a peer that sends or reads nothing
 MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
 EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
@@ -924,10 +925,12 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
     # headers under a deadline (`Deadlined`). The requests this door HOLDS (`/events/wait`, `WAITERS_MAX`) and the
     # queries it answers at once (`EVENTS_INFLIGHT`) fit inside one address's share with room to spare — they are
     # one server's evaluators and its console. Imported here: `console.py` reads this module for `resources_seen`.
-    from .console import Deadlined, door_server
+    from .console import STREAM_PIECE, Deadlined, Paced, body_deadline, door_server
     root = resource.root
 
     class H(Deadlined, BaseHTTPRequestHandler):
+        timeout = DOOR_TIMEOUT                            # a socket that sends or reads nothing for this long is let go
+
         def log_message(self, *a): pass
 
         def _raw(self, status, body, headers=()):
@@ -989,17 +992,58 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                 rel = self.path[len("/events/"):]; p = os.path.join(root, rel)
                 if not safe_rel(rel) or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
                     return self._raw(404, b"")
-                with open(p, "rb") as f: return self._raw(200, f.read())
+                return self._bucket(p)
             if extra is not None:
                 r = extra(self.path, self.headers)
                 if r is not None:
                     return self._raw(*r)
             self._raw(404, b"")
 
+        # A BUCKET GOES OUT IN PIECES (the review's seventh pass, major; reproduced by a run). It was `f.read()` into one
+        # reply: eight readers of a 60 MB bucket that did not read held 400 MB in the resource, and a peer slower than
+        # 2 MB/s never got one at all — the socket's timeout is the whole of a `sendall`, and `restore` of that bucket
+        # failed on every retry. Its length is said (`Content-Length`: a reply that ends short is an error to the
+        # reader, not a smaller bucket) and the bytes go `STREAM_PIECE` at a time, each under the socket's timeout, to a
+        # reader that keeps `STREAM_MIN_RATE` on average (`Paced`) — what the holder's and the recorders' doors do.
+        def _bucket(self, p):
+            try:
+                f = open(p, "rb")
+            except OSError:
+                return self._raw(404, b"")
+            with f:
+                left = os.fstat(f.fileno()).st_size
+                self.send_response(200); self.send_header("Content-Length", str(left)); self.end_headers()
+                out = Paced(self, chunked=False)
+                try:
+                    while left > 0:
+                        part = f.read(min(left, STREAM_PIECE))
+                        if not part:
+                            break                             # shorter than it was: the reader sees the length unmet
+                        out.write(part); left -= len(part)
+                except (OSError, TimeoutError) as e:
+                    log.debug("%s: a bucket's reader fell behind or went: %s", resource.server, e)
+                if left:
+                    self.close_connection = True
+
+        # A body's deadline, whole (the review's seventh pass, major; reproduced by a run): past the headers a request
+        # was its handler's, and `PUT /mirror` read its body under nothing but the socket's timeout on each read — 32
+        # connections declaring 60 MB and sending a byte every twenty seconds held an address's share for ever, two
+        # addresses the whole door: `/events`, `/events/wait` and the mirror were 503. Now the body has the door's
+        # `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`, `read_body`'s rule), here and for a
+        # subsystem's own writes (`extra_put`); one that does not arrive in time is 408 and leaves no copy.
         def do_PUT(self):
+            try:
+                n = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                return self._raw(400, b"")
             if not self.path.startswith("/mirror/"):
                 if extra_put is not None:
-                    r = extra_put(self.path, self.headers, self.rfile)
+                    body_deadline(self, n)
+                    try:
+                        r = extra_put(self.path, self.headers, self.rfile)
+                    except TimeoutError:
+                        self.close_connection = True
+                        return self._raw(408, b"")
                     if r is not None:
                         return self._raw(*r)
                 return self._raw(404, b"")
@@ -1011,26 +1055,26 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             # was `Content-Length` bytes read into memory, whatever that said, by a door that asks nobody. Past
             # `MIRROR_MAX` it is 413 and nothing is read; within it the bytes go to the file a piece at a time; a
             # body that ends early leaves no copy.
-            try:
-                n = int(self.headers.get("Content-Length", 0))
-            except ValueError:
-                return self._raw(400, b"")
             if n < 0 or n > MIRROR_MAX:
                 self.close_connection = True
                 return self._raw(413, b"")
             dest = os.path.join(root, MIRROR_DIR, server, path)
             os.makedirs(os.path.dirname(dest), exist_ok=True)
-            left = n
+            left, late = n, False
+            body_deadline(self, n)
             with open(dest + ".tmp", "wb") as f:
-                while left > 0:
-                    part = self.rfile.read(min(left, 1 << 16))
-                    if not part:
-                        break
-                    f.write(part); left -= len(part)
+                try:
+                    while left > 0:
+                        part = self.rfile.read(min(left, 1 << 16))
+                        if not part:
+                            break
+                        f.write(part); left -= len(part)
+                except (TimeoutError, OSError):
+                    late = True
             if left:
                 os.remove(dest + ".tmp")
                 self.close_connection = True
-                return self._raw(400, b"")
+                return self._raw(408 if late else 400, b"")
             os.replace(dest + ".tmp", dest)                     # a copy appears whole or not at all
             self._raw(204, b"")
 

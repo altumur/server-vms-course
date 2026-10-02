@@ -32,7 +32,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
-from w2cplatform.console import Bounds, ConsoleServer, Deadlined, read_body
+from w2cplatform.console import Deadlined, open_doors, read_body
 
 from .api import ApiError, ConsoleAPI
 from .federation import DomainDirectory
@@ -112,8 +112,18 @@ class Console:
         # before the caller's token was looked at. The server and the handler's reading are the platform's
         # (`ConsoleServer`, `Deadlined`): so many connections at once and so many to one address, the request line
         # and headers under a deadline, a body of at most `MAX_BODY`.
+        #
+        # …AND WITH THE CONSOLE'S RESERVE AND THE BOX'S LANE (М10's seventh review, major: "the domain's console and the
+        # signer have neither"). Its bounds are the console's (`Bounds`: `CONSOLE_PER_ADDRESS`, `CONSOLE_RESERVE`, the
+        # monitors in `CONSOLE_MONITORS`), and the box's own door is a unix socket when `DOMAIN_CONSOLE_UNIX` names one
+        # (`open_doors`). There is no door in here — a person's token is the signer's to give — so a connection of the
+        # reserve is answered on `/healthz` alone (`RESERVE`), and a listed monitor's on `/healthz`.
         class H(Deadlined, BaseHTTPRequestHandler):
             MAX_BODY = 1 << 20
+            RESERVE = ("/healthz",)
+
+            def parse_request(self):
+                return super().parse_request() and not self.busy_unless(self.RESERVE, urlsplit(self.path).path)
 
             def _send(self, status: int, body: dict | list):
                 raw = json.dumps(body).encode()
@@ -241,9 +251,7 @@ class Console:
 
     def serve(self, host: str = "127.0.0.1", port: int = 8090) -> ThreadingHTTPServer:
         threading.Thread(target=self._refresher, daemon=True, name="readview").start()
-        srv = ConsoleServer((host, port), self.handler(), bounds=Bounds(64, 16, reserve=0, box=0))
-        threading.Thread(target=srv.serve_forever, daemon=True, name="console").start()
-        return srv
+        return open_doors(host, port, self.handler(), unix_env="DOMAIN_CONSOLE_UNIX", say=False)
 
     def stop(self, srv: ThreadingHTTPServer) -> None:
         self._stop.set()

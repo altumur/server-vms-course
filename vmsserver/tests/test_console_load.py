@@ -202,10 +202,11 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
     everybody and was taken before anybody was known. Now one address holds `CONSOLE_PER_ADDRESS` of the common
     connections and no more; with the common ones gone — taken by many addresses — monitoring and the door in are
     still answered, on the reserve, and nothing else is; and the caller on the box, through the console's unix
-    socket, has connections of its own and is answered on every route."""
+    socket, has connections of its own and is answered on every route. (Monitoring on its own lane, the address named
+    in `CONSOLE_MONITORS`: the seventh pass, and the next test.)"""
     from w2cplatform import console as wc
     sock = os.path.join(tempfile.mkdtemp(prefix="con-"), "c.sock")
-    was = _env(CONSOLE_UNIX=sock, CONSOLE_TIMEOUT=30, CONSOLE_HEADER_TIMEOUT=30)
+    was = _env(CONSOLE_UNIX=sock, CONSOLE_TIMEOUT=30, CONSOLE_HEADER_TIMEOUT=30, CONSOLE_MONITORS="192.0.2.7")
     Gate.forget_glass()
     box = Box()
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
@@ -261,9 +262,11 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
             others.append(s)
         time.sleep(0.3)
         assert srv.bounds.used["common"] == wc.CONSOLE_CONNECTIONS
-        assert _ask(_as(who, "192.0.2.7", port), get("/metrics")).startswith(b"HTTP/1.0 200")       # monitoring: the reserve
+        assert _ask(_as(who, "192.0.2.7", port), get("/metrics")).startswith(b"HTTP/1.0 200")       # monitoring: its lane
         busy = _ask(_as(who, "192.0.2.7", port), get("/cameras", "admin"))
-        assert busy.startswith(b"HTTP/1.0 503") and b"/session" in busy                              # nothing else is
+        assert busy.startswith(b"HTTP/1.0 503") and b"/metrics" in busy                              # nothing else is
+        busy = _ask(_as(who, "192.0.2.9", port), get("/cameras", "admin"))
+        assert busy.startswith(b"HTTP/1.0 503") and b"/session" in busy                              # …nor on the reserve
         body = json.dumps(glass).encode()
         door_in = _ask(_as(who, "192.0.2.8", port), b"POST /session HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
                        + f"Content-Length: {len(body)}\r\n\r\n".encode() + body)
@@ -278,6 +281,158 @@ def test_a_flood_from_one_address_keeps_neither_the_emergency_entry_at_the_box_n
         for s in others:
             s.close()
         srv.shutdown(); _restore(was); Gate.forget_glass()
+
+
+def _flood(who: dict, port: int, addrs: list, stop: threading.Event, each: int = 24) -> threading.Thread:
+    """Every address of `addrs` keeps `each` connections open with half a request line, and opens again at once one
+    that was refused or let go — what the seventh pass ran from four addresses."""
+    def run():
+        socks = []
+        while not stop.is_set():
+            alive = []
+            for a, s in socks:
+                try:
+                    s.setblocking(False)
+                    s.recv(4096)                                      # a 503, or the end: let go
+                    s.close()
+                except BlockingIOError:
+                    alive.append((a, s))
+                except OSError:
+                    s.close()
+            socks = alive
+            for a in addrs:
+                try:
+                    while sum(1 for b, _ in socks if b == a) < each:
+                        s = _as(who, a, port)
+                        s.sendall(b"GET /cam")
+                        socks.append((a, s))
+                except OSError:
+                    pass
+            stop.wait(0.05)
+        for _, s in socks:
+            s.close()
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    return t
+
+
+def test_four_or_eight_addresses_flooding_keep_neither_an_honest_door_in_nor_a_listed_monitor_out():
+    """The review's seventh pass, major — reproduced by a run: four addresses, each sending half a request line and
+    reconnecting, held all 64 common connections (16 an address) and all 8 of the reserve (2 an address), and an honest
+    address had not one 200 — `/metrics`, `/healthz`, `/session`, `/cameras`. "Addresses in their dozens" was four. Now
+    an address holds `CONSOLE_PER_ADDRESS` (8), the reserve is taken only once the common connections are all gone,
+    one to an address, and `/metrics` is answered past the common connections only to the monitors named in
+    `CONSOLE_MONITORS`, on a lane of their own. Four addresses leave the door open to everybody; eight fill the common
+    connections, and the door in is still answered on the reserve, and the listed monitor on its lane; sixteen fill
+    the reserve as well — and the listed monitor is answered still. The numbers are the ones the lessons write down."""
+    from w2cplatform import console as wc
+    was = _env(CONSOLE_TIMEOUT=30, CONSOLE_HEADER_TIMEOUT=30, CONSOLE_MONITORS="192.0.2.100, 198.18.0.0/24")
+    Gate.forget_glass()
+    box = Box()
+    ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
+    port, who = srv.server_address[1], {}
+    srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
+    glass = json.dumps({"glass": {"who": "anna", "why": "the domain is down", "password": "open-sesame"}}).encode()
+    door_in = (b"POST /session HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\n"
+               + f"Content-Length: {len(glass)}\r\n\r\n".encode() + glass)
+    get = lambda path, token="": (f"GET {path} HTTP/1.1\r\nHost: x\r\n" + (f"Authorization: Bearer {token}\r\n" if token else "")
+                                  + "\r\n").encode()
+
+    def settle(want_common: int, want_reserve: int) -> None:
+        for _ in range(100):
+            if srv.bounds.used["common"] >= want_common and srv.bounds.used["reserve"] >= want_reserve:
+                return
+            time.sleep(0.05)
+        raise AssertionError(dict(srv.bounds.used))
+    try:
+        for n, honest in ((4, "192.0.2.50"), (8, "192.0.2.51"), (16, "192.0.2.52")):
+            stop = threading.Event()
+            flooders = [f"203.0.113.{i}" for i in range(n)]
+            t = _flood(who, port, flooders, stop)
+            try:
+                full = n * wc.CONSOLE_PER_ADDRESS >= wc.CONSOLE_CONNECTIONS
+                settle(min(n * wc.CONSOLE_PER_ADDRESS, wc.CONSOLE_CONNECTIONS),
+                       min(n, wc.CONSOLE_RESERVE) if full else 0)
+                assert all(srv.bounds.by_addr.get(("common", a), 0) <= wc.CONSOLE_PER_ADDRESS for a in flooders)
+                assert all(srv.bounds.by_addr.get(("reserve", a), 0) <= wc.RESERVE_PER_ADDRESS for a in flooders)
+                session = _ask(_as(who, honest, port), door_in)
+                cameras = _ask(_as(who, honest, port), get("/cameras", "admin"))
+                metrics = _ask(_as(who, "198.18.0.7", port), get("/metrics"))                 # a listed network
+                stranger = _ask(_as(who, honest, port), get("/metrics"))
+                if n == 4:                                            # 32 of 64: the door is everybody's as usual
+                    assert not full and srv.bounds.used["reserve"] == 0
+                    assert session.startswith(b"HTTP/1.0 200") and cameras.startswith(b"HTTP/1.0 200")
+                    assert stranger.startswith(b"HTTP/1.0 200")
+                elif n == 8:                                          # the common connections gone: the door in, on the reserve
+                    assert session.startswith(b"HTTP/1.0 200") and b"w2c_glass=" in session, session[:200]
+                    assert cameras.startswith(b"HTTP/1.0 503") and stranger.startswith(b"HTTP/1.0 503")
+                else:                                                 # the reserve gone too: only the listed monitor, over TCP
+                    assert srv.bounds.used["reserve"] == wc.CONSOLE_RESERVE
+                    assert session.startswith(b"HTTP/1.0 503") and cameras.startswith(b"HTTP/1.0 503")
+                assert metrics.startswith(b"HTTP/1.0 200") and b"vms_" in metrics, metrics[:200]   # the monitor: always
+                listed = _ask(_as(who, "192.0.2.100", port), get("/healthz"))                 # a listed address
+                assert listed.startswith(b"HTTP/1.0 200"), listed[:80]
+            finally:
+                stop.set(); t.join(5)
+            for _ in range(100):                                      # the flood's connections end before the next round
+                if srv.bounds.used["common"] == 0 and srv.bounds.used["reserve"] == 0:
+                    break
+                time.sleep(0.05)
+    finally:
+        srv.shutdown(); _restore(was); Gate.forget_glass()
+
+
+def test_a_refusal_is_read_by_the_client_not_reset_under_it():
+    """The review's seventh pass, minor: the 503 was written and the socket closed with the client's request unread in
+    it — and a socket closed with unread bytes is reset: on macOS the client's read was `ECONNRESET`, not the 503 and
+    its `Retry-After` (the domain's door test failed six runs of six). The refused socket is finished (`SHUT_WR`) and
+    what the client still sends is read and dropped until it closes or a second passes (`linger`); a handler's own
+    refusal with a body unread — a 413 — is finished the same way."""
+    from w2cplatform import console as wc
+    was = _env(CONSOLE_CONNECTIONS=2, CONSOLE_PER_ADDRESS=2, CONSOLE_RESERVE=0, CONSOLE_HEADER_TIMEOUT=30)
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    port = srv.server_address[1]
+    held = []
+    body = b"x" * (256 << 10)                                         # more than the refusal reads: it stays unread
+    try:
+        for _ in range(2):
+            s = socket.create_connection(("127.0.0.1", port)); s.sendall(b"GET /cam"); held.append(s)
+        time.sleep(0.2)
+        for _ in range(10):
+            s = socket.create_connection(("127.0.0.1", port))
+            s.settimeout(5)
+            try:
+                s.sendall(b"POST /marks HTTP/1.1\r\nHost: x\r\nContent-Length: %d\r\n\r\n" % len(body) + body)
+            except OSError:
+                pass                                                  # the door may finish before all of it went
+            out = b""
+            while True:
+                got = s.recv(65536)                                   # ECONNRESET here was the finding
+                if not got:
+                    break
+                out += got
+            s.close()
+            assert out.startswith(b"HTTP/1.0 503") and b"Retry-After: 1" in out, out[:80]
+        for s in held:
+            s.close()
+        held = []
+        time.sleep(0.3)
+        huge = wc.MAX_BODY + 1
+        s = socket.create_connection(("127.0.0.1", port)); s.settimeout(5)
+        s.sendall(b"POST /marks HTTP/1.1\r\nHost: x\r\nContent-Length: %d\r\n\r\n" % huge + body)
+        out = b""
+        while True:
+            got = s.recv(65536)
+            if not got:
+                break
+            out += got
+        s.close()
+        assert out.startswith(b"HTTP/1.0 413"), out[:80]
+    finally:
+        for s in held:
+            s.close()
+        srv.shutdown(); _restore(was)
 
 
 def test_a_connection_nobody_knows_yet_has_seconds_for_its_headers_not_the_sockets_timeout():
@@ -490,6 +645,54 @@ def test_a_viewer_who_reads_at_his_own_pace_gets_the_devices_footage_whole_and_h
         door.shutdown()
 
 
+def test_the_holders_door_holds_a_budget_of_footage_not_a_minute_a_connection_and_two_connections_a_signature():
+    """The review's seventh pass, major — a run: a viewer with `view` on one camera opened eight connections on one
+    signed address to a camera of 8 Mbit/s, and the holder — the process holding every camera of its server — went from
+    45 to 503 MB: a piece was sixty seconds, whatever bytes that was, one per connection. A piece is sized in bytes now
+    (`PLAYBACK_PIECE_BYTES`, from the rate the last one came at), the pieces the door holds across its connections are
+    at most `PLAYBACK_BUDGET` — past it the next first piece waits, then is 503 — and one signed address holds
+    `PLAYBACK_PER_SIGNATURE` connections."""
+    from vms.worker import FakeDevice
+    box = Box()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 3600.0)}, max_playbacks=64, bps=1_000_000)
+    piece, budget = 2 << 20, 8 << 20                              # two seconds of this camera a piece; four pieces
+    w, door = _holder(box, dev, PLAYBACK_PIECE_BYTES=piece, PLAYBACK_BUDGET=budget, PLAYBACK_FIRST=0.25,
+                      PLAYBACK_BUDGET_WAIT=0.5, PLAYBACK_CONNECTIONS=32, PLAYBACK_PER_ADDRESS=16)
+    port = door.server_address[1]
+    idle, peak, stop = [], [0], threading.Event()
+
+    def watch():
+        while not stop.is_set():
+            peak[0] = max(peak[0], w.playback_budget().used)
+            time.sleep(0.005)
+
+    def nobody_reads(sig: str) -> socket.socket:
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        s.connect(("127.0.0.1", port))
+        s.sendall(f"GET /playback/1?from=0&to=3600&sig={sig} HTTP/1.1\r\nHost: x\r\n\r\n".encode())
+        return s
+    t = threading.Thread(target=watch, daemon=True)
+    t.start()
+    try:
+        idle += [nobody_reads("one"), nobody_reads("one")]           # one viewer's address, twice: its two
+        time.sleep(0.5)
+        third, _ = _raw(port, b"GET /playback/1?from=0&to=3600&sig=one HTTP/1.1\r\nHost: x\r\n\r\n")
+        assert third.startswith(b"HTTP/1.0 503") and b"at once already" in third, third[:120]
+        idle += [nobody_reads(f"v{i}") for i in range(6)]             # six more viewers who read nothing
+        time.sleep(1.5)
+        refused, _ = _raw(port, b"GET /playback/1?from=0&to=3600&sig=late HTTP/1.1\r\nHost: x\r\n\r\n")
+        assert refused.startswith(b"HTTP/1.0 503") and b"bytes of footage at once" in refused, refused[:160]
+        assert peak[0] <= budget + piece, peak[0]                     # the budget, and one piece over it at most
+        sizes = [int((b - a) * dev.bps) for _, a, b in dev.fetched]
+        assert sizes and max(sizes[1:] or sizes) <= 2 * piece, max(sizes)   # pieces of bytes, not of sixty seconds
+    finally:
+        stop.set(); t.join(2)
+        for s in idle:
+            s.close()
+        door.shutdown()
+
+
 def test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles():
     """The sixth pass's sweep of every place a body is read: the gateway read `Content-Length` bytes of an offer,
     whatever that said, into the process every viewer's stream goes through. An offer past `MAX_OFFER` is 413 and
@@ -539,4 +742,106 @@ def test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole
         s.close()
         assert open(copy, "rb").read() == lines and not os.path.exists(copy + ".tmp")   # the copy that was there stands; no half of one
     finally:
+        srv.shutdown()
+
+
+def test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too():
+    """The review's seventh pass, major — a run: past the headers a request was its handler's, and `PUT /mirror` read its
+    body under nothing but the socket's timeout on each read: 32 connections declaring 60 MB and sending a byte every
+    twenty seconds held an address's share for ever, and two addresses the whole door. The body has the door's
+    `timeout` and a second for every `BODY_RATE` bytes (`body_deadline`); one that does not arrive in time is 408 and
+    leaves no copy. A subsystem's own write (`extra_put`) reads under the same deadline."""
+    from w2cplatform import resource as wr
+    box = Box()
+    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0
+    seen = {}
+
+    def extra_put(path, headers, rfile):
+        try:
+            seen["got"] = rfile.read(int(headers.get("Content-Length", 0)))
+        except TimeoutError:
+            seen["late"] = True
+            raise
+        return 204, b""
+    srv = wr.serve(res, "127.0.0.1", 0, extra_put=extra_put)
+    wr.DOOR_TIMEOUT = was
+    port = srv.server_address[1]
+    path = "/mirror/srv-2/vms/7/e1/1757499600.events.jsonl"
+    copy = os.path.join(box.archive, wr.MIRROR_DIR, "srv-2", "vms", "7", "e1", "1757499600.events.jsonl")
+
+    def trickle(target: str, n: int) -> tuple[bytes, float]:
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(f"PUT {target} HTTP/1.1\r\nHost: x\r\nContent-Length: {n}\r\n\r\n".encode())
+        began, out = time.monotonic(), b""
+        s.settimeout(0.5)
+        try:
+            while time.monotonic() - began < 15:
+                try:
+                    s.sendall(b"x")                                   # a byte, inside the socket's timeout of each read
+                except OSError:
+                    break
+                try:
+                    got = s.recv(4096)
+                    if not got:
+                        break
+                    out += got
+                    break
+                except socket.timeout:
+                    pass
+        finally:
+            s.close()
+        return out, time.monotonic() - began
+    try:
+        reply, took = trickle(path, 60000)                            # 1 s and 60000 / BODY_RATE ≈ 0.9 s: under 2 s
+        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0, (reply[:40], took)
+        assert not os.path.exists(copy) and not os.path.exists(copy + ".tmp")
+        reply, took = trickle("/theirs/1", 60000)
+        assert reply.startswith(b"HTTP/1.0 408") and took < 4.0 and seen.get("late"), (reply[:40], took)
+        assert _raw(port, b"PUT /theirs/2 HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\n\r\nabc")[0].startswith(b"HTTP/1.0 204")
+        assert seen["got"] == b"abc"                                   # a body in time: as before
+    finally:
+        srv.shutdown()
+
+
+def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():
+    """The review's seventh pass, major — a run: `GET /events/<bucket>` was `f.read()` into one reply; eight readers of a
+    60 MB bucket that did not read held 400 MB in the resource, and a peer slower than 2 MB/s never got one — the
+    socket's timeout is the whole of a `sendall`, and `restore` of that bucket failed on every retry. The bucket goes
+    out `STREAM_PIECE` at a time with its length said: a reader slower than the socket's timeout allows for the whole
+    gets every byte, and readers that read nothing hold pieces, not buckets."""
+    import tracemalloc
+    from w2cplatform import resource as wr
+    box = Box()
+    res = wr.Resource(box.archive, "srv-1", "http://127.0.0.1:0", box.vars, box.objects, wall=box.wall)
+    rel = "vms/7/e1/1757499600.events.jsonl"
+    os.makedirs(os.path.join(box.archive, os.path.dirname(rel)), exist_ok=True)
+    line = b'{"t": 1, "kind": "motion", "pad": "' + b"p" * 200 + b'"}\n'
+    with open(os.path.join(box.archive, rel), "wb") as f:
+        f.write(line * (4 * (1 << 20) // len(line)))                 # four megabytes of one bucket
+    size = os.path.getsize(os.path.join(box.archive, rel))
+    was, wr.DOOR_TIMEOUT = getattr(wr, "DOOR_TIMEOUT", 30.0), 1.0                      # a second a write: the whole would need four
+    srv = wr.serve(res, "127.0.0.1", 0)
+    wr.DOOR_TIMEOUT = was
+    port = srv.server_address[1]
+    idle = []
+    try:
+        got, took = _slowly(port, f"/events/{rel}", 1_000_000, wait=20.0)
+        head, _, body = got.partition(b"\r\n\r\n")
+        assert b" 200 " in head.split(b"\r\n", 1)[0] and f"Content-Length: {size}".encode() in head
+        assert len(body) == size and took > 2.0, (len(body), size, took)   # every byte, at its pace
+        tracemalloc.start()
+        for _ in range(6):                                            # six readers that read nothing
+            s = socket.socket()
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+            s.connect(("127.0.0.1", port))
+            s.sendall(f"GET /events/{rel} HTTP/1.1\r\nHost: x\r\n\r\n".encode())
+            idle.append(s)
+        time.sleep(0.5)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        assert peak < 6 * size // 4, peak                             # pieces in flight, not six buckets
+    finally:
+        for s in idle:
+            s.close()
         srv.shutdown()
