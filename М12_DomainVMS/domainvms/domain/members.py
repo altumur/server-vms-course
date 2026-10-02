@@ -49,10 +49,22 @@ class Members:
         self.vars, self.wall = domain_vars, wall
         self.configured, self.domain = configured or (lambda: []), domain
 
+    # A list that does not parse (М10's seventh review: `Members.read` is the first step of the signer's books, of the
+    # domain's member pages and of following the members) is read as NOT WRITTEN — `rev 0`, nobody joins, nobody is
+    # dropped — and says so (`unreadable`), logged once. It is never written over by `settle` or a change: the list is
+    # a record, and a record nobody can read is mended by a person, not replaced by the configuration.
     def read(self) -> dict:
+        from w2cplatform.rows import PARSE_ERRORS
+        from .federation import MEMBER_OBJECTS
         items, _ = self.vars.get(MEMBERS)
-        doc = json.loads(items["doc"]) if items and items.get("doc") else {}
-        return {"rev": int(doc.get("rev", 0)), "members": dict(doc.get("members", {}))}
+        try:
+            doc = json.loads(items["doc"]) if items and items.get("doc") else {}
+            out = {"rev": int(doc.get("rev", 0)), "members": dict(doc.get("members", {}))}
+        except PARSE_ERRORS as e:
+            MEMBER_OBJECTS.garbled(MEMBERS, e)
+            return {"rev": 0, "members": {}, "unreadable": str(e)}
+        MEMBER_OBJECTS.parsed(MEMBERS)
+        return out
 
     def names(self) -> list[str]:
         return sorted(self.read()["members"])
@@ -60,7 +72,8 @@ class Members:
     def settle(self) -> bool:
         """Write the list if nobody ever has — the configuration's members, as the first write carries them
         — so that it is a record and not a property of this holder's processes (Lesson 15, feedback AS)."""
-        return self.read()["rev"] == 0 and self._change(lambda members: True)
+        doc = self.read()
+        return doc["rev"] == 0 and not doc.get("unreadable") and self._change(lambda members: True)
 
     def _refuse_domain(self, name: str) -> None:
         from .api import ApiError
@@ -74,6 +87,9 @@ class Members:
         for _ in range(10):
             items, idx = self.vars.get(MEMBERS)
             doc = self.read()
+            if doc.get("unreadable"):
+                raise Conflict(f"the list of members ({MEMBERS}) does not parse ({doc['unreadable']}): mend it first — "
+                               f"a change written over it would drop every member it names")
             members = dict(doc["members"])
             if doc["rev"] == 0:                          # the first write: the configuration comes along
                 for n in self.configured():
@@ -134,7 +150,10 @@ class Members:
         items, _ = self.vars.get(KEYS_PATH)
         if not items or "doc" not in items:
             return None
-        return json.loads(items["doc"]).get("root") or None
+        try:
+            return json.loads(items["doc"]).get("root") or None
+        except (ValueError, TypeError, AttributeError):
+            return None                                  # a root nobody can read is no root to compare with (the seventh review)
 
     def pinned(self, name: str, domain_objects, own: str | None = None) -> dict:
         """{"root": "this" | "another" | None, "keys_rev": n | None}, from the member's last report."""
@@ -144,9 +163,16 @@ class Members:
 
         def row(path):
             raw = domain_objects.get(base(name) + "v/" + path)
-            return (json.loads(raw).get("items") or {}) if raw else {}
+            try:
+                got = (json.loads(raw).get("items") or {}) if raw else {}
+            except (ValueError, TypeError, AttributeError):
+                got = {}                                 # that report's row does not parse: it says nothing (the seventh review)
+            return got if isinstance(got, dict) else {}
         pub, keys = row(ROOT_PATH).get("pub"), row(KEYS_PATH)
-        rev = json.loads(keys["doc"]).get("rev") if keys.get("doc") else None
+        try:
+            rev = json.loads(keys["doc"]).get("rev") if keys.get("doc") else None
+        except (ValueError, TypeError, AttributeError):
+            rev = None
         return {"root": None if not (own and pub) else ("this" if pub == own else "another"), "keys_rev": rev}
 
     def accept(self, name: str, by: str | None, domain_objects=None) -> bool:

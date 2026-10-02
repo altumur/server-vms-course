@@ -91,9 +91,14 @@ class SurveyWorker(Worker):
         found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage")
         if found is None or not found[2].get("coverage") or not found[2].get("index_url"):
             return None
-        cov = found[2]["coverage"]
+        cov = found[2]["coverage"] if isinstance(found[2]["coverage"], dict) else {}
         from .playback import process_url                # the door asks a gated cluster's processes for this camera's capability
-        return found[2]["index_url"], process_url(found), float(cov["from"]), float(cov["to"])
+        from w2cplatform.rows import number               # one holder's word for its coverage: this watch's, not the pass's (the seventh pass)
+        start, end = number(f"vms/status/{cam}#coverage.from", cov.get("from"), float, None), \
+            number(f"vms/status/{cam}#coverage.to", cov.get("to"), float, None)
+        if start is None or end is None:
+            return None
+        return found[2]["index_url"], process_url(found), start, end
 
     # -- the pass: advance every watch by at most a budget of media seconds ----------------------------
     def reconcile_once(self, now: float | None = None) -> list[str]:

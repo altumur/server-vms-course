@@ -135,7 +135,11 @@ def declared(vars_, garbled: list | None = None) -> list[Keep]:
     does not parse goes into `garbled`, when the caller gives one, as `whole(...)`."""
     out = []
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
-        items, _ = vars_.get(path)
+        try:
+            items, _ = vars_.get(path)                  # a file store's row that is not even JSON raises in the read itself
+        except (ValueError, TypeError, KeyError) as e:
+            KEEPS.garbled(path, e)
+            continue                                    # no camera to hold: counted, and said in the log
         if items:
             id_ = path[len(f"{SUB}/{TABLE}/"):]
             k = KEEPS.read(path, lambda: Keep.from_items(id_, items))

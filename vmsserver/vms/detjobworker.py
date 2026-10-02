@@ -102,9 +102,12 @@ class DetJobWorker(Worker):
         found = holder_of(self.objects, "vms/", str(cam), self.wall(), field="coverage")
         if found is None or not found[2].get("coverage"):
             return False
-        cov = found[2]["coverage"]
-        if not (float(cov["to"]) > t0 and float(cov["from"]) < t1):
-            return False                                  # outside what the device holds at all
+        cov = found[2]["coverage"] if isinstance(found[2]["coverage"], dict) else {}
+        from w2cplatform.rows import number               # what one holder says it holds, through the one reader (the seventh pass)
+        start, end = number(f"vms/status/{cam}#coverage.from", cov.get("from"), float, None), \
+            number(f"vms/status/{cam}#coverage.to", cov.get("to"), float, None)
+        if start is None or end is None or not (end > t0 and start < t1):
+            return False                                  # outside what the device holds at all — or not said
         # Inside the summary is not the same as "there is footage there". A device recording on motion has
         # mostly nothing between its first and last minute, and a job told `fetching` about minutes that do
         # not exist waits for a fetch that will never bring anything. So the index is asked — and when the
@@ -245,7 +248,7 @@ class DetJobWorker(Worker):
                     n = 0
                     for ts, kind, fields in self._stretch(model, sc):
                         EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
-                            ts, kind, cam=int(row["cam"]), job=job, source="archive", **fields)
+                            ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
                     self.events_written += n
@@ -275,7 +278,7 @@ class DetJobWorker(Worker):
             if not self.may_write(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
             EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
-                float(row["from"]), "scan.partial", cam=int(row["cam"]), job=job, source="archive", missing=list(missing),
+                float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive", missing=list(missing),
                 waited=round(self.wall() - waited["since"]))
             partial = log_.wait(self.wall(), partial=missing)["partial"]
             log.warning("scan %s: done without %s — waited %.0f s", job, "; ".join(missing), self.wall() - waited["since"])
@@ -356,3 +359,9 @@ class DetJobWorker(Worker):
         for job in list(self.running):
             self._stop(job)
         self.release_slot()
+
+
+# The camera an event carries: its number when it is one, else as written — `ref:<serial>`, a camera of another cluster
+# (the review's seventh pass: `int(row["cam"])` raised on it, out of the job's pass, and every job after it waited).
+def _cam(cam):
+    return int(cam) if str(cam).isdigit() else str(cam)

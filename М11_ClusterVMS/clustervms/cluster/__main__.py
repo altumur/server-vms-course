@@ -152,7 +152,11 @@ def resource() -> None:
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
     res = cluster_resource(archive, server, url, open_vars(CONFIG_URL), objects)
     srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")))
-    res.heartbeat(); logging.info("restore: %s", res.restore())    # back with an empty disk? pull my buckets from my peers first
+    res.heartbeat()
+    try:                                          # back with an empty disk? pull my buckets from my peers first — and a
+        logging.info("restore: %s", res.restore())   # restore that raises does not end the process (the seventh review)
+    except Exception:                             # noqa: BLE001
+        logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
     last_policy = 0.0
     while not stop.is_set():
         # Two jobs, two tries, as М10's resource loop has them (`vms/__main__.py`; the review's seventh pass, part 2):

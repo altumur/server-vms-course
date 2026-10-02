@@ -49,8 +49,8 @@ administrator's list, and the claim that makes one of them served."""
 # ================================================================================================
 from dataclasses import dataclass
 
-from w2cplatform.contract import Slot, Subsystem, read_hold
-from w2cplatform.rows import Table
+from w2cplatform.contract import HOLDS, Slot, Subsystem, read_hold
+from w2cplatform.rows import FIELDS as NUMBERS, PARSE_ERRORS, Table, number
 from w2cplatform.secrets import is_secret_field
 from w2cplatform.spec import Refused
 
@@ -239,7 +239,13 @@ def declared(vars_, garbled: set | None = None) -> list[Volume]:
     out = []
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
         name = path[len(f"{SUB}/{TABLE}/"):]
-        items, _ = vars_.get(path)
+        try:
+            items, _ = vars_.get(path)                  # a file store's row that is not even JSON raises in the read itself
+        except PARSE_ERRORS as e:
+            VOLUMES.garbled(path, e)
+            items = None
+            if garbled is not None:
+                garbled.add(name)
         if items:
             vol = read_volume(name, items)
             if vol is not None:
@@ -271,13 +277,17 @@ def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0
     have = {v.server for v in declared(vars_) if on_a_box(v)}
     res = resources_seen(objects)
     out = {}
-    for _, hb in heartbeats(objects, sub.name + "/").items():
+    for name, hb in heartbeats(objects, sub.name + "/").items():
         server, root = str(hb.extra.get("server", "")), str(hb.extra.get("archive", ""))
         if not server or not root or server in have or now - hb.ts > lost_after:
             continue
         # The size the volume HAS, from the recorder that formatted it — not the whole partition, which it shares
         # with the resource's events: declared at the partition's size, the ring would be resized past the room.
-        total = int(hb.extra.get("archive_quota") or ((res.get(server) or {}).get("space") or {}).get("total", 0))
+        # Through `rows.number` (the review's seventh pass): a word in one recorder's `archive_quota` raised out of the
+        # whole page of volumes. Not said, the partition's size; neither said, 0, as before.
+        space = (res.get(server) or {}).get("space")
+        total = number(f"{sub.heartbeat_key(name)}#archive_quota", hb.extra.get("archive_quota") or None, int, None) or \
+            number(f"platform/resources/{server}/heartbeat#space.total", (space if isinstance(space, dict) else {}).get("total"), int, 0)
         out[server] = {"name": server, "kind": "local", "url": root, "server": server, "quota_bytes": total,
                        "why": "this box records here and the disk is not declared as a volume"}
     return [out[k] for k in sorted(out)]
@@ -291,8 +301,12 @@ def holders(vars_, sub: Subsystem, garbled: set | None = None) -> dict[str, Slot
     prefix = f"{sub.name}/holds/"
     for path in sorted(vars_.list(prefix)):
         name = path[len(prefix):]
-        items, _ = vars_.get(path)
-        slot = read_hold(path, name, items)
+        try:
+            items, _ = vars_.get(path)                  # a file store's row that is not even JSON raises in the read itself
+            slot = read_hold(path, name, items)
+        except PARSE_ERRORS as e:
+            HOLDS.garbled(path, e)
+            slot = None
         if slot is not None:
             out[name] = slot
         elif garbled is not None:
@@ -374,7 +388,8 @@ def _refusing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[st
     for name, hb in sorted(heartbeats(objects, sub.name + "/").items()):
         if now - hb.ts > lost_after:
             continue
-        for vol, why in sorted((hb.extra.get("refused") or {}).items()):
+        refused = hb.extra.get("refused")
+        for vol, why in sorted((refused if isinstance(refused, dict) else {}).items()):
             out.setdefault(str(vol), []).append(f"{name} does not take it: {why}")
     return out
 
@@ -385,10 +400,14 @@ def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str
     from w2cplatform.console import heartbeats
     from .writerwatch import describe
     out = {}
-    for hb in heartbeats(objects, sub.name + "/").values():
+    for name, hb in heartbeats(objects, sub.name + "/").items():
         if now - hb.ts > lost_after:
             continue
-        vol, said = str(hb.extra.get("volume", "")), describe(hb.extra.get("writer") or {})
+        try:                                            # one recorder's `writer` that is not what it says: that recorder's
+            vol, said = str(hb.extra.get("volume", "")), describe(hb.extra.get("writer") or {})
+        except PARSE_ERRORS as e:
+            NUMBERS.garbled(f"{sub.heartbeat_key(name)}#writer", e)
+            continue
         if vol and said:
             out[vol] = said
     return out

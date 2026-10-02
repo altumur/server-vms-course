@@ -151,8 +151,8 @@ def record_on_request(rec_ctl, now: float) -> int:
             log.warning("%s: %s asks to record nothing: %s", rec_ctl.spec.name, rid, it)
             continue
         name, ends = f"{cam}-auto", now + minutes * 60
-        row = rec_ctl.unit(name)
         try:
+            row = rec_ctl.unit(name)                        # in the try: that recording's row garbled is this request's trouble
             if row is None:
                 fields = {"name": name, "cam": cam, "until": ends}
                 if it.get("archive"):
@@ -234,6 +234,9 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
         action = str(it.get("action", ""))
         try:
             until = _deadline(it)
+            for f in ("minutes", "at", "before", "after"):  # the request's own numbers, checked here: a row of a detector
+                if it.get(f) not in (None, ""):              # or a recording that does not parse is not THIS request's word
+                    finite(it[f])
         except PARSE_ERRORS as e:
             REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
             det_ctl.vars.delete(key)
@@ -252,10 +255,6 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
                 _scan(job_ctl, rec_ctl, cam, kind, it, same, now)
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused: %s", det_ctl.spec.name, rid, e)
-        except PARSE_ERRORS as e:
-            # …and so is a request whose numbers are not numbers (`minutes`, `at`, `before`, `after`): it was "not an
-            # answer" below, so it stood and was tried — and failed — every two seconds for ever (the seventh pass).
-            REQUESTS.garbled(key, e)
         except Exception as e:                              # noqa: BLE001 — not an answer: stays, and is tried again
             log.warning("%s: %s could not be turned into work this pass: %s", det_ctl.spec.name, rid, e)
             continue
@@ -508,7 +507,10 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
             t0, t1 = (number(_hb_key(rec_ctl, w, f"closed.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
             if t0 is None or t1 is None:
                 continue                                    # that span's trouble, counted once: the others are scanned
-            rec = rec_ctl.unit(unit)
+            try:
+                rec = rec_ctl.unit(unit)
+            except PARSE_ERRORS:
+                continue                                    # that recording's row does not parse: its span waits for it
             if rec is None or t1 <= t0:
                 continue
             cam = str(rec.get("cam", unit))

@@ -1068,7 +1068,11 @@ class IdempotencyKeys:
         self._pruned = self.clock(); n = 0; now = self.wall()
         for path in self.vars.list(self.prefix):
             items, idx = self.vars.get(path)
-            if items and now - float(items.get("at", 0)) > self.ttl:
+            # `at` through `rows.number` (the review's seventh pass): a word there raised out of the loop — the rows after
+            # it never pruned — and out of the POST that ran the prune, which got no reply. Its age not known, the row
+            # is kept: counted, and the others are pruned.
+            at = number(f"{path}#at", items.get("at", 0), float, None) if items else None
+            if at is not None and now - at > self.ttl:
                 try:
                     self.vars.delete(path, cas=idx); n += 1
                 except Conflict:

@@ -201,6 +201,11 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
     """The object parsed, or None — skipped, counted, and logged once."""
     try:
         hb = (parse or Heartbeat.from_bytes)(raw)
+        # …and its status is a list of OBJECTS (the review's seventh pass, the walk over every reader): an entry that
+        # is a word parsed, and raised `AttributeError` in every reader that asks an entry `.get` — `holder_of`, the
+        # read model, the running gauge — each a loop over every worker.
+        if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
+            raise TypeError("a status entry is not an object")
     except (ValueError, KeyError, TypeError, AttributeError):
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1

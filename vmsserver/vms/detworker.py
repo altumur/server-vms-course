@@ -166,7 +166,10 @@ class DetWorker(Worker):
     # worker gave up drops its summary rather than writing it under an epoch that is not its own any more.
     def _flush_suppressed(self, now: float) -> None:
         for unit, t, kind, fields in self.suppressor.flush(now):
-            row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
+            try:                                            # a row garbled under a running detector: its summary waits (the seventh pass)
+                row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
+            except (ValueError, KeyError, TypeError):
+                continue
             if row is not None and self.may_write(unit):
                 self._write(unit, row, [(t, kind, fields)])
 

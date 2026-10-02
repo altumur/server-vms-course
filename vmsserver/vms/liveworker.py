@@ -130,7 +130,8 @@ class LiveWorker(Worker):
                             self.name, cam, server, self.server)
             return None
         self._said_loopback.discard(cam)
-        return server, st["live_url"], int(st.get("epoch", 0))
+        from w2cplatform.rows import number                 # a word for the epoch in one holder's status: that camera's, not the pass's (the seventh pass)
+        return server, st["live_url"], number(f"vms/status/{cam}#epoch", st.get("epoch", 0), int, 0)
 
     # -- the reconcile pass: make the subscriptions equal the assignment -------------------------------
     # The store is read BEFORE the lock and written AFTER it; under the lock only `upstreams` and `sessions`

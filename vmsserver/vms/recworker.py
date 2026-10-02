@@ -42,7 +42,7 @@ from w2cplatform.contract import Subsystem, is_live
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import PARSE_ERRORS
+from w2cplatform.rows import FIELDS, PARSE_ERRORS, number
 from w2cplatform.variables import Variables
 
 from . import volumes
@@ -716,10 +716,21 @@ class RecWorker(VmsWorker):
         if not ref or ref not in items:
             return None
         import json
-        e = json.loads(items[ref])
-        raw = self.objects.get(DOMAIN_SEEN)
-        seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
         key = f"ref:{ref}"
+        # An entry of the book, or the agent's mark, that does not parse is a book nobody can vouch for: the backup records
+        # (the review's seventh pass). Read bare, it raised out of `enrich` — out of the reconciler's loop: every start
+        # after this backup, every stop, the gate and the writer's pass were skipped.
+        try:
+            e = json.loads(items[ref])
+            raw = self.objects.get(DOMAIN_SEEN)
+            seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
+            if not isinstance(e, dict):
+                raise TypeError("a book's entry is not an object")
+        except PARSE_ERRORS as err:
+            FIELDS.garbled(f"{PRIMARIES}#{ref}", err)
+            self._not_written_since.pop(key, None)
+            return True
+        FIELDS.parsed(f"{PRIMARIES}#{ref}")
         if now - seen > self.CARRIED_LOST_AFTER:                 # the book is as old as the agent's last contact
             self._not_written_since.pop(key, None)
             return True
@@ -1778,8 +1789,15 @@ class RecWorker(VmsWorker):
         from .archive import visible_from
         ours = self.our_coverage(unit)
         row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
-        lo = max(float(coverage["from"]), now - self.keep_days * 86400, visible_from(row, now))
-        hi = min(float(coverage["to"]), now - self.settle, ours[-1][1] if ours else now)
+        # What a source says it holds, through `rows.number` (the review's seventh pass): a word there raised out of the
+        # backfill of every recording after this one. Not said, nothing to fetch from it.
+        c = coverage if isinstance(coverage, dict) else {}
+        start = number(f"rec/coverage/{source}/{unit}#from", c.get("from"), float, None)
+        end = number(f"rec/coverage/{source}/{unit}#to", c.get("to"), float, None)
+        if start is None or end is None:
+            return []
+        lo = max(start, now - self.keep_days * 86400, visible_from(row, now))
+        hi = min(end, now - self.settle, ours[-1][1] if ours else now)
         if planned:
             if not ours:
                 return []

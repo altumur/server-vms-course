@@ -167,6 +167,12 @@ class ReadView:
             return self._read(c)
         except Unreachable:
             return None
+        except PARSE_ERRORS as e:
+            # Whatever a member's read still raises of what it published (its copy's rows, a relay's bundle) is that
+            # member's: this pass reads it as one that did not answer — its rows kept as last known, counted — and the
+            # other members are read (М10's seventh review: one of them stopped the pass of all).
+            MEMBER_OBJECTS.garbled(f"{c.name}/(read)", e)
+            return None
 
     # -- reads, from memory ----------------------------------------------------
     # The cluster that last reported the camera the domain calls `camera`, and the row it reported — kept when

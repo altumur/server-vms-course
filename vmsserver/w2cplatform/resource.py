@@ -95,6 +95,7 @@ from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
 DOOR_TIMEOUT = 30.0          # seconds the door's socket waits on a peer that sends or reads nothing
+PIECE = 1 << 16               # what the mirror's client reads at a time (`PeerClient.get_into`)
 MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
 EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
@@ -250,6 +251,11 @@ def resources_seen(objects) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
         hb = dict(json.loads(raw))
         hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it
+        # …and what the mirror asks of it (the review's seventh pass): `url` to send to and take back from, `mirrors` a
+        # map — read bare, a heartbeat without them raised out of `mirror` for every peer, and out of `restore`, which
+        # runs at the start with nothing around it.
+        if not isinstance(hb.get("url", ""), str) or not isinstance(hb.get("mirrors", {}), dict):
+            raise TypeError("url or mirrors is not what a resource heartbeat says")
         return hb
 
     out = {}
@@ -331,6 +337,32 @@ class PeerClient:
     def get(self, url: str, server: str, path: str) -> bytes:
         with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
             return r.read()
+
+    # A BUCKET IS NEVER HELD WHOLE ON EITHER SIDE OF THE MIRROR (the review's seventh pass, beside "the resource sends a
+    # bucket whole"). The door sends a bucket in pieces and takes a copy in pieces now; the resource's own client read a
+    # bucket into memory to send it (`mirror`) and a copy into memory to write it back (`restore`) — sixty megabytes of
+    # a storm, held whole, once per bucket. These two do it a piece at a time: `put_file` hands the open file to the
+    # connection with its length (`http.client` sends a file in blocks), and `get_into` writes the reply to a file a
+    # piece at a time and checks the length the peer said — a reply that ends short is an error, never a smaller bucket.
+    # `mirror` and `restore` use them when the client has them; a client a test substitutes may have only `put`/`get`.
+    def put_file(self, url: str, server: str, path: str, f, size: int) -> None:
+        req = urllib.request.Request(f"{url}/mirror/{server}/{path}", data=f, method="PUT",
+                                     headers={"Content-Length": str(size)})
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            if r.status not in (200, 201, 204):
+                raise IOError(f"PUT mirror {path}: {r.status}")
+
+    def get_into(self, url: str, server: str, path: str, dest) -> int:
+        with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
+            want, got = r.headers.get("Content-Length"), 0
+            while True:
+                part = r.read(PIECE)
+                if not part:
+                    break
+                dest.write(part); got += len(part)
+        if want is not None and got != int(want):
+            raise IOError(f"GET mirror {path}: {got} of {want} bytes")
+        return got
 
 
 # A subsystem's hook is called with what it takes of the optional words, and nothing it does not: `volume` (the
@@ -674,7 +706,7 @@ class Resource:
         knob = mirror_settings(self.vars)
         if not knob["enabled"]:
             return {"enabled": False, "mirrored": 0, "peers": []}
-        live = self.live_resources()
+        live = {s: hb for s, hb in self.live_resources().items() if hb.get("url")}   # a peer that says no address takes nothing
         peers = peers_of(self.server, list(live), knob["copies"])
         n, closed = 0, None
         for peer in peers:
@@ -686,7 +718,11 @@ class Resource:
                 if b.path in have:
                     continue
                 with open(self.path_of(b.path), "rb") as f:
-                    self.peers.put(live[peer]["url"], self.server, b.path, f.read())
+                    put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
+                    if put_file is not None:
+                        put_file(live[peer]["url"], self.server, b.path, f, os.fstat(f.fileno()).st_size)
+                    else:
+                        self.peers.put(live[peer]["url"], self.server, b.path, f.read())
                 n += 1
                 # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
                 # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
@@ -710,7 +746,7 @@ class Resource:
         with self._pulsing():
             pulled = 0
             for peer, hb in self.live_resources().items():
-                if peer == self.server or self.server not in hb.get("mirrors", {}):
+                if peer == self.server or self.server not in hb.get("mirrors", {}) or not hb.get("url"):
                     continue
                 listed = self.peers.mirrored(hb["url"], self.server)
                 self._progressed()
@@ -720,8 +756,16 @@ class Resource:
                     if os.path.exists(dest):
                         continue
                     os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    with open(dest + ".tmp", "wb") as f:
-                        f.write(self.peers.get(hb["url"], self.server, path))
+                    get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+                    try:
+                        with open(dest + ".tmp", "wb") as f:
+                            if get_into is not None:
+                                get_into(hb["url"], self.server, path, f)
+                            else:
+                                f.write(self.peers.get(hb["url"], self.server, path))
+                    except BaseException:
+                        os.remove(dest + ".tmp")                     # half a copy is no copy
+                        raise
                     os.replace(dest + ".tmp", dest); pulled += 1
                     self._progressed()
             hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)

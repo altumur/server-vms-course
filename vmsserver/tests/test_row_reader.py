@@ -416,3 +416,114 @@ def test_a_garbled_id_counter_gives_the_next_number_past_the_largest_id():
     assert new == 4 and box.vars.get("vms/next_id")[0] == {"n": "4"}
     assert ctl.create_camera({"name": "cam5", "source": "driverpack://file/cam5.mp4"})["id"] == 5
     _forget_garbled()
+
+
+# -- the walk over every reader (the siblings the review did not name) -------------------------------------------------
+
+def test_a_name_in_an_assignment_that_is_no_units_id_stops_no_move():
+    """`read_assignment` reads the list of names as it stands, and `redistribute` took every name for an id: `seven` in
+    the row of a slot on a draining server raised out of the whole step, and no unit of any leaving slot moved."""
+    from w2cplatform.contract import DRAIN_KEY
+    from tests.test_garbled_rows import _placed
+    box, ctl = _placed(3)
+    on1 = [u for u in ctl.assignment("w-1").units]
+    assert on1
+    box.vars.put("vms/workers/w-1", {"units": ",".join(on1 + ["seven"]), "rev": "3"})
+    box.vars.put(DRAIN_KEY, {"server": "srv-a"})
+    ctl.redistribute()
+    assert all(ctl.where(int(u)) == "w-2" for u in on1)
+    _forget_garbled()
+
+
+def test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader():
+    """A heartbeat whose status holds a word, or an entry with no `id`: the first parsed and raised `AttributeError` in
+    every reader that asks an entry `.get`; the second raised `KeyError` out of `read_model` — under the console's list,
+    the job reaper and the asks for footage — and out of the recorders' metrics. The first heartbeat is skipped where
+    heartbeats are read; the entry with no id says nothing about a unit."""
+    from vms import jobs
+    from vms.config import DETJOB_SPEC
+    from vms.console import rec_metrics
+    box = Box()
+    t = box.wall()
+    job = SpecController(DETJOB_SPEC, box.vars, box.objects, wall=box.wall)
+    box.objects.put("detjob/heartbeats/j-1", Heartbeat("j-1", t, ["running"], {}).to_bytes())
+    box.objects.put("detjob/heartbeats/j-2", Heartbeat("j-2", t, [{"phase": "done"}], {}).to_bytes())
+    assert job.read_model() == [] and "j-1" not in job.workers_seen()
+    assert jobs.reap(job) == {"done": 0, "failed": 0} and jobs.ask_for_footage(job, _rec_console(box)) == 0
+    rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    box.objects.put("rec/heartbeats/r-9", Heartbeat("r-9", t, [{"phase": "running", "last_frame_at": t, "depth_days": 1}],
+                                                    {"writer": "stuck"}).to_bytes())
+    _prometheus("\n".join(rec_metrics(rec)()))
+    _forget_garbled()
+
+
+def test_a_sweep_list_entry_that_is_no_digest_stops_no_reclaiming():
+    """`<sub>/sweep` holding a name that is no digest: `blob_key` raised on it at every sweep, and the list was never
+    cleared — nothing of the subsystem was reclaimed again. Only digests are swept."""
+    from vms.config import DET_SPEC
+    box = Box()
+    ctl = SpecController(DET_SPEC, box.vars, box.objects, wall=box.wall)
+    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(b"a" * 900)})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(b"b" * 900)})                    # the first is an orphan now
+    assert ctl.sweep_blobs()["marked"] == 1
+    items, idx = box.vars.get(DET_SPEC.sub.sweep_key())
+    marked = json.loads(items["digests"])
+    box.vars.put(DET_SPEC.sub.sweep_key(), {**items, "digests": json.dumps(marked + ["../not-a-digest", 5])}, cas=idx)
+    box.wall.advance(30 * 86400)
+    assert ctl.sweep_blobs() == {"marked": 0, "deleted": 1, "waiting": 0}
+
+
+def test_a_book_of_primaries_nobody_can_read_makes_the_backup_record():
+    """`carried_primary` parsed the book's entry and the agent's mark bare, inside `enrich` — inside the reconciler's
+    loop: every start after that backup, every stop, the gate and the writer's pass were skipped. A book nobody can read
+    is a book nobody can vouch for, and then the backup records, as for one that is old."""
+    from tests.conftest import recorder
+    from vms.recworker import DOMAIN_SEEN, PRIMARIES
+    box = Box()
+    r = recorder(box)
+    box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
+    box.vars.put(PRIMARIES, {"SN1": '{"should": tru'})
+    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
+    box.vars.put(PRIMARIES, {"SN1": json.dumps({"should": True, "written": True})})
+    box.objects.put(DOMAIN_SEEN, b'{"ts": "now"}')
+    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is True
+    box.objects.put(DOMAIN_SEEN, json.dumps({"ts": box.wall()}).encode())
+    assert r.carried_primary({"id": "1-b", "cam": "ref:SN1"}, box.wall()) is False   # mended: read as it says
+    _forget_garbled()
+
+
+def test_a_devices_counts_and_a_holders_coverage_that_are_words_are_that_devices_and_that_cameras():
+    """The siblings in the other workers, each a loop over many units: a device row's `relays: "many"` raised out of the
+    evaluator's whole pass and the scenario catalogue (`parse_device_row`); a holder's coverage with a word in it out
+    of the scan's and the survey's pass over every job; a scan job of a camera of another cluster (`cam: ref:…`) out
+    of the scan's pass at its first event (`int(row["cam"])`). Each is read as not said, and the pass goes on."""
+    import vms.detjobworker as dj
+    import vms.surveyworker as sv
+    from vms.config import parse_device_row
+    assert parse_device_row({"relays": "many", "presets": "3"})["relays"] == 0
+    assert parse_device_row({"relays": "many", "presets": "3"})["presets"] == 3
+    assert dj._cam("ref:SN1") == "ref:SN1" and dj._cam("7") == 7
+    st = {"id": "7", "coverage": {"from": "then", "to": 100.0}, "index_url": "http://w-1/index", "playback_url": "http://w-1/p"}
+    found = ("w-1", Heartbeat("w-1", 0.0, [st], {}), st)
+    real = dj.holder_of, sv.holder_of
+    dj.holder_of = sv.holder_of = lambda *a, **kw: found
+    try:
+        assert dj.DetJobWorker.device_has(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7", 0, 50) is False
+        assert sv.SurveyWorker.device(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7") is None
+    finally:
+        dj.holder_of, sv.holder_of = real
+    _forget_garbled()
+
+
+def test_a_resource_comes_up_over_a_peer_whose_heartbeat_names_no_address():
+    """`restore` runs at the start with nothing around it, and read a peer's `url` bare: a peer's heartbeat without one
+    ended the resource process at every start. Such a peer takes nothing and gives nothing back; the start goes on."""
+    from w2cplatform.resource import Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    box.objects.put("platform/resources/srv-2/heartbeat", json.dumps(
+        {"server": "srv-2", "ts": box.wall(), "mirrors": {"srv-1": 3}}).encode())
+    box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
+    res.heartbeat()
+    assert res.restore() == {"pulled": 0} and res.mirror()["mirrored"] == 0

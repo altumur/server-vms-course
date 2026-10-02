@@ -845,3 +845,48 @@ def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():
         for s in idle:
             s.close()
         srv.shutdown()
+
+
+def test_the_mirror_sends_and_takes_back_a_bucket_in_pieces_never_whole():
+    """The resource's own client of the mirror held a bucket whole on both sides: `mirror` sent `f.read()`, and
+    `restore` wrote what `PeerClient.get` had read whole (the review's seventh pass, beside "the resource sends a bucket
+    whole"; the door's side was closed in the same pass). Two real resources over HTTP, a bucket of 16 MB: the copy goes
+    over and comes back byte for byte, and the most Python held at once during each is a few pieces, not the bucket."""
+    import shutil
+    import tracemalloc
+    from w2cplatform import resource as wr
+    from w2cplatform.events import EventLog
+    box = Box(); t = box.wall() - 7200
+    roots = {s: tempfile.mkdtemp(prefix=f"res-{s}-") for s in ("srv-a", "srv-b")}
+    res, srvs = {}, []
+    for s, root in roots.items():
+        r = wr.Resource(root, s, "", box.vars, box.objects, wall=box.wall)
+        srv = wr.serve(r, "127.0.0.1", 0); srvs.append(srv)
+        r.url = f"http://127.0.0.1:{srv.server_address[1]}"
+        res[s] = r
+    try:
+        EventLog(roots["srv-a"], "thing", "x", 1).append(t + 5, "tick")                       # a closed bucket…
+        bucket = next(os.path.join(d, f) for d, _, fs in os.walk(os.path.join(roots["srv-a"], "thing")) for f in fs)
+        with open(bucket, "ab") as f:                                                       # …of a storm
+            for _ in range(16):
+                f.write(b'{"t": 1, "kind": "tick"}' + b" " * ((1 << 20) - 25) + b"\n")
+        whole = open(bucket, "rb").read()
+        for r in res.values():
+            r.heartbeat()
+        box.vars.put(wr.MIRROR_KEY, {"enabled": "true", "copies": "1"})
+        tracemalloc.start()
+        try:
+            assert res["srv-a"].mirror()["mirrored"] == 1
+            sent_peak = tracemalloc.get_traced_memory()[1]
+            res["srv-b"].heartbeat()
+            shutil.rmtree(roots["srv-a"]); os.makedirs(roots["srv-a"])                        # back with a replaced disk
+            tracemalloc.reset_peak()
+            assert res["srv-a"].restore()["pulled"] == 1
+            took_peak = tracemalloc.get_traced_memory()[1]
+        finally:
+            tracemalloc.stop()
+        assert open(bucket, "rb").read() == whole
+        assert sent_peak < 4 << 20 and took_peak < 4 << 20, (sent_peak, took_peak)        # pieces, never the 16 MB
+    finally:
+        for srv in srvs:
+            srv.shutdown()

@@ -1165,11 +1165,15 @@ def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str
 def _recorders(rec_ctl: SpecController) -> list[str]:
     sub = rec_ctl.spec.sub.name
     hbs = sorted(heartbeats(rec_ctl.objects, sub).items())
+    # A status entry that names no recording says nothing about one (the review's seventh pass): `st["id"]` raised out
+    # of the whole page on it. And `writer` is read as a map only when it is one.
+    status = {w: [st for st in hb.status if "id" in st] for w, hb in hbs}
+    writer = {w: hb.extra.get("writer") if isinstance(hb.extra.get("writer"), dict) else {} for w, hb in hbs}
     now = rec_ctl.wall()
     out = ["# TYPE rec_recordings gauge"]
     for w, hb in hbs:
         phases: dict[str, int] = {}
-        for st in hb.status:
+        for st in status[w]:
             phases[str(st.get("phase", "?"))] = phases.get(str(st.get("phase", "?")), 0) + 1
         out += [f'rec_recordings{{worker="{w}",phase="{ph}"}} {n}' for ph, n in sorted(phases.items())]
     out.append("# TYPE rec_volume_error gauge")
@@ -1183,32 +1187,32 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out += [f'rec_archive_failure{{worker="{w}",kind="{hb.extra["archive_failure"]}"}} 1' for w, hb in hbs
             if hb.extra.get("archive_failure")]
     out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
-    out += [f'rec_writer{{worker="{w}",state="{(hb.extra.get("writer") or {}).get("state") or "ok"}"}} 1' for w, hb in hbs]
+    out += [f'rec_writer{{worker="{w}",state="{writer[w].get("state") or "ok"}"}} 1' for w, hb in hbs]
     # How long since each recording last took anything from its source (feedback BI; the review's
     # `rec_archive_gap_seconds`). `rec_recordings{phase="running"}` says the pipeline is up; this says it is
     # being FED. Counted from the moment the recorder says bytes last arrived — so a recorder that went silent
     # grows here too — and only for recorders whose actuator measures.
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - at), 1)}'
-            for w, hb in hbs for st in hb.status if st.get("last_frame_at")
+            for w, hb in hbs for st in status[w] if st.get("last_frame_at")
             if (at := _n(sub, w, str(st.get("id")) + ".last_frame_at", st["last_frame_at"], float, None)) is not None]
     # What the engine refused of each recording's samples, by its answer (the review's third pass). The writer watch
     # counts the VOLUME, and one camera of thirty that was never written — its group of pictures larger than a block
     # — left it `ok`. A counter per recording and answer, from what the recorder's sinks were told.
     out.append("# TYPE rec_samples_refused_total counter")
     out += [f'rec_samples_refused_total{{unit="{st["id"]}",status="{k}"}} {_n(sub, w, str(st.get("id")) + ".samples_refused." + str(k), n, int)}'
-            for w, hb in hbs for st in hb.status
+            for w, hb in hbs for st in status[w]
             for k, n in sorted((st.get("samples_refused") if isinstance(st.get("samples_refused"), dict) else {}).items())]
     # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")
     out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".depth_days", st["depth_days"])}'
-            for w, hb in hbs for st in hb.status if "depth_days" in st]
+            for w, hb in hbs for st in status[w] if "depth_days" in st]
     out.append("# TYPE rec_archive_shallow gauge")
-    out += [f'rec_archive_shallow{{unit="{st["id"]}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in hb.status if "depth_days" in st]
+    out += [f'rec_archive_shallow{{unit="{st["id"]}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in status[w] if "depth_days" in st]
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
     out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".unconfirmed_s", st.get("unconfirmed_s"))}'
-            for w, hb in hbs for st in hb.status if st.get("lease") == "unconfirmed"]
+            for w, hb in hbs for st in status[w] if st.get("lease") == "unconfirmed"]
     return out
 
 

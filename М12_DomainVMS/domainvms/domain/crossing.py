@@ -494,9 +494,13 @@ def resolve(cluster_vars, source: str, now: float) -> Source | None:
     if not items or ref not in items:
         raise NotResolvable(f"{ref} is not in this cluster's source book: the domain has not asked this cluster "
                             f"to record it, or has never seen it publish a door")
-    e = json.loads(items[ref])
-    return Source(ref, e["cluster"], e["live_url"], e.get("playback_url"), e.get("coverage"),
-                  max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)), list(e.get("backups", [])))
+    try:                                                 # an entry that does not parse is not resolvable — said, not raised
+        e = json.loads(items[ref])
+        return Source(ref, e["cluster"], e["live_url"], e.get("playback_url"), e.get("coverage"),
+                      max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)), list(e.get("backups", [])))
+    except PARSE_ERRORS as err:
+        raise NotResolvable(f"{ref}'s entry in this cluster's source book does not parse ({err}): the domain writes it "
+                            f"again on its next publish") from None
 
 
 # What to fetch from the card: what the book says it holds, minus what we hold, bounded as М10B's recorder
@@ -650,9 +654,10 @@ def _entry(raw, default):
     if raw is None:
         return default
     try:
-        return json.loads(raw)
+        v = json.loads(raw)
     except PARSE_ERRORS:
         return default
+    return v if isinstance(v, dict) else default        # an entry is an object; anything else is as unreadable
 
 
 def _until(r: dict) -> float:

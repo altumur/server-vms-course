@@ -570,7 +570,13 @@ def resource() -> None:
     res = vms_resource(os.environ.get("ARCHIVE", "/data/archive"), socket.gethostname(),
                        os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port)
-    res.heartbeat(); logging.info("restore: %s", res.restore())
+    res.heartbeat()
+    # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
+    # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
+    try:
+        logging.info("restore: %s", res.restore())
+    except Exception:                                                     # noqa: BLE001
+        logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
     logging.info("resource %s on %s", res.server, srv.server_address)
     last_policy = 0.0
     while not stop.is_set():

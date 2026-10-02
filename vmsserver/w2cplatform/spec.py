@@ -79,11 +79,11 @@ from urllib.parse import urlsplit
 
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
-from .rows import Table, finite
+from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Variables
 
 PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revision", "phase", "id")   # never the operator's
@@ -1594,7 +1594,14 @@ class SpecController(Controller):
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
-                uid = self.spec.parse_id(unit)
+                try:
+                    uid = self.spec.parse_id(unit)
+                except PARSE_ERRORS as e:
+                    # A name in the row that is no unit's id (`read_assignment` reads the list as it stands): that name's
+                    # trouble, counted — it raised out of the whole step, and no unit of any leaving slot moved (the
+                    # review's seventh pass, the walk over every row read).
+                    ASSIGNMENTS.garbled(f"{self.sub.assignment(gone)}#{unit}", e)
+                    continue
                 row = self._parsed(uid)
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
@@ -1675,6 +1682,8 @@ class SpecController(Controller):
             age = now - hb.ts
             state = "live" if age <= lost_after else "stale"
             for s in hb.status:
+                if "id" not in s:
+                    continue                            # an entry that names no unit says nothing about one (the seventh pass)
                 rows.append({**s, "worker": w, "server": hb.extra.get("server", "?"), "age": round(age, 1), "worker_state": state})
         return sorted(rows, key=lambda r: _unit_key(str(r["id"])))
 
@@ -1789,7 +1798,9 @@ class SpecController(Controller):
 
         # -- sweep: check again, write the decision down, and only then remove the bytes
         referenced = self.blobs_referenced()
-        doomed = [d for d in marked if d not in referenced]
+        # Only digests: an entry of the list that is none is no blob's name — `blob_key` raised on it, every sweep, and the
+        # list was never cleared: nothing of the subsystem was reclaimed again (the review's seventh pass).
+        doomed = [d for d in marked if isinstance(d, str) and is_digest(d) and d not in referenced]
         self.vars.put(key, {"at": str(now), "digests": json.dumps(doomed), "state": "deleting"}, cas=idx)   # Conflict here deletes nothing
         deleted = 0
         for d in doomed:

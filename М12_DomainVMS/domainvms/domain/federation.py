@@ -98,7 +98,8 @@ class Cluster:
             raw = self.objects.get(REACHES)
         except Unreachable:
             raw = None
-        return self.reaches | (frozenset(json.loads(raw).get("networks", [])) if raw else frozenset())
+        said = published(self.name, REACHES, raw, lambda v: frozenset(v.get("networks", []))) or {}
+        return self.reaches | frozenset(said.get("networks", []))       # what does not parse says no network (the seventh review)
 
     def snapshot(self) -> dict | None:
         """The cluster's cameras and placement, merged from one object per worker.

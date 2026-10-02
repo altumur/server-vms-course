@@ -139,9 +139,12 @@ def device_row(desc: dict) -> dict:
 def parse_device_row(items: dict | None) -> dict | None:
     if not items:
         return None
+    # The counts through `rows.number` (the review's seventh pass): a word in one device's row raised out of the
+    # evaluator's whole pass (`Catalog.check`) and out of the scenario catalogue page. Not said, none.
+    from w2cplatform.rows import number
+    n = lambda f: number(f"vms/devices#{f}", items.get(f) or 0, int, 0)
     return {"events": [e for e in str(items.get("events", "")).split(",") if e],
-            "rays": int(items.get("rays") or 0), "relays": int(items.get("relays") or 0), "ptz": str(items.get("ptz")) == "true",
-            "presets": int(items.get("presets") or 0)}
+            "rays": n("rays"), "relays": n("relays"), "ptz": str(items.get("ptz")) == "true", "presets": n("presets")}
 
 
 def channel_of(source: str) -> str | None:
