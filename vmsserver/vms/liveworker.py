@@ -392,20 +392,25 @@ class LiveWorker(Worker):
     def run(self, poll: float = 2.0, stop=None) -> None:
         """One box: the loop as a process. Nomad or systemd restarts it."""
         stop = stop or threading.Event()
+        stand_in = self.start_stand_in()               # renews for a step that hangs, for a while (feedback DD)
         while not stop.is_set():
             try:
-                self.reconcile_once()
+                with self.guarded("pass"):
+                    self.reconcile_once()
             except Exception:                            # noqa: BLE001 — one bad pass, not a silent worker
                 log.exception("gateway pass failed")
             try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
-                self.renew_leases()
+                with self.guarded("lease"):
+                    self.renew_leases()
             except Exception:                            # noqa: BLE001
                 log.exception("gateway lease renewal failed")
             try:                                         # in a try of its own: the heartbeat says the worker is alive even when its pass is not (the review's second pass)
-                self.heartbeat_once()
+                with self.guarded("heartbeat"):
+                    self.heartbeat_once()
             except Exception:                            # noqa: BLE001
                 log.exception("gateway heartbeat failed")
             stop.wait(poll)
+        stand_in.set()
         for cam in list(self.upstreams):
             self._drop(cam)
         self.release_slot()

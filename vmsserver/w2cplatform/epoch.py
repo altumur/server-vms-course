@@ -33,9 +33,13 @@ platform only promises that it comes from one issuer and increases.
 #   after the new holder took the epoch. That bounded window is the RPO the archive lesson accepts, and the
 #   epoch in the name — of a bucket, of a stream in a volume — is what lets the timeline mark that window as
 #   fenced afterwards.
+# - Two threads renew a lease (feedback DD): the loop, and `Worker`'s stand-in while a step of the loop hangs.
+#   The fields are under `_lock`, the store is asked outside it; a stamp never moves backwards, and a lease
+#   fenced or released (`release`) while a renewal was in flight stays so (`tests/test_stand_in.py`).
 # ================================================================================================
 from __future__ import annotations
 
+import threading
 import time
 
 from .variables import Conflict, Variables, cas_pause
@@ -101,6 +105,11 @@ class Lease:
         #                      a subsystem that writes data says otherwise
         self.silent_since: float | None = None
         self.unconfirmed_max = unconfirmed_max
+        # TWO THREADS RENEW IT (feedback DD): the worker's loop, and its stand-in while a step of that loop hangs
+        # (`Worker.stand_in_once`). The fields are read and written under this lock; the store is asked outside it,
+        # so a renewal hung on the store does not hang the other one too.
+        self._lock = threading.RLock()
+        self.released = False                  # the worker let go of the unit (`Worker.release`): renewed by nobody
 
     # Once fenced, always `False`. Otherwise read `current_epoch(key)`: if the store raises (unreachable),
     # do not fence — return `may_write()` and keep going until `ttl − margin` runs out; if the live epoch
@@ -114,50 +123,67 @@ class Lease:
     # (`store_errors`): "the store is away" and "the row is garbled" used to look alike and be seen by nobody
     # until the leases ran out.
     def renew(self) -> bool:
-        if self.fenced:
-            return False
+        with self._lock:
+            if self.fenced or self.released:
+                return False
         t0 = self.clock()
         try:
             live = current_epoch(self.vars, self.key)
         except OSError:                        # the store is unreachable: not a loss, and not a confirmation
-            self.store_errors += 1
-            if self.silent_since is None and self.may_write():
-                self.silent_since = t0         # silence, established while the lease was still good
-            return self.may_record()
+            with self._lock:
+                self.store_errors += 1
+                if self.silent_since is None and self.may_write():
+                    self.silent_since = t0     # silence, established while the lease was still good
+                return self.may_record()
         except (ValueError, KeyError, TypeError):
             # The store ANSWERED, with a row that is not an epoch. That is not silence to record through
             # (the review's second pass): somebody wrote over the counter, and whoever did may have given the
             # camera away too. Fenced, as a counter that moved; the instance takes a fresh slot and starts again.
-            self.fenced, self.conflicts = True, self.conflicts + 1
+            with self._lock:
+                self.fenced, self.conflicts = True, self.conflicts + 1
             return False
-        self.silent_since = None               # it answered: whatever it says now is an answer
-        if live != self.epoch:
-            self.fenced, self.conflicts = True, self.conflicts + 1
-            return False
-        self.last_renewal = t0
-        return True
+        with self._lock:
+            if self.fenced or self.released:
+                return False                   # fenced or let go while we asked: an answer does not undo either
+            self.silent_since = None           # it answered: whatever it says now is an answer
+            if live != self.epoch:
+                self.fenced, self.conflicts = True, self.conflicts + 1
+                return False
+            # Never backwards: of two renewals in flight, the one that asked earlier may answer later, and its
+            # stamp is the older one (the loop and the stand-in, feedback DD).
+            self.last_renewal = max(self.last_renewal, t0)
+            return True
+
+    # The worker stopped the unit. A renewal already in flight — the stand-in's — finds it let go and stamps nothing.
+    def release(self) -> None:
+        with self._lock:
+            self.released = True
 
     # Data may go on: the strict answer, or a lease that ran out in silence and is under its ceiling.
     def may_record(self) -> bool:
-        if self.fenced:
-            return False
-        if self.may_write():
-            return True
-        if self.silent_since is None:
-            return False                       # it ran out and nobody was silent about it: lost
-        return self.unconfirmed_max is None or self.unconfirmed() < self.unconfirmed_max
+        with self._lock:
+            if self.fenced:
+                return False
+            if self.may_write():
+                return True
+            if self.silent_since is None:
+                return False                   # it ran out and nobody was silent about it: lost
+            return self.unconfirmed_max is None or self.unconfirmed() < self.unconfirmed_max
 
     # Seconds this lease has been past its end with the store silent; 0 while it is confirmed.
     def unconfirmed(self) -> float:
-        if self.silent_since is None:
-            return 0.0
-        return max(0.0, (self.clock() - self.last_renewal) - (self.ttl - self.margin))
+        with self._lock:
+            if self.silent_since is None:
+                return 0.0
+            return max(0.0, (self.clock() - self.last_renewal) - (self.ttl - self.margin))
 
     # `not fenced and (clock() − last_renewal) < ttl − margin`. The one line the actuator asks before a
     # write.
     def may_write(self) -> bool:
-        return not self.fenced and (self.clock() - self.last_renewal) < (self.ttl - self.margin)
+        with self._lock:
+            return not self.fenced and (self.clock() - self.last_renewal) < (self.ttl - self.margin)
 
     # Time until `may_write` would become false, floored at 0.
     def seconds_left(self) -> float:
-        return max(0.0, (self.ttl - self.margin) - (self.clock() - self.last_renewal))
+        with self._lock:
+            return max(0.0, (self.ttl - self.margin) - (self.clock() - self.last_renewal))
