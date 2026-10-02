@@ -123,13 +123,16 @@ class SessionLost(Unavailable):
     """The daemon does not know a handle of this session (`UNKNOWN_HANDLE`) that this client never closed: every
     handle the session had is gone.
 
-    Two ways to get here, and the client cannot tell them apart — nor does it need to (the engine's session, asked):
-    the daemon was restarted, or every connection of the session was gone longer than `OBSD_SESSION_LINGER_MS`.
-    Either way the HELLO that reconnected under the same token made a NEW, empty session, and `HELLO` says nothing
-    that would show it — its `pid` repeats in a container and after a reboot. So the rule is the reply: an
+    Two ways to get here, and the client need not tell them apart (the engine's session, asked): the daemon was
+    restarted, or every connection of the session was gone longer than `OBSD_SESSION_LINGER_MS`. Either way the HELLO
+    that reconnected under the same token made a NEW, empty session, and `HELLO` does not say so — its `pid` shows a
+    restart only where pids do not repeat, and in a container and after a reboot they do. So the rule is the reply: an
     `UNKNOWN_HANDLE` is the engine lost, and the answer is a remount (the review's third pass, blocker 4). Before
     it, the client reconnected in silence, the old handles answered `UNKNOWN_HANDLE`, and a recorder took that for
     a passing outage and wrote into dead handles until somebody restarted it.
+
+    Raised as well, without asking the daemon, for a handle of a daemon that has restarted since (`Session.call`):
+    its number may be another handle's by now.
 
     A handle this client closed ITSELF answers `UNKNOWN_HANDLE` too — a sample that raced its writer's own close —
     and that is `Closed`, not this: nothing was lost but that handle, and counting it as the engine lost said
@@ -215,6 +218,9 @@ READ_OPS = frozenset({"VOLUME_MOUNT_RO", "READER_CLOSE", "READER_INFO", "READER_
                       "READER_TIMELINE", "READER_SEQUENCES", "READER_FIND", "READ_SEQUENCE"})
 WRITE_OPS = frozenset({"WRITER_CONFIGURE", "PUT_MEDIA", "FINISH_MEDIA", "WRITER_FLUSH", "WRITER_RESIZE", "WRITER_CLOSE",
                        "WRITER_ABANDON"})
+# The ops that ISSUE a handle, and the field of the reply it comes in (`Session._issued`).
+ISSUES = {"VOLUME_OPEN": "volume", "VOLUME_MOUNT_RO": "reader", "VOLUME_MOUNT_RW": "writer"}
+_NUMBER = (1 << 56) - 1                   # a handle without its kind: the daemon's counter
 
 
 class _Lane:
@@ -274,16 +280,30 @@ class Session:
         self._lanes: dict[str, _Lane] = {}
         self._guard = threading.Lock()
         self.server: dict = {}
+        self.pid = os.getpid()                       # what HELLO says of this client: the process it is
         self.lost = 0                                # how many times the daemon answered UNKNOWN_HANDLE for a handle it lost
         self.closed: dict[int, None] = {}            # handles this client closed itself, newest last (`Closed`)
         self.abandoned = False                       # left behind for the daemon to detach (`abandon`)
-        # WHICH SESSION OF THE DAEMON a handle belongs to (the review's fifth pass). A restarted daemon numbers its
-        # handles from the start again, and `closed` outlived `SessionLost`: after a second restart a handle of the new
-        # session answered `UNKNOWN_HANDLE`, its number was in `closed` from before the first one, and the engine lost
-        # read as `Closed` — `lost` never said, the volume never mounted again. So `closed` is emptied when the session
-        # is found lost, and every handle carries the generation it was opened in: a handle of an earlier generation
-        # closed afterwards — the remount closing what the dead session had — is not written down as this one's.
+        # WHICH DAEMON a handle belongs to (the review's fifth pass). A restarted daemon numbers its handles from the
+        # start again, and `closed` outlived the restart: after a second one a handle of the new daemon answered
+        # `UNKNOWN_HANDLE`, its number was in `closed` from before the first, and the engine lost read as `Closed` —
+        # `lost` never said, the volume never mounted again. So `closed` is one daemon's, and every handle carries the
+        # generation it was opened in: one of an earlier daemon is not written down as closed, and is not sent at all.
+        #
+        # ONE GENERATION PER DAEMON, FOUND WHERE THE DAEMON SHOWS IT (the review's sixth pass). The generation was
+        # counted at every `UNKNOWN_HANDLE` instead, and that was wrong twice. A restart first met by a CLOSE — a
+        # seal, a remount — answered `Closed` (the handle had just been written down), nothing was emptied, and the
+        # new daemon's handles came back under numbers `closed` still held: the next restart read as `Closed` for
+        # ever. And every handle of the dead session, answering late on its own thread, counted one more generation
+        # and emptied `closed` again — under handles just opened, whose own closes were then not written down: a
+        # sample that raced one was the engine lost, and the volume was mounted once more for nothing. A new daemon is
+        # known by its HELLO now — another `pid` (`_greeted`): once, by whichever connection meets it first, before a
+        # request reaches it. And where pids repeat (a container's daemon is the same pid every time) `closed` is kept
+        # right by the numbers themselves (`_issued`): a daemon counts its handles up for its whole life, so the
+        # moment it issues number N, nothing numbered N or higher was ever closed in it.
         self.generation = 0
+        self._closed_top = 0                         # the highest number in `closed`
+        self._abandons: bool | None = None          # does this daemon take WRITER_ABANDON (`abandons`); None: not asked
 
     # -- the wire -------------------------------------------------------------------------------------
     def lane(self, name: str) -> _Lane:
@@ -311,8 +331,33 @@ class Session:
         if self.abandoned:                           # abandoned while connecting: no HELLO revives it
             self._drop(ln)
             raise Unavailable("connect", "this session was abandoned: its writers are the daemon's to detach")
-        self.server = self._exchange(ln, "HELLO", {"proto": [PROTO, PROTO], "client": self.client, "pid": os.getpid(),
-                                                   "session": self.token, "logLevel": self.log_level})[0]
+        self._greeted(self._exchange(ln, "HELLO", {"proto": [PROTO, PROTO], "client": self.client, "pid": self.pid,
+                                                   "session": self.token, "logLevel": self.log_level})[0])
+
+    # A HELLO's answer. Another `pid` than the last one is another daemon: what this session knew of the old one — the
+    # handles it closed, the numbers it was issued, what the daemon can do — is forgotten, once, by whichever
+    # connection meets it first, and before any request of this session reaches the new daemon.
+    def _greeted(self, server: dict) -> None:
+        with self._guard:
+            was, self.server = self.server.get("pid"), server
+            if was is not None and server.get("pid") != was:
+                self._new_daemon()
+
+    def _new_daemon(self) -> None:                   # under `_guard`
+        self.generation += 1
+        self.closed.clear()                          # its numbers were the dead daemon's: this one issues them again
+        self._closed_top, self._abandons = 0, None
+
+    # A handle the daemon just issued (`call`, still under the connection's lock). Handles of every kind are numbered
+    # by one counter for a daemon's whole life, so whatever `closed` holds under this number or a higher one was
+    # closed in a daemon that is gone — one restarted under the same `pid`, which no HELLO shows — and is forgotten
+    # before this daemon reaches those numbers again.
+    def _issued(self, handle: int) -> None:
+        n = handle & _NUMBER
+        with self._guard:
+            if n <= self._closed_top:
+                self.closed = {h: None for h in self.closed if h & _NUMBER < n}
+                self._closed_top = max((h & _NUMBER for h in self.closed), default=0)
 
     def _recv(self, ln: _Lane, n: int) -> bytes:
         buf = bytearray()
@@ -345,8 +390,7 @@ class Session:
                     raise Closed(op, h)                   # ours, closed by us: not the engine lost
                 with self._guard:
                     self.lost += 1
-                    self.closed.clear()                   # its numbers are the dead session's: the next one reuses them
-                    self.generation += 1
+                    self._abandons = None                 # maybe a daemon started again under the same `pid`: asked anew
                 raise SessionLost(op, str(reply.get("detail", "")) or "no such handle in this session")
             if status != 0:
                 raise ObsdError(status, op, str(reply.get("detail", "")))
@@ -365,13 +409,17 @@ class Session:
     def closing(self, handle: int, generation: int | None = None) -> None:
         with self._guard:
             if generation is not None and generation != self.generation:
-                return                                # a handle of a session found lost: its number is not ours now
+                return                                # a handle of a daemon that is gone: its number is not ours now
             self.closed[handle] = None
+            self._closed_top = max(self._closed_top, handle & _NUMBER)
             while len(self.closed) > 4096:
                 del self.closed[next(iter(self.closed))]
 
+    # `generation`: of the handle the request names (a `Volume`, a `Reader`, a `Writer` passes its own). A handle of a
+    # daemon that has restarted since is not sent: the new daemon numbers its handles from the start, and the number
+    # may be another handle of this session by now — a late close of a dead reader would close a live one.
     def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False,
-             timeout: float | None = None) -> tuple[dict, bytes]:
+             timeout: float | None = None, generation: int | None = None) -> tuple[dict, bytes]:
         ln = self.lane(self.lane_of(op))
         wait = timeout if timeout is not None else self.long_timeout if long else self.timeout
         if not ln.lock.acquire(timeout=self.timeout):
@@ -384,8 +432,13 @@ class Session:
                 try:
                     if ln.sock is None:
                         self._connect(ln)
+                    if generation is not None and generation != self.generation:
+                        raise SessionLost(op, "a handle of a daemon that has restarted since: not sent")
                     ln.sock.settimeout(wait)
-                    return self._exchange(ln, op, js, tail)
+                    got = self._exchange(ln, op, js, tail)
+                    if op in ISSUES:
+                        self._issued(int(got[0][ISSUES[op]]))
+                    return got
                 except ObsdError:
                     if self.abandoned:
                         self._drop(ln)                   # under this lane's lock: nobody else is using its socket
@@ -451,6 +504,23 @@ class Session:
     def stats(self) -> dict:
         return self.call("STATS")[0]
 
+    # DOES THIS DAEMON GIVE A VOLUME UP — `WRITER_ABANDON`, operation 36: the engine's patch 07, the only engine this
+    # course supports? Asked with a handle that is nobody's: a daemon that has the operation answers that it does not
+    # know the handle, one that does not answers `UNKNOWN_OP`. Asked once per daemon (`_new_daemon` forgets the
+    # answer). A daemon that does not answer raises `Unavailable`: not knowing is not "yes".
+    def abandons(self) -> bool:
+        if self._abandons is None:
+            self.closing(0)                          # 0 is never issued: said closed, so its answer is `Closed`, not the session lost
+            try:
+                self.call("WRITER_ABANDON", {"writer": 0})
+                known = True
+            except Unavailable:
+                raise
+            except ObsdError as e:
+                known = e.name != "UNKNOWN_OP"
+            self._abandons = known
+        return self._abandons
+
     def bye(self) -> None:
         """End the session cleanly: every handle closed, writers included, before the reply."""
         try:
@@ -478,45 +548,52 @@ class Session:
         js = {"uri": uri} if uri else {"params": {k: str(v) for k, v in (params or {}).items()}}
         if max_parallel_reads:
             js["maxParallelReads"] = max_parallel_reads
-        gen = self.generation
-        return Volume(self, int(self.call("VOLUME_OPEN", js)[0]["volume"]), gen)
+        handle = int(self.call("VOLUME_OPEN", js)[0]["volume"])
+        return Volume(self, handle, self.generation)     # read AFTER the answer: the HELLO before it may have found a new daemon
+
+
+class _Handle:
+    """What a `Volume`, a `Reader` and a `Writer` are: a handle of one daemon. Every request that names it carries the
+    generation it was issued in, and is not sent to a daemon started since (`Session.call`)."""
+
+    def _call(self, op: str, js: dict | None = None, tail: bytes = b"", **kw) -> tuple[dict, bytes]:
+        return self.session.call(op, js, tail, generation=self.generation, **kw)
 
 
 @dataclass
-class Volume:
+class Volume(_Handle):
     session: Session
     handle: int
     generation: int = 0                              # the session's when it was opened (`Session.generation`)
 
     def exists(self) -> bool:
-        return bool(self.session.call("VOLUME_EXISTS", {"volume": self.handle})[0].get("exists"))
+        return bool(self._call("VOLUME_EXISTS", {"volume": self.handle})[0].get("exists"))
 
     def format(self, size: int, max_block: int = 0, optimal_read: int = 0, label: str = "",
                check_space: bool = False, lock_refresh: int = 0) -> dict:
         tun = {k: v for k, v in (("maxBlockSize", max_block), ("optimalReadSize", optimal_read),
                                  ("lockRefreshSec", lock_refresh)) if v}
-        return self.session.call("VOLUME_FORMAT", {"volume": self.handle, "size": int(size), "label": label,
+        return self._call("VOLUME_FORMAT", {"volume": self.handle, "size": int(size), "label": label,
                                                    "checkSpace": check_space, **({"tunables": tun} if tun else {})})[0]["info"]
 
     def recover(self) -> int:
         """0 clean, 1 recovered, 2 error."""
-        return int(self.session.call("VOLUME_RECOVER", {"volume": self.handle})[0].get("result", 0))
+        return int(self._call("VOLUME_RECOVER", {"volume": self.handle})[0].get("result", 0))
 
     def space(self) -> dict:
-        return self.session.call("VOLUME_SPACE", {"volume": self.handle})[0]
+        return self._call("VOLUME_SPACE", {"volume": self.handle})[0]
 
+    # A reader or a writer is of its volume's generation: the request went to the daemon the volume is a handle of.
     def mount_ro(self) -> "Reader":
-        gen = self.session.generation
-        return Reader(self.session, int(self.session.call("VOLUME_MOUNT_RO", {"volume": self.handle})[0]["reader"]), gen)
+        return Reader(self.session, int(self._call("VOLUME_MOUNT_RO", {"volume": self.handle})[0]["reader"]), self.generation)
 
     def mount_rw(self, owner: str = "") -> "Writer":
-        gen = self.session.generation
-        r = self.session.call("VOLUME_MOUNT_RW", {"volume": self.handle, "owner": owner})[0]
-        return Writer(self.session, int(r["writer"]), bool(r.get("reattached")), generation=gen)
+        r = self._call("VOLUME_MOUNT_RW", {"volume": self.handle, "owner": owner})[0]
+        return Writer(self.session, int(r["writer"]), bool(r.get("reattached")), generation=self.generation)
 
     def close(self) -> None:
         self.session.closing(self.handle, self.generation)
-        self.session.call("VOLUME_CLOSE", {"volume": self.handle})
+        self._call("VOLUME_CLOSE", {"volume": self.handle})
 
 
 def _tail(writer: int, stream: str, sample: Sample | None = None) -> bytes:
@@ -525,7 +602,7 @@ def _tail(writer: int, stream: str, sample: Sample | None = None) -> bytes:
 
 
 @dataclass
-class Writer:
+class Writer(_Handle):
     """The volume's one writer on this host. `reattached`: the daemon handed back a writer a vanished session
     of the same `owner` left — nothing recovered, no lock waited for."""
     session: Session
@@ -535,13 +612,13 @@ class Writer:
     generation: int = 0
 
     def configure(self, **settings) -> None:
-        self.session.call("WRITER_CONFIGURE", {"writer": self.handle, "settings": settings})
+        self._call("WRITER_CONFIGURE", {"writer": self.handle, "settings": settings})
 
     def put(self, stream: str, sample: Sample) -> str:
         """One sample. Returns `OK` or `SEQUENCE_LOST` (taken — an EARLIER sequence was refused and lost);
         raises `ObsdError` when it was NOT taken (`SEQUENCE_TOO_LARGE`, `WRITER_STOPPED`, `SEQUENCE_*`)."""
         try:
-            self.session.call("PUT_MEDIA", None, _tail(self.handle, stream, sample))
+            self._call("PUT_MEDIA", None, _tail(self.handle, stream, sample))
             status = "OK"
         except ObsdError as e:
             if e.name != "SEQUENCE_LOST":
@@ -554,7 +631,7 @@ class Writer:
     def finish(self, stream: str) -> bool:
         """Close the stream's open sequence. False: nothing was open."""
         try:
-            self.session.call("FINISH_MEDIA", None, _tail(self.handle, stream))
+            self._call("FINISH_MEDIA", None, _tail(self.handle, stream))
             return True
         except ObsdError as e:
             if e.name == "EMPTY_RESULT":
@@ -562,52 +639,43 @@ class Writer:
             raise
 
     def flush(self) -> None:
-        self.session.call("WRITER_FLUSH", {"writer": self.handle})
+        self._call("WRITER_FLUSH", {"writer": self.handle})
 
     def resize(self, size: int) -> None:
-        self.session.call("WRITER_RESIZE", {"writer": self.handle, "size": int(size)})
+        self._call("WRITER_RESIZE", {"writer": self.handle, "size": int(size)})
 
     def close(self, timeout: float | None = None) -> None:
         """After the flush — up to 30 s. What was written becomes readable: the last block is closed. `timeout`: how
         long to wait for that here, when the caller may not wait the protocol's thirty seconds."""
         self.session.closing(self.handle, self.generation)
-        self.session.call("WRITER_CLOSE", {"writer": self.handle}, long=True, timeout=timeout)
+        self._call("WRITER_CLOSE", {"writer": self.handle}, long=True, timeout=timeout)
 
-    def abandon(self, timeout: float | None = None) -> bool:
+    def abandon(self, timeout: float | None = None) -> None:
         """Give the volume up WITHOUT writing anything more — no queued sequence, no status, no index — the lock
         removed only if it is still this writer's: for a volume that is no longer this client's (the engine's patch
-        07, `WRITER_ABANDON`). The volume may need recovering at its next mount. False: a daemon without the
-        operation (`UNKNOWN_OP`) — the writer is as it was."""
+        07, `WRITER_ABANDON`). The volume may need recovering at its next mount."""
         self.session.closing(self.handle, self.generation)
-        try:
-            self.session.call("WRITER_ABANDON", {"writer": self.handle}, timeout=timeout)
-        except ObsdError as e:
-            if e.name != "UNKNOWN_OP":
-                raise
-            with self.session._guard:
-                self.session.closed.pop(self.handle, None)   # still alive: not one of ours closed
-            return False
-        return True
+        self._call("WRITER_ABANDON", {"writer": self.handle}, timeout=timeout)
 
 
 @dataclass
-class Reader:
+class Reader(_Handle):
     session: Session
     handle: int
     generation: int = 0
 
     def info(self) -> dict:
-        return self.session.call("READER_INFO", {"reader": self.handle})[0]
+        return self._call("READER_INFO", {"reader": self.handle})[0]
 
     def status(self) -> dict:
-        return self.session.call("READER_STATUS", {"reader": self.handle})[0]["status"]
+        return self._call("READER_STATUS", {"reader": self.handle})[0]["status"]
 
     def streams(self) -> list[str]:
-        return list(self.session.call("READER_STREAMS", {"reader": self.handle})[0].get("streams", []))
+        return list(self._call("READER_STREAMS", {"reader": self.handle})[0].get("streams", []))
 
     def timeline(self, stream: str, t0: int, t1: int, min_gap: int = 0, mode: str = "") -> list[dict]:
         """Intervals `{start, end, size, streamId}` of `stream` in `[t0, t1]` (archive ms)."""
-        return list(self.session.call("READER_TIMELINE", {"reader": self.handle, "stream": stream, "from": int(t0),
+        return list(self._call("READER_TIMELINE", {"reader": self.handle, "stream": stream, "from": int(t0),
                                                           "to": int(t1), "minGap": int(min_gap), "mode": mode})[0]
                     .get("intervals", []))
 
@@ -615,17 +683,17 @@ class Reader:
         js = {"reader": self.handle, "stream": stream, "from": int(t0), "to": int(t1)}
         if page_hint:
             js["pageHint"] = page_hint
-        return [Entry(**e) for e in self.session.call("READER_SEQUENCES", js)[0].get("entries", [])]
+        return [Entry(**e) for e in self._call("READER_SEQUENCES", js)[0].get("entries", [])]
 
     def find(self, stream: str, t: int, backwards: bool = False) -> Entry | None:
-        r = self.session.call("READER_FIND", {"reader": self.handle, "stream": stream, "from": int(t),
+        r = self._call("READER_FIND", {"reader": self.handle, "stream": stream, "from": int(t),
                                               "backwards": backwards})[0]
         return Entry(**r["entry"]) if r.get("found") else None
 
     def read(self, entry: Entry) -> list[Sample]:
-        _, tail = self.session.call("READ_SEQUENCE", {"reader": self.handle, "entry": entry.to_json()})
+        _, tail = self._call("READ_SEQUENCE", {"reader": self.handle, "entry": entry.to_json()})
         return Sample.decode_all(tail)
 
     def close(self) -> None:
         self.session.closing(self.handle, self.generation)
-        self.session.call("READER_CLOSE", {"reader": self.handle})
+        self._call("READER_CLOSE", {"reader": self.handle})

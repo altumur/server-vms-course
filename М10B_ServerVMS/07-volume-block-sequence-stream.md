@@ -192,14 +192,20 @@ class ArchiveError(Exception):
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out
 
-    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
-    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
-    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
-    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
-    since when, and the operator decides — stops the recorder or takes the volume from it."""
+    `away` and `busy` have NO deadline for a disk of this server, on purpose (the review's fifth pass, its third
+    question): nobody else can write there, and handing it back for a daemon that is restarted in a minute reshuffles
+    every recording on it. So the recorder keeps it, and while this host's engine stays broken its recordings are
+    written nowhere. That is the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the
+    heartbeat show the operator since when, and the operator decides.
+
+    A volume ANY box may serve has one (the review's sixth pass): while this host's engine answers nothing, the hold is
+    renewed for `RecWorker.ENGINE_SILENT_FOR` and no longer — then the volume is let go, for a box whose engine does
+    answer (`RecWorker.volume_pass`)."""
 ```
 
 Вид нужен потому, что ответы противоположны. Неверный том регистратор отдаёт: писать туда некому, пока человек не исправит. Недоступный том регистратор держит: связь вернётся через минуту, а отдача тома перетасовала бы все записи на нём. Занятый том тоже держит: писатель вот-вот освободится или вернётся к своему владельцу.
+
+У «держит» есть срок только для тома, который может обслуживать любая коробка. Диск этого сервера никто другой не запишет, и отдавать его незачем. Сетевой том при молчащем демоне держат `RecWorker.ENGINE_SILENT_FOR` (300 с) и отпускают: коробка, чей демон отвечает, запишет его сейчас, а эта — неизвестно когда (шестое ревью; урок 10, шаг 3).
 
 ```python
 WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY", "PATH_NOT_EMPTY",
@@ -288,8 +294,11 @@ def classify(e: Exception) -> ArchiveError:
         if w is None:
             raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
         self._fenced("PUT_MEDIA")
+        name = stream_name(unit, epoch, backfill)
         try:
-            return w.put(stream_name(unit, epoch, backfill), sample)
+            status = w.put(name, sample)
+            self._took(name, sample)
+            return status
         except SessionLost:
             self.lost = True
             raise
@@ -322,6 +331,15 @@ def classify(e: Exception) -> ArchiveError:
     # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
     # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
     # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    #
+    # A CHECK BEFORE SENDING, NOT A TOKEN (the review's sixth pass). Nothing travels with the sample that the engine
+    # could refuse it by: a process frozen between this check and the send puts that one sample into a volume another
+    # box has mounted meanwhile, and it is taken — reproduced: one frame `OK`. The fence of a volume is the ENGINE's,
+    # and the course requires an engine that has one (ObjectStorage's patch 07): it checks the volume's lock at its
+    # path before every block, status and removal, stops a writer whose lock is another's (`WRITER_STOPPED`, "volume
+    # lock lost" — `lock_lost` here) and never removes a lock that is not its own. So that one frame is refused with
+    # its block. What this check adds is time: nothing is SENT from ten seconds before anybody else may take the hold
+    # (`RecWorker._may_write_volume`), instead of from the engine's next block.
     def _fenced(self, op: str) -> None:
         if self.lock_lost:
             raise Fenced(op, f"{self.name}: the engine says the volume's lock is another writer's: nothing sent")
@@ -331,7 +349,11 @@ def classify(e: Exception) -> ArchiveError:
 
 `put` — имя потока и вызов писателя. Граница «взят — не взят» из урока 6 проходит сквозь него без изменений: статус — кадр на томе, исключение — нет. Закрытый том (`writer is None`) — не отказ кадра, а `Unavailable`: писать больше некуда, и тот, кто пишет, должен узнать это как «движка нет», а не как «пропусти до ключевого» (шаг 13).
 
-**Каждый кадр в сетевой том — под оградой.** Холд тома проверялся только перед `VOLUME_MOUNT_RW` и больше никогда: коробка, замороженная целиком — регистратор и демон, — просыпалась со смонтированным писателем, и её конвейер клал тридцать кадров (все `OK`) в кольцо, которое за это время взяла другая коробка (пятое ревью, блокер 1; воспроизведено на двух демонах над одним каталогом `kind: network`). Теперь `put`, `finish` и `seal` сначала спрашивают `_fenced`: `fence` — функция, которую даёт регистратор (`RecWorker._may_write_volume`, урок 10, шаг 3), — отвечает, подтверждён ли холд достаточно недавно. Нет — `Fenced`, и в демон не уходит ничего. `Fenced` — подкласс `Unavailable`, но не потеря движка: движка никто не спрашивал. Вторая линия — сам движок с патчем 07 (урок 6, шаг 6): `WRITER_STOPPED` с «lock lost» ставит `lock_lost`, и дальше ограда отказывает уже по нему. Тесты: `test_rec_volume.py::test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_write_window`, `test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
+**Перед каждым кадром в сетевой том — проверка холда.** Холд тома проверялся только перед `VOLUME_MOUNT_RW` и больше никогда: коробка, замороженная целиком — регистратор и демон, — просыпалась со смонтированным писателем, и её конвейер клал тридцать кадров (все `OK`) в кольцо, которое за это время взяла другая коробка (пятое ревью, блокер 1; воспроизведено на двух демонах над одним каталогом `kind: network`). Теперь `put`, `finish` и `seal` сначала спрашивают `_fenced`: `fence` — функция, которую даёт регистратор (`RecWorker._may_write_volume`, урок 10, шаг 3), — отвечает, подтверждён ли холд достаточно недавно. Нет — `Fenced`, и в демон не уходит ничего. `Fenced` — подкласс `Unavailable`, но не потеря движка: движка никто не спрашивал. Тесты: `test_rec_volume.py::test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_write_window`, `test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
+
+**Это проверка перед отправкой, а не ограда.** С кадром не едет ничего, по чему движок мог бы его отвергнуть. Процесс, замороженный между `_fenced` и `put`, отправит этот один кадр в том, который другая коробка уже смонтировала, и получит `OK` (шестое ревью; воспроизведено запуском: один кадр). Настоящая ограда тома — у движка, и курс требует движок, у которого она есть: ObjectStorage с патчем 07 перед каждым блоком, статусом и удалением проверяет замок тома по пути, останавливает писателя, чей замок стал чужим (`WRITER_STOPPED` с «lock lost» — здесь это ставит `lock_lost`, и дальше `_fenced` отказывает уже по нему), и чужой lock-файл не снимает. Тот один кадр остаётся в очереди остановленного писателя и на том не попадает. Наша проверка даёт время: кадры перестают **уходить** за десять секунд до того, как холд сможет взять кто-то ещё, а не с ближайшего блока движка.
+
+**Взят — ещё не записан, и это считается.** `_took` запоминает по каждому потоку, что писатель взял с момента монтирования и когда. Взятый кадр лежит в очереди писателя или в открытом блоке; писатель, которого бросили (`abandon`, урок 10, шаг 11), этого уже не запишет. Раньше такие кадры терялись без счёта (шестое ревью). Теперь `Archive.unwritten` говорит, сколько: с ответившим демоном — точно, от конца того, что видит читатель, до последнего взятого кадра; с молчащим — оценкой сверху, кадры, взятые за периоды сброса движка (`sequenceFlushPeriodMs` плюс `blockFlushPeriodSec`) до последнего взятого. Регистратор превращает это в тревогу `archive.footage.dropped` в журнале записи.
 
 **`Closed` на текущем писателе — писатель ушёл.** Если хэндл, который `Archive` ещё держит как свой писатель, отвечает `Closed`, значит, его закрытие ушло, а хранилище хэндл оставило. `_closed_under` обнуляет писателя и ставит `lost`, и проход монтирует том заново. Раньше каждый кадр после этого был `Closed`, `lost` не ставился никогда, и так до перезапуска (пятое ревью). `Closed` на писателе, которого уже заменил `seal`, — гонка с собственным закрытием, и её `_closed_under` не трогает.
 
@@ -354,6 +376,7 @@ def classify(e: Exception) -> ArchiveError:
             return
         self._fenced("WRITER_CLOSE")               # a close is the writer's last write: under the same fence
         w, self.writer = self.writer, None
+        self.taken, self._recent = {}, {}          # the close is the flush: what was taken is written
         try:
             w.close()
         except SessionLost:
@@ -589,7 +612,7 @@ class RecSink:
 
 А если регистратор не вернулся? Аренда тома истекает за 45 секунд, следующий регистратор берёт том под тем же `rec:<том>` и получает писателя — отсрочка в `obsd.service` девяносто секунд, дольше аренды. Отсрочка истекла, а никто не пришёл — демон закрывает писателя чисто, и взятое остаётся на томе (`test_after_the_grace_the_volume_is_clean_for_anybody`).
 
-Всё это — про том одного хоста. Сетевой том после истечения аренды может взять регистратор **другой** коробки, со своим демоном. Писатель первого хоста он не подхватит, а конец отсрочки на первом хосте — это закрытие со сбросом и удалением lock-файла по пути, уже чужого. Без патча 07 движка это открыто; что делает регистратор, разбирает урок 10, шаг 11.
+Всё это — про том одного хоста. Сетевой том после истечения аренды может взять регистратор **другой** коробки, со своим демоном. Писатель первого хоста он не подхватит, а конец отсрочки на первом хосте — это закрытие со сбросом, уже в чужой том. От этого том ограждает сам движок (патч 07, урок 6): писатель, чей замок стал чужим, не пишет ничего, и чужой lock-файл не снимается. На движке без этого регистратор сетевой том не берёт; что он делает со своим писателем, разбирает урок 10, шаг 11.
 
 **Аккуратная остановка** — другая история, и в ней важен порядок:
 

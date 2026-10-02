@@ -273,6 +273,68 @@ def test_STAND_IN_FOR_counts_from_the_loops_last_renewal_and_a_new_step_does_not
         assert not w.may_write("1"), "a second hung step was given five more minutes of somebody else's camera"
 
 
+def test_STAND_IN_FOR_is_not_started_again_by_a_renewal_inside_the_step_that_then_hangs():
+    """The review's sixth pass (П-m2). The lease step renews first and works after — and hung there, it had renewed a
+    moment ago by its own count: every such step was given five minutes more, six in a row held a camera and a place
+    for 1680 s. The five minutes run from before the FIRST step that had to be stood in for, and start again only after
+    a step in which the loop renewed and needed nobody."""
+    box = Box()
+    w = _holder(box)
+    w.claim_hold(["vol"])
+    w.take_epoch("1")
+    start, held_until = box.clock(), None
+    for _ in range(6):                                             # six lease steps, each renewing and then hung 280 s
+        with w.guarded("lease"):
+            w.lease_pass()
+            for _ in range(56):
+                _tick(box, 5)
+                w.stand_in_once()
+                if held_until is None and not w.may_write("1"):
+                    held_until = box.clock()
+    assert held_until is not None, "a loop that hangs in every lease step held its camera for 1680 s"
+    assert held_until - start <= w.STAND_IN_FOR + w.lease_ttl      # five minutes of standing in, and the lease's own term
+    assert Slot.from_items("vol", box.vars.get(w.sub.hold_key("vol"))[0]).until < box.wall()   # …and its place lapsed too
+
+    with w.guarded("lease"):                                       # the loop works again: a step that renews and returns
+        w.lease_pass()
+    w.take_epoch("1")
+    with w.guarded("pass"):                                        # …and the next hung step is stood in for afresh
+        _tick(box, 60)
+        assert w.stand_in_once() and w.may_write("1")
+
+
+def test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once():
+    """The review's sixth pass, blocker 2, in the platform's terms. An instance that takes a worker's name takes its
+    place back at once (feedback CF) — unless the subsystem says the place can be written from another host
+    (`hold_follows_name`): then it waits like anybody, the row unchanged for `slot_ttl + HOLD_SKEW` by its own clock,
+    because that wait is what the previous holder's write window is measured against. Released, it is free at once."""
+    sub = Subsystem("t")
+
+    def worker(box, instance):
+        w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance=instance)
+        w.hold_follows_name = lambda place: place != "net"         # what a recorder says of a network volume
+        w.claim_slot(prefer="t-1")
+        return w
+    box = Box()
+    first = worker(box, "first:1")
+    assert first.claim_hold(["disk"]) == "disk"
+    again = worker(box, "again:1")                                 # the same name, another instance
+    assert again.claim_hold(["disk"]) == "disk"                    # a place of one host: at once, as before
+
+    box = Box()
+    first = worker(box, "first:1")
+    assert first.claim_hold(["net"]) == "net"
+    again = worker(box, "again:1")
+    assert again.claim_hold(["net"]) is None                       # may be written from another host: not at once
+    _tick(box, again.slot_ttl + again.HOLD_SKEW - 1)
+    assert again.claim_hold(["net"]) is None
+    _tick(box, 1)
+    assert again.claim_hold(["net"]) == "net"                      # the row stood still a term and the skew
+    again.release_hold()
+    third = worker(box, "third:1")
+    assert third.claim_hold(["net"]) == "net"                      # let go on purpose: at once
+
+
 def test_a_normal_fast_loop_never_calls_the_stand_in():
     """Passes of a second each, renewing as the loop does: no step runs long enough, and the stand-in renews
     nothing — not even once."""
