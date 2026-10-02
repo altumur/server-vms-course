@@ -233,10 +233,10 @@ ctl  GET  /v1/vars?prefix=vms/slots/, /v1/var/vms/slots/w-2  → until в про
 w-2  GET  /v1/var/platform/schema                            → 404  (так выглядело продление, пока он жил)
 w-2  GET  /v1/var/vms/slots/w-2                              → ModifyIndex 5120
 w-2  PUT  /v1/var/vms/slots/w-2?cas=5120                     → 5121  until +45
-new  GET  /v1/var/platform/schema, /v1/vars?prefix=vms/slots/, slots/w-2 ×2
-new  PUT  /v1/var/vms/slots/w-2?cas=1006                     → holder нового экземпляра, gen 2
+new  GET  /v1/var/platform/schema, /v1/vars?prefix=vms/slots/, slots/w-1..w-3, slots/w-2
+new  PUT  /v1/var/vms/slots/w-2?cas=5121                     → holder alloc-0099, gen 2
 new  GET  /v1/var/objects/vms/heartbeats/w-2                 → прежний отчёт: отсюда меряется перерыв
-new  GET  /v1/var/vms/workers/w-2, /v1/var/vms/cameras/1     → назначение унаследовано
+new  GET  /v1/var/vms/workers/w-2, /v1/var/vms/cameras/2     → units "2": назначение унаследовано
 ctl  GET  /v1/var/vms/slots/w-2                              → по слову оператора (Controller.retire, справочник)
 ctl  PUT  /v1/var/vms/slots/w-2?cas=5120                     → released true — единственное изменение
 
