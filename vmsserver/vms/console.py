@@ -300,15 +300,31 @@ def _rec_epoch(ctl, unit) -> int | None:
 # proxy that took the framing off — ends where the connection ends, and a door that failed half way looked exactly
 # like a door that had nothing more. Such an answer is refused here, as a cut one is: the export says the door did not
 # answer, it does not write a shorter film.
-def _door(url: str, timeout: float):
+#
+# …AND READ UP TO A BOUND WHEN IT IS A LIST (the review's eighth pass, part 4, left to this group): a door's `/timeline`
+# was read whole whatever its size, and each span parsed bare — `int(sp["epoch"])` of a door of another build or a proxy
+# raised out of the camera's timeline and its export. `limit`: at most so many bytes (`rows.answer`, a `ValueError`
+# past it — the door did not answer); the spans are read by `door_spans` below.
+def _door(url: str, timeout: float, limit: int | None = None):
+    from w2cplatform.rows import answer
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             if not framed(r):                            # …and a length that is a number (the eighth pass): `framed`
                 raise ConnectionError(f"{url}: the door's answer has neither chunks nor a length — whether it is whole "
                                       f"cannot be told")
-            return r.read()
+            return r.read() if limit is None else answer(r, limit)
     except http.client.HTTPException as e:
         raise ConnectionError(f"{url}: the door's answer was cut short ({e!r})") from None
+
+
+# A recorder door's timeline of one recording, each span read alone (`scan.door_spans`): `(spans, whole)`, or an
+# `OSError`/`ValueError` — the door did not answer. A span that does not parse costs that span, and `whole` is False:
+# the reader names the door, it does not take the rest for all the door holds.
+def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list[dict], bool]:
+    from w2cplatform.rows import ANSWER_MAX
+    from .scan import door_spans
+    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX))
+    return door_spans(f"rec/doors/{name}#{unit}", body)
 
 
 def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_ctl=None):
@@ -685,6 +701,12 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         rid = str(body.get("id") or key)
         if "/" in rid or rid in (".", "..") or len(rid) > 200:
             return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
+        # …and the rule a unit's name keeps (the eighth pass's sibling: `doors.unnamable` — no `"`, `|`, control
+        # characters): a request's id goes into the holder's log lines and its heartbeat whole.
+        from w2cplatform.doors import unnamable
+        if unnamable(rid):
+            return 400, {"detail": f"a request id may not hold {', '.join(repr(c) for c in unnamable(rid))}",
+                         "error": "bad id"}
         # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity` reached
         # the row as `nan`/`inf`, and a holder performed such a command hours late. A word is refused here as well.
         try:
@@ -781,12 +803,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             cur = _rec_epoch(ctl, unit)
             for name, url, hb in doors:
                 try:
-                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={min(t1, 1e11)}", DOOR_TIMEOUT))
+                    got, said_whole = door_timeline(name, url, unit, t0, min(t1, 1e11))
                 except (OSError, ValueError):
                     unreachable.append(name)
                     continue
-                for sp in body.get("spans", []):
-                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < int(sp.get("epoch", 0)) < cur)
+                if not said_whole:
+                    unreachable.append(name)             # spans it said that do not parse: its picture is not whole
+                for sp in got:
+                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < sp["epoch"] < cur)
                     ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
                                  "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
         extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
@@ -941,13 +965,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             spans, where = [], {}
             for name, url, _ in doors:
                 try:
-                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT))
+                    got, said_whole = door_timeline(name, url, unit, t0, t1)
                 except (OSError, ValueError):
                     unreachable.append(name)
                     continue
-                for sp in body.get("spans", []):
-                    span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
-                                str(sp.get("source", "live")))
+                if not said_whole:
+                    unreachable.append(name)             # a span it said that does not parse: named, as a silent door
+                for sp in got:
+                    span = Span(unit, sp["epoch"], sp["start"], sp["end"], sp["bytes"], sp["source"])
                     spans.append(span)
                     where.setdefault(span, (name, url))
             stretches = sorted(authoritative(spans, t0, t1), key=lambda x: x[1])
@@ -1394,11 +1419,23 @@ def rec_routes(rec_ctl: SpecController):
             # The list is what THIS caller may see (feedback CG): a keep says which camera, which minutes and why,
             # and lifting or checking one already asked by its camera — the list did not. A camera of another
             # cluster (`ref:…`) has no labels here, as at every gate.
+            # …and a keep whose row does not parse is SHOWN, as it holds (the review's eighth pass, part 4): hidden, the
+            # camera it holds as far as its interval reads was held by something nobody could see or lift. Its line says
+            # so — `garbled`, the interval it holds — and since when this console has seen it so (`garbled_since`).
             sees = getattr(handler, "sees", None)
-            shown = keeps.declared(rec_ctl.vars)
+            garbled: list = []
+            shown = keeps.declared(rec_ctl.vars, garbled) + garbled
             if sees is not None:
                 shown = [k for k in shown if sees(str(k.cam), handler.labels_for(k.cam))]
-            return 200, {"keeps": [k.shown() for k in shown]}
+            first = extra.__dict__.setdefault("garbled_seen", {})
+            now = rec_ctl.wall()
+            for k in garbled:
+                first.setdefault(k.id, now)
+            for gone in set(first) - {k.id for k in garbled}:
+                first.pop(gone, None)
+            return 200, {"keeps": [{**k.shown(), **({"garbled": True, "garbled_since": first[k.id],
+                                                     "to": k.until if k.until != float("inf") else None} if k.garbled else {})}
+                                   for k in shown]}
         if method == "POST" and path in ("/keeps", "/keeps/"):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             try:
@@ -1438,7 +1475,16 @@ def rec_routes(rec_ctl: SpecController):
             view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, now, objects=rec_ctl.objects)
             spare = spare_workers(rec_ctl)
             view = {**view, "volumes": [{**v, **as_held(rec_ctl, v, now)} for v in view["volumes"]]}
-            return 200, {**view, "spare": len(spare), "spares": sorted(spare),
+            # A recorder pinned to a volume whose hold is another's writes nothing and says why (`volume_wait`): only its
+            # heartbeat said so, and on this page it was a spare with no capacity (the review's eighth pass, part 2,
+            # minor). Its line, and on the volume it waits for.
+            waiting = [{"recorder": w, "why": str(hb.extra["volume_wait"])}
+                       for w, hb in sorted(heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items())
+                       if hb.extra.get("volume_wait") and now - hb.ts <= 45.0]
+            view["volumes"] = [{**v, **({"waiting": [x["recorder"] for x in waiting if x["why"].startswith(f"{v['name']} ")]}
+                                        if any(x["why"].startswith(f"{v['name']} ") for x in waiting) else {})}
+                               for v in view["volumes"]]
+            return 200, {**view, "spare": len(spare), "spares": sorted(spare), **({"waiting": waiting} if waiting else {}),
                          # `live` so that whatever acts on `needed` does not have to ask the orchestrator
                          # how many recorders are running — the console already knows, from heartbeats,
                          # and one source for the pair means the two numbers cannot disagree.

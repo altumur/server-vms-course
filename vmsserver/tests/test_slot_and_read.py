@@ -127,7 +127,7 @@ def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
     da = door(box, st, "r-a", "srv-a")
     asked = []
     real = vc._door
-    vc._door = lambda url, timeout: (asked.append(url), real(url, timeout))[1]
+    vc._door = lambda url, timeout, *limit: (asked.append(url), real(url, timeout, *limit))[1]
     url = f"http://127.0.0.1:{srv.server_address[1]}/export/7?rec=7&from={t}&to={t + 600}"
     try:
         piece = vc.EXPORT_PIECE
@@ -164,7 +164,7 @@ def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_whe
                     Heartbeat("r-1", box.wall(), [], {"archive_url": "http://door.invalid", "volume": "a"}).to_bytes())
     held, entered = threading.Event(), threading.Semaphore(0)
 
-    def slow_door(url, timeout):                                     # a door that takes its time: the export stays in flight
+    def slow_door(url, timeout, *limit):                                     # a door that takes its time: the export stays in flight
         entered.release(); held.wait(10)
         raise OSError("not answering")
     door_, vc._door = vc._door, slow_door
@@ -412,12 +412,12 @@ def test_a_door_that_stops_answering_after_the_first_byte_breaks_the_export_and_
     da = door(box, st, "r-a", "srv-a")
     real, asked = vc._door, []
 
-    def gone_after_two(url, timeout):                                 # the timelines and two minutes of frames, then nothing
+    def gone_after_two(url, timeout, *limit):                                 # the timelines and two minutes of frames, then nothing
         if "/samples/" in url:
             asked.append(url)
             if len(asked) > 2:
                 raise ConnectionRefusedError("the recorder's door is gone")
-        return real(url, timeout)
+        return real(url, timeout, *limit)
     vc._door = gone_after_two
     try:
         c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=30)
@@ -558,3 +558,52 @@ def test_one_recordings_torn_epoch_row_does_not_take_the_cameras_timeline_away()
         assert by["7"]["fenced"] is False and by["7-cloud"]["fenced"] is True   # …the torn one by its door's word, the other by its row
     finally:
         da.shutdown(); srv.shutdown()
+
+
+def test_a_span_a_door_answered_that_does_not_parse_costs_that_door_and_not_the_cameras_timeline_or_its_export():
+    """The review's eighth pass, part 4, left to the console's routes: `/timeline` and `/export` read a recorder door's
+    answer whole and each span bare — `int(sp["epoch"])` of a door of another build or a proxy (`{"epoch": "e3"}`)
+    raised out of the route, and the good door's footage was lost with it. A door's timeline is read up to a bound
+    (`rows.answer`) and span by span (`scan.door_spans`, `door_timeline`): a span that does not parse costs that span,
+    and the door is named among those that did not answer; the good door's minutes are drawn and exported."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from w2cplatform import rows
+    from w2cplatform.contract import Heartbeat
+    from vms.config import REC_SPEC
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    st = store()
+    t = box.wall()
+    footage(st, "7", 3, t - 3600, t - 3000)
+    dsrv = door(box, st)
+
+    class Bad(BaseHTTPRequestHandler):                                # a door of another build: its epoch is a word
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            body = json.dumps({"spans": [{"epoch": "e3", "start": t - 3600, "end": t - 3000, "bytes": 10}]}).encode()
+            self.send_response(200); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+    bad = ThreadingHTTPServer(("127.0.0.1", 0), Bad)
+    threading.Thread(target=bad.serve_forever, daemon=True).start()
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-bad"), Heartbeat("r-bad", box.wall(), [], {
+        "server": "srv-9", "archive_url": f"http://127.0.0.1:{bad.server_address[1]}", "volume": "other"}).to_bytes())
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+            tl = json.loads(r.read())
+        assert tl["unreachable"] == ["r-bad"] and tl["segments"] and all(s["recorder"] == "r-door" for s in tl["segments"])
+        with urllib.request.urlopen(f"{base}/export/7?from={t - 3600}&to={t - 3300}") as r:
+            assert r.status == 200 and r.read()[4:8] == b"ftyp" and r.headers.get("X-Archive-Unreachable") == "r-bad"
+        was, rows.ANSWER_MAX = rows.ANSWER_MAX, 64                    # an answer past the bound: not read, that door silent
+        try:
+            with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+                tl = json.loads(r.read())
+        finally:
+            rows.ANSWER_MAX = was
+        assert set(tl["unreachable"]) == {"r-bad", "r-door"}
+    finally:
+        srv.shutdown(); dsrv.shutdown(); bad.shutdown()

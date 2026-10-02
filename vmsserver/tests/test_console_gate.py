@@ -1240,6 +1240,8 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
             assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # camera 3 is the recorder's now
         assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1, "id": "r-1"}, token="admin")[0] == 202
         assert box.vars.get("vms/requests/r-1")[0]["device"] == "acme/10.0.0.50"       # what the rights were asked on
+        for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
+            assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
     finally:
         srv.shutdown()
 
