@@ -225,8 +225,14 @@ class DetJobWorker(Worker):
                 self.status_by_unit[job] = self._status(job, row, "queued", scans=scans, log=log_,
                                                         why=f"this worker's {self.capacity} scan(s) are all decoding: next when one ends")
                 continue
+            # Its epoch is this job's own trouble (the review's fifth pass; det and survey were mended in the fourth): a
+            # garbled `detjob/epoch/<job>` raised out of the pass, and no job after this one moved — nor said why.
             if job not in self.epochs:
-                self.take_epoch(job)                        # one writer of detjob/<job>/… at a time
+                why = self._take_epoch(job)                 # one writer of detjob/<job>/… at a time
+                if why:
+                    self._stop(job)
+                    self.status_by_unit[job] = self._status(job, row, "failed", why=why, scans=scans, log=log_)
+                    continue
             if model is None:
                 model = self.running[job] = self.models[row["kind"]](row)
             if self.may_write(job):
@@ -258,8 +264,9 @@ class DetJobWorker(Worker):
         waited = log_.waiting() or log_.wait(self.wall())
         partial = waited.get("partial")
         if partial is None and self.wall() - waited["since"] >= self.wait_max:
-            if job not in self.epochs:
-                self.take_epoch(job)
+            why_not = self._take_epoch(job) if job not in self.epochs else ""
+            if why_not:
+                return self._status(job, row, "failed", scans=scans, log=log_, why=why_not)
             if not self.may_write(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
             EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
@@ -273,6 +280,15 @@ class DetJobWorker(Worker):
         left = self.wait_max - (self.wall() - waited["since"])
         return self._status(job, row, "waiting", scans=scans, log=log_,
                             why=why + "; ".join(missing) + f" (ends without them in {max(0.0, left):.0f} s)")
+
+    # `take_epoch`, as one job's trouble: "" when it holds one, else why not — said in the job's status and the log.
+    def _take_epoch(self, job: str) -> str:
+        try:
+            self.take_epoch(job)
+        except Exception as e:                              # noqa: BLE001 — a garbled row, a store that did not answer
+            log.error("scan %s: its epoch was not taken: %s", job, e)
+            return f"its epoch could not be taken: {e}"
+        return ""
 
     # What the console and the controller read. `done_through` and `covered` are here and not computed by
     # a reader, because the log they come from is a file on THIS server's disk and nobody else can see it.

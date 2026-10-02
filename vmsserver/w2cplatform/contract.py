@@ -125,6 +125,10 @@ class SchemaTooNew(Exception):
     """This build does not understand the layout the store is already in."""
 
 
+class NoSlot(RuntimeError):
+    """This instance gave its slot up and has not claimed another yet: it is nobody, and takes nothing."""
+
+
 # The store's layout version — absent means "whatever this build is", which is a fresh install.
 def schema_version(vars_) -> int:
     items, _ = vars_.get(SCHEMA_KEY)
@@ -693,6 +697,8 @@ class Worker:
         self.slot_ttl = slot_ttl
         self.slot: Slot | None = None
         self.name = name                          # None until claim_slot(); a fixed name is a slot claimed by that name
+        # The name this instance gave up to another (`keep_slot`) while it has not claimed another: fenced till then.
+        self.seeking: str | None = None
         self.hold: str | None = None              # the PLACE this worker took, if its subsystem has places to take
         # One renewal or claim of the hold at a time, from whichever thread (`renew_hold`); and when this process
         # first saw each place's row as it is now — the clock a stale hold is judged by (`claim_hold`).
@@ -767,7 +773,8 @@ class Worker:
 
     # Still me? Read the slot; if `holder` is another instance, return False — the instance is fenced as a
     # whole (the VMS worker stops recording on this). Otherwise extend `until` by CAS; a `Conflict` is also
-    # False. A worker with no slot (fixed name without claim) returns True.
+    # False. A worker with no slot (fixed name without claim) returns True — but not one that gave its name up to
+# another instance and has not claimed another yet (`keep_slot`): that one is nobody, and False.
     def renew_slot(self) -> bool:
         """Still me? Read the slot; if another instance holds it now, the
         instance is fenced as a whole. Extends `until` by CAS otherwise."""
@@ -776,7 +783,7 @@ class Worker:
 
     def _renew_slot(self) -> bool:
         if self.slot is None:
-            return True
+            return self.seeking is None           # a fixed name never claimed is itself; a name given up is nobody's here
         # The store's schema, again (the review's second pass, m4). `set_schema` refuses while a LIVE build
         # understands less, and a build that checked at construction and has not heartbeaten yet is not live to
         # it: the version is raised under a process that passed its check a moment ago. So the check is repeated
@@ -942,6 +949,8 @@ class Worker:
 
     # Reads my row.
     def assignment(self) -> Assignment:
+        if self.seeking is not None:
+            return Assignment(self.name, [])      # the row under that name is the other instance's now (`keep_slot`)
         items, _ = self.vars.get(self.sub.assignment(self.name))
         return Assignment.from_items(self.name, items)
 
@@ -952,6 +961,8 @@ class Worker:
         """Called when the worker STARTS a unit: a new epoch, by CAS, and a
         lease on it. A second worker starting the same unit gets the next
         number, and the first one's lease will fence on renewal."""
+        if self.seeking is not None:
+            raise NoSlot(f"{self.instance} gave slot {self.seeking} up and holds no other: no epoch for {unit}")
         epoch, _ = next_epoch(self.vars, self.sub.epoch_key(unit))
         self.epochs[unit] = epoch
         self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
@@ -994,8 +1005,20 @@ class Worker:
     # could take the name of a worker that was alive and holding units. `keep_slot` renews it on the loop's lease
     # step; a store that does not answer keeps the slot (not known is not "taken"); a row naming ANOTHER instance
     # means this one is a zombie on that name: it lets its units go (`let_go`, the worker's own stop), gives up
-    # their epochs and claims a free slot, as the evaluator does.
+    # their epochs and claims a free slot.
+    #
+    # NOBODY UNTIL IT HAS ONE (the review's fifth pass, blocker 3). The claim that follows can fail — the store blinks,
+    # every candidate is taken under it — and the worker was left with no slot and the OLD name: `renew_slot` with no
+    # slot said "still me", the stand-in renewed for it, the next pass read the other instance's assignment and took
+    # epochs on its units with `may_write` true, and its heartbeat went out over the legitimate one. Two processes took
+    # the same detectors in turn, until a restart. Now a name given up is `seeking` until another is claimed, and
+    # while it is the instance is fenced: `renew_slot` says no (so the stand-in renews nothing), `may_stand_in` says no,
+    # `take_epoch` raises `NoSlot`, the assignment it reads is empty and no heartbeat goes out under the name. Every
+    # lease step claims again, as `VmsWorker.rejoin` does for a fenced holder.
     def keep_slot(self, let_go) -> list[str]:
+        if self.seeking is not None:
+            self._seek_slot()
+            return []
         try:
             mine = self.renew_slot()
         except OSError as e:
@@ -1003,12 +1026,28 @@ class Worker:
             return []
         if mine:
             return []
-        was, lost = self.name, list(self.epochs)
-        let_go()
-        self.release_all(); self.slot = None
-        self.claim_slot()
-        log.warning("%s: slot %s is held by another instance now; its units let go, going on as %s", self.instance, was, self.name)
+        with self._slot_lock:
+            was, lost = self.name, list(self.epochs)
+            self.seeking, self.slot = was, None   # fenced from this line, whatever `let_go` does
+        try:
+            let_go()
+        finally:
+            self.release_all()
+        self._seek_slot()
         return lost
+
+    # One try at a free slot for an instance that gave its own up. True when it is somebody again.
+    def _seek_slot(self) -> bool:
+        was = self.seeking
+        try:
+            self.claim_slot()
+        except (OSError, RuntimeError) as e:
+            log.warning("%s: slot %s is held by another instance now and no other could be claimed (%s): nobody, "
+                        "taking nothing; trying again on the next step", self.instance, was, e)
+            return False
+        self.seeking = None
+        log.warning("%s: slot %s is held by another instance now; its units let go, going on as %s", self.instance, was, self.name)
+        return True
 
     def renew_leases(self) -> list[str]:
         """Returns the units whose lease was lost — fenced or expired."""
@@ -1045,9 +1084,10 @@ class Worker:
     def stand_in_after(self) -> float:
         return (self.lease_ttl - self.lease_margin) * self.STAND_IN_AFTER
 
-    # Whether this instance may be stood in for at all. A subsystem that fences an instance says no once it has.
+    # Whether this instance may be stood in for at all. A subsystem that fences an instance says no once it has; and
+    # an instance that gave its slot up and has no other is nobody to stand in for (`keep_slot`).
     def may_stand_in(self) -> bool:
-        return True
+        return self.seeking is None
 
     # Marks one step of the loop. Nested steps are one step: the outermost one's start is what the stand-in judges.
     @contextmanager
@@ -1158,6 +1198,8 @@ class Worker:
         extra.setdefault("build", BUILD)
         if self.stand_in_renewals:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
+        if self.seeking is not None:
+            return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),
                          Heartbeat(self.name, self.wall(), status, extra).to_bytes())
 

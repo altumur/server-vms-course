@@ -414,13 +414,19 @@ class Resource:
         return {k: sorted(v) for k, v in out.items()}
 
     # Every bucket of every unit whose `end <= now`. Only these are mirrored.
+    #
+    # By NAME, and a mark of progress per bucket (the review's fifth pass, Т-M13's remainder). The mirror needs a
+    # bucket's path and its end, both in the name; `buckets_under` opened every file to count its lines, so the walk
+    # read a year of archive every pass — and marked progress once per UNIT: 5000 buckets of 300 lines took 3.2 s
+    # against a pulse limit of 2, and the resource looked silent while it walked. `events` is 0 here: nobody reads it.
     def closed_buckets(self) -> list[Bucket]:
         out = []
         for sub, units in self.units().items():
             for unit in units:
-                self._progressed()                      # it opens every file of the unit: the mirror's walk moves too
+                self._progressed()
                 for path in self.volumes.values():
-                    out += [b for b in buckets_under(path, sub, unit, self.bucket_seconds) if b.end <= self.wall()]
+                    out += [b for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed)
+                            if b.end <= self.wall()]
         return out
 
     # Total bytes under `root` — every file, not only the ones some subsystem accounts for. A walk, and
@@ -534,7 +540,8 @@ class Resource:
                 self._progressed()
                 days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
-                    for b in bucket_names_under(path, sub, unit, self.bucket_seconds):   # by NAME: no file is opened to be swept
+                    # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
+                    for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
@@ -559,7 +566,8 @@ class Resource:
                     for unit in units:
                         days = retention_days(self.vars, sub, unit)
                         days = max(days, floor) if tree_owner(sub)[0] == CONSOLE else days
-                        for b in bucket_names_under(base, sub, unit, self.bucket_seconds):
+                        self._progressed()
+                        for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):
                                 os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
@@ -580,11 +588,13 @@ class Resource:
             return {"enabled": False, "mirrored": 0, "peers": []}
         live = self.live_resources()
         peers = peers_of(self.server, list(live), knob["copies"])
-        n = 0
+        n, closed = 0, None
         for peer in peers:
             have = {b.path for b in self.peers.mirrored(live[peer]["url"], self.server)}
             self._progressed()
-            for b in self.closed_buckets():
+            if closed is None:
+                closed = self.closed_buckets()               # the walk once a pass, not once per peer
+            for b in closed:
                 if b.path in have:
                     continue
                 with open(self.path_of(b.path), "rb") as f:

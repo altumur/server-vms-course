@@ -34,7 +34,14 @@ def _one_pass(ctl) -> list[str]:
     Driven by the loop's own `stop.wait(5)` at the end of a pass: it sets the flag,
     so the pass runs once and the `while` exits. The point of going through
     `_controller_loop` rather than calling the four methods by hand is that the
-    thing under test IS the try blocks."""
+    thing under test IS the try blocks.
+
+    `stop` is cleared FIRST (the review's fifth pass: this test failed in one full run and passed alone). It is
+    the process's own flag, and importing `vms.__main__` installs the SIGTERM/SIGINT handler that sets it — for the
+    whole test run. A signal that reached the runner at any point before (a `kill` aimed at a daemon, a terminal's
+    interrupt) did not stop it: it set the flag, nothing else in the suite reads it, and this helper's loop then
+    ran no pass at all — no lines, the first assertion failed — and cleared it for the next test, which passed."""
+    stop.clear()
     rec = _Recorder()
     logging.getLogger().addHandler(rec)
     real_wait = stop.wait
@@ -88,6 +95,27 @@ def test_a_failed_placement_still_publishes_what_is_known():
     assert any("placement pass failed" in ln for ln in lines), lines
     assert not any("publishing the snapshot failed" in ln for ln in lines), lines
     assert box.objects.list("vms/snapshot/"), "the publish was skipped because placement failed"
+
+
+def test_one_pass_runs_a_pass_whatever_signal_reached_the_runner_before():
+    """The cause of the flake above, kept found: a SIGTERM delivered to the test process earlier in the run is
+    swallowed by `vms.__main__`'s handler and leaves `stop` set. The helper runs its pass all the same."""
+    import os
+    import signal
+    import time
+    box = Box()
+    ctl = _cluster(box, cameras=1)
+    if callable(signal.getsignal(signal.SIGTERM)):
+        os.kill(os.getpid(), signal.SIGTERM)                        # the handler sets `stop`; nothing else hears it
+    else:
+        stop.set()                                                  # not installed here: what it would have done
+    deadline = time.monotonic() + 2
+    while not stop.is_set() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert stop.is_set()
+    _one_pass(ctl)
+    assert ctl.pass_report() is not None and box.objects.list("vms/snapshot/")   # the pass ran, and published
+    assert not stop.is_set()
 
 
 def test_the_age_of_the_published_copy_is_on_metrics():

@@ -943,6 +943,67 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         rsrv.shutdown()
 
 
+def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_opens_none_of_them():
+    """The review's fifth pass (Т-M13's remainder). The mirror's walk (`closed_buckets`) opened every bucket to count
+    its lines and marked progress once per UNIT: 5000 buckets of 300 lines took 3.2 s against a pulse limit of 2 s,
+    and a resource walking a year of one camera looked silent. Now the walk goes by names, and every bucket named is
+    progress — in the mirror's walk and in the retention's.
+
+    The disk is made slow by the box's clock: every name the walk parses costs a tenth of the pulse's limit. What is
+    measured is the pulse's own question — how long since the pass last got somewhere — at every name."""
+    from w2cplatform import events as ev_mod
+    from w2cplatform.events import bucket_path
+    from w2cplatform.resource import Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
+                   lost_after=0.5)
+    limit = res.PULSE_LIMIT * res.lost_after                        # two seconds, as the review measured against
+    n = 2000
+    for i in range(n):                                              # closed buckets of one camera, a few lines each
+        p = bucket_path(box.archive, "vms", "7", 1, box.wall() - (n - i + 1) * 600)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w") as f:
+            f.write("".join(json.dumps({"t": 0, "kind": "stats", "n": k}) + "\n" for k in range(5)))
+    box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
+    box.objects.put("platform/resources/srv-2/heartbeat",
+                    json.dumps({"server": "srv-2", "ts": box.wall(), "url": "http://srv-2"}).encode())
+    res.heartbeat()
+    held = sorted(b.path for b in ev_mod.bucket_names_under(box.archive, "vms", "7", 600))
+
+    class Peer:                                                     # holds every one already: the pass is the walk
+        def mirrored(self, url, server):
+            return [type("B", (), {"path": p})() for p in held]
+
+        def put(self, url, server, path, data):
+            raise AssertionError("nothing to send")
+
+    res.peers = Peer()
+    worst, opened = [0.0], [0]
+    real_parse, real_read = ev_mod.parse_bucket, ev_mod.read_bucket
+
+    def slow_parse(path, root):
+        worst[0] = max(worst[0], box.clock() - res._progress_at)     # the pulse's `still`, at this name
+        box.clock.advance(limit / 10)
+        return real_parse(path, root)
+
+    def counted_read(path):
+        opened[0] += 1
+        return real_read(path)
+
+    ev_mod.parse_bucket, ev_mod.read_bucket = slow_parse, counted_read
+    try:
+        res._progressed()
+        assert res.mirror()["mirrored"] == 0
+        assert worst[0] < limit, f"the mirror's walk went {worst[0]:.1f} s without a mark (limit {limit:g} s)"
+        assert opened[0] == 0, f"the mirror's walk opened {opened[0]} buckets to count lines nobody reads"
+        worst[0] = 0.0
+        res._progressed()
+        assert res.retain() == 0                                     # nothing is old enough: the walk is the work
+        assert worst[0] < limit, f"the retention's walk went {worst[0]:.1f} s without a mark (limit {limit:g} s)"
+    finally:
+        ev_mod.parse_bucket, ev_mod.read_bucket = real_parse, real_read
+
+
 def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_themselves():
     """The review's third pass (minor; Н-M9's remainder). `usage()` ran outside any part and `part` caught only
     `OSError`: one `.tmp` renamed between the listing and the `stat` took the whole pass — watermark and mirror with
