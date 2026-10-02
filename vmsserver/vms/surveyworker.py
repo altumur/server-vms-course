@@ -271,6 +271,7 @@ class SurveyWorker(Worker):
                 log.exception("survey pass failed")
             try:                                         # its own try, like the heartbeat's: the renewal used to be the last line of the pass, so a pass that raised half-way also let the leases run out (M19 of the review)
                 with self.guarded("lease"):
+                    self.keep_slot(lambda: [self._stop(u) for u in list(self.running)])   # the slot row too, not only the leases
                     self.renew_leases()
             except Exception:                            # noqa: BLE001
                 log.exception("survey lease renewal failed")

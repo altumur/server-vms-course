@@ -316,3 +316,34 @@ def test_a_fast_run_starts_the_stand_in_and_it_renews_nothing():
         w.reconcile_once = quick
         w.run(poll=0, stop=stop)
         assert w.stand_in_renewals == 0, type(w).__name__
+
+
+def test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given_up():
+    """Found beside the stand-in: the detector, scan, survey and gateway loops claimed their slot once and never
+    renewed it, so the row lapsed after `slot_ttl` in ordinary work and anybody could take a live worker's name.
+    Their lease step keeps the slot row now (`Worker.keep_slot`); a row that names another instance is a name given up —
+    the units let go, their epochs released, a free slot claimed."""
+    from tests.test_pass_failures import _workers
+    box = Box()
+    for w in _workers(box):
+        name = w.name
+        stop, passes = threading.Event(), []
+
+        def pass_(*a, **kw):
+            passes.append(1)
+            _tick(box, 30)                                         # each pass is thirty seconds of the box's clock
+            if len(passes) >= 3:
+                stop.set()
+            return []
+
+        w.reconcile_once = pass_
+        w.run(poll=0.0, stop=stop)                                 # ninety seconds: twice the slot's own ttl
+        row = _slot_row(box, w, name)
+        assert row.holder == w.instance and row.until > box.wall() - 30, type(w).__name__   # renewed by the loop, not lapsed
+    box = Box()
+    for w in _workers(box):
+        w.take_epoch("u")
+        was = w.name
+        box.vars.put(w.sub.slot_key(was), Slot(was, "somebody-else", box.wall() + 45, False, 9).to_items())
+        lost = w.keep_slot(lambda: None)
+        assert lost == ["u"] and "u" not in w.epochs and w.name != was, type(w).__name__

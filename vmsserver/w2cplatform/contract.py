@@ -988,6 +988,28 @@ class Worker:
 
     # Renews every lease; returns the units whose lease was lost — fenced or expired — for the subsystem to
     # stop.
+    # THE SLOT ROW, KEPT BY EVERY LOOP — not only the holder's and the evaluator's (found beside the stand-in, after
+    # the fourth review). The detector, scan, survey and gateway workers claimed their slot once, at construction,
+    # and never renewed it: the row lapsed after `slot_ttl` in ordinary work, and a spare or a restarted process
+    # could take the name of a worker that was alive and holding units. `keep_slot` renews it on the loop's lease
+    # step; a store that does not answer keeps the slot (not known is not "taken"); a row naming ANOTHER instance
+    # means this one is a zombie on that name: it lets its units go (`let_go`, the worker's own stop), gives up
+    # their epochs and claims a free slot, as the evaluator does.
+    def keep_slot(self, let_go) -> list[str]:
+        try:
+            mine = self.renew_slot()
+        except OSError as e:
+            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
+            return []
+        if mine:
+            return []
+        was, lost = self.name, list(self.epochs)
+        let_go()
+        self.release_all(); self.slot = None
+        self.claim_slot()
+        log.warning("%s: slot %s is held by another instance now; its units let go, going on as %s", self.instance, was, self.name)
+        return lost
+
     def renew_leases(self) -> list[str]:
         """Returns the units whose lease was lost — fenced or expired."""
         self._loop_renewed = self.clock()         # what the stand-in measures a hung step's danger from
