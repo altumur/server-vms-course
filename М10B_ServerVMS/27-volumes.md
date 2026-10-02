@@ -208,10 +208,17 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 ## Шаг 4 — Квота — размер кольца
 
 ```python
+    for f in ("quota_bytes", "shrink_confirmed"):
+        try:
+            int(fields.get(f, 0) or 0)
+        except (ValueError, TypeError):
+            raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
         raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
                       "(the console offers the size the box's own volume already has)")
 ```
+
+**Число проверяется как число, у двери.** `"1e12"` или `"64M"` бросали из этой проверки голый `ValueError`: строка не писалась, но консоль отвечала ошибкой, а не отказом; `shrink_confirmed` не проверялся вовсе и падал по дороге к строке (седьмое ревью). Теперь оба поля — целое число байт, иначе `Refused` со словами *is a whole number of bytes*. Тест: `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page` (его последняя часть).
 
 Квота нужна **каждому** объявленному тому, локальному тоже. Причина — в том, что такое том для движка. Новый том `obsd` форматирует ровно на этот размер, и дальше он кольцо: заполнился — отдаёт старейшие блоки (урок 7). Без числа форматировать нечем:
 
@@ -551,6 +558,8 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 ```
 
 Две строки — от шестого ревью. «Никто не взял» без причины оставляло оператора гадать: регистраторы пишут в heartbeat, какой том они **не берут** и почему (`refused`: том отказал в записи, отдан за молчащий демон, `obsd` слишком стар для сетевого тома), и раньше это было видно только в JSON heartbeat'а. Теперь `served` дописывает эти причины к строке тома (`_refusing`): *declared, and no recorder has taken it; r-1 does not take it: obsd on srv-a is too old to write net safely…*. И строка холда, которая не разбирается, больше не роняет весь список: том назван, причина сказана (`holders` читает через `read_hold`).
+
+**Строка самого тома, которая не разбирается, тоже на странице — названная.** Строка, написанная руками или старой сборкой (`quota_bytes: "1e12"`), бросала из `declared`, а под ним — шаг аренд каждого регистратора, эта страница, карта камеры и скан (седьмое ревью, часть 2, блокер 1; что было с регистраторами — урок 10). Теперь `declared(vars_, garbled)` пропускает такую строку, считает её один раз (`VOLUMES`, `volumes_garbled`) и кладёт её имя в `garbled`. `served` показывает её отдельной строкой с `garbled: True` и причиной *its row (rec/volumes/…) does not parse, so no recorder takes it and the console cannot show it: mend the row — declare the volume again — or delete it*; если регистратор всё ещё держит этот том, к причине дописано, что он пишет по строке, прочитанной последней. В `wanted` такой том считается: его объявили, а включён ли он, сказать нельзя. Удалить его можно: `DELETE /rec/volumes/<имя>` находит имя и среди нечитаемых строк и не отвечает 404. Запись на такой том не садится: `volume_named` бросает `Unreadable` (это `Refused`), и `refuse_recording` отказывает записи с `home` на нём, а права на такой том консоль спрашивает как на карту без камеры — грант на весь кластер (`volume_cam` отвечает `"*"`). Тесты: `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page`, `test_row_reader.py::test_a_recording_is_not_homed_on_a_volume_whose_row_does_not_parse`.
 
 Рядом — `writing`: открыт, но пишет плохо, по сторожу писателя (урок 10). И пара чисел: `wanted` — сколько процессов нужно объявленному списку, `serving` — сколько есть. `spare: 0` при `serving < wanted` — единственное состояние, которому нужен человек. Консоль его называет и пишет команду словами того оркестратора, который запустил её саму (`systemctl start recworker@r-2` или `nomad job scale recworker 3`), но не выполняет (`test_the_console_says_which_archives_nobody_is_writing_into`, `test_the_console_writes_out_the_command_and_does_not_run_it`, `test_the_numbers_a_scaling_policy_reads`).
 

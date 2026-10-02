@@ -89,7 +89,10 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
             t0, t1 = (number(_hb_key(rec_ctl, w, f"closed.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
             if t0 is None or t1 is None:
                 continue                                    # that span's trouble, counted once: the others are scanned
-            rec = rec_ctl.unit(unit)
+            try:
+                rec = rec_ctl.unit(unit)
+            except PARSE_ERRORS:
+                continue                                    # that recording's row does not parse: its span waits for it
             if rec is None or t1 <= t0:
                 continue
             cam = str(rec.get("cam", unit))
@@ -98,7 +101,7 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
                     continue
 ```
 
-**Слово в одном отрезке — беда этого отрезка.** Концы отрезка разбирались голым `float`. Один регистратор с `closed: "7|then|now"` — и исключение выходило из всего прохода: ни одного скана поверх пришедших кадров ни у одного регистратора, и так раз в 30 секунд, пока отрезок висит в heartbeat'е (седьмое ревью, часть 2). Теперь числа читает `rows.number`, общий читатель строк и полей heartbeat'а (М10A, урок 8, шаг 5). Конец, который не разбирается, как и `nan` или `inf`, даёт `None`. Отрезок пропускается и считается один раз на свой ключ, пока снова не станет читаться, а остальные отрезки превращаются в задачи. Так же устроены остальные проходы этого семейства: `keep_what_fired` по `hits` обзора, `reap`, `forget_finished` и `ask_for_footage` (урок 21). Тест: `test_row_reader.py::test_one_word_in_a_recorders_closed_spans_stops_no_scan_and_no_keep`.
+**Слово в одном отрезке — беда этого отрезка.** Концы отрезка разбирались голым `float`. Один регистратор с `closed: "7|then|now"` — и исключение выходило из всего прохода: ни одного скана поверх пришедших кадров ни у одного регистратора, и так раз в 30 секунд, пока отрезок висит в heartbeat'е (седьмое ревью, часть 2). Теперь числа читает `rows.number`, общий читатель строк и полей heartbeat'а (М10A, урок 8, шаг 5). Конец, который не разбирается, как и `nan` или `inf`, даёт `None`. Отрезок пропускается и считается один раз на свой ключ, пока снова не станет читаться, а остальные отрезки превращаются в задачи. Строка записи, которая не разбирается, — тоже беда своего отрезка: `rec_ctl.unit` в `try`, и отрезок ждёт, пока строку починят. Так же устроены остальные проходы этого семейства: `keep_what_fired` по `hits` обзора, `reap`, `forget_finished` и `ask_for_footage` (урок 21). Тест: `test_row_reader.py::test_one_word_in_a_recorders_closed_spans_stops_no_scan_and_no_keep`.
 
 **Камера задачи — камера её записи.** Проход берёт `cam` из строки записи и кладёт ту же запись в `rec`, так что его задачи согласованы по построению. После пятого ревью это правило консоли, а не совпадение: задачу, чей `rec` — запись другой камеры, консоль не создаёт, а `rec` у созданной не меняется (`refuse_job`, `DetJobController`, урок 21). Проход пишет строки своим `SpecController`, мимо ворот, и правило ему не мешает: он сам его соблюдает.
 

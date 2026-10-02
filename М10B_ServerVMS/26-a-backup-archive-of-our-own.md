@@ -192,9 +192,24 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 
 ```python
         q = urllib.parse.urlencode({"from": t0, "to": t1})
-        with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
-            data = r.read()
+        try:
+            with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
+                # an answer with neither chunks nor a length cannot be told whole from cut (the seventh pass, minor;
+                # the console's `_door` refuses it the same way)
+                if r.headers.get("Content-Length") is None and \
+                        "chunked" not in (r.headers.get("Transfer-Encoding") or "").lower():
+                    raise OSError(f"{url}: the frames of {unit} came with neither chunks nor a length — whole or cut "
+                                  f"cannot be told")
+                data = r.read()
+        except http.client.HTTPException as e:
+            raise OSError(f"{url}: the frames of {unit} came cut short ({e!r})") from None
+        try:
+            return Sample.decode_all(data)
+        except (ValueError, struct.error) as e:
+            raise OSError(f"{url}: the frames of {unit} came cut short ({e})") from None
 ```
+
+Оборванный ответ двери — `OSError`, как и недоступная дверь: ответ без `Content-Length` и без `chunked`, по которому не сказать, целый он или обрезан (седьмое ревью, мелкие; консоль так же отказывает в своём `_door`), оборванное чтение (`HTTPException`) и кадры, которые не декодируются. `fetch_from` ловит `OSError`: копия кончается `error`, и диапазон спросят снова.
 
 У карты камеры — крючок `card_range`. Две строки с `_source_answered` в `fetch_from` — отсрочка для источника, который не отдал диапазон: и для камеры, и для двери резервной (шаг 10).
 
@@ -630,9 +645,15 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
 
 ```python
     def volume_pass(self) -> str:
-        rows = {v.name: v for v in volumes.declared(self.vars)
+        unread: set = set()
+        rows = {v.name: v for v in volumes.declared(self.vars, unread)
                 if v.kind == "edge" and v.enabled and v.server == self.server}
+        last = getattr(self, "_card_last", None)
+        if self.hold in unread and last is not None and last.name == self.hold:
+            rows[self.hold] = last
 ```
+
+**Строка карты, которая не разбирается, — не карта, которую забрали.** Строку тома — эту или чужую — `volumes.declared` читает общим читателем: битая пропускается, считается и называется (седьмое ревью, часть 2, блокер 1; урок 10 и урок 27). Прочитанный пропуск как «карты нет» стоил бы камере её карты — `leave_volume` и остановленные записи из-за одного поля. Поэтому своя карта держится по строке, прочитанной последней (`_card_last`, её запоминает каждый проход, который держит карту). Тест: `test_row_reader.py::test_a_card_whose_row_stops_parsing_stays_the_cameras_card`.
 
 Продукт нашёл, почему это важно (DH). Его рекордер камеры выбирал том по общим правилам, где сетевой том идёт раньше резервного. Сетевой том, объявленный на консоли камеры, уводил рекордер с карты, и карта переставала быть резервной: `when: offline` писал всегда, а сервер переставал видеть её источником. Продукт закрепил рекордер за картой. Тест: `test_a_network_volume_declared_in_the_cameras_cluster_does_not_take_the_cameras_recorder`.
 

@@ -517,9 +517,18 @@ class Journal:
     def metrics_text(self) -> str:
         p = self.spec.name
         hbs = heartbeats(self.ctl.objects, p + "/"); now = self.wall()
-        live = {w: hb for w, hb in hbs.items() if now - hb.ts <= self.lost_after}
+        live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
         res = resources_seen(self.ctl.objects)
+        hk = self.ctl.sub.heartbeat_key
+
+        def n(w: str, field: str, kind=float, default=0):                # a worker's field
+            return number(f"{hk(w)}#{field}", hbs[w].extra.get(field), kind, default)
+
+        def rn(server: str, field: str, value, kind=float):               # a resource's field
+            return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
 ```
+
+**Каждое число heartbeat'а здесь читается через `n` или `rn`, а числа отчёта о проходе — через `r`** (седьмое ревью, часть 2). Голое `int(headroom)` или `float(space.full)` бросало на одном слове в одном поле одного heartbeat'а, и пропадала вся страница метрик подсистемы — а с ней каждый алерт. `rows.number(key, value, kind, default)` (урок 8, шаг 5) отдаёт конечное число нужного вида; слово, `nan` или `inf` — «не сказано»: `default` (0, у возрастов −1), посчитано один раз на объект и поле (ключ `<объект>#<поле>`, таблица `field`), остальная страница стоит. Отсутствующее поле — тоже `default`, но не считается. Тест: `test_row_reader.py::test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page`.
 
 Формат Prometheus — это текст. Никакой библиотеки, никакого реестра, никакого клиента: `# TYPE`, имя, метки в фигурных скобках, число. Двадцать строк кода вместо зависимости, которую пришлось бы тащить на коробку.
 
@@ -528,41 +537,54 @@ class Journal:
 ```python
         lines = [f"# TYPE {p}_workers_live gauge", f"{p}_workers_live {len(live)}",
                  f"# TYPE {p}_worker_headroom gauge",
-                 *[f'{p}_worker_headroom{{worker="{w}",server="{hb.extra.get("server", "?")}"}} {hb.extra.get(self.spec.headroom_from, 0)}' for w, hb in live.items()],
-                 f"{p}_headroom {sum(int(hb.extra.get(self.spec.headroom_from, 0)) for hb in live.values())}",
+                 *[f'{p}_worker_headroom{{worker="{w}",server="{hb.extra.get("server", "?")}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
+                 f"{p}_headroom {sum(n(w, self.spec.headroom_from, int) for w in live)}",
 ```
 
 `headroom_from` — имя поля heartbeat'а, взятое из YAML (урок 9). Платформа не знает, что у камер запас считается в мегапикселях, а у счётчика в тиках; она знает, что поле называется так, как сказано в спецификации.
 
-Сумма запаса по живым воркерам — единственная метрика без меток: именно её читает автомасштабирование в М11. Метрика с метками — для глаз, метрика без меток — для решения.
+Сумма запаса по живым воркерам — метрика без меток: именно её читает автомасштабирование в М11. Метрика с метками — для глаз, метрика без меток — для решения.
 
 ```python
                  f"# TYPE {p}_worker_load gauge",              # assigned / capacity: what a target-value policy scales on
-                 *[f'{p}_worker_load{{worker="{w}"}} {1 - int(hb.extra.get(self.spec.headroom_from, 0)) / max(1, int(hb.extra.get(self.spec.capacity_from, 1))):.3f}' for w, hb in live.items()],
+                 # …over the workers that ARE a place. A worker holding no place (`place_of` empty) is a
+                 # spare: it carries nothing and reports zero capacity, which this formula would read as
+                 # fully loaded — and a target-value policy would then scale out for ever, one spare
+                 # demanding the next. A spare is counted below instead, as what it is.
+                 *[f'{p}_worker_load{{worker="{w}"}} {1 - n(w, self.spec.headroom_from, int) / max(1, n(w, self.spec.capacity_from, int, 1)):.3f}'
+                   for w in live if self.ctl.place_of(w) != ""],
+                 f"# TYPE {p}_spare_workers gauge",            # running, holding no place, ready to take one
+                 f'{p}_spare_workers {sum(1 for w in live if self.ctl.place_of(w) == "")}',
 ```
 
 Нагрузка как `1 - запас/ёмкость`. `max(1, …)` — защита от деления на ноль, которая случается ровно один раз: у воркера, успевшего ударить heartbeat'ом до того, как он посчитал свою ёмкость.
 
 ```python
                  f"# TYPE {p}_epoch_conflicts counter",
-                 *[f'{p}_epoch_conflicts{{worker="{w}"}} {hb.extra.get("conflicts", 0)}' for w, hb in hbs.items()],
+                 *[f'{p}_epoch_conflicts{{worker="{w}"}} {n(w, "conflicts", int)}' for w in hbs],
 ```
 
-Единственная метрика, которая считается по **всем** heartbeat'ам, а не только по живым: конфликты эпох — это история, и умерший воркер свой счёт уже не поправит, но рассказать о нём успел. Ненулевые конфликты означают, что двое держали одну единицу и отсечение сработало — то, ради чего написан урок 6.
+Первая метрика, которая считается по **всем** heartbeat'ам, а не только по живым: конфликты эпох — это история, и умерший воркер свой счёт уже не поправит, но рассказать о нём успел. Ненулевые конфликты означают, что двое держали одну единицу и отсечение сработало — то, ради чего написан урок 6.
 
 ```python
                  f"# TYPE {p}_failover_seconds gauge", f'{p}_failover_seconds{{kind="worst"}} {self.worst_failover}',
-                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if now - float(hb['ts']) <= self.lost_after)}",
+                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
+                 # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
+                 # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
+                 # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
+                 f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
+                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}",
+                 f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
+                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
                  f"# TYPE {p}_{self.spec.running_gauge} gauge",
                  f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
-        return "\n".join(lines) + "\n"
 ```
 
 `worst_failover` — арифметика из урока 11, посчитанная один раз при сборке консоли: худший разрыв между смертью воркера и подхватом его единиц. Величина проектная, а не наблюдаемая, и на графике она — линия, с которой сравнивают наблюдаемое.
 
 `running_gauge` — снова имя из YAML: у камер это `cameras_streaming`, у счётчика `ticks_ticking`. Считается перечислением статусов живых воркеров с `phase == running` — то есть **не** «сколько настроено», а «сколько на самом деле идёт».
 
-Ответ заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
+Дальше в `lines` идут возраст снимка, диски серверов, ожидания ресурсов, проход контроллера и строки, которые не разбираются (таблица ниже), очередь сборщика блобов, если у подсистемы есть блобы, и числа самой подсистемы (`metrics_extra`). Ответ (`return "\n".join(lines) + "\n"` в конце метода) заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
 
 **Проход контроллера — тоже отсюда.** У контроллера нет порта, и спросить его не о чем. Он оставляет отчёт о проходе в хранилище объектов (урок 11, шаг 9), а консоль его отдаёт — по каждой подсистеме, с её префиксом:
 
@@ -576,8 +598,10 @@ class Journal:
 | `<p>_worker_fenced{worker}` | воркер жив, ничего не держит и ждёт: его сборка не понимает схему хранилища (урок 17). Воркер, чей **слот** забрал другой экземпляр, здесь не виден — он молчит, пока не найдёт слот (нет heartbeat'а под этим именем), а когда снова встал в строй, говорит `was_fenced` |
 | `<p>_worker_store_errors{worker}`, `<p>_worker_pass_failures{worker}` | сколько раз хранилище ему не ответило; сколько раз часть его цикла упала |
 | `<p>_worker_slots_garbled{worker}` | сколько строк слотов воркер не смог разобрать, когда искал слот: каждая — имя, которое никто не возьмёт и никого под ним не увидят (шестое ревью) |
+| `<p>_worker_<table>s_garbled{worker}` | то же по другим таблицам, которые знает процесс консоли (`rows.counts`): `holds_garbled` — место, которое никто не возьмёт; `assignments_garbled`; у регистратора — `volumes_garbled`, `keeps_garbled`. Строки, каждая один раз, пока снова не разберётся, — не чтения (седьмое ревью: `holds_garbled` был в heartbeat'е, а здесь не был) |
+| `<p>_console_rows_garbled{table}` | строки подсистемы, которые не смогла разобрать сама консоль, по таблицам: заявки, которые она превращает в работу (`table="request"`, урок 25 М10B), удержания, которые показывает, поля heartbeat'ов, прочитанные выше как «не сказано» (`table="field"`) |
 
-Четыре последние — из heartbeat'ов. Размещение их не читает: ограждённый воркер и так ничего не держит. Их читает человек, которому иначе не отличить «воркер пуст» от «воркер ограждён» — и не заметить, что ёмкость уходит в строки, которые не читаются.
+Четыре строки таблицы от `fenced` до `<table>s_garbled` — из heartbeat'ов. Размещение их не читает: ограждённый воркер и так ничего не держит. Их читает человек, которому иначе не отличить «воркер пуст» от «воркер ограждён» — и не заметить, что ёмкость уходит в строки, которые не читаются.
 
 ## Шаг 12 — Дверь подсистемы
 

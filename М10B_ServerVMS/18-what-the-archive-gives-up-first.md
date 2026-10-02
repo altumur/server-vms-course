@@ -431,10 +431,16 @@ class Keep:
 **Не прочитал — не значит «меток нет».** Проход читает метки в начале, и это чтение не в `try`:
 
 ```python
-        declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
+        # A store that does not answer RAISES: unread is not "none". A keep whose row does not parse is skipped and
+        # counted (`keeps.KEEPS`; the seventh pass) — it raised out of this pass, and no keep of anybody's was copied —
+        # and what was copied of it is carried as it stands below, so its losses are still seen when it is mended.
+        unread: list = []
+        declared = keeps.declared(self.vars, unread)
 ```
 
 Хранилище не ответило — проход падает и не делает ничего. Здесь обратное правило стоило бы меньше, чем в старой лестнице: проход только копирует. Но `keep_state` в heartbeat'е, прочитанный как «меток нет», сказал бы оператору, что его доказательства нигде не держат. Тест — `test_not_being_able_to_read_the_keeps_is_not_there_are_none`.
+
+**Метка, чья строка не разбирается, — беда этой метки, а не всех.** `from: "yesterday"` в одной метке бросал из `keeps.declared`, а он стоит под копированием каждой метки, под дверью каждого регистратора и под сроком хранения событий каждой единицы на каждом сервере (`kept_buckets`: «не знаю, что отмечено» — не «ничего не отмечено», поэтому не удалялось ничего, и диски наполнялись; седьмое ревью, часть 2). Теперь строки меток читает общий читатель `rows.Table` (`KEEPS`; М10A, урок 8, шаг 5): битая строка пропускается, считается один раз, пока снова не разберётся (`keeps_garbled` в heartbeat'е), и пишется в лог один раз. Тому, кто не должен прочитать её как «метки нет», `declared(vars_, garbled)` отдаёт её через список `garbled` как метку **всей** её камеры — `keeps.whole`, от нуля до бесконечности: не знать, какие минуты отмечены, и значит «все». Срок хранения держит бакеты этой камеры и удаляет остальные по их дням. Копировать для неё проход ничего не копирует — вся камера не интервал, — но её состояние переносит как было, с пометкой `garbled: True` (`state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}`), и `keep_held` по ней не забывается: когда строку починят, пропажа из кольца `incidents` по-прежнему будет видна. Строка, в которой нет даже камеры, не держит ничего — она только посчитана и названа в логе. Тест: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`.
 
 **События держатся на месте.** Бакеты событий лежат на ресурсе, и их хранит по дням ресурс платформы. Что такое метка, он не знает. Тот, кто его собрал, даёт ему функцию `kept`:
 
