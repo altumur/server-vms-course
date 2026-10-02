@@ -43,13 +43,16 @@ def _second(wall, pusher, n=1):
 
 
 def test_a_break_continues_after_what_the_recorder_wrote_and_nothing_goes_twice():
-    """Pushing at t=1..5; the recorder WROTE up to 3 (4 and 5 were lost in its queue). The road goes for six
-    seconds. Back: the push starts at the first keyframe after 3 — 4, 5 again, then the break, then live."""
+    """Pushing at t=1..5; the recorder WROTE up to 3 (4 and 5 were lost in its queue: it restarted, and subscribed
+    anew). The road goes for six seconds. Back: the push starts at the first keyframe after 3 — 4, 5 again, then the
+    break, then live."""
     wall = Clock(0.0)
     south, ingest, pusher, rq, down = _world(wall)
     _second(wall, pusher, 5)
     assert [f["t"] for f in rq.drain()] == [1, 2, 3, 4, 5]
     ingest.written = lambda ref: 3.0
+    ingest.tees[(SERIAL, "live")].unsubscribe("recorder:r")            # the recorder restarted: its queue is gone
+    rq = ingest.subscribe(SERIAL, "recorder:r", maxsize=1000)
     down.update(URLS)
     _second(wall, pusher, 6)                                           # t=6..11: nobody answers
     assert pusher.broken_at == 5.0
@@ -157,6 +160,30 @@ def test_a_card_that_holds_less_than_the_break_leaves_a_hole_and_the_stream_goes
     assert got == [float(t) for t in range(24, 30)] + [float(t) for t in range(36, 55)]   # 35 is a delta frame: dropped
 
 
+def test_a_hole_in_the_middle_of_the_cards_part_is_counted_and_the_stream_goes_on_from_a_keyframe_after_it():
+    """The product's sibling of the eighth review: its live loop had no hole check, and the server took the frames after
+    a hole as if they followed them. Off the card it was the same: a read checked only where it began, and a hole in
+    the middle of the card's part — a queue the card's writer dropped, a hold that closed a segment — went into the
+    stream unsaid. Every frame off the card must begin where the one before ended: after a hole the stream goes on from
+    the next key frame, and the seconds are said (`failed_s`) — they are on no copy."""
+    wall = Clock(0.0)
+    card = real_card(28, 60, card=real_card(0, 25))                    # the card lost 25..28 (a key frame at 28)
+    south, ingest, pusher, rq, down = _world(wall, card=card.pieces)
+    _short_memory(pusher, 20)
+    for _ in range(3):
+        wall.advance(1); pusher.pass_once([_heavy(wall())])
+    rq.drain()
+    ingest.written = lambda ref: 3.0
+    down.update(URLS)
+    for _ in range(50):
+        wall.advance(1); pusher.pass_once([_heavy(wall())])
+    down.clear()
+    wall.advance(1); out = pusher.pass_once([_heavy(wall())])
+    got = [f["t"] for f in rq.drain()]
+    assert got == [24.0] + [float(t) for t in range(28, 55)]            # 24, the hole, 28 on: every second after it once
+    assert out["continue"]["failed_s"] == 3.0 and "hole" in out["continue"]["failed_why"]
+
+
 def test_a_card_that_cannot_give_its_part_of_a_break_is_logged_counted_and_said_in_the_pushers_state():
     """The seventh review: `except OSError: reached = have` swallowed the card's error — two recordings on the card
     and a pusher not told which, and the part of the break that only the card held was neither sent nor said. Now
@@ -198,7 +225,8 @@ def test_without_have_the_continuation_is_what_the_camera_kept():
     _second(wall, pusher, 3); rq.drain()
     down.update(URLS); _second(wall, pusher, 3); down.clear()
     _second(wall, pusher)
-    assert [f["t"] for f in rq.drain()] == [1, 2, 3, 4, 5, 6, 7]      # an ingest that cannot say: all it kept
+    assert pusher.resumed == 6                                         # an ingest that cannot say: all it kept went…
+    assert [f["t"] for f in rq.drain()] == [4, 5, 6, 7]               # …and the recorder is given only what it had not had
 
 
 def test_back_with_nobody_wanting_the_stream_continues_nothing():
@@ -377,9 +405,10 @@ def test_at_the_assumed_uplink_a_break_is_caught_up_in_twice_its_length_and_belo
             wall.advance(1); frames, last = _sensor(wall, last); pusher.pass_once(frames)
         down.clear()
         _uplink(ingest, wall, rate)
-        back = wall()
+        back, lagged = wall(), False
         while wall() - back < 300:
             wall.advance(0.5); frames, last = _sensor(wall, last); pusher.pass_once(frames)
+            lagged |= pusher.lag and pusher.uncovered is True and "the uplink does not carry the stream" in pusher.state
             if catches_up and not pusher.behind():
                 break
         if catches_up:
@@ -389,3 +418,93 @@ def test_at_the_assumed_uplink_a_break_is_caught_up_in_twice_its_length_and_belo
             missing = set(float(t) for t in range(1, int(pusher.sent) + 1)) - set(w.written)   # (not what is still to go)
             assert missing and pusher.continued["cut_s"] >= len(missing)   # every second it skipped is counted
             assert pusher.behind() <= pusher.lag_limit and w.repeats == 0 and w.written == sorted(w.written)
+            assert lagged                                              # …and it said so: lagging, the card told (the eighth review)
+
+
+# -- the eighth review ---------------------------------------------------------------------------------------------------
+def test_a_push_repeated_after_its_answer_was_lost_adds_nothing_even_with_have_five_seconds_old():
+    """The eighth review, major, run as its probe ran it: every third push reaches the ingest and its answer is lost,
+    and `have` — the recorder's word in its heartbeat — is five seconds old. Each lost answer is a break of one pass to
+    the camera, and its continuation starts at `have`: five seconds the recorder has, sent again. The ingest dropped
+    only what was not newer than `have`, and the rest went to the recorder — 53 repeats, out of order; the rule "the
+    writer takes nothing older than its last" lived in the course's test writer alone. Now no subscriber of the ingest
+    is given a frame not newer than the last it was given: the repeats are counted at the ingest and reach nobody."""
+    wall = Clock(0.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    w = _Writer(ingest)
+    ingest.written = lambda ref: w.written[-1] - 5.0 if w.written else None   # a heartbeat five seconds old
+    real, calls = ingest.push, {"n": 0}
+
+    def push(*a, **kw):
+        calls["n"] += 1
+        took = real(*a, **kw)
+        if calls["n"] % 3 == 0:
+            raise Unreachable("the answer to the push was lost")
+        return took
+    ingest.push = push
+    _second(wall, pusher, 60)
+    _second(wall, pusher, 2)                                              # (the last lost answer's frames, sent again)
+    assert ingest.tees[(SERIAL, "live")].repeats > 50                     # the camera did send them again…
+    assert w.repeats == 0 and w.written == [float(t) for t in range(1, int(wall()) + 1)]   # …and nobody got them twice
+    # What the ingest did not hand on is said (the product's sibling: a full queue's refusals were counted nowhere).
+    import json
+    from domain.ingest import POLLED
+    ingest.push = real
+    ingest.subscribe(SERIAL, "viewer:v", maxsize=2, edge=True)            # a viewer that does not read
+    _second(wall, pusher, 5)
+    lost = ingest.lost()[SERIAL]
+    assert lost["repeats"] > 50 and lost["dropped"] == {"viewer:v": 3}
+    ingest.publish_polled(south.objects)
+    [key] = south.objects.list(POLLED + "/")
+    assert json.loads(south.objects.get(key))["lost"][SERIAL] == lost
+
+
+def test_a_camera_that_polls_an_ingest_that_restarted_is_answered_at_once_whatever_version_it_says():
+    """The eighth review's sibling of the pull's number: the poll's `version` restarted at nought with the ingest too. A
+    camera that had seen version 1 before the restart polled the new ingest with 1, the new ingest's first version was 1,
+    and the poll was held as "nothing changed" — up to the whole wait — with a want waiting in the answer. Versions start
+    at a number of the ingest's own boot now: one from before, or from another ingest of the road, is answered at once."""
+    import time
+    wall = Clock(0.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    token = _token(ingest, pusher)
+    seen = ingest.poll(token, SERIAL, version=-1)["version"]
+    from domain.ingest import Ingest
+    again = Ingest(ingest.cluster, ingest.urls, ingest.keys, wall=wall)    # the same ingest, restarted
+    again.want(SERIAL, "recorder:r")
+    began = time.monotonic()
+    out = again.poll(token, SERIAL, version=seen, wait=2.0)
+    assert time.monotonic() - began < 0.5 and not out.get("held") and out["push"] is True
+    assert again.poll(token, SERIAL, version=out["version"]).get("held")    # (and its own version is still "nothing new")
+
+
+def test_a_torn_book_entry_snapshot_shard_or_heartbeat_field_is_that_ones_trouble_and_the_camera_goes_on_pushing():
+    """The eighth review's siblings, left in this module by the М12 pass: the camera's entry in its book of primaries,
+    this cluster's rec snapshot shards (`should_from_snapshot`) and a recorder's `written_through` (`written_from_
+    heartbeats`) were read bare — one torn entry raised out of the camera's whole pass, and one torn shard or field out
+    of every poll at the ingest. Each is skipped and counted once (`BOOKS`, `FIELDS`), and what was read last of it is
+    kept: the camera pushes on by the entry it read before, the ingest says what the shards it can read say."""
+    import json
+    from domain.agent import PRIMARIES_PATH
+    from domain.ingest import BOOKS, should_from_snapshot
+    wall = Clock(1000.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    _second(wall, pusher, 2)
+    items, idx = pusher.flash.get(PRIMARIES_PATH)
+    pusher.flash.put(PRIMARIES_PATH, {**items, SERIAL: '{"cluster": "south", "ingest": {"urls": '}, cas=idx)   # half a write
+    _second(wall, pusher, 2)
+    assert [f["t"] for f in rq.drain()] == [1001.0, 1002.0, 1003.0, 1004.0] and "pushing" in pusher.state
+    assert f"{PRIMARIES_PATH}/{SERIAL}" in BOOKS.bad
+    row = {"id": SERIAL, "cam": f"ref:{SERIAL}", "enabled": True}
+    south.objects.put("rec/snapshot/a", json.dumps({"recordings": [row]}).encode())
+    south.objects.put("rec/snapshot/b", b'{"recordings": [')
+    south.objects.put("rec/snapshot/c", json.dumps({"recordings": [{**row, "id": "x", "until": "soon"}]}).encode())
+    should = should_from_snapshot(south.objects, wall)
+    assert should(SERIAL) is True and "rec/snapshot/b" in BOOKS.bad      # the shard it can read decides
+    south.objects.put("rec/snapshot/a", b"[")                            # torn now: the shard as read last
+    assert should(SERIAL) is True
+    south.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", wall(), [
+        {"id": SERIAL, "cam": f"ref:{SERIAL}", "written_through": "x"},
+        {"id": "y", "cam": f"ref:{SERIAL}", "written_through": 990.0}], {}).to_bytes())
+    ingest.written = written_from_heartbeats(south.objects, wall)
+    assert ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall())["have"] == 990.0   # the field that is a number

@@ -208,6 +208,96 @@ def test_frames_the_relay_could_not_push_up_or_whose_pull_answer_was_lost_are_se
     assert rq.drain() == []                                            # …and not a third time
 
 
+# -- the eighth review ---------------------------------------------------------------------------------------------------
+def test_a_centre_that_restarts_in_the_middle_of_a_pull_with_two_answers_lost_hands_every_frame_down():
+    """The eighth review, blocker 2, run as its probe ran it. The relay had got batch 2; the centre restarted — its
+    count back at nought — and the first two answers after it were lost on the way down. The relay still said "2", the
+    new count reached 2, and the third pull was taken for "the relay has batch 2": frames 3 and 4 never arrived, and
+    nothing counted them. A batch's mark is `(boot, n)` now, and a mark from another boot is never this boot's: the
+    last batch goes again until the relay has a mark of this boot. Every frame arrives, once, in order; a relay that
+    restarted itself says no mark, and gets the last batch once more — a repeat its ingest drops."""
+    from domain.chain import Forwarder
+
+    def centre():
+        ing = Ingest("north", CENTRE_URLS, keys=lambda: {})
+        ing._check = lambda *a, **k: {}                                # (the tokens are the other tests')
+        ing.subscribe("7", "up:east", maxsize=1000)                    # the relay's subscription, from its first pull
+        return ing
+    at = {"centre": centre()}
+    relay = Ingest("east", RELAY_URLS, keys=lambda: {})
+    rq = relay.subscribe("7", "recorder:east", maxsize=1000)
+    fwd = Forwarder("east", relay, FakeVariables(), lambda url: at["centre"], needs=lambda ref: True)
+
+    def pull(t, lost=False):
+        ing = at["centre"]
+        ing._take("7", [{"t": float(t), "key": True}])                # what the camera pushed to the centre since
+        real = ing.pull
+        if lost:
+            def answer_lost(*a, **kw):
+                real(*a, **kw)
+                raise Unreachable("the answer to the pull was lost")
+            ing.pull = answer_lost
+        try:
+            fwd._pull(ing, "7", {"token": "t"})
+        except Unreachable:
+            pass
+        ing.pull = real
+    pull(1); pull(2)
+    at["centre"] = centre()                                            # the centre restarts
+    pull(3, lost=True); pull(4, lost=True); pull(5); pull(6)
+    assert [f["t"] for f in rq.drain()] == [1, 2, 3, 4, 5, 6]
+    fwd.pulled.clear()                                                 # the relay's forwarder restarts
+    pull(7)
+    assert [f["t"] for f in rq.drain()] == [7] and relay.tees[("7", "live")].repeats >= 1
+
+
+def test_frames_the_centre_took_but_whose_answer_was_lost_reach_its_recorder_once():
+    """The eighth review's major, one level up: the relay pushes again what the centre did not acknowledge — and when the
+    centre HAD taken it and only the answer was lost, the centre's recorder got it twice, out of order. The centre's
+    ingest gives no subscriber a frame not newer than the last it was given."""
+    from domain.federation import Unreachable as Gone
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    fwd.pass_once()
+
+    def second():
+        wall.advance(1)
+        pusher.pass_once([{"t": wall(), "key": True}])
+    second(); second()
+    push, left = centre.push, {"n": 1}
+
+    def took_but_lost(*a, **kw):
+        out = push(*a, **kw)
+        if left["n"]:
+            left["n"] -= 1
+            raise Gone("the answer was lost")
+        return out
+    centre.push = took_but_lost
+    fwd.pass_once()                                                    # taken; the answer lost: kept to push again
+    second(); fwd.pass_once()                                          # pushed again, with what came since
+    got = [f["t"] for f in rq.drain()]
+    assert len(got) == 3 and got == sorted(set(got)) and centre.tees[(SERIAL, "live")].repeats == 2
+
+
+def test_the_forwarder_keeps_what_it_holds_in_seconds_and_bytes_and_says_what_it_dropped():
+    """The eighth review, a minor: "the relay does not lose frames when a push fails" held about a second and a half —
+    thirty frames waiting, fifty kept — and what it dropped was counted where nobody looked. It keeps `FORWARD_HOLD`
+    seconds now, at most `FORWARD_BYTES`, cut clean to a key frame, and the camera's state and `stats` say how many
+    frames it dropped past that."""
+    from domain.chain import FORWARD_HOLD, Forwarder
+    fwd = Forwarder("east", Ingest("east", RELAY_URLS, keys=lambda: {}), FakeVariables(), lambda url: None)
+    frames = [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)]   # thirty seconds at 25 frames a second
+    kept = fwd._kept("7", frames)
+    assert kept[0]["key"] and frames[-1]["t"] - kept[0]["t"] <= FORWARD_HOLD and kept[-1] is frames[-1]
+    assert len(kept) >= 25 * (FORWARD_HOLD - 2) and fwd.dropped["7"] == len(frames) - len(kept)
+    fat = [{"t": 1000 + i, "key": True, "body": b"x" * (4 << 20)} for i in range(8)]
+    assert len(fwd._kept("8", fat)) == 4                               # sixteen mebibytes, whatever the seconds
+    fwd.state["7"] = "forwarding"
+    assert fwd.stats()["7"]["dropped"] == fwd.dropped["7"]
+
+
 def _site_of(n_relays, per_relay, wall):
     north, _ = make_cluster("north", domain=True)
     store = _Counting(Ram())
@@ -606,3 +696,34 @@ def test_by_event_the_whole_road_takes_milliseconds_while_every_timer_is_a_secon
             t.join(timeout=2.0)
     assert out == "performed" and done[YARD7] == [{"action": "preset", "arg": 3}]
     assert took < 0.5, f"took {took:.3f} s: something waited for a timer"
+
+
+def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_forwards_on():
+    """The eighth review's siblings, left in this module by the М12 pass: the centre's ingest announcement and the
+    upstream book's own entries (`publish_upstream`), and the books the relay's agent carried (`Forwarder.book`,
+    `asks_book`) were read bare — one torn document raised out of the whole pass: no token to push up re-issued, or no
+    camera of the relay forwarded. A torn announcement keeps the road each entry names; a torn entry of the domain's
+    book is issued anew; a torn entry the relay carried is the one it read last — each counted once (`BOOKS`)."""
+    from domain.agent import UPSTREAM_PATH
+    from domain.ingest import ASKS_PATH, BOOKS, INGEST
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    north.objects.put(INGEST, b'{"cluster": "north", "urls": ')          # the centre's announcement, half written
+    books = publish_upstream(domain_pass.crossings, "north", lifetime=1.0)   # (a lifetime that asks for a new token)
+    assert json.loads(books["east"][SERIAL])["urls"] == CENTRE_URLS       # re-issued, on the road the entry named
+    centre.announce(north.objects)
+    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
+    north.vars.put(f"{UPSTREAM_PATH}/east", {**items, SERIAL: "{"}, cas=idx)   # the book's own entry, torn
+    books = publish_upstream(domain_pass.crossings, "north")
+    assert json.loads(books["east"][SERIAL])["token"] and f"{UPSTREAM_PATH}/east/{SERIAL}" in BOOKS.bad
+    before = fwd.book()[SERIAL]
+    items, idx = east.vars.get(UPSTREAM_PATH)
+    east.vars.put(UPSTREAM_PATH, {**items, SERIAL: '{"urls": ["srt://'}, cas=idx)   # what the relay carried, torn
+    assert fwd.book()[SERIAL] == before and f"{UPSTREAM_PATH}/{SERIAL}" in BOOKS.bad
+    centre.want(SERIAL, "recorder:centre")
+    assert "forwarding" in fwd.pass_once()[SERIAL]                        # the relay forwards on, by the entry read last
+    road = json.dumps({"roads": [{"urls": CENTRE_URLS, "token": "t"}]})
+    east.vars.put(ASKS_PATH, {"a|b": road, "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
+    assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
+    east.vars.put(ASKS_PATH, {"a|b": "[", "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
+    assert fwd.asks_book() == {"a|b": json.loads(road)}                   # torn now: the one read last
