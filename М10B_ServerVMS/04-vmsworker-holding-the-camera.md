@@ -170,7 +170,10 @@ Loopback, если привязана к нему, иначе имя серве�
             row = mine.get(str(it.get("unit", ""))) if it else None
             if row is None or rid in self.fetched:
                 continue                                 # чужое устройство, или уже сделано
-            until = float(it.get("valid_until", 0) or 0)
+            try:
+                until = float(it.get("valid_until", 0) or 0)
+            except (TypeError, ValueError):
+                self._refused(rid, row, it, "`valid_until` is not a time: …", done); continue
             if not until:
                 self._refused(rid, row, it, "a command carries a deadline …", done); continue
             if until - now > self.MAX_VALID:
@@ -197,7 +200,16 @@ Loopback, если привязана к нему, иначе имя серве�
 
 ```python
             if unit not in self.leases:
-                self.take_epoch(unit)                    # a device commanded is a unit fenced: its epoch, before the first command
+                try:
+                    self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
+                except OSError:
+                    raise                                # the store did not answer: not known, for every request — `pump_once` says so
+                except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this command's refusal
+                    self.epoch_errors[unit] = str(e)     # …and in the unit's status, as a start refused for it is (`_actuate`)
+                    self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)
+                    log.error("%s: request %s not performed: the epoch of %s could not be taken (%s)", self.name, rid, unit, e)
+                    continue
+                self.epoch_errors.pop(unit, None)
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
@@ -377,6 +389,7 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
             self.store_errors += 1
             mine = True
         if not mine:
+            self.give_up_name()
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
 ```
@@ -411,6 +424,9 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 - **Данные идут, действия ждут.** `_actuate` спрашивает `may_record`, и `observe` пишет события. `requests` спрашивает строгий `may_write`: команда устройству не исполняется, пока хранилище не подтвердит эпоху. Сценарий автоматизации — то же.
 - **Упавший конвейер поднимается под той же эпохой.** `take_epoch` не получил ответа, а эпоха этой камеры у воркера есть — старт идёт под ней. Раньше он ждал новой, и камера не писалась всё время, пока хранилище молчало.
 - **Битая строка эпохи — беда одной камеры.** Строка `vms/epoch/<камера>`, которая не разбирается, бросала `ValueError` через сверку и обрывала весь проход: камеры после неё не стартовали, а уведённая не останавливалась — каждый проход (пятое ревью; детекторы и обзор исправлены ещё после четвёртого). Теперь в `_actuate` это неудавшийся старт этой камеры: сверка повторит его со своей задержкой, а причина — в статусе камеры (`its epoch could not be taken: …`). Регистратор идёт через тот же `_actuate`. То же у скана (задача — `failed` с причиной), у вычислителя сценариев и у шлюза (`refused` в heartbeat'е); тесты — `test_epoch_refused.py`.
+- **И беда одной команды.** Пять мест пятого ревью закрыли сверку, а шестой вызов остался голым: `take_epoch` в `requests`, который берёт эпоху единице без аренды перед её первой командой (шаг 3а, «Под арендой, и отметка — один раз»). С битой `vms/epoch/1` и командами на двери 1 и 2 `ValueError` выходил из `requests` и из каждого `pump_once` — все 600 секунд, пока жила заявка, — и дверь 2 не открывалась (шестое ревью, воспроизведено запуском). Теперь это отказ **этой** команды: она отвечена (`_refused` — id уходит в `fetched`, консоль убирает строку), посчитана в `refused`, причина стоит в статусе единицы (`its epoch could not be taken: …`) и в логе, а проход идёт к следующей заявке. События `command.failed` на единице при этом нет: событие пишется под эпохой единицы, а её как раз не дали. Хранилище, которое не ответило (`OSError`), по-прежнему прерывает весь список до следующего прохода: «не знаю» — не отказ. Тест: `test_epoch_refused.py::test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_other_devices_are_commanded`.
+- **Соседи той же строки.** `valid_until`, в котором слово вместо числа, читался голым `float` и ронял каждый проход **вечно**: до проверки, которая просрочивает заявку, он не доходил. Теперь это отказ с причиной `valid_until is not a time` (`test_a_command_whose_deadline_does_not_parse_is_refused_alone`). У регистратора `requests` эпох не берёт, но читал `from` и `to` заявки на дозапись так же голо: одна битая заявка останавливала все за ней, любой записи. Теперь она отвечена с ошибкой и уходит (`test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next`).
+- **Все вызовы `take_epoch` — под изоляцией отказа.** Их семь: `_actuate` держателя (и регистратора, и регистратора на камере — они его наследуют), `requests` держателя, детектор, скан (два вызова через `_take_epoch`), обзор, шлюз, вычислитель сценариев. В М11 своих вызовов нет: `ClusterWorker` и `ClusterRecorder` — те же классы. В М12 камера берёт эпоху при загрузке (`device.py`, `boot`) — у неё одна единица, и отказ касается только её. Чтение эпох теневым отчётом домена (`shadow.reports_from`) пропускает битую строку вместо того, чтобы ронять отчёт всех кластеров (`test_lesson2_shadow.py::test_one_garbled_epoch_row_is_skipped_and_the_report_of_every_cluster_stands`).
 - **Камера, которую воркер ещё не запускал, ждёт.** Эпохи у него нет, и взять её негде.
 - **Хранилище вернулось.** Эпоха та же — в логе «the store confirms epoch 3 of camera 7 again; nothing was stopped», и в записи нет шва. Эпоха другая — камера останавливается, как при любом переназначении.
 
@@ -438,7 +454,36 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 
 **Отсечение не навсегда.** Первая версия оставляла отсечённый процесс жить: он слал heartbeat с `fenced: true`, которого размещение не читает, и не писал ничего, пока его не перезапускали руками — супервизор не перезапускает процесс, который не упал. Теперь на следующем проходе цикла отсечённый экземпляр берёт **свободный** слот и начинает с нуля (`rejoin`): без эпох, без строк, с тем назначением, какое есть у нового слота. Прежний слот принадлежит тому, кто его занял. В heartbeat остаётся `was_fenced` — почему.
 
-До `rejoin`: heartbeat говорит `fenced: true`, `_actuate` отказывает любому запуску, `observe` не пишет ничего. Процесс жив, виден, объясняет своё состояние — и не делает ничего. **Отсечённый процесс не убивает себя**: его перезапуск — дело супервизора, а его рассказ о том, что он отсечён, ценнее его тишины.
+```python
+    def rejoin(self) -> str | None:
+        if self.recording_allowed:
+            return self.name
+        try:
+            self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))
+        except SchemaTooNew:
+            return None
+        except OSError:
+            return None                               # not known: a fenced instance can wait a pass
+        was = self.name
+        self.release_all()
+        self.rows, self.assignment_rev = [], 0
+        self.reconciler.clear()
+        self.give_up_name()
+        if not self._seek_slot():
+            return None
+        name = self.name
+        log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
+        self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
+        return name
+```
+
+**Отсечённый по слоту — никто, и под чужим именем он молчит.** Прежняя версия этого шага говорила: до `rejoin` heartbeat сообщает `fenced: true`, и рассказ отсечённого о себе ценнее его тишины. Для отсечённого **по слоту** это было ошибкой. Имя уже чужое, и рассказ ложился поверх heartbeat'а законного держателя. Хуже того, `rejoin` сбрасывал слот и звал `claim_slot`, а ловил только `RuntimeError`: хранилище моргнуло на захвате — `OSError` уходил из `rejoin`, экземпляр оставался без слота со старым именем, `renew_slot` без слота отвечал «это я», и зомби писал heartbeat под именем `w-1` проход за проходом (шестое ревью, воспроизведено запуском: законный пульс перезаписан зомби с `fenced=true` и `status=[]`). Это тот же класс, что блокер 3 пятого ревью у `keep_slot`, на соседнем пути.
+
+Теперь `lease_pass`, прочитав в строке слота чужой экземпляр, отдаёт имя (`give_up_name()` — поле `seeking`, М10A, урок 8) **до** `fence`. С этой строки и пока не взят другой слот экземпляр ничего не делает под именем: назначение читается пустым, поэтому `refresh` не берёт чужих строк и закрывает устройства; `take_epoch` бросает `NoSlot`; heartbeat не пишется; «подменщик» ничего не продлевает; аккуратная остановка чужой слот не отпускает. `rejoin` берёт слот через общий `_seek_slot`: тот ловит любое исключение захвата, экземпляр остаётся никем и пробует на следующем проходе. Тест: `test_slot_fence.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds` — держатель, регистратор и регистратор на камере (`CardRecorder`), хранилище моргает на захвате и все кандидаты заняты; «зомби на одной коробке» в `test_lesson4_worker.py` теперь проверяет, что зомби не читает даже назначение `w-1`.
+
+**Рассказ отсечённого остаётся там, где он не чужой.** О том, что экземпляр отсечён по слоту, говорят его лог (`FENCED (slot w-1 is held by another instance now)`) и, после возвращения, `was_fenced` в heartbeat'е под новым именем. Отсечённый **за схему** — хранилище подняли выше его сборки — держит слот в руках, имя его, и он по-прежнему пишет `fenced: true` под ним. Но слот он не продлевает: когда строка протухнет и имя возьмёт новая сборка, шаг аренд это прочитает (`name_taken`), и с него такой экземпляр тоже молчит (`test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name`). Метрика `vms_worker_fenced{worker}` поэтому показывает теперь только отсечённых за схему.
+
+**Отсечённый процесс не убивает себя**: его перезапуск — дело супервизора. `_actuate` отказывает любому запуску, `observe` не пишет ничего. Открытым остаётся окно в один шаг аренд: зомби узнаёт о потере слота на `lease_pass`, раз в восемь секунд, и heartbeat, ушедший между захватом имени и этим шагом, один раз ляжет поверх чужого — следующий heartbeat законного держателя его перепишет.
 
 ## Шаг 10 — Цикл как процесс
 
