@@ -6,10 +6,11 @@ set. Without one the console is as open as it was, and says so; with one and no 
 """
 import json
 import logging
+import os
 import urllib.error
 import urllib.request
 
-from w2cplatform.access import TRUST_KEYS, Denied, Gate, token_of
+from w2cplatform.access import TRUST_KEYS, Denied, Gate, caller_addr, token_of
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.spec import SpecController
 from vms.config import REC_SPEC, SPEC
@@ -93,6 +94,39 @@ def test_a_cluster_with_no_key_set_is_as_open_as_it_was_and_says_so():
         srv.shutdown(); logging.getLogger("w2cplatform.access").removeHandler(h)
 
 
+def test_the_journal_says_who_made_changed_and_deleted_a_unit_and_who_turned_the_policy():
+    """The review's third pass, minor: the journal knew who deleted a camera, not who created or edited it; the
+    policy was not written at all. `unit.created` and `unit.changed` name the fields — never their values — and the
+    author; `policy.changed` the new values. `unit.deleted` is written BEFORE the delete: a deleted unit is not there
+    to be its own evidence, and a delete that then fails is followed by `unit.delete.failed`."""
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+
+    def lines():
+        return [{k: e.get(k) for k in ("kind", "user", "target", "fields", "policy") if e.get(k) is not None}
+                for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]]
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4", "cred_secret": "hunter2"}, user="anna")[0] == 201
+        assert _call(base, "PUT", "/cameras/1", {"enabled": False, "priority": 5}, user="boris")[0] == 200
+        assert _call(base, "PUT", "/policy", {"servers": "shared"}, user="carol")[0] == 200
+        delete = m.root.ctl.delete
+        m.root.ctl.delete = lambda uid: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
+        assert _call(base, "DELETE", "/cameras/1", user="dave")[0] == 503
+        m.root.ctl.delete = delete
+        assert _call(base, "DELETE", "/cameras/1", user="dave")[0] == 200
+        assert lines() == [
+            {"kind": "unit.created", "user": "anna", "target": "1", "fields": "cred_secret,source"},
+            {"kind": "unit.changed", "user": "boris", "target": "1", "fields": "enabled,priority"},
+            {"kind": "policy.changed", "user": "carol", "policy": '{"servers": "shared"}'},
+            {"kind": "unit.deleted", "user": "dave", "target": "1"},
+            {"kind": "unit.delete.failed", "user": "dave", "target": "1"},
+            {"kind": "unit.deleted", "user": "dave", "target": "1"},
+        ]
+        assert "hunter2" not in json.dumps(lines())
+    finally:
+        srv.shutdown()
+
+
 def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
     box = Box()
     ctl, rec, m, srv, base = _console(box)
@@ -104,7 +138,7 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
         assert _call(base, "DELETE", "/cameras/1")[0] == 503 and _call(base, "GET", "/rec/recordings")[0] == 503
         assert _call(base, "GET", "/metrics")[0] == 200                     # what monitoring reads stays open
         # the key set deleted, or rolled back from a backup made before the cluster joined: NOT open again
-        box.vars.delete(TRUST_KEYS)
+        os.remove(box.vars._file(TRUST_KEYS))                         # past the store: only the agent may delete it there
         code, body = _call(base, "GET", "/cameras")
         assert code == 503 and "has gone" in body["detail"]
     finally:
@@ -117,6 +151,45 @@ def test_a_key_set_and_no_way_to_check_a_token_is_shut_not_open():
         raise AssertionError("a gate that could not read the trust admitted somebody")
     except Denied as e:
         assert e.status == 503
+
+
+def test_a_cluster_that_is_in_a_domain_stays_shut_without_its_keys_after_a_restart_too():
+    """The review's third pass (Н-M2): that a cluster had a key set lived in one `Gate`'s memory — the row rolled
+    back, the console restarted, and every request passed as `admin`. What says "a member" is in the store: the root
+    the agent pinned, or any other row only the agent writes (`DOMAIN_MARKS`). With one of them and no key set a
+    console that has never seen the keys is shut too. And `domain/*` is deleted by nobody but the agent."""
+    from w2cplatform.access import DOMAIN_MARKS
+    from w2cplatform.variables import Forbidden
+    box = Box()
+    box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})
+    box.vars.put("domain/root", {"pub": "ab" * 32})
+    box.vars.put("domain/grants", {"anna": "admin"})
+    for who in (box.vars, box.vars.as_writer("console", SPEC.acl_console())):
+        try:
+            who.delete(TRUST_KEYS)
+            raise AssertionError("somebody other than the agent deleted the key set")
+        except Forbidden:
+            pass
+    os.remove(box.vars._file(TRUST_KEYS))                              # rolled back from a backup, past the store
+    for mark in DOMAIN_MARKS:                                          # …a console started afterwards, by each mark alone
+        others = [p for p in DOMAIN_MARKS if p != mark and box.vars.get(p)[0]]
+        for p in others:
+            os.remove(box.vars._file(p))
+        if not box.vars.get(mark)[0]:
+            box.vars.put(mark, {"x": "1"})
+        ctl, rec, m, srv, base = _console(box)
+        try:
+            code, body = _call(base, "GET", "/cameras", user="admin")
+            assert code == 503 and mark in body["detail"], (mark, code, body)
+        finally:
+            srv.shutdown()
+    box.vars.as_writer("agent", ["domain/*"]).delete(DOMAIN_MARKS[-1])  # the agent may; then nothing says "a member"
+    assert not any(box.vars.get(p)[0] for p in DOMAIN_MARKS)
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _call(base, "GET", "/cameras")[0] == 200                   # a cluster nobody joined: open, as it was
+    finally:
+        srv.shutdown()
 
 
 def test_the_gate_asks_who_and_the_grant_says_what():
@@ -258,6 +331,7 @@ def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
     """The one account with rights to everything is the one password worth guessing — and every wrong guess was a
     fsync'd alarm. Five refusals from one address in fifteen minutes close the door to it, with ONE alarm saying
     so; the right password does not open it until the window has passed."""
+    Gate._glass_tries.clear(); Gate._glass_limited.clear()                # the counts are the process's
     box = Box()
     ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
     try:
@@ -270,5 +344,162 @@ def test_the_emergency_door_closes_after_a_handful_of_wrong_passwords():
         assert alarms.count("access.break_glass.opened") == 1                                     # nothing more for the guesses past the limit
         box.wall.advance(901)
         assert glass("open-sesame") == 200                                                        # the window passed
+    finally:
+        srv.shutdown()
+
+
+def test_an_emergency_attempt_is_reserved_before_its_password_and_counted_by_the_callers_own_address():
+    """The review's third pass, major. The limit was a check and then a count: thirty parallel guesses all passed the
+    check. An attempt is reserved under a lock before the password is looked at, and given back only when it was
+    right — so at most five guesses from one address are ever checked. Behind a proxy every caller was the proxy;
+    `X-Forwarded-For` is taken from a proxy named in `TRUSTED_PROXY` and from nobody else. And while a window is
+    full — the address's, or the process's — the right password is 429 too: a limit that lets the right guess in
+    limits nothing."""
+    import threading
+    import time
+    Gate._glass_tries.clear(); Gate._glass_limited.clear()
+    box = Box()
+
+    class Slow(Tokens):
+        def glass(self, who, why, password):
+            time.sleep(0.05)                                           # every check in flight at once
+            return super().glass(who, why, password)
+
+    gate = Gate(box.vars, box.wall, impl=Slow({}))
+    out = []
+
+    def guess(addr="10.0.0.9", pw="wrong"):
+        try:
+            gate.open_glass("mallory", "testing", pw, addr=addr)
+            out.append(200)
+        except Denied as e:
+            out.append(e.status)
+    threads = [threading.Thread(target=guess) for _ in range(30)]
+    [t.start() for t in threads]; [t.join() for t in threads]
+    assert sorted(out).count(403) == 5 and out.count(429) == 25          # five checked; the rest never reached the password
+    out.clear(); guess(pw="open-sesame")
+    assert out == [429]                                                  # this address's window is full: the right password too
+    out.clear(); guess("10.0.0.1", "open-sesame"); guess("10.0.0.1", "open-sesame")
+    assert out == [200, 200]                                             # another address; and the right password is no guess
+    for i in range(3):                                                   # spread over addresses: the process's window fills
+        for _ in range(5):
+            guess(f"10.0.1.{i}")
+    out.clear(); guess("10.0.2.1", "open-sesame")
+    assert out == [429]                                                  # 20 refused in the window: shut to everybody
+    assert caller_addr({"X-Forwarded-For": "1.2.3.4"}, "10.0.0.5") == "10.0.0.5"   # nobody said to trust anybody
+
+    # over HTTP, behind a proxy: five wrong from one person close it to that person, not to the next one
+    Gate._glass_tries.clear(); Gate._glass_limited.clear()
+    ctl, rec, m, srv, base = _console(box, Tokens({"admin": [("admin", None, ())]}))
+
+    def glass(pw, xff):
+        req = urllib.request.Request(base + "/session", method="POST", headers={"Content-Type": "application/json", "X-Forwarded-For": xff},
+                                     data=json.dumps({"glass": {"who": "carol", "why": "uplink down", "password": pw}}).encode())
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            return e.code
+    was = os.environ.get("TRUSTED_PROXY")
+    try:
+        os.environ["TRUSTED_PROXY"] = "127.0.0.1"
+        assert [glass("wrong", "10.9.9.9") for _ in range(5)] == [403] * 5
+        assert glass("open-sesame", "10.9.9.9") == 429                   # that person
+        assert glass("open-sesame", "203.0.113.7, 10.8.8.8") == 200      # the next one: the address the proxy saw
+        os.environ.pop("TRUSTED_PROXY")                                  # not trusted: the header is the caller's word
+        assert [glass("wrong", f"10.6.6.{i}") for i in range(5)] == [403] * 5
+        assert glass("open-sesame", "10.7.7.7") == 429                   # …five "addresses" that were one peer
+    finally:
+        srv.shutdown()
+        os.environ.pop("TRUSTED_PROXY", None)
+        if was is not None:
+            os.environ["TRUSTED_PROXY"] = was
+        Gate._glass_tries.clear(); Gate._glass_limited.clear()
+
+
+def test_the_gate_and_the_route_read_the_unit_from_the_same_segment():
+    """The review's third pass, blocker 1. The gate read the unit from the second segment and the routes from the
+    last: `DELETE /cameras/1/2` with `admin` on camera 1 deleted camera 2, `GET /export/1/2` with `view` on 1 reached
+    2. One reading of a path's id (`path_id`) for both; a family that takes an id takes one, and more after it is
+    404 before the gate — except `PUT /<rows>/<id>/<blob>`, the one route with a third segment."""
+    box = Box()
+    access = Tokens({"one": [("admin", "1", ())], "viewer": [("view", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        for i in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-cloud", "cam": "1"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "2-cloud", "cam": "2"}, token="admin")[0] == 201
+
+        assert _call(base, "DELETE", "/cameras/1/2", token="one")[0] == 404          # the confirmed case: no route
+        assert _call(base, "DELETE", "/cameras/1/2")[0] == 404                       # …said before the gate is asked
+        assert ctl.camera(2) is not None and ctl.camera(1) is not None
+        assert _call(base, "PUT", "/cameras/1/2", {"enabled": False}, token="one")[0] == 404   # a blob route: `2` is no blob field
+        assert _call(base, "PUT", "/cameras/1/2/3", {"enabled": False}, token="one")[0] == 404
+        assert ctl.camera(2)["enabled"] is True
+        for path in ("/export/1/2?from=0&to=60", "/timeline/1/2", "/where/1/2", "/cameras/1/2"):
+            assert _call(base, "GET", path, token="viewer")[0] == 404, path
+        assert _call(base, "POST", "/whep/1/2", token="viewer")[0] == 404
+        # the mounts' families: a recording, a keep, a volume — one id, and nothing after it
+        assert _call(base, "DELETE", "/rec/recordings/1-cloud/2-cloud", token="one")[0] == 404
+        assert rec.unit("2-cloud") is not None
+        assert _call(base, "DELETE", "/rec/keeps/a/b", token="admin")[0] == 404
+        assert _call(base, "DELETE", "/rec/volumes/cold/x", token="admin")[0] == 404
+        # and the one id there is, is the one checked and the one acted on
+        assert _call(base, "DELETE", "/cameras/2", token="one")[0] == 403
+        assert _call(base, "DELETE", "/rec/recordings/2-cloud", token="one")[0] == 403
+        assert _call(base, "DELETE", "/cameras/1", token="one")[0] == 200 and ctl.camera(2) is not None
+    finally:
+        srv.shutdown()
+
+
+def test_a_console_listening_beyond_loopback_says_so_when_it_starts():
+    """The review's third pass, minor: the unit binds `0.0.0.0` over plain HTTP. It keeps doing so — the page is
+    opened from the operator's machine and no TLS proxy ships — and the console says it in its log at start."""
+    from w2cplatform.console import say_where
+    said = []
+    h = logging.Handler(); h.emit = lambda r: said.append(r.getMessage())
+    logging.getLogger("w2cplatform.console").addHandler(h)
+    try:
+        say_where("127.0.0.1"); say_where("::1")
+        assert said == []
+        say_where("0.0.0.0")
+        assert len(said) == 1 and "beyond loopback" in said[0] and "TLS" in said[0]
+    finally:
+        logging.getLogger("w2cplatform.console").removeHandler(h)
+
+
+def test_drain_schema_and_mounts_ask_the_gate_too():
+    """The review's third pass, blocker 2: `/drain`, `/schema` and `/mounts` were answered by the Mount before the
+    console's gate — `POST /drain` with no token took every recording off a server. Now the root console's gate:
+    `admin` to change, `view` to read; a drain and a schema raised are lines in the journal, with the name."""
+    from w2cplatform.contract import SCHEMA
+    box = Box()
+    access = Tokens({"viewer": [("view", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        assert _call(base, "POST", "/drain?server=srv-1")[0] == 401
+        assert _call(base, "POST", "/drain?server=srv-1", token="viewer")[0] == 403
+        assert ctl.draining() == ""
+        assert _call(base, "POST", "/drain?server=srv-1", token="admin")[0] == 200 and ctl.draining() == "srv-1"
+        assert _call(base, "GET", "/drain")[0] == 401 and _call(base, "GET", "/drain", token="viewer")[0] == 200
+        assert _call(base, "DELETE", "/drain", token="viewer")[0] == 403 and ctl.draining() == "srv-1"
+        assert _call(base, "DELETE", "/drain", token="admin")[0] == 200 and ctl.draining() == ""
+
+        assert _call(base, "PUT", f"/schema?version={SCHEMA}")[0] == 401
+        assert _call(base, "PUT", f"/schema?version={SCHEMA}", token="viewer")[0] == 403
+        assert _call(base, "GET", "/schema")[0] == 401 and _call(base, "GET", "/schema", token="viewer")[0] == 200
+        code, body = _call(base, "PUT", f"/schema?version={SCHEMA}", token="admin")
+        assert code == 403 and "platform/schema" in body["detail"]       # past the gate, the console's TOKEN may not
+        m.root.ctl.vars = box.vars                                         # a console whose token reaches it
+        assert _call(base, "PUT", f"/schema?version={SCHEMA}", token="admin")[0] == 200
+
+        assert _call(base, "GET", "/mounts")[0] == 401
+        code, body = _call(base, "GET", "/mounts", token="viewer")
+        assert code == 200 and "rec" in body["mounts"]
+
+        said = _audit(box)
+        assert ("drain.started", "admin") in said and ("drain.ended", "admin") in said and ("schema.raised", "admin") in said
+        assert not [s for s in said if s[0].startswith(("drain.", "schema.")) and s[1] != "admin"]
     finally:
         srv.shutdown()

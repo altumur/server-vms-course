@@ -110,3 +110,39 @@ def test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_
             db.shutdown()
     finally:
         da.shutdown(); srv.shutdown()
+
+
+def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_when_to_come_back():
+    """The review's third pass, major: an export holds its interval in memory, an hour of a camera is gigabytes, and
+    nothing bounded how many ran at once — two or three from anybody with `view` took the console down. Past
+    `EXPORTS_AT_ONCE` the next is 503 with `Retry-After`; when one finishes, the next is served."""
+    import threading
+    from w2cplatform.contract import Heartbeat
+    from vms import console as vc
+    from vms.config import REC_SPEC
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"),
+                    Heartbeat("r-1", box.wall(), [], {"archive_url": "http://door.invalid", "volume": "a"}).to_bytes())
+    held, entered = threading.Event(), threading.Semaphore(0)
+
+    def slow_door(url, timeout):                                     # a door that takes its time: the export stays in flight
+        entered.release(); held.wait(10)
+        raise OSError("not answering")
+    door_, vc._door = vc._door, slow_door
+    route = vc.vms_routes(True, None, ctl, None)
+    t = box.wall()
+    out = []
+    try:
+        busy = [threading.Thread(target=lambda: out.append(route(None, "GET", "/export/7", {"from": t - 60, "to": t})[0]))
+                for _ in range(vc.EXPORTS_AT_ONCE)]
+        [b.start() for b in busy]
+        for _ in busy:
+            assert entered.acquire(timeout=5)                         # both in flight
+        status, body, headers = route(None, "GET", "/export/7", {"from": t - 60, "to": t})
+        assert status == 503 and json.loads(body)["error"] == "busy" and ("Retry-After", "5") in headers
+        held.set(); [b.join(5) for b in busy]
+        assert out == [404] * vc.EXPORTS_AT_ONCE                     # nothing recorded there: the door did not answer
+        assert route(None, "GET", "/export/7", {"from": t - 60, "to": t})[0] == 404   # a place again
+    finally:
+        vc._door = door_; held.set()

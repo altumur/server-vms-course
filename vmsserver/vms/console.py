@@ -25,7 +25,7 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import PAGE, Mount, SpecConsole, heartbeats, holder_of, holders, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
+from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import slot_number
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
@@ -39,7 +39,10 @@ from .archive import subtract
 from .controller import VmsController
 
 EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
+EXPORTS_AT_ONCE = 2           # exports one console makes at a time (`EXPORTS_AT_ONCE` in its environment): each is held in memory
+EXPORT_RETRY = 5.0            # the `Retry-After` of an export refused for that
 DOOR_TIMEOUT = 5.0            # a recorder's door that does not answer in this is named, not waited for
+SESSIONS_KEPT = 10000         # live sessions remembered for their hang-up: past it, the oldest is forgotten
 
 
 class LiveFront:
@@ -87,13 +90,19 @@ class LiveFront:
             # with a public address) — from among the places that EXIST. A label no live gateway carries made a
             # row nothing could place, and every next viewer of the camera was told "retry" for ever (the review's
             # second pass, major). Refused by name, and no row.
-            carried = {l for hb in holders(self.live.objects, "live/", self.ctl.wall()).values()
-                       for l in str(hb.extra.get("labels", "")).split(",") if l}
-            unknown = sorted(set(labels) - carried)
-            if unknown:
-                return 400, {"error": f"no gateway carries the label{'s' if len(unknown) > 1 else ''} {', '.join(unknown)}",
+            #
+            # …by ONE gateway (the review's third pass, Н-M8 and its minor): placement puts a stream on a gateway whose
+            # labels cover ALL of the stream's, and the check took the union over every gateway — `public` on g-1 and
+            # `eu` on g-2 passed for `public,eu`, and the row was one nothing could place, as before.
+            sets = [{l for l in str(hb.extra.get("labels", "")).split(",") if l}
+                    for hb in holders(self.live.objects, "live/", self.ctl.wall()).values()]
+            if labels and not any(set(labels) <= s for s in sets):
+                carried = set().union(*sets) if sets else set()
+                unknown = sorted(set(labels) - carried)
+                return 400, {"error": (f"no gateway carries the label{'s' if len(unknown) > 1 else ''} {', '.join(unknown)}" if unknown
+                                       else f"no one gateway carries all of {', '.join(sorted(labels))}"),
                              "detail": f"a stream is placed on a gateway whose labels cover its own; the gateways here carry: "
-                                       f"{', '.join(sorted(carried)) or 'none'}"}
+                                       f"{'; '.join(','.join(sorted(s)) or '(none)' for s in sets) or 'none'}"}
             try:
                 self.live.create({"cam": str(cam), "labels": labels})
             except Refused as e:
@@ -254,6 +263,10 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # the header (`w2cplatform/access.py`): in a domain the journal names who the token said.
     seen_reads: dict[tuple, float] = {}
     reads_lock = threading.Lock()
+    # The live sessions this console handed out — `{session: (who, camera, gateway)}`, oldest first, at most
+    # `SESSIONS_KEPT`: what a hang-up is checked against.
+    sessions: dict[str, tuple] = {}
+    sessions_lock = threading.Lock()
 
     # WHAT LEFT, NOT WHAT WAS ASKED (the product, feedback BU). The line used to be written before the piece
     # went, and said only that somebody asked. It is written after, and says what was sent: the status, the
@@ -294,22 +307,44 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             who = handler.headers.get("X-User", "operator")
             addr = (getattr(handler, "client_address", None) or ("",))[0]
             if method == "POST" and not path.startswith("/whep/session/"):
-                cam = path[len("/whep/"):]
+                cam = path_id(path)
                 sdp = handler.rfile.read(int(handler.headers.get("Content-Length", 0))).decode()
                 r = live.offer(cam, sdp, [l for l in q.get("labels", "").split(",") if l], token_of(handler.headers))
-                if journal is not None and r[0] == 201:
+                if r[0] == 201:
                     loc = dict(r[2]).get("Location", "")
-                    journal.say("live.view", user=who, target=cam, session=loc.rsplit("/", 1)[-1].split("?")[0],
-                                gateway=loc.rsplit("gateway=", 1)[-1], addr=addr)
+                    sid, g = loc.rsplit("/", 1)[-1].split("?")[0], loc.rsplit("gateway=", 1)[-1]
+                    with sessions_lock:
+                        sessions[sid] = (who, cam, g)
+                        while len(sessions) > SESSIONS_KEPT:
+                            sessions.pop(next(iter(sessions)))           # the oldest: a viewer who left without a word
+                    if journal is not None:
+                        journal.say("live.view", user=who, target=cam, session=sid, gateway=g, addr=addr)
                 return r
             if method == "DELETE" and path.startswith("/whep/session/"):
+                # HANGING UP IS THE VIEWER'S OWN (the review's third pass, minor). The gate read `session` as the
+                # camera, and a viewer granted one camera could not put the phone down. A session names no camera
+                # (`NO_UNIT`): the gate asks for any grant, and the session is checked here — the id this console
+                # handed out, to the caller it handed it to, on the gateway it named then, whatever `?gateway=` says.
                 sid = path[len("/whep/session/"):]
-                r = live.hangup(sid, q.get("gateway", ""), token_of(handler.headers))
-                if journal is not None and r[0] in (200, 204):
-                    journal.say("live.view.ended", user=who, session=sid, gateway=q.get("gateway", ""), addr=addr)
+                with sessions_lock:
+                    held = sessions.get(sid)
+                if getattr(handler, "sees", None) is not None:    # gated: the caller is a proven name
+                    if held is None:
+                        return 404, {"error": "no such session", "detail": "not a session this console handed out"}
+                    if held[0] != who:
+                        if journal is not None:
+                            journal.say("access.denied", user=who, capability="hangup", target=held[1], session=sid)
+                        return 403, {"error": "not your session", "detail": f"{who} may hang up only the sessions it opened"}
+                g = held[2] if held is not None else q.get("gateway", "")
+                r = live.hangup(sid, g, token_of(handler.headers))
+                if r[0] in (200, 204):
+                    with sessions_lock:
+                        sessions.pop(sid, None)
+                    if journal is not None:
+                        journal.say("live.view.ended", user=who, session=sid, gateway=g, addr=addr)
                 return r
             if method == "GET" and not path.startswith("/whep/session/"):
-                return 200, live.status(path[len("/whep/"):])           # GET /whep/<cam>: the stream, its gateway, that gateway's word
+                return 200, live.status(path_id(path))                  # GET /whep/<cam>: the stream, its gateway, that gateway's word
             return None
         # A COMMAND to a device, filed as a row for whoever holds it — `POST /requests`. Not a call: the
         # console does not open devices, and the one process that has this device open is the worker that
@@ -330,31 +365,35 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if not key:
                 return 400, {"detail": "Idempotency-Key header is required: a command retried is the same command",
                              "error": "Idempotency-Key required"}
-            body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
-            unit, action = str(body.get("unit", "")), str(body.get("action", ""))
-            if not unit or ctl.camera(unit) is None:
-                return 404, {"detail": f"no unit {unit}", "error": "no such unit"}
-            if action not in ("output", "preset"):
-                return 400, {"detail": f"actions are output and preset, not {action!r}", "error": "unknown action"}
-            now = con_wall()
-            rid = str(body.get("id") or key)
-            if "/" in rid or rid in (".", "..") or len(rid) > 200:
-                return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
-            until = float(body.get("valid_until") or now + 30)
-            if until - now > 600:                                     # the holder refuses it (`VmsWorker.MAX_VALID`): say so at the door
-                return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
-            row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
-                   "valid_until": str(until)}
-            for f in ("port", "state", "pulse_ms", "n"):
-                if body.get(f) is not None:
-                    row[f] = str(body[f])
+            raw = handler.rfile.read(int(handler.headers.get("Content-Length", 0)))
+            # …and the row lives only until its holder has answered it: the controller clears it, and a retry ninety
+            # seconds later found no row and filed the command again (the review's third pass, minor). So the key is
+            # ALSO kept where the console keeps every key (`IdempotencyKeys`, `<sub>/idem/`, for a day) — the same
+            # claim, the same reply to the same caller with the same body, whichever console the retry reaches.
+            seen = getattr(extra, "seen", None)
+            if seen is None:
+                return file_request(handler, json.loads(raw or b"{}"), key)
             try:
-                ctl.vars.put(ctl.spec.sub.request_key(rid), row, cas=0)
-            except Conflict:
-                row = ctl.vars.get(ctl.spec.sub.request_key(rid))[0] or row   # the same request, filed already: its row is the answer
-            return 202, {"queued": {"id": rid, **row},
-                         "detail": "the worker holding this device performs it on its next pass; "
-                                   "after valid_until it expires unperformed"}
+                prior = seen.claim(key, handler.headers.get("X-User", "operator"), raw)
+            except Refused as e:
+                return 400, {"detail": str(e), "error": str(e)}
+            except OSError as e:
+                return 503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}
+            if prior is not None:
+                return prior
+            try:
+                reply = file_request(handler, json.loads(raw or b"{}"), key)
+            except Exception:
+                seen.release(key)
+                raise
+            if reply[0] != 202:
+                seen.release(key)                                     # a refusal is not a command: the key is not spent on it
+                return reply
+            try:
+                seen.store(key, reply)
+            except (OSError, ClaimLost) as e:
+                log.warning("the command under %s was filed, and not remembered under its key: %s", key, e)
+            return reply
         if method == "POST" and path == "/backfill" and media:
             # This used to answer 202 and store nothing: the text below was true about what the recorder
             # WOULD do and false about anything having been asked. The request is a row now
@@ -383,15 +422,57 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         if method != "GET" or not media:
             return None
         if (path == "/segment" or path == "/segment/") and ctl is not None:                 # the device's own footage, through its holder
-            url = device_playback(ctl.objects, q.get("cam"), con_wall())
-            if url is None:
-                return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
-            return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
+            return segment(handler, q)
+        # The camera is `path_id`'s — the segment the gate checked, never the last one (the review's third pass,
+        # blocker 1: `/export/1/2` was checked on 1 and served 2; such a path is 404 now, before the gate).
         if path.startswith("/timeline/"):
-            return timeline(path.rsplit("/", 1)[1], q)
+            return timeline(path_id(path), q)
         if path.startswith("/export/"):
-            return export(handler, path.rsplit("/", 1)[1], q)
+            return export(handler, path_id(path), q)
         return None
+
+    # The command, as a row: `(202, {queued, detail})`, or the refusal.
+    def file_request(handler, body: dict, key: str):
+        unit, action = str(body.get("unit", "")), str(body.get("action", ""))
+        if not unit or ctl.camera(unit) is None:
+            return 404, {"detail": f"no unit {unit}", "error": "no such unit"}
+        if action not in ("output", "preset"):
+            return 400, {"detail": f"actions are output and preset, not {action!r}", "error": "unknown action"}
+        now = con_wall()
+        rid = str(body.get("id") or key)
+        if "/" in rid or rid in (".", "..") or len(rid) > 200:
+            return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
+        until = float(body.get("valid_until") or now + 30)
+        if until - now > 600:                                     # the holder refuses it (`VmsWorker.MAX_VALID`): say so at the door
+            return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
+        row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
+               "valid_until": str(until)}
+        for f in ("port", "state", "pulse_ms", "n"):
+            if body.get(f) is not None:
+                row[f] = str(body[f])
+        try:
+            ctl.vars.put(ctl.spec.sub.request_key(rid), row, cas=0)
+        except Conflict:
+            row = ctl.vars.get(ctl.spec.sub.request_key(rid))[0] or row   # the same request, filed already: its row is the answer
+        return 202, {"queued": {"id": rid, **row},
+                     "detail": "the worker holding this device performs it on its next pass; "
+                               "after valid_until it expires unperformed"}
+
+    # `GET /segment?cam=` — the device's own footage, through its holder's playback door: the URL, and a line.
+    def segment(handler, q: dict):
+        url = device_playback(ctl.objects, q.get("cam"), con_wall())
+        if url is None:
+            return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
+        # The door to the DEVICE's footage is handed out here, and the footage then goes holder → browser:
+        # this console never sees the bytes, so what it can say is that it gave the door, to whom, for which
+        # minutes (the review's third pass, Н-B1's remainder: it went with no line at all). One line per URL
+        # handed out — a page asks once per click, not once per byte range.
+        journal = getattr(extra, "journal", None)
+        if journal is not None:
+            journal.say("archive.read", user=handler.headers.get("X-User", "operator"), source="device",
+                        target=str(q.get("cam")), addr=(getattr(handler, "client_address", None) or ("",))[0],
+                        **{"from": q.get("from", 0), "to": q.get("to", 1e12)})
+        return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
 
     # A camera's timeline: every recording of it, from every recorder's door — each holds one volume, and what a
     # recording wrote over its life may be in more than one. A door that does not answer is NAMED, not waited
@@ -434,7 +515,30 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # An interval as a fragmented MP4 (`fmp4.from_samples`): the frames from every door that holds them, each
     # moment taken once — the first door's — and then, as everything that leaves through this console, a line
     # `archive.read` with what was sent and its sha256: the answer to "is this the file you gave out".
+    #
+    # AT MOST `EXPORTS_AT_ONCE` OF THEM (the review's third pass, major). An export holds its interval's samples and
+    # the MP4 made of them in memory — an hour of an 8 Mbit/s camera is some 3.6 GB, twice — and nothing bounded how
+    # many ran at once: two or three from anybody with `view` took the console down, and the requests' loop with
+    # it. Past the bound it is 503 with `Retry-After`, which a client waits out, rather than a process that dies.
+    #
+    # Not streamed, and said why: the memory is in READING — the door answers a range as one body (`/samples`, the
+    # third pass's blocker 6, in the recorder's door) and the frames from several doors are merged by time before
+    # the first byte, so a key frame and its parameter sets are known before the headers and the unreachable doors
+    # can still go into one. Writing the MP4 out as it is made (`fmp4.Writer` takes any file) saves only the second
+    # copy; the bound is what stops the process dying, and streaming belongs with reading the range in pieces.
+    exporting = threading.BoundedSemaphore(max(1, int(os.environ.get("EXPORTS_AT_ONCE", EXPORTS_AT_ONCE))))
+
     def export(handler, cid: str, q: dict):
+        if not exporting.acquire(blocking=False):
+            return 503, json.dumps({"detail": "this console is making as many exports as it holds in memory at once — retry",
+                                    "error": "busy"}).encode(), [("Content-Type", "application/json"),
+                                                                 ("Retry-After", str(int(EXPORT_RETRY)))]
+        try:
+            return _export(handler, cid, q)
+        finally:
+            exporting.release()
+
+    def _export(handler, cid: str, q: dict):
         from .fmp4 import from_samples
         try:
             t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
@@ -724,7 +828,7 @@ def rec_routes(rec_ctl: SpecController):
                                                            "until one is declared"}
             return 201, {"keep": k.shown()}
         if method == "DELETE" and path.startswith("/keeps/"):
-            id_ = path[len("/keeps/"):]
+            id_ = path_id(path)
             if not any(k.id == id_ for k in keeps.declared(rec_ctl.vars)):
                 return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
             keeps.delete(rec_ctl.vars, id_)
@@ -759,7 +863,7 @@ def rec_routes(rec_ctl: SpecController):
             return 201, {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items()
                                     if not k.endswith("_secret")}}
         if method == "DELETE" and path.startswith("/volumes/"):
-            name = path[len("/volumes/"):]
+            name = path_id(path)
             if not any(v.name == name for v in volumes.declared(rec_ctl.vars)):
                 return 404, {"detail": f"no volume {name}", "error": "no such volume"}
             # The row goes; the recorder holding it finds out on its next pass, stops what it was writing
@@ -799,11 +903,13 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
                        extra=vms_routes(media, live, ctl, rec_ctl), media=media, index=index,
                        metrics_extra=vms_metrics(ctl))
     root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
+    root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
     # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
     # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
     # which is the viewer's token on the live door.
     root.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/backfill",)
     root.UNIT_ROUTES = SpecConsole.UNIT_ROUTES + ("timeline", "export", "whep")
+    root.NO_UNIT = ("/whep/session/",)                                   # a live session is not a camera: its route checks it
     root.VIEW_POSTS = ("/whep/",)
     m = Mount(root)
     if live_ctl is not None:
@@ -819,6 +925,7 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         con.journal = root.journal
         if name == "rec":
             con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/keeps",)   # a keep is set by an operator; a volume by an administrator
+            con.ID_ROUTES = ("keeps", "volumes")                       # one id each, and nothing after it
         if name in ("rec", "live", "det"):
             # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
             # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).

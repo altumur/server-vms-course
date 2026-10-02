@@ -193,7 +193,8 @@ def test_the_console_over_http():
         name = ev[0].pop("id")                                                                   # every line has a name, given by its writer
         assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
         assert ev == [{"t": box.wall(), "kind": "mark", "cam": 1, "user": "murat", "note": "left the bag"}]
-        assert subsystems_under(box.archive) == {"console": [m["unit"]]}                          # not in vms/1/: that bucket has one writer
+        # not in vms/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
+        assert subsystems_under(box.archive) == {"audit": ["console"], "console": [m["unit"]]}
         # the page, and what it plays: the timeline from the recorders' doors, and an interval of it as an MP4
         page = urllib.request.urlopen(f"http://127.0.0.1:{port}/").read().decode()
         assert "/spec" in page and "/timeline/" in page and "<video" in page and "camera" not in page.rsplit("-->", 1)[1].lower()   # the page (after its comments) is the spec's, not the VMS's
@@ -356,6 +357,49 @@ def test_an_idempotency_key_is_one_callers_for_one_body():
         assert box.vars.get("vms/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("vms/idem/k-1")[0]["sha256"]) == 64
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_a_console_whose_claim_was_taken_over_while_it_stood_still_writes_nothing():
+    """The review's third pass, major: a take-over did not fence the console it took from. A stood still for thirty
+    seconds, B took the claim and created camera 1, A woke and created camera 2 under the same key. `reserve`, `store`
+    and `release` are CAS on the revision the console holds: A, waking before its reserve, loses it — 409, no row; A,
+    waking after its reserve, finds B created under the id it reserved — 409, the same camera. Either way one camera,
+    and the key answers with B's reply."""
+    from vms.config import SPEC
+    box = Box()
+    a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    b = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    ma, sa, pa = _console_with_its_own_clock(box, a)
+    mb, sb, pb = _console_with_its_own_clock(box, b)
+    try:
+        for stall in ("before the reserve", "after the reserve"):
+            key, go, out = f"k-{stall[0]}", threading.Event(), {}
+            if stall == "before the reserve":
+                create = a.create
+                a.create = lambda body, **kw: (go.wait(10), create(body, **kw))[1]
+            else:
+                reserve = ma.root.seen.reserve
+                ma.root.seen.reserve = lambda k, uid: (reserve(k, uid), go.wait(10))[0]
+            t = threading.Thread(target=lambda: out.setdefault("a", _post(pa, key))); t.start()
+            for _ in range(200):                                                 # A holds the claim and stands still
+                if box.vars.get(f"vms/idem/{key}")[0]:
+                    break
+                time.sleep(0.01)
+            assert _post(pb, key)[0] == 409                                      # B sees it in flight…
+            box.clock.advance(31)
+            code, body = _post(pb, key)                                          # …and thirty seconds later takes it over
+            assert code == 201
+            go.set(); t.join(10)
+            assert out["a"][0] == 409 and out["a"][1]["error"] == "taken over", (stall, out)
+            assert _post(pa, key) == (code, body)                                # the key answers with B's reply
+            if stall == "before the reserve":
+                a.create = create
+            else:
+                ma.root.seen.reserve = reserve
+        # one camera per key: 1, and 3 under the id A reserved — the 2 A drew before it lost its reserve is a gap, not a camera
+        assert [c["id"] for c in a.cameras()] == [1, 3]
+    finally:
+        sa.shutdown(); sa.server_close(); sb.shutdown(); sb.server_close()
 
 
 def test_a_claim_nobody_will_answer_does_not_hold_its_key_for_a_day():
