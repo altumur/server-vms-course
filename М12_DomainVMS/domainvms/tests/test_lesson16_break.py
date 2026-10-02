@@ -9,7 +9,7 @@ from vms.config import REC_SPEC
 from w2cplatform.console import Heartbeat
 from domain.federation import Unreachable
 from domain.ingest import CameraPusher, written_from_heartbeats
-from tests.conftest import Clock
+from tests.conftest import Clock, real_card
 from tests.test_lesson16_nobody_reaches import SERIAL, URLS, _site
 
 
@@ -25,7 +25,8 @@ def _world(wall, card=None, clock=None):
         if url not in URLS or url in down:
             raise Unreachable(f"{url} did not answer")
         return ingest
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=card or (lambda t0, t1: []), clock=clock or wall)
+    nothing = lambda recording, t0, t1, max_bytes: iter(())            # a card that holds nothing of the range
+    pusher = CameraPusher(SERIAL, cam.flash, dial, card=card or nothing, clock=clock or wall)
     ingest.want(SERIAL, "recorder:r")
     rq = ingest.subscribe(SERIAL, "recorder:r", maxsize=1000)
     return south, ingest, pusher, rq, down
@@ -70,21 +71,46 @@ def test_what_the_recorder_has_is_dropped_at_the_ingest():
 
 def test_a_long_break_is_read_back_off_the_card():
     """Fifty seconds without a road: the camera keeps thirty in memory; the card wrote the rest (its gate
-    released it), and the continuation reads it off the card from the first keyframe after `have`."""
-    wall = Clock(0.0)
-    asked = []
+    released it), and the continuation reads it off the card from the first keyframe after `have`.
 
-    def card(t0, t1):
+    The card is the REAL one (the sixth review, blocker 3): its reader gives sample records — `Sample` — and this
+    test, on a fake card that returned dicts, passed while every frame read off a real card was thrown away. The
+    pusher turns the card's frames into push frames (`wire`); the record itself rides along, for the recorder."""
+    from w2cplatform.obsd import archive_ms
+    wall = Clock(0.0)
+    card, asked = real_card(0, 60), []
+
+    def read(recording, t0, t1, max_bytes):
         asked.append((t0, t1))
-        return [_frame(t) for t in range(int(t0), int(t1))]
-    south, ingest, pusher, rq, down = _world(wall, card=card)
+        return card.pieces(recording, t0, t1, max_bytes)
+    south, ingest, pusher, rq, down = _world(wall, card=read)
+    _second(wall, pusher, 3); rq.drain()
+    ingest.written = lambda ref: 3.0
+    down.update(URLS); _second(wall, pusher, 50); down.clear()
+    _second(wall, pusher)
+    frames = rq.drain()
+    got = [f["t"] for f in frames]
+    assert asked == [(3.0, 23.0)]                                     # off the card: from `have` to where memory begins
+    assert got[0] == 4 and got == sorted(set(got)) and got[-1] == 54  # from the card, then memory, then live, once each
+    assert got == [float(t) for t in range(4, 55)] and pusher.resumed == 50
+    off_card = [f for f in frames if "sample" in f]
+    assert [f["t"] for f in off_card] == [float(t) for t in range(4, 23)] and all(f["ring"] for f in off_card)
+    assert all(f["sample"].begin == archive_ms(f["t"]) and f["sample"].key == f["key"] for f in off_card)
+
+
+def test_a_card_that_holds_less_than_the_break_leaves_a_hole_and_the_stream_goes_on_from_a_keyframe():
+    """The card's part and the ring's part join in the middle of a group of pictures only when the card's part
+    reaches the ring. A card that has less — it was slow, it opened late — leaves a hole before the ring, and after a
+    hole the stream starts on a keyframe: the half-group after it could not be decoded. What is missing is backfill's."""
+    wall = Clock(0.0)
+    card = real_card(0, 15)                                            # the card stops at 15; memory begins at 23
+    south, ingest, pusher, rq, down = _world(wall, card=card.pieces)
     _second(wall, pusher, 3); rq.drain()
     ingest.written = lambda ref: 3.0
     down.update(URLS); _second(wall, pusher, 50); down.clear()
     _second(wall, pusher)
     got = [f["t"] for f in rq.drain()]
-    assert asked and asked[0][0] == 3.0
-    assert got[0] == 4 and got == sorted(set(got)) and got[-1] == 54  # from the card, then memory, then live, once each
+    assert got == [float(t) for t in range(4, 15)] + [float(t) for t in range(24, 55)]   # 23 is a delta frame: dropped
 
 
 def test_without_have_the_continuation_is_what_the_camera_kept():

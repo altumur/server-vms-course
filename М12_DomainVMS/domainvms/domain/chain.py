@@ -99,10 +99,11 @@ def publish_upstream(crossings, centre: str, star=frozenset(), lifetime: float =
 class Forwarder:
     def __init__(self, name: str, local, cluster_vars, dial, archive=None, needs=None):
         """`local`: this cluster's `Ingest`. `dial(url)`: calling OUT to the centre. `archive(ref, t0, t1)`:
-        frames of a range from this cluster's archive. `needs(ref)`: whether this cluster wants the stream
+        frames of a range from this cluster's archive — called with `recording=` when the centre named one, and
+        raising `OSError` for a range it could not read. `needs(ref)`: whether this cluster wants the stream
         itself — its recorder — which in star mode it must fetch."""
         self.name, self.local, self.vars, self.dial = name, local, cluster_vars, dial
-        self.archive = archive or (lambda ref, t0, t1: [])
+        self.archive = archive or (lambda ref, t0, t1, recording=None: [])
         self.needs = needs or (lambda ref: False)
         self.up = f"up:{name}"
         self.queues: dict[str, object] = {}
@@ -153,8 +154,17 @@ class Forwarder:
         else:
             self.local.release(ref, self.up)
             said = "the centre does not want it"
-        for rid, (t0, t1) in work["ranges"].items():
-            ing.upload(e["token"], ref, rid, self.archive(ref, t0, t1))    # the answer to that request (AD)
+        # The card's rule, one level up — all of it (the sixth review): the recording the centre named goes to the
+        # archive's reader, and an archive that could not read the range says so (`failed`) instead of leaving the
+        # centre to its timeout. One upload, not pieces: the relay is a server, and the centre asks a minute at a time.
+        for rid, r in work["ranges"].items():
+            named = {"recording": r["recording"]} if r.get("recording") else {}
+            try:
+                frames = self.archive(ref, r["from"], r["to"], **named)
+            except OSError as err:
+                ing.upload(e["token"], ref, rid, [], failed=str(err))
+                continue
+            ing.upload(e["token"], ref, rid, frames)                     # the answer to that request (AD)
         for aid, a in work.get("asks", {}).items():                     # an ask left above: down it goes…
             with self._lock:
                 self.carried.setdefault((ref, aid), (ing, e["token"], float(a["deadline"])))

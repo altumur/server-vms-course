@@ -157,7 +157,13 @@ class LiveWorker(Worker):
                     log.error("%s: camera %s not subscribed: its epoch could not be taken: %s", self.name, cam, e)
         for cam in [c for c in self.refused if c not in wanted]:
             del self.refused[cam]                                   # not ours any more: nothing to say about it
-        rows = {cam: self.ctl.unit(cam) for cam in idle} if self.ctl is not None else {}
+        rows = {}
+        for cam in (idle if self.ctl is not None else ()):
+            try:
+                rows[cam] = self.ctl.unit(cam)
+                self.row_parsed(cam)
+            except (ValueError, KeyError, TypeError) as e:    # its row does not parse (`row_garbled`): nobody can say
+                self.row_garbled(cam, e)                      # its grace has run out, and the fan-out is kept
         orphans = self._orphans(now, wanted) if self.ctl is not None else []
         dropped, deleted = [], []
         with self.lock:

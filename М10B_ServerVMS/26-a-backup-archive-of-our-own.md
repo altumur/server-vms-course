@@ -106,7 +106,7 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 #
 #   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
-#                                  owns it, from a key frame (`Archive.samples`)
+#                                  owns it, from a key frame (`Archive.stream`). STREAMED, a sequence at a time
 ```
 
 `serve_archive()` поднимает её и кладёт адрес в heartbeat как `archive_url`. Адрес — то, к чему дверь привязана: loopback или имя сервера, никогда не `0.0.0.0`. Дверь на loopback другого сервера основная не берёт (`local_only`, обратная связь BT): по такому адресу она постучалась бы к себе.
@@ -120,9 +120,6 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 Так же, как здесь находится всё, — в heartbeat'ах:
 
 ```python
-    # Found the way everything here is found — in heartbeats: a recording of this camera, homed on a backup
-    # volume, run by a recorder that is alive, says what it holds and serves its archive. `self` is never its
-    # own source, and a backup fetches from nobody.
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         names = volumes.backups(self.vars)
@@ -140,6 +137,8 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
                 kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
                 if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
                     continue                  # no door to a backup, nobody to ask the camera: not a source from here
+                if self._source_waits(f"{kind}:{st['id']}"):
+                    continue                  # it failed a range just now: not asked again yet (`_source_answered`)
                 out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
                             "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
                             "coverage": st["coverage"]})
@@ -174,22 +173,30 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         unit = str(unit)
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
+
+        def read(a, b):
+            self.actuator.range_error = ""
+            if src["kind"] == "edge":
+                return self.card_range(src, a, b)        # the camera's answer to a range of its card
+            return self.read_samples(src["url"], src["recording"], a, b)
         try:
-            samples = self.read_samples(src["url"], src["recording"], t0, t1)
+            out = self._land_pieces(unit, cam, read, t0, t1, src["key"])
         except OSError as e:
+            self._source_answered(src["key"], failed=True)
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
-        self.actuator.range_error = ""
-        return self._land(unit, cam, samples, t0, t1, src["key"])
+        self._source_answered(src["key"], failed=False)
+        return out
 ```
+
+Диапазон забирается и сажается кусками (`_land_pieces`, `_pieces`): `read` зовётся примерно на минуту за раз, и кусок садится до того, как спрошен следующий (урок 16, шаг 3; третье ревью, блокер 6) — час дозаписи не лежит часом кадров в памяти. У двери резервной `read` — это `read_samples`:
 
 ```python
-    def read_samples(self, url: str, unit: str, t0: float, t1: float) -> list[Sample]:
-        ...
+        q = urllib.parse.urlencode({"from": t0, "to": t1})
         with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
-            return Sample.decode_all(r.read())
+            data = r.read()
 ```
 
-Так это выглядело, пока диапазон читался целиком; теперь `fetch_from` зовёт `read_samples` кусками через `_pieces` — около минуты за запрос, — и кусок садится до следующего (урок 16, шаг 3; третье ревью, блокер 6).
+У карты камеры — крючок `card_range`. Две строки с `_source_answered` в `fetch_from` — отсрочка для источника, который не отдал диапазон: и для камеры, и для двери резервной (шаг 10).
 
 У устройства есть только сводка, и выкачка говорит правду о дырах карты лишь после того, как её сделали (шаг 10 урока 16). Резервная отвечает точнее: её дверь отдаёт **кадры** того, что её том действительно держит в диапазоне, каждый отрезок от эпохи, которая им владеет, с ключевого кадра на его первом моменте или раньше (урок 8). Чего в томе резервной нет, того дверь не отдаст.
 
@@ -221,8 +228,10 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 
 ```python
                 for smp in g:
-                    self.store.put(unit, epoch, smp, backfill=True)
+                    if store.put(unit, epoch, smp, backfill=True) == "SEQUENCE_LOST":
 ```
+
+(Ответ `SEQUENCE_LOST` — движок взял кадр, но потерял прежнюю последовательность: её отрезок снова считается дырой, урок 16.)
 
 Ни демукса, ни конвейера, ни переписанных меток. Исполнитель здесь не участвует вовсе: тест проверяет, что `primary.actuator.fetched == []`.
 
@@ -301,9 +310,11 @@ def rank_near_recording(ctl, recording_id: str) -> int:
             if not should or str(other["id"]) in running:
                 self._not_written_since.pop(str(other["id"]), None)
                 continue
-            since = self._not_written_since.setdefault(str(other["id"]), now)
+            since = self._not_written_since.setdefault(str(other["id"]), min(now, vanished.get(str(other["id"]), now)))
             need = need or now - since >= self.START_GRACE
 ```
+
+(`vanished` — основная, чей регистратор **пропал**: для неё отсчёт идёт от его последнего heartbeat'а, а не от момента, когда это заметили; об этом — в шаге 9, «Кольцо должно доставать до смерти сервера основной».)
 
 «Пишется» — значит у живого регистратора кластера (heartbeat моложе 45 секунд) эта запись числится `running`. Только что замолчавшей основной даются секунды — `START_GRACE = 20`, число продукта, намеренное на коробке: так начинается **каждая** запись по событию — строка появилась, конвейер поднимается, — и будить резервную на каждое событие не нужно. Тест: `test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision`.
 
@@ -317,7 +328,9 @@ def rank_near_recording(ctl, recording_id: str) -> int:
 
 Шаг 8 решает, **когда** резервной писать. Остаётся вопрос, **с какого момента**. Основная замолчала в 14:20:00. Резервная ждёт свои двадцать секунд на старт, замечает это на следующем проходе и начинает писать в 14:20:22. Двадцать две секунды пропажи не записаны нигде, и это ровно те секунды, за которые случилось то, из-за чего основная замолчала.
 
-Решение — не запускать резервную, а **держать** её. Её конвейер работает всегда: подписан на камеру, принимает поток, но пишет не в том, а в кольцо последних тридцати секунд в памяти (`PREBUFFER = 30`). Когда основную находят пропавшей, кольцо выпускается первым, а за ним идёт живое. Запись начинается раньше, чем пропажу заметили.
+Решение — не запускать резервную, а **держать** её. Её конвейер работает всегда: подписан на камеру, принимает поток, но пишет не в том, а в кольцо последней минуты в памяти (`PREBUFFER = 60`). Когда основную находят пропавшей, кольцо выпускается первым, а за ним идёт живое. Запись начинается раньше, чем пропажу заметили.
+
+**Тридцать или шестьдесят.** Шестое ревью нашло, что урок говорил «тридцать», а код — шестьдесят. Верно шестьдесят: кольцо было тридцатисекундным, пока третье ревью не посчитало, что смерть сервера основной замечают через 45 секунд (ниже, «Кольцо должно доставать до смерти сервера основной»). Но это число — **окно**, то есть сколько кольцо держит самое большее. У сервера кольцо — очередь GStreamer с пределом по времени, и окно она держит целиком. У камеры кольцо ограничено ещё и байтами, и при обычном битрейте держит меньше окна; сколько именно и что с этим делать — в шаге 10, «Предзапись — то, что кольцо держит».
 
 В конвейере это одна очередь между сторожем и `appsink`:
 
@@ -330,7 +343,6 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 ```python
         if cam.get("hold"):
             pad = p.get_by_name("ring").get_static_pad("src")
-            self.blocks = getattr(self, "blocks", {})
             self.blocks[cam["id"]] = pad.add_probe(Gst.PadProbeType.BLOCK_DOWNSTREAM, lambda *_: Gst.PadProbeReturn.OK)
 ```
 
@@ -345,9 +357,9 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
             return Gst.PadProbeReturn.REMOVE
 ```
 
-Поэтому выпущенное — не ровно тридцать секунд, а чуть меньше: продукт на ящике намерил 28,5 секунды до снятия удержания.
+Поэтому выпущенное — не ровно окно кольца, а чуть меньше: продукт на ящике, когда кольцо было тридцатисекундным, намерил 28,5 секунды до снятия удержания.
 
-**Время — по времени съёмки.** Каждый кадр уходит в писатель тома со своим временем, и это время приёмник берёт не по часам в момент, когда кадр до него дошёл. Для живой записи это одно и то же с точностью до буфера. Для выпущенного кольца — на тридцать секунд позже: запись легла бы на таймлайн после сбоя, а не до него. Поэтому время кадра — часы конвейера, переведённые в настенные: сейчас минус то, насколько давно этот кадр был.
+**Время — по времени съёмки.** Каждый кадр уходит в писатель тома со своим временем, и это время приёмник берёт не по часам в момент, когда кадр до него дошёл. Для живой записи это одно и то же с точностью до буфера. Для выпущенного кольца — на длину кольца, до минуты, позже: запись легла бы на таймлайн после сбоя, а не до него. Поэтому время кадра — часы конвейера, переведённые в настенные: сейчас минус то, насколько давно этот кадр был.
 
 ```python
                 clock = p.get_clock()
@@ -366,6 +378,7 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
             need = self.primary_needs_cover(row, now)
             ...
             if need and self.holding.get(uid):
+                held = self.prebuffered(uid)                 # what the ring holds as it is released: the log says THAT
                 if self.actuator("release", {"id": row["id"], "now": now}):
                     self.holding[uid] = False
                     ...
@@ -379,18 +392,18 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 
 Сам возврат на удержание — перезапуск под той же эпохой: старый конвейер получает EOS, последние кадры доходят до писателя, и записанное остаётся в томе; новый конвейер стартует с перекрытым кольцом, и оно начинает копиться заново. Это не новый писатель, поэтому и эпоха прежняя. Тест: `test_the_backup_goes_back_on_hold_a_minute_after_the_primary_is_back`.
 
-Удерживаемая резервная видна в статусе словами: фаза `standby` — *the primary recording is being written; the last 30 s are held in memory*. Тест: `test_an_offline_backup_runs_on_hold_and_writes_nothing` — после минуты удержания и `store.seal()` в томе резервной ни одного пролёта.
+Удерживаемая резервная видна в статусе словами: фаза `standby` — *the primary recording is being written; the last 60 s are held in memory*. Число здесь — то, что кольцо держит **сейчас** (`prebuffered`): у сервера это окно, у карты камеры — фактический размах её кольца. Тест: `test_an_offline_backup_runs_on_hold_and_writes_nothing` — после минуты удержания и `store.seal()` в томе резервной ни одного пролёта.
 
 **Сначала память** (обратная связь CB). Для потока, который камера **толкает сама**, у карты есть третье состояние: между «держит» и «пишет» — «обрыв, держу в памяти». Такая камера после обрыва продолжает поток с того места, докуда регистратор записал (урок 16 М12, шаг 6а; регистратор говорит это в heartbeat как `written_through`). Значит, выпускать кольцо в момент обрыва незачем: десятисекундный обрыв Wi-Fi писал бы карту и потом дозаписывался с неё, каждый раз. Шлюз ждёт `defer_for` — кольцо минус то, насколько поздно обрыв замечают, минус запас:
 
 ```python
     def defer_for(self) -> float:
-        return max(0.0, self.PREBUFFER - self.DETECTION - self.DEFER_MARGIN)
+        return max(0.0, min(self.PREBUFFER, self.CONTINUE_REACH) - self.DETECTION - self.DEFER_MARGIN)
 ```
 
-(Тогда `PREBUFFER` был 30 с; теперь отсрочка ограничена ещё и памятью самой камеры — `CONTINUE_REACH` = 30 с, — и остаётся 30 − 10 − 5.) Это 30 − 10 − 5 = 15 секунд. Связь вернулась раньше — карта не тронута (`back from memory`). Обрыв затянулся — кольцо выпускается и всё ещё достаёт до начала обрыва: выпущено через `defer_for` после того, как обрыв заметили, а заметили не позже чем через `DETECTION` после его начала. Где продолжать поток некому — камеру сервер забирает по RTSP, — ждать нечего, и карта пишет сразу. Скажет об этом тот, кто запускает регистратор (`resumes`, как `stream_says`).
+Отсрочка ограничена меньшим из двух: тем, что держит кольцо карты (`PREBUFFER`), и памятью самой камеры-толкателя (`CONTINUE_REACH` = 30 с, урок 16 М12). Это 30 − 10 − 5 = 15 секунд; у камеры, чьё кольцо при её битрейте держит меньше тридцати секунд, — меньше (шаг 10). Связь вернулась раньше — карта не тронута (`back from memory`). Обрыв затянулся — кольцо выпускается и всё ещё достаёт до начала обрыва: выпущено через `defer_for` после того, как обрыв заметили, а заметили не позже чем через `DETECTION` после его начала. Где продолжать поток некому — камеру сервер забирает по RTSP, — ждать нечего, и карта пишет сразу. Скажет об этом тот, кто запускает регистратор (`resumes`, как `stream_says`).
 
-Пока шлюз ждёт, кольцо **удерживается** (`keep`, как `Keeper` в продукте): по окну оно не отпускает ничего, а то, что должно отпустить за потолком в байтах, пишет на карту, а не выбрасывает. Обрыв целиком лежит в памяти, сколько бы ни длилось ожидание. Связь вернулась раньше — кольцо держится ещё `KEEP_GRACE` = 10 секунд, пока камера досылает из него своё, и становится обычным. Выпущено — удержание снято: удержанное уже уходит на карту. Просит шлюз удержание через `_keep` и только у исполнителя, который умеет удерживать, — у карты камеры (`CardActuator.keep`, шаг 10). У конвейера сервера кольцо — очередь GStreamer, и такого режима у него нет.
+Пока шлюз ждёт, кольцо **удерживается** (`keep`, как `Keeper` в продукте): по окну оно не отпускает ничего, а то, что должно отпустить за потолком в байтах, пишет на карту, а не выбрасывает. Обрыв целиком лежит в памяти, сколько бы ни длилось ожидание. Связь вернулась раньше — кольцо держится ещё `KEEP_GRACE` = 10 секунд, пока камера досылает из него своё, и становится обычным. Выпущено — шлюз просит снять удержание в том же проходе, но снимает его исполнитель, и не сразу: только когда писатель карты забрал кольцо (шаг 10, «Кольцо удерживает запись»). Просит шлюз удержание через `_keep` и только у исполнителя, который умеет удерживать, — у карты камеры (`CardActuator.keep`, шаг 10). У конвейера сервера кольцо — очередь GStreamer, и такого режима у него нет.
 
 ```python
     def _keep(self, uid, keep: bool) -> None:
@@ -419,27 +432,69 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 
 | Курс | Продукт | Что это |
 |---|---|---|
-| `CamRing` | `camfeed` | кадры камеры в памяти: одно кольцо на 60 с, не больше 32 МиБ, всегда от ключевого кадра; уходят целые группы кадров |
+| `CamRing` | `camfeed` | кадры камеры в памяти: одно кольцо с окном 60 с, не больше `RING_BYTES` (32 МиБ, как в продукте; бюджет всего процесса — 40), всегда от ключевого кадра; уходят целые группы кадров |
 | `CardBuffer` | `cardbuf` | карта: на поток — файлы сегментов `.smpl`, только дописываются; бюджет в байтах; старейшие сегменты уходят |
 | `CardActuator` | `cardact` | исполнитель регистратора на камере: пишет запись с кольца на карту; удержание (`hold`) и удержанное кольцо (`keep`) |
 | `CardRecorder` | `RecWorker` в `vmscam` | регистратор платформы над ними: шлюз этого урока без изменений, слой тома заменён картой |
 
-**Одно кольцо.** Кадры камеры в памяти лежат один раз. Кольцо читают все: пушер (урок 16 М12) и писатель карты. Камера без карты толкает поток так же и держит в памяти, сколько позволяет бюджет. Размер кольца — 60 секунд, потому что это ещё и предзапись карты: обрыв, которого камера сама не видит, замечают только через `LOST_AFTER`, а только что размещённой основной даётся ещё `START_GRACE`. 32 МиБ — шестьдесят секунд при 4 Мбит/с; решение владельца продукта — подтвердить замером на камере и уменьшить до 16 МиБ, если памяти мало (CT, DE). Тесты: `test_the_ring_keeps_its_window_from_a_key_frame_and_lets_go_of_whole_groups`, `test_a_kept_ring_lets_nothing_go_by_its_window_and_spills_its_oldest_groups_past_its_ceiling`.
+**Одно кольцо.** Кольцо у камеры одно, и читают его все: пушер (урок 16 М12) и писатель карты. Камера без карты толкает поток так же и держит в памяти, сколько позволяет бюджет. Окно кольца — 60 секунд, потому что это ещё и предзапись карты: обрыв, которого камера сама не видит, замечают только через `LOST_AFTER`. Тесты: `test_the_ring_keeps_its_window_from_a_key_frame_and_lets_go_of_whole_groups`, `test_a_kept_ring_lets_nothing_go_by_its_window_and_spills_its_oldest_groups_past_its_ceiling`.
+
+**Память камеры — один бюджет в байтах.** Раньше урок говорил «кадры камеры в памяти лежат один раз», а потолок в байтах был только у кольца. Шестое ревью посчитало запуском, что лежит на самом деле: кольцо 31,5 МиБ, ещё 38,2 МиБ пролитого удержанным кольцом в очереди к карте (она считалась в кадрах: 512 и 2048) и 28,6 МиБ одного ответа на диапазон одним списком — на камере, у которой на данные процесса около 32 МБ. Кадр, который ждёт карту, и кадр, прочитанный с карты для сервера, — тоже память этого процесса. Поэтому бюджет один, и режется он в коде:
+
+```python
+MEMORY_BUDGET = 40 << 20
+
+
+def memory_split(budget: int = MEMORY_BUDGET) -> tuple[int, int, int]:
+    """`(ring, queue, piece)` in bytes, out of one budget: three twentieths wait for the card, two pieces of a
+    fortieth each are in flight, and the ring has the rest — four fifths: 32 MiB of 40, the product's ring."""
+    queue, piece = budget * 3 // 20, budget // 40
+    return budget - queue - 2 * piece, queue, piece
+
+
+RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
+```
+
+| Доля | Сколько | Что в ней |
+|---|---|---|
+| кольцо, `RING_BYTES` | 32 МиБ | последние секунды потока: все 60 с окна при 4 Мбит/с, 44 с при 6, 33 с при 8 |
+| очередь карты, `QUEUE_BYTES` | 6 МиБ | кадры всех записей на пути к карте и пролитое удержанным кольцом, вместе: около двенадцати секунд при 4 Мбит/с |
+| куски, 2 × `PIECE_BYTES` | 2 МиБ | один кусок, который писатель карты взял из кольца, и один кусок карты, прочитанный для сервера |
+
+Больше нигде кадры не лежат. Счёт консервативный: в Python очередь держит те же объекты, что и кольцо, но продукт копирует кадр в арену кольца, и там это две копии, — курс считает как продукт. **Кольцо — как в продукте, 32 МиБ** (решение владельца): сначала бюджет был 32 МиБ на всё, и кольцу из него доставалось 24 — пятьдесят секунд при 4 Мбит/с, ровно столько, сколько нужно, чтобы заметить обрыв по книге, без запаса. Владелец выбрал кольцо продукта; очередь и куски идут **сверху**, и бюджет процесса — 40 МиБ. Отличие от продукта осталось одно: у него очередь (512 кадров) и пролитое (2048) считаются в кадрах, у курса — в байтах, так что 40 МиБ — честный потолок, а у продукта сверх кольца потолка нет. Число 32 МиБ и продукт, и курс ждут подтвердить замером на камере (CT, DE); камере, у которой памяти намерили другое, дают другой бюджет, и три доли двигаются вместе (`memory_split`). Тесты: `test_the_cameras_memory_is_one_budget_cut_three_ways`, `test_the_ring_the_queue_and_the_spill_are_bytes_out_of_one_budget` — тот же сценарий, что считало ревью: сто пятьдесят секунд при 4 Мбит/с с застрявшей картой, и кольцо вместе с очередью ни разу не превысили свои 38 МиБ.
+
+**Предзапись — то, что кольцо держит, а не его окно.** Шестое ревью: кольцо в 32 МиБ держит 44 секунды при 6 Мбит/с и 32 при 8, смерть основной замечают через 45, а лог писал «recording from 60 s ago». `PREBUFFER` у карты был окном кольца, что бы кольцо ни держало. Теперь кольцо говорит, сколько оно достаёт при том битрейте, который ему дают:
+
+```python
+    def reach(self) -> float:
+        """Seconds of this camera's stream the ring holds when it is full: the window, or less — its bytes at the
+        bitrate of what it holds now."""
+        with self._lock:
+            if not self._frames or not self.bytes:
+                return self.window
+            span = (self._frames[-1].end - self._frames[0].begin) / 1000.0
+            if span < min(MEASURE_SPAN, self.window):
+                return self.window
+            by_bytes = span * self.max_bytes / self.bytes
+            return min(self.window, by_bytes) if self.window > 0 else by_bytes
+```
+
+`CardRecorder.PREBUFFER` — это `ring.reach()`, и на это число опирается всё, что рассчитывает на предзапись: отсрочка шлюза (`defer_for`), статус удерживаемой записи (`prebuffer_s`) и строка лога о выпуске, которая называет фактический размах кольца (`prebuffered`). А когда кольцо достаёт меньше, чем нужно, чтобы обрыв был на карте с начала, регистратор камеры поднимает тревогу `card.prebuffer.short` — когда это началось и раз в сутки, пока длится, — и пишет `prebuffer_short` в статус записи. Сколько нужно, зависит от того, как камера узнаёт об обрыве (`detection`): камера, которая толкает поток сама, слышит об обрыве за `DETECTION` = 10 с, и кольцо с этого момента удерживается; камера, которая узнаёт по книге, — только через `LOST_AFTER` = 45 с. К этому прибавляется `DEFER_MARGIN` = 5 с на проход и ключевой кадр. Получается: при 4 Мбит/с кольцо достаёт 50 секунд — ровно столько, сколько нужно по книге, без запаса; при 6 и 8 Мбит/с начала обрыва, о котором камера узнала по книге, на карте не будет, и тревога говорит об этом заранее. Лекарство у камеры: ниже битрейт или больше памяти кольцу. Тесты: `test_the_ring_says_how_far_back_it_reaches_at_the_bitrate_it_is_given`, `test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detection_is_an_alarm`.
 
 **Карта — файлы.** Поток записи `<запись>/e<эпоха>` — это сегменты по файлу на сегмент, записи `SMPL` подряд, как они идут по проводу. Индекса нет: имена сегментов и их первые и последние кадры читаются при открытии карты. Сегмент, который оборвала потеря питания, обрезается до последней целой записи. Больше чинить нечего: ничего, кроме дописывания, не пишется. Карта заполнилась — уходят старейшие сегменты, чьи бы они ни были; открытый не уходит никогда, и полная карта кадр не отвергает. Тесты: `test_a_full_card_lets_its_oldest_segments_go_and_never_refuses_a_frame`, `test_a_segment_a_power_loss_cut_is_read_to_its_last_whole_record`, `test_a_stream_opens_on_a_key_frame`.
 
-**Камера никогда не ждёт карту.** Кольцо отдаёт кадр в очередь под своим замком, а на карту пишут из очереди. Очередь — `QUEUE_LEN` = 512 кадров, около двадцати секунд при 25 кадрах в секунду:
+**Камера никогда не ждёт карту.** Кольцо отдаёт кадр в очередь под своим замком, а на карту пишут из очереди. Очередь ограничена дважды: байтами на всю карту (`QUEUE_BYTES`, `_room`) и кадрами на запись (`QUEUE_LEN` = 512, число продукта):
 
 ```python
     def _offer(self, r: _Rec, s: Sample) -> None:
         with r.lock:
-            if r.hold or r.stopped:
+            if r.hold or r.stopped or r.release_due or r.failed:
                 return
             if r.cutting and not s.key:
                 r.dropped += 1
                 return
             room = QUEUE_LEN - len(r.live)
-            if room < (2 if r.cutting else 1):
+            if room < (2 if r.cutting else 1) or not self._room(len(s.body)):
                 r.dropped += 1
                 r.cutting = True
                 return
@@ -450,9 +505,67 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
             r.wake.notify()
 ```
 
-Карта медленнее потока — дешёвая или изношенная — заполняет очередь. Дальше кадры **для карты** теряются до следующего ключевого кадра и считаются (`samples_dropped`). Кольцо, пушер и прошивка из-за карты не замедляются никогда. Место разрыва помечено, и писатель закрывает там сегмент: дыра на карте видна в её покрытии, а не прячется внутри сегмента. Тест: `test_a_card_slower_than_the_stream_loses_frames_up_to_the_next_key_frame_and_never_slows_the_ring`.
+Первая строка говорит, когда в очередь не кладут вовсе: на удержании (кольцо — предзапись), пока писатель ещё забирает само кольцо (`release_due`: эти кадры лежат в кольце, и он возьмёт их оттуда) и после отказа карты. Карта медленнее потока — дешёвая или изношенная — заполняет очередь. Дальше кадры **для карты** теряются до следующего ключевого кадра и считаются (`samples_dropped`). Кольцо, пушер и прошивка из-за карты не замедляются никогда. Место разрыва помечено, и писатель закрывает там сегмент: дыра на карте видна в её покрытии, а не прячется внутри сегмента. Тест: `test_a_card_slower_than_the_stream_loses_frames_up_to_the_next_key_frame_and_never_slows_the_ring`.
 
-**Ошибка записи — запись мертва.** Отказ карты — это карта, а не поток. Запись объявляется мёртвой тем же договором, что упавший конвейер (`pump`), её статус называет ошибку (`last_error`), и регистратор запускает её снова после отсрочки сверки. Тест: `test_a_card_that_refuses_a_write_kills_the_recording_and_the_recorder_starts_it_again_after_a_backoff`.
+**Кольцо уходит на карту кусками.** Выпущенная запись получала кольцо одним списком — снимком всего кольца, который писатель держал, пока карта его писала, а кольцо тем временем шло дальше: второе кольцо в памяти на время записи. Теперь писатель берёт из кольца кусок не больше `PIECE_BYTES` (`CamRing.piece`), пишет его и берёт следующий, с того кадра, на котором остановился:
+
+```python
+    def _catch_up(self, r: _Rec, upto: int | None = None) -> bool:
+        def done():
+            with r.lock:
+                r.release_due = False
+        at = r.last
+        piece, whole = self.ring.piece(at, self.piece_bytes, upto=upto, caught_up=done)
+        with r.lock:
+            spilled = [self._took(r.spill) for _ in range(len(r.spill))]
+        for s in spilled:
+            self._write(r, s)
+        if not whole and r.last == at:
+            if piece and at and not r.fresh:
+                r.lost_ms += piece[0].begin - at
+                if not r.need_key:
+                    self._write(r, _CUT)
+            r.need_key = True
+        for s in piece:
+            self._write(r, s)
+        r.fresh = False
+        if not piece:
+            with r.lock:
+                unkeep, r.unkeep_due = r.unkeep_due, False
+            if unkeep:
+                self._unkeep(r)
+        return r.last > at
+```
+
+Три вещи здесь держатся вместе. Пока писатель должен карте кольцо, кольцо **удерживается за ним** (`_owe`): новые кадры в очередь не кладутся, они в кольце, и кольцо не должно отпустить их по окну раньше, чем писатель до них дойдёт; за потолком в байтах оно проливает их в очередь, и то, чему в очереди нет места, считается. Конец догона объявляет само кольцо, под своим замком (`caught_up`): с этого мига каждый кадр идёт в очередь, и между последним куском и первым кадром очереди не выпадает ни одного. А кусок, который не продолжает последний кадр и не пришёл проливом, — дыра: карта была закрыта дольше, чем достаёт кольцо. Дыра закрывается как дыра (сегмент заканчивается, покрытие её показывает), а её длина считается в `seconds_lost`. Тесты: `test_the_ring_is_taken_a_piece_at_a_time_and_says_when_a_piece_does_not_follow_the_last`, `test_on_a_camera_a_release_and_a_restart_under_the_writers_thread_lose_no_frame`.
+
+**Кольцо удерживает запись, а не карта.** Шестое ревью: `keep` был одним флагом на всё кольцо. Записи A и B удерживают один обрыв, B снимает удержание — кольцо возвращается к окну под A, и у A пропадает начало обрыва. И второе: шлюз выпускал запись и снимал удержание в одном проходе, писатель забирал кольцо мгновением позже, а между ними следующий кадр обрезал кольцо до окна — обрыв в сто секунд, целиком лежавший в памяти, доходил до карты последними секундами. Теперь каждая запись удерживает кольцо под своим именем (`CamRing.set_keep(..., who=...)`), пролитое получают все удерживающие, и кольцо становится обычным, когда отпустил последний. А просьба снять удержание, пришедшая, пока писатель ещё должен карте кольцо, запоминается (`unkeep_due`) и исполняется писателем, когда он кольцо забрал. Тесты: `test_two_recordings_keep_the_ring_and_one_letting_go_does_not_take_it_from_the_other`, `test_a_ring_kept_by_two_spills_to_both`, `test_a_released_ring_stays_kept_until_the_writer_has_taken_it`.
+
+**Две записи пишут одну карту разом.** Сосед того же сценария: A и B удержали один обрыв и выпущены в одном проходе — с этого момента обе пишут, кадр за кадром по очереди. У карты был один открытый сегмент на всю карту, как у `cardbuf` продукта: кадр второй записи закрывал сегмент первой, её следующий неключевой кадр отвергался, и каждая теряла все группы кадров, в которые писала другая. Теперь открытый сегмент — у каждого потока свой (`CardBuffer.open`); цена — файловый дескриптор на пишущую запись. Тест: `test_two_recordings_released_together_write_one_card_at_once_and_neither_loses_a_frame`.
+
+**Ошибка записи — запись мертва, а карта закрыта.** Отказ карты — это карта, а не поток. Запись объявляется мёртвой тем же договором, что упавший конвейер (`pump`), её статус называет ошибку (`last_error`), и регистратор запускает её снова после отсрочки сверки. Тест: `test_a_card_that_refuses_a_write_kills_the_recording_and_the_recorder_starts_it_again_after_a_backoff`.
+
+Шестое ревью показало, чего здесь не хватало. Карта ушла в «только чтение» — ядро делает так с картой, вернувшей ошибку, — и шесть проходов подряд heartbeat говорил `card.state: recording`, `volume_error` был пуст, запись перезапускалась семь раз на карте, которую никто не открывал заново, а кадры между отказом и каждым перезапуском не попадали на карту вовсе. Теперь слово самой карты (`CardBuffer.err` — последняя запись не удалась, и после неё не удалась ни одна) читается на каждом проходе:
+
+```python
+    def _card_failing(self, vol) -> None:
+        err = self.card.err if self.card is not None else None
+        if err is None:
+            return
+        self.card_failures += 1
+        log.warning("%s: the card %s refused a write: %s; closing it, trying again in %.0f s (the ring and the pusher "
+                    "work; what the ring lets go of meanwhile is lost to the card)", self.name, vol.url, err, self.CARD_RETRY)
+        for uid in list(self.reconciler.actual):
+            self.actuator("stop", {"id": uid})
+            self.reconciler.lost(uid, self.now())
+        self._close_store(quiet=True)
+        self.card_fault, self.card_error, self.card_since = "refused a write", str(err), self.wall()
+        self._card_retry_at = self.clock() + self.CARD_RETRY
+```
+
+Отказавшая карта **закрывается**: в heartbeat сначала `failing`, потом `unavailable` с тем, что она отвергла, в `volume_error` — «the card refused a write: …», отказы считаются (`card.failures`), ёмкость регистратора — ноль, так что в закрытую карту ничего не запускается. Через `CARD_RETRY` её открывают снова, как карту, которая не открылась: открытие её читает, поэтому вернувшаяся карта находится целой, а не вернувшаяся говорит почему. И запись продолжается **с последнего кадра, который карта взяла**, из кольца — насколько кольцо ещё достаёт. Тест: `test_a_card_that_refuses_writes_is_said_closed_opened_again_and_written_from_where_it_stopped` — полминуты без карты, и в покрытии нет ни секунды дыры.
+
+**Где запись остановилась, там и продолжается.** Минор того же ревью: запись, запущенная заново, ничего не знала о предыдущей. Основная «мигнула» — выпуск, возврат на удержание, снова выпуск, всё внутри окна кольца, — и один и тот же интервал ложился на карту дважды, двумя сегментами. Исполнитель переносит, докуда дошёл писатель (`CardActuator.carried`), — и через перезапуск той же эпохи, и через новую эпоху: покрытие карты принадлежит записи, а не эпохе. Запись, которая писала, продолжает с этого места из кольца. Что перезапуск всё же стоит — остаток группы кадров, в которой запись остановили: остановка закрыла сегмент, а сегмент открывается ключевым кадром; эти кадры считаются в `samples_dropped`. Место «в будущем» относительно кольца — это часы, шагнувшие назад, и оно забывается. Тест: `test_a_recording_held_again_and_released_again_writes_no_interval_twice`.
 
 **Карта как резервная `when: offline`.** Шлюз — шаги 8 и 9 слово в слово. Меняется только то, что значат «держать» и «выпустить». На удержании кольцо — предзапись, а карта не тронута. Обрыв, который камера может продолжить, удерживается в кольце (`keep`) на `defer_for`. Выпущенная карта получает сначала то, что удержанное кольцо пролило за потолок, потом то, что кольцо ещё держит, потом каждый живой кадр. Остановка во время удержания пишет кольцо на карту: это единственная копия обрыва. Тесты «сначала память» в `test_backup_archive.py` идут на этой карте; `test_a_recording_stopped_while_its_ring_is_kept_writes_the_ring_first`.
 
@@ -468,23 +581,53 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 
 **Камера без карты — всё ещё камера** (DH). Карту часто монтируют после запуска процесса или вставляют позже. Не открылась — регистратор теряет ёмкость (это не место для записи), говорит причину в `volume_error` и в статусе записи и пробует снова каждые `CARD_RETRY` = 30 секунд. Кольцо и пушер карту не ждут; обрыв длиннее кольца тогда теряется — это предел камеры без носителя. Тест: `test_a_camera_whose_card_does_not_open_works_without_it_says_why_and_tries_again`.
 
-**Что видно с сервера и в консоли.** У записи на карте: `hold`, `keep`, `samples_written`, `samples_dropped`, `last_error`, `card_segments`, `card_bytes`, `card_budget` и покрытие. У регистратора камеры: `card` — `state` (`opening`, `unavailable`, `recording`), `error`, `tries`, `since` — и `feed`: `frames_connected`, `last_frame_age_s`, `ring_*`. Признака «движок есть» и тревог движка у камеры нет: движка там нет. Нет и `archive`, который консоль предложила бы объявить томом. Страница томов показывает карту как карту: сколько на ней лежит из бюджета или почему она не открыта. Тест: `test_what_a_camera_recorder_says_of_its_card_and_its_frames`.
+**Что видно с сервера и в консоли.** У записи на карте: `hold`, `keep`, `samples_written`, `samples_dropped`, `seconds_lost` (сколько потока кольцо отпустило раньше, чем карта его взяла), `last_error`, `card_segments`, `card_bytes`, `card_budget`, `card_failures`, покрытие, а у резервной `when: offline` ещё `prebuffer_s` и, когда кольца не хватает, `prebuffer_short`. Счётчики записи идут через её перезапуски. У регистратора камеры: `card` — `state` (`opening`, `unavailable`, `recording`, `failing`), `error`, `failures`, `tries`, `since` — и `feed`: `frames_connected`, `last_frame_age_s`, `ring_*`, в том числе `ring_reach_s`. Признака «движок есть» и тревог движка у камеры нет: движка там нет. Нет и `archive`, который консоль предложила бы объявить томом. Страница томов показывает карту как карту: сколько на ней лежит из бюджета или почему она не открыта. Тест: `test_what_a_camera_recorder_says_of_its_card_and_its_frames`.
 
 **Ни одного вызова движка.** `CardRecorder` строится с `NO_ENGINE`, который отказывает на любом вызове. Путь, который всё ещё тянется к демону, упадёт в тестах, а не тихо на камере. И наоборот: регистратор движка карту не берёт, даже закреплённый на неё по ошибке (`test_a_camera_recorder_holds_its_card_and_never_touches_an_engine`, `test_a_recorder_of_the_engine_never_takes_a_cameras_card`).
 
-**Ответ на диапазон.** Камера отвечает на запрос диапазона кадрами своей карты, от ключевого кадра. Карта, которая не открыта, — ошибка, не пустота:
+**Ответ на диапазон — кусками и той записи, которую спросили.** Камера отвечает на запрос диапазона кадрами своей карты, от ключевого кадра. Карта, которая не открыта, — ошибка, не пустота:
 
 ```python
-    def answer_range(self, recording: str, t0: float, t1: float) -> list[Sample]:
+    def answer_range(self, recording: str | None, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
         card = self.card
         if card is None:
             raise CardError(f"the card is not open{': ' + self.card_error if self.card_error else ''}")
-        return card.range(str(recording), t0, t1)
+        mine = sorted(str(r["id"]) for r in self.rows)
+        if recording is None and len(mine) == 1:
+            recording = mine[0]
+        try:
+            return card.pieces(None if recording is None else str(recording), t0, t1, max_bytes)
+        except NoRecording:
+            if recording is None or str(recording) not in mine:
+                raise
+            return iter(())
 ```
+
+Раньше это был `card.range(...)` — один список. Шестое ревью измерило: минута при 4 Мбит/с — 28,6 МиБ одним списком, десять минут — 272 МиБ, в камере с 32 МБ. Теперь читатель карты отдаёт диапазон **кусками** не больше `max_bytes`, и каждый читается с карты, только когда его попросили:
+
+```python
+    def _pieces_of(self, parts: list, lo: int, hi: int, max_bytes: int):
+        out, size = [], 0
+        for path, written in parts:
+            for smp in self._range_of(path, written, lo, hi):
+                if out and size + len(smp.body) > max_bytes:
+                    yield out
+                    out, size = [], 0
+                out.append(smp)
+                size += len(smp.body)
+        if out:
+            yield out
+```
+
+`CardBuffer.range` остался — те же куски, склеенные в один список, для читателя с памятью сервера и для тестов; камера отвечает кусками. И запрос **называет запись**: на карте их столько, сколько у камеры строк с `home` на ней, и читатель, привязанный к одной, отвечал на запрос другой пустотой — «на карте нет», навсегда. Имя, которого на карте нет, — ошибка (`NoRecording`), не пустой ответ; запись этой камеры, от которой на карте ещё ничего нет, — единственный пустой ответ, который правда; без имени отвечает единственная запись, а когда их несколько — ошибка. Тесты: `test_a_range_is_read_off_the_card_in_pieces_of_bytes_never_as_one_list`, `test_a_range_names_its_recording_and_a_recording_the_card_does_not_hold_is_an_error`.
 
 Сегмент короче записанного — тоже ошибка (`CardError`), а не конец: ответ частью диапазона, выданной за весь, сказал бы серверу «остального на карте нет», навсегда (`test_a_range_starts_on_a_key_frame_and_an_unreadable_card_is_an_error_not_an_empty_answer`).
 
+**Отказавшую камеру спрашивают снова, но не сразу.** Диапазон, который камера не отдала, сервер спрашивал на следующем же проходе, и на следующем: камера, отвечавшая на секунду позже срока, четыре раза читала карту ради четырёх отказов (шестое ревью). Источник, не отдавший диапазон, — карта камеры или, сосед на том же пути, дверь резервной, чей том не отвечает, — перестаёт быть источником на отсрочку — `SOURCE_BACKOFF` = 5 с, с удвоением до `SOURCE_BACKOFF_MAX` = 600 с и случайным разбросом, чтобы камеры площадки, отказавшие вместе, не спрашивались вместе (`RecWorker._source_answered`); проход тем временем идёт к другим источникам и другим записям. Один севший диапазон отказы забывает. Тест: `test_a_camera_that_failed_a_range_is_not_asked_again_at_once`.
+
 **Чем платим.** Длинного автономного архива на камере нет: буфер рассчитан на часы или дни. Нет дисциплины износа и восстановления, которую даёт движок. Карту, вынутую из камеры, серверные инструменты без конвертера не прочитают. И перезагрузка камеры во время обрыва теряет то, что было только в памяти.
+
+**Что остаётся открытым.** Кольцо в 32 МиБ при 4 Мбит/с держит всё окно, а при 6 Мбит/с (44 с) и выше не достаёт до обрыва, замеченного по книге (50 с): тревога это говорит, но памяти не прибавляет — число бюджета, как и у продукта, ждёт замера на живой камере. Перезапуск пишущей записи стоит остатка группы кадров. Открытие карты читает её целиком — на карте в десятки гигабайт это минуты, и повторная попытка после отказа записи платит их снова. И модель толкателя в М12 держит свою память сама (`ring`, `tail`), вне этого бюджета: в ней кадры — словари без тел.
 
 ---
 
@@ -501,9 +644,9 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 - **`when: offline` как «никто не пишет».** Выключенная основная и паузы между событиями превратят резервную в постоянную.
 - **Без секунд на старт.** Резервная просыпается на каждое событие и пишет его дважды.
 - **Запускать резервную, когда сбой заметили.** Секунды между сбоем и тем, как его заметили, не записаны нигде.
-- **Кольцо без выброса старого.** Очередь без `leaky=downstream` при переполнении перестаёт брать новое, и выпущенное окажется не последними тридцатью секундами, а первыми.
+- **Кольцо без выброса старого.** Очередь без `leaky=downstream` при переполнении перестаёт брать новое, и выпущенное окажется не последней минутой, а первой.
 - **Выпуск с середины группы кадров.** Движок не откроет последовательность (`SEQUENCE_NEEDS_KEY_SAMPLE`), и выпущенное до первого ключевого кадра пропадёт.
-- **Время кадра по приходу в приёмник.** Выпущенное кольцо ляжет на таймлайн на тридцать секунд позже, после сбоя, а не до него.
+- **Время кадра по приходу в приёмник.** Выпущенное кольцо ляжет на таймлайн на свою длину позже, после сбоя, а не до него.
 - **Возврат на удержание под новой эпохой.** Писатель не менялся; новая эпоха пометит его же потоки чужими.
 - **Карта толкающей камеры пишет каждый обрыв Wi-Fi.** Шлюз выпускает кольцо в момент обрыва, хотя камера может продолжить поток сама. Ждите `defer_for`.
 - **Кольцо выброшено при остановке во время обрыва.** Это была единственная копия обрыва: остановка во время ожидания сначала пишет кольцо.
@@ -511,13 +654,21 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 - **Карта камеры как том движка.** Движку на камере нужно 20–25 МБ из 32: камера, которая помещает его, не помещает ничего другого. Карта — буфер файлов, без `obsd`.
 - **Пустой ответ вместо отказа.** Карта не открыта или сегмент прочитан не до конца, а камера ответила «ничего». Сервер запомнил диапазон как «нет на карте» и больше его не спросит.
 - **Очередь карты, которая ждёт.** Медленная карта тормозит кольцо, а с ним пушер и прошивку. Очередь ограничена и теряет кадры для карты — до ключевого, со счётом.
+- **Потолок в байтах только у кольца.** Очередь к карте и пролитое считаются в кадрах, ответ на диапазон — одним списком: 70 МиБ кольца с очередью и ещё 29 МиБ ответа в камере с 32 МБ. Бюджет один, в байтах, и режется в коде (`memory_split`).
+- **Предзапись — окно кольца.** При 6 Мбит/с кольцо держит 33 секунды, а не 60: лог обещает минуту до сбоя, а начала обрыва на карте нет. Предзапись — `ring.reach()`, и нехватка — тревога.
+- **Удержание — флаг кольца.** Вторая запись снимает удержание первой; а снятое сразу после выпуска кольцо обрезается окном раньше, чем писатель его забрал.
+- **Один открытый сегмент на карту.** Две записи, пишущие разом, по очереди закрывают сегменты друг друга и теряют группы кадров.
+- **Отказ карты, которого не видно.** Карта в «только чтение», а heartbeat говорит `recording`: запись перезапускается на карте, которую никто не открыл заново, и секунды между отказом и перезапуском пропадают.
+- **Перезапущенная запись начинает с нуля.** Мигнувшая основная кладёт один интервал на карту дважды.
 - **Рекордер камеры выбирает том по общим правилам.** Сетевой том на консоли камеры уводит его с карты, и карта перестаёт быть резервной (DH). Регистратор камеры берёт только свою карту.
 - **Камера падает без карты.** Вместе с ней падают кольцо и пушер, и сервер теряет живой поток. Без карты камера работает и пробует открыть её снова.
 
 ## Итог
 
 - Резервный архив — это **запись** на резервном томе — `backup` (диск второго сервера или адрес) или `edge` (карта в камере): ни новой подсистемы, ни нового вида строки.
-- Карта камеры — место для размещения и шлюза, но не том движка: буфер файлов с бюджетом, который пишет регистратор камеры с её единственного кольца, без `obsd` (`vms/card.py`, как в продукте). Читают её, спрашивая камеру диапазон (`card_range`); отказ камеры — ошибка копии, а не «нет на карте».
+- Карта камеры — место для размещения и шлюза, но не том движка: буфер файлов с бюджетом, который пишет регистратор камеры с её единственного кольца, без `obsd` (`vms/card.py`, как в продукте). Читают её, спрашивая камеру диапазон названной записи (`card_range`); камера отвечает кусками; отказ камеры — ошибка копии, а не «нет на карте», и спрашивают её снова после отсрочки.
+- Память камеры — один бюджет в байтах (`MEMORY_BUDGET` = 40 МиБ): кольцо 32, как в продукте, очередь к карте с пролитым 6, два куска по 1. Предзапись карты — то, что кольцо достаёт при своём битрейте (`reach`), а не его окно; нехватка — тревога `card.prebuffer.short`.
+- Кольцо удерживает запись, под своим именем, и отпускает, когда писатель его забрал; отказавшая карта закрывается, называется в `volume_error` и открывается снова, а запись продолжается с последнего взятого картой кадра.
 - Резервная публикует видимую сводку покрытия и дверь архива; основная находит её в heartbeat'ах.
 - Источники дозаписи идут по порядку: устройство, затем резервные записи той же камеры.
 - План — по сводке, копия — тем, что отдаёт дверь (`/samples/<unit>`); чего дверь не отдала, запоминается для этого источника.
@@ -542,6 +693,8 @@ RING = "queue name=ring max-size-time={ring_ns} max-size-buffers=0 max-size-byte
 10. Карта камеры — том `edge`, а камера — сервер `cam-7`. Что меняется в размещении, когда камера выключена, и что — когда выключен сервер основной?
 11. Поставьте `QUEUE_LEN = 8` и подавайте кадры в `CardActuator`, не вызывая `drain()`. Сколько кадров примет кольцо, сколько ляжет на карту и где на карте будет дыра?
 12. Пусть `answer_range` при закрытой карте отвечает `[]`. Повторите `test_a_range_the_camera_could_not_read_fails_the_copy_and_is_asked_again_later`: что окажется в `nowhere`, и спросит ли основная этот диапазон, когда карта вернётся?
+13. Поставьте `MEMORY_BUDGET = 20 << 20`. Сколько секунд достаёт кольцо при 4 Мбит/с, и у какой камеры поднимется `card.prebuffer.short`: у той, что толкает поток сама, или у той, что узнаёт об обрыве по книге?
+14. В `CardActuator.keep` снимайте удержание сразу, не дожидаясь писателя. Повторите `test_a_released_ring_stays_kept_until_the_writer_has_taken_it`: с какой секунды начнётся покрытие карты?
 
 ## Что дальше
 

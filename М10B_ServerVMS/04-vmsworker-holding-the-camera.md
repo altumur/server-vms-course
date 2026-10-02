@@ -213,7 +213,11 @@ Loopback, если привязана к нему, иначе имя серве�
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
-            if before is None and not self._mark(rid, unit, now):
+            made = self._mark(rid, unit, now) if before is None else False
+            if made is None:
+                self._refused(rid, row, it, self.CANNOT_MARK, done)
+                continue
+            if before is None and not made:
                 before = self.began_by(rid) or "?"       # somebody made the mark between our read and our write
             if before is not None:
                 why = f"unknown: an earlier instance ({before}) began it, and whether the device acted is not known"
@@ -221,8 +225,16 @@ Loopback, если привязана к нему, иначе имя серве�
                 done.append({"request": rid, "unit": row["id"], "error": why})
                 self.commands["unknown"] += 1
                 self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
+                log.warning("%s: request %s not performed — %s", self.name, rid, why)
                 continue
-            self.objects.put(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode())
+```
+
+```python
+    def _mark(self, rid: str, unit: str, now: float) -> bool | None:
+        put_new = getattr(self.objects, "put_new", None)
+        if put_new is None:
+            return None
+        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode()))
 ```
 
 Это **отметка** — объект `vms/commands/<id>` в хранилище объектов, единственном месте, куда воркеру можно писать помимо своих строк. Заявку с отметкой другого экземпляра не исполняют: она получает ответ `unknown`, событие `command.failed` на единице, и решает человек. Для двери «возможно, дважды» хуже, чем «возможно, ни разу».
@@ -443,6 +455,7 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 - **Битая строка эпохи — беда одной камеры.** Строка `vms/epoch/<камера>`, которая не разбирается, бросала `ValueError` через сверку и обрывала весь проход: камеры после неё не стартовали, а уведённая не останавливалась — каждый проход (пятое ревью; детекторы и обзор исправлены ещё после четвёртого). Теперь в `_actuate` это неудавшийся старт этой камеры: сверка повторит его со своей задержкой, а причина — в статусе камеры (`its epoch could not be taken: …`). Регистратор идёт через тот же `_actuate`. То же у скана (задача — `failed` с причиной), у вычислителя сценариев и у шлюза (`refused` в heartbeat'е); тесты — `test_epoch_refused.py`.
 - **И беда одной команды.** Пять мест пятого ревью закрыли сверку, а шестой вызов остался голым: `take_epoch` в `requests`, который берёт эпоху единице без аренды перед её первой командой (шаг 3а, «Под арендой, и отметка — один раз»). С битой `vms/epoch/1` и командами на двери 1 и 2 `ValueError` выходил из `requests` и из каждого `pump_once` — все 600 секунд, пока жила заявка, — и дверь 2 не открывалась (шестое ревью, воспроизведено запуском). Теперь это отказ **этой** команды: она отвечена (`_refused` — id уходит в `fetched`, консоль убирает строку), посчитана в `refused`, причина стоит в статусе единицы (`its epoch could not be taken: …`) и в логе, а проход идёт к следующей заявке. События `command.failed` на единице при этом нет: событие пишется под эпохой единицы, а её как раз не дали. Хранилище, которое не ответило (`OSError`), по-прежнему прерывает весь список до следующего прохода: «не знаю» — не отказ. Тест: `test_epoch_refused.py::test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_other_devices_are_commanded`.
 - **Соседи той же строки.** `valid_until`, в котором слово вместо числа, читался голым `float` и ронял каждый проход **вечно**: до проверки, которая просрочивает заявку, он не доходил. Теперь это отказ с причиной `valid_until is not a time` (`test_a_command_whose_deadline_does_not_parse_is_refused_alone`). У регистратора `requests` эпох не берёт, но читал `from` и `to` заявки на дозапись так же голо: одна битая заявка останавливала все за ней, любой записи. Теперь она отвечена с ошибкой и уходит (`test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next`).
+- **И строка самой камеры.** Контроллер пропускает строку единицы, которая не разбирается, со второго ревью. Воркер — нет: `refresh` читал строки своих камер одним циклом, голо, и строка, испорченная **после** размещения, бросала `ValueError` из прохода — воркер застывал на строках прошлого прохода: новое не стартовало, уведённое не останавливалось (шестое ревью, обход соседей). Теперь это беда одной камеры (`Worker.row_garbled`), и она не читается как «камеру забрали»: то, что идёт по строке, прочитанной последней, продолжает идти, а камера, которую воркер целой не читал ни разу, не стартует. В статусе — `its row does not parse: …; going on with the row read last`. То же у детектора, скана, обзора, вычислителя и шлюза (шлюз не удаляет простаивающую раздачу, строку которой не прочитать), а регистратор проходит мимо битой строки **чужой** записи в обходах всех записей (`_recordings`). Тесты: `test_garbled_rows.py::test_the_holder_goes_on_with_the_row_it_read_last_and_runs_the_rest`, `test_the_recorder_reads_past_a_recording_whose_row_does_not_parse`, `test_the_detector_the_scan_the_survey_the_evaluator_and_the_gateway_each_pass_a_garbled_row_by`, `test_the_detector_passes_a_garbled_row_by_and_keeps_what_it_runs`. Все строки, которые читает платформа, одной таблицей — М10A, урок 8, шаг 5.
 - **Все вызовы `take_epoch` — под изоляцией отказа.** Их семь: `_actuate` держателя (и регистратора, и регистратора на камере — они его наследуют), `requests` держателя, детектор, скан (два вызова через `_take_epoch`), обзор, шлюз, вычислитель сценариев. В М11 своих вызовов нет: `ClusterWorker` и `ClusterRecorder` — те же классы. В М12 камера берёт эпоху при загрузке (`device.py`, `boot`) — у неё одна единица, и отказ касается только её. Чтение эпох теневым отчётом домена (`shadow.reports_from`) пропускает битую строку вместо того, чтобы ронять отчёт всех кластеров (`test_lesson2_shadow.py::test_one_garbled_epoch_row_is_skipped_and_the_report_of_every_cluster_stands`).
 - **Камера, которую воркер ещё не запускал, ждёт.** Эпохи у него нет, и взять её негде.
 - **Хранилище вернулось.** Эпоха та же — в логе «the store confirms epoch 3 of camera 7 again; nothing was stopped», и в записи нет шва. Эпоха другая — камера останавливается, как при любом переназначении.
@@ -482,6 +495,7 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
         except OSError:
             return None                               # not known: a fenced instance can wait a pass
         was = self.name
+        self.conflicts_carried += super().conflicts()
         self.release_all()
         self.rows, self.assignment_rev = [], 0
         self.reconciler.clear()
@@ -498,7 +512,7 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 
 Теперь `lease_pass`, прочитав в строке слота чужой экземпляр, отдаёт имя (`give_up_name()` — поле `seeking`, М10A, урок 8) **до** `fence`. С этой строки и пока не взят другой слот экземпляр ничего не делает под именем: назначение читается пустым, поэтому `refresh` не берёт чужих строк и закрывает устройства; `take_epoch` бросает `NoSlot`; heartbeat не пишется; «подменщик» ничего не продлевает; аккуратная остановка чужой слот не отпускает. `rejoin` берёт слот через общий `_seek_slot`: тот ловит любое исключение захвата, экземпляр остаётся никем и пробует на следующем проходе. Тест: `test_slot_fence.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds` — держатель, регистратор и регистратор на камере (`CardRecorder`), хранилище моргает на захвате и все кандидаты заняты; «зомби на одной коробке» в `test_lesson4_worker.py` теперь проверяет, что зомби не читает даже назначение `w-1`.
 
-**Рассказ отсечённого остаётся там, где он не чужой.** О том, что экземпляр отсечён по слоту, говорят его лог (`FENCED (slot w-1 is held by another instance now)`) и, после возвращения, `was_fenced` в heartbeat'е под новым именем. Отсечённый **за схему** — хранилище подняли выше его сборки — держит слот в руках, имя его, и он по-прежнему пишет `fenced: true` под ним. Но слот он не продлевает: когда строка протухнет и имя возьмёт новая сборка, шаг аренд это прочитает (`name_taken`), и с него такой экземпляр тоже молчит (`test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name`). Метрика `vms_worker_fenced{worker}` поэтому показывает теперь только отсечённых за схему.
+**Рассказ отсечённого остаётся там, где он не чужой.** О том, что экземпляр отсечён по слоту, говорят его лог (`FENCED (slot w-1 is held by another instance now)`) и, после возвращения, `was_fenced` в heartbeat'е под новым именем. Туда же уходит счёт конфликтов эпох, набранный зомби (`conflicts_carried`): аренды, которые его считали, `rejoin` отпускает, а под потерянным именем экземпляр молчит — без переноса число `vms_epoch_conflicts`, ради которого существует урок 9 М11, не показал бы никто. Отсечённый **за схему** — хранилище подняли выше его сборки — держит слот в руках, имя его, и он по-прежнему пишет `fenced: true` под ним. Но слот он не продлевает: когда строка протухнет и имя возьмёт новая сборка, шаг аренд это прочитает (`name_taken`), и с него такой экземпляр тоже молчит (`test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name`). Метрика `vms_worker_fenced{worker}` поэтому показывает теперь только отсечённых за схему.
 
 **Отсечённый процесс не убивает себя**: его перезапуск — дело супервизора. `_actuate` отказывает любому запуску, `observe` не пишет ничего. Открытым остаётся окно в один шаг аренд: зомби узнаёт о потере слота на `lease_pass`, раз в восемь секунд, и heartbeat, ушедший между захватом имени и этим шагом, один раз ляжет поверх чужого — следующий heartbeat законного держателя его перепишет.
 
@@ -560,7 +574,9 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
             self.beat_once()
 ```
 
-`beat_once` — это `serve_requests`, тот самый взгляд на строки заявок, которым кончается `pump_once`, в своём `guarded`-шаге. Не проход: назначение не перечитывается, ничего не сверяется, шина не прокачивается. И не новый вход: те же `requests`, те же строки, те же правила. Шаг аренд и heartbeat остаются там, где были, — раз за оборот цикла, по часам; такт их не приближает. `beat` — параметр, как `poll`, и по умолчанию ноль: кто не сказал, получает цикл, каким он был. Процесс говорит `COMMANDS_BEAT` — четверть секунды, если окружение не говорит иного (`commands_beat`); так же делает держатель продукта (`commandsBeat`, 250 мс). Регистратор такта не просит: то, что он обслуживает из `rec/requests`, — дозапись, минуты с карты в своём потоке, и четверть секунды там ничего не меняет.
+`beat_once` — это то же, что делает `pump_once`, в своём `guarded`-шаге: шина прокачивается (`drain_bus`) и строки заявок просматриваются (`serve_requests`). Не проход: назначение не перечитывается, ничего не сверяется. И не новый вход: те же `drain_bus` и `requests`, те же строки, те же правила.
+
+**Шину прокачивает и такт.** Событие устройства становится строкой журнала, когда держатель прокачал шину, — а это был проход: до `poll` секунд, прежде чем событие мог увидеть хоть один сценарий. Это звено не мерил ни один счётчик: время события ставится тогда, когда его вычерпали. Продукт прокачивает шину и в своём цикле команд, раз в 250 мс; курс — так же, на каждом такте. Поток тот же, что у прохода: у актуатора и сверки другого нет. Тест: `test_long_poll.py::test_a_devices_event_is_a_line_within_a_beat_and_only_on_the_pass_when_the_beat_is_off`. Шаг аренд и heartbeat остаются там, где были, — раз за оборот цикла, по часам; такт их не приближает. `beat` — параметр, как `poll`, и по умолчанию ноль: кто не сказал, получает цикл, каким он был. Процесс говорит `COMMANDS_BEAT` — четверть секунды, если окружение не говорит иного (`commands_beat`); так же делает держатель продукта (`commandsBeat`, 250 мс). Регистратор такта не просит: то, что он обслуживает из `rec/requests`, — дозапись, минуты с карты в своём потоке, и четверть секунды там ничего не меняет.
 
 **Хранилище, не ответившее на такте, пережидается и называется один раз.** Четыре взгляда в секунду на хранилище, которого нет, — четыре предупреждения в секунду. Такт, которому хранилище не ответило, считается и говорится один раз за отказ (`_beat_failed`); такты идут дальше, и первый, которому ответили, говорит об этом. Проход по-прежнему говорит своё раз в две секунды. Тест: `test_long_poll.py::test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once`.
 

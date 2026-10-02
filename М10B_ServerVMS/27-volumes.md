@@ -296,18 +296,28 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 **Потерять том — не потерять слот.** Слот говорит, какой это процесс; захват — в какой архив он пишет. Процесс, у которого забрали том, останавливает его записи и остаётся собой: не отсечён, слот при нём, на следующем проходе берёт другой (`test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running`).
 
-### Том идёт за именем (обратная связь CF)
+### Диск идёт за именем (обратная связь CF), сетевой том — нет
 
 Регистратор, убитый `kill -9` и поднятый systemd под тем же именем, — тот же воркер. Слот он забирает сразу (урок 17). Том раньше ждал истечения захвата: 45 секунд без записи на томе, который этот же процесс держал минуту назад. Теперь захват помнит, **чей слот** его держит (`by`), и воркер этого слота забирает его сразу, раньше других кандидатов:
 
 ```python
-            mine = [c for c in candidates if self.name and Slot.from_items(c, rows[c][0]).by == self.name]
-            named = bool(mine) and Slot.from_items(self.name, self.vars.get(self.sub.slot_key(self.name))[0]).holder == self.instance
+            mine = [c for c in candidates if self.name and held[c].by == self.name]
+            slot = read_slot(self.sub.slot_key(self.name), self.name, self.vars.get(self.sub.slot_key(self.name))[0]) if mine else None
+            named = slot is not None and slot.holder == self.instance      # (a slot row that does not parse proves nothing)
+            mine = mine if named else []
+            for cand in mine + [c for c in candidates if c not in mine]:
+                key, now = self.sub.hold_key(cand), self.wall()
+                idx, cur = rows[cand][1], held[cand]
+                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand)
+                if not ours and not self._hold_stale(cand, cur, idx):
+                    continue                                   # somebody live is writing there
 ```
 
-Вторая строка — условие, без которого правило было бы опасным. Забрать том назад можно, только пока слот и правда у этого экземпляра. Экземпляр, которого systemd заменил, носит то же имя и не должен по дороге отобрать том у преемника. Всем остальным том по-прежнему достаётся после истечения захвата (`test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once`).
+`named` — условие, без которого правило было бы опасным. Забрать том назад можно, только пока слот и правда у этого экземпляра. Экземпляр, которого systemd заменил, носит то же имя и не должен по дороге отобрать том у преемника. Всем остальным том по-прежнему достаётся после истечения захвата (`test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once`). `held` — строки холдов, прочитанные через `read_hold`: строка, которая не разбирается, — не кандидат и никому не мешает взять другой том (урок 10, шаг 3).
 
-Писатель идёт за томом тем же способом. Регистратор монтирует том под владельцем `rec:<том>`. Демон держит писателя исчезнувшей сессии *отсоединённым* `OBSD_WRITER_GRACE_S` (в `deploy/obsd.service` — 90 секунд, дольше, чем истекает захват) и отдаёт его тому, кто назовёт того же владельца: `reattached: true`, без ожидания блокировки и без восстановления. Отдаёт — на этом хосте: регистратор другой коробки, взявший сетевой том, писателя первого хоста не получит, и конец отсрочки там закроет его со сбросом и удалением lock-файла по пути (урок 6, шаг 12; без патча 07 движка это открыто). Тесты: `test_rec_volume.py::test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left` и `test_volumes.py::test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` — второй заодно проверяет, что перезапущенный регистратор смотрит на объявленные тома **до** того, как откроет что-нибудь своё, и собственный том сервера не форматируется.
+**За именем идёт только диск.** `hold_follows_name(cand)` — вопрос платформы к подсистеме, и регистратор отвечает «да» только для тома, который с другого хоста не запишешь. Экземпляр, взявший имя, может оказаться на **другой** коробке, а прежний — замороженным со смонтированным писателем. На двух демонах это воспроизведено (шестое ревью, блокер 2): второй `r-1` брал холд сетевого тома сразу, монтировал через 13 секунд, первый просыпался внутри своего окна записи — и оба писали. Окно записи прежнего держателя отмерено от того, что претендент ждёт `slot_ttl + HOLD_SKEW`; для сетевого тома это ожидание теперь не снимает никто, и то же имя тоже. Сразу берётся только холд, отпущенный намеренно (`released`): его писатель закрыт до отпускания. Тесты: `test_volumes.py::test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go`, `test_rec_volume.py::test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_network_volume_from_a_frozen_one`.
+
+Писатель идёт за томом тем же способом. Регистратор монтирует том под владельцем `rec:<том>`. Демон держит писателя исчезнувшей сессии *отсоединённым* `OBSD_WRITER_GRACE_S` (в `deploy/obsd.service` — 90 секунд, дольше, чем истекает захват) и отдаёт его тому, кто назовёт того же владельца: `reattached: true`, без ожидания блокировки и без восстановления. Отдаёт — на этом хосте: регистратор другой коробки, взявший сетевой том, писателя первого хоста не получит, и конец отсрочки там закроет его со сбросом. В чужой том этот сброс не попадёт: движок с патчем 07, который курс требует, не даёт писать писателю, чей замок стал чужим, и чужой lock-файл не снимает (урок 6, шаг 12). Тесты: `test_rec_volume.py::test_a_recorder_killed_and_started_again_picks_up_the_writer_it_left` и `test_volumes.py::test_a_restart_takes_its_volumes_writer_back_and_never_opens_the_local_one` — второй заодно проверяет, что перезапущенный регистратор смотрит на объявленные тома **до** того, как откроет что-нибудь своё, и собственный том сервера не форматируется.
 
 Заметьте, кто за что отвечает. Демон обещает одного писателя на том **на хосте** (README `obsd`: *one writer per volume on the host*). Один писатель на том **в кластере** даёт только захват. Отсюда шаг 8.
 
@@ -319,8 +329,12 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
         # our writer still in it. Waited one call's timeout, on the leases' thread (Т-M1): a flush longer than that
         # goes on in the daemon, and whoever mounts the volume next finds it busy until it is done — the daemon keeps
         # one writer per volume, and on another host the engine's own lock holds it. A network volume whose hold is
-        # already lost is not closed at all: its writer is parked (`_close_store`; the review's fifth pass, blocker 1).
-        self._close_store(quiet=True, wait=self.session.timeout)
+        # already lost is not closed at all: its writer is given up (`_close_store`; the review's fifth pass, blocker 1).
+        self._leaving = True
+        try:
+            self._close_store(quiet=True, wait=self.session.timeout)
+        finally:
+            self._leaving = False
         try:
             self.release_hold()
         except OSError:                              # the store is silent: the hold lapses by itself
@@ -329,7 +343,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 Это `leave_volume`: том отозвали, отключили или забрали. То же в `after_stop`, при штатной остановке (обратная связь BR). Порядок — весь смысл. Отпущенный захват берут сразу, и взявший монтирует том на запись. Писатель закрывается, пока том ещё наш: его сброс кладёт последние минуты в том. Отпусти захват первым — следующий регистратор найдёт в томе нашего писателя.
 
-Порядок верен, пока том наш. Сетевой том, чей холд уже потерян, закрывать нельзя: закрытие — сброс и удаление lock-файла по пути, а том, может быть, уже держит другая коробка. Такого писателя бросают или паркуют (шаг 8, урок 10, шаг 11).
+Порядок верен, пока том наш. Сетевой том, чей холд уже потерян, закрывать нельзя: закрытие — сброс, а том, может быть, уже держит другая коробка. Такого писателя бросают — `WRITER_ABANDON`, без единой записи, — а что он взял и не успел записать, считают: тревога `archive.footage.dropped` в журнале записи (шаг 8, урок 10, шаг 11).
 
 Тесты: `test_rec_volume.py::test_leaving_a_volume_closes_its_writer_before_the_hold_goes` (следующий монтирует чистый том, `reattached` ложно, и видит всё, что было записано), `test_volumes.py::test_the_recorder_writes_into_the_volume_it_took` (отозванный том хранит записанное, в новый не попало ничего из старого) и `test_orderly_stop.py::test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it`.
 
@@ -348,7 +362,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     # From that moment the fence refuses every sample (`_may_write_volume`; the review's fifth pass, blocker 1), and the
     # writer is still closed — its flush is the last minutes — while nobody else may have taken the hold: until
     # `slot_ttl + HOLD_SKEW`, what a claimant waits (`_may_close_volume`). A pass that comes later than that — the box
-    # was frozen — parks the writer instead (`_close_store`).
+    # was frozen — gives the writer up instead (`_close_store`).
 ```
 
 ```python
@@ -364,7 +378,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 **Адрес отпускается.** Захват истечёт через `slot_ttl`, и коробка, которая хранилище видит, возьмёт том. Регистратор, который хранилища не видит, не может узнать, что это случилось. Поэтому он уходит сам, раньше: за `lease_margin` до истечения (45 − 5 = 40 секунд по умолчанию). Два писателя кадров под разными эпохами дают перекрытие, которое таймлайн разбирает. Два писателя в одном томе на двух хостах — порча, и демон одного хоста не видит писателя другого.
 
-**Отпустить — ещё не значит перестать писать.** Пока отпускание ждало прохода, конвейеры писали: холд проверялся только перед монтированием, и коробка, замороженная целиком, просыпалась с писателем, который клал кадры в чужое кольцо, а её проход закрывал его со сбросом и удалял чужой lock-файл (пятое ревью, блокер 1; урок 10, шаг 11). Теперь ограда на каждом кадре: с `slot_ttl − margin` без подтверждения в том не уходит ничего, прошёл проход или нет. Закрывается писатель, только пока холд подтверждён моложе `slot_ttl + HOLD_SKEW`, — раньше этого срока никто другой том не возьмёт. Проход, пришедший позже (коробка спала), писателя не закрывает: с патчем 07 движка бросает его (`WRITER_ABANDON`), без патча паркует смонтированным и незакрытым (`archive_parked` в heartbeat'е) до тех пор, пока том снова не станет нашим. Без патча 07 остаётся открытым то, что демон закрывает сам (конец отсрочки, остановка демона): его закрытие удаляет lock-файл по пути. Тест: `test_rec_volume.py::test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
+**Отпустить — ещё не значит перестать писать.** Пока отпускание ждало прохода, конвейеры писали: холд проверялся только перед монтированием, и коробка, замороженная целиком, просыпалась с писателем, который клал кадры в чужое кольцо, а её проход закрывал его со сбросом и удалял чужой lock-файл (пятое ревью, блокер 1; урок 10, шаг 11). Теперь холд проверяется перед каждым кадром: с `slot_ttl − margin` без подтверждения в том не уходит ничего, прошёл проход или нет. Закрывается писатель, только пока холд подтверждён моложе `slot_ttl + HOLD_SKEW`, — раньше этого срока никто другой том не возьмёт. Проход, пришедший позже (коробка спала), писателя не закрывает, а бросает (`WRITER_ABANDON`): ни одной записи больше, а взятое и не записанное — тревога `archive.footage.dropped` с секундами. Проверка холда — не ограда: один кадр замороженного процесса она пропустит. Ограждает том движок с патчем 07 — писатель, чей замок стал чужим, не пишет ничего, кто бы его ни закрывал, — и другого движка курс не поддерживает (урок 10, шаги 3 и 11). Тест: `test_rec_volume.py::test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
 
 `self._shared` — какие тома адресные, по последнему удачному чтению. Спросить в момент молчания уже не у кого. В множество попадает всё, что `any_box`: сетевой том, резервный и происшествий без сервера.
 
@@ -383,11 +397,15 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out
 
-    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
-    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
-    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
-    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
-    since when, and the operator decides — stops the recorder or takes the volume from it.
+    `away` and `busy` have NO deadline for a disk of this server, on purpose (the review's fifth pass, its third
+    question): nobody else can write there, and handing it back for a daemon that is restarted in a minute reshuffles
+    every recording on it. So the recorder keeps it, and while this host's engine stays broken its recordings are
+    written nowhere. That is the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the
+    heartbeat show the operator since when, and the operator decides.
+
+    A volume ANY box may serve has one (the review's sixth pass): while this host's engine answers nothing, the hold is
+    renewed for `RecWorker.ENGINE_SILENT_FOR` and no longer — then the volume is let go, for a box whose engine does
+    answer (`RecWorker.volume_pass`).
 ```
 
 `classify` раскладывает статусы движка: `PERMISSION_DENIED`, `NOT_A_VOLUME`, `READ_ONLY` и ещё пять — `wrong`; `ALREADY_LOCKED` — `busy`; молчание демона (`Unavailable`) и всё прочее — `away`.
@@ -423,9 +441,11 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 (`RecWorker._away`, общий для `away` и `busy` при открытии.) Ответ один — держать и пробовать снова, — а причины разные. «Демона нет» ищут на хосте, «том держит другой писатель» — у прошлого регистратора этого тома. Метрика `rec_archive_failure{kind}` разводит их по виду.
 
-**`busy` под своим же владельцем — не всегда «пройдёт само».** Если демон называет в `ALREADY_LOCKED` нашего владельца `rec:<том>`, писатель не отсоединён и не запаркован нами, и так дольше `OWN_LOCK_FOR` (10 с), это сирота нашей же сессии: монтирование, ответ на который потерялся. Регистратор оставляет сессию, и новая подхватывает писателя (пятое ревью, блокер 2; урок 6, шаг 4).
+**`busy` под своим же владельцем — не всегда «пройдёт само».** Если демон называет в `ALREADY_LOCKED` нашего владельца `rec:<том>`, писатель не отсоединён, и так дольше `OWN_LOCK_FOR` (10 с), это, скорее всего, сирота нашей же сессии: монтирование, ответ на который потерялся. Регистратор оставляет сессию, и новая подхватывает писателя (пятое ревью, блокер 2; урок 6, шаг 4). Оставляет один раз: если блокировка осталась и после этого — или если в `STATS` демона есть сессия с именем этого регистратора и чужим pid, — том пишет другой процесс на этом сервере, и `archive_error` говорит это прямо: кто ещё подключён к `obsd` и что один из двух регистраторов надо остановить (шестое ревью).
 
-**Сетевой том в `away`/`busy` держат без срока — это решение, и у него есть цена.** Пятое ревью спросило, почему том не уходит на другой хост, когда `obsd` этого хоста сломан надолго. Отдать его из-за молчащего демона значит перетасовать все записи тома ради демона, которого перезапускают за минуту (докстрока `ArchiveError`). Цена: пока демон этого хоста не вернулся, записи тома не пишутся нигде, хотя другая коробка могла бы их взять. Это видно (`archive_failure`, `archive_away_since`), а снимает регистратор с тома человек. Холд за висящий на молчащем демоне шаг подменщик не продлевает (урок 10, шаг 10).
+**Диск в `away`/`busy` держат без срока. Сетевой том при молчащем демоне — пять минут.** Пятое ревью спросило, почему сетевой том не уходит на другой хост, когда `obsd` этого хоста сломан надолго, и ответом было «решение: отдать том из-за демона, которого перезапускают за минуту, значит перетасовать все его записи». Шестое показало цену запуском: демон заморожен на 320 секунд, холд продлевается все 320, на томе не пишется ничего, а коробка с живым демоном взять его не может. Теперь срок есть: через молчащий демон холд сетевого тома продлевается `ENGINE_SILENT_FOR` — 300 секунд, — потом том отпускается, оставляется в покое на `REFUSED_FOR`, и коробка, чей демон отвечает, берёт его сразу (урок 10, шаг 3). Минуту перезапуска демона том по-прежнему переживает на месте. Диск этого сервера не отпускается никогда: его некому записать, кроме этого регистратора, и пока демон не вернулся, его записи не пишутся нигде — это видно (`archive_failure`, `archive_away_since`), и решает человек. `busy` срока не имеет ни у кого: демон отвечает, замок держит другой писатель. Тесты: `test_rec_volume.py::test_a_network_volume_is_given_up_when_this_hosts_obsd_has_answered_nothing_for_five_minutes`, `test_a_frozen_daemon_under_a_network_volume_costs_a_pass_one_wait_and_the_volume_goes_to_a_box_that_answers`.
+
+**Сетевой том на слишком старом `obsd` — `wrong`, и регистратор его не берёт.** Том, который может взять другая коробка, требует от демона умения его бросить (`WRITER_ABANDON`, движок с патчем 07). Демон без этого регистратор проверяет один раз (`Session.abandons`) и такой том не заявляет вовсе; причина — в `refused` его heartbeat'а и на странице томов: *obsd on srv-a is too old to write net safely — a volume any server may take: this obsd cannot give a volume up when another server takes it. Update obsd on srv-a; volumes on its own disks are not affected* (урок 10, шаг 3; `test_lock_lost.py::test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up`).
 
 ### Молчащий демон не останавливает жизнь регистратора
 
@@ -500,13 +520,19 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 У тома три состояния, а не два. «Обслуживается» и «никто не взял» скрывали худшую поломку: захват свежий, консоль считает том обслуживаемым, записи нет, все числа зелёные. Поэтому регистратор говорит, если том не открылся (`volume_error`), и `served` такой том обслуживаемым не считает:
 
 ```python
-                     "why": None if live and not err else
-                            f"held by {slot.holder}, which cannot write there: {err}" if err else
-                            "disabled by the administrator" if not v.enabled else
-                            "declared, and no recorder has taken it" if slot is None or slot.holder == "" else
-                            "the recorder that held it let go" if slot.released else
-                            "the recorder that held it went silent"})
+        why = (None if live and not err else
+               f"held by {slot.holder}, which cannot write there: {err}" if err else
+               "disabled by the administrator" if not v.enabled else
+               f"its hold row ({sub.name}/holds/{v.name}) does not parse, so no recorder can take it: mend the row or "
+               f"delete it" if v.name in garbled else
+               "declared, and no recorder has taken it" if slot is None or slot.holder == "" else
+               "the recorder that held it let go" if slot.released else
+               "the recorder that held it went silent")
+        if why and v.enabled and not err and v.name in refusing:
+            why += "; " + "; ".join(refusing[v.name])   # …and the recorders that will not take it say why not
 ```
+
+Две строки — от шестого ревью. «Никто не взял» без причины оставляло оператора гадать: регистраторы пишут в heartbeat, какой том они **не берут** и почему (`refused`: том отказал в записи, отдан за молчащий демон, `obsd` слишком стар для сетевого тома), и раньше это было видно только в JSON heartbeat'а. Теперь `served` дописывает эти причины к строке тома (`_refusing`): *declared, and no recorder has taken it; r-1 does not take it: obsd on srv-a is too old to write net safely…*. И строка холда, которая не разбирается, больше не роняет весь список: том назван, причина сказана (`holders` читает через `read_hold`).
 
 Рядом — `writing`: открыт, но пишет плохо, по сторожу писателя (урок 10). И пара чисел: `wanted` — сколько процессов нужно объявленному списку, `serving` — сколько есть. `spare: 0` при `serving < wanted` — единственное состояние, которому нужен человек. Консоль его называет и пишет команду словами того оркестратора, который запустил её саму (`systemctl start recworker@r-2` или `nomad job scale recworker 3`), но не выполняет (`test_the_console_says_which_archives_nobody_is_writing_into`, `test_the_console_writes_out_the_command_and_does_not_run_it`, `test_the_numbers_a_scaling_policy_reads`).
 
@@ -542,8 +568,12 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Регистратор берёт сначала сетевой том.** Свой диск остаётся без писателя, и запасной на другом сервере его не возьмёт. Порядок в `servable` — свои диски первыми.
 - **Ошибка чтения хранилища как пустой ответ.** Регистратор бросает том со всеми записями при первом же сбое хранилища. Не прочитать — не значит «нет».
 - **Сетевой том держат, сколько молчит хранилище.** Захват истёк, том взяла другая коробка, и в одном томе два писателя на двух хостах.
-- **Холд сетевого тома проверяют только перед монтированием.** Проснувшийся писатель пишет в чужое кольцо, пока проход не дошёл до отпускания. Ограда — на каждом кадре.
-- **Писателя сетевого тома с потерянным холдом закрывают.** Сброс и удаление lock-файла ложатся на том другой коробки: у неё `VOLUME_UNCLEAN`.
+- **Холд сетевого тома проверяют только перед монтированием.** Проснувшийся писатель пишет в чужое кольцо, пока проход не дошёл до отпускания. Проверка — перед каждым кадром.
+- **Писателя сетевого тома с потерянным холдом закрывают.** Сброс ложится на том другой коробки. Писателя бросают.
+- **Сетевой том отдают экземпляру того же слота сразу.** Прежний экземпляр мог быть заморожен на другой коробке, а его окно записи отмерено от ожидания претендента: два писателя в одном томе.
+- **Сетевой том держат, сколько молчит демон.** На нём не пишется ничего, а коробка с живым демоном взять его не может. Срок — `ENGINE_SILENT_FOR`.
+- **Сетевой том дают демону без `WRITER_ABANDON`.** Он закроет писателя со сбросом в том, который уже чужой. Регистратор такой том не берёт и говорит, какой `obsd` обновить.
+- **Одна битая строка холда роняет захват.** Регистратор не берёт никакого тома, список томов в консоли не открывается. Битая строка — беда одного тома.
 - **Захват отпущен раньше, чем закрыт писатель.** Следующий регистратор найдёт том с чужим писателем, а последние минуты не сброшены.
 - **Локальный диск, который не открылся, считают `away`.** Регистратор держит сломанный диск вечно, его записи никуда не уходят, а на экране «вернётся через минуту».
 - **Сетевой том, который не открылся, считают `wrong`.** Каждый обрыв сети перетасовывает все записи тома.
@@ -567,8 +597,9 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - Ничего не объявлено — собственный том сервера, `/data/volume` рядом с деревом ресурса, на четыре пятых свободного места и не выше нижней отметки ватерлинии. Консоль предлагает его объявить с тем размером, который у него есть, и объявление ничего не двигает.
 - Квота — размер кольца. Новый том форматируется на неё, новая квота меняет размер на ходу, уменьшение отдаёт старейшее и попадает в журнал.
 - Том открывается по параметрам. Какой ключ — поле `access_key`, его показывают; сам ключ — значение `access_secret`, запечатанное. Ни то ни другое в адрес не попадает никогда.
-- Захват идёт за именем слота, писатель — за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.
-- При молчащем хранилище диск остаётся, адрес отпускается через `slot_ttl − margin`: два писателя в одном томе — порча. С того же срока ограда не пропускает в сетевой том ни кадра, а писателя, чей холд старше `slot_ttl + HOLD_SKEW`, не закрывают — бросают или паркуют.
+- Захват диска идёт за именем слота; захват сетевого тома ждёт срока всегда, если его не отпустили намеренно. Писатель идёт за владельцем `rec:<том>`. Отпускают в обратном порядке: сначала писатель, потом захват.
+- При молчащем хранилище диск остаётся, адрес отпускается через `slot_ttl − margin`: два писателя в одном томе — порча. С того же срока в сетевой том не отправляется ни кадра, а писателя, чей холд старше `slot_ttl + HOLD_SKEW`, не закрывают — бросают (`WRITER_ABANDON`) и считают, что он не успел записать. Это проверка, а не ограда: ограждает том движок (патч 07), и на демоне без него регистратор сетевой том не берёт.
+- Через молчащий `obsd` холд сетевого тома продлевается `ENGINE_SILENT_FOR` (300 с) и не дольше; диск за молчащий демон не отпускается.
 - `wrong` — отдать (закреплённый не отдаёт, но сообщает нулевую ёмкость), `away` и `busy` — держать, и heartbeat называет каждый своим словом. Для тома на коробке `IO_ERROR` и `GENERIC_ERROR` — `wrong`, для тома по адресу — `away`.
 - Для `backup` и `edge` `home` — фильтр в обе стороны, воркер камеры стоит у резервной записи, `when: offline` пишет за сбой.
 - `edge` — место, но не том движка: карту пишет регистратор камеры обычными файлами с бюджетом, а читают её, спрашивая камеру (урок 26, шаг 10; как в продукте).

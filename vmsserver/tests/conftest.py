@@ -76,7 +76,8 @@ class FakeStore:
 # Two numbers are shorter than in production, so that a test of them does not wait a minute: how long a
 # vanished session's writer waits for its owner, and how long a session with no connection survives.
 OBSD_HINT = ("the archive's tests need obsd, the ObjectStorage daemon, with the patches of `standalone-build/patches/` "
-             "(04: a block flushes by its period; 05: a timeline window of any length) and the sources of 2 October 2026 or later "
+             "(04: a block flushes by its period; 05: a timeline window of any length; 07: a writer that lost its volume's "
+             "lock writes nothing more, and `WRITER_ABANDON`) and the sources of 2 October 2026 or later "
              "(`OBSD_CLIENT_GROUP`, which `deploy/obsd.service` sets): build it with `ObjectStorage/standalone-build/build.sh <out>` and set "
              "OBSD_BIN=<out>/build/obsd (or put obsd on PATH)")
 OBSD_GRACE_S = 3
@@ -99,6 +100,17 @@ class ObsdDaemon:
             raise RuntimeError(f"the socket path {self.socket} is longer than unix sockets allow; set TMPDIR shorter")
         self._start()
         atexit.register(self.stop)
+        # The one engine this course supports gives a volume up (`WRITER_ABANDON`, its patch 07): a build without it is
+        # not a daemon to run the suite on — said here, once, and not as forty tests failing each in its own way.
+        from w2cplatform.obsd import Session
+        probe = Session(self.socket, client="conftest-probe")
+        try:
+            new_enough = probe.abandons()
+        finally:
+            probe.vanish()
+        if not new_enough:
+            self.stop()
+            raise RuntimeError(f"{binary} is an obsd without WRITER_ABANDON (the engine's patch 07): " + OBSD_HINT)
 
     def _start(self) -> None:
         import subprocess

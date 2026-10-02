@@ -254,6 +254,15 @@ def test_a_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instan
 GARBLED_SLOT = {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"}     # a hand edit
 
 
+def _forget_garbled():
+    """The counts of rows that did not parse are the PROCESS's, and every heartbeat written after carries them: a test
+    that garbles a row clears them on its way out, or the heartbeats of every later test say `slots_garbled`."""
+    import sys
+    m = sys.modules["w2cplatform.contract"]                            # the module in use, whatever was imported since
+    for counts in (m.SLOTS_GARBLED, m.ASSIGNMENTS_GARBLED, m._garbled_slots, m._garbled_assignments):
+        counts.clear()
+
+
 def test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted():
     """Every claim lists `<sub>/slots/` and parsed every row bare: one row with a word for a number — ANOTHER
     worker's — raised out of the claim, and an instance that had given its name up stayed nobody for ever, its
@@ -284,6 +293,7 @@ def test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted():
         hb = Heartbeat.from_bytes(box.objects.get(w.sub.heartbeat_key(w.name)))
         assert hb.extra["slots_garbled"] == garbled[sub], kind
         assert b"somebody-else" in box.objects.get(w.sub.heartbeat_key(was)), kind
+    _forget_garbled()
 
 
 def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
@@ -310,3 +320,4 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
 
     w9 = _holder(box, name="w-9", instance="other:9")                   # the runtime named it: taken, and whole again
     assert Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0]).holder == "other:9" and w9.renew_slot() is True
+    _forget_garbled()

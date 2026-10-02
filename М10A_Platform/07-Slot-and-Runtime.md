@@ -283,13 +283,19 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
 
 ```python
     def retire(self, worker: str) -> Slot:
+        key = self.sub.slot_key(worker)
+
         def mutate(items):
-            s = Slot.from_items(worker, items)
+            s = read_slot(key, worker, items)
+            if s is None:
+                return Slot(worker, "", self.wall(), True, 0).to_items()
             if s.released:
                 return None
             return Slot(worker, s.holder, s.until, True, s.gen).to_items()
-        return self.write(self.sub.slot_key(worker), mutate)
+        return Slot.from_items(worker, self.write(key, mutate))
 ```
+
+**Битую строку `retire` не читает — он пишет поверх.** Строка, которая не разбирается, — как раз тот слот, от которого оператор хочет избавиться, а первая версия бросала на ней `ValueError` (шестое ревью, обход соседей). Слово оператора записывается целиком: отпущен и ничей. Тест: `test_garbled_rows.py::test_retiring_a_slot_whose_row_is_garbled_writes_it_released`.
 
 И дверь для человека. Оператор знает то, чего система знать не может: «этот сервер сгорел, процесс не вернётся». `retire` ставит `released` снаружи, и дальше работает обычное перераспределение. Уже отпущенный слот возвращает `None` из мутатора — то есть записи не будет (урок 8 объясняет этот приём).
 

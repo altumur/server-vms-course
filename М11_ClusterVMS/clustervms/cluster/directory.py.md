@@ -9,7 +9,7 @@ A cached view of every worker's assignment: `{worker: [unit ids as strings]}`. H
 `vars_` is any `Variables` (the console's token is enough: read + list on `vms/*`). `ttl` is how long an answer may be served from the cache — 5 s, the controller's own pass period, so a directory is never staler than one placement pass. `clock` is injectable for tests. `_at = -1e9` forces the first call to scan.
 
 ### `scan(self, force=False) -> dict[str, list[str]]`
-If `force` or the cache is older than `ttl`: lists `prefix`, and for each path reads the items and decodes them with `Assignment.from_items(worker, items).units`; stores the result, stamps the time and increments `scans`. Returns the cache. One `list` plus one `get` per worker — for a dozen workers a dozen raft reads every five seconds at most.
+If `force` or the cache is older than `ttl`: lists `prefix`, and for each path reads the items and decodes them with `read_assignment(path, worker, items).units` (a row whose `rev` does not parse is read for the units it names, counted and logged — it used to end the scan for every camera); stores the result, stamps the time and increments `scans`. Returns the cache. One `list` plus one `get` per worker — for a dozen workers a dozen raft reads every five seconds at most.
 
 ### `where(self, camera_id) -> str | None`
 The workers whose units contain `str(camera_id)`. Exactly one → its name; none → `None`; more than one → the names joined with `+` in sorted order — the comment says why: during a reassignment window (the controller has written the destination and not yet removed the source) a camera legitimately shows as on both, and the directory reports that rather than picking one.

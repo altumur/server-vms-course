@@ -48,7 +48,7 @@ administrator's list, and the claim that makes one of them served."""
 # ================================================================================================
 from dataclasses import dataclass
 
-from w2cplatform.contract import Slot, Subsystem
+from w2cplatform.contract import Slot, Subsystem, read_hold
 from w2cplatform.secrets import is_secret_field
 from w2cplatform.spec import Refused
 
@@ -251,14 +251,20 @@ def suggest(vars_, objects, sub: Subsystem, now: float, lost_after: float = 45.0
     return [out[k] for k in sorted(out)]
 
 
-def holders(vars_, sub: Subsystem) -> dict[str, Slot]:
-    """`{volume: Slot}` from `rec/holds/*` — who took what, lapsed holds included."""
+def holders(vars_, sub: Subsystem, garbled: set | None = None) -> dict[str, Slot]:
+    """`{volume: Slot}` from `rec/holds/*` — who took what, lapsed holds included. A row that does not parse is not
+    in it (`contract.read_hold`: one garbled hold failed the whole list — the review's sixth pass); its volume's name
+    goes into `garbled`, when the caller gives one."""
     out = {}
     prefix = f"{sub.name}/holds/"
     for path in sorted(vars_.list(prefix)):
         name = path[len(prefix):]
         items, _ = vars_.get(path)
-        out[name] = Slot.from_items(name, items)
+        slot = read_hold(path, name, items)
+        if slot is not None:
+            out[name] = slot
+        elif garbled is not None:
+            garbled.add(name)
     return out
 
 
@@ -268,23 +274,29 @@ def holders(vars_, sub: Subsystem) -> dict[str, Slot]:
 # without a word. `wanted`/`serving` is the same arithmetic one line up: how many processes the declared
 # list needs, and how many of them exist.
 def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=None) -> dict:
-    vols, held = declared(vars_), holders(vars_, sub)
+    garbled: set = set()
+    vols, held = declared(vars_), holders(vars_, sub, garbled)
     broken = _unwritable(objects, sub, now, lost_after) if objects is not None else {}
     writing = _writing(objects, sub, now, lost_after) if objects is not None else {}
+    refusing = _refusing(objects, sub, now, lost_after) if objects is not None else {}
     rows = []
     for v in vols:
         slot = held.get(v.name)
         live = slot is not None and not slot.released and slot.holder != "" and now <= slot.until
         err = broken.get(v.name) if live else None
         row = {k: x for k, x in v.to_items().items() if not is_secret_field(k)}   # the rule at the source
+        why = (None if live and not err else
+               f"held by {slot.holder}, which cannot write there: {err}" if err else
+               "disabled by the administrator" if not v.enabled else
+               f"its hold row ({sub.name}/holds/{v.name}) does not parse, so no recorder can take it: mend the row or "
+               f"delete it" if v.name in garbled else
+               "declared, and no recorder has taken it" if slot is None or slot.holder == "" else
+               "the recorder that held it let go" if slot.released else
+               "the recorder that held it went silent")
+        if why and v.enabled and not err and v.name in refusing:
+            why += "; " + "; ".join(refusing[v.name])   # …and the recorders that will not take it say why not
         rows.append({**row, "name": v.name, "served_by": slot.holder if live and not err else None,
-                     "writing": writing.get(v.name) if live and not err else None,
-                     "why": None if live and not err else
-                            f"held by {slot.holder}, which cannot write there: {err}" if err else
-                            "disabled by the administrator" if not v.enabled else
-                            "declared, and no recorder has taken it" if slot is None or slot.holder == "" else
-                            "the recorder that held it let go" if slot.released else
-                            "the recorder that held it went silent"})
+                     "writing": writing.get(v.name) if live and not err else None, "why": why})
     wanted = len([v for v in vols if v.enabled])
     return {"volumes": rows, "wanted": wanted, "serving": len([r for r in rows if r["served_by"]])}
 
@@ -307,6 +319,21 @@ def _unwritable(objects, sub: Subsystem, now: float, lost_after: float) -> dict[
             out[vol] = err
     return out
 
+
+
+# `{volume: ["<recorder> does not take it: <why>"]}` for the volumes a live recorder REFUSES — handed back for
+# refusing writes, given up for an engine that stopped answering, or not taken at all because its host's engine cannot
+# serve it safely (`refused` in the recorder's heartbeat; the review's sixth pass). An unserved volume used to read
+# "no recorder has taken it" and nothing more, with the reason only in a heartbeat's JSON.
+def _refusing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str, list[str]]:
+    from w2cplatform.console import heartbeats
+    out: dict[str, list[str]] = {}
+    for name, hb in sorted(heartbeats(objects, sub.name + "/").items()):
+        if now - hb.ts > lost_after:
+            continue
+        for vol, why in sorted((hb.extra.get("refused") or {}).items()):
+            out.setdefault(str(vol), []).append(f"{name} does not take it: {why}")
+    return out
 
 
 # `{volume: what the console says}` for the volumes whose live holder reports its writer stuck or losing

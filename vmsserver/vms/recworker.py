@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import logging
 import os
+import random
 import threading
 import time
 
@@ -296,9 +297,16 @@ class RecWorker(VmsWorker):
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._hold_confirmed = self.clock()          # when the store last said the hold is ours (`renew_hold`, `claim_hold`)
-        # Writers of network volumes whose hold was lost, left mounted and fed nothing (`_close_store`): volume -> store.
-        self.parked: dict[str, Archive] = {}
+        # Volumes any box may serve that THIS recorder does not take, and why: its host's engine cannot give a volume
+        # up (`_engine_refuses`). In the heartbeat with `refused`, and on the volumes page (`volumes.served`).
+        self.unservable: dict[str, str] = {}
+        # Since when the host's engine has answered nothing under a volume any box may serve (`_hear_engine`, `_away`);
+        # None while it answers. What the hold on such a volume is given up by (`ENGINE_SILENT_FOR`).
+        self._engine_silent_since: float | None = None
+        self.dropped_seconds = 0.0                   # footage writers given up had taken and not written (`_say_dropped`)
         self._own_lock_since = 0.0                   # since when mounts answer ALREADY_LOCKED under our own owner
+        self._own_lock_left = False                  # …and a session was already left behind for it (`_own_lock`)
+        self._lock_theirs = False                    # …and it is still there: another process's, not an orphan of ours
         self._requested: dict[str, float] = {}       # request id -> how far it has been served (`RANGE_CAP` a pass)
         self.default_size = 0                        # the box's own volume's real size, once it was opened
         self.quota_note = ""                         # a smaller quota declared and not applied: said, not done
@@ -315,6 +323,7 @@ class RecWorker(VmsWorker):
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
         self._kept_until: dict = {}                 # held backup -> its ring stays kept until then: a break over without the card
+        self._source_asks: dict[str, tuple[int, float]] = {}   # a source that failed a range -> (times in a row, not asked before)
         self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
@@ -342,6 +351,7 @@ class RecWorker(VmsWorker):
         self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
         self._keeps_read = False                     # `keep_held` restored from the volume and its events (`keep_pass`)
         self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
+        self._keep_nowhere: dict[tuple[str, str], list] = {}   # (keep, recording) -> what a door that holds it said it has not
         self._keeper: threading.Thread | None = None
         self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
@@ -517,7 +527,8 @@ class RecWorker(VmsWorker):
             if st["phase"] != "running" and st["id"] in self.waiting and st["enabled"]:
                 st["phase"] = "waiting"
             if st["phase"] == "running" and self.holding.get(str(st["id"])):
-                st["phase"], st["why"] = "standby", f"the primary recording is being written; the last {self.PREBUFFER:.0f} s are held in memory"
+                st["phase"], st["why"] = "standby", (f"the primary recording is being written; the last "
+                                                     f"{self.prebuffered(st['id']):.0f} s are held in memory")
                 if str(st["id"]) in self._cover_since:
                     st["why"] = (f"the stream broke {self.wall() - self._cover_since[str(st['id'])]:.0f} s ago; held in "
                                  f"memory for {self.defer_for():.0f} s before the card writes — the camera may continue it")
@@ -593,6 +604,7 @@ class RecWorker(VmsWorker):
                 self._kept_until.pop(uid, None)
                 self._keep(uid, False)
             if need and self.holding.get(uid):
+                held = self.prebuffered(uid)                 # what the ring holds as it is released: the log says THAT
                 if self.actuator("release", {"id": row["id"], "now": now}):
                     self.holding[uid] = False
                     self._cover_since.pop(uid, None)
@@ -600,7 +612,7 @@ class RecWorker(VmsWorker):
                     self._keep(uid, False)                   # released: what the kept ring held goes to the card first
                     done.append((uid, "released"))
                     log.warning("%s: the primary of %s is not being written — recording from %.0f s ago",
-                                self.name, uid, self.PREBUFFER)
+                                self.name, uid, held)
             elif not need and self.holding.get(uid) is False:
                 back = self._primary_back_since.setdefault(uid, now)
                 if now - back >= self.HOLD_AFTER and self._actuate("restart", row):
@@ -621,10 +633,18 @@ class RecWorker(VmsWorker):
     def defer_for(self) -> float:
         return max(0.0, min(self.PREBUFFER, self.CONTINUE_REACH) - self.DETECTION - self.DEFER_MARGIN)
 
+    # What a held backup holds in memory NOW, in seconds — what its status says, and what the log says a release
+    # began from. A server's pipeline holds the ring it was started with; the camera's card says what its ring really
+    # holds, which at an ordinary bitrate is less than its window (`CardRecorder.prebuffered`; the review's sixth pass).
+    def prebuffered(self, uid=None) -> float:
+        return self.PREBUFFER
+
     # A KEPT ring (feedback CB; the product's `Keeper`): while a break is held in memory the ring lets go of nothing by
     # its window, and what it must let go of past its byte ceiling goes to the card instead of being dropped. Only an
     # actuator that can keep is asked — the camera's card (`vms/card.py`, `CardActuator.keep`); a server's pipeline
-    # holds its ring in a GStreamer queue and has no such mode.
+    # holds its ring in a GStreamer queue and has no such mode. The ring is kept BY THIS RECORDING — two recordings on
+    # one card keep and let go apart — and after a release the actuator lets the ring go when its writer has taken
+    # it, not at the gate's word, which comes in the same pass as the release (the review's sixth pass).
     def _keep(self, uid, keep: bool) -> None:
         keeper = getattr(self.actuator, "keep", None)
         if keeper is not None:
@@ -655,11 +675,7 @@ class RecWorker(VmsWorker):
                     else:
                         vanished[str(st.get("id"))] = max(hb.ts, vanished.get(str(st.get("id")), hb.ts))
         need = False
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if not items or items.get("deleted") == "true":
-                continue
-            other = self.parse_row(items)
+        for other in self._recordings():
             if str(other["id"]) == str(row["id"]) or str(other["cam"]) != str(row["cam"]) or volumes.is_backup(other, names=names):
                 continue
             until = float(other.get("until") or 0)
@@ -855,16 +871,16 @@ class RecWorker(VmsWorker):
                 "archive_failure": self.archive_failure,
                 # The engine lost and the volume mounted again (blocker 4): how many times, and the last — when, and why.
                 **({"archive_remounts": self.remounts, "archive_remounted": self.remounted} if self.remounts else {}),
-                # Network volumes whose hold was lost with a writer of ours still mounted in them, fed nothing and not
-                # closed (`_close_store`; the review's fifth pass, blocker 1): said, because the engine closes them by
-                # itself when this process goes, and that is the open end of it.
-                **({"archive_parked": sorted(self.parked)} if self.parked else {}),
+                # Seconds of footage that writers this recorder gave up had taken and not written (`_say_dropped`; each
+                # is an alarm in its recording's journal too).
+                **({"archive_dropped_seconds": round(self.dropped_seconds, 1)} if self.dropped_seconds else {}),
                 # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stuck or losing.
                 # A fresh hold and a running row do not say it; only this does.
                 "writer": self.writer.state,
                 # Volumes this recorder handed back for refusing writes, and why — left alone until the time
-                # given, so that a key somebody fixes is picked up without a restart.
-                "refused": {n: why for n, (_, why) in self.refused.items()},
+                # given, so that a key somebody fixes is picked up without a restart. And the ones it does not take at
+                # all, for as long as the reason stands (`unservable`).
+                "refused": {**{n: why for n, (_, why) in self.refused.items()}, **self.unservable},
                 "closed": ",".join(self.closed),
                 # Lesson 26: the door this recorder serves its archive at, for a primary backfilling from it.
                 **({"archive_url": self.archive_url} if self.archive_url else {}),
@@ -923,11 +939,19 @@ class RecWorker(VmsWorker):
             self.refused[self.hold] = (now + self.REFUSED_FOR, why)
             logging.error("%s: %s refuses writes (%s) — handing it back", self.name, self.hold, why)
             self.leave_volume(f"volume {self.hold} refuses writes")
+        answers = self._engine_pass(rows, free, now)   # the volumes any box may serve, and the engine they need
         self.refused = {n: v for n, v in self.refused.items() if v[0] > now}
-        free = [n for n in free if n not in self.refused]
+        free = [n for n in free if n not in self.refused and n not in self.unservable]
+        if self._engine_silent_since is not None:    # an engine that answers nothing takes no volume another box could
+            free = [n for n in free if n == self.hold or n not in self._shared]
         held = self.hold
         if held is not None and (held not in free or not self.renew_hold()):
-            self.leave_volume(f"volume {held} is not this recorder's any more")   # withdrawn, disabled, or taken from us
+            # withdrawn, disabled, taken from us — or one this host's engine may not write
+            self.leave_volume(self.unservable.get(held) or f"volume {held} is not this recorder's any more")
+        if self.hold is not None and self.hold in self._shared and not answers:
+            # Kept, and not mounted in this pass: the ping was this pass's one wait on a silent daemon (Т-M1).
+            self._away(rows[self.hold], ArchiveError("away", "obsd is not answering: no answer to a ping", "UNAVAILABLE"))
+            return self.volume
         if self.hold is None and not free:
             # Nothing declared anywhere: the box as it was before volumes were rows — one place, named after
             # the server, beside `$ARCHIVE`. Note this is reached after letting go above, so withdrawing
@@ -974,6 +998,87 @@ class RecWorker(VmsWorker):
             self.volume_error = str(err)
             self.release_hold()                                    # so somebody who CAN write there may take it
 
+    # THE ENGINE UNDER A VOLUME ANY BOX MAY SERVE (the review's sixth pass, blockers 1 and 2, and П-m2). Two things are
+    # asked of the host's daemon once a pass, and only when such a volume is declared.
+    #
+    # CAN IT GIVE A VOLUME UP (`_engine_refuses`)? If not, this recorder takes no such volume at all: not claimed, and
+    # said — `unservable`, in the heartbeat's `refused` and on the volumes page — so that a box whose daemon can takes
+    # it. The mode this replaces was the fifth pass's "parked" writer for a daemon without the operation: mounted, fed
+    # nothing, closed later. It was not safe — a recorder paused past its hold's term while its daemon went on
+    # refreshing the engine's lock woke, parked its writer, and the box that held the volume by then was `busy` for
+    # ever (reproduced) — and it is gone.
+    #
+    # DOES IT ANSWER AT ALL (`_hear_engine`)? A recorder renewed its hold for as long as it ran, whatever its daemon
+    # did: frozen for 320 s (reproduced), the hold was renewed throughout, nothing was written, and no box whose
+    # daemon answers could take the volume. Now the hold is renewed through a silence for `ENGINE_SILENT_FOR` and no
+    # longer — by the loop here, and never by the stand-in (`may_stand_in_hold`): past it the volume is let go, and
+    # left alone for `REFUSED_FOR` like one that refuses writes. A disk of this server is not let go for a silent
+    # daemon: nobody else could write it (`ArchiveError`).
+    ENGINE_SILENT_FOR = 300.0                        # the stand-in's `STAND_IN_FOR`, for the same reason: a daemon comes back in less
+
+    def _engine_pass(self, rows: dict, free: list[str], now: float) -> bool:
+        """True when the daemon answered in this pass — or was not asked: no volume any box may serve is declared."""
+        shared = [n for n in free if n in self._shared]
+        was, self.unservable = self.unservable, {}
+        if not shared:
+            self._engine_silent_since = None
+            return True
+        answers = self._hear_engine()
+        if answers:
+            for n in shared:
+                e = self._engine_refuses(rows[n])
+                if e is not None and e.kind == "wrong":
+                    self.unservable[n] = e.detail
+                    if n not in was:
+                        log.error("%s: %s is not taken: %s", self.name, n, e.detail)
+        held = self.hold
+        silent = 0.0 if self._engine_silent_since is None else self.clock() - self._engine_silent_since
+        if held in shared and silent >= self.ENGINE_SILENT_FOR:
+            why = (f"obsd on {self.server} has not answered for {silent:.0f} s, so nothing is being recorded into "
+                   f"{held}: this recorder gives the volume up, and a server whose obsd answers takes it. Check obsd "
+                   f"on {self.server}; this recorder tries {held} again in {self.REFUSED_FOR / 60:.0f} minutes")
+            self.refused[held] = (now + self.REFUSED_FOR, why)
+            log.error("%s: %s", self.name, why)
+            self.leave_volume(why)
+        return answers
+
+    # One PING. No answer: silent since now, if it was not already — and a store that looked open is one the next pass
+    # mounts again, as when a sink finds the daemon gone. An answer ends the silence only where nothing contradicts
+    # it: no volume held, or one whose writer is mounted — a daemon that answers PING and no mount is still silent.
+    def _hear_engine(self) -> bool:
+        try:
+            self.session.ping()
+        except Unavailable as e:
+            if self._engine_silent_since is None:
+                self._engine_silent_since = self.clock()
+                log.warning("%s: obsd does not answer (%s)", self.name, e.detail)
+            if self.hold in self._shared and self.store is not None and not self.engine_lost:
+                self._lost_engine()
+            return False
+        except ObsdError:
+            pass                                     # an answer, whatever it says
+        if self.hold is None or (self.store is not None and self.store.writer is not None and not self.engine_lost):
+            self._engine_silent_since = None
+        return True
+
+    # A volume any box may serve needs an engine that can GIVE IT UP when another box takes it: `WRITER_ABANDON` — the
+    # writer stopped with nothing more written, the engine's lock left alone unless it is still its own (ObjectStorage's
+    # patch 07, which this course requires). A daemon without the operation closes a writer one way only: its flush,
+    # the volume's status, the lock file removed by its PATH — onto a volume that is another box's by then. So such a
+    # daemon is not given the volume at all. `wrong`, in words an operator can act on; `away` while the daemon does not
+    # answer — not known is not "it can". None: no objection (a disk of this server needs no giving up).
+    def _engine_refuses(self, vol) -> ArchiveError | None:
+        if not volumes.any_box(vol):
+            return None
+        try:
+            if self.session.abandons():
+                return None
+        except ObsdError as e:
+            return classify(e)
+        return ArchiveError("wrong", f"obsd on {self.server} is too old to write {vol.name} safely — a volume any server "
+                                     f"may take: this obsd cannot give a volume up when another server takes it. Update "
+                                     f"obsd on {self.server}; volumes on its own disks are not affected", "ENGINE_TOO_OLD")
+
     # The box's own volume, which nobody declared: no size of its own (`quota_bytes` 0) — `default_quota` formats it
     # if it is new, and a volume that exists keeps the size it has. Declared with a quota, it would be resized at
     # every start to whatever share of the disk was free that morning.
@@ -1010,11 +1115,23 @@ class RecWorker(VmsWorker):
     def note_hold_confirmed(self, at: float) -> None:
         self._hold_confirmed = max(self._hold_confirmed, at)
 
-    # THE FENCE ON EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second?
+    # A VOLUME ANY BOX MAY SERVE DOES NOT FOLLOW THE NAME (the review's sixth pass, blocker 2). A disk does: the
+    # instance that took this recorder's name is on the same host, where the daemon keeps one writer per volume. A
+    # network volume's next holder may be on ANOTHER host, and the instance it takes the name from may be frozen, not
+    # dead, its writer mounted: two instances of `r-1` on two daemons, the first frozen — the second took the hold at
+    # once, mounted thirteen seconds later, and the first woke with a hold confirmed thirteen seconds ago, inside its
+    # write window: thirty frames `OK` beside the other's (reproduced). The window rests on a claimant WAITING
+    # `slot_ttl + HOLD_SKEW`, so for such a volume everybody waits it, the same name included; a hold let go on
+    # purpose — its writer closed first (`leave_volume`, `after_stop`) — is still taken at once.
+    def hold_follows_name(self, place: str) -> bool:
+        return place not in self._shared
+
+    # BEFORE EVERY SAMPLE (the review's fifth pass, blocker 1): may this recorder write into `vol` this second?
     # A disk of this server, or a pinned volume, always — nobody else can write there. A network volume any box may
     # serve only while the hold is this recorder's and was confirmed less than `slot_ttl − lease_margin` ago: the
     # recorder that takes it next waits `slot_ttl + HOLD_SKEW` of an unchanged row by its own clock (`_hold_stale`),
-    # so writing stops ten seconds before anybody else may start. It is `Lease.may_write`, for the place.
+    # so writing stops ten seconds before anybody else may start. It is `Lease.may_write`, for the place — and like
+    # it a check before sending: what fences the volume itself is the engine (`Archive._fenced`).
     def _may_write_volume(self, vol) -> bool:
         if vol is None or self.pinned or not volumes.any_box(vol):
             return True
@@ -1032,9 +1149,11 @@ class RecWorker(VmsWorker):
 
     # The stand-in renews the hold while a step hangs (`Worker._stand_in_hold`) — but not while the engine itself is
     # silent (the review's fifth pass, a minor): a step stuck on a daemon that answers nothing writes nothing either,
-    # and a hold renewed for it only keeps the volume from a box whose daemon answers.
+    # and a hold renewed for it only keeps the volume from a box whose daemon answers. Silent is what the PASS found
+    # (`_engine_silent_since`), not only what this moment shows (the sixth pass): between two of a hung step's calls
+    # the session is not "silent", and with no volume open nothing had said the engine lost — the stand-in renewed.
     def may_stand_in_hold(self) -> bool:
-        return not (self.engine_lost or self.session.silent())
+        return not (self.engine_lost or self.session.silent() or self._engine_silent_since is not None)
 
     # Asked right before every `VOLUME_MOUNT_RW` (`Archive.confirm`): is this volume still ours, this second? A
     # network volume any box may serve is ours only while the store says the hold is, and the engine's own lock on
@@ -1097,18 +1216,9 @@ class RecWorker(VmsWorker):
             if self._close_store(quiet=True, wait=self.session.timeout):
                 return self._away(vol, ArchiveError("away", "the writer's close did not come back: mounted again on "
                                                             "the next pass", "UNAVAILABLE"))
-        self._prune_parked()
-        parked = self.parked.get(vol.name)
-        if parked is not None:
-            # This volume's writer, parked when its hold was lost, and the hold is ours again: closed now that it may be
-            # — and what it flushes is answered by the mount below, `VOLUME_UNCLEAN` recovered under this hold.
-            if not self._may_write_volume(vol):
-                return self._away(vol, ArchiveError("away", f"{vol.name}: the writer parked when its hold was lost is "
-                                                            "closed only under a confirmed hold", "HOLD_UNCONFIRMED"))
-            del self.parked[vol.name]
-            if not parked.close(self.session.timeout) and parked.session is self.session:
-                self._leave_session(f"the parked writer of {vol.name} did not close")
-                return self._away(vol, ArchiveError("away", "the parked writer's close did not come back", "UNAVAILABLE"))
+        refuses = self._engine_refuses(vol)              # a volume any box may serve, and an engine that cannot give it up
+        if refuses is not None:
+            return refuses if refuses.kind == "wrong" else self._away(vol, refuses)
         # The volume's secret is sealed to ITS row, `rec/volumes/<name>` (the review's third pass, blocker 3): opened
         # without the row it never opened at all, and the recorder — with no key in its unit either — handed the
         # bucket the ciphertext. And a secret that does not open is THIS volume's failure, not the pass's: the volume
@@ -1131,6 +1241,7 @@ class RecWorker(VmsWorker):
         try:
             store.open()
         except ArchiveError as e:
+            self._lock_theirs = False
             if store.orphan and store.session is self.session:
                 self._leave_session(f"the mount of {vol.name} was not answered: the writer the daemon made is an orphan")
             elif self._own_lock(store, e):
@@ -1146,8 +1257,10 @@ class RecWorker(VmsWorker):
                 e = ArchiveError("wrong", e.detail, e.name)
             if e.kind == "wrong":
                 return e
+            if self._lock_theirs:
+                e = ArchiveError("busy", self._not_our_lock(vol), e.name)
             return self._away(vol, e)
-        self._own_lock_since = 0.0
+        self._own_lock_since, self._own_lock_left, self._engine_silent_since = 0.0, False, None
         if self.engine_lost:
             self.remounts += 1
             self.remounted = {"lost_at": self._lost_at or self.wall(), "at": self.wall(),
@@ -1170,47 +1283,81 @@ class RecWorker(VmsWorker):
                  " — the writer a previous process left, picked up again" if store.reattached else "")
         return None
 
-    # `away` or `busy` at open: the volume is kept, and said as what it is.
+    # `away` or `busy` at open: the volume is kept, and said as what it is. A daemon that did not answer at all, under a
+    # volume any box may serve, is the engine silent since now (`_engine_pass`).
     def _away(self, vol, e: ArchiveError) -> None:
         if not self.archive_error:
             self.archive_away_since = self.wall()
             log.warning("%s: %s is %s at open (%s) — keeping it and trying again", self.name, vol.name, e.kind, e.detail)
         self.archive_error, self.archive_failure = e.detail, e.kind
+        if e.name == "UNAVAILABLE" and volumes.any_box(vol) and self._engine_silent_since is None:
+            self._engine_silent_since = self.clock()
         return None
 
     # ALREADY_LOCKED UNDER OUR OWN OWNER, FOR LONGER THAN A SESSION LINGERS (the review's fifth pass, blocker 2). The
     # daemon names the owner of an attached writer in its refusal; a detached one of ours it would have handed back
     # (`reattached`), and one of a process that is gone after its linger. `rec:<volume>` attached to a session that
     # stays — this one: a mount whose answer was lost, whatever lost it — is an orphan nobody here holds a handle of.
-    # Not at once: a predecessor on this host may be closing its writer this moment. A writer parked by this recorder
-    # (`parked`) is not an orphan: it is closed under the hold, not left to the daemon.
+    # Not at once: a predecessor on this host may be closing its writer this moment.
+    #
+    # THE OWNER IS A NAME, AND ANOTHER PROCESS MAY BEAR IT (the review's sixth pass, a minor). `rec:<volume>` is the
+    # same for every recorder of the volume: a second instance of this recorder on the host, or one that lost the
+    # hold and has not let go yet, holds a writer under it in a session of ITS own — and this recorder took that for
+    # its orphan, every ten seconds: seven sessions left behind in forty (reproduced), each cutting its readers off.
+    # The daemon does not say which session holds a writer, but it lists its sessions with their process ids (`STATS`):
+    # while another process of this recorder's own client name is there, the lock is taken for its, and no session is
+    # left. And whatever the list says, one session is left per lock, not one per ten seconds: an orphan of ours comes
+    # back to the next mount (`reattached`); a lock still attached after that is not in a session of this process.
     OWN_LOCK_FOR = 10.0
 
     def _own_lock(self, store: Archive, e: ArchiveError) -> bool:
         if e.name != "ALREADY_LOCKED" or f"({store.owner})" not in e.detail or "detached" in e.detail \
-                or store.name in self.parked or store.session is not self.session:
-            self._own_lock_since = 0.0
+                or store.session is not self.session:
+            self._own_lock_since, self._own_lock_left = 0.0, False
             return False
         now = self.clock()
         self._own_lock_since = self._own_lock_since or now
         if now - self._own_lock_since < self.OWN_LOCK_FOR:
             return False
-        self._own_lock_since = 0.0
+        if self._own_lock_left or self._same_name_elsewhere():
+            self._lock_theirs = True                 # said as what it is (`_not_our_lock`); nothing of ours to shed
+            return False
+        self._own_lock_since, self._own_lock_left = now, True   # …and judged again a linger after the session is left
         return True
+
+    # The daemon's sessions of this recorder's client name in ANOTHER process: `[{client, pid, …}]` (`STATS`).
+    def _same_name_elsewhere(self) -> list[dict]:
+        try:
+            sessions = self.session.stats().get("sessions", [])
+        except ObsdError:
+            return []
+        return [s for s in sessions if s.get("client") == self.session.client and int(s.get("pid") or 0) != self.session.pid]
+
+    # What `archive_error` says of a lock under this recorder's owner that is not its own to shed: who else is there.
+    def _not_our_lock(self, vol) -> str:
+        try:
+            others = sorted({f"{s.get('client')} (pid {s.get('pid')})" for s in self.session.stats().get("sessions", [])
+                             if int(s.get("pid") or 0) != self.session.pid})
+        except ObsdError:
+            others = []
+        return (f"{vol.name} is being written by another process on {self.server} under this recorder's owner name, so "
+                f"this recorder cannot write it"
+                + (f" — obsd's other clients: {', '.join(others)}" if others else "")
+                + f". Two recorders of one volume on one server: stop the other one, or wait for it to let {vol.name} go")
 
     # This session left behind for the daemon to detach, and a new one in its place (`Session.successor`): the writer
     # nobody here holds is detached after its linger and handed to the next mount under the same owner.
+    #
+    # WHAT ELSE GOES WITH IT (the review's sixth pass). Its readers: the doors' questions in flight answer 503 and are
+    # asked again of the new session. And no writer of ANOTHER volume: a recorder has one store, and it is closed, given
+    # up or the very one being left by the time a session is (`_write_into`, `_close_store`) — the parked writers that
+    # used to die with a left session are gone with parking. The writer that IS left the daemon closes after its grace,
+    # unless the same owner mounts first: with the lock still its own that is the flush of what it had taken; with the
+    # lock another writer's the engine writes nothing and leaves that lock alone (its patch 07).
     def _leave_session(self, why: str) -> None:
         log.warning("%s: %s — its session is left for the daemon to detach, and a new one picks the writer up",
                     self.name, why)
         self.session = self.session.successor()
-
-    # Parked writers of a session that is gone — left behind, or found lost (`SessionLost`: the daemon restarted) — are
-    # nothing to close any more: their handles are not this session's.
-    def _prune_parked(self) -> None:
-        self.parked = {n: st for n, st in self.parked.items()
-                       if st.session is self.session and not st.lost and st.writer is not None
-                       and st.writer.generation == self.session.generation}
 
     # `VOLUME_UNCLEAN`, recovered under a confirmed hold (`Archive._mount_rw`): an ALARM, because footage may be gone —
     # two writers in one ring, a crash in the middle of a block — and somebody is asked about it afterwards.
@@ -1302,38 +1449,47 @@ class RecWorker(VmsWorker):
     # flush fenced every recording. That thread waits one call's timeout; a flush longer than that goes on in the
     # daemon, the session is left behind as above, and the volume is mounted again once the daemon has done.
     #
-    # A WRITER OF A NETWORK VOLUME WHOSE HOLD IS LOST IS NOT CLOSED (the review's fifth pass, blocker 1). The close is
-    # the writer's last write — its flush, the volume's status — and the engine's release DELETES the lock file by its
-    # path (`FileStorageVolumeOps.cpp`, `CWriteLock`): on a volume another box took meanwhile, the other box's lock. A
-    # box frozen whole woke, its pass found the hold gone and closed the writer, and the next mount of the rightful
-    # holder was `VOLUME_UNCLEAN`, pass after pass. So such a writer is not closed. A daemon with the engine's patch 07
-    # takes `WRITER_ABANDON`: the writer given up writing nothing — no queue, no status — and the lock removed only if
-    # it is still its own (`Archive.abandon`). A daemon without it leaves the writer PARKED (`parked`): mounted, fed
-    # nothing — the fence refuses every sample (`Archive.fence`) — and closed only when this recorder holds the volume
-    # again (`_write_into`). Not its session left behind either: the daemon closes a left session's writers after
-    # `OBSD_WRITER_GRACE_S` with the same release — the same damage a minute later.
+    # A WRITER OF A NETWORK VOLUME WHOSE HOLD IS LOST IS NOT CLOSED: IT IS GIVEN UP (the review's fifth pass, blocker 1).
+    # The close is the writer's last write — its flush, the volume's status — onto a volume another box may hold by
+    # then: a box frozen whole woke, its pass found the hold gone and closed the writer, and the rightful holder's next
+    # mount was `VOLUME_UNCLEAN`, pass after pass. So such a writer gets `WRITER_ABANDON` (`Archive.abandon`): nothing
+    # more written — no queue, no status — and the engine's lock removed only if it is still its own.
     #
-    # What stays open without patch 07 is the ENGINE's, not this course's to change: a writer the daemon closes on its
-    # own — the grace of a recorder that died, a daemon stopped by its supervisor — deletes whatever lock file is at the
-    # path, and a writer woken from a freeze flushes its queue by its own timer before any client asks. The holder that
-    # mounts after it finds `VOLUME_UNCLEAN` and recovers it under its hold (`Archive._mount_rw`). With patch 07 the
-    # engine checks its lock before every block and status and stops the writer (`WRITER_STOPPED`, "volume lock lost";
-    # `Archive.lock_lost`).
+    # THE ENGINE IS WHAT MAKES THIS SAFE, AND THE COURSE REQUIRES THAT ENGINE (ObjectStorage with its patch 07; the
+    # review's sixth pass). It checks the volume's lock at its path before every block, status and removal, stops a
+    # writer whose lock is another's (`WRITER_STOPPED`, "volume lock lost" — `Archive.lock_lost`), and never removes a
+    # lock that is not its own — whoever closes the writer: this recorder, the daemon at the end of a dead recorder's
+    # grace, the supervisor stopping the daemon. A daemon without `WRITER_ABANDON` is not given such a volume at all
+    # (`_engine_refuses`); the fifth pass's stopgap for it — the writer "parked", mounted and fed nothing — is gone:
+    # it made the volume busy for ever for the box that held it by then (the sixth pass, blocker 1).
+    #
+    # WHAT THE WRITER HAD TAKEN AND NOT WRITTEN IS LOST, AND COUNTED (the sixth pass, a minor): frames answered `OK`
+    # that were still in the writer's queue or its open block — an alarm in each recording's journal, seconds in the
+    # heartbeat (`_say_dropped`). And a daemon that does not answer the giving up keeps the writer in a session this
+    # recorder leaves: the engine's own check is then all that stands, which is what it is there for.
+    #
+    # `_leaving`: the volume is being left for good (`leave_volume`, `after_stop`), not mounted again. Then a close that
+    # did not come back on a volume any box may serve is footage that MAY be lost: the next writer may be another box's,
+    # and the engine will let this one write nothing once its lock is taken. Said as a bound, not as a fact.
     #
     # Returns True when the session was left behind.
+    _leaving = False
+
     def _close_store(self, quiet: bool = False, wait: float | None = None) -> bool:
         if self.store is None:
             return False
         st, let_go = self.store, True
         if st.writer is not None and (st.lock_lost or not self._may_close_volume(getattr(st, "row", None))):
             self.store = None
-            if st.abandon(wait):
-                log.error("%s: the hold on %s is not confirmed: its writer is abandoned — given up without writing "
-                          "anything more (the engine's WRITER_ABANDON)", self.name, st.name)
-                return False
-            self.parked[st.name] = st
-            log.error("%s: the hold on %s is not confirmed: its writer is parked — fed nothing and not closed, so that "
-                      "its flush and its lock's release do not land on a volume another box may hold now", self.name, st.name)
+            answered = st.abandon(wait)
+            log.error("%s: volume %s may be another server's by now (%s): this recorder stops writing it and gives its "
+                      "writer up without writing anything more%s", self.name, st.name,
+                      "the engine found its lock taken" if st.lock_lost else "its hold was not confirmed in time",
+                      "" if answered else " — obsd did not answer, so the writer is left for obsd to close")
+            self._say_dropped(st, answered)
+            if not answered and st.session is self.session:
+                self._leave_session(f"the writer of {st.name} could not be given up (the daemon did not answer)")
+                return True
             return False
         try:
             let_go = st.close(wait)
@@ -1341,10 +1497,35 @@ class RecWorker(VmsWorker):
             if not quiet:
                 log.warning("%s: closing %s: %s", self.name, st.name, e)
         self.store = None
+        row = getattr(st, "row", None)
+        if not let_go and self._leaving and row is not None and volumes.any_box(row):
+            st.dropped = st.unwritten(look=False)
+            self._say_dropped(st, False)
         if not let_go and st.session is self.session:
             self._leave_session(f"the writer of {st.name} did not close (the daemon did not answer)")
             return True
         return False
+
+    # What a writer given up had taken and not written (`Archive.dropped`), said per recording: an ALARM in its journal
+    # — `archive.footage.dropped`, with the seconds and the stretch — and summed in the heartbeat
+    # (`archive_dropped_seconds`). `known` False: the daemon did not answer, nobody could look at what the volume
+    # shows, and the stretch is what the engine's flush periods leave unwritten at most — a bound, said as one
+    # (`exact: false`).
+    def _say_dropped(self, st: Archive, known: bool) -> None:
+        from w2cplatform.events import ALARM, EventLog
+        from .archive import parse_stream
+        for name, (a, b) in sorted(st.dropped.items()):
+            p = parse_stream(name)
+            if p is None:
+                continue
+            self.dropped_seconds += b - a
+            EventLog(self.archive_root, REC.name, p[0], p[1]).append(
+                self.wall(), "archive.footage.dropped", cls=ALARM, volume=st.name, seconds=round(b - a, 1), since=a,
+                until=b, exact=known)
+            log.error("%s: %s%.0f s of recording %s are lost (%.0f–%.0f): the writer had taken them and not yet "
+                      "written them when volume %s was given up. A backup recording or the camera's own archive may "
+                      "still hold them — ask for a backfill of that stretch", self.name, "" if known else "up to ",
+                      b - a, p[0], a, b, st.name)
 
     # Stop writing into a volume that is no longer ours — the administrator withdrew it, or the hold
     # lapsed and somebody else took it. Every recording of that archive is stopped and released, which is
@@ -1366,8 +1547,12 @@ class RecWorker(VmsWorker):
         # our writer still in it. Waited one call's timeout, on the leases' thread (Т-M1): a flush longer than that
         # goes on in the daemon, and whoever mounts the volume next finds it busy until it is done — the daemon keeps
         # one writer per volume, and on another host the engine's own lock holds it. A network volume whose hold is
-        # already lost is not closed at all: its writer is parked (`_close_store`; the review's fifth pass, blocker 1).
-        self._close_store(quiet=True, wait=self.session.timeout)
+        # already lost is not closed at all: its writer is given up (`_close_store`; the review's fifth pass, blocker 1).
+        self._leaving = True
+        try:
+            self._close_store(quiet=True, wait=self.session.timeout)
+        finally:
+            self._leaving = False
         try:
             self.release_hold()
         except OSError:                              # the store is silent: the hold lapses by itself
@@ -1375,7 +1560,7 @@ class RecWorker(VmsWorker):
         self.volume, self.capacity, self.incidents = "", 0, False
         # What the archive's state said was about the volume we just left. The next one starts clean.
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
-        self.keep_held, self.keep_state, self._keeps_read = {}, {}, False
+        self.keep_held, self.keep_state, self._keeps_read, self._keep_nowhere = {}, {}, False, {}
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -1393,7 +1578,11 @@ class RecWorker(VmsWorker):
     # `rec:<volume>`, picks the writer up whole (feedback CF).
     def after_stop(self) -> None:
         held = self.hold
-        self._close_store()
+        self._leaving = True
+        try:
+            self._close_store()
+        finally:
+            self._leaving = False
         if held is None:
             return
         try:
@@ -1420,8 +1609,8 @@ class RecWorker(VmsWorker):
 
     def depth_pass(self, now: float | None = None) -> dict:
         from w2cplatform.events import ALARM, EventLog
-        if self.store is None or self.clock() - self._depth_at < self.DEPTH_EVERY:
-            return self.depths
+        if self.store is None or self.engine_lost or self.clock() - self._depth_at < self.DEPTH_EVERY:
+            return self.depths                       # (an engine found lost is not asked again on the leases' thread)
         self._depth_at, now = self.clock(), self.wall() if now is None else now
         try:
             closed = int(self.store.status().get("firstBlockId", 0)) > 0
@@ -1459,7 +1648,7 @@ class RecWorker(VmsWorker):
     # From that moment the fence refuses every sample (`_may_write_volume`; the review's fifth pass, blocker 1), and the
     # writer is still closed — its flush is the last minutes — while nobody else may have taken the hold: until
     # `slot_ttl + HOLD_SKEW`, what a claimant waits (`_may_close_volume`). A pass that comes later than that — the box
-    # was frozen — parks the writer instead (`_close_store`).
+    # was frozen — gives the writer up instead (`_close_store`).
     def lease_pass(self) -> list[str]:
         lost = super().lease_pass()
         if self.recording_allowed:                   # a fenced instance decides nothing about volumes
@@ -1609,7 +1798,43 @@ class RecWorker(VmsWorker):
     # Lesson 16). `card_range(src, t0, t1)` is that request, set by whoever runs this recorder — the ingest; unset,
     # nobody here can ask the camera, and the card is not a source. A card that could not read the range raises
     # (`OSError`): the copy fails and is asked again on a later pass — never an empty answer taken for "not on the card".
+    # `src["recording"]` is the recording ON THE CARD the range is of, and whoever asks the camera must say it: a card
+    # holds as many recordings as its camera has rows homed on it (the review's sixth pass).
+    #
+    # ASKED AGAIN, BUT NOT AT ONCE (the review's sixth pass). A range that failed was asked again on the next pass, and
+    # the pass after: a camera that answers a second later than it is waited for read its card four times for four
+    # failures. A source that failed a range is not a source for a while — `SOURCE_BACKOFF`, doubling to
+    # `SOURCE_BACKOFF_MAX`, with jitter, so a site's cameras that failed together are not asked together — and the pass
+    # goes on to the recording's other sources and to other recordings meanwhile. One range landed forgets it. The
+    # same for a backup recorder's door, the neighbour on this path: a door whose volume is away read the same minute
+    # for every pass that asked it.
     card_range = None                                    # (src, t0, t1) -> [Sample], set by whoever runs this recorder
+    SOURCE_BACKOFF, SOURCE_BACKOFF_MAX = 5.0, 600.0
+
+    def _source_waits(self, key: str) -> bool:
+        return self.clock() < self._source_asks.get(key, (0, float("-inf")))[1]
+
+    def _source_answered(self, key: str, failed: bool) -> None:
+        if not failed:
+            self._source_asks.pop(key, None)
+            return
+        n = self._source_asks.get(key, (0, 0.0))[0] + 1
+        delay = min(self.SOURCE_BACKOFF * 2 ** n, self.SOURCE_BACKOFF_MAX) * (0.5 + random.random() * 0.5)
+        self._source_asks[key] = (n, self.clock() + delay)
+
+    # Every recording's row, parsed — and one that does not parse passed by (`Worker.row_garbled`; the sixth pass, the
+    # follow-up). The recorder walks ALL of them to answer a question about one — who else records this camera,
+    # which backup holds it, what a keep names — and parsed each bare: one garbled row, and no backup's pipeline
+    # started, no range was fetched and no keep was copied, for any recording.
+    def _recordings(self, deleted: bool = False):
+        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
+            items, _ = self.vars.get(key)
+            if not items or (not deleted and items.get("deleted") == "true"):
+                continue
+            try:
+                yield self.parse_row(items)
+            except (ValueError, KeyError, TypeError) as e:
+                self.row_garbled(key.rsplit("/", 1)[1], e)
 
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
@@ -1617,18 +1842,12 @@ class RecWorker(VmsWorker):
         if not names or volumes.is_backup(row, names=names):
             return []
         recs = set()
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items and items.get("deleted") != "true":
-                other = self.parse_row(items)
-                if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
-                    recs.add(str(other["id"]))
+        for other in self._recordings():
+            if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
+                recs.add(str(other["id"]))
         out, edge_homes, homes = [], volumes.edges(self.vars), {}
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items:
-                other = self.parse_row(items)
-                homes[str(other["id"])] = str(other.get("home") or "")
+        for other in self._recordings(deleted=True):
+            homes[str(other["id"])] = str(other.get("home") or "")
         from .config import local_only
         for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
             if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
@@ -1642,6 +1861,8 @@ class RecWorker(VmsWorker):
                 kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
                 if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
                     continue                  # no door to a backup, nobody to ask the camera: not a source from here
+                if self._source_waits(f"{kind}:{st['id']}"):
+                    continue                  # it failed a range just now: not asked again yet (`_source_answered`)
                 out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
                             "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
                             "coverage": st["coverage"]})
@@ -1923,9 +2144,12 @@ class RecWorker(VmsWorker):
                 return self.card_range(src, a, b)        # the camera's answer to a range of its card
             return self.read_samples(src["url"], src["recording"], a, b)
         try:
-            return self._land_pieces(unit, cam, read, t0, t1, src["key"])
+            out = self._land_pieces(unit, cam, read, t0, t1, src["key"])
         except OSError as e:
+            self._source_answered(src["key"], failed=True)
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
+        self._source_answered(src["key"], failed=False)
+        return out
 
     # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
@@ -2136,16 +2360,15 @@ class RecWorker(VmsWorker):
         now = self.wall() if now is None else now
         declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
         cams: dict[str, set] = {}
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if items and items.get("deleted") != "true":
-                row = self.parse_row(items)
-                cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
+        for row in self._recordings():
+            cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
         # Not a door on another server's loopback (the review's fourth pass): announced truthfully and not reachable from
         # here, it was asked every pass, refused, and the keep stayed uncopied with nothing to say why.
         from .config import local_only
-        doors = [(n, u) for n, u, hb in recorder_doors(self.objects, now)
-                 if n != self.name and not local_only(u, str(hb.extra.get("server", "?")), self.server)]
+        live = [(n, u, hb) for n, u, hb in recorder_doors(self.objects, now)
+                if n != self.name and not local_only(u, str(hb.extra.get("server", "?")), self.server)]
+        doors = [(n, u) for n, u, _ in live]
+        held_at = {u: {str(st.get("id")) for st in hb.status} for _, u, hb in live}   # door -> the recordings its recorder holds
         state: dict[str, dict] = {}
 
         def inside(k, rec) -> float:                     # seconds of the keep this volume holds for `rec`
@@ -2190,7 +2413,8 @@ class RecWorker(VmsWorker):
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
                 got += held
-                missing += self._keep_short_of(subtract((k.since, k.until), self.store.coverage(rec)), shown)
+                missing += self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
+                                               {u for u, recs in held_at.items() if rec in recs})
             entry = {"copied": round(got, 1), "missing": round(missing, 1)}
             self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
@@ -2211,6 +2435,7 @@ class RecWorker(VmsWorker):
                 entry["sha256"] = self.keep_state[k.id]["sha256"]
             state[k.id] = entry
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
         self.keep_state = state
         return state
@@ -2222,14 +2447,22 @@ class RecWorker(VmsWorker):
     # they hold of the recording in the keep's interval (`_doors_show`), only that is copied, and only that, not here,
     # is short. A recording no door from here answers for at all is short by all it lacks, as before: nobody can say
     # it is not there.
-    @staticmethod
-    def _keep_short_of(short: list, shown: dict) -> float:
-        whole = sum(b - a for a, b in short)
-        if not short or not shown:
-            return whole
-        have = stitch([sp for spans in shown.values() for sp in spans], 0.0)
-        nowhere = [piece for want in short for piece in subtract(want, have)]     # the source does not have these either
-        return whole - sum(b - a for a, b in nowhere)
+    #
+    # AND ONLY A DOOR THAT HOLDS THE RECORDING SAYS "THE SOURCE HAS NONE" (the review's sixth pass). Any door that
+    # answered was believed: the recording's own door unreachable, another camera's door answering "nothing of it here"
+    # — which is true of every door but the right one — and the keep was `copied 0, missing 0`, no alarm, while the
+    # recording's ring went on towards the kept minutes. A door speaks for a recording when its recorder holds it now
+    # (`holders`: the recording is in that recorder's heartbeat) or when it shows footage of it in the keep's interval;
+    # an empty answer of any other door says nothing. What such a door has said is remembered per (keep, recording)
+    # (`_keep_nowhere`) — a recording deleted afterwards has no holder to say it again — and forgotten where a door
+    # shows the footage after all.
+    def _keep_short_of(self, key: tuple[str, str], short: list, shown: dict, holders: set) -> float:
+        everything = stitch([sp for spans in shown.values() for sp in spans], 0.0)
+        gone = [p for g in self._keep_nowhere.get(key, []) for p in subtract(g, everything)]
+        if any(spans or url in holders for url, spans in shown.items()):
+            gone = stitch(gone + [p for want in short for p in subtract(want, everything)], 0.0)   # the source does not have these either
+        self._keep_nowhere[key] = gone
+        return sum(b - a for want in short for a, b in subtract(want, gone))
 
     # What each door that answers shows of a recording in `[since, until)`: `{url: [(start, end)]}` — a door that is
     # down is not in it, one that has nothing is, with nothing.
@@ -2362,6 +2595,7 @@ class RecWorker(VmsWorker):
                         for kid, e in sorted(self.keep_state.items()))
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
                 f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
+                f"# TYPE rec_footage_dropped_seconds_total counter\nrec_footage_dropped_seconds_total {self.dropped_seconds:.1f}\n"
                 + (f"# TYPE rec_keep_missing_seconds gauge\n{keeps}" if keeps else ""))
 
 
