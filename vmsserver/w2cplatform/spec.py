@@ -79,10 +79,11 @@ from urllib.parse import urlsplit
 
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
+from .rows import PARSE_ERRORS, Table, finite
 from .variables import Conflict, Variables
 
 PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revision", "phase", "id")   # never the operator's
@@ -102,6 +103,10 @@ class Moved(Exception):
 
 class Refused(Exception):
     pass
+
+
+# The counter of numeric ids, `<name>/next_id`, through the one reader of rows (`SpecController._next_id`).
+NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, and the row is written whole")
 
 
 # A stored placement decision: `unit` (int for numeric ids, str otherwise), `worker`, `reason` (a sentence
@@ -780,11 +785,26 @@ class SpecController(Controller):
     # -- units ------------------------------------------------------------------------
     # For numeric ids, bump `<name>/next_id {n}` by CAS and return it; otherwise `Refused` (the unit is
     # named by its field).
+    #
+    # A COUNTER THAT DOES NOT PARSE (the review's seventh pass, a minor): `n: "seven"` raised here, and not one unit of
+    # the subsystem could be created until somebody mended the row by hand. It is counted once (`NEXT_IDS`, through the
+    # one reader of rows) and the next number is one past the LARGEST id under `<name>/<rows>/` — the deleted rows
+    # included, which stay as marks, so a number once given is not given again — and the CAS writes the row whole.
     def _next_id(self):
         if self.spec.numeric:
-            new = self.write(self.sub.config("next_id"), lambda it: {"n": int(it.get("n", 0)) + 1})
+            key = self.sub.config("next_id")
+
+            def bump(it):
+                n = NEXT_IDS.read(key, lambda: int(finite(it.get("n", 0) or 0)))
+                return {"n": (self._largest_id() if n is None else n) + 1}
+            new = self.write(key, bump)
             return int(new["n"])
         raise Refused(f"a {self.spec.name} unit is named by its {self.spec.id}")
+
+    def _largest_id(self) -> int:
+        prefix = self.sub.config(self.spec.rows, "")
+        ids = [k[len(prefix):] for k in self.vars.list(prefix)]
+        return max([int(i) for i in ids if i.isdigit()] + [0])
 
     # Keep every derived row in step: on create/update write `{item: to_item(row[field])}` only if it
     # differs; on delete write `on_delete` if set and the row exists.
@@ -1574,7 +1594,14 @@ class SpecController(Controller):
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
-                uid = self.spec.parse_id(unit)
+                try:
+                    uid = self.spec.parse_id(unit)
+                except PARSE_ERRORS as e:
+                    # A name in the row that is no unit's id (`read_assignment` reads the list as it stands): that name's
+                    # trouble, counted — it raised out of the whole step, and no unit of any leaving slot moved (the
+                    # review's seventh pass, the walk over every row read).
+                    ASSIGNMENTS.garbled(f"{self.sub.assignment(gone)}#{unit}", e)
+                    continue
                 row = self._parsed(uid)
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
@@ -1655,6 +1682,8 @@ class SpecController(Controller):
             age = now - hb.ts
             state = "live" if age <= lost_after else "stale"
             for s in hb.status:
+                if "id" not in s:
+                    continue                            # an entry that names no unit says nothing about one (the seventh pass)
                 rows.append({**s, "worker": w, "server": hb.extra.get("server", "?"), "age": round(age, 1), "worker_state": state})
         return sorted(rows, key=lambda r: _unit_key(str(r["id"])))
 
@@ -1769,7 +1798,9 @@ class SpecController(Controller):
 
         # -- sweep: check again, write the decision down, and only then remove the bytes
         referenced = self.blobs_referenced()
-        doomed = [d for d in marked if d not in referenced]
+        # Only digests: an entry of the list that is none is no blob's name — `blob_key` raised on it, every sweep, and the
+        # list was never cleared: nothing of the subsystem was reclaimed again (the review's seventh pass).
+        doomed = [d for d in marked if isinstance(d, str) and is_digest(d) and d not in referenced]
         self.vars.put(key, {"at": str(now), "digests": json.dumps(doomed), "state": "deleting"}, cas=idx)   # Conflict here deletes nothing
         deleted = 0
         for d in doomed:

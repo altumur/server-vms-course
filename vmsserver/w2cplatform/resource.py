@@ -81,6 +81,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .doors import MAX_LIMIT, safe_rel, safe_segment
@@ -88,12 +89,14 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 log = logging.getLogger(__name__)
 
 from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
+from .rows import Table, counts as garbled_by_table, finite
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
 DOOR_TIMEOUT = 30.0          # seconds the door's socket waits on a peer that sends or reads nothing
+PIECE = 1 << 16               # what the mirror's client reads at a time (`PeerClient.get_into`)
 MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
 EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
@@ -137,19 +140,53 @@ def bucket_from_line(line: str) -> Bucket:
 #
 # `WATERMARK_DEFAULT=off` is for tests, said by the environment like `STORE_VOLATILE`: a suite runs on a
 # developer's disk, which is as full as it happens to be, and must not start cutting its fixtures for that.
-def space_settings(vars_) -> dict:
+#
+# A ROW THAT DOES NOT PARSE IS NOT "OFF" EITHER (the review's seventh pass, part 2). `high: "85%"` raised out of here,
+# and `relieve` failed on every pass — a disk at 98 % freed nothing, with the knob read last in hand and unused. Each
+# number is read alone now: one that does not parse — or is `nan`, `inf`, a mark under no disk (`finite`) — is the
+# one in `last` (what the caller read last), else the default, and the row is counted once until it parses again
+# through the one reader of rows (`SPACE`), logged once. `enabled` is a word compared with a word: it always reads.
+# The fields taken from elsewhere come back in `garbled`, for the caller to say (`Resource.relieve`, `space_garbled`
+# in the resource's heartbeat).
+SPACE = Table("space", "each number that does not parse is the one read last, or the default, until it is mended")
+
+
+def space_defaults() -> dict:
+    return {"enabled": os.environ.get("WATERMARK_DEFAULT", "on") != "off", "high": 0.85, "low": 0.75, "min_days": 3.0}
+
+
+def space_settings(vars_, last: dict | None = None) -> dict:
+    """The watermark's settings; with `garbled: [field, …]` when a number of the row does not parse."""
     items, _ = vars_.get(SPACE_KEY)
     d = items or {}
-    default_on = os.environ.get("WATERMARK_DEFAULT", "on") != "off"
-    return {"enabled": d.get("enabled") == "true" if "enabled" in d else default_on,
-            "high": float(d.get("high", 0.85)), "low": float(d.get("low", 0.75)),
-            "min_days": float(d.get("min_days", 3))}
+    dflt = space_defaults()
+    out = {"enabled": d.get("enabled") == "true" if "enabled" in d else dflt["enabled"]}
+    garbled, errors = [], []
+    for f in ("high", "low", "min_days"):
+        try:
+            out[f] = finite(d.get(f, dflt[f]))
+        except (ValueError, TypeError) as e:
+            out[f] = (last or dflt).get(f, dflt[f])
+            garbled.append(f); errors.append(f"{f}: {e}")
+    if garbled:
+        SPACE.garbled(SPACE_KEY, "; ".join(errors))
+        out["garbled"] = garbled
+    else:
+        SPACE.parsed(SPACE_KEY)
+    return out
 
 
-# Reads the knob: `enabled` is true only if the row exists and says `"true"`; `copies` defaults to 1.
+# Reads the knob: `enabled` is true only if the row exists and says `"true"`; `copies` defaults to 1. A `copies` that
+# does not parse is ONE copy (the seventh pass, beside the watermark): it raised out of the mirror on every pass, and
+# a mirror the operator turned on copied nothing — the row is counted (`MIRROR`) and logged once; one copy is the
+# least the switch that IS readable asked for.
+MIRROR = Table("mirror", "mirrored to one peer, until it is mended")
+
+
 def mirror_settings(vars_) -> dict:
     items, _ = vars_.get(MIRROR_KEY)
-    return {"enabled": bool(items) and items.get("enabled") == "true", "copies": int((items or {}).get("copies", 1))}
+    return {"enabled": bool(items) and items.get("enabled") == "true",
+            "copies": MIRROR.read(MIRROR_KEY, lambda: int(finite((items or {}).get("copies", 1))), 1)}
 
 
 # The unit's days if its subsystem set `<sub>/retention/<unit>`, else the subsystem's `<sub>/retention`,
@@ -215,6 +252,11 @@ def resources_seen(objects) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
         hb = dict(json.loads(raw))
         hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it
+        # …and what the mirror asks of it (the review's seventh pass): `url` to send to and take back from, `mirrors` a
+        # map — read bare, a heartbeat without them raised out of `mirror` for every peer, and out of `restore`, which
+        # runs at the start with nothing around it.
+        if not isinstance(hb.get("url", ""), str) or not isinstance(hb.get("mirrors", {}), dict):
+            raise TypeError("url or mirrors is not what a resource heartbeat says")
         return hb
 
     out = {}
@@ -297,6 +339,32 @@ class PeerClient:
         with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
             return r.read()
 
+    # A BUCKET IS NEVER HELD WHOLE ON EITHER SIDE OF THE MIRROR (the review's seventh pass, beside "the resource sends a
+    # bucket whole"). The door sends a bucket in pieces and takes a copy in pieces now; the resource's own client read a
+    # bucket into memory to send it (`mirror`) and a copy into memory to write it back (`restore`) — sixty megabytes of
+    # a storm, held whole, once per bucket. These two do it a piece at a time: `put_file` hands the open file to the
+    # connection with its length (`http.client` sends a file in blocks), and `get_into` writes the reply to a file a
+    # piece at a time and checks the length the peer said — a reply that ends short is an error, never a smaller bucket.
+    # `mirror` and `restore` use them when the client has them; a client a test substitutes may have only `put`/`get`.
+    def put_file(self, url: str, server: str, path: str, f, size: int) -> None:
+        req = urllib.request.Request(f"{url}/mirror/{server}/{path}", data=f, method="PUT",
+                                     headers={"Content-Length": str(size)})
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            if r.status not in (200, 201, 204):
+                raise IOError(f"PUT mirror {path}: {r.status}")
+
+    def get_into(self, url: str, server: str, path: str, dest) -> int:
+        with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
+            want, got = r.headers.get("Content-Length"), 0
+            while True:
+                part = r.read(PIECE)
+                if not part:
+                    break
+                dest.write(part); got += len(part)
+        if want is not None and got != int(want):
+            raise IOError(f"GET mirror {path}: {got} of {want} bytes")
+        return got
+
 
 # A subsystem's hook is called with what it takes of the optional words, and nothing it does not: `volume` (the
 # disk that is short — older hooks do not take one) and `progressed` (the pass's pulse: a hook that works for
@@ -364,6 +432,7 @@ class Resource:
         self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
         self.retention_garbled: list[str] = []     # `<sub>/<unit>` whose days the last `retain` could not read: kept, not swept
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
+        self.space_garbled = ""                    # what the watermark acts on while its row does not parse (`relieve`), for the heartbeat
         self.kept = None                           # `() -> (subsystem, unit, start, end) -> bool`: buckets `retain` must leave, if anybody says so
         # How many `/events` it answers AT ONCE. The server starts a thread per request and never says no, so
         # without a limit a burst of readers is a queue with no end: every answer later, memory growing, and a
@@ -522,6 +591,12 @@ class Resource:
               "space": self.space(), "volumes": self.spaces(), "units": self.units(),
               "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
               "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
+              # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's
+              # seventh pass) — and the rows of any table this process could not read, by table (`rows.Table`): the
+              # keeps a hook reads, the knobs. Absent when there are none.
+              **({"space_garbled": self.space_garbled} if self.space_garbled else {}),
+              **({"rows_garbled": garbled} if (garbled := {name: sum(c.values()) for name, c in garbled_by_table().items()
+                                                           if sum(c.values())}) else {}),
               "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
@@ -633,7 +708,7 @@ class Resource:
         knob = mirror_settings(self.vars)
         if not knob["enabled"]:
             return {"enabled": False, "mirrored": 0, "peers": []}
-        live = self.live_resources()
+        live = {s: hb for s, hb in self.live_resources().items() if hb.get("url")}   # a peer that says no address takes nothing
         peers = peers_of(self.server, list(live), knob["copies"])
         n, closed = 0, None
         for peer in peers:
@@ -645,7 +720,11 @@ class Resource:
                 if b.path in have:
                     continue
                 with open(self.path_of(b.path), "rb") as f:
-                    self.peers.put(live[peer]["url"], self.server, b.path, f.read())
+                    put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
+                    if put_file is not None:
+                        put_file(live[peer]["url"], self.server, b.path, f, os.fstat(f.fileno()).st_size)
+                    else:
+                        self.peers.put(live[peer]["url"], self.server, b.path, f.read())
                 n += 1
                 # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
                 # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
@@ -657,24 +736,43 @@ class Resource:
     # of my buckets it holds that I do not have (tmp + rename), then, if anything came back, run every
     # registered hook once so the subsystem re-indexes. Returns `{pulled, <sub>.<key>: …}`. In the test,
     # `srv-a` with a wiped disk pulls 2 buckets; the open bucket that was never mirrored is the RPO.
+    #
+    # UNDER THE SAME PULSE AS THE PASS (the review's seventh pass, M4). It runs before the loop's first heartbeat after
+    # the first, on the same thread: a disk replaced and two thousand buckets pulled at 50 ms each were 100 s without a
+    # heartbeat — the resource silent to the index (the window incomplete, automation's cursor held) and to the
+    # console, while its door answered. It beats as `pass_` does (`_pulsing`), with a mark per bucket pulled — and per
+    # listing and per bucket already here — so a pull that moves keeps the pulse, and one that hangs on a peer stops it.
     def restore(self) -> dict:
         """The reverse, run by the owner: pull my buckets from whoever holds
         copies, then let each subsystem's hook re-index what came back."""
-        pulled = 0
-        for peer, hb in self.live_resources().items():
-            if peer == self.server or self.server not in hb.get("mirrors", {}):
-                continue
-            for path in sorted(b.path for b in self.peers.mirrored(hb["url"], self.server)):
-                dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
-                if os.path.exists(dest):
+        with self._pulsing():
+            pulled = 0
+            for peer, hb in self.live_resources().items():
+                if peer == self.server or self.server not in hb.get("mirrors", {}) or not hb.get("url"):
                     continue
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
-                with open(dest + ".tmp", "wb") as f:
-                    f.write(self.peers.get(hb["url"], self.server, path))
-                os.replace(dest + ".tmp", dest); pulled += 1
-        hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
-                 for sub, h in self.hooks.items()} if pulled else {}
-        return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+                listed = self.peers.mirrored(hb["url"], self.server)
+                self._progressed()
+                for path in sorted(b.path for b in listed):
+                    self._progressed()
+                    dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
+                    if os.path.exists(dest):
+                        continue
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+                    try:
+                        with open(dest + ".tmp", "wb") as f:
+                            if get_into is not None:
+                                get_into(hb["url"], self.server, path, f)
+                            else:
+                                f.write(self.peers.get(hb["url"], self.server, path))
+                    except BaseException:
+                        os.remove(dest + ".tmp")                     # half a copy is no copy
+                        raise
+                    os.replace(dest + ".tmp", dest); pulled += 1
+                    self._progressed()
+            hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
+                     for sub, h in self.hooks.items()} if pulled else {}
+            return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
 
     # -- the watermark -------------------------------------------------------------------
     # Retention by days is a PROMISE to the operator; this is what happens when the promise cannot be kept.
@@ -702,11 +800,20 @@ class Resource:
         # the store was away, which is exactly when nobody is looking. The resource keeps what it last read
         # and acts on that. With nothing ever read it says `unknown` and frees nothing: it does not guess.
         try:
-            knob = self._space_knob = space_settings(self.vars)
+            knob = space_settings(self.vars, self._space_knob)
         except OSError as e:
             if self._space_knob is None:
                 return {"space": "unknown", "error": str(e)}
             knob = self._space_knob
+        else:
+            # A number of the row that does not parse is the store ANSWERING with something that is not a setting —
+            # unlike its silence, there is no reason to wait: that number as read last, else its default, and the
+            # heartbeat says which (the review's seventh pass).
+            bad = knob.pop("garbled", [])
+            self.space_garbled = (f"{SPACE_KEY} does not parse ({', '.join(bad)}): acting on "
+                                  f"{'the settings read last' if self._space_knob else 'the defaults'} for "
+                                  f"{'it' if len(bad) == 1 else 'them'}") if bad else ""
+            self._space_knob = knob
         if not knob["enabled"]:
             self.short = {}
             return {"space": "off"}
@@ -766,7 +873,11 @@ class Resource:
     # that takes nothing, a disk that does not answer — stops it, as before.
     PULSE_LIMIT = 4
 
-    def pass_(self) -> dict:
+    # The pulse itself, around whatever long step runs on the heartbeat's thread: `pass_`, and `restore` (the seventh
+    # pass). While it runs, the last heartbeat goes out again every `PULSE_SECONDS` with the time moved on — until
+    # `PULSE_LIMIT` × `lost_after` pass with no mark of progress (`_progressed`).
+    @contextmanager
+    def _pulsing(self):
         done = threading.Event()
         started = self.clock()
         self._progressed()
@@ -789,6 +900,16 @@ class Resource:
                     log.warning("%s: a pulse of the pass did not go out", self.server, exc_info=True)
 
         threading.Thread(target=pulse, daemon=True).start()
+        try:
+            yield
+        finally:
+            done.set()
+
+    def pass_(self) -> dict:
+        with self._pulsing():
+            return self._pass()
+
+    def _pass(self) -> dict:
         # Each part in a `try` of its own (the review's second pass): the promise (`retain`) reads the rows of
         # what is kept, and a store that does not answer used to take the watermark and the mirror with it.
         # What a part could not do is named in `errors`; the next pass tries again. Whatever it raises — not only
@@ -809,19 +930,16 @@ class Resource:
             self._volume_usage = {n: self.usage(n) for n in self.quotas}   # …and the same for the volumes with a ceiling
             self.last_usage, self.usage_at = usage, self.wall()
             return usage
-        try:
-            for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
-                part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in
-                                                _call_hook(h.pass_, self.wall(), progressed=self._progressed).items()})
-            part("retain", self.retain, "removed")
-            part("usage", measure, "usage")
-            part("relieve", self.relieve)
-            part("mirror", self.mirror)
-            if errors:
-                out["errors"] = errors
-            return out
-        finally:
-            done.set()
+        for sub, h in self.hooks.items():                        # a subsystem's own pass first: it may index or drop lines
+            part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in
+                                            _call_hook(h.pass_, self.wall(), progressed=self._progressed).items()})
+        part("retain", self.retain, "removed")
+        part("usage", measure, "usage")
+        part("relieve", self.relieve)
+        part("mirror", self.mirror)
+        if errors:
+            out["errors"] = errors
+        return out
 
 
 # The resource over HTTP, in a daemon thread. `extra(path, headers) -> (status, bytes[, headers]) | None`

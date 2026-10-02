@@ -258,9 +258,7 @@ def _forget_garbled():
     """The counts of rows that did not parse are the PROCESS's, and every heartbeat written after carries them: a test
     that garbles a row clears them on its way out, or the heartbeats of every later test say `slots_garbled`."""
     import sys
-    m = sys.modules["w2cplatform.contract"]                            # the module in use, whatever was imported since
-    for counts in (m.SLOTS_GARBLED, m.ASSIGNMENTS_GARBLED, m._garbled_slots, m._garbled_assignments):
-        counts.clear()
+    sys.modules["w2cplatform.rows"].forget()                           # the module in use, whatever was imported since: every table
 
 
 def test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted():

@@ -70,7 +70,9 @@ def test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names(
     box.vars.put("vms/workers/w-1", {"units": "2,3", "rev": "eight"})
     assert w.reconcile_once() == [("stop", 1)]                                              # …and what it takes away is stopped
     w.heartbeat_once()
-    assert Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1")).extra["assignments_garbled"] >= 2
+    # One row, garbled across two passes and two hand edits: ONE row that does not parse, not one per read (the
+    # review's seventh pass, a minor — the count grew on every pass).
+    assert Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1")).extra["assignments_garbled"] == 1
     _forget_garbled()
 
 

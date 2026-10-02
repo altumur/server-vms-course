@@ -42,7 +42,7 @@ from __future__ import annotations
 import json
 import time
 
-from .federation import Cluster, Unreachable
+from .federation import MEMBER_OBJECTS, Cluster, Unreachable
 
 UPLINK = "domain/members"
 REPORTED = "reported"
@@ -103,8 +103,15 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
     for full in domain_objects.list(b):
         if full not in keep:
             domain_objects.delete(full)                            # gone from the member: gone from its report
+    # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
+    # before the new one was written, so it was never written again: the member stopped reporting for good, by one
+    # object (М10's seventh review, part 2). It starts again from the clock's milliseconds — a number the domain has
+    # not seen, which is all `_Fresh` asks of a sequence — and is written whole.
     prev = domain_objects.get(b + REPORTED)
-    seq = (json.loads(prev).get("seq", 0) if prev else 0) + 1
+    try:
+        seq = (int(json.loads(prev).get("seq", 0)) if prev else 0) + 1
+    except (ValueError, TypeError, AttributeError):
+        seq = int(now * 1000)
     domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want)}).encode())   # last: the report is whole
     return written + 1
 
@@ -112,7 +119,10 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
 def reported_at(member: str, domain_objects) -> float | None:
     """The time the member stamped its last report with — ITS clock. For how old the report is, ask the copy."""
     raw = domain_objects.get(base(member) + REPORTED)
-    return float(json.loads(raw)["ts"]) if raw else None
+    try:
+        return float(json.loads(raw)["ts"]) if raw else None
+    except (ValueError, TypeError, KeyError):
+        return None                                                  # a mark nobody can read says no time (the seventh review)
 
 
 class _Fresh:
@@ -127,10 +137,17 @@ class _Fresh:
         raw = self.store.get(self.base + REPORTED)
         if not raw:
             raise Unreachable(f"{self.member} has never reported to the domain")
-        mark, now = json.loads(raw), self.wall()
+        try:
+            mark, now = json.loads(raw), self.wall()
+            ts = float(mark["ts"])
+        except (ValueError, TypeError, KeyError) as e:
+            # Not a report the domain can read: as if the member had not reported (М10's seventh review) — it raised a
+            # `ValueError` out of every read of the member, which nothing above takes for a silent member.
+            raise Unreachable(f"{self.member}'s last report mark does not parse ({e}): the member writes it again "
+                              f"with its next report") from None
         if mark.get("seq") != self.seq:                              # a new report: seen now, by our clock
             self.seq, self.seen_at = mark.get("seq"), now
-            self.offset = now - float(mark["ts"])                    # our clock minus theirs, as of this report
+            self.offset = now - ts                                   # our clock minus theirs, as of this report
         age = now - self.seen_at
         if age > self.lost_after:
             raise Unreachable(f"{self.member} has not reported for {age:.0f} s")
@@ -154,7 +171,7 @@ class _CopyObjects:
                 if isinstance(d, dict) and "ts" in d:
                     d["ts"] = self.f.domain_time(d["ts"])
                     raw = json.dumps(d).encode()
-            except ValueError:
+            except (ValueError, TypeError):                          # `ts: null` too: handed on as it is, the reader decides
                 pass
         return raw
 
@@ -181,8 +198,14 @@ class _CopyVars:
         raw = self.f.store.get(self.f.base + "v/" + path)
         if not raw:
             return None, 0
-        d = json.loads(raw)
-        return d["items"], d["idx"]
+        try:
+            d = json.loads(raw)
+            return d["items"], d["idx"]
+        except (ValueError, TypeError, KeyError) as e:
+            # A row of the copy that does not parse is not a row that is gone: this read is as one the member did not
+            # answer (М10's seventh review) — said, counted, and each reader's own "not reached" decides.
+            MEMBER_OBJECTS.garbled(f"{self.f.member}/{path}", e)
+            raise Unreachable(f"{self.f.member}'s copy of {path} does not parse ({e})") from None
 
     def list(self, prefix: str) -> list[str]:
         self.f.check()
@@ -229,7 +252,11 @@ class NewerRoad:
             raw = road.get(base(self.member) + REPORTED)
             if not raw:
                 continue
-            mark = json.loads(raw)
+            try:
+                mark = json.loads(raw)
+                float(mark.get("ts", 0))
+            except (ValueError, TypeError, AttributeError):
+                continue                                 # a road whose mark does not parse is no road this pass (the seventh review)
             if self.seen.get(name, (None,))[0] != mark.get("seq"):
                 self.seen[name] = (mark.get("seq"), now)
             marks[name] = mark
@@ -243,8 +270,11 @@ class NewerRoad:
         name = self._pick()
         raw = self.roads[name].get(key)
         if raw is not None and key == base(self.member) + REPORTED:
-            mark = json.loads(raw)
-            mark["seq"] = f"{name}:{mark.get('seq')}"
+            try:
+                mark = json.loads(raw)
+                mark["seq"] = f"{name}:{mark.get('seq')}"
+            except (ValueError, TypeError, AttributeError):
+                return raw                               # as it is: `_Fresh` reads it as no report, with the words
             return json.dumps(mark).encode()
         return raw
 
@@ -276,7 +306,13 @@ def page(member: str, name: str, domain_objects, lost_after: float = 45.0, wall=
     raw = domain_objects.get(base(member) + "p/" + name)
     if not raw:
         return None
-    p = json.loads(raw)
+    try:
+        p = json.loads(raw)
+        if not isinstance(p, dict):
+            raise TypeError("a page is not an object")
+    except (ValueError, TypeError) as e:
+        MEMBER_OBJECTS.garbled(f"{member}/p/{name}", e)
+        raise Unreachable(f"{member}'s page {name} does not parse ({e})") from None
     for k in ("from", "to", "known_until"):
         if p.get(k) is not None:
             p[k] = f.domain_time(p[k])

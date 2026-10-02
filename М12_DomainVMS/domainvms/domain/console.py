@@ -26,6 +26,7 @@ Stateless: kill it, start another, the first pass rebuilds everything.
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -36,6 +37,8 @@ from w2cplatform.console import Deadlined, open_doors, read_body
 from .api import ApiError, ConsoleAPI
 from .federation import DomainDirectory
 from .readview import ReadView
+
+log = logging.getLogger("domain.console")
 
 
 class Console:
@@ -53,23 +56,53 @@ class Console:
         self.viewer = viewer
         self._stop = threading.Event()
 
+    # Each step of the pass in a try of its own, and what one raises SAID (М10's seventh review, part 2): one `try` with
+    # `except Exception: pass` around all five, so a member object that did not parse in the first froze the view of
+    # the whole domain — every cluster's time stood still — and the log was empty. A step that raises is logged with
+    # its trace once, until it succeeds again (`refresh_failures` counts every one), and the steps after it run.
     def _refresher(self):
         while not self._stop.is_set():
-            try:
-                if self.members is not None and self.publish_to is not None:
-                    from .members import apply as follow_members
-                    follow_members(self.view.fed, self.members, self.publish_to, self.topology)
-                if self.topology is not None and self.publish_to is not None:
-                    from .topology import apply
-                    apply(self.view.fed, self.topology, self.publish_to)
-                self.view.refresh()
-                if self.publish_to is not None:
-                    self.view.publish(self.publish_to, self.crossings.all() if self.crossings else None)
-                if self.pending is not None:
-                    self.pending.collect(self.view.fed)      # what the members' reports say became of kept edits
-            except Exception:                              # noqa: BLE001 — a bad pass is a stale view, not a dead console
-                pass
+            self._steps(
+                ("following the members", self._follow_members),
+                ("following the topology", self._follow_topology),
+                ("the read view's pass", self.view.refresh),
+                ("publishing the read view", self._publish_view),
+                ("collecting kept edits", self._collect_pending))
             self._stop.wait(self.refresh_interval)
+
+    def _steps(self, *steps) -> None:
+        failing = self.__dict__.setdefault("_failing", set())
+        for what, step in steps:
+            try:
+                step()
+            except Exception:                              # noqa: BLE001 — a bad step is a stale part of the view, not a dead console
+                self.refresh_failures = getattr(self, "refresh_failures", 0) + 1
+                if what not in failing:
+                    failing.add(what)
+                    log.exception("domain console: %s failed; the other steps go on, and this one is tried every %.0f s",
+                                  what, self.refresh_interval)
+            else:
+                if what in failing:
+                    failing.discard(what)
+                    log.warning("domain console: %s works again", what)
+
+    def _follow_members(self) -> None:
+        if self.members is not None and self.publish_to is not None:
+            from .members import apply as follow_members
+            follow_members(self.view.fed, self.members, self.publish_to, self.topology)
+
+    def _follow_topology(self) -> None:
+        if self.topology is not None and self.publish_to is not None:
+            from .topology import apply
+            apply(self.view.fed, self.topology, self.publish_to)
+
+    def _publish_view(self) -> None:
+        if self.publish_to is not None:
+            self.view.publish(self.publish_to, self.crossings.all() if self.crossings else None)
+
+    def _collect_pending(self) -> None:
+        if self.pending is not None:
+            self.pending.collect(self.view.fed)              # what the members' reports say became of kept edits
 
     def handler(self):
         console = self

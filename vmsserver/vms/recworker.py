@@ -42,6 +42,7 @@ from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.objects import ObjectStore
+from w2cplatform.rows import FIELDS, PARSE_ERRORS, number
 from w2cplatform.variables import Variables
 
 from . import volumes
@@ -291,6 +292,7 @@ class RecWorker(VmsWorker):
         self._lost_why, self._lost_at = "", 0.0      # why, and since when, the engine is lost (`_lost_engine`)
         self._taken_over = ""                        # …or the volume's lock was another writer's: said till, and at, the remount
         self._vol_last = None                        # the volume row last opened: what a silent store remounts by
+        self._volume_garbled_said = ""               # the last row trouble the volume step logged (`lease_pass`), said once
         self.refused: dict[str, tuple[float, str]] = {}   # volume -> (tried again after, why) — see REFUSED_FOR
         self._backfiller: threading.Thread | None = None
         # Is the WRITER writing (Lesson 10, feedback U): bytes offered to the sinks against what the volume
@@ -731,10 +733,21 @@ class RecWorker(VmsWorker):
         if not ref or ref not in items:
             return None
         import json
-        e = json.loads(items[ref])
-        raw = self.objects.get(DOMAIN_SEEN)
-        seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
         key = f"ref:{ref}"
+        # An entry of the book, or the agent's mark, that does not parse is a book nobody can vouch for: the backup records
+        # (the review's seventh pass). Read bare, it raised out of `enrich` — out of the reconciler's loop: every start
+        # after this backup, every stop, the gate and the writer's pass were skipped.
+        try:
+            e = json.loads(items[ref])
+            raw = self.objects.get(DOMAIN_SEEN)
+            seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
+            if not isinstance(e, dict):
+                raise TypeError("a book's entry is not an object")
+        except PARSE_ERRORS as err:
+            FIELDS.garbled(f"{PRIMARIES}#{ref}", err)
+            self._not_written_since.pop(key, None)
+            return True
+        FIELDS.parsed(f"{PRIMARIES}#{ref}")
         if now - seen > self.CARRIED_LOST_AFTER:                 # the book is as old as the agent's last contact
             self._not_written_since.pop(key, None)
             return True
@@ -955,7 +968,7 @@ class RecWorker(VmsWorker):
             last = self._vol_last if self.store is not None else None
             if last is not None and not self.engine_lost and not volumes.any_box(last) and self.hold is None:
                 return self.volume
-            rows = {v.name: v for v in volumes.declared(self.vars)}
+            rows = self._declared()
             vol = rows.get(self.pin) or self._own_volume(self.pin)
             if not volumes.any_box(vol) and not (last is not None and volumes.any_box(last)) and self.hold is None:
                 self.volume, self.volume_wait = self.pin, ""
@@ -965,7 +978,7 @@ class RecWorker(VmsWorker):
                     self._place_kind(vol)
                 return self.volume
         if rows is None:
-            rows = {v.name: v for v in volumes.declared(self.vars)}
+            rows = self._declared()
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
         # A camera's card is not this recorder's to take: it is the camera's buffer, and only the camera's own recorder
         # (`vms/card.py`, `CardRecorder`) writes it — a recorder of the engine on the camera's box included.
@@ -1048,6 +1061,25 @@ class RecWorker(VmsWorker):
             broken.append((self.hold, str(err)))
             self.volume_error = str(err)
             self.release_hold()                                    # so somebody who CAN write there may take it
+
+    # The declared volumes, `{name: Volume}`, read through `volumes.declared` — and a row that does not parse is NOT a
+    # volume withdrawn (the review's seventh pass, part 2, blocker 1). Skipped, it would be: the held volume missing
+    # from `free`, let go, its recordings stopped — for one field. The volume this recorder writes into is kept by the
+    # row it read last (`_vol_last`, what it opened); any other garbled row is no candidate until it is mended, and is
+    # counted and logged by the reader (`volumes.VOLUMES`, `volumes_garbled` in the heartbeat). A pinned recorder whose
+    # row was never read whole has nothing to open by: `_own_volume` under that name would be the box's default
+    # directory, which is not the volume — so the row's trouble is said and no place is taken.
+    def _declared(self) -> dict:
+        unread: set = set()
+        rows = {v.name: v for v in volumes.declared(self.vars, unread)}
+        mine = self.pin if self.pinned else self.hold
+        last = self._vol_last
+        if mine in unread and last is not None and last.name == mine:
+            rows[mine] = last
+        elif mine in unread and self.pinned:
+            raise ValueError(f"the row of volume {mine} ({volumes.key(mine)}) does not parse, and this recorder never "
+                             f"read it whole: it has nothing to open — mend the row")
+        return rows
 
     # PINNED TO A VOLUME ANY BOX MAY SERVE, AND NOT HOLDING IT (the review's seventh pass, blocker 2). Another recorder
     # holds it — a free one that took it first, or the previous instance of this name on another host whose hold has
@@ -1781,6 +1813,20 @@ class RecWorker(VmsWorker):
                     logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
                                     self.name, e, self.volume or "nothing")
                     self._remount_by_last()
+            except PARSE_ERRORS as e:
+                # A ROW THAT DOES NOT PARSE is the row's trouble, not the lease step's (the review's seventh pass, part
+                # 2, blocker 1): it went out of here to the loop's one `try`, and the heartbeat after it never went.
+                # The rows are read past such a row (`_declared`); whatever still raises one here — a row read on the
+                # way, a pinned volume never read whole — leaves the recorder writing where it writes, said in
+                # `volume_error` and once in the log, and the depth below is still measured.
+                self.volume_error = f"a row of the store does not parse: {e}"
+                if self._volume_garbled_said != str(e):
+                    self._volume_garbled_said = str(e)
+                    logging.error("%s: the volume step met a row that does not parse (%s); still writing into %s",
+                                  self.name, e, self.volume or "nothing")
+                self._remount_by_last()
+            else:
+                self._volume_garbled_said = ""
             self.depth_pass()
         return lost
 
@@ -1860,8 +1906,15 @@ class RecWorker(VmsWorker):
         from .archive import visible_from
         ours = self.our_coverage(unit)
         row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
-        lo = max(float(coverage["from"]), now - self.keep_days * 86400, visible_from(row, now))
-        hi = min(float(coverage["to"]), now - self.settle, ours[-1][1] if ours else now)
+        # What a source says it holds, through `rows.number` (the review's seventh pass): a word there raised out of the
+        # backfill of every recording after this one. Not said, nothing to fetch from it.
+        c = coverage if isinstance(coverage, dict) else {}
+        start = number(f"rec/coverage/{source}/{unit}#from", c.get("from"), float, None)
+        end = number(f"rec/coverage/{source}/{unit}#to", c.get("to"), float, None)
+        if start is None or end is None:
+            return []
+        lo = max(start, now - self.keep_days * 86400, visible_from(row, now))
+        hi = min(end, now - self.settle, ours[-1][1] if ours else now)
         if planned:
             if not ours:
                 return []
@@ -2506,7 +2559,11 @@ class RecWorker(VmsWorker):
         if not self.incidents or self.store is None:
             return {}
         now = self.wall() if now is None else now
-        declared = keeps.declared(self.vars)             # a store that does not answer RAISES: unread is not "none"
+        # A store that does not answer RAISES: unread is not "none". A keep whose row does not parse is skipped and
+        # counted (`keeps.KEEPS`; the seventh pass) — it raised out of this pass, and no keep of anybody's was copied —
+        # and what was copied of it is carried as it stands below, so its losses are still seen when it is mended.
+        unread: list = []
+        declared = keeps.declared(self.vars, unread)
         cams: dict[str, set] = {}
         for row in self._recordings():
             cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
@@ -2581,6 +2638,8 @@ class RecWorker(VmsWorker):
             if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
                 entry["sha256"] = self.keep_state[k.id]["sha256"]
             state[k.id] = entry
+        for k in unread:                                 # not read is not lifted: what it holds stays counted
+            state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
         self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}

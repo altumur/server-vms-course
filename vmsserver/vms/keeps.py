@@ -25,9 +25,11 @@
 # was set, and also matches any recording whose row names the camera now.
 # ================================================================================================
 import json
+import math
 from dataclasses import dataclass
 
 from w2cplatform.doors import safe_segment
+from w2cplatform.rows import Table, finite
 from w2cplatform.spec import Refused
 
 SUB = "rec"
@@ -52,8 +54,9 @@ class Keep:
 
     @classmethod
     def from_items(cls, id_: str, d: dict) -> "Keep":
-        return cls(id_, str(d.get("cam", "")), float(d.get("from", d.get("since", 0)) or 0), float(d.get("to", d.get("until", 0)) or 0),   # `since`/`until`: rows written before the rename (feedback BV)
-                   str(d.get("note", "")), str(d.get("by", "")), float(d.get("at", 0) or 0),
+        # `finite`: a `nan` bound passes no comparison, so such a keep held nothing while it looked set (the seventh pass)
+        return cls(id_, str(d.get("cam", "")), finite(d.get("from", d.get("since", 0)) or 0), finite(d.get("to", d.get("until", 0)) or 0),   # `since`/`until`: rows written before the rename (feedback BV)
+                   str(d.get("note", "")), str(d.get("by", "")), finite(d.get("at", 0) or 0),
                    tuple(str(r) for r in _names(d.get("recordings"))))
 
     def to_items(self) -> dict:
@@ -114,15 +117,43 @@ def delete(vars_, id_: str) -> None:
     vars_.delete(key(id_))
 
 
-def declared(vars_) -> list[Keep]:
-    """Every keep. A store that does not answer RAISES, and the caller must let it: "I could not read the
-    keeps" is not "there are none", and a policy that reads it so deletes what it was told to leave."""
+# A KEEP WHOSE ROW DOES NOT PARSE IS THAT KEEP'S TROUBLE (the review's seventh pass, part 2). `from: "yesterday"` in
+# one keep raised out of `declared`, and `declared` is under the resource's retention of every unit on every server
+# (`vms/resource.kept_buckets`: "not knowing what is kept is not nothing is", so nothing was swept and the disks
+# filled), under the incidents recorder's copying of every keep, and under each recorder's door. Now it is skipped
+# where keeps are listed, counted once until it parses again (`KEEPS`; `keeps_garbled`), logged once — and handed to
+# whoever must not read it as "no keep" through `garbled`: as a keep of its camera WHOLE (`whole`, from 0 to
+# infinity), which is what not knowing which minutes means. Retention then keeps that camera's buckets and sweeps the
+# rest; nothing is copied for it until it is mended (a whole camera is not a range to copy). A row that does not
+# even name a camera holds nothing — a keep without a camera is no keep of anything; it is counted and logged.
+KEEPS = Table("keep", "its camera is kept whole and nothing is copied for it, until it is mended")
+
+
+def declared(vars_, garbled: list | None = None) -> list[Keep]:
+    """Every keep whose row parses. A store that does not answer RAISES, and the caller must let it: "I could not read
+    the keeps" is not "there are none", and a policy that reads it so deletes what it was told to leave. A row that
+    does not parse goes into `garbled`, when the caller gives one, as `whole(...)`."""
     out = []
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
-        items, _ = vars_.get(path)
+        try:
+            items, _ = vars_.get(path)                  # a file store's row that is not even JSON raises in the read itself
+        except (ValueError, TypeError, KeyError) as e:
+            KEEPS.garbled(path, e)
+            continue                                    # no camera to hold: counted, and said in the log
         if items:
-            out.append(Keep.from_items(path[len(f"{SUB}/{TABLE}/"):], items))
+            id_ = path[len(f"{SUB}/{TABLE}/"):]
+            k = KEEPS.read(path, lambda: Keep.from_items(id_, items))
+            if k is not None:
+                out.append(k)
+            elif garbled is not None and str(items.get("cam", "") or ""):
+                garbled.append(whole(id_, items))
     return out
+
+
+def whole(id_: str, items: dict) -> Keep:
+    """A keep nobody can read, as a keep of its camera from the start of time to its end."""
+    return Keep(id_, str(items.get("cam", "")), 0.0, math.inf, "its row does not parse", str(items.get("by", "")), 0.0,
+                tuple(str(r) for r in _names(items.get("recordings"))))
 
 
 def spans_of(keeps: list[Keep], recording: str, cam: str = "") -> list[tuple[float, float]]:

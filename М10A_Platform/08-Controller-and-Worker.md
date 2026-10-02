@@ -179,48 +179,74 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 **Строка назначения, которая не разбирается, — беда одного воркера.** В строке одно число, `rev`, и первая версия разбирала его голым `int`. `rev` со словом вместо числа (правка руками, оборванная запись) бросал `ValueError` из `assignments()` — а на нём стоит весь проход контроллера: сверка назначений со строками размещения, каждый перенос, `/where`. Одна строка одного воркера, и ни одна единица подсистемы не размещалась; сам воркер падал на ней каждый проход (шестое ревью, найдено при обходе соседей битой строки слота). Теперь строку читает `read_assignment`:
 
 ```python
+ASSIGNMENTS = Table("assignment", "read for the units it names")
+ASSIGNMENTS_GARBLED, _garbled_assignments = ASSIGNMENTS.counts, ASSIGNMENTS.bad
+
+
 def read_assignment(key: str, worker: str, items) -> "Assignment":
     """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
-    try:
-        a = Assignment.from_items(worker, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        ASSIGNMENTS_GARBLED[sub] = ASSIGNMENTS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_assignments:
-            _garbled_assignments.add(key)
-            log.error("%s: the assignment row does not parse (%r); read for the units it names", key, items)
-        return Assignment(worker, [u for u in str(items.get("units", "")).split(",") if u])
-    _garbled_assignments.discard(key)
-    return a
+    return ASSIGNMENTS.read(key, lambda: Assignment.from_items(worker, items),
+                            Assignment(worker, [u for u in str((items or {}).get("units", "")).split(",") if u]))
 ```
+
+`Table` — общий читатель строк платформы (`w2cplatform/rows.py`), о нём в конце шага.
 
 То, что строка **решает**, — список `units`, а список имён не может не разобраться. Он читается как есть, с `rev 0`; строка считается (`assignments_garbled` в отчёте прохода и в heartbeat'е воркера) и один раз попадает в лог. Следующая запись контроллера в эту строку пишет её целиком, и `rev` начинается заново — это ничего не стоит: ревизию публикуют, но нигде не сравнивают между записями. Тесты: `test_garbled_rows.py::test_a_garbled_assignment_row_is_that_workers_trouble_and_the_pass_goes_on`, `test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names`; каталог М11 читает те же строки тем же `read_assignment`.
 
-**Тот же вопрос — каждой строке, которую читают контроллер и воркер.** Битая эпоха, потом битый слот, потом битое назначение: три прохода ревью находили одно и то же в новом месте. Поэтому вот все строки хранилища, которые платформа разбирает, и что происходит, когда строка не разбирается. Правило одно: что строка ещё говорит — используется; строка считается и один раз попадает в лог; проход идёт дальше; и ничто не читается как «нет» только потому, что не разобралось.
+**Тот же вопрос — каждой строке хранилища, кто бы её ни читал.** Битая эпоха, потом битый слот, потом битое назначение. Шестое ревью закрыло строки контроллера и воркера, а седьмое нашло тот же отказ в строках, которых таблица не перечисляла: тома, метки удержания, заявки, `platform/space`, `<подсистема>/next_id`, числа heartbeat'ов в `/metrics` и в циклах консоли, срезы в М12. Хуже всего вышло с томами: одна строка тома гасила пульс всех регистраторов кластера (седьмое ревью, часть 2, блокер 1). Эта таблица составлена заново — не по памяти, а обходом кода. Перебраны все места в `w2cplatform`, `vms`, кластере М11 и домене М12, где к прочитанному из `vars` или `objects` применяется `from_items`, `int`, `float`, `json.loads` или обязательный ключ: 238 мест. Правило одно: что строка ещё говорит — используется; строка считается и один раз попадает в лог; проход идёт дальше; и ничто не читается как «нет» только потому, что не разобралось.
 
-| Строка | Кто читает | Не разбирается — что происходит | Тест |
+**Один читатель на все таблицы** — `w2cplatform/rows.py`. Таблица — это `Table(имя, что значит не прочитать)`. `read(key, parse, default)` вызывает `parse()`. Если разбор бросает `ValueError` (это и `JSONDecodeError`), `TypeError`, `KeyError`, `AttributeError` или `OverflowError`, строка считается испорченной. Тогда возвращается `default`, строка считается **один раз**, пока снова не станет читаться (`counts`, по подсистеме — первому сегменту ключа), и один раз попадает в лог, а её ключ лежит в `bad` для того, кто называет её на странице. Раньше три читателя считали чтения, а не строки: одна строка, прочитанная на каждом проходе, выглядела тысячей строк (седьмое ревью, minor про `SLOTS_GARBLED`, `ASSIGNMENTS_GARBLED` и `HOLDS_GARBLED`). Что значит `default`, решает вызывающий: «не кандидат», «последняя прочитанная», «камера удержана целиком», «настройки, прочитанные последними». Числа в строках и в heartbeat'ах читает `rows.number` через таблицу `field`, и слово, `nan` и `inf` там — «не сказано». Счёт каждой таблицы уходит в heartbeat воркера (`<имя>s_garbled`), а на `/metrics` консоли — как `<подсистема>_worker_<имя>s_garbled{worker}` и `<подсистема>_console_rows_garbled{table}`.
+
+| Строка или объект | Кто читает | Не разбирается — что теперь | Тест |
 |---|---|---|---|
-| слот `<подсистема>/slots/<имя>` | захват (`_claim_slot`) | не кандидат; считается (`slots_garbled`) | `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` |
-| слот | своя строка: продление, уход (`_own_slot`) | читается как записанная последней; продление пишет её целиком | `test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names` |
-| слот | контроллер: `slots()` | пропускается | там же |
-| слот | оператор: `retire` | бросал `ValueError` → пишется целиком: отпущен, ничей | `test_garbled_rows.py::test_retiring_a_slot_whose_row_is_garbled_writes_it_released` |
-| назначение `<подсистема>/workers/<имя>` | контроллер, воркер, каталог М11 | обрывал проход всех → читается список единиц, `rev 0` | два теста выше |
-| эпоха `<подсистема>/epoch/<единица>` | выдача (`next_epoch`), семь вызовов `take_epoch` | отказ одной единицы или одной команды (урок 6; М10B, урок 4) | `test_epoch_refused.py` |
-| эпоха | продление аренды (`Lease.renew`) | эта аренда отсечена (урок 6, шаг 8) | `test_garbled_rows.py::test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone` |
-| эпоха | консоль: `epochs`, `epochs_of` | события этой единицы не помечаются отсечёнными | `test_lesson10_events.py::test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_only_its_own` |
-| heartbeat (объект) | `workers_seen`, `builds`, `resources_seen` | пропускается, считается (`parse_heartbeat`) | `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs` |
-| числа внутри heartbeat'а | `capacity_of`, `headroom`, `failover_seconds` | `capacity_of` ронял размещение каждой единицы → «не сказал»: ёмкость по умолчанию | `test_garbled_rows.py::test_a_heartbeat_whose_numbers_are_words_is_that_workers_trouble` |
+| слот `<подсистема>/slots/<имя>` | захват (`_claim_slot`), контроллер (`slots()`) | не кандидат; считается (`SLOTS`, `slots_garbled`) | `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` |
+| слот | своя строка: продление, уход (`_own_slot`) | читается как записанная последней; продление пишет её целиком | `test_slot_fence.py::test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names` |
+| слот | оператор: `retire` | пишется целиком: отпущен, ничей | `test_garbled_rows.py::test_retiring_a_slot_whose_row_is_garbled_writes_it_released` |
+| назначение `<подсистема>/workers/<имя>`: `rev` | контроллер, воркер, каталог М11 (`read_assignment`) | читается список единиц, `rev 0`; одна строка — один счёт | `test_garbled_rows.py::test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names` |
+| назначение: имя, которое не id | `SpecController.redistribute` | это имя пропускается и считается; остальные единицы уходящего слота переезжают (обрывало весь шаг) | `test_row_reader.py::test_a_name_in_an_assignment_that_is_no_units_id_stops_no_move` |
+| холд `<подсистема>/holds/<место>` | захват места, страница томов (`read_hold`, `volumes.holders`) | не кандидат; назван на странице; файл, который даже не JSON, — тоже | `test_volumes.py::test_one_garbled_hold_row_is_that_volumes_trouble_and_nobody_elses` |
+| эпоха `<подсистема>/epoch/<единица>` | `next_epoch`, вызовы `take_epoch`, `Lease.renew`, консоль | отказ одной единицы или команды; эта аренда отсечена; события не помечаются отсечёнными | `test_epoch_refused.py`, `test_garbled_rows.py::test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone` |
+| heartbeat (объект) | `workers_seen`, `builds`, `heartbeats`, `resources_seen` (`parse_heartbeat`) | пропускается, считается; статус, в котором не объекты, — тоже (раньше `AttributeError` у каждого, кто спрашивает `.get`) | `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs`, `test_row_reader.py::test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader` |
+| элемент статуса без `id` | `read_model` (список консоли, уборщик задач, просьбы о кадрах), метрики регистраторов | ничего не говорит о единице, пропускается | там же |
+| числа внутри heartbeat'а | `capacity_of`, `headroom`, `failover_seconds` (`_number`) | «не сказал»: ёмкость по умолчанию | `test_garbled_rows.py::test_a_heartbeat_whose_numbers_are_words_is_that_workers_trouble` |
+| числа heartbeat'ов и отчёта прохода на `/metrics` | `SpecConsole.metrics_text`, `rec_metrics`, `vms_metrics`, `auto_metrics` (`rows.number`, `_histogram`) | «не сказано»: 0 или -1 для возраста; гистограмма, где не числа, не выводится; страница целая и вся из чисел | `test_row_reader.py::test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page` |
+| числа heartbeat'ов в циклах консоли: `closed`, `hits`, `to`/`covered`/`events`, `from`/`to` | `jobs.scan_what_arrived`, `keep_what_fired`, `reap`, `ask_for_footage` | этот отрезок или эта задача пропускается, считается; остальные идут | `test_row_reader.py::test_one_word_in_a_recorders_closed_spans_stops_no_scan_and_no_keep` |
+| `writer`, `refused`, `archive_quota` в heartbeat регистратора | страница томов (`_writing`, `_refusing`, `suggest`), `as_held` | этот регистратор «не сказал»; страница целая | `test_row_reader.py::test_a_status_entry_that_is_not_an_object_or_names_no_unit_stops_no_reader` |
+| heartbeat ресурса без `url` | `Resource.mirror`, `restore` | такой сосед не берёт и не отдаёт; `restore` при старте ещё и в своём `try` (процесс падал на каждом старте) | `test_row_reader.py::test_a_resource_comes_up_over_a_peer_whose_heartbeat_names_no_address` |
 | схема `platform/schema` | `check_schema` | работающий держит последнюю прочитанную; новый не стартует (урок 17) | `test_lesson1_platform.py::test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_starts_nobody_new` |
-| вывод сервера `platform/drain` | `draining` | чисел в строке нет: `server` — имя | — |
-| размещение `<подсистема>/placement/<единица>` | `placement()` и всё, что на нём стоит | ронял проход → читается `worker`; `at` и `rev` — нули (урок 10) | `test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass` |
+| размещение `<подсистема>/placement/<единица>` | `placement()` и всё, что на нём стоит | читается `worker`; `at` и `rev` — нули (урок 10) | `test_garbled_rows.py::test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass` |
 | строка единицы | контроллер: `units()`, `_parsed` | пропускается, считается (урок 10) | `test_placement_decides.py::test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each` |
-| строка единицы | воркеры: цикл по своим единицам | ронял проход воркера → единица пропускается (`row_garbled`), остальные идут | `test_the_holder_goes_on_with_the_row_it_read_last_and_runs_the_rest` и три соседних |
-| отчёт прохода (объект) | `pass_report` | ронял цикл контроллера → `None`, проход пишет его заново | `test_a_garbled_pass_report_does_not_stop_the_controllers_loop` |
-| срез снимка (объект) | `snapshot_age` | ронял `/metrics` → возраст «старше некуда» (урок 19) | `test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh` |
-| список сборки блобов `<подсистема>/sweep` | `put_blob`, `sweep_blobs` | ронял каждую загрузку блоба → списка нет; ничего не удаляется по его слову (урок 20) | `test_a_garbled_sweep_list_stops_no_upload_and_deletes_nothing_on_its_word` |
-| срок хранения `<подсистема>/retention[/<единица>]` | ресурс: `retain` | ронял хранение всех единиц → эта единица не метётся (урок 14) | `test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_are_swept` |
+| строка единицы | воркеры: цикл по своим единицам (`row_garbled`) | единица идёт по строке, прочитанной последней; остальные идут | `test_garbled_rows.py::test_the_holder_goes_on_with_the_row_it_read_last_and_runs_the_rest` и три соседних |
+| счётчик `<подсистема>/next_id` | `SpecController._next_id` | следующий номер — за наибольшим id, удалённые тоже; строка пишется целиком (отказывал в создании любой единицы) | `test_row_reader.py::test_a_garbled_id_counter_gives_the_next_number_past_the_largest_id` |
+| отчёт прохода (объект) | `pass_report` | `None`, проход пишет его заново | `test_garbled_rows.py::test_a_garbled_pass_report_does_not_stop_the_controllers_loop` |
+| срез снимка (объект) | `snapshot_age` | возраст «старше некуда» (урок 19) | `test_garbled_rows.py::test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh` |
+| список сборки блобов `<подсистема>/sweep` | `put_blob`, `sweep_blobs`, `/metrics` | списка нет, по его слову ничего не удаляется; элемент, который не digest, не метётся (`blob_key` ронял каждую сборку) | `test_garbled_rows.py::test_a_garbled_sweep_list_stops_no_upload_and_deletes_nothing_on_its_word`, `test_row_reader.py::test_a_sweep_list_entry_that_is_no_digest_stops_no_reclaiming` |
+| ключ идемпотентности `<подсистема>/idem/*`: `at` | `IdempotencyKeys.prune` | возраст неизвестен — строка остаётся, считается; остальные чистятся (обрывало чистку и POST, который её запустил) | — |
+| срок хранения `<подсистема>/retention[/<единица>]` | ресурс: `retain` | эта единица не метётся (урок 14) | `test_garbled_rows.py::test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_are_swept` |
+| ватерлиния `platform/space` | `Resource.relieve` (`space_settings`) | число — из прочитанного последним или умолчание; сказано в heartbeat ресурса (`space_garbled`) | `test_row_reader.py::test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so` |
+| зеркало `platform/mirror`: `copies` | `Resource.mirror` | одна копия | `test_row_reader.py::test_a_mirror_whose_copies_do_not_parse_mirrors_to_one_peer` |
+| том `rec/volumes/<имя>` | регистратор (`volume_pass`, `_declared`), карта камеры, страница томов, скан (`volumes.declared`, `read_volume`) | пропускается, считается (`volumes_garbled`), назван на странице; том, который регистратор держит, — по строке, прочитанной последней; запись на такой том — отказ; консоль такую строку не пишет | `test_row_reader.py::test_one_garbled_volume_row_stops_no_recorder_and_is_named_on_the_volumes_page` и три следующих |
+| метка удержания `rec/keeps/<id>` | ресурс (`kept_buckets`), регистратор `incidents` (`keep_pass`), двери (`_kept_of`), консоль | камера метки удержана целиком, остальные метутся; не копируется, скопированное помнится; считается (`keeps_garbled`) | `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept` |
+| заявка `rec/requests/*`, `det/requests/*`: `valid_until`, `minutes`, `at`, `before`, `after` | консоль: `record_on_request`, `detect_on_request` | отказ этой заявке: считается (`request`), снимается; запуск и снятие по сроку — в разных `try` | `test_row_reader.py::test_one_garbled_request_row_is_refused_alone_and_the_recordings_are_started_and_ended`, `test_a_detector_request_whose_numbers_are_words_is_refused_and_not_tried_for_ever`, `test_the_console_loop_ends_timed_recordings_when_starting_them_fails` |
+| заявка `vms/requests/*`: `valid_until` | держатель (`requests`), консоль (`POST /requests`) | отказ этой команде; `nan` и `inf` — тоже отказ (раньше команда без срока) | `test_row_reader.py::test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_the_console` |
+| `until` строки записи или детектора | `jobs.expire`, `_detect`, `record_on_request` | конца нет, считается; остальные кончаются | `test_row_reader.py::test_one_garbled_request_row_is_refused_alone_and_the_recordings_are_started_and_ended` |
+| книга основных `domain/primaries`, отметка `domain/seen` | регистратор (`carried_primary`) | книге никто не ручается — резерв пишет (обрывало сверку регистратора) | `test_row_reader.py::test_a_book_of_primaries_nobody_can_read_makes_the_backup_record` |
+| покрытие источника в heartbeat держателя | регистратор (`gaps`), скан (`device_has`), обзор (`device`) | «не сказано»: из него ничего не берётся; остальные записи и задачи идут | `test_row_reader.py::test_a_devices_counts_and_a_holders_coverage_that_are_words_are_that_devices_and_that_cameras` |
+| описание устройства `vms/devices/*` | `parse_device_row`: каталог сценариев, вычислитель | счётчик, который не число, — 0 | там же |
+| `cam` задачи скана (`ref:…`) | скан: события задачи | камера пишется как есть | там же |
+| эпоха в статусе держателя | шлюз (`rtp_source`) | 0 для этой камеры, остальные идут | — |
+| объекты члена домена: срезы, heartbeat'ы, отметки, страницы, копии строк (М12) | `federation.published`, `ReadView.refresh`/`rows`/`_try`, `uplink`, `crossing`, `members` | пропускается, считается (`member_object`); порванный срез делает копию кластера старейшей; член, чтение которого бросило, — как не ответивший в этот проход; список членов, который не разбирается, — «не написан» и не перезаписывается | `test_lesson3_readview_api_gateway.py::test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directory` |
 
-Что оставлено как есть, потому что беда не выходит за свою строку. `set_schema` на битой строке схемы бросает исключение оператору: поднять версию поверх строки, которую не прочитать, значит не знать, не понижаешь ли. Счётчик `next_id` со словом вместо числа отказывает в создании новой единицы — выдать номер поверх него значило бы, возможно, повторить номер. Ручки ресурса (`platform/space`, `platform/mirror`) роняют только свою часть прохода, и она названа в `errors`. Строки холдов (`<подсистема>/holds/<место>`) читаются пока голо — это отдельная находка про сетевой том (М10B, урок 10).
+**Что остаётся открытым — сказано по месту.** Обход нашёл ещё места, где одна строка останавливает больше себя, и в этом проходе они не закрыты:
+- ворота `/events` консоли (`SpecConsole.dispatch`, `may_see`): строка единицы, которая не разбирается, — 400 на всю ленту для того, кого проверяют воротами;
+- М12: читатели доверия кластера (`KeySet.from_items`, `RevocationList.from_items`, `grants_from_items` в `access.py`, `grants.py`, консоль домена) — каждый запрос с проверкой;
+- проход агента (`agent.py`, `pending.py`, `term.py`, `shared.py`, `chain.say_seen`);
+- шаги `Books.pass_once` (`chain.publish_upstream`, `ingest.publish_asks`, `shared.published`, `scenario.misfit`, `topology.read`);
+- публикация пользователей (`identity.users`);
+- старт signer (`signer.py`, `signer_service.py`).
+Это остаток для следующего прохода.
+
+Только свою строку или свой запрос останавливают, громко, с ошибкой этому запросу: `Mount.schema_route` (`GET /schema`), правка и удаление строки, которая не разбирается (`create`, `update`, `delete`, `put_blob` консоли, `DetJobController.update`, `AutoController.update`), `IdempotencyKeys.claim` повторённого запроса, `/timeline/<камера>` (`device_spans`), `/whep/<камера>`, `domain_view`. И остаются осознанные отказы: `set_schema` на битой строке схемы бросает исключение оператору — поднять версию поверх строки, которую не прочитать, значит не знать, не понижаешь ли.
 
 ## Шаг 6 — Чтение слотов и назначений
 

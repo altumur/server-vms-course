@@ -1274,9 +1274,17 @@ class CardRecorder(RecWorker):
     # — but only THIS camera's card, and opening it is a directory, not a daemon. A card that will not open costs the
     # recorder its capacity (not a place to put a recording), is said in `volume_error`, and is tried again every
     # `CARD_RETRY`: a card is often mounted after the camera's process starts, or put in later.
+    #
+    # A volume row that does not parse — this card's or anybody's — is skipped by the one reader of rows, counted and
+    # named (`volumes.declared`; the review's seventh pass, blocker 1: it raised out of here and out of the lease step).
+    # This card's own row garbled is not the card taken away: it is kept by the row read last (`_card_last`).
     def volume_pass(self) -> str:
-        rows = {v.name: v for v in volumes.declared(self.vars)
+        unread: set = set()
+        rows = {v.name: v for v in volumes.declared(self.vars, unread)
                 if v.kind == "edge" and v.enabled and v.server == self.server}
+        last = getattr(self, "_card_last", None)
+        if self.hold in unread and last is not None and last.name == self.hold:
+            rows[self.hold] = last
         held = self.hold
         if held is not None and (held not in rows or not self.renew_hold()):
             self.leave_volume(f"card {held} is not this camera's any more")
@@ -1285,7 +1293,7 @@ class CardRecorder(RecWorker):
                 self.volume, self.capacity = "", 0
                 self.volume_error = "" if rows else "no card is declared for this camera"
                 return self.volume
-        vol = rows[self.hold]
+        vol = self._card_last = rows[self.hold]
         self.card_cam = vol.cam
         self._card_failing(vol)
         if self.card is None and self.clock() >= self._card_retry_at:

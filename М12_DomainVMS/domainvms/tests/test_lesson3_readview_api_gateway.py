@@ -380,3 +380,46 @@ def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_whe
     wall.advance(120)                                         # the domain's pass stopped
     st, d = domain_view(north.objects, wall())
     assert d["silent"] and d["age"] == 120
+
+
+def test_one_torn_object_of_one_cluster_freezes_neither_the_view_nor_the_directory():
+    """М10's seventh review, part 2, reproduced: a snapshot shard or a heartbeat that does not parse raised
+    `JSONDecodeError` out of the read view's pass — every cluster's time froze, `/api/cameras` and
+    `DomainDirectory.where` failed — and the console's loop swallowed it with `except Exception: pass`. The torn object
+    is that object's: skipped and counted once (`federation.MEMBER_OBJECTS`); a shard nobody can read makes its
+    cluster's copy as old as can be; the cluster's other workers, and the other cluster, are read; a status entry whose
+    numbers are words is that entry's; and a step of the console's loop that raises is said in the log, once."""
+    import logging
+    from domain.federation import MEMBER_OBJECTS
+    wall = Clock(10_000.0); fed, links = _four_workers(wall)
+    north, south = fed.clusters["north"], fed.clusters["south"]
+    snapshot(south, {151: ("w-0", "srv-9")}, ts=wall())
+    snapshot(north, {7: ("w-0", "srv-1")}, ts=wall())
+    north.objects.put("vms/snapshot/w-9", b'{"ts": 9999, "cameras": [')             # half a write
+    north.objects.put("vms/heartbeats/w-1", b'{"worker": "w-1", "ts": ')
+    south.objects.put("vms/heartbeats/w-5", json.dumps({"worker": "w-5", "ts": wall(), "server": "srv-9",
+                                                        "status": [{"id": "x", "revision": "two"}]}).encode())
+    before = MEMBER_OBJECTS.counts.get("north", 0)
+    view = ReadView(fed, lost_after=45, wall=wall)
+    for _ in range(2):
+        wall.advance(5); view.refresh()
+    page = view.list(size=500)
+    assert page["complete"] and view.passes == 2
+    assert {r["worker"] for r in page["rows"] if r["cluster"] == "north"} == {"w-0", "w-2"}       # the torn one alone is gone
+    assert view.list(cluster="south")["total"] == 50                                             # the entry of words: that entry's
+    assert MEMBER_OBJECTS.counts.get("north", 0) == before + 2                                   # once each, not once per pass
+    d = DomainDirectory(fed, wall=wall)
+    assert d.where("151").cluster == "south" and d.ages()["north"] == wall()                     # the copy says it is broken
+
+    console, ran, said = Console(d, view, None), [], []
+
+    class Catch(logging.Handler):
+        def emit(self, record):
+            said.append(record.getMessage())
+    h = Catch(); logging.getLogger("domain.console").addHandler(h)
+    try:
+        for _ in range(2):
+            console._steps(("a broken step", lambda: json.loads("{")), ("the next step", lambda: ran.append(1)))
+    finally:
+        logging.getLogger("domain.console").removeHandler(h)
+    assert ran == [1, 1] and len([m for m in said if "a broken step failed" in m]) == 1 and console.refresh_failures == 2
