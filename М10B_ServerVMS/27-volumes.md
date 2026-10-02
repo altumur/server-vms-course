@@ -378,9 +378,16 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     wrong   only a person changes it: a path that is not a volume, no permission, a bucket that refuses the key.
             The volume is handed back
     away    a timeout, a network that is down, the daemon itself gone. Kept: it is back in a minute, and handing
-            it back would reshuffle every recording on it for a link that returns
+            it back would reshuffle every recording on it for a link that returns. `SESSION_LOST` is away too —
+            and more: every handle is dead, and the volume is mounted again (`Archive.lost`)
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out
+
+    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
+    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
+    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
+    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
+    since when, and the operator decides — stops the recorder or takes the volume from it.
 ```
 
 `classify` раскладывает статусы движка: `PERMISSION_DENIED`, `NOT_A_VOLUME`, `READ_ONLY` и ещё пять — `wrong`; `ALREADY_LOCKED` — `busy`; молчание демона (`Unavailable`) и всё прочее — `away`.
@@ -418,7 +425,7 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 
 **`busy` под своим же владельцем — не всегда «пройдёт само».** Если демон называет в `ALREADY_LOCKED` нашего владельца `rec:<том>`, писатель не отсоединён и не запаркован нами, и так дольше `OWN_LOCK_FOR` (10 с), это сирота нашей же сессии: монтирование, ответ на который потерялся. Регистратор оставляет сессию, и новая подхватывает писателя (пятое ревью, блокер 2; урок 6, шаг 4).
 
-**Сетевой том в `away`/`busy` держат без срока — это решение, и у него есть цена.** Пятое ревью спросило, почему том не уходит на другой хост, когда `obsd` этого хоста сломан надолго. Отдать его из-за молчащего демона значит перетасовать все записи тома ради демона, которого перезапускают за минуту, а следующему держателю, может быть, придётся восстанавливать том с нашим живым писателем внутри. Цена: пока демон этого хоста не вернулся, записи тома не пишутся нигде, хотя другая коробка могла бы их взять. Это видно (`archive_failure`, `archive_away_since`), а снимает регистратор с тома человек. Холд за висящий на молчащем демоне шаг подменщик не продлевает (урок 10, шаг 10).
+**Сетевой том в `away`/`busy` держат без срока — это решение, и у него есть цена.** Пятое ревью спросило, почему том не уходит на другой хост, когда `obsd` этого хоста сломан надолго. Отдать его из-за молчащего демона значит перетасовать все записи тома ради демона, которого перезапускают за минуту (докстрока `ArchiveError`). Цена: пока демон этого хоста не вернулся, записи тома не пишутся нигде, хотя другая коробка могла бы их взять. Это видно (`archive_failure`, `archive_away_since`), а снимает регистратор с тома человек. Холд за висящий на молчащем демоне шаг подменщик не продлевает (урок 10, шаг 10).
 
 ### Молчащий демон не останавливает жизнь регистратора
 

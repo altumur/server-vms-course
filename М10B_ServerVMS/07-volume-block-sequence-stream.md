@@ -187,9 +187,16 @@ class ArchiveError(Exception):
     wrong   only a person changes it: a path that is not a volume, no permission, a bucket that refuses the key.
             The volume is handed back
     away    a timeout, a network that is down, the daemon itself gone. Kept: it is back in a minute, and handing
-            it back would reshuffle every recording on it for a link that returns
+            it back would reshuffle every recording on it for a link that returns. `SESSION_LOST` is away too —
+            and more: every handle is dead, and the volume is mounted again (`Archive.lost`)
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
-            not let go yet, or one whose grace the daemon is still waiting out"""
+            not let go yet, or one whose grace the daemon is still waiting out
+
+    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
+    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
+    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
+    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
+    since when, and the operator decides — stops the recorder or takes the volume from it."""
 ```
 
 Вид нужен потому, что ответы противоположны. Неверный том регистратор отдаёт: писать туда некому, пока человек не исправит. Недоступный том регистратор держит: связь вернётся через минуту, а отдача тома перетасовала бы все записи на нём. Занятый том тоже держит: писатель вот-вот освободится или вернётся к своему владельцу.
@@ -240,21 +247,27 @@ def classify(e: Exception) -> ArchiveError:
         try:
             vol = self._open_volume()
             if not vol.exists():
+                if not self.quota and self.share is not None:
+                    self.quota = self.share(self.space_where())
                 if not self.quota:
                     raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
-                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name)
+                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name,
+                           lock_refresh=self.lock_refresh)
                 self.formatted = True
+            else:
+                self.quota = self.size() or self.quota
             if write and self.writer is None:
-                self.writer = vol.mount_rw(self.owner)
+                self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
+                self._configure()
         except (ObsdError, ValueError) as e:
-            raise classify(e) from None
+            raise self._classified(e) from None
         return self
 ```
 
 **Открытие — единственная честная проверка.** Строка тома может назвать что угодно. Пока демон не открыл том, ничего о нём не известно.
 
-**Нового тома нет — его форматируют по квоте.** Квота — размер кольца, и задать его можно только сейчас. Нет квоты — нечем форматировать, и это `wrong`: исправит только человек. Блок и размер чтения берутся из `BLOCK, READ = 8 << 20, 1 << 20` — блок должен вмещать размер чтения плюс одну группу кадров (урок 6, шаг 10).
+**Нового тома нет — его форматируют по квоте.** Квота — размер кольца, и задать его можно только сейчас. Нет квоты — нечем форматировать, и это `wrong`: исправит только человек. Блок и размер чтения берутся из `BLOCK, READ = 8 << 20, 1 << 20` — блок должен вмещать размер чтения плюс одну группу кадров (урок 6, шаг 10). Собственный том сервера без объявления квоты не имеет: его размер — доля диска, которую называет демон (`share(space_where())`, четвёртое ревью; урок 10). У тома, который уже есть, размер берётся у демона (`size()`), а не из строки. Монтирует писателя `_mount_rw`: перед ним спрашивается холд, а `VOLUME_UNCLEAN` восстанавливается только под подтверждённым холдом (урок 10, шаг 11). После монтирования `_configure` задаёт периоды сброса (шаг 9).
 
 **Писатель монтируется под владельцем.** Регистратор передаёт `rec:<том>`, и докстрока класса объясняет зачем:
 

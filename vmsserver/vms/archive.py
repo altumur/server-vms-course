@@ -183,7 +183,13 @@ class ArchiveError(Exception):
             it back would reshuffle every recording on it for a link that returns. `SESSION_LOST` is away too —
             and more: every handle is dead, and the volume is mounted again (`Archive.lost`)
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
-            not let go yet, or one whose grace the daemon is still waiting out"""
+            not let go yet, or one whose grace the daemon is still waiting out
+
+    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
+    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
+    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
+    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
+    since when, and the operator decides — stops the recorder or takes the volume from it."""
 
     def __init__(self, kind: str, detail: str, name: str = ""):
         self.kind, self.detail, self.name = kind, detail, name    # `name`: the engine's status, or UNAVAILABLE

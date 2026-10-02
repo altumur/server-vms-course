@@ -86,20 +86,24 @@
 Из последнего пункта следует первое решение: **каждый вопрос задаётся свежему читателю**.
 
 ```python
-    def reader(self):
-        if self._reader is not None:
+    @contextmanager
+    def reading(self):
+        try:
+            r = self._open_volume().mount_ro()
+        except (ObsdError, ValueError) as e:
+            raise self._classified(e) from None
+        try:
+            yield r
+        except ObsdError as e:
+            raise self._classified(e) from None
+        finally:
             try:
-                self._reader.close()
+                r.close()
             except ObsdError:
                 pass
-        try:
-            self._reader = self._open_volume().mount_ro()
-        except ObsdError as e:
-            raise classify(e) from None
-        return self._reader
 ```
 
-Держать одного читателя долго было бы дешевле. Но такой читатель застыл бы в моменте своего монтирования, и таймлайн через час показывал бы часовой давности картинку.
+Держать одного читателя долго было бы дешевле. Но такой читатель застыл бы в моменте своего монтирования, и таймлайн через час показывал бы часовой давности картинку. И читатель у каждого вопроса свой, а закрывается он в `finally`: общий читатель, которого закрывал следующий вопрос, обрывал дверь посреди ответа (третье ревью, блокер 5; урок 7, шаг 9). Вызывающий пишет `with store.reading() as r:`.
 
 Второе решение — `seal`, для случаев, когда только что записанное нужно увидеть сейчас:
 

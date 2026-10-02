@@ -714,7 +714,13 @@ class ArchiveError(Exception):
             it back would reshuffle every recording on it for a link that returns. `SESSION_LOST` is away too —
             and more: every handle is dead, and the volume is mounted again (`Archive.lost`)
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
-            not let go yet, or one whose grace the daemon is still waiting out"""
+            not let go yet, or one whose grace the daemon is still waiting out
+
+    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
+    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
+    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
+    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
+    since when, and the operator decides — stops the recorder or takes the volume from it."""
 
 
 WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY", "PATH_NOT_EMPTY",
@@ -731,7 +737,7 @@ WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY",
 - **`away`** — том остаётся за регистратором, с полной ёмкостью; heartbeat говорит `archive_error` и с какого момента (`archive_away_since`); следующий проход пробует снова (`test_an_archive_that_is_away_at_open_is_kept`);
 - **`busy`** — то же, что `away`: писателя держит предыдущий регистратор этого тома, и он вот-вот его отпустит. Но heartbeat называет его своим словом, `archive_failure: busy`, а не `away`: «демона нет» и «том держит другой писатель» лечатся по-разному, и оператор должен видеть, какой из двух случаев перед ним.
 
-**`away` и `busy` у сетевого тома — без срока, и это решение.** Пятое ревью спросило: если `obsd` одного хоста сломан надолго, регистратор держит сетевой том в `away`/`busy` сколько угодно, и том не уходит на другой хост — так задумано? Да. Холд регистратор продлевает, пока хранилище ему отвечает, и сам его не отдаёт из-за молчащего демона. Причина та же, что у таблицы выше: демон, перезапущенный за минуту, — обычное дело, а отдать том значит перетасовать все записи на нём, и следующему держателю пришлось бы восстанавливать том, в котором, может быть, ещё живёт наш писатель. Цена тоже названа: пока демон этого хоста не вернулся, записи тома не пишутся нигде, хотя другой хост мог бы их взять. Heartbeat это говорит — `archive_failure: away` и `archive_away_since`, — а решает человек: остановить регистратор или снять его с тома. Подменщик, правда, такой холд за висящий шаг не продлевает (шаг 10).
+**`away` и `busy` у сетевого тома — без срока, и это решение.** Пятое ревью спросило: если `obsd` одного хоста сломан надолго, регистратор держит сетевой том в `away`/`busy` сколько угодно, и том не уходит на другой хост — так задумано? Да, и это записано в докстроке `ArchiveError` (выше). Холд регистратор продлевает, пока хранилище ему отвечает, и сам его не отдаёт из-за молчащего демона. Причина та же, что у таблицы выше: демон, перезапущенный за минуту, — обычное дело, а отдать том значит перетасовать все записи на нём. Цена тоже названа: пока демон этого хоста не вернулся, записи тома не пишутся нигде, хотя другой хост мог бы их взять. Heartbeat это говорит — `archive_failure: away` и `archive_away_since`, — а решает человек: остановить регистратор или снять его с тома. Подменщик, правда, такой холд за висящий шаг не продлевает (шаг 10).
 
 ### Диск на коробке, который не открывается, — неверен
 
