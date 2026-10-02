@@ -92,8 +92,6 @@ root = os.environ.get("PLATFORM_DIR", "/data/platform")
 # not one of those names appears in the loop.
 CONFIG_URL = os.environ.get("CONFIG_URL") or "file://" + os.path.join(root, "config")
 stop = threading.Event()
-for s in (signal.SIGTERM, signal.SIGINT):
-    signal.signal(s, lambda *_: stop.set())
 
 
 # Builds `vmsworker`:
@@ -570,6 +568,10 @@ def resource() -> None:
 
 
 if __name__ == "__main__":
+    # Only when run: a module imported (the tests) must not take the process's signals — a SIGTERM aimed at a daemon a
+    # test started reached the runner, set `stop` and silently skipped the next test's pass (the review's fifth pass).
+    for s in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "controller": controller, "recorder": recorder, "reccontroller": reccontroller, "console": console, "resource": resource,
      "gateway": gateway, "livecontroller": livecontroller, "detworker": detworker, "detcontroller": detcontroller,
      "detjobworker": detjobworker, "detjobcontroller": detjobcontroller,
