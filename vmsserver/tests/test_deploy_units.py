@@ -89,10 +89,71 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
     from w2cplatform.obsd import default_socket
     u = unit("obsd.service")
     assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/obsd/obsd.sock"
-    assert u["Service"]["RuntimeDirectory"] == "obsd vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["RuntimeDirectory"] == "obsd" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["RuntimeDirectoryMode"] == "0750"                              # its group gets in; the daemon's own 0700 would not let it
     env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
     assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
     assert u["Service"]["User"] == "obsd" and env["OBSD_CLIENT_GROUP"] == u["Service"]["Group"]   # its own user; the recorders' group
     import sys
     if sys.platform != "darwin":
-        assert default_socket() == "/run/vms/obsd.sock"                                 # the daemon's own default; the unit says otherwise
+        assert default_socket() == "/run/obsd/obsd.sock"                                # where the unit puts it, not the daemon's own default
+
+
+def _sysusers() -> tuple[set, dict, set]:
+    """`obsd.sysusers` as (users, {group: gid}, {(user, group)})."""
+    users, groups, members = set(), {}, set()
+    for line in open(os.path.join(DEPLOY, "obsd.sysusers")):
+        f = line.split()
+        if not f or f[0].startswith("#"):
+            continue
+        if f[0] == "u":
+            users.add(f[1])
+        elif f[0] == "g":
+            groups[f[1]] = f[2]
+        elif f[0] == "m":
+            members.add((f[1], f[2]))
+    return users, groups, members
+
+
+def _tmpfiles() -> dict:
+    """`vms.tmpfiles` as {path: (type, mode, user, group)}."""
+    out = {}
+    for line in open(os.path.join(DEPLOY, "vms.tmpfiles")):
+        f = line.split()
+        if f and not f[0].startswith("#"):
+            out[f[1]] = (f[0], f[2], f[3], f[4])
+    return out
+
+
+def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_files():
+    """The review's fourth pass, blocker 2. `obsd.service` ran as a user nobody created and owned a volume nobody
+    handed it; /run/vms was made only by that unit, so without the daemon neither the holder nor the recorder started.
+    Every user and group a unit names is in `obsd.sysusers` — the clients' group with the number the recorders join it
+    by — every host directory under /run a container mounts is in `vms.tmpfiles`, the box's own volume is the daemon's,
+    and `install-obsd.sh` installs both files, checks the number and hands an old ring over."""
+    users, groups, members = _sysusers()
+    dirs = _tmpfiles()
+    svc = unit("obsd.service")["Service"]
+    assert svc["User"] in users and svc["Group"] in groups and (svc["User"], svc["Group"]) in members
+    rec = unit("recworker@.container")["Container"]
+    assert groups[svc["Group"]] == rec["GroupAdd"]                                       # the number the container joins by
+    for n in os.listdir(DEPLOY):
+        if not n.endswith(".container"):
+            continue
+        vols = unit(n)["Container"].get("Volume", [])
+        for v in vols if isinstance(vols, list) else [vols]:
+            host = v.split(":", 1)[0]
+            if host.startswith("/run/"):
+                assert host in dirs, f"{n} mounts {host}, which nothing makes before it starts"
+    sock_dir = os.path.dirname(svc["ExecStart"].split("--socket", 1)[1].strip())
+    assert dirs[sock_dir] == ("d", svc["RuntimeDirectoryMode"], svc["User"], svc["Group"])   # the same as the unit makes it
+    archive = dict(l.strip().split("=", 1) for l in open(os.path.join(DEPLOY, "vms.env.example"))
+                   if "=" in l and not l.startswith("#"))["ARCHIVE"]
+    own = os.path.join(os.path.dirname(archive), "volume")                                # the box's own volume, beside ARCHIVE
+    assert dirs[own][2:] == (svc["User"], svc["Group"])                                   # the daemon opens it, as itself
+    script = open(os.path.join(DEPLOY, "install-obsd.sh")).read()
+    for needed in ("obsd.sysusers", "systemd-sysusers", "vms.tmpfiles", "systemd-tmpfiles --create",
+                   f'"$GID" != {rec["GroupAdd"]}', f"chown -R {svc['User']}:{svc['Group']}", own,
+                   "obsd.service", "systemctl enable --now obsd.service"):
+        assert needed in script, needed
+    assert os.access(os.path.join(DEPLOY, "install-obsd.sh"), os.X_OK)

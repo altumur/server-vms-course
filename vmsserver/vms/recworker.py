@@ -244,8 +244,10 @@ class RecWorker(VmsWorker):
         self.default_volume = str(self.server or "default")
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
         self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
-        q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
+        # Its size when it is new: `ARCHIVE_QUOTA_BYTES`, or — 0 — a share of the disk it will be on, which the DAEMON
+        # measures when it formats it (`_share_of_space`; the review's fourth pass: measured here, it was the
+        # container's own disk, not the data disk `/data/volume` is on).
+        self.default_quota = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
         self.volume = str(env.get("VOLUME") or self.default_volume)
         self.store: Archive | None = None            # the volume open for writing, if one is
         self.full_capacity = self.capacity           # what it reports while it has a place to record in
@@ -285,6 +287,8 @@ class RecWorker(VmsWorker):
         self._requested: dict[str, float] = {}       # request id -> how far it has been served (`RANGE_CAP` a pass)
         self.default_size = 0                        # the box's own volume's real size, once it was opened
         self.quota_note = ""                         # a smaller quota declared and not applied: said, not done
+        self.shrink_pending = 0                      # …the same, as data: the size declared and waiting for its second word
+        self.resize_error = ""                       # the engine refused the new size: said, and asked again next pass
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew)
         self.running_since: dict = {}               # recording -> when this recorder first saw it running, this time
         # What the engine answered for each recording's samples (`RecSink.tally`): `{recording: {status: n}}` for
@@ -315,7 +319,8 @@ class RecWorker(VmsWorker):
         self.incidents = False                       # is the volume this recorder holds an incidents volume
         self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
         self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
-        self._keeps_read = False                     # `keep_held` restored from the volume's own events (`keep_pass`)
+        self._keeps_read = False                     # `keep_held` restored from the volume and its events (`keep_pass`)
+        self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
         self._keeper: threading.Thread | None = None
         self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
@@ -331,15 +336,18 @@ class RecWorker(VmsWorker):
     # and a ring that filled it past the mark would leave the watermark short for good: nothing of the VMS's
     # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
     # formatted; a volume that exists keeps the size it has.
+    #
+    # Of the disk as the DAEMON sees it — `VOLUME_SPACE` of the volume's directory (`Archive.space_where`), not
+    # `statvfs` here (the review's fourth pass): in the recorder's container the volume's directory is not mounted,
+    # and what was measured was the container's root. Nothing to measure — a bucket, a daemon that cannot see the
+    # path — is no size: the volume is not formatted, and its status says why.
     @staticmethod
-    def _share_of_free(root: str, low: float = 0.75) -> int:
-        try:
-            import shutil
-            os.makedirs(root, exist_ok=True)
-            u = shutil.disk_usage(root)
-        except OSError:
-            return 4 << 30
-        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
+    def _share_of_space(space: dict, low: float = 0.75) -> int:
+        free, total = int(space.get("available") or 0), int(space.get("capacity") or 0)
+        if not total:
+            return 0
+        used = total - int(space.get("free") or free)
+        return max(1 << 30, min(int(free * 0.8), free - (2 << 30), int(total * low) - used))
 
     # -- where a camera's stream is: the VMS heartbeat, never a call to the worker ------------------
     def source(self, cam) -> tuple[str, str] | None:
@@ -788,6 +796,15 @@ class RecWorker(VmsWorker):
                 # operator who declared it shrank a volume of eight terabytes to the one gigabyte offered).
                 "archive_quota": self.default_size or self.default_quota,
                 **({"quota_note": self.quota_note} if self.quota_note else {}),
+                # THE SIZE THE HELD VOLUME HAS, from the daemon, and a smaller one declared and waiting for its second word
+                # (the review's fourth pass): the page showed the declared number as the size and the journal said
+                # `shrunk`, while the ring stayed as it was — an operator who split a disk in two found both rings
+                # full later. `volume_quota` is the ring; `shrink_pending` the declared size until it is applied, and
+                # `resize_error` why the engine refused a new size (asked again every pass); the applied shrink is the
+                # event `archive.volume.shrunk`.
+                **({"volume_quota": self.store.quota} if self.store is not None else {}),
+                **({"shrink_pending": self.shrink_pending} if self.shrink_pending else {}),
+                **({"resize_error": self.resize_error} if self.resize_error else {}),
                 # Empty unless the volume this process holds will not open. Published because the alternative
                 # is the failure that looks like health: a fresh hold, a green console and nothing being
                 # written. Whatever reads it must not count that volume as served.
@@ -813,7 +830,11 @@ class RecWorker(VmsWorker):
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
                 "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
                 # A recorder holding an incidents volume: what each keep holds there (`keep_pass`).
-                **({"keeps": self.keep_state} if self.incidents else {})}
+                **({"keeps": self.keep_state} if self.incidents else {}),
+                # …and what each keep is short of, alone: `{keep: seconds}` — the console's `rec_keep_missing_seconds`
+                # (the review's fourth pass). Empty when every keep is whole.
+                **({"keep_missing": {kid: e["missing"] for kid, e in self.keep_state.items() if e.get("missing")}}
+                   if self.incidents else {})}
 
     # -- which archive this recorder writes into ------------------------------------------------------
     # Run once a pass, after the slot and the leases. Four outcomes, and the one that matters is the last.
@@ -979,7 +1000,7 @@ class RecWorker(VmsWorker):
             self._apply_quota(vol)
             return None
         if self.store is not None:
-            self._close_store(quiet=True)
+            self._close_store(quiet=True, wait=self.session.timeout)   # on the leases' thread: one call's wait (Т-M1)
         # The volume's secret is sealed to ITS row, `rec/volumes/<name>` (the review's third pass, blocker 3): opened
         # without the row it never opened at all, and the recorder — with no key in its unit either — handed the
         # bucket the ciphertext. And a secret that does not open is THIS volume's failure, not the pass's: the volume
@@ -993,7 +1014,7 @@ class RecWorker(VmsWorker):
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
                         secret=secret, access_key=vol.access_key,
                         sequence_flush_ms=self.sequence_flush_ms, block_flush_s=self.block_flush_s,
-                        confirm=lambda: self._confirm_hold(vol),
+                        confirm=lambda: self._confirm_hold(vol), share=self._share_of_space,
                         **{k: v for k, v in (("block", self.block), ("read", self.read), ("lock_refresh", self.lock_refresh))
                            if v})
         try:
@@ -1041,20 +1062,36 @@ class RecWorker(VmsWorker):
     # recorder's guess, erased terabytes of footage without a question (the review's third pass). So a quota below
     # the size the volume HAS is applied only when the row also carries `shrink_confirmed` equal to it — the
     # operator's second word — and otherwise it is said in the heartbeat (`quota_note`) and the ring keeps its size.
+    #
+    # And what happened is SAID (the review's fourth pass): the console journals the request (`archive.volume.
+    # shrink_requested`), and only the recorder knows when the engine applied it — `archive.volume.shrunk`, with the
+    # size before and after, under the volume's name in this recorder's events. A size the engine refused is
+    # `resize_error` in the heartbeat until a pass gets it through.
     def _apply_quota(self, vol) -> None:
-        self.quota_note = ""
+        self.quota_note, self.shrink_pending = "", 0
         st = self.store
         if st is None or not vol.quota_bytes or vol.quota_bytes == st.quota:
+            self.resize_error = ""
             return
         if vol.quota_bytes < st.quota and vol.shrink_confirmed != vol.quota_bytes:
             self.quota_note = (f"{vol.name} is {st.quota} bytes and declared {vol.quota_bytes}: shrinking it erases the "
                                f"oldest footage, so it is not done until the row says `shrink_confirmed: {vol.quota_bytes}`")
+            self.shrink_pending = vol.quota_bytes
             return
+        was = st.quota
         try:
             st.resize(vol.quota_bytes)           # a new quota is a new size of the ring, without stopping
         except ObsdError as e:
             log.warning("%s: could not resize %s to %d bytes: %s", self.name, vol.name, vol.quota_bytes, e)
+            self.resize_error = f"{vol.name}: {vol.quota_bytes} bytes refused: {e}"
             return
+        self.resize_error = ""
+        if vol.quota_bytes < was:
+            from w2cplatform.events import EventLog
+            EventLog(self.archive_root, REC.name, vol.name, 0).append(
+                self.wall(), "archive.volume.shrunk", durable=True, volume=vol.name, was=was, quota_bytes=vol.quota_bytes)
+            log.warning("%s: %s shrunk from %d to %d bytes: its oldest footage is given up first", self.name, vol.name,
+                        was, vol.quota_bytes)
         if vol.url == self.default_url:
             self.default_size = st.quota
 
@@ -1085,15 +1122,32 @@ class RecWorker(VmsWorker):
             self.archive_error, self.archive_failure = str(e), "wrong"
             self.archive_away_since = self.archive_away_since or self.wall()
 
-    def _close_store(self, quiet: bool = False) -> None:
+    # Closing the store, and what a close that did not happen leaves (the review's fourth pass, blocker 1). The daemon
+    # went silent, the write connection answered `Unavailable` at once for its window, and the remount's
+    # `WRITER_CLOSE` was refused before it reached the daemon: the store forgot the handle, the writer lived on in the
+    # session the readers and the pass kept alive, and every mount after it was `ALREADY_LOCKED` until somebody
+    # restarted the recorder. A writer whose close did not happen is left to the daemon now: the session is abandoned
+    # and a new one takes its place (`Session.successor`) — the daemon detaches the writer after its linger, sequences
+    # finished, and the next mount, under the same owner, picks it up (`reattached`). Busy until then, a pass or two.
+    #
+    # And the close waits `wait` (the review's fourth pass, Т-M1): on the thread that renews the leases a
+    # `WRITER_CLOSE` waited the protocol's thirty seconds and more, past the twenty-five a lease leaves — a slow
+    # flush fenced every recording. That thread waits one call's timeout; a flush longer than that goes on in the
+    # daemon, the session is left behind as above, and the volume is mounted again once the daemon has done.
+    def _close_store(self, quiet: bool = False, wait: float | None = None) -> None:
         if self.store is None:
             return
+        st, let_go = self.store, True
         try:
-            self.store.close()
+            let_go = st.close(wait)
         except Exception as e:                           # noqa: BLE001 — closing a volume that went away says nothing new
             if not quiet:
-                log.warning("%s: closing %s: %s", self.name, self.store.name, e)
+                log.warning("%s: closing %s: %s", self.name, st.name, e)
         self.store = None
+        if not let_go and st.session is self.session:
+            log.warning("%s: the writer of %s did not close (the daemon did not answer): its session is left for the "
+                        "daemon to detach, and a new one picks the writer up", self.name, st.name)
+            self.session = self.session.successor()
 
     # Stop writing into a volume that is no longer ours — the administrator withdrew it, or the hold
     # lapsed and somebody else took it. Every recording of that archive is stopped and released, which is
@@ -1112,8 +1166,10 @@ class RecWorker(VmsWorker):
             self._backfiller.join(timeout=5.0)
         # The writer is closed while the volume is still ours — its flush is what puts the last minutes on the
         # volume — and only then is the hold let go: released first, the next holder would mount a volume with
-        # our writer still in it.
-        self._close_store(quiet=True)
+        # our writer still in it. Waited one call's timeout, on the leases' thread (Т-M1): a flush longer than that
+        # goes on in the daemon, and whoever mounts the volume next finds it busy until it is done — the daemon keeps
+        # one writer per volume, and on another host the engine's own lock holds it.
+        self._close_store(quiet=True, wait=self.session.timeout)
         try:
             self.release_hold()
         except OSError:                              # the store is silent: the hold lapses by itself
@@ -1482,12 +1538,20 @@ class RecWorker(VmsWorker):
             return []
         mine = {str(r["id"]) for r in self.rows}
         done: list[dict] = []
-        for key in self.vars.list(REC.requests_prefix()):
+        keys = sorted(self.vars.list(REC.requests_prefix()))
+        # A request answered is remembered while its ROW stands, and not after — the base worker's rule (`VmsWorker.
+        # requests`), which this override did not keep: `fetched` grew by one id per request for the life of the
+        # process, and a request whose row the console had not reaped yet was fetched again from its start (the
+        # review's fourth pass, Т-m13). The same for how far each one got.
+        present = {k.rsplit("/", 1)[1] for k in keys}
+        self.fetched = [r for r in self.fetched if r in present]
+        self._requested = {r: v for r, v in self._requested.items() if r in present}
+        for key in keys:
             if len(done) >= budget:
                 break
             it, _ = self.vars.get(key)
-            if not it or str(it.get("unit", "")) not in mine:
-                continue                                     # another recorder's recording: not ours to fetch
+            if not it or str(it.get("unit", "")) not in mine or key.rsplit("/", 1)[1] in self.fetched:
+                continue                                     # another recorder's recording, or answered already
             # One family, two kinds of asking. A backfill names a RANGE and this worker fetches it; a
             # `record` names a DURATION and is not a worker's to serve at all — it becomes a row, and rows
             # are the console's. Skipping it here is what keeps the recorder from tripping over a request
@@ -1495,10 +1559,7 @@ class RecWorker(VmsWorker):
             if str(it.get("action", "backfill")) != "backfill":
                 continue
             unit, cam = str(it["unit"]), str(it.get("cam", it["unit"]))
-            srcs = self.sources_of({"id": unit, "cam": cam, "home": next((r.get("home") for r in self.rows if str(r["id"]) == unit), "")})
             rid = key.rsplit("/", 1)[1]
-            if not srcs:
-                continue                                     # nobody holds the device and no backup answers; ask again next pass
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
             t0, t1 = float(it["from"]), float(it["to"])
@@ -1507,9 +1568,25 @@ class RecWorker(VmsWorker):
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
             # `RANGE_CAP` of it a pass, from where the last pass stopped: a request for a day is not a day in one go
             # (blocker 6). Done — reported, and the console removes the row — when the last piece of it is.
+            #
+            # WHERE THE LAST PASS STOPPED survives a restart (the review's fourth pass, Т-B6): it was in memory only, and
+            # a recorder started again read a day's request from its first minute — the hours it had landed fetched
+            # once more, to be dropped group by group as ours already. What landed is in the volume, under this
+            # recording's name: the request goes on from its first moment the volume does not show. Nothing is kept
+            # beside the volume to say it, so nothing can say it wrongly; a stretch the source did not have is asked
+            # for once more after a restart, and found not there again.
             t0 = max(t0, self._requested.get(rid, t0))
             if t1 <= t0:
                 continue
+            t0 = self._served_to(unit, ours, t0, t1)
+            if t0 >= t1:                                     # the volume shows all that was left: nothing to fetch
+                self._requested.pop(rid, None)
+                self.fetched.append(rid)
+                done.append({"unit": unit, "cam": cam, "from": float(it["from"]), "to": t1, "groups": 0, "request": rid})
+                continue
+            srcs = self.sources_of({"id": unit, "cam": cam, "home": next((r.get("home") for r in self.rows if str(r["id"]) == unit), "")})
+            if not srcs:
+                continue                                     # nobody holds the device and no backup answers; ask again next pass
             upto = min(t1, t0 + self.RANGE_CAP)
             # Each source in turn until one serves it. A source that FAILED says nothing about the range — the
             # request stays, for the next pass; reported as fetched, the console would delete what nobody served.
@@ -1528,6 +1605,11 @@ class RecWorker(VmsWorker):
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
+
+    # The first moment of `[t0, t1)` the volume does not show — `t1` when it shows all of it.
+    def _served_to(self, unit: str, ours: list[tuple[float, float]], t0: float, t1: float) -> float:
+        holes = subtract((t0, t1), stitch(ours + self.landing.get(unit, []), self.stitch))
+        return holes[0][0] if holes else t1
 
     # Bounded work, on request — never in the ordinary pass, the way `rebalance(budget)` is bounded
     # (Lesson 13): backfill competes with live for the device's uplink, so it gets a ceiling and an hour.
@@ -1683,7 +1765,14 @@ class RecWorker(VmsWorker):
             except ObsdError as e:                       # the engine refused the group: the next one opens on its key
                 log.warning("%s: %s refused a fetched group at %.0f: %s", self.name, unit, span[0], e.name)
         if kept:
-            store.finish(unit, epoch, backfill=True)
+            # In the `try` too (the review's fourth pass): the engine gone between the last sample and this finish
+            # raised out of `_land`, every request of the pass with it, and what had landed was not counted.
+            try:
+                store.finish(unit, epoch, backfill=True)
+            except Unavailable:
+                self._lost_engine()
+            except ObsdError as e:
+                log.warning("%s: the fetched range of %s was not finished: %s", self.name, unit, e.name)
         self.backfilled += kept
         self.landing[unit] = stitch(self.landing.get(unit, []) + ours, self.stitch)
         failed = getattr(self.actuator, "range_error", "")
@@ -1718,10 +1807,14 @@ class RecWorker(VmsWorker):
     #                         of the frames as the incidents volume now holds them — "is this what was kept"
     #   archive.keep.lost     an ALARM, when footage a keep held in the incidents volume is no longer there: its
     #                         own ring, full, took it. The answer is a larger quota, or an export
+    #   archive.keep.uncopied an ALARM, when a keep has stayed short of what it names for `KEEP_UNCOPIED_AFTER`: no
+    #                         door that answers from here has those minutes (the review's fourth pass). Said again
+    #                         once a day while it lasts; the heartbeat says how much and since when, every pass
     #
     # A keep is still not "for ever": the incidents volume is a ring too. It is only one that nothing else writes
     # into, so it turns as slowly as keeps arrive.
     KEEP_EVERY = 60.0
+    KEEP_UNCOPIED_AFTER = 300.0                      # five passes: a door that blinked had its chance
 
     def keeps_in_background(self) -> None:
         if self._keeper is not None and self._keeper.is_alive():
@@ -1755,19 +1848,26 @@ class RecWorker(VmsWorker):
             if items and items.get("deleted") != "true":
                 row = self.parse_row(items)
                 cams.setdefault(str(row["cam"]), set()).add(str(row["id"]))
-        doors = [(n, u) for n, u, _ in recorder_doors(self.objects, now) if n != self.name]
+        # Not a door on another server's loopback (the review's fourth pass): announced truthfully and not reachable from
+        # here, it was asked every pass, refused, and the keep stayed uncopied with nothing to say why.
+        from .config import local_only
+        doors = [(n, u) for n, u, hb in recorder_doors(self.objects, now)
+                 if n != self.name and not local_only(u, str(hb.extra.get("server", "?")), self.server)]
         state: dict[str, dict] = {}
 
         def inside(k, rec) -> float:                     # seconds of the keep this volume holds for `rec`
             return sum(min(b, k.until) - max(a, k.since) for a, b in self.store.coverage(rec) if b > k.since and a < k.until)
 
+        def recordings_of(k) -> list[str]:               # what the keep names, and every recording of its camera now
+            return sorted(set(k.recordings) | cams.get(k.cam, set()))
+
         if not self._keeps_read:
             self._keeps_read = True
-            self.keep_held = {**self._keeps_held_before(declared), **self.keep_held}
+            self.keep_held = {**self._keeps_held_before(declared, recordings_of, inside), **self.keep_held}
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
-            for rec in sorted(set(k.recordings) | cams.get(k.cam, set())):
+            for rec in recordings_of(k):
                 # First what is GONE — before anything is copied, or a copy taken again from the recording's own
                 # volume would hide that the incidents ring is too small to hold what it was given.
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
@@ -1794,6 +1894,7 @@ class RecWorker(VmsWorker):
                 got += held
                 missing += sum(b - a for a, b in subtract((k.since, k.until), self.store.coverage(rec)))
             entry = {"copied": round(got, 1), "missing": round(missing, 1)}
+            self._keep_uncopied(k, entry, missing, now)
             for rec in sorted(set(touched)):
                 h, size = hashlib.sha256(), 0
                 for smp in self.store.stream(rec, k.since, k.until):     # the digest a sequence at a time, as the copy
@@ -1812,32 +1913,69 @@ class RecWorker(VmsWorker):
                 entry["sha256"] = self.keep_state[k.id]["sha256"]
             state[k.id] = entry
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
+        self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
         self.keep_state = state
         return state
+
+    # A KEEP THAT STAYS SHORT (the review's fourth pass). What a pass could not copy it asked for again on the next,
+    # and said nowhere but in `missing`: the recording's door on another server's loopback, every pass `copied = []`,
+    # the recording's own ring reaching the kept minutes — and `/metrics` said no keep was unprotected. Since when it
+    # is short goes into the heartbeat (`missing_since`, beside `missing` — the console's `rec_keep_missing_seconds`),
+    # and past `KEEP_UNCOPIED_AFTER` it is an alarm, once a day while it lasts.
+    def _keep_uncopied(self, k, entry: dict, missing: float, now: float) -> None:
+        from w2cplatform.events import ALARM, EventLog
+        if missing <= 0:
+            self._keep_short.pop(k.id, None)
+            return
+        since, said = self._keep_short.get(k.id, (now, None))
+        entry["missing_since"] = since
+        if now - since >= self.KEEP_UNCOPIED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
+            unit = (sorted(k.recordings) or [str(k.cam)])[0]
+            EventLog(self.archive_root, REC.name, unit, 0).append(
+                now, "archive.keep.uncopied", cls=ALARM, cam=k.cam, keep=k.id, seconds=round(missing, 1),
+                since=since, volume=self.volume)
+            logging.error("%s: keep %s is %.0f s short of what it names, for %.0f s: no door that answers from here has "
+                          "them", self.name, k.id, missing, now - since)
+            said = now
+        self._keep_short[k.id] = (since, said)
 
     # What this volume held of each keep when this recorder last said so: the last `archive.keep.copied` of each
     # (keep, recording), less the `archive.keep.lost` said after it — read from the events on this server, the
     # durable record of what was copied. What it held before is what a restarted recorder compares against, or the
     # ring taking kept footage during a restart would never be an alarm.
-    def _keeps_held_before(self, declared) -> dict:
+    #
+    # AND WHAT THE VOLUME HOLDS NOW, whichever is more (the review's fourth pass, Т-m9). The events alone missed keeps:
+    # an `archive.keep.copied` is written when the copy is made, outside the keep's interval, and goes with the event
+    # tree's retention — and they were looked for under this recorder's own rows, which an incidents recorder has none
+    # of, and the names the keep wrote down, not the recordings of its camera it was copied from. The incidents
+    # volume's own `<recording>/e0` is the truth of what is there: a recorder starts from it for every recording of
+    # every keep, and from an event that says MORE — the ring took some while nobody was looking — it raises the alarm.
+    def _keeps_held_before(self, declared, recordings_of, inside) -> dict:
         from w2cplatform.events import alarm_tree, buckets_under, read_bucket, when
         ids = {k.id for k in declared}
+        held: dict = {}
+        for k in declared:
+            for rec in recordings_of(k):
+                if inside(k, rec) > 0:
+                    held[(k.id, rec)] = inside(k, rec)
         lines = []
         for sub in (REC.name, alarm_tree(REC.name)):
-            for unit in {r for k in declared for r in k.recordings} | {str(r["id"]) for r in self.rows}:
+            for unit in {r for k in declared for r in recordings_of(k)}:
                 try:
                     for b in buckets_under(self.archive_root, sub, unit, 600):
                         lines += [e for e in read_bucket(os.path.join(self.archive_root, b.path))
                                   if e.get("keep") in ids and e.get("volume") == self.volume]
                 except OSError:
                     continue
-        held: dict = {}
+        said: dict = {}
         for e in sorted(lines, key=when):
             key = (str(e["keep"]), str(e.get("recording", "")))
             if e.get("kind") == "archive.keep.copied" and "seconds" in e:
-                held[key] = float(e["seconds"])
-            elif e.get("kind") == "archive.keep.lost" and key in held:
-                held[key] = max(0.0, held[key] - float(e.get("seconds", 0)))
+                said[key] = float(e["seconds"])
+            elif e.get("kind") == "archive.keep.lost" and key in said:
+                said[key] = max(0.0, said[key] - float(e.get("seconds", 0)))
+        for key, v in said.items():
+            held[key] = max(held.get(key, 0.0), v)
         return held
 
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
@@ -1848,28 +1986,36 @@ class RecWorker(VmsWorker):
         for smp in samples:
             if last is None and not smp.key:
                 continue
-            if last is not None and unix_s(smp.begin) - last > self.stitch:
-                self.store.finish(rec, 0)
-                if not smp.key:
-                    last = None
-                    continue
             try:
+                if last is not None and unix_s(smp.begin) - last > self.stitch:
+                    self.store.finish(rec, 0)
+                    if not smp.key:
+                        last = None
+                        continue
                 self.store.put(rec, 0, smp)
                 self._offered_extra += len(smp.body)
                 kept += 1
                 last = unix_s(smp.end)
             except Unavailable:
                 self._lost_engine()
-                return False
+                return kept > 0                          # what went in before the engine went counts (the fourth pass)
             except ObsdError:
                 last = None                              # refused: the next group opens on its key
         if kept:
-            self.store.finish(rec, 0)
+            try:
+                self.store.finish(rec, 0)
+            except Unavailable:
+                self._lost_engine()
+            except ObsdError:
+                pass
         return kept > 0
 
     def metrics_text(self) -> str:
+        keeps = "".join(f'rec_keep_missing_seconds{{keep="{kid}"}} {e.get("missing", 0)}\n'
+                        for kid, e in sorted(self.keep_state.items()))
         return (f"# TYPE rec_recordings_running gauge\nrec_recordings_running {len(self.reconciler.actual)}\n"
-                f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n")
+                f"# TYPE rec_groups_backfilled counter\nrec_groups_backfilled {self.backfilled}\n"
+                + (f"# TYPE rec_keep_missing_seconds gauge\n{keeps}" if keeps else ""))
 
 
 # A recorder's archive door, over the volume it holds: what a primary copies from a backup, and what the console

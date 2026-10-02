@@ -65,7 +65,7 @@ job "vmsworker" {
         volumes      = ["/data/archive:/data/archive", "/data/media:/data/media", "/run/vms:/run/vms"]   # it writes events, never footage; /run/vms: the tee's shared-memory branch for subscribers on this server
       }
       # The cluster's key (`w2cplatform/sealing.py`): rendered from the Nomad variable `secrets/vms` into this
-      # task's secrets directory, which only this task sees. The policy lets this job and the worker's read it
+      # task's secrets directory, which only this task sees. The policies let the console, the worker and the recorder read it
       # and no other job; the variable is `ring`: lines `<kid> <hex>`, the current key first.
       template {
         data        = "{{ with nomadVar \"secrets/vms\" }}{{ .ring }}{{ end }}"

@@ -68,6 +68,7 @@ import json
 import logging
 import os
 import socket
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -692,6 +693,10 @@ class Worker:
         self.slot: Slot | None = None
         self.name = name                          # None until claim_slot(); a fixed name is a slot claimed by that name
         self.hold: str | None = None              # the PLACE this worker took, if its subsystem has places to take
+        # One renewal or claim of the hold at a time, from whichever thread (`renew_hold`); and when this process
+        # first saw each place's row as it is now — the clock a stale hold is judged by (`claim_hold`).
+        self._hold_lock = threading.RLock()
+        self._hold_seen: dict[str, tuple[int, float]] = {}
 
     # -- identity by claim ----------------------------------------------------------
     # Become somebody. Lists the slot rows; with `prefer` (Nomad's `NOMAD_ALLOC_INDEX`, systemd's `%i`) the
@@ -798,9 +803,40 @@ class Worker:
     # `renew_hold` and stops writing there; what it wrote in between is fenced by the new epochs, as a slot's is.
     # Anybody else still waits for the TTL — the product's own lesson, from its archive daemon: a place
     # kept for its owner must be kept LONGER than the time the owner takes to come back.
+    #
+    # THE TTL BY THIS HOST'S CLOCK (the review's fourth pass, Т-M5). Anybody else took a hold when the wall clock HERE
+    # passed the `until` the holder wrote by ITS wall clock: two machines five seconds apart, and a holder renewing
+    # every pass looked lapsed to its neighbour — two writers in one ring, which on s3 the engine's lock does not
+    # reliably stop. So a hold of somebody else's is stale when THIS process has watched its row stand still — the
+    # same revision, never renewed — for the hold's whole term and `HOLD_SKEW` on top, by its own monotonic clock.
+    # A holder that renews changes the row every pass, whatever its clock says; one that stopped leaves it standing.
+    # The price: a process that first looks at a long-dead hold waits one term from that look. A released hold, or
+    # one nobody holds, is free at once, as before.
+    #
+    # And no generation in the daemon's `owner` (`rec:<volume>`, `Archive`). The owner is how the next holder of the
+    # volume on this host picks up the writer a vanished one left, detached — with a generation in it the successor
+    # names another owner, and waits out the daemon's grace with nothing recorded, which is what the owner is there
+    # to prevent (feedback CF). The fence is the hold, confirmed by CAS right before every `VOLUME_MOUNT_RW`
+    # (`RecWorker._confirm_hold`); on one host the daemon itself keeps one writer per volume.
+    HOLD_SKEW = 5.0
+
+    def _hold_stale(self, cand: str, cur: "Slot", idx) -> bool:
+        if cur.released or cur.holder in ("", self.instance):
+            return True
+        now = self.clock()
+        seen = self._hold_seen.get(cand)
+        if seen is None or seen[0] != idx:
+            self._hold_seen[cand] = (idx, now)               # renewed since we last looked — or never looked: from now
+            return False
+        return now - seen[1] >= self.slot_ttl + self.HOLD_SKEW
+
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
         """Take one place out of a list somebody else wrote. None when they are
         all taken — a spare, not a failure."""
+        with self._hold_lock:
+            return self._claim_hold(candidates, retries)
+
+    def _claim_hold(self, candidates: list[str], retries: int) -> str | None:
         for attempt in range(retries):
             if attempt:
                 cas_pause(attempt - 1)
@@ -816,12 +852,13 @@ class Worker:
                 items, idx = rows[cand]
                 cur = Slot.from_items(cand, items)
                 ours = named and cur.by == self.name and cur.holder != self.instance
-                if not cur.claimable(now) and not ours:
+                if not ours and not self._hold_stale(cand, cur, idx):
                     continue                                   # somebody live is writing there
                 try:
                     self.vars.put(key, Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, self.name or "").to_items(), cas=idx)
                 except Conflict:
                     contended = True; continue
+                self._hold_seen.pop(cand, None)
                 self.hold = cand
                 return cand
             if not contended:
@@ -831,20 +868,31 @@ class Worker:
     # Still mine? Same three lines as `renew_slot`, and the same meaning when it says no: another process
     # holds this place now, so this one must stop writing into it. Losing a hold is NOT losing the slot —
     # the process stays itself and becomes a spare.
+    #
+    # ONE AT A TIME, AND A LOST RACE IS READ AGAIN (the review's fourth pass, a minor). The recorder renews from two
+    # threads — the pass, and a keep's `seal`, which confirms the hold before it mounts the writer again — and the
+    # one that lost the CAS to the other took the conflict for the hold taken: let go of its own fresh hold, stopped
+    # writing, and waited out the term to take it back. Renewals are serialised now, and a conflict is answered by
+    # the row: still ours — somebody of ours renewed it a moment ago — is ours.
     def renew_hold(self) -> bool:
-        if self.hold is None:
+        with self._hold_lock:
+            if self.hold is None:
+                return True
+            key = self.sub.hold_key(self.hold)
+            items, idx = self.vars.get(key)
+            cur = Slot.from_items(self.hold, items)
+            if cur.holder != self.instance:
+                self.hold = None
+                return False
+            try:
+                self.vars.put(key, Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen, self.name or "").to_items(), cas=idx)
+            except Conflict:
+                again = Slot.from_items(self.hold, self.vars.get(key)[0])
+                if again.holder == self.instance and not again.released:
+                    return True
+                self.hold = None
+                return False
             return True
-        items, idx = self.vars.get(self.sub.hold_key(self.hold))
-        cur = Slot.from_items(self.hold, items)
-        if cur.holder != self.instance:
-            self.hold = None
-            return False
-        try:
-            self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen, self.name or "").to_items(), cas=idx)
-        except Conflict:
-            self.hold = None
-            return False
-        return True
 
     # Let go on purpose: an orderly stop, or the administrator deleted the volume. `released` is what
     # tells that apart from a crash, and a released place is taken again at once instead of after a TTL.

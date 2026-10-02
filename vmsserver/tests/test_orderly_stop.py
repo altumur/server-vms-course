@@ -41,6 +41,7 @@ def test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_i
     c = recorder(box, "r-3", "srv-a", acl=False)
     assert c.volume_pass() == ""                                       # held by r-2, which is alive
     box.wall.advance(46)
+    box.clock.advance(c.slot_ttl + c.HOLD_SKEW)                        # …by c's own clock: the row stood still a term (Т-M5)
     assert c.volume_pass() == "vol"
 
 

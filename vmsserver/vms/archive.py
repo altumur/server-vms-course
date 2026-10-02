@@ -213,13 +213,17 @@ class Archive:
     passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back.
 
     `confirm`: asked right before every `VOLUME_MOUNT_RW`, and a mount it refuses does not happen — the recorder's
-    hold on a volume any box may serve, confirmed at that moment and not a pass ago (`RecWorker._confirm_hold`)."""
+    hold on a volume any box may serve, confirmed at that moment and not a pass ago (`RecWorker._confirm_hold`).
+
+    `share`: for a volume that does not exist yet and has no `quota`, how big to format it — given what the daemon
+    says of the disk it will be on (`space_where`)."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
                  wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = "",
                  sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S,
-                 confirm=None, lock_refresh: int = 0):
+                 confirm=None, lock_refresh: int = 0, share=None):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
+        self.share = share                         # no quota and no volume yet: its size from the disk (`space_where`)
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
@@ -259,6 +263,8 @@ class Archive:
         try:
             vol = self._open_volume()
             if not vol.exists():
+                if not self.quota and self.share is not None:
+                    self.quota = self.share(self.space_where())
                 if not self.quota:
                     raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
                 vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name,
@@ -273,6 +279,30 @@ class Archive:
         except (ObsdError, ValueError) as e:
             raise self._classified(e) from None
         return self
+
+    # THE DISK A NEW VOLUME WILL BE ON, AS THE DAEMON SEES IT (the review's fourth pass). A volume of nobody's
+    # declaring was formatted at a share of the disk the RECORDER measured — in its container, where `/data/volume`
+    # is not mounted at all: the share of the container's root, a system SSD, not of the 8 TB data disk the daemon
+    # writes to, and that size stood from then on as the volume's own. The daemon opens the path, so the daemon is
+    # asked (`VOLUME_SPACE`): of the volume's directory, or — not there yet — of the nearest one above it that is.
+    # `{available, capacity, free}`, zeros when there is nothing to measure (a bucket; a daemon that cannot see it).
+    def space_where(self) -> dict:
+        p = volume_params(self.url, self.secret, self.access_key)
+        if p.get("schema") != "file":
+            return {"available": 0, "capacity": 0, "free": 0}
+        path = p["path"].rstrip("/") or "/"
+        while True:
+            v = self.session.open_volume(params={"schema": "file", "path": path})
+            try:
+                got = v.space()
+            finally:
+                try:
+                    v.close()
+                except ObsdError:
+                    pass
+            if int(got.get("capacity") or 0) or path in ("/", ""):
+                return got
+            path = path.rsplit("/", 1)[0] or "/"
 
     def size(self) -> int:
         """The ring's size as the volume holds it — `maxVolumeSize`, what it was formatted or last resized to."""
@@ -329,16 +359,27 @@ class Archive:
                 raise
             self._configure()
 
-    def close(self) -> None:
+    def close(self, timeout: float | None = None) -> bool:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
-        last minutes readable, and a volume released first would be somebody else's with a writer still in it."""
+        last minutes readable, and a volume released first would be somebody else's with a writer still in it.
+
+        True when the writer is let go: closed, or a writer the daemon no longer knows. False when it may still be
+        ALIVE in the session — its close was refused in a silence, or did not come back within `timeout` — and
+        then whoever owns the session must leave it behind (`Session.abandon`), or every mount of this volume is
+        `ALREADY_LOCKED` for as long as the session lives (the review's fourth pass, blocker 1)."""
+        let_go = True
         for h in (self.writer, self.volume):
             if h is not None:
                 try:
-                    h.close()
+                    h.close(timeout) if h is self.writer else h.close()
+                except SessionLost:
+                    pass                           # the daemon lost it: gone, nothing to let go of
+                except Unavailable:
+                    let_go = let_go and h is not self.writer
                 except ObsdError:
                     pass
         self.writer = self.volume = None
+        return let_go
 
     # -- reading: a reader of its own for every question --------------------------------------------------
     # A reader sees what was closed when it mounted, so every question mounts one — and CLOSES it when the question

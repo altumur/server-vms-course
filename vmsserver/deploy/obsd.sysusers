@@ -1,0 +1,25 @@
+# /etc/sysusers.d/obsd.conf — who the archive's engine runs as, and the group its clients join.
+# Installed and applied by install-obsd.sh (`systemd-sysusers`); read again by systemd at every boot.
+# ================================================================================================
+# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
+# ================================================================================================
+# # obsd.sysusers — the user `obsd` and the group `vms-rec`, which obsd.service names
+#
+# **Role.** `obsd.service` runs the daemon as `User=obsd`, `Group=vms-rec` and lets in, besides its own user, only
+# the members of `OBSD_CLIENT_GROUP=vms-rec` — the recorders. A unit that names a user nobody created does not
+# start (217/USER), and without the daemon nothing is recorded (the review's fourth pass, blocker 2): this file
+# creates both, the way the box creates every system user it needs.
+#
+# - `g vms-rec 2101` — the group with a FIXED number. The recorder runs in a container, which has no /etc/group of
+#   the host's: it joins the group by number (`GroupAdd=2101` in `recworker@.container`, the Nomad job's `user`
+#   in М11). `install-obsd.sh` refuses a box where `vms-rec` already exists with another number.
+# - `u obsd -` — the daemon's own user, a system one with no login; its own group, as sysusers makes it.
+# - `m obsd vms-rec` — and a member of the clients' group: what the daemon writes (the socket, the volumes'
+#   files) is `obsd:vms-rec`.
+#
+# The product names both `vms-obsd` (its install.sh, `useradd --system --user-group`); the course keeps the names
+# its units and lessons already use.
+# ================================================================================================
+g vms-rec 2101 -
+u obsd    -    "ObjectStorage daemon (obsd.service)" - -
+m obsd    vms-rec

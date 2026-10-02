@@ -170,3 +170,44 @@ def test_a_long_request_is_fetched_in_pieces_over_several_passes_and_reported_on
     r.store.seal()
     from vms.archive import stitch
     assert stitch((s.start, s.end) for s in _backfilled(r)) == [(NOW - 30000, NOW - 28200)]   # nothing between pieces
+
+
+def test_a_request_served_in_part_goes_on_after_a_restart_from_where_the_volume_shows_it_got():
+    """The review's fourth pass, Т-B6. How far a long request had got was in memory: a recorder started again read it
+    from its first minute — the twenty minutes it had landed fetched again off the card, to be dropped as ours. The
+    volume shows what landed, and the request goes on from the first moment it does not."""
+    act = FakeActuator()
+    box, r, con_rec = _recorder(act)
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-long"),
+                     {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28200), "at": str(NOW), "by": "anna"})
+    r.requests(now=NOW); r.requests(now=NOW)                                # two passes: twenty minutes of thirty
+    assert "1-long" not in r.fetched
+    r.after_stop()                                                          # the writer closed: what landed is visible
+
+    again = _rec(box, actuator=FakeActuator(), keep_days=1.0, settle=1000.0)
+    while "1-long" not in again.fetched:
+        assert again.requests(now=NOW)
+    asked = [(lo, hi) for _, lo, hi, _ in again.actuator.fetched]
+    assert asked and min(lo for lo, _ in asked) >= NOW - 30000 + 2 * r.RANGE_CAP - r.PIECE   # not from the start
+    again.store.seal()
+    from vms.archive import stitch
+    assert stitch((s.start, s.end) for s in _backfilled(again)) == [(NOW - 30000, NOW - 28200)]
+
+
+def test_an_answered_request_is_not_fetched_again_and_is_forgotten_with_its_row():
+    """The review's fourth pass, Т-m13. The recorder's own `requests` did not keep the base worker's rule: a request
+    it had answered was fetched again from its start for as long as the console had not reaped the row, and
+    `fetched` grew by one id per request for the life of the process."""
+    act = FakeActuator()
+    box, r, con_rec = _recorder(act)
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    key = REC_SPEC.sub.request_key("1-x")
+    con_rec.vars.put(key, {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 29700), "at": str(NOW), "by": "anna"})
+    assert r.requests(now=NOW) and r.fetched == ["1-x"]
+    asked = len(act.fetched)
+    assert r.requests(now=NOW) == [] and len(act.fetched) == asked          # the row stands: answered, not fetched again
+    assert r.heartbeat_extra()["fetched"] == "1-x"
+    con_rec.vars.delete(key)                                                # the console reaped it
+    r.requests(now=NOW)
+    assert r.fetched == []

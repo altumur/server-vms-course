@@ -118,6 +118,7 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
       "fetched": "",
       "volume": "disks-a",
       "archive_quota": 67108864,
+      "volume_quota": 4000000000000,
       "volume_error": "",
       "archive_error": "",
       "archive_away_since": 0.0,
