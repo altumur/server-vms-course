@@ -23,8 +23,14 @@ import time
 from dataclasses import dataclass, field
 
 from cluster.variables import Conflict, Variables
+from w2cplatform.rows import Table
 
 from .signer import Signer
+
+# One user's record that does not parse is that user's (the review's seventh pass left `identity.users` open): it
+# raised out of `users()`, and with it the publication of the whole identity set on the signer's loop and the login of
+# every federated user. Skipped, counted once by its path, logged once; the others are read and published.
+USERS = Table("user", "left out of the published identity set and of federated logins — the others are read", "user record")
 
 TOKEN_LIFETIME = 15 * 60.0        # the number the product states; Lesson 4 makes students defend it
 
@@ -95,7 +101,11 @@ class IdentityStore:
         self.vars.put(self._path(u.id), u.to_items(), cas=idx)
         self._dirty = True
 
+    # A user's name is the subject of every token and grant they will hold: `|`, `"` and control characters are refused
+    # here, where it is made (the review's eighth pass; `grants.refuse_name`) — a `|` broke every grant of a row.
     def create_local(self, uid: str, password: str, roles: list[str], by: str | None = None) -> User:
+        from .grants import refuse_name
+        refuse_name(uid, "user's name")
         if self.get(uid) and self.get(uid).kind != "deleted":
             raise ValueError(f"user {uid} exists")
         u = User(uid, "local", roles, pwhash=_hash(password), created=self.now())
@@ -105,6 +115,8 @@ class IdentityStore:
 
     def create_federated(self, uid: str, idp_subject: str, roles: list[str], by: str | None = None) -> User:
         """The customer has an IdP: the record holds a subject, not a person, and no secret."""
+        from .grants import refuse_name
+        refuse_name(uid, "user's name")
         u = User(uid, "idp", roles, idp_subject=idp_subject, created=self.now())
         self._put(u)
         self._say("domain.user.created", uid, by, account="idp", roles=",".join(roles))
@@ -142,7 +154,7 @@ class IdentityStore:
             if path == DOMAIN_GRANTS:
                 continue
             row, idx = self.vars.get(path)
-            kept = {k: v for k, v in (row or {}).items() if k.split("|", 1)[0] != uid}
+            kept = {k: v for k, v in (row or {}).items() if k.rsplit("|", 2)[0] != uid}   # the subject: all but the last two
             if row is not None and kept != row:
                 self.vars.put(path, kept, cas=idx)
         _, idx = self.vars.get(self._path(uid))
@@ -154,8 +166,10 @@ class IdentityStore:
         out = []
         for p in self.vars.list("identity/users/"):
             items, _ = self.vars.get(p)
-            if items and items.get("kind") in ("local", "idp"):
-                out.append(User.from_items(items))
+            u = USERS.read(p, lambda items=items: User.from_items(items) if items and items.get("kind") in ("local", "idp")
+                           else None)
+            if u is not None:
+                out.append(u)
         return out
 
     # -- authentication: ends in a token naming the subject and nothing else ---

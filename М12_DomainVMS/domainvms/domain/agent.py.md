@@ -32,7 +32,9 @@ Since Lessons 9–15 the same pass also: reads `domain/pending/<cluster>` and th
 ### `__init__(self, cluster_vars)`.
 ### `keyset(self) -> KeySet | None` — `domain/keys`, or `None` before the first sync.
 ### `revoked(self) -> set[str]` — the jtis from `domain/revoked` (empty if absent).
-### `grants(self) -> list[Grant]` — `grants_from_items` of `domain/grants`; the console loads them with `ClusterGrants.renew_from_domain`.
+### `grants(self) -> list[Grant]` — `grants_from_items` of `domain/grants`, item by item; the console loads them with `ClusterGrants.renew_from_domain`.
+
+`keyset`, `root` and `revoked` raise `Untrusted` when their row is there and does not parse (counted in `tokens.TRUST_ROWS`): the doors answer 503 "nobody can be checked" (the review's eighth pass).
 
 ## Functions
 
@@ -41,7 +43,7 @@ Since Lessons 9–15 the same pass also: reads `domain/pending/<cluster>` and th
 
 ## Notes
 - Both `NomadVariables` handles use the same `NOMAD_TOKEN` — the agent's workload identity — for the read from the domain region and the write to the local one; whether that token is honoured through forwarding is `verify-bench.sh` item 2/3, not a test.
-- In production, `sync()` sees `URLError`/`OSError` from `NomadVariables` on a dead link, not `Unreachable`; `main()`'s broad `except` is what makes it behave as designed. Callers of `sync()` that catch only `Unreachable` (the tests) rely on the fakes.
+- In production, `sync()` sees `URLError`/`OSError` from `NomadVariables` on a dead link, not `Unreachable`; the loop's broad `except` (`run`, which sets the next pass before the pass and logs a pass that raised once) is what makes it behave as designed. Callers of `sync()` that catch only `Unreachable` (the tests) rely on the fakes.
 - No production process calls `publish_grants`: `signer_service` publishes keys and the revocation list only, and `deploy/signer-policy.hcl` does not grant `domain/grants/*` to the signer. Grants reach a cluster only in the tests. See the report.
 - The domain holder's own agent (the jobspec runs one per region, including north) reads `domain/keys` from north and writes it to north — the same Variable, always equal, so a no-op.
 - Lesson 14: `wake()` — an alarm on the card; `due()` — woken, and the last urgent report at least `URGENT_GAP` (1 s) ago; `report_now()` — the loop's urgent pass. `main` waits for the interval or a wake, whichever first, so the card never syncs from its own thread.

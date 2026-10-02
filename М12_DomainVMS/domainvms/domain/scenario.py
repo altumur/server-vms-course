@@ -31,8 +31,10 @@ from __future__ import annotations
 
 import json
 
+from w2cplatform.rows import PARSE_ERRORS, finite
+
 from .federation import Unreachable
-from .ingest import Refused
+from .ingest import ASK_DEADLINE_MAX, Refused
 
 VALID = 30.0
 RATE = 6                               # asks per scenario per minute, the product's default
@@ -49,20 +51,37 @@ def misfit(who: str, can: dict, action: dict) -> str | None:
     domain says it when the scenario is written, the camera when the ask arrives (`DeviceCluster.perform`)."""
     name, arg = str(action.get("action", "")), str(action.get("arg", ""))
     if name == "preset":
-        n = int(can.get("presets") or 0)
+        n = _count(can, "presets")
         if not can.get("ptz"):
             return f"{who} has no telemetry: it cannot go to a preset"
         if n and (not arg.isdigit() or not 1 <= int(arg) <= n):
             return f"{who} has {n} preset(s), not {arg}"
         return None
     if name == "output":
-        r = int(can.get("relays") or 0)
+        r = _count(can, "relays")
         if not r:
             return f"{who} has no relays"
         if not arg.isdigit() or not 1 <= int(arg) <= r:
             return f"{who} has {r} relay(s), not port {arg}"
         return None
     return f"{who} cannot be asked {name!r}: one camera asks another for {' or '.join(ACTIONS)}"
+
+
+def _count(can: dict, key: str) -> int:
+    """How many presets or relays a camera said it has — 0, "said none", when what it said is not a whole number
+    (the review's eighth pass, minor: `int("five")` raised out of the pass over the books)."""
+    try:
+        return max(0, int(can.get(key) or 0))
+    except PARSE_ERRORS:
+        return 0
+
+
+def _within(then: dict) -> float:
+    """A scenario's `within`: seconds, finite, more than 0 and at most `ASK_DEADLINE_MAX` — what an ingest takes."""
+    w = finite(then.get("within", VALID))
+    if not 0 < w <= ASK_DEADLINE_MAX:
+        raise ValueError(f"within is {w:g} s; it is more than 0 and at most {ASK_DEADLINE_MAX:.0f}")
+    return w
 
 
 def _scenarios(settings: dict) -> list[dict]:
@@ -101,7 +120,11 @@ def refusals(settings: dict, crossings) -> list[str]:
         kind, action = str(sc.get("when", {}).get("kind", "")), _action(sc.get("then", {}))
         can_a = crossings.can_of(a) if a in crossings.members() else None
         if can_a is not None and kind not in can_a.get("events", []):
-            out.append(f"camera {a} (trigger) does not raise {kind!r} — it raises {', '.join(can_a['events'])}")
+            out.append(f"camera {a} (trigger) does not raise {kind!r} — it raises {', '.join(can_a.get('events', []))}")
+        try:
+            _within(sc.get("then", {}))
+        except PARSE_ERRORS as e:
+            out.append(f"the scenario from {a} to {b}: {e}")
         can_b = crossings.can_of(b)
         why = (misfit(f"camera {b} (target)", can_b, action) if can_b is not None else
                None if str(action.get("action", "")) in ACTIONS else misfit(f"camera {b} (target)", {}, action))
@@ -181,13 +204,19 @@ class Scenarios:
             if str(when.get("camera")) != self.serial or when.get("kind") != kind:
                 continue
             target = str(then.pop("camera", ""))
-            within = float(then.pop("within", VALID))
             if not target or target == self.serial:
                 continue                                          # its own automation, not an ask
+            try:                                                  # refused when written; a document from before the
+                within = _within(then)                            # rule is that scenario's trouble, said, not the event's
+                then.pop("within", None)
+                cap = int(sc.get("rate_per_minute") or RATE)
+            except PARSE_ERRORS as e:
+                done.append({"target": target, "action": then, "state": f"not asked: {e}"})
+                continue
             if at + within <= now:
                 done.append({"target": target, "action": then, "state": "seen after its deadline: not asked"})
                 continue
-            key, cap = json.dumps(sc, sort_keys=True), int(sc.get("rate_per_minute") or RATE)
+            key = json.dumps(sc, sort_keys=True)
             recent = self.fired[key] = [t for t in self.fired.get(key, []) if now - t < 60.0]
             if len(recent) >= cap:
                 done.append({"target": target, "action": then, "state": f"over its ceiling of {cap}/min: not asked"})

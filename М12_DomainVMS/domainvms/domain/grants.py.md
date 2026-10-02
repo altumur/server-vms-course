@@ -23,7 +23,7 @@ State in advance: if a revoke cannot reach this cluster, when does the subject l
 ## Functions
 ### `grants_to_items(grants) -> dict`
 The Variable `domain/grants/<cluster>`: one item per grant, key `subject|capability|camera` (empty camera for `None`), value the expiry as a string.
-### `grants_from_items(items) -> list[Grant]` — the inverse; tolerates `None`.
+### `grants_from_items(items, where) -> list[Grant]` — the inverse; tolerates `None`. Item by item (the review's eighth pass): an item that does not split into three, whose camera is not a number or whose expiry is not finite is not a grant — counted once in the table `grant` (`<where>#<item>`), logged once; the others are read. A row that is not an object is no grants, counted.
 ### `revocation_window(token_lifetime, grant_lifetime) -> float`
 `min` of the two. The docstring: "Most people answer the token." With the module's numbers, 900 s.
 
@@ -36,7 +36,7 @@ The Variable `domain/grants/<cluster>`: one item per grant, key `subject|capabil
 A `TokenError` becomes `PermissionError("token refused: …")`; no matching grant → `PermissionError("alice has no edit grant on camera 12 in south")`; otherwise the subject. `test_grants_are_cluster_local…`: `view` on any camera and `edit` on 7 pass, `edit` on 12 fails; after `TOKEN_LIFETIME + 61` the token is refused as expired; after a further `GRANT_LIFETIME` a fresh token is refused for lack of a live grant.
 
 ## Notes
-- The item key splits on `|`; a subject containing `|` would break `grants_from_items`. Subjects here are login ids.
+- The item key splits on `|`, so `|` is not allowed in a subject (nor `"` and control characters; in a label not `,` either): `grants_to_items` refuses it (`BadName`, `refuse_name`), and so does `IdentityStore.create_local`/`create_federated`. A stored one is an item that is not a grant (above).
 - `gateway.py` defines its own `Forbidden` for the same refusal; the two are not related classes.
 - In production the grants a cluster reads live at `domain/grants` (the agent copies `domain/grants/<cluster>` from the domain holder to that exact path in its own cluster — see `agent.py.md`).
 - **The domain's own grants** (feedback CA): `DOMAIN_GRANTS = "domain/grants/domain"` in the holder's store — who may look at the domain's door (`view`) and change what it decided (`admin`). Not the carried grants of the cluster that holds the domain: a move (Lesson 15) would change the domain's administrators to whoever administers the new holder. Exported in the backup (`term.EXPORTED` has `domain/grants/`), carried by no agent (`Members` refuses a cluster named `domain`). `domain_may(vars, subject, capability, now)`: whole-domain grants only (no camera, no labels), `valid_until` 0 never lapses, rank as `w2cplatform.access.RANK`. `set_domain_grants` refuses (`LastAdmin`) a write that leaves no live `admin`. The first admin: `CONFIG_URL=… python3 -m domain.grants domain <subject> [view|edit|admin]` on the holder. Tests: `test_domain_door.py`.

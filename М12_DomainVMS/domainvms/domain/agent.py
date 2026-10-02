@@ -12,13 +12,17 @@ Workers are not involved: nothing about a user reaches a worker, ever.
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
 
 from cluster.variables import Variables
+from w2cplatform.rows import PARSE_ERRORS
 
 from .federation import Unreachable
-from .tokens import ROOT_KID, KeySet, RevocationList
+from .tokens import ROOT_KID, TRUST_ROWS, KeySet, RevocationList
+
+log = logging.getLogger("domain.agent")
 
 KEYS_PATH, REVOKED_PATH, GRANTS_PATH = "domain/keys", "domain/revoked", "domain/grants"
 # Lesson 15: the domain root's public key, PINNED in each member — written once, never replaced by the agent.
@@ -144,7 +148,20 @@ class DomainAgent:
     # once this member has a root pinned, only a key set that root SIGNED, and never an older revision than it
     # holds. A holder carried off the wall has the token key and can sign anything with it — but not as the
     # root: a key set of its own, published to members it can still reach, is refused, and says why.
+    #
+    # A key set from the domain that does not parse is REFUSED like one that does not verify, and the one carried
+    # before is held (the review's eighth pass: `json.loads(items["doc"])` raised out of the pass — nothing after the
+    # keys was carried, and the report that is this member's sign of life was not written). A pinned root this member
+    # cannot read trusts nothing: refused too, said — the member is enrolled again.
     def _carry_keys(self, items: dict | None) -> str:
+        try:
+            return self._carry_keys_parsed(items)
+        except Untrusted as e:
+            return f"refused: {e}"
+        except PARSE_ERRORS as e:
+            return f"refused: the domain's key set does not parse ({e}); holding the one carried before"
+
+    def _carry_keys_parsed(self, items: dict | None) -> str:
         import json
         from .shared import NotTaken, verify
         if items is None:
@@ -154,6 +171,7 @@ class DomainAgent:
         if "doc" not in items:
             if pinned is not None:
                 return "refused: a key set not signed by the domain's root"
+            KeySet.from_items(items)                        # carried as it is — but only one that reads
             self._carry(KEYS_PATH, items)
             return "carried"
         doc = json.loads(items["doc"])
@@ -166,7 +184,11 @@ class DomainAgent:
             return f"refused: {e}"
         if doc.get("root") != root.hex() or doc.get("kid") != ROOT_KID:
             return "refused: signed by a root this member did not pin"
-        have = trust.keyset()
+        KeySet.from_items(items)                            # signed, and readable as a key set
+        try:
+            have = trust.keyset()
+        except Untrusted:
+            have = None                                     # the copy here does not read: the root's signed set replaces it
         if have is not None and have.root is not None and int(doc["rev"]) < have.rev:
             return f"holding rev {have.rev}"
         if pinned is None:
@@ -217,7 +239,7 @@ class DomainAgent:
         return ok
 
     def _relay_mark(self) -> float | None:
-        mark = self.domain_vars.seen()
+        mark = self.domain_vars.seen()                     # None when it does not parse (`chain._RelayVars.seen`)
         if mark and mark.get("n") != self._relay_n:
             self._relay_n = mark.get("n")
             self._relay_seen = None if mark.get("age") is None else self.now() - float(mark["age"])
@@ -236,6 +258,7 @@ class DomainAgent:
         except Unreachable:
             return False
         self.keys = self._carry_keys(keys)
+        self._say_refused("the key set", self.keys)
         for path, items in ((REVOKED_PATH, revoked), (GRANTS_PATH, grants), *later):
             self._carry(path, items)
         # Edits the domain kept while this cluster was off (Lesson 9) — carried home even when there are
@@ -245,7 +268,8 @@ class DomainAgent:
         self._carry(PENDING_PATH, pending, clear=True)
         if self.console is not None and self.current is not None:
             import json
-            entries = {k: json.loads(v) for k, v in (pending or {}).items()}
+            from .pending import _load
+            entries = _load(pending if isinstance(pending, dict) else None, PENDING_PATH)   # one entry that does not parse: that camera's
             outcomes = apply_pending(entries, self.current, self.console, self.now())
             self._carry(OUTCOMES_PATH, {k: json.dumps(v, ensure_ascii=False, sort_keys=True)
                                         for k, v in outcomes.items()}, clear=True)
@@ -253,19 +277,28 @@ class DomainAgent:
         # own, never one that came with the document.
         # And Lesson 15: which member holds the domain — carried like the keys, but never to a smaller term —
         # and, on the members chosen to keep it, the backup of the domain's state, carried like the settings.
+        #
+        # Each of these three is its own step (the review's eighth pass): a pointer or a record from the domain that does
+        # not parse raised out of the pass, and the report below — the member's sign of life — was not written; the
+        # domain then called a member silent whose only trouble was one row the domain itself wrote. Now it is refused,
+        # said in what the pass did (`holder`, `shared`, `backup`) and in the log once, and the pass goes on.
         from .term import BACKUP, carry_holder
-        keyset = ClusterTrust(self.cluster_vars).keyset()
+        try:
+            keyset = ClusterTrust(self.cluster_vars).keyset()
+        except Untrusted:
+            keyset = None
         if keyset is not None:
             self._carry(MEMBER_PATH, {"cluster": self.cluster})   # written when missing — after a rollback too — and only then
         try:
-            self.holder = carry_holder(self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet"
+            self.holder = self._step("the holder record", lambda: carry_holder(
+                self.domain_vars, self.cluster_vars, keyset, self.now()) if keyset else "no keys yet")
             if self.domain_objects is not None and self.cluster_objects is not None:
                 from .shared import carry
-                self.shared = carry(self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects,
-                                    keyset, self.now())
-                self.backup = carry(self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects,
-                                    keyset, self.now(), src=f"{BACKUP}/{self.cluster}", dst=BACKUP, obj=BACKUP,
-                                    refused=f"{BACKUP}-refused")
+                self.shared = self._step("the shared settings", lambda: carry(
+                    self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects, keyset, self.now()))
+                self.backup = self._step("the backup", lambda: carry(
+                    self.domain_vars, self.domain_objects, self.cluster_vars, self.cluster_objects, keyset, self.now(),
+                    src=f"{BACKUP}/{self.cluster}", dst=BACKUP, obj=BACKUP, refused=f"{BACKUP}-refused"))
         except Unreachable:
             return False
         self.last_synced = self.now()
@@ -294,45 +327,88 @@ class DomainAgent:
                 return False
         if self.relay_members and self.bundle_store is not None:
             from .chain import relay_down
-            members = self.relay_members() if callable(self.relay_members) else self.relay_members
             try:
-                relay_down(members, self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now())
+                self._step("relaying down", lambda: relay_down(
+                    self.relay_members() if callable(self.relay_members) else self.relay_members,
+                    self.domain_vars, self.domain_objects, self.cluster_vars, self.bundle_store, self.now()))
             except Unreachable:
                 return False
         if self.bundle_members and self.bundle_store is not None and self.domain_objects is not None:
             from .chain import bundle
             try:
-                bundle(self.cluster, self.bundle_members() if callable(self.bundle_members) else self.bundle_members,
-                       self.bundle_store, self.domain_objects)
+                self._step("the bundle", lambda: bundle(
+                    self.cluster, self.bundle_members() if callable(self.bundle_members) else self.bundle_members,
+                    self.bundle_store, self.domain_objects))
             except Unreachable:
                 return False
         return True
+
+    # One step of the pass that reads what the domain wrote: what does not parse is that step's — refused, said once
+    # in the log until it works again — and `Unreachable` is still the domain not answering, which ends the pass.
+    def _step(self, what: str, fn):
+        try:
+            done = fn()
+        except PARSE_ERRORS as e:
+            done = f"refused: what the domain wrote does not parse ({e})"
+        self._say_refused(what, done)
+        return done
+
+    def _say_refused(self, what: str, done) -> None:
+        said = self.__dict__.setdefault("_refused", {})
+        refused = isinstance(done, str) and done.startswith("refused")
+        if refused and said.get(what) != done:
+            log.error("%s: %s %s", self.cluster, what, done)     # a refusal is a person's to act on: said, once
+        if refused:
+            said[what] = done
+        elif said.pop(what, None) is not None:
+            log.warning("%s: %s taken again", self.cluster, what)
+
+
+class Untrusted(Exception):
+    """A row of trust is in this cluster's store and does not parse: nobody can be checked by it."""
 
 
 class ClusterTrust:
     """What a cluster's console and gateway read from THEIR OWN cluster's
     Variables — never from the domain — to verify tokens and decide grants
-    offline."""
+    offline.
+
+    A row that does not parse (the review's seventh pass left these readers open: each request raised) is not a row
+    that is absent. `keyset`, `root` and `revoked` raise `Untrusted` with what to do — the door answers 503, "I cannot
+    check", which is what an absent key set in a member already meant — counted once (`TRUST_ROWS`). The revocation
+    list is read entry by entry (`RevocationList.from_items`), and the grants item by item (`grants_from_items`): one
+    entry or one item is its own trouble, not the row's."""
 
     def __init__(self, cluster_vars: Variables):
         self.vars = cluster_vars
 
+    def _read(self, path: str, parse):
+        items, _ = self.vars.get(path)
+        if not items:
+            return None
+        try:
+            v = parse(items)
+        except PARSE_ERRORS as e:
+            TRUST_ROWS.garbled(path, e)
+            raise Untrusted(f"{path} in this cluster's store does not parse ({e}); the domain's agent writes it again "
+                            f"on its next pass") from None
+        TRUST_ROWS.parsed(path)
+        return v
+
     def keyset(self) -> KeySet | None:
-        items, _ = self.vars.get(KEYS_PATH)
-        return KeySet.from_items(items) if items else None
+        return self._read(KEYS_PATH, KeySet.from_items)
 
     def root(self) -> bytes | None:
-        items, _ = self.vars.get(ROOT_PATH)
-        return bytes.fromhex(items["pub"]) if items else None
+        return self._read(ROOT_PATH, lambda items: bytes.fromhex(items["pub"]))
 
     def revoked(self) -> set[str]:
-        items, _ = self.vars.get(REVOKED_PATH)
-        return RevocationList.from_items(items).jtis
+        got = self._read(REVOKED_PATH, lambda items: RevocationList.from_items(items, REVOKED_PATH).jtis)
+        return got or set()
 
     def grants(self) -> list:
         from .grants import grants_from_items
         items, _ = self.vars.get(GRANTS_PATH)
-        return grants_from_items(items)
+        return grants_from_items(items, GRANTS_PATH)
 
 
 def local_networks() -> list[str]:
@@ -404,19 +480,32 @@ def main() -> None:
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
-    next_pass = 0.0
+    run(agent, interval, stop)
+
+
+# The agent's loop. The next pass is set BEFORE the pass (the review's eighth pass, major): a pass that raised left
+# `next_pass` where it was, and the loop ran it again at once — twenty passes a second, ten reads of the domain's store
+# each, from every member behind a relay whose age mark did not parse. A pass that raises is said with its trace once
+# until one goes through — not printed as "the domain is unreachable", which it may not be.
+def run(agent: "DomainAgent", interval: float, stop: threading.Event) -> None:
+    next_pass, failing = 0.0, None
     while not stop.is_set():
         try:
             if agent.due():
                 ok = agent.report_now()                      # an alarm woke it: the report goes now
             elif time.monotonic() >= next_pass:
-                ok = agent.sync(); next_pass = time.monotonic() + interval
+                next_pass = time.monotonic() + interval
+                ok = agent.sync()
             else:
                 ok = True
-        except Exception:                                    # noqa: BLE001 — the domain is unreachable; keep the last set
+            failing = None
+        except Exception as e:                               # noqa: BLE001 — a bad pass: the last books are kept
             ok = False
-        if not ok:
-            print(f"{cluster}: domain unreachable; keeping the key set from {agent.last_synced}", flush=True)
+            if failing != repr(e):
+                failing = repr(e)
+                log.exception("%s: the agent's pass failed; trying again in %.0f s", agent.cluster, interval)
+        if not ok and failing is None:
+            print(f"{agent.cluster}: domain unreachable; keeping the key set from {agent.last_synced}", flush=True)
         agent.woken.wait(max(0.05, min(agent.URGENT_GAP, next_pass - time.monotonic())))
 
 

@@ -39,6 +39,9 @@ from .federation import DomainDirectory
 from .readview import ReadView
 
 log = logging.getLogger("domain.console")
+# The tables of what others wrote that `/healthz` counts (`w2cplatform.rows`): members' objects, grants, user records,
+# and the trust rows a cluster holds (the review's eighth pass: "counted, named" — and shown).
+GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
 
 
 class Console:
@@ -59,7 +62,9 @@ class Console:
     # Each step of the pass in a try of its own, and what one raises SAID (М10's seventh review, part 2): one `try` with
     # `except Exception: pass` around all five, so a member object that did not parse in the first froze the view of
     # the whole domain — every cluster's time stood still — and the log was empty. A step that raises is logged with
-    # its trace once, until it succeeds again (`refresh_failures` counts every one), and the steps after it run.
+    # its trace once, until it succeeds again (`refresh_failures` counts every one), and the steps after it run. The
+    # bookkeeping is `domain.steps.Steps`, which the signer's loop and the books' pass share (the review's eighth
+    # pass); what is failing now is on `/healthz`.
     def _refresher(self):
         while not self._stop.is_set():
             self._steps(
@@ -71,20 +76,21 @@ class Console:
             self._stop.wait(self.refresh_interval)
 
     def _steps(self, *steps) -> None:
-        failing = self.__dict__.setdefault("_failing", set())
-        for what, step in steps:
-            try:
-                step()
-            except Exception:                              # noqa: BLE001 — a bad step is a stale part of the view, not a dead console
-                self.refresh_failures = getattr(self, "refresh_failures", 0) + 1
-                if what not in failing:
-                    failing.add(what)
-                    log.exception("domain console: %s failed; the other steps go on, and this one is tried every %.0f s",
-                                  what, self.refresh_interval)
-            else:
-                if what in failing:
-                    failing.discard(what)
-                    log.warning("domain console: %s works again", what)
+        if "_pass" not in self.__dict__:
+            from .steps import Steps
+            self._pass = Steps("domain console", self.refresh_interval, log)
+        self._pass.run(*steps)
+
+    @property
+    def refresh_failures(self) -> int:
+        return self._pass.failures if "_pass" in self.__dict__ else 0
+
+    def health(self) -> dict:
+        """What `/healthz` says: the passes, the steps failing now, and what others wrote that does not parse."""
+        from w2cplatform.rows import counts
+        out = {"ok": True, "passes": self.view.passes, **(self._pass.said() if "_pass" in self.__dict__ else {})}
+        garbled = {n: sum(c.values()) for n, c in counts().items() if n in GARBLED_SHOWN and c}
+        return {**out, **({"garbled": garbled} if garbled else {})}
 
     def _follow_members(self) -> None:
         if self.members is not None and self.publish_to is not None:
@@ -142,7 +148,7 @@ class Console:
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
                 try:
                     if u.path == "/healthz":
-                        return self._send(200, {"ok": True, "passes": console.view.passes})
+                        return self._send(200, console.health())
                     if console.viewer is not None and u.path.startswith("/api/"):
                         subject = console.api._subject(self._token())
                         if subject is not None and not console.viewer(subject):
@@ -275,10 +281,14 @@ def main() -> None:
     trust = ClusterTrust(fed.domain_holder.vars)
 
     def verifier(token: str) -> str:
-        ks = trust.keyset()
+        from .agent import Untrusted
+        try:
+            ks, revoked = trust.keyset(), trust.revoked()
+        except Untrusted as e:                                           # "I cannot check", not a 500 (the review's eighth pass)
+            raise ApiError(503, f"nobody can be checked: {e}") from None
         if ks is None:
             raise ApiError(503, "no signer key set in this cluster yet (is the domain agent running?)")
-        return verify(token, ks, trust.revoked(), kind="person")["sub"]     # the domain's door is a person's (CE)
+        return verify(token, ks, revoked, kind="person")["sub"]     # the domain's door is a person's (CE)
 
     def consoles(cluster: str):
         # Forwarding to a member's console needs a connection TO the member, and the domain opens none

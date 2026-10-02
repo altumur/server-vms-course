@@ -100,7 +100,9 @@ from vms.card import PIECE_BYTES       # what one piece of a camera's card may w
 from vms.card import RING_BYTES        # …and the camera's ring: what a pusher with no camera ring keeps at most
 from w2cplatform.obsd import archive_ms, unix_s
 
-from .federation import Unreachable
+from w2cplatform.rows import finite
+
+from .federation import Unreachable, published
 from .gateway import Forbidden, LeakyQueue, LiveTee
 from .tokens import TokenError, kid_of, verify
 
@@ -114,6 +116,10 @@ LINGER = 10.0                          # how long a stream nobody wants any more
 REMEMBER = 900.0
 PEER_BUFFER = 50                       # frames one ingest holds for a peer that is not keeping up: two seconds (AJ)
 MAX_LIVE_ASKS = 16                     # live asks one asking camera may hold at one ingest: a ceiling, not a queue
+# How far ahead an ask's deadline may be, from when it arrives (the review's eighth pass; the product found `within`
+# had no upper bound): an ask is "do it now", and the product's commands live up to 600 s (`valid_until`). One kept
+# for a year was one more live ask for a year, against the ceiling above.
+ASK_DEADLINE_MAX = 600.0
 ANSWER_GRACE = 5.0                     # past the deadline by this, an ask nobody knows of is lost, not late
 # A RANGE IS WAITED FOR A PIECE AT A TIME (the sixth review). The recorder waited one fixed number for the whole
 # answer, whatever it weighed: a camera that answered in 1.2 s to a wait of 1 failed four requests out of four, and
@@ -279,7 +285,7 @@ class Ingest:
 
     # -- the camera's side of the conversation ----------------------------------------------------------
     def _check(self, token: str, ref: str, camera_now: float | None = None) -> dict:
-        ks = self.keys()
+        ks = self._keys()
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
         try:
@@ -289,8 +295,17 @@ class Ingest:
         if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
             raise Refused(f"stream token is for {p.get('ref')} at {p.get('aud')}, not {ref} at {audience(self.cluster)}")
         if camera_now is not None:                               # every request says what time the camera thinks it is
-            self._cam(ref).offset = self.wall() - float(camera_now)
+            self._cam(ref).offset = self.wall() - _finite_clock(camera_now)
         return p
+
+    def _keys(self):
+        """`keys()` — and a key set in this cluster's store that does not parse is a refusal with the reason, as no key
+        set is (the review's eighth pass: it raised out of every poll and push of every camera)."""
+        from .agent import Untrusted
+        try:
+            return self.keys()
+        except Untrusted as e:
+            raise Refused(f"{self.cluster}: {e}") from None
 
     def poll(self, token: str, ref: str, camera_now: float | None = None, version: int | None = None,
              wait: float = 0.0) -> dict:
@@ -444,7 +459,7 @@ class Ingest:
         """A camera asks `target` to do `action` before `deadline` (the asker's clock). The token is the domain
         signer's, for this ingest, naming the target in its `ask` claim — issued because a scenario ties the
         asker's event to the target's action. Kept only until the deadline."""
-        ks = self.keys()
+        ks = self._keys()
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet")
         try:
@@ -459,9 +474,21 @@ class Ingest:
         if action not in (p.get("acts") or []):
             raise Refused(f"{p.get('by', p['sub'])} may ask {target} for {p.get('acts') or 'nothing'}, not {action}")
         now, by = self.wall(), p.get("by", p["sub"])
+        # A DEADLINE IS A NUMBER (the review's eighth pass, major). `nan` passed every check and failed every comparison:
+        # `nan > now` is false, so an ask of `nan` was never counted against `MAX_LIVE_ASKS` and never expired — two
+        # thousand of them were taken at a ceiling of sixteen, and every poll of the target handed them all out. A
+        # deadline or a camera clock that is not a finite number is refused, and so is a deadline further ahead than
+        # `ASK_DEADLINE_MAX`.
+        shift = 0.0 if camera_now is None else now - _finite_clock(camera_now)
+        try:
+            deadline = finite(deadline)
+        except (TypeError, ValueError):
+            raise Refused(f"an ask's deadline is a number of seconds, not {deadline!r}") from None
+        if deadline + shift > now + ASK_DEADLINE_MAX:
+            raise Refused(f"an ask's deadline is at most {ASK_DEADLINE_MAX:.0f} s ahead; this one is "
+                          f"{deadline + shift - now:.0f} s ahead")
         for ing in self._cluster():
             ing._sweep(now)
-        shift = 0.0 if camera_now is None else now - float(camera_now)
         live = (sum(1 for c in list(self.cams.values()) for a in list(c.asks.values()) if a["by"] == by and a["deadline"] > now)
                 + sum(1 for a in list(self.up.values()) if a["by"] == by and a["deadline"] > now))
         if p.get("up"):                                   # a road UP: not for a camera here — for this relay to carry
@@ -1502,6 +1529,21 @@ class Asker:
         return None
 
 
+def _finite_clock(camera_now) -> float:
+    """The time a camera says it is, as a number — `nan` would make its offset, and every range on its clock, `nan`
+    (the product found `X-Camera-Clock: NaN` did): refused."""
+    try:
+        return finite(camera_now)
+    except (TypeError, ValueError):
+        raise Refused(f"the camera's clock is a number of seconds, not {camera_now!r}") from None
+
+
+def _urls(v: dict) -> None:
+    """An ingest's announcement: its `urls`, a list of strings."""
+    if not isinstance(v.get("urls"), list) or not all(isinstance(u, str) for u in v["urls"]):
+        raise TypeError("its urls are not a list of addresses")
+
+
 # -- the domain's side: the book of asks -----------------------------------------------------------------------
 # For every scenario "an event on camera A acts on camera B", A's cluster gets the roads to B: the ingest of the
 # cluster that records B and, when that cluster forwards B up (Lesson 17), the ingest above — with a token to
@@ -1512,13 +1554,20 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
     from .chain import UPSTREAM_PATH
     now, books = crossings.wall(), {}
 
-    def urls_of(cluster):
+    # What another cluster's ingest announced is read through the members' one reader (the review's eighth pass): a
+    # torn announcement raised out of the whole book of asks — every camera's right to ask stopped being re-issued.
+    # One that does not parse keeps the road the book already holds for that cluster (`old`), as the book of
+    # primaries does (`Crossings._ingest`); a cluster that is silent gives no road, as before.
+    def urls_of(cluster, old: dict | None = None):
         c = crossings.view.fed.clusters.get(cluster)
         try:
             raw = c.objects.get(INGEST) if c is not None else None
         except Unreachable:
             raw = None
-        return json.loads(raw)["urls"] if raw else None
+        if not raw:
+            return None
+        said = published(cluster, INGEST, raw, _urls)
+        return said["urls"] if said is not None else (old or {}).get("urls")
 
     dc = getattr(crossings.view.fed, "domain_holder", None)
     top = crossings.centre or (dc.name if dc is not None else None)      # where every relay's forwarder goes
@@ -1547,17 +1596,18 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
             # The target is in another relay. The only road this camera has is its own relay, marked UP; the
             # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
             # road down to the target: it polls the top, or its relay forwards it there.
-            if not (on == top or above.get("mode") == "push") or urls_of(via) is None or urls_of(top) is None:
-                continue
-            roads = [road(old.get(via), via, urls_of(via), home, a, b, acts, up=top)]
             ohave, _ = crossings.vars.get(f"{ASKS_PATH}/{via}")
             oold = {r["cluster"]: r for r in json.loads((ohave or {}).get(f"{b}|{a}", '{"roads": []}'))["roads"]}
+            mine, theirs = urls_of(via, old.get(via)), urls_of(top, oold.get(top))
+            if not (on == top or above.get("mode") == "push") or mine is None or theirs is None:
+                continue
+            roads = [road(old.get(via), via, mine, home, a, b, acts, up=top)]
             books.setdefault(via, {})[f"{b}|{a}"] = json.dumps(
-                {"roads": [road(oold.get(top), top, urls_of(top), via, a, b, acts)]}, sort_keys=True)
+                {"roads": [road(oold.get(top), top, theirs, via, a, b, acts)]}, sort_keys=True)
         else:
             # Its own relay (the only one it reaches), or — for a camera that reaches the centre — the cluster
             # where the target polls, then the centre that cluster forwards it to.
-            wanted = [(on, urls_of(on))]
+            wanted = [(on, urls_of(on, old.get(on)))]
             if not via and above.get("mode") == "push" and crossings.centre:
                 wanted.append((crossings.centre, above["urls"]))
             roads = [road(old.get(cluster), cluster, urls, home, a, b, acts) for cluster, urls in wanted if urls]

@@ -25,6 +25,13 @@ from dataclasses import dataclass, field
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from w2cplatform.rows import Table
+
+# The rows of trust a cluster holds — the key set, the root it pinned, the revocation list — as the domain's agent
+# carried them (the review's seventh pass left "the trust readers" open). One that does not parse is counted here once
+# (`trust_row`) and logged once; what not reading it means is the reader's (`agent.ClusterTrust`): a door that cannot
+# check a token says so with a 503 — never "nothing to check".
+TRUST_ROWS = Table("trust_row", "a door that reads it answers 503 until the domain's agent writes it again", "trust row")
 
 
 class TokenError(Exception):
@@ -234,13 +241,32 @@ class RevocationList:
     def to_items(self) -> dict:
         return {"jtis": ",".join(f"{j}:{e}" for j, e in sorted(self.entries.items()))}
 
+    # Entry by entry (the review's seventh pass: the signer did not start on one torn entry, and a cluster's every
+    # request raised). An entry whose expiry is not a number — or that has no expiry at all, half of it written — still
+    # names a token that was revoked: it stays revoked, with no end (`inf`), counted once. A row that is not an object
+    # of a string raises: whoever reads it decides what not knowing the revocations means.
     @classmethod
-    def from_items(cls, items: dict | None) -> "RevocationList":
+    def from_items(cls, items: dict | None, where: str = "domain/revoked") -> "RevocationList":
+        import math
         rl = cls()
+        if items is not None and not (isinstance(items, dict) and isinstance(items.get("jtis", ""), str)):
+            raise TypeError("the revocation list is not an object holding a string")
+        torn = False
         for part in (items or {}).get("jtis", "").split(","):
-            if ":" in part:
-                j, e = part.rsplit(":", 1)
-                rl.entries[j] = float(e)
+            j, _, e = part.rpartition(":") if ":" in part else (part, "", "")
+            if not j:
+                continue
+            try:
+                exp = float(e)
+                if math.isnan(exp):
+                    raise ValueError("nan")
+            except ValueError:
+                exp, torn = math.inf, True
+            rl.entries[j] = exp
+        if torn:
+            TRUST_ROWS.garbled(where, ValueError("an entry's expiry is not a number: kept revoked, with no end"))
+        else:
+            TRUST_ROWS.parsed(where)
         return rl
 
     @property

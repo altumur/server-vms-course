@@ -38,7 +38,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 from cluster.variables import Conflict
 
-from .federation import Unreachable
+from w2cplatform.rows import PARSE_ERRORS
+
+from .federation import MEMBER_OBJECTS, Unreachable
 from .tokens import KeySet, TokenIssuer, _b64, _unb64
 
 POINTER, OBJECT, REFUSED = "domain/shared", "domain/shared", "domain/shared-refused"
@@ -121,15 +123,17 @@ class SharedSettings:
             try:
                 have, _ = c.vars.get(POINTER)
                 refused, _ = c.vars.get(REFUSED)
+                if refused and (int(refused.get("term", 0)), int(refused.get("rev", 0))) == want:
+                    out["refused"][name] = str(refused.get("reason", ""))
+                elif have and (int(have["term"]), int(have["rev"])) >= want:
+                    out["holding"].append(name)
+                else:
+                    out["behind"][name] = int(have["rev"]) if have else 0
             except Unreachable:
                 out["silent"].append(name)
-                continue
-            if refused and (int(refused.get("term", 0)), int(refused.get("rev", 0))) == want:
-                out["refused"][name] = refused.get("reason", "")
-            elif have and (int(have["term"]), int(have["rev"])) >= want:
-                out["holding"].append(name)
-            else:
-                out["behind"][name] = int(have["rev"]) if have else 0
+            except PARSE_ERRORS as e:                       # its copy cannot be read: as one that did not answer (the
+                MEMBER_OBJECTS.garbled(f"{name}/{POINTER}", e)   # review's eighth pass), and the other members are read
+                out["silent"].append(name)
         out["sentence"] = (f"rev {want[1]} on {len(out['holding'])} of {len(out['holding']) + len(out['behind']) + len(out['refused']) + len(out['silent'])} members"
                            + (f"; not answering: {', '.join(sorted(out['silent']))}" if out["silent"] else "")
                            + (f"; refused by: {', '.join(sorted(out['refused']))}" if out["refused"] else ""))
@@ -187,11 +191,11 @@ class SharedView:
         raw = self.objects.get(OBJECT)
         if raw is None:
             return None
-        from .agent import ClusterTrust
+        from .agent import ClusterTrust, Untrusted
         try:
             return verify(json.loads(raw), ClusterTrust(self.vars).keyset(), self.wall())
-        except NotTaken:
-            return None
+        except (NotTaken, Untrusted, *PARSE_ERRORS):
+            return None                                  # nothing this member can check: no document, as unverified
 
     def settings(self) -> dict:
         doc = self.document()

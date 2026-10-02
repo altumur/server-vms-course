@@ -41,7 +41,9 @@ import time
 
 from w2cplatform.events import ALARM, EventLog, alarm_tree, buckets_under, read_bucket, subsystems_under
 
-from .federation import Unreachable
+from w2cplatform.rows import PARSE_ERRORS, finite
+
+from .federation import Unreachable, published
 
 BUCKET = 600
 POLLED = "rec/polled"                 # an ingest's word, `rec/polled/<ingest>`: when each camera last polled it
@@ -216,15 +218,22 @@ class DomainAlarms:
         best = None
         for name, c in self.fed.clusters.items():
             try:
-                raws = [c.objects.get(k) for k in c.objects.list(POLLED + "/")]   # one per ingest of the cluster
+                raws = [(k, c.objects.get(k)) for k in c.objects.list(POLLED + "/")]   # one per ingest of the cluster
             except Unreachable:
                 continue
-            for raw in filter(None, raws):
-                d = json.loads(raw)
+            for key, raw in raws:
+                # Through the members' one reader (the review's eighth pass, minor): one ingest's object that does not
+                # parse said nothing, and raised out of the domain's list of alarms for every member.
+                d = published(name, key, raw, lambda d: (finite(d["ts"]), dict(d.get("cameras") or {})))
+                if d is None:
+                    continue
                 age = (d.get("cameras") or {}).get(str(ref))
                 if age is None:
                     continue
-                at = float(d["ts"]) - float(age)                 # `ts` on the domain's clock: the copy shifts it
+                try:
+                    at = float(d["ts"]) - finite(age)            # `ts` on the domain's clock: the copy shifts it
+                except PARSE_ERRORS:
+                    continue
                 if best is None or at > best[0]:
                     best = (at, d.get("cluster", name))
         return best
