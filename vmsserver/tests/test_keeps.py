@@ -401,6 +401,42 @@ def test_a_garbled_keep_is_shown_as_it_holds_and_a_recorder_waiting_for_its_volu
     assert net["waiting"] == ["r-9"] and page["waiting"][0]["recorder"] == "r-9"
 
 
+def test_a_keep_that_stays_garbled_for_an_hour_is_an_alarm_once_per_episode_and_again_once_a_day():
+    """The review's eighth pass, part 4: a keep whose row does not parse holds its camera as far as its interval reads,
+    and only the console's list said so. The incidents recorder carries since when it is garbled (`garbled_since`) and,
+    past `KEEP_GARBLED_AFTER`, says `archive.keep.garbled` — once, again a day later while it lasts; a keep that parses
+    again ends the episode, and its next garbling is a new one."""
+    box, k = _site(source=False)
+    t = box.wall()
+    bad = {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna", "recordings": '["7"]'}
+    box.vars.put("rec/keeps/7-bad", bad)
+    state = k.keep_pass()
+    assert state["7-bad"]["garbled"] is True and state["7-bad"]["garbled_since"] == t
+    assert k.heartbeat_extra()["keeps"]["7-bad"]["garbled_since"] == t
+    box.wall.advance(k.KEEP_GARBLED_AFTER - 60)
+    k.keep_pass()
+    assert _events(box, "archive.keep.garbled") == []                  # not yet an hour: a hand edit has its chance
+    box.wall.advance(60)
+    k.keep_pass()
+    [alarm] = _events(box, "archive.keep.garbled")
+    assert alarm["keep"] == "7-bad" and alarm["cam"] == "7" and alarm["class"] == "alarm" and alarm["since"] == t
+    box.wall.advance(k.KEEP_EVERY)
+    k.keep_pass()
+    assert len(_events(box, "archive.keep.garbled")) == 1              # said once, not every pass
+    box.wall.advance(k.SHALLOW_AGAIN)
+    k.keep_pass()
+    assert len(_events(box, "archive.keep.garbled")) == 2              # again a day later, while it lasts
+
+    box.vars.put("rec/keeps/7-bad", {**bad, "from": str(t - 600)})    # mended: the episode is over
+    assert "garbled" not in k.keep_pass()["7-bad"]
+    box.vars.put("rec/keeps/7-bad", bad)                               # garbled again: a new hour from now
+    again = box.wall()
+    assert k.keep_pass()["7-bad"]["garbled_since"] == again
+    box.wall.advance(k.KEEP_GARBLED_AFTER)
+    k.keep_pass()
+    assert [a["since"] for a in _events(box, "archive.keep.garbled")][-1] == again
+
+
 def test_a_keep_written_before_its_fields_were_renamed_still_holds():
     """`since`/`until` became `from`/`to` (feedback BQ). A row written before that, read by the new names only,
     would hold nothing — an interval from 0 to 0 — and the footage would go by its days, silently. It is read by

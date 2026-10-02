@@ -22,13 +22,16 @@ from cluster.variables import FakeVariables  # noqa: E402
 from cluster.recworker import ClusterRecorder  # noqa: E402
 from cluster.worker import ClusterWorker  # noqa: E402
 from vms import volumes  # noqa: E402
-from vms.config import REC_SPEC, SPEC  # noqa: E402
+from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS  # noqa: E402
 from vms.worker import FakeActuator  # noqa: E402
 from tests.conftest import Cluster  # noqa: E402
 from tests.trace import TraceLog, TracedVariables  # noqa: E402
 
 TRACES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "traces")
-WORKER_GRANTS = SPEC.sub.acl_worker() + ["objects/vms/heartbeats/*"]       # what vmsworker-policy.hcl grants
+# What vmsworker-policy.hcl grants — the code's own list (`WORKER_ACL`, `WORKER_OBJECTS`), the one `test_policies.py`
+# checks the file against: the device rows a worker writes (`vms/devices/*`) and the marks before a command
+# (`objects/vms/commands/*`) were missing here, and the stand let a worker do less than the policy does.
+WORKER_GRANTS = WORKER_ACL + ["objects/" + p for p in WORKER_OBJECTS]
 RECORDER_GRANTS = REC_SPEC.sub.acl_worker() + ["objects/rec/heartbeats/*"]  # what recworker-policy.hcl grants
 
 

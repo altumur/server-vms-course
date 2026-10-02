@@ -138,11 +138,11 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
 
 Это **копия**: сами строки остаются в raft с одним писателем. Представление для чтения М12 строится из этих объектов и heartbeat'ов воркеров, и никогда — из Variables. Его `ts` — возраст, который консоль домена показывает на каждой строке этого кластера. Это мысль урока 6: RPO поднялся на уровень выше и стал числом на экране.
 
-Контроллер публикует снимок каждые пять секунд рядом с `ensure_placed()`, `redistribute()` и `ensure_home(1)`. Эти четыре вызова — весь его цикл, и каждый в своём `try`:
+Контроллер публикует снимок каждые пять секунд, сразу после прохода размещения. Проход и снимок — весь его цикл, и каждый в своём `try`:
 
 ```python
     while not stop.is_set():
-        _steps("placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.publish_snapshot)
+        _placement_pass("placement", ctl)
         stop.wait(5)
 ```
 
@@ -155,9 +155,21 @@ def _steps(what: str, *steps) -> None:
             step()
         except Exception:                         # noqa: BLE001
             logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
+
+
+# One pass of a placement controller, the same as the box's loop makes it (`vms/__main__._controller_loop`; the review's
+# eighth pass, found by the coordinator): `pass_once` — place, move, bring ONE unit home, each step in a try of its own —
+# and the report it writes (`<sub>/controller/pass`), which is where `/metrics` reads `<sub>_units_unplaced`,
+# `<sub>_reconcile_pass_seconds`, the last pass and the last success. The cluster's loops called the three steps one by
+# one and wrote no report: on a cluster those metrics said 0 and -1 for ever. Then the snapshot, in its own step — the
+# recordings' too, as on a box (`rec_snapshot_age_seconds` was -1 here).
+def _placement_pass(what: str, ctl) -> None:
+    _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
 ```
 
-**Шаг, который упал, не отменяет остальные.** Четыре вызова стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал. Так же устроен цикл контроллера записей (`reccontroller`: `ensure_placed`, `redistribute`, `ensure_home(1)`, `unplace_deleted`).
+**Шаг, который упал, не отменяет остальные.** Шаги стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал.
+
+**Проход — тот же, что на коробке** (восьмое ревью ServerVMS, нашёл координатор). Цикл кластера звал `ensure_placed`, `redistribute` и `ensure_home(1)` по одному и не писал отчёта прохода, а `/metrics` берёт из этого отчёта (`<sub>/controller/pass`) `vms_units_unplaced`, `vms_reconcile_pass_seconds`, последний проход и последний успех. На кластере эти метрики навсегда показывали 0 и -1. Теперь `_placement_pass` зовёт `pass_once(1)` платформы (`SpecController.pass_once`): те же три шага, каждый в своём `try`, и отчёт, который он пишет, — как цикл контроллера на коробке (`vms/__main__._controller_loop`). Снимок — отдельным шагом. Так же устроен цикл контроллера записей (`reccontroller`: `_placement_pass("rec placement", ctl)`), и у записей теперь тоже публикуется снимок — `rec_snapshot_age_seconds` на кластере больше не -1.
 
 ## Шаг 6 — Консоль
 

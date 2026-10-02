@@ -43,24 +43,46 @@
 # live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
 def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0) -> list[Span] | None:
+    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout)
+    return seen.spans if seen.answered else None
+
+
+def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0) -> Read:
     import json as _json
     import urllib.request
     from w2cplatform.console import heartbeats
-    out, answered = set(), False
-    for _, hb in sorted(heartbeats(objects, "rec/").items()):
+    from w2cplatform.contract import is_live
+    out, answered, silent, read, garbled = set(), False, [], set(), []
+    every = heartbeats(objects, "rec/")
+    for w, hb in sorted(every.items()):
         url = str(hb.extra.get("archive_url") or "")
-        if not url or now - hb.ts > 45.0:
+        if not url or not is_live("rec", hb.ts, now, 45.0):   # whose clock: `is_live` (the review's second pass, M9)
             continue
         try:
             with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
-                body = _json.loads(r.read())
-        except (OSError, ValueError):
+                spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
+        except (OSError, *PARSE_ERRORS, RecursionError):
+            silent.append(w)
             continue
         answered = True
-        for sp in body.get("spans", []):
-            out.add(Span(str(unit), int(sp["epoch"]), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
-                         str(sp.get("source", "live"))))
-    return sorted(out, key=lambda s: (s.start, s.epoch)) if answered else None
+        if not whole:
+            garbled.append(w)
+        if hb.extra.get("volume") and whole:
+            read.add(str(hb.extra["volume"]))            # a volume read in part is not read: it stays `unread` if nobody else
+        for sp in spans:
+            out.add(Span(str(unit), sp["epoch"], sp["start"], sp["end"], sp["bytes"], sp["source"]))
+    unread = []
+    if vars_ is not None:
+        from . import volumes
+        from .console import unserved_volumes          # the timeline's rule, read and not copied
+        off = {v.name for v in volumes.declared(vars_) if not v.enabled}
+
+        def held_it(recorder: str) -> bool:
+            hb = every.get(recorder)
+            return hb is not None and any(str(st.get("id")) == str(unit) for st in hb.status if isinstance(st, dict))
+        unread = [g["volume"] for g in unserved_volumes(objects, now)
+                  if g["volume"] not in read and g["volume"] not in off and held_it(g["recorder"])]
+    return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread, garbled)
 ```
 
 Ответ берётся из индекса томов и ниоткуда больше. Это не аскеза, а требование задачи, и у него три половины.
@@ -70,6 +92,30 @@ def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: fl
 **Место.** Индекс тома прочитать может только тот, кто этот том смонтировал. Поэтому вопрос идёт к двери регистратора, который держит том (урок 10). Одной двери мало: запись за свою жизнь могла переехать, и её минуты лежат в двух томах у двух регистраторов. Функция спрашивает каждую живую дверь и складывает ответы в множество — одна и та же строка индекса от двух дверей не удвоится.
 
 **Ответ одной двери — не полнота.** `recording_spans` склеивал ответы дверей, которые ответили, и молча пропускал не ответившие: запись переехала с тома A на B, дверь A не ответила — задача кончалась `done`, и половина интервала не сканировалась никогда (третье ревью). Теперь `recording_read` возвращает спаны, двери, которые **не ответили** (`silent`), и тома, которые **никто не прочитал** (`unread`) — не все объявленные, а те, что сейчас никто не обслуживает (`unserved_volumes`, правило таймлайна) и чей регистратор в последнем heartbeat'е называл **эту** запись (после четвёртого ревью: один объявленный том без регистратора держал в `waiting` все сканы кластера); задача сканирует, что пришло, но остаётся `waiting` с названием недостающего, а не `done` (урок 21). Тесты: `test_scan.py`, `test_detjob_worker.py`.
+
+**Ответ двери — чужой JSON, и каждый спан читается отдельно** (восьмое ревью, часть 4, воспроизведено запуском). `int(sp["epoch"])` стоял вне `try` двери: дверь другой сборки или прокси, ответившая `{"epoch": "e3"}`, бросала исключение из чтения, скан-воркер не двигал ни одной задачи (он зовёт чтение без `try` на задачу), и спан хорошей двери рядом тоже терялся. Теперь тело читается не больше `rows.ANSWER_MAX` (`answer`), а спаны разбирает `door_spans`:
+
+```python
+def door_spans(key: str, body) -> tuple[list[dict], bool]:
+    """The spans of a door's `/timeline` answer, each read alone — `([{start, end, epoch, bytes, source, …}], whole)`;
+    `ValueError` when the answer is not `{spans: [...]}` at all."""
+    if not isinstance(body, dict) or not isinstance(body.get("spans", []), list):
+        raise ValueError("a timeline is {spans: [...]}")
+    out, whole = [], True
+    for sp in body.get("spans", []):
+        try:
+            out.append({**sp, "epoch": int(finite(sp.get("epoch") or 0)), "start": finite(sp["start"]),
+                        "end": finite(sp["end"]), "bytes": int(finite(sp.get("bytes") or 0)),
+                        "source": str(sp.get("source", "live"))})
+        except PARSE_ERRORS as e:
+            DOOR_SPANS.garbled(key, e)
+            whole = False
+    if whole:
+        DOOR_SPANS.parsed(key)
+    return out, whole
+```
+
+Ответ, который не `{spans: [...]}`, — это `ValueError`, и дверь попадает в `silent`, как не ответившая. Спан, который не разбирается, пропускается и считается один раз на дверь и запись (`DOOR_SPANS`, на `/metrics` — таблица `door_span`), а дверь называется в `Read.garbled`. Чтение тогда неполное (`Read.partial`), и том такой двери не считается прочитанным, так что скан не кончается `done` без минут, которых не прочёл. Тем же разборщиком читают двери копировщик удержаний (`RecWorker._door_timeline`) и таймлайн с экспортом камеры (`console.door_timeline`). Тест: `test_row_reader.py::test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not_the_scan`.
 
 **Молчание.** `None` и `[]` — разные ответы. `[]`: двери ответили, и записи в этом интервале нет. `None`: не ответил никто, и сказать нельзя ничего. Скан, принявший второе за первое, закончил бы задачу, которую не читал, — и доложил бы «ноль событий». Тест — `test_what_was_recorded_is_asked_of_the_recorders_doors_and_nobody_answering_is_not_nothing`: без регистраторов `None`, с дверью над томом — спан записи `7`, а про запись `8`, которой нет, — пустой список.
 
