@@ -112,6 +112,44 @@ def test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_
         da.shutdown(); srv.shutdown()
 
 
+def test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made():
+    """The review's third pass, major: an export decoded every door's whole answer into one list and made the MP4 of
+    all of it — an hour of a camera, twice, in the console's memory. It reads each stretch in pieces of
+    `EXPORT_PIECE`, cut at a key frame, and writes fragments as they come: the same file, byte for byte, as the one
+    made in one piece, its sha256 in the journal; asked of the door ten times instead of once."""
+    from vms import console as vc
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    t = box.wall() - 3600
+    st = store("a")
+    footage(st, "7", 1, t, t + 600, step=1)
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    da = door(box, st, "r-a", "srv-a")
+    asked = []
+    real = vc._door
+    vc._door = lambda url, timeout: (asked.append(url), real(url, timeout))[1]
+    url = f"http://127.0.0.1:{srv.server_address[1]}/export/7?rec=7&from={t}&to={t + 600}"
+    try:
+        piece = vc.EXPORT_PIECE
+        vc.EXPORT_PIECE = 1e9
+        try:
+            whole = urllib.request.urlopen(url).read()
+        finally:
+            vc.EXPORT_PIECE = piece
+        assert sum("/samples/" in u for u in asked) == 1
+        asked.clear()
+        r = urllib.request.urlopen(url)
+        streamed = r.read()
+        assert r.headers.get("Content-Length") is None and r.headers["Content-Type"] == "video/mp4"   # written as it is made
+        assert streamed == whole and len(streamed) > 600 * 200                                       # the same file
+        assert sum("/samples/" in u for u in asked) >= 10                                            # a minute at a time
+        digests = [json.loads(line).get("sha256") for b in buckets_under(box.archive, "audit", "console", 600)
+                   for line in open(os.path.join(box.archive, b.path)) if json.loads(line)["kind"] == "archive.read"]
+        assert hashlib.sha256(streamed).hexdigest() in digests
+    finally:
+        vc._door = real; da.shutdown(); srv.shutdown()
+
+
 def test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_when_to_come_back():
     """The review's third pass, major: an export holds its interval in memory, an hour of a camera is gigabytes, and
     nothing bounded how many ran at once — two or three from anybody with `view` took the console down. Past

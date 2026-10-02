@@ -41,6 +41,7 @@ from .controller import VmsController
 EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
 EXPORTS_AT_ONCE = 2           # exports one console makes at a time (`EXPORTS_AT_ONCE` in its environment): each is held in memory
 EXPORT_RETRY = 5.0            # the `Retry-After` of an export refused for that
+EXPORT_PIECE = 60.0           # an export reads a stretch this much at a time: what one recording holds in memory
 DOOR_TIMEOUT = 5.0            # a recorder's door that does not answer in this is named, not waited for
 SESSIONS_KEPT = 10000         # live sessions remembered for their hang-up: past it, the oldest is forgotten
 
@@ -289,12 +290,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     del seen_reads[k]
             seen_reads[(user, rel, whole)] = now
         parts = rel.split("/")
-        digest = hashlib.sha256(sent["data"]).hexdigest() if whole and "data" in sent else None
+        digest = sent.get("sha256") or (hashlib.sha256(sent["data"]).hexdigest() if whole and "data" in sent else None)
         log.info("archive read: %s got %s (%s, %d bytes) from %s", user, rel, sent.get("status"), sent.get("bytes", 0), addr)
         journal = getattr(extra, "journal", None)         # the console's journal (`w2cplatform/journal.py`), set by `make_console`
         if journal is not None:
             journal.say("archive.read", user=user, media=rel, addr=addr, status=sent.get("status"), bytes=sent.get("bytes", 0),
-                        **({"sha256": digest} if digest else {}), **({"recording": parts[1]} if len(parts) > 1 else {}))
+                        **({"sha256": digest} if digest else {}), **({"recording": parts[1]} if len(parts) > 1 else {}),
+                        **({"unreachable": sent["unreachable"]} if sent.get("unreachable") else {}))
 
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
@@ -516,21 +518,17 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # moment taken once — the first door's — and then, as everything that leaves through this console, a line
     # `archive.read` with what was sent and its sha256: the answer to "is this the file you gave out".
     #
-    # AT MOST `EXPORTS_AT_ONCE` OF THEM (the review's third pass, major). An export holds its interval's samples and
-    # the MP4 made of them in memory — an hour of an 8 Mbit/s camera is some 3.6 GB, twice — and nothing bounded how
-    # many ran at once: two or three from anybody with `view` took the console down, and the requests' loop with
-    # it. Past the bound it is 503 with `Retry-After`, which a client waits out, rather than a process that dies.
-    #
-    # Not streamed, and said why: the memory is in READING — the door answers a range as one body (`/samples`, the
-    # third pass's blocker 6, in the recorder's door) and the frames from several doors are merged by time before
-    # the first byte, so a key frame and its parameter sets are known before the headers and the unreachable doors
-    # can still go into one. Writing the MP4 out as it is made (`fmp4.Writer` takes any file) saves only the second
-    # copy; the bound is what stops the process dying, and streaming belongs with reading the range in pieces.
+    # AT MOST `EXPORTS_AT_ONCE` OF THEM, AND EACH A STREAM (the review's third pass, major). An export held its
+    # interval's samples and the MP4 made of them in memory — an hour of an 8 Mbit/s camera is some 3.6 GB, twice —
+    # and nothing bounded how many ran at once: two or three from anybody with `view` took the console down, and the
+    # requests' loop with it. Now an export reads a minute of each recording at a time and writes the MP4 as it is
+    # made (`_export`), so one holds about a minute per recording; and past the bound the next is 503 with
+    # `Retry-After`, which a client waits out — each export is also a minute of reading from a recorder's door.
     exporting = threading.BoundedSemaphore(max(1, int(os.environ.get("EXPORTS_AT_ONCE", EXPORTS_AT_ONCE))))
 
     def export(handler, cid: str, q: dict):
         if not exporting.acquire(blocking=False):
-            return 503, json.dumps({"detail": "this console is making as many exports as it holds in memory at once — retry",
+            return 503, json.dumps({"detail": "this console is making as many exports as it makes at once — retry",
                                     "error": "busy"}).encode(), [("Content-Type", "application/json"),
                                                                  ("Retry-After", str(int(EXPORT_RETRY)))]
         try:
@@ -539,7 +537,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             exporting.release()
 
     def _export(handler, cid: str, q: dict):
-        from .fmp4 import from_samples
+        import hashlib
+        import heapq
+        import itertools
+        import struct
+        from . import fmp4
         try:
             t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
         except ValueError:
@@ -551,7 +553,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
         # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
         # caller can see.
-        from w2cplatform.obsd import Sample
+        from w2cplatform.obsd import Sample, unix_s
         from .archive import Span, authoritative
         # `rec` picks ONE of this camera's recordings — never another camera's: the gate checked `view` on the
         # camera in the path, and a recording named in the query must be hers (the review's second pass, blocker 1).
@@ -561,7 +563,33 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if not units:
                 return 404, {"detail": f"recording {q['rec']} is not a recording of camera {cid}", "error": "not hers"}
         doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
-        got, unreachable = [], []
+        unreachable: list[str] = []
+
+        # THE FRAMES OF A STRETCH, A MINUTE AT A TIME (the review's third pass, major; the door streams since its
+        # blocker 6). Every door's answer used to be decoded into one list and the MP4 made of all of it: an hour
+        # of an 8 Mbit/s camera, twice over, in the console. A stretch is now read in pieces of `EXPORT_PIECE`,
+        # cut at a key frame the way the recorder cuts what it lands (`RecWorker._pieces`): a piece ends where its
+        # last group of pictures begins, and the next piece starts there. A door that fails half way ends its
+        # stretch there and is named; what came before it has gone out already.
+        def frames_of(name: str, url: str, unit: str, lo: float, hi: float):
+            at = lo
+            while at < hi:
+                top = min(hi, at + EXPORT_PIECE)
+                try:
+                    got = sorted(Sample.decode_all(_door(f"{url}/samples/{unit}?from={at}&to={top}", 30.0)),
+                                 key=lambda s: s.begin)
+                except (OSError, ValueError, struct.error):
+                    unreachable.append(name)
+                    return
+                nxt = top
+                if top < hi:
+                    cut = next((i for i in range(len(got) - 1, -1, -1) if got[i].key and unix_s(got[i].begin) > at), None)
+                    if cut is not None:
+                        nxt, got = unix_s(got[cut].begin), got[:cut]
+                yield from got
+                at = nxt
+
+        streams = []
         for unit in units:
             spans, where = [], {}
             for name, url, _ in doors:
@@ -574,34 +602,65 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
                                 str(sp.get("source", "live")))
                     spans.append(span)
-                    where.setdefault(span, url)
-            for span, lo, hi in authoritative(spans, t0, t1):
-                try:
-                    got += Sample.decode_all(_door(f"{where[span]}/samples/{unit}?from={lo}&to={hi}", 30.0))
-                except (OSError, ValueError):
-                    unreachable.append(next(n for n, u, _ in doors if u == where[span]))
-        frames, end = [], None
-        for smp in sorted(got, key=lambda s: s.begin):
-            if end is not None and smp.begin < end:
-                continue                                 # this moment came from another door already
-            if not frames and not smp.key:
-                continue
-            frames.append(smp)
-            end = smp.end
-        if not frames:
-            return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
+                    where.setdefault(span, (name, url))
+            stretches = sorted(authoritative(spans, t0, t1), key=lambda x: x[1])
+            streams.append(itertools.chain.from_iterable(frames_of(*where[span], unit, lo, hi) for span, lo, hi in stretches))
+
+        # The recordings of the camera merged by time — one piece per recording held at a time — and each moment
+        # taken once, the first door's. The MP4 is written as it is made (`fmp4.Writer`, one fragment per group of
+        # pictures): the headers go with the first key frame, because that is when "nothing recorded" (404) and "not
+        # playable" (415) can no longer be the answer. So there is no `Content-Length`, the connection's end is the
+        # file's end, and a door that fails after the first byte cannot be named in a header any more: it is in the
+        # log and in the journal's line (`unreachable`), and the file has the hole.
+        sent = {"bytes": 0, "sha": hashlib.sha256(), "head": False}
+
+        class Out:
+            def write(self, b: bytes) -> None:
+                handler.wfile.write(b)
+                sent["bytes"] += len(b); sent["sha"].update(b)
+
+        writer, frag, end, broken, said = None, [], None, None, 0
         try:
-            data = from_samples(frames)
-        except ValueError as e:
-            return 415, {"detail": str(e), "error": "not playable"}
-        handler.send_response(200)
-        handler.send_header("Content-Type", "video/mp4")
-        handler.send_header("Content-Length", str(len(data)))
-        if unreachable:
-            handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
-        handler.end_headers()
-        handler.wfile.write(data)
-        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
+            for smp in heapq.merge(*streams, key=lambda s: s.begin):
+                if end is not None and smp.begin < end:
+                    continue                             # this moment came from another door already
+                if writer is None:
+                    if not smp.key:
+                        continue
+                    try:
+                        sps, pps = fmp4.param_sets(smp.body)
+                        width, height = struct.unpack("<II", smp.sub[:8]) if len(smp.sub) >= 8 else (0, 0)
+                        writer = fmp4.Writer(Out(), sps, pps, width, height)
+                    except ValueError as e:
+                        return 415, {"detail": str(e), "error": "not playable"}
+                    handler.send_response(200)
+                    handler.send_header("Content-Type", "video/mp4")
+                    if unreachable:
+                        handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
+                    handler.send_header("Connection", "close")
+                    handler.end_headers()
+                    handler.close_connection = True
+                    sent["head"], said = True, len(unreachable)
+                if smp.key and frag:
+                    writer.write_fragment(frag)
+                    frag = []
+                frag.append(fmp4.Sample(fmp4.to_avcc(smp.body), max(1, int(smp.end - smp.begin)), smp.key))
+                end = smp.end
+            if writer is None:
+                return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
+            writer.write_fragment(frag)
+        except (OSError, ValueError) as e:              # the caller went away, or a frame would not convert
+            if not sent["head"]:
+                raise
+            broken = str(e)
+            log.warning("an export of camera %s stopped after %d bytes: %s", cid, sent["bytes"], e)
+        late = sorted(set(unreachable[said:]))
+        if late:
+            log.warning("an export of camera %s has holes: %s did not answer after the first byte", cid, ",".join(late))
+        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}",
+                  {"status": 200, "bytes": sent["bytes"], "whole": broken is None,
+                   **({"sha256": sent["sha"].hexdigest()} if broken is None else {}),
+                   **({"unreachable": ",".join(late)} if late else {})})
         return ()
     return extra
 
