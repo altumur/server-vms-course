@@ -89,7 +89,14 @@ class DetWorker(Worker):
         now = self.wall() if now is None else now
         wanted = set(self.assignment().units)
         for unit in wanted:
-            row = self.unit_row(unit)
+            try:
+                row = self.unit_row(unit)
+                self.row_parsed(unit)
+            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this detector's trouble (`row_garbled`)
+                why = self.row_garbled(unit, e)
+                if unit not in self.running:                  # what runs under the row read last keeps running
+                    self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": why}
+                continue
             if row is None:
                 continue
             if not row["enabled"]:

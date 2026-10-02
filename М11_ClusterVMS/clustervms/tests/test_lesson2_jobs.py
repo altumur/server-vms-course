@@ -78,3 +78,18 @@ def test_the_acl_from_inside_an_allocation():
     except Forbidden:
         pass
     assert ctl.ensure_placed()[0].worker == "w-0"                         # the controller placed what the console created
+
+
+def test_importing_the_clusters_entry_point_takes_none_of_the_runners_signals():
+    """The review's sixth pass. `cluster/__main__.py` installed its SIGTERM/SIGINT handler at import, as М10's entry
+    point did: whatever process imported it — a test run — had its signals taken, and a signal sent to stop that run
+    was swallowed (`vmsserver/tests/test_pass_failures.py` says what that looked like). The handler is installed only
+    when the module is run; this runner fails any module or test that takes its signals (`tests/run.py`)."""
+    import inspect
+    import signal
+    import cluster.__main__ as m
+    for s in (signal.SIGTERM, signal.SIGINT):
+        assert getattr(signal.getsignal(s), "__module__", None) != m.__name__, f"importing cluster.__main__ took {s.name}"
+    src = inspect.getsource(m)
+    assert "signal.signal(" not in src.split('if __name__ == "__main__":')[0], "a handler installed at import"
+    assert "signal.signal(" in src.split('if __name__ == "__main__":')[1]          # …and the process still stops on SIGTERM

@@ -79,7 +79,7 @@ from urllib.parse import urlsplit
 
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import DRAIN_KEY, UNPLACED, Controller, Subsystem, is_live, slot_number
+from .contract import ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -642,6 +642,29 @@ def _unit_key(u: str):
     return (0, int(u)) if u.isdigit() else (1, u)
 
 
+# The `rev` a placement row gets when it is written again. One that does not parse counts from nothing: the row is
+# being rewritten whole, and a word in `rev` must not stop the write that mends it.
+# The sweep's list — `<sub>/sweep {at, digests}` — as `(digests, at)`; one that does not parse is NO list (the sixth
+# pass, the follow-up). `put_blob` reads it on every upload, to take its digest off it: a row with half a list in it
+# raised there, and no blob of the subsystem could be stored. Nothing is deleted on the word of a list nobody can
+# read: the sweep reads it as empty and marks afresh — a new list, a new grace.
+def _sweep_list(items) -> tuple[list, float]:
+    import json
+    try:
+        marked = json.loads((items or {}).get("digests", "[]"))
+        at = float((items or {}).get("at", 0))
+    except (ValueError, TypeError):
+        return [], 0.0
+    return (marked, at) if isinstance(marked, list) else ([], 0.0)
+
+
+def _next_rev(it) -> int:
+    try:
+        return int((it or {}).get("rev", 0)) + 1
+    except (ValueError, TypeError):
+        return 1
+
+
 # The only writer of `<name>/*`, from a spec. Holds nothing; two instances are harmless; never on the
 # recovery path. The VMS is one spec; live and det are others — same code.
 class SpecController(Controller):
@@ -678,9 +701,29 @@ class SpecController(Controller):
     # The worker's own number from its latest heartbeat (`extra[capacity_from]`, any age), else the
     # fallback. `test_capacity_is_the_workers_word_not_the_controllers`: workers saying 2 and 6 are placed
     # by 2 and 6; an unknown worker gets 50.
+    #
+    # A NUMBER THAT IS A WORD (the sixth pass, the follow-up). A heartbeat that does not parse is skipped where it
+    # is read (`parse_heartbeat`); one that parses and carries a word where a number is read here raised here — and
+    # `capacity_of` is asked of every candidate while ANY unit is placed, so one worker's field stopped every
+    # placement. Such a field is read as "it has not said" (`_number`): the fallback, no headroom, no failover time.
     def capacity_of(self, worker: str) -> int:
         hb = self.workers_seen(max_age=1e12).get(worker)
-        return int(hb.extra[self.spec.capacity_from]) if hb and self.spec.capacity_from in hb.extra else self.capacity
+        said = self._number(worker, hb, self.spec.capacity_from, int) if hb else None
+        return self.capacity if said is None else said
+
+    def _number(self, worker: str, hb, field: str, kind=float):
+        """A numeric field of a worker's heartbeat, or None if it is absent or not a number (logged once)."""
+        if field not in hb.extra:
+            return None
+        try:
+            return kind(hb.extra[field])
+        except (ValueError, TypeError):
+            key = f"{self.sub.heartbeat_key(worker)}#{field}"
+            if key not in self._garbled_rows:
+                self._garbled_rows.add(key)
+                log.warning("%s: heartbeat of %s says %s=%r, not a number; read as not said", self.sub.name, worker,
+                            field, hb.extra[field])
+            return None
 
     # The `labels` string of its heartbeat, split on commas.
     def labels_of(self, worker: str) -> set[str]:
@@ -721,7 +764,7 @@ class SpecController(Controller):
     # Sum of `extra[headroom_from]` over workers seen in the last 45 s — what the autoscaler reads via
     # `/metrics`. Stale until the workers heartbeat again after a placement.
     def headroom(self) -> int:
-        return sum(int(hb.extra.get(self.spec.headroom_from, 0)) for hb in self.workers_seen().values())
+        return sum(self._number(w, hb, self.spec.headroom_from, int) or 0 for w, hb in self.workers_seen().items())
 
     # -- units ------------------------------------------------------------------------
     # For numeric ids, bump `<name>/next_id {n}` by CAS and return it; otherwise `Refused` (the unit is
@@ -854,14 +897,26 @@ class SpecController(Controller):
         loses its assignment and its row says so. Runs first in every pass."""
         gone = []
         for p in self.vars.list(self.sub.config("placement") + "/"):
-            uid = self.spec.parse_id(p.rsplit("/", 1)[1])
+            uid = self._placed_id(p)
             it, _ = self.vars.get(p)
-            if not it or not it.get("worker") or self._parsed(uid) is not None:
+            if uid is None or not it or not it.get("worker") or self._parsed(uid) is not None:
                 continue                                  # a row that does not parse EXISTS: it is not unplaced as deleted
             self.assign_remove(it["worker"], str(uid))
-            self.write(p, lambda it: {"worker": "", "reason": "deleted", "at": self.wall(), "rev": int(it.get("rev", 0)) + 1})
+            self.write(p, lambda it: {"worker": "", "reason": "deleted", "at": self.wall(), "rev": _next_rev(it)})
             gone.append(uid)
         return gone
+
+    # The unit a row under `<sub>/placement/` is about, or None when its name is no unit's id — a stray row there
+    # raised out of the two passes that walk the placements, and so out of `ensure_placed` and `redistribute`, for
+    # every unit (the sixth pass, the follow-up). Skipped, and said once.
+    def _placed_id(self, path: str):
+        try:
+            return self.spec.parse_id(path.rsplit("/", 1)[1])
+        except (ValueError, TypeError):
+            if path not in self._garbled_rows:
+                self._garbled_rows.add(path)
+                log.warning("%s: %s is named after no unit; skipped", self.sub.name, path)
+            return None
 
     # Whether this row says the work is over — `retire_when` in the spec, and nothing at all for the
     # subsystems that never end.
@@ -880,14 +935,14 @@ class SpecController(Controller):
         """Every placement whose unit's row says the work is over loses its assignment."""
         done = []
         for p in self.vars.list(self.sub.config("placement") + "/"):
-            uid = self.spec.parse_id(p.rsplit("/", 1)[1])
+            uid = self._placed_id(p)
             it, _ = self.vars.get(p)
-            row = self._parsed(uid)
+            row = self._parsed(uid) if uid is not None else GARBLED_ROW
             if not it or not it.get("worker") or row is GARBLED_ROW or not self.retired(row):
                 continue                                  # whether a row that does not parse is over, nobody can say
             state = str(row.get(self.spec.retire_field, ""))
             self.assign_remove(it["worker"], str(uid))
-            self.write(p, lambda i: {"worker": "", "reason": state, "at": self.wall(), "rev": int(i.get("rev", 0)) + 1})
+            self.write(p, lambda i: {"worker": "", "reason": state, "at": self.wall(), "rev": _next_rev(i)})
             done.append(uid)
         return done
 
@@ -933,11 +988,30 @@ class SpecController(Controller):
 
     # -- placement ---------------------------------------------------------------------
     # The stored decision, `None` if no row or the worker is empty (unplaced).
+    #
+    # WHAT THE ROW DECIDES IS `worker` (the sixth pass, the follow-up); `reason`, `at` and `rev` are for a person.
+    # All four were parsed bare, and the row of ONE unit is read while others are placed (`together`, `apart`), by
+    # `unplaced()`, by `ensure_home`: an `at` with a word in it stopped them all. The decision is read as it stands;
+    # what does not parse beside it is 0, and the row is said once.
     def placement(self, uid) -> Placement | None:
-        it, _ = self.vars.get(self.sub.config("placement", str(uid)))
+        key = self.sub.config("placement", str(uid))
+        it, _ = self.vars.get(key)
         if not it or not it.get("worker"):
             return None
-        return Placement(self.spec.parse_id(uid), it["worker"], it["reason"], float(it["at"]), int(it["rev"]))
+        return self._placement(uid, it)
+
+    def _placement(self, uid, it: dict) -> Placement:
+        key = self.sub.config("placement", str(uid))
+        try:
+            at, rev = float(it["at"]), int(it["rev"])
+            self._garbled_rows.discard(key)
+        except (ValueError, KeyError, TypeError):
+            at, rev = 0.0, 0
+            if key not in self._garbled_rows:
+                self._garbled_rows.add(key)
+                log.warning("%s: placement row %s does not parse beyond its worker (%r); read as placed on %s",
+                            self.sub.name, key, it, it["worker"])
+        return Placement(self.spec.parse_id(uid), it["worker"], str(it.get("reason", "")), at, rev)
 
     # Assigned units on that worker — from the assignment row, not from the heartbeat.
     def load(self, worker: str) -> int:
@@ -1271,9 +1345,9 @@ class SpecController(Controller):
         def mutate(it):
             if it and it.get("worker"):
                 return None                             # the other instance placed it while we thought
-            return {"worker": pl.worker, "reason": pl.reason, "at": pl.at, "rev": int(it.get("rev", 0)) + 1 if it else 1}
+            return {"worker": pl.worker, "reason": pl.reason, "at": pl.at, "rev": _next_rev(it)}
         written = self.write(self.sub.config("placement", str(uid)), mutate)
-        pl = Placement(pl.unit, written["worker"], written["reason"], float(written["at"]), int(written["rev"]))
+        pl = self._placement(uid, written)             # ours, or the other instance's — which may be the garbled one
         self.assign_add(pl.worker, str(uid))
         return pl
 
@@ -1302,7 +1376,11 @@ class SpecController(Controller):
         import json
         started, now = time.monotonic(), self.wall()
         prev = self.pass_report() or {}
-        rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
+        try:
+            failures = int(prev.get("failures", 0))
+        except (ValueError, TypeError):
+            failures = 0                              # a count that is a word: counted from here
+        rep = {"ts": now, "ok": True, "error": "", "failures": failures,
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
         errors = []
@@ -1323,15 +1401,29 @@ class SpecController(Controller):
         try:
             rep["unplaced"] = len(self.unplaced())
             rep["garbled"] = self.rows_garbled
+            for name, counts in (("slots_garbled", SLOTS_GARBLED), ("assignments_garbled", ASSIGNMENTS_GARBLED)):
+                if counts.get(self.sub.name):         # rows of the contract this process could not read (`contract.py`):
+                    rep[name] = counts[self.sub.name] # said when there are any, as a worker's heartbeat says them
             self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
         except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
             log.exception("%s: the pass could not report on itself", self.sub.name)
         return rep
 
+    # The last pass's report, or None — and None for one that does not parse (the sixth pass, the follow-up):
+    # `pass_once` reads it first, and "it does not raise" is what the loop calling it relies on. Half a write under
+    # this key raised out of the pass and out of the loop, the process ended, started, and ended again on the same
+    # object — which only a pass that finishes writes over.
     def pass_report(self) -> dict | None:
         import json
         raw = self.objects.get(f"{self.sub.name}/{self.PASS_KEY}")
-        return json.loads(raw) if raw else None
+        if not raw:
+            return None
+        try:
+            rep = json.loads(raw)
+        except ValueError:
+            log.warning("%s: the last pass's report does not parse; this pass writes it again", self.sub.name)
+            return None
+        return rep if isinstance(rep, dict) else None
 
     def unplaced(self) -> list:
         """Units that should be somewhere and are nowhere — whatever the reason; `/unplaceable` says which cannot be."""
@@ -1412,7 +1504,7 @@ class SpecController(Controller):
         def mutate(it):
             if expect is not None and (it or {}).get("worker") != expect:
                 raise Moved(f"{uid} is on {(it or {}).get('worker') or 'nobody'}, not on {expect}: somebody moved it first")
-            return {"worker": to, "reason": reason, "at": self.wall(), "rev": int(it.get("rev", 0)) + 1 if it else 1}
+            return {"worker": to, "reason": reason, "at": self.wall(), "rev": _next_rev(it)}
         new = self.write(self.sub.config("placement", str(uid)), mutate)
         for w, a in self.assignments().items():                     # wherever it is listed, and not only where the row says
             if str(uid) in a.units and w != to:
@@ -1568,7 +1660,7 @@ class SpecController(Controller):
         key = self.sub.sweep_key()
 
         def off_the_list(it):
-            marked = json.loads(it.get("digests", "[]"))
+            marked = _sweep_list(it)[0]
             return {**it, "digests": json.dumps([x for x in marked if x != d])} if d in marked else None
 
         self.write(key, off_the_list)                 # by CAS, tried again on a conflict: the sweeper writes this row too
@@ -1645,7 +1737,7 @@ class SpecController(Controller):
             return {"marked": 0, "deleted": 0, "waiting": 0}
         key, now = self.sub.sweep_key(), self.wall()
         items, idx = self.vars.get(key)
-        marked = json.loads((items or {}).get("digests", "[]"))
+        marked, at = _sweep_list(items)
 
         if not marked:                                   # -- mark: notice, write it down, delete nothing
             referenced = self.blobs_referenced()
@@ -1656,7 +1748,7 @@ class SpecController(Controller):
                 self.vars.put(key, {"at": str(now), "digests": json.dumps(orphans)}, cas=idx)
             return {"marked": len(orphans), "deleted": 0, "waiting": 0}
 
-        if now - float((items or {}).get("at", 0)) < grace:
+        if now - at < grace:
             return {"marked": 0, "deleted": 0, "waiting": len(marked)}
 
         # -- sweep: check again, write the decision down, and only then remove the bytes
@@ -1666,13 +1758,13 @@ class SpecController(Controller):
         deleted = 0
         for d in doomed:
             items, idx = self.vars.get(key)                                 # still doomed? `put_blob` takes a digest off this list
-            if d not in json.loads((items or {}).get("digests", "[]")):
+            if d not in _sweep_list(items)[0]:
                 continue
             data = self.objects.get(self.sub.blob_key(d))
             if data is None or not self.objects.delete(self.sub.blob_key(d)):
                 continue
             items, idx = self.vars.get(key)                                 # …and after: taken off meanwhile is being uploaded
-            if d not in json.loads((items or {}).get("digests", "[]")):
+            if d not in _sweep_list(items)[0]:
                 getattr(self.objects, "put_durable", self.objects.put)(self.sub.blob_key(d), data)
                 continue
             deleted += 1
@@ -1729,7 +1821,10 @@ class SpecController(Controller):
             raw = self.objects.get(key)
             if not raw:
                 continue
-            ts = float(json.loads(raw).get("ts", 0))
+            try:
+                ts = float(json.loads(raw).get("ts", 0))
+            except (ValueError, TypeError, AttributeError):
+                ts = 0.0                              # a shard that does not parse has no age: the oldest there can be
             oldest = ts if oldest is None else min(oldest, ts)
         if oldest is None:
             return None
@@ -1771,8 +1866,8 @@ class SpecController(Controller):
         started and that instance's first — measured from what the workers wrote."""
         out = {}
         for w, hb in self.workers_seen(max_age=1e12).items():
-            started = float(hb.extra.get("started", hb.ts))
-            prev = float(hb.extra.get("previous_hb", 0) or 0)
-            if prev:
+            started = self._number(w, hb, "started") if "started" in hb.extra else hb.ts
+            prev = self._number(w, hb, "previous_hb")
+            if prev and started is not None:
                 out[w] = round(started - prev, 1)
         return out

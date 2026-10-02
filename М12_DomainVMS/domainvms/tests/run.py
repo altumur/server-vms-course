@@ -9,6 +9,7 @@ import asyncio
 import importlib
 import inspect
 import os
+import signal
 import sys
 import traceback
 
@@ -62,12 +63,29 @@ class _Monkeypatch:
         for obj, name, old in reversed(self._undo): setattr(obj, name, old)
 
 
+# THE RUNNER'S OWN SIGNALS — the guard of М10's runner (`vmsserver/tests/run.py`; the review's sixth pass). Code under
+# test that installs a handler for SIGTERM or SIGINT, at import or inside a test, takes them from the RUN: a signal
+# sent to stop it is swallowed, the run goes on, and whatever the handler set fails some later test that passes alone.
+# The handlers are compared after every import and every test: a change fails that module or test by name, and is undone.
+def _signals_taken(ours: dict) -> list[str]:
+    taken = [s.name for s, h in ours.items() if signal.getsignal(s) is not h]
+    for s, h in ours.items():
+        if h is not None and signal.getsignal(s) is not h:
+            signal.signal(s, h)
+    return taken
+
+
 def main() -> int:
     here = os.path.dirname(os.path.abspath(__file__))
     files = sorted(f for f in os.listdir(here) if f.startswith("test_") and f.endswith(".py"))
     passed = failed = skipped = 0
+    ours = {s: signal.getsignal(s) for s in (signal.SIGTERM, signal.SIGINT)}
     for f in files:
         mod = importlib.import_module(f"tests.{f[:-3]}")
+        took = _signals_taken(ours)
+        if took:
+            print(f"{f} ... FAIL (importing it took the runner's {', '.join(took)}: a signal sent to the run would be swallowed)")
+            failed += 1
         mark = getattr(mod, "pytestmark", None)
         if mark is not None and getattr(mark, "name", "") == "skipif" and mark.args and mark.args[0]:
             print(f"{f}: skipped ({mark.kwargs.get('reason', '')})"); skipped += 1; continue
@@ -80,11 +98,15 @@ def main() -> int:
                 res = fn(**kwargs)
                 if inspect.iscoroutine(res):
                     asyncio.run(res)
+                took = _signals_taken(ours)
+                if took:
+                    raise AssertionError(f"it left its own handler for {', '.join(took)}: a signal sent to the run would be swallowed")
                 print(f"{f}::{name} ... OK"); passed += 1
             except Exception:                              # noqa: BLE001
                 print(f"{f}::{name} ... FAIL"); traceback.print_exc(); failed += 1
             finally:
                 mp.undo()
+                _signals_taken(ours)
     print(f"\n{passed} passed, {failed} failed, {skipped} skipped")
     return 1 if failed else 0
 

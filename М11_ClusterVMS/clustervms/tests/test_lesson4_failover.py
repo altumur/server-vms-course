@@ -98,6 +98,11 @@ def test_the_old_instance_wakes_up_and_the_archive_is_intact():
     a.heartbeat_once()                                                     # one heartbeat under the name, and it is B's
     assert ctl.workers_seen()["w-1"].extra == theirs and theirs["server"] == "srv-b" and theirs["fenced"] is False
     assert a.reconcile_once() == [] and a.rows == []                       # not even w-1's assignment is read
+    name = a.rejoin()                                                      # a free slot, from nothing — and what the epochs
+    a.heartbeat_once()                                                     # said of it goes with it: the number of this lesson
+    told = ctl.workers_seen()[name].extra
+    assert name != "w-1" and told["conflicts"] == 3 and "slot w-1" in told["was_fenced"] and told["fenced"] is False
+    assert ctl.workers_seen()["w-1"].extra == theirs
 
 
 def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():

@@ -46,8 +46,6 @@ from cluster.variables import NomadVariables
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
 stop = threading.Event()
-for s in (signal.SIGTERM, signal.SIGINT):
-    signal.signal(s, lambda *_: stop.set())
 objects = open_store(os.environ.get("OBJECTS", "variables://objects"))
 archive = os.environ.get("ARCHIVE", "/data/archive")
 
@@ -164,5 +162,10 @@ def resource() -> None:
 
 
 if __name__ == "__main__":
+    # Only when run, as М10's entry point does (`vms/__main__.py`; the review's sixth pass): installed at import, the
+    # handler takes the signals of whatever process imports this module — a test run — and a signal sent to stop
+    # that run is swallowed.
+    for s in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "controller": controller, "recorder": recorder, "reccontroller": reccontroller,
      "console": console, "resource": resource}[sys.argv[1]]()

@@ -54,6 +54,25 @@ def test_where_is_camera_7_in_one_scan():
     assert sorted(sum((d.holdings(w) for w in ("w-0", "w-1", "w-2")), [])) == list(range(1, 10))
 
 
+def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
+    """The review's sixth pass, the follow-up. The directory is one scan of every `vms/workers/*`, each row parsed
+    bare: one worker's `rev` with a word in it — a hand edit — and "where is camera 7" had no answer for ANY camera.
+    The row is read for the units it names (`w2cplatform.contract.read_assignment`), as the controller reads it."""
+    c = Cluster(); ctl = ClusterController(c.vars, c.objects, wall=c.wall)
+    _three_workers(c, ctl)
+    for i in range(9):
+        ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
+    ctl.ensure_placed()
+    w = ctl.where(7)
+    c.vars.put(f"vms/workers/{w}", {"units": ",".join(ctl.assignment(w).units), "rev": "seven"})
+    d = Directory(c.vars, ttl=5.0, clock=c.clock)
+    assert [d.where(i) for i in range(1, 10)] == [ctl.where(i) for i in range(1, 10)] and d.where(7) == w
+    assert ctl.pass_once()["ok"]                                             # and the controller's pass is a pass
+    import sys                                                               # the count is the process's, and every heartbeat
+    m = sys.modules["w2cplatform.contract"]                                  # and pass report after would carry it — into the
+    m.ASSIGNMENTS_GARBLED.clear(); m._garbled_assignments.clear()            # traces `test_stand.py` compares
+
+
 def test_two_controllers_agree_under_constraints():
     c = Cluster()
     _three_workers(c, ClusterController(c.vars, c.objects, wall=c.wall))
