@@ -184,17 +184,27 @@ Docstring называет суть: **правило, заменяющее ка
             return {"enabled": False, "mirrored": 0, "peers": []}
         live = self.live_resources()
         peers = peers_of(self.server, list(live), knob["copies"])
-        n = 0
+        n, closed = 0, None
         for peer in peers:
             have = {b.path for b in self.peers.mirrored(live[peer]["url"], self.server)}
-            for b in self.closed_buckets():
+            self._progressed()
+            if closed is None:
+                closed = self.closed_buckets()               # the walk once a pass, not once per peer
+            for b in closed:
                 if b.path in have:
                     continue
-                with open(os.path.join(self.root, b.path), "rb") as f:
-                    self.peers.put(live[peer]["url"], self.server, b.path, f.read())
+                with open(self.path_of(b.path), "rb") as f:
+                    put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
+                    if put_file is not None:
+                        put_file(live[peer]["url"], self.server, b.path, f, os.fstat(f.fileno()).st_size)
+                    else:
+                        self.peers.put(live[peer]["url"], self.server, b.path, f.read())
                 n += 1
+                self._progressed()
         return {"enabled": True, "mirrored": n, "peers": peers}
 ```
+
+**Бакет не держится в памяти целиком ни с одной стороны зеркала.** Первая версия отправляла `f.read()`: шестьдесят мегабайт шторма — одним куском, по разу на бакет, а `restore` писал на диск то, что `PeerClient.get` прочитал целиком (седьмое ревью, рядом с находкой «ресурс отдаёт бакет целиком»). Теперь у клиента зеркала два метода. `put_file` отдаёт соединению открытый файл с его длиной (`Content-Length`), и `http.client` шлёт файл блоками. `get_into` пишет ответ в файл кусками по `PIECE` (64 КиБ) и сверяет с длиной, которую назвал сосед: ответ, оборвавшийся раньше, — ошибка, а не бакет поменьше, и половины копии на диске не остаётся. Клиент, которого подставляет тест, может иметь только `put` и `get`: тогда идёт прежний путь. Тест: `test_console_load.py::test_the_mirror_sends_and_takes_back_a_bucket_in_pieces_never_whole` — два настоящих ресурса по HTTP, бакет в 16 МБ туда и обратно байт в байт, а пик памяти Python на каждой стороне меньше 4 МБ.
 
 Выключено по умолчанию: ручка `platform/mirror`, которую ставит инсталлятор. Включено — каждый сосед спрашивается, что у него уже есть, и досылается недостающее.
 
@@ -250,8 +260,16 @@ def mirror_settings(vars_) -> dict:
                     if os.path.exists(dest):
                         continue
                     os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    with open(dest + ".tmp", "wb") as f:
-                        f.write(self.peers.get(hb["url"], self.server, path))
+                    get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+                    try:
+                        with open(dest + ".tmp", "wb") as f:
+                            if get_into is not None:
+                                get_into(hb["url"], self.server, path, f)
+                            else:
+                                f.write(self.peers.get(hb["url"], self.server, path))
+                    except BaseException:
+                        os.remove(dest + ".tmp")                     # half a copy is no copy
+                        raise
                     os.replace(dest + ".tmp", dest); pulled += 1
                     self._progressed()
             hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
@@ -396,12 +414,14 @@ VMS этой дверью не пользуется. Её видео лежит 
             if self.path.startswith("/buckets/"): …        # какие бакеты есть у этой единицы
             if self.path.startswith("/mirrored/"): …       # чьи копии я держу
             if self.path == "/events" or self.path.startswith("/events?"): …   # запрос к индексу
-            if self.path.startswith("/events/"): …         # один бакет целиком
+            if self.path.startswith("/events/"): …         # один бакет, кусками (`_bucket`)
             if extra is not None: …                        # маршруты подсистемы
             self._raw(404, b"")
 ```
 
 Пять веток. Первые две — межресурсный разговор (зеркало). Третья — то, что спрашивает консоль (урок 13). Четвёртая — выдача файла: по ней сосед тянет копию, и по ней же отдаются копии обратно владельцу.
+
+Файл уходит **кусками**, с названной длиной. Раньше это был `f.read()` в один ответ: восемь нечитающих читателей бакета в 60 МБ держали в ресурсе 400 МБ, а сосед медленнее 2 МБ/с не получал бакет никогда — таймаут сокета покрывает весь `sendall`, и `restore` такого бакета падал на каждом повторе (седьмое ревью, воспроизведено запуском). Теперь `_bucket` шлёт `Content-Length` и затем по `STREAM_PIECE` (128 КиБ) байт, каждый кусок под таймаутом сокета, читателю, который держит в среднем `STREAM_MIN_RATE` (`Paced`) — как двери держателя и регистраторов. Ответ, который кончился раньше названной длины, читатель видит ошибкой. Тест: `test_console_load.py::test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole`.
 
 ```python
             if resource.index is None:
@@ -423,12 +443,36 @@ VMS этой дверью не пользуется. Её видео лежит 
 
 ```python
         def do_PUT(self):
-            if not self.path.startswith("/mirror/"): return self._raw(404, b"")
+            try:
+                n = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                return self._raw(400, b"")
+            if not self.path.startswith("/mirror/"):
+                …                                               # a subsystem's own write (`extra_put`), under the same deadline
             rel = self.path[len("/mirror/"):]
             server, _, path = rel.partition("/")
             if not safe_segment(server) or not safe_rel(path) or not path.endswith(".events.jsonl"):
                 return self._raw(400, b"")
-            …
+            if n < 0 or n > MIRROR_MAX:
+                self.close_connection = True
+                return self._raw(413, b"")
+            dest = os.path.join(root, MIRROR_DIR, server, path)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            left, late = n, False
+            body_deadline(self, n)
+            with open(dest + ".tmp", "wb") as f:
+                try:
+                    while left > 0:
+                        part = self.rfile.read(min(left, 1 << 16))
+                        if not part:
+                            break
+                        f.write(part); left -= len(part)
+                except (TimeoutError, OSError):
+                    late = True
+            if left:
+                os.remove(dest + ".tmp")
+                self.close_connection = True
+                return self._raw(408 if late else 400, b"")
             os.replace(dest + ".tmp", dest)                     # a copy appears whole or not at all
             self._raw(204, b"")
 ```
@@ -438,6 +482,8 @@ VMS этой дверью не пользуется. Её видео лежит 
 Единственный `PUT` во всей платформе — приём копии. Три проверки: имя сервера и путь проходят `doors`, расширение не бакета. Последняя существенна: без неё сосед мог бы положить что угодно куда угодно под видом копии.
 
 Запись — снова через `.tmp` и `os.replace`: копия появляется целиком или не появляется вовсе.
+
+**Тело копии ограничено и по размеру, и по времени.** Копия больше `MIRROR_MAX` (64 МиБ — десять минут событий, со штормом) получает 413, и ничего не читается. Меньше — пишется во временный файл кусками по 64 КиБ, а память держит кусок, не бакет (шестое ревью). И у тела есть срок целиком: `timeout` двери плюс секунда на каждые `BODY_RATE` байт (`body_deadline`, правило `read_body` консоли). Раньше после заголовков тело читалось только под таймаутом сокета на каждое чтение. 32 соединения, объявившие 60 МБ и шлющие по байту раз в двадцать секунд, держали долю адреса вечно, а с двух адресов — всю дверь: `/events`, `/events/wait` и зеркало получали 503 (седьмое ревью, воспроизведено запуском). Тело, не пришедшее в срок, — 408, и копии нет. Тот же срок у собственных записей подсистемы (`extra_put`). Тесты: `test_console_load.py::test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole`, `test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too`.
 
 ## Шаг 9 — Тест: две подсистемы, которых нет
 
