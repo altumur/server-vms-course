@@ -19,7 +19,10 @@ work. Ordering beats equality: "behind by 4 for 40 minutes" is an incident;
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
+
+log = logging.getLogger("shadow")
 
 
 @dataclass
@@ -126,8 +129,14 @@ def reports_from(fed) -> tuple[list[WorkerReport], dict[tuple[str, str], int], l
                 reports.append(WorkerReport(w, name, hb.get("server", "?"), cams, float(hb["ts"])))
             for path in c.vars.list("vms/epoch/"):
                 items, _ = c.vars.get(path)
-                cid = int(path.rsplit("/", 1)[1])
-                epochs[(name, refs.get(cid, f"{name}/{cid}"))] = int(items["epoch"])
+                # One epoch row that does not parse is that camera's (the review's sixth pass, the class of М10B's
+                # `take_epoch`): read bare, it raised out of the report for EVERY cluster of the domain. Skipped, the
+                # camera has no entry, and `compare` takes its worker's word for the epoch — no finding invented.
+                try:
+                    cid = int(path.rsplit("/", 1)[1])
+                    epochs[(name, refs.get(cid, f"{name}/{cid}"))] = int(items["epoch"])
+                except (ValueError, KeyError, TypeError):
+                    log.warning("%s: epoch row %s does not parse: skipped in the shadow report", name, path)
         except Unreachable:
             down.append(name)
     return reports, epochs, down

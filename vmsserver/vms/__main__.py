@@ -50,9 +50,9 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 #
 # ## Module-level names
 # - `root` — `$PLATFORM_DIR`, read once at import.
-# - `stop` — a `threading.Event` set by the SIGTERM/SIGINT handler installed at import time; every verb
-#   loops on it. Because the handler is installed at import, importing the module (as the deploy test does)
-#   also installs the handlers in the importing process.
+# - `stop` — a `threading.Event` set by the SIGTERM/SIGINT handler; every verb loops on it. The handler is
+#   installed when the module is RUN (`if __name__ == "__main__"`), never at import: a process that imports the
+#   module (the tests do) keeps its own signals.
 #
 # ### `if __name__ == "__main__"`
 # Dispatch table on `sys.argv[1]`: worker, controller, console, resource, gateway, livecontroller, detworker,
@@ -569,8 +569,11 @@ def resource() -> None:
 
 
 if __name__ == "__main__":
-    # Only when run: a module imported (the tests) must not take the process's signals — a SIGTERM aimed at a daemon a
-    # test started reached the runner, set `stop` and silently skipped the next test's pass (the review's fifth pass).
+    # Only when run: a module imported (the tests) must not take the process's signals. Installed at import, the
+    # handler swallowed a SIGTERM or SIGINT sent to the test run itself: the run went on with `stop` set, and the first
+    # test to drive `_controller_loop` ran no pass and failed, alone (the review's fifth pass saw that once). Which
+    # signal reached that run is not known — no test of the suite sends one to the runner (the sixth pass:
+    # `tests/test_pass_failures.py` has the evidence, `tests/run.py` the guard).
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "controller": controller, "recorder": recorder, "reccontroller": reccontroller, "console": console, "resource": resource,

@@ -496,6 +496,31 @@ def slot_number(name: str) -> int:
     return int(tail) if tail.isdigit() else 0
 
 
+# A slot row that does not parse — a hand edit, half a write — is ONE row's trouble, as a heartbeat's is
+# (`parse_heartbeat`; the review's sixth pass, a minor). Read bare, one such row among `<name>/slots/` raised out of
+# every claim: an instance that had given its name up stayed nobody for ever, its capacity lost with nothing said,
+# and the controller's `slots()` — what placement asks who is leaving — stopped every pass at it. The row is skipped
+# where slots are listed, counted (`SLOTS_GARBLED`, in every worker's heartbeat as `slots_garbled`) and logged once
+# until it parses again.
+SLOTS_GARBLED: dict[str, int] = {}                # subsystem -> slot rows that did not parse, this process
+_garbled_slots: set[str] = set()
+
+
+def read_slot(key: str, name: str, items) -> "Slot | None":
+    """The row parsed, or None — skipped, counted, and logged once."""
+    try:
+        slot = Slot.from_items(name, items)
+    except (ValueError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        SLOTS_GARBLED[sub] = SLOTS_GARBLED.get(sub, 0) + 1
+        if key not in _garbled_slots:
+            _garbled_slots.add(key)
+            log.error("%s: the slot row does not parse (%r); skipped — nobody claims it until it is mended", key, items)
+        return None
+    _garbled_slots.discard(key)
+    return slot
+
+
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
 # so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
 # and the reason the controller is never on the recovery path.
@@ -593,7 +618,9 @@ class Controller:
         for path in self.vars.list(self.sub.name + "/slots/"):
             name = path.rsplit("/", 1)[1]
             items, _ = self.vars.get(path)
-            out[name] = Slot.from_items(name, items)
+            slot = read_slot(path, name, items)   # one that does not parse is not the end of the pass (`read_slot`)
+            if slot is not None:
+                out[name] = slot
         return out
 
     # Slots whose holder let go on purpose (scale-in, or `retire`) and that still have units assigned: what
@@ -743,7 +770,9 @@ class Worker:
             if attempt:
                 cas_pause(attempt - 1)               # every candidate was taken under us: not the same race again at once
             names = [p[len(prefix):] for p in self.vars.list(prefix)]
-            known = {n: Slot.from_items(n, self.vars.get(prefix + n)[0]) for n in names}
+            # A row that does not parse is no candidate (`read_slot`): skipped, and its number is still counted below,
+            # so a slot made new never takes its name.
+            known = {n: s for n in names if (s := read_slot(prefix + n, n, self.vars.get(prefix + n)[0])) is not None}
             if prefer is not None:
                 order = [prefer]
             else:
@@ -758,7 +787,11 @@ class Worker:
                 order = lapsed + free + [nxt]
             for cand in order:
                 items, idx = self.vars.get(prefix + cand)
-                cur = Slot.from_items(cand, items)
+                cur = read_slot(prefix + cand, cand, items)
+                if cur is None:
+                    if prefer is None:
+                        continue                               # garbled since the listing: not a candidate
+                    cur = Slot(cand)                           # the runtime named this slot: taken, and written whole again
                 if prefer is None and not cur.claimable(now):
                     continue                                   # a preferred slot is taken regardless: the scheduler
                                                                # said this index is mine; the old holder fences on renewal
@@ -781,6 +814,46 @@ class Worker:
         with self._slot_lock:
             return self._renew_slot()
 
+    # The row of this instance's name, read now. One that does not parse is not a row naming ANOTHER holder (the
+    # review's sixth pass): read bare it raised out of every renewal — no lease renewed after it, no heartbeat, a
+    # worker dead of one field. It is read as the row this instance last wrote, so the renewal writes it whole again,
+    # by CAS: nobody else takes a row that does not parse (`_claim_slot` skips it), except a process the runtime gave
+    # this very name — and then the row parses again, and names that one.
+    def _own_slot(self) -> tuple[Slot, int]:
+        key = self.sub.slot_key(self.name)
+        items, idx = self.vars.get(key)
+        cur = read_slot(key, self.name, items)
+        if cur is None:
+            cur = Slot(self.name, self.instance, 0.0, False, self.slot.gen if self.slot is not None else 0)
+        return cur, idx
+
+    # Whether the row of this instance's name names ANOTHER instance now — read, nothing renewed. For an instance
+    # fenced with its slot in hand (a store raised past its build: `renew_slot` raises on the schema before it reads
+    # the row): it renews nothing, the row lapses, another process takes the name — and what this one went on saying
+    # under it was written over the other's (the review's sixth pass, beside the holder's `rejoin`). Nobody from the
+    # look that finds another holder there. A store that does not answer says nothing.
+    def name_taken(self) -> bool:
+        with self._slot_lock:
+            if self.slot is None:
+                return self.seeking is not None
+            try:
+                cur, _ = self._own_slot()
+            except OSError:
+                return False
+            if cur.holder == self.instance:
+                return False
+            self.seeking, self.slot = self.name, None
+            return True
+
+    # The name is not this instance's any more: nobody from this line (`seeking`), whatever is done next — until
+    # `_seek_slot` claims another. Returns the name given up.
+    def give_up_name(self) -> str:
+        with self._slot_lock:
+            if self.seeking is None:
+                self.seeking = self.name
+            self.slot = None
+            return self.seeking
+
     def _renew_slot(self) -> bool:
         if self.slot is None:
             return self.seeking is None           # a fixed name never claimed is itself; a name given up is nobody's here
@@ -789,8 +862,7 @@ class Worker:
         # it: the version is raised under a process that passed its check a moment ago. So the check is repeated
         # where the slot is renewed, and the worker fences on it as it would on a slot held by somebody else.
         self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # a garbled row: what it ran with stands
-        items, idx = self.vars.get(self.sub.slot_key(self.name))
-        cur = Slot.from_items(self.name, items)
+        cur, idx = self._own_slot()
         if cur.holder != self.instance or cur.released:          # released: `retire` let go of it; a late renewal does not take it back
             return False
         new = Slot(self.name, self.instance, self.wall() + self.slot_ttl, False, cur.gen)
@@ -938,8 +1010,7 @@ class Worker:
         with self._slot_lock:
             if self.slot is None:
                 return
-            items, idx = self.vars.get(self.sub.slot_key(self.name))
-            cur = Slot.from_items(self.name, items)
+            cur, idx = self._own_slot()
             if cur.holder == self.instance:
                 try:
                     self.vars.put(self.sub.slot_key(self.name), Slot(self.name, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
@@ -1015,6 +1086,11 @@ class Worker:
     # while it is the instance is fenced: `renew_slot` says no (so the stand-in renews nothing), `may_stand_in` says no,
     # `take_epoch` raises `NoSlot`, the assignment it reads is empty and no heartbeat goes out under the name. Every
     # lease step claims again, as `VmsWorker.rejoin` does for a fenced holder.
+    #
+    # …AND THE HOLDER TOO (the review's sixth pass). `VmsWorker` and the recorder do not come through here: they fence
+    # the instance (`fence`) and take a free slot on a later pass (`rejoin`) — and that path kept the old name through
+    # a claim that failed, the very thing closed here. It gives the name up by the same line now (`give_up_name`) and
+    # claims by the same try (`_seek_slot`); what is fenced while `seeking` is one list, for every worker.
     def keep_slot(self, let_go) -> list[str]:
         if self.seeking is not None:
             self._seek_slot()
@@ -1024,11 +1100,17 @@ class Worker:
         except OSError as e:
             log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
             return []
+        except SchemaTooNew:
+            # A store raised past this build: the renewal refuses before it reads the row, every step — and the row
+            # lapses with the process alive and heartbeating. Once another instance has the name, this one is nobody
+            # like any other whose slot was taken (`name_taken`); until then the refusal is the loop's to log, as before.
+            if not self.name_taken():
+                raise
+            mine = False
         if mine:
             return []
-        with self._slot_lock:
-            was, lost = self.name, list(self.epochs)
-            self.seeking, self.slot = was, None   # fenced from this line, whatever `let_go` does
+        lost = list(self.epochs)
+        self.give_up_name()                       # fenced from this line, whatever `let_go` does
         try:
             let_go()
         finally:
@@ -1036,17 +1118,20 @@ class Worker:
         self._seek_slot()
         return lost
 
-    # One try at a free slot for an instance that gave its own up. True when it is somebody again.
+    # One try at a free slot for an instance that gave its own up. True when it is somebody again. Whatever the claim
+    # raised — the store did not answer, every candidate was taken under it, a token refused — the instance stays
+    # nobody and tries again: `VmsWorker.rejoin` comes through here too (the review's sixth pass).
     def _seek_slot(self) -> bool:
         was = self.seeking
         try:
+            self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # nobody to be on a store past this build
             self.claim_slot()
-        except (OSError, RuntimeError) as e:
-            log.warning("%s: slot %s is held by another instance now and no other could be claimed (%s): nobody, "
-                        "taking nothing; trying again on the next step", self.instance, was, e)
+        except Exception as e:                    # noqa: BLE001
+            log.warning("%s: gave slot %s up and no other could be claimed (%s): nobody, taking nothing; trying again "
+                        "on the next step", self.instance, was, e)
             return False
         self.seeking = None
-        log.warning("%s: slot %s is held by another instance now; its units let go, going on as %s", self.instance, was, self.name)
+        log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
         return True
 
     def renew_leases(self) -> list[str]:
@@ -1219,6 +1304,8 @@ class Worker:
         extra.setdefault("build", BUILD)
         if self.stand_in_renewals:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
+        if SLOTS_GARBLED.get(self.sub.name):
+            extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),

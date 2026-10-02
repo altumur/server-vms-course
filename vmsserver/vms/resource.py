@@ -100,15 +100,34 @@ def cameras_of_units(vars_) -> dict[tuple[str, str], set | None]:
     return out
 
 
+# The store as this hook reads it, with a mark of the pass's progress at every row read and every listing (the
+# review's sixth pass): the keeps, and the rows of every subsystem whose units are about a camera, are read one by
+# one before anything is swept — a part of the pass that moves the whole time, and said nothing to the pulse.
+class _Marked:
+    def __init__(self, vars_, progressed):
+        self._vars, self._progressed = vars_, progressed
+
+    def get(self, path, *a, **kw):
+        out = self._vars.get(path, *a, **kw)
+        self._progressed()
+        return out
+
+    def list(self, prefix, *a, **kw):
+        out = self._vars.list(prefix, *a, **kw)
+        self._progressed()
+        return out
+
+
 def kept_buckets(vars_):
     from . import keeps
 
-    def once():
-        all_ = keeps.declared(vars_)
+    def once(progressed=None):
+        store = vars_ if progressed is None else _Marked(vars_, progressed)
+        all_ = keeps.declared(store)
         if not all_:
             return lambda sub, unit, start, end: False
-        cams = cameras_of_units(vars_)
-        recs = {u: str(it.get("cam") or u) for u, it in _rows(vars_, "rec", "recordings").items()}
+        cams = cameras_of_units(store)
+        recs = {u: str(it.get("cam") or u) for u, it in _rows(store, "rec", "recordings").items()}
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
             from w2cplatform.events import tree_owner

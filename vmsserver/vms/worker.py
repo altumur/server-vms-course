@@ -707,8 +707,17 @@ class VmsWorker(Worker):
             # not start — and it stays fenced (`rejoin` checks the same thing) until somebody restarts it new.
             self.schema_seen = None                   # what it read is not the store's layout any more (`rejoin`)
             self.fence(str(e))
+            # Fenced with its slot in hand, it renews nothing: the row lapses and another process takes the name. From
+            # the lease step that reads another holder there it is nobody, and says nothing under the name (the
+            # review's sixth pass, beside `rejoin`) — until then the name is its own, and its heartbeat says `fenced`.
+            self.name_taken()
             return list(self.epochs)
         if not mine:
+            # NOBODY FROM THIS LINE (the review's sixth pass), as `keep_slot` makes every other worker: the name is the
+            # other instance's, and so are its assignment and its heartbeat. It was fenced and kept the name — and a
+            # heartbeat `fenced: true` went out over the legitimate one until `rejoin` took another slot, for as long
+            # as that claim failed.
+            self.give_up_name()
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
         waiting = {u: l.epoch for u, l in self.leases.items() if l.unconfirmed() > 0}
@@ -756,11 +765,15 @@ class VmsWorker(Worker):
         self.release_all()
         self.rows, self.assignment_rev = [], 0
         self.reconciler.clear()
-        self.slot = None
-        try:
-            name = self.claim_slot()
-        except RuntimeError:
+        # The claim can fail — the store blinks, every candidate is taken under it — and it used to leave the instance
+        # with no slot and the OLD name: an `OSError` went out of here, `renew_slot` with no slot said "still me", and
+        # the heartbeat went on under a name another instance holds (the review's sixth pass; the fifth's blocker 3,
+        # on this path). The name is given up first and the claim is `keep_slot`'s (`_seek_slot`): nobody until it
+        # has a slot, and every pass tries again.
+        self.give_up_name()
+        if not self._seek_slot():
             return None
+        name = self.name
         log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
         self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
         return name
@@ -772,8 +785,9 @@ class VmsWorker(Worker):
 
     # Once: log at error, set `recording_allowed = False` and `fenced_reason`, `actuator.stop_all()`,
     # `reconciler.clear()` — the pipelines were stopped underneath the loop. Idempotent (a second call
-    # returns immediately). After this the heartbeat says `fenced: true`, `_actuate` refuses every start,
-    # and `observe` writes nothing.
+    # returns immediately). After this `_actuate` refuses every start and `observe` writes nothing; the heartbeat
+    # says `fenced: true` while the name is still this instance's (a store raised past its build), and nothing at
+    # all once the name is another's (`lease_pass` gives it up before it calls this: `seeking`).
     def fence(self, why: str) -> None:
         if not self.recording_allowed:
             return
@@ -996,7 +1010,16 @@ class VmsWorker(Worker):
             unit = str(row["id"])
             if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
                 continue                                 # not mine to act on now: fenced, or the lease is lost
-            until = float(it.get("valid_until", 0) or 0)
+            # ONE ROW'S TROUBLE IS THAT ROW'S (the review's sixth pass). Two things here were read or taken bare, and
+            # either raised out of `requests` — out of every `pump_once`, for as long as the row stood — so no command
+            # to ANY device of this holder was performed behind it: a `valid_until` that is not a number (which never
+            # reaches the check that expires it), and, below, the epoch of a unit held without a lease, when its row
+            # `<sub>/epoch/<unit>` does not parse. Each is a refusal now, answered like the others here.
+            try:
+                until = float(it.get("valid_until", 0) or 0)
+            except (TypeError, ValueError):
+                self._refused(rid, row, it, f"`valid_until` is not a time: {it.get('valid_until')!r}", done)
+                continue
             if not until:
                 self._refused(rid, row, it, "a command carries a deadline (`valid_until`): without one it would wait "
                                             "for its device for ever", done)
@@ -1016,7 +1039,16 @@ class VmsWorker(Worker):
             if id(dev) in self._performing:
                 continue                                 # a call into this device has not returned: wait your turn
             if unit not in self.leases:
-                self.take_epoch(unit)                    # a device commanded is a unit fenced: its epoch, before the first command
+                try:
+                    self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
+                except OSError:
+                    raise                                # the store did not answer: not known, for every request — `pump_once` says so
+                except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this command's refusal
+                    self.epoch_errors[unit] = str(e)     # …and in the unit's status, as a start refused for it is (`_actuate`)
+                    self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)
+                    log.error("%s: request %s not performed: the epoch of %s could not be taken (%s)", self.name, rid, unit, e)
+                    continue
+                self.epoch_errors.pop(unit, None)
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
