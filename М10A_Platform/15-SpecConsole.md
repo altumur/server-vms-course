@@ -561,13 +561,15 @@ class Journal:
 
 ```python
                  f"# TYPE {p}_epoch_conflicts counter",
-                 *[f'{p}_epoch_conflicts{{worker="{w}"}} {n(w, "conflicts", int)}' for w in hbs],
+                 *[f'{p}_epoch_conflicts{{worker="{label(w)}"}} {n(w, "conflicts", int)}' for w in hbs],
 ```
 
 Первая метрика, которая считается по **всем** heartbeat'ам, а не только по живым: конфликты эпох — это история, и умерший воркер свой счёт уже не поправит, но рассказать о нём успел. Ненулевые конфликты означают, что двое держали одну единицу и отсечение сработало — то, ради чего написан урок 6.
 
 ```python
-                 f"# TYPE {p}_failover_seconds gauge", f'{p}_failover_seconds{{kind="worst"}} {self.worst_failover}',
+                 f"# TYPE {p}_failover_seconds gauge",
+                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, *failover.values()])}',
+                 *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
                  f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
@@ -580,7 +582,9 @@ class Journal:
                  f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
 ```
 
-`worst_failover` — арифметика из урока 11, посчитанная один раз при сборке консоли: худший разрыв между смертью воркера и подхватом его единиц. Величина проектная, а не наблюдаемая, и на графике она — линия, с которой сравнивают наблюдаемое.
+`failover_seconds` **измеряется**, а не только называется (восьмое ревью, найдено координатором). Раньше `kind="worst"` был числом, с которым собрали консоль, — арифметикой урока 11; в кластере его не передают, и после любого failover там стоял `0.0`. Теперь последний failover каждого воркера меряется по тому, что написали его экземпляры (`SpecController.failover_seconds`: начало этого экземпляра минус последний heartbeat предыдущего), и называется по воркеру — `kind="last",worker=…`. А `kind="worst"` — наибольшее из измеренных и из числа, данного консоли (`worst_failover`: цифра учений, паспорт). Разница между измеренным и данным — самое полезное на этом графике.
+
+**Значение каждой метки экранируется** (`label`: `\`, `"`, перевод строки; восьмое ревью, часть 4). Имя записи `7"x` ломало строку `/metrics`, и Prometheus отвергал весь скрейп. Новые имена с `"`, `|` и управляющими символами отказываются при создании (`doors.unnamable`), а уже записанные проходят через `label`.
 
 `running_gauge` — снова имя из YAML: у камер это `cameras_streaming`, у счётчика `ticks_ticking`. Считается перечислением статусов живых воркеров с `phase == running` — то есть **не** «сколько настроено», а «сколько на самом деле идёт».
 
@@ -599,6 +603,10 @@ class Journal:
 | `<p>_worker_store_errors{worker}`, `<p>_worker_pass_failures{worker}` | сколько раз хранилище ему не ответило; сколько раз часть его цикла упала |
 | `<p>_worker_slots_garbled{worker}` | сколько строк слотов воркер не смог разобрать, когда искал слот: каждая — имя, которое никто не возьмёт и никого под ним не увидят (шестое ревью) |
 | `<p>_worker_<table>s_garbled{worker}` | то же по другим таблицам, которые знает процесс консоли (`rows.counts`): `holds_garbled` — место, которое никто не возьмёт; `assignments_garbled`; у регистратора — `volumes_garbled`, `keeps_garbled`. Строки, каждая один раз, пока снова не разберётся, — не чтения (седьмое ревью: `holds_garbled` был в heartbeat'е, а здесь не был) |
+| `<p>_resource_rows_garbled{server,table}`, `<p>_resource_space_garbled{server}` | строки, которые не разобрал ресурс сервера, по таблицам, и испорченная `platform/space` (тогда водяная отметка — по последней настройке или умолчаниям); раньше были только в heartbeat'е ресурса (восьмое ревью) |
+| `<p>_resource_restore_left{server}`, `<p>_resource_restore_failures_total{server}`, `<p>_resource_mirror_failures_total{server}`, `<p>_resource_mirror_too_big_total{server}` | что ресурс ещё не привёз при `restore` (он повторяет его в своём цикле, по пиру и ведру), сколько раз пир или ведро не отдались, сколько копий зеркала не легло и сколько вёдер больше `MIRROR_MAX` пропущено (восьмое ревью) |
+| `rec_volume_wait{worker}`, `auto_wants_folded{worker}`, `rec_stream_lagging`, `rec_stream_behind_seconds`, `rec_stream_skipped_seconds_total`, `rec_keep_missing_seconds{keep}` | числа подсистем (`metrics_extra`): регистратор, привязанный к тому, чей холд чужой, и ждущий (1); вычислитель, свернувший подписки длинного опроса по `(sub, kind)`, потому что троек больше `WANTS_MAX`; отставание и срез потока регистратора; недостача удержания (восьмое ревью) |
+| `vms_devices_slow{worker}`, `vms_commands_in_flight{worker}`, `vms_commands_reanswered_total{worker}` | чего ждёт такт держателя: устройства, чей последний вызов не ответил за `PERFORM_GRACE`; вызовы, ещё не вернувшиеся; ответы, сказанные повтором после перезапуска (М10B, урок 4; восьмое ревью) |
 | `<p>_console_rows_garbled{table}` | строки подсистемы, которые не смогла разобрать сама консоль, по таблицам: заявки, которые она превращает в работу (`table="request"`, урок 25 М10B), удержания, которые показывает, поля heartbeat'ов, прочитанные выше как «не сказано» (`table="field"`) |
 
 Четыре строки таблицы от `fenced` до `<table>s_garbled` — из heartbeat'ов. Размещение их не читает: ограждённый воркер и так ничего не держит. Их читает человек, которому иначе не отличить «воркер пуст» от «воркер ограждён» — и не заметить, что ёмкость уходит в строки, которые не читаются.
