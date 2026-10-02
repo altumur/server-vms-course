@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
 
 from w2cplatform.events import EventLog
-from w2cplatform.obsd import ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
+from w2cplatform.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
 
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
 EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
@@ -190,6 +190,16 @@ class ArchiveError(Exception):
         super().__init__(f"{kind}: {detail}")
 
 
+class Fenced(Unavailable):
+    """A sample NOT sent: the volume is one any box may serve, and the hold this recorder writes it under has not been
+    confirmed within its write window (`Archive.fence`). Not the engine lost — nothing was asked of it — and not a
+    refusal by the engine: the recorder's own fence (the review's fifth pass, blocker 1)."""
+
+    def __init__(self, op: str, why: str):
+        super().__init__(op, why)
+        self.name = "FENCED"
+
+
 WRONG = {"PERMISSION_DENIED", "NOT_A_VOLUME", "UNSUPPORTED_FORMAT", "READ_ONLY", "PATH_NOT_EMPTY",
          "INVALID_ARGUMENT", "PROTECTED_VOLUME", "INVALID_CIPHER_KEY"}
 
@@ -215,25 +225,37 @@ class Archive:
     `confirm`: asked right before every `VOLUME_MOUNT_RW`, and a mount it refuses does not happen — the recorder's
     hold on a volume any box may serve, confirmed at that moment and not a pass ago (`RecWorker._confirm_hold`).
 
+    `fence`: asked before every sample and every finish, and a False sends nothing (`Fenced`) — the same hold, its
+    confirmation young enough to write under (`RecWorker._may_write_volume`; the review's fifth pass, blocker 1).
+
+    `on_unclean`: given, a mount the engine refuses as `VOLUME_UNCLEAN` is RECOVERED — `confirm` asked once more first,
+    so never without a hold confirmed this second — told `(result, detail)`, and mounted again. Not given, it is the
+    refusal it always was.
+
     `share`: for a volume that does not exist yet and has no `quota`, how big to format it — given what the daemon
     says of the disk it will be on (`space_where`)."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
                  wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = "",
                  sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S,
-                 confirm=None, lock_refresh: int = 0, share=None):
+                 confirm=None, lock_refresh: int = 0, share=None, fence=None, on_unclean=None):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
         self.share = share                         # no quota and no volume yet: its size from the disk (`space_where`)
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
         self.confirm, self.lock_refresh = confirm, int(lock_refresh)
+        self.fence, self.on_unclean = fence, on_unclean
         self.volume = None
         self.writer = None
         self._opening = threading.Lock()
         self.formatted = False                     # this open formatted the volume: it was new
         self.reattached = False                    # the daemon handed back a writer a vanished process left
         self.lost = False                          # a handle of this volume answered SESSION_LOST: mount it again
+        # A writer that may be alive in the session with no handle here: a `VOLUME_MOUNT_RW` sent and not answered,
+        # a `WRITER_CLOSE` that did not come back. Whoever owns the session leaves it behind (`close` says False).
+        self.orphan = False
+        self.lock_lost = False                     # the engine refused a sample: the volume's lock is another writer's
 
     def _open_volume(self):
         with self._opening:                        # the door, the backfill and the pass may all ask first
@@ -249,10 +271,42 @@ class Archive:
             self.lost = True
         return classify(e)
 
+    # THE MOUNT WHOSE ANSWER WAS LOST (the review's fifth pass, blocker 2). `VOLUME_MOUNT_RW` is not sent twice, and
+    # one sent into a silence — the daemon frozen right at it — was `away` and nothing more: the writer the daemon made
+    # when it woke stayed ATTACHED to this session, which the readers and the pass kept alive, and every mount after
+    # it answered `ALREADY_LOCKED` until the recorder was restarted. It is an orphan now (`orphan`), and the session
+    # is left behind like one whose close did not come back (`RecWorker._close_store`): a successor under the same
+    # owner gets that writer back at once.
+    #
+    # AN UNCLEAN VOLUME UNDER A CONFIRMED HOLD IS RECOVERED (the review's fifth pass, blocker 1, and its second
+    # question). `VOLUME_UNCLEAN` was `away` for ever, and said by nobody: nothing called `VOLUME_RECOVER`. Now the
+    # recorder that holds the volume recovers it — `confirm` asked again right before, so a recorder whose hold is not
+    # confirmed this second recovers nothing — says so (`on_unclean`), and mounts. Recovery that fails is `wrong`:
+    # only a person changes that.
     def _mount_rw(self, vol):
         if self.confirm is not None:
             self.confirm()                         # raises ArchiveError: this volume is not ours to write this second
-        return vol.mount_rw(self.owner)
+        try:
+            return vol.mount_rw(self.owner)
+        except Unavailable as e:
+            self.orphan = self.orphan or e.sent
+            raise
+        except ObsdError as e:
+            if e.name != "VOLUME_UNCLEAN" or self.on_unclean is None:
+                raise
+            unclean = e.detail
+        if self.confirm is not None:
+            self.confirm()
+        result = vol.recover()
+        self.on_unclean(result, unclean)
+        if result == 2:
+            raise ArchiveError("wrong", f"{self.name} was not cleanly unmounted and its recovery failed: {unclean}",
+                               "VOLUME_UNCLEAN")
+        try:
+            return vol.mount_rw(self.owner)
+        except Unavailable as e:
+            self.orphan = self.orphan or e.sent
+            raise
 
     # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a
     # bucket nobody can reach. A volume that is not there yet is FORMATTED — at its quota, which is the size of
@@ -325,20 +379,79 @@ class Archive:
         """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
         lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame — and
         `Unavailable` when this volume is not open for writing any more (closed, or the engine went away)."""
-        if self.writer is None:
+        w = self.writer
+        if w is None:
             raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
+        self._fenced("PUT_MEDIA")
         try:
-            return self.writer.put(stream_name(unit, epoch, backfill), sample)
+            return w.put(stream_name(unit, epoch, backfill), sample)
         except SessionLost:
             self.lost = True
+            raise
+        except Closed:
+            self._closed_under(w)
+            raise
+        except ObsdError as e:
+            # The engine's own fence (its patch 07): the volume's lock is another writer's, found at its path before a
+            # block was written. Not the engine lost — a remount would only find the other writer's lock — but the
+            # place lost: nothing more is sent, and the recorder gives the volume up (`RecWorker.volume_pass`).
+            if e.name == "WRITER_STOPPED" and "lock lost" in e.detail:
+                self.lock_lost = True
             raise
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
+        w = self.writer
+        if w is None:
+            return False
+        self._fenced("FINISH_MEDIA")
         try:
-            return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
+            return w.finish(stream_name(unit, epoch, backfill))
         except SessionLost:
             self.lost = True
             raise
+        except Closed:
+            self._closed_under(w)
+            raise
+
+    # EVERY SAMPLE INTO A VOLUME ANY BOX MAY SERVE IS FENCED (the review's fifth pass, blocker 1). The hold was checked
+    # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
+    # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
+    # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    def _fenced(self, op: str) -> None:
+        if self.lock_lost:
+            raise Fenced(op, f"{self.name}: the engine says the volume's lock is another writer's: nothing sent")
+        if self.fence is not None and not self.fence():
+            raise Fenced(op, f"{self.name}: the hold this recorder writes it under is not confirmed: nothing sent")
+
+    def abandon(self, timeout: float | None = None) -> bool:
+        """The writer given up WITHOUT writing anything more (`Writer.abandon`, the engine's patch 07) and the volume
+        let go: True when that is done — or the daemon no longer knows the writer. False when the daemon does not
+        have the operation, or did not answer: the writer is left as it was, mounted and fed nothing."""
+        w = self.writer
+        if w is not None:
+            try:
+                if not w.abandon(timeout):
+                    return False
+            except (SessionLost, Closed):
+                pass                               # not the daemon's any more: nothing to give up
+            except Unavailable:
+                return False
+        self.writer = None
+        if self.volume is not None:
+            try:
+                self.volume.close()
+            except ObsdError:
+                pass
+            self.volume = None
+        return True
+
+    # `Closed` on the writer this store still uses — not one a seal has already replaced — is a writer that is gone:
+    # its close went out and the store kept the handle (the review's fifth pass). Counted as the engine lost, so the
+    # pass mounts again; before, every sample after it was `Closed`, `lost` never set, for as long as the process ran.
+    def _closed_under(self, w) -> None:
+        if self.writer is w:
+            self.writer = None
+            self.lost = True
 
     def resize(self, quota: int) -> None:
         """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest."""
@@ -346,18 +459,38 @@ class Archive:
             self.writer.resize(quota)
         self.quota = quota or self.quota
 
+    # A SEAL THAT FAILS LEAVES NO DEAD WRITER (the review's fifth pass). A close that timed out left `writer` set to the
+    # handle it had just closed: every sample after it was `Closed`, `lost` stayed False, and the incidents volume took
+    # nothing until a restart — and five minutes later its keep was a false alarm. Now the writer is forgotten before
+    # its close goes out, whatever comes back: a close or a mount that did not come back leaves an `orphan` — the session
+    # is left behind on the pass's `close`, and a successor picks the writer up — and the engine lost is `lost`.
+    # Either way the next pass sees no writer and mounts again.
     def seal(self) -> None:
         """Close the writer and take it again: its last block is closed, and what was written is readable. What
         a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
-        if self.writer is not None:
-            try:
-                self.writer.close()
-                self.writer = None
-                self.writer = self._mount_rw(self._open_volume())
-            except SessionLost:
-                self.lost = True
-                raise
-            self._configure()
+        if self.writer is None:
+            return
+        self._fenced("WRITER_CLOSE")               # a close is the writer's last write: under the same fence
+        w, self.writer = self.writer, None
+        try:
+            w.close()
+        except SessionLost:
+            self.lost = True
+            raise
+        except Unavailable:
+            self.orphan = True                     # closed or not, nobody knows: the session is left behind
+            raise
+        except Closed:
+            self.lost = True
+            raise
+        except ObsdError:
+            pass                                   # refused: the handle is gone either way; a new writer is mounted
+        try:
+            self.writer = self._mount_rw(self._open_volume())
+        except SessionLost:
+            self.lost = True
+            raise
+        self._configure()
 
     def close(self, timeout: float | None = None) -> bool:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
@@ -366,18 +499,26 @@ class Archive:
         True when the writer is let go: closed, or a writer the daemon no longer knows. False when it may still be
         ALIVE in the session — its close was refused in a silence, or did not come back within `timeout` — and
         then whoever owns the session must leave it behind (`Session.abandon`), or every mount of this volume is
-        `ALREADY_LOCKED` for as long as the session lives (the review's fourth pass, blocker 1)."""
-        let_go = True
-        for h in (self.writer, self.volume):
-            if h is not None:
-                try:
-                    h.close(timeout) if h is self.writer else h.close()
-                except SessionLost:
-                    pass                           # the daemon lost it: gone, nothing to let go of
-                except Unavailable:
-                    let_go = let_go and h is not self.writer
-                except ObsdError:
-                    pass
+        `ALREADY_LOCKED` for as long as the session lives (the review's fourth pass, blocker 1). False as well for an
+        `orphan` — a mount or a seal whose answer did not come back (the review's fifth pass, blocker 2).
+
+        And once the writer's close did not come back, the volume's close is not sent at all (the review's fifth pass,
+        Т-M1): the session goes with it, and on the thread that renews the leases it was one more call's wait."""
+        let_go = not self.orphan
+        if self.writer is not None:
+            try:
+                self.writer.close(timeout)
+            except SessionLost:
+                pass                               # the daemon lost it: gone, nothing to let go of
+            except Unavailable:
+                let_go = False
+            except ObsdError:
+                pass
+        if self.volume is not None and let_go:
+            try:
+                self.volume.close()
+            except ObsdError:
+                pass
         self.writer = self.volume = None
         return let_go
 

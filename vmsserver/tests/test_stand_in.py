@@ -227,6 +227,52 @@ def test_the_stand_in_renews_the_place_only_while_it_is_this_instances():
         assert w.hold == "vol"                                     # the loop's renew_hold finds out, not the stand-in
 
 
+def test_the_stand_in_does_not_hold_the_place_for_a_step_on_a_silent_engine_and_says_what_it_renewed():
+    """The review's fifth pass, a minor. The stand-in renewed a recorder's network volume for five minutes while the
+    step stood on a daemon that had already answered `Unavailable`: nothing was being written, and no box whose daemon
+    answers could take the volume. A subsystem says whether the place is worth holding for the step
+    (`may_stand_in_hold`), and a renewal the stand-in does make is told, from before the store was asked
+    (`note_hold_confirmed`) — what a recorder fences every sample by."""
+    box = Box()
+    sub = Subsystem("t")
+    w = Worker(sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall, instance="me:1")
+    w.claim_slot(prefer="t-1")
+    assert w.claim_hold(["vol"]) == "vol"
+    told, silent = [], [True]
+    w.note_hold_confirmed = told.append
+    w.may_stand_in_hold = lambda: not silent[0]
+    with w.guarded("pass"):
+        _tick(box, 30)
+        before = Slot.from_items("vol", box.vars.get(sub.hold_key("vol"))[0]).until
+        assert w.stand_in_once()                                   # the slot and the leases: still renewed
+        assert Slot.from_items("vol", box.vars.get(sub.hold_key("vol"))[0]).until == before and told == []
+        silent[0] = False
+        _tick(box, 10)
+        assert w.stand_in_once()
+        assert Slot.from_items("vol", box.vars.get(sub.hold_key("vol"))[0]).until == box.wall() + w.slot_ttl
+        assert told == [box.clock()]
+
+
+def test_STAND_IN_FOR_counts_from_the_loops_last_renewal_and_a_new_step_does_not_start_it_again():
+    """The review's fifth pass, a minor. Five minutes were counted from each step's start: a loop that came back from
+    one hung step and went straight into another, renewing nothing in between, was given five minutes more each
+    time. They are counted from the loop's own last renewal now."""
+    box = Box()
+    w = _holder(box)
+    w.take_epoch("1")
+    w.renew_leases()
+    with w.guarded("pass"):
+        while box.clock() - 1000 + 5 <= w.STAND_IN_FOR - 60:
+            _tick(box, 5)
+            w.stand_in_once()
+    assert w.may_write("1")                                        # four minutes stood in for: the camera still held
+    with w.guarded("pump"):                                        # the next step, and the loop renewed nothing between
+        for _ in range(24):                                        # two more minutes
+            _tick(box, 5)
+            w.stand_in_once()
+        assert not w.may_write("1"), "a second hung step was given five more minutes of somebody else's camera"
+
+
 def test_a_normal_fast_loop_never_calls_the_stand_in():
     """Passes of a second each, renewing as the loop does: no step runs long enough, and the stand-in renews
     nothing — not even once."""
