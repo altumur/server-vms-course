@@ -580,6 +580,160 @@ def test_a_row_cannot_be_moved_to_another_camera_by_an_edit():
         srv.shutdown()
 
 
+def _console_with_jobs(box, access):
+    """A gated console that fronts `rec`, `det`, `detjob` (`DetJobController`) and `auto`, as `python3 -m vms console` does."""
+    from vms.auto import AutoController
+    from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC
+    from vms.jobs import DetJobController
+    acl = SPEC.acl_console() + REC_SPEC.acl_console() + DET_SPEC.acl_console() + DETJOB_SPEC.acl_console() + AUTO_SPEC.acl_console()
+    vars_ = box.vars.as_writer("console", acl)
+    ctl = VmsController(vars_, box.objects, wall=box.wall)
+    mounts = {"rec": SpecController(REC_SPEC, vars_, box.objects, wall=box.wall),
+              "det": SpecController(DET_SPEC, vars_, box.objects, wall=box.wall),
+              "detjob": DetJobController(vars_, box.objects, wall=box.wall),
+              "auto": AutoController(vars_, box.objects, wall=box.wall)}
+    m = make_console(ctl, box.archive, box.wall, mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
+    for con in (m.root, *m.mounts.values()):
+        con.gate.impl = access
+    srv = m.serve("127.0.0.1", 0)
+    return mounts, srv, f"http://127.0.0.1:{srv.server_address[1]}"
+
+
+def test_a_scan_reads_only_its_own_cameras_recording_and_keeps_it():
+    """The review's fifth pass, major: `cam` was fixed, and a scan names a camera through another field too — `rec`, the
+    recording whose footage it reads. `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 was 200, and
+    the scan read camera 2's archive. The gate asks for the route's capability on every camera a row reaches, before
+    and after the edit; and `rec` is a recording of `cam`, fixed when the job is made — for anybody."""
+    box = Box()
+    access = Tokens({"one": [("admin", "1", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    t = box.wall()
+    try:
+        for i in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
+            assert _call(base, "POST", "/rec/recordings", {"name": str(i), "cam": str(i)}, token="admin")[0] == 201
+        job = {"name": "1-motion-1", "cam": "1", "rec": "1", "kind": "motion", "from": t - 600, "to": t - 300}
+        assert _call(base, "POST", "/detjob/jobs", job, token="admin")[0] == 201
+        assert _call(base, "PUT", "/detjob/jobs/1-motion-1", {"rec": "2"}, token="one")[0] == 403   # camera 2 is not hers
+        code, body = _call(base, "PUT", "/detjob/jobs/1-motion-1", {"rec": "2"}, token="admin")
+        assert code == 400 and "fixed" in body["detail"]                                      # rights on both: still not a move
+        assert mounts["detjob"].unit("1-motion-1")["rec"] == "1"
+        assert _call(base, "PUT", "/detjob/jobs/1-motion-1", {"params": "{}"}, token="one")[0] == 200   # her camera, her scan
+        code, body = _call(base, "POST", "/detjob/jobs", {**job, "name": "1-motion-2", "rec": "2"}, token="admin")
+        assert code == 400 and "camera 2's" in body["detail"]                                 # another camera's recording
+    finally:
+        srv.shutdown()
+
+
+def test_a_scenario_is_edited_by_whoever_may_act_on_every_camera_it_names():
+    """The review's fifth pass, major, and its question about `auto`: a scenario's labels are PLACEMENT labels — where
+    its evaluator runs — and a grant on a label matched them: `PUT /auto/scenarios/lobby` with `then: output unit 12`
+    was 200 for somebody whose `POST /requests` on camera 12 is 403. A scenario is the cameras it watches and acts on
+    (`scenario_cams`): an edit or a delete needs the route's capability on every one of them, old and new; a trigger
+    with no unit is any camera's, which only a grant on the whole cluster covers."""
+    box = Box()
+    access = Tokens({"lobby": [("admin", None, ("lobby",))], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["lobby"]}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/2.mp4"}, token="admin")[0] == 201
+        scenario = {"name": "lobby", "labels": ["lobby"],
+                    "when": [{"sub": "vms", "kind": "motion", "unit": "1"}],
+                    "then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1}]}
+        assert _call(base, "POST", "/auto/scenarios", scenario, token="admin")[0] == 201
+        assert _call(base, "POST", "/requests", {"unit": "2", "action": "output", "port": 1}, token="lobby")[0] == 403
+        other = [{"sub": "vms", "action": "output", "unit": "2", "port": 1}]
+        assert _call(base, "PUT", "/auto/scenarios/lobby", {"then": other}, token="lobby")[0] == 403   # camera 2: not hers
+        anyone = [{"sub": "vms", "kind": "motion"}]
+        assert _call(base, "PUT", "/auto/scenarios/lobby", {"when": anyone}, token="lobby")[0] == 403  # every camera: the cluster's
+        assert mounts["auto"].unit("lobby")["then"][0]["unit"] == "1"
+        assert _call(base, "PUT", "/auto/scenarios/lobby", {"within": 0, "then": [{**scenario["then"][0], "port": 2}]},
+                     token="lobby")[0] == 200                                                      # her camera, before and after
+        assert _call(base, "PUT", "/auto/scenarios/lobby", {"then": other}, token="admin")[0] == 200
+        assert _call(base, "DELETE", "/auto/scenarios/lobby", token="lobby")[0] == 403              # it acts on camera 2 now
+    finally:
+        srv.shutdown()
+
+
+def test_a_deleted_recordings_name_comes_back_only_for_its_own_camera():
+    """The review's fifth pass, major: DELETE «1-cloud» of camera 1, then POST `{"name": "1-cloud", "cam": "2"}` — and a
+    viewer of camera 2 alone got camera 1's frames from `GET /export/2`, because footage is found by the recording's
+    name. The rule: a tombstone keeps its camera, and the name comes back for that camera only — for another it is
+    400, and so is the PUT that asked for it, whose refusal no longer suggests the trick."""
+    from tests.conftest import door, footage, store
+    box = Box()
+    access = Tokens({"two": [("view", "2", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    st = store()
+    t = box.wall()
+    footage(st, "1-cloud", 1, t - 900, t - 300)                       # what «1-cloud» recorded: camera 1's footage
+    rdoor = door(box, st)
+    try:
+        for i in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{i}.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-cloud", "cam": "1"}, token="admin")[0] == 201
+        code, body = _call(base, "PUT", "/rec/recordings/1-cloud", {"cam": "2"}, token="admin")
+        assert code == 400 and "another name" in body["detail"] and "delete it" not in body["detail"]
+        assert _call(base, "DELETE", "/rec/recordings/1-cloud", token="admin")[0] == 200
+        code, body = _call(base, "POST", "/rec/recordings", {"name": "1-cloud", "cam": "2"}, token="admin")
+        assert code == 400 and "cam 1's" in body["detail"]
+        assert _call(base, "GET", f"/export/2?from={t - 900}&to={t - 300}", token="two")[0] == 404   # nothing of camera 1's
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-cloud", "cam": "1"}, token="admin")[0] == 201   # its own camera
+        assert rec.unit("1-cloud")["cam"] == "1"
+    finally:
+        rdoor.shutdown(); srv.shutdown()
+
+
+def test_forty_addresses_flooding_the_emergency_door_do_not_keep_the_operator_on_the_box_out():
+    """The review's fifth pass, Ч-M3's remainder: a refusal by the pace spends no try of the address, so forty addresses
+    — each inside its five a window — keep every turn of the pace taken, and the operator competes with them for each.
+    The box has a lane of its own (`is_local`: a loopback peer that is no trusted proxy): an hour of such a flood,
+    simulated on the pace's clock, and the operator at the box gets in at once, every time; guessing from the network
+    is exactly as slow as it was."""
+    from w2cplatform.access import is_local
+    clock = {"t": 1000.0}
+    Gate.forget_glass()
+    real = Gate._glass_clock, Gate._glass_sleep
+    Gate._glass_clock = staticmethod(lambda: clock["t"])
+    Gate._glass_sleep = staticmethod(lambda s: None)               # every attempt in flight at once: nobody waits out a turn
+    box = Box()
+    gate = Gate(box.vars, box.wall, impl=Tokens({}))
+
+    def guess(addr, pw="wrong", local=False):
+        try:
+            gate.open_glass("x", "testing", pw, addr=addr, local=local)
+            return 200
+        except Denied as e:
+            return e.status
+    checked, turned_away, operator = 0, 0, []
+    try:
+        for second in range(3600):                                 # an hour; the forty try as often as they are let
+            clock["t"] += 1; box.wall.advance(1)
+            for i in range(40):
+                code = guess(f"198.51.100.{i}")
+                checked += code == 403
+                turned_away += code == 429
+            if second % 300 == 150:                                # the operator at the box, every five minutes
+                operator.append(guess("127.0.0.1", "open-sesame", local=True))
+        assert operator == [200] * 12                              # in, every time, while the flood goes on
+        interval = 60 / Gate.GLASS_RATE                            # the network's pace: as slow as it was
+        assert checked <= 3600 / interval + Gate.GLASS_BURST + Gate.GLASS_WAIT / interval + 1, checked
+        assert turned_away > checked                               # …and the flood saturated it
+        assert guess("198.51.100.200", "open-sesame") == 429       # from the network, the right one still competes
+        assert is_local("127.0.0.1") and is_local("::1") and is_local("::ffff:127.0.0.1") and not is_local("10.0.0.5")
+        was = os.environ.get("TRUSTED_PROXY")
+        os.environ["TRUSTED_PROXY"] = "127.0.0.1"
+        try:
+            assert not is_local("127.0.0.1")                       # a proxy on the box: its callers are not on the box
+        finally:
+            os.environ.pop("TRUSTED_PROXY", None)
+            if was is not None:
+                os.environ["TRUSTED_PROXY"] = was
+    finally:
+        Gate._glass_clock, Gate._glass_sleep = staticmethod(real[0]), staticmethod(real[1])
+        Gate.forget_glass()
+
+
 def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_name():
     """The review's fourth pass, major: a camera with no recording of its own falls back to the tree named after it —
     and a recording NAMED «1» that records camera 2 made `/timeline/1` and `/export/1` serve camera 2's frames to camera
@@ -618,12 +772,129 @@ def test_a_camera_without_a_recording_does_not_read_another_cameras_tree_by_its_
         rdoor.shutdown(); srv.shutdown()
 
 
+def test_a_backfill_is_two_finite_numbers_a_handful_at_a_time_and_a_line():
+    """The review's fifth pass, minor: `POST /backfill` with `NaN` broke the connection with no reply (`NaN` passes
+    `t1 <= t0`, and then `int()` fails); nothing bounded how many day-long asks one person filed; and an ask left no
+    line. Now: 400 for anything but two finite numbers; at most `BACKFILLS_OPEN` of one person's asks waiting for a
+    recorder (the same range again is the same ask); and `archive.backfill.asked` names who, which camera, which
+    recording and which minutes."""
+    from vms import console as vc
+    box = Box()
+    access = Tokens({"guard": [("edit", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    t = box.wall()
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1"}, token="admin")[0] == 201
+        for bad in ({"cam": "1", "from": float("nan"), "to": t}, {"cam": "1", "from": t - 60, "to": float("inf")},
+                    {"cam": "1", "from": "soon", "to": t}):
+            assert _call(base, "POST", "/backfill", bad, token="guard")[0] == 400, bad
+        asks = [_call(base, "POST", "/backfill", {"cam": "1", "from": t - 3600 * (i + 1), "to": t - 3600 * i}, token="guard")[0]
+                for i in range(vc.BACKFILLS_OPEN)]
+        assert asks == [202] * vc.BACKFILLS_OPEN
+        assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 3600, "to": t}, token="guard")[0] == 202   # the same ask
+        code, body = _call(base, "POST", "/backfill", {"cam": "1", "from": t - 9e4, "to": t - 8.9e4}, token="guard")
+        assert code == 429 and "guard has 7" in body["detail"]
+        assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 9e4, "to": t - 8.9e4}, token="admin")[0] == 202  # another person
+        lines = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
+                 if e["kind"] == "archive.backfill.asked"]
+        assert len(lines) == vc.BACKFILLS_OPEN + 2 and lines[0]["user"] == "guard" and lines[0]["target"] == "1" \
+            and lines[0]["recording"] == "1"
+    finally:
+        srv.shutdown()
+
+
 def _get(url, headers=None):
     try:
         with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {})) as r:
             return r.status, r.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
+
+
+def test_a_segment_is_signed_for_what_the_device_holds_and_the_door_streams_it_a_piece_at_a_time():
+    """The review's fifth pass, major: `/segment` signed any interval, and the holder's door read it in one `read` into
+    one buffer — 1000 s of a 100 kB/s card was 100 MB in the process holding every camera of its server. The console
+    cuts the interval to the coverage the holder announces and holds it to `SEGMENT_MAX` before it signs (nothing of
+    the device's there: 404; longer: 400). The door asks the device for `PLAYBACK_PIECE` seconds at a time, one session
+    at a time, and sends each piece as it comes, in chunks — the last one only when every piece went."""
+    import http.client
+    from urllib.parse import parse_qs, urlsplit
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    box = Box()
+    access = Tokens({"viewer": [("view", "1", ()), ("view", "2", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    dev = FakeDevice("acme/10.0.0.50", channels=["1", "2"], coverage={"1": (0.0, 1000.0), "2": (0.0, 10000.0)},
+                     max_playbacks=2, bps=20000)
+    pieces = []
+    read = dev.read
+    dev.read = lambda sid: (lambda b: (pieces.append((len(b), len(dev.open))), b)[1])(read(sid))
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive, device_factory=lambda k: dev)
+    w.heartbeat_once()
+    door = w.serve_playback("127.0.0.1", 0)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+        box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})          # gated: the console signs
+        code, body = _call(base, "GET", "/segment?cam=1&from=0&to=86400", token="viewer")
+        assert code == 200, body
+        q = {k: v[0] for k, v in parse_qs(urlsplit(body["playback"]).query).items()}
+        assert (q["from"], q["to"]) == ("0.000", "1000.000")                     # a day asked: what the card holds, signed
+        assert _call(base, "GET", "/segment?cam=1&from=5000&to=6000", token="viewer")[0] == 404
+        code, body2 = _call(base, "GET", "/segment?cam=2&from=0&to=1e12", token="viewer")
+        assert code == 400 and "3600" in body2["detail"]                          # longer than an export: not signed at all
+
+        u = urlsplit(body["playback"])
+        c = http.client.HTTPConnection(u.hostname, u.port, timeout=30)
+        c.request("GET", f"{u.path}?{u.query}")
+        r = c.getresponse()
+        assert r.status == 200 and r.getheader("Transfer-Encoding") == "chunked" and r.getheader("Content-Length") is None
+        total = len(r.read())
+        assert total == 1000 * 20000                                               # all of it, through the stream
+        assert max(n for n, _ in pieces) <= w.PLAYBACK_PIECE * 20000                # never more than a piece at once
+        assert len(pieces) >= 1000 / w.PLAYBACK_PIECE and max(o for _, o in pieces) == 1   # one session at a time
+        assert not dev.open                                                          # and every one closed
+    finally:
+        door.shutdown(); srv.shutdown()
+
+
+def test_the_doors_expiry_forgives_clocks_a_little_apart_and_names_the_difference_when_they_are_not():
+    """The review's fifth pass, minor: the address's expiry is the console's clock, read by the holder's — more than
+    `TTL` apart and every address was "expired" the moment it was made, with nothing to say why. The address carries
+    when it was signed: `SKEW` apart either way is forgiven; further, the refusal names the difference as the door
+    measured it, and an address signed in the door's future is refused too (it would live longer than `TTL`)."""
+    from vms import playback as pb
+    key = pb.new_key()
+
+    def check(console_now, door_now):
+        q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(
+            pb.signed_query(key, "7", 100, 200, "anna", console_now)).items()}
+        try:
+            return pb.check_signed(key, "7", q, door_now)
+        except PermissionError as e:
+            return str(e)
+    assert check(1000, 1000) == "anna"
+    assert check(1000, 1000 - pb.SKEW + 1) == "anna"                          # the console a little ahead
+    assert check(1000, 1000 + pb.TTL + pb.SKEW - 1) == "anna"                 # …or behind, or a viewer a little late
+    ahead = check(1000, 1000 - 400)
+    assert "400 s ahead" in ahead and "NTP" in ahead                          # the console 400 s ahead of the door
+    behind = check(1000, 1000 + 700)
+    assert "expired" in behind and "700 s" in behind and "NTP" in behind      # …or 700 s behind it: named, not a riddle
+    q = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(pb.signed_query(key, "7", 100, 200, "anna", 1000)).items()}
+    assert "did not sign" in str(_raises(lambda: pb.check_signed(key, "7", {k: v for k, v in q.items() if k != "at"}, 1000)))
+    q["at"] = "1100"
+    assert "does not match" in str(_raises(lambda: pb.check_signed(key, "7", q, 1000)))   # `at` is under the signature
+
+
+def _raises(fn):
+    try:
+        fn()
+    except Exception as e:                                                     # noqa: BLE001
+        return e
+    raise AssertionError("did not raise")
 
 
 def test_the_devices_own_door_opens_only_to_what_the_console_signed():
@@ -668,8 +939,9 @@ def test_the_devices_own_door_opens_only_to_what_the_console_signed():
         assert _get(f"{cap}?from=0&to=5")[0] == 200
         assert _get(f"{cap.replace('/playback/2/', '/playback/1/')}?from=0&to=5")[0] == 403   # one camera's capability is not another's
 
-        box.wall.advance(301)
-        assert _get(url)[0] == 403                                   # five minutes on: ask the console again
+        from vms import playback as pb
+        box.wall.advance(pb.TTL + pb.SKEW + 1)
+        assert _get(url)[0] == 403                                   # five minutes on (and the clocks' grace): ask again
 
         audit = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit")["events"]
         at_door = [e for e in audit if e.get("unit") == "door-w-1"]

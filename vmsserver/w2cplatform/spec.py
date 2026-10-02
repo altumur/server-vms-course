@@ -784,6 +784,16 @@ class SpecController(Controller):
             old, idx = self.vars.get(self._row_key(uid))
             if old and old.get("deleted") != "true":
                 raise Refused(f"{self.spec.name} unit {uid} exists")
+            # A NAME STAYS ITS CAMERA'S (the review's fifth pass, major). A unit's name is also the name of what it left
+            # behind — a recording's tree in its volumes, a detector's events — and readers find those by the name.
+            # Deleted as camera 1's «1-cloud» and created again as camera 2's, the recording handed camera 1's
+            # footage to whoever may view camera 2 (`GET /export/2` played it). The tombstone keeps `cam`: the name
+            # comes back for the same camera, and for another it is refused — whatever was written under it is still
+            # there, and nothing here can know when the last of it is gone, so "reuse once the archive is empty" is
+            # not a rule this controller could keep.
+            if old and "cam" in old and "cam" in fields and str(self.spec.fields["cam"].parse(fields["cam"])) != str(old["cam"]):
+                raise Refused(f"the name {uid} was cam {old['cam']}'s, and what was written under it still is: create "
+                              f"cam {fields['cam']}'s under another name")
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
@@ -814,8 +824,8 @@ class SpecController(Controller):
                 raise KeyError(uid)
             r = self.spec.row(it)
             if "cam" in fields and "cam" in r and str(self.spec.fields["cam"].parse(fields["cam"])) != str(r["cam"]):
-                raise Refused(f"`cam` is fixed when the unit is created: {uid} is about {r['cam']} — delete it and "
-                              f"create one for {fields['cam']}")
+                raise Refused(f"`cam` is fixed when the unit is created: {uid} is about {r['cam']} — create one for "
+                              f"{fields['cam']} under another name (this one stays {r['cam']}'s, deleted or not)")
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller

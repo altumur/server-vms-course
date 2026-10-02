@@ -41,6 +41,7 @@ import secrets
 from urllib.parse import quote, urlsplit, urlunsplit
 
 TTL = 300.0                   # how long an address the console signs opens the door: a click, and the player's re-asks
+SKEW = 60.0                   # how far apart the console's clock and the door's may be before an address is refused for it
 
 
 def new_key() -> str:
@@ -59,27 +60,42 @@ def times(t0, t1) -> tuple[str, str]:
     return f"{a:.3f}", f"{b:.3f}"
 
 
-# The query a console appends for one viewer: `from`, `to`, `exp`, `v` (who), `sig`.
+# The query a console appends for one viewer: `from`, `to`, `at` (when it was signed), `exp`, `v` (who), `sig`.
 def signed_query(key: str, cam, t0, t1, who: str, now: float, ttl: float = TTL) -> str:
     a, b = times(t0, t1)
-    exp = f"{now + ttl:.0f}"
-    sig = _mac(key, "viewer", str(cam), a, b, exp, who)
-    return f"from={a}&to={b}&exp={exp}&v={quote(who, safe='')}&sig={sig}"
+    at, exp = f"{now:.0f}", f"{now + ttl:.0f}"
+    sig = _mac(key, "viewer", str(cam), a, b, at, exp, who)
+    return f"from={a}&to={b}&at={at}&exp={exp}&v={quote(who, safe='')}&sig={sig}"
 
 
 # `who` when the query is the console's for this camera and these minutes and has not expired; else `PermissionError`
 # naming why. `q` is the parsed query.
+#
+# THE EXPIRY IS THE CONSOLE'S CLOCK, READ BY THE DOOR'S (the review's fifth pass, minor). With the two more than `TTL`
+# apart, every address was "expired" the moment it was made — and the refusal did not say why. The address carries
+# the moment it was signed (`at`, under the signature), so the door can tell a late viewer from a wrong clock: up to
+# `SKEW` apart either way is forgiven; further, the refusal names the difference as this door measured it — the
+# fix is NTP on one of the two machines, not asking the console again. An address signed further in the FUTURE than
+# `SKEW` is refused as well: the console's clock ahead would otherwise make every address it signs live that much
+# longer than `TTL`.
 def check_signed(key: str, cam, q: dict, now: float) -> str:
     try:
         a, b = times(q.get("from", ""), q.get("to", ""))
-        exp = float(q["exp"])
+        at, exp = float(q["at"]), float(q["exp"])
     except (KeyError, ValueError):
         raise PermissionError("an address the console did not sign") from None
-    want = _mac(key, "viewer", str(cam), a, b, str(q["exp"]), str(q.get("v", "")))
+    want = _mac(key, "viewer", str(cam), a, b, str(q["at"]), str(q["exp"]), str(q.get("v", "")))
     if not hmac.compare_digest(want, str(q.get("sig", ""))) or q.get("from") != a or q.get("to") != b:
         raise PermissionError("the signature does not match this camera and these minutes")
-    if now > exp:
-        raise PermissionError("the address has expired: ask the console again")
+    if at > now + SKEW:
+        raise PermissionError(f"the address was signed {at - now:.0f} s ahead of this door's clock: the console's clock "
+                              f"and this holder's are that far apart (more than {SKEW:.0f} s) — set them right (NTP)")
+    if now > exp + SKEW:
+        late = now - at
+        raise PermissionError(f"the address has expired: it was signed {late:.0f} s ago as this door's clock reads it, "
+                              f"and an address opens the door for {exp - at:.0f} s — ask the console again; refused the "
+                              f"moment it was asked for, it means the console's clock is {late:.0f} s behind this "
+                              f"holder's: set them right (NTP)")
     return str(q.get("v", ""))
 
 

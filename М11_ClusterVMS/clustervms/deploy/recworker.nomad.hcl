@@ -89,6 +89,14 @@ job "recworker" {
       # ever, nothing recorded. Now: /run/obsd mounted, `OBSD_SOCKET` said, and the group — as the PRIMARY group of
       # the task's root, which the daemon counts as it counts a supplementary one (the peer's gid; a root without it
       # is refused). `tests/test_recorder_job.py` checks all three against the unit and the install files.
+      #
+      # STILL ROOT, AND SO /run/obsd's RIGHTS DO NOT STOP IT (М10's fifth review, Т-M2 — open, said here). Root in the
+      # container is root on the host's paths it mounts, so the 0750 of /run/obsd keeps out the processes that do not
+      # mount it (the holder, a vendor's DriverPack), not this one. The recorder cannot drop to a user of its own yet:
+      # it writes its events into /data/archive, which the resource and the workers own as root; it reads the
+      # workers' shared-memory sockets in /run/vms, which they create as root with no group to join; and the key Nomad
+      # renders 0600 is root's. Each is a change on the other side (the archive's and /run/vms's owner group, the
+      # template's `uid`), and until all three are made `user = "<uid>:2101"` here would only make it fail.
       user = "0:2101"
       config {
         image        = "localhost/clustervms:latest"

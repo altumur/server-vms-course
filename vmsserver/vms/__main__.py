@@ -490,6 +490,7 @@ def console() -> None:
     from w2cplatform.spec import SpecController
     from .auto import AutoController
     from .config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SURVEY_SPEC
+    from .jobs import DetJobController
     vars_ = open_vars(CONFIG_URL, writer="console",
                           acl={"console": SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console()
                                + REC_SPEC.acl_console() + DETJOB_SPEC.acl_console()
@@ -500,7 +501,7 @@ def console() -> None:
     srv = serve(ctl, archive, os.environ.get("CONSOLE_HOST", "127.0.0.1"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 live_ctl=SpecController(LIVE_SPEC, vars_, objects),
                 mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
-                        "detjob": SpecController(DETJOB_SPEC, vars_, objects),
+                        "detjob": DetJobController(vars_, objects),     # a scan's recording is its camera's (`jobs.refuse_job`)
                         "survey": SpecController(SURVEY_SPEC, vars_, objects),
                         # `AutoController` and not the platform's class: a scenario is refused where it is
                         # written, which is here, and the refusal has to be the subsystem's own words.
