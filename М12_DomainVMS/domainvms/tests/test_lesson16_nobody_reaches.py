@@ -219,8 +219,8 @@ def test_the_ring_lives_on_the_camera_the_recorder_gets_it_and_the_viewer_does_n
     vq = ingest.subscribe(SERIAL, "viewer", edge=True)
     wall.advance(1); pusher.pass_once([{"t": wall()}])
     got = rq.drain()
-    assert [f.get("ring", False) for f in got] == [True, True, True, True, False]   # 30 s of ring, then live
-    assert got[0]["t"] == wall() - 31 and vq.drain() == [{"t": wall()}]
+    assert [f.get("ring", False) for f in got] == [True, True, True, False]   # the last 30 s before it, then live
+    assert got[0]["t"] == wall() - 21 and vq.drain() == [{"t": wall()}]
 
 
 def test_the_long_poll_answers_first_holds_when_nothing_changed_and_wakes_when_a_want_runs_out():

@@ -46,7 +46,9 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  the copy fails and is asked again later, never taken for "not on the card" (feedback DG, DH).
                  The request NAMES the recording on the card; the answer comes up in PIECES of bytes the camera
                  can hold (`vms.card.PIECE_BYTES`), the recorder waits for each piece as long as a piece of that
-                 size takes, and the ingest forgets an answer the moment it has handed it over (the sixth review)
+                 size takes, and the ingest forgets an answer the moment it has handed it over (the sixth review).
+                 The camera sends a piece's worth a pass, beside its stream, and a piece it had no answer for goes
+                 again under its own number — the ingest takes the repeat as a repeat (the seventh review)
     frames       two forms, each for its road, and ONE place that turns the one into the other. The card's frame
                  is a sample record (`w2cplatform.obsd.Sample`: archive ms, the key flag, the body) — as it lies
                  on the card and as it travels in a range's answer, never re-made. The PUSH's frame, in this
@@ -67,10 +69,12 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  from the recorder's own word in its heartbeat (`written_through`), not from what this
                  ingest received: frames a recorder's queue dropped must be sent again, and a camera that
                  comes back to ANOTHER ingest of the cluster, or to one that restarted, must still be told.
-                 The camera starts its next push at the first keyframe after `have` — off its card, then out
-                 of the ring it kept through the break — and nothing the recorder has goes twice; the
-                 ingest drops what is not newer than `have`. Backfill is for minutes and hours (it plans
-                 nothing fresher than its settle); a break of seconds is the stream's own business
+                 The camera starts its next push at the first keyframe after `have` — out of its memory (the
+                 camera's ring), off its card for what memory no longer holds — and nothing the recorder has
+                 goes twice; the ingest drops what is not newer than `have`. Backfill is for minutes and hours
+                 (it plans nothing fresher than its settle); a break of seconds is the stream's own business —
+                 and only seconds: the stream reaches back `hold_seconds`, goes ahead of the live edge a piece a
+                 pass, and leaves what is older to backfill, saying how much (the seventh review)
     asks         a scenario between cameras — "vehicle at the gate: yard camera to preset 3" (Lesson 12) — is
                  worth something NOW. Neither camera can be reached; both keep a long poll open. So the camera
                  whose event fired leaves the ask at the ingest of the cluster that records the target — the
@@ -86,17 +90,21 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import secrets
 import threading
 import time
 from dataclasses import dataclass, field
 
 from vms.card import PIECE_BYTES       # what one piece of a camera's card may weigh: a share of the camera's memory
-from w2cplatform.obsd import unix_s
+from vms.card import RING_BYTES        # …and the camera's ring: what a pusher with no camera ring keeps at most
+from w2cplatform.obsd import archive_ms, unix_s
 
 from .federation import Unreachable
 from .gateway import Forbidden, LeakyQueue, LiveTee
 from .tokens import TokenError, kid_of, verify
+
+log = logging.getLogger("ingest")
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
 POLLED = "rec/polled"                  # `/<ingest>`: when each camera last polled here, as ages: {"cluster", "ingest", "ts", "cameras"}
@@ -220,6 +228,7 @@ class Ingest:
         self.recheck = 5.0
         self.linger = LINGER
         self.links: dict[tuple[str, str], PeerLink] = {}          # (peer, camera) -> the stream this ingest pushes it (AJ)
+        self.pulled: dict[tuple[str, str], tuple[int, list]] = {}  # (camera, puller) -> the last batch pulled, numbered
         self.tees: dict[tuple[str, str], LiveTee] = {}
         self.cams: dict[str, _Camera] = {}
         # Asks going UP (Lesson 17): left here by a camera that sees only this relay, for a camera elsewhere;
@@ -386,7 +395,13 @@ class Ingest:
         IN PIECES (the sixth review): `more` — this is a piece and more follow; `seq` — which piece, from nought. The
         answer is whole, and handed to the recorder, when a piece comes without `more`; a piece out of its turn fails
         the range — an answer with a piece missing would be taken for all the card has. Returns whether anybody still
-        waits for this range: False tells the camera to stop reading its card for a recorder that has given up."""
+        waits for this range: False tells the camera to stop reading its card for a recorder that has given up.
+
+        A REPEAT OF THE PIECE TAKEN LAST IS A REPEAT (the seventh review): the answer to an upload can be lost on its way
+        back as well as the upload itself, and the camera sends the piece again under the same number — `seq == n - 1`.
+        It was failed as "out of its turn": one lost answer cost the whole range, and at 5 % of answers lost one range
+        in ten landed. Now it is taken as what it is — nothing added, the range waits for piece `n` — and the camera
+        hears that the range is still wanted."""
         self._check(token, ref, camera_now)
         shifted, now, wanted = _shift(samples, self._cam(ref).offset), self.wall(), False
         for ing in self._cluster():
@@ -394,6 +409,10 @@ class Ingest:
             if rid not in c.ranges:
                 continue
             n, have, _ = c.parts.pop(rid, (0, [], 0.0))
+            if failed is None and more and seq == n - 1:
+                c.parts[rid] = (n, have, time.monotonic())             # a repeat: taken already, and the camera is alive
+                wanted = True
+                continue
             if failed is None and seq != n:
                 failed = f"piece {seq} of the answer came where piece {n} was due"
             if failed is not None:
@@ -586,13 +605,29 @@ class Ingest:
                 for kept in (c.ranges, c.parts, c.answers, c.failed):
                     kept.pop(rid, None)
 
-    def pull(self, token: str, ref: str, who: str) -> list:
+    def pull(self, token: str, ref: str, who: str, have: int | None = None) -> list:
         """Lesson 17, the star: a cluster that nobody can dial either — a relay behind a mobile operator's
         NAT, a cluster in a cloud that takes no inbound — takes the streams of ITS cameras from here, calling
-        in. Each pull is wanting the stream for another `LINGER`; stop pulling, and the want runs out."""
+        in. Each pull is wanting the stream for another `LINGER`; stop pulling, and the want runs out.
+
+        A BATCH IS GONE FROM HERE ONLY WHEN THE PULLER HAS IT (the seventh review, the camera's rule one level up): the
+        answer is numbered (`.seq`), and the puller says which number it last got (`have`). An answer lost on its way
+        down — the drained frames gone with it — is handed over again, in front of what came since; as a stream,
+        at most `PEER_BUFFER` frames of it, cut clean to a keyframe. `have` None: a puller that does not count."""
         self._check(token, ref)
         self.want(ref, who, until=self.wall() + self.linger)
-        return self.subscribe(ref, who).drain()
+        fresh = self.subscribe(ref, who).drain()
+        if have is None:
+            return fresh
+        key = (str(ref), str(who))
+        seq, last = self.pulled.get(key, (0, []))
+        frames = fresh if int(have) == seq else last + fresh
+        if len(frames) > PEER_BUFFER:
+            frames = frames[-PEER_BUFFER:]
+            while frames and not _is_key(frames[0]):
+                frames.pop(0)
+        self.pulled[key] = (seq + 1, frames)
+        return _Batch(frames, seq + 1)
 
     def inject(self, ref: str, frames: list) -> int:
         """A stream arriving from this cluster's own forwarder or a peer ingest — already on this cluster's clock."""
@@ -662,6 +697,14 @@ def _is_key(frame) -> bool:
     return not isinstance(frame, dict) or bool(frame.get("key", True))
 
 
+class _Batch(list):
+    """The frames of one pull, and its number (`seq`): what the puller says it has, next time (`Ingest.pull`)."""
+
+    def __init__(self, frames, seq: int):
+        super().__init__(frames)
+        self.seq = seq
+
+
 class PeerLink:
     """The stream one ingest pushes to a peer of its cluster for one camera (AJ). A recorder is behind it, so a
     frame lost in the middle of a GOP is worse than a gap: the recorder writes garbage, or nothing, until the
@@ -728,50 +771,196 @@ class _Tees:
 # opening a connection OUT — it raises Unreachable when that address does not answer, and then the next one
 # in the book is tried. `frames_now` is what the sensor produced since the last pass, each with its capture
 # time on the camera's clock (`t`); `card(recording, t0, t1, max_bytes)` reads a range off the card, on that clock
-# too, a piece at a time (below). `clock` is
-# the camera's own clock, stated in every request (AC). `ring_seconds`: the ring kept while nobody wants the
-# stream, flushed first — marked — when somebody does (AC). `hold_seconds`: how much of a BREAK it keeps in
-# memory — while it was pushing and lost its road — to continue the stream from when the road comes back (CB).
+# too, a piece at a time (below). `clock` is the camera's own clock, stated in every request (AC). `ring_seconds`:
+# how much of what came before a push is sent first — marked — when somebody starts wanting the stream (AC).
+# `hold_seconds`: how far back a BREAK is continued — the road was lost while pushing — when the road comes back (CB).
 # It has to reach as far back as the card's gate waits before it writes (`RecWorker.defer_for` plus how late the
-# break is noticed — `RecWorker.CONTINUE_REACH`, 30 s; the card's own ring holds what its bytes hold of the stream,
-# `CardRecorder.PREBUFFER`, and the gate waits no longer than the shorter of the two): a break that ends
-# while the card still waits is in memory
-# ONLY, and a shorter hold here would lose its beginning. Longer breaks: the card wrote them, from before
-# the break, and the continuation reads them off it — a piece at a time (`_continue`).
+# break is noticed — `RecWorker.CONTINUE_REACH`, 30 s): a break that ends while the card still waits is in memory
+# ONLY, and a shorter reach here would lose its beginning. A longer break: the card wrote it, from before its start,
+# and BACKFILL takes it off the card (below, "how far a break is continued").
+#
+# THE PUSHER HOLDS NO FRAMES OF ITS OWN ON A CAMERA (the seventh review: "the pusher keeps frames outside the budget
+# and counts them in seconds"). It kept two lists — `tail`, what it had sent in the last half-minute, and `ring`, the
+# break — with the same frames the camera's ring (`vms.card.CamRing`) already held: 14.8 MiB each at 4 Mbit/s, 29.6 at
+# 8, some 70 MiB in a camera whose budget says 40. Now its frames ARE the camera's ring: given it (`ring=`), the pusher
+# keeps only WHERE the stream stands — `sent`, the capture time of the last frame an ingest took, and `cursor`, where
+# the next piece begins — and reads the ring from there, a piece at a time (`_RingFrames`). What it sent and may not
+# have been written, a break, the frames before an event: all of it is the ring's, under the ring's bytes. Of the card
+# it holds one piece in flight, from the camera's budget (`vms.card.memory_split`, "pieces"). Without a camera's ring —
+# the course's model frames, dicts with no bodies — it keeps one of its own, of the same bounds (`_OwnFrames`).
+#
+# A FRAME IS GONE FROM THE PUSHER'S STATE ONLY WHEN AN INGEST TOOK IT (the seventh review, blocker 3). The state of a
+# break was reset BEFORE the push that continued it, and `Unreachable` — not an `OSError` — left the pass on the way
+# out: a push that failed after a poll that answered lost the whole break, with `resumed` counting it as sent; and an
+# ordinary push that failed lost its own frames, which were never added to what was kept. Now `sent`, `cursor` and the
+# end of a break move after each push an ingest confirmed, and nowhere else; a push that fails leaves them where they
+# were, and the break stands — the next road that answers gets everything from the last frame taken. The same rule for
+# a range's pieces (`uploading`: a piece not acknowledged is sent again, as it was, under its own number) and for an
+# ask (`_outcomes`: an action performed and not acknowledged is answered again, not performed again).
 #
 # THE CARD IS OPTIONAL, AND IT IS NOT AN ARCHIVE (the product's camera; feedback CB, DG, DH). On a camera the card is
 # the camera's buffer of plain files, written from the camera's one ring with no engine (`vms/card.py`); `card` here
-# is its range reader — `CardRecorder.answer_range`. The pusher does not need it: a camera
-# with no card — none put in, or one that would not open — pushes and continues breaks from memory all the same, and
-# answers a range with RANGE FAILED (`upload(failed=...)`), as it does when the card could not read one: the server
-# asks again later. Answered empty, the server would remember the range as "not on the card" and never ask again.
+# is its range reader — `CardRecorder.answer_range`. The pusher does not need it: a camera with no card — none put in,
+# or one that would not open — pushes and continues breaks from memory all the same, and answers a range with RANGE
+# FAILED (`upload(failed=...)`), as it does when the card could not read one: the server asks again later. Answered
+# empty, the server would remember the range as "not on the card" and never ask again.
 #
 # THE CARD'S READER (the sixth review): `card(recording, t0, t1, max_bytes)` gives the range as an ITERATOR OF PIECES
 # — lists of `Sample`, each at most `max_bytes` — read off the card as each is asked for; `recording` is the one the
 # request names (None: the camera's one), and one the card does not hold is an error. Nothing of the card is in
-# this process but the piece in hand: a camera has some 32 MB for everything (`vms.card.MEMORY_BUDGET`), and a
-# reader that returned the range as one list put ten minutes at 4 Mbit/s — 272 MiB — into it, to continue one break.
+# this process but the piece in hand.
+def _t(frame) -> float | None:
+    """A push frame's capture time on the camera's clock; None for a frame that carries none (the tests' plain values)."""
+    return float(frame["t"]) if isinstance(frame, dict) and "t" in frame else None
+
+
+def _weight(frame) -> int:
+    """The bytes a push frame holds: the record's body, off the card or the camera's ring, or a body of its own. The
+    course's model frames have none, and weigh nothing."""
+    if not isinstance(frame, dict):
+        return 0
+    body = getattr(frame.get("sample"), "body", None)
+    if body is None:
+        body = frame.get("body")
+    return len(body) if isinstance(body, (bytes, bytearray, str)) else 0
+
+
+def _key(frame) -> bool:
+    return not isinstance(frame, dict) or bool(frame.get("key", True))
+
+
+class _RingFrames:
+    """The camera's own ring (`vms.card.CamRing`), as its pusher sees it: what the sensor put there, as push frames
+    (`wire`), on the camera's clock. The pusher holds nothing of its own; the ring is fed by the sensor, not the pass."""
+
+    def __init__(self, ring):
+        self.ring = ring
+
+    def add(self, frames: list) -> None:
+        if frames:
+            raise ValueError("a pusher over the camera's ring takes the frames from the ring, not from the pass")
+
+    def oldest(self) -> float | None:
+        ms = self.ring.oldest()
+        return unix_s(ms) if ms else None
+
+    def newest(self) -> float | None:
+        ms = self.ring.newest()
+        return unix_s(ms) if ms else None
+
+    def last_key(self) -> float | None:
+        ms = self.ring.last_key()
+        return unix_s(ms) if ms else None
+
+    def weight(self, after: float | None) -> int:
+        return self.ring.weight(0 if after is None else archive_ms(after))
+
+    def piece(self, after: float | None, max_bytes: int, joined: bool = False) -> tuple[list, bool]:
+        frames, whole = self.ring.piece(0 if after is None else archive_ms(after), max_bytes, joined=joined)
+        return [wire(s) for s in frames], whole and after is not None
+
+
+class _OwnFrames:
+    """What a pusher given no camera ring keeps itself: the course's model frames (dicts with `t`), in the order they
+    were captured, for `window` seconds and at most `max_bytes` — the bounds of the camera's ring. A frame not newer
+    than the newest held is not taken (`stale`): a capture clock goes forward."""
+
+    def __init__(self, window: float, max_bytes: int, clock):
+        self.window, self.max_bytes, self.clock = float(window), int(max_bytes), clock
+        self.frames: list[dict] = []
+        self.bytes = self.stale = 0
+
+    def add(self, frames: list) -> None:
+        for f in frames:
+            if self.frames and _t(f) <= _t(self.frames[-1]):
+                self.stale += 1
+                continue
+            self.frames.append(f)
+            self.bytes += _weight(f)
+        floor, drop = self.clock() - self.window, 0
+        while drop < len(self.frames) and (_t(self.frames[drop]) < floor or self.bytes > self.max_bytes):
+            self.bytes -= _weight(self.frames[drop])
+            drop += 1
+        del self.frames[:drop]
+
+    def oldest(self) -> float | None:
+        return _t(self.frames[0]) if self.frames else None
+
+    def newest(self) -> float | None:
+        return _t(self.frames[-1]) if self.frames else None
+
+    def last_key(self) -> float | None:
+        return next((_t(f) for f in reversed(self.frames) if _key(f)), None)
+
+    def weight(self, after: float | None) -> int:
+        return sum(_weight(f) for f in self.frames if after is None or _t(f) > after)
+
+    def piece(self, after: float | None, max_bytes: int, joined: bool = False) -> tuple[list, bool]:
+        """`(frames, whole)`, as `CamRing.piece`: the frames past `after` (None: from the first frame held), at most
+        `max_bytes` of them and one at least; `whole` — they follow the frame at `after` with nothing missing, because
+        it is held or the reader says so (`joined`). Otherwise they start on a key frame."""
+        fs, i = self.frames, 0
+        if after is not None:
+            i = next((k for k, f in enumerate(fs) if _t(f) > after), len(fs))
+        whole = joined or (after is not None and i > 0 and _t(fs[i - 1]) == after)
+        if not whole:
+            while i < len(fs) and not _key(fs[i]):
+                i += 1
+        out, size = [], 0
+        while i < len(fs) and (not out or size + _weight(fs[i]) <= max_bytes):
+            out.append(fs[i])
+            size += _weight(fs[i])
+            i += 1
+        return out, whole
+
+
+_END = object()                                                        # a range's reader has nothing more
+_BEFORE = 0.001                        # a cursor just before a frame: the stream goes on from it, held or not, a keyframe first
+_CARD_BACK = 10.0                      # a read of the card that goes on mid-group starts this far back: a keyframe is in it
+
+
 class CameraPusher:
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
-                 hold_seconds: float = 30.0, recording: str | None = None):
+                 hold_seconds: float = 30.0, recording: str | None = None, ring=None):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
         what happened: "performed", or "refused: <why>". `recording`: this camera's recording on its card — what a
-        break is continued from (None: the card's one)."""
+        break is continued from (None: the card's one). `ring`: the camera's ring (`vms.card.CamRing`) — the frames
+        it pushes; none, and it keeps the frames of the pass itself."""
         self.serial, self.flash, self.dial, self.card, self.recording = str(serial), flash, dial, card, recording
         self.failed_ranges: list[tuple[float, float, str]] = []        # ranges answered "could not read", and why
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
         self.clock, self.ring_seconds = clock or time.time, ring_seconds
         self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
-        self.pushing, self.ring, self.road = None, [], None            # the road it pushes on, if any
+        self.pushing, self.road = None, None                           # the road it pushes on, if any
         self.uncovered: bool | None = None                             # the primary does not take the stream
         self.state = "no book yet"
-        # A BREAK (CB): the road was lost while pushing. `broken_at` — the capture time of the last frame pushed;
-        # while it is set, the ring keeps what the break held, `hold_seconds` of it, not the event ring's window.
-        self.hold_seconds, self.broken_at, self.last_pushed = hold_seconds, None, None
-        # What it SENT in the last `hold_seconds`, while pushing: sent is not written — a recorder's queue may have
-        # dropped some of it — so at a break this becomes the start of what is kept, and `have` decides.
-        self.tail: list = []
+        self.hold_seconds = hold_seconds
+        self.frames = (_RingFrames(ring) if ring is not None else
+                       _OwnFrames(max(hold_seconds, ring_seconds), RING_BYTES, self.clock))
+        # WHERE THE STREAM STANDS — all the pusher keeps of it. `sent`: the capture time of the last frame an ingest
+        # took. `cursor`: `(after, joined)`, where the next piece begins — past `after`, from a key frame unless the
+        # frame at `after` is known to be followed with nothing missing. `live_from`: frames up to it are what came
+        # before the push began (the event's ring, a break) — marked, for the recorder, never the viewer's live edge.
+        # `broken_at`: the road was lost while pushing — `sent` then. `seen`: the newest frame when the last pass
+        # ended: what is newer is this pass's own.
+        self.sent: float | None = None
+        self.cursor: tuple[float | None, bool] | None = None
+        self.live_from: float | None = None
+        self.broken_at: float | None = None
+        self.resuming = False                                          # the stream is continuing a break
+        self._left = 0.0                                               # …and how much of it is older than it reaches
+        self._hole_said = False                                        # the hole the next piece begins after is counted
+        self.seen: float | None = self.frames.newest()
+        self._card = None                                              # the continuation's read off the card, under way
         self.resumed = 0                                               # frames sent again after breaks, for the tests and a metric
+        # What became of the breaks the stream could not continue whole, in seconds (`continued`): `failed` — the
+        # card could not give its part (and how many times, and the last reason); `left` — older than `hold_seconds`,
+        # left to backfill; `cut` — the uplink fell behind the stream by more than `lag_limit`, and the stream went on
+        # from the live edge. Each is the recorder's backfill to close off the card, and none is silent.
+        self.continued = {"failed": 0, "failed_s": 0.0, "failed_why": "", "left_s": 0.0, "cut_s": 0.0}
+        self.lag_limit = 2 * hold_seconds
+        self.uploading: dict[str, dict] = {}                           # ranges being answered, piece by piece
+        self._outcomes: dict[str, str] = {}                            # asks performed and not yet acknowledged
 
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
@@ -789,51 +978,144 @@ class CameraPusher:
         return {"cluster": p["cluster"], "polls_only": True,
                 "ingest": {k: p[k] for k in ("urls", "token", "until")}}
 
-    def _keep(self, frames: list) -> None:
-        now = self.clock()
-        window = self.hold_seconds if self.broken_at is not None else self.ring_seconds
-        self.ring = [f for f in self.ring + [f for f in frames if isinstance(f, dict) and "t" in f]
-                     if float(f["t"]) >= now - window]
+    def behind(self) -> float:
+        """How far the stream it pushes is behind the newest frame, in seconds: catching up after a break."""
+        newest = self.frames.newest()
+        if self.pushing is None or self.cursor is None or newest is None:
+            return 0.0
+        after = self.cursor[0]
+        return 0.0 if after is not None and after >= newest else newest - (after if after is not None else newest)
 
-    # The continuation of a broken push (CB): everything after `have` — the recorder's own word, on this camera's
-    # clock — that the camera still holds, from the first keyframe: off the card up to where the ring begins,
-    # then the ring. Without `have` (an ingest that cannot say) it is the ring, as at an event's start.
+    def busy(self) -> bool:
+        """Work left over from the last pass — a break or a start no ingest has taken yet, a stream catching up, a
+        range being answered, an outcome not yet taken: the poll is not held for it."""
+        return (self.broken_at is not None or (self.pushing is None and self.cursor is not None) or self.behind() > 0
+                or bool(self.uploading) or bool(self._outcomes))
+
+    # HOW FAR A BREAK IS CONTINUED, AND HOW FAST (the seventh review: "the continuation goes whole inside one pass" —
+    # ten minutes at 4 Mbit/s, 272 MiB over an uplink of 8 Mbit/s, about five minutes with no live stream at all, no
+    # poll, no ask answered; and "what uplink does the camera assume for it?").
     #
-    # THE CARD'S PART GOES OUT AS IT IS READ (the sixth review, blocker 3). It was read whole into one list — ten
-    # minutes of a break at 4 Mbit/s, 272 MiB in a camera with 32 — and then all of it was thrown away: the card's
-    # reader gives `Sample`, and this kept only dicts. So the camera went down with its ring, the break it was
-    # keeping and its live stream, to send nothing. Now a piece of at most `PIECE_BYTES` is read, turned into push
-    # frames (`wire`) and pushed, and only then is the next one read: what the camera holds of its card is one piece.
-    # Returns how many frames went out, and the ring's part — which goes with the pass's own frames, as before.
+    # THE UPLINK IS ASSUMED AT ONE AND A HALF TIMES THE STREAM'S OWN BITRATE. The stream to a recorder goes in order —
+    # its writer takes nothing older than its last frame — so a continuation is not sent beside the live stream but
+    # ahead of it, and the live edge waits behind it until the stream has caught up: at 1.5 × the bitrate a backlog of
+    # B seconds is gone in 2B. So the continuation reaches back no further than `hold_seconds` (30 s: caught up in a
+    # minute, the live edge never more than half a minute late) — the stream after a break begins at `have` or at
+    # `now - hold_seconds`, whichever is later, and what is older the card wrote (its gate released it, `defer_for`)
+    # and BACKFILL copies off it, a range at a time, between the polls. A break of ten minutes is thirty seconds of
+    # the stream and nine and a half minutes of backfill; `continued["left_s"]` says how much was left.
     #
-    # The ring follows the card's part in the middle of a group of pictures only when the card's part reached it —
-    # its last frame ends where the ring begins. A card that could not be read, that holds less, or no card at all
-    # leaves a hole before the ring, and after a hole the stream starts on a keyframe; what is missing is backfill's.
-    def _continue(self, ing, token: str, have) -> tuple[int, list]:
-        ring = list(self.ring)
-        if have is None:
-            return 0, ring
-        have = float(have)
-        ring = [f for f in ring if float(f["t"]) > have]
-        first = float(ring[0]["t"]) if ring else self.clock()
-        sent, reached = 0, have
-        if have < first:
+    # AND IT GOES A PIECE AT A TIME. A pass sends what came since the last pass and one piece (`PIECE_BYTES`) of the
+    # backlog on top, two pieces at the most — never the whole backlog; off the card, a piece as the card gives it —
+    # then answers ranges and asks, and the next pass polls at once and goes on: the stream gains as fast as the uplink
+    # takes it, and no pass holds the poll, the asks and the ranges longer than two pieces take.
+    # Below the assumed uplink it catches up slower; below the stream's own bitrate it cannot catch up at all, and when
+    # it falls `lag_limit` (two `hold_seconds`) behind it goes on from the newest key frame, the seconds it skipped
+    # counted (`continued["cut_s"]`) and logged — backfill's too. An uplink that does not carry the live stream is a
+    # camera that cannot be recorded live, and that is said, not hidden in a queue.
+    def _start(self, work: dict, now: float) -> None:
+        """Where the stream begins this pass: after a break, at `have` (the recorder's word) or `hold_seconds` back;
+        at a start, `ring_seconds` back and this pass's frames; going on, where it stands — or, fallen too far
+        behind, at the newest key frame."""
+        reach = now - self.hold_seconds
+        if self.broken_at is not None:                                 # a break ends here: continue, don't restart
+            have = work.get("have")
+            after, joined = (reach, True) if have is None else (float(have), False)   # none: all it holds, as at a start
+            if after < reach:                                          # older than the stream reaches: backfill's —
+                self._left, after = reach - after, reach - _BEFORE     # the stream from the first keyframe at `reach`
+                self._hole_said = True
+            self.cursor, self.live_from, self.resuming, self._card = (after, joined), self.seen, True, None
+        elif self.pushing is None:                                     # a start: the ring first, marked
+            if self.cursor is None:                                    # (kept from a start no ingest took yet)
+                self.cursor = (None if self.seen is None else min(now - self.ring_seconds, self.seen), True)
+            self.live_from, self.resuming = self.seen, False
+        elif self.cursor is not None and self.cursor[0] is not None and self.cursor[0] < now - self.lag_limit:
+            k = self.frames.last_key()
+            if k is not None and k > self.cursor[0]:
+                self.continued["cut_s"] = round(self.continued["cut_s"] + k - self.cursor[0], 1)
+                log.warning("camera %s: its stream fell %.0f s behind (the uplink does not carry it): going on from the "
+                            "newest key frame; the %.0f s skipped are backfill's", self.serial, now - self.cursor[0],
+                            k - self.cursor[0])
+                self.cursor, self._card, self.resuming, self._hole_said = (k - _BEFORE, False), None, False, True
+
+    # The next piece from the cursor: off the card while the stream is behind what memory holds — after a break that
+    # memory does not reach back to, and when memory let go of frames the uplink had not sent yet (a camera's ring at a
+    # high bitrate holds less than the stream may lag) — read one piece at a time, kept open across passes; then out of
+    # memory. The card's part joins memory in the middle of a group of pictures only when it reached it (its last frame
+    # ends where memory begins); a card that could not be read, that holds less, or no card at all leaves a hole, and
+    # after a hole the stream starts on a key frame. What is missing is backfill's — and said (`_card_failed`, `_hole`).
+    #
+    # `_card`: None — no read under way; a dict — a read, `upto` where memory began when it was opened; "done" — the
+    # last read ended, and a new one is opened only if memory moves past the cursor again; "failed" — the card failed,
+    # and is not asked again until the next break.
+    def _next_piece(self, room: int = PIECE_BYTES) -> tuple[list, bool]:
+        after, joined = self.cursor
+        room = max(1, min(PIECE_BYTES, room))
+        oldest = self.frames.oldest()
+        while self._card != "failed" and after is not None and not joined and (oldest is None or after < oldest - 0.002):
+            upto = oldest if oldest is not None else self.clock()
             try:
-                for piece in self._read_card(self.recording, have, first, PIECE_BYTES):
-                    out = [wire(s, ring=True) for s in piece if unix_s(s.begin) > have]
-                    while out and not sent and not out[0]["key"]:
-                        out.pop(0)                                     # a continuation starts on a keyframe, never mid-GOP
-                    if out:
-                        ing.push(token, self.serial, out, camera_now=self.clock())
-                        sent, reached = sent + len(out), unix_s(piece[-1].end)
-                    piece = out = None                                 # let go BEFORE the next is read: one piece, not two
-            except OSError:
-                reached = have                                         # no card, or it could not read: memory only —
-                                                                       # what is missing is backfill's, asked again
-        if not sent or reached < first - 0.002:
-            while ring and not ring[0].get("key", True):
-                ring.pop(0)
-        return sent, ring
+                if not isinstance(self._card, dict):
+                    # A break's first read starts at `after` on a keyframe; any later one goes on from a keyframe a little
+                    # before the last frame sent, and drops what was sent — the stream is contiguous there.
+                    first = self.resuming and self._card is None
+                    self._card = {"pieces": iter(self._read_card(self.recording, after if first else after - _CARD_BACK,
+                                                                 upto, PIECE_BYTES)),
+                                  "upto": upto, "started": not first, "end": after}
+                piece = next(self._card["pieces"], None)
+            except OSError as e:
+                self._card_failed(e, after, upto)
+                break
+            if piece is None:
+                reached, oldest = self._card["end"], self.frames.oldest()
+                if oldest is not None and reached >= oldest - 0.002:  # it reached memory: no hole between them
+                    self._card = "done"
+                    return self.frames.piece(after, room, joined=True)[0], False
+                moved = self._card["started"] and oldest is not None and oldest > self._card["upto"] + 0.002
+                self._card = "done"
+                if moved:
+                    continue                                           # memory moved on while the card was read: read on
+                break
+            out = [wire(s, ring=True) for s in piece if unix_s(s.begin) > after]
+            if not self._card["started"]:
+                while out and not out[0]["key"]:
+                    out.pop(0)                                         # a continuation starts on a keyframe, never mid-GOP
+            if out:
+                self._card["started"], self._card["end"] = True, unix_s(piece[-1].end)
+                return out, True
+        piece, whole = self.frames.piece(after, room, joined=joined)
+        if piece and not whole and after is not None and not self._hole_said and _t(piece[0]) > after:
+            self._hole(_t(piece[0]) - after)
+        self._hole_said = False
+        return piece, False
+
+    # A HOLE NOBODY PLANNED IS SAID TOO. The stream goes on past a hole from the next keyframe — and a hole is planned
+    # where the stream begins after a break older than it reaches (`left_s`), where the card failed (`failed_s`) and
+    # where the pusher cut to the live edge (`cut_s`). Two more come by themselves, and were silent: the card's part of a
+    # break ended before memory begins (it holds less — it opened late, it was slow), and memory let go of frames the
+    # uplink had not sent yet (a camera's ring at a high bitrate holds less than `lag_limit`). Counted, and logged.
+    def _hole(self, gap: float) -> None:
+        if self.resuming:
+            self.continued["failed"] += 1
+            self.continued["failed_s"] = round(self.continued["failed_s"] + gap, 1)
+            self.continued["failed_why"] = "the card holds less of the break than memory lacks"
+            log.warning("camera %s: the card's part of a break ends %.0f s before memory begins: not in the stream; "
+                        "backfill asks the card for them later", self.serial, gap)
+        else:
+            self.continued["cut_s"] = round(self.continued["cut_s"] + gap, 1)
+            log.warning("camera %s: its stream fell behind and memory let go of %.0f s before they were sent (the uplink "
+                        "does not carry the stream); backfill asks the card for them later", self.serial, gap)
+
+    # THE CARD'S ERROR IS SAID (the seventh review: `except OSError: reached = have` swallowed it — two recordings on the
+    # card and a pusher not told which, a break of ten minutes, nothing off the card, and neither a log line nor a
+    # failed range). Logged, counted, and the seconds the card could not give are in the pusher's state.
+    def _card_failed(self, e: OSError, after: float, upto: float) -> None:
+        self._card, self._hole_said = "failed", True
+        self.continued["failed"] += 1
+        self.continued["failed_s"] = round(self.continued["failed_s"] + max(0.0, upto - after), 1)
+        self.continued["failed_why"] = str(e)
+        log.warning("camera %s: a break could not be continued off the card (%s): %.0f s of it are not in the stream; "
+                    "backfill asks the card for them later", self.serial, e, upto - after)
 
     def _read_card(self, recording, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
         if self.card is None:
@@ -853,112 +1135,222 @@ class CameraPusher:
                 continue
         return None, None, None
 
-    def _serve(self, ing, token: str, work: dict, frames_now: list, key: str) -> tuple[int, list, list]:
-        pushed = 0
-        if work["push"]:
-            batch = list(frames_now)
-            if self.broken_at is not None:                             # a break ends here: continue, don't restart
-                sent, more = self._continue(ing, token, work.get("have"))   # the card's part is pushed as it is read
-                self.resumed += sent + len(more)
-                pushed += sent
-                batch = [dict(f, ring=True) for f in more] + batch
-                self.ring, self.broken_at = [], None
-            elif self.pushing != key and self.ring:                    # a start, here: the ring first, marked
-                batch = [dict(f, ring=True) for f in self.ring] + batch
-                self.ring = []
-            pushed += ing.push(token, self.serial, batch, camera_now=self.clock())
-            self.pushing = key
-            timed = [f for f in batch if isinstance(f, dict) and "t" in f]
-            if timed:
-                self.last_pushed = max(float(f["t"]) for f in timed)
-                floor = self.clock() - self.hold_seconds
-                self.tail = [f for f in self.tail + [{k: v for k, v in f.items() if k != "ring"} for f in timed]
-                             if float(f["t"]) >= floor]
-        uploaded = []
-        for rid, r in work["ranges"].items():
-            t0, t1 = r["from"], r["to"]
-            if self._upload(ing, token, rid, r):
-                uploaded.append((t0, t1))
-        performed = []
-        for aid, a in work.get("asks", {}).items():
-            outcome = "expired" if a["deadline"] <= self.clock() else self.perform(a["action"])   # too late: not done
-            ing.answer_ask(token, self.serial, aid, outcome)
-            performed.append((a["action"], outcome))
-        return pushed, uploaded, performed
+    # One road's work: a range piece the ingest did not acknowledge, first (one piece of the card in memory at a time,
+    # never two); the stream; the ranges; the asks. The first `Unreachable` ends the road's work for this pass — and
+    # changes nothing that was not confirmed.
+    def _serve(self, ing, token: str, work: dict, loose: list, key: str) -> tuple[int, list, list, bool]:
+        pushed, uploaded, performed = 0, [], []
+        ok = self._resend(ing, token, work)
+        if ok and work["push"]:
+            pushed, ok = self._push(ing, token, work, loose, key)
+        if ok:
+            uploaded, ok = self._uploads(ing, token, work)
+        if ok:
+            performed, ok = self._answer(ing, token, work)
+        return pushed, uploaded, performed, ok
 
-    # One range of the card, answered (the sixth review). The request names the recording and the size of a piece; the
-    # card is read a piece at a time and each piece is uploaded before the next is read — `more` on every one of
-    # them, and an upload with nothing in it and no `more` to say the answer is whole. A minute at 4 Mbit/s was read
-    # into one list of 28.6 MiB; it is thirty pieces of a megabyte now, one of them in memory. The ingest says, with
-    # every piece, whether anybody still waits: a recorder that gave up is not read the rest of the card for.
-    # An error of the card at ANY piece is said (`failed`), never answered as "that was all".
-    def _upload(self, ing, token: str, rid: str, r: dict) -> bool:
-        t0, t1 = r["from"], r["to"]
-        piece = min(int(r.get("piece") or PIECE_BYTES), PIECE_BYTES)
-        recording = r.get("recording") or self.recording
-        seq = 0
-        try:
-            for samples in self._read_card(recording, t0, t1, piece):
-                if not ing.upload(token, self.serial, rid, samples, camera_now=self.clock(), more=True, seq=seq):
-                    return False                                       # nobody waits for it any more
-                seq, samples = seq + 1, None                           # let go BEFORE the next is read: one piece, not two
-        except OSError as e:                                           # the card's error is said, never answered as empty
-            ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
-            self.failed_ranges.append((t0, t1, str(e)))
-            return False
-        ing.upload(token, self.serial, rid, [], camera_now=self.clock(), seq=seq)
+    def _push(self, ing, token: str, work: dict, loose: list, key: str) -> tuple[int, bool]:
+        now = self.clock()
+        self._left = 0.0
+        self._start(work, now)
+        # This pass's own frames and a piece of the backlog on top — two pieces at the most: a pass that took long (an
+        # uplink below the stream) is not followed by a longer one; the next pass does not hold its poll (`busy`).
+        allowance = min(PIECE_BYTES + self.frames.weight(self.seen), 2 * PIECE_BYTES)
+        pushed = sent_bytes = 0
+        while sent_bytes < allowance:
+            piece, off_card = self._next_piece(allowance - sent_bytes)
+            if not piece:
+                break
+            out = [f if off_card or self.live_from is None or _t(f) > self.live_from else dict(f, ring=True)
+                   for f in piece]
+            try:
+                ing.push(token, self.serial, out, camera_now=self.clock())
+            except Unreachable:
+                return pushed, False                                   # nothing moves: the next road gets it all
+            self._took(key, piece)
+            pushed += len(out)
+            sent_bytes += sum(_weight(f) for f in piece)
+            if self.resuming:
+                self.resumed += sum(1 for f in out if f.get("ring"))
+                if self.live_from is None or self.sent > self.live_from:
+                    self.resuming = False                              # the break is sent: what follows is live
+        if loose and self.behind() <= 0:
+            try:
+                ing.push(token, self.serial, list(loose), camera_now=self.clock())
+            except Unreachable:
+                return pushed, False
+            self._took(key, [])
+            pushed += len(loose)
+        return pushed, True
+
+    def _took(self, key: str, piece: list) -> None:
+        """An ingest TOOK this piece: only now does the stream's state move."""
+        if self.broken_at is not None:
+            self.continued["left_s"] = round(self.continued["left_s"] + self._left, 1)   # the break is over: what it left, said
+            self.broken_at = None
+        self.pushing = key
+        if piece:
+            self.sent = _t(piece[-1])
+            self.cursor = (self.sent, False)
+
+    def _resend(self, ing, token: str, work: dict) -> bool:
+        for rid in [r for r in self.uploading if r not in work["ranges"]]:
+            del self.uploading[rid]                                    # handed over, given up, or forgotten there
+        for rid, u in list(self.uploading.items()):
+            if u["piece"] is not None:
+                return self._upload_piece(ing, token, rid, u)[1]
         return True
 
+    # One range of the card, answered (the sixth review), A PIECE AT A TIME ACROSS PASSES (the seventh review). The
+    # request names the recording and the size of a piece; the card is read a piece at a time and each piece is
+    # uploaded before the next is read — `more` on every one of them, and an upload with nothing in it and no `more` to
+    # say the answer is whole. A pass sends at most a piece's worth of answers (`PIECE_BYTES`) and goes on with the
+    # range next pass, where it stopped: an answer of thirty megabytes is thirty passes that each poll and push too,
+    # not thirty megabytes in one. The ingest says, with every piece, whether anybody still waits.
+    #
+    # A PIECE NOT ACKNOWLEDGED IS SENT AGAIN, AS IT IS, UNDER ITS OWN NUMBER (the seventh review: a lost answer to piece
+    # 3 and the camera started again from piece 0 — the ingest failed the range; at 5 % lost answers one range in ten
+    # landed). The ingest takes a repeat of the piece it took last as a repeat (`Ingest.upload`). An error of the card at
+    # ANY piece is said (`failed`), never answered as "that was all".
+    def _uploads(self, ing, token: str, work: dict) -> tuple[list, bool]:
+        ranges = work["ranges"]
+        done, budget = [], PIECE_BYTES
+        for rid, r in ranges.items():
+            if budget <= 0:
+                break
+            u = self.uploading.get(rid)
+            if u is None:
+                t0, t1 = r["from"], r["to"]
+                piece = min(int(r.get("piece") or PIECE_BYTES), PIECE_BYTES)
+                try:
+                    pieces = iter(self._read_card(r.get("recording") or self.recording, t0, t1, piece))
+                except OSError as e:
+                    if not self._range_failed(ing, token, rid, t0, t1, e):
+                        return done, False
+                    continue
+                u = self.uploading[rid] = {"pieces": pieces, "seq": 0, "piece": None, "from": t0, "to": t1}
+            while budget > 0 and rid in self.uploading:
+                if u["piece"] is None:
+                    try:
+                        u["piece"] = next(u["pieces"], _END)
+                    except OSError as e:                               # the card's error is said, never answered as empty
+                        del self.uploading[rid]
+                        if not self._range_failed(ing, token, rid, u["from"], u["to"], e):
+                            return done, False
+                        break
+                size, final = (0 if u["piece"] is _END else sum(len(s.body) for s in u["piece"])), u["piece"] is _END
+                landed, ok = self._upload_piece(ing, token, rid, u)
+                if not ok:
+                    return done, False
+                budget -= size
+                if landed:
+                    done.append((u["from"], u["to"]))
+                if final or landed:
+                    break
+        return done, True
+
+    def _upload_piece(self, ing, token: str, rid: str, u: dict) -> tuple[bool, bool]:
+        """`(landed, ok)`: the range's pending piece uploaded — or its end said. Not ok: not acknowledged, kept."""
+        try:
+            if u["piece"] is _END:
+                ing.upload(token, self.serial, rid, [], camera_now=self.clock(), seq=u["seq"])
+            elif not ing.upload(token, self.serial, rid, u["piece"], camera_now=self.clock(), more=True, seq=u["seq"]):
+                self.uploading.pop(rid, None)                          # nobody waits for it any more
+                return False, True
+        except Unreachable:
+            return False, False
+        if u["piece"] is _END:
+            self.uploading.pop(rid, None)
+            return True, True
+        u["seq"], u["piece"] = u["seq"] + 1, None                      # let go BEFORE the next is read: one piece, not two
+        return False, True
+
+    def _range_failed(self, ing, token: str, rid: str, t0: float, t1: float, e: OSError) -> bool:
+        try:
+            ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
+        except Unreachable:
+            return False                                               # said again next pass: the range is still asked
+        self.failed_ranges.append((t0, t1, str(e)))
+        return True
+
+    def _answer(self, ing, token: str, work: dict) -> tuple[list, bool]:
+        asks = work.get("asks", {})
+        for aid in [a for a in self._outcomes if a not in asks]:
+            del self._outcomes[aid]                                    # answered, or expired there
+        performed = []
+        for aid, a in asks.items():
+            outcome = self._outcomes.get(aid)
+            if outcome is None:                                        # performed ONCE, however often it is answered
+                outcome = self._outcomes[aid] = ("expired" if a["deadline"] <= self.clock()   # too late: not done
+                                                 else self.perform(a["action"]))
+            try:
+                ing.answer_ask(token, self.serial, aid, outcome)
+            except Unreachable:
+                return performed, False
+            self._outcomes.pop(aid, None)
+            performed.append((a["action"], outcome))
+        return performed, True
+
     def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
-        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll.
+        """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll; never while
+        the pass has work left over (`busy`).
 
         Two roads when the camera has a backup on another server (М11 lesson 1): the PRIMARY's ingest, and
         the backup's. One stream, never two — the camera pushes to the backup when, and only when, the primary
         does not take it: no ingest of the primary answers, or the book says the primary should be written and
-        is not (and is not merely starting). Frames nobody takes stay in the ring, so the road it switches to
-        gets them first."""
+        is not (and is not merely starting). The stream goes on, on whichever road, from the last frame an ingest
+        took."""
+        loose = [f for f in frames_now if _t(f) is None]                # frames with no time: this pass's, or nobody's
+        self.frames.add([f for f in frames_now if _t(f) is not None])
+        try:
+            return self._pass(loose, wait)
+        finally:
+            self.seen = self.frames.newest()
+
+    def _pass(self, loose: list, wait: float) -> dict:
         e = self.entry()
         if not e or not e.get("ingest"):
             self.state = "no book yet" if not e else "recorded in its own cluster: nothing to push"
             return {"state": self.state}
         backup = e.get("backup")
-        ing, work, url = self._poll(e["ingest"], "primary", 0.0 if backup else wait)
+        ing, work, url = self._poll(e["ingest"], "primary", 0.0 if backup or self.busy() else wait)
         pushed, uploaded, performed, road = 0, [], [], None
         takes = primary_takes(e, ing is not None, work)
         # What the card (edge) goes by, decided HERE and now: the primary does not take the stream — its ingest
         # did not answer, or said the recording is uncovered, or (with no word from it) the book says so.
         self.uncovered = not takes if ing is None or "uncovered" in (work or {}) or backup else None
         if ing is not None:
-            p, u, a = self._serve(ing, e["ingest"]["token"], work if takes else {**work, "push": False},
-                                  frames_now, "primary")
+            p, u, a, ok = self._serve(ing, e["ingest"]["token"], work if takes else {**work, "push": False}, loose,
+                                      "primary")
             pushed, uploaded, performed = p, u, a
-            if takes:
+            if takes and ok:
                 road = ("primary", url, work["push"])
         if road is None and backup:
-            bing, bwork, burl = self._poll(backup["ingest"], "backup", wait)
+            bing, bwork, burl = self._poll(backup["ingest"], "backup", 0.0 if self.busy() else wait)
             if bing is not None:
-                p, u, a = self._serve(bing, backup["ingest"]["token"], bwork, frames_now, "backup")
+                p, u, a, ok = self._serve(bing, backup["ingest"]["token"], bwork, loose, "backup")
                 pushed, uploaded, performed = pushed + p, uploaded + u, performed + a
-                road = ("backup", burl, bwork["push"])
-        if road is None and self.pushing is not None and self.broken_at is None:
-            self.broken_at = self.last_pushed if self.last_pushed is not None else self.clock()   # it broke while pushing (CB)
-            self.ring = list(self.tail)                                # what was sent and may not have been written
-        if road is not None and not road[2]:
-            self.broken_at, self.tail = None, []                       # back, and nobody wants it now: nothing to continue
-        if road is None or not road[2]:
-            self.pushing = None
-            if self.ring_seconds or self.broken_at is not None:
-                self._keep(frames_now)                                 # nobody takes it now: keep it for who will
+                if ok:
+                    road = ("backup", burl, bwork["push"])
+        if road is None:
+            if self.pushing is not None and self.broken_at is None:
+                self.broken_at = self.sent if self.sent is not None else self.clock()   # it broke while pushing (CB)
+            self.pushing, self._card = None, None
+        elif not road[2]:                                              # back, and nobody wants it now: nothing to continue
+            self.broken_at, self.cursor, self.pushing, self._card, self.resuming = None, None, None, None, False
+        said = {"continue": dict(self.continued)}
         if road is None:
             self.state = f"no ingest of {e['cluster']} answered" + (" nor of its backup" if backup else "")
-            return {"state": self.state, "pushed": 0, "uploaded": uploaded, "asks": performed}
+            return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, **said}
         which, where, pushing = road
         self.road = which
+        behind = self.behind()
         self.state = (f"pushing to {where}" + (" — the backup: the primary does not take the stream" if which == "backup" else "")
+                      + (f" — catching up after a break, {behind:.0f} s behind" if behind >= 1.0 else "")
                       if pushing else
                       f"polling {where}: nobody records it, asks only" if e.get("polls_only") else
                       f"idle at {where}: nobody wants the stream")
-        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, "road": which}
+        return {"state": self.state, "pushed": pushed, "uploaded": uploaded, "asks": performed, "road": which, **said}
 
 
 def live_road(entry: dict, dial) -> str | None:

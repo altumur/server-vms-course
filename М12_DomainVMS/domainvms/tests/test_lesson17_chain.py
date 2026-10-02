@@ -165,6 +165,49 @@ def test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_camera
     assert {(w, u) for w, u in dialled} <= {("camera", u) for u in CENTRE_URLS} | {("relay", u) for u in CENTRE_URLS}
 
 
+def test_frames_the_relay_could_not_push_up_or_whose_pull_answer_was_lost_are_sent_again_not_dropped():
+    """The seventh review's rule for the camera — nothing moves until it is taken — one level up. The relay drained
+    what the camera sent and pushed it to the centre; a push that failed took those frames with it, and its
+    `Unreachable` ended the whole pass. Now they are pushed again first, and the pass goes on. In the star, the centre
+    drained what it handed the relay; an answer lost on its way down lost the frames — now the relay says which batch
+    it last got, and the centre hands the lost one over again."""
+    from domain.federation import Unreachable as Gone
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre")
+    fwd.pass_once(); pusher.pass_once(["a", "b"])
+    push, left = centre.push, {"n": 1}
+
+    def flaky(*a, **kw):
+        if left["n"]:
+            left["n"] -= 1
+            raise Gone("the centre's connection dropped")
+        return push(*a, **kw)
+    centre.push = flaky
+    assert "stopped answering" in fwd.pass_once()[SERIAL] and rq.drain() == []
+    pusher.pass_once(["c"]); fwd.pass_once()
+    assert rq.drain() == ["a", "b", "c"]                               # pushed again, first, and nothing twice
+
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(Clock(), star={"east"})
+    rq = relay.subscribe(SERIAL, "recorder:east")
+    fwd.pass_once(); pusher.pass_once(["s1", "s2"])
+    pull, left = centre.pull, {"n": 1}
+
+    def lost(*a, **kw):
+        out = pull(*a, **kw)
+        if left["n"]:
+            left["n"] -= 1
+            raise Gone("the answer to the pull was lost")
+        return out
+    centre.pull = lost
+    assert "stopped answering" in fwd.pass_once()[SERIAL] and rq.drain() == []
+    pusher.pass_once(["s3"]); fwd.pass_once()
+    assert rq.drain() == ["s1", "s2", "s3"]                            # the lost batch again, then what came since
+    fwd.pass_once()
+    assert rq.drain() == []                                            # …and not a third time
+
+
 def _site_of(n_relays, per_relay, wall):
     north, _ = make_cluster("north", domain=True)
     store = _Counting(Ram())

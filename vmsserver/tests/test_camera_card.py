@@ -137,6 +137,20 @@ def test_a_range_is_read_off_the_card_in_pieces_of_bytes_never_as_one_list():
     assert inspect.isgenerator(card.pieces("1-card", 1000, 1100))         # nothing is read until a piece is asked for
 
 
+def test_a_read_of_the_card_left_open_between_two_pieces_holds_neither_of_them():
+    """The seventh review: the camera's pusher keeps a read of the card open from one pass to the next — a break's
+    continuation, a range being answered — and a reader suspended after handing a piece over kept that piece: one more
+    piece of the card in memory for every read left open. The piece given away is the reader's only."""
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
+    for s in fake_samples(1000, 1010, step=0.5, gop=2.0, size=100_000):
+        card.append("1-card/e1", s)
+    reader = card.pieces("1-card", 1000, 1010, max_bytes=250_000)
+    piece = next(reader)
+    held = list(reader.gi_frame.f_locals.values())                        # what the suspended reader still holds
+    assert not any(v is piece or (isinstance(v, list) and any(x is piece for x in v)) for v in held)
+    assert len(next(reader)) == 2 and len(list(reader)) == 8
+
+
 def test_a_range_names_its_recording_and_a_recording_the_card_does_not_hold_is_an_error():
     """The sixth review: the request did not say WHICH recording. Two recordings on one card, and the server's request
     for `2-card` was answered out of the one the reader was wired to — nothing in the range, remembered as "not on
@@ -728,6 +742,132 @@ def _alarms(box, kind):
     from w2cplatform.eventdatabase import EventIndex
     return [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1e6, subsystem="rec")["events"]
             if e["kind"] == kind]
+
+
+def test_a_card_that_stays_read_only_is_an_error_at_every_heartbeat_and_one_alarm_not_a_blinking_metric():
+    """The seventh review: under a card gone read-only for good, `volume_error` was empty in the `failing` phase (the
+    last write refused, the card not closed yet) and again after each opening anew, until the next refusal — so
+    `rec_volume_error` went 1, 0, 1 every thirty seconds, an alert with `for:` never fired, and there was no event of
+    the card failing at all. Now every heartbeat of the episode says it — failing, closed, opened again with nothing
+    written since — and `card.failing` is raised once for it; a write that lands ends it, and the next failure is a
+    new alarm."""
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera(when=None)
+    t = box.wall()
+    _film(ring, t, t + 10, act=act)
+    real = CardBuffer._write
+
+    def refuses(self, data):
+        raise OSError(30, "Read-only file system")
+    said = []
+
+    def beat():
+        rec.heartbeat_once()
+        said.append(heartbeats(box.objects, "rec/")["r-1"].extra["volume_error"])
+    CardBuffer._write = refuses                                          # the card, and every opening of it, read-only
+    try:
+        _film(ring, t + 10, t + 14, act=act)
+        beat()                                                            # failing: refused, not closed yet
+        assert rec.card is not None and said[-1].startswith("the card refused a write: ") and "Read-only" in said[-1]
+        rec.gate_pass()
+        assert len(_alarms(box, "card.failing")) == 1
+        for n in range(3):                                                # three rounds of close, open again, refuse
+            rec.pump_once(); rec.lease_pass(); beat()                     # closed
+            assert rec.card is None
+            box.clock.advance(rec.CARD_RETRY)
+            rec.lease_pass(); beat()                                      # opened again: nothing has landed on it
+            assert rec.card is not None and "opened again, nothing written to it since" in said[-1]
+            rec_ctl.ensure_placed(); rec.reconcile_once()
+            _film(ring, t + 14 + 4 * n, t + 18 + 4 * n, act=act); beat()  # …and the first write is refused again
+            assert rec.card.err is not None
+        assert all(said) and len(said) == 10, said                       # never once empty
+        assert len(_alarms(box, "card.failing")) == 1                     # one episode, one alarm
+    finally:
+        CardBuffer._write = real
+    rec.pump_once(); rec.lease_pass()
+    box.clock.advance(rec.CARD_RETRY)
+    rec.lease_pass(); rec_ctl.ensure_placed(); rec.reconcile_once()
+    _film(ring, t + 30, t + 34, act=act); beat()
+    assert said[-1] == "" and rec.failing_pass() == "" and rec.failing_said is None   # a write landed: over
+    rec.card._write = lambda data: refuses(rec.card, data)
+    _film(ring, t + 34, t + 36, act=act)
+    rec.gate_pass()
+    assert len(_alarms(box, "card.failing")) == 2                         # a new failure, a new alarm
+
+
+def _timed(fn, *args):
+    """`(seconds, result or the exception)` of `fn(*args)` on a thread of its own, given up after three seconds."""
+    import threading
+    import time
+    out, began = {}, time.monotonic()
+
+    def run():
+        try:
+            out["r"] = fn(*args)
+        except Exception as e:                                            # noqa: BLE001
+            out["r"] = e
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+    t.join(3.0)
+    return time.monotonic() - began, out.get("r", TimeoutError(f"{fn.__name__} did not return in 3 s"))
+
+
+def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the_card_is_said_stalled():
+    """The seventh review: a write to the card that hung for forty seconds held the card's one lock, and every reader
+    took it — the heartbeat's counters, the status, a range's answer were blocked past eight seconds, the recorder went
+    "lost" after 45 s with no reason, and the card said `recording` all along. Now the card's I/O and what the card
+    holds are two locks, and the I/O is watched: while one write hangs, the heartbeat and the status come at once, a
+    range is refused at once (`Stalled`, an error — never an empty answer), and the card is said `stalled` — in the
+    heartbeat, in `volume_error`, as `writer: stuck` for the console's `rec_writer`, and as the alarm `card.failing`.
+    When the write returns, the card records again and nothing is said."""
+    import threading
+    import time
+    from vms.card import Stalled
+    from vms.console import _recorders
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera(when=None)
+    card, gate = rec.card, threading.Event()
+    card.stall_after = 0.3
+    real = card._write
+
+    def hangs(data):
+        gate.wait(10)
+        real(data)
+    t = box.wall()
+    _film(ring, t, t + 4, act=act)
+    card._write = hangs
+    _film(ring, t + 4, t + 6)
+    writer = threading.Thread(target=act.drain, daemon=True)            # the card's writer, stuck in its first write
+    writer.start()
+    try:
+        time.sleep(0.5)
+        took, _ = _timed(rec.heartbeat_once)
+        assert took < 1.0, f"the heartbeat waited {took:.1f} s for a card that does not answer"
+        took, st = _timed(rec.status)
+        assert took < 1.0 and isinstance(st, list)
+        took, got = _timed(rec.answer_range, "1-card", t, t + 4)
+        assert took < 1.0 and isinstance(got, Stalled) and "not finished a write" in str(got)
+        took, _ = _timed(card.finish, "1-card/e1")                       # the gate's hold: left for the next write
+        assert took < 1.0 and card._finish_due == {"1-card/e1"}
+        hb = heartbeats(box.objects, "rec/")["r-1"]
+        assert hb.extra["card"]["state"] == "stalled" and hb.extra["card"]["stalled_s"] >= 0.3
+        assert hb.extra["volume_error"].startswith("the card does not answer: a write to it has not returned for")
+        assert "check or replace the card" in hb.extra["volume_error"]
+        assert hb.extra["writer"]["state"] == "stuck"
+        lines = _recorders(rec_ctl)
+        assert 'rec_writer{worker="r-1",state="stuck"} 1' in lines and 'rec_volume_error{worker="r-1"} 1' in lines
+        rec.gate_pass(); rec.gate_pass()
+        [alarm] = _alarms(box, "card.failing")
+        assert alarm["class"] == "alarm" and alarm["state"] == "stalled" and "does not answer" in alarm["error"]
+    finally:
+        gate.set()
+        writer.join(5)
+    card._write = real
+    act.drain()
+    rec.heartbeat_once()
+    hb = heartbeats(box.objects, "rec/")["r-1"]
+    assert hb.extra["card"]["state"] == "recording" and not hb.extra["volume_error"] and "writer" not in hb.extra
+    assert rec.failing_pass() == "" and rec.failing_said is None
 
 
 def test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detection_is_an_alarm():
