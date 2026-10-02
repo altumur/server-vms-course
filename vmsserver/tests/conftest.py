@@ -211,15 +211,16 @@ def footage(st, unit, epoch: int, t0: float, t1: float, step: float = 1.0, backf
         st.seal()
 
 
-def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | None = None):
+def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | None = None, held: dict | None = None):
     """A recorder's archive door over `st`, served, and a heartbeat that announces it — what the console and a
-    scan find a recording's footage by. Returns the server; shut it down when done."""
+    scan find a recording's footage by. `held`: `{recording: since}` its recorder writes into `st` (`held_since`).
+    Returns the server; shut it down when done."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
     from vms.recworker import archive_routes, send_route
-    routes = archive_routes(lambda: st, box.wall)
+    routes = archive_routes(lambda: st, box.wall, held_since=lambda unit: (held or {}).get(unit))
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):

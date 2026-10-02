@@ -147,7 +147,8 @@ def test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once()
     instance learns on its next pass that the place is not its own any more.
 
     A DISK of its server, that is (the review's sixth pass, blocker 2): there the two instances are on one host, and
-    the daemon keeps one writer per volume. A volume any box may serve is the next test."""
+    the daemon keeps one writer per volume. A volume any box may serve is the next test: it follows the name only on
+    its holder's own host."""
     box = Box()
     _disk(box, "disk-a")
     old, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
@@ -165,14 +166,14 @@ def test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go():
     """The review's sixth pass, blocker 2. The instance that takes a recorder's name may be on ANOTHER box, and the one
     it takes it from frozen, not dead, with its writer mounted — and the hold followed the name at once: no wait, which
     is the one thing the previous holder's write window is measured against. For a volume any box may serve the same
-    name waits like anybody: the row unchanged for `slot_ttl + HOLD_SKEW` by its own clock. A hold LET GO — the writer
-    closed first — is still taken at once."""
+    name on another host waits like anybody: the row unchanged for `slot_ttl + HOLD_SKEW` by its own clock. A hold LET
+    GO — the writer closed first — is still taken at once."""
     box = Box()
     _net(box, "s3-main")
-    old = _recorder(box, "r-1", "srv-a")
+    old = _recorder(box, "r-1", "srv-a", instance="box-a:10:aaaaaa")
     assert old.volume_pass() == "s3-main"
     box.wall.advance(5); box.clock.advance(5)
-    again = _recorder(box, "r-1", "srv-b")                             # the same slot, started on another box
+    again = _recorder(box, "r-1", "srv-b", instance="box-b:11:bbbbbb")   # the same slot, started on another box
     assert again.volume_pass() == "" and again.hold is None            # not at once: the old one may be writing
     assert old.store is not None and old._may_write_volume(old.store.row)
     box.wall.advance(again.slot_ttl); box.clock.advance(again.slot_ttl)

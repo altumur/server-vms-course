@@ -121,13 +121,15 @@ def test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up()
     [row] = volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]
     assert row["served_by"] and row["why"] is None
 
-    # the neighbours of the same rule: a volume PINNED to such a recorder is refused the same way, mounted by nobody…
+    # the neighbours of the same rule: a volume PINNED to such a recorder is refused the same way, mounted by nobody,
+    # claimed by nobody — and the recorder says what it waits for (the seventh pass: a pinned network volume takes the hold)
     pinned = recorder(Box(), "r-1", "srv-c", acl=False, env={"VOLUME": "net2"})
     volumes.write(pinned.vars, {"name": "net2", "kind": "network", "url": tempfile.mkdtemp(prefix="net2-"),
                                 "quota_bytes": 64 << 20})
     pinned.session.abandons = lambda: False
     pinned.lease_pass()
-    assert pinned.store is None and pinned.capacity == 0 and "too old to write net2 safely" in pinned.volume_error
+    assert pinned.store is None and pinned.capacity == 0 and pinned.hold is None and pinned.volume == ""
+    assert "too old to write net2 safely" in pinned.heartbeat_extra()["volume_wait"]
     # …and one already held, on a daemon replaced by an older build, is let go — for a box that can serve it
     other.session.abandons = lambda: False
     other.lease_pass()
