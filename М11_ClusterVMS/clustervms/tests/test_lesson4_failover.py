@@ -83,19 +83,21 @@ def test_a_server_gone_with_nowhere_to_reschedule_the_controller_moves_the_camer
 def test_the_old_instance_wakes_up_and_the_archive_is_intact():
     """Server A was not dead — partitioned, or paused. It comes back with w-1 still
     running epoch 1. Its next renewal finds the slot held by B: fenced at the slot,
-    and every epoch says the same. It stops. Its footage is in e1; B's is in e2."""
+    and every epoch says the same. It stops. Its footage is in e1; B's is in e2.
+
+    And it is nobody (the review's sixth pass): the name is B's, so A says nothing under it and reads nothing of
+    its assignment. It used to heartbeat `fenced: true` over B's — "the live one wrote last", every ten seconds."""
     c, ctl, a, act_a = _recording()
     c.wall.advance(LOST_AFTER + 3)
     b = c.worker(1, "srv-b"); b.reconcile_once()
     lost = a.lease_pass()                                                  # kill -CONT
     assert not a.recording_allowed and act_a.running == set() and "slot w-1" in a.fenced_reason
     assert a.renew_leases() == ["1", "2", "3"] and a.conflicts() == 3      # the resource-level token agrees, per camera
-    a.heartbeat_once()
-    hb = ctl.workers_seen(max_age=1e12)                                    # both wrote a heartbeat under one name...
-    assert hb["w-1"].extra["fenced"] is True and hb["w-1"].extra["server"] == "srv-a"
     b.heartbeat_once()
-    assert ctl.workers_seen()["w-1"].extra["fenced"] is False              # ...and the live one wrote last
-    assert a.reconcile_once() == [("failed", 1), ("failed", 2), ("failed", 3)]
+    theirs = ctl.workers_seen()["w-1"].extra
+    a.heartbeat_once()                                                     # one heartbeat under the name, and it is B's
+    assert ctl.workers_seen()["w-1"].extra == theirs and theirs["server"] == "srv-b" and theirs["fenced"] is False
+    assert a.reconcile_once() == [] and a.rows == []                       # not even w-1's assignment is read
 
 
 def test_the_reassignment_window_is_the_same_window_with_a_different_verdict():

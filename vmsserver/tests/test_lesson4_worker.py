@@ -126,7 +126,9 @@ def test_the_zombie_on_one_box():
     assert a.lease_pass() == ["1"] and not a.recording_allowed and a_act.running == set()   # A wakes, renews, fences
     assert "slot w-1" in a.fenced_reason                      # fenced at the slot first...
     assert a.renew_leases() == ["1"] and a.conflicts() == 1   # ...and the camera's epoch says the same
-    assert a.reconcile_once() == [("failed", 1)]              # it may start nothing
+    # it is nobody: the name is B's, and A does not even read w-1's assignment (the review's sixth pass) — it used to
+    # read it and fail the start, and to heartbeat `fenced` over B's
+    assert a.reconcile_once() == [] and a.rows == [] and a.seeking == "w-1"
     assert b.lease_pass() == [] and b_act.running == {1}      # B is fine
 
 

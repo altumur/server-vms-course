@@ -15,6 +15,8 @@ a server's disks and nothing about what it means:
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)
     GET  <url>/mirrored/<server>       which of <server>'s buckets this server holds copies of
     GET  <url>/events?from&to&cam&kind&subsystem&unit   this resource's EventIndex: its buckets and its copies
+    GET  <url>/events/wait?want=<sub>/<kind>,…&timeout&since   HELD until a line of a wanted kind is appended here, or the
+                                       timeout: `{changed, seq}` — a hint to look, never the events (`longpoll.py`)
     PUT  <url>/mirror/<server>/<path>  another resource leaves a copy of one of ITS closed buckets here
 
 The policy pass runs on a timer: retain each subsystem's buckets by its
@@ -86,6 +88,7 @@ log = logging.getLogger(__name__)
 
 from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
+from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
@@ -364,6 +367,11 @@ class Resource:
         # `Retry-After` — a refusal the merge reads as "did not answer", which makes the window incomplete and
         # holds automation's cursor rather than losing what this resource holds (М10B Lesson 25).
         self.events_slots = threading.BoundedSemaphore(EVENTS_INFLIGHT)
+        # The requests this resource HOLDS for readers of its events (`GET /events/wait`, `longpoll.Watch`): answered
+        # when a line of a kind the reader watches is appended to a current bucket here. Its own bound, apart from
+        # the slots above — a held request does nothing for thirty seconds, and must neither take a query's slot nor
+        # be without a ceiling of its own. It costs nothing until somebody waits: no thread, no stat.
+        self.watch = Watch(self.volumes.values(), bucket_seconds, wall)
         for path in self.volumes.values():
             os.makedirs(path, exist_ok=True)
 
@@ -438,6 +446,10 @@ class Resource:
     # A file that goes between the listing and the `stat` — a `.tmp` renamed into place, a bucket the retention
     # removed — is not there to count, and is not the end of the walk (the review's third pass): one vanished file
     # used to take the whole policy pass with it.
+    #
+    # A mark of progress per FILE (the review's sixth pass): it was one per directory, and every bucket of an epoch
+    # is in one directory — a year of one camera is fifty thousand `stat`s between two marks, and on a cold disk the
+    # pulse called a walk that moved the whole time "stuck".
     def usage(self, volume: str | None = None) -> int:
         roots = [self.volumes[volume]] if volume is not None else list(self.volumes.values())
         total = 0
@@ -449,6 +461,8 @@ class Resource:
                         total += os.path.getsize(os.path.join(d, f))
                     except FileNotFoundError:
                         continue
+                    finally:
+                        self._progressed()
         return total
 
     # The pass is getting somewhere: what the pulse measures its limit by (`pass_`). Cheap — a clock read.
@@ -525,15 +539,20 @@ class Resource:
         removed = []
         # What each unit keeps, decided before anything is swept, because the console's floor is read off
         # the others (`console_floor`).
-        days_of = {(sub, unit): retention_days(self.vars, sub, unit)
-                   for sub, units in self.units().items() for unit in units}
+        days_of = {}
+        for sub, units in self.units().items():
+            for unit in units:
+                days_of[(sub, unit)] = retention_days(self.vars, sub, unit)
+                self._progressed()                                      # a row read per unit: each is a step
         floor = console_floor(days_of)
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: whoever built
         # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
         # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
         # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
-        # nothing is swept: not knowing what is kept is not "nothing is".
-        kept = self.kept() if self.kept is not None else None
+        # nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by row, so it is
+        # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
+        kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
+        self._progressed()
         swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
@@ -541,11 +560,15 @@ class Resource:
                 days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
+                    # …and a mark per REMOVAL (the sixth): the names are all marked while the list is built, and then
+                    # the files go one after another — a year past its days is fifty thousand unlinks, and the pulse
+                    # saw none of them.
                     for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
                             os.remove(os.path.join(path, b.path)); removed.append(b.path)
+                            self._progressed()
                             n, a, z = swept.get((sub, unit), (0, b.start, b.end))
                             swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
         # What the pass removed, per unit, in the journal: whose buckets, how many, of what period, by what
@@ -553,6 +576,7 @@ class Resource:
         for (sub, unit), (n, a, z) in sorted(swept.items()):
             self.journal.say("events.removed", of=sub, target=unit, buckets=n, since=a, until=z,
                              days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)])
+            self._progressed()                                          # a line written to the medium per unit
         # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
         # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
         # with the mirror on it only ever grew. A copy is kept by the days of ITS unit, as the original is,
@@ -571,6 +595,7 @@ class Resource:
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):
                                 os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
+                                self._progressed()
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
         return len(removed)
@@ -839,6 +864,28 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                     return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
                 finally:
                     resource.events_slots.release()
+            # THE LONG POLL (`longpoll.py`): a reader of this resource's events asks to be told when a line of a kind
+            # it watches is written, and this request is held until one is — or `timeout` seconds, capped. The answer
+            # is `{changed, seq}` and nothing of the events: the reader makes its ordinary query next, through the
+            # route above. Asked nothing more than `/events` is: the same door, no new opening.
+            #
+            # Not under `events_slots`: a held request is not a query being answered, and sixteen of them
+            # (`WAITERS_MAX`) must not shut the door to the queries they exist to speed up. One more than that is
+            # answered at once, `full`, and its sender goes back to its pass. This server gives every request a
+            # thread and a socket with no deadline of its own, so a hold trips nothing — and a client that hung up
+            # is noticed within a second (`client_gone`), not at the timeout.
+            if self.path == "/events/wait" or self.path.startswith("/events/wait?"):
+                q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
+                try:
+                    timeout = float(q.get("timeout", WAIT_MAX))
+                    since = int(q["since"]) if q.get("since") not in (None, "") else None
+                except ValueError as e:
+                    return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
+                rep = resource.watch.wait(parse_wants(q.get("want", "")), timeout, since, gone=lambda: client_gone(self.connection))
+                try:
+                    return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
+                except OSError:
+                    return None                                   # the client went while it was held: nobody to answer
             if self.path.startswith("/events/"):
                 rel = self.path[len("/events/"):]; p = os.path.join(root, rel)
                 if not safe_rel(rel) or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
@@ -870,5 +917,15 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             self._raw(204, b"")
 
     srv = ThreadingHTTPServer((host, port), H)
+    # A door that shuts lets go of the requests it holds: each is answered now (`closed`), so no reader waits out
+    # its timeout on a resource that has stopped, and no thread of this server outlives it by thirty seconds.
+    resource.watch.open()
+    shut = srv.shutdown
+
+    def shutdown() -> None:
+        resource.watch.close()
+        shut()
+
+    srv.shutdown = shutdown
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv

@@ -36,11 +36,25 @@ def _one_pass(ctl) -> list[str]:
     `_controller_loop` rather than calling the four methods by hand is that the
     thing under test IS the try blocks.
 
-    `stop` is cleared FIRST (the review's fifth pass: this test failed in one full run and passed alone). It is
-    the process's own flag, and importing `vms.__main__` installs the SIGTERM/SIGINT handler that sets it — for the
-    whole test run. A signal that reached the runner at any point before (a `kill` aimed at a daemon, a terminal's
-    interrupt) did not stop it: it set the flag, nothing else in the suite reads it, and this helper's loop then
-    ran no pass at all — no lines, the first assertion failed — and cleared it for the next test, which passed."""
+    `stop` is cleared FIRST: it is the module's own flag, and a loop that finds it set runs no pass at all.
+
+    WHAT IS KNOWN ABOUT THE FLAKE, AND WHAT IS NOT (the review's fifth pass saw `test_a_failed_placement_still_
+    publishes_what_is_known` fail in one full run and pass alone; the sixth asked for the cause to be proved).
+    `vms.__main__` used to install its SIGTERM/SIGINT handler at import — for the whole test run. A signal that
+    reached the runner did not stop it: it set `stop`, nothing else in the suite reads it, and the first test to come
+    through this helper ran no pass — `AssertionError: []` — and cleared the flag for the next, which passed.
+
+    Proved, on the tree before the fix (`c61aee8^`), under a watch on the runner's signals and on every `stop.set()`:
+      - one SIGTERM sent to the runner's pid from OUTSIDE, five minutes before this module: the run goes on, and
+        exactly that one test fails, with exactly that assertion — 687 passed, 2 failed (the other is the disk's);
+      - three whole runs with nothing sent from outside: no signal reaches the runner, and `stop` is set by this
+        helper alone. No test sends one that could: the daemon is stopped through `Popen.terminate`/`kill` (its own
+        pid, and only while it is not reaped), the tests that freeze it send SIGSTOP/SIGCONT to that pid, nothing
+        signals a process group — though the daemon IS in the runner's group — and obsd signals nobody.
+    Not proved: what sent a signal to the reviewer's run — a tool's timeout, a `kill` from another shell, an
+    interrupt. So the cause of THAT run is still not known; what is closed is the mechanism, three ways: the handler
+    is installed only when the module is run, this helper clears the flag, and the runner fails any module or test
+    that takes its signals (`tests/run.py`)."""
     stop.clear()
     rec = _Recorder()
     logging.getLogger().addHandler(rec)
@@ -98,24 +112,30 @@ def test_a_failed_placement_still_publishes_what_is_known():
 
 
 def test_one_pass_runs_a_pass_whatever_signal_reached_the_runner_before():
-    """The cause of the flake above, kept found: a SIGTERM delivered to the test process earlier in the run is
-    swallowed by `vms.__main__`'s handler and leaves `stop` set. The helper runs its pass all the same."""
-    import os
-    import signal
-    import time
+    """The mechanism of the flake above, closed in the helper: `stop` left set by whatever came before — what the
+    old handler did with a signal sent to the run — and the helper runs its pass all the same. No signal is sent
+    here: a test that signals its own runner is the thing the runner's guard is there to catch."""
     box = Box()
     ctl = _cluster(box, cameras=1)
-    if callable(signal.getsignal(signal.SIGTERM)):
-        os.kill(os.getpid(), signal.SIGTERM)                        # the handler sets `stop`; nothing else hears it
-    else:
-        stop.set()                                                  # not installed here: what it would have done
-    deadline = time.monotonic() + 2
-    while not stop.is_set() and time.monotonic() < deadline:
-        time.sleep(0.01)
-    assert stop.is_set()
+    stop.set()
     _one_pass(ctl)
     assert ctl.pass_report() is not None and box.objects.list("vms/snapshot/")   # the pass ran, and published
     assert not stop.is_set()
+
+
+def test_importing_the_entry_point_takes_none_of_the_runners_signals():
+    """The other half, and the one the fix had no test for: `vms.__main__` imported — as this module imports it, and
+    six others — installs no handler. One installed at import swallows a SIGTERM or SIGINT sent to the test run,
+    which then goes on with `stop` set. The handlers this process has now are not the entry point's, and the lines
+    that install them are under `if __name__ == "__main__"`."""
+    import inspect
+    import signal
+    import vms.__main__ as m
+    for s in (signal.SIGTERM, signal.SIGINT):
+        assert getattr(signal.getsignal(s), "__module__", None) != m.__name__, f"importing vms.__main__ took {s.name}"
+    src = inspect.getsource(m)
+    assert "signal.signal(" not in src.split('if __name__ == "__main__":')[0], "a handler installed at import"
+    assert "signal.signal(" in src.split('if __name__ == "__main__":')[1]          # …and the process still stops on SIGTERM
 
 
 def test_the_age_of_the_published_copy_is_on_metrics():

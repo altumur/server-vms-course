@@ -126,6 +126,17 @@ def unconfirmed_max(env) -> float | None:
     return 0.0 if raw == "off" else float(raw)
 
 
+# `COMMANDS_BEAT`: how often a holder looks at its request rows BETWEEN passes, in seconds (`VmsWorker.between`).
+# A quarter of a second unless the environment says — the product's holder does the same (`commandsBeat`, 250 ms);
+# `0` is "only on the pass", the loop as it was. What the process hands `run(beat=…)`.
+COMMANDS_BEAT = 0.25
+
+
+def commands_beat(env) -> float:
+    raw = str(env.get("COMMANDS_BEAT", "") or "").strip()
+    return float(raw) if raw else COMMANDS_BEAT
+
+
 log = logging.getLogger("vmsworker")
 VMS = Subsystem("vms")
 
@@ -454,6 +465,13 @@ class VmsWorker(Worker):
         # by the device, or arrived after their moment. The last is the one to watch — a share of `expired` that
         # grows is the road from an event to this worker getting longer than the requests live (М10B Lesson 25).
         self.commands = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
+        # The road to the device, counted since this process started, over `ROAD_BUCKETS` (`_measure`): from the
+        # request's `at` — the event's moment — to the call (`road`: two clocks), and from this worker's first sight
+        # of the row to the call (`wait`: one clock, its own).
+        self.road = {"buckets": [0] * len(self.ROAD_BUCKETS), "sum": 0.0, "count": 0, "skewed": 0}
+        self.wait = {"buckets": [0] * len(self.ROAD_BUCKETS), "sum": 0.0, "count": 0}
+        self._first_seen: dict[str, float] = {}          # request -> when a pass of this worker first saw its row, by the clock
+        self._beat_failed = False                        # the look at the requests between passes is failing: said once (`beat_once`)
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
         self.actuator = actuator or FakeActuator()
@@ -707,8 +725,17 @@ class VmsWorker(Worker):
             # not start — and it stays fenced (`rejoin` checks the same thing) until somebody restarts it new.
             self.schema_seen = None                   # what it read is not the store's layout any more (`rejoin`)
             self.fence(str(e))
+            # Fenced with its slot in hand, it renews nothing: the row lapses and another process takes the name. From
+            # the lease step that reads another holder there it is nobody, and says nothing under the name (the
+            # review's sixth pass, beside `rejoin`) — until then the name is its own, and its heartbeat says `fenced`.
+            self.name_taken()
             return list(self.epochs)
         if not mine:
+            # NOBODY FROM THIS LINE (the review's sixth pass), as `keep_slot` makes every other worker: the name is the
+            # other instance's, and so are its assignment and its heartbeat. It was fenced and kept the name — and a
+            # heartbeat `fenced: true` went out over the legitimate one until `rejoin` took another slot, for as long
+            # as that claim failed.
+            self.give_up_name()
             self.fence(f"slot {self.name} is held by another instance now")
             return list(self.epochs)
         waiting = {u: l.epoch for u, l in self.leases.items() if l.unconfirmed() > 0}
@@ -756,11 +783,15 @@ class VmsWorker(Worker):
         self.release_all()
         self.rows, self.assignment_rev = [], 0
         self.reconciler.clear()
-        self.slot = None
-        try:
-            name = self.claim_slot()
-        except RuntimeError:
+        # The claim can fail — the store blinks, every candidate is taken under it — and it used to leave the instance
+        # with no slot and the OLD name: an `OSError` went out of here, `renew_slot` with no slot said "still me", and
+        # the heartbeat went on under a name another instance holds (the review's sixth pass; the fifth's blocker 3,
+        # on this path). The name is given up first and the claim is `keep_slot`'s (`_seek_slot`): nobody until it
+        # has a slot, and every pass tries again.
+        self.give_up_name()
+        if not self._seek_slot():
             return None
+        name = self.name
         log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
         self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
         return name
@@ -772,8 +803,9 @@ class VmsWorker(Worker):
 
     # Once: log at error, set `recording_allowed = False` and `fenced_reason`, `actuator.stop_all()`,
     # `reconciler.clear()` — the pipelines were stopped underneath the loop. Idempotent (a second call
-    # returns immediately). After this the heartbeat says `fenced: true`, `_actuate` refuses every start,
-    # and `observe` writes nothing.
+    # returns immediately). After this `_actuate` refuses every start and `observe` writes nothing; the heartbeat
+    # says `fenced: true` while the name is still this instance's (a store raised past its build), and nothing at
+    # all once the name is another's (`lease_pass` gives it up before it calls this: `seeking`).
     def fence(self, why: str) -> None:
         if not self.recording_allowed:
             return
@@ -943,8 +975,43 @@ class VmsWorker(Worker):
     # `unknown`. A unit held with no lease (`live: on-demand`: the device is on the line, nothing recorded) took
     # no epoch and so had no fence: it takes one here, before its first command, so that a second holder fences
     # the first the way it would for a stream.
+    #
+    # LOOKED AT FOUR TIMES A SECOND (2 October 2026). A request used to wait for this worker's pass — two seconds
+    # at worst, one on average, of a road whose whole length a person at a door feels. Between passes the loop now
+    # looks at the request rows every `COMMANDS_BEAT` (`run`, `beat_once`): this same method, with every rule
+    # above — the lease, the deadline, the mark, one call at a time. Nobody tells the worker anything: the row is
+    # the request and the look is the worker's own, the same on a box and in a cluster. What it costs is one
+    # listing of `<sub>/requests/` per worker per beat, and a read of each row found.
+    #
+    # AND THE ROAD IS MEASURED HERE, where it ends (`_measure`). Two histograms, because there are two clocks:
+    #
+    #   wait   from this worker's first sight of the row to the call into the device — its own monotonic clock,
+    #          so the number is this link's and nobody's skew
+    #   road   from the request's `at` — the moment of the event that caused it, by the clock of whoever wrote
+    #          the event — to the call, by this worker's wall clock. The whole road, and only as true as the two
+    #          clocks agree: a negative one is counted (`skewed`) and taken as zero
+    #
+    # The evaluator's buckets (`AutoWorker.LATENCY_BUCKETS`), and three finer ones under a second: the road is a
+    # fraction of a second now, and a histogram whose first bucket is one second would not show it.
     PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
     MAX_VALID, MARK_SWEEP = 600.0, 30.0
+    ROAD_BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0)
+
+    def _measure(self, rid: str, it: dict) -> None:
+        def count(h: dict, seconds: float) -> None:
+            h["sum"] += seconds
+            h["count"] += 1
+            for i, le in enumerate(self.ROAD_BUCKETS):
+                if seconds <= le:
+                    h["buckets"][i] += 1
+        count(self.wait, max(0.0, self.clock() - self._first_seen.pop(rid, self.clock())))
+        try:
+            road = self.wall() - float(it.get("at"))
+        except (TypeError, ValueError):
+            return                                       # a row that does not say when: this link is counted, the road is not
+        if road < 0:
+            self.road["skewed"] += 1                     # the writer's clock is ahead of this one: said, not hidden
+        count(self.road, max(0.0, road))
 
     def command_key(self, rid: str) -> str:
         return f"{self.SUB.name}/commands/{rid}"
@@ -985,6 +1052,7 @@ class VmsWorker(Worker):
         # by its key (`vms/console.py`).
         present = {k.rsplit("/", 1)[1] for k in keys}
         self.fetched = [r for r in self.fetched if r in present]
+        self._first_seen = {r: t for r, t in self._first_seen.items() if r in present}
         for key in keys:
             if len(done) >= budget:
                 break
@@ -993,10 +1061,20 @@ class VmsWorker(Worker):
             row = mine.get(str(it.get("unit", ""))) if it else None
             if row is None or rid in self.fetched or any(c["rid"] == rid for c in self._performing.values()):
                 continue                                 # another worker's device, one we have done, or one in flight
+            self._first_seen.setdefault(rid, self.clock())   # what `wait` is measured from (`_measure`)
             unit = str(row["id"])
             if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
                 continue                                 # not mine to act on now: fenced, or the lease is lost
-            until = float(it.get("valid_until", 0) or 0)
+            # ONE ROW'S TROUBLE IS THAT ROW'S (the review's sixth pass). Two things here were read or taken bare, and
+            # either raised out of `requests` — out of every `pump_once`, for as long as the row stood — so no command
+            # to ANY device of this holder was performed behind it: a `valid_until` that is not a number (which never
+            # reaches the check that expires it), and, below, the epoch of a unit held without a lease, when its row
+            # `<sub>/epoch/<unit>` does not parse. Each is a refusal now, answered like the others here.
+            try:
+                until = float(it.get("valid_until", 0) or 0)
+            except (TypeError, ValueError):
+                self._refused(rid, row, it, f"`valid_until` is not a time: {it.get('valid_until')!r}", done)
+                continue
             if not until:
                 self._refused(rid, row, it, "a command carries a deadline (`valid_until`): without one it would wait "
                                             "for its device for ever", done)
@@ -1016,7 +1094,16 @@ class VmsWorker(Worker):
             if id(dev) in self._performing:
                 continue                                 # a call into this device has not returned: wait your turn
             if unit not in self.leases:
-                self.take_epoch(unit)                    # a device commanded is a unit fenced: its epoch, before the first command
+                try:
+                    self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
+                except OSError:
+                    raise                                # the store did not answer: not known, for every request — `pump_once` says so
+                except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this command's refusal
+                    self.epoch_errors[unit] = str(e)     # …and in the unit's status, as a start refused for it is (`_actuate`)
+                    self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)
+                    log.error("%s: request %s not performed: the epoch of %s could not be taken (%s)", self.name, rid, unit, e)
+                    continue
+                self.epoch_errors.pop(unit, None)
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
@@ -1044,6 +1131,7 @@ class VmsWorker(Worker):
                 call["returned"].set()
 
             self._performing[id(dev)] = call
+            self._measure(rid, it)                       # the road ends here: the call into the device
             threading.Thread(target=run, daemon=True).start()
             call["returned"].wait(self.PERFORM_GRACE)
             done += self._performed()
@@ -1286,6 +1374,8 @@ class VmsWorker(Worker):
     def heartbeat_extra(self) -> dict:
         return {"fetched": ",".join(self.fetched[-32:]),
                 **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
+                # The road to the device, as two histograms since this process started (`_measure`).
+                **({"command_road": self.road, "command_wait": self.wait} if self.wait["count"] else {}),
                 # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
                 # address with, and what a process derives its capability from. Here and not in a camera's status:
                 # statuses are the read model the page shows.
@@ -1439,7 +1529,11 @@ class VmsWorker(Worker):
     # `vmsworker@.container` gives it `StopTimeout=20`), a last heartbeat, then `release_slot()` — "an
     # orderly stop says so; a crash says nothing", which is what lets the controller tell scale-in
     # (redistribute) from a crash (leave it to the scheduler).
-    def run(self, poll: float = 2.0, stop=None) -> None:
+    #
+    # `beat` is `COMMANDS_BEAT`, in seconds: between two passes the loop looks at its request rows that often
+    # (`between`). 0 — only on the pass, which is what a caller that does not say gets, and what the loop always did;
+    # the process says a quarter of a second (`commands_beat`).
+    def run(self, poll: float = 2.0, stop=None, beat: float = 0.0) -> None:
         """One box: the loop as a process. Nomad or systemd restarts it."""
         import threading
         stop = stop or threading.Event()
@@ -1490,13 +1584,56 @@ class VmsWorker(Worker):
                     last_hb = self.clock()
             except Exception:                              # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed; will retry", self.name)
-            stop.wait(poll)
+            self.between(poll, stop, beat)                 # `stop.wait(poll)`, with a look at the requests every `beat`
         stand_in.set()
         self.before_stop_all()
         self.actuator.stop_all()
         self.heartbeat_once()
         self.release_slot()                           # an orderly stop says so; a crash says nothing
         self.after_stop()
+
+    # BETWEEN TWO PASSES: THE REQUESTS, EVERY BEAT (2 October 2026). The wait between passes is `poll` seconds, and a
+    # command filed a moment after a pass waited all of it: the second half of the road from an event to a device,
+    # a second on average. The loop now wakes every `beat` seconds inside that wait and does ONE thing — `beat_once`,
+    # the look at the request rows that `pump_once` ends with. Not a pass: the assignment is not read again, nothing
+    # is reconciled, the bus is not drained. And not a new way in: the same `requests`, the same rows, the same rules.
+    #
+    # The lease step and the heartbeat stay where they were — once per turn of the loop, by the clock: a beat brings
+    # neither forward. A beat that hangs on the store is a `guarded` step like any other, and the stand-in renews
+    # for it.
+    #
+    # By the real clock, not `self.clock`: `stop.wait` waits real seconds, and the beats divide THAT wait.
+    def between(self, poll: float, stop, beat: float) -> None:
+        if beat <= 0 or beat >= poll:
+            stop.wait(poll)
+            return
+        end = time.monotonic() + poll
+        while not stop.wait(max(0.0, min(beat, end - time.monotonic()))):
+            if end - time.monotonic() <= 0.001:
+                return                                # the pass is due, and it looks at the requests itself
+            self.beat_once()
+
+    # One look at the requests between passes. A store that does not answer is waited out as on a pass — and said
+    # ONCE per outage, counted once: four warnings a second for as long as the store is away would be the log, and
+    # the pass says it every two seconds anyway (`pump_once`).
+    def beat_once(self) -> None:
+        try:
+            with self.guarded("beat"):
+                self.serve_requests()
+        except Exception as e:                        # noqa: BLE001 — a beat that raised is a beat to make again
+            if not self._beat_failed:
+                self._beat_failed = True
+                if isinstance(e, OSError):
+                    self.store_errors += 1
+                    log.warning("%s: the store did not answer for the requests between passes (%s); "
+                                "looking again every beat, saying so once", self.name, e)
+                else:
+                    self.pass_failures += 1
+                    log.exception("%s: the look at the requests between passes failed; will retry", self.name)
+            return
+        if self._beat_failed:
+            self._beat_failed = False
+            log.warning("%s: the requests are read between passes again", self.name)
 
     # What a subsystem's worker does before its pipelines are stopped on an ORDERLY stop: nothing here. A recorder
     # writes the rings it holds through a break first (`RecWorker.before_stop_all`).
