@@ -67,6 +67,12 @@ class DetJobWorker(Worker):
     # frame to an answer; feedback CP).
     FOLLOW_LAGS = 2
 
+    # How long a scan WAITS for a silent door or a volume nobody serves before it ends without them (the review's
+    # fourth pass). It used to wait for ever: one volume whose server never came back, and every scan of that recording
+    # was `waiting` for good. Past this the job is `done` with `partial` naming what it did not read — said in its
+    # status and, because the status goes with the placement, as a line `scan.partial` in the job's own events.
+    WAIT_MAX = 3600.0
+
     def __init__(self, name: str | None, vars_: Variables, objects, models: dict | None = None,
                  capacity: int | None = None, clock=time.monotonic, wall=time.time, server: str | None = None,
                  archive_root: str | None = None, env: dict | None = None, step: float | None = None):
@@ -80,6 +86,7 @@ class DetJobWorker(Worker):
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
         self.step = self.STEP if step is None else float(step)
         self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
+        self.wait_max = float(env.get("SCAN_WAIT_SECONDS", self.WAIT_MAX))
         self.running: dict[str, object] = {}                # job -> model, kept between passes
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0
@@ -157,6 +164,8 @@ class DetJobWorker(Worker):
             seen = read.spans
             missing = ([f"recorder {w}'s door did not answer" for w in read.silent]
                        + [f"nobody serves volume {v}" for v in read.unread])
+            if not missing:
+                log_.not_waiting()                          # the deadline is for one stretch of waiting, not for the job's life
             scans = plan(seen, row["from"], row["to"])
             # FOLLOWING: the interval runs past what is recorded, and the end may yet be written. A scenario
             # asking for the minute after the alarm asks for footage that does not exist when it asks.
@@ -169,8 +178,8 @@ class DetJobWorker(Worker):
                 continue
             if not scans and missing:
                 self._stop(job)
-                self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
-                                                        why="nothing recorded in the volumes that answered — " + "; ".join(missing))
+                self.status_by_unit[job] = self._wait_or_end(job, row, log_, missing,
+                                                             "nothing recorded in the volumes that answered — ")
                 continue
             if not scans:
                 # Not "no events": no FOOTAGE, here. Two different silences, and which one it is decides
@@ -200,17 +209,24 @@ class DetJobWorker(Worker):
                 continue
             if not left and missing:
                 self._stop(job)
-                self.status_by_unit[job] = self._status(job, row, "waiting", scans=scans, log=log_,
-                                                        why="what answered is scanned; not done — " + "; ".join(missing))
+                self.status_by_unit[job] = self._wait_or_end(job, row, log_, missing, "what answered is scanned; not done — ",
+                                                             scans=scans)
                 continue
             if not left:
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "done", scans=scans, log=log_)
                 continue
 
+            model = self.running.get(job)
+            if model is None and len(self.running) >= self.capacity:
+                # The budget is of MODELS, not of jobs (the review's fourth pass): a job that waits holds none, so this
+                # worker may carry more jobs than models (`heartbeat_once`) — and when the waiting ones can all run at
+                # once, the ones past the budget queue here until a model is free.
+                self.status_by_unit[job] = self._status(job, row, "queued", scans=scans, log=log_,
+                                                        why=f"this worker's {self.capacity} scan(s) are all decoding: next when one ends")
+                continue
             if job not in self.epochs:
                 self.take_epoch(job)                        # one writer of detjob/<job>/… at a time
-            model = self.running.get(job)
             if model is None:
                 model = self.running[job] = self.models[row["kind"]](row)
             if self.may_write(job):
@@ -227,7 +243,7 @@ class DetJobWorker(Worker):
                                                     **({"why": "the interval reaches past what is recorded — following "
                                                                "the recording to its end"} if caught_up else {}))
 
-        for job in list(self.running):
+        for job in set(self.running) | set(self.epochs):   # an epoch with no model too: a finished job, or a partial one's line
             if job not in wanted:
                 self._stop(job); self.release(job)
         for job in list(self.status_by_unit):
@@ -235,13 +251,38 @@ class DetJobWorker(Worker):
                 self.status_by_unit.pop(job, None)
         return sorted(self.running)
 
+    # Waiting for what is missing — until `wait_max` after it began, then `done` with `partial`. The line `scan.partial`
+    # is written once, at the interval's start in media time (where `/events?cam=` finds the scan's answer), and the
+    # end is remembered beside the progress, so the next pass before the reaper does not write it again.
+    def _wait_or_end(self, job: str, row: dict, log_: ScanLog, missing: list[str], why: str, scans=None) -> dict:
+        waited = log_.waiting() or log_.wait(self.wall())
+        partial = waited.get("partial")
+        if partial is None and self.wall() - waited["since"] >= self.wait_max:
+            if job not in self.epochs:
+                self.take_epoch(job)
+            if not self.may_write(job):
+                return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
+            EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
+                float(row["from"]), "scan.partial", cam=int(row["cam"]), job=job, source="archive", missing=list(missing),
+                waited=round(self.wall() - waited["since"]))
+            partial = log_.wait(self.wall(), partial=missing)["partial"]
+            log.warning("scan %s: done without %s — waited %.0f s", job, "; ".join(missing), self.wall() - waited["since"])
+        if partial is not None:
+            return self._status(job, row, "done", scans=scans, log=log_, partial=partial,
+                                why=f"done without what it waited {self.wait_max:.0f} s for — " + "; ".join(partial))
+        left = self.wait_max - (self.wall() - waited["since"])
+        return self._status(job, row, "waiting", scans=scans, log=log_,
+                            why=why + "; ".join(missing) + f" (ends without them in {max(0.0, left):.0f} s)")
+
     # What the console and the controller read. `done_through` and `covered` are here and not computed by
     # a reader, because the log they come from is a file on THIS server's disk and nobody else can see it.
-    def _status(self, job: str, row: dict, phase: str, why: str = "", scans=None, log=None) -> dict:
+    def _status(self, job: str, row: dict, phase: str, why: str = "", scans=None, log=None, partial=None) -> dict:
         st = {"id": job, "cam": row["cam"], "rec": row["rec"], "kind": row["kind"], "phase": phase,
               "from": row["from"], "to": row["to"]}
         if why:
             st["why"] = why
+        if partial:
+            st["partial"] = list(partial)
         if log is not None:
             st["done_through"] = log.done_through()
             st["events"] = log.events()
@@ -258,9 +299,14 @@ class DetJobWorker(Worker):
     def headroom(self) -> int:
         return max(0, self.capacity - len(self.running))
 
+    # `capacity` is the jobs this worker will HOLD: its budget of models, plus every job it holds that has none — one that
+    # waits, follows with nothing to decode, or queues (the review's fourth pass). The controller places by `capacity −
+    # assigned`, so it sees exactly the models that are free; two jobs waiting for a volume that never comes back used
+    # to fill a GPU worker of two, and every new scan was unplaceable behind them.
     def heartbeat_once(self) -> None:
+        idle = sum(1 for job in self.status_by_unit if job not in self.running)
         self.heartbeat(list(self.status_by_unit.values()), server=self.server, instance=self.instance,
-                       labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
+                       labels=",".join(self.labels), capacity=self.capacity + idle, headroom=self.headroom(),
                        conflicts=self.conflicts(), events=self.events_written)
 
     def run(self, poll: float = 2.0, stop=None) -> None:

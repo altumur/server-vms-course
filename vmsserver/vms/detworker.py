@@ -99,8 +99,17 @@ class DetWorker(Worker):
             src = self.rtp_source(row["cam"])
             if src is None:
                 self._stop(unit); self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "waiting", "why": "camera held by nobody"}; continue
+            # …and so is its epoch (the review's fourth pass): a row `det/epoch/<unit>` that does not parse raised out of
+            # `take_epoch` before the unit's `try`, and every detector after this one was not looked at, every pass.
             if unit not in self.epochs:
-                self.take_epoch(unit)                                           # one writer of det/<unit>/… at a time
+                try:
+                    self.take_epoch(unit)                                       # one writer of det/<unit>/… at a time
+                except Exception as e:                                          # noqa: BLE001
+                    log.exception("detector %s: its epoch was not taken", unit)
+                    self._stop(unit)
+                    self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "failed",
+                                                 "why": f"its epoch could not be taken: {e}"}
+                    continue
             # THE MODEL IS THE UNIT'S OWN TROUBLE (the review's third pass, M19's remainder). Its factory — a weights
             # file missing, a mask that does not decode — and its `observe` raised out of the pass, and every unit
             # after this one in the loop was not looked at, every pass. Now the unit says `failed` and why, its model is

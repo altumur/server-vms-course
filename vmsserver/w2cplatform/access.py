@@ -45,7 +45,7 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
 # shut across a restart of the console, which a flag in one process's memory did not. `domain/primaries` is not one
 # of them: the recorder writes it in a cluster of its own.
-DOMAIN_MARKS = ("domain/root", "domain/grants", "domain/revoked", "domain/break_glass")
+DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
 OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
 COOKIE = "w2c_token"

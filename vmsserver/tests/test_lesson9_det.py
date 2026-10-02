@@ -195,3 +195,28 @@ def test_one_detectors_model_failing_is_that_detectors_trouble_and_not_the_passs
         assert gpu.status_by_unit["1-motion"]["phase"] == "running" and gpu.events_written >= 1
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_one_detectors_garbled_epoch_row_is_that_detectors_trouble_and_not_the_passs():
+    """The review's fourth pass (minor). `take_epoch` stood outside the unit's `try`: a row `det/epoch/<unit>` that does
+    not parse raised out of the pass, and every detector after it was not looked at, every pass. That detector says
+    `failed` and why; the others run and write."""
+    box, ctl, det_ctl, w, srv, base = _box()
+    try:
+        gpu = _det(box, "d-1")
+
+        class Sees:
+            def __init__(self, row): self.row = row
+            def observe(self, now): return [("motion", {"area": 1})]
+            def close(self): pass
+        gpu.models = {"lpr": Sees, "motion": Sees}
+        call(base, "POST", "/det/units", {"name": "1-lpr", "cam": "1", "kind": "lpr"}, {"Idempotency-Key": "k1"})
+        call(base, "POST", "/det/units", {"name": "1-motion", "cam": "1", "kind": "motion"}, {"Idempotency-Key": "k2"})
+        det_ctl.ensure_placed()
+        box.vars.put("det/epoch/1-lpr", {"epoch": "one"})                # a hand edit
+        assert gpu.reconcile_once() == ["1-motion"]
+        st = gpu.status_by_unit["1-lpr"]
+        assert st["phase"] == "failed" and "epoch could not be taken" in st["why"] and "1-lpr" not in gpu.epochs
+        assert gpu.status_by_unit["1-motion"]["phase"] == "running" and gpu.events_written >= 1
+    finally:
+        srv.shutdown(); srv.server_close()

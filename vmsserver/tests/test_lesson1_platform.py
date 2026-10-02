@@ -493,3 +493,30 @@ def test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_start
         w.renew_slot(); raise AssertionError("a newer layout that parses did not fence")
     except SchemaTooNew:
         pass
+
+
+def test_a_worker_fenced_for_its_slot_rejoins_over_a_garbled_schema_row_and_one_fenced_for_the_schema_does_not():
+    """The review's fourth pass (Т-m7's remainder). `renew_slot` keeps the schema it last read whole when the row
+    stops parsing, but `rejoin` asked bare — and a bare check refuses a row it cannot read: a worker fenced because
+    another instance took its slot never came back while one field of `platform/schema` was garbled. It asks with
+    what it last read now. A worker fenced FOR the schema has nothing to keep: a garbled row does not say the store
+    came back to its layout, and it stays fenced until a version that parses says so."""
+    from w2cplatform.contract import SCHEMA, SCHEMA_KEY, Slot
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    assert w.name == "w-1" and w.lease_pass() == [] and w.recording_allowed
+    box.vars.put(w.sub.slot_key("w-1"), Slot("w-1", "somebody-else", box.wall() + 60, False, 9).to_items(),
+                 cas=box.vars.get(w.sub.slot_key("w-1"))[1])                # another instance took the slot
+    w.lease_pass()
+    assert not w.recording_allowed and "held by another instance" in w.fenced_reason
+    box.vars.put(SCHEMA_KEY, {"version": "one"}, cas=0)                     # …and a hand edit garbled the schema
+    assert w.rejoin() == "w-2" and w.recording_allowed                       # what it read stands: it comes back
+
+    box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA + 1)}, cas=box.vars.get(SCHEMA_KEY)[1])
+    w.lease_pass()
+    assert not w.recording_allowed and f"schema {SCHEMA + 1}" in w.fenced_reason
+    box.vars.put(SCHEMA_KEY, {"version": "two"}, cas=box.vars.get(SCHEMA_KEY)[1])   # garbled again, over the newer one
+    assert w.rejoin() is None and not w.recording_allowed
+    box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA)}, cas=box.vars.get(SCHEMA_KEY)[1])
+    assert w.rejoin() is not None and w.recording_allowed

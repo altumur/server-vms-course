@@ -449,13 +449,14 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
         assert synced == [] and dirs == []                         # …including for the file it just created
         pa = log.append(1001.0, "io.input", ALARM, port="1")
         epoch_dir = os.path.dirname(pa)
-        assert synced == [pa] and dirs == [epoch_dir, os.path.dirname(epoch_dir)]   # the alarm pays for both, the entries included:
-        log.append(1002.0, "io.input", ALARM, port="1")                             # the file's, and the new epoch directory's
-        assert synced == [pa, pa] and len(dirs) == 2                # …and once per bucket is enough
+        unit_dir_ = os.path.dirname(epoch_dir)
+        assert synced == [pa] and dirs == [epoch_dir, unit_dir_, os.path.dirname(unit_dir_), box.archive]   # the alarm pays for
+        log.append(1002.0, "io.input", ALARM, port="1")             # both, the entries included: the file's, and every new
+        assert synced == [pa, pa] and len(dirs) == 4                # directory's up to the root — and once per bucket is enough
         # ten minutes on, the NEXT bucket in the same `e1` (the review's third pass): its entry is synced too — once
         # per directory synced the first bucket's and none after it
         pb = log.append(1001.0 + 600, "io.input", ALARM, port="1")
-        assert pb != pa and os.path.dirname(pb) == epoch_dir and dirs[2:] == [epoch_dir]
+        assert pb != pa and os.path.dirname(pb) == epoch_dir and dirs[4:] == [epoch_dir]
     finally:
         ev.durably, ev.durable_dir = real_durably, real_dir
 
@@ -463,6 +464,31 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
     from w2cplatform.events import read_bucket
     assert os.path.relpath(p, box.archive).startswith("vms/7/e1/") and os.path.relpath(pa, box.archive).startswith("vms.alarms/7/e1/")
     assert [r["kind"] for r in read_bucket(p)] == ["stats"] and [r["kind"] for r in read_bucket(pa)] == ["io.input", "io.input"]
+
+
+def test_every_directory_above_a_durable_line_is_synced_up_to_the_root_once():
+    """The review's fourth pass (Т-m3's remainder). The first durable line of a unit creates `<sub>/<unit>/e<epoch>/`
+    in one go, and only `e<epoch>`'s entry (in `<unit>`) was synced: `<unit>`'s entry in `<sub>` and `<sub>`'s in the
+    root stayed in the cache, and after a power cut the bytes were on the medium with no path to them. Every directory
+    from the bucket's up to the tree's root is synced the first time a writer makes a durable line there — also when
+    an observation created them a moment before and paid for nothing — and never again by that writer."""
+    import w2cplatform.events as ev
+    from w2cplatform.events import EventLog
+    box = Box()
+    real_durably, real_dir = ev.durably, ev.durable_dir
+    dirs = []
+    ev.durably, ev.durable_dir = (lambda f: None), (lambda d: dirs.append(os.path.abspath(d)))
+    try:
+        log = EventLog(box.archive, "journal", "srv-1", 3)
+        p = log.append(1000.0, "stats", n=1)                       # an observation makes the directories, and pays nothing
+        assert dirs == []
+        log.append(1001.0, "unit.deleted", durable=True, target="7")   # the journal's line: durable
+        e = os.path.dirname(os.path.abspath(p))
+        assert dirs == [e, os.path.dirname(e), os.path.dirname(os.path.dirname(e)), os.path.abspath(box.archive)]
+        log.append(1002.0, "unit.deleted", durable=True, target="8")
+        assert len(dirs) == 4                                       # once per writer: the chain is not walked again
+    finally:
+        ev.durably, ev.durable_dir = real_durably, real_dir
 
 
 def test_the_durable_write_reaches_the_medium_or_says_it_could_not():
@@ -787,6 +813,86 @@ def test_the_pulse_survives_a_failed_beat_and_stops_on_no_progress_not_on_a_long
         res.pass_()
         assert failed and seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()   # beat on after the failure
         assert seen["srv-1"]["pass_seconds"] > res.PULSE_LIMIT * res.lost_after                  # past the old limit, still beating
+    finally:
+        rsrv.shutdown()
+
+
+def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_that_hangs_stops_it():
+    """The review's fourth pass (Т-M13's remainder). Only the walk and the retention said they moved: the mirror, a
+    subsystem's own hook and `relieve` did not, so a part that worked the whole time — the FIRST mirroring of a
+    server, a year of buckets to its peer — was "stuck" to the pulse after four `lost_after`, and the resource went
+    silent with its recordings moved off it. Now each bucket a peer took is progress, a hook is handed `progressed`,
+    and `relieve` marks each volume and each answer. A peer that hangs on one bucket still stops the pulse."""
+    import time
+    from w2cplatform.events import EventLog
+    box = Box()
+    res, rsrv = _resource_process(box)
+    res.clock = box.clock
+    limit = res.PULSE_LIMIT * res.lost_after
+    try:
+        res.PULSE_SECONDS = 0.02
+        for i in range(8):                                            # eight closed buckets for the mirror to send
+            EventLog(box.archive, "vms", "7", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+        box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
+        res.heartbeat()
+        seen = {}
+
+        class Peer:                                                   # each copy takes a third of the limit
+            took, hang = [], False
+
+            def mirrored(self, url, server):
+                return []
+
+            def put(self, url, server, path, data):
+                peer_hb()
+                box.wall.advance(limit + 1 if self.hang else limit / 3); box.clock.advance(limit + 1 if self.hang else limit / 3)
+                time.sleep(0.1)
+                self.took.append(path)
+                seen.update(resources_seen(box.objects))
+
+        def peer_hb():                                                # the peer is live, by its own word, now
+            box.objects.put("platform/resources/srv-2/heartbeat",
+                            json.dumps({"server": "srv-2", "ts": box.wall(), "url": "http://srv-2"}).encode())
+        peer_hb()
+        res.peers = peer = Peer()
+        res.pass_()
+        assert len(peer.took) == 8 and seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()
+
+        # a hook and the watermark's `free` that work long, and say so as they go
+        class Long:
+            def pass_(self, now, progressed):
+                for _ in range(6):
+                    box.wall.advance(limit / 3); box.clock.advance(limit / 3)
+                    progressed(); time.sleep(0.05)
+                seen["hook"] = (resources_seen(box.objects)["srv-1"]["ts"], box.wall())
+                return {}
+
+            def free(self, need, now, min_days, volume=None, progressed=None):
+                for _ in range(6):
+                    box.wall.advance(limit / 3); box.clock.advance(limit / 3)
+                    progressed(); time.sleep(0.05)
+                seen["free"] = (resources_seen(box.objects)["srv-1"]["ts"], box.wall())
+                return {"freed": need}
+
+        box.vars.put("platform/mirror", {"enabled": "false"})
+        box.vars.put("platform/space", {"enabled": "true", "high": "0.5", "low": "0.4"})
+        res.space_probe = lambda path: (1000, 100)                    # 90% full: `relieve` asks the hook
+        res.register("long", Long())
+        res.pass_()
+        assert seen["hook"][0] == seen["hook"][1] and seen["free"][0] == seen["free"][1]   # fresh at the end of each
+        assert "srv-1" in res.live_resources()
+        del res.hooks["long"]
+
+        # …and a peer that hangs on its first bucket stops the pulse, as a stuck pass always did
+        box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
+        box.vars.put("platform/space", {"enabled": "false"})
+        for i in range(2):
+            EventLog(box.archive, "vms", "8", 1).append(box.wall() - 86400 + i * 600, "stats", n=i)
+        peer.hang, peer.took = True, []
+        peer_hb(); res.heartbeat()
+        res.pass_()
+        assert peer.took                                              # the peer was asked, and hung
+        assert seen["srv-1"]["ts"] < box.wall() - res.lost_after and "srv-1" not in res.live_resources()
     finally:
         rsrv.shutdown()
 

@@ -272,16 +272,94 @@ def test_one_door_answering_is_not_the_whole_recording_and_the_job_waits_for_the
         srv.shutdown()
 
 
-def test_a_declared_volume_nobody_serves_keeps_the_job_waiting_and_a_disabled_one_does_not():
+def _silent_recorder(box, name, volume, recordings, age=3600):
+    """A recorder that went silent `age` seconds ago holding `volume`, its last heartbeat naming `recordings`."""
+    from w2cplatform.contract import Heartbeat
+    from vms.config import REC_SPEC
+    box.objects.put(REC_SPEC.sub.heartbeat_key(name), Heartbeat(name, box.wall() - age, [{"id": r, "phase": "running"} for r in recordings], {
+        "server": "srv-9", "archive_url": "http://127.0.0.1:9", "volume": volume}).to_bytes())
+
+
+def test_the_job_waits_for_a_volume_that_held_its_recording_and_not_for_every_declared_one():
+    """The review's fourth pass. "Declared, enabled, and no answering door serves it" made one volume without a
+    recorder — a disk declared for a box not yet racked — hold every scan of the cluster in `waiting`, for good. A scan
+    waits for the volumes ITS recording was in: those whose last recorder went silent naming the recording, and that
+    no live recorder holds since (the timeline's `unserved_volumes`). A disabled one is nobody's, as before."""
     from vms import volumes
     box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
     volumes.write(box.vars, {"name": "cold", "kind": "local", "server": "srv-9", "url": "/data/cold", "quota_bytes": 1 << 30})
+    _silent_recorder(box, "r-other", "spare", ["9"])                        # another recording's volume, unserved
     w = _worker(box)
-    for _ in range(4):
+    for _ in range(3):
         w.reconcile_once()
+    assert w.status_by_unit["7-lpr-1"]["phase"] == "done"                   # neither was ever this recording's
+
+    box2 = _site(); _footage(box2, "7", 1, 0, 10); _job(box2)
+    _silent_recorder(box2, "r-warm", "warm", ["7", "8"])                    # it was recording `7` when it went silent
+    w2 = _worker(box2)
+    for _ in range(3):
+        w2.reconcile_once()
+    st = w2.status_by_unit["7-lpr-1"]
+    assert st["phase"] == "waiting" and "nobody serves volume warm" in st["why"] and st["covered"] == 600
+    volumes.write(box2.vars, {"name": "warm", "kind": "local", "server": "srv-9", "url": "/data/warm", "quota_bytes": 1 << 30,
+                              "enabled": "false"})                          # the administrator's decision: nobody's
+    w2.reconcile_once()
+    assert w2.status_by_unit["7-lpr-1"]["phase"] == "done"
+
+
+def test_a_job_that_waits_past_its_deadline_ends_done_and_says_what_it_did_not_read():
+    """The review's fourth pass. A job waiting for a volume whose server never comes back waited for ever. Past
+    `SCAN_WAIT_SECONDS` it is `done` with `partial` naming what was missing — in its status, and once as a line
+    `scan.partial` in its own events, which outlive the status. The clock is beside the progress: a restarted worker
+    does not start it again."""
+    box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
+    _silent_recorder(box, "r-warm", "warm", ["7"])
+    w = _worker(box)
+    w.reconcile_once(); w.reconcile_once()
     st = w.status_by_unit["7-lpr-1"]
-    assert st["phase"] == "waiting" and "nobody serves volume cold" in st["why"]
-    volumes.write(box.vars, {"name": "cold", "kind": "local", "server": "srv-9", "url": "/data/cold", "quota_bytes": 1 << 30,
-                             "enabled": "false"})                           # the administrator's decision: nobody's
+    assert st["phase"] == "waiting" and "ends without them in 3600 s" in st["why"]
+    box.wall.advance(1800)
+    _silent_recorder(box, "r-warm", "warm", ["7"])                          # still silent, an hour ago by its clock
+    box.door.announce()
+    w2 = _worker(box, name="j-1")                                           # a restart half way: the clock is on the disk
+    w2.reconcile_once()
+    assert w2.status_by_unit["7-lpr-1"]["phase"] == "waiting" and "in 1800 s" in w2.status_by_unit["7-lpr-1"]["why"]
+    box.wall.advance(1801); _silent_recorder(box, "r-warm", "warm", ["7"]); box.door.announce()
+    w2.reconcile_once(); w2.reconcile_once()
+    st = w2.status_by_unit["7-lpr-1"]
+    assert st["phase"] == "done" and st["partial"] == ["nobody serves volume warm"] and st["covered"] == 600
+    lines = [l for d, _, fs in os.walk(os.path.join(box.archive, "detjob", "7-lpr-1")) for f in fs if f.endswith(".events.jsonl")
+             for l in read_bucket(os.path.join(d, f)) if l["kind"] == "scan.partial"]
+    assert len(lines) == 1 and lines[0]["missing"] == ["nobody serves volume warm"] and lines[0]["t"] == m(0)
+
+
+def test_a_waiting_job_does_not_hold_the_workers_capacity():
+    """The review's fourth pass. A job that waits holds no model, but it held a place in the worker's capacity: two
+    jobs waiting for a volume that never came back filled a GPU worker of two, and every new scan was unplaceable.
+    The worker's `capacity` counts its models plus the jobs it holds that have none; the controller places a new job
+    beside a waiting one, and when more jobs can run than there are models, the rest queue."""
+    box = _site()
+    _silent_recorder(box, "r-warm", "warm", ["7"])                          # recording 7 was there; nothing of it here
+    ctl = SpecController(DETJOB_SPEC, box.vars, box.objects, wall=box.wall)
+    ctl.create({"name": "7-lpr-1", "cam": "7", "rec": "7", "kind": "lpr", "from": m(0), "to": m(60)})
+    w = _worker(box, capacity=1)
+    w.heartbeat_once(); ctl.ensure_placed()
+    w.reconcile_once(); w.heartbeat_once()
+    assert w.status_by_unit["7-lpr-1"]["phase"] == "waiting" and w.headroom() == 1
+    for i in range(6):
+        _footage(box, "8", 1, i * 10, i * 10 + 9)                           # a long one: two passes of the budget
+    ctl.create({"name": "8-lpr-1", "cam": "8", "rec": "8", "kind": "lpr", "from": m(0), "to": m(60)})
+    ctl.ensure_placed()
+    assert ctl.placement("8-lpr-1") is not None and ctl.placement("8-lpr-1").worker == "j-1"   # placed beside the waiting one
     w.reconcile_once()
-    assert w.status_by_unit["7-lpr-1"]["phase"] == "done"
+    assert w.status_by_unit["8-lpr-1"]["phase"] == "running" and list(w.running) == ["8-lpr-1"]
+
+    for i in range(6):                                                      # the volume comes back: 7 can run too —
+        _footage(box, "7", 1, i * 10, i * 10 + 9)
+    _silent_recorder(box, "r-warm", "warm", [])
+    w.reconcile_once()                                                      # …and waits for the one model there is
+    assert w.status_by_unit["7-lpr-1"]["phase"] == "queued" and w.status_by_unit["8-lpr-1"]["phase"] == "running"
+    w.reconcile_once()
+    assert w.status_by_unit["8-lpr-1"]["phase"] == "done" and not w.running
+    w.reconcile_once()
+    assert w.status_by_unit["7-lpr-1"]["phase"] == "running" and list(w.running) == ["7-lpr-1"]

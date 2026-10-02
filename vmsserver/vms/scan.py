@@ -117,12 +117,21 @@ def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: fl
 # them now, or their holder is silent), and a scan that is missing anything is not finished (`DetJobWorker`).
 # A volume the administrator DISABLED is nobody's (`volumes.servable`), and waiting for it would be waiting for a
 # decision to change: it is not counted.
+#
+# Not every declared volume — the volumes THIS recording was in (the review's fourth pass). "Declared and nobody's
+# door read it" made one volume without a recorder — a disk declared for a box not yet racked — hold every scan of
+# the cluster in `waiting` for good. What the store knows about where a recording lived is the recorders' heartbeats:
+# each names its volume and the recordings it holds, and the last one of a recorder that went silent says what was
+# on its volume when it did. So `unread` is the timeline's rule (`unserved_volumes`: a volume whose last recorder is
+# silent and that no live recorder holds) narrowed to the volumes whose last recorder named this recording. A
+# volume that held it once and something else when its recorder died is not seen by this — the scan's deadline is
+# what bounds that (`DetJobWorker.WAIT_MAX`), and the answer says what it did not read.
 @dataclass
 class Read:
     spans: list[Span]
     answered: bool                 # at least one door answered
     silent: list[str]              # recorders whose door was asked and did not answer
-    unread: list[str]              # declared, enabled volumes whose index nobody read
+    unread: list[str]              # volumes that held this recording and nobody serves now
 
     @property
     def partial(self) -> bool:
@@ -135,7 +144,8 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     from w2cplatform.console import heartbeats
     from w2cplatform.contract import is_live
     out, answered, silent, read = set(), False, [], set()
-    for w, hb in sorted(heartbeats(objects, "rec/").items()):
+    every = heartbeats(objects, "rec/")
+    for w, hb in sorted(every.items()):
         url = str(hb.extra.get("archive_url") or "")
         if not url or not is_live("rec", hb.ts, now, 45.0):   # whose clock: `is_live` (the review's second pass, M9)
             continue
@@ -154,7 +164,14 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
     unread = []
     if vars_ is not None:
         from . import volumes
-        unread = [v.name for v in volumes.declared(vars_) if v.enabled and v.name not in read]
+        from .console import unserved_volumes          # the timeline's rule, read and not copied
+        off = {v.name for v in volumes.declared(vars_) if not v.enabled}
+
+        def held_it(recorder: str) -> bool:
+            hb = every.get(recorder)
+            return hb is not None and any(str(st.get("id")) == str(unit) for st in hb.status if isinstance(st, dict))
+        unread = [g["volume"] for g in unserved_volumes(objects, now)
+                  if g["volume"] not in read and g["volume"] not in off and held_it(g["recorder"])]
     return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread)
 
 
@@ -196,6 +213,37 @@ class ScanLog:
 
     def events(self) -> int:
         return sum(int(d.get("events", 0)) for d in self.read())
+
+    # Since when this scan has been waiting for what it could not read, and — once its deadline passed — what it ended
+    # without (the review's fourth pass). Durable beside the progress, for the same reason: a worker restarted on this
+    # server does not start the deadline again. `{since, partial?}`; gone once nothing is missing.
+    def _waiting_path(self) -> str:
+        return os.path.join(os.path.dirname(self.path), "waiting.json")
+
+    def waiting(self) -> dict | None:
+        try:
+            with open(self._waiting_path()) as f:
+                d = json.load(f)
+            return {"since": float(d["since"]), **({"partial": list(d["partial"])} if d.get("partial") else {})}
+        except (FileNotFoundError, ValueError, KeyError, TypeError):
+            return None
+
+    def wait(self, now: float, partial: list | None = None) -> dict:
+        d = self.waiting() or {"since": float(now)}
+        if partial:
+            d["partial"] = list(partial)
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        tmp = self._waiting_path() + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(d, f)
+        os.replace(tmp, self._waiting_path())
+        return d
+
+    def not_waiting(self) -> None:
+        try:
+            os.remove(self._waiting_path())
+        except FileNotFoundError:
+            pass
 
 
 # Moments into stretches: what to keep when the reason for keeping it is that a model fired.

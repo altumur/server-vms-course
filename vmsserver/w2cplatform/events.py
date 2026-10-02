@@ -316,11 +316,23 @@ class EventLog:
         # directory, so "once per directory" synced the first bucket's entry and none after it — ten minutes later
         # the next bucket's alarms were on the platter with nothing naming them. And the first time this writer
         # reaches an `e<epoch>` directory, its parent is synced too: a new epoch's directory is itself an entry.
+        #
+        # …and so is every directory above it, up to the tree's root (the review's fourth pass): the first alarm of a
+        # new unit creates `<sub>.alarms/<unit>/e<epoch>/` at once, and syncing only `<unit>` left `<unit>`'s own
+        # entry in `<sub>.alarms`, and that one's in the root, in the cache — after a power cut the file is on the
+        # platter and the path to it is not. Once per directory per writer, as before: three barriers more on the
+        # first alarm of a unit, and nothing after. Not only the directories THIS call created: an observation may
+        # have made them a moment ago and paid for no barrier, which is the same argument as for the file above.
         if (cls == ALARM or durable) and p not in self._synced:
             d = os.path.dirname(p)
             durable_dir(d)
             if d not in self._synced_dirs:
-                durable_dir(os.path.dirname(d))
+                top, up = os.path.abspath(self.root), os.path.dirname(d)
+                while True:
+                    durable_dir(up)                  # the entry of the directory below `up` lives in `up`
+                    if os.path.abspath(up) == top or os.path.dirname(up) == up:
+                        break
+                    up = os.path.dirname(up)
                 self._synced_dirs.add(d)
             self._synced.add(p)
         return p

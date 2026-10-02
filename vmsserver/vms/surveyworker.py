@@ -134,13 +134,27 @@ class SurveyWorker(Worker):
                                                          front=front, newest=newest)
                 continue
 
+            # …its epoch too (the review's fourth pass): a garbled `survey/epoch/<unit>` raised out of `take_epoch`, outside
+            # the unit's `try`, and ended the pass for every watch after it.
             if unit not in self.epochs:
-                self.take_epoch(unit)                    # one writer of survey/<unit>/… at a time
+                try:
+                    self.take_epoch(unit)                # one writer of survey/<unit>/… at a time
+                except Exception as e:                   # noqa: BLE001
+                    log.exception("survey %s: its epoch was not taken", unit)
+                    self._stop(unit)
+                    self.status_by_unit[unit] = self._status(unit, row, "failed", why=f"its epoch could not be taken: {e}",
+                                                             front=front, newest=newest)
+                    continue
             # THE UNIT'S OWN TROUBLE (the review's third pass, M19's remainder): a door that answers with an error that
             # is not "busy", a model's factory or its `observe` raised out of the pass, and every watch after this one
             # was not looked at. A failed read ends this watch's window where it got to, like a busy door; a failed
             # model fails this unit — `failed`, and why — and is built afresh next pass.
-            busy, failed, fired, watched = False, "", [], []
+            #
+            # A stretch is `watched` once the model has looked at all of it, not once the door handed it over (the review's
+            # fourth pass): a model that died half way through used to move the frontier to the stretch's END, and the rest
+            # of the stretch was never looked at, in silence. `looked` is how far the model got inside the current one —
+            # past the last moment it finished with — and that is where a failure leaves the frontier.
+            busy, failed, fired, watched, looked = False, "", [], [], [None]
             try:
                 model = self.running.get(unit)
                 if model is None:
@@ -156,17 +170,22 @@ class SurveyWorker(Worker):
                     except Exception as e:               # noqa: BLE001 — the holder's door failed: not a busy one, not ours
                         busy, failed = True, f"the holder's door failed: {e}"
                         break
-                    watched.append((a, b))
-                    for ts, kind, fields in self._watch(model, a, b):
+                    looked[0] = a
+                    for ts, kind, fields in self._watch(model, a, b, looked):
                         EventLog(self.archive_root, SURVEY, unit, self.epochs[unit]).append(
                             ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
                         self.events_written += 1
                         fired.append(ts)
+                    watched.append((a, b))               # all of it looked at: now it is watched
+                    looked[0] = None
             except Exception as e:                       # noqa: BLE001
                 log.exception("survey %s failed this pass", unit)
                 self._stop(unit)
-                if watched:
-                    front.set(watched[-1][1])            # what WAS watched is written: watching it again would write it twice
+                # What WAS watched is written, and watching it again would write it twice: the frontier goes to the end
+                # of the last whole stretch, or into the one the model died in — no further than it looked.
+                through = looked[0] if looked[0] is not None else (watched[-1][1] if watched else None)
+                if through is not None:
+                    front.set(through)
                 self.status_by_unit[unit] = self._status(unit, row, "failed", why=f"the model failed: {e}",
                                                          front=front, newest=newest)
                 continue
@@ -200,12 +219,16 @@ class SurveyWorker(Worker):
                 self.status_by_unit.pop(unit, None)
         return sorted(self.running)
 
-    def _watch(self, model, a: float, b: float):
+    # `looked[0]`, when given, is moved past each moment once the model has answered for it and its lines are taken:
+    # how far a stretch got when the model dies in the middle of it.
+    def _watch(self, model, a: float, b: float, looked: list | None = None):
         ts = a
         while ts < b:
             for kind, fields in model.observe(ts):
                 yield ts, kind, fields
             ts += self.step
+            if looked is not None:
+                looked[0] = min(ts, b)
 
     # `lag` is the answer this subsystem exists to give about itself: how far behind the device's newest
     # minute we are. A survey that cannot keep up is not broken and not finished — it is behind, and the
