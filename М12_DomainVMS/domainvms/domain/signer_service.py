@@ -9,6 +9,7 @@ over mTLS, which need the bench.
     POST /login          {"user","password"}         -> {"token"}
     POST /revoke         {"token"}                    -> revokes that token's jti
     GET  /keys           the key set (what agents copy)
+    GET  /healthz        alive — what a monitor asks
 
 Given CLUSTERS (the console's format), it also runs the domain's pass over the books every 5 s
 (`domain/books.py`): sources, primaries, polls, upstream, asks. Those books carry tokens the signer mints —
@@ -31,7 +32,7 @@ from .identity import AuthError, IdentityStore
 from .signer import DomainRoot, Signer
 from .tokens import RevocationList, verify
 import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
-from w2cplatform.console import Bounds, ConsoleServer, Deadlined, read_body
+from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.variables import open_vars
 
 
@@ -80,8 +81,17 @@ def main() -> None:
     # deadline on a request, and a body read to whatever `Content-Length` said. The platform's server and reading
     # (`ConsoleServer`, `Deadlined`, `read_body`): so many connections at once and so many to one address, the
     # request line and headers under a deadline, a body of a name and a password — `MAX_BODY`, no more.
+    #
+    # …AND WITH THE CONSOLE'S RESERVE AND THE BOX'S LANE (М10's seventh review, major). Four addresses took every
+    # connection of it; its bounds are the console's now (`Bounds`), with the box's own door a unix socket when
+    # `SIGNER_UNIX` names one (`open_doors`). The reserve is for the door in — `/login`, and its preflight — and a
+    # listed monitor (`CONSOLE_MONITORS`) is answered on `/healthz`.
     class H(Deadlined, BaseHTTPRequestHandler):
         MAX_BODY = 16 << 10
+        RESERVE = ("/login",)
+
+        def parse_request(self):
+            return super().parse_request() and not self.busy_unless(self.RESERVE, self.path.split("?", 1)[0])
 
         def _send(self, status, body):
             raw = json.dumps(body).encode()
@@ -103,6 +113,8 @@ def main() -> None:
             self.send_response(204); self._cors(); self.send_header("Content-Length", "0"); self.end_headers()
 
         def do_GET(self):
+            if self.path == "/healthz":
+                return self._send(200, {"ok": True})
             if self.path == "/keys":
                 return self._send(200, vars_.get(KEYS_PATH)[0] or signer.tokens.keyset().to_items())
             self._send(404, {"detail": "no such route"})
@@ -125,9 +137,8 @@ def main() -> None:
         def log_message(self, *a):
             pass
 
-    srv = ConsoleServer((os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445"))), H,
-                        bounds=Bounds(64, 16, reserve=0, box=0))
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    srv = open_doors(os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445")), H,
+                     unix_env="SIGNER_UNIX", say=False)
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())

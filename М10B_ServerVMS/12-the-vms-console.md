@@ -414,6 +414,8 @@ const PIECE = 600;
 
 Тот же класс стоял этажом ниже, у самой двери регистратора, и ревью его не называло. `/samples/<unit>` шёл без разметки, только до конца соединения, и по **последовательности** за раз — так что том, отказавший между двумя последовательностями, оставлял читателю целые записи и ничего, что отличило бы их от всех: укороченный диапазон, принятый за всё, что есть у источника, — и экспортом консоли, и регистратором, копирующим из резервной записи. Теперь дверь пишет кадры chunked и последний кусок — только когда поток кончился целым (`send_route`), а оба читателя берут ответ без него за то, что он есть: `IncompleteRead` — ошибка (`RecWorker.read_samples`, `vms.console._door`). Тест: `test_slot_and_read.py::test_a_recorders_door_cut_between_two_sequences_is_an_error_to_its_readers_never_a_shorter_range`.
 
+**Ответ без рамки — не целый ответ.** Куски или длина — то, по чему короткий ответ отличается от целого; ответ без того и другого — дверь, говорящая на HTTP/1.0, или прокси, снявший разметку, — кончается там, где кончилось соединение, и дверь, отказавшая посреди, выглядела ровно как дверь, которой больше нечего дать (седьмое ревью, minor). `_door` теперь требует `Transfer-Encoding: chunked` или `Content-Length` и иначе поднимает `ConnectionError`: экспорт говорит, что дверь не ответила, а не пишет фильм короче. Так же читает кадры регистратор, копирующий из резервной записи (`RecWorker.read_samples`). Тест: `test_slot_and_read.py::test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one`.
+
 ```python
         sent = {"bytes": 0, "sha": hashlib.sha256(), "head": False}
         chunked = getattr(handler, "request_version", "") == "HTTP/1.1"
@@ -644,10 +646,36 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
     root.moved_cams = source_cams(ctl)
+    # …and a command to a device reaches every camera of the device (`command_cams`).
+    root.body_cams = command_cams(ctl)
     root.labels_of = cam_labels
 ```
 
 Таймлайн, экспорт и вещание называют камеру в пути, и право на них — право на эту камеру. Запрос на дозапись действует, поэтому нужен `edit`. `POST /whep/` ничего не меняет и проходит по праву `view`. Смена `source` камеры касается каждой камеры устройства, которое строка покидает, и устройства, на которое приходит, а смена `ref` — всего кластера (`source_cams`; М10A, урок 15, шаг 12а).
+
+**Команда устройству — это право на каждую камеру устройства.** `POST /requests` проверял `edit` на одну камеру, названную в `unit`, а держатель выполняет команду на **устройстве**: `perform` зовёт `dev.output(port, …)` и `dev.preset(n)`, канала нет ни там, ни там. Охранник с `edit` на камеру 1 шестнадцатиканального видеорегистратора послал `output` на порты 1–4 и `preset 5` — 202, и устройство выполнило всё, в том числе замок зоны камеры 2 (седьмое ревью, major, воспроизведено запуском). Привязаны ли выходы и пресеты к каналам где-нибудь в описании драйвера — нет: `capabilities()` говорит `rays`, `relays`, `ptz`, `presets` — числа, и это числа устройства (`config.describe`, строка `vms/devices/<устройство>`). Поэтому реле и пресет — каждой камеры устройства: ворота спрашивают `edit` на каждую, как смена `source` спрашивает `admin` на каждую (`source_cams`). Спрашивает платформа: у `SpecConsole` есть `body_cams(path, body)` — камеры, до которых действие из тела достаёт сверх названной, — и `dispatch` после чтения тела спрашивает право маршрута на каждую (`admit_body_cams`); VMS ставит туда `command_cams`. Камера, которая у своего устройства одна (камера с картой, файл), не спрашивает ничего сверх прежнего. Сценарий, который командует устройством (`vms.output`, `vms.preset`), — тот же охват через автоматику: `scenario_cams` добавляет все камеры устройства, и правка сценария требует `admin` на каждую.
+
+```python
+def device_cams(ctl, cam) -> set:
+    from .config import device_of
+    row = ctl.camera(cam)
+    src = str((row or {}).get("source") or "")
+    if not src:
+        return {str(cam)}
+    dev = device_of(src)
+    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) == dev}
+
+
+def command_cams(ctl):
+    def cams(path: str, body) -> set:
+        if path != "/requests" or not isinstance(body, dict) or str(body.get("action", "")) not in ("output", "preset"):
+            return set()                                 # not a command to a device (`file_request` refuses the rest)
+        unit = str(body.get("unit") or "")
+        return device_cams(ctl, unit) if unit and ctl.camera(unit) is not None else set()
+    return cams
+```
+
+Выход для объекта, где охраннику нужно нажимать одно реле регистратора, — привязка в описании устройства (`реле → канал`, `пресет → канал`), которую `device_cams` читала бы; ни один драйвер курса её пока не даёт. Чего это не делает: камера, добавленная к устройству **после** того, как сценарий записан, не спрашивается — сценарий продолжает действовать на устройство с ней, как и с `source_cams`. Тест: `test_console_gate.py::test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_and_through_a_scenario` — `output` и `preset` с `edit` на одну камеру регистратора — 403, с `edit` на обе — 202, у камеры-файла с правом на неё — 202; сценарий с `vms.output` на камеру регистратора правит и удаляет только тот, у кого `admin` на обе.
 
 **Одна функция для обеих сборок.** До шестого ревью всё это стояло внутри `make_console`, а консоль М11 собирается своей функцией (`cluster/console.py`) — и не получала ничего: `/timeline/<cam>` и `/export/<cam>` не были там маршрутами, называющими единицу, и в кластере, который спрашивает, кто звонит, зритель камеры 1 получал таймлайн и кадры камеры 2 за любой грант; метка записи была её меткой размещения; и то, что уходило через эту консоль, не попадало в журнал. Теперь то, что консоли VMS нужно у ворот и в журнале, — `wire_vms(m, ctl, index)`, и её зовут обе сборки. Тест: М11, `test_lesson5_controller.py::test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does`.
 

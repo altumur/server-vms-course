@@ -483,6 +483,48 @@ def test_a_recorders_door_cut_between_two_sequences_is_an_error_to_its_readers_n
         srv.shutdown()
 
 
+def test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one():
+    """The review's seventh pass, minor: `_door` took an answer that ended where its connection ended — no chunks, no
+    `Content-Length` — as whole; such an answer cut half way (a door that spoke HTTP/1.0, a proxy that took the framing
+    off) looked exactly like one that had nothing more. Both readers of a recorder's frames — the console's export and a
+    recorder copying from a backup — refuse it; with a length, or in chunks, it is read as before."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from vms import console as vc
+    from vms.recworker import RecWorker
+    from vms.worker import fake_samples
+    frames = b"".join(s.encode() for s in fake_samples(1000.0, 1004.0))
+    state = {"length": False}
+
+    class H(BaseHTTPRequestHandler):                                  # HTTP/1.0: the connection's end is the answer's end
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            if state["length"]:
+                self.send_header("Content-Length", str(len(frames)))
+            self.end_headers()
+            self.wfile.write(frames)
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        for read in (lambda: vc._door(f"{url}/samples/7?from=1000&to=1004", 5.0),
+                     lambda: RecWorker.read_samples(None, url, "7", 1000.0, 1004.0)):
+            try:
+                read()
+                raise AssertionError("an answer with no framing read as whole")
+            except OSError as e:
+                assert "neither chunks nor a length" in str(e)
+        state["length"] = True
+        assert vc._door(f"{url}/samples/7?from=1000&to=1004", 5.0) == frames
+        assert len(RecWorker.read_samples(None, url, "7", 1000.0, 1004.0)) == 4
+    finally:
+        srv.shutdown()
+
+
 def test_one_recordings_torn_epoch_row_does_not_take_the_cameras_timeline_away():
     """The review's sixth pass, minor: a `rec/epoch/<recording>` row that does not parse was a `ValueError` out of the
     timeline's handler — the page got no timeline of the camera at all, every other recording of it included. Read as

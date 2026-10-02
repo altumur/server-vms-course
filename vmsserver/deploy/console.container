@@ -65,6 +65,10 @@ Environment=CONSOLE_PORT=8080
 # root@box`, and a browser at http://localhost:8080. A TCP peer of 127.0.0.1 is the network's, like any other.
 Environment=CONSOLE_UNIX=/run/vms-console/console.sock
 Volume=/run/vms-console:/run/vms-console:z
+# Who scrapes `/metrics` (the review's seventh pass): addresses or networks, comma-separated. They get four
+# connections of their own, which a flood from the network cannot take; anyone else is answered `/metrics` only from
+# the common slots. Set it to Prometheus's address in `vms.env` (`CONSOLE_MONITORS=10.0.0.5`); unset — no lane.
+#Environment=CONSOLE_MONITORS=10.0.0.5
 # `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
 EnvironmentFile=/data/config/vms.env

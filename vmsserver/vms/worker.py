@@ -141,6 +141,38 @@ log = logging.getLogger("vmsworker")
 VMS = Subsystem("vms")
 
 
+# Bytes a door may hold at once, across its connections: `take(n, wait)` — True once `n` are free (within `wait`
+# seconds), False if not; `force(n)` counts bytes it has whatever the limit says (a piece larger than was asked for: it
+# is in memory already); `give(n)` frees them. The holder's playback door (`VmsWorker.playback_pieces`).
+class ByteBudget:
+    def __init__(self, limit: int):
+        self.limit, self.used = int(limit), 0
+        self.cond = threading.Condition()
+
+    def take(self, n: int, wait: float) -> bool:
+        deadline = time.monotonic() + wait
+        with self.cond:
+            while self.used and self.used + n > self.limit:   # nothing held: one piece goes, whatever its size
+                left = deadline - time.monotonic()
+                if left <= 0:
+                    return False
+                self.cond.wait(left)
+            self.used += n
+            return True
+
+    def force(self, n: int) -> None:
+        with self.cond:
+            self.used += n
+            if n < 0:
+                self.cond.notify_all()
+
+    def give(self, n: int) -> None:
+        if n:
+            with self.cond:
+                self.used -= n
+                self.cond.notify_all()
+
+
 # М9 Lesson 6's `print()` with a memory — the actuator without GStreamer, and the one `__main__` falls back
 # to. It mirrors `GstActuator`'s surface: callable, `pump()`, `stop_all()`, plus test hooks. State:
 # `failing` (a set of camera ids, or a predicate, whose start fails), `calls` (every `(verb, id)`),
@@ -1500,7 +1532,47 @@ class VmsWorker(Worker):
     # recorder closing a gap got 503. A session is now open only while the DEVICE is read: the piece is taken whole
     # (a driver that streams is read to the end of the piece — it is one piece, `PLAYBACK_PIECE` seconds, either
     # way), the session closed, and only then does the piece go to whoever is waiting for it.
+    #
+    # …AND A PIECE IS SIZED IN BYTES, AND THE DOOR'S PIECES HAVE A BUDGET (the review's seventh pass, major; a run: a
+    # viewer with `view` on one camera, eight connections on one signed address, a camera of 8 Mbit/s — the holder went
+    # from 45 to 503 MB, and from four addresses it would have been 1.9 GB). A piece of sixty seconds is a number of
+    # bytes only the camera's bitrate says, and the door held one per connection. So:
+    #
+    #   bytes, not seconds  the first piece asks for `PLAYBACK_FIRST` seconds; every next one for as many seconds as
+    #                       `PLAYBACK_PIECE_BYTES` came to at the rate the last one came at — never more than
+    #                       `PLAYBACK_PIECE` seconds, never less than one
+    #   a budget            the pieces the door holds across all its connections are at most `PLAYBACK_BUDGET` bytes:
+    #                       a piece is read only when its bytes are free (`ByteBudget`), waiting `PLAYBACK_BUDGET_WAIT`
+    #                       for them; past that the first piece is 503 and a later one ends the reply short — said, as a
+    #                       device that failed half way is. A piece's bytes are the door's until the client has taken it
+    #   one signature       holds at most `PLAYBACK_PER_SIGNATURE` connections at once (`playback_handler`): a signed
+    #                       address is one viewer's, for one interval
+    #
+    # So what the door holds of pieces is the budget, whoever asks — a connection holds one piece at a time, and lets go
+    # of it before it reads the next. A driver whose stream is far above the rate its first piece came at overshoots one
+    # piece (counted, `force`), and the next is smaller.
     PLAYBACK_PIECE = 60.0
+    PLAYBACK_FIRST = 2.0
+    PLAYBACK_PIECE_BYTES = 4 << 20
+    PLAYBACK_BUDGET = 64 << 20
+    PLAYBACK_BUDGET_WAIT = 5.0
+    PLAYBACK_PER_SIGNATURE = 2
+
+    def playback_signature(self, sig: str, step: int) -> bool:
+        """Count a connection on a signed address in (`+1`: False when it has its `PLAYBACK_PER_SIGNATURE`) or out."""
+        sigs = self.__dict__.setdefault("_playback_sigs", {})          # one, whichever connection asks first
+        with self.__dict__.setdefault("_playback_sigs_lock", threading.Lock()):
+            n = sigs.get(sig, 0)
+            if step > 0 and n >= self.PLAYBACK_PER_SIGNATURE:
+                return False
+            if n + step > 0:
+                sigs[sig] = n + step
+            else:
+                sigs.pop(sig, None)
+            return True
+
+    def playback_budget(self) -> "ByteBudget":
+        return self.__dict__.setdefault("_playback_budget", ByteBudget(self.PLAYBACK_BUDGET))
 
     def playback_pieces(self, cam, t0: float, t1: float):
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
@@ -1511,19 +1583,35 @@ class VmsWorker(Worker):
         if cov is None:
             raise KeyError(cam)
         t0, t1 = max(float(t0), float(cov.get("from", t0))), min(float(t1), float(cov.get("to", t1)))
+        budget = self.playback_budget()
 
         def pieces():
-            at = t0
-            while at < t1:
-                b = min(t1, at + self.PLAYBACK_PIECE)
-                sid = dev.open_playback(cam, at, b)      # OverflowError when the device is full
-                try:
-                    got = dev.read(sid)
-                    got = [bytes(got)] if isinstance(got, (bytes, bytearray, memoryview)) else [bytes(c) for c in got]
-                finally:
-                    dev.close_playback(sid)              # before a byte of the piece is sent
-                yield from got
-                at = b
+            at, span, held = t0, min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE), 0
+            try:
+                while at < t1:
+                    budget.give(held)                    # the last piece is the client's now: its bytes are free
+                    held = 0
+                    want = self.PLAYBACK_PIECE_BYTES
+                    if not budget.take(want, self.PLAYBACK_BUDGET_WAIT):
+                        raise OverflowError(f"this door holds {budget.limit} bytes of footage at once, and they are "
+                                            f"all being sent — retry")
+                    held = want
+                    b = min(t1, at + span)
+                    sid = dev.open_playback(cam, at, b)  # OverflowError when the device is full
+                    try:
+                        got = dev.read(sid)
+                        got = [bytes(got)] if isinstance(got, (bytes, bytearray, memoryview)) else [bytes(c) for c in got]
+                    finally:
+                        dev.close_playback(sid)          # before a byte of the piece is sent
+                    size = sum(len(c) for c in got)
+                    budget.force(size - held)            # what the piece really is, whatever was asked
+                    held = size
+                    rate = size / max(b - at, 1e-3)
+                    span = max(1.0, min(self.PLAYBACK_PIECE, self.PLAYBACK_PIECE_BYTES / max(rate, 1.0)))
+                    yield from got
+                    at = b
+            finally:
+                budget.give(held)
         return pieces()
 
     # What the heartbeat says per unit beyond the platform's fields: the worker publishes `live_url` — where a
@@ -1722,6 +1810,19 @@ class VmsWorker(Worker):
                 refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]))
                 if refused is not None:
                     return self._send(refused[0], {"detail": refused[1], "error": "denied"})
+                # One signed address — or one camera's capability — holds `PLAYBACK_PER_SIGNATURE` connections at once
+                # (`playback_pieces`): eight on one address were eight pieces of one viewer's interval.
+                held = q.get("sig") or (segs[3] if len(segs) == 4 else "")
+                if held and not gw.playback_signature(held, +1):
+                    return self._send(503, {"detail": f"this address is being read {gw.PLAYBACK_PER_SIGNATURE} times "
+                                                      f"at once already — one viewer, one interval", "error": "busy"})
+                try:
+                    return self._play(cam, q)
+                finally:
+                    if held:
+                        gw.playback_signature(held, -1)
+
+            def _play(self, cam, q):
                 try:
                     pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
                     first = next(pieces, None)                   # the first piece read before the reply is chosen
@@ -1736,13 +1837,16 @@ class VmsWorker(Worker):
                 # one only when every piece went — a device that failed half way is a reply that ends short, which
                 # the client SEES; to an HTTP/1.0 one, the bytes until the connection closes, as before. Written a
                 # piece of the wire's size at a time, to a client that keeps the pace (`Paced`).
+                # A piece is let go before the next is read — by this loop as by `playback_pieces` — so a connection
+                # holds one, as the door's budget counts it.
                 out = Paced(self, start_stream(self, 200, "video/mp4"), gw.PLAYBACK_MIN_RATE, gw.PLAYBACK_GRACE)
+                piece, first = first, None
                 try:
-                    for piece in ([first] if first else []):
-                        out.write(piece)
-                    for piece in pieces:
+                    while piece is not None:
                         if piece:
                             out.write(piece)
+                        piece = None
+                        piece = next(pieces, None)
                     out.end()
                 except (OSError, OverflowError, KeyError) as e:  # the client went or fell behind, or the device failed after the first byte
                     log.warning("%s: playback of camera %s ended short: %s", gw.name, cam, e)

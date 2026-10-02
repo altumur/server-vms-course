@@ -1169,3 +1169,75 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
             assert sub in REFUSE or type(con.ctl) is not SpecController, (sub, field)   # a rule of the subsystem's own
         if FIXED in how and field == "cam":
             assert "cam" in con.spec.fields and con.labels_of is not None, (sub, field)   # the gate reads the camera's own labels
+
+
+def test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_and_through_a_scenario():
+    """The review's seventh pass, major — a run: a guard with `edit` on camera 1 of a sixteen-channel recorder sent
+    `output` to ports 1–4 and `preset 5`: 202, and the device did all of it — the lock of camera 2's zone among them.
+    The holder performs a command on the DEVICE (`perform`: `dev.output(port)`, `dev.preset(n)`), and nothing a device
+    says of itself binds a relay or a preset to a channel. So a command needs `edit` on every camera of the device
+    (`command_cams`, `body_cams`) — and a scenario that commands it, `admin` on every one (`scenario_cams`); a camera
+    that is its device's only channel asks for nothing more than it did."""
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    box = Box()
+    access = Tokens({"guard": [("edit", "1", ())], "both": [("edit", "1", ()), ("edit", "2", ())],
+                     "lobby": [("admin", "1", ())], "lobbies": [("admin", "1", ()), ("admin", "2", ())],
+                     "three": [("edit", "3", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201   # its own device
+        for cmd in ({"unit": "1", "action": "output", "port": 3}, {"unit": "1", "action": "preset", "n": 5}):
+            assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # camera 2 is on that device
+            assert _call(base, "POST", "/requests", cmd, token="both")[0] == 202, cmd    # every camera of it hers
+        assert box.vars.list("vms/requests/") and all(box.vars.get(k)[0]["by"] for k in box.vars.list("vms/requests/"))
+        assert _call(base, "POST", "/requests", {"unit": "3", "action": "output", "port": 1}, token="three")[0] == 202
+        # through a scenario: the same reach
+        acting = {"name": "gate", "when": [{"sub": "vms", "kind": "motion", "unit": "1"}],
+                  "then": [{"sub": "vms", "action": "output", "unit": "1", "port": 1}]}
+        assert _call(base, "POST", "/auto/scenarios", acting, token="admin")[0] == 201
+        assert _call(base, "PUT", "/auto/scenarios/gate", {"within": 0}, token="lobby")[0] == 403   # it acts on camera 2's device too
+        assert _call(base, "PUT", "/auto/scenarios/gate", {"within": 0}, token="lobbies")[0] == 200
+        assert _call(base, "DELETE", "/auto/scenarios/gate", token="lobby")[0] == 403
+    finally:
+        srv.shutdown()
+
+
+def test_a_backfill_of_a_time_nothing_could_hold_is_refused():
+    """The review's seventh pass, minor: `{"from": 0, "to": 600}` — 1970 — and even `false`/`true` were rows, each
+    holding one of its person's seven places for a day. A range that ends before anything the recording shows (its
+    `retention_days`) or the device holds (the coverage its holder announces) is 400; true and false are not seconds."""
+    box = Box()
+    access = Tokens({"guard": [("edit", "1", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    t = box.wall()
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1", "retention_days": 2}, token="admin")[0] == 201
+        for bad in ({"cam": "1", "from": 0, "to": 600}, {"cam": "1", "from": False, "to": True},
+                    {"cam": "1", "from": t - 3 * 86400, "to": t - 2 * 86400 - 60}):
+            code, body = _call(base, "POST", "/backfill", bad, token="guard")
+            assert code == 400, (bad, code, body)
+        assert "before anything the recording shows" in body["detail"]
+        assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 2 * 86400 - 60, "to": t - 2 * 86400 + 600},
+                     token="guard")[0] == 202                          # reaching into what it shows: an ask
+        assert not [k for k in box.vars.list("rec/requests/") if "-0-600" in k]
+    finally:
+        srv.shutdown()
+
+    # …and before anything the DEVICE holds: the coverage its holder announces
+    from tests.test_console_load import _holder
+    from vms.worker import FakeDevice
+    box = Box()
+    t = box.wall()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (t - 3600.0, t)})
+    w, door = _holder(box, dev)
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        assert _call(base, "POST", "/rec/recordings", {"name": "1", "cam": "1"}, token="admin")[0] == 201
+        code, body = _call(base, "POST", "/backfill", {"cam": "1", "from": t - 7200, "to": t - 3700}, token="guard")
+        assert code == 400 and "before anything the device holds" in body["detail"], (code, body)
+        assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 4000, "to": t - 3000}, token="guard")[0] == 202
+    finally:
+        srv.shutdown(); door.shutdown()

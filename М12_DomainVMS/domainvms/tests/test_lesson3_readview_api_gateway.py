@@ -296,6 +296,65 @@ def test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceilin
         con.stop(srv)
 
 
+def test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_answered_whoever_floods():
+    """М10's seventh review, major: the domain's console (and the signer) had `Bounds(64, 16)` with no reserve and no
+    lane for the box — four addresses took every connection. Its bounds are the console's now: `CONSOLE_PER_ADDRESS`
+    an address, and once the common connections are all gone `/healthz` is still answered on the reserve, and to an
+    address named in `CONSOLE_MONITORS` on its own lane; anything else from the network is 503."""
+    import os
+    import socket
+    import time
+    from w2cplatform import console as wc
+    was = os.environ.get("CONSOLE_MONITORS")
+    os.environ["CONSOLE_MONITORS"] = "192.0.2.100"
+    fed, _ = make_domain({"north": (), "south": ()}, "north")
+    api = ConsoleAPI(DomainDirectory(fed), lambda n: FakeClusterConsole())
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=lambda: 1002.0), api, refresh_interval=0.05)
+    srv = con.serve(port=0)
+    port, who, held = srv.server_address[1], {}, []
+    srv.peer_of = lambda request, ca: (who.get(ca[1], str(ca[0])), False)
+
+    def conn(addr: str) -> socket.socket:
+        s = socket.socket(); s.bind(("127.0.0.1", 0)); who[s.getsockname()[1]] = addr
+        s.connect(("127.0.0.1", port))
+        return s
+
+    def ask(addr: str, path: str) -> bytes:
+        s = conn(addr); s.settimeout(5); s.sendall(f"GET {path} HTTP/1.1\r\nHost: x\r\n\r\n".encode()); out = b""
+        try:
+            while True:
+                got = s.recv(65536)
+                if not got:
+                    break
+                out += got
+        except socket.timeout:
+            pass
+        s.close()
+        return out
+    try:
+        assert srv.bounds.per_address == wc.CONSOLE_PER_ADDRESS and srv.bounds.reserve == wc.CONSOLE_RESERVE
+        for i in range(srv.bounds.limit // srv.bounds.per_address):     # every common connection, an address's share each
+            for _ in range(srv.bounds.per_address):
+                s = conn(f"203.0.113.{i}"); s.sendall(b"GET /api"); held.append(s)
+        for _ in range(50):
+            if srv.bounds.used["common"] == srv.bounds.limit:
+                break
+            time.sleep(0.02)
+        assert srv.bounds.used["common"] == srv.bounds.limit
+        assert ask("192.0.2.7", "/healthz").startswith(b"HTTP/1.0 200")             # the reserve
+        busy = ask("192.0.2.7", "/api/cameras")
+        assert busy.startswith(b"HTTP/1.0 503") and b"/healthz" in busy               # nothing else on it
+        assert ask("192.0.2.100", "/healthz").startswith(b"HTTP/1.0 200")           # a listed monitor: its own lane
+    finally:
+        for s in held:
+            s.close()
+        con.stop(srv)
+        if was is None:
+            os.environ.pop("CONSOLE_MONITORS", None)
+        else:
+            os.environ["CONSOLE_MONITORS"] = was
+
+
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A

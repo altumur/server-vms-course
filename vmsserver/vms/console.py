@@ -292,9 +292,20 @@ def _rec_epoch(ctl, unit) -> int | None:
 # A door's answer, whole — or an `OSError`. A recorder's door streams its frames in chunks and writes the last one only
 # when the stream was whole (`recworker.send_route`): an answer that ends without it is `http.client.IncompleteRead`,
 # which is not an `OSError` and would have gone past every `except` here as a door that answered.
+#
+# …AND AN ANSWER WITH NO FRAMING IS NOT TAKEN FOR A WHOLE ONE (the review's seventh pass, minor). Chunks or a length
+# are what let a short answer be told from a whole one; an answer with neither — a door that spoke HTTP/1.0, or a
+# proxy that took the framing off — ends where the connection ends, and a door that failed half way looked exactly
+# like a door that had nothing more. Such an answer is refused here, as a cut one is: the export says the door did not
+# answer, it does not write a shorter film.
 def _door(url: str, timeout: float):
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
+            framed = r.headers.get("Content-Length") is not None or \
+                "chunked" in (r.headers.get("Transfer-Encoding") or "").lower()
+            if not framed:
+                raise ConnectionError(f"{url}: the door's answer has neither chunks nor a length — whether it is whole "
+                                      f"cannot be told")
             return r.read()
     except http.client.HTTPException as e:
         raise ConnectionError(f"{url}: the door's answer was cut short ({e!r})") from None
@@ -472,6 +483,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             # is false for it — and then broke `int()` with no reply at all. Finite, both ends, or 400.
             try:
                 body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
+                if any(isinstance(body.get(k), bool) for k in ("from", "to")):
+                    raise TypeError("true and false are not seconds")   # `float(False)` is 0.0: 1970, not an answer
                 cam, t0, t1 = str(body.get("cam", "")), float(body.get("from", 0)), float(body.get("to", 0))
             except (ValueError, TypeError, AttributeError):
                 return 400, {"detail": "a backfill is {cam, from, to}: a camera and two unix seconds", "error": "bad range"}
@@ -502,6 +515,26 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if t1 > now + BACKFILL_AHEAD:
                 return 400, {"detail": f"a backfill is a hole in what HAS been recorded: this range ends "
                                        f"{t1 - now:.0f} s from now", "error": "range in the future"}
+            # …AND NOT BEFORE ANYTHING COULD BE THERE (the review's seventh pass, minor: `{"from": 0, "to": 600}` — 1970 —
+            # was a row, and held one of its person's seven places for a day). A range wholly older than what the
+            # recording shows (its `retention_days`: the doors would never show what was fetched) or than what the
+            # device holds (the coverage its holder announces, when it does) is refused: no recorder could answer it.
+            from .archive import visible_from
+            try:
+                floor, why = visible_from(rec_ctl.unit(unit), now), "the recording shows"
+            except (ValueError, KeyError, TypeError):
+                floor, why = now - BACKFILL_MAX * 30, "a recording shows"
+            found = holder_of(ctl.objects, "vms/", cam, now, field="coverage") if ctl is not None else None
+            cov = found[2].get("coverage") if found is not None else None
+            if isinstance(cov, dict):
+                try:
+                    if float(cov["from"]) > floor:
+                        floor, why = float(cov["from"]), "the device holds"
+                except (KeyError, TypeError, ValueError):
+                    pass
+            if t1 <= floor:
+                return 400, {"detail": f"this range ends before anything {why} (from {floor:.0f}): no recorder could "
+                                       f"fetch it", "error": "range too old"}
             who = handler.headers.get("X-User", "operator")
             # …AND SO MANY OF THEM (the fifth pass's minor): each ask is a day at most, and nothing bounded how many — a
             # day a row, a thousand rows, and the recorder reading a card for a thousand days. One person's asks that
@@ -1446,6 +1479,35 @@ def source_cams(ctl):
     return cams
 
 
+# THE CAMERAS A COMMAND TO A DEVICE REACHES (the review's seventh pass, major; a run: a guard with `edit` on camera 1 of
+# a sixteen-channel recorder sent `output` to ports 1–4 and `preset 5` — 202, and the device did all of it, the lock of
+# camera 2's zone among them). A command is filed for a camera (`unit`), and its holder performs it on the DEVICE
+# (`VmsWorker.perform`: `dev.output(port, …)`, `dev.preset(n)` — no channel in either). Nothing a device says of itself
+# binds a relay or a preset to a channel: `capabilities()` is `rays`, `relays`, `ptz`, `presets` — counts, the
+# device's (`config.describe`, the row `vms/devices/<device>`). So a relay or a preset is every camera's of the device:
+# `edit` on each of them, as a change of `source` is `admin` on each (`source_cams`). A camera that is its device's
+# only channel — a camera with a card, a file — asks for nothing more than it did. The way out, when a site needs a
+# guard to press one relay of a recorder: a binding in the device's description (`relay → channel`, `preset →
+# channel`) which this function would read, and which no driver here gives yet.
+def device_cams(ctl, cam) -> set:
+    from .config import device_of
+    row = ctl.camera(cam)
+    src = str((row or {}).get("source") or "")
+    if not src:
+        return {str(cam)}
+    dev = device_of(src)
+    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) == dev}
+
+
+def command_cams(ctl):
+    def cams(path: str, body) -> set:
+        if path != "/requests" or not isinstance(body, dict) or str(body.get("action", "")) not in ("output", "preset"):
+            return set()                                 # not a command to a device (`file_request` refuses the rest)
+        unit = str(body.get("unit") or "")
+        return device_cams(ctl, unit) if unit and ctl.camera(unit) is not None else set()
+    return cams
+
+
 # WHICH CAMERAS A SCENARIO IS (the review's fifth pass, its question about `auto`). A scenario's labels are placement
 # labels — where its evaluator runs — and say nothing about whose it is; a grant matching them is not a grant on the
 # cameras it acts on. A scenario is the cameras it watches and the cameras it acts on: every `unit` of a trigger (a
@@ -1453,8 +1515,10 @@ def source_cams(ctl):
 # command, `cam` of a recording or a scan, and a scan's recording's camera). A trigger with no unit watches every
 # camera of its subsystem, and a unit nothing can say the camera of is anybody's: `"*"`, which only a grant on the
 # whole cluster covers. And the camera whose CARD a `record` writes to (`archive`, which becomes the recording's
-# `home`; the review's sixth pass): the same reach as an operator's `home`, through a scenario.
-def scenario_cams(vars_, mounts: dict):
+# `home`; the review's sixth pass): the same reach as an operator's `home`, through a scenario. And a command to a
+# device — `vms.output`, `vms.preset` — every camera of that device (`device_cams`; the seventh pass): the same reach
+# as an operator's `POST /requests`, through a scenario. `ctl`: the cameras' controller, which knows the devices.
+def scenario_cams(vars_, mounts: dict, ctl=None):
     from .jobs import recording_cam
 
     def listed(v) -> list:
@@ -1478,6 +1542,9 @@ def scenario_cams(vars_, mounts: dict):
             out.add(cam_of(str(t.get("sub", "")), unit) if unit else "*")
         for a in listed(row.get("then")):
             out.add(str((a.get("unit") if str(a.get("sub", "")) == "vms" else a.get("cam")) or "*"))
+            if ctl is not None and str(a.get("sub", "")) == "vms" and str(a.get("action", "")) in ("output", "preset") \
+                    and a.get("unit") and ctl.camera(str(a["unit"])) is not None:
+                out |= device_cams(ctl, str(a["unit"]))
             if a.get("rec"):
                 out.add(recording_cam(vars_, str(a["rec"])))
             if a.get("archive") and volume_cam(vars_, str(a["archive"])):
@@ -1534,6 +1601,8 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
     root.moved_cams = source_cams(ctl)
+    # …and a command to a device reaches every camera of the device (`command_cams`).
+    root.body_cams = command_cams(ctl)
     root.labels_of = cam_labels
     controllers = {name: con.ctl for name, con in m.mounts.items()}
     for name, con in m.mounts.items():
@@ -1559,7 +1628,7 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
         if name == "detjob":
             con.cams_of = job_cams(c.vars)
         if name == "auto":
-            con.cams_of = scenario_cams(c.vars, controllers)
+            con.cams_of = scenario_cams(c.vars, controllers, ctl)
             con.labels_of = cam_labels
         if con.extra is not None:
             con.extra.journal = root.journal
