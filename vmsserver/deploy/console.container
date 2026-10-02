@@ -48,7 +48,10 @@ Image=localhost/vmsserver:latest
 # `vms.console.serve(...)` over `$ARCHIVE` for its marks.
 Exec=python3 -m vms console
 # listen on every interface (the code's default is `127.0.0.1`); with `Network=host` this is the box's
-# :8080.
+# :8080. Plain HTTP, and the console says so in its log at every start (`w2cplatform/console.py`, `say_where`):
+# kept because on one box the page is opened from the operator's own machine and nothing here ships a TLS
+# proxy. With one in front, set `127.0.0.1` here and name the proxy in `TRUSTED_PROXY` (the emergency entry's
+# limit then counts the address the proxy saw, not the proxy).
 Environment=CONSOLE_HOST=0.0.0.0
 # the port the README's `PLATFORM_DIR=… python3 -m vms controller  # the console on :8080` line refers to;
 # the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/timeline`, `/export` all live here.

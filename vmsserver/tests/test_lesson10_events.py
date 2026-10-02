@@ -554,6 +554,16 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     assert fenced(ask(cam="7")) == [("7", True)] and vars_.scans == 0                           # the camera's timeline knows at once…
     assert fenced(ask()) == [("7", False), ("9", True)]                                         # …the whole one, inside its three seconds, not yet
     assert fenced(ask(unit="7")) == [("7", True)]                                               # a unit named is read the same way
+    # the review's third pass, minor: one epoch row that does not parse was no reply at all; now that unit is unfenced
+    box.vars.put("vms/epoch/9", {"epoch": "torn"})
+    box.clock.advance(con.EPOCH_CACHE + 1)
+    rep = ask()
+    assert rep[0] == 200 and fenced(rep) == [("7", True), ("9", False)] and "epochs" not in rep[1]
+    # …and a store that does not answer the scan: the last map, and the reply says it is the last map
+    vars_.list = lambda prefix: (_ for _ in ()).throw(PermissionError(13, "the store does not answer"))
+    box.clock.advance(con.EPOCH_CACHE + 1)
+    rep = ask()
+    assert rep[0] == 200 and fenced(rep) == [("7", True), ("9", False)] and rep[1]["epochs"] == "cached"
 
 
 def test_the_consoles_records_outlive_what_they_refer_to():

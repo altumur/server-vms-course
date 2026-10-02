@@ -296,6 +296,45 @@ def test_a_command_another_instance_began_is_not_performed_again():
     assert w2.requests() == [] and box.objects.get("vms/commands/r2") is None
 
 
+def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_ask_again():
+    """The review's third pass, minor. The key of `POST /requests` lived only as long as the row: the holder answered,
+    the row was cleared, and a retry ninety seconds later filed the command again — a second pulse of the door. The
+    key is kept where the console keeps every key, for a day: the retry is the first reply, and no row. And a holder's
+    `fetched` grew by one id per command for the life of the process; it keeps an id while the row stands."""
+    from vms.console import serve
+    box = Box(); ctl, con = _ctl(box)
+    door = con.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
+    srv = serve(con, None, port=0, wall=box.wall)
+
+    def post(key, body, user="anna"):
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/requests", data=json.dumps(body).encode(),
+                                     method="POST", headers={"Idempotency-Key": key, "X-User": user})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.load(r)
+        except urllib.error.HTTPError as e:
+            return e.code, json.load(e)
+    import urllib.error
+    try:
+        pulse = {"unit": door, "action": "output", "port": 1}
+        first = post("open-1", pulse)
+        assert first[0] == 202 and box.vars.list(SPEC.sub.requests_prefix()) == [SPEC.sub.request_key("open-1")]
+        box.vars.delete(SPEC.sub.request_key("open-1"))                     # answered by the holder, cleared by the controller
+        box.wall.advance(90)
+        assert post("open-1", pulse) == first                               # the retry: the first reply…
+        assert box.vars.list(SPEC.sub.requests_prefix()) == []              # …and no second command
+        assert post("open-1", {**pulse, "port": 2})[0] == 422               # the same key for another command: refused
+        assert post("open-2", {"unit": 999, "action": "output"})[0] == 404
+        assert post("open-2", pulse)[0] == 202                              # a refusal did not spend the key
+    finally:
+        srv.shutdown()
+
+    w = _holder(box)
+    w.fetched = ["gone-1", "open-2", "gone-2"]                               # answered; only open-2's row still stands
+    w.requests()
+    assert w.fetched == ["open-2"]
+
+
 def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():
     """The review's second pass (minor): a unit `live: on-demand` is held — its device on the line, nothing
     recorded — under no epoch and so under no lease; its commands went to the device with no fence at all, and the
@@ -448,6 +487,30 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
         assert [x[0] for x in said(3)] == ["anna", "boris", "anna"]
     finally:
         srv.shutdown(); rec_door.shutdown()
+
+
+def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
+    """The review's third pass (Н-B1's remainder, and its minor): `/segment?cam=` hands out the holder's playback
+    door, the footage then goes holder → browser, and nothing said so. The console never sees those bytes; it says
+    what it gave — `archive.read` with `source: device`, who, which camera, which minutes."""
+    from vms.console import serve
+    from vms.controller import VmsController
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    box.objects.put(SPEC.sub.heartbeat_key("w-1"),
+                    Heartbeat("w-1", box.wall(), [{"id": "7", "phase": "running", "playback_url": "http://h:1/playback/7"}],
+                              {"server": "srv-1"}).to_bytes())
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/segment?cam=7&from=100&to=200",
+                                     headers={"X-User": "anna"})
+        with urllib.request.urlopen(req) as r:
+            assert json.loads(r.read())["playback"] == "http://h:1/playback/7?from=100&to=200"
+        lines = [e for b in buckets_under(box.archive, "audit", "console", 600)
+                 for e in map(json.loads, open(os.path.join(box.archive, b.path))) if e["kind"] == "archive.read"]
+        assert [(e["user"], e["source"], e["target"], e["from"], e["to"]) for e in lines] == [("anna", "device", "7", "100", "200")]
+    finally:
+        srv.shutdown()
 
 
 def test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_it():

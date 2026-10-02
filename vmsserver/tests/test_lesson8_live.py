@@ -218,6 +218,23 @@ def test_a_label_no_gateway_carries_is_refused_and_a_stream_nobody_places_does_n
         srv.shutdown(); srv.server_close()
 
 
+def test_labels_are_taken_only_when_one_gateway_carries_all_of_them():
+    """The review's third pass (Н-M8 and its minor): the labels were checked against the UNION of every gateway's,
+    and placement wants one gateway that covers them all — `public` on one gateway and `eu` on another passed for
+    `public,eu`, and the row was one nothing could place."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        _gateway(box, "g-1", labels="public"); _gateway(box, "g-2", labels="eu")
+        code, body, _ = _whep(base, 1, path="/whep/1?labels=public,eu")
+        assert code == 400 and "no one gateway carries all of eu, public" in json.loads(body)["error"]
+        assert "public" in json.loads(body)["detail"] and "eu" in json.loads(body)["detail"]
+        assert live_ctl.unit("1") is None                                                # no row nothing could place
+        _gateway(box, "g-3", labels="eu,public")
+        assert _whep(base, 1, path="/whep/1?labels=public,eu")[0] == 503 and live_ctl.unit("1")["labels"] == ["public", "eu"]
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
     box, ctl, live_ctl, w, srv, base = _box()
     try:
@@ -458,5 +475,35 @@ def test_who_watched_a_camera_live_is_a_line_in_the_journal():
         assert said() == [{"kind": "live.view", "user": "anna", "target": "1", "session": sid, "gateway": "g-1"}]
         assert _whep(base, 1, headers={"X-User": "anna"}, method="DELETE", path=loc)[0] in (200, 204)
         assert [e["kind"] for e in said()] == ["live.view", "live.view.ended"] and said()[1]["user"] == "anna"
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
+def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses():
+    """The review's third pass, minor: `/whep/session/<id>` was a unit route, the gate read `session` as the camera,
+    and a viewer granted camera 1 got 403 hanging up. A session names no camera: the gate asks for a grant, and the
+    console checks the session is one it handed out — to this caller, on the gateway it named then."""
+    from tests.test_console_gate import Tokens
+    from vms.console import make_console
+    box, ctl, live_ctl, w, srv, base = _box()
+    srv.shutdown(); srv.server_close()
+    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
+    m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
+                     live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
+    access = Tokens({"anna": [("view", "1", ())], "boris": [("view", "1", ())]})
+    for con in (m.root, *m.mounts.values()):
+        con.gate.impl = access
+    srv = m.serve("127.0.0.1", 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    as_ = lambda who: {"Authorization": f"Bearer {who}"}
+    try:
+        g = _gateway(box, "g-1")
+        _whep(base, 1, headers=as_("anna")); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+        code, _, loc = _whep(base, 1, headers=as_("anna"))
+        assert code == 201
+        assert _whep(base, 1, headers=as_("boris"), method="DELETE", path=loc)[0] == 403        # not his session
+        assert _whep(base, 1, headers=as_("anna"), method="DELETE", path="/whep/session/nope?gateway=g-1")[0] == 404
+        assert _whep(base, 1, method="DELETE", path=loc)[0] == 401                               # nobody proved who they are
+        assert _whep(base, 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)   # hers: hung up
     finally:
         srv.shutdown(); srv.server_close()

@@ -107,7 +107,7 @@ from .events import ALARM, EventLog
 # Sixty is one a second, and it is a starting number rather than a discovery: the point of having it at
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
-from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, session_cookie, token_of
+from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, caller_addr, session_cookie, token_of
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -233,6 +233,37 @@ def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
     return None
 
 
+# The id in `/<family>/<id>`: the second segment, whatever follows it. The ONE reading of a path's id — the gate's
+# (`SpecConsole.route_id`) and every route's, the platform's and a subsystem's (`vms/console.py`) — so the unit
+# checked and the unit acted on cannot be two segments of one path (the review's third pass, blocker 1).
+def path_id(path: str) -> str:
+    segs = path.split("/")
+    return segs[2] if len(segs) >= 3 else ""
+
+
+# WHERE IT LISTENS, SAID (the review's third pass, minor: the unit binds `0.0.0.0` over plain HTTP, and the module's
+# notes speak of loopback). The deploy unit keeps `0.0.0.0` — on one box the page is opened from the operator's own
+# machine, and the course ships no TLS proxy to stand in front — so the console says so at every start, in the one
+# place an administrator reads: beyond loopback, a token, a session cookie and the emergency password cross the
+# network as they are. `CONSOLE_HOST=127.0.0.1` behind a TLS proxy (named in `TRUSTED_PROXY`) is the quiet setup.
+LOOPBACK = ("127.0.0.1", "::1", "localhost")
+
+
+def say_where(host: str) -> None:
+    if host not in LOOPBACK:
+        log.warning("the console listens on %s, beyond loopback, over plain HTTP: tokens, session cookies and the "
+                    "emergency password cross the network as they are — put a TLS proxy in front and listen on "
+                    "127.0.0.1 (CONSOLE_HOST), the proxy named in TRUSTED_PROXY", host or "every interface")
+
+
+class NoSuchRoute(Exception):
+    """A path with more after its id than its route takes: 404, before the gate is asked."""
+
+
+class ClaimLost(Exception):
+    """The idempotency claim this console held was taken over by another: it must not write under it (409)."""
+
+
 # A retried POST must be the same POST whichever console answers it, so the key lives in the store, not in a
 # process: `<sub>/idem/<key>` is claimed by a create-only CAS before the write and filled with the reply
 # after it. A second instance that sees the claim waits for the reply and serves it; it never repeats the
@@ -269,6 +300,7 @@ class IdempotencyKeys:
         self._seen: dict[str, tuple[int, float]] = {}    # pending claim -> (its revision, when THIS process first saw it)
         self._mine: dict[str, dict] = {}                 # the claims this process holds: whose, and of what body
         self._reserved: dict[str, str] = {}              # claims taken over -> the id the first attempt reserved
+        self._rev: dict[str, int] = {}                   # the claims this process holds -> the revision it wrote last
 
     # Refuses an empty key, one containing `/` or `..`, or longer than 200 chars (`Refused`: must be one
     # path segment) and returns `prefix + key`.
@@ -311,7 +343,7 @@ class IdempotencyKeys:
         """None: ours to answer — do the write, then store(). Else the reply to serve."""
         path, tag = self._path(key), self._tag(sub, body)
         try:
-            self.vars.put(path, {"state": "pending", "at": self.wall(), **tag}, cas=0)   # create-only: the first claimant wins
+            self._rev[path] = self.vars.put(path, {"state": "pending", "at": self.wall(), **tag}, cas=0)   # create-only: the first claimant wins
             self._mine[path] = tag
             self.prune()
             return None
@@ -344,7 +376,7 @@ class IdempotencyKeys:
             if self.clock() - first[1] >= self.PENDING_TTL:
                 kept = {"id": items["id"]} if "id" in items else {}       # the id the first attempt reserved: ours to create under
                 try:
-                    self.vars.put(path, {"state": "pending", "at": self.wall(), **tag, **kept}, cas=idx)
+                    self._rev[path] = self.vars.put(path, {"state": "pending", "at": self.wall(), **tag, **kept}, cas=idx)
                     self._seen.pop(path, None)
                     self._mine[path] = tag
                     if kept:
@@ -365,16 +397,29 @@ class IdempotencyKeys:
     # creates under that id, or finds it created and answers with it — one camera either way (the product's
     # `Reserve`, feedback CS). Without it a lost reply and a write never made were the same claim, and the
     # retry made the second camera.
+    #
+    # By CAS on the revision this process wrote — like `store` and `release` (the review's third pass, major). A
+    # take-over is a new revision; the console it was taken from may only be asleep, and when it wakes its write
+    # must lose. Without the CAS it did not: A stood still for thirty seconds, B took the claim and created unit
+    # 8, A woke and created unit 9 under the same key. Now A's `reserve` is a `ClaimLost` — 409, and no row.
     def reserve(self, key: str, uid) -> None:
         path = self._path(key)
-        self.vars.put(path, {"state": "pending", "at": self.wall(), **self._mine.get(path, {}), "id": str(uid)})
+        try:
+            self._rev[path] = self.vars.put(path, {"state": "pending", "at": self.wall(), **self._mine.get(path, {}), "id": str(uid)},
+                                            cas=self._rev.get(path, 0))
+        except Conflict:
+            self._lose(path)
+            raise ClaimLost(f"the claim on {key} was taken over by another console: this one does not write") from None
 
     def reserved(self, key: str):
         """The id reserved by the attempt this process took the claim over from, if it got that far; else None."""
         return self._reserved.pop(self._path(key), None)
 
-    # Overwrite the row with `{state: done, status, body: json, at}` plus the claim's tag (no CAS: the claimant
-    # owns it).
+    def _lose(self, path: str) -> None:
+        self._mine.pop(path, None); self._reserved.pop(path, None); self._rev.pop(path, None)
+
+    # Overwrite the row with `{state: done, status, body: json, at}` plus the claim's tag — by CAS on the claim this
+    # process holds (create-only when it holds none). Lost: `ClaimLost`, and the claim is the other console's.
     #
     # A 5xx is NOT remembered: "the store is away" is not an answer to the request, and kept under the key it was
     # the answer to every retry for a day. The claim is let go instead, and the retry does the work.
@@ -382,16 +427,25 @@ class IdempotencyKeys:
         if int(resp[0]) >= 500:
             return self.release(key)
         path = self._path(key)
-        tag = self._mine.pop(path, {})
-        self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall(), **tag})
+        tag, rev = self._mine.get(path, {}), self._rev.get(path, 0)
+        try:
+            self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall(), **tag}, cas=rev)
+        except Conflict:
+            raise ClaimLost(f"the claim on {key} was taken over by another console before the reply was kept") from None
+        finally:
+            self._lose(path)
 
     def release(self, key: str) -> None:
-        """Let a claim go: the write it stood for did not happen."""
+        """Let a claim go: the write it stood for did not happen. Only the claim this process holds — one taken
+        over meanwhile is the other console's, and stays."""
         path = self._path(key)
-        self._mine.pop(path, None); self._reserved.pop(path, None)
+        rev = self._rev.get(path)
+        self._lose(path)
+        if rev is None:
+            return
         try:
-            self.vars.delete(path)
-        except Exception:                                                # noqa: BLE001 — it will age out in `PENDING_TTL`
+            self.vars.delete(path, cas=rev)
+        except Exception:                                                # noqa: BLE001 — taken over, or it ages out in `PENDING_TTL`
             pass
 
     # At most once per 60 s of monotonic time: delete every key under the prefix whose `at` is older than
@@ -509,12 +563,30 @@ class SpecConsole:
     # the next refresh, which is the lag the timeline already has from the resources' side.
     EPOCH_CACHE = 3.0
 
+    #
+    # One row that does not parse is skipped, not the whole answer: it was a `ValueError` out of the handler and the
+    # page got no reply at all (the review's third pass, minor) — its unit's events then stand as their resource
+    # marked them, as in `epochs_of`. A store that does not answer leaves the last map in place and says so
+    # (`epochs_stale`, and `epochs: "cached"` in the reply): fenced by what was known a moment ago beats no timeline.
+    epochs_stale = False
+
     def epochs(self) -> dict:
         now = self.clock()
         if now - self._epochs[0] >= self.EPOCH_CACHE:
             vars_ = self.ctl.vars
-            self._epochs = (now, {(p.split("/")[0], p.rsplit("/", 1)[1]): current_epoch(vars_, p)
-                                  for p in vars_.list("") if "/epoch/" in p})
+            try:
+                paths = [p for p in vars_.list("") if "/epoch/" in p]
+                out = {}
+                for p in paths:
+                    try:
+                        out[(p.split("/")[0], p.rsplit("/", 1)[1])] = current_epoch(vars_, p)
+                    except (ValueError, KeyError, TypeError):
+                        log.warning("%s: epoch row %s does not parse: its events are not fenced", self.spec.name, p)
+            except OSError as e:
+                log.warning("%s: the store did not answer the epochs (%s): the timeline is fenced by the last ones read", self.spec.name, e)
+                self.epochs_stale = True
+                return self._epochs[1]
+            self._epochs, self.epochs_stale = (now, out), False
             self.epoch_scans += 1
         return self._epochs[1]
 
@@ -525,8 +597,8 @@ class SpecConsole:
         for sub, unit in pairs:
             try:
                 e = current_epoch(self.ctl.vars, f"{sub}/epoch/{unit}")
-            except (ValueError, KeyError):
-                continue                                 # no epoch row, or a torn one: the events stand as their resource marked them
+            except (ValueError, KeyError, TypeError, OSError):
+                continue                                 # no epoch row, a torn one, or no store: the events stand as their resource marked them
             if e:
                 out[(sub, unit)] = e
         return out
@@ -690,10 +762,17 @@ class SpecConsole:
     # `ctl.create(body)` → 201 with the row plus `worker: None` (placed by the controller's next pass, never
     # by the console); `Refused` → 400 `{detail, error}`. Under `key`, the new id goes into the claim first,
     # and a claim taken over creates under the id it names (`IdempotencyKeys.reserve`).
-    def create(self, body: dict, key: str | None = None) -> tuple[int, dict]:
+    #
+    # WHO MADE IT AND WHO CHANGED IT (the review's third pass, minor): the journal knew who deleted a unit and not
+    # who created or edited it. `unit.created` and `unit.changed` — with the NAMES of the fields, never their values
+    # (a password is one of them) — are written after the write, because a unit that exists is its own evidence
+    # that it was made, and an edit that failed changed nothing. `unit.deleted` is the other way round (`delete`).
+    def create(self, body: dict, key: str | None = None, user: str = "operator") -> tuple[int, dict]:
         try:
             r = self.ctl.create(body, uid=self.seen.reserved(key) if key else None,
                                 reserve=(lambda uid: self.seen.reserve(key, uid)) if key else None)
+            self.journal.say("unit.created", of=self.spec.name, target=str(r.get("id")), user=user,
+                             fields=",".join(sorted(str(k) for k in body)))
             # Masked, like every other way out. This reply is ALSO what `IdempotencyKeys` stores to answer a
             # retry, so an unmasked one puts a second copy of the secret in the config store under a key
             # nobody thinks to look at — which is exactly how this was got wrong the first time.
@@ -702,11 +781,22 @@ class SpecConsole:
             return 400, {"detail": str(e), "error": str(e)}
         except TooLarge as e:
             return 413, {"detail": str(e), "error": str(e)}
+        except ClaimLost as e:                                        # taken over while this console stood still: the
+            return 409, {"detail": str(e), "error": "taken over"}     # other one answers the key, and nothing was written
+        except Conflict as e:
+            if key is None:
+                raise
+            # Reserved, then stood still: the console that took the claim over created under the reserved id first,
+            # and this row's create-only write lost to it. One unit, and it is the other console's answer.
+            return 409, {"detail": f"the request was taken over by another console, which created it ({e})", "error": "taken over"}
 
     # `ctl.update` → 200 with the row; `Refused` → 400; `TooLarge` → 413; `KeyError` → 404.
-    def update(self, uid, body: dict) -> tuple[int, dict]:
+    def update(self, uid, body: dict, user: str = "operator") -> tuple[int, dict]:
         try:
-            return 200, mask_secrets([self.ctl.update(uid, body)])[0]
+            row = self.ctl.update(uid, body)
+            self.journal.say("unit.changed", of=self.spec.name, target=str(uid), user=user,
+                             fields=",".join(sorted(str(k) for k in body)), revision=row.get("revision"))
+            return 200, mask_secrets([row])[0]
         except Refused as e:
             return 400, {"detail": str(e), "error": str(e)}
         # 413, and to the person who typed it. The store's ceiling used to be a number in a document and a
@@ -721,7 +811,7 @@ class SpecConsole:
     # JSON, because the thing it takes is not JSON. The bytes go to the object store first and the row gets
     # the digest — which bumps `revision`, which is what makes the worker pick the new lump up. Nothing
     # here is a new mechanism; the digest is what lets the old one see a change.
-    def put_blob(self, uid, field: str, data: bytes) -> tuple[int, dict]:
+    def put_blob(self, uid, field: str, data: bytes, user: str = "operator") -> tuple[int, dict]:
         f = self.spec.fields.get(field)
         if f is None or f.type != "blob":
             return 404, {"detail": f"{field} is not a blob field", "error": "no such blob field"}
@@ -737,18 +827,28 @@ class SpecConsole:
             # is the answer, because a blob is exactly the class of data an object store exists for.
             return 413, {"detail": f"{e} — a blob is what an object store is for: OBJECTS=s3+https://… "
                                    f"holds this, variables:// does not", "error": str(e)}
+        self.journal.say("unit.changed", of=self.spec.name, target=str(uid), user=user, fields=field,
+                         revision=row.get("revision"), digest=d)
         return 200, {**mask_secrets([row])[0], field: d, "bytes": len(data)}
 
     # 404 if the unit is absent; else `ctl.delete(uid)` and 200 `{deleted: uid}`.
     #
     # …and WHO. A deleted unit leaves a tombstone and a revision; neither is a name (feedback BN).
+    #
+    # Said BEFORE the delete (the review's second and third passes): after it, a console that died between the two
+    # left a unit gone and no line — and a deleted unit, unlike a created one, is not there to be its own evidence.
+    # Before, the worst is a line for a delete that then failed, and that is followed by `unit.delete.failed`.
     def delete(self, uid, user: str = "operator") -> tuple[int, dict]:
         if self.ctl.unit(uid) is None:
             return 404, {"detail": "no such unit", "error": "no such unit"}
-        self.ctl.delete(uid)
         # `of` and `target`, not `subsystem` and `unit`: those two are the LINE's own — who wrote it — and a field
         # of the same name would answer for it in every reader.
         self.journal.say("unit.deleted", of=self.spec.name, target=str(uid), user=user)
+        try:
+            self.ctl.delete(uid)
+        except Exception as e:
+            self.journal.say("unit.delete.failed", of=self.spec.name, target=str(uid), user=user, error=str(e))
+            raise
         return 200, {"deleted": uid}
 
     # An operator's observation. 503 if there is no resource on this server; 400 unless the body names `cam`
@@ -776,7 +876,7 @@ class SpecConsole:
     # - `log_message` — silenced.
     # - `_send(status, body, raw=False)` — JSON (or raw text) with `Content-Type` and `Content-Length`.
     # - `_body()` — the JSON request body, `{}` if empty.
-    # - `_uid()` — the last path segment (query stripped) through `spec.parse_id`.
+    # - `_uid()` — the id segment (`path_id`: the one after the family, the one the gate checked) through `spec.parse_id`.
     # - `_extra(method, path, q) -> bool` — call the subsystem's `extra`; `None` means not ours (return
     #   False). `()` means the extra wrote the reply itself (`send_file`). `(status, dict|list)` is sent as
     #   JSON; `(status, bytes)` raw; `(status, bytes, headers)` raw with headers.
@@ -818,8 +918,33 @@ class SpecConsole:
         return Mount(self).handler()
 
     # -- one request, already stripped of any mount prefix: the routes above -----------------------------
+    # THE ID A PATH NAMES — one reading, for the gate and for the route (the review's third pass, blocker 1). The
+    # gate read `segs[2]` and the routes the LAST segment: `DELETE /<rows>/1/2` was checked on unit 1 and
+    # deleted unit 2, `GET /export/1/2` was checked on 1 and served 2. Now a family that takes an id takes
+    # exactly one — `/<family>/<id>` — and anything after it is 404 before the gate is asked, except the one
+    # route with a third segment, `PUT /<rows>/<id>/<blob>`. Every route reads its id through `path_id`, the same
+    # function the gate reads it through.
+    #
+    # The families: the rows, `UNIT_ROUTES` (the id IS a unit: `/where`, and a subsystem's — `/timeline`,
+    # `/export`, `/whep`) and `ID_ROUTES` (an id that is not a unit: a keep, a volume). `NO_UNIT`: paths inside a
+    # unit family that name something else — a live session is not a unit.
+    ID_ROUTES: tuple = ()
+    NO_UNIT: tuple = ()
+
+    def route_id(self, method: str, path: str) -> tuple[str | None, str | None]:
+        """`(family, id)` when the path is `/<family>/<id>` of a family that takes one, else `(None, None)`.
+        `NoSuchRoute` for a path with more after the id."""
+        if self.NO_UNIT and path.startswith(self.NO_UNIT):
+            return None, None
+        segs = path.split("/")
+        if len(segs) < 3 or segs[1] not in (self.spec.rows, *self.UNIT_ROUTES, *self.ID_ROUTES):
+            return None, None
+        if len(segs) > 3 and not (method == "PUT" and segs[1] == self.spec.rows and len(segs) == 4 and segs[3]):
+            raise NoSuchRoute(f"{path}: one id after /{segs[1]}/, and nothing after it")
+        return segs[1], path_id(path) or None
+
     def _uid(self, path):
-        return self.spec.parse_id(path.rsplit("/", 1)[1])
+        return self.spec.parse_id(path_id(path))
 
     # What a gated caller may LOOK at: `(unit, labels) -> bool`, or None when this console is open. A list is
     # not a route that names a unit, so the gate lets in anybody with any grant — and the list then shows them
@@ -891,9 +1016,9 @@ class SpecConsole:
     def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list]:
         cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) else \
               "edit" if path.startswith(self.EDIT_ROUTES) else "admin"
-        segs = path.split("/")
-        in_path = len(segs) >= 3 and segs[2] and segs[1] in (self.spec.rows, *self.UNIT_ROUTES)
-        uid = segs[2] if in_path else named
+        family, pid = self.route_id(method, path)
+        in_path = bool(pid) and family in (self.spec.rows, *self.UNIT_ROUTES)
+        uid = pid if in_path else named
         if uid is None:
             return cap, None, []
         try:
@@ -970,6 +1095,10 @@ class SpecConsole:
             self.seen.store(key, resp)
         except OSError as e:
             log.warning("%s: the reply to %s was sent but not remembered under its key: %s", self.spec.name, key, e)
+        except ClaimLost as e:
+            # The write happened, and then the claim was taken over: the console that took it finds the unit under
+            # the id reserved in the claim and answers with it — the same unit. This reply is still the truth.
+            log.warning("%s: %s", self.spec.name, e)
 
     # A write that RAISED under a claimed key: the claim is let go — nothing was written that the key could
     # answer for — and the reply says whose fault it was. The store: 503, which a client retries. Anything
@@ -1013,7 +1142,7 @@ class SpecConsole:
             g = body["glass"]
             try:
                 sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")),
-                                                    addr=str(getattr(h, "client_address", ("?",))[0]))
+                                                    addr=caller_addr(h.headers, str(getattr(h, "client_address", ("?",))[0])))
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
             h._extra_headers = (("Set-Cookie", session_cookie(sid, float(payload.get("exp", 0)) - self.wall(), secure).replace(COOKIE, GLASS_COOKIE, 1)),)
@@ -1039,7 +1168,11 @@ class SpecConsole:
         rows_path = "/" + spec.rows
         if path == "/session":
             return self.session(h, method)
-        if path not in OPEN_ROUTES:                      # the gate: open while this cluster has no key set, shut when it cannot check
+        try:
+            self.route_id(method, path)                  # `/<rows>/1/2`: no such route — said before the gate reads an id
+        except NoSuchRoute as e:
+            return h._send(404, {"detail": str(e), "error": "no such path"})
+        if path not in OPEN_ROUTES:                     # the gate: open while this cluster has no key set, shut when it cannot check
             try:
                 self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path, q)))
             except Denied as e:
@@ -1103,6 +1236,8 @@ class SpecConsole:
                                 known[unit] = sees(unit, list((row or {}).get("labels") or []))
                             return known[unit]
                         rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
+                    if not narrow and con.epochs_stale:
+                        rep = {**rep, "epochs": "cached"}         # fenced by the epochs read before the store went quiet
                     return h._send(200, con.timeline(rep, t0, t1))
                 except ValueError as e:
                     return h._send(400, {"error": str(e)})
@@ -1123,30 +1258,36 @@ class SpecConsole:
                 if path == "/marks":
                     resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
                 else:
-                    resp = con.create(h._body(), key)
+                    resp = con.create(h._body(), key, h.headers.get("X-User", "operator"))
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp); return h._send(*resp)
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
                 try:
-                    return h._send(200, ctl.set_policy(h._body()))
+                    body = h._body()
+                    out = ctl.set_policy(body)
                 except (Refused, Forbidden) as e:
                     return h._send(400 if isinstance(e, Refused) else 403, {"detail": str(e), "error": str(e)})
+                # A knob that moves every unit of the subsystem is a line with a name and the new values in it (the
+                # review's third pass, minor): the policy's values are choices, not secrets.
+                con.journal.say("policy.changed", of=spec.name, user=h.headers.get("X-User", "operator"),
+                                policy=json.dumps(body, sort_keys=True))
+                return h._send(200, out)
             if not path.startswith(rows_path + "/"):
                 if self._extra(h, "PUT", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
             rest = path[len(rows_path) + 1:]
             if "/" in rest:                                              # /<rows>/<id>/<field>: the bytes of a blob
-                uid, _, field = rest.partition("/")
+                field = rest.partition("/")[2]
                 n = int(h.headers.get("Content-Length", 0))
-                return h._send(*con.put_blob(spec.parse_id(uid), field, h.rfile.read(n)))
+                return h._send(*con.put_blob(self._uid(path), field, h.rfile.read(n), h.headers.get("X-User", "operator")))
             key = self._idem(h, required=False)                          # optional here: a PUT is its own retry
             if key is None and h.headers.get("Idempotency-Key"):
                 return                                                   # a prior reply, a refused key or 503: already sent
             try:
-                resp = con.update(self._uid(path), h._body())
+                resp = con.update(self._uid(path), h._body(), h.headers.get("X-User", "operator"))
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp)
@@ -1156,11 +1297,15 @@ class SpecConsole:
                 if self._extra(h, "DELETE", path, q):
                     return
                 return h._send(404, {"detail": "no such route", "error": "no such path"})
-            return h._send(*con.delete(self._uid(path), h.headers.get("X-User", "operator")))
+            try:
+                return h._send(*con.delete(self._uid(path), h.headers.get("X-User", "operator")))
+            except Exception as e:                                       # noqa: BLE001 — said in the journal already
+                return h._send(*self._failed(None, e))
         h._send(405, {"detail": "method", "error": "method"})
 
     # Starts the server in a daemon thread and returns it (tests use `port=0` and read `server_address`).
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
+        say_where(host)
         srv = ThreadingHTTPServer((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         return srv
@@ -1208,16 +1353,24 @@ class Mount:
     # `/schema` is about the moment all of them are done. Raising early is the mistake the guard exists
     # for — it would lock out whatever was not upgraded, which is exactly what a rolling upgrade is
     # trying to avoid.
-    def schema_route(self, method: str, q: dict) -> tuple:
+    def schema_route(self, method: str, q: dict, user: str = "operator") -> tuple:
         ctl = self.root.ctl
         now = ctl.wall()
         if method == "PUT":
+            try:
+                was = schema_version(ctl.vars)
+            except Exception:                            # noqa: BLE001 — what it was is for the journal; set_schema decides
+                was = None
             try:
                 ctl.set_schema(int(q.get("version", 0)))
             except SchemaTooNew as e:
                 return 409, {"error": str(e), "detail": str(e)}
             except ValueError:
                 return 400, {"error": "a version is a number", "detail": "a version is a number"}
+            except Forbidden as e:                       # the console's token, not the caller: the store said no
+                return 403, {"error": str(e), "detail": f"{e} — this console's token does not reach platform/schema"}
+            # Irreversible — every older build is locked out from here — so it is a line with a name in it.
+            self.root.journal.say("schema.raised", version=int(q.get("version", 0)), was=was, user=user)
         elif method != "GET":
             return 404, {}
         running = builds(ctl.objects, now)
@@ -1235,7 +1388,7 @@ class Mount:
     # after the reboot, DELETE — and `ensure_home` refills it one unit a pass, which is why the script
     # should wait for the work to come back before draining the NEXT machine. Otherwise ten servers'
     # worth of units drift onto whichever two were upgraded last.
-    def drain_route(self, method: str, q: dict) -> tuple:
+    def drain_route(self, method: str, q: dict, user: str = "operator") -> tuple:
         consoles = [self.root, *self.mounts.values()]
         ctl = self.root.ctl
         if method == "POST":
@@ -1246,8 +1399,11 @@ class Mount:
                 ctl.drain(server)
             except DrainRefused as e:
                 return 409, {"error": str(e), "detail": str(e)}
+            self.root.journal.say("drain.started", server=server, user=user)   # every unit leaves a server: who said so
         elif method == "DELETE":
+            was = ctl.draining()
             ctl.undrain()
+            self.root.journal.say("drain.ended", server=was, user=user)
         elif method != "GET":
             return 404, {}
         parts = [c.drain_state() for c in consoles]
@@ -1259,6 +1415,23 @@ class Mount:
                      "would_strand": {p["subsystem"]: p["would_strand"] for p in parts if p.get("would_strand")},
                      "subsystems": {p["subsystem"]: p for p in parts}}
 
+    # THE MOUNT'S OWN ROUTES ASK THE GATE TOO (the review's third pass, blocker 2). `/drain`, `/schema` and `/mounts`
+    # were answered here, before `dispatch` and its gate: `POST /drain?server=srv-1` with no token took every
+    # recording off a server, and the irreversible `PUT /schema` was as open. There are no exceptions for rights:
+    # the root console's gate, `admin` to change (a drain moves every unit of a server; a schema locks out every
+    # older build) and `view` to read — `/mounts` too. It says what this process fronts and each subsystem's
+    # `/spec`, which is gated; it is the same knowledge, and the page reads it after its login like `/spec`. An
+    # upgrade script polls `GET /drain` with a token, as anything else that talks to a gated console does.
+    # Returns the name to act under, or None when it has already answered.
+    MOUNT_ROUTES = ("/mounts", "/drain", "/schema")
+
+    def admit(self, h, method: str) -> str | None:
+        try:
+            return self.root.gate.admit(h.headers, "view" if method == "GET" else "admin")
+        except Denied as e:
+            h._send(e.status, {"detail": e.why, "error": "denied"})
+            return None
+
     def handler(self):
         mnt = self
 
@@ -1267,12 +1440,15 @@ class Mount:
 
             def _route(self, method):
                 u = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(u.query).items()}
-                if u.path == "/mounts":
-                    return self._send(200, mnt.describe())
-                if u.path == "/drain":
-                    return self._send(*mnt.drain_route(method, q))
-                if u.path == "/schema":
-                    return self._send(*mnt.schema_route(method, q))
+                if u.path in mnt.MOUNT_ROUTES:
+                    user = mnt.admit(self, method)
+                    if user is None:
+                        return                                           # refused, and said so
+                    if u.path == "/mounts":
+                        return self._send(200, mnt.describe())
+                    if u.path == "/drain":
+                        return self._send(*mnt.drain_route(method, q, user))
+                    return self._send(*mnt.schema_route(method, q, user))
                 con, path = mnt.resolve(u.path)
                 con.dispatch(self, method, path, q)
 
@@ -1284,6 +1460,7 @@ class Mount:
         return H
 
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
+        say_where(host)
         srv = ThreadingHTTPServer((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         return srv

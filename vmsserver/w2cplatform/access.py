@@ -35,9 +35,17 @@ from __future__ import annotations
 import importlib
 import logging
 import os
+import threading
 from typing import Protocol
 
 TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set in a cluster's store (М12)
+# What says THIS CLUSTER IS IN A DOMAIN when the key set is not there to say it (the review's third pass, Н-M2): rows
+# only the domain's agent writes, and only into a member — the root it pinned (М12 Lesson 15, written once, never
+# replaced), the grants, the revocation list, the emergency account's hash. Any of them and no key set is a cluster
+# that lost its keys — deleted, or the row rolled back from a backup — not one that never had any: shut, and it stays
+# shut across a restart of the console, which a flag in one process's memory did not. `domain/primaries` is not one
+# of them: the recorder writes it in a cluster of its own.
+DOMAIN_MARKS = ("domain/root", "domain/grants", "domain/revoked", "domain/break_glass")
 RANK = {"view": 0, "edit": 1, "admin": 2}
 OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
 COOKIE = "w2c_token"
@@ -93,6 +101,19 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
             + ("; Secure" if secure else ""))
 
 
+# Who is on the other end, for a limit counted by address. The peer — unless the peer is a proxy this console was
+# told to trust (`TRUSTED_PROXY`: its addresses, comma-separated), and then the address that proxy says it saw: the
+# rightmost entry of `X-Forwarded-For` that is not itself one of ours. Taken from anybody, the header is whatever the
+# caller writes in it — one guesser would be a thousand addresses; not taken at all, behind a proxy every caller is
+# the proxy (the review's third pass, major).
+def caller_addr(headers, peer: str) -> str:
+    trusted = {a.strip() for a in os.environ.get("TRUSTED_PROXY", "").split(",") if a.strip()}
+    if peer not in trusted:
+        return peer
+    hops = [a.strip() for a in (headers.get("X-Forwarded-For", "") or "").split(",") if a.strip()]
+    return next((a for a in reversed(hops) if a not in trusted), peer)
+
+
 def cookie(headers, name: str) -> str | None:
     for part in (headers.get("Cookie", "") or "").split(";"):
         k, _, v = part.strip().partition("=")
@@ -114,8 +135,24 @@ class Gate:
     # …and its attempts, by the caller's address and for the process: the one account with rights to everything
     # is the one password worth guessing, and a wrong guess is also a fsync'd alarm line. Past the limit the
     # door says 429 and writes one alarm, not one per guess (the review's second pass, major).
+    #
+    # The third pass, major: the check and the count were two steps, and 500 parallel attempts all passed the
+    # check before the first was counted. An attempt is now RESERVED under a lock before its password is looked
+    # at, and given back only if the password was right — at most `GLASS_TRIES` checks are ever in flight from one
+    # address. The address is the peer's, or what a proxy we trust says the peer was (`caller_addr`): behind a
+    # proxy every caller was the proxy, and five wrong guesses from anybody shut the door to everybody.
+    #
+    # The limit is still asked BEFORE the password, the right one included, and that is the point of it: a door
+    # that checks the password while the limit is full and lets the right one in limits nothing — the guesser keeps
+    # guessing, and the right guess opens it. So while the window is full — this address's, or the process's
+    # (`GLASS_TRIES_ALL`: guesses spread over many addresses) — it is 429 for everybody until the window ends. The
+    # price is that twenty wrong guesses from several addresses close the emergency door for fifteen minutes; for
+    # the one account that can do everything, guessed is worse than late. The alarm says it happened, and a person
+    # at the box who must get in sooner restarts the console: the counts live in its memory.
     GLASS_TRIES, GLASS_TRIES_ALL, GLASS_WINDOW = 5, 20, 900.0
     _glass_tries: dict = {}
+    _glass_limited: dict = {}                            # key -> when its `limited` alarm was written: once a window
+    _glass_lock = threading.Lock()
 
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
@@ -128,14 +165,18 @@ class Gate:
             return self.impl
         try:
             items, _ = self.vars.get(TRUST_KEYS)
+            marked = None if items else next((p for p in DOMAIN_MARKS if self.vars.get(p)[0]), None)
         except OSError as e:
             raise Denied(503, f"this console cannot read the cluster's trust ({e}): it admits nobody until it can") from None
-        if not items and self._seen_keys:
+        if not items and (self._seen_keys or marked):
             # Deleted, or rolled back from a backup made before the cluster joined: the keys this console has
             # already checked tokens against are gone. Open would be "an administrator under any name" for
-            # whoever did that (the review's second pass, major). Shut, until the agent brings them back.
-            raise Denied(503, f"the key set has gone from this cluster's store ({TRUST_KEYS}): this console admits "
-                              f"nobody until the domain's agent writes it again")
+            # whoever did that (the review's second pass, major). Shut, until the agent brings them back — and
+            # not only in the process that saw them: the store still says it is a member (`DOMAIN_MARKS`), and a
+            # console started after the loss reads that (the review's third pass).
+            raise Denied(503, f"the key set has gone from this cluster's store ({TRUST_KEYS}"
+                              + (f"; {marked} says this cluster is in a domain" if marked else "") +
+                              "): this console admits nobody until the domain's agent writes it again")
         if items:
             self._seen_keys = True
         if not items:
@@ -181,27 +222,47 @@ class Gate:
             raise Denied(501, "this cluster's access has no emergency account")
         now = self.wall()
         limits = {addr: self.GLASS_TRIES, "*": self.GLASS_TRIES_ALL}
-        for k, limit in limits.items():
-            tries = self._glass_tries[k] = [t for t in self._glass_tries.get(k, []) if now - t < self.GLASS_WINDOW]
-            if len(tries) >= limit:
-                raise Denied(429, f"too many emergency entries refused ({len(tries)} in {self.GLASS_WINDOW:.0f} s): "
-                                  f"the door is closed to {'this address' if k == addr else 'everybody'} for a while")
+        with self._glass_lock:                           # check and reserve in one step: no attempt slips between them
+            for k, limit in limits.items():
+                tries = self._glass_tries[k] = [t for t in self._glass_tries.get(k, []) if now - t < self.GLASS_WINDOW]
+                if len(tries) >= limit:
+                    raise Denied(429, f"too many emergency entries refused ({len(tries)} in {self.GLASS_WINDOW:.0f} s): "
+                                      f"the door is closed to {'this address' if k == addr else 'everybody'} for a while — "
+                                      f"the right password too, until the window ends")
+            for k in limits:
+                self._glass_tries[k].append(now)
         try:
             payload = access.glass(who, why, password)
         except Denied:
-            for k, limit in limits.items():
-                self._glass_tries[k].append(now)
-                if len(self._glass_tries[k]) == limit and self.journal is not None:
+            with self._glass_lock:                       # the reservation stays: it was a wrong guess
+                full = [(k, limit) for k, limit in limits.items() if len(self._glass_tries[k]) >= limit
+                        and now - self._glass_limited.get(k, -1e18) >= self.GLASS_WINDOW]
+                for k, _ in full:
+                    self._glass_limited[k] = now
+            for k, limit in full:
+                if self.journal is not None:
                     self.journal().say("access.break_glass.limited", cls=ALARM, user=f"break-glass({who})",
-                                       addr=addr, tries=limit, window=self.GLASS_WINDOW)
+                                       addr=addr, tries=limit, window=self.GLASS_WINDOW, **({"all": True} if k == "*" else {}))
             if self.journal is not None:
                 self.journal().say("access.break_glass.refused", cls=ALARM, user=f"break-glass({who})", why=why, addr=addr)
             raise
+        except BaseException:
+            self._give_back(limits, now)                 # not an answer about the password: not a guess either
+            raise
+        self._give_back(limits, now)                     # the right password: it was no guess
         sid = secrets.token_urlsafe(24)
         self._glass[sid] = payload
         if self.journal is not None:
             self.journal().say("access.break_glass.opened", cls=ALARM, user=f"break-glass({who})", why=why, until=payload.get("exp"))
         return sid, payload
+
+    def _give_back(self, limits: dict, at: float) -> None:
+        with self._glass_lock:
+            for k in limits:
+                try:
+                    self._glass_tries.get(k, []).remove(at)
+                except ValueError:
+                    pass                                 # aged out meanwhile
 
     def close_glass(self, headers) -> None:
         self._glass.pop(cookie(headers, GLASS_COOKIE) or "", None)

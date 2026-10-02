@@ -953,7 +953,14 @@ class VmsWorker(Worker):
         mine = {str(r["id"]): r for r in self.rows}
         done: list[dict] = self._performed()             # what calls already in flight have come to
         self.sweep_marks()
-        for key in sorted(self.vars.list(self.SUB.requests_prefix())):
+        keys = sorted(self.vars.list(self.SUB.requests_prefix()))
+        # An answered request is remembered for as long as its ROW stands — the heartbeat carries it until the
+        # controller clears the row — and not after: `fetched` grew by one id per command for the life of the
+        # process (the review's third pass, minor). A retry after the row is gone is the console's to recognise,
+        # by its key (`vms/console.py`).
+        present = {k.rsplit("/", 1)[1] for k in keys}
+        self.fetched = [r for r in self.fetched if r in present]
+        for key in keys:
             if len(done) >= budget:
                 break
             it, _ = self.vars.get(key)
