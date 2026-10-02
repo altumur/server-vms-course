@@ -774,7 +774,7 @@ class Worker:
     # Still me? Read the slot; if `holder` is another instance, return False — the instance is fenced as a
     # whole (the VMS worker stops recording on this). Otherwise extend `until` by CAS; a `Conflict` is also
     # False. A worker with no slot (fixed name without claim) returns True — but not one that gave its name up to
-# another instance and has not claimed another yet (`keep_slot`): that one is nobody, and False.
+    # another instance and has not claimed another yet (`keep_slot`): that one is nobody, and False.
     def renew_slot(self) -> bool:
         """Still me? Read the slot; if another instance holds it now, the
         instance is fenced as a whole. Extends `until` by CAS otherwise."""
