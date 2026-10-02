@@ -1329,6 +1329,20 @@ class SpecConsole:
                   *[f'{p}_resource_full{{server="{s}"}} {round(float((hb.get("space") or {}).get("full", 0)), 3)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_short_bytes gauge",
                   *[f'{p}_resource_short_bytes{{server="{s}"}} {int(hb.get("short", 0) or 0)}' for s, hb in sorted(res.items())]]
+        # The requests each resource holds for the readers of its events (`/events/wait`, `longpoll.Watch.counts`): held
+        # now, and since it started — held, refused for want of room, replaced by their own client's next. `full`
+        # climbing is an evaluator back on its two-second pass, and nothing else would say so (the review's seventh pass).
+        def count(v) -> int:
+            try:
+                return int(v or 0)
+            except (TypeError, ValueError):
+                return 0                                       # a number that does not parse is not a scrape that fails
+        waits = {s: hb["waits"] for s, hb in sorted(res.items()) if isinstance(hb.get("waits"), dict)}
+        lines += [f"# TYPE {p}_resource_waits gauge",
+                  *[f'{p}_resource_waits{{server="{s}"}} {count(w.get("waiting"))}' for s, w in waits.items()]]
+        for key in ("held", "full", "replaced"):
+            lines += [f"# TYPE {p}_resource_waits_{key}_total counter",
+                      *[f'{p}_resource_waits_{key}_total{{server="{s}"}} {count(w.get(key))}' for s, w in waits.items()]]
         # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
         # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
         # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.

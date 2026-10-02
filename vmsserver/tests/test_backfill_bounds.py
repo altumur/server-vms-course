@@ -279,3 +279,23 @@ def test_a_piece_refused_once_and_then_taken_lands_and_is_forgotten():
     r._refused("1", "device", many)
     assert len(r.refusals) == r.REFUSALS_KEPT and (1, *many[-1]) in r.refusals.values()
     assert (1, *many[0]) not in r.refusals.values()
+
+
+def test_a_recorder_reads_another_recorders_request_once_and_an_answered_one_never_again():
+    """The review's seventh pass, M5 — the sibling of the holder's beat. The recorder's own `requests` read every row of
+    `rec/requests/` on every pass of its backfill thread, another recorder's and its own answered ones alike. The unit a
+    row names is remembered by its key now, as the holder does: another recorder's row is read once, when it appears,
+    and an answered one not at all."""
+    act = FakeActuator()
+    box, r, con_rec = _recorder(act)
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    for i in range(50):                                                     # other recorders' recordings
+        con_rec.vars.put(REC_SPEC.sub.request_key(f"9-{i}"), {"unit": "9", "cam": "9", "from": str(NOW - 600), "to": str(NOW - 300)})
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-x"), {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 29700),
+                                                       "at": str(NOW), "by": "anna"})
+    reads: list[str] = []
+    get = r.vars.get
+    r.vars.get = lambda key: (reads.append(key) if "/requests/" in key else None, get(key))[1]
+    assert r.requests(now=NOW) and r.fetched == ["1-x"] and len(reads) == 51
+    del reads[:]
+    assert r.requests(now=NOW) == [] and reads == []                        # nothing read again

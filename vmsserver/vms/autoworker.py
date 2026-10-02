@@ -44,6 +44,25 @@ log = logging.getLogger("autoworker")
 AUTO = AUTO_SPEC.sub
 
 
+# What the catalog reads, read once per ordinary pass (the review's seventh pass, the sweep beside M8). `Catalog.check`
+# runs per scenario, and a trigger that names no camera lists and reads EVERY camera — so ten such scenarios were ten
+# listings of the cameras and ten reads of each, every pass. Within one pass the answer cannot be more than a pass
+# old anyway; it is asked of the store once, and the store's word is not kept past the pass.
+class _OnePass:
+    def __init__(self, vars_):
+        self.vars, self._got, self._listed = vars_, {}, {}
+
+    def get(self, key):
+        if key not in self._got:
+            self._got[key] = self.vars.get(key)
+        return self._got[key]
+
+    def list(self, prefix, *a, **kw):
+        if prefix not in self._listed:
+            self._listed[prefix] = self.vars.list(prefix, *a, **kw)
+        return self._listed[prefix]
+
+
 class AutoWorker(Worker):
     """`name` is a slot (`a-1`); `index` is the merged event log — the console's
     own reader, because a scenario watches what the console shows."""
@@ -114,7 +133,11 @@ class AutoWorker(Worker):
         # cursor trails `now`, and the longest road from an event to the request it filed.
         self._asked: dict[tuple[str, str, str], dict] = {}
         self._needed: dict[tuple[str, str, str], float] = {}
-        self._watched: set[tuple[str, str]] = set()   # (subsystem, kind) of every trigger held: what `wants` says
+        self._watched: set[tuple[str, str, str]] = set()   # (subsystem, kind, unit) of every trigger held: what `wants` says
+        self._keys_of: dict[str, set] = {}            # scenario -> its triggers' keys (last full pass): what an answer touches
+        self._fit: dict[str, tuple] = {}              # scenario -> (misfit, unchecked), as of the last full pass
+        self._refused = False                         # a resource did not answer this pass: early passes back off (`Wake.pace`)
+        self._pass_reads = None
         self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
         self.latency = {"buckets": [0] * len(self.LATENCY_BUCKETS), "sum": 0.0, "count": 0}
         self.late = 0                                 # firings not filed: their request was expired before it left
@@ -132,11 +155,19 @@ class AutoWorker(Worker):
     # here, and the order is the argument: take the epoch (one evaluator per scenario, fenced like any
     # writer), read the window, decide, file, then move the cursor — never before the filing, or a crash
     # between the two would lose the firing instead of repeating it.
-    def reconcile_once(self, now: float | None = None) -> list[str]:
+    #
+    # AN EARLY PASS IS FOR WHAT WAS TOUCHED (the review's seventh pass, M8). `only` is what the resources' answers said
+    # changed — `(subsystem, kind, unit)` (`LongPoll.take_touched`) — and the pass evaluates the scenarios a trigger of
+    # which it touches, and reads no other scenario's row: an `io.input` on camera 777 twenty times a second was twenty
+    # full passes over every scenario, a query each, for a scenario on camera 1 that nothing had happened to. `None` is
+    # the ordinary pass, over all of them; the loop makes one at least every `poll` whatever the answers (`run`).
+    def reconcile_once(self, now: float | None = None, only: set | None = None) -> list[str]:
         now = self.wall() if now is None else now
         started = self.clock()
         acted: list[str] = []
         units = sorted(self.assignment().units)
+        if only is not None:
+            units = [u for u in units if any(self._touches(k, t) for k in self._keys_of.get(u, ()) for t in only)]
         rows = {}
         for u in units:
             try:
@@ -145,8 +176,10 @@ class AutoWorker(Worker):
             except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this scenario's trouble (`row_garbled`)
                 rows[u] = None
                 self.status_by_unit[u] = {"id": u, "phase": "failed", "why": self.row_garbled(u, e)}
-        self._plan(rows, now)
+        self._plan(rows, now, partial=only is not None)
         self.pass_stats.update(queries=0, lag_seconds=0.0, latency_seconds=0.0)
+        self._refused = False
+        self._pass_reads = None                      # the catalog's reads of this pass (`_OnePass`), made on first use
         for unit in units:
             row = rows[unit]
             if row is None:
@@ -181,8 +214,22 @@ class AutoWorker(Worker):
             # A scenario that no longer fits still runs: its trigger may be fine and its other actions too,
             # and the one that cannot be done is refused by the holder, on the unit, where it is seen. What
             # changes is that the scenario SAYS so, on every pass — never a scenario silently half-working.
-            misfit, unsure = self.catalog.check(row)
+            # …checked on the ordinary pass, and an early one says what that found: the check reads the catalog — every
+            # camera, for a trigger that names none — and four times a second it would be the costliest part of a pass
+            # that exists to be short.
+            if only is None or unit not in self._fit:
+                real = getattr(self.catalog, "vars", None)
+                if real is not None:
+                    self._pass_reads = self._pass_reads or _OnePass(real)
+                    self.catalog.vars = self._pass_reads
+                try:
+                    self._fit[unit] = self.catalog.check(row)
+                finally:
+                    if real is not None:
+                        self.catalog.vars = real
+            misfit, unsure = self._fit[unit]
             holes = self.holes.get(unit) or {}
+            self._refused = self._refused or any(str(why).startswith("did not answer") for why in holes.values())
             self.status_by_unit[unit] = {"id": unit, "phase": "running", "fired": n,
                                          **({"holding": holes} if holes else {}),
                                          **({"cut": self.cut[unit]} if self.cut.get(unit) else {}),
@@ -210,25 +257,40 @@ class AutoWorker(Worker):
         since = Frontier(self.archive_root, str(row["id"]), AUTO.name).read()
         return now - self.COLD_START if since is None else max(since, now - self.COLD_START)
 
-    def _plan(self, rows: dict, now: float) -> None:
+    # An early pass (`partial`) plans for the scenarios it evaluates and leaves what is watched as the last ordinary
+    # pass found it: the scenarios it did not read are still held, and still watched.
+    def _plan(self, rows: dict, now: float, partial: bool = False) -> None:
         self._asked, self._needed = {}, {}
-        watched: set[tuple[str, str]] = set()
-        for row in rows.values():
+        watched: set[tuple[str, str, str]] = set()
+        keys_of: dict[str, set] = {}
+        for unit, row in rows.items():
             if row is None or not row["enabled"]:
                 continue
             t0 = self._since(row, now) - float(row.get("within") or 0)
-            for key in self._keys(row):
+            keys_of[unit] = set(self._keys(row))
+            for key in keys_of[unit]:
                 self._needed[key] = min(self._needed.get(key, t0), t0)
-                watched.add(key[:2])
-        self._watched = watched
+                watched.add(key)
+        if not partial:
+            self._watched, self._keys_of = watched, keys_of
+            self._fit = {u: f for u, f in self._fit.items() if u in keys_of}
+
+    # Whether a line of `seen = (subsystem, kind, unit)` is one a trigger keyed `key` may fire on: the same kind, and
+    # the unit it names — or any unit, for a trigger that names none.
+    @staticmethod
+    def _touches(key: tuple, seen: tuple) -> bool:
+        return key[0] == seen[0] and key[1] == seen[1] and (not key[2] or key[2] == seen[2])
 
     # What this evaluator asks the resources to tell it about (`Worker.wants`, `w2cplatform/longpoll.py`): the
-    # `(subsystem, kind)` of every trigger of every scenario it holds, as of its last pass. A line of such a kind,
-    # appended on a resource, answers the request this evaluator holds there, and the next pass begins now; a line
-    # of any other kind answers nobody. The unit is not in the pair: an answer for the neighbouring unit's event is
-    # an early pass that files nothing, and the list stays a handful. When the scenarios change, the next request
-    # carries the new list.
-    def wants(self) -> list[tuple[str, str]]:
+    # `(subsystem, kind, unit)` of every trigger of every scenario it holds, as of its last pass. A line of such a
+    # kind, appended on a resource for that unit, answers the request this evaluator holds there, and the next pass
+    # begins now; a line of another kind or another unit answers nobody. A trigger that names no unit is `""`: any
+    # unit's line of its kind answers it. When the scenarios change, the next request carries the new list.
+    #
+    # THE UNIT IS IN THE WANT (the review's seventh pass, M8). It was not — "the list stays a handful" — and a site
+    # with one busy camera kept every evaluator in four passes a second, each a query per kind to every resource: eight
+    # times the queries of the ordinary pass, up against `EVENTS_INFLIGHT`, whose refusals hold the cursors.
+    def wants(self) -> list[tuple[str, str, str]]:
         return sorted(self._watched)
 
     # The resources this evaluator's index asks — the same list, read the same way (`MergedIndex.seen`, cached
@@ -451,8 +513,11 @@ class AutoWorker(Worker):
             fields = {k: str(v) for k, v in action.items() if k not in ("sub", "action")}
             if name == "record":                     # the recorder's own words for "record this from now"
                 fields = {"unit": fields.get("cam", ""), **fields}
+            # `filed`: when this row was written, by this clock — what the holder measures the request's own road from
+            # (`vms_request_to_device_seconds`, the review's seventh pass); `at` stays the event's moment.
             self.vars.put(f"{sub}/requests/{rid}",
-                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}", "valid_until": str(valid_until)})
+                          {**fields, "action": name, "at": str(at), "by": f"auto/{unit}", "valid_until": str(valid_until),
+                           "filed": str(self.wall())})
             self.filed += 1
         self.fired[fid] = self.wall()
         self.recent.setdefault(unit, []).append(at)
@@ -496,7 +561,7 @@ class AutoWorker(Worker):
     def long_poll_stats(self) -> dict:
         lp = self.long_poll
         return {} if lp is None else {"waits": lp.waits, "woken": lp.woken, "early_passes": self.wake.early,
-                                      "wait_errors": lp.errors}
+                                      "wait_errors": lp.errors, "wake_gap": round(self.wake.gap, 3)}   # the gap as paced now
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
@@ -516,6 +581,9 @@ class AutoWorker(Worker):
     # decides nothing: the pass is this same pass — the same window, cursor, `SETTLE` and firing ids. With no
     # answer — a resource away, its waiters' room full, the long poll switched off (`LONG_POLL=0`), a line
     # written into an old bucket, which no resource watches — the pass comes at the end of the period, as before.
+    # Since the seventh review an early pass evaluates the scenarios the answer touched and no others, the ordinary
+    # pass over all of them still comes every `poll`, and the gap widens with a long pass and with a resource that
+    # refused (`Wake.pace`): the long poll speeds up the road and is never what loads the resources.
     # Staying itself. The loop used to pass and heartbeat and renew NOTHING: thirty seconds after it started the
     # leases on its scenarios ran out, `may_write` said no for every one of them, and the evaluator went on
     # heartbeating and decided nothing, for ever; fifteen seconds later its slot lapsed and another process could
@@ -541,15 +609,25 @@ class AutoWorker(Worker):
         stop = stop or threading.Event()
         lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
         last_lease = last_hb = self.clock()
+        last_full = -math.inf                       # when the last ordinary pass — over every scenario — began
         woken = False                               # whether this pass began early, at a resource's answer (`Worker.wait_next`)
+        touched: set | None = None                  # …and what the answers said changed: the scenarios it evaluates
         stand_in = self.start_stand_in()            # renews for a step that hangs, for a while (feedback DD)
         while not stop.is_set():
+            # The ordinary pass at least every `poll`, woken or not: an early pass evaluates only what was touched, and
+            # a resource whose events never wake anybody — away, refused, an old bucket — is found by this one.
+            full = not woken or touched is None or self.clock() - last_full >= poll
+            began = self.clock()
             try:
                 with self.guarded("pass"):
-                    self.reconcile_once()
+                    self.reconcile_once(only=None if full else touched)
+                if full:
+                    last_full = began
             except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
                 self.pass_failures += 1
                 log.exception("%s: pass failed", self.name)
+            if self.wake is not None:                 # the next early pass no sooner than the load allows (`Wake.pace`)
+                self.wake.pace(self.clock() - began, self._refused)
             try:                                      # in a try of its own: a pass that raises still holds its scenarios
                 if self.clock() - last_lease >= lease_every:
                     with self.guarded("lease"):
@@ -565,6 +643,7 @@ class AutoWorker(Worker):
             except Exception:                         # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed", self.name)
             woken = self.wait_next(poll, stop)        # `stop.wait(poll)` — or sooner, when an event a scenario watches was written
+            touched = self.long_poll.take_touched() if woken and self.long_poll is not None else None
         stand_in.set()
         self.stop_polling()                           # no request is held at a resource for a loop that ended
         self.release_slot()

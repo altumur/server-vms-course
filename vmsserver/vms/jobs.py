@@ -315,18 +315,30 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
 # has touched for that long holds nothing live, and goes with them.
 BACKFILL_TTL = 86400.0
 
+# …AND THE ANSWERED ROWS GO IN A SHORT CYCLE (the review's seventh pass, M6). Clearing ran once every thirty seconds,
+# beside the reaper, and a holder may answer sixteen commands a second: at three a second the standing rows grew
+# without a bound. The answered rows are cleared every `CLEAR_EVERY` now (`__main__._clear_loop`, `sweep=False`): a
+# listing of the family and the heartbeats of its workers — no row read, and nothing at all read beyond the listing
+# while the family is empty. The day-old backfills, which need their rows read, stay on the thirty-second cycle.
+CLEAR_EVERY = 2.0
 
-def clear_requests(ctl) -> int:
+
+def clear_requests(ctl, sweep: bool = True) -> int:
     from w2cplatform.console import heartbeats
+    keys = ctl.vars.list(ctl.sub.requests_prefix())
+    if not keys:
+        return 0
     fetched: set[str] = set()
     for _, hb in heartbeats(ctl.objects, ctl.spec.name + "/").items():
         fetched |= {r for r in str(hb.extra.get("fetched", "")).split(",") if r}
     gone, now = 0, ctl.wall()
-    for key in ctl.vars.list(ctl.sub.requests_prefix()):
+    for key in keys:
         if key.rsplit("/", 1)[1] in fetched:
             ctl.vars.delete(key)
             gone += 1
             continue
+        if not sweep:
+            continue                                        # the short cycle: answered rows only, nothing read
         it, idx = ctl.vars.get(key)
         if not it or it.get("action") or not (("from" in it and "to" in it) or "asks" in it):
             continue                                        # a command or a `record`: its own `valid_until` ends it

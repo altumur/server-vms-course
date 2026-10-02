@@ -2142,10 +2142,18 @@ class RecWorker(VmsWorker):
         present = {k.rsplit("/", 1)[1] for k in keys}
         self.fetched = [r for r in self.fetched if r in present]
         self._requested = {r: v for r, v in self._requested.items() if r in present}
+        self._requests_read = {r: v for r, v in self._requests_read.items() if r in present}
         for key in keys:
             if len(done) >= budget:
                 break
+            # Answered, or another recorder's as its row said when it appeared: not read again (the holder's rule, the
+            # review's seventh pass, M5 — every row of the family was read on every pass of every recorder).
+            known = self._requests_read.get(key.rsplit("/", 1)[1])
+            if key.rsplit("/", 1)[1] in self.fetched or (known is not None and known[0] not in mine):
+                continue
             it, _ = self.vars.get(key)
+            if it:
+                self._requests_read[key.rsplit("/", 1)[1]] = (str(it.get("unit", "")), None)
             if not it or str(it.get("unit", "")) not in mine or key.rsplit("/", 1)[1] in self.fetched:
                 continue                                     # another recorder's recording, or answered already
             # One family, two kinds of asking. A backfill names a RANGE and this worker fetches it; a

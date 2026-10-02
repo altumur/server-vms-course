@@ -446,12 +446,29 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                 logging.exception("keeping what fired failed in %s — those minutes stay on the device", survey_ctl.spec.name)
         for c in requests:                            # the same division, one row simpler: fetched, so gone
             try:
-                gone = clear_requests(c)
+                gone = clear_requests(c)              # …and the day-old backfills; the answered ones go in `_clear_loop` too
                 if gone:
                     logging.info("%s: %d request(s) fetched and cleared", c.spec.name, gone)
             except Exception:                         # noqa: BLE001
                 logging.exception("clearing requests failed in %s — they will be asked for again", c.spec.name)
         stop.wait(every)
+
+
+# The answered requests, cleared in a short cycle of their own (the review's seventh pass, M6): every `CLEAR_EVERY`, the
+# rows the workers' heartbeats say they answered — no row is read for it (`clear_requests(sweep=False)`). On the reaper's
+# thirty seconds they piled up behind a holder that answers up to sixteen a second, and a holder started again found
+# them standing. Apart from `_requests_loop` because that one is automation's way in, and a failure here is not its.
+def _clear_loop(requests, every: float | None = None) -> None:
+    from .jobs import CLEAR_EVERY, clear_requests
+    while not stop.is_set():
+        for c in requests:
+            try:
+                gone = clear_requests(c, sweep=False)
+                if gone:
+                    logging.debug("%s: %d answered request(s) cleared", c.spec.name, gone)
+            except Exception:                         # noqa: BLE001
+                logging.exception("clearing answered requests failed in %s — the reaper's pass clears them", c.spec.name)
+        stop.wait(CLEAR_EVERY if every is None else every)
 
 
 # The console's third loop: what AUTOMATION asked for, turned into rows — and a short loop, apart from the
@@ -531,6 +548,7 @@ def console() -> None:
     # somebody sent a device (a relay, a preset). Same division as everywhere: the worker performs and
     # says so in its heartbeat, the controller removes the row, because a worker writes no configuration.
     threading.Thread(target=_reap_loop, args=([job_ctl], [rec_ctl, ctl], rec_ctl, det_ctl, survey_ctl), daemon=True).start()
+    threading.Thread(target=_clear_loop, args=([rec_ctl, ctl],), daemon=True).start()   # answered requests: every 2 s
     threading.Thread(target=_requests_loop, args=(rec_ctl, det_ctl, job_ctl), daemon=True).start()   # a request lives 30 s: looked at every 2
     stop.wait()
     srv.shutdown()

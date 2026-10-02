@@ -1190,26 +1190,45 @@ def vms_metrics(ctl):
             for k, v in (hb.extra.get("command_counts") or {}).items():
                 if k in total:
                     total[k] += int(v)
-        # The road to the device, where it ends (`VmsWorker._measure`), per holder, since it started. Two histograms
-        # for two clocks: `vms_event_to_device_seconds` from the event's moment to the call — the whole road, as
-        # true as the writer's clock and the holder's agree (`…_skewed_total`: the times they did not); and
-        # `vms_request_to_device_seconds` from the holder's first sight of the row to the call, by its clock alone.
+        # The road to the device, where it ends (`VmsWorker._measure`), per holder, since it started (the review's seventh
+        # pass, minor: what each number is measured FROM). `vms_event_to_device_seconds` from the event's moment to the
+        # call, and `vms_request_to_device_seconds` from the row's filing to the call — two clocks each, by who asked
+        # (`by`: `auto` for a scenario, `operator` for a person), with the times the clocks visibly disagreed in
+        # `…_skewed_total{direction="ahead|behind"}`; and `vms_request_seen_to_device_seconds` from the holder's first
+        # sight of the row to the call, by its clock alone. A heartbeat of an older build (one histogram, `skewed`) is
+        # read as automation's.
         from .worker import VmsWorker
+
+        def by_who(h) -> dict:
+            if not isinstance(h, dict):
+                return {}
+            if "buckets" in h:
+                return {"auto": h}
+            return {b: x for b, x in sorted(h.items()) if isinstance(x, dict) and x.get("buckets")}
+
+        def histogram(metric: str, labels: str, h: dict) -> list[str]:
+            out = [f'{metric}_bucket{{{labels},le="{le:g}"}} {n}' for le, n in zip(VmsWorker.ROAD_BUCKETS, h["buckets"])]
+            return out + [f'{metric}_bucket{{{labels},le="+Inf"}} {h["count"]}', f'{metric}_sum{{{labels}}} {round(h["sum"], 3)}',
+                          f'{metric}_count{{{labels}}} {h["count"]}']
+
         road: list[str] = []
-        for metric, key in (("vms_event_to_device_seconds", "command_road"), ("vms_request_to_device_seconds", "command_wait")):
-            road.append(f"# TYPE {metric} histogram")
+        for metric, key in (("vms_event_to_device", "command_road"), ("vms_request_to_device", "command_request")):
+            road.append(f"# TYPE {metric}_seconds histogram")
+            skew: list[str] = []
             for w, hb in sorted(hbs.items()):
-                h = hb.extra.get(key)
-                if not h:
-                    continue
-                for le, n in zip(VmsWorker.ROAD_BUCKETS, h["buckets"]):
-                    road.append(f'{metric}_bucket{{worker="{w}",le="{le:g}"}} {n}')
-                road.append(f'{metric}_bucket{{worker="{w}",le="+Inf"}} {h["count"]}')
-                road.append(f'{metric}_sum{{worker="{w}"}} {round(h["sum"], 3)}')
-                road.append(f'{metric}_count{{worker="{w}"}} {h["count"]}')
-        road.append("# TYPE vms_event_to_device_skewed_total counter")
-        road += [f'vms_event_to_device_skewed_total{{worker="{w}"}} {hb.extra["command_road"].get("skewed", 0)}'
-                 for w, hb in sorted(hbs.items()) if hb.extra.get("command_road")]
+                for by, h in by_who(hb.extra.get(key)).items():
+                    if not h["count"] and not any(h.get(k) for k in ("ahead", "behind", "skewed")):
+                        continue
+                    road += histogram(f"{metric}_seconds", f'worker="{w}",by="{by}"', h)
+                    ahead = h.get("ahead", 0) + h.get("skewed", 0)            # `skewed`: an older build's word for ahead
+                    skew += [f'{metric}_skewed_total{{worker="{w}",by="{by}",direction="ahead"}} {ahead}',
+                             f'{metric}_skewed_total{{worker="{w}",by="{by}",direction="behind"}} {h.get("behind", 0)}']
+            road += [f"# TYPE {metric}_skewed_total counter"] + skew
+        road.append("# TYPE vms_request_seen_to_device_seconds histogram")
+        for w, hb in sorted(hbs.items()):
+            h = hb.extra.get("command_wait")
+            if isinstance(h, dict) and h.get("count"):
+                road += histogram("vms_request_seen_to_device_seconds", f'worker="{w}"', h)
         # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
         # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
         # loop is late (the review's second pass).

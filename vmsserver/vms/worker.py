@@ -499,11 +499,19 @@ class VmsWorker(Worker):
         # grows is the road from an event to this worker getting longer than the requests live (М10B Lesson 25).
         self.commands = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
         # The road to the device, counted since this process started, over `ROAD_BUCKETS` (`_measure`): from the
-        # request's `at` — the event's moment — to the call (`road`: two clocks), and from this worker's first sight
-        # of the row to the call (`wait`: one clock, its own).
-        self.road = {"buckets": [0] * len(self.ROAD_BUCKETS), "sum": 0.0, "count": 0, "skewed": 0}
+        # request's `at` — the event's moment — to the call (`road`: two clocks), from the row's filing to the call
+        # (`request_road`: two clocks), each by who asked; and from this worker's first sight of the row to the call
+        # (`wait`: one clock, its own).
+        self.road = {"auto": self._histogram(), "operator": self._histogram()}           # the event's moment -> the call
+        self.request_road = {"auto": self._histogram(), "operator": self._histogram()}   # the row's filing -> the call
         self.wait = {"buckets": [0] * len(self.ROAD_BUCKETS), "sum": 0.0, "count": 0}
         self._first_seen: dict[str, float] = {}          # request -> when a pass of this worker first saw its row, by the clock
+        self._requests_read: dict[str, tuple] = {}       # request -> (the unit it names, its fields if ours): read once (M5)
+        self._marks_looked: set[str] = set()             # requests whose mark was read at their first sight (`_confirm`)
+        self._appeared: dict[str, float] = {}            # request -> the wall time of the last listing that did not have it
+        self._listed: tuple[float, set] | None = None    # (when, which requests) of the previous listing
+        self._slow: set[int] = set()                     # devices whose last call did not answer inside `PERFORM_GRACE`
+        self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
         self._beat_failed = False                        # the look at the requests between passes is failing: said once (`beat_once`)
         self._marks_swept = -1e18                        # when the marks of requests that are gone were last cleared
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
@@ -1040,9 +1048,14 @@ class VmsWorker(Worker):
     # looks at the request rows every `COMMANDS_BEAT` (`run`, `beat_once`): this same method, with every rule
     # above — the lease, the deadline, the mark, one call at a time. Nobody tells the worker anything: the row is
     # the request and the look is the worker's own, the same on a box and in a cluster. What it costs is one
-    # listing of `<sub>/requests/` per worker per beat, and a read of each row found.
+    # listing of `<sub>/requests/` per worker per beat, and a read of each row ONCE, when it first appears (the
+    # review's seventh pass, M5): every row of the cluster was read on every beat — another holder's, one answered
+    # already — and twenty holders over two hundred standing rows were 16 000 reads of the store a second. The unit a
+    # row names is remembered by its key (`_requests_read`), and the checks that need no row — answered, in flight —
+    # come before any read. A request row is written once (the console files it create-only; a scenario's id is its
+    # event's, the same row each time), so what was read is what stands.
     #
-    # AND THE ROAD IS MEASURED HERE, where it ends (`_measure`). Two histograms, because there are two clocks:
+    # AND THE ROAD IS MEASURED HERE, where it ends (`_measure`). Two kinds of histogram, because there are two clocks:
     #
     #   wait   from this worker's first sight of the row to the call into the device — its own monotonic clock,
     #          so the number is this link's and nobody's skew
@@ -1052,9 +1065,52 @@ class VmsWorker(Worker):
     #
     # The evaluator's buckets (`AutoWorker.LATENCY_BUCKETS`), and three finer ones under a second: the road is a
     # fraction of a second now, and a histogram whose first bucket is one second would not show it.
+    #
+    # WHAT THE NUMBERS MEAN, SAID PRECISELY (the review's seventh pass, minor). `vms_request_to_device_seconds` was the
+    # holder's first sight of the row, not its filing — and after a restart every standing row was "first seen" at
+    # its call, a zero. And the road mixed automation's requests with an operator's clicks, whose `at` is the click.
+    # Now three histograms, two of them split by who asked (`by`: `auto` for a scenario's row, `operator` for the rest):
+    #
+    #   road      from the event (`at`) to the call                            two clocks: the event's writer's, ours
+    #   request   from the row's filing (`filed`; an operator's row: `at`) to the call   two clocks: the filer's, ours
+    #   wait      from this worker's first sight of the row to the call        one clock, its own
+    #
+    # and a clock skew is counted in both directions where it can be seen. AHEAD: the writer's moment is after ours —
+    # a road below zero, taken as zero. BEHIND: the row says it was filed before this worker's previous listing of
+    # the requests, which did not have it — by more than `SKEW_SLACK`; only a request can be caught so (an event
+    # happened before anybody filed for it, and nothing here bounds how long before).
+    #
+    # HUNG DEVICES DO NOT HOLD THE LOOP (the review's seventh pass, M7). The loop waited `PERFORM_GRACE` for every call,
+    # and `budget` counted only what was answered — so a hung device cost a fifth of a second and nothing of the budget:
+    # 100 of 200 devices hung for 30 s held the loop's thread 24.7 s, a fast command waited 7 s and the lease went
+    # 13.9 s unrenewed; about 120 hung was past the lease. Three bounds now, the design number being a holder that keeps
+    # its leases with every one of its devices hung (`HUNG_DEVICES`, 200):
+    #
+    #   REQUESTS_HOLD       the most one `requests` call holds the loop's thread, reading and waiting together; what
+    #                       is left is the next look's, a beat away. The calls a look began are waited for TOGETHER,
+    #                       `PERFORM_GRACE` at most: one fifth of a second however many of them hang
+    #   budget              requests acted on per look — a call STARTED counts, answered or not; refusals, expiries too
+    #   a slow device       one whose last call did not answer inside `PERFORM_GRACE` is not waited for at all: its
+    #                       answer is collected by the next look (`_performed`), and a quick answer clears the name
+    #
+    # The budget is `COMMANDS_PER_LOOK`: every device of a holder of the design's size, commanded at once, is called in
+    # one look — the design's burst (`COMMANDS_BURST`) many times over. What bounds a look on a slow store is
+    # `REQUESTS_HOLD`, which cuts it first; the rest is a beat away. The sustained rate (`COMMANDS_SUSTAINED`) is what
+    # the rows must not pile up at — the answers leave in the heartbeat (`FETCHED_BYTES`) and the console clears them
+    # every `jobs.CLEAR_EVERY` (`clear_requests`).
     PERFORM_GRACE, PERFORM_TIMEOUT = 0.2, 10.0
     MAX_VALID, MARK_SWEEP = 600.0, 30.0
     ROAD_BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0)
+    COMMANDS_SUSTAINED, COMMANDS_BURST = 2.0, 16    # commands a second per holder: the design numbers of 2 October 2026
+    HUNG_DEVICES = 200                              # devices hung at once a holder keeps its leases through (the test's)
+    COMMANDS_PER_LOOK = HUNG_DEVICES                # every device of such a holder, commanded at once, called in one look
+    REQUESTS_HOLD = 0.5                             # seconds one `requests` call may hold the loop's thread
+    FETCHED_BYTES = 8192                            # the answered ids one heartbeat carries, oldest first
+    SKEW_SLACK = 1.0                                # a filing this much before our previous listing: the writer's clock is behind
+
+    @staticmethod
+    def _histogram() -> dict:
+        return {"buckets": [0] * len(VmsWorker.ROAD_BUCKETS), "sum": 0.0, "count": 0, "ahead": 0, "behind": 0}
 
     def _measure(self, rid: str, it: dict) -> None:
         def count(h: dict, seconds: float) -> None:
@@ -1063,27 +1119,45 @@ class VmsWorker(Worker):
             for i, le in enumerate(self.ROAD_BUCKETS):
                 if seconds <= le:
                     h["buckets"][i] += 1
+
+        def two_clocks(h: dict, since, behind_of: float | None = None) -> None:
+            try:
+                at = float(since)
+            except (TypeError, ValueError):
+                return                                   # a row that does not say when: not counted here
+            if at != at or at in (float("inf"), float("-inf")):
+                return
+            seconds = self.wall() - at
+            if seconds < 0:
+                h["ahead"] += 1                          # the writer's clock is ahead of this one: said, not hidden
+            elif behind_of is not None and at < behind_of - self.SKEW_SLACK:
+                h["behind"] += 1                         # filed "before" a listing that did not have it: its clock is behind
+            count(h, max(0.0, seconds))
+
         count(self.wait, max(0.0, self.clock() - self._first_seen.pop(rid, self.clock())))
-        try:
-            road = self.wall() - float(it.get("at"))
-        except (TypeError, ValueError):
-            return                                       # a row that does not say when: this link is counted, the road is not
-        if road < 0:
-            self.road["skewed"] += 1                     # the writer's clock is ahead of this one: said, not hidden
-        count(self.road, max(0.0, road))
+        by = "auto" if str(it.get("by", "")).startswith("auto/") else "operator"
+        two_clocks(self.road[by], it.get("at"))
+        filed = it.get("filed") if it.get("filed") not in (None, "") else (it.get("at") if by == "operator" else None)
+        two_clocks(self.request_road[by], filed, self._appeared.pop(rid, None))
 
     def command_key(self, rid: str) -> str:
         return f"{self.SUB.name}/commands/{rid}"
 
     def began_by(self, rid: str) -> str | None:
         """The instance that said it was about to perform this request, or None."""
+        mark = self.mark_of(rid)
+        return None if mark is None else (str(mark.get("instance", "")) or "?")
+
+    def mark_of(self, rid: str) -> dict | None:
+        """The mark of this request as it stands, or None. Raises if the store does not answer."""
         raw = self.objects.get(self.command_key(rid))
         if raw is None:
             return None
         try:
-            return str(json.loads(raw).get("instance", "")) or "?"
+            mark = json.loads(raw)
         except ValueError:
-            return "?"                                   # a mark that does not parse is still a mark
+            return {"instance": "?"}                     # a mark that does not parse is still a mark
+        return mark if isinstance(mark, dict) else {"instance": "?"}
 
     def sweep_marks(self) -> int:
         if self.clock() - self._marks_swept < self.MARK_SWEEP:
@@ -1099,11 +1173,14 @@ class VmsWorker(Worker):
             self.objects.delete(k)
         return len(gone)
 
-    def requests(self, budget: int = 4, now: float | None = None) -> list[dict]:
+    def requests(self, budget: int = COMMANDS_PER_LOOK, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
+        held_from = time.monotonic()                     # the waits below are real seconds: so is their bound
         mine = {str(r["id"]): r for r in self.rows}
         done: list[dict] = self._performed()             # what calls already in flight have come to
+        base, again, from_calls, begun = len(done), 0, 0, []   # what this look acted on: answers given, calls begun
         self.sweep_marks()
+        listed_at = self.wall()
         keys = sorted(self.vars.list(self.SUB.requests_prefix()))
         # An answered request is remembered for as long as its ROW stands — the heartbeat carries it until the
         # controller clears the row — and not after: `fetched` grew by one id per command for the life of the
@@ -1112,18 +1189,56 @@ class VmsWorker(Worker):
         present = {k.rsplit("/", 1)[1] for k in keys}
         self.fetched = [r for r in self.fetched if r in present]
         self._first_seen = {r: t for r, t in self._first_seen.items() if r in present}
+        self._requests_read = {r: v for r, v in self._requests_read.items() if r in present}
+        self._marks_looked &= present
+        # When each row first appeared, as "after our previous listing" — what a filing that says otherwise is checked
+        # against (`_measure`, `behind`). The first listing of a process knows of no before.
+        self._appeared = {r: t for r, t in self._appeared.items() if r in present}
+        if self._listed is not None:
+            for r in present - self._listed[1]:
+                self._appeared.setdefault(r, self._listed[0])
+        self._listed = (listed_at, present)
+        answered = set(self.fetched)
+        in_flight = {c["rid"] for c in self._performing.values()}
+        self._slow &= {id(d) for d in self.devices.values()}
         for key in keys:
-            if len(done) >= budget:
-                break
-            it, _ = self.vars.get(key)
+            if len(done) - base - again - from_calls + len(begun) >= budget:
+                break                                    # this look has acted on its share: the rest is the next look's
+            if time.monotonic() - held_from >= self.REQUESTS_HOLD:
+                break                                    # …or held the loop as long as one look may
             rid = key.rsplit("/", 1)[1]
-            row = mine.get(str(it.get("unit", ""))) if it else None
-            if row is None or rid in self.fetched or any(c["rid"] == rid for c in self._performing.values()):
-                continue                                 # another worker's device, one we have done, or one in flight
+            if rid in answered or rid in in_flight:
+                continue                                 # one we have answered, or one in flight: not even read
+            got = self._requests_read.get(rid)           # (the unit it names, its fields if the unit is ours)
+            if got is None or (got[0] in mine and got[1] is None):
+                it, _ = self.vars.get(key)
+                if not it:
+                    continue
+                unit_of = str(it.get("unit", ""))
+                got = self._requests_read[rid] = (unit_of, it if unit_of in mine else None)
+            row = mine.get(got[0])
+            if row is None:
+                continue                                 # another worker's device: its row was read once, when it appeared
+            it = got[1]
             self._first_seen.setdefault(rid, self.clock())   # what `wait` is measured from (`_measure`)
             unit = str(row["id"])
             if not self.recording_allowed or (unit in self.leases and not self.may_write(unit)):
                 continue                                 # not mine to act on now: fenced, or the lease is lost
+            # ANSWERED BEFORE, BY THIS NAME (the review's seventh pass, M6). A holder started again on standing rows
+            # it had performed under its previous instance found that instance's mark on each, and answered
+            # `unknown` with a `command.failed` — a scenario may fire on that — or `expired`; 53 and 16 of 69 in the
+            # review's run. The answer is in the mark now (`_confirm`): a mark that says how the call went is that
+            # call's answer, said again so the row is cleared, and nothing else — no event, no counter of outcomes.
+            # Looked at once per row, at its first sight, before the deadline: performed is not expired.
+            unmarked = False                             # read just now, and no mark: not read again before the call
+            if rid not in self._marks_looked:
+                mark = self.mark_of(rid)                 # raises if the store does not answer: not known is not "nobody"
+                self._marks_looked.add(rid)
+                unmarked = mark is None
+                if mark is not None and mark.get("outcome"):
+                    self._answered_before(rid, row, mark, done)
+                    again += 1                           # a read, not a call: not of the budget
+                    continue
             # ONE ROW'S TROUBLE IS THAT ROW'S (the review's sixth pass). Two things here were read or taken bare, and
             # either raised out of `requests` — out of every `pump_once`, for as long as the row stood — so no command
             # to ANY device of this holder was performed behind it: a `valid_until` that is not a number (which never
@@ -1151,7 +1266,22 @@ class VmsWorker(Worker):
             if dev is None:
                 continue                                 # the device is not open yet: ask again next pass
             if id(dev) in self._performing:
-                continue                                 # a call into this device has not returned: wait your turn
+                # A call this look began into the same device, not yet back: waited for — inside its own
+                # `PERFORM_GRACE` and the look's `REQUESTS_HOLD` — so that two commands to a device that answers at once
+                # go in one look, as they always did; a device that does not answer is not waited for twice.
+                ahead = self._performing[id(dev)]
+                if id(dev) not in self._slow and any(c is ahead for c, _ in begun):
+                    left = min(ahead["t0"] + self.PERFORM_GRACE, held_from + self.REQUESTS_HOLD) - time.monotonic()
+                    if left > 0:
+                        ahead["returned"].wait(left)
+                    if ahead["returned"].is_set():
+                        got_back = self._performed()
+                        from_calls += len(got_back)
+                        done += got_back
+                    elif time.monotonic() - ahead["t0"] >= self.PERFORM_GRACE:
+                        self._slow.add(id(dev))
+                if id(dev) in self._performing:
+                    continue                             # a call into this device has not returned: wait your turn
             if unit not in self.leases:
                 try:
                     self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
@@ -1165,7 +1295,12 @@ class VmsWorker(Worker):
                 self.epoch_errors.pop(unit, None)
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
-            before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
+            mark = None if unmarked else self.mark_of(rid)   # raises if the store does not answer: not known is not "nobody"
+            if mark is not None and mark.get("outcome"):
+                self._answered_before(rid, row, mark, done)      # answered meanwhile — by another holder of the device
+                again += 1
+                continue
+            before = None if mark is None else (str(mark.get("instance", "")) or "?")
             made = self._mark(rid, unit, now) if before is None else False
             if made is None:
                 self._refused(rid, row, it, self.CANNOT_MARK, done)
@@ -1180,21 +1315,64 @@ class VmsWorker(Worker):
                 self.observe(row["id"], "command.failed", action=str(it.get("action", "")), error=why)
                 log.warning("%s: request %s not performed — %s", self.name, rid, why)
                 continue
-            call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False}
+            call = {"rid": rid, "row": row, "it": it, "at": self.clock(), "returned": threading.Event(), "answered": False,
+                    "t0": time.monotonic()}
 
             def run(call=call, dev=dev):
+                t0 = time.monotonic()
                 try:
                     call["out"] = self.perform(dev, call["row"], call["it"])
                 except Exception as e:                   # noqa: BLE001 — the device's word, whatever it is
                     call["error"] = str(e)
+                call["took"] = time.monotonic() - t0
                 call["returned"].set()
 
             self._performing[id(dev)] = call
+            in_flight.add(rid)
             self._measure(rid, it)                       # the road ends here: the call into the device
             threading.Thread(target=run, daemon=True).start()
-            call["returned"].wait(self.PERFORM_GRACE)
+            begun.append((call, id(dev)))
+        # The calls this look began, waited for TOGETHER — a device that answers at once is answered in this look — for
+        # `PERFORM_GRACE` at most, and never past what is left of `REQUESTS_HOLD`. One after another, each hung device
+        # was a fifth of a second of the loop's; now a look waits one fifth however many hang. A device that did not
+        # answer last time is not waited for at all, and a call that outlasts a whole `PERFORM_GRACE` names its device
+        # so; its answer, whenever it comes, is collected by a later look (`_performed`).
+        if begun:
+            deadline = min(time.monotonic() + self.PERFORM_GRACE, held_from + self.REQUESTS_HOLD)
+            for call, dev_id in begun:
+                if dev_id not in self._slow and deadline > time.monotonic():
+                    call["returned"].wait(max(0.0, deadline - time.monotonic()))
+            for call, dev_id in begun:
+                if not call["returned"].is_set() and time.monotonic() - call["t0"] >= self.PERFORM_GRACE:
+                    self._slow.add(dev_id)
             done += self._performed()
         return done
+
+    # A request this holder's slot had answered before — its mark says how the call went (`_confirm`) — answered again,
+    # so that the row is cleared: into `fetched`, and nowhere else. No event (it was written when the call came back),
+    # no outcome counted twice; `reanswered` says how many, in the heartbeat.
+    def _answered_before(self, rid: str, row: dict, mark: dict, done: list) -> None:
+        self.fetched.append(rid)
+        self.reanswered += 1
+        done.append({"request": rid, "unit": row["id"], "answered": str(mark.get("outcome")),
+                     "by": str(mark.get("slot") or mark.get("instance") or "?")})
+        log.info("%s: request %s was answered before (%s, by %s): said again, not performed", self.name, rid,
+                 mark.get("outcome"), mark.get("slot") or mark.get("instance"))
+
+    # The answer, written into the mark once the device has said it — the mark is this holder's to write (the one place
+    # a worker writes besides its own rows), and it is what an instance started after this one reads instead of
+    # "an earlier instance began it" (`requests`). A call that did not answer leaves its mark as it was: whether the
+    # device acted is not known, and `unknown` is then the truth. A store that does not take the write costs the
+    # same: the next instance says `unknown`, as it did before; the answer already given stands.
+    def _confirm(self, rid: str, row: dict, outcome: str, it: dict) -> None:
+        try:
+            self.objects.put(self.command_key(rid), json.dumps(
+                {"instance": self.instance, "slot": self.name, "unit": str(row["id"]), "outcome": outcome,
+                 "action": str(it.get("action", "")), "at": self.wall()}).encode())
+        except Exception as e:                           # noqa: BLE001
+            self.store_errors += 1
+            log.warning("%s: the answer to request %s could not be written into its mark (%s); a restart would "
+                        "call it unknown", self.name, rid, e)
 
     # The mark, create-only: `True` when this instance made it, `False` when somebody else did — the store says so
     # (`put_new`: a directory's `link`, М11's Variables by CAS on index 0). A store WITHOUT create-only answers
@@ -1209,7 +1387,8 @@ class VmsWorker(Worker):
         put_new = getattr(self.objects, "put_new", None)
         if put_new is None:
             return None
-        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode()))
+        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "slot": self.name, "unit": unit,
+                                                               "at": now}).encode()))
 
     # What the calls in flight have come to: performed, refused by the device, or — after `PERFORM_TIMEOUT` —
     # not answered. A call that timed out is answered ONCE and stays in flight until the driver returns: the
@@ -1220,14 +1399,18 @@ class VmsWorker(Worker):
             rid, row, it = call["rid"], call["row"], call["it"]
             if call["returned"].is_set():
                 del self._performing[key]
+                if call.get("took", 0.0) <= self.PERFORM_GRACE:
+                    self._slow.discard(key)              # it answered at once: waited for again from the next call
                 if call["answered"]:
                     continue                             # it came back after we had said it did not answer
                 if "error" in call:
                     self._refused(rid, row, it, call["error"], done)
+                    self._confirm(rid, row, "refused", it)
                 else:
                     self.fetched.append(rid)
                     done.append({"request": rid, "unit": row["id"], **call["out"]})
                     self.commands["performed"] += 1
+                    self._confirm(rid, row, "performed", it)
                     self.observe(row["id"], "command", **call["out"])    # what was done to a device is an event about it
             elif not call["answered"] and self.clock() - call["at"] >= self.PERFORM_TIMEOUT:
                 call["answered"] = True
@@ -1493,11 +1676,28 @@ class VmsWorker(Worker):
     # What a subclass adds to the heartbeat. `fetched` for everyone — the requests this worker has
     # answered, which is how the rows get cleared — and a subsystem with one more fact about itself says
     # it by extending this, not by rewriting the heartbeat.
+    #
+    # EVERY ANSWER, OLDEST FIRST, UNDER A CEILING (the review's seventh pass, M6). It was the last 32 ids, once every ten
+    # seconds: about three answers a second could be cleared, while the beat lets a holder answer sixteen. At three
+    # commands a second the standing rows went 45 → 174 and on without a bound. Now as many as fit in `FETCHED_BYTES`
+    # (a heartbeat is one object under the store's ceiling), oldest first: what is cleared leaves `fetched` with its
+    # row, and the next heartbeat carries the next ones — a cursor that is the list itself.
+    def fetched_said(self) -> str:
+        out, size = [], 0
+        for rid in self.fetched:
+            size += len(rid) + 1
+            if size > self.FETCHED_BYTES:
+                break
+            out.append(rid)
+        return ",".join(out)
+
     def heartbeat_extra(self) -> dict:
-        return {"fetched": ",".join(self.fetched[-32:]),
+        return {"fetched": self.fetched_said(),
                 **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
-                # The road to the device, as two histograms since this process started (`_measure`).
-                **({"command_road": self.road, "command_wait": self.wait} if self.wait["count"] else {}),
+                **({"commands_reanswered": self.reanswered} if self.reanswered else {}),
+                # The road to the device, as histograms since this process started (`_measure`).
+                **({"command_road": self.road, "command_request": self.request_road, "command_wait": self.wait}
+                   if self.wait["count"] else {}),
                 # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
                 # address with, and what a process derives its capability from. Here and not in a camera's status:
                 # statuses are the read model the page shows.
