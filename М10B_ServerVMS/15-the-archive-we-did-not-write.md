@@ -116,13 +116,32 @@ def device_of(source: str) -> str:
 
 ```python
     def playback(self, cam, t0: float, t1: float) -> bytes:
+        return b"".join(self.playback_pieces(cam, t0, t1))
+
+    PLAYBACK_PIECE = 60.0
+
+    def playback_pieces(self, cam, t0: float, t1: float):
         ...
-        sid = dev.open_playback(cam, t0, t1)            # OverflowError when the device is full
-        try:
-            return dev.read(sid)
-        finally:
-            dev.close_playback(sid)
+        t0, t1 = max(float(t0), float(cov.get("from", t0))), min(float(t1), float(cov.get("to", t1)))
+
+        def pieces():
+            at = t0
+            while at < t1:
+                b = min(t1, at + self.PLAYBACK_PIECE)
+                sid = dev.open_playback(cam, at, b)      # OverflowError when the device is full
+                try:
+                    got = dev.read(sid)
+                    if isinstance(got, (bytes, bytearray, memoryview)):
+                        yield bytes(got)
+                    else:
+                        yield from got                   # a driver that streams
+                finally:
+                    dev.close_playback(sid)
+                at = b
+        return pieces()
 ```
+
+**Дверь читает устройство по минуте и отдаёт по куску.** Раньше `playback` читал весь интервал одним `dev.read` и отдавал одним буфером с `Content-Length`. На запуске 1000 с карты при 100 кБ/с дали 100 МБ в памяти держателя — процесса, который держит все камеры сервера, — а подписанных суток хватало, чтобы он упал по памяти (пятое ревью, major). Каким бывает `read` у настоящего драйвера, решает драйвер; в коде курса драйвер один, поддельный, и его `read(session) -> bytes` отдаёт весь диапазон сразу. Поэтому `playback_pieces` сначала подрезает интервал по покрытию устройства и просит не больше `PLAYBACK_PIECE` секунд за раз. Сессия открывается на каждый кусок и закрывается до следующего, так что дверь по-прежнему держит одну сессию устройства, а не по одной на кусок. Драйвер, чей `read` отдаёт куски (поток), передаётся кусок за куском. Обработчик двери берёт первый кусок через `next` до заголовков — 404 и 503 остаются ответами, — а дальше пишет клиенту HTTP/1.1 кусками chunked и последний, нулевой кусок только после всех. Устройство, отказавшее посреди, даёт ответ, оборванный на виду. Консоль со своей стороны не подписывает интервал длиннее `SEGMENT_MAX` (час) после подрезки по покрытию (урок 12). Тест: `test_console_gate.py::test_a_segment_is_signed_for_what_the_device_holds_and_the_door_streams_it_a_piece_at_a_time`.
 
 ```python
     def open_playback(self, cam, t0: float, t1: float) -> str:
@@ -232,11 +251,10 @@ NVR знает свои каналы. Соблазн — чтобы воркер
 
 ```python
         if (path == "/segment" or path == "/segment/") and ctl is not None:                 # the device's own footage, through its holder
-            url = device_playback(ctl.objects, q.get("cam"), con_wall())
-            if url is None:
-                return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
-            return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
+            return segment(handler, q)
 ```
+
+`segment` (урок 12) находит держателя в момент запроса — тем же `holder_of`, что и функция ниже, — подрезает интервал по покрытию, которое держатель объявил, и подписывает адрес его двери.
 
 ```python
 # The holder of a camera, resolved NOW — never written into a span when it was drawn. A camera that moved
@@ -312,7 +330,8 @@ GET /cameras
 GET /timeline/41
     [{"start": …, "end": …, "media": null, "epoch": 0, "source": "device", "fenced": false, "device": true}]
 
-GET /segment?cam=41&from=…&to=…          → {"playback": "http://box:8083/playback/41?from=…&to=…"}
+GET /segment?cam=41&from=…&to=…          → {"playback": "http://box:8083/playback/41?from=…&to=…&at=…&exp=…&v=…&sig=…", "until": …}
+                                            (интервал подрезан по coverage, не длиннее часа; у держателя старой сборки без ключа — голый адрес)
 GET /export/7?rec=7&from=…&to=…          → MP4 из кадров, которые отдали двери регистраторов
 ```
 
