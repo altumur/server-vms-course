@@ -211,3 +211,71 @@ def test_an_answered_request_is_not_fetched_again_and_is_forgotten_with_its_row(
     con_rec.vars.delete(key)                                                # the console reaped it
     r.requests(now=NOW)
     assert r.fetched == []
+
+
+BAD = (NOW - 76200, NOW - 76190)                                            # ten seconds of card the engine will not take
+
+
+class Corrupt(FakeActuator):
+    """A card with one group of pictures the engine cannot take — its key frame is larger than a block, so the
+    daemon refuses it (`SEQUENCE_TOO_LARGE`) — the first `times` fetches of it (all of them, by default)."""
+    def __init__(self, times: int | None = None):
+        super().__init__()
+        self.times = times
+
+    def record_range(self, cam, source, t0, t1):
+        import dataclasses
+        from w2cplatform.obsd import FLAG_NEED_KEY_FRAME, unix_s
+        out = super().record_range(cam, source, t0, t1)
+        if not (t0 < BAD[1] and BAD[0] < t1) or self.times == 0:
+            return out
+        self.times = None if self.times is None else self.times - 1
+        for i, s in enumerate(out):
+            if unix_s(s.begin) == BAD[0]:
+                out[i] = dataclasses.replace(s, flags=0, body=s.body + b"\x80" * (5 << 20))   # one group: its key is too large…
+            elif BAD[0] < unix_s(s.begin) < BAD[1]:
+                out[i] = dataclasses.replace(s, flags=FLAG_NEED_KEY_FRAME)                    # …and the rest of it hangs on it
+        return out
+
+
+def _asked_for_bad(act) -> int:
+    return sum(1 for _, lo, hi, _ in act.fetched if lo < BAD[1] and BAD[0] < hi)
+
+
+def test_a_piece_the_engine_always_refuses_is_fetched_three_times_and_then_given_up():
+    """The review's fourth pass, an open item; the product's DD. What the engine refuses stays a hole and is asked for
+    again — and a piece the engine refuses for its CONTENT is refused every time: the recorder fetched it off the
+    card every pass, for ever. Counted per piece (recording, source, span rounded to the stitch tolerance), it is
+    fetched three times, then given up: logged, no longer planned, and the heartbeat says how many seconds."""
+    act = Corrupt()
+    box, r, _ = _recorder(act)
+    _ours(box, r, 1, ((NOW - 80000, NOW - 76400), (NOW - 76000, NOW - 72000)))
+    _until_done(lambda: r.backfill(budget=1, now=NOW, force=True))
+    assert _asked_for_bad(act) == 3                                         # the first fetch and two more; not a fourth
+    assert r.given_up[("1", "device")] == [BAD] and r.refusals == {}
+    assert r.backfill(budget=1, now=NOW, force=True) == [] and _asked_for_bad(act) == 3
+    r.store.seal()
+    assert subtract((NOW - 76400, NOW - 76000), r.our_coverage("1")) == [BAD]   # a hole on the timeline, not footage
+    r.heartbeat_once()
+    hb = Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1")))
+    assert hb.extra["backfill"] == {"refused_seconds": 10} and hb.extra["nowhere_seconds"] == 0
+
+
+def test_a_piece_refused_once_and_then_taken_lands_and_is_forgotten():
+    """A refusal that was not about the content — the engine refused it once — is not a piece given up: the next
+    pass asks again, it lands, and its count is forgotten."""
+    act = Corrupt(times=1)
+    box, r, _ = _recorder(act)
+    _ours(box, r, 1, ((NOW - 80000, NOW - 76400), (NOW - 76000, NOW - 72000)))
+    r.backfill(budget=1, now=NOW, force=True)
+    assert len(r.refusals) == 1 and BAD[0] not in [a for a, _ in r.landing["1"]]
+    _until_done(lambda: r.backfill(budget=1, now=NOW, force=True))          # the next fetch of it is taken
+    assert _asked_for_bad(act) == 2 and r.refusals == {} and r.given_up == {}
+    r.store.seal()
+    assert subtract((NOW - 76400, NOW - 76000), r.our_coverage("1")) == []
+    assert r.heartbeat_extra()["backfill"] == {"refused_seconds": 0}
+    # and however much is refused once, the counts are bounded: the oldest forgotten first
+    many = [(NOW - 50000 + 10 * i, NOW - 49995 + 10 * i) for i in range(r.REFUSALS_KEPT + 50)]
+    r._refused("1", "device", many)
+    assert len(r.refusals) == r.REFUSALS_KEPT and (1, *many[-1]) in r.refusals.values()
+    assert (1, *many[0]) not in r.refusals.values()

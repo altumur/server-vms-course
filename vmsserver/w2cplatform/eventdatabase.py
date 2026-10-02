@@ -385,9 +385,18 @@ def refence(events: list, current_epochs: dict | None, epoch_policy: dict | None
 class MergedIndex:
     """A console's view of the event indexes: every live resource's `/events`, merged by time."""
 
+    # Which resources exist — a listing of `resources/` and a read of every heartbeat there — at most once every
+    # `SEEN_FOR` seconds of `clock` (the product's DD). It was read on every query: every poll of every open page, a
+    # List and a Get per resource each time. A heartbeat comes every few seconds anyway, and liveness is still judged
+    # by `wall` against the heartbeat's own time; what the cache costs is a resource that appeared, seen up to two
+    # seconds late. The resources themselves are asked on every query, as before.
+    SEEN_FOR = 2.0
+
     def __init__(self, objects, fetch=None, wall=time.time, lost_after: float = 45.0, timeout: float = 3.0,
-                 cooldown: float = 10.0, lanes: int = 8):
+                 cooldown: float = 10.0, lanes: int = 8, clock=time.monotonic):
         self.objects, self.wall, self.lost_after, self.timeout = objects, wall, lost_after, timeout
+        self.clock = clock
+        self._seen: tuple[float, dict] | None = None     # (read at, by `clock`; the resources) — one tuple, swapped whole
         self.fetch = fetch or self._http
         self.state = "live"
         # A resource that did not answer is not asked again for `cooldown` seconds: it is named in the answer as
@@ -400,6 +409,14 @@ class MergedIndex:
         # operation, whole under the GIL, and the worst two queries can do is ask a hung server once more. A port
         # without a GIL guards it — the product keeps it under a mutex (feedback AW); without one it is a race.
         self._quiet: dict[str, float] = {}               # server -> not asked again until
+
+    def seen(self) -> dict[str, dict]:
+        """`resources_seen`, read again only once the last read is `SEEN_FOR` seconds old. A store that does not
+        answer raises, as before; nothing is cached for it."""
+        now, last = self.clock(), self._seen
+        if last is None or now - last[0] >= self.SEEN_FOR:
+            last = self._seen = (now, resources_seen(self.objects))
+        return last[1]
 
     def _http(self, url: str, params: dict) -> dict:
         with urllib.request.urlopen(f"{url}/events?{urllib.parse.urlencode(params)}", timeout=self.timeout) as r:
@@ -454,7 +471,7 @@ class MergedIndex:
         if by not in ("t", "occurred"):
             raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
         order = when if by == "occurred" else (lambda e: e["t"])
-        now = self.wall(); seen = resources_seen(self.objects)
+        now = self.wall(); seen = self.seen()
         live = {s for s, hb in seen.items() if now - float(hb["ts"]) <= self.lost_after}
         params = {k: v for k, v in (("from", t0), ("to", t1), ("cam", cam), ("kind", kind), ("subsystem", subsystem),
                                     ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls),

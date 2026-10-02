@@ -315,6 +315,43 @@ def test_an_engine_gone_at_the_finish_of_a_fetched_range_does_not_take_the_pass_
     assert r._copy_in("1", fake_samples(t - 300, t - 200, gop=10.0)) is True and r.engine_lost
 
 
+def test_a_refused_group_ends_its_sequence_and_a_lost_sequence_is_not_landed():
+    """The review's fourth pass, an open item. A group the engine refused left the sequence before it open, and the
+    next group went on in it: the index drew the refused stretch as footage — no hole on the timeline, nothing to
+    fetch again — in a fetched range and in a keep's copy alike. And a sequence the engine took and then LOST (the
+    next put answers `SEQUENCE_LOST`) was counted as landed, so it was never asked for again either."""
+    import dataclasses
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall() - 3600
+
+    def with_a_bad_group(a, b, bad):
+        """Frames of `[a, b)`, the ten seconds from `bad` one group whose key frame is larger than a block."""
+        out = fake_samples(a, bad) + fake_samples(bad, bad + 10, gop=100.0) + fake_samples(bad + 10, b)
+        i = next(i for i, s in enumerate(out) if unix_s(s.begin) == bad)
+        out[i] = dataclasses.replace(out[i], body=out[i].body + b"\x80" * (5 << 20))
+        return out
+    out = r._land("1", "1", with_a_bad_group(t, t + 100, t + 40), t, t + 100, "device")
+    assert out["groups"] == 45 and r.landing["1"] == [(t, t + 40), (t + 50, t + 100)]
+    assert r._copy_in("1", with_a_bad_group(t + 200, t + 300, t + 240)) is True
+    r.store.seal()
+    assert r.our_coverage("1") == [(t, t + 40), (t + 50, t + 100), (t + 200, t + 240), (t + 250, t + 300)]
+
+    # the engine answers the first put of the third sequence `SEQUENCE_LOST`: the second one is a hole again
+    real = r.store.put
+
+    def put(unit, epoch, smp, backfill=False):
+        st = real(unit, epoch, smp, backfill)                                   # taken…
+        return "SEQUENCE_LOST" if unix_s(smp.begin) == t + 1060 else st          # …and an earlier sequence said lost
+    r.store.put = put
+    samples = fake_samples(t + 1000, t + 1010) + fake_samples(t + 1030, t + 1040) + fake_samples(t + 1060, t + 1070)
+    out = r._land("1", "1", samples, t + 1000, t + 1070, "device")
+    assert out["groups"] == 10 and (t + 1030, t + 1040) not in r.landing["1"]
+    assert {(a, b) for _, a, b in r.refusals.values()} >= {(t + 1030 + 2 * i, t + 1032 + 2 * i) for i in range(5)}   # its groups, counted
+
+
 def test_a_daemon_that_froze_between_two_samples_is_a_remount_and_the_recording_goes_on():
     """The review's fourth pass, blocker 1. Frozen, not restarted: SIGSTOP longer than a call's timeout. The write
     connection answered `Unavailable` at once for its silent window, the remount's `WRITER_CLOSE` was refused in it
