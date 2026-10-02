@@ -41,8 +41,9 @@ or `network` volume like a server's — and is not built here.
 # waits for the card, and a piece of the card on its way to the server are all the same frames, and all of them are
 # held by this one process: counted in frames, or not at all, the ring's 32 MiB came with 38 MiB of spilled groups
 # and a 29 MiB answer to one range on top. `memory_split` cuts the budget three ways — `RING_BYTES`, `QUEUE_BYTES`
-# (every recording's queue and spill together), and two pieces of `PIECE_BYTES` in flight — and nothing here holds
-# frames outside those three.
+# (every recording's queue and spill together), and two pieces of `PIECE_BYTES` in flight — and nothing in the camera's
+# process holds frames outside those three: not this file, and not the camera's pusher (М12 `CameraPusher`, given the
+# ring, keeps no frame of its own — the seventh review). One frame more is in hand where a record is written or read.
 #
 # **The write path never waits for the card.** Frames reach the card off the ring's lock: the ring hands each to a
 # bounded queue (`QUEUE_BYTES` for the whole card, `QUEUE_LEN` frames a recording), and the card is written from the
@@ -78,6 +79,7 @@ or `network` volume like a server's — and is not built here.
 from __future__ import annotations
 
 import collections
+import contextlib
 import logging
 import os
 import threading
@@ -103,6 +105,18 @@ log = logging.getLogger("card")
 #                                                   ring spilled, together: twelve seconds at 4 Mbit/s
 #     pieces            2 × `PIECE_BYTES`   2 MiB   one piece the card's writer took out of the ring, and one piece of
 #                                                   the card read for the server (a range's answer, a break continued)
+#     the pusher        nothing of its own          М12's `CameraPusher(ring=…)` reads THIS ring: what it sent and may
+#                                                   not have been written, a break, the frames before an event are the
+#                                                   ring's frames, and the pusher keeps only where the stream stands. Of
+#                                                   the card it holds one piece at a time — the "pieces" row: a range's
+#                                                   piece not acknowledged is sent again before anything else is read
+#                                                   off the card, and a read left open between passes holds no piece
+#
+# THE PUSHER'S ROW IS NEW (the seventh review: "the pusher keeps frames outside the budget, and counts them in seconds").
+# It kept `tail` and `ring` lists of its own — the same frames the ring holds, half a minute each: 14.8 MiB at
+# 4 Mbit/s, 29.6 at 8, some 70 MiB in a camera that says 40. They are gone, and the whole camera is measured: the
+# ring, the card's writer and queue, the card and the pusher through a break of a minute and its continuation at
+# 10 Mbit/s, under `tracemalloc`: a peak of 33.7 MiB (М12 Lesson 16, `test_lesson16_card.py`, the whole camera's test).
 #
 # Until then only the ring had a ceiling in bytes: the queue was 512 frames, the spill 2048, and a range was answered
 # as one list — 31.5 MiB of ring, 38.2 MiB spilled and 28.6 MiB of one answer at 4 Mbit/s. The ring is the product's:
@@ -129,6 +143,7 @@ CARD_BUDGET = 1 << 30                    # the card's budget when the declaratio
 SEGMENT_BYTES = 16 << 20                 # a segment closes at the first key frame past this…
 SEGMENT_SPAN = 300.0                     # …or past five minutes of footage
 SYNC_EVERY = 5.0                         # how often what is written is forced onto the card
+STALL_AFTER = 10.0                       # a write to the card that has not returned for this long: the card is stalled
 
 
 class CardError(OSError):
@@ -145,6 +160,11 @@ class Backwards(CardError):
 
 class NoRecording(CardError):
     """The card holds nothing under the name it was asked for — or was asked for no name, and holds several."""
+
+
+class Stalled(CardError):
+    """The card's I/O in progress has not returned for `CardBuffer.stall_after`: the card does not answer, and nothing
+    else is put behind that I/O."""
 
 
 # A camera has no archive engine (the product's §12): a recorder built with this one fails loudly if anything in it
@@ -276,13 +296,17 @@ class CamRing:
     # frame, the piece starts at the next key frame and says so (`whole` False): what lay between is gone.
     # `caught_up()` is called under the ring's lock when there is nothing past `t_ms` at all — whoever subscribed is
     # told every frame from that moment, so a reader that takes pieces first and its subscription after loses none.
-    def piece(self, t_ms: int, max_bytes: int, upto: int | None = None, caught_up=None) -> tuple[list[Sample], bool]:
+    #
+    # `joined`: the reader knows the frame at `t_ms` is followed with nothing missing although the ring does not hold it
+    # — the camera's pusher, whose continuation of a break read up to here off the card (М12 Lesson 16).
+    def piece(self, t_ms: int, max_bytes: int, upto: int | None = None, caught_up=None,
+              joined: bool = False) -> tuple[list[Sample], bool]:
         """`(frames, whole)`: the next frames past `t_ms`, at most `max_bytes` of them (one frame at least), none
         that begins after `upto`; `whole` — they follow the frame at `t_ms` with nothing missing between."""
         with self._lock:
             fs = self._frames
             i = next((k for k, f in enumerate(fs) if f.begin > t_ms), len(fs))
-            whole = t_ms == 0 or (i > 0 and fs[i - 1].begin == t_ms)
+            whole = t_ms == 0 or joined or (i > 0 and fs[i - 1].begin == t_ms)
             if not whole or t_ms == 0:
                 i = next((k for k in range(i, len(fs)) if fs[k].key), len(fs))
             out, size = [], 0
@@ -299,11 +323,27 @@ class CamRing:
         with self._lock:
             return self._frames[-1].begin if self._frames else 0
 
+    def oldest(self) -> int:
+        """When the oldest frame held began (archive ms); 0 when the ring is empty."""
+        with self._lock:
+            return self._frames[0].begin if self._frames else 0
+
+    def last_key(self) -> int:
+        """When the newest KEY frame held began (archive ms): where a reader that fell behind starts again; 0: none."""
+        with self._lock:
+            return next((f.begin for f in reversed(self._frames) if f.key), 0)
+
+    def weight(self, t_ms: int) -> int:
+        """The bytes of what the ring holds past `t_ms` (archive ms): what a reader at `t_ms` still has to send."""
+        with self._lock:
+            return sum(len(f.body) for f in self._frames if f.begin > t_ms)
+
     # HOW FAR BACK THE RING REACHES (the review's sixth pass). The window is sixty seconds and the ceiling is bytes:
-    # at 6 Mbit/s the ring holds thirty-three seconds, and the card's gate went on saying sixty — "recording from 60 s
-    # ago" over a ring that began after the break did. What the ring CAN hold of this camera's stream is its ceiling
-    # at the bitrate it is being given: measured over what it holds now, once that is `MEASURE_SPAN` of stream (a
-    # key frame alone would measure as a hundred megabits), and never more than the window.
+    # at 6 Mbit/s the ring holds forty-four seconds, at 8 thirty-three (32 MiB at 750 000 and 1 000 000 bytes a
+    # second; the seventh review caught "thirty-three at 6" here and in Lesson 26), and the card's gate went on saying
+    # sixty — "recording from 60 s ago" over a ring that began after the break did. What the ring CAN hold of this
+    # camera's stream is its ceiling at the bitrate it is being given: measured over what it holds now, once that is
+    # `MEASURE_SPAN` of stream (a key frame alone would measure as a hundred megabits), and never more than the window.
     def reach(self) -> float:
         """Seconds of this camera's stream the ring holds when it is full: the window, or less — its bytes at the
         bitrate of what it holds now."""
@@ -364,20 +404,56 @@ class CardBuffer:
     """One card. `budget` is its size in bytes: when it is spent, the oldest segments go, whatever recording they
     belong to. Opening it reads what is on it; a card that cannot be opened raises `OSError` here and nowhere else."""
 
+    # TWO LOCKS: WHAT IS ON THE CARD, AND THE CARD'S I/O (the seventh review). One lock held across `write` and `fsync`
+    # was taken by every reader too — the heartbeat's `stats`, the coverage, a range's answer — and a write that hung
+    # for forty seconds held all of them: the camera's recorder stopped beating, went "lost" after 45 s with no reason
+    # given, and its card said `recording` the whole time. Now the I/O — a write, an open, a close, a delete — is one at
+    # a time under `_io`, and what the card holds (its segments and bytes) under `_lock`, held for moments and never
+    # across I/O: a reader never waits for the card. And the I/O is WATCHED: `stalled_for` is how long the I/O in
+    # progress has not returned, readable without any lock; past `stall_after` the card is STALLED — said in the
+    # heartbeat (`CardRecorder.heartbeat_extra`), and nothing more waits for it: an append, a range read, a close raise
+    # `Stalled` at once, and a `finish` is left for the next I/O that gets the card.
     def __init__(self, path: str, budget: int = CARD_BUDGET, segment_bytes: int = SEGMENT_BYTES,
-                 segment_span: float = SEGMENT_SPAN, sync_every: float = SYNC_EVERY, clock=time.monotonic):
+                 segment_span: float = SEGMENT_SPAN, sync_every: float = SYNC_EVERY, clock=time.monotonic,
+                 stall_after: float = STALL_AFTER):
         self.path = path[len("file://"):] if path.startswith("file://") else path
         self.budget = int(budget) or CARD_BUDGET
         self.segment_bytes, self.segment_span, self.sync_every, self.clock = segment_bytes, segment_span, sync_every, clock
-        self._lock = threading.Lock()
+        self.stall_after = float(stall_after)
+        self._lock = threading.Lock()                        # what is on the card: never held across I/O
+        self._iolock = threading.Lock()                      # the card's I/O, one at a time
+        self._busy_since: float | None = None                # when the I/O in progress began (`clock`); None: none
+        self._finish_due: set[str] = set()                   # streams to close at the next I/O: asked while stalled
         self.segs: list[_Segment] = []                       # oldest first
         self.bytes = 0
         # The segment being written, of each STREAM that is: `stream -> [segment, file, when it was last synced]`.
         self.open: dict[str, list] = {}
         self._f = None                                       # the file `_write` writes into: the appending stream's
         self.err: OSError | None = None                      # the last write error: the card is failing
+        self.appended = 0                                    # samples written since it opened: a card that works
         os.makedirs(self.path, exist_ok=True)
         self._scan()
+
+    def stalled_for(self) -> float:
+        """How long the card's I/O in progress has not returned, in seconds; 0 when none is in progress."""
+        since = self._busy_since
+        return 0.0 if since is None else max(0.0, self.clock() - since)
+
+    def stalled(self) -> bool:
+        return self.stalled_for() >= self.stall_after
+
+    @contextlib.contextmanager
+    def _io(self):
+        """The card's I/O, one at a time — refused at once while the card is stalled, and refused after
+        `stall_after` of waiting for the I/O ahead: nothing waits for a card that does not answer."""
+        if self.stalled() or not self._iolock.acquire(timeout=self.stall_after):
+            raise Stalled(f"the card has not finished a write for {self.stalled_for():.0f} s")
+        self._busy_since = self.clock()
+        try:
+            yield
+        finally:
+            self._busy_since = None
+            self._iolock.release()
 
     def _scan(self) -> None:
         for root, _, files in os.walk(self.path):
@@ -418,7 +494,10 @@ class CardBuffer:
     # together write at once — and each lost every group of pictures the other wrote a frame in. The price of a
     # second open segment is a file descriptor and a write buffer per recording that is writing.
     def append(self, stream: str, s: Sample) -> None:
-        with self._lock:
+        with self._io():
+            if stream in self._finish_due:
+                self._finish_due.discard(stream)
+                self._close_locked(stream)
             cur = self.open[stream][0] if stream in self.open else None
             if cur is not None and cur.bytes > 0 and s.begin <= cur.last_begin:
                 raise Backwards(f"{stream}: {s.begin} is not after {cur.last_begin}")
@@ -440,11 +519,13 @@ class CardBuffer:
             except OSError as e:
                 self.err = e
                 raise
-            cur.last, cur.last_begin, cur.bytes = s.end, s.begin, cur.bytes + len(data)
-            if not cur.first:
-                cur.first = s.begin
-            self.bytes += len(data)
+            with self._lock:
+                cur.last, cur.last_begin, cur.bytes = s.end, s.begin, cur.bytes + len(data)
+                if not cur.first:
+                    cur.first = s.begin
+                self.bytes += len(data)
             self.err = None
+            self.appended += 1
             self._retain()
 
     # The one place bytes reach the card — a test replaces it to have the card fail.
@@ -462,16 +543,23 @@ class CardBuffer:
         path = os.path.join(d, f"{begin}.smpl")
         seg = _Segment(stream, path)
         self.open[stream] = [seg, open(path, "ab"), self.clock()]
-        self.segs.append(seg)
+        with self._lock:
+            self.segs.append(seg)
         return seg
 
     def finish(self, stream: str) -> None:
-        """Close the stream's open segment: its next sample opens a new one, on a key frame."""
-        with self._lock:
-            self._close_locked(stream)
+        """Close the stream's open segment: its next sample opens a new one, on a key frame. On a card that does not
+        answer it is left for the next I/O that gets the card — its next sample of the stream opens a new segment
+        all the same — and whoever asked does not wait."""
+        try:
+            with self._io():
+                self._close_locked(stream)
+        except Stalled:
+            self._finish_due.add(stream)
 
     def close(self) -> None:
-        with self._lock:
+        """Every open segment closed. `Stalled` on a card that does not answer: the files stay with the I/O that hung."""
+        with self._io():
             failed = None
             for stream in list(self.open):
                 try:
@@ -481,6 +569,7 @@ class CardBuffer:
             if failed is not None:
                 raise failed
 
+    # Under `_io`: the file is the I/O's, the segment list is `_lock`'s.
     def _close_locked(self, stream: str) -> None:
         cur, f, _ = self.open.pop(stream, (None, None, 0.0))
         if f is self._f:
@@ -492,30 +581,39 @@ class CardBuffer:
             finally:
                 f.close()
         if cur is not None and cur.bytes == 0:                # opened and never written
+            self._drop(cur)
             try:
                 os.remove(cur.path)
             except OSError:
                 pass
-            self._drop(cur)
 
-    # The budget: the oldest closed segments go while the card is over it. An open one never does.
+    # The budget: the oldest closed segments go while the card is over it. An open one never does. Under `_io`; a
+    # segment leaves the list before its file goes, so a reader lists only what is still there (or finds it gone, and
+    # takes it for that: `_range_of`).
     def _retain(self) -> None:
-        while self.bytes > self.budget:
-            writing = {id(held[0]) for held in self.open.values()}
-            old = next((seg for seg in self.segs if id(seg) not in writing), None)
-            if old is None:
-                return
+        while True:
+            with self._lock:
+                if self.bytes <= self.budget:
+                    return
+                writing = {id(held[0]) for held in self.open.values()}
+                old = next((seg for seg in self.segs if id(seg) not in writing), None)
+                if old is None:
+                    return
+                self._drop_locked(old)
             try:
                 os.remove(old.path)
             except FileNotFoundError:
                 pass
-            self._drop(old)
             try:
                 os.rmdir(os.path.dirname(old.path))          # the epoch's directory, if that was its last segment
             except OSError:
                 pass
 
     def _drop(self, seg: _Segment) -> None:
+        with self._lock:
+            self._drop_locked(seg)
+
+    def _drop_locked(self, seg: _Segment) -> None:
         if seg in self.segs:
             self.segs.remove(seg)
             self.bytes -= seg.bytes
@@ -545,8 +643,13 @@ class CardBuffer:
     # An error is RAISED, never taken for the end: a camera answering a server's request for a range must not answer
     # with part of it as if it were all — the server would take the rest for "the card has none" and never ask
     # again. The end of a segment is the size the card wrote when the range began, so the record being written right
-    # now is not read, and a segment shorter than that is an error.
+    # now is not read, and a segment shorter than that is an error. (Every record is flushed as it is written —
+    # `_write` — so the reader takes no part in the card's I/O: it used to flush the open files under the one lock, and
+    # waited for a write that hung, with the heartbeat behind it; the seventh review.) A card that is STALLED is not
+    # read at all: a read of a card that does not finish a write would hang the camera's pusher with it.
     def pieces(self, recording: str | None, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
+        if self.stalled():
+            raise Stalled(f"the card has not finished a write for {self.stalled_for():.0f} s: it is not read")
         lo, hi = archive_ms(t0), archive_ms(t1)
         held = self.recordings()
         if recording is None:
@@ -556,23 +659,25 @@ class CardBuffer:
         if str(recording) not in held:
             raise NoRecording(f"no recording {recording} on this card (it holds {', '.join(held) or 'none'})")
         with self._lock:
-            for held in self.open.values():
-                held[1].flush()
             parts = [(s.path, s.bytes) for s in self.segs
                      if s.stream.startswith(f"{recording}/") and s.bytes > 0 and s.first < hi and s.last > lo]
         return self._pieces_of(parts, lo, hi, max(1, int(max_bytes)))
 
+    # A piece handed over is not kept here (the seventh review): the camera's pusher keeps a read of the card open from
+    # one pass to the next, and a generator suspended at `yield out` held the piece it had just given — a piece more in
+    # memory for every read left open. The piece is yielded out of a box, and the suspended reader holds one frame.
     def _pieces_of(self, parts: list, lo: int, hi: int, max_bytes: int):
-        out, size = [], 0
+        box, size = [[]], 0
         for path, written in parts:
             for smp in self._range_of(path, written, lo, hi):
-                if out and size + len(smp.body) > max_bytes:
-                    yield out
-                    out, size = [], 0
-                out.append(smp)
+                if box[0] and size + len(smp.body) > max_bytes:
+                    box.append([])
+                    size = 0
+                    yield box.pop(0)
+                box[0].append(smp)
                 size += len(smp.body)
-        if out:
-            yield out
+        if box[0]:
+            yield box.pop(0)
 
     def range(self, recording: str | None, t0: float, t1: float) -> list[Sample]:
         """`pieces`, joined: the whole range as ONE list — for a reader with a server's memory, and the tests. A
@@ -857,6 +962,9 @@ class CardActuator:
         except Backwards:
             r.last = s.begin
             return
+        except Stalled as e:                             # not a refusal: the card does not answer (the seventh review) —
+            r.last_error, r.need_key, r.failed = str(e), True, True      # dead all the same, back from `last` later
+            return
         except OSError as e:
             self._refused(r, e)
             return
@@ -951,8 +1059,8 @@ class CardActuator:
         with r.lock:
             r.stopped = True
             r.wake.notify()
-        if r.thread is not None:
-            r.thread.join(timeout=5.0)
+        if r.thread is not None:                         # a writer stuck in a card that does not answer is not waited for
+            r.thread.join(timeout=0.0 if self.card is not None and self.card.stalled() else 5.0)
         self._flush(r)
         upto = self.ring.newest()
         while (r.keep or not r.hold) and not r.failed and self._catch_up(r, upto):
@@ -980,7 +1088,7 @@ class CardActuator:
         with self._lock:
             dead = [(cid, r.last_error) for cid, r in self.recs.items() if r.failed]
         for cid, why in dead:
-            log.warning("card: %s: the card refused a write (%s) — the recording is restarted", cid, why)
+            log.warning("card: %s: the card did not take a write (%s) — the recording is restarted", cid, why)
             self._stop(cid)
         return [cid for cid, _ in dead], []
 
@@ -1041,6 +1149,8 @@ class CardRecorder(RecWorker):
         self._card_retry_at = float("-inf")
         self._coverage: dict[str, tuple[float, list]] = {}
         self.prebuffer_short: dict[str, float] = {}          # recording -> when `card.prebuffer.short` was last raised
+        self.card_refusal = ""                               # what the card refused, until a write lands on it again
+        self.failing_said: float | None = None               # when `card.failing` was last raised; None: the card is well
 
     # THE PRE-RECORD IS WHAT THE RING HOLDS, NOT ITS WINDOW (the review's sixth pass: "30 or 60?"). Sixty seconds is the
     # ring's window, the product's and the server's `PREBUFFER`; what a camera's ring holds is that or its bytes,
@@ -1064,7 +1174,7 @@ class CardRecorder(RecWorker):
         return (self.DETECTION if by_stream else self.LOST_AFTER) + self.DEFER_MARGIN
 
     # A RING SHORTER THAN THE DETECTION IS AN ALARM (the review's sixth pass). At 6 Mbit/s the ring held 44 s, at 8 —
-    # 32; the primary's death is noticed after 45; and the log said "recording from 60 s ago" all the same. The start
+    # 33; the primary's death is noticed after 45; and the log said "recording from 60 s ago" all the same. The start
     # of the break — the one thing the ring is kept for — was on the card at no ordinary bitrate above four megabits,
     # and nothing said so. Now it is said: in the recording's status (`prebuffer_s`, `prebuffer_short`), in the log,
     # and as the alarm `card.prebuffer.short`, when it begins and once a day while it lasts. The cure is the
@@ -1094,9 +1204,38 @@ class CardRecorder(RecWorker):
                         st["ring_max_bytes"] >> 20)
         return short
 
+    # A CARD THAT FAILS IS AN ALARM, NOT ONLY A FIELD (the seventh review: under a card gone read-only "there is no event
+    # of the card's failure"). `card.failing` goes into the journal of every recording on the card when the trouble
+    # begins — a write refused, a write that has not returned — and once a day while it lasts, through the closing,
+    # the opening again and the next refusal: one episode, until a write lands on the card again.
+    def failing_pass(self, now: float | None = None) -> str:
+        from w2cplatform.events import ALARM, EventLog
+        now = self.wall() if now is None else now
+        state, error = self._card_said()
+        bad = state in ("stalled", "failing") or (state == "recording" and bool(error)) or (
+            state == "unavailable" and self.card_fault == "refused a write")
+        if not bad:
+            self.failing_said = None
+            return ""
+        if self.failing_said is not None and now - self.failing_said < self.PREBUFFER_AGAIN:
+            return error
+        said = 0
+        for row in self.rows:
+            uid = str(row["id"])
+            if uid in self.epochs:
+                EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+                    now, "card.failing", cls=ALARM, cam=row.get("cam"), state=state, error=error)
+                said += 1
+        if said:
+            self.failing_said = now
+            log.warning("%s: the card %s (%s): what the camera records goes no further than its memory until the card "
+                        "is fixed or replaced", self.name, error, state)
+        return error
+
     def gate_pass(self, now: float | None = None) -> list[tuple[str, str]]:
         done = super().gate_pass(now)
         self.prebuffer_pass(now)
+        self.failing_pass(now)
         return done
 
     # The source is the camera's own ring — not a fan-out found in somebody's heartbeat: nothing to re-subscribe to.
@@ -1171,7 +1310,10 @@ class CardRecorder(RecWorker):
                 self._card_retry_at = self.clock() + self.CARD_RETRY
         self.volume = self.hold
         if self.card is not None:
-            self.capacity, self.volume_error = self.full_capacity, ""
+            if self.card.appended:
+                self.card_refusal = ""                       # a write landed: what it refused is over
+            _, error = self._card_said()
+            self.capacity, self.volume_error = self.full_capacity, f"the card {error}" if error else ""
         else:
             self.capacity, self.volume_error = 0, f"the card {self.card_fault}: {self.card_error}"
         return self.volume
@@ -1198,6 +1340,7 @@ class CardRecorder(RecWorker):
             self.reconciler.lost(uid, self.now())
         self._close_store(quiet=True)
         self.card_fault, self.card_error, self.card_since = "refused a write", str(err), self.wall()
+        self.card_refusal = str(err)
         self._card_retry_at = self.clock() + self.CARD_RETRY
 
     def _close_store(self, quiet: bool = False, wait: float | None = None) -> None:
@@ -1235,28 +1378,62 @@ class CardRecorder(RecWorker):
                 out["prebuffer_short"] = self.detection(cam)   # …and a break is noticed only after this many seconds
         return out
 
+    # WHAT THE CARD IS DOING, IN ONE PLACE (the seventh review), read live by the heartbeat and by the volume pass:
+    #
+    #     stalled      a write has not returned for `CardBuffer.stall_after` — the card does not answer. It used to
+    #                  hold the heartbeat with it, and the card said `recording` while nothing reached it
+    #     failing      its last write was refused, and it is still open (the next pass closes it)
+    #     unavailable  closed: it would not open, or it refused a write — with what it did
+    #     recording    open and taking writes — or opened again after refusing, and nothing has landed on it since:
+    #                  that is said too, so a card gone read-only is an error all along and not one that blinks
+    #
+    # `volume_error` was set by the volume pass alone, so it was empty while the card was `failing` and again between
+    # its opening anew and its next refusal: `rec_volume_error` went 1, 0, 1 every thirty seconds under a read-only
+    # card, and an alert with `for:` never fired.
+    def _card_said(self) -> tuple[str, str]:
+        """`(state, error)`: what the card is doing, and what it did, in words for the operator ("" when well)."""
+        card = self.card
+        if card is None:
+            if not self.card_error:
+                return "opening", ""
+            return "unavailable", (self.card_error if self.card_fault == "would not open"
+                                   else f"{self.card_fault}: {self.card_error}")
+        stalled = card.stalled_for()
+        if stalled >= card.stall_after:
+            return "stalled", (f"does not answer: a write to it has not returned for {stalled:.0f} s, and nothing more "
+                               f"is recorded on it until it does — check or replace the card")
+        if card.err is not None:
+            return "failing", f"refused a write: {card.err}"
+        if self.card_refusal and not card.appended:
+            return "recording", f"refused a write: {self.card_refusal}; opened again, nothing written to it since"
+        return "recording", ""
+
     # What a camera's recorder says: its place, the card, and the camera's frames. None of the engine's fields — no
-    # `archive` (nothing for a console to offer to declare), no quota of a ring, no writer watch, no door. The card's
-    # state is the card's own word: `failing` while its last write was refused and it is still open (until the next
-    # pass closes it), `unavailable` with what it did — would not open, refused a write — while it is closed.
+    # `archive` (nothing for a console to offer to declare), no quota of a ring, no door — and no writer watch but
+    # one: a STALLED card is `writer: stuck`, what waits for it and for how long, so the console's `rec_writer` and its
+    # volume page say it as they say a server's writer that stopped landing (the seventh review). Nothing here waits
+    # for the card: its counters are read under its own lock, which no I/O holds (`CardBuffer._io`).
     def heartbeat_extra(self) -> dict:
-        failing = self.card.err if self.card is not None else None
-        card = {"state": "failing" if failing is not None else "recording" if self.card is not None else
-                         "unavailable" if self.card_error else "opening",
-                "tries": self.card_tries, "since": self.card_since}
+        state, error = self._card_said()
+        card = {"state": state, "tries": self.card_tries, "since": self.card_since}
         if self.card is not None:
             segs, size, budget = self.card.stats()
             card.update(segments=segs, bytes=size, budget=budget)
-        if failing is not None:
-            card["error"] = f"refused a write: {failing}"
-        if self.card_error and self.card is None:
-            card["error"] = self.card_error if self.card_fault == "would not open" else f"{self.card_fault}: {self.card_error}"
+        if error:
+            card["error"] = error
         if getattr(self.actuator, "failures", 0):
             card["failures"] = self.actuator.failures        # writes the card refused, since this process started
+        stuck = {}
+        if state == "stalled":
+            card["stalled_s"] = round(self.card.stalled_for(), 1)
+            stuck = {"writer": {"state": "stuck", "outstanding": getattr(self.actuator, "queued", 0),
+                                "still": card["stalled_s"]}}
         # `archive` empty: a worker's is its events tree, and under `rec/` the console reads it as the box's own volume
         # and offers to declare it (`volumes.suggest`) — a camera has no volume of the engine to offer.
         return {**VmsWorker.heartbeat_extra(self), "archive": "", "volume": self.volume,
-                "volume_error": self.volume_error, "card": card, "feed": self.ring.status(self.wall())}
+                "volume_error": self.volume_error if self.card is None else f"the card {error}" if error else "",
+                "card": card,
+                "feed": self.ring.status(self.wall()), **stuck}
 
     # The camera's answer to a request for a range of its card (М12 Lesson 16: the server puts the range in the answer
     # to the camera's poll, the camera uploads it). A card that is not open, or a read cut short, is an ERROR — the

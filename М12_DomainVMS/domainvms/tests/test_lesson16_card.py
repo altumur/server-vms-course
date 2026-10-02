@@ -49,14 +49,32 @@ class _Sink:
             self.first = f["t"] if self.first is None else self.first
 
 
-def test_a_break_of_ten_minutes_is_continued_off_the_card_and_the_camera_holds_one_piece_of_it():
-    """The sixth review, blocker 3 — run as it was measured. A break of ten minutes at 4 Mbit/s: the continuation read
-    the whole gap off the card into one list — 272 MiB, in a camera that has 32 MB — and then threw all of it away,
-    because the card's reader gives `Sample` and the continuation kept only dicts. The camera's process dies of that,
-    and its ring, the break it was keeping and its live stream go with it; and had it lived, it sent nothing.
+def _weighed(ingest):
+    """The ingest's `upload`, weighing what the camera sends and keeping none of it — the protocol untouched (piece
+    numbers, `more`, `failed`): `{"bytes", "samples", "passes": [bytes of each pass]}`. A test that moves 272 MiB
+    measures the camera, not the ingest."""
+    seen, upload = {"bytes": 0, "samples": 0, "passes": [0], "in_order": True, "last": float("-inf")}, ingest.upload
 
-    The same break, on a real `CardBuffer`: every frame of it arrives, in order, from the first keyframe after what the
-    recorder has — and what the camera holds while it sends 272 MiB, measured, is a piece of the card and not the gap."""
+    def weigh(token, ref, rid, samples, **kw):
+        size = sum(len(s.body) for s in samples)
+        seen["bytes"] += size
+        seen["samples"] += len(samples)
+        seen["passes"][-1] += size
+        for smp in samples:
+            seen["in_order"], seen["last"] = seen["in_order"] and smp.begin > seen["last"], smp.begin
+        return upload(token, ref, rid, [], **kw)
+    ingest.upload = weigh
+    return seen
+
+
+def test_a_break_of_ten_minutes_is_half_a_minute_of_stream_and_the_rest_is_backfilled_a_piece_a_pass_beside_it():
+    """The sixth review, blocker 3, and the seventh's major on its fix. Ten minutes without a road at 4 Mbit/s: the
+    continuation read the whole gap off the card into one list — 272 MiB in a camera of 32 MB — and threw it away;
+    fixed to read it a piece at a time, it then sent all 272 MiB inside ONE pass: about five minutes over 8 Mbit/s with
+    no live frame, no poll, no ask answered. Now the stream continues the last `hold_seconds` out of memory and says
+    how much it left (`continued["left_s"]`); the recorder's backfill asks the card for the rest — a range, answered a
+    piece's worth a pass, each pass pushing the live frame too. Every frame of the 272 MiB arrives, in order, and what
+    the camera holds over the whole of it, measured, is a few pieces and not the gap."""
     from vms.card import CardBuffer
     from vms.worker import fake_samples
     wall = Clock(100_000.0)
@@ -82,24 +100,28 @@ def test_a_break_of_ten_minutes_is_continued_off_the_card_and_the_camera_holds_o
         down.update(URLS)
         for _ in range(600):                                           # ten minutes without a road
             wall.advance(1); pusher.pass_once([_frame(wall())])
-        assert pusher.broken_at is not None and len(pusher.ring) == 31  # in memory: the last half-minute
         down.clear()
-        wall.advance(1)
         before = sink.frames
+        wall.advance(1); out = pusher.pass_once([_frame(wall())])      # the road is back
+        assert sink.frames - before == out["pushed"] == 31 and sink.last == wall()   # the last thirty seconds, and live
+        assert out["continue"]["left_s"] == 571.0 and pusher.broken_at is None       # …and 3..574 left, said
+        seen = _weighed(ingest)                                        # the recorder's backfill asks for what was left
+        rid = ingest.request_range(SERIAL, start + 3, wall() - 30, recording="1-card")
         tracemalloc.start()
-        held = tracemalloc.get_traced_memory()[0]
-        out = pusher.pass_once([_frame(wall())])                       # the road is back: the break is continued
+        held, passes, live = tracemalloc.get_traced_memory()[0], 0, sink.frames
+        while ingest.cams[SERIAL].ranges and passes < 400:
+            seen["passes"].append(0)
+            wall.advance(1); pusher.pass_once([_frame(wall())])
+            passes += 1
         peak = tracemalloc.get_traced_memory()[1] - held
         tracemalloc.stop()
     finally:
         shutil.rmtree(card.path, ignore_errors=True)
-    off_card = (573 - 4) * 5                                           # from the keyframe at +4 to where memory begins, +573
-    assert sink.off_card == off_card and sink.first == start + 4.0     # every frame of the gap, from a keyframe
-    assert sink.frames - before == off_card + 31 + 1 == out["pushed"]  # …then what memory held, then the live frame
-    assert sink.in_order and sink.last == wall() and pusher.resumed == off_card + 31
-    assert sink.bytes > 270 << 20                                      # 272 MiB went through the camera…
-    assert peak < 4 * PIECE_BYTES < MEMORY_BUDGET // 4                 # …and it never held more than a few pieces of it
-    assert pusher.broken_at is None and pusher.ring == []
+    assert ingest.result(SERIAL, rid) == []                            # (landed: its samples were weighed, not kept)
+    assert seen["samples"] == (574 - 4) * 5 and seen["in_order"] and seen["bytes"] > 270 << 20   # every frame, in order
+    assert passes > 100 and max(seen["passes"]) <= 2 * PIECE_BYTES     # a piece's worth a pass, never the whole range…
+    assert sink.frames - live == passes and sink.in_order              # …and every one of those passes pushed live
+    assert peak < 4 * PIECE_BYTES < MEMORY_BUDGET // 4                 # the camera held a few pieces of it, not 272 MiB
 
 
 def test_the_camera_answers_a_range_off_its_card_with_the_cards_own_frames_on_the_clusters_clock():
@@ -137,7 +159,10 @@ def test_a_range_is_answered_in_pieces_the_camera_can_hold_and_names_the_recordi
             return upload(token, ref, rid, samples, **kw)
         ingest.upload = weighed
         rid = ingest.request_range(SERIAL, wall() - 100, wall() - 40, recording="1-card")
-        assert pusher.pass_once([])["uploaded"] == [(wall() - 100, wall() - 40)]
+        uploaded, passes = [], 0
+        while not uploaded and passes < 100:                           # a piece's worth a pass (the seventh review)
+            uploaded, passes = pusher.pass_once([])["uploaded"], passes + 1
+        assert uploaded == [(wall() - 100, wall() - 40)] and passes >= 15
         got = ingest.result(SERIAL, rid)
         assert len(got) == 300 and sum(sizes) == sum(len(s.body) for s in got) > 28 << 20
         assert len(sizes) >= 30 and max(sizes) <= PIECE_BYTES and sizes[-1] == 0   # thirty pieces, and the word "whole"
@@ -333,3 +358,128 @@ def test_a_range_is_waited_for_a_piece_at_a_time_so_a_slow_camera_is_not_a_silen
     assert read == [0, 1, 2]                                           # nine pieces of the card it did not read for nobody
     kept = ingest.cams[SERIAL]
     assert kept.answers == {} and kept.parts == {} and kept.ranges == {}
+
+
+def test_with_one_upload_in_twenty_lost_and_one_answer_in_twenty_lost_every_range_lands_whole():
+    """The seventh review: a lost answer to piece 3 and the camera began the range again from piece 0 — the ingest
+    failed it as "out of its turn", the recorder backed off, and at 5 % of answers lost one range in ten landed,
+    after 159 pieces read and sent. Now the camera keeps the piece it has no answer for and sends it again under its
+    own number: an upload that never arrived is simply taken, one whose answer was lost is taken as a repeat
+    (`Ingest.upload`), and a pass whose upload did not get through ends there — `Unreachable` is caught per range,
+    never out of the pass. Ten ranges of five pieces each: every one lands whole."""
+    import random
+    from domain.ingest import Unreachable as Gone
+    wall = Clock(100_000.0)
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    card = real_card(wall() - 1000, wall(), step=0.2, size=50_000)    # 2 Mbit/s: twenty seconds are five pieces
+    try:
+        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces)
+        rng, lost, upload = random.Random(16), {"uploads": 0, "answers": 0}, ingest.upload
+
+        def lossy(*a, **kw):
+            r = rng.random()
+            if r < 0.05:
+                lost["uploads"] += 1
+                raise Gone("the upload did not arrive")
+            out = upload(*a, **kw)
+            if r > 0.95:
+                lost["answers"] += 1
+                raise Gone("the answer to the upload was lost on its way back")
+            return out
+        ingest.upload = lossy
+        rids = {ingest.request_range(SERIAL, wall() - 600 + 30 * i, wall() - 580 + 30 * i): i for i in range(10)}
+        got, failed = {}, []
+        for _ in range(200):
+            pusher.pass_once([])
+            for rid in [r for r in rids if r not in got]:
+                try:
+                    answer = ingest.result(SERIAL, rid)
+                except RangeFailed as e:
+                    failed.append(str(e))
+                    continue
+                if answer is not None:
+                    got[rid] = answer
+            if len(got) + len(failed) == len(rids):
+                break
+    finally:
+        shutil.rmtree(card.path, ignore_errors=True)
+    assert lost["answers"] >= 2 and lost["uploads"] >= 2                # both kinds of loss happened…
+    assert failed == [] and len(got) == 10                              # …and every range landed
+    for rid, i in rids.items():
+        assert _times(got[rid]) == [wall() - 600 + 30 * i + 0.2 * k for k in range(100)]   # whole, once, in order
+
+
+def test_the_whole_camera_holds_its_frames_inside_its_memory_budget_through_a_break_and_its_continuation():
+    """The seventh review: the pusher's `tail` and `ring` held the camera's frames a second time, outside the budget —
+    some 70 MiB in a camera that says 40. On a camera the pusher is given the camera's ring (`ring=`) and holds no
+    frame of its own: what it sent, a break, the event's ring are the ring's, under the ring's bytes, and of the card
+    it holds one piece in flight. Measured, the whole camera — the ring, the card's writer and its queue, the card,
+    the pusher — at 10 Mbit/s, through ten seconds of stream, a minute without a road and the catch-up after it: the
+    ring reaches 27 s, less than the stream's 30, so the continuation's first seconds come off the card too. The peak
+    stays under `MEMORY_BUDGET`, and every frame from the first keyframe the stream reaches reaches the writer once."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    from vms.worker import fake_samples
+    wall = Clock(100_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    down = set()
+
+    def dial(url):
+        if url in down:
+            raise Unreachable(f"{url} did not answer")
+        return ingest
+
+    class Writer:                                                       # the recorder's writer: newer than its last, or nothing
+        def __init__(self):
+            self.times, self.repeats, self.off_card = [], 0, 0
+
+        def push(self, f):
+            if self.times and f["t"] <= self.times[-1]:
+                self.repeats += 1
+                return
+            self.times.append(f["t"])
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
+    try:
+        ring = CamRing(clock=wall)
+        act = CardActuator(ring, card, threaded=False)
+        act("start", {"id": "1-card", "epoch": 1})                      # the card writes every frame: its queue is full work
+        pusher = CameraPusher(SERIAL, cam.flash, dial, clock=wall, card=card.pieces, recording="1-card", ring=ring)
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        writer = ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        ingest.written = lambda ref: writer.times[-1] if writer.times else None
+        reads, pieces = [], card.pieces
+
+        def read(recording, t0, t1, max_bytes):
+            reads.append((t0, t1))
+            return pieces(recording, t0, t1, max_bytes)
+        pusher.card = read
+
+        def second():                                                   # the sensor: 25 frames of 50 kB into the ring
+            for s in fake_samples(wall(), wall() + 1, step=0.04, gop=2.0, size=50_000):
+                ring.add(s)
+            act.drain()
+            wall.advance(1)
+        tracemalloc.start()
+        for _ in range(10):
+            second(); pusher.pass_once([])
+        down.update(URLS)
+        for _ in range(60):
+            second(); pusher.pass_once([])
+        down.clear()
+        back, catching = wall(), 0
+        for _ in range(120):
+            second(); pusher.pass_once([])
+            catching += 1
+            if not pusher.behind():
+                break
+        peak = tracemalloc.get_traced_memory()[1]
+        tracemalloc.stop()
+    finally:
+        shutil.rmtree(card.path, ignore_errors=True)
+    assert 24 < ring.reach() < 30 and reads                             # memory reached less than the stream: the card gave the rest
+    assert peak < MEMORY_BUDGET, f"the camera held {peak / 2**20:.1f} MiB of a {MEMORY_BUDGET >> 20} MiB budget"
+    assert pusher.continued["failed_s"] == 0 and pusher.continued["cut_s"] == 0 and catching > 1, (pusher.continued, catching, peak / 2**20)
+    reach = back + 1 - pusher.hold_seconds                              # the first keyframe at `now - hold_seconds`, on
+    tail = [t for t in writer.times if t >= reach]
+    assert tail[0] - reach < 1.0 and writer.repeats == 0
+    assert all(round(b - a, 3) == 0.04 for a, b in zip(tail, tail[1:]))  # …every frame of it, once, in order

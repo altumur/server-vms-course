@@ -118,7 +118,9 @@ BACKUP = {"id": f"{SERIAL}-copy", "cam": f"ref:{SERIAL}", "home": "copy", "when"
 
 
 def _frames(wall, n, start=0):
-    return [{"t": wall() + i * 0.04, "n": start + i} for i in range(n)]
+    """The sensor's frames `start` to `start + n`, twenty-five a second: their capture times go forward with their
+    numbers — a pusher takes no frame that is not newer than the last it holds (М12 Lesson 16, the seventh review)."""
+    return [{"t": wall() + (start + i) * 0.04, "n": start + i} for i in range(n)]
 
 
 def test_while_a_writes_the_camera_sends_one_stream_to_a_and_neither_standby_records():
