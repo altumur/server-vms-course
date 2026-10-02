@@ -82,13 +82,32 @@ job "recworker" {
       driver = "podman"
       kill_timeout = "40s"                           # SIGTERM: the pipelines stop, the writer closes after its flush (up to 30 s), then the hold goes
       identity { env = true }
+      # THE ARCHIVE'S ENGINE, AS М10'S UNIT RUNS IT (the review's fourth pass, blocker 3). Every node runs М10's
+      # `obsd.service` (`vmsserver/deploy/install-obsd.sh`): the daemon as `obsd`, its socket in /run/obsd, and only
+      # the members of `vms-rec` — gid 2101, `obsd.sysusers` — let in. This job still mounted /run/vms and named no
+      # socket: every recorder of the cluster looked for the daemon where it no longer was, its volume `away` for
+      # ever, nothing recorded. Now: /run/obsd mounted, `OBSD_SOCKET` said, and the group — as the PRIMARY group of
+      # the task's root, which the daemon counts as it counts a supplementary one (the peer's gid; a root without it
+      # is refused). `tests/test_recorder_job.py` checks all three against the unit and the install files.
+      user = "0:2101"
       config {
         image        = "localhost/clustervms:latest"
         network_mode = "host"                        # it subscribes to workers' RTSP fan-outs, on this server or elsewhere
         args         = ["python3", "-m", "cluster", "recorder"]
-        volumes      = ["/data/archive:/data/archive", "/run/vms:/run/vms"]   # its events, and its own volume's path (the daemon opens it); /run/vms: obsd's socket and the workers' shared memory; no /data/media: it never reads a camera
+        volumes      = ["/data/archive:/data/archive", "/run/vms:/run/vms", "/run/obsd:/run/obsd"]   # its events, and its own volume's path (the daemon opens it); /run/vms: the workers' shared memory; /run/obsd: the daemon's socket — this job's alone; no /data/media: it never reads a camera
+      }
+      # The cluster's key (`w2cplatform/sealing.py`): a network volume's `access_secret` is sealed by the console to its
+      # row, and the daemon takes credentials only as the volume's parameters — so the recorder, which mounts the
+      # volume, opens it (М10's third review, blocker 3). Rendered from the Nomad variable `secrets/vms` into this task's
+      # secrets directory, as for the console and the worker; without it the recorder handed the bucket the ciphertext.
+      template {
+        data        = "{{ with nomadVar \"secrets/vms\" }}{{ .ring }}{{ end }}"
+        destination = "secrets/vms.key"
+        perms       = "0600"
       }
       env {
+        SECRETS_KEY = "/secrets/vms.key"         # what the template above rendered
+        OBSD_SOCKET = "/run/obsd/obsd.sock"      # where obsd.service listens (`--socket`)
         # The runtime's part of the seam (`w2cplatform/runtime.py`): the neutral names the loop
         # reads, filled here from Nomad's own. This file already knows the orchestrator — the
         # worker must not. A k8s manifest fills the same four from an ordinal and a fieldRef.

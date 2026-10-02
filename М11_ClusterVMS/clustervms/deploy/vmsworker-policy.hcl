@@ -5,7 +5,7 @@
 # the "nothing else" from inside an allocation.
 namespace "default" {
   variables {
-    path "secrets/vms"          { capabilities = ["read"] }   # the cluster's key: this job and one other, nobody else
+    path "secrets/vms"          { capabilities = ["read"] }   # the cluster's key: this job and two others (console, vmsworker, recworker), nobody else
     path "vms/epoch/*"  { capabilities = ["write", "read", "list"] }
     path "vms/slots/*"  { capabilities = ["write", "read", "list"] }
     path "vms/holds/*"  { capabilities = ["write", "read", "list"] }    # the place it took — a claim about this process, like its slot

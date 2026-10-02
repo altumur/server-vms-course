@@ -69,8 +69,9 @@ Volume=/data/archive:/data/archive:z
 # it too: a vendor's SDK could read every camera's footage past the console's rights and its audit, and in the
 # grace after a recorder's restart mount its volume's writer by the owner `rec:<volume>`, which is a name, not a
 # secret. Now: /run/obsd, mounted here only; the daemon runs as its own user and lets in, besides itself, only
-# the members of `OBSD_CLIENT_GROUP` (obsd.service) — which this container joins, by number (the group's gid on
-# the host; `groupadd -g 2101 vms-rec` when the box is set up).
+# the members of `OBSD_CLIENT_GROUP` (obsd.service) — which this container joins, by number: the gid of `vms-rec`
+# on the host, fixed at 2101 by `obsd.sysusers` and checked by `install-obsd.sh` (a container has no /etc/group of
+# the host's). /run/obsd and /run/vms are made at boot by `vms.tmpfiles`, so this unit starts before the daemon too.
 Volume=/run/obsd:/run/obsd:z
 Environment=OBSD_SOCKET=/run/obsd/obsd.sock
 GroupAdd=2101

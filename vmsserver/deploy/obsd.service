@@ -20,9 +20,14 @@
 # - `User=obsd`, `Group=vms-rec`, `OBSD_CLIENT_GROUP=vms-rec` — the daemon refuses a peer of another uid unless it
 #   is in that group (`SO_PEERGROUPS`); the recorders join it (`GroupAdd=` in their unit), nothing else does. What
 #   is left: every member of the group is trusted alike — any recorder on the box may open any volume, and the
-#   `owner` a detached writer is picked up by is a name, not a secret. The daemon has no per-client token.
-# - `RuntimeDirectory=obsd vms` + `RuntimeDirectoryPreserve=yes` — both exist before the daemon starts (/run/vms
-#   for the workers' shared memory), and a restart of the daemon does not take those sockets with it.
+#   `owner` a detached writer is picked up by is a name, not a secret. The daemon has no per-client token. The user
+#   and the group (gid 2101) are made by `obsd.sysusers`, the volume it owns by `vms.tmpfiles` — both installed by
+#   `install-obsd.sh`, which also hands a ring formatted under root to `obsd` (the review's fourth pass, blocker 2:
+#   nothing made them, and this unit failed on a fresh box with 217/USER).
+# - `RuntimeDirectory=obsd` 0750 + `RuntimeDirectoryPreserve=yes` — the socket's directory, `obsd:vms-rec`, made
+#   before the daemon starts (the daemon itself would make it 0700, which no recorder could enter) and kept across
+#   its restarts. Not /run/vms any more: that one is the box's (`vms.tmpfiles`) — made only here, it did not exist
+#   without the daemon, and the holder and the recorder, which mount it, did not start either.
 # - `OBSD_WRITER_GRACE_S=90` — how long a writer whose recorder vanished waits for the same owner
 #   (`rec:<volume>`). Longer than a hold takes to lapse (45 s), so whoever takes the volume next picks the
 #   writer up whole (feedback CF).
@@ -41,7 +46,7 @@ ExecStart=/usr/local/bin/obsd --socket /run/obsd/obsd.sock
 User=obsd
 Group=vms-rec
 Environment=OBSD_CLIENT_GROUP=vms-rec
-RuntimeDirectory=obsd vms
+RuntimeDirectory=obsd
 RuntimeDirectoryMode=0750
 RuntimeDirectoryPreserve=yes
 Environment=OBSD_WRITER_GRACE_S=90

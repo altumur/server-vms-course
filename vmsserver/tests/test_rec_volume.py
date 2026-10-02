@@ -295,6 +295,116 @@ def test_a_daemon_that_crashed_is_a_remount_once_its_lock_is_stale():
         d.stop()
 
 
+def test_an_engine_gone_at_the_finish_of_a_fetched_range_does_not_take_the_pass_with_it():
+    """The review's fourth pass, a minor. The finish after a fetched range's last group, and a keep's copy's, stood
+    outside the `try`: the engine gone between the last sample and the finish raised out of `_land` — every request
+    of the pass with it, and what had landed not counted. It is the engine lost now, said, and what landed counts."""
+    from w2cplatform.obsd import Unavailable
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+
+    def gone(*a, **k):
+        raise Unavailable("FINISH_MEDIA", "obsd closed the connection")
+    r.store.finish = gone
+    out = r._land("1", "1", fake_samples(t - 400, t - 300, gop=10.0), t - 400, t - 300, "device")
+    assert out["groups"] == 10 and r.backfilled == 10 and r.engine_lost
+    r.engine_lost = False
+    assert r._copy_in("1", fake_samples(t - 300, t - 200, gop=10.0)) is True and r.engine_lost
+
+
+def test_a_daemon_that_froze_between_two_samples_is_a_remount_and_the_recording_goes_on():
+    """The review's fourth pass, blocker 1. Frozen, not restarted: SIGSTOP longer than a call's timeout. The write
+    connection answered `Unavailable` at once for its silent window, the remount's `WRITER_CLOSE` was refused in it
+    before it reached the daemon, the store forgot the handle — and the writer lived on in the session the readers and
+    the pass kept alive: every mount after it `ALREADY_LOCKED`, the volume not written until somebody restarted the
+    recorder. A writer whose close did not happen is left to the daemon now, in a session abandoned: detached after the
+    linger, picked up by the next mount under the same owner — and the same pipeline goes on into it."""
+    import os
+    import signal
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=1))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        assert r.actuator.feed("1", t - 120, t - 60) == {"OK": 60}
+        r.store.status()                                               # the readers' connection is up too
+        first = r.session
+        os.kill(d.proc.pid, signal.SIGSTOP)
+        try:
+            said = r.actuator.feed("1", t - 60, t - 50)                # the first waits its second; the rest fail at once
+        finally:
+            os.kill(d.proc.pid, signal.SIGCONT)
+        assert said == {"UNAVAILABLE": 10}
+        assert r.engine_lost and r.heartbeat_extra()["archive_error"] == "obsd stopped answering"
+        r.lease_pass()                                                 # the remount, inside the write connection's window
+        assert first.abandoned and r.session is not first              # the writer's close was refused: left behind
+        deadline = time.monotonic() + 10
+        while r.store is None and time.monotonic() < deadline:        # busy while the old session lingers
+            assert r.archive_failure in ("busy", "away") and r.volume == "srv-1"
+            time.sleep(OBSD_LINGER_MS / 1000)
+            r.lease_pass()
+        assert r.store is not None and r.store.reattached and r.remounts == 1   # the writer the old session left
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}           # the same pipeline, into it
+        r.store.seal()
+        assert r.our_coverage("1") == [(t - 120, t - 59), (t - 30, t)]    # the sample out before the freeze landed after it
+    finally:
+        d.stop()
+
+
+def test_a_close_that_waits_on_the_leases_thread_waits_one_call_and_not_thirty_seconds():
+    """The review's fourth pass, Т-M1. `WRITER_CLOSE` may take thirty seconds to flush, and a remount or a volume let
+    go closes the writer on the thread that renews the leases — twenty-five seconds a lease leaves. That thread waits
+    one call's timeout now; a close that did not come back in it leaves the session to the daemon, as a silence does."""
+    import os
+    import signal
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=1, long_timeout=30))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        first = r.session
+        os.kill(d.proc.pid, signal.SIGSTOP)
+        t0 = time.monotonic()
+        try:
+            r._lost_engine()
+            r._close_store(quiet=True, wait=r.session.timeout)         # what `_write_into` and `leave_volume` do
+        finally:
+            os.kill(d.proc.pid, signal.SIGCONT)
+        assert time.monotonic() - t0 < 5 and r.store is None and first.abandoned
+    finally:
+        d.stop()
+
+
+def test_a_sample_that_races_its_writers_own_close_is_not_the_engine_lost():
+    """The review's fourth pass, a minor. A handle this client closed answers `UNKNOWN_HANDLE` like a handle the
+    daemon lost, and was counted as one: `SESSION_LOST`, a remount, an outage in the heartbeat for a close of our own.
+    The client remembers what it closed: that answer is `Closed`, and the session is not lost."""
+    from w2cplatform.obsd import Closed, SessionLost
+    from tests.conftest import store
+    st = store()
+    w = st.writer
+    st.seal()                                                          # the writer closed and taken again
+    smp = fake_samples(Box().wall() - 10, Box().wall())[0]
+    try:
+        w.put("1/e1", smp)                                             # the old handle, after its own close
+        raise AssertionError("a closed writer took a sample")
+    except SessionLost:
+        raise AssertionError("our own close was taken for the engine lost")
+    except Closed as e:
+        assert e.name == "CLOSED"
+    assert st.session.lost == 0 and not st.lost
+
+
 def test_readers_do_not_close_each_other_in_the_middle_of_a_read():
     """Blocker 5. One reader was shared: every question closed it and mounted another, so the door, the backfill,
     the keeps and the pass — reading at once — closed each other's reader mid-read. A reader is the question's own

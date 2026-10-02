@@ -132,6 +132,8 @@ def test_a_spare_picks_up_a_volume_whose_recorder_went_silent():
     assert a.volume_pass() == "s3-main" and b.volume_pass() == ""
 
     box.wall.advance(a.slot_ttl + 1)                                   # r-1 stops renewing: crashed, or the box went away
+    assert b.volume_pass() == ""                                       # past `until` by the wall — not by b's own watch
+    box.clock.advance(a.slot_ttl + a.HOLD_SKEW)                        # the row stood still a whole term, by b's clock
     assert b.volume_pass() == "s3-main" and b.hold == "s3-main"
 
     # and the old holder learns it on its next pass: it is not fenced, it is a spare now
@@ -686,10 +688,12 @@ def test_a_network_volume_is_mounted_only_on_a_hold_confirmed_at_the_mount():
     r2 = _recorder(box, "r-2", "srv-b")
     real_close = r._close_store
 
-    def slow_close(quiet=False):                                       # the old writer's close takes a minute…
-        real_close(quiet)
-        box.wall.advance(60); box.clock.advance(60)
-        assert r2.claim_hold(["net"]) == "net"                         # …the hold lapses, and another recorder takes it
+    def slow_close(quiet=False, wait=None):                            # the old writer's close takes a minute…
+        real_close(quiet, wait)
+        if r2.hold is None:
+            assert r2.claim_hold(["net"]) is None                      # (r2 looks: renewed a moment ago, r-1's)
+            box.wall.advance(60); box.clock.advance(60)
+            assert r2.claim_hold(["net"]) == "net"                     # …the hold lapses, and another recorder takes it
     r._close_store = slow_close
     r._lost_engine()
     r.lease_pass()
@@ -718,10 +722,103 @@ def test_the_boxs_own_volume_keeps_the_size_it_has_and_a_smaller_quota_waits_for
     volumes.write(box.vars, row)
     again.lease_pass()
     assert again.volume == "srv-a" and again.store.size() == 64 << 20  # not shrunk on one word…
-    assert "shrink_confirmed" in again.heartbeat_extra()["quota_note"]
+    hb = again.heartbeat_extra()
+    assert "shrink_confirmed" in hb["quota_note"]
+    # …and the heartbeat says the size it HAS and the shrink that waits, for the console to show — not the declared
+    # number as if it were done (the review's fourth pass)
+    assert hb["volume_quota"] == 64 << 20 and hb["shrink_pending"] == 32 << 20
     volumes.write(box.vars, {**row, "shrink_confirmed": 32 << 20})
     again.lease_pass()
-    assert again.store.size() == 32 << 20 and "quota_note" not in again.heartbeat_extra()   # …on two
+    hb = again.heartbeat_extra()
+    assert again.store.size() == 32 << 20 and "quota_note" not in hb and "shrink_pending" not in hb   # …on two
+    assert hb["volume_quota"] == 32 << 20
+    from w2cplatform.eventdatabase import EventIndex                  # and the recorder says when the engine did it
+    [shrunk] = [e for e in EventIndex(box.archive, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+                if e["kind"] == "archive.volume.shrunk"]
+    assert shrunk["volume"] == "srv-a" and shrunk["was"] == 64 << 20 and shrunk["quota_bytes"] == 32 << 20
+
+    def refused(size):
+        from w2cplatform.obsd import ObsdError
+        raise ObsdError(5, "WRITER_RESIZE", "the disk said no")
+    real_resize, again.store.resize = again.store.resize, refused
+    volumes.write(box.vars, {**row, "quota_bytes": 128 << 20})
+    again.lease_pass()
+    assert "refused" in again.heartbeat_extra()["resize_error"]       # said, and asked again on the next pass
+    again.store.resize = real_resize
     volumes.write(box.vars, {**row, "quota_bytes": 128 << 20})
     again.lease_pass()
     assert again.store.size() == 128 << 20                             # a larger ring takes nothing away: at once
+
+
+def test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to():
+    """The review's fourth pass. The box's own volume, with no `ARCHIVE_QUOTA_BYTES`, was formatted at a share of the
+    disk the RECORDER measured — in its container, where `/data/volume` is not mounted: the container's system SSD, not
+    the data disk, and that size stood from then on as the volume's own. The daemon opens the path, so the daemon is
+    asked, before `FORMAT`: `VOLUME_SPACE` of the directory, or of the nearest one above it that exists."""
+    import shutil
+    from collections import namedtuple
+    from vms.recworker import RecWorker
+    box = Box()
+    real, real_share, given = shutil.disk_usage, RecWorker._share_of_space, []
+    ssd = namedtuple("usage", "total used free")(200 << 30, 190 << 30, 10 << 30)
+    shutil.disk_usage = lambda path: ssd                               # what a container would have measured
+    RecWorker._share_of_space = staticmethod(lambda space, low=0.75: given.append(space) or real_share(space, low))
+    try:
+        r = _recorder(box, "r-1", "srv-a", default_quota=0)
+        r.lease_pass()
+    finally:
+        shutil.disk_usage, RecWorker._share_of_space = real, staticmethod(real_share)
+    assert r.store is not None and r.store.formatted
+    space = r.store.space_where()                                      # the daemon's numbers for the volume's disk
+    assert [g["capacity"] for g in given] == [space["capacity"]] != [ssd.total]
+    assert r.store.quota == real_share(given[0]) > 1 << 30
+    assert r.heartbeat_extra()["archive_quota"] == r.store.quota       # what the console offers: the size it has
+    from vms.archive import Archive
+    from tests.conftest import obsd_session
+    deep = Archive(f"file://{box.root}/a/b/volume", "deep", 0, "rec:deep", obsd_session("deep"))
+    assert deep.space_where()["capacity"] == space["capacity"]        # not there yet: the nearest directory above it
+
+
+def test_a_hold_renewed_by_a_box_whose_clock_is_behind_is_not_taken_from_it():
+    """The review's fourth pass, Т-M5. A hold was taken when the wall clock HERE passed the `until` the holder wrote by
+    ITS wall clock: a holder a minute behind, renewing every pass, looked lapsed to the spare — two writers in one
+    ring. A hold of somebody else's is stale when this process has watched its row stand still for a whole term, by
+    its own monotonic clock: renewed, it is not taken whatever the clocks say; let go of, it is — a term later."""
+    box = Box()
+    _net(box, "net")
+    behind, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
+    behind.wall = lambda: box.wall() - 60                              # its clock a minute behind everybody's
+    assert behind.volume_pass() == "net" and spare.volume_pass() == ""
+    for _ in range(6):                                                 # two minutes, a pass every twenty seconds
+        box.wall.advance(20); box.clock.advance(20)
+        assert behind.volume_pass() == "net"                           # it renews: `until` is in the past by the spare's wall
+        assert spare.volume_pass() == "" and spare.hold is None        # …and the row moves: not stale
+    for _ in range(2):                                                 # it stops renewing
+        box.wall.advance(20); box.clock.advance(20)
+        assert spare.volume_pass() == ""                               # forty seconds of a still row: not yet a term
+    box.wall.advance(20); box.clock.advance(20)
+    assert spare.volume_pass() == "net"                                # past a term and the skew, by the spare's own clock
+
+
+def test_a_renewal_that_lost_to_one_of_ours_keeps_the_hold():
+    """The review's fourth pass, a minor. The pass and a keep's `seal` both renew the hold; the one that lost the CAS
+    took the conflict for the hold taken — let go of a fresh hold of its own and waited out a term for it. A conflict
+    is answered by the row now: still ours is ours."""
+    from w2cplatform.variables import Conflict
+    box = Box()
+    _net(box, "net")
+    r = _recorder(box, "r-1", "srv-a")
+    assert r.volume_pass() == "net"
+    real_put = r.vars.put
+
+    def renewed_meanwhile(key, items, cas=None):
+        if key == "rec/holds/net" and cas is not None:
+            real_put(key, items)                                       # another thread of ours renewed it first…
+            raise Conflict(key)                                        # …and this CAS lost to it
+        return real_put(key, items, cas=cas)
+    r.vars.put = renewed_meanwhile
+    try:
+        assert r.renew_hold() and r.hold == "net"
+    finally:
+        r.vars.put = real_put
+    assert r.volume_pass() == "net" and r.store is not None

@@ -75,12 +75,17 @@ FLAG_NEED_KEY_FRAME = 1 << 0              # this sample needs an earlier key fra
 FLAG_NEED_PREVIOUS_FRAME = 1 << 3
 
 
+# Where the course's daemon listens: `/run/obsd/obsd.sock`, the directory of its own that `obsd.service` gives it
+# and only the recorder mounts (the review's third pass) — not the daemon's built-in `/run/vms/obsd.sock`, which the
+# client kept as its default after the unit moved: a recorder started without `OBSD_SOCKET` (М11's job did not set
+# it) looked beside the workers' shared memory and found no daemon there, for ever (the review's fourth pass,
+# blocker 3). On macOS the daemon's own default, per user.
 def default_socket() -> str:
-    """Where the daemon listens unless told otherwise: `OBSD_SOCKET`, else its own default."""
+    """Where the daemon listens unless told otherwise: `OBSD_SOCKET`, else where `obsd.service` puts it."""
     if os.environ.get("OBSD_SOCKET"):
         return os.environ["OBSD_SOCKET"]
     import sys
-    return f"/tmp/vms-obsd-{os.getuid()}.sock" if sys.platform == "darwin" else "/run/vms/obsd.sock"
+    return f"/tmp/vms-obsd-{os.getuid()}.sock" if sys.platform == "darwin" else "/run/obsd/obsd.sock"
 
 
 def archive_ms(unix_s: float) -> int:
@@ -111,19 +116,34 @@ class Unavailable(ObsdError):
 
 
 class SessionLost(Unavailable):
-    """The daemon does not know a handle of this session (`UNKNOWN_HANDLE`): every handle the session had is gone.
+    """The daemon does not know a handle of this session (`UNKNOWN_HANDLE`) that this client never closed: every
+    handle the session had is gone.
 
     Two ways to get here, and the client cannot tell them apart — nor does it need to (the engine's session, asked):
     the daemon was restarted, or every connection of the session was gone longer than `OBSD_SESSION_LINGER_MS`.
     Either way the HELLO that reconnected under the same token made a NEW, empty session, and `HELLO` says nothing
-    that would show it — its `pid` repeats in a container and after a reboot. So the rule is the reply: any
+    that would show it — its `pid` repeats in a container and after a reboot. So the rule is the reply: an
     `UNKNOWN_HANDLE` is the engine lost, and the answer is a remount (the review's third pass, blocker 4). Before
     it, the client reconnected in silence, the old handles answered `UNKNOWN_HANDLE`, and a recorder took that for
-    a passing outage and wrote into dead handles until somebody restarted it."""
+    a passing outage and wrote into dead handles until somebody restarted it.
+
+    A handle this client closed ITSELF answers `UNKNOWN_HANDLE` too — a sample that raced its writer's own close —
+    and that is `Closed`, not this: nothing was lost but that handle, and counting it as the engine lost said
+    remounts and outages that never happened (the review's fourth pass, a minor)."""
 
     def __init__(self, op: str, why: str):
         super().__init__(op, why)
         self.status, self.name = CODE["UNKNOWN_HANDLE"], "SESSION_LOST"
+
+
+class Closed(ObsdError):
+    """A handle THIS client closed, used after its close (`UNKNOWN_HANDLE` for a handle in `Session.closed`): a
+    sample that raced its writer's own `WRITER_CLOSE`, a question on a volume let go a moment before. Not the engine
+    lost — the session and every other handle are where they were."""
+
+    def __init__(self, op: str, handle: int):
+        super().__init__(CODE["UNKNOWN_HANDLE"], op, f"handle {handle:#x} was closed by this client")
+        self.name = "CLOSED"
 
 
 @dataclass
@@ -229,7 +249,17 @@ class Session:
     rest — the pass: open, format, mount, space — each have a connection of their own, and a connection's lock is
     waited for at most `timeout`: one held by a request that does not come back answers `Unavailable` to the next
     caller instead of queueing it. And a connection that went silent fails at once for `timeout` after — the
-    pass's budget: a pass that asks twenty things of a daemon that answers none waits for one of them."""
+    pass's budget: a pass that asks twenty things of a daemon that answers none waits for one of them.
+
+    A SESSION LEFT BEHIND (the review's fourth pass, blocker 1). The silent window has a price: a writer whose close
+    is refused in it — or whose close did not come back in time — is still the session's, and the session lives on
+    in the connections the readers and the pass keep; every new `VOLUME_MOUNT_RW` of the volume then answers
+    `ALREADY_LOCKED`, for as long as the process runs. Such a session is `abandon`ed: every connection dropped and
+    none opened again, whoever asks. The daemon then does what it does for a process that died — after
+    `OBSD_SESSION_LINGER_MS` the writer is DETACHED, its open sequences finished — and the `successor` session, a
+    new token, mounts the volume under the same `owner` and gets that writer back (`reattached`). A close sent before
+    the silence and answered late closes the old session's handle and nothing else: a handle never repeats, and a
+    new session's writer has a handle of its own."""
 
     def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
                  timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
@@ -239,7 +269,9 @@ class Session:
         self._lanes: dict[str, _Lane] = {}
         self._guard = threading.Lock()
         self.server: dict = {}
-        self.lost = 0                                # how many times the daemon answered UNKNOWN_HANDLE
+        self.lost = 0                                # how many times the daemon answered UNKNOWN_HANDLE for a handle it lost
+        self.closed: dict[int, None] = {}            # handles this client closed itself, newest last (`Closed`)
+        self.abandoned = False                       # left behind for the daemon to detach (`abandon`)
 
     # -- the wire -------------------------------------------------------------------------------------
     def lane(self, name: str) -> _Lane:
@@ -254,6 +286,8 @@ class Session:
         return "read" if op in READ_OPS else "write" if op in WRITE_OPS else "pass"
 
     def _connect(self, ln: _Lane) -> None:
+        if self.abandoned:
+            raise Unavailable("connect", "this session was abandoned: its writers are the daemon's to detach")
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(self.timeout)
         try:
@@ -262,6 +296,9 @@ class Session:
             s.close()
             raise Unavailable("connect", f"{self.path}: {e}") from None
         ln.sock = s
+        if self.abandoned:                           # abandoned while connecting: no HELLO revives it
+            self._drop(ln)
+            raise Unavailable("connect", "this session was abandoned: its writers are the daemon's to detach")
         self.server = self._exchange(ln, "HELLO", {"proto": [PROTO, PROTO], "client": self.client, "pid": os.getpid(),
                                                    "session": self.token, "logLevel": self.log_level})[0]
 
@@ -290,15 +327,35 @@ class Session:
                 continue                                  # a reply to a request we stopped waiting for
             reply = json.loads(frame[HEADER.size:HEADER.size + jl] or b"{}")
             if status == CODE["UNKNOWN_HANDLE"]:
+                h = self._handle_of(js, tail)
+                if h is not None and h in self.closed:
+                    raise Closed(op, h)                   # ours, closed by us: not the engine lost
                 self.lost += 1
                 raise SessionLost(op, str(reply.get("detail", "")) or "no such handle in this session")
             if status != 0:
                 raise ObsdError(status, op, str(reply.get("detail", "")))
             return reply, frame[HEADER.size + jl:]
 
-    def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False) -> tuple[dict, bytes]:
+    # The handle a request names: in its JSON, or — a sample, a finish — the u64 its tail begins with.
+    @staticmethod
+    def _handle_of(js: dict | None, tail: bytes) -> int | None:
+        for k in ("writer", "reader", "volume"):
+            if js and k in js:
+                return int(js[k])
+        return struct.unpack_from("<Q", tail)[0] if len(tail) >= 8 else None
+
+    # A handle this client is closing: said BEFORE the close goes out, so that a sample racing it — answered
+    # `UNKNOWN_HANDLE` the moment the daemon has done the close — is `Closed`, whichever reply comes back first.
+    def closing(self, handle: int) -> None:
+        with self._guard:
+            self.closed[handle] = None
+            while len(self.closed) > 4096:
+                del self.closed[next(iter(self.closed))]
+
+    def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False,
+             timeout: float | None = None) -> tuple[dict, bytes]:
         ln = self.lane(self.lane_of(op))
-        wait = self.long_timeout if long else self.timeout
+        wait = timeout if timeout is not None else self.long_timeout if long else self.timeout
         if not ln.lock.acquire(timeout=self.timeout):
             raise Unavailable(op, f"the {ln.name} connection is held by a request unanswered for {self.timeout:g} s")
         try:
@@ -358,6 +415,18 @@ class Session:
         """Drop every connection WITHOUT `BYE` — what a process that dies does. Its writers are detached and wait."""
         self._drop_all()
 
+    def abandon(self) -> None:
+        """`vanish`, for good: no connection of this session is opened again — a reader on another thread that asks
+        next gets `Unavailable` instead of a HELLO that would keep the session, and its writers, alive."""
+        self.abandoned = True
+        self._drop_all()
+
+    def successor(self) -> "Session":
+        """This session abandoned, and a new one with the same settings and a token of its own in its place."""
+        self.abandon()
+        return Session(self.path, client=self.client, timeout=self.timeout, log_level=self.log_level,
+                       long_timeout=self.long_timeout)
+
     def open_volume(self, uri: str | None = None, params: dict | None = None, max_parallel_reads: int = 0) -> "Volume":
         js = {"uri": uri} if uri else {"params": {k: str(v) for k, v in (params or {}).items()}}
         if max_parallel_reads:
@@ -395,6 +464,7 @@ class Volume:
         return Writer(self.session, int(r["writer"]), bool(r.get("reattached")))
 
     def close(self) -> None:
+        self.session.closing(self.handle)
         self.session.call("VOLUME_CLOSE", {"volume": self.handle})
 
 
@@ -445,9 +515,11 @@ class Writer:
     def resize(self, size: int) -> None:
         self.session.call("WRITER_RESIZE", {"writer": self.handle, "size": int(size)})
 
-    def close(self) -> None:
-        """After the flush — up to 30 s. What was written becomes readable: the last block is closed."""
-        self.session.call("WRITER_CLOSE", {"writer": self.handle}, long=True)
+    def close(self, timeout: float | None = None) -> None:
+        """After the flush — up to 30 s. What was written becomes readable: the last block is closed. `timeout`: how
+        long to wait for that here, when the caller may not wait the protocol's thirty seconds."""
+        self.session.closing(self.handle)
+        self.session.call("WRITER_CLOSE", {"writer": self.handle}, long=True, timeout=timeout)
 
 
 @dataclass
@@ -486,4 +558,5 @@ class Reader:
         return Sample.decode_all(tail)
 
     def close(self) -> None:
+        self.session.closing(self.handle)
         self.session.call("READER_CLOSE", {"reader": self.handle})

@@ -279,6 +279,67 @@ def test_the_list_of_keeps_is_what_the_caller_may_see():
     assert cams(boris) == ["1"] and cams(vera) == ["3"] and cams(open_) == ["1", "3", "ref:SN-A"]
 
 
+def test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_every_recording_of_a_keep():
+    """The review's fourth pass, Т-m9. A recorder started again restored what each keep held from the
+    `archive.keep.copied` events — written when the copy was made, outside the keep's interval, gone with the event
+    tree's retention — and looked for them only under the names the keep wrote down and its own rows, which an
+    incidents recorder has none of. A recording of the camera found by its row was restored as nothing, and its loss
+    was never an alarm. The incidents volume's own `<recording>/e0` is what a recorder starts from now."""
+    import os
+    import shutil
+    box, k = _site(quota=16 << 20)
+    t = box.wall()
+    box.vars.put("rec/recordings/7-x", {"id": "7-x", "name": "7-x", "cam": "7"})
+    for smp in fake_samples(t - 1200, t, step=10, size=256 << 10):
+        box.src.put("7-x", 1, smp)
+    box.src.finish("7-x", 1); box.src.seal()
+    first = _keep(box, "7", t - 1200, t - 900, recordings=[])          # names nothing: `7-x` is found by its row
+    k.keep_pass()
+    assert k.keep_held[(first.id, "7-x")] == 300
+    k.after_stop()
+    shutil.rmtree(os.path.join(box.archive, "rec"))                    # the event tree's retention took the copied events
+
+    again = recorder(box, "r-keep", "srv-1", acl=False)
+    again.lease_pass()
+    assert again.volume == "evidence" and again.keep_held == {}
+    _keep(box, "7", t - 800, t - 500, recordings=[]); _keep(box, "7", t - 400, t - 100, recordings=[])
+    again.keep_pass()                                                  # restored from the volume, then its own copies…
+    box.src_door.shutdown()
+    state = again.keep_pass()                                          # …push the first keep out of the ring
+    lost = [a for a in _events(box, "archive.keep.lost") if a["keep"] == first.id]
+    assert lost and lost[0]["recording"] == "7-x" and state[first.id]["missing"] > 0
+
+
+def test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm():
+    """The review's fourth pass. The recording's door on ANOTHER server's loopback was asked every pass and refused,
+    `copied` stayed empty, and nothing said so: no metric, no alarm, while the recording's own ring reached the kept
+    minutes. A door on another server's loopback is not asked; how much a keep is short and since when is in the
+    heartbeat and on the recorder's `/metrics`; past `KEEP_UNCOPIED_AFTER` it is `archive.keep.uncopied`, once."""
+    box, k = _site(source=False)
+    t = box.wall()
+    src = store("far")
+    footage(src, "7", 1, t - 3600, t, step=10)
+    far = door(box, src, "r-far", "srv-2")                             # announced as 127.0.0.1 by a recorder of srv-2
+    try:
+        kp = _keep(box, "7", t - 1800, t - 1200)
+        state = k.keep_pass()
+        assert state[kp.id]["copied"] == 0 and state[kp.id]["missing"] == 600   # not asked: not reachable from srv-1
+        assert state[kp.id]["missing_since"] == t and f'rec_keep_missing_seconds{{keep="{kp.id}"}} 600' in k.metrics_text()
+        assert _events(box, "archive.keep.uncopied") == []
+        for _ in range(5):
+            box.wall.advance(k.KEEP_EVERY); far.announce()
+            k.keep_pass()
+        [alarm] = _events(box, "archive.keep.uncopied")
+        assert alarm["keep"] == kp.id and alarm["class"] == "alarm" and alarm["seconds"] == 600 and alarm["since"] == t
+        box.wall.advance(k.KEEP_EVERY); far.announce()
+        k.keep_pass()
+        assert len(_events(box, "archive.keep.uncopied")) == 1          # said once, not every pass
+        hb = k.heartbeat_extra()
+        assert hb["keeps"][kp.id]["missing_since"] == t and hb["keep_missing"] == {kp.id: 600}
+    finally:
+        far.shutdown()
+
+
 def test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_an_alarm():
     """The review's third pass, a minor: what each keep held in the incidents volume was in memory only, so a recorder
     started again compared against nothing, and kept footage its ring took meanwhile was never `archive.keep.lost`.

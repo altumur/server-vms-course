@@ -10,7 +10,7 @@ client {
   meta {
     labels  = "vlan:cctv-a,vlan:cctv-b"  # what this server's NICs can reach; the worker reports it, the controller places by it
     archive = "/data/archive"            # this server carries a resource with disks (the platform's `resource` system job pins to meta.archive)
-                                         # — and the archive's engine: `systemctl enable --now obsd` (М10's obsd.service), the daemon
+                                         # — and the archive's engine: М10's `deploy/install-obsd.sh` (its user, group 2101, obsd.service), the daemon
                                          # every recorder here writes its footage through, one per host
   }
 }
