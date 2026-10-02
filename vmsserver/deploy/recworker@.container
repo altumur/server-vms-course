@@ -13,11 +13,12 @@
 # **Role.** The Quadlet unit for the `rec` subsystem's worker. `python3 -m vms recorder`: `RecWorker` claims
 # the slot `%i`, reads `rec/workers/<r>` and the recording rows it names, subscribes each to the camera's
 # `live_url`, takes `rec/epoch/<cam>`, and records with `GstRecActuator` (`rtspsrc ! … ! appsink`): every
-# access unit a sample into the volume's writer, through the daemon's socket in /run/vms. The mounts are the
-# recorder's: /run/vms (the daemon's socket, and the workers' shared memory), the archive read-write for its
-# own events (`rec/<recording>/…`); the box's own volume, `/data/volume` beside it, is opened by the DAEMON on
-# the host and needs no mount here; the platform's stores read-write for its slot, epochs, holds and
-# heartbeat; no media directory (it never reads a camera). Checked by `tests/test_deploy_units.py`.
+# access unit a sample into the volume's writer, through the daemon's socket in /run/obsd. The mounts are the
+# recorder's: /run/obsd (the daemon's socket — this unit's alone), /run/vms (the workers' shared memory), the
+# archive read-write for its own events (`rec/<recording>/…`); the box's own volume, `/data/volume` beside it,
+# is opened by the DAEMON on the host and needs no mount here; the platform's stores read-write for its slot,
+# epochs, holds and heartbeat; the cluster's key, to open a network volume's `access_secret`; no media
+# directory (it never reads a camera). Checked by `tests/test_deploy_units.py`.
 #
 # ## Notes
 # - `CAPACITY` is recordings this box's disks and NIC can take: the recorder's own number, exported as
@@ -53,12 +54,28 @@ Environment=RECORDER_NAME=%i
 EnvironmentFile=/data/config/vms.env
 # read-write: `rec/epoch/*`, `rec/slots/*`, `rec/holds/*` (its token) and its heartbeat object.
 Volume=/data/platform:/data/platform:z
+# The cluster's key (`w2cplatform/sealing.py`). A network volume's `access_secret` is sealed by the console to
+# its row, `rec/volumes/<name>`, and the daemon takes credentials only as a volume's parameters — so the process
+# that MOUNTS the volume opens it: this one (the review's third pass, blocker 3: without the key the recorder
+# handed the bucket the ciphertext, and no network archive was written by anybody). The third unit the key goes
+# into, after the console and the holder; read-only.
+Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
+Environment=SECRETS_KEY=/run/secrets/vms.key
 # read-write: its events (`archive.shallow`, `archive.keep.*`) under `rec/`, on this server's resource. Footage
 # is not here: the box's own volume is `/data/volume`, which only the host's daemon opens.
 Volume=/data/archive:/data/archive:z
-# a tmpfs of sockets, not state: the daemon's (`obsd.sock`), and the workers' shared-memory branches
-# (`live_shm`) — the recorder reads a camera held HERE from its worker's tee with `shmsrc`; one held elsewhere
-# over RTSP.
+# THE DAEMON'S SOCKET, in a directory of its own that only this unit mounts (the review's third pass). It was in
+# /run/vms beside the workers' shared memory, so the holder — the process that loads a vendor's DriverPack — had
+# it too: a vendor's SDK could read every camera's footage past the console's rights and its audit, and in the
+# grace after a recorder's restart mount its volume's writer by the owner `rec:<volume>`, which is a name, not a
+# secret. Now: /run/obsd, mounted here only; the daemon runs as its own user and lets in, besides itself, only
+# the members of `OBSD_CLIENT_GROUP` (obsd.service) — which this container joins, by number (the group's gid on
+# the host; `groupadd -g 2101 vms-rec` when the box is set up).
+Volume=/run/obsd:/run/obsd:z
+Environment=OBSD_SOCKET=/run/obsd/obsd.sock
+GroupAdd=2101
+# a tmpfs of sockets, not state: the workers' shared-memory branches (`live_shm`) — the recorder reads a camera
+# held HERE from its worker's tee with `shmsrc`; one held elsewhere over RTSP.
 Volume=/run/vms:/run/vms:z
 # host network: it subscribes to workers' RTSP fan-outs on other servers.
 Network=host

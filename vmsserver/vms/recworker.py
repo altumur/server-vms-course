@@ -39,6 +39,7 @@ import time
 from w2cplatform.console import heartbeats, holder_of
 from w2cplatform.contract import Subsystem
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
+from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.objects import ObjectStore
 from w2cplatform.variables import Variables
 
@@ -149,6 +150,14 @@ class RecWorker(VmsWorker):
     # counting (М12 Lesson 13). The same 45 s a heartbeat gets: past it, the backup cannot know whether the
     # primary in the other cluster is written, and records.
     CARRIED_LOST_AFTER = 45.0
+    # A RANGE IS LANDED IN PIECES (the review's third pass, blocker 6). A fetched range was one request and one list:
+    # a day of backfill from a backup is some forty gigabytes, in the memory of both recorders at once — both died
+    # of it, the request stayed, and after the restart it all began again. Whatever is copied — a gap from a device
+    # or a backup, a keep — is asked for about a minute at a time and landed before the next minute is asked for
+    # (`_pieces`). And one pass takes at most `RANGE_CAP` of one range: an operator's request for a day is served
+    # ten minutes a pass, the rest on the passes after (`requests`), the way a planned gap is (`backfill`).
+    PIECE = 60.0
+    RANGE_CAP = 600.0
     SLOT_PREFIX, NAME_ENV = "r", "RECORDER_NAME"
     parse_row = staticmethod(rec_row)
 
@@ -172,6 +181,9 @@ class RecWorker(VmsWorker):
         # is `away` (`ArchiveError`): the volume is kept, the pass goes on, the next one asks again.
         self.session = obsd or Session(client=f"rec-{self.name}", timeout=float(env.get("OBSD_TIMEOUT", "10")))
         self.block, self.read = block, read           # how a volume this recorder formats is cut (`vms/archive.py`)
+        # …and how often the engine refreshes a new volume's write lock (`lockRefreshSec`; 0: the engine's 30 s). After
+        # a daemon that CRASHED, a volume it held stays locked until that lock is stale: `busy` for up to a minute.
+        self.lock_refresh = int(env.get("ARCHIVE_LOCK_REFRESH_S", "0") or 0)
         # How soon written is visible (feedback CP): the writer's two flush periods, `WRITER_CONFIGURE`d at every open.
         from .archive import BLOCK_FLUSH_S, SEQUENCE_FLUSH_MS
         self.sequence_flush_ms = int(env.get("SEQUENCE_FLUSH_MS", SEQUENCE_FLUSH_MS))
@@ -209,6 +221,11 @@ class RecWorker(VmsWorker):
         self.archive_error, self.archive_away_since = "", 0.0
         self.archive_failure = ""                    # "away" or "wrong" while archive_error is set
         self.engine_lost = False                     # a sink found the daemon gone: remount on the next pass
+        # What the last remount after a lost engine was, and how many there were: `archive_error` says the outage
+        # while it lasts and clears when the volume is open again, and this is what is left to say afterwards.
+        self.remounts, self.remounted = 0, {}
+        self._lost_why, self._lost_at = "", 0.0      # why, and since when, the engine is lost (`_lost_engine`)
+        self._vol_last = None                        # the volume row last opened: what a silent store remounts by
         self.refused: dict[str, tuple[float, str]] = {}   # volume -> (tried again after, why) — see REFUSED_FOR
         self._backfiller: threading.Thread | None = None
         # Is the WRITER writing (Lesson 10, feedback U): bytes offered to the sinks against what the volume
@@ -229,7 +246,10 @@ class RecWorker(VmsWorker):
         self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
-        self._hold_confirmed = self.clock()          # when `volume_pass` last ran to its end
+        self._hold_confirmed = self.clock()          # when the store last said the hold is ours (`renew_hold`, `claim_hold`)
+        self._requested: dict[str, float] = {}       # request id -> how far it has been served (`RANGE_CAP` a pass)
+        self.default_size = 0                        # the box's own volume's real size, once it was opened
+        self.quota_note = ""                         # a smaller quota declared and not applied: said, not done
         self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
@@ -253,6 +273,7 @@ class RecWorker(VmsWorker):
         self.incidents = False                       # is the volume this recorder holds an incidents volume
         self.keep_held: dict[tuple[str, str], float] = {}   # (keep, recording) -> seconds of it in the volume
         self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
+        self._keeps_read = False                     # `keep_held` restored from the volume's own events (`keep_pass`)
         self._keeper: threading.Thread | None = None
         self._keep_at = -1e18
         self.waiting: set[str] = set()                                        # units with nobody holding their camera
@@ -631,6 +652,8 @@ class RecWorker(VmsWorker):
                 self._landed = int(self.store.status().get("totalWritten", 0)) - self._written_at_open
             landed = self._landed_before + self._landed
         except ArchiveError:
+            if self.store is not None and self.store.lost:
+                self._lost_engine()                  # the daemon no longer knows the session: remount, not wait
             return self.writer.state                 # a volume that does not answer measures nothing this pass
         # Offered is summed by DELTAS per pipeline, not as the sum of the running ones: a recording that stops took
         # its count out of the sum, `outstanding` went negative and `stuck` never came (the review's second pass).
@@ -650,6 +673,7 @@ class RecWorker(VmsWorker):
                 self.actuator("stop", {"id": cid})
                 self.reconciler.lost(cid, self.now())
             self.engine_lost = True                  # …and the writer itself: closed and opened again on the next pass
+            self._lost_why, self._lost_at = f"the writer was {state['state']}: reopened", wall
         return state
 
     # What this recorder adds to the heartbeat.
@@ -670,7 +694,12 @@ class RecWorker(VmsWorker):
                 # The box's own volume — where this recorder writes when nothing is declared. What the console
                 # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
                 "archive": self.default_url,
-                "archive_quota": self.default_quota,         # …and its size: what the console offers to declare it at
+                # …and its size: what the console offers to declare it at. The size it HAS once it was opened — read
+                # from the volume — and only before that the share of the disk it would be formatted at (the review's
+                # third pass: recomputed at every start, the number grew and shrank with the disk's free space, and an
+                # operator who declared it shrank a volume of eight terabytes to the one gigabyte offered).
+                "archive_quota": self.default_size or self.default_quota,
+                **({"quota_note": self.quota_note} if self.quota_note else {}),
                 # Empty unless the volume this process holds will not open. Published because the alternative
                 # is the failure that looks like health: a fresh hold, a green console and nothing being
                 # written. Whatever reads it must not count that volume as served.
@@ -681,6 +710,8 @@ class RecWorker(VmsWorker):
                 "archive_error": self.archive_error,
                 "archive_away_since": self.archive_away_since,
                 "archive_failure": self.archive_failure,
+                # The engine lost and the volume mounted again (blocker 4): how many times, and the last — when, and why.
+                **({"archive_remounts": self.remounts, "archive_remounted": self.remounted} if self.remounts else {}),
                 # Whether what the sinks were handed is reaching the volume (Lesson 10): ok, stuck or losing.
                 # A fresh hold and a running row do not say it; only this does.
                 "writer": self.writer.state,
@@ -711,11 +742,11 @@ class RecWorker(VmsWorker):
     # and it then stops recording — the footage of those recordings belongs to whoever holds the volume
     # now — without fencing the instance, which would mean it could never take another.
     def volume_pass(self) -> str:
+        self._check_lost()
         if self.pinned:
             if self.store is None or self.engine_lost:
                 rows = {v.name: v for v in volumes.declared(self.vars)}
-                vol = rows.get(self.volume) or volumes.Volume(self.volume, "local", self.default_url, self.server or "",
-                                                              self.default_quota)
+                vol = rows.get(self.volume) or self._own_volume(self.volume)
                 self.volume_error = str(self._write_into(vol) or "")
                 self.capacity = 0 if self.volume_error else self.full_capacity    # will not open: not a place to put a recording
                 self._place_kind(vol)
@@ -741,8 +772,7 @@ class RecWorker(VmsWorker):
             # Nothing declared anywhere: the box as it was before volumes were rows — one place, named after
             # the server, beside `$ARCHIVE`. Note this is reached after letting go above, so withdrawing
             # the last volume does not leave a process quietly writing into it.
-            err = self._write_into(volumes.Volume(self.default_volume, "local", self.default_url, self.server or "",
-                                                  self.default_quota))
+            err = self._write_into(self._own_volume(self.default_volume))
             self.volume, self.capacity, self.volume_error = self.default_volume, self.full_capacity, str(err or "")
             return self.volume
         # Take one, and then OPEN it — the step that was missing. Holding a volume and being unable to
@@ -769,16 +799,70 @@ class RecWorker(VmsWorker):
                         return self.volume
                     self.volume, self.capacity = "", 0             # a spare is not a place to put a recording
                     return self.volume
-            err = self._write_into(rows[self.hold])
+            name = self.hold
+            err = self._write_into(rows[name])
             if err is None:
                 self.volume, self.capacity, self.volume_error = self.hold, self.full_capacity, ""
                 self._place_kind(rows[self.hold])
+                return self.volume
+            if err.name == "HOLD_LOST":                            # taken from us between the renewal and the mount
+                self.leave_volume(f"volume {name} is not this recorder's any more: {err.detail}")
                 return self.volume
             logging.warning("%s: %s will not open (%s) — looking for another", self.name, self.hold, err)
             skipped.add(self.hold)
             broken.append((self.hold, str(err)))
             self.volume_error = str(err)
             self.release_hold()                                    # so somebody who CAN write there may take it
+
+    # The box's own volume, which nobody declared: no size of its own (`quota_bytes` 0) — `default_quota` formats it
+    # if it is new, and a volume that exists keeps the size it has. Declared with a quota, it would be resized at
+    # every start to whatever share of the disk was free that morning.
+    def _own_volume(self, name: str):
+        return volumes.Volume(name, "local", self.default_url, self.server or "", 0)
+
+    # The engine lost, found by whoever touched a handle of the store (`Archive.lost`): the next open is a remount.
+    def _check_lost(self) -> None:
+        if self.store is not None and self.store.lost and not self.engine_lost:
+            self._lost_engine()
+
+    # WHEN THE HOLD WAS LAST CONFIRMED (the review's third pass). It was stamped when `volume_pass` ended — after the
+    # renewal AND after whatever the pass did next, a remount that closes a writer and opens another included, which
+    # can take a minute. A hold confirmed at the start of that minute and stamped at its end looked a minute younger
+    # than it was. The stamp is the store's answer, now: at the renewal, and at the claim.
+    def renew_hold(self) -> bool:
+        ok = super().renew_hold()
+        if ok and self.hold is not None:
+            self._hold_confirmed = self.clock()
+        return ok
+
+    def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
+        got = super().claim_hold(candidates, retries)
+        if got is not None:
+            self._hold_confirmed = self.clock()
+        return got
+
+    # Asked right before every `VOLUME_MOUNT_RW` (`Archive.confirm`): is this volume still ours, this second? A
+    # network volume any box may serve is ours only while the store says the hold is, and the engine's own lock on
+    # it is a SECOND line, not the first: on s3 it is a lock object with a timestamp — taken without an atomic
+    # check, compared across two machines' clocks, and overwritten unconditionally by a holder that wakes from a
+    # freeze (the engine's owner, asked). Two writers in one ring is damage. So the hold is renewed here, at the
+    # mount, and a mount the store does not confirm does not happen. A disk of this server is nobody else's, and a
+    # store that does not answer does not stop its mount (`lease_pass`).
+    def _confirm_hold(self, vol) -> None:
+        if self.pinned or self.hold != vol.name:
+            return                                   # no hold to confirm: pinned, or the box's own volume
+        try:
+            ok = self.renew_hold()
+        except OSError as e:
+            # The store is silent. The hold is still ours for as long as its term runs, and a mount takes at most a
+            # call's timeout: a network volume is mounted only if the term outlasts that; a disk of this server, always.
+            left = self.slot_ttl - self.lease_margin - (self.clock() - self._hold_confirmed)
+            if volumes.any_box(vol) and left <= self.session.timeout:
+                raise ArchiveError("away", f"the hold on {vol.name} could not be confirmed before mounting it: {e}",
+                                   "HOLD_UNCONFIRMED") from None
+            return
+        if not ok:
+            raise ArchiveError("wrong", f"{vol.name} is held by another recorder now: not mounted", "HOLD_LOST")
 
     # An INCIDENTS volume is a place for kept footage and never one to record into: the recorder holding it says
     # so with its capacity — nought, like a spare — and copies keeps instead (`keep_pass`).
@@ -802,23 +886,33 @@ class RecWorker(VmsWorker):
     # recorder to hold the volume — names the same owner, and the daemon hands back the very writer the dead
     # process left (`reattached`): no lock waited out, nothing recovered (feedback CF).
     def _write_into(self, vol) -> ArchiveError | None:
+        self._vol_last = vol
         if self.store is not None and self.store.url == vol.url and self.store.writer is not None and not self.engine_lost:
-            if vol.quota_bytes and vol.quota_bytes != self.store.quota:
-                try:
-                    self.store.resize(vol.quota_bytes)   # a new quota is a new size of the ring, without stopping
-                except ObsdError as e:
-                    log.warning("%s: could not resize %s to %d bytes: %s", self.name, vol.name, vol.quota_bytes, e)
+            self._apply_quota(vol)
             return None
         if self.store is not None:
             self._close_store(quiet=True)
-        secret = self.sealer.open("access_secret", vol.access_secret) if vol.access_secret and self.sealer else vol.access_secret
+        # The volume's secret is sealed to ITS row, `rec/volumes/<name>` (the review's third pass, blocker 3): opened
+        # without the row it never opened at all, and the recorder — with no key in its unit either — handed the
+        # bucket the ciphertext. And a secret that does not open is THIS volume's failure, not the pass's: the volume
+        # is not taken, its status says why, and the pass goes on to the next (`Sealed` used to fly out of `lease_pass`,
+        # which catches only `OSError`: no heartbeat, and in 45 s the recorder was dead to its controller).
+        try:
+            secret = open_row(self.sealer, {"access_secret": vol.access_secret}, volumes.key(vol.name))["access_secret"]
+        except Sealed as e:
+            log.error("%s: %s: %s", self.name, vol.name, e)
+            return ArchiveError("wrong", f"{vol.name}: {e}", "SEALED")
         store = Archive(vol.url, vol.name, vol.quota_bytes or self.default_quota, f"rec:{vol.name}", self.session, self.wall,
                         secret=secret, access_key=vol.access_key,
                         sequence_flush_ms=self.sequence_flush_ms, block_flush_s=self.block_flush_s,
-                        **{k: v for k, v in (("block", self.block), ("read", self.read)) if v})
+                        confirm=lambda: self._confirm_hold(vol),
+                        **{k: v for k, v in (("block", self.block), ("read", self.read), ("lock_refresh", self.lock_refresh))
+                           if v})
         try:
             store.open()
         except ArchiveError as e:
+            if e.name == "HOLD_LOST":
+                return e
             # A DISK on this box that cannot be formatted or mounted — a file where the directory should be, a
             # path nobody may create — is not a link that comes back in a minute. The engine says it as an I/O or
             # a generic error, the same words a network volume uses for a network that is down, so the kind of
@@ -832,12 +926,21 @@ class RecWorker(VmsWorker):
                 log.warning("%s: %s is %s at open (%s) — keeping it and trying again", self.name, vol.name, e.kind, e.detail)
             self.archive_error, self.archive_failure = e.detail, e.kind     # `away` or `busy`: kept, said as what it is
             return None
+        if self.engine_lost:
+            self.remounts += 1
+            self.remounted = {"lost_at": self._lost_at or self.wall(), "at": self.wall(),
+                              "why": self._lost_why or "the writer was reopened"}
+            self._lost_why, self._lost_at = "", 0.0
+            log.warning("%s: %s mounted again (%s)", self.name, vol.name, self.remounted["why"])
         self.store, self.engine_lost = store, False
         try:
             self._landed_before, self._landed = self._landed_before + self._landed, 0
             self._written_at_open = int(store.status().get("totalWritten", 0))
         except ArchiveError:
             self._written_at_open = 0
+        if vol.url == self.default_url:
+            self.default_size = store.quota          # the box's own volume: the size it HAS, for the console to offer
+        self._apply_quota(vol)
         if self.archive_error:
             log.info("%s: %s answers again after %.0f s", self.name, vol.name, self.wall() - self.archive_away_since)
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
@@ -845,12 +948,44 @@ class RecWorker(VmsWorker):
                  " — the writer a previous process left, picked up again" if store.reattached else "")
         return None
 
-    # A sink found the daemon gone. Nothing is torn down here, on the pipeline's thread: the next pass closes
-    # what is left of the store and opens it again (`volume_pass`) — at once, not after the writer watch's ten
-    # minutes, because there is nothing to wait for: the engine is not there, a new session is (feedback CF).
+    # A NEW QUOTA IS A NEW SIZE OF THE RING — a larger one at once, a smaller one only when the row says so twice.
+    # Shrinking a ring frees its oldest blocks: a quota typed one digit short, or a number the console offered from a
+    # recorder's guess, erased terabytes of footage without a question (the review's third pass). So a quota below
+    # the size the volume HAS is applied only when the row also carries `shrink_confirmed` equal to it — the
+    # operator's second word — and otherwise it is said in the heartbeat (`quota_note`) and the ring keeps its size.
+    def _apply_quota(self, vol) -> None:
+        self.quota_note = ""
+        st = self.store
+        if st is None or not vol.quota_bytes or vol.quota_bytes == st.quota:
+            return
+        if vol.quota_bytes < st.quota and vol.shrink_confirmed != vol.quota_bytes:
+            self.quota_note = (f"{vol.name} is {st.quota} bytes and declared {vol.quota_bytes}: shrinking it erases the "
+                               f"oldest footage, so it is not done until the row says `shrink_confirmed: {vol.quota_bytes}`")
+            return
+        try:
+            st.resize(vol.quota_bytes)           # a new quota is a new size of the ring, without stopping
+        except ObsdError as e:
+            log.warning("%s: could not resize %s to %d bytes: %s", self.name, vol.name, vol.quota_bytes, e)
+            return
+        if vol.url == self.default_url:
+            self.default_size = st.quota
+
+    # A sink found the daemon gone — or a handle of the store answered that the daemon no longer knows this session
+    # (`SessionLost`: restarted, or the session outlived its linger; the review's third pass, blocker 4). Nothing is
+    # torn down here, on the pipeline's thread: the next pass closes what is left of the store and opens it again
+    # (`volume_pass`) — at once, not after the writer watch's ten minutes, because there is nothing to wait for: the
+    # engine is not there, a new session is (feedback CF). And it is SAID: until the remount, `archive_error`; after
+    # it, `archive_remounted`.
     def _lost_engine(self) -> None:
+        lost = self.store is not None and self.store.lost
+        why = ("obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every "
+               "handle is dead" if lost else "obsd stopped answering")
         if not self.engine_lost:
-            log.warning("%s: obsd stopped answering — remounting %s on the next pass", self.name, self.volume)
+            log.warning("%s: %s — remounting %s on the next pass", self.name, why, self.volume)
+            self._lost_why, self._lost_at = why, self.wall()
+            if not self.archive_error or lost:
+                self.archive_error, self.archive_failure = why, "away"
+                self.archive_away_since = self.archive_away_since or self.wall()
         self.engine_lost = True
 
     # The volume took the sample and REFUSED it for good — no permission, read-only, a key that no longer opens
@@ -898,7 +1033,7 @@ class RecWorker(VmsWorker):
         self.volume, self.capacity, self.incidents = "", 0, False
         # What the archive's state said was about the volume we just left. The next one starts clean.
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
-        self.keep_held, self.keep_state = {}, {}
+        self.keep_held, self.keep_state, self._keeps_read = {}, {}, False
 
     # AN ORDERLY STOP GIVES THE VOLUME BACK — AFTER THE LAST WRITE INTO IT (the product's box, feedback BR).
     #
@@ -983,7 +1118,6 @@ class RecWorker(VmsWorker):
         if self.recording_allowed:                   # a fenced instance decides nothing about volumes
             try:
                 self.volume_pass()
-                self._hold_confirmed = self.clock()
             except OSError as e:
                 self.store_errors += 1
                 quiet = self.clock() - self._hold_confirmed
@@ -993,8 +1127,26 @@ class RecWorker(VmsWorker):
                 else:
                     logging.warning("%s: the store did not answer for the volumes (%s); still writing into %s",
                                     self.name, e, self.volume or "nothing")
+                    self._remount_by_last()
             self.depth_pass()
         return lost
+
+    # THE ENGINE LOST WHILE THE STORE IS SILENT (the review's third pass). `volume_pass` begins by reading the declared
+    # volumes; a store that does not answer raised out of it before anything was opened again — so a daemon that
+    # restarted during the store's election left the recorder with no writer for the whole silence. The rows read
+    # last say where this recorder writes; it mounts by them — a disk of this server at once, and a network volume
+    # only while the term of its last confirmed hold outlasts what a mount can take (`_confirm_hold`); past that
+    # another box may hold it, and the branch above lets it go.
+    def _remount_by_last(self) -> None:
+        self._check_lost()
+        vol = self._vol_last
+        if vol is None or not (self.store is None or self.engine_lost):
+            return
+        if not self.pinned and vol.name not in (self.hold, self.default_volume):
+            return
+        err = self._write_into(vol)
+        if err is not None:
+            log.warning("%s: %s could not be mounted again by its last known row: %s", self.name, vol.name, err)
 
     # The volume is taking nothing: it said so (`archive_error`), or nothing is open. Backfill — planned or asked
     # for — waits then: there is nowhere to land what it would fetch.
@@ -1139,12 +1291,39 @@ class RecWorker(VmsWorker):
     # The backup's FRAMES, through its recorder's door: the samples of a range as its volume holds them, with
     # the times they were recorded at — what goes into our own volume as they are. The plan came from the
     # summary in the heartbeat; what is copied is what the door hands over.
+    # A PIECE of a range, not a range (`_pieces`): what is read here is held whole. The door streams its answer, and a
+    # stream cut short — the door's volume went away half way — is a record cut in the middle: an error, never a
+    # shorter range taken for what the source holds.
     def read_samples(self, url: str, unit: str, t0: float, t1: float) -> list[Sample]:
+        import struct
         import urllib.parse
         import urllib.request
         q = urllib.parse.urlencode({"from": t0, "to": t1})
         with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
-            return Sample.decode_all(r.read())
+            data = r.read()
+        try:
+            return Sample.decode_all(data)
+        except (ValueError, struct.error) as e:
+            raise OSError(f"{url}: the frames of {unit} came cut short ({e})") from None
+
+    # A range, about a minute at a time (`PIECE`; the review's third pass, blocker 6). Each piece is read whole and
+    # handed on before the next is asked for, and the cut between two pieces is at a KEY FRAME: a piece ends where its
+    # last group of pictures begins, and the next piece starts there. A cut anywhere else would split a group — the
+    # half after the cut has no key frame to open a sequence on, and the half before it would be fetched again as
+    # the next piece's lead-in. `read(t0, t1)` is a source's frames of a range; yields `(from, to, frames)`.
+    def _pieces(self, read, t0: float, t1: float):
+        from w2cplatform.obsd import unix_s
+        at = t0
+        while at < t1:
+            hi = min(t1, at + self.PIECE)
+            got = read(at, hi)
+            nxt = hi
+            if hi < t1:
+                cut = next((i for i in range(len(got) - 1, -1, -1) if got[i].key and unix_s(got[i].begin) > at), None)
+                if cut is not None:
+                    nxt, got = unix_s(got[cut].begin), got[:cut]
+            yield at, nxt, got
+            at = nxt
 
     # How far back the doors show a recording: its row's `retention_days` (`visible_from`). A ceiling — the ring
     # decides what is still there; this decides what is SHOWN, and for some installations it is the promise that
@@ -1190,13 +1369,7 @@ class RecWorker(VmsWorker):
                 pass
 
             def do_GET(self):
-                got = routes(self.path)
-                if got is None:
-                    self.send_response(404); self.end_headers(); return
-                status, body, ctype = got
-                self.send_response(status)
-                self.send_header("Content-Type", ctype)
-                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+                send_route(self, routes(self.path))
 
         srv = ThreadingHTTPServer((host, port), H)
         threading.Thread(target=srv.serve_forever, daemon=True, name="archive-door").start()
@@ -1243,17 +1416,26 @@ class RecWorker(VmsWorker):
             ours = self.our_coverage(unit)
             if unit in self.reconciler.actual:
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
+            # `RANGE_CAP` of it a pass, from where the last pass stopped: a request for a day is not a day in one go
+            # (blocker 6). Done — reported, and the console removes the row — when the last piece of it is.
+            t0 = max(t0, self._requested.get(rid, t0))
             if t1 <= t0:
                 continue
+            upto = min(t1, t0 + self.RANGE_CAP)
             # Each source in turn until one serves it. A source that FAILED says nothing about the range — the
             # request stays, for the next pass; reported as fetched, the console would delete what nobody served.
             r = {}
             for src in srcs:
-                r = self.fetch_from(unit, cam, src, t0, t1)
+                r = self.fetch_from(unit, cam, src, t0, upto)
                 if not r.get("error"):
                     break
             if r.get("skipped") or r.get("error"):
                 continue
+            if upto < t1:
+                self._requested[rid] = upto                  # the rest on the next pass
+                done.append({**r, "request": rid, "partial": True})
+                continue
+            self._requested.pop(rid, None)
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
             done.append({**r, "request": rid})
         return done
@@ -1304,7 +1486,8 @@ class RecWorker(VmsWorker):
                 continue
             for src in self.sources_of(row):
                 for (t0, t1) in self.gaps(row["id"], src["coverage"], now, source=src["key"])[:budget - len(done)]:
-                    done.append(self.fetch_from(row["id"], row["cam"], src, t0, t1))
+                    # RANGE_CAP of a gap a pass: what is left of it is a gap on the next one
+                    done.append(self.fetch_from(row["id"], row["cam"], src, t0, min(t1, t0 + self.RANGE_CAP)))
                 if len(done) >= budget:
                     break
         return done
@@ -1318,23 +1501,41 @@ class RecWorker(VmsWorker):
         unit = str(unit)
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
-        store = self.store                               # the volume this fetch is FOR (`_land`)
+
+        def read(a, b):
+            self.actuator.range_error = ""
+            return self.read_samples(src["url"], src["recording"], a, b)
         try:
-            samples = self.read_samples(src["url"], src["recording"], t0, t1)
+            return self._land_pieces(unit, cam, read, t0, t1, src["key"])
         except OSError as e:
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "error": f"{src['recording']}: {e}"}
-        self.actuator.range_error = ""
-        return self._land(unit, cam, samples, t0, t1, src["key"], store)
 
     # One range from the device: its frames, landed as OURS — our epoch, our volume, the backfill stream.
     def fetch(self, unit, cam, url: str, t0: float, t1: float) -> dict:
         unit = str(unit)
         if not self.may_record(unit):
             return {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "skipped": "no lease"}
-        self.actuator.range_error = ""
+
+        def read(a, b):
+            self.actuator.range_error = ""
+            return self.actuator.record_range(unit, f"{url}?from={a}&to={b}", a, b)
+        return self._land_pieces(unit, cam, read, t0, t1, "device")
+
+    # A range landed piece by piece, into the volume the fetch STARTED on (`_land`). A piece that failed, or was
+    # skipped, ends the range there: what landed before it stays landed, and the rest is asked for again — a failed
+    # piece says nothing about what the source holds after it. The range is reported to the console ONCE, whole.
+    def _land_pieces(self, unit: str, cam, read, t0: float, t1: float, source: str) -> dict:
         store = self.store                               # the volume this fetch is FOR (`_land`)
-        samples = self.actuator.record_range(unit, f"{url}?from={t0}&to={t1}", t0, t1)
-        return self._land(unit, cam, samples, t0, t1, "device", store)
+        out = {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "groups": 0, "source": source}
+        for a, b, samples in self._pieces(read, t0, t1):
+            r = self._land(unit, cam, samples, a, b, source, store, report=False)
+            out["groups"] += r.get("groups", 0)
+            if r.get("skipped") or r.get("error"):
+                out.update({k: r[k] for k in ("skipped", "error") if k in r})
+                break
+        if out["groups"]:
+            self.closed = (self.closed + [f"{unit}|{t0:.0f}|{t1:.0f}"])[-self.CLOSED_REPORTED:]
+        return out
 
     # What a fetch brought, landed. The overlap is checked a second time here, by GROUP OF PICTURES — from one
     # key frame to the next — because live recording may have reached the same minutes while we were fetching;
@@ -1352,7 +1553,8 @@ class RecWorker(VmsWorker):
     # back and another taken, or the lease let go. After a release `epochs.get(unit)` is None, not 0 — epoch nought
     # is a keep's copy, never a backfill's. And `landing` is what LANDED, plus what live recording had already: a
     # group the engine refused, or one that began without a key frame, stays a hole and is asked for again.
-    def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str, store=None) -> dict:
+    def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str, store=None,
+              report: bool = True) -> dict:
         from w2cplatform.obsd import unix_s
         store = self.store if store is None else store
         epoch = self.epochs.get(unit)
@@ -1399,12 +1601,14 @@ class RecWorker(VmsWorker):
         if not failed:
             missing = subtract((t0, t1), delivered)
             if missing:
-                self.nowhere[(unit, source)] = sorted(self.nowhere.get((unit, source), []) + missing)
-        if kept:
+                # touching pieces are one range: a hole fetched a minute at a time is remembered as the hole
+                self.nowhere[(unit, source)] = stitch(self.nowhere.get((unit, source), []) + missing, 0.0)
+        if kept and report:
             # What arrived is now ordinary footage — and a hole in the DETECTIONS, because nothing was
             # watching this camera while nothing was recording it. The console turns each of these into a
             # scan (М10B Lesson 22), so the two holes close together. Reported here and not written
-            # anywhere: a worker's token writes no configuration.
+            # anywhere: a worker's token writes no configuration. A range landed in pieces is reported once,
+            # whole (`_land_pieces`).
             self.closed = (self.closed + [f"{unit}|{t0:.0f}|{t1:.0f}"])[-self.CLOSED_REPORTED:]
         out = {"unit": unit, "cam": str(cam), "from": t0, "to": t1, "groups": kept, "source": source}
         if failed:
@@ -1468,6 +1672,9 @@ class RecWorker(VmsWorker):
         def inside(k, rec) -> float:                     # seconds of the keep this volume holds for `rec`
             return sum(min(b, k.until) - max(a, k.since) for a, b in self.store.coverage(rec) if b > k.since and a < k.until)
 
+        if not self._keeps_read:
+            self._keeps_read = True
+            self.keep_held = {**self._keeps_held_before(declared), **self.keep_held}
         for k in declared:
             got = missing = 0.0
             touched: list[str] = []
@@ -1484,11 +1691,12 @@ class RecWorker(VmsWorker):
                                   self.name, lost, k.id, rec, self.volume)
                 for a, b in subtract((k.since, k.until), self.store.coverage(rec)):
                     for name, url in doors:
-                        try:
-                            samples = self.read_samples(url, rec, a, b)
+                        try:                             # in pieces (blocker 6): an hour's keep is not an hour in memory
+                            copied = [self._copy_in(rec, smp) for _, _, smp in
+                                      self._pieces(lambda x, y: self.read_samples(url, rec, x, y), a, b) if smp]
                         except OSError:
-                            continue                     # that door is down: another may have it, the next pass asks again
-                        if samples and self._copy_in(rec, samples):
+                            copied = []                  # that door is down: another may have it, the next pass asks again
+                        if any(copied):
                             touched.append(rec)
                             break
                 if rec in touched:
@@ -1498,11 +1706,18 @@ class RecWorker(VmsWorker):
                 missing += sum(b - a for a, b in subtract((k.since, k.until), self.store.coverage(rec)))
             entry = {"copied": round(got, 1), "missing": round(missing, 1)}
             for rec in sorted(set(touched)):
-                frames = b"".join(s.encode() for s in self.store.samples(rec, k.since, k.until))
-                digest = hashlib.sha256(frames).hexdigest()
+                h, size = hashlib.sha256(), 0
+                for smp in self.store.stream(rec, k.since, k.until):     # the digest a sequence at a time, as the copy
+                    raw = smp.encode()
+                    h.update(raw)
+                    size += len(raw)
+                digest = h.hexdigest()
+                # Durable, with how much of the keep the volume held: what `keep_held` is restored from when this
+                # recorder starts again — in memory only, a restart forgot what had been copied, and the incidents
+                # ring taking it afterwards raised no `archive.keep.lost` (the review's third pass, a minor).
                 EventLog(self.archive_root, REC.name, rec, 0).append(
-                    now, "archive.keep.copied", cam=k.cam, keep=k.id, recording=rec, bytes=len(frames),
-                    sha256=digest, volume=self.volume)
+                    now, "archive.keep.copied", durable=True, cam=k.cam, keep=k.id, recording=rec, bytes=size,
+                    sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1), volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
             if "sha256" not in entry and k.id in self.keep_state and "sha256" in self.keep_state[k.id]:
                 entry["sha256"] = self.keep_state[k.id]["sha256"]
@@ -1510,6 +1725,31 @@ class RecWorker(VmsWorker):
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
         self.keep_state = state
         return state
+
+    # What this volume held of each keep when this recorder last said so: the last `archive.keep.copied` of each
+    # (keep, recording), less the `archive.keep.lost` said after it — read from the events on this server, the
+    # durable record of what was copied. What it held before is what a restarted recorder compares against, or the
+    # ring taking kept footage during a restart would never be an alarm.
+    def _keeps_held_before(self, declared) -> dict:
+        from w2cplatform.events import alarm_tree, buckets_under, read_bucket, when
+        ids = {k.id for k in declared}
+        lines = []
+        for sub in (REC.name, alarm_tree(REC.name)):
+            for unit in {r for k in declared for r in k.recordings} | {str(r["id"]) for r in self.rows}:
+                try:
+                    for b in buckets_under(self.archive_root, sub, unit, 600):
+                        lines += [e for e in read_bucket(os.path.join(self.archive_root, b.path))
+                                  if e.get("keep") in ids and e.get("volume") == self.volume]
+                except OSError:
+                    continue
+        held: dict = {}
+        for e in sorted(lines, key=when):
+            key = (str(e["keep"]), str(e.get("recording", "")))
+            if e.get("kind") == "archive.keep.copied" and "seconds" in e:
+                held[key] = float(e["seconds"])
+            elif e.get("kind") == "archive.keep.lost" and key in held:
+                held[key] = max(0.0, held[key] - float(e.get("seconds", 0)))
+        return held
 
     # Frames from another recorder's door into this volume, as `<recording>/e0`, one sequence per stretch — a hole
     # inside a sequence would be drawn as footage. What the door handed over starts on a key frame.
@@ -1548,7 +1788,44 @@ class RecWorker(VmsWorker):
 #
 #   GET /timeline/<unit>?from&to   {"spans": [{start, end, epoch, source, bytes, fenced}], "current_epoch"}
 #   GET /samples/<unit>?from&to    the frames, SMPL records one after another — each stretch from the epoch that
-#                                  owns it, from a key frame (`Archive.samples`)
+#                                  owns it, from a key frame (`Archive.stream`). STREAMED, a sequence at a time
+#                                  (blocker 6: it built the whole range into one string — a day of a camera, in the
+#                                  memory of the recorder serving it). No ceiling on the range: what is held is one
+#                                  sequence whatever it is, the recorders ask in pieces (`RecWorker._pieces`), and the
+#                                  console's export has a ceiling of its own (`EXPORT_MAX`)
+#
+# The frames' body is an ITERABLE of byte strings — or `b""` when there are none: whoever serves it writes each
+# as it comes (`send_route`), and whoever wants them whole joins them (`frames_of`).
+def frames_of(body) -> bytes:
+    return body if isinstance(body, bytes) else b"".join(body)
+
+
+# A route's answer, onto the wire. Bytes go with their length; an iterable of frames goes as it comes, with no
+# length, the connection closed at its end (HTTP/1.0) — and a volume that fails half way closes it early: a reader
+# of the door gets a record cut in the middle, which is an error (`RecWorker.read_samples`), never a shorter range.
+def send_route(handler, got) -> None:
+    if got is None:
+        handler.send_response(404); handler.end_headers(); return
+    status, body, ctype = got
+    handler.send_response(status)
+    handler.send_header("Content-Type", ctype)
+    if isinstance(body, bytes):
+        handler.send_header("Content-Length", str(len(body))); handler.end_headers(); handler.wfile.write(body)
+        return
+    handler.send_header("Connection", "close")
+    handler.close_connection = True
+    handler.end_headers()
+    try:
+        for chunk in body:
+            handler.wfile.write(chunk)
+    except (ArchiveError, OSError) as e:
+        log.warning("archive door: %s cut short: %s", handler.path, e)
+    finally:
+        close = getattr(body, "close", None)
+        if close is not None:
+            close()
+
+
 def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from=lambda unit: 0.0, kept=lambda unit: []):
     import json
     from urllib.parse import parse_qs, urlsplit
@@ -1585,12 +1862,27 @@ def archive_routes(store_of, wall, current_epoch=lambda unit: None, visible_from
                                 spans.append({**sp, "start": lo, "end": hi})
                     body = {"unit": unit, "spans": spans, "current_epoch": cur}
                     return 200, json.dumps(body).encode(), "application/json"
-                frames = b""
-                for a, b in shown:
-                    lo, hi = max(t0, a), min(t1, b)
-                    if hi > lo:
-                        frames += b"".join(smp.encode() for smp in store.samples(unit, lo, hi))
-                return 200, frames, "application/octet-stream"
+                def frames():
+                    for a, b in shown:
+                        lo, hi = max(t0, a), min(t1, b)
+                        if hi > lo:
+                            for smp in store.stream(unit, lo, hi):
+                                yield smp.encode()
+                # The first frame is taken here: a volume that is away is a 503, said before the 200 goes out, and
+                # nothing at all is an empty answer.
+                body = frames()
+                try:
+                    first = next(body)
+                except StopIteration:
+                    return 200, b"", "application/octet-stream"
+
+                def rest():
+                    try:
+                        yield first
+                        yield from body
+                    finally:
+                        body.close()                     # the reader goes when the answer does, finished or not
+                return 200, rest(), "application/octet-stream"
             except ArchiveError as e:
                 return 503, json.dumps({"error": str(e)}).encode(), "application/json"
         return None

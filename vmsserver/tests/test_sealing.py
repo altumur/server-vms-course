@@ -34,11 +34,12 @@ def _key(*kids):
 def test_a_value_is_sealed_with_the_current_key_and_opens_by_the_kid_it_names():
     old = _key("k1")
     s1 = Sealer.from_file(old)
-    sealed = s1.seal("cred_secret", "hunter2")
-    assert sealed.startswith(PREFIX + "k1:") and "hunter2" not in sealed and s1.seal("cred_secret", sealed) == sealed   # never twice
-    assert s1.open("cred_secret", sealed) == "hunter2" and s1.open("cred_secret", "plain") == "plain"                 # a row from before the key
-    for bad, why in ((lambda: s1.open("access_secret", sealed), "another field"),
-                     (lambda: s1.open("cred_secret", sealed[:-4] + "AAAA"), "altered")):
+    row = "vms/cameras/1"
+    sealed = s1.seal("cred_secret", "hunter2", row)
+    assert sealed.startswith(PREFIX + "k1:") and "hunter2" not in sealed and s1.seal("cred_secret", sealed, row) == sealed   # never twice
+    assert s1.open("cred_secret", sealed, row) == "hunter2" and s1.open("cred_secret", "plain", row) == "plain"         # a row from before the key
+    for bad, why in ((lambda: s1.open("access_secret", sealed, row), "another field"),
+                     (lambda: s1.open("cred_secret", sealed[:-4] + "AAAA", row), "altered")):
         try:
             bad(); raise AssertionError(f"opened although {why}")
         except Sealed:
@@ -46,9 +47,9 @@ def test_a_value_is_sealed_with_the_current_key_and_opens_by_the_kid_it_names():
 
     both = _key("k1", "k2")                                           # k2 on top: current; k1 still opens
     s2 = Sealer.from_file(both)
-    assert s2.current == "k2" and s2.seal("cred_secret", "x").startswith(PREFIX + "k2:")
+    assert s2.current == "k2" and s2.seal("cred_secret", "x", row).startswith(PREFIX + "k2:")
     try:
-        s2.open("cred_secret", sealed); raise AssertionError("a key the ring does not hold opened a value")
+        s2.open("cred_secret", sealed, row); raise AssertionError("a key the ring does not hold opened a value")
     except Sealed as e:
         assert "k1" in str(e)                                         # a different k1: the two rings share only a name
 
@@ -112,12 +113,12 @@ def test_without_a_key_secrets_are_written_as_before_and_that_is_said():
     logging.getLogger("w2cplatform.sealing").addHandler(h)
     was, g["_said_clear"] = g["_said_clear"], False
     try:
-        assert seal_items(None, {"cred_secret": "x", "name": "gate"}) == {"cred_secret": "x", "name": "gate"}
-        seal_items(None, {"cred_secret": "y"})
+        assert seal_items(None, {"cred_secret": "x", "name": "gate"}, "vms/cameras/1") == {"cred_secret": "x", "name": "gate"}
+        seal_items(None, {"cred_secret": "y"}, "vms/cameras/2")
         assert sum("stored in the CLEAR" in m for m in said) == 1
-        assert open_row(None, {"cred_secret": "plain"}) == {"cred_secret": "plain"}
+        assert open_row(None, {"cred_secret": "plain"}, "vms/cameras/1") == {"cred_secret": "plain"}
         try:
-            open_row(None, {"cred_secret": PREFIX + "k1:a:b"}); raise AssertionError("opened without a key")
+            open_row(None, {"cred_secret": PREFIX + "k1:a:b"}, "vms/cameras/1"); raise AssertionError("opened without a key")
         except Sealed:
             pass
     finally:
@@ -228,7 +229,8 @@ def test_a_value_that_only_looks_sealed_stops_its_own_camera_and_is_refused_at_t
 def test_a_ciphertext_opens_only_in_the_row_it_was_sealed_for():
     """The review's second pass, major: with the field alone as associated data, camera 7's sealed password pasted
     into camera 8's row opened for whoever reads camera 8. The row's key is in the ciphertext now; what was
-    sealed before that opens by the field alone, once, and `seal_stored` seals it again, to its row."""
+    sealed before that opens by the field alone ONLY for `seal_stored`, which seals it again, to its row — a holder
+    asking for it is refused, or it would open in any row (the review's third pass, Н-M1's remainder)."""
     key = _key("k1")
     box = Box()
     con = _console_with_key(box, key)
@@ -244,9 +246,14 @@ def test_a_ciphertext_opens_only_in_the_row_it_was_sealed_for():
         raise AssertionError("another row's ciphertext opened")
     except Sealed as e:
         assert "another row" in str(e)
-    # sealed before the row was bound in: opens once by the field alone, and the console's start re-seals it
-    old = sealer.seal("cred_secret", "Legacy")
-    assert sealer.open("cred_secret", old, "vms/cameras/3") == "Legacy" and not sealer.bound("cred_secret", old, "vms/cameras/3")
+    # sealed before the row was bound in: opens by the field alone only to be re-sealed, at the console's start
+    old = sealer.seal("cred_secret", "Legacy", "")
+    assert not sealer.bound("cred_secret", old, "vms/cameras/3") and sealer.open("cred_secret", old, "vms/cameras/3", fallback=True) == "Legacy"
+    try:
+        sealer.open("cred_secret", old, "vms/cameras/3")
+        raise AssertionError("a value bound to no row opened in a holder")
+    except Sealed:
+        pass
     con.create_camera({"name": "c", "source": "driverpack://file/c.mp4", "cred_secret": "Legacy"})
     items3, idx3 = box.vars.get("vms/cameras/3")
     box.vars.put("vms/cameras/3", {**items3, "cred_secret": old}, cas=idx3)

@@ -57,8 +57,8 @@ EnvironmentFile=/data/config/vms.env
 # object. `:z` relabels for SELinux, shared.
 Volume=/data/platform:/data/platform:z
 # The cluster's key (`w2cplatform/sealing.py`): the console seals device passwords with it, the holder opens
-# them for the pipeline. Mounted into these two units ONLY — a key beside the store, in /data/platform, would
-# be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
+# them for the pipeline (and the recorder a network volume's secret). Mounted into those units ONLY — a key beside
+# the store, in /data/platform, would be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
 Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
 Environment=SECRETS_KEY=/run/secrets/vms.key
 # the worker records nothing — the recorder does (`recworker@.container`). Read-write here
@@ -69,7 +69,9 @@ Volume=/data/archive:/data/archive:z
 Volume=/data/media:/data/media:ro,z
 # the tee's shared-memory branch: `shmsink` opens <SHM_DIR>/<cam>.shm here (`live_shm` in the heartbeat); a
 # subscriber on THIS box — the recorder — reads it with `shmsrc`, no RTSP hop. A socket on a tmpfs, not state:
-# the one mount outside /data, and nothing an update must keep.
+# the one mount outside /data, and nothing an update must keep. NOT the archive daemon's socket: the holder
+# records nothing and reads no footage, and this is the process with a vendor's DriverPack in it — obsd's socket
+# is in /run/obsd, which only the recorder mounts (the review's third pass).
 Volume=/run/vms:/run/vms:z
 # host network: the RTSP fan-out listens on :8554 (`live_url` in the heartbeat) — what the recorder, the
 # gateways and the detectors subscribe to, from this box or another server.

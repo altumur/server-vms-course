@@ -638,3 +638,90 @@ def test_a_volume_another_writer_still_holds_is_said_to_be_busy():
     other.close()
     time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
     assert r.volume_pass() == "shared" and r.store is not None and r.archive_failure == ""
+
+
+# -- the review's third pass ---------------------------------------------------------------------------------------
+
+def test_a_network_volumes_secret_sealed_by_the_console_is_opened_by_the_recorder_with_the_key():
+    """Blocker 3, end to end: the console seals `access_secret` to the row `rec/volumes/<name>`; the recorder opened it
+    without the row — it never opened — and had no key in its unit either, so the bucket was handed the ciphertext.
+    The recorder opens it with the key and the row now. And a recorder WITHOUT the key does not die of it: the
+    volume is not written, its status says why, and the pass — the heartbeat with it — goes on."""
+    from w2cplatform.sealing import is_sealed, new_key_file
+    box = Box()
+    key = os.path.join(tempfile.mkdtemp(), "vms.key")
+    new_key_file(key)
+    os.environ["SECRETS_KEY"] = key
+    try:
+        rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    finally:
+        del os.environ["SECRETS_KEY"]
+    status, _ = rec_routes(rec)(_Body(json.dumps({"name": "s3", "kind": "network", "url": tempfile.mkdtemp(),
+                                                  "quota_bytes": 64 << 20, "access_key": "AKIA",
+                                                  "access_secret": "wJalr"}).encode()), "POST", "/volumes", {})
+    assert status == 201 and is_sealed(box.vars.get("rec/volumes/s3")[0]["access_secret"])
+
+    nokey = _recorder(box, "r-1", "srv-a")                             # `env={}`: no SECRETS_KEY
+    nokey.lease_pass(); nokey.heartbeat_once()                         # neither raises
+    hb = nokey.heartbeat_extra()
+    assert nokey.store is None and nokey.capacity == 0 and "SECRETS_KEY" in hb["volume_error"]
+    nokey.leave_volume("test: the operator gives it to a recorder with the key")
+
+    r = _recorder(box, "r-2", "srv-b", env={"SECRETS_KEY": key})
+    r.lease_pass()
+    assert r.volume == "s3" and r.store is not None and r.volume_error == ""
+    assert r.store.secret == "wJalr" and r.store.access_key == "AKIA"   # what the daemon is given among the parameters
+
+
+def test_a_network_volume_is_mounted_only_on_a_hold_confirmed_at_the_mount():
+    """The hold was stamped when the whole pass ended, and the mount did not look again: a remount whose old writer
+    took a minute to close mounted a volume whose hold had lapsed and been taken — two writers in one ring, which
+    the engine's lock on an s3 volume does not reliably stop (a lease without fencing, the engine's owner says). The
+    hold is renewed at the moment of the mount now, and a mount the store does not confirm does not happen."""
+    box = Box()
+    _net(box, "net")
+    r = _recorder(box, "r-1", "srv-a")
+    r.lease_pass()
+    assert r.volume == "net" and r.store is not None
+    r2 = _recorder(box, "r-2", "srv-b")
+    real_close = r._close_store
+
+    def slow_close(quiet=False):                                       # the old writer's close takes a minute…
+        real_close(quiet)
+        box.wall.advance(60); box.clock.advance(60)
+        assert r2.claim_hold(["net"]) == "net"                         # …the hold lapses, and another recorder takes it
+    r._close_store = slow_close
+    r._lost_engine()
+    r.lease_pass()
+    r._close_store = real_close
+    assert r.store is None and r.hold is None and r.volume == ""       # not mounted on a hold that is not ours
+    r2.lease_pass()
+    assert r2.volume == "net" and r2.store is not None                 # one writer: the one whose hold it is
+
+
+def test_the_boxs_own_volume_keeps_the_size_it_has_and_a_smaller_quota_waits_for_a_second_word():
+    """The size of the box's own volume was recomputed at every start from the disk's free space, published as its
+    size, and offered by the console to declare it at: a disk the ring had filled offered a gigabyte, and declaring
+    it shrank a volume of terabytes — the oldest footage gone. The size is the volume's own now, and a quota below
+    it is applied only when the row says `shrink_confirmed` with the same number; a larger one, at once."""
+    box = Box()
+    r = _recorder(box, "r-1", "srv-a", default_quota=64 << 20)
+    r.lease_pass()
+    assert r.store.formatted and r.heartbeat_extra()["archive_quota"] == 64 << 20
+    r.after_stop()
+    again = _recorder(box, "r-1", "srv-a", default_quota=16 << 20)    # the disk filled: the guess is smaller today
+    again.lease_pass()
+    assert not again.store.formatted and again.store.quota == 64 << 20
+    assert again.heartbeat_extra()["archive_quota"] == 64 << 20        # what the console offers: the size it HAS
+
+    row = {"name": "srv-a", "kind": "local", "url": again.default_url, "server": "srv-a", "quota_bytes": 32 << 20}
+    volumes.write(box.vars, row)
+    again.lease_pass()
+    assert again.volume == "srv-a" and again.store.size() == 64 << 20  # not shrunk on one word…
+    assert "shrink_confirmed" in again.heartbeat_extra()["quota_note"]
+    volumes.write(box.vars, {**row, "shrink_confirmed": 32 << 20})
+    again.lease_pass()
+    assert again.store.size() == 32 << 20 and "quota_note" not in again.heartbeat_extra()   # …on two
+    volumes.write(box.vars, {**row, "quota_bytes": 128 << 20})
+    again.lease_pass()
+    assert again.store.size() == 128 << 20                             # a larger ring takes nothing away: at once

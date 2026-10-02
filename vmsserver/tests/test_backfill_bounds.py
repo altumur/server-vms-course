@@ -19,6 +19,28 @@ from tests.test_lesson11_edge import CARD, _backfilled, _box, _holder, _ours, _r
 NOW = 1_000_000.0
 
 
+def _until_done(fetch, passes: int = 30) -> list:
+    """Every pass of `fetch` until one plans nothing: a range is served `RANGE_CAP` a pass (the review's third pass,
+    blocker 6), so a gap of an hour or more comes in turns."""
+    done = []
+    for _ in range(passes):
+        got = fetch()
+        if not got:
+            return done
+        done += got
+    raise AssertionError("still fetching after every pass")
+
+
+def _served(r, rid: str, passes: int = 30) -> None:
+    """The ordinary pass, until the request is reported fetched — a request is served `RANGE_CAP` a pass."""
+    for _ in range(passes):
+        r.pump_once()
+        r._backfiller.join(10.0)
+        if rid in r.fetched:
+            return
+    raise AssertionError(f"{rid} never served whole")
+
+
 def _recorder(act=None, settle=1000.0, card=(0.0, NOW)):
     box, ctl, con, con_vars = _box()
     w = _holder(box, lambda k: FakeDevice(k, channels=["1"], coverage={"1": (*card, 5)}))
@@ -41,8 +63,8 @@ def test_a_range_the_card_does_not_have_is_fetched_once_and_then_remembered():
     box, r, _ = _recorder(act)
     _ours(box, r, 1, ((NOW - 80000, NOW - 76400), (NOW - 70000, NOW - 66400)))
 
-    done = r.backfill(budget=1, now=NOW, force=True)
-    assert done[0]["groups"] > 0 and r.nowhere[("1", "device")] == [hole]
+    done = _until_done(lambda: r.backfill(budget=1, now=NOW, force=True))
+    assert sum(d["groups"] for d in done) > 0 and r.nowhere[("1", "device")] == [hole]
     asked = len(act.fetched)
     assert r.backfill(budget=1, now=NOW, force=True) == []                  # nothing left to plan
     assert len(act.fetched) == asked
@@ -90,7 +112,7 @@ def test_planned_backfill_fills_holes_inside_what_was_recorded_and_not_before_it
     con_rec.vars.put(REC_SPEC.sub.request_key("1-morning"),
                      {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28000), "at": str(NOW), "by": "anna"})
     r.backfill_budget = 0
-    r.pump_once()
+    _served(r, "1-morning")
     assert r.fetched == ["1-morning"]
     r.store.seal()
     assert any(s.start == NOW - 30000 for s in _backfilled(r))
@@ -122,4 +144,29 @@ def test_an_operators_request_is_served_off_the_loops_thread():
     r.pump_once()
     assert r._backfiller is not None
     r._backfiller.join(10.0)
+    _served(r, "1-x")
     assert r.fetched == ["1-x"] and r.actuator.fetched
+
+
+def test_a_long_request_is_fetched_in_pieces_over_several_passes_and_reported_once_whole():
+    """The review's third pass, blocker 6. An operator's request for a day was one fetch, one list in memory — and
+    `POST /backfill` put no ceiling on it. The recorder asks the device for about a minute at a time, lands each
+    piece before the next, and serves `RANGE_CAP` of a request a pass: the request is reported fetched — and its
+    row removed — only when the last piece of it has landed."""
+    act = FakeActuator()
+    box, r, con_rec = _recorder(act)
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-long"),
+                     {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 28200), "at": str(NOW), "by": "anna"})
+    passes = 0
+    while "1-long" not in r.fetched:
+        got = r.requests(now=NOW)
+        passes += 1
+        assert got and passes <= 10
+        assert all(d["to"] - d["from"] <= r.RANGE_CAP for d in got)        # a pass takes at most RANGE_CAP of it
+    assert passes == 3                                                      # half an hour, ten minutes a pass
+    asked = [(lo, hi) for _, lo, hi, _ in act.fetched]
+    assert len(asked) >= 30 and all(hi - lo <= r.PIECE for lo, hi in asked)   # and the device a minute at a time
+    r.store.seal()
+    from vms.archive import stitch
+    assert stitch((s.start, s.end) for s in _backfilled(r)) == [(NOW - 30000, NOW - 28200)]   # nothing between pieces

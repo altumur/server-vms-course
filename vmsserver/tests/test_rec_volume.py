@@ -229,3 +229,136 @@ def test_a_fetched_range_lands_under_its_lease_into_the_volume_it_was_fetched_fo
     r.release("1")
     out = r._land("1", "1", fake_samples(t - 300, t - 200), t - 300, t - 200, "device")
     assert out["skipped"] and r.backfilled == before
+
+
+# -- the review's third pass: the archive on obsd ------------------------------------------------------------------
+
+def test_a_daemon_restarted_between_two_samples_is_a_remount_and_the_recording_goes_on():
+    """Blocker 4. A restarted daemon is a new, empty session under the old token: the client reconnected in silence,
+    every handle answered `UNKNOWN_HANDLE`, the recorder took it for a passing outage and wrote into dead handles
+    until somebody restarted IT. Any `UNKNOWN_HANDLE` is the engine lost now: the next pass mounts the volume again,
+    the same pipeline goes on into the new writer, and the heartbeat says what happened — while it lasts, and after."""
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=5))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        assert r.actuator.feed("1", t - 120, t - 60) == {"OK": 60}
+        d.restart(kill=False)                                          # SIGTERM: every writer closed cleanly; back empty
+        said = r.actuator.feed("1", t - 60, t - 30)
+        assert said == {"SESSION_LOST": 30}                            # nothing "taken" by a writer that is not there
+        hb = r.heartbeat_extra()
+        assert r.engine_lost and "no longer knows this recorder's session" in hb["archive_error"]
+        r.lease_pass()                                                 # the next pass mounts the volume again
+        hb = r.heartbeat_extra()
+        assert r.store is not None and hb["archive_error"] == "" and hb["archive_remounts"] == 1
+        assert "no longer knows" in hb["archive_remounted"]["why"]
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}           # the same pipeline, into the new writer
+        r.store.seal()
+        assert r.our_coverage("1") == [(t - 120, t - 60), (t - 30, t)]
+    finally:
+        d.stop()
+
+
+def test_a_daemon_that_crashed_is_a_remount_once_its_lock_is_stale():
+    """The same, by SIGKILL: no writer was closed, and the volume's lock is the dead daemon's until it is stale
+    (`lockRefreshSec`). The remount is `busy` until then — kept, said — and then the recording goes on."""
+    import time as _time
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=5), env={"ARCHIVE_LOCK_REFRESH_S": "1"})
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        r.actuator.feed("1", t - 120, t - 60)
+        d.restart(kill=True)
+        assert r.actuator.feed("1", t - 60, t - 50) == {"SESSION_LOST": 10}
+        deadline = _time.monotonic() + 10
+        while True:
+            r.lease_pass()
+            if r.store is not None or _time.monotonic() > deadline:
+                break
+            assert r.archive_failure in ("busy", "away") and r.volume == "srv-1"     # kept while the lock is stale
+            _time.sleep(0.5)
+        assert r.store is not None and r.remounts == 1
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}
+        r.store.seal()
+        assert r.our_coverage("1")[-1] == (t - 30, t)
+    finally:
+        d.stop()
+
+
+def test_readers_do_not_close_each_other_in_the_middle_of_a_read():
+    """Blocker 5. One reader was shared: every question closed it and mounted another, so the door, the backfill,
+    the keeps and the pass — reading at once — closed each other's reader mid-read. A reader is the question's own
+    now, closed when the question is answered."""
+    import threading
+    from tests.conftest import footage, store
+    st = store()
+    t = Box().wall()
+    footage(st, "7", 1, t - 1800, t, step=1)
+    want = len(st.samples("7", t - 1800, t))
+    errors, counts = [], []
+
+    def read():
+        try:
+            for _ in range(3):
+                counts.append(len(st.samples("7", t - 1800, t)))
+        except Exception as e:                                         # noqa: BLE001
+            errors.append(e)
+
+    def status():
+        try:
+            for _ in range(40):
+                st.status(); st.units()
+        except Exception as e:                                         # noqa: BLE001
+            errors.append(e)
+    threads = [threading.Thread(target=read) for _ in range(3)] + [threading.Thread(target=status) for _ in range(3)]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join(60)
+    assert errors == [] and counts == [want] * 9
+
+
+def test_a_long_range_is_fetched_from_a_backup_a_minute_at_a_time_and_lands_whole():
+    """Blocker 6. A range was one request and one list — a day from a backup, tens of gigabytes in two recorders'
+    memory. It is asked for about a minute at a time and landed before the next minute is asked for, cut at key
+    frames so that nothing is fetched twice and nothing is left between two pieces."""
+    from w2cplatform.obsd import unix_s
+    from tests.conftest import door, footage, store
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+    backup = store("backup")
+    footage(backup, "1-backup", 1, t - 1800, t - 600, step=0.5)
+    srv = door(box, backup, "r-backup", "srv-2")
+    asked, real = [], r.read_samples
+
+    def read(url, unit, a, b):
+        got = real(url, unit, a, b)
+        asked.append((a, b, len(got)))
+        return got
+    r.read_samples = read
+    try:
+        out = r.fetch_from("1", "1", {"kind": "backup", "key": "backup:1-backup", "url": srv.url, "recording": "1-backup"},
+                           t - 1800, t - 600)
+    finally:
+        srv.shutdown()
+    assert len(asked) >= 20 and all(b - a <= r.PIECE for a, b, _ in asked)       # twenty minutes, a minute at a time
+    assert all(n <= 2 * (r.PIECE + 2) for _, _, n in asked)                       # …never more than a piece in hand
+    assert out["groups"] > 0 and r.closed == [f"1|{t - 1800:.0f}|{t - 600:.0f}"]  # reported once, whole
+    r.store.seal()
+    landed = r.store.samples("1", t - 1800, t - 600)
+    assert r.our_coverage("1") == [(t - 1800, t - 600)]                            # nothing between two pieces
+    assert len(landed) == len({s.begin for s in landed}) == 2400                  # and nothing twice
+    assert unix_s(landed[0].begin) == t - 1800

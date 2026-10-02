@@ -208,7 +208,9 @@ def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
         def sendall(self, data):
             self.inner.sendall(data); sent.append(data); self.inner.shutdown(socket.SHUT_RDWR)
         def __getattr__(self, name): return getattr(self.inner, name)
-    s._sock = Breaks(s._sock)
+    ln = s.lane("write")                                          # a sample goes on the writer's own connection
+    s._connect(ln)
+    ln.sock = Breaks(ln.sock)
     try:
         s.call("PUT_MEDIA", None, b"\x00" * 10)
         raise AssertionError("resent a sample the daemon may have taken")
@@ -241,3 +243,49 @@ def test_a_thin_stream_is_visible_after_the_flush_periods_and_not_when_its_block
     seen = quick.coverage("7")
     assert seen and seen[0][0] == t - 30 and seen[0][1] >= t - 2        # the sequence the engine cut, on the volume
     assert quick.status()["numBlocks"] >= 1
+
+
+def test_the_writer_the_readers_and_the_pass_each_have_a_connection_of_their_own():
+    """The review's third pass. One connection behind one lock: a long read held every camera's samples, and a
+    silent request held the pass that renews the leases. The writer's ops, the readers' and the rest each have a
+    connection of their own now; and a connection held by a request that does not come back answers the next
+    caller `Unavailable` after a timeout instead of queueing it for ever."""
+    import time as _time
+    from w2cplatform.obsd import Session, Unavailable
+    from tests.conftest import ObsdDaemon
+    s = Session(ObsdDaemon.get().socket, client="t", timeout=0.5)
+    vol, _ = obsd_volume(s)
+    w = vol.mount_rw("rec:lanes")
+    reads = s.lane("read")
+    reads.lock.acquire()                                              # a read in flight that does not come back
+    try:
+        assert _frames(w, "7/e1", 50) == {"OK": 50}                   # the writer writes
+        assert s.call("STATS")[0] is not None                         # the pass asks
+        t0 = _time.monotonic()
+        try:
+            vol.mount_ro()
+            raise AssertionError("a read queued behind a read that never ends")
+        except Unavailable as e:
+            assert "held by a request" in e.detail and _time.monotonic() - t0 < 2
+    finally:
+        reads.lock.release()
+    assert vol.mount_ro().status() is not None                        # the connection is free again
+    s.bye()
+
+
+def test_a_session_past_its_linger_answers_session_lost_and_its_handles_are_gone():
+    """Blocker 4, from the client's side. Every connection of a session gone longer than the linger, or the daemon
+    restarted: a HELLO under the same token makes a NEW, empty session, and nothing in its reply says so. The
+    old handles answer `UNKNOWN_HANDLE` — which the client raises as `SessionLost`, the engine lost: remount."""
+    from w2cplatform.obsd import SessionLost, Unavailable
+    s = obsd_session("lingered")
+    vol, _ = obsd_volume(s)
+    w = vol.mount_rw("rec:lingered")
+    _frames(w, "7/e1", 25)
+    s.vanish()
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.5)
+    try:
+        w.put("7/e1", video(T0 + 2000, T0 + 2040, b"x" * 100, True))
+        raise AssertionError("a handle of a session that ended was taken")
+    except SessionLost as e:
+        assert isinstance(e, Unavailable) and e.name == "SESSION_LOST" and s.lost == 1

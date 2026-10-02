@@ -1,6 +1,6 @@
 # /etc/systemd/system/obsd.service — ObjectStorage, the archive's engine, as the box's own daemon.
 # Not a container and not one of the VMS's processes: the engine the recorders write their footage
-# through, over a unix socket in /run/vms (`w2cplatform/obsd.py`). One per host — it keeps one writer per
+# through, over a unix socket in /run/obsd (`w2cplatform/obsd.py`). One per host — it keeps one writer per
 # volume, and that rule means something only if every recorder on the box asks the same daemon.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -14,15 +14,22 @@
 # the declarations name. So a local volume's url is a path on THIS HOST, and the recorder that writes into it
 # needs no mount of it at all.
 #
-# - `ExecStart=… --socket /run/vms/obsd.sock` — the socket in the tmpfs every recorder already mounts for the
-#   workers' shared memory; `OBSD_SOCKET` is not set anywhere because this is its default on Linux.
-# - `RuntimeDirectory=vms` + `RuntimeDirectoryPreserve=yes` — /run/vms exists before the daemon starts, and a
-#   restart of the daemon does not take the workers' shared-memory sockets with it.
+# - `ExecStart=… --socket /run/obsd/obsd.sock` — the socket in a directory of its OWN, which only the recorders
+#   mount (`OBSD_SOCKET` in `recworker@.container`). It was in /run/vms, beside the workers' shared memory, and so
+#   in the holder's container too — the process that runs a vendor's DriverPack (the review's third pass).
+# - `User=obsd`, `Group=vms-rec`, `OBSD_CLIENT_GROUP=vms-rec` — the daemon refuses a peer of another uid unless it
+#   is in that group (`SO_PEERGROUPS`); the recorders join it (`GroupAdd=` in their unit), nothing else does. What
+#   is left: every member of the group is trusted alike — any recorder on the box may open any volume, and the
+#   `owner` a detached writer is picked up by is a name, not a secret. The daemon has no per-client token.
+# - `RuntimeDirectory=obsd vms` + `RuntimeDirectoryPreserve=yes` — both exist before the daemon starts (/run/vms
+#   for the workers' shared memory), and a restart of the daemon does not take those sockets with it.
 # - `OBSD_WRITER_GRACE_S=90` — how long a writer whose recorder vanished waits for the same owner
 #   (`rec:<volume>`). Longer than a hold takes to lapse (45 s), so whoever takes the volume next picks the
 #   writer up whole (feedback CF).
 # - `Restart=always`. A daemon that went away is `away` to every recorder: they keep their volumes, and the
-#   next pass opens them again.
+#   next pass opens them again — a restarted daemon is a new session, whose handles answer `UNKNOWN_HANDLE`, and
+#   that is a remount at once (`SessionLost`). After a CRASH the volume's lock is the dead daemon's until it is
+#   stale (`lockRefreshSec`, 30 s): the remount is `busy` until then.
 # - `TimeoutStopSec=60` — SIGTERM closes every writer, each after its flush.
 # ================================================================================================
 [Unit]
@@ -30,8 +37,12 @@ Description=ObjectStorage daemon — the archive's engine, one per host
 After=local-fs.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/obsd --socket /run/vms/obsd.sock
-RuntimeDirectory=vms
+ExecStart=/usr/local/bin/obsd --socket /run/obsd/obsd.sock
+User=obsd
+Group=vms-rec
+Environment=OBSD_CLIENT_GROUP=vms-rec
+RuntimeDirectory=obsd vms
+RuntimeDirectoryMode=0750
 RuntimeDirectoryPreserve=yes
 Environment=OBSD_WRITER_GRACE_S=90
 Environment=OBSD_LOG_LEVEL=warning

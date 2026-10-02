@@ -55,7 +55,7 @@ from w2cplatform.spec import Refused
 SUB = "rec"
 TABLE = "volumes"
 KINDS = ("local", "network", "backup", "edge", "incidents")
-FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled")
+FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret", "enabled", "shrink_confirmed")
 
 
 # The kinds that are a disk on ONE box, named in `server`. A backup volume is one when it names a server — the
@@ -84,18 +84,24 @@ class Volume:
     access_secret: str = ""       # the `*_secret` suffix: never handed back by a console
     enabled: bool = True
     access_key: str = ""          # a bucket's key ID — which key, not the key: shown, like a camera's login
+    # A quota SMALLER than the size the volume has erases its oldest footage when applied, so the recorder applies it
+    # only when this says the same number — the operator's second word (`RecWorker._apply_quota`; the review's third
+    # pass). Absent, the ring keeps its size and the heartbeat says why.
+    shrink_confirmed: int = 0
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Volume":
         d = items or {}
         return cls(name, str(d.get("kind", "local")), str(d.get("url", "")), str(d.get("server", "")),
                    int(d.get("quota_bytes", 0) or 0), str(d.get("access_secret", "")),
-                   str(d.get("enabled", "true")) != "false", access_key=str(d.get("access_key", "")))
+                   str(d.get("enabled", "true")) != "false", access_key=str(d.get("access_key", "")),
+                   shrink_confirmed=int(d.get("shrink_confirmed", 0) or 0))
 
     def to_items(self) -> dict:
         return {"kind": self.kind, "url": self.url, "server": self.server,
                 "quota_bytes": self.quota_bytes, "access_secret": self.access_secret, "access_key": self.access_key,
-                "enabled": "true" if self.enabled else "false"}
+                "enabled": "true" if self.enabled else "false",
+                **({"shrink_confirmed": self.shrink_confirmed} if self.shrink_confirmed else {})}
 
 
 def key(name: str) -> str:
@@ -149,8 +155,9 @@ def write(vars_, fields: dict, sealer=None) -> Volume:
     versions of it at once, and the hold is what makes it exclusive.
 
     `sealer`: the console's key (`w2cplatform/sealing.py`) — `access_secret` goes into the store sealed, as a
-    camera's password does (feedback CD: the product's volumes have the same field and the same rule). The
-    process that would open a network volume opens it; the course mounts none."""
+    camera's password does (feedback CD: the product's volumes have the same field and the same rule), bound to
+    this row. The recorder that takes the volume opens it, with the same key and the same row (`RecWorker.
+    _write_into`), and hands it to the daemon among the volume's parameters — obsd takes credentials only that way."""
     from w2cplatform.sealing import seal_items
     refuse(fields)
     name = str(fields["name"])

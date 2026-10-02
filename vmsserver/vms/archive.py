@@ -30,13 +30,14 @@
 from __future__ import annotations
 
 import logging
-
+import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
 
 from w2cplatform.events import EventLog
-from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable, archive_ms, unix_s
+from w2cplatform.obsd import ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
 
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
 EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
@@ -179,7 +180,8 @@ class ArchiveError(Exception):
     wrong   only a person changes it: a path that is not a volume, no permission, a bucket that refuses the key.
             The volume is handed back
     away    a timeout, a network that is down, the daemon itself gone. Kept: it is back in a minute, and handing
-            it back would reshuffle every recording on it for a link that returns
+            it back would reshuffle every recording on it for a link that returns. `SESSION_LOST` is away too —
+            and more: every handle is dead, and the volume is mounted again (`Archive.lost`)
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out"""
 
@@ -208,44 +210,74 @@ def classify(e: Exception) -> ArchiveError:
 
 class Archive:
     """One volume through the host's `obsd`. `owner` is what the daemon remembers a writer by — the recorder
-    passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back."""
+    passes `rec:<volume>`, which the platform's hold makes unique — and what gets a vanished writer back.
+
+    `confirm`: asked right before every `VOLUME_MOUNT_RW`, and a mount it refuses does not happen — the recorder's
+    hold on a volume any box may serve, confirmed at that moment and not a pass ago (`RecWorker._confirm_hold`)."""
 
     def __init__(self, url: str, name: str = "", quota: int = 0, owner: str = "", session: Session | None = None,
                  wall=time.time, secret: str = "", block: int = BLOCK, read: int = READ, access_key: str = "",
-                 sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S):
+                 sequence_flush_ms: int = SEQUENCE_FLUSH_MS, block_flush_s: int = BLOCK_FLUSH_S,
+                 confirm=None, lock_refresh: int = 0):
         self.url, self.name, self.quota, self.owner = url, name or url, int(quota), owner
         self.session = session or Session(client="vms-archive")
         self.wall, self.secret, self.block, self.read, self.access_key = wall, secret, block, read, access_key
         self.sequence_flush_ms, self.block_flush_s = int(sequence_flush_ms), int(block_flush_s)
+        self.confirm, self.lock_refresh = confirm, int(lock_refresh)
         self.volume = None
         self.writer = None
-        self._reader = None
+        self._opening = threading.Lock()
         self.formatted = False                     # this open formatted the volume: it was new
         self.reattached = False                    # the daemon handed back a writer a vanished process left
+        self.lost = False                          # a handle of this volume answered SESSION_LOST: mount it again
 
     def _open_volume(self):
-        if self.volume is None:
-            self.volume = self.session.open_volume(params=volume_params(self.url, self.secret, self.access_key))
-        return self.volume
+        with self._opening:                        # the door, the backfill and the pass may all ask first
+            if self.volume is None:
+                self.volume = self.session.open_volume(params=volume_params(self.url, self.secret, self.access_key))
+            return self.volume
+
+    # Every handle this volume has is dead once ONE of them answers `UNKNOWN_HANDLE` (`SessionLost`): the daemon
+    # restarted, or the session outlived its linger. Said here, on whichever thread found it; the recorder's pass
+    # reads `lost` and mounts the volume again (the review's third pass, blocker 4).
+    def _classified(self, e: Exception) -> ArchiveError:
+        if isinstance(e, SessionLost):
+            self.lost = True
+        return classify(e)
+
+    def _mount_rw(self, vol):
+        if self.confirm is not None:
+            self.confirm()                         # raises ArchiveError: this volume is not ours to write this second
+        return vol.mount_rw(self.owner)
 
     # Opening is the only honest test: a row can name a path that does not exist, a mount that is gone or a
     # bucket nobody can reach. A volume that is not there yet is FORMATTED — at its quota, which is the size of
-    # the ring — and then mounted for writing under `owner`.
+    # the ring — and then mounted for writing under `owner`. A volume that IS there keeps its size, and `quota`
+    # becomes that size, read from the volume (the review's third pass): the number a recorder computed at its
+    # start is a guess for a volume it has yet to format, never news about one that exists.
     def open(self, write: bool = True) -> "Archive":
         try:
             vol = self._open_volume()
             if not vol.exists():
                 if not self.quota:
                     raise ArchiveError("wrong", f"{self.name}: no volume there and no quota to format one with")
-                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name)
+                vol.format(self.quota, max_block=self.block, optimal_read=self.read, label=self.name,
+                           lock_refresh=self.lock_refresh)
                 self.formatted = True
+            else:
+                self.quota = self.size() or self.quota
             if write and self.writer is None:
-                self.writer = vol.mount_rw(self.owner)
+                self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
                 self._configure()
         except (ObsdError, ValueError) as e:
-            raise classify(e) from None
+            raise self._classified(e) from None
         return self
+
+    def size(self) -> int:
+        """The ring's size as the volume holds it — `maxVolumeSize`, what it was formatted or last resized to."""
+        with self.reading() as r:
+            return int((r.info().get("info") or {}).get("maxVolumeSize") or 0)
 
     # The writer's settings, before its first sample: how a sequence is cut by time and how long a block may wait
     # (`SEQUENCE_FLUSH_MS`, `BLOCK_FLUSH_S`), and how a volume this recorder formats is cut. A writer picked up again
@@ -265,10 +297,18 @@ class Archive:
         `Unavailable` when this volume is not open for writing any more (closed, or the engine went away)."""
         if self.writer is None:
             raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
-        return self.writer.put(stream_name(unit, epoch, backfill), sample)
+        try:
+            return self.writer.put(stream_name(unit, epoch, backfill), sample)
+        except SessionLost:
+            self.lost = True
+            raise
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
-        return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
+        try:
+            return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
+        except SessionLost:
+            self.lost = True
+            raise
 
     def resize(self, quota: int) -> None:
         """A new quota is a new size of the ring, at once and without stopping: shrinking frees the oldest."""
@@ -280,42 +320,61 @@ class Archive:
         """Close the writer and take it again: its last block is closed, and what was written is readable. What
         a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
         if self.writer is not None:
-            self.writer.close()
-            self.writer = self._open_volume().mount_rw(self.owner)
+            try:
+                self.writer.close()
+                self.writer = None
+                self.writer = self._mount_rw(self._open_volume())
+            except SessionLost:
+                self.lost = True
+                raise
             self._configure()
 
     def close(self) -> None:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
         last minutes readable, and a volume released first would be somebody else's with a writer still in it."""
-        for h in (self._reader, self.writer, self.volume):
+        for h in (self.writer, self.volume):
             if h is not None:
                 try:
                     h.close()
                 except ObsdError:
                     pass
-        self._reader = self.writer = self.volume = None
+        self.writer = self.volume = None
 
-    # -- reading: a fresh reader for every question -----------------------------------------------------
-    def reader(self):
-        if self._reader is not None:
+    # -- reading: a reader of its own for every question --------------------------------------------------
+    # A reader sees what was closed when it mounted, so every question mounts one — and CLOSES it when the question
+    # is answered, its own and nobody else's. There used to be one, `self._reader`, which each question closed and
+    # replaced: the door, the backfill, the keeps and the pass read the volume at once, and every one of them closed
+    # the reader another was in the middle of — `UNKNOWN_HANDLE` in an export, a keep's copy that never completed
+    # (the review's third pass, blocker 5). And whatever the engine answers inside is an `ArchiveError` by kind, so
+    # a door that catches those catches everything the volume can say.
+    @contextmanager
+    def reading(self):
+        try:
+            r = self._open_volume().mount_ro()
+        except (ObsdError, ValueError) as e:
+            raise self._classified(e) from None
+        try:
+            yield r
+        except ObsdError as e:
+            raise self._classified(e) from None
+        finally:
             try:
-                self._reader.close()
+                r.close()
             except ObsdError:
                 pass
-        try:
-            self._reader = self._open_volume().mount_ro()
-        except ObsdError as e:
-            raise classify(e) from None
-        return self._reader
 
     def units(self) -> list[str]:
-        names = {p[0] for p in (parse_stream(s) for s in self.reader().streams()) if p}
+        with self.reading() as r:
+            names = {p[0] for p in (parse_stream(s) for s in r.streams()) if p}
         return sorted(names, key=lambda d: (0, int(d), "") if d.isdigit() else (1, 0, d))
 
     def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:
         """What the index holds — of one recording, or of all — as spans, in time order. One question, one
         reader: `reader` is the one the caller already mounted, if it is asking more than this."""
-        r = reader or self.reader()
+        if reader is None:
+            with self.reading() as r:
+                return self.spans(unit, t0, t1, reader=r)
+        r = reader
         lo = archive_ms(t0) if t0 is not None else NEVER
         hi = archive_ms(t1) if t1 is not None else FOREVER
         out = []
@@ -380,20 +439,44 @@ class Archive:
         """The frames of `[t0, t1)`, each stretch from the epoch that owns it, each starting on the key frame AT
         OR BEFORE its first moment — what an export, a scan or a copy into another volume takes. A stretch that
         opens at 10:05 is inside a group of pictures that opened at 10:04:58, and without that key frame nothing
-        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`)."""
-        r = self.reader()
-        out: list[Sample] = []
-        for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
-            a, b = archive_ms(lo), archive_ms(hi)
-            seq = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.begin < b]
-            first = next((i for i, s in enumerate(seq) if s.end > a), len(seq))
-            key = next((i for i in range(min(first, len(seq) - 1), -1, -1) if seq[i].key), None)
-            if key is None:                              # no key frame at or before: the stretch opens on its next one
-                key = next((i for i in range(first, len(seq)) if seq[i].key), len(seq))
-            out += seq[key:]
-        return out
+        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`). All of it, in a
+        list: for a short range. A long one is `stream`ed."""
+        return list(self.stream(unit, t0, t1))
+
+    # The same frames, one SEQUENCE at a time (the review's third pass, blocker 6). A day of one camera is tens of
+    # gigabytes, and the door built it into one string and the keep copied it out of one list: what is held now is
+    # a sequence — a block at most — and whatever group of pictures is waiting for the moment the range begins.
+    # The reader is held for as long as the frames are being taken, and closed when they are, or when whoever was
+    # taking them stops.
+    def stream(self, unit, t0: float, t1: float):
+        with self.reading() as r:
+            for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
+                a, b = archive_ms(lo), archive_ms(hi)
+                lead: list[Sample] = []                  # since the last key frame, until the stretch's first moment
+                started = False
+                for e in r.sequences(span.stream, a, b):
+                    for smp in r.read(e):
+                        if smp.begin >= b:
+                            break
+                        if started:
+                            yield smp
+                            continue
+                        if smp.key:
+                            lead = []
+                        lead.append(smp)
+                        if smp.end > a:                  # the first moment: from the key frame at or before it
+                            started = True
+                            k = next((i for i, x in enumerate(lead) if x.key), None)
+                            yield from (lead[k:] if k is not None else [])
+                            if k is None:                # no key frame at or before: the stretch opens on its next one
+                                started = False
+                            lead = []
+                    else:
+                        continue
+                    break
 
     def status(self) -> dict:
         """The ring: `usedSize`, `availableSize`, `totalWritten`, `firstBlockId`, `numBlocks`. A first block
         past nought is a ring that has closed: it has begun to overwrite."""
-        return dict(self.reader().status())
+        with self.reading() as r:
+            return dict(r.status())

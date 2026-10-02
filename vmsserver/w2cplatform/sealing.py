@@ -91,12 +91,19 @@ class Sealer:
     # The associated data binds the ciphertext to its place: the ROW (`<sub>/<rows>/<id>`, the store key) and the
     # field. Without the row, camera 7's sealed password pasted into camera 8's row opens for whoever reads 8 —
     # the holder does the opening, and does it for the row it was given (the review's second pass, a major).
-    # Values sealed before the row was part of it open by the field alone, once; `seal_stored` re-seals them.
+    #
+    # The row is NOT optional (the review's third pass, blocker 3). It was `ctx=""` by default, and the one caller
+    # that forgot it — the recorder opening a volume's `access_secret` — asked for a value bound to no row, which
+    # the console had sealed to `rec/volumes/<name>`: every network volume's secret failed to open. Every seal and
+    # every open names its row now, or does not run.
+    #
+    # Values sealed before the row was part of it open by the field alone — and ONLY where `seal_stored` re-seals
+    # them (`fallback=True`). Anywhere else an old value was a value that opened in any row, the hole binding closed.
     @staticmethod
     def _aad(field: str, ctx: str) -> bytes:
         return f"{ctx}:{field}".encode() if ctx else field.encode()
 
-    def seal(self, field: str, value: str, ctx: str = "") -> str:
+    def seal(self, field: str, value: str, ctx: str) -> str:
         if not value or is_sealed(value):
             return value
         nonce = _secrets.token_bytes(12)
@@ -112,7 +119,7 @@ class Sealer:
         except Sealed:
             return False
 
-    def open(self, field: str, value: str, ctx: str = "", fallback: bool = True) -> str:
+    def open(self, field: str, value: str, ctx: str, fallback: bool = False) -> str:
         if not is_sealed(value):
             return value
         # A value that only LOOKS sealed — `enc:v1:x`, a row somebody typed or a copy that lost its tail — is a
@@ -137,7 +144,7 @@ class Sealer:
 _said_clear = False
 
 
-def seal_items(sealer: Sealer | None, items: dict, ctx: str = "") -> dict:
+def seal_items(sealer: Sealer | None, items: dict, ctx: str) -> dict:
     """The row as it goes into the store: every `*_secret` value sealed — when there is a key. `ctx`: the row's
     key in the store, bound into the ciphertext."""
     global _said_clear
@@ -150,7 +157,7 @@ def seal_items(sealer: Sealer | None, items: dict, ctx: str = "") -> dict:
     return {k: (sealer.seal(k, str(v), ctx) if is_secret_field(k) and v else v) for k, v in items.items()}
 
 
-def open_row(sealer: Sealer | None, row: dict, ctx: str = "") -> dict:
+def open_row(sealer: Sealer | None, row: dict, ctx: str) -> dict:
     """The row as the process that USES a secret needs it. A sealed value and no key raise `Sealed`. `ctx`: the
     row's key in the store — the one the holder was given, not one the row names."""
     out = dict(row)
@@ -185,7 +192,7 @@ def seal_stored(sealer: "Sealer | None", vars_, prefixes) -> int:
             # holder that does not know the new key yet cannot open what the console re-sealed with it.
             todo = {k: v for k, v in items.items() if is_secret_field(k) and v and not is_sealed(v)}
             try:
-                todo.update({k: sealer.open(k, v, key) for k, v in items.items()
+                todo.update({k: sealer.open(k, v, key, fallback=True) for k, v in items.items()
                              if is_secret_field(k) and is_sealed(v) and (not sealer.bound(k, v, key) or kid_of(v) != sealer.current)})
             except Sealed as e:
                 log.warning("%s: a sealed value this process cannot open is left as it is (%s)", key, e)
