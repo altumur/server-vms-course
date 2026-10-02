@@ -52,12 +52,12 @@
 Камера обслуживает одну живую сессию и одну дозапись (М10B, урок 15) — её кодер и её канал невелики. Две серверные, пишущие её обе, взяли бы каждая половину того, что у неё есть, или вторая отняла бы её у первой. Поэтому *какой кластер пишет камеру SN4471* — не то, что каждая серверная решает сама. Это решение домена, сохранённое один раз, по CAS, той же формы, что размещение урока 1:
 
 ```python
-    def record(self, ref: str, on: str) -> dict:
+    def record(self, ref: str, on: str, move: bool = False) -> dict:
         ...
         if known[0] == on:
             raise ApiError(400, f"camera {ref} is in {on} already: a cluster records its own cameras as it always did")
         ...
-            if ref in items:
+            if ref in items and not move:
                 raise ApiError(409, f"camera {ref} is recorded by {items[ref]} already: a device serves one live "
                                     f"session and one backfill, and a second recorder would take them from the first")
 ```
@@ -69,12 +69,17 @@
 Для каждого кластера записи домен публикует книгу: для каждой камеры другого кластера, которую тот пишет, — двери, которые последним опубликовал воркер этой камеры, и **когда**:
 
 ```python
-    def _doors(self, ref: str) -> dict | None:
+    def _doors(self, ref: str, on: str | None = None) -> dict | None:
+        on = on or self.all().get(ref, "?")
         for (cluster, worker), s in self.view.snapshots.items():
             if any(str(st.get("ref", "")) == ref for st in s.status) and s.doors:
-                return {"cluster": cluster, "worker": worker, **s.doors, "as_of": s.ts,
+                doors = dict(s.doors)
+                ...
+                return {"cluster": cluster, "worker": worker, **doors, "as_of": s.ts,
                         "reachable": cluster not in self.view.cluster_down_since}
 ```
+
+(Пропущенное — дорога камеры, которая толкает сама: урок 16.)
 
 Она строится из памяти представления для чтения — теперь оно хранит `live_url`, `playback_url` и `coverage` каждого heartbeat'а, которые раньше отбрасывало, — так что публикация ни о чём не спрашивает ни одну камеру. Книга пишется под `domain/sources/<cluster>` у держателя домена (кластер или камера, где запущены службы домена), и агент кластера записи несёт её в `domain/sources` — ровно так же, как несёт `domain/grants/<cluster>`. Агент научился ради этого одной общей вещи: списку строк по кластерам, которые надо нести, и эта строка в нём первая.
 
@@ -85,8 +90,8 @@ def resolve(cluster_vars, source: str, now: float) -> Source | None:
     if not str(source).startswith("ref:"):
         return None
     ...
-    return Source(ref, e["cluster"], e["live_url"], e["playback_url"], e.get("coverage"),
-                  max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)))
+    return Source(ref, e["cluster"], e["live_url"], e.get("playback_url"), e.get("coverage"),
+                  max(0.0, now - float(e["as_of"])), bool(e.get("reachable", True)), list(e.get("backups", [])))
 ```
 
 Шов в `recworker.py` — один запасной вариант в `device_source`: в моих heartbeat'ах не найдено, а источник строки — `ref:`, значит, разрешить его.
@@ -130,9 +135,10 @@ def resolve(cluster_vars, source: str, now: float) -> Source | None:
 Лечение — книга источников в обратную сторону. Домен читает то, что публикует серверная: снапшот её записей — *должна ли* запись писаться (`enabled`, `until` не прошёл; `until` для этого добавлен в снапшот записи) — и heartbeat'ы её регистраторов — *пишется ли*. По каждой камере, которую пишет другой кластер, он кладёт в `domain/primaries/<кластер камеры>` одну запись, и агент камеры несёт её домой, в `domain/primaries`, как несёт права:
 
 ```python
-        return {**entry, "recording": ",".join(names),
-                "should": any(bool(r.get("enabled", True)) and until_ok(r) for r in rows),
-                "written": any(n in running for n in names)}
+        should = any(bool(r.get("enabled", True)) and until_ok(r) for r in rows)
+        return {**entry, "recording": ",".join(names), "should": should,
+                "written": any(n in running for n in names),
+                "starting": should and not any(n in named for n in names)}
 ```
 
 Различие «запускается» и «перестала» пришлось добавить отдельно (обратная связь, пункт AB): без времени в книге оба выглядели как `should && !written`, и остановка получала те же 20 секунд отсрочки, что запуск, — сверх времени, за которое домен вообще узнал, что регистратор замолчал. Домен это различие знает: запись **названа**, если о ней говорит любой heartbeat регистратора её кластера, свежий или нет, а **пишется** — только если heartbeat свежий. Поле `starting` меняется при старте записи и при первом отчёте регистратора — редко, флеш оно не нагружает.

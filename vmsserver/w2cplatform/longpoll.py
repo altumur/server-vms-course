@@ -28,15 +28,25 @@ instead of at the end of its wait, and reads what it would have read anyway.
 #
 # **How the door notices.** Nothing tells the resource that a line was written: writers append to files and say
 # nothing to anybody. So while somebody waits — and only then — one thread stats the files a new line can land
-# in: the current bucket of each unit of the watched subsystems, in the newest epoch, in the subsystem's tree and
-# its alarms' (and the bucket before, for the first seconds after a boundary). A file that grew is read from
-# where it stood, and the kinds of the new lines are what waiters are matched against. Nobody waiting: no thread,
+# in: the current bucket of each unit somebody named — of every unit of a subsystem, for a want that names none —
+# in the newest epoch, in the subsystem's tree and its alarms' (and the bucket before, for the first seconds after
+# a boundary). A file that grew is read from where it stood, and the kinds of the new lines, with the unit whose
+# file it is, are what waiters are matched against. Nobody waiting: no thread,
 # no stat. Lines written into OLD buckets — an archive scan's, a card survey's — are not watched: the reader's
 # own pass is still there, and it is the safety net for everything this does not see.
 #
-# **The bounds.** `WAITERS_MAX` requests held at once; one more is answered `full` at once, and its sender falls
-# back to its pass. `WAIT_MAX` seconds per request. A waiter whose client went away is dropped within a second.
-# `WAKE_GAP` between the beginnings of two passes of a reader, whatever is answered.
+# **The bounds.** One request held per CLIENT — an evaluator's instance, `client=` — and a second one from it ends
+# the first (`replaced`); `WAITERS_MAX` held at once in all (`LONG_POLL_WAITERS`), one more is answered `full` at
+# once and its sender falls back to its pass. `WAIT_MAX` seconds per request. A waiter whose client went away is
+# dropped within a second. `WAKE_GAP` between the beginnings of two passes of a reader, whatever is answered — wider
+# when the passes are long or the resources refuse (`Wake.pace`). What was held, refused and replaced is in the
+# resource's heartbeat and on `/metrics` (`Watch.counts`).
+#
+# **The unit is in the want** (the review's seventh pass, M8). `vms/io.input/12` is camera 12's contacts and nobody
+# else's; `vms/io.input` is any camera's. A request for named units is answered only for them, and the watcher looks
+# at their directories alone — a thousand cameras on the resource cost what the units asked about cost, not a stat
+# per camera per tick. The answer says which of the wanted units changed (`touched`), and the reader's early pass
+# evaluates the scenarios those touch and no others.
 #
 # **Between two waits.** A reader that was answered asks again, and a line written in between would fall into
 # the gap. Two things close it: the answer carries `seq`, a number that grows with every change noticed, and the
@@ -49,25 +59,51 @@ from __future__ import annotations
 import json
 import logging
 import os
-import select
+import random
+import selectors
 import socket
 import threading
 import time
 import urllib.parse
 import urllib.request
 
+from .doors import safe_segment
 from .events import EPOCH_DIR, alarm_tree, bucket_start, _stamp
 
 log = logging.getLogger(__name__)
 
 WAKE_GAP = 0.25               # an early pass begins no sooner than this after the previous pass began: 4 a second at most
+WAKE_GAP_MAX = 2.0            # …and the gap, widened for long passes and refusals (`Wake.pace`), is never wider than this
+PASS_SHARE = 2.0              # the gap is at least this many times the last pass: early passes take half the loop at most
 WATCH_TICK = 0.1              # how often the door looks at the files, while somebody waits
 WAIT_MAX = 30.0               # the longest a request is held; a reader asks again
-WAITERS_MAX = 16              # requests held at once by one resource; one more is answered `full`
-RESCAN = 1.0                  # how often the watcher lists directories for a unit or an epoch that appeared
+# Requests held at once by one resource, in all; one more is answered `full`. Each client holds ONE (a second from the
+# same `client` replaces its first), so this is a number of evaluators: up to eight are expected per resource (the
+# design number of 2 October 2026), and the default is twice that. `LONG_POLL_WAITERS` changes it.
+EVALUATORS_EXPECTED = 8
+WAITERS_MAX = 2 * EVALUATORS_EXPECTED
+WANTS_MAX = 64                # `(subsystem, kind, unit)` one request may name; more is 400
+RESCAN = 1.0                  # how often the watcher looks for a unit or an epoch that appeared (by the directories' mtime)
 LINGER = 2.0                  # how long the sizes are remembered after the last waiter left
 PREVIOUS_FOR = 5.0            # how long after a bucket's boundary the bucket before it is still looked at
-BACKOFF = 2.0                 # what a reader waits after a resource failed or said `full`, before asking again
+BACKOFF = 2.0                 # what a reader waits after a resource failed or said `full`, before asking again — ±50 %
+MTIME_SLACK = 2.0             # a directory changed this recently is listed again whatever its mtime says: a coarse clock
+
+
+def waiters_from(env) -> int:
+    """`LONG_POLL_WAITERS`: requests one resource holds at once, in all. `WAITERS_MAX` unless the environment says."""
+    raw = str(env.get("LONG_POLL_WAITERS", "") or "").strip()
+    return max(1, int(raw)) if raw else WAITERS_MAX
+
+
+def wanted(pairs) -> frozenset:
+    """`(subsystem, kind)` or `(subsystem, kind, unit)` -> triples; a unit of `""` is any unit of that kind."""
+    return frozenset((str(p[0]), str(p[1]), str(p[2]) if len(p) > 2 and p[2] else "") for p in pairs)
+
+
+def matches(wants: frozenset, seen: tuple) -> bool:
+    """Whether a line of `(subsystem, kind, unit)` answers `wants`: that unit named, or any unit of the kind."""
+    return seen in wants or (seen[0], seen[1], "") in wants
 
 
 def enabled(env) -> bool:
@@ -80,8 +116,9 @@ def enabled(env) -> bool:
 class Wake:
     """The wait a loop sleeps in between passes: `stop.wait(poll)`, with one more way to end — `set()`."""
 
-    def __init__(self, gap: float = WAKE_GAP, clock=time.monotonic):
-        self.gap, self.clock = gap, clock
+    def __init__(self, gap: float = WAKE_GAP, clock=time.monotonic, gap_max: float = WAKE_GAP_MAX):
+        self.base, self.gap, self.gap_max, self.clock = gap, gap, max(gap, gap_max), clock
+        self.backoff = 0.0                           # the part of the gap the refusals added (`pace`)
         self.event = threading.Event()
         self.early = 0                               # passes begun early, since the process started
         self._began = clock()                        # when the pass that runs now began
@@ -89,6 +126,18 @@ class Wake:
 
     def set(self) -> None:
         self.event.set()
+
+    # THE GAP FOLLOWS THE LOAD (the review's seventh pass, M8). It was `WAKE_GAP` whatever happened: a pass that took
+    # a second was followed by the next early one a quarter of a second later, and a resource answering 503 to the
+    # queries (`EVENTS_INFLIGHT`) was asked four times a second all the same — the holes kept the cursors where they
+    # were, and the early passes made more holes. Told after every pass how long it took and whether a resource
+    # refused it, the gap is now at least `PASS_SHARE` times the pass (early passes take half the loop at most), and
+    # doubles with every pass a resource refused, back to the floor at the first one nobody refused; never wider than
+    # `gap_max`, which is the ordinary pass.
+    def pace(self, seconds: float, refused: bool) -> float:
+        self.backoff = min(self.gap_max, max(self.base, 2 * self.backoff)) if refused else 0.0
+        self.gap = min(self.gap_max, max(self.base, PASS_SHARE * max(0.0, float(seconds)), self.backoff))
+        return self.gap
 
     # Returns when `poll` has passed, when `stop` is set, or when `set()` was called — but an early return never
     # comes sooner than `gap` after the previous pass BEGAN, so a flood of answers is one early pass per gap.
@@ -125,26 +174,29 @@ class Wake:
 
 # -- the door's side: who waits, and what was appended -----------------------------------------------------
 class Watch:
-    """A resource's held requests. `wait(wants, timeout)` returns when a line of a wanted `(subsystem, kind)`
+    """A resource's held requests. `wait(wants, timeout)` returns when a line of a wanted `(subsystem, kind, unit)`
     is appended under one of `roots`, or at the timeout."""
 
     def __init__(self, roots, bucket_seconds: int = 600, wall=time.time, tick: float = WATCH_TICK,
-                 waiters_max: int = WAITERS_MAX, clock=time.monotonic):
+                 waiters_max: int | None = None, clock=time.monotonic, env=None):
         self.roots, self.bucket_seconds, self.wall, self.tick = list(roots), bucket_seconds, wall, tick
-        self.waiters_max, self.clock = waiters_max, clock
+        self.waiters_max = waiters_max if waiters_max is not None else waiters_from(os.environ if env is None else env)
+        self.clock = clock
         self.seq = 0                                 # grows with every change noticed
-        self.last: dict[tuple[str, str], int] = {}   # (subsystem, kind) -> the `seq` of its last change
+        self.last: dict[tuple[str, str, str], int] = {}   # (subsystem, kind, unit) -> the `seq` of its last change
         self.stats = 0                               # files stat-ed, since the process started: what a tick costs
-        self.held = self.full = 0                    # requests held; requests refused for want of room
+        self.held = self.full = self.replaced = 0    # requests held; refused for want of room; ended by their client's next
         self._lock = threading.Lock()
         self._waiters: list[dict] = []
+        self._by_client: dict[str, dict] = {}        # client -> the one request it holds here
         self._thread: threading.Thread | None = None
         self._closed = False
         self._sizes: dict[str, int] = {}             # candidate file -> bytes of it already looked at
-        self._based: set[str] = set()                # subsystems whose files have a baseline in `_sizes`
-        self._recent: dict[str, float] = {}          # subsystem -> when somebody last wanted it, by `clock`
-        self._dirs: list[tuple[str, str]] = []       # (subsystem, newest epoch directory of a unit), as last listed
+        self._based: set[tuple[str, str]] = set()    # (subsystem, unit) whose files have a baseline in `_sizes`
+        self._recent: dict[tuple[str, str], float] = {}   # (subsystem, unit or "") -> when somebody last wanted it, by `clock`
+        self._dirs: list[tuple[str, str, str]] = []  # (subsystem, unit, newest epoch directory of it), as last listed
         self._listed: tuple[float, frozenset] | None = None
+        self._dircache: dict[str, tuple[int, float, object]] = {}   # directory -> (mtime_ns, when listed, what it gave)
         self._idle_since: float | None = None        # when the last waiter left
 
     def open(self) -> None:
@@ -161,20 +213,43 @@ class Watch:
     def waiting(self) -> int:
         return len(self._waiters)
 
+    # What the resource says about its waits in its heartbeat, and the console on `/metrics`: held now, and since the
+    # process started — held, refused `full`, and replaced by their own client's next request.
+    def counts(self) -> dict:
+        with self._lock:
+            return {"waiting": len(self._waiters), "held": self.held, "full": self.full, "replaced": self.replaced,
+                    "max": self.waiters_max}
+
     # `gone()` — whether the client that asked is still there; asked once a second while the request is held.
-    def wait(self, wants, timeout: float, since: int | None = None, gone=None) -> dict:
-        wants = frozenset((str(s), str(k)) for s, k in wants)
+    # `client` — who asks (an evaluator's instance): it holds one request here, and a second ends the first.
+    #
+    # THE NUMBER IS READ UNDER THE LOCK (the review's seventh pass, minor). `seq` was read after the waiter had left
+    # and outside the lock: a change the watcher noticed in between went into the number this reader asks again
+    # with, and not into an answer — the hint was swallowed until the reader's next ordinary pass. Now what this
+    # waiter was told and the number it is told to ask again with come from one moment.
+    def wait(self, wants, timeout: float, since: int | None = None, gone=None, client: str | None = None) -> dict:
+        wants = wanted(wants)
         timeout = max(0.0, min(float(timeout), WAIT_MAX))
-        me = {"wants": wants, "event": threading.Event(), "changed": False}
+        client = str(client or "")
+        me = {"wants": wants, "event": threading.Event(), "changed": False, "touched": set(), "client": client}
         with self._lock:
             if self._closed:
                 return {"changed": False, "closed": True, "seq": self.seq}
-            if since is not None and since <= self.seq and any(self.last.get(p, 0) > since for p in wants):
-                return {"changed": True, "seq": self.seq}        # it changed between this reader's two waits
-            if len(self._waiters) >= self.waiters_max:
+            if since is not None and since <= self.seq:
+                touched = [t for t, n in self.last.items() if n > since and matches(wants, t)]
+                if touched:                                       # it changed between this reader's two waits
+                    return {"changed": True, "seq": self.seq, "touched": sorted("/".join(t) for t in touched)}
+            old = self._by_client.get(client) if client else None
+            if old is not None:                               # its previous request — a client holds one, the newest
+                old["replaced"] = True
+                old["event"].set()
+                self.replaced += 1
+            elif len(self._waiters) >= self.waiters_max:
                 self.full += 1
                 return {"changed": False, "full": True, "seq": self.seq}
             self._waiters.append(me)
+            if client:
+                self._by_client[client] = me
             self.held += 1
             if self._thread is None:
                 self._thread = threading.Thread(target=self._run, name="events-watch", daemon=True)
@@ -187,9 +262,18 @@ class Watch:
         finally:
             with self._lock:
                 self._waiters.remove(me)
+                if client and self._by_client.get(client) is me:
+                    del self._by_client[client]
                 if not self._waiters:
                     self._idle_since = self.clock()
-        return {"changed": me["changed"], "seq": me.get("seq", self.seq), **({"closed": True} if self._closed else {})}
+                rep = {"changed": me["changed"], "seq": me["seq"] if me["changed"] else self.seq}
+                if me["changed"]:
+                    rep["touched"] = sorted("/".join(t) for t in me["touched"])
+                if self._closed:
+                    rep["closed"] = True
+                if me.get("replaced"):
+                    rep["replaced"] = True
+        return rep
 
     # The one thread, for as long as somebody waits.
     def _run(self) -> None:
@@ -198,16 +282,16 @@ class Watch:
                 if not self._waiters or self._closed:
                     self._thread = None
                     return
-                wanted = frozenset(p for w in self._waiters for p in w["wants"])
+                wanted_now = frozenset(p for w in self._waiters for p in w["wants"])
             try:
-                self._tick(wanted)
+                self._tick(wanted_now)
             except Exception:                        # noqa: BLE001 — one bad look is a late answer, not a dead watcher
                 log.exception("the watch over the events failed; looking again")
             time.sleep(self.tick)
 
     # One look. The candidates are computed, not found: the bucket of `now` has one name, so a file that is not
     # there yet is a stat that fails, and the first line written into it is growth from zero.
-    def _tick(self, wanted: frozenset) -> None:
+    def _tick(self, wanted_now: frozenset) -> None:
         now_c, now = self.clock(), self.wall()
         if self._idle_since is not None:
             idle = now_c - self._idle_since
@@ -216,20 +300,23 @@ class Watch:
             else:                                    # nobody looked meanwhile: "wanted a moment ago" did not age
                 self._recent = {s: t + idle for s, t in self._recent.items()}
             self._idle_since = None
-        # A subsystem is looked at while somebody wants it — and for `LINGER` after: its reader was answered and is
-        # asking again, and what is written in between must be noticed for it (`last`, `since`), not start afresh.
-        for s, _ in wanted:
-            self._recent[s] = now_c
-        self._recent = {s: t for s, t in self._recent.items() if now_c - t <= LINGER}
-        subs = frozenset(self._recent)
-        if self._listed is None or now_c - self._listed[0] >= RESCAN or self._listed[1] != subs:
-            self._dirs, self._listed = self._list(subs), (now_c, subs)
+        # A unit is looked at while somebody wants it — and for `LINGER` after: its reader was answered and is asking
+        # again, and what is written in between must be noticed for it (`last`, `since`), not start afresh. A want
+        # with no unit is every unit of that subsystem (`""`).
+        for s, _, u in wanted_now:
+            self._recent[(s, u)] = now_c
+        self._recent = {k: t for k, t in self._recent.items() if now_c - t <= LINGER}
+        looked = frozenset(self._recent)
+        if self._listed is None or now_c - self._listed[0] >= RESCAN or self._listed[1] != looked:
+            self._dirs, self._listed = self._list(looked), (now_c, looked)
         start = bucket_start(now, self.bucket_seconds)
         names = [_stamp(start) + ".events.jsonl"]
         if now - start < PREVIOUS_FOR:
             names.append(_stamp(start - self.bucket_seconds) + ".events.jsonl")
-        sizes, seen = {}, set()
-        for sub, d in self._dirs:
+        sizes, seen, based = {}, set(), set()
+        for sub, unit, d in self._dirs:
+            first = (sub, unit) not in self._based   # a unit first looked at: from here
+            based.add((sub, unit))
             for name in names:
                 p = os.path.join(d, name)
                 self.stats += 1
@@ -237,42 +324,79 @@ class Watch:
                     size = os.stat(p).st_size
                 except OSError:
                     size = 0
-                old = size if sub not in self._based else self._sizes.get(p, 0)   # a subsystem first looked at: from here
+                old = size if first else self._sizes.get(p, 0)
                 if size > old:
                     kinds, old = self._kinds(p, old, size)
-                    seen.update((sub, k) for k in kinds)
+                    seen.update((sub, k, unit) for k in kinds)
                 sizes[p] = min(old, size)
-        self._sizes, self._based = sizes, set(subs)  # a subsystem not looked at this time starts from a baseline when it returns
+        self._sizes, self._based = sizes, based      # a unit not looked at this time starts from a baseline when it returns
         if seen:
             with self._lock:
                 self.seq += 1
-                for pair in seen:
-                    self.last[pair] = self.seq
+                for t in seen:
+                    self.last[t] = self.seq
                 for w in self._waiters:
-                    if w["wants"] & seen and not w["changed"]:
+                    touched = {t for t in seen if matches(w["wants"], t)}
+                    if not touched:
+                        continue
+                    w["touched"] |= touched
+                    if not w["changed"]:
                         w["changed"], w["seq"] = True, self.seq      # the number it asks again with: what came after THIS
                         w["event"].set()
 
-    # The newest epoch directory of every unit of `subs`, in each subsystem's tree and its alarms'. A line of an
-    # older epoch is a fenced writer's, and no reader acts on it.
-    def _list(self, subs: frozenset) -> list[tuple[str, str]]:
-        out = []
+    # The newest epoch directory of each unit looked at, in each subsystem's tree and its alarms'. A line of an older
+    # epoch is a fenced writer's, and no reader acts on it.
+    #
+    # WHAT IS LISTED IS WHAT IS WANTED (the review's seventh pass, minor). Every unit of every watched subsystem was
+    # listed every second and its files stat-ed every tick — a thousand cameras were 7 % of a core with ONE waiter, for
+    # one camera's contact. Now a want that names its units lists those units' directories and no others; only a want
+    # with no unit lists the subsystem. And a directory is listed again only when its mtime moved (an epoch or a unit
+    # appeared) — or changed within `MTIME_SLACK`, for a file system whose clock is coarser than two creations.
+    def _list(self, looked: frozenset) -> list[tuple[str, str, str]]:
+        named: dict[str, set[str] | None] = {}
+        for sub, unit in looked:
+            if not safe_segment(sub) or (unit and not safe_segment(unit)):
+                continue                             # never a path: `parse_wants` refuses these at the door already
+            if not unit:
+                named[sub] = None                    # every unit of it
+            elif named.get(sub, set()) is not None:
+                named.setdefault(sub, set()).add(unit)
+        out, used = [], set()
         for root in self.roots:
-            for sub in sorted(subs):
+            for sub in sorted(named):
                 for tree in (sub, alarm_tree(sub)):
                     base = os.path.join(root, tree)
-                    try:
-                        units = os.listdir(base)
-                    except OSError:
-                        continue
-                    for unit in units:
-                        try:
-                            epochs = [int(m.group(1)) for m in map(EPOCH_DIR.match, os.listdir(os.path.join(base, unit))) if m]
-                        except OSError:
+                    units = named[sub]
+                    if units is None:
+                        units = self._listed_dir(base, used, lambda names: list(names))
+                        if units is None:
                             continue
-                        if epochs:
-                            out.append((sub, os.path.join(base, unit, f"e{max(epochs)}")))
+                    for unit in sorted(units):
+                        d = os.path.join(base, unit)
+                        newest = self._listed_dir(d, used, lambda names: max(
+                            (int(m.group(1)) for m in map(EPOCH_DIR.match, names) if m), default=None))
+                        if newest is not None:
+                            out.append((sub, unit, os.path.join(d, f"e{newest}")))
+        self._dircache = {k: v for k, v in self._dircache.items() if k in used}
         return out
+
+    # What `make(os.listdir(path))` gave, listed again only when the directory's mtime moved. None: not there.
+    def _listed_dir(self, path: str, used: set, make):
+        try:
+            mtime = os.stat(path).st_mtime_ns
+        except OSError:
+            return None
+        used.add(path)
+        now = time.time()                            # the file system's clock, which is what an mtime is in
+        have = self._dircache.get(path)
+        if have is not None and have[0] == mtime and now - mtime / 1e9 > MTIME_SLACK:
+            return have[2]
+        try:
+            got = make(os.listdir(path))
+        except OSError:
+            return None
+        self._dircache[path] = (mtime, now, got)
+        return got
 
     # The kinds of the lines in `[old, size)` of a file, and how far whole lines went: a line half written is
     # left for the next look.
@@ -294,43 +418,95 @@ class Watch:
         return kinds, old + whole
 
 
+# Whether the other end of a held request closed its connection: readable, and nothing to read.
+#
+# Through `selectors`, not `select.select` (the review's seventh pass, minor): `select` cannot take a descriptor at or
+# above 1024 and raises `ValueError`, which was read as "the client went" — on a busy process every hold became a
+# poll answered within a second. A descriptor this cannot watch is now "not known", and the hold ends at its timeout.
 def client_gone(conn) -> bool:
-    """Whether the other end of a held request closed its connection: readable, and nothing to read."""
     try:
-        readable, _, _ = select.select([conn], [], [], 0)
-        return bool(readable) and conn.recv(1, socket.MSG_PEEK) == b""
-    except (OSError, ValueError):
+        with selectors.DefaultSelector() as sel:
+            sel.register(conn, selectors.EVENT_READ)
+            readable = bool(sel.select(0))
+    except ValueError:
+        return False                                 # not a descriptor this can watch: not known, so not gone
+    except OSError:
+        return True
+    if not readable:
+        return False
+    try:
+        return conn.recv(1, socket.MSG_PEEK) == b""
+    except (BlockingIOError, InterruptedError):
+        return False
+    except OSError:
         return True
 
 
-def parse_wants(text: str) -> list[tuple[str, str]]:
-    """`vms/io.input,det/motion` -> pairs. What does not look like `<subsystem>/<kind>` is dropped."""
+# `vms/io.input,det/motion/7-motion` -> `[("vms", "io.input", ""), ("det", "motion", "7-motion")]`: a unit of `""` is
+# any unit of the kind.
+#
+# REFUSED, NOT GUESSED (the review's seventh pass, minor). What did not look like a want was dropped: an empty `want`
+# held a place for thirty seconds and answered nothing, `want=../../x/k` sent the watcher to list a directory outside
+# the volumes, and nothing bounded how many were named. Now each is a `ValueError` the door answers 400: nothing
+# wanted; a subsystem or a unit that is not one name (`safe_segment` — the subsystem and the unit are path segments
+# under the volume); more than `WANTS_MAX`.
+def parse_wants(text: str) -> list[tuple[str, str, str]]:
     out = []
     for part in (text or "").split(","):
-        sub, sep, kind = part.strip().partition("/")
-        if sep and sub and kind:
-            out.append((sub, kind))
-    return out
+        part = part.strip()
+        if not part:
+            continue
+        sub, kind, unit = (part.split("/", 2) + ["", ""])[:3]
+        if not safe_segment(sub) or not kind or (unit and not safe_segment(unit)):
+            raise ValueError(f"a want is <subsystem>/<kind> or <subsystem>/<kind>/<unit>, each one name: not {part!r}")
+        out.append((sub, kind, unit))
+    if not out:
+        raise ValueError("nothing is wanted: `want` names at least one <subsystem>/<kind>")
+    if len(out) > WANTS_MAX:
+        raise ValueError(f"{len(out)} wants; one request names at most {WANTS_MAX}")
+    return sorted(set(out))
 
 
 # -- the reader's side: one held request per resource --------------------------------------------------------
 class LongPoll:
     """Keeps one request held at each resource for what `wants()` says, and calls `wake.set()` when one is
-    answered `changed`. `resources()` is `{server: url}` — the resources the reader asks anyway."""
+    answered `changed`. `resources()` is `{server: url}` — the resources the reader asks anyway; `client` is who
+    asks (the worker's instance), so that a resource holds one request of it and not one per retry."""
 
-    def __init__(self, wake: Wake, resources, wants, timeout: float = WAIT_MAX, backoff: float = BACKOFF, fetch=None):
+    def __init__(self, wake: Wake, resources, wants, timeout: float = WAIT_MAX, backoff: float = BACKOFF, fetch=None,
+                 client: str = ""):
         self.wake, self.resources, self.wants = wake, resources, wants
-        self.timeout, self.backoff = timeout, backoff
+        self.timeout, self.backoff, self.client = timeout, backoff, str(client or "")
         self.fetch = fetch or self._http
         self.waits = self.woken = self.errors = 0    # requests opened, answered `changed`, failed or refused
         self._urls: dict[str, str] = {}
         self._threads: dict[str, threading.Thread] = {}
         self._stop = threading.Event()
+        self._lock = threading.Lock()
+        self._touched: set | None = set()            # what the answers since the last pass said changed; None: not said
 
     def _http(self, url: str, wants: list, timeout: float, since: int | None) -> dict:
-        q = {"want": ",".join(f"{s}/{k}" for s, k in wants), "timeout": f"{timeout:g}", **({"since": since} if since is not None else {})}
+        q = {"want": ",".join("/".join(str(x) for x in w if x != "") for w in wants), "timeout": f"{timeout:g}",
+             **({"since": since} if since is not None else {}), **({"client": self.client} if self.client else {})}
         with urllib.request.urlopen(f"{url}/events/wait?{urllib.parse.urlencode(q)}", timeout=timeout + 5.0) as r:
             return json.loads(r.read())
+
+    # What the answers since the last call said changed — `(subsystem, kind, unit)` — and forgotten: the pass that
+    # follows evaluates what these touch. None when an answer said `changed` without saying what (a resource of an
+    # older build): everything, then.
+    def take_touched(self) -> set | None:
+        with self._lock:
+            out, self._touched = self._touched, set()
+        return out
+
+    def _say_touched(self, rep: dict) -> None:
+        with self._lock:
+            if "touched" not in rep:
+                self._touched = None
+            elif self._touched is not None:
+                for t in rep.get("touched") or []:
+                    sub, kind, unit = (str(t).split("/", 2) + ["", ""])[:3]
+                    self._touched.add((sub, kind, unit))
 
     # Called by the loop once a pass: a thread for every resource that has none. A resource that left the list has
     # its thread end by itself, at the end of the request it holds. Never raises: a list that could not be read is
@@ -347,6 +523,11 @@ class LongPoll:
                 t = self._threads[server] = threading.Thread(target=self._run, args=(server,), name=f"long-poll-{server}", daemon=True)
                 t.start()
 
+    # A pause after a failure or a refusal, ±50 %: sixteen evaluators refused together do not all ask again in the
+    # same instant, and one of them finds the place another has just left (the review's seventh pass, minor).
+    def _pause(self) -> None:
+        self._stop.wait(self.backoff * random.uniform(0.5, 1.5))
+
     def _run(self, server: str) -> None:
         since = None
         while not self._stop.is_set():
@@ -362,16 +543,21 @@ class LongPoll:
             except Exception as e:                   # noqa: BLE001 — the resource is away, or does not know the route
                 self.errors += 1
                 log.debug("%s did not hold a wait (%s); the pass looks, as it did", server, e)
-                self._stop.wait(self.backoff)
+                self._pause()
+                continue
+            if rep.get("full") or rep.get("closed"):
+                # No room, or the door is shutting: back to the pass for a while — and `since` stays where it was. The
+                # number such an answer carries says nothing about what this reader was told (the review's seventh
+                # pass, minor): moved to it, a change made before it and never answered was skipped for good.
+                self.errors += 1
+                self._pause()
                 continue
             since = rep.get("seq", since)
             if rep.get("changed"):
                 self.woken += 1
+                self._say_touched(rep)
                 if not self._stop.is_set():
                     self.wake.set()
-            elif rep.get("full") or rep.get("closed"):
-                self.errors += 1                     # no room, or the door is shutting: back to the pass for a while
-                self._stop.wait(self.backoff)
 
     def close(self) -> None:
         self._stop.set()                             # a thread inside a held request ends when the request does

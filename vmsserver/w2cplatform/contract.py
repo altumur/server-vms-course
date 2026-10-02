@@ -950,7 +950,9 @@ class Worker:
     # instance that took the name may be on another box, and the one it took it from frozen, not dead. Where the place
     # is a disk that is harmless — the two are on one host. Where any box may write it, taking it at once skipped the
     # one wait the previous holder's write window is measured against (`_hold_stale`), and two instances of one name
-    # wrote one volume. The subsystem says which places follow (`hold_follows_name`); the rest wait like anybody's.
+    # wrote one volume. The subsystem says which places follow, given who holds the place now (`hold_follows_name`:
+    # the row's `holder`, `host:pid:rnd` — the seventh pass gave the same-host restart its place back); the rest wait
+    # like anybody's.
     #
     # THE TTL BY THIS HOST'S CLOCK (the review's fourth pass, Т-M5). Anybody else took a hold when the wall clock HERE
     # passed the `until` the holder wrote by ITS wall clock: two machines five seconds apart, and a holder renewing
@@ -1002,7 +1004,7 @@ class Worker:
             for cand in mine + [c for c in candidates if c not in mine]:
                 key, now = self.sub.hold_key(cand), self.wall()
                 idx, cur = rows[cand][1], held[cand]
-                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand)
+                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand, cur.holder)
                 if not ours and not self._hold_stale(cand, cur, idx):
                     continue                                   # somebody live is writing there
                 try:
@@ -1016,9 +1018,10 @@ class Worker:
                 return None                                    # every place is held: a spare
         return None
 
-    # Whether `place`, held under this worker's NAME by another instance, is taken back at once (`_claim_hold`). Yes,
-    # unless the subsystem knows the place can be written from another host (`RecWorker.hold_follows_name`).
-    def hold_follows_name(self, place: str) -> bool:
+    # Whether `place`, held under this worker's NAME by the instance `holder`, is taken back at once (`_claim_hold`).
+    # Yes, unless the subsystem knows the place can be written from another host than the holder's
+    # (`RecWorker.hold_follows_name`).
+    def hold_follows_name(self, place: str, holder: str = "") -> bool:
         return True
 
     # Still mine? Same three lines as `renew_slot`, and the same meaning when it says no: another process
@@ -1383,7 +1386,7 @@ class Worker:
     # ordinary pass, reading what it would have read at the end of its wait. An answer that never comes costs the
     # wait it would have saved; a flood of them is one early pass per `WAKE_GAP`.
     #
-    #   wants()         what this worker watches: pairs `(subsystem, kind)`. Its subsystem's to say
+    #   wants()         what this worker watches: `(subsystem, kind, unit)`, a unit of "" for any. Its subsystem's to say
     #   poll_events()   the process asks for the long poll, before the loop: `resources()` is `{server: url}`,
     #                   the resources this worker asks anyway. `LONG_POLL=0`: nothing is asked, nothing changes
     #   wait_next()     the loop's wait between passes: `stop.wait(poll)`, cut short by an answer
@@ -1393,7 +1396,7 @@ class Worker:
     def poll_events(self, resources, env=None) -> LongPoll | None:
         if self.long_poll is None and long_poll_enabled(os.environ if env is None else env):
             self.wake = Wake()
-            self.long_poll = LongPoll(self.wake, resources, self.wants)
+            self.long_poll = LongPoll(self.wake, resources, self.wants, client=self.instance)   # one held request per instance
         return self.long_poll
 
     def wait_next(self, poll: float, stop) -> bool:

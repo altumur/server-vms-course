@@ -430,7 +430,7 @@ def server(env: dict, given: str | None = None) -> str:
             for cand in mine + [c for c in candidates if c not in mine]:
                 key, now = self.sub.hold_key(cand), self.wall()
                 idx, cur = rows[cand][1], held[cand]
-                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand)
+                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand, cur.holder)
                 if not ours and not self._hold_stale(cand, cur, idx):
                     continue                                   # somebody live is writing there
                 try:
@@ -444,15 +444,16 @@ def server(env: dict, given: str | None = None) -> str:
                 return None                                    # every place is held: a spare
         return None
 
-    # Whether `place`, held under this worker's NAME by another instance, is taken back at once (`_claim_hold`). Yes,
-    # unless the subsystem knows the place can be written from another host (`RecWorker.hold_follows_name`).
-    def hold_follows_name(self, place: str) -> bool:
+    # Whether `place`, held under this worker's NAME by the instance `holder`, is taken back at once (`_claim_hold`).
+    # Yes, unless the subsystem knows the place can be written from another host than the holder's
+    # (`RecWorker.hold_follows_name`).
+    def hold_follows_name(self, place: str, holder: str = "") -> bool:
         return True
 ```
 
 Раньше здесь стоял упрощённый захват: чужой холд считался свободным по `claimable` — по `until`, который записали часы другой машины, — и строка разбиралась как есть. Теперь чужой холд свободен, только когда **этот** процесс видел его строку неизменной `slot_ttl + HOLD_SKEW` по своим монотонным часам (`_hold_stale`, четвёртое ревью); отпущенный (`released`) или ничей — сразу. Строку, которая не разбирается, `read_hold` пропускает: этот холд — не кандидат, остальные берутся как обычно, как и битая строка слота в шаге 4 (шестое ревью; М10B, урок 10). И холд помнит, **чей слот** его держит (`by`): экземпляр, который сейчас держит этот слот (`named`), забирает свой холд назад сразу, раньше других кандидатов, — так перезапущенный systemd регистратор не ждёт 45 секунд собственного тома (обратная связь CF; М10B, урок 17).
 
-**Но `ours` — только когда место идёт за именем, а место сетевого тома не идёт** (шестое ревью, блокер 2). Экземпляр, взявший имя, может стоять на другой коробке, а прежний — быть замороженным, а не мёртвым, со смонтированным писателем. Окно записи прежнего держателя отмерено от того, что претендент **ждёт** `slot_ttl + HOLD_SKEW`, а «холд идёт за именем» это ожидание снимал: второй `r-1` брал холд сетевого тома сразу, первый просыпался внутри своего окна, и оба писали в один том. Платформа про тома ничего не знает, поэтому спрашивает подсистему: `hold_follows_name(place)` — по умолчанию да, а регистратор отвечает «нет» для тома, который может обслуживать любая коробка (М10B, урок 10). Такой холд ждёт и тот, кто носит то же имя; сразу берётся только отпущенный намеренно — его писатель закрыт до отпускания. Тест: `test_stand_in.py::test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once`.
+**Но `ours` — только когда место идёт за именем, а место сетевого тома идёт только на хосте своего держателя** (шестое ревью, блокер 2, и седьмое). Экземпляр, взявший имя, может стоять на другой коробке, а прежний — быть замороженным, а не мёртвым, со смонтированным писателем. Окно записи прежнего держателя отмерено от того, что претендент **ждёт** `slot_ttl + HOLD_SKEW`, а «холд идёт за именем» это ожидание снимал: второй `r-1` брал холд сетевого тома сразу, первый просыпался внутри своего окна, и оба писали в один том. Платформа про тома ничего не знает, поэтому спрашивает подсистему и называет, кто держит место сейчас: `hold_follows_name(place, holder)` — по умолчанию да. Регистратор отвечает «да» для диска и для сетевого тома, чей прежний держатель на этом же хосте: `holder` — это `host:pid:rnd`, тот же хост — тот же демон, а демон держит на томе одного писателя (М10B, урок 10). Шестое ревью отвечало «нет» для любого сетевого тома, и перезапуск регистратора на той же коробке стоил 50 секунд без записи — седьмое вернуло это. Экземпляр с другого хоста ждёт; экземпляр, чьё имя хоста не называет (`INSTANCE_ID`), — тоже. Сразу берётся и отпущенный намеренно холд — его писатель закрыт до отпускания. Тесты: `test_stand_in.py::test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once`, М10B `test_rec_volume.py::test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_on_another`.
 
 Строка — тот же `Slot`, и читается так же: `read_hold` рядом с `read_slot`. Продление и отпускание — построчно `renew_slot` и `release_slot`. **Различие ровно одно, и оно не в коде:** имя слота процесс придумывает сам (`w-<max+1>`), потому что один процесс не хуже другого; имя места он придумать не может — места перечислены в строках, которые написал кто-то другой, и взять можно только одно из них.
 

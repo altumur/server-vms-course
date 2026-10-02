@@ -1347,6 +1347,15 @@ class SpecConsole:
                     for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_short_bytes gauge",
                   *[f'{p}_resource_short_bytes{{server="{s}"}} {rn(s, "short", hb.get("short"), int)}' for s, hb in sorted(res.items())]]
+        # The requests each resource holds for the readers of its events (`/events/wait`, `longpoll.Watch.counts`): held
+        # now, and since it started — held, refused for want of room, replaced by their own client's next. `full`
+        # climbing is an evaluator back on its two-second pass, and nothing else would say so (the review's seventh pass).
+        waits = {s: hb["waits"] for s, hb in sorted(res.items()) if isinstance(hb.get("waits"), dict)}
+        lines += [f"# TYPE {p}_resource_waits gauge",
+                  *[f'{p}_resource_waits{{server="{s}"}} {rn(s, "waits.waiting", w.get("waiting"), int)}' for s, w in waits.items()]]
+        for key in ("held", "full", "replaced"):
+            lines += [f"# TYPE {p}_resource_waits_{key}_total counter",
+                      *[f'{p}_resource_waits_{key}_total{{server="{s}"}} {rn(s, "waits." + key, w.get(key), int)}' for s, w in waits.items()]]
         # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
         # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
         # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.

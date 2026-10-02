@@ -15,8 +15,9 @@ a server's disks and nothing about what it means:
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)
     GET  <url>/mirrored/<server>       which of <server>'s buckets this server holds copies of
     GET  <url>/events?from&to&cam&kind&subsystem&unit   this resource's EventIndex: its buckets and its copies
-    GET  <url>/events/wait?want=<sub>/<kind>,…&timeout&since   HELD until a line of a wanted kind is appended here, or the
-                                       timeout: `{changed, seq}` — a hint to look, never the events (`longpoll.py`)
+    GET  <url>/events/wait?want=<sub>/<kind>[/<unit>],…&timeout&since&client   HELD until a line of a wanted kind (of
+                                       that unit) is appended here, or the timeout: `{changed, seq, touched}` — a hint to
+                                       look, never the events; one held request per `client` (`longpoll.py`)
     PUT  <url>/mirror/<server>/<path>  another resource leaves a copy of one of ITS closed buckets here
 
 The policy pass runs on a timer: retain each subsystem's buckets by its
@@ -589,6 +590,7 @@ class Resource:
               "usage": self.usage_cached(), "usage_at": self.usage_at,
               "space": self.space(), "volumes": self.spaces(), "units": self.units(),
               "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
+              "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
               # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's
               # seventh pass) — and the rows of any table this process could not read, by table (`rows.Table`): the
               # keeps a hook reads, the knobs. Absent when there are none.
@@ -1025,9 +1027,11 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                 try:
                     timeout = float(q.get("timeout", WAIT_MAX))
                     since = int(q["since"]) if q.get("since") not in (None, "") else None
+                    wants = parse_wants(q.get("want", ""))       # nothing, not a name, too many: 400 (the review's seventh pass)
                 except ValueError as e:
                     return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
-                rep = resource.watch.wait(parse_wants(q.get("want", "")), timeout, since, gone=lambda: client_gone(self.connection))
+                rep = resource.watch.wait(wants, timeout, since, gone=lambda: client_gone(self.connection),
+                                          client=q.get("client") or None)   # one held request per evaluator
                 try:
                     return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
                 except OSError:

@@ -112,6 +112,14 @@ class Forwarder:
         self.forwarding: dict[str, bool] = {}
         self.lifted: dict[str, dict] = {}                        # asks carried UP, waiting for their outcome
         self.carried: dict[tuple, tuple] = {}                    # asks carried DOWN: (ref, id) -> (centre, token, deadline)
+        # THE CAMERA'S RULE, ONE LEVEL UP (the seventh review: state moved before the push was taken). Frames drained
+        # from this cluster's ingest and not taken by the centre — its push failed — are pushed again first, not lost
+        # with the failure (`unsent`, a stream: past `PEER_BUFFER` frames it is cut clean to a keyframe, counted in
+        # `dropped`); and a pull remembers the last batch it got (`pulled`), so the centre hands a batch whose answer
+        # was lost on its way down over again (`Ingest.pull`).
+        self.unsent: dict[str, list] = {}
+        self.dropped: dict[str, int] = {}
+        self.pulled: dict[str, int] = {}
         self._lock = threading.RLock()
         self.woken = threading.Event()                           # set by the local ingest: something changed here
         self.pending = threading.Event()                         # set when an ask went up: an outcome to wait for
@@ -135,10 +143,13 @@ class Forwarder:
             if ing is None:
                 self.state[ref] = "no ingest of the centre answered"
                 continue
-            if e["mode"] == "pull":
-                self.state[ref] = self._pull(ing, ref, e)
-            else:
-                self.state[ref] = self._push(ing, ref, e)
+            try:                                                # one camera's centre that stopped answering is that
+                if e["mode"] == "pull":                         # camera's, not the end of the pass (the seventh review)
+                    self.state[ref] = self._pull(ing, ref, e)
+                else:
+                    self.state[ref] = self._push(ing, ref, e)
+            except Unreachable as err:
+                self.state[ref] = f"the centre stopped answering: {err}"
         return dict(self.state)
 
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
@@ -147,12 +158,17 @@ class Forwarder:
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
             q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up))
-            frames = q.drain()
+            frames = self.unsent.pop(ref, []) + q.drain()       # what the centre did not take last time, first
             if frames:
-                ing.push(e["token"], ref, frames)
+                try:
+                    ing.push(e["token"], ref, frames)
+                except Unreachable:
+                    self.unsent[ref] = self._kept(ref, frames)
+                    raise
             said = f"forwarding {len(frames)} frame(s) up"
         else:
             self.local.release(ref, self.up)
+            self.unsent.pop(ref, None)                          # nobody up there wants it: nothing to send again
             said = "the centre does not want it"
         # The card's rule, one level up — all of it (the sixth review): the recording the centre named goes to the
         # archive's reader, and an archive that could not read the range says so (`failed`) instead of leaving the
@@ -306,10 +322,25 @@ class Forwarder:
         self.woken.set()
         return started
 
+    def _kept(self, ref: str, frames: list) -> list:
+        """What is kept to push again: a stream, so at most `PEER_BUFFER` frames, from a keyframe — the rest dropped,
+        counted, as a peer that falls behind is cut (`PeerLink`)."""
+        from .ingest import PEER_BUFFER, _is_key
+        if len(frames) <= PEER_BUFFER:
+            return frames
+        kept = frames[-PEER_BUFFER:]
+        while kept and not _is_key(kept[0]):
+            kept.pop(0)
+        self.dropped[ref] = self.dropped.get(ref, 0) + len(frames) - len(kept)
+        return kept
+
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):
             return "nobody here wants it"
-        frames = ing.pull(e["token"], ref, self.up)             # calling in; the centre wants it from the camera
+        # calling in; the centre wants it from the camera — and says which batch it last GOT: a pull whose answer was
+        # lost on the way down is answered with that batch again, first
+        frames = ing.pull(e["token"], ref, self.up, have=self.pulled.get(ref, 0))
+        self.pulled[ref] = getattr(frames, "seq", 0)
         self.local.inject(ref, frames)
         return f"pulled {len(frames)} frame(s) down"
 
