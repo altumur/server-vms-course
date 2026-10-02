@@ -97,6 +97,11 @@ class Snapshot:
     status: list[dict]
     doors: dict | None = None   # the worker's published doors — live_url, playback_url, coverage (Lesson 13)
 
+def _text(v) -> str:
+    """A field shown and searched as text: `""` for none, else what was written, as a string."""
+    return "" if v is None else str(v)
+
+
 DOORS = ("live_url", "playback_url", "coverage", "push", "polls")   # Lesson 16: `push` — nobody can dial this one;
                                                                      # `polls` — a member camera, holding a poll
 
@@ -117,6 +122,9 @@ class ReadView:
         self.lanes, self.backoff, self.backoff_max = max(1, lanes), backoff, backoff_max
         self.failures: dict[str, int] = {}
         self.retry_at: dict[str, float] = {}
+        # Why each member that did not answer did not (the review's eighth pass): "has not reported for 60 s" and
+        # "reports through relay east, which runs an older build; update it" are different things to do about it.
+        self.why: dict[str, str] = {}
 
     # -- the one pass ----------------------------------------------------------
     # One member's part of it. The heartbeats, then the cluster's own copy of what SHOULD exist, for the
@@ -164,15 +172,19 @@ class ReadView:
 
     def _try(self, c):
         try:
-            return self._read(c)
-        except Unreachable:
+            got = self._read(c)
+        except Unreachable as e:
+            self.why[c.name] = str(e)                      # why it did not answer, in its own words: shown with it
             return None
         except PARSE_ERRORS as e:
             # Whatever a member's read still raises of what it published (its copy's rows, a relay's bundle) is that
             # member's: this pass reads it as one that did not answer — its rows kept as last known, counted — and the
             # other members are read (М10's seventh review: one of them stopped the pass of all).
             MEMBER_OBJECTS.garbled(f"{c.name}/(read)", e)
+            self.why[c.name] = f"what it published does not parse: {e}"
             return None
+        self.why.pop(c.name, None)
+        return got
 
     # -- reads, from memory ----------------------------------------------------
     # The cluster that last reported the camera the domain calls `camera`, and the row it reported — kept when
@@ -194,8 +206,8 @@ class ReadView:
         searched = sorted(n for n in self.fed.clusters if n not in down)
         hits = [(cl, row) for cl in searched for row in self.configured.get(cl, [])
                 if str(row.get("ref", "")) == str(camera)]
-        if len(hits) > 1:
-            raise RuntimeError(f"camera {camera} claimed by {[h[0] for h in hits]}: a placement failure, not a tie")
+        if len(hits) > 1:                                  # one member naming another's camera: contested, not a 500
+            return Answer(camera, None, None, None, searched, down, contested=sorted({cl for cl, _ in hits}))
         if hits:
             cl, row = hits[0]
             return Answer(camera, row.get("worker"), row.get("server"), cl, searched, down)
@@ -209,7 +221,9 @@ class ReadView:
             state = "unreachable" if s.cluster in self.cluster_down_since else ("stale" if age > self.lost_after else "live")
             for st in s.status:
                 try:
-                    out.append(Row(int(st["id"]), st.get("name", ""), s.worker, s.cluster, s.server, st.get("phase", "?"),
+                    # `name` as a string, whatever the worker wrote: a number there broke the search of every operator
+                    # (`r.name.lower()`, the review's eighth pass)
+                    out.append(Row(int(st["id"]), _text(st.get("name")), s.worker, s.cluster, s.server, st.get("phase", "?"),
                                    st.get("position", "?"), int(st.get("revision", 0)), int(st.get("observed_revision", 0)),
                                    int(st.get("epoch", 0)), age, state, str(st.get("ref", ""))))
                 except PARSE_ERRORS as e:                  # one entry of one worker: that entry's (the seventh review)
@@ -242,7 +256,7 @@ class ReadView:
                 except PARSE_ERRORS as e:
                     MEMBER_OBJECTS.garbled(f"{cl}/vms/snapshot#{cam}", e)
                     revision = 0                           # the row is shown; its revision is not known
-                out.append(Row(cam, str(row.get("name", "")), str(row.get("worker") or ""), cl,
+                out.append(Row(cam, _text(row.get("name")), str(row.get("worker") or ""), cl,
                                str(row.get("server") or "?"), "unobserved", "", revision,
                                0, 0, age, "configured", str(ref)))
         out.sort(key=lambda r: (r.cluster, r.worker, r.camera))
@@ -255,6 +269,7 @@ class ReadView:
         page_rows = rows[(page - 1) * size: page * size]
         return {"total": total, "page": page, "size": size, "rows": [r.to_json() for r in page_rows],
                 "clusters": {n: ("unreachable" if n in self.cluster_down_since else "ok") for n in self.fed.clusters},
+                "why": {n: self.why[n] for n in self.cluster_down_since if n in self.why},
                 "rpo": self.rpo(),
                 "complete": not self.cluster_down_since}
 
@@ -284,7 +299,8 @@ class ReadView:
         from w2cplatform.console import DOMAIN_VIEW
         keep = ("ref", "camera", "name", "cluster", "server", "worker", "phase", "worker_state", "as_of")
         view = {"ts": self.wall(), "complete": not self.cluster_down_since,
-                "members": {n: {"state": "unreachable" if n in self.cluster_down_since else "ok", "rpo": r}
+                "members": {n: {"state": "unreachable" if n in self.cluster_down_since else "ok", "rpo": r,
+                                **({"why": self.why[n]} if n in self.cluster_down_since and n in self.why else {})}
                             for n, r in self.rpo().items()},
                 "units": [{k: v for k, v in r.to_json().items() if k in keep} for r in self.rows()],   # the platform's word
                 "causes": [c.sentence() for c in self.causes()],

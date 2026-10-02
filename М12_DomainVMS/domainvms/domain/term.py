@@ -45,7 +45,13 @@ import time
 
 from .agent import DomainPublisher
 from .alarms import HISTORY
+from w2cplatform.rows import PARSE_ERRORS
+
 from .federation import Unreachable
+# A record, a backup or a key set that a member, a peer or the domain wrote and that does not parse is refused like
+# one that does not verify (`except (NotTaken, *PARSE_ERRORS)`) — the lists here left out `TypeError` and
+# `AttributeError` (a doc that is a list), and one such peer stopped the search for the holder and the move (the
+# review's eighth pass, sibling of the relay's bundle).
 from .shared import NotTaken, sign, verify
 from .signer import DomainRoot, Signer, is_recovery_file
 from .tokens import ROOT_KID, KeySet
@@ -83,7 +89,7 @@ def read_holder(vars_, keys, now: float) -> dict | None:
         return None
     try:
         rec = verify(json.loads(items["doc"]), keys, now)
-    except (NotTaken, ValueError, KeyError):
+    except (NotTaken, *PARSE_ERRORS):
         return None
     # A member that trusts a root takes a holder record only from the ROOT (step 9). The token key signs every
     # minute and sits on the holder; a record it signed is what a stolen holder would write to take the domain.
@@ -297,7 +303,7 @@ def carry_holder(domain_vars, member_vars, keys, now: float) -> str:
         return "no holder record"
     try:
         incoming = verify(json.loads(items["doc"]), keys, now)
-    except (NotTaken, ValueError, KeyError) as e:
+    except (NotTaken, *PARSE_ERRORS) as e:
         return f"refused: {e}"
     if keys is not None and keys.root is not None and incoming.get("kid") != ROOT_KID:
         return "refused: a holder record not signed by the domain's root"   # what a stolen holder would write
@@ -370,7 +376,7 @@ def move_domain(fed, new: str, signer_backup: bytes, domain_id: str, objects_of,
             continue
         try:
             doc = verify(json.loads(raw), keys, now)
-        except (NotTaken, ValueError) as e:
+        except (NotTaken, *PARSE_ERRORS) as e:
             ignored.append((name, str(e)))
             continue
         if best is None or (int(doc["term"]), int(doc["rev"])) > (int(best[1]["term"]), int(best[1]["rev"])):
@@ -508,7 +514,7 @@ def _trusted_keys(fed, new: str, root: DomainRoot, now: float) -> KeySet:
             continue
         try:
             doc = verify(json.loads(items["doc"]), only_root, now)
-        except (NotTaken, ValueError):
+        except (NotTaken, *PARSE_ERRORS):
             continue
         if doc.get("kid") == ROOT_KID and int(doc["rev"]) > best.rev:
             best = KeySet.from_items(items)

@@ -13,7 +13,8 @@
 #
 # This is the one reader. A table is a `Table`: its name and what not reading a row of it means. `read(key,
 # parse, default)` runs `parse()`; what a parse raises — `ValueError` (a `JSONDecodeError` is one), `TypeError`,
-# `KeyError`, `AttributeError`, `OverflowError` (`int(float("inf"))`) — makes the row garbled: `default` is
+# `KeyError`, `AttributeError`, `OverflowError` (`int(float("inf"))`), `RecursionError` (JSON nested ten thousand
+# deep: `json.loads` gives up on it, and it fits a Variable — the review's eighth pass) — makes the row garbled: `default` is
 # returned, the row is counted ONCE until it parses again (`counts`, by subsystem — the key's first segment),
 # logged once with what not reading it means, and its key is in `bad` for whoever names it on a page. A row
 # that parses again leaves `bad`; garbled again later, it is counted again — a new spell, not a re-read.
@@ -40,7 +41,7 @@ import math
 
 log = logging.getLogger(__name__)
 
-PARSE_ERRORS = (ValueError, TypeError, KeyError, AttributeError, OverflowError)
+PARSE_ERRORS = (ValueError, TypeError, KeyError, AttributeError, OverflowError, RecursionError)
 
 TABLES: list["Table"] = []
 

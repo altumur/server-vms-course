@@ -57,13 +57,17 @@ def test_unreachable_cluster_makes_the_answer_incomplete_not_short():
 
 
 def test_two_clusters_claiming_a_camera_is_a_fault_not_a_tie():
+    """Neither cluster is picked: the answer names both, is not complete, and says it is a placement failure. It used to
+    raise — and a member naming another's camera then made `/api/where` and every edit of that camera a 500 (the
+    review's eighth pass); the read view's `where` answers the same."""
+    from domain.readview import ReadView
     fed, _ = make_domain({"north": (), "south": ()}, "north")
     snapshot(fed.clusters["north"], {7: ("w-0", "srv-1")}, ts=0)
     snapshot(fed.clusters["south"], {7: ("w-0", "srv-9")}, ts=0)
-    try:
-        DomainDirectory(fed).where(7); raise AssertionError("must raise")
-    except RuntimeError as e:
-        assert "placement failure" in str(e)
+    view = ReadView(fed); view.refresh()
+    for a in (DomainDirectory(fed).where(7), view.where(7)):
+        assert not a.found and not a.complete and a.contested == ["north", "south"]
+        assert "placement failure" in a.sentence()
 
 
 def test_a_camera_caught_mid_move_is_read_once_from_the_newer_shard():

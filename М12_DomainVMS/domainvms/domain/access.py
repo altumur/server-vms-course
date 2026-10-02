@@ -16,7 +16,7 @@ import time
 
 from w2cplatform.access import RANK, Denied
 
-from .agent import ClusterTrust
+from .agent import ClusterTrust, Untrusted
 from .grants import ClusterGrants
 from .tokens import TokenError, verify
 
@@ -26,11 +26,14 @@ class ClusterAccess:
         self.trust, self.wall = ClusterTrust(cluster_vars), wall
 
     def who(self, token: str) -> dict:
-        keys = self.trust.keyset()
+        try:
+            keys, revoked = self.trust.keyset(), self.trust.revoked()
+        except Untrusted as e:                               # a row that does not parse: "I cannot check" (the review's eighth pass)
+            raise Denied(503, f"nobody can be checked: {e}") from None
         if keys is None:
             raise Denied(503, "the key set has gone from this cluster's store: nobody can be checked")
         try:
-            return verify(token, keys, self.trust.revoked(), now=self.wall(), kind="person")   # a person's door (CE)
+            return verify(token, keys, revoked, now=self.wall(), kind="person")   # a person's door (CE)
         except TokenError as e:
             raise Denied(401, f"token refused: {e}") from None
 

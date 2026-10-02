@@ -17,7 +17,10 @@ SHORTER of the token lifetime and the grant lifetime.
 from __future__ import annotations
 
 import time
+import unicodedata
 from dataclasses import dataclass
+
+from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 from .tokens import KeySet, TokenError, verify
 
@@ -72,20 +75,68 @@ class ClusterGrants:
         return min(token_exp, max(untils)) if untils else token_exp
 
 
+# WHAT A NAME MAY HOLD (the review's eighth pass, major; the coordinator's decision). A grant is the item
+# `<subject>|<capability>|<camera or labels:a,b>`, and the reader split it on `|` into three: a user called `acme|ivan`
+# made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/api/*` of the
+# domain's door, for the admin too, and the command that mends the grants raised the same way. `|`, `"` and the
+# control characters (a newline above all) are not allowed in a user's name, a grant's subject or a label: refused
+# where a user is created (`IdentityStore.create_local`, `create_federated`) and wherever a grant is written (every
+# write goes through `grants_to_items`: `publish_grants`, `set_domain_grants`, `python -m domain.grants`). A label
+# may not hold `,` either — the labels of a grant are listed with it.
+class BadName(ValueError):
+    """A name with a character the domain does not allow in it."""
+
+
+def name_refused(name, what: str = "name", also: str = "") -> str | None:
+    """Why `name` is not a name — None when it is one."""
+    if not isinstance(name, str) or not name:
+        return f"a {what} is a non-empty string"
+    bad = sorted({c for c in name if c in '|"' + also or unicodedata.category(c) in ("Cc", "Zl", "Zp")})
+    if bad:
+        return f"a {what} may not hold {', '.join(repr(c) for c in bad)}: {name!r}"
+    return None
+
+
+def refuse_name(name, what: str = "name", also: str = "") -> None:
+    why = name_refused(name, what, also)
+    if why:
+        raise BadName(why)
+
+
 def grants_to_items(grants: list[Grant]) -> dict:
-    """domain/grants/<cluster> as a Variable: one item per grant, the value its expiry."""
+    """domain/grants/<cluster> as a Variable: one item per grant, the value its expiry. A subject or a label the reader
+    could not take back apart is refused here (`BadName`), before anything is written."""
+    for g in grants:
+        refuse_name(g.subject, "user's name")
+        for label in g.labels:
+            refuse_name(label, "label", also=",")
     return {f"{g.subject}|{g.capability}|" + ("labels:" + ",".join(sorted(g.labels)) if g.labels else
                                               "" if g.camera is None else str(g.camera)): str(g.valid_until) for g in grants}
 
 
-def grants_from_items(items: dict | None) -> list[Grant]:
+# …and a row that holds one anyway — written before the rule, by hand, by an older build — is read ITEM BY ITEM: an item
+# that does not split into three, whose camera is not a number or whose expiry is not a finite number, is not a grant
+# (`nan` lapsed never: `now >= nan` is false). It is counted once (`grant`, by `<row>#<item>`) and logged once, and the
+# other grants of the row are read. Fail shut for that item only: nobody gets a right from it, nobody loses one by it.
+GRANTS = Table("grant", "not a grant — the other grants of the row are read", "grant")
+
+
+def _grant(k: str, v) -> Grant:
+    subject, cap, cam = k.split("|")
+    if cam.startswith("labels:"):
+        return Grant(subject, cap, None, finite(v), tuple(l for l in cam[7:].split(",") if l))
+    return Grant(subject, cap, int(cam) if cam else None, finite(v))
+
+
+def grants_from_items(items: dict | None, where: str = "domain/grants") -> list[Grant]:
+    if items is not None and not isinstance(items, dict):
+        GRANTS.garbled(where, TypeError(f"the row is not an object: {type(items).__name__}"))
+        return []
     out = []
     for k, v in (items or {}).items():
-        subject, cap, cam = k.split("|")
-        if cam.startswith("labels:"):
-            out.append(Grant(subject, cap, None, float(v), tuple(l for l in cam[7:].split(",") if l)))
-        else:
-            out.append(Grant(subject, cap, int(cam) if cam else None, float(v)))
+        g = GRANTS.read(f"{where}#{k}", lambda k=k, v=v: _grant(k, v))
+        if g is not None:
+            out.append(g)
     return out
 
 
@@ -109,7 +160,7 @@ DOMAIN_GRANTS = f"domain/grants/{DOMAIN_SCOPE}"
 def domain_may(vars_, subject: str, capability: str, now: float) -> bool:
     from w2cplatform.access import RANK
     items, _ = vars_.get(DOMAIN_GRANTS)
-    for g in grants_from_items(items):
+    for g in grants_from_items(items, DOMAIN_GRANTS):
         if g.subject != subject or g.camera is not None or g.labels:
             continue
         if (g.valid_until == 0 or now < g.valid_until) and RANK.get(g.capability, -1) >= RANK[capability]:
@@ -179,7 +230,8 @@ if __name__ == "__main__":
     if len(sys.argv) not in (3, 4) or sys.argv[1] != DOMAIN_SCOPE:
         sys.exit("usage: python3 -m domain.grants domain <subject> [view|edit|admin]")
     store = open_vars(os.environ["CONFIG_URL"])
-    have = [g for g in grants_from_items(store.get(DOMAIN_GRANTS)[0]) if g.subject != sys.argv[2]]
+    # An item that does not parse is not a grant, and is not written back: this command is how such a row is mended.
+    have = [g for g in grants_from_items(store.get(DOMAIN_GRANTS)[0], DOMAIN_GRANTS) if g.subject != sys.argv[2]]
     set_domain_grants(store, have + [Grant(sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else "admin", None, 0.0)],
                       time.time())
     print(f"{sys.argv[2]}: {sys.argv[3] if len(sys.argv) == 4 else 'admin'} on the domain")

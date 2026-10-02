@@ -350,15 +350,30 @@ class Forwarder:
 # object store (the relay is reachable from its sites — that is the whole premise of this layout); the
 # relay's agent folds what is there into `domain/members/<relay>/bundle`, only when it changed.
 BUNDLE = "bundle"
+# What one member's report may weigh in its relay's bundle (feedback from the product, checking the eighth review: a
+# bundle bounded only as a whole let one large member crowd out the others behind the relay). Thirty cameras' reports
+# are some 60 KiB together (Lesson 17's test); a member past this share is NOT carried, and the bundle says why under
+# `REFUSED_KEY` — the domain names the reason with the member (`BundleView`), and the others are carried whole.
+MEMBER_SHARE = 256 << 10
+REFUSED_KEY = "!refused"                 # not a member's name: `!` is in no cluster's name
 
 
 def bundle(relay: str, members: list[str], relay_objects, domain_objects) -> bool:
     out: dict[str, dict[str, str]] = {}
+    refused: dict[str, str] = {}
     for m in members:
         b = base(m)
         keys = relay_objects.list(b)
         if keys:
-            out[m] = {k[len(b):]: relay_objects.get(k).decode("utf-8", "surrogateescape") for k in keys}
+            entry = {k[len(b):]: (relay_objects.get(k) or b"").decode("utf-8", "surrogateescape") for k in keys}
+            size = sum(len(k) + len(v) for k, v in entry.items())
+            if size > MEMBER_SHARE:
+                refused[m] = (f"its report is {size} bytes, over the {MEMBER_SHARE} its relay carries for one member — "
+                              f"the relay carried the others")
+                continue
+            out[m] = entry
+    if refused:
+        out[REFUSED_KEY] = refused
     raw = json.dumps(out, sort_keys=True).encode()
     key = base(relay) + BUNDLE
     if domain_objects.get(key) == raw:
@@ -374,9 +389,50 @@ class BundleView:
     def __init__(self, relay: str, domain_objects):
         self.relay, self.store = relay, domain_objects
 
+    # A BUNDLE THAT DOES NOT PARSE IS ITS RELAY'S MEMBERS NOT ANSWERING (the review's eighth pass, blocker). It was read
+    # with a bare `json.loads(raw).get(member)`: a torn bundle — or a list, the shape an older build of the relay wrote —
+    # raised `JSONDecodeError`/`AttributeError` out of every read of every member behind it, and the readers above take
+    # only `Unreachable` for "did not answer". `DomainDirectory.where` scans every cluster, so `/api/where` and every
+    # edit through the domain failed for every camera of the domain; the pass over the books raised, and the signer's
+    # loop swallowed it — the stream tokens in the books stopped being re-issued. Now the bundle is read through the
+    # members' one reader (`MEMBER_OBJECTS`): what does not parse is counted once under `<relay>/bundle`, logged once,
+    # and is `Unreachable` for the members behind that relay — each reader's own "not reached" decides, and the rest
+    # of the domain is read. A list is REFUSED by name, not parsed: an older relay is updated, not guessed at (the
+    # coordinator's decision). One member's entry that is not an object is that member's alone, and one record of an
+    # entry that is not a string is that record's (feedback from the product: one record rejected its relay's bundle).
     def _entries(self, member: str) -> dict[str, str]:
-        raw = self.store.get(base(self.relay) + BUNDLE)
-        return (json.loads(raw) if raw else {}).get(member, {})
+        from w2cplatform.rows import PARSE_ERRORS
+        from .federation import MEMBER_OBJECTS
+        key = base(self.relay) + BUNDLE
+        raw = self.store.get(key)
+        if not raw:
+            return {}
+        try:
+            doc = json.loads(raw)
+            if isinstance(doc, list):
+                raise TypeError(f"relay {self.relay} runs an older build (its bundle is a list); update it")
+            if not isinstance(doc, dict):
+                raise TypeError(f"relay {self.relay}'s bundle is not an object: {type(doc).__name__}")
+        except PARSE_ERRORS as e:
+            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}", e)
+            raise Unreachable(f"{member} reports through relay {self.relay}, whose bundle cannot be read: {e}") from None
+        MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}")
+        why = doc.get(REFUSED_KEY, {}).get(member) if isinstance(doc.get(REFUSED_KEY), dict) else None
+        if why is not None:
+            raise Unreachable(f"relay {self.relay} did not carry {member}'s report: {why}")
+        entry = doc.get(member, {})
+        if not isinstance(entry, dict):
+            MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}#{member}", TypeError(f"not an object: {type(entry).__name__}"))
+            raise Unreachable(f"{member}'s entry in relay {self.relay}'s bundle cannot be read")
+        MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}#{member}")
+        out = {}
+        for sub, v in entry.items():                     # …and one record of it, that record's: left out, counted, named
+            if isinstance(v, str):
+                out[sub] = v
+                MEMBER_OBJECTS.parsed(f"{self.relay}/{BUNDLE}#{member}/{sub}")
+            else:
+                MEMBER_OBJECTS.garbled(f"{self.relay}/{BUNDLE}#{member}/{sub}", TypeError(f"not a string: {type(v).__name__}"))
+        return out
 
     @staticmethod
     def _split(key: str) -> tuple[str, str]:
@@ -441,9 +497,19 @@ def relay_down(members: list[str], domain_vars, domain_objects, relay_vars, rela
 # reached the domain, said on every relay pass, the failed ones above all, with a counter. The camera takes a
 # new counter as "said just now" and sets its own mark to ITS clock minus the age: two clocks never compared,
 # and the error is at most one camera pass (feedback AM — the product sends the same age in its exchange).
+#
+# A mark that does not parse — half a write — is written whole again (the review's eighth pass, major). It was read to
+# count on from BEFORE the new one was written, so one torn mark raised on every pass, was never rewritten, and the
+# cameras behind the relay never heard how current their books were; the relay's agent loop, its pass raising, ran
+# again at once (`run`, now paced). It counts on from the clock's milliseconds instead — a number the cameras have
+# not seen, which is all they ask of it — as `uplink.report` does with its own mark.
 def say_seen(relay_objects, last_contact: float | None, now: float) -> dict:
+    from w2cplatform.rows import PARSE_ERRORS
     raw = relay_objects.get(RELAY_SEEN)
-    n = int(json.loads(raw).get("n", 0)) + 1 if raw else 1
+    try:
+        n = int(json.loads(raw).get("n", 0)) + 1 if raw else 1
+    except PARSE_ERRORS:
+        n = int(now * 1000)
     mark = {"n": n, "age": None if last_contact is None else max(0.0, now - last_contact)}
     relay_objects.put(RELAY_SEEN, json.dumps(mark).encode())
     return mark
@@ -470,8 +536,13 @@ class _RelayVars:
         return [k[len(RELAY):] for k in self.relay_vars.list(RELAY + prefix)]
 
     def seen(self) -> dict | None:
-        raw = self.relay_objects.get(RELAY_SEEN)
-        return json.loads(raw) if raw else None
+        """The relay's age mark, or None when there is none or it does not parse (the relay writes it whole again on
+        its next pass, `say_seen`): a camera that cannot read it knows nothing of how current its books are."""
+        from w2cplatform.rows import finite
+        from .federation import published
+        mark = published("relay", RELAY_SEEN, self.relay_objects.get(RELAY_SEEN),
+                         lambda m: None if m.get("age") is None else finite(m["age"]))
+        return mark
 
 
 class _RelayObjects:
