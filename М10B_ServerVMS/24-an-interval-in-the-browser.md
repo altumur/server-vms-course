@@ -234,22 +234,27 @@ def from_samples(samples) -> bytes:
 
 ## Шаг 8 — Что маршрут обещает муксеру
 
-Маршрут `/export/<cam>?rec&from&to` разобран в [уроке 12](12-the-vms-console.md), шаг 6: потолок `EXPORT_MAX`, таймлайны всех дверей и `authoritative` над ними всеми — каждый момент от эпохи, которая им владеет, у двери, которая её держит, — заголовок `X-Archive-Unreachable` для двери, которая не ответила, `archive.read` с sha256 после отправки. Здесь важна одна его часть — та, что готовит кадры для `from_samples`:
+Маршрут `/export/<cam>?rec&from&to` разобран в [уроке 12](12-the-vms-console.md), шаг 6: потолок `EXPORT_MAX`, таймлайны всех дверей и `authoritative` над ними всеми — каждый момент от эпохи, которая им владеет, у двери, которая её держит, — заголовок `X-Archive-Unreachable` для двери, которая не ответила, `archive.read` с sha256 после отправки. Здесь важна одна его часть — та, что готовит кадры для муксера. Экспорт не собирает файл целиком через `from_samples`, а пишет его потоком тем же `Writer` (урок 12), и кадры отбираются по одному, по мере того как приходят:
 
 ```python
-        frames, end = [], None
-        for smp in sorted(got, key=lambda s: s.begin):
-            if end is not None and smp.begin < end:
-                continue                                 # this moment came from another door already
-            if not frames and not smp.key:
-                continue
-            frames.append(smp)
-            end = smp.end
+            for smp in heapq.merge(*streams, key=lambda s: s.begin):
+                ...
+                if end is not None and smp.begin < end:
+                    continue                             # this moment came from another door already
+                if writer is None:
+                    if not smp.key:
+                        continue
+                    ...
+                if smp.key and frag:
+                    writer.write_fragment(frag)
+                    frag = []
+                frag.append(fmp4.Sample(fmp4.to_avcc(smp.body), max(1, int(smp.end - smp.begin)), smp.key))
+                end = smp.end
 ```
 
 **Каждый момент — один раз.** Чьи кадры за какую минуту, консоль уже решила `authoritative` над спанами всех дверей. Но соседние отрезки всё равно касаются краями: дверь начинает каждый отрезок с ключевого кадра на его первом моменте или раньше, и подводка следующего ложится на конец предыдущего. Два кадра на один момент муксер записал бы подряд, и время в файле пошло бы медленнее, чем в жизни. Поэтому кадр, начавшийся раньше конца уже взятого, пропускается.
 
-**Начало — ключевой кадр.** Та же мысль, что в `from_samples`, на шаг раньше: кадры до первого ключевого не попадут даже в список.
+**Начало — ключевой кадр.** Та же мысль, что в `from_samples`: пока писателя нет, кадры до первого ключевого пропускаются, и писатель создаётся на нём.
 
 Сама дверь отдаёт кадры тоже с ключевого — с того, что стоит на первом моменте отрезка **или раньше** (`Archive.samples`, урок 8). Поэтому кусок, попрошенный с 10:05, начинается не ровно в 10:05, а на ключевом кадре в 10:05 или за секунду-другую до него. Начать со следующего ключевого значило бы потерять начало куска.
 

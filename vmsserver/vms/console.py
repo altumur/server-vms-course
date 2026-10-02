@@ -195,14 +195,7 @@ class LiveFront:
 #   play it by); a door that did not answer makes the reply `{segments, unreachable, note}`.
 # - `GET /export/<cam>?rec&from&to` — the frames of the interval as one fragmented MP4, the reply written by
 #   this function itself (it returns `()`), and a line `archive.read` with the sha256 of what left.
-# - `GET /segment?cam=` — the DEVICE's own footage, through its holder's playback door.
-# The holder of a camera, resolved NOW — never written into a span when it was drawn. A camera that moved
-# between the drawing and the click would make a stored worker name a 404; resolving at request time costs
-# one heartbeat read and cannot go stale. The fourth consumer of the same move, after the recorder, the
-# gateway and the detector.
-def device_playback(objects, cam, now: float) -> str | None:
-    found = holder_of(objects, "vms/", cam, now, field="playback_url")
-    return None if found is None else found[2]["playback_url"]
+# - `GET /segment?cam=` — the DEVICE's own footage, through its holder's playback door (`segment`).
 
 
 # What the DEVICE has and we do not — drawn only where our own footage does not cover it. The same
@@ -616,6 +609,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             t0, t1 = pb.times(raw0, raw1)
         except (TypeError, ValueError):
             return 400, {"detail": "from and to are unix seconds, and to is after from", "error": "bad range"}
+        # The holder, resolved NOW — never written into a span when it was drawn: a camera that moved between the
+        # drawing and the click would make a stored worker name a 404; one heartbeat read cannot go stale.
         found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url")
         if found is None:
             return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
@@ -696,7 +691,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                          "note": "; ".join(notes)}
         return 200, spans
 
-    # An interval as a fragmented MP4 (`fmp4.from_samples`): the frames from every door that holds them, each
+    # An interval as a fragmented MP4, written as it is made (`fmp4.Writer`): the frames from every door that holds them, each
     # moment taken once — the first door's — and then, as everything that leaves through this console, a line
     # `archive.read` with what was sent and its sha256: the answer to "is this the file you gave out".
     #

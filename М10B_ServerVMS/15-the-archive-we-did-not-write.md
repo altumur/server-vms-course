@@ -254,25 +254,26 @@ NVR знает свои каналы. Соблазн — чтобы воркер
             return segment(handler, q)
 ```
 
-`segment` (урок 12) находит держателя в момент запроса — тем же `holder_of`, что и функция ниже, — подрезает интервал по покрытию, которое держатель объявил, и подписывает адрес его двери.
+`segment` (урок 12) находит держателя в момент запроса, подрезает интервал по покрытию, которое держатель объявил, и подписывает адрес его двери. Держателя он ищет так:
 
 ```python
-# The holder of a camera, resolved NOW — never written into a span when it was drawn. A camera that moved
-# between the drawing and the click would make a stored worker name a 404; resolving at request time costs
-# one heartbeat read and cannot go stale. The fourth consumer of the same move, after the recorder, the
-# gateway and the detector.
-def device_playback(objects, cam, now: float) -> str | None:
-    found = holder_of(objects, "vms/", cam, now, field="playback_url")
-    return None if found is None else found[2]["playback_url"]
+        # The holder, resolved NOW — never written into a span when it was drawn: a camera that moved between the
+        # drawing and the click would make a stored worker name a 404; one heartbeat read cannot go stale.
+        found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url")
+        if found is None:
+            return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
+        url, key = found[2]["playback_url"], found[1].extra.get("playback_key") or None
 ```
+
+(Раньше это делала отдельная функция `device_playback`; после пятого ревью её не звал никто, и она удалена.)
 
 Ответ — **адрес двери, а не байты**: консоль называет `http://<holder>:8083/playback/<cam>?from&to`, и страница берёт кусок оттуда сама. Тест: `test_the_console_draws_the_device_only_where_we_have_nothing` получает `{"playback": "http://srv-1:8083/playback/1?from=10&to=20"}`.
 
 Это то же решение, что с WHEP (урок 12): консоль участвует в установлении, но не встаёт на путь данных. Цена — адрес держателя виден браузеру; для живого видео мы этого избегали переписыванием `Location`, потому что шлюзов много и они бывают в закрытом сегменте. Здесь выбрано иначе: операторов, листающих архив, единицы, а проксировать байты через консоль значило бы пустить через неё перемотку всех.
 
-Почему же наш архив консоль проксирует (`/export`)? Потому что дверь регистратора отдаёт не MP4, а кадры — записи `SMPL` одна за другой, каждая со своим временем. Собрать из них файл, который играет браузер, кто-то должен, и консоль делает это сама (`fmp4.from_samples`), не длиннее `EXPORT_MAX = 3600` секунд за раз, с записью `archive.read` и sha256 отданного. Дверь держателя отдаёт `video/mp4` готовым, и собирать там нечего.
+Почему же наш архив консоль проксирует (`/export`)? Потому что дверь регистратора отдаёт не MP4, а кадры — записи `SMPL` одна за другой, каждая со своим временем. Собрать из них файл, который играет браузер, кто-то должен, и консоль делает это сама — потоком: читает каждый отрезок у двери кусками по минуте (`EXPORT_PIECE`), сводит записи по времени (`heapq.merge`) и пишет фрагментированный MP4 фрагмент за фрагментом (`fmp4.Writer`), клиенту HTTP/1.1 — кусками chunked. Не длиннее `EXPORT_MAX = 3600` секунд за раз, с записью `archive.read` и sha256 отданного (урок 12, шаг 6). Дверь держателя отдаёт `video/mp4` готовым, и собирать там нечего.
 
-Альтернатива — проксировать и поток устройства — остаётся открытой: если держатели окажутся недостижимы из браузера, меняется одна функция.
+Альтернатива — проксировать и поток устройства — остаётся открытой: если держатели окажутся недостижимы из браузера, меняется одна функция (`segment`).
 
 **Держатель ищется в момент запроса, а не записывается в пролёт.** Если бы пролёт нёс `worker: w-1`, а камера за секунду до клика переехала на `w-2`, клик дал бы 404. Резолвинг при клике снимает это даром.
 
