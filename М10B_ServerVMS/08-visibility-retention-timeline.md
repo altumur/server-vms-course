@@ -281,7 +281,10 @@ def visible_from(row: dict | None, now: float) -> float:
     def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:
         """What the index holds — of one recording, or of all — as spans, in time order. One question, one
         reader: `reader` is the one the caller already mounted, if it is asking more than this."""
-        r = reader or self.reader()
+        if reader is None:
+            with self.reading() as r:
+                return self.spans(unit, t0, t1, reader=r)
+        r = reader
         lo = archive_ms(t0) if t0 is not None else NEVER
         hi = archive_ms(t1) if t1 is not None else FOREVER
         out = []
@@ -405,28 +408,48 @@ def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, f
 
 У этого правила есть следствие для удержаний. Копия в томе `incidents` пишется в поток `<запись>/e0`. Эпоха ноль — ничья аренда. Где живая запись ещё существует, её эпоха старше и владеет этими минутами. Где кольцо её уже забрало, остаётся копия.
 
-`samples` читает кадры по этим отрезкам:
+`stream` читает кадры по этим отрезкам, `samples` собирает их в список:
 
 ```python
     def samples(self, unit, t0: float, t1: float) -> list[Sample]:
         """The frames of `[t0, t1)`, each stretch from the epoch that owns it, each starting on the key frame AT
         OR BEFORE its first moment — what an export, a scan or a copy into another volume takes. A stretch that
         opens at 10:05 is inside a group of pictures that opened at 10:04:58, and without that key frame nothing
-        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`)."""
-        r = self.reader()
-        out: list[Sample] = []
-        for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
-            a, b = archive_ms(lo), archive_ms(hi)
-            seq = [s for e in r.sequences(span.stream, a, b) for s in r.read(e) if s.begin < b]
-            first = next((i for i, s in enumerate(seq) if s.end > a), len(seq))
-            key = next((i for i in range(min(first, len(seq) - 1), -1, -1) if seq[i].key), None)
-            if key is None:                              # no key frame at or before: the stretch opens on its next one
-                key = next((i for i in range(first, len(seq)) if seq[i].key), len(seq))
-            out += seq[key:]
-        return out
+        of 10:05 decodes: the lead-in comes along, and whoever asked clips it (`Scan.accepts`). All of it, in a
+        list: for a short range. A long one is `stream`ed."""
+        return list(self.stream(unit, t0, t1))
+
+    def stream(self, unit, t0: float, t1: float):
+        with self.reading() as r:
+            for span, lo, hi in authoritative(self.spans(unit, t0, t1, reader=r), t0, t1):
+                a, b = archive_ms(lo), archive_ms(hi)
+                lead: list[Sample] = []                  # since the last key frame, until the stretch's first moment
+                started = False
+                for e in r.sequences(span.stream, a, b):
+                    for smp in r.read(e):
+                        if smp.begin >= b:
+                            break
+                        if started:
+                            yield smp
+                            continue
+                        if smp.key:
+                            lead = []
+                        lead.append(smp)
+                        if smp.end > a:                  # the first moment: from the key frame at or before it
+                            started = True
+                            k = next((i for i, x in enumerate(lead) if x.key), None)
+                            yield from (lead[k:] if k is not None else [])
+                            if k is None:                # no key frame at or before: the stretch opens on its next one
+                                started = False
+                            lead = []
+                    else:
+                        continue
+                    break
 ```
 
-**Отрезок начинается с ключевого кадра на его первом моменте или раньше.** Момент, о котором спросили, лежит внутри группы кадров, открытой раньше. Декодер не начнёт с промежуточного кадра, а движок не примет последовательность без ключевого (`SEQUENCE_NEEDS_KEY_SAMPLE`), если эти кадры копируют в другой том. Начать со следующего ключевого — значит потерять начало отрезка: до целой группы кадров на каждом стыке эпох и в начале каждого вопроса. Поэтому `samples` отступает назад до ключевого кадра, и подводка приходит вместе с ответом. Обрезает её тот, кто спросил: скан считает только то, что попало в `[t0, t1)` (`Scan.accepts`, урок 20). Следующий ключевой берётся, только если раньше ключевого нет вовсе.
+**Кадры идут потоком, по последовательности.** Сутки камеры — десятки гигабайт, и список всех кадров держал бы их в памяти целиком (третье ревью, блокер 6): `stream` держит последовательность и подводку от ключевого кадра, а читатель — пока кадры берут, и закрывается, когда их взяли или перестали брать.
+
+**Отрезок начинается с ключевого кадра на его первом моменте или раньше.** Момент, о котором спросили, лежит внутри группы кадров, открытой раньше. Декодер не начнёт с промежуточного кадра, а движок не примет последовательность без ключевого (`SEQUENCE_NEEDS_KEY_SAMPLE`), если эти кадры копируют в другой том. Начать со следующего ключевого — значит потерять начало отрезка: до целой группы кадров на каждом стыке эпох и в начале каждого вопроса. Поэтому `stream` (а `samples` — тот же поток, собранный в список, для короткого промежутка) отступает назад до ключевого кадра, и подводка приходит вместе с ответом. Обрезает её тот, кто спросил: скан считает только то, что попало в `[t0, t1)` (`Scan.accepts`, урок 20). Следующий ключевой берётся, только если раньше ключевого нет вовсе.
 
 `test_review_remainder.py::test_a_read_starts_on_the_key_frame_before_the_moment_asked_for` пишет сто секунд с ключевым кадром каждые две и спрашивает с `t - 51`:
 
