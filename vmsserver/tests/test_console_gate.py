@@ -805,7 +805,7 @@ def test_a_backfill_is_two_finite_numbers_a_handful_at_a_time_and_a_line():
 def test_forty_backfills_asked_at_once_are_seven_and_an_ask_nobody_can_answer_is_refused():
     """The review's sixth pass, minor — a run: forty POSTs at once left fifteen rows where `BACKFILLS_OPEN` is seven.
     The bound was a count of rows read before the write, and requests in flight all counted the same ones. A person's
-    open asks are one row now, changed by CAS (`rec/requests/asks-<person>`): forty at once are seven asks and
+    open asks are one row now, changed by CAS (`rec/requests/asks-<sha256 of the person, 16 hex>`): forty at once are seven asks and
     thirty-three refusals, never an eighth. And an ask no recorder could ever answer — a range of milliseconds, a
     range that has not happened yet — is refused instead of holding a place for good."""
     import threading

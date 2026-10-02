@@ -896,9 +896,9 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             #
             # Not under `events_slots`: a held request is not a query being answered, and sixteen of them
             # (`WAITERS_MAX`) must not shut the door to the queries they exist to speed up. One more than that is
-            # answered at once, `full`, and its sender goes back to its pass. This server gives every request a
-            # thread and a socket with no deadline of its own, so a hold trips nothing — and a client that hung up
-            # is noticed within a second (`client_gone`), not at the timeout.
+            # answered at once, `full`, and its sender goes back to its pass. The door's deadline (`Deadlined`) is on
+            # the request line and the headers only; past them a request is its handler's, so a hold trips nothing —
+            # and a client that hung up is noticed within a second (`client_gone`), not at the timeout.
             if self.path == "/events/wait" or self.path.startswith("/events/wait?"):
                 q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
                 try:

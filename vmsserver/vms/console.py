@@ -510,7 +510,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             #
             # COUNTED BY CAS, NOT BY LOOKING (the sixth pass, minor; a run: forty POSTs at once left fifteen rows). The
             # bound was a count of rows read before the write, and forty requests in flight all counted the same six.
-            # A person's open asks are now ONE row — `rec/requests/asks-<person>`, the list of their ids — changed by
+            # A person's open asks are now ONE row — `rec/requests/asks-<sha256 of the person, 16 hex>`, the list of their ids — changed by
             # CAS: a request adds its id only on the revision it read, and the one that loses reads again. The list
             # never holds an eighth. An id stays in it while its request's row stands (the console clears a row the
             # recorder fetched; `jobs.clear_requests` ends one that stood for `BACKFILL_TTL`) — and for
