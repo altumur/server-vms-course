@@ -18,3 +18,4 @@
 - `path "rec/keeps/*" { capabilities = ["read", "list"] }` — the keeps (М10B Lesson 18). `ArchivePolicy` and the bucket retention read them before deleting anything; a pass that cannot read them raises and deletes nothing, so without the grant retention stops on every box and the log says why.
 - `path "platform/space" { capabilities = ["read"] }` — the watermark's settings (`space_settings`, М10A Lesson 14), read by every pass. The grant was missing from this file; with the watermark on by default the read is no longer optional.
 - `path "*/alarms_retention"` and `"*/alarms_retention/*"` — read: the days the alarms' trees (`<sub>.alarms/…`) are swept by; three years where no row says otherwise.
+- `path "platform/schema" { capabilities = ["read"] }` — the store's schema, checked first (`check_schema`; М10's eighth review): the resource job reads it at its start like every other.

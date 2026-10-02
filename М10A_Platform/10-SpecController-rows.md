@@ -81,27 +81,59 @@ class SpecController(Controller):
 ## Шаг 3 — Создание
 
 ```python
-    def create(self, fields: dict) -> dict:
+    def create(self, fields: dict, uid=None, reserve=None) -> dict:
         self.spec.refuse(fields)
+        if uid is not None:
+            old = self.unit(uid)
+            if old is not None:
+                return old                                              # created by the attempt whose reply was lost: the row is the answer
         if self.spec.numeric:
-            uid = self._next_id()
+            uid = self._next_id() if uid is None else self.spec.parse_id(uid)
         else:
             uid = str(fields.get(self.spec.id) or "")
             if not uid:
                 raise Refused(f"a {self.spec.name} unit needs a {self.spec.id}")
+            # A named unit's id comes VERBATIM from the operator's body, and from here it becomes three
+            # things: the key `<sub>/<rows>/<id>`, the prefix an ACL is matched against, and a directory on
+            # a resource's disk (`events.unit_dir`). So it is a name, not a path: no separators, and not a
+            # relative one. `variables.safe_path` refuses the same shapes one layer down — this one is a
+            # 400 to the person who typed it rather than a 500 from the store.
             if "/" in uid or uid in (".", ".."):
                 raise Refused(f"a {self.spec.name} {self.spec.id} is a name, not a path: {uid!r}")
+            # …and a name that goes into other text whole (the review's eighth pass, part 4, and its question about `|`,
+            # `"` and the newline): a label value on `/metrics` (escaped there too, for the names already stored —
+            # `console.label`), a `|`-joined field of a heartbeat (`closed`, `hits`), a log line. Refused here, the rule
+            # the domain keeps for a user's name (`domain/grants.py`, `name_refused`): no `"`, no `|`, no control
+            # character or line or paragraph separator (Unicode Cc, Zl, Zp).
+            bad = unnamable(uid)
+            if bad:
+                raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
+        if reserve is not None:
+            reserve(uid)                                                # into the claim, before the row exists
+        if self.spec.name in REFUSE:                                   # the subsystem's own rule about what the row points at
+            REFUSE[self.spec.name](self, uid, None, self.spec.new_row(uid, fields))
+        if not self.spec.numeric:
             old, idx = self.vars.get(self._row_key(uid))
             if old and old.get("deleted") != "true":
                 raise Refused(f"{self.spec.name} unit {uid} exists")
+            # A NAME STAYS ITS CAMERA'S (the review's fifth pass, major). A unit's name is also the name of what it left
+            # behind — a recording's tree in its volumes, a detector's events — and readers find those by the name.
+            # Deleted as camera 1's «1-cloud» and created again as camera 2's, the recording handed camera 1's
+            # footage to whoever may view camera 2 (`GET /export/2` played it). The tombstone keeps `cam`: the name
+            # comes back for the same camera, and for another it is refused — whatever was written under it is still
+            # there, and nothing here can know when the last of it is gone, so "reuse once the archive is empty" is
+            # not a rule this controller could keep.
+            if old and "cam" in old and "cam" in fields and str(self.spec.fields["cam"].parse(fields["cam"])) != str(old["cam"]):
+                raise Refused(f"the name {uid} was cam {old['cam']}'s, and what was written under it still is: create "
+                              f"cam {fields['cam']}'s under another name")
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
-                self.vars.put(self._row_key(uid), self.spec.items(r), cas=idx)
+                self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
                 self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
-        self.vars.put(self._row_key(uid), self.spec.items(r), cas=0)
+        self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
         self._derived(r, uid)
         return r
 ```
@@ -110,13 +142,17 @@ class SpecController(Controller):
 
 **Числовой путь** прост: взять следующий номер, собрать запись, записать с `cas=0`. Последнее — важная мелочь: `cas=0` значит «создать, только если ключа нет» (урок 2). Ключ с только что выданным номером существовать не может, и всё же проверка стоит — как утверждение, а не как защита. Если она когда-нибудь сработает, значит, счётчик разошёлся с реальностью, и лучше узнать об этом через исключение, чем через затёртую строку.
 
-**Именованный путь** начинается с двух отказов, и второй стоит того, чтобы на нём остановиться.
+**Именованный путь** начинается с трёх отказов: нет имени, имя — путь, имя с запретными символами. Второй стоит того, чтобы на нём остановиться.
 
 Идентификатор здесь приходит **из тела POST как есть** — в отличие от числового, который выдаёт контроллер. И дальше эта строка становится тремя вещами сразу: ключом `<подсистема>/<строки>/<id>`, префиксом, по которому сверяется ACL, и **каталогом на диске ресурса** (`unit_dir`, урок 12). Поэтому `cam` — это имя, а не путь: разделителей в нём быть не может.
 
 Проверьте сами, чем кончится `{"cam": "../../cameras/7"}` без этой строки. Ключ получится `rec/recordings/../../cameras/7` — и он **пройдёт** проверку прав, потому что честно начинается с `rec/recordings/`, а токен консоли именно этот префикс и разрешает. Дальше всё зависит от того, нормализует ли кто-нибудь путь по дороге: в хранилище на файлах получится мусорная строка, в хранилище за HTTP — запись не туда, а `unit_dir` построит `/data/archive/rec/../../cameras/7` вообще без всякого кодирования.
 
 Та же проверка стоит и слоем ниже, в `safe_path` (урок 2). Дублирование намеренное и разное по смыслу: здесь это **400 тому, кто это напечатал**, с внятным текстом; там — последний рубеж для любого, кто дошёл до хранилища другим путём.
+
+**Имя не может держать `"`, `|` и управляющие символы** (восьмое ревью, часть 4, и его вопрос к автору). Имя единицы попадает целиком и в другой текст: значением метки на `/metrics`, полем heartbeat'а, склеенным через `|` (`closed`, `hits`), строкой лога. Запись с именем `7"x` давала строку `rec_last_frame_age_seconds{unit="7"x"}`, которую формат Prometheus не читает, и Prometheus отвергал весь скрейп регистраторов — вместе со всеми их алертами. Теперь `create` отказывает такому имени словами: `doors.unnamable(uid)` возвращает найденные запретные символы — `"`, `|` и символы Unicode категорий Cc (управляющие, в том числе перевод строки), Zl и Zp (разделители строк и абзацев). Та же функция стоит на id команды в `POST /requests` консоли (`vms/console.py`) и на камере метки удержания (`keeps.refuse`). Это то же правило, что домен М12 держит для имени пользователя и субъекта гранта (`grants.refuse_name`, `name_refused`). Имена, записанные до правила, по-прежнему лежат в хранилище, поэтому `/metrics` ещё и экранирует каждое значение метки (`console.label`, урок 15). Тесты: `test_lesson11_edge.py::test_a_units_name_holds_no_quote_no_bar_and_no_control_character`, `test_row_reader.py::test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page`.
+
+Остальные строки листинга разобраны в других уроках: `uid` и `reserve` — повтор запроса с ключом идемпотентности, который создаёт под тем же id (урок 15); `REFUSE` — собственное правило подсистемы о том, на что указывает строка (в М10B — `volumes.refuse_camera`); `_sealed` — запечатанный пароль устройства (урок 18). Проверка `cam` у надгробия — имя записи остаётся за своей камерой: удалённая запись камеры 1 не возвращается под тем же именем для камеры 2, иначе её архив открылся бы тому, кто смотрит камеру 2 (пятое ревью).
 
 Остальная длина этой ветки — из-за одного случая. Единица опознаётся своим полем: `rec/recordings/7` — это запись камеры 7. Оператор выключил запись (строка помечена удалённой), потом через час включил снова. Имя то же самое — другого быть не может, камера та же.
 
