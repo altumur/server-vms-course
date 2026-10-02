@@ -394,31 +394,67 @@ def server(env: dict, given: str | None = None) -> str:
     def hold_key(self, place: str) -> str:
         return f"{self.name}/holds/{place}"
 
-    # A stale hold of ANOTHER holder is taken only after this process watched its row stand still for `slot_ttl +
-    # HOLD_SKEW` by its own monotonic clock — `until` was written by another host's clock (the review's fourth pass).
+    HOLD_SKEW = 5.0
+
+    def _hold_stale(self, cand: str, cur: "Slot", idx) -> bool:
+        if cur.released or cur.holder in ("", self.instance):
+            return True
+        now = self.clock()
+        seen = self._hold_seen.get(cand)
+        if seen is None or seen[0] != idx:
+            self._hold_seen[cand] = (idx, now)               # renewed since we last looked — or never looked: from now
+            return False
+        return now - seen[1] >= self.slot_ttl + self.HOLD_SKEW
+
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
+        """Take one place out of a list somebody else wrote. None when they are
+        all taken — a spare, not a failure."""
+        with self._hold_lock:
+            return self._claim_hold(candidates, retries)
+
+    def _claim_hold(self, candidates: list[str], retries: int) -> str | None:
         for attempt in range(retries):
             if attempt:
                 cas_pause(attempt - 1)
             contended = False
-            for cand in candidates:
+            rows = {c: self.vars.get(self.sub.hold_key(c)) for c in candidates}
+            # A row that does not parse is no candidate, and stops nobody from taking another (`read_hold`).
+            held = {c: read_hold(self.sub.hold_key(c), c, rows[c][0]) for c in candidates}
+            candidates = [c for c in candidates if held[c] is not None]
+            # Only while the slot IS this instance's: the instance systemd replaced has the same name, and must not
+            # take the place back from its successor on its way out. The slot is read only when a hold names it.
+            mine = [c for c in candidates if self.name and held[c].by == self.name]
+            slot = read_slot(self.sub.slot_key(self.name), self.name, self.vars.get(self.sub.slot_key(self.name))[0]) if mine else None
+            named = slot is not None and slot.holder == self.instance      # (a slot row that does not parse proves nothing)
+            mine = mine if named else []
+            for cand in mine + [c for c in candidates if c not in mine]:
                 key, now = self.sub.hold_key(cand), self.wall()
-                items, idx = self.vars.get(key)
-                cur = Slot.from_items(cand, items)
-                if not cur.claimable(now):
-                    continue                                   # там живой писатель
+                idx, cur = rows[cand][1], held[cand]
+                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand)
+                if not ours and not self._hold_stale(cand, cur, idx):
+                    continue                                   # somebody live is writing there
                 try:
-                    self.vars.put(key, Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1).to_items(), cas=idx)
+                    self.vars.put(key, Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, self.name or "").to_items(), cas=idx)
                 except Conflict:
                     contended = True; continue
+                self._hold_seen.pop(cand, None)
                 self.hold = cand
                 return cand
             if not contended:
-                return None                                    # всё занято: это запасной
+                return None                                    # every place is held: a spare
         return None
+
+    # Whether `place`, held under this worker's NAME by another instance, is taken back at once (`_claim_hold`). Yes,
+    # unless the subsystem knows the place can be written from another host (`RecWorker.hold_follows_name`).
+    def hold_follows_name(self, place: str) -> bool:
+        return True
 ```
 
-Строка — тот же `Slot`. Предикаты — те же `claimable` и `lapsed`. Продление и отпускание — построчно `renew_slot` и `release_slot`. **Различие ровно одно, и оно не в коде:** имя слота процесс придумывает сам (`w-<max+1>`), потому что один процесс не хуже другого; имя места он придумать не может — места перечислены в строках, которые написал кто-то другой, и взять можно только одно из них.
+Раньше здесь стоял упрощённый захват: чужой холд считался свободным по `claimable` — по `until`, который записали часы другой машины, — и строка разбиралась как есть. Теперь чужой холд свободен, только когда **этот** процесс видел его строку неизменной `slot_ttl + HOLD_SKEW` по своим монотонным часам (`_hold_stale`, четвёртое ревью); отпущенный (`released`) или ничей — сразу. Строку, которая не разбирается, `read_hold` пропускает: этот холд — не кандидат, остальные берутся как обычно, как и битая строка слота в шаге 4 (шестое ревью; М10B, урок 10). И холд помнит, **чей слот** его держит (`by`): экземпляр, который сейчас держит этот слот (`named`), забирает свой холд назад сразу, раньше других кандидатов, — так перезапущенный systemd регистратор не ждёт 45 секунд собственного тома (обратная связь CF; М10B, урок 17).
+
+**Но `ours` — только когда место идёт за именем, а место сетевого тома не идёт** (шестое ревью, блокер 2). Экземпляр, взявший имя, может стоять на другой коробке, а прежний — быть замороженным, а не мёртвым, со смонтированным писателем. Окно записи прежнего держателя отмерено от того, что претендент **ждёт** `slot_ttl + HOLD_SKEW`, а «холд идёт за именем» это ожидание снимал: второй `r-1` брал холд сетевого тома сразу, первый просыпался внутри своего окна, и оба писали в один том. Платформа про тома ничего не знает, поэтому спрашивает подсистему: `hold_follows_name(place)` — по умолчанию да, а регистратор отвечает «нет» для тома, который может обслуживать любая коробка (М10B, урок 10). Такой холд ждёт и тот, кто носит то же имя; сразу берётся только отпущенный намеренно — его писатель закрыт до отпускания. Тест: `test_stand_in.py::test_a_place_another_host_may_write_does_not_follow_the_name_and_a_released_one_is_taken_at_once`.
+
+Строка — тот же `Slot`, и читается так же: `read_hold` рядом с `read_slot`. Продление и отпускание — построчно `renew_slot` и `release_slot`. **Различие ровно одно, и оно не в коде:** имя слота процесс придумывает сам (`w-<max+1>`), потому что один процесс не хуже другого; имя места он придумать не может — места перечислены в строках, которые написал кто-то другой, и взять можно только одно из них.
 
 Отсюда и `None` в возврате, которого у `claim_slot` нет. Слот есть всегда — на худой конец новый. Мест может не хватить, и тогда процесс — **запасной**: работает, не несёт ничего, ждёт. Это нормальное состояние, а не отказ, и оно же — то, из-за чего следующий архив, заведённый в консоли, начинает обслуживаться за один проход, а не за один деплой.
 
