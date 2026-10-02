@@ -169,6 +169,19 @@ def test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_pass
     assert "w-9" in ctl.workers_seen()                                                       # mended: read again, as any other
 
 
+def test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same():
+    """The review's third pass (M6's remainder). `VmsWorker.__init__` read the previous instance's heartbeat — to
+    measure its own failover — bare: a garbled one raised out of the constructor, and the process restarted for
+    ever over the very object its first heartbeat would have replaced. Unparsed, there is no failover to measure."""
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    box.objects.put("vms/heartbeats/w-1", b'{"worker": "w-1", "ts": ')                      # cut short
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-a")
+    assert (w.previous_hb, w.previous_instance) == (0.0, "")
+    w.heartbeat_once()
+    assert "w-1" in VmsController(box.vars, box.objects, wall=box.wall).workers_seen()
+
+
 def test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps_run_each():
     """The review's second pass, M7. `units()` parsed every row bare, so one row with a field that is not what the
     spec says — a hand edit, a build that wrote another layout — ended every caller's pass: nothing placed, nothing
@@ -192,4 +205,24 @@ def test_a_row_that_does_not_parse_is_one_unit_nobody_serves_and_the_three_steps
     rep = ctl.pass_once()
     assert ran == ["home"] and not rep["ok"] and rep["error"].startswith("redistribute:") and rep["failures"] == 1
     assert ctl.placement(4) is not None                                                        # `ensure_placed` ran before the step that raised
+
+
+def test_a_placed_unit_whose_row_stops_parsing_holds_up_neither_placing_nor_moving():
+    """The review's third pass. `units()` skipped a row that does not parse, but `unplace_deleted` — the first step of
+    both `ensure_placed` and `redistribute` — and `redistribute` itself read each PLACED unit's row bare: one field
+    edited by hand on a camera already placed, and no new camera was placed and no unit of a released slot moved,
+    every pass. The garbled unit stays where it is, counted in `rows_garbled`; everything else goes on."""
+    box, ctl, ws = _three(cameras=6)
+    assert ctl.assignment("w-3").units == ["3", "6"]
+    it, idx = box.vars.get("vms/cameras/3")
+    box.vars.put("vms/cameras/3", {**it, "revision": "three"}, cas=idx)                     # placed, and now unreadable
+    new = ctl.create_camera({"source": "driverpack://file/7.mp4"})["id"]
+    placed = ctl.ensure_placed()
+    assert [p.unit for p in placed if p.unit == new] == [new] and ctl.placement(3).worker == "w-3"   # not unplaced as "deleted"
+    ws[2].release_slot()
+    moves = ctl.redistribute()
+    assert [(m[0], m[1]) for m in moves] == [(6, "w-3")]                                    # 6 moved; 3 waits, listed where it was
+    assert ctl.assignment("w-3").units == ["3"]
+    rep = ctl.pass_once()
+    assert rep["ok"] and rep["garbled"] == 1
 

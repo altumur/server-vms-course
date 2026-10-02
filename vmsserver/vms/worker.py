@@ -478,11 +478,14 @@ class VmsWorker(Worker):
         self.passes = 0
         # the previous instance of this slot, if it left a heartbeat: what failover is measured from
         self.previous_hb, self.previous_instance = 0.0, ""
+        # A heartbeat that does not parse is one object's trouble (the review's second pass, M6) — here too: read
+        # bare, it raised out of the constructor, and the process went into a restart loop over the very object its
+        # first heartbeat would have replaced. Unparsed, there is no failover to measure; that is all it costs.
         raw = objects.get(self.sub.heartbeat_key(self.name))
         if raw:
-            from w2cplatform.contract import Heartbeat
-            old = Heartbeat.from_bytes(raw)
-            if old.extra.get("instance") != self.instance:
+            from w2cplatform.contract import parse_heartbeat
+            old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
+            if old is not None and old.extra.get("instance") != self.instance:
                 self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
 
     # -- the store, as the reconciler sees it ------------------------------------
@@ -988,7 +991,11 @@ class VmsWorker(Worker):
             if not self.may_write(unit):
                 continue                                 # taken and lost already, or not confirmed: whoever holds it now acts
             before = self.began_by(rid)                  # raises if the store does not answer: not known is not "nobody"
-            if before is None and not self._mark(rid, unit, now):
+            made = self._mark(rid, unit, now) if before is None else False
+            if made is None:
+                self._refused(rid, row, it, self.CANNOT_MARK, done)
+                continue
+            if before is None and not made:
                 before = self.began_by(rid) or "?"       # somebody made the mark between our read and our write
             if before is not None:
                 why = f"unknown: an earlier instance ({before}) began it, and whether the device acted is not known"
@@ -1013,16 +1020,20 @@ class VmsWorker(Worker):
             done += self._performed()
         return done
 
-    # The mark, create-only: `True` when this instance made it. A store with `put_new` says so itself; one
-    # without (last-writer-wins and nothing else) is read back — the write that landed last is the one
-    # everybody reads, so the instance that reads its own name proceeds and the other does not.
-    def _mark(self, rid: str, unit: str, now: float) -> bool:
-        key, data = self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode()
+    # The mark, create-only: `True` when this instance made it, `False` when somebody else did — the store says so
+    # (`put_new`: a directory's `link`, М11's Variables by CAS on index 0). A store WITHOUT create-only answers
+    # `None`, and the command is refused (the review's third pass). Reading the mark back after a last-writer-wins
+    # write was the old fallback, and it is no fence: A puts, A reads its own name, B puts, B reads its own name —
+    # two holders in the same two seconds both pulse the door. For a door, "not performed, and a person is told
+    # why" is better than "perhaps twice".
+    CANNOT_MARK = ("this object store cannot write a command's mark create-only (no `put_new`): two holders of the "
+                   "device could both perform it, so neither does")
+
+    def _mark(self, rid: str, unit: str, now: float) -> bool | None:
         put_new = getattr(self.objects, "put_new", None)
-        if put_new is not None:
-            return bool(put_new(key, data))
-        self.objects.put(key, data)
-        return self.began_by(rid) == self.instance
+        if put_new is None:
+            return None
+        return bool(put_new(self.command_key(rid), json.dumps({"instance": self.instance, "unit": unit, "at": now}).encode()))
 
     # What the calls in flight have come to: performed, refused by the device, or — after `PERFORM_TIMEOUT` —
     # not answered. A call that timed out is answered ONCE and stays in flight until the driver returns: the

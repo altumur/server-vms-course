@@ -333,21 +333,22 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
     assert w2._mark("m1", str(door), box.wall()) and not w._mark("m1", str(door), box.wall())
     assert json.loads(box.objects.get("vms/commands/m1"))["instance"] == w2.instance                     # …and it was not written over
 
-    class LastWriterWins:                                     # a store with no create-only: written, then read back
-        def __init__(self, real, then=None): self._r, self._then = real, then
+    # a store with no create-only (the review's third pass): reading the mark back after a last-writer-wins write is
+    # no fence — A puts, A reads its own name, B puts, B reads its own — so the command is REFUSED, and says why
+    class LastWriterWins:
+        def __init__(self, real): self._r = real
         def __getattr__(self, n):
             if n == "put_new":
                 raise AttributeError(n)
             return getattr(self._r, n)
-        def put(self, key, data):
-            self._r.put(key, data)
-            if self._then:
-                self._then(key)                               # …and the other instance's write lands right after ours
-    w2.objects = LastWriterWins(box.objects)
-    w.objects = LastWriterWins(box.objects, then=lambda key: w2.objects.put(key, json.dumps({"instance": w2.instance}).encode()))
-    assert not w._mark("m2", str(door), box.wall())           # w read w2's name over its own: not first
-    assert json.loads(box.objects.get("vms/commands/m2"))["instance"] == w2.instance
-    assert w2._mark("m3", str(door), box.wall())              # alone, it reads its own name
+    w.objects = LastWriterWins(box.objects)
+    assert w._mark("m2", str(door), box.wall()) is None and box.objects.get("vms/commands/m2") is None
+    con.vars.delete(SPEC.sub.request_key("d3"))
+    con.vars.put(SPEC.sub.request_key("d4"), {"unit": str(door), "action": "output", "port": "2", "valid_until": str(box.wall() + 30)})
+    did = list(w.devices["acme/10.0.0.91"].did)
+    [answer] = [d for d in w.requests() if d["request"] == "d4"]
+    assert "create-only" in answer["error"] and box.objects.get("vms/commands/d4") is None
+    assert w.devices["acme/10.0.0.91"].did == did                                                      # the device was not called
 
 
 # -- whose clock -------------------------------------------------------------------------------------------
@@ -377,6 +378,27 @@ def test_a_heartbeat_from_the_future_is_not_live_and_the_skew_is_a_number():
     assert "w-3" in ctl.workers_seen()                                                        # its clock is 4 s ahead of ours now: live
 
 
+def test_a_clock_running_behind_is_a_number_too():
+    """The review's third pass (M9's remainder). `SKEW_MAX` saw only clocks running AHEAD; a clock behind makes a live
+    worker look old, `lost_after` from "dead" sooner than it should be, and nothing said so. The oldest heartbeat
+    still judged live is on `/metrics` as `<sub>_heartbeat_skew_seconds_min`; a dead worker's is not counted."""
+    import re
+    from w2cplatform import contract
+    from w2cplatform.console import SpecConsole
+    from vms.controller import VmsController
+    now = 1_757_500_000.0                                   # the number, on a subsystem name nobody else's threads judge
+    for ts in (now - 2, now - 31, now - 400):               # 31 s behind and live; 400 s: dead, not a clock
+        contract.is_live("skew-test", ts, now, 45.0)
+    contract.is_live("skew-test", now - 9000, now, 1e12)    # a LISTING, not a judgement of liveness: not counted
+    assert contract.SKEW_MIN["skew-test"] == -31.0
+    box = Box()                                             # …and on `/metrics`, beside the maximum
+    ctl = VmsController(box.vars, box.objects, wall=box.wall)
+    box.objects.put(SPEC.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall() - 31, [], {"server": "srv-a"}).to_bytes())
+    assert "w-2" in ctl.workers_seen()
+    m = re.search(r"\nvms_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())
+    assert m and float(m.group(1)) <= -31.0
+
+
 # -- what is seen -----------------------------------------------------------------------------------------
 
 def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
@@ -390,9 +412,10 @@ def test_a_recording_that_is_running_and_fed_nothing_has_an_age_that_grows():
     r.rows = [{"id": "7", "cam": "7", "name": "7", "enabled": True, "revision": 1}]
     t0 = box.wall()
     act.offered_bytes["7"] = 1000; r.writer_pass()
-    box.wall.advance(5); act.offered_bytes["7"] = 9000; r.writer_pass()          # fed: the moment moves
-    box.wall.advance(40); r.writer_pass()                                        # up, and fed nothing
-    assert r.status_extra(r.rows[0])["last_frame_at"] == t0 + 5
+    assert r.status_extra(r.rows[0])["last_frame_at"] == t0                       # nothing taken yet: counted from the start
+    box.wall.advance(5); act.offered_bytes["7"] = 9000; r._tally("7", "OK"); r.writer_pass()   # the writer TOOK a frame: the moment moves
+    box.wall.advance(40); act.offered_bytes["7"] = 99000; r._tally("7", "SEQUENCE_TOO_LARGE"); r.writer_pass()
+    assert r.status_extra(r.rows[0])["last_frame_at"] == t0 + 5                   # offered, refused: not a frame on the volume
     box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", box.wall(), [
         {"id": "7", "phase": "running", "last_frame_at": t0 + 5}, {"id": "8", "phase": "running"}], {"server": "srv-1"}).to_bytes())
     box.wall.advance(15)                                                         # …and the recorder goes silent too

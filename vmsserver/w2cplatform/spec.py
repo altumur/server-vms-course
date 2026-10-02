@@ -635,6 +635,9 @@ def register_near_rank(spec_name: str, fn) -> None:
 
 
 # Sort key: numeric ids before others, numbers by value.
+GARBLED_ROW = object()     # what `SpecController._parsed` says of a row that does not parse: there, and unreadable
+
+
 def _unit_key(u: str):
     return (0, int(u)) if u.isdigit() else (1, u)
 
@@ -832,8 +835,8 @@ class SpecController(Controller):
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self.spec.parse_id(p.rsplit("/", 1)[1])
             it, _ = self.vars.get(p)
-            if not it or not it.get("worker") or self.unit(uid) is not None:
-                continue
+            if not it or not it.get("worker") or self._parsed(uid) is not None:
+                continue                                  # a row that does not parse EXISTS: it is not unplaced as deleted
             self.assign_remove(it["worker"], str(uid))
             self.write(p, lambda it: {"worker": "", "reason": "deleted", "at": self.wall(), "rev": int(it.get("rev", 0)) + 1})
             gone.append(uid)
@@ -858,9 +861,10 @@ class SpecController(Controller):
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self.spec.parse_id(p.rsplit("/", 1)[1])
             it, _ = self.vars.get(p)
-            if not it or not it.get("worker") or not self.retired(self.unit(uid)):
-                continue
-            state = str(self.unit(uid).get(self.spec.retire_field, ""))
+            row = self._parsed(uid)
+            if not it or not it.get("worker") or row is GARBLED_ROW or not self.retired(row):
+                continue                                  # whether a row that does not parse is over, nobody can say
+            state = str(row.get(self.spec.retire_field, ""))
             self.assign_remove(it["worker"], str(uid))
             self.write(p, lambda i: {"worker": "", "reason": state, "at": self.wall(), "rev": int(i.get("rev", 0)) + 1})
             done.append(uid)
@@ -870,6 +874,20 @@ class SpecController(Controller):
     def unit(self, uid) -> dict | None:
         it, _ = self.vars.get(self._row_key(uid))
         return self.spec.row(it) if it and it.get("deleted") != "true" else None
+
+    # The same for the controller's loops over units ALREADY PLACED (the review's third pass): a row that does not
+    # parse is `GARBLED_ROW` — logged once, counted by `units()` in `rows_garbled` like every other — instead of an
+    # exception out of `unplace_deleted`, which ran first in `ensure_placed` and `redistribute`: one hand-edited
+    # field on a placed camera, and no new camera was placed and no unit of a silent server moved, every pass.
+    def _parsed(self, uid):
+        try:
+            return self.unit(uid)
+        except (ValueError, KeyError, TypeError) as e:
+            p = self._row_key(uid)
+            if p not in self._garbled_rows:
+                self._garbled_rows.add(p)
+                log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+            return GARBLED_ROW
 
     # Every live row under `<name>/<rows>/`, sorted by `_unit_key`. A row that does not parse — a field edited by
     # hand, a build that wrote another layout — is ONE unit nobody serves, not the end of every caller's pass
@@ -1428,7 +1446,9 @@ class SpecController(Controller):
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
                 uid = self.spec.parse_id(unit)
-                row = self.unit(uid)
+                row = self._parsed(uid)
+                if row is GARBLED_ROW:
+                    continue                            # its filters cannot be read: it waits where it is, the others move
                 pool = self.eligible(row, live) if row else live
                 best, free, near = self._pick(pool, uid)
                 if best is None:
@@ -1548,8 +1568,7 @@ class SpecController(Controller):
             return data
         return verify(d, data)
 
-    # Every digest any row currently names: what a sweep would keep. There is no sweep — nothing in the
-    # platform deletes an object — and this is the half of it that can be written honestly today.
+    # Every digest any row currently names: what the sweep keeps (`sweep_blobs`, below).
     def blobs_referenced(self) -> set[str]:
         names = [n for n, f in self.spec.fields.items() if f.type == "blob"]
         return {r[n] for r in self.units() for n in names if is_digest(r.get(n) or "")}
@@ -1585,6 +1604,13 @@ class SpecController(Controller):
     # leaves what is gone from it alone. The row is cleared at the end, by CAS; a clear that loses — somebody
     # took a digest off meanwhile — leaves the rest listed for the next pass, which checks them again.
     #
+    # That left one window, two store calls wide (the review's third pass): the sweeper reads "still doomed",
+    # `put_blob` takes the digest off and writes the object, and the sweeper's delete removes it. It is closed by
+    # reading the bytes before the delete and the row AFTER it: a digest that left the list in between is one
+    # somebody is uploading, and its object is put back — the same bytes, by construction (the key is their
+    # digest), so the restore and the upload write one object, in whichever order they land. Still on the list
+    # after the delete means `put_blob` has not taken it off yet, and its own write comes after ours.
+    #
     # `limit` is not a nicety either: `<name>/sweep` is a row, and a row has the store's ceiling over it
     # (Lesson 26). The sweep is subject to the rule it was written under.
     SWEEP_LIMIT = 64
@@ -1619,8 +1645,16 @@ class SpecController(Controller):
         deleted = 0
         for d in doomed:
             items, idx = self.vars.get(key)                                 # still doomed? `put_blob` takes a digest off this list
-            if d in json.loads((items or {}).get("digests", "[]")) and self.objects.delete(self.sub.blob_key(d)):
-                deleted += 1
+            if d not in json.loads((items or {}).get("digests", "[]")):
+                continue
+            data = self.objects.get(self.sub.blob_key(d))
+            if data is None or not self.objects.delete(self.sub.blob_key(d)):
+                continue
+            items, idx = self.vars.get(key)                                 # …and after: taken off meanwhile is being uploaded
+            if d not in json.loads((items or {}).get("digests", "[]")):
+                getattr(self.objects, "put_durable", self.objects.put)(self.sub.blob_key(d), data)
+                continue
+            deleted += 1
         try:
             self.vars.put(key, {"at": str(now), "digests": "[]"}, cas=idx)
         except Conflict:

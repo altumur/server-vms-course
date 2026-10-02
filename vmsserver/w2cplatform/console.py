@@ -92,7 +92,7 @@ from urllib.parse import parse_qs, urlsplit
 from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
-from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
+from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
                        is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
 from .eventdatabase import refence
@@ -629,6 +629,7 @@ class SpecConsole:
                  f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
                  f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
+                 f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
                  f"# TYPE {p}_{self.spec.running_gauge} gauge",
                  f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
         # How far behind the copy the layer above reads is. The controller publishes every pass and has no

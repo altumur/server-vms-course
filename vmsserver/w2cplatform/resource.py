@@ -309,7 +309,7 @@ class Resource:
 
     def __init__(self, root: str | None, server: str, url: str, vars_, objects, bucket_seconds: int = 600,
                  wall=time.time, peers: PeerClient | None = None, lost_after: float = 45.0, space_probe=None,
-                 volumes: dict[str, str] | None = None, quotas: dict[str, int] | None = None):
+                 volumes: dict[str, str] | None = None, quotas: dict[str, int] | None = None, clock=time.monotonic):
         # A server's disks, named. One volume is the common case and stays the whole of `root`; several are
         # what a box with more than one disk actually has, and they are the resource's INTERNAL structure:
         # the resource is still one per server, because reachability is a property of a server and a volume
@@ -336,6 +336,8 @@ class Resource:
         self.last_usage: int | None = None                   # the tree walk's answer, refreshed by `pass_`
         self._volume_usage: dict[str, int] = {}              # …and per volume, for the ones with a quota
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
+        self.clock = clock                                   # monotonic: what the pass's pulse measures by (a test passes its own)
+        self._progress_at = clock()                          # when the running pass last got somewhere (`pass_`'s pulse)
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
         # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
@@ -415,14 +417,26 @@ class Resource:
     # files, and walking them touches every inode in the tree. Measured
     # once per policy pass (`pass_`), published from the cache with the time it was taken (`usage_at`).
     # What decides anything is `space()` — one `statvfs`, cheap enough for every heartbeat.
+    #
+    # A file that goes between the listing and the `stat` — a `.tmp` renamed into place, a bucket the retention
+    # removed — is not there to count, and is not the end of the walk (the review's third pass): one vanished file
+    # used to take the whole policy pass with it.
     def usage(self, volume: str | None = None) -> int:
         roots = [self.volumes[volume]] if volume is not None else list(self.volumes.values())
         total = 0
         for root in roots:
             for d, _, files in os.walk(root):
+                self._progressed()
                 for f in files:
-                    total += os.path.getsize(os.path.join(d, f))
+                    try:
+                        total += os.path.getsize(os.path.join(d, f))
+                    except FileNotFoundError:
+                        continue
         return total
+
+    # The pass is getting somewhere: what the pulse measures its limit by (`pass_`). Cheap — a clock read.
+    def _progressed(self) -> None:
+        self._progress_at = self.clock()
 
     # The cached number, measured now if it never was: the first heartbeat of a process pays for it once.
     def usage_cached(self) -> int:
@@ -506,6 +520,7 @@ class Resource:
         swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
+                self._progressed()
                 days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     for b in bucket_names_under(path, sub, unit, self.bucket_seconds):   # by NAME: no file is opened to be swept
@@ -659,45 +674,65 @@ class Resource:
     # published, and nothing the pass is changing.
     PULSE_SECONDS = 10.0
     # …and not for ever (the review's second pass): a pass stuck on a disk that never answers would be `live`
-    # with frozen numbers for as long as it hung. Four `lost_after` and the pulse stops; the pass is then what
-    # it is — silent — and the heartbeat says how long it has been running while it still beats.
+    # with frozen numbers for as long as it hung. Four `lost_after` WITHOUT PROGRESS and the pulse stops; the pass
+    # is then what it is — silent — and the heartbeat says how long it has been running while it still beats.
+    #
+    # Three things the first version got wrong (the review's third pass). The pulse died on its first error — one
+    # store write that failed, an exception out of the thread, and a five-minute pass on a store that blinked was a
+    # silent resource whose recordings `redistribute` moved off a sound server: each beat is in a `try` of its own
+    # now. It measured by the WALL clock, which NTP steps: by a monotonic one (`clock`). And it stopped at four `lost_after`
+    # of TOTAL time, which a year of archive legitimately takes: it stops at four `lost_after` with no progress —
+    # the walk, the retention and each part say they moved (`_progressed`) — which is what "stuck" means.
     PULSE_LIMIT = 4
 
     def pass_(self) -> dict:
         done = threading.Event()
-        started = self.wall()
+        started = self.clock()
+        self._progressed()
 
         def pulse():
             while not done.wait(self.PULSE_SECONDS):
-                last = getattr(self, "_last_heartbeat", None)
-                running = self.wall() - started
-                if running > self.PULSE_LIMIT * self.lost_after:
-                    log.error("%s: the pass has run %.0f s — longer than %d × lost_after: the pulse stops, and this "
-                              "resource is reported silent until the pass ends", self.server, running, self.PULSE_LIMIT)
-                    return
-                if last is not None:
-                    self.objects.put(f"{RESOURCES}/{self.server}/heartbeat",
-                                     json.dumps({**last, "ts": self.wall(), "pass_seconds": round(running, 1)}).encode())
+                try:
+                    now = self.clock()
+                    running, still = now - started, now - self._progress_at
+                    if still > self.PULSE_LIMIT * self.lost_after:
+                        log.error("%s: the pass has made no progress for %.0f s — longer than %d × lost_after: the pulse "
+                                  "stops, and this resource is reported silent until the pass ends", self.server, still,
+                                  self.PULSE_LIMIT)
+                        return
+                    last = getattr(self, "_last_heartbeat", None)
+                    if last is not None:
+                        self.objects.put(f"{RESOURCES}/{self.server}/heartbeat",
+                                         json.dumps({**last, "ts": self.wall(), "pass_seconds": round(running, 1)}).encode())
+                except Exception:                             # noqa: BLE001 — one beat lost, not the pulse
+                    log.warning("%s: a pulse of the pass did not go out", self.server, exc_info=True)
 
         threading.Thread(target=pulse, daemon=True).start()
         # Each part in a `try` of its own (the review's second pass): the promise (`retain`) reads the rows of
         # what is kept, and a store that does not answer used to take the watermark and the mirror with it.
-        # What a part could not do is named in `errors`; the next pass tries again.
+        # What a part could not do is named in `errors`; the next pass tries again. Whatever it raises — not only
+        # `OSError` (the review's third pass): a part's bug is that part's, and the walk below is a part too.
         out, errors = {}, []
         def part(name, fn, into=None):
+            self._progressed()
             try:
                 r = fn()
                 out.update(r if into is None else {into: r})
-            except OSError as e:
+            except Exception as e:                          # noqa: BLE001
                 errors.append(f"{name}: {e}")
                 log.warning("%s: %s skipped this pass: %s", self.server, name, e)
+            self._progressed()
+
+        def measure():                                       # the one walk of the pass, not one per heartbeat
+            usage = self.usage()
+            self._volume_usage = {n: self.usage(n) for n in self.quotas}   # …and the same for the volumes with a ceiling
+            self.last_usage, self.usage_at = usage, self.wall()
+            return usage
         try:
             for sub, h in self.hooks.items():                    # a subsystem's own pass first: it may index or drop lines
                 part(sub, lambda h=h, sub=sub: {f"{sub}.{k}": v for k, v in h.pass_(self.wall()).items()})
             part("retain", self.retain, "removed")
-            self.last_usage, self.usage_at = self.usage(), self.wall()    # the one walk of the pass, not one per heartbeat
-            self._volume_usage = {n: self.usage(n) for n in self.quotas}  # …and the same for the volumes with a ceiling
-            out["usage"] = self.last_usage
+            part("usage", measure, "usage")
             part("relieve", self.relieve)
             part("mirror", self.mirror)
             if errors:

@@ -448,9 +448,14 @@ def test_an_alarm_is_written_down_and_an_observation_is_only_flushed():
         p = log.append(1000.0, "stats", n=1)                       # an observation pays nothing…
         assert synced == [] and dirs == []                         # …including for the file it just created
         pa = log.append(1001.0, "io.input", ALARM, port="1")
-        assert synced == [pa] and dirs == [os.path.dirname(pa)]    # the alarm pays for both, the entry included
-        log.append(1002.0, "io.input", ALARM, port="1")
-        assert synced == [pa, pa] and dirs == [os.path.dirname(pa)]   # …and once per bucket is enough
+        epoch_dir = os.path.dirname(pa)
+        assert synced == [pa] and dirs == [epoch_dir, os.path.dirname(epoch_dir)]   # the alarm pays for both, the entries included:
+        log.append(1002.0, "io.input", ALARM, port="1")                             # the file's, and the new epoch directory's
+        assert synced == [pa, pa] and len(dirs) == 2                # …and once per bucket is enough
+        # ten minutes on, the NEXT bucket in the same `e1` (the review's third pass): its entry is synced too — once
+        # per directory synced the first bucket's and none after it
+        pb = log.append(1001.0 + 600, "io.input", ALARM, port="1")
+        assert pb != pa and os.path.dirname(pb) == epoch_dir and dirs[2:] == [epoch_dir]
     finally:
         ev.durably, ev.durable_dir = real_durably, real_dir
 
@@ -699,13 +704,14 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
     import time
     box = Box()
     res, rsrv = _resource_process(box)
+    res.clock = box.clock                                             # the pulse's clock is monotonic: the test's own
     try:
         res.PULSE_SECONDS = 0.02
         first = res.heartbeat()
 
         class Slow:                                                   # a subsystem's own pass, over a long archive
             def pass_(self, now):
-                box.wall.advance(100)
+                box.wall.advance(100); box.clock.advance(100)
                 time.sleep(0.2)
                 return {}
 
@@ -722,7 +728,8 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
 
         class Stuck(Slow):
             def pass_(self, now):
-                box.wall.advance(res.PULSE_LIMIT * res.lost_after + 1); time.sleep(0.2)
+                box.wall.advance(res.PULSE_LIMIT * res.lost_after + 1); box.clock.advance(res.PULSE_LIMIT * res.lost_after + 1)
+                time.sleep(0.2)
                 return {}
 
         res.register("slow", Stuck())
@@ -730,6 +737,80 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
         assert seen["srv-1"]["ts"] < box.wall() - res.lost_after and "srv-1" not in res.live_resources()
         res.heartbeat()
         assert "srv-1" in res.live_resources()
+    finally:
+        rsrv.shutdown()
+
+
+def test_the_pulse_survives_a_failed_beat_and_stops_on_no_progress_not_on_a_long_pass():
+    """The review's third pass. The pulse thread died on its first error — one store write that failed during a
+    five-minute pass, and the resource was silent, its recordings moved off a sound server. It counted by the wall
+    clock, and stopped at four `lost_after` of TOTAL time, which a big archive legitimately takes. Now a failed beat
+    is one beat; the limit is four `lost_after` WITHOUT PROGRESS, by a monotonic clock."""
+    import time
+    box = Box()
+    res, rsrv = _resource_process(box)
+    res.clock = box.clock
+    try:
+        res.PULSE_SECONDS = 0.02
+        res.heartbeat()
+        real, failed = box.objects.put, []
+
+        def put(key, data, **kw):
+            if key.endswith("/heartbeat") and not failed:
+                failed.append(key)
+                raise OSError("the store blinked")
+            return real(key, data, **kw)
+        box.objects.put = put
+
+        class Long:                                                   # long in total, and moving all the time
+            def pass_(self, now):
+                for _ in range(6):
+                    box.wall.advance(res.lost_after); box.clock.advance(res.lost_after)
+                    res._progressed()                                 # what the walk and the retention say as they go
+                    time.sleep(0.1)
+                return {}
+
+        res.register("long", Long())
+        seen = {}
+        mirror = res.mirror
+        res.mirror = lambda: seen.update(resources_seen(box.objects)) or mirror()
+        res.pass_()
+        assert failed and seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()   # beat on after the failure
+        assert seen["srv-1"]["pass_seconds"] > res.PULSE_LIMIT * res.lost_after                  # past the old limit, still beating
+    finally:
+        rsrv.shutdown()
+
+
+def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_themselves():
+    """The review's third pass (minor; Н-M9's remainder). `usage()` ran outside any part and `part` caught only
+    `OSError`: one `.tmp` renamed between the listing and the `stat` took the whole pass — watermark and mirror with
+    it. The walk skips what is gone, it is a part of its own, and a part that raises anything is named in `errors`."""
+    import os as _os
+    box = Box()
+    res, rsrv = _resource_process(box)
+    try:
+        _os.makedirs(_os.path.join(box.archive, "vms", "7"), exist_ok=True)
+        open(_os.path.join(box.archive, "vms", "7", "keep.bin"), "wb").write(b"x" * 1000)
+        real_getsize = _os.path.getsize
+
+        def getsize(path):
+            if path.endswith("keep.bin"):
+                raise FileNotFoundError(path)                         # gone between the listing and the stat
+            return real_getsize(path)
+        _os.path.getsize = getsize
+        try:
+            assert res.usage() >= 0
+        finally:
+            _os.path.getsize = real_getsize
+
+        class Buggy:
+            def pass_(self, now):
+                raise KeyError("a bug in a subsystem's own pass")
+        res.register("buggy", Buggy())
+        ran = []
+        res.mirror = lambda: ran.append("mirror") or {"enabled": False, "mirrored": 0, "peers": []}
+        out = res.pass_()
+        assert ran == ["mirror"] and "usage" in out and any(e.startswith("buggy:") for e in out["errors"])
     finally:
         rsrv.shutdown()
 

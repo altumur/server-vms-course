@@ -469,3 +469,27 @@ def test_a_build_the_store_outgrew_while_it_ran_fences_and_does_not_rejoin():
     assert w.rejoin() is None and not w.recording_allowed             # nobody to rejoin as while the store is ahead
     box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA)}, cas=box.vars.get(SCHEMA_KEY)[1])    # the operator rolled it back
     assert w.rejoin() is not None and w.recording_allowed
+
+
+def test_a_schema_row_that_does_not_parse_fences_nobody_who_is_running_and_starts_nobody_new():
+    """The review's third pass (minor). `platform/schema` is read at every slot renewal, by every process: a hand edit
+    that made `version` a word raised out of `renew_slot` everywhere at once — no lease renewed, no heartbeat, the
+    whole fleet fenced by one field. A process that already read the schema keeps what it read; one that never did
+    refuses to start, as for a newer layout. Only a version that PARSES as newer fences a running build."""
+    from w2cplatform.contract import SCHEMA, SCHEMA_KEY, SchemaTooNew
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1")
+    assert w.lease_pass() == [] and w.recording_allowed
+    box.vars.put(SCHEMA_KEY, {"version": "one"}, cas=0)                              # a hand edit
+    assert w.renew_slot() and w.lease_pass() == [] and w.recording_allowed           # running: what it read stands
+    try:
+        VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+        raise AssertionError("a new process started on a schema it cannot read")
+    except SchemaTooNew as e:
+        assert "does not parse" in str(e)
+    box.vars.put(SCHEMA_KEY, {"version": str(SCHEMA + 1)}, cas=box.vars.get(SCHEMA_KEY)[1])
+    try:
+        w.renew_slot(); raise AssertionError("a newer layout that parses did not fence")
+    except SchemaTooNew:
+        pass

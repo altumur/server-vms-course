@@ -18,6 +18,12 @@ and says what it finds in its heartbeat, as a state of its own and not as a gues
 The cure is one — reopen the writer — and not more often than every ten minutes: if the cause is not the
 writer but what it is fed, reopening every minute only adds the time a writer takes to let go to what is
 lost. The heartbeat goes on telling the truth either way.
+
+This watch counts the VOLUME, and a volume can be `ok` while one of its recordings is never written: one camera
+of thirty whose group of pictures is larger than a block, refused every sample, while the other twenty-nine land.
+That is counted per recording, apart (the review's third pass): what the engine answered for each recording's
+samples (`RecSink.tally` → `samples_refused` in the status, `rec_samples_refused_total{unit,status}` on
+`/metrics`), and `last_frame_at` — the writer's last TAKE of that recording's frame, not the last frame offered.
 """
 from __future__ import annotations
 

@@ -270,3 +270,36 @@ def test_the_console_process_keeps_what_fired():
     assert "keep_what_fired(survey_ctl, rec_ctl)" in inspect.getsource(m._reap_loop), \
         "everything a model liked would stay on the device"
     assert "survey_ctl" in inspect.getsource(m.console)
+
+
+def test_one_watch_failing_is_that_watchs_trouble_and_not_the_passs():
+    """The review's third pass (M19's remainder). A door that answered with an error that is not "busy", and a model's
+    factory, raised out of the pass: every watch after the failing one was not looked at. A failed read ends that
+    watch's window where it got to — what was watched stays watched — and a failed model fails that unit only."""
+    box = Box(); spans = _holder(box)
+    ctl = _watch(box, name="7-lpr", start="earliest")
+    ctl.create({"name": "7-motion", "cam": "7", "kind": "motion", "start": "earliest"})
+    box.vars.put(SURVEY_SPEC.sub.assignment("s-1"), {"units": "7-lpr,7-motion", "rev": 2}, cas=box.vars.get(SURVEY_SPEC.sub.assignment("s-1"))[1])
+    w = _worker(box, spans); w.SECONDS_PER_PASS = m(100) - m(0)
+
+    class Broken:
+        def __init__(self, row):
+            raise ValueError("the model will not load")
+    w.models = {"lpr": Broken, "motion": Every}
+    w.reconcile_once()
+    assert w.status_by_unit["7-lpr"]["phase"] == "failed" and "will not load" in w.status_by_unit["7-lpr"]["why"]
+    assert w.status_by_unit["7-motion"]["phase"] == "running" and w.events_written > 0
+
+    w2 = _worker(box, spans, name="s-1"); w2.SECONDS_PER_PASS = m(100) - m(0); w2.models = {"lpr": Every, "motion": Every}
+    calls = []
+
+    def fetch(url, a, b):
+        calls.append((a, b))
+        if len(calls) == 2:
+            raise OSError("the holder's door answered 500")
+        return b"\0"
+    w2.fetch = fetch
+    w2.reconcile_once()
+    st = w2.status_by_unit["7-lpr"]
+    assert st["phase"] == "waiting" and "500" in st["why"]
+    assert Frontier(box.archive, "7-lpr").read() == m(10)            # the end of what WAS watched

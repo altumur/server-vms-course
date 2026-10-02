@@ -245,3 +245,43 @@ def test_a_device_whose_coverage_misses_the_interval_is_not_asked():
     w = _worker(box)
     w.reconcile_once()
     assert w.status_by_unit["7-lpr-1"]["phase"] == "waiting"
+
+
+def test_one_door_answering_is_not_the_whole_recording_and_the_job_waits_for_the_rest():
+    """The review's third pass. The recording moved from volume A to volume B half way through the interval; A's
+    recorder is alive and its door does not answer. The scan planned B's half, scanned it and said `done` — and
+    the other half was never scanned, for good. What answered is scanned; the job waits while a door is silent,
+    says which, and finishes once the door answers — A's half scanned too."""
+    from w2cplatform.contract import Heartbeat
+    from vms.config import REC_SPEC
+    box = _site(); _footage(box, "7", 2, 5, 10); _job(box)                 # B (the box's door): minutes 5–10
+    a = store(); footage(a, "7", 1, m(0), m(5), step=10)                    # A: minutes 0–5, behind a door that is down
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-a"), Heartbeat("r-a", box.wall(), [], {
+        "server": "srv-2", "archive_url": "http://127.0.0.1:9", "volume": a.name}).to_bytes())
+    w = _worker(box)
+    for _ in range(4):
+        w.reconcile_once()
+    st = w.status_by_unit["7-lpr-1"]
+    assert st["phase"] == "waiting" and "r-a" in st["why"] and st["covered"] == 300   # B's five minutes, scanned
+    assert [d["from"] for d in ScanLog(box.archive, "7-lpr-1").read()] == [m(5)]
+    srv = door(box, a, name="r-a", server="srv-2")                          # A's door answers again
+    try:
+        w.reconcile_once(); w.reconcile_once()
+        assert w.status_by_unit["7-lpr-1"]["phase"] == "done" and w.status_by_unit["7-lpr-1"]["covered"] == 600
+    finally:
+        srv.shutdown()
+
+
+def test_a_declared_volume_nobody_serves_keeps_the_job_waiting_and_a_disabled_one_does_not():
+    from vms import volumes
+    box = _site(); _footage(box, "7", 1, 0, 10); _job(box)
+    volumes.write(box.vars, {"name": "cold", "kind": "local", "server": "srv-9", "url": "/data/cold", "quota_bytes": 1 << 30})
+    w = _worker(box)
+    for _ in range(4):
+        w.reconcile_once()
+    st = w.status_by_unit["7-lpr-1"]
+    assert st["phase"] == "waiting" and "nobody serves volume cold" in st["why"]
+    volumes.write(box.vars, {"name": "cold", "kind": "local", "server": "srv-9", "url": "/data/cold", "quota_bytes": 1 << 30,
+                             "enabled": "false"})                           # the administrator's decision: nobody's
+    w.reconcile_once()
+    assert w.status_by_unit["7-lpr-1"]["phase"] == "done"

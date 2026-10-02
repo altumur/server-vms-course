@@ -106,24 +106,56 @@ def written_through(spans: list[Span]) -> float:
 # live recorder (`/timeline/<unit>`), since each serves the one volume it holds and a recording's life may have
 # been written into several. `None` when no door answered at all — "nobody could say" is not "nothing recorded".
 def recording_spans(objects, unit, t0: float, t1: float, now: float, timeout: float = 5.0) -> list[Span] | None:
+    seen = recording_read(objects, unit, t0, t1, now, timeout=timeout)
+    return seen.spans if seen.answered else None
+
+
+# …and what the answer is MISSING (the review's third pass). One door answering is not the whole recording: the
+# recording moved from volume A to B, A's door did not answer, and the scan planned B's half, scanned it, and
+# called the job `done` — the other half never scanned, for good. So the read says which doors were asked and did
+# not answer (`silent`, by recorder) and which declared volumes no answering door serves (`unread`: nobody holds
+# them now, or their holder is silent), and a scan that is missing anything is not finished (`DetJobWorker`).
+# A volume the administrator DISABLED is nobody's (`volumes.servable`), and waiting for it would be waiting for a
+# decision to change: it is not counted.
+@dataclass
+class Read:
+    spans: list[Span]
+    answered: bool                 # at least one door answered
+    silent: list[str]              # recorders whose door was asked and did not answer
+    unread: list[str]              # declared, enabled volumes whose index nobody read
+
+    @property
+    def partial(self) -> bool:
+        return bool(self.silent or self.unread)
+
+
+def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, timeout: float = 5.0) -> Read:
     import json as _json
     import urllib.request
     from w2cplatform.console import heartbeats
-    out, answered = set(), False
-    for _, hb in sorted(heartbeats(objects, "rec/").items()):
+    from w2cplatform.contract import is_live
+    out, answered, silent, read = set(), False, [], set()
+    for w, hb in sorted(heartbeats(objects, "rec/").items()):
         url = str(hb.extra.get("archive_url") or "")
-        if not url or now - hb.ts > 45.0:
+        if not url or not is_live("rec", hb.ts, now, 45.0):   # whose clock: `is_live` (the review's second pass, M9)
             continue
         try:
             with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
                 body = _json.loads(r.read())
         except (OSError, ValueError):
+            silent.append(w)
             continue
         answered = True
+        if hb.extra.get("volume"):
+            read.add(str(hb.extra["volume"]))
         for sp in body.get("spans", []):
             out.add(Span(str(unit), int(sp["epoch"]), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
                          str(sp.get("source", "live"))))
-    return sorted(out, key=lambda s: (s.start, s.epoch)) if answered else None
+    unread = []
+    if vars_ is not None:
+        from . import volumes
+        unread = [v.name for v in volumes.declared(vars_) if v.enabled and v.name not in read]
+    return Read(sorted(out, key=lambda s: (s.start, s.epoch)), answered, silent, unread)
 
 
 # Seconds of `[t0, t1)` the plan actually covers. The operator asked for an hour; if forty minutes were
@@ -228,13 +260,19 @@ class Frontier:
 
 
 # The plan minus what the log says is behind us — what a restarted worker picks up, and what a follower scans
-# next. By TIME, per stream, not by key: the index draws a stream's sequences that touch as ONE span, so the span a
-# follower scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and
-# matching keys would scan its first five minutes again and count every car in them twice.
+# next. By TIME, not by key: the index draws a stream's sequences that touch as ONE span, so the span a follower
+# scanned up to 10:05 is, a block later, a span to 10:10 — a different stretch with a different key, and matching
+# keys would scan its first five minutes again and count every car in them twice.
+#
+# And by time over the whole RECORDING, not per stream (the review's third pass). An epoch takeover moves the
+# minutes of the overlap from the old stream to the new one once the new one is visible: per stream, minutes
+# already scanned under `7/e1` were scanned again under `7/e2`, every car in them counted twice. The minutes are
+# the camera's whichever writer won them; scanned once is the point.
 def remaining(scans: list[Scan], log: ScanLog) -> list[Scan]:
-    from .archive import subtract
+    from .archive import parse_stream, subtract
     done: dict[str, list[tuple[float, float]]] = {}
     for d in log.read():
-        done.setdefault(str(d.get("stream", "")), []).append((float(d["from"]), float(d["to"])))
-    return [Scan(s.seg, a, b) for s in scans for a, b in subtract((s.t0, s.t1), done.get(s.seg.stream, []))
+        parsed = parse_stream(str(d.get("stream", "")))
+        done.setdefault(parsed[0] if parsed else str(d.get("stream", "")), []).append((float(d["from"]), float(d["to"])))
+    return [Scan(s.seg, a, b) for s in scans for a, b in subtract((s.t0, s.t1), done.get(str(s.seg.unit), []))
             if b - a > 1e-6]

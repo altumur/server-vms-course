@@ -38,7 +38,7 @@ from w2cplatform.variables import Variables
 
 from .config import DETJOB_SPEC
 from .detworker import FakeModel
-from .scan import ScanLog, covered, covered_by, device_recordings, plan, recording_spans, remaining, written_through
+from .scan import ScanLog, covered, covered_by, device_recordings, plan, recording_read, remaining, written_through
 
 DETJOB = DETJOB_SPEC.sub
 TERMINAL = ("done", "failed")
@@ -143,14 +143,20 @@ class DetJobWorker(Worker):
                 continue
 
             # What was recorded: the recording's spans, from the archive doors of the recorders holding its volumes.
-            # Nobody answering is not "nothing recorded": the job waits, and says why.
-            seen = recording_spans(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall())
+            # Nobody answering is not "nothing recorded": the job waits, and says why. And SOME doors answering is not
+            # the whole recording (the review's third pass): what answered is scanned, but the job is not `done`
+            # while a door was silent or a volume unread — it waits for them, and says which (`missing`).
+            read = recording_read(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall(),
+                                  vars_=self.vars)
             log_ = ScanLog(self.archive_root, job)
-            if seen is None:
+            if not read.answered:
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
                                                         why="no recorder's archive door answered: what was recorded is not known")
                 continue
+            seen = read.spans
+            missing = ([f"recorder {w}'s door did not answer" for w in read.silent]
+                       + [f"nobody serves volume {v}" for v in read.unread])
             scans = plan(seen, row["from"], row["to"])
             # FOLLOWING: the interval runs past what is recorded, and the end may yet be written. A scenario
             # asking for the minute after the alarm asks for footage that does not exist when it asks.
@@ -160,6 +166,11 @@ class DetJobWorker(Worker):
                 self._stop(job)
                 self.status_by_unit[job] = self._status(job, row, "following", log=log_,
                                                         why="the interval reaches past what is recorded — following the recording to its end")
+                continue
+            if not scans and missing:
+                self._stop(job)
+                self.status_by_unit[job] = self._status(job, row, "waiting", log=log_,
+                                                        why="nothing recorded in the volumes that answered — " + "; ".join(missing))
                 continue
             if not scans:
                 # Not "no events": no FOOTAGE, here. Two different silences, and which one it is decides
@@ -186,6 +197,11 @@ class DetJobWorker(Worker):
                 # the next block is minutes away, not a new job — and the row says nothing new.
                 self.status_by_unit[job] = self._status(job, row, "following", scans=scans, log=log_,
                                                         why="the interval reaches past what is recorded — following the recording to its end")
+                continue
+            if not left and missing:
+                self._stop(job)
+                self.status_by_unit[job] = self._status(job, row, "waiting", scans=scans, log=log_,
+                                                        why="what answered is scanned; not done — " + "; ".join(missing))
                 continue
             if not left:
                 self._stop(job)

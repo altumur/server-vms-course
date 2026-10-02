@@ -181,13 +181,18 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
     return made
 
 
+# What the standing detector of this camera and model is set up with — its params, its mask, its labels — and the
+# request's own `params` over them. A request that brought params used to bring ONLY them (the review's third
+# pass, Н-m7): the mask and the labels stayed behind, and the scenario's detector watched the whole frame on
+# whatever worker came first, gpu or not.
 def _settings(det_ctl, cam: str, kind: str, it: dict) -> dict:
-    out = {f: it[f] for f in ("params",) if it.get(f)}
-    if not out:
-        for d in sorted(det_ctl.units(), key=lambda d: str(d["id"])):
-            if str(d.get("cam")) == cam and str(d.get("kind")) == kind and not str(d["id"]).endswith(DETECT_KEY):
-                out = {f: d[f] for f in ("params", "mask", "labels") if d.get(f)}
-                break
+    out = {}
+    for d in sorted(det_ctl.units(), key=lambda d: str(d["id"])):
+        if str(d.get("cam")) == cam and str(d.get("kind")) == kind and not str(d["id"]).endswith(DETECT_KEY):
+            out = {f: d[f] for f in ("params", "mask", "labels") if d.get(f)}
+            break
+    if it.get("params"):
+        out["params"] = it["params"]
     return out
 
 

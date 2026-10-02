@@ -32,9 +32,9 @@ the two leaves an object nobody points at — harmless, and collectable. The
 other order leaves a row pointing at nothing, which is a unit that cannot
 start.
 
-The honest residue: nothing in the platform deletes an object, so unreferenced
-blobs accumulate and a sweep does not exist yet. It is written down rather than
-implied.
+What nobody names any more is collected: `SpecController.sweep_blobs` marks the
+digests no row names, and deletes them a pass and a grace later, after checking
+again — the one caller in the platform that deletes an object (Lesson 29).
 
 The spelling is `sha256-<hex>` — a dash, not a colon, because this string is
 also a key, and a key becomes a path on a filesystem, and a colon is not a path

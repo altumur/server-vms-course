@@ -72,6 +72,25 @@ def test_the_object_store_on_this_cluster_is_variables():
         pass                                                                    # the ACL comes with the token, as for every Variable
 
 
+def test_a_command_mark_is_create_only_on_the_cluster_store_too():
+    """The platform review's third pass. A worker marks a device command BEFORE it calls the device, and two holders
+    of one device in the same two seconds must not both believe they were first. On a box the directory says so
+    (`link`); here the store had nothing but last-writer-wins, and the worker read its mark back — A puts, A reads,
+    B puts, B reads: the relay pulsed twice. `put_new` is a Variable written with `cas=0`: raft's create-only."""
+    import json
+    from cluster.objectstore import VariablesObjectStore
+    v = FakeVariables()
+    a = VariablesObjectStore(v.as_writer("vmsworker", ["objects/*"]))
+    b = VariablesObjectStore(v.as_writer("vmsworker", ["objects/*"]))
+    assert a.put_new("vms/commands/r1", json.dumps({"instance": "a"}).encode())
+    assert not b.put_new("vms/commands/r1", json.dumps({"instance": "b"}).encode())
+    assert json.loads(a.get("vms/commands/r1"))["instance"] == "a"             # …and not written over
+    try:
+        VariablesObjectStore(v.as_writer("vmsworker", ["vms/epoch/*"])).put_new("vms/commands/r2", b"{}"); assert False
+    except Forbidden:
+        pass
+
+
 def test_every_writer_sees_one_log():
     """A ModifyIndex comes from ONE raft log, whichever token wrote. Two writers' views of the store must
     never hand out the same index — or a stale CAS can match a write it never saw, and an edit is lost with

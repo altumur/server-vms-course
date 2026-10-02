@@ -130,3 +130,41 @@ def test_what_was_recorded_is_asked_of_the_recorders_doors_and_nobody_answering_
         assert recording_spans(box.objects, "8", m(0), m(30), box.wall()) == []   # answered, and nothing there
     finally:
         srv.shutdown()
+
+
+def test_minutes_scanned_under_one_epoch_are_not_scanned_again_under_the_epoch_that_takes_them_over():
+    """The review's third pass (minor). e1's minutes 0–10 were scanned; then e2's footage of 5–20 became visible and
+    the plan gives the overlap to e2. Subtracted per stream, minutes 5–10 were scanned again under `7/e2` and every
+    car in them counted twice. Subtracted by time over the recording, only 10–20 is left."""
+    box = Box()
+    log = ScanLog(box.archive, "job-1")
+    for s in plan([sp(1, 0, 10)], m(0), m(30)):
+        log.append(s, events=3, at=m(11))
+    left = remaining(plan([sp(1, 0, 10), sp(2, 5, 20)], m(0), m(30)), log)
+    assert [(s.seg.epoch, s.t0, s.t1) for s in left] == [(2, m(10), m(20))]
+
+
+def test_the_read_says_which_doors_were_silent_and_which_volumes_nobody_read():
+    """One door answering is a partial answer, and says so: the recorder whose door was asked and did not answer,
+    the declared volumes no answering door serves. A disabled volume is nobody's and is not waited for."""
+    from w2cplatform.contract import Heartbeat
+    from vms import volumes
+    from vms.config import REC_SPEC
+    from vms.scan import recording_read
+    box = Box()
+    st = store()
+    footage(st, "7", 1, m(0), m(10), step=10)
+    srv = door(box, st)
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-gone"), Heartbeat("r-gone", box.wall() - 3600, [], {
+        "archive_url": "http://127.0.0.1:9", "volume": "old"}).to_bytes())    # silent for an hour: not asked
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-mute"), Heartbeat("r-mute", box.wall(), [], {
+        "archive_url": "http://127.0.0.1:9", "volume": "b"}).to_bytes())      # alive, its door does not answer
+    for name, on in ((st.name, True), ("b", True), ("off", False)):
+        volumes.write(box.vars, {"name": name, "kind": "local", "server": "srv-1", "url": "/x/" + name,
+                                 "quota_bytes": 1 << 30, "enabled": "true" if on else "false"})
+    try:
+        got = recording_read(box.objects, "7", m(0), m(30), box.wall(), vars_=box.vars)
+        assert got.answered and got.partial and got.silent == ["r-mute"] and got.unread == ["b"]
+        assert [(s.epoch, s.start, s.end) for s in got.spans] == [(1, m(0), m(10))]
+    finally:
+        srv.shutdown()

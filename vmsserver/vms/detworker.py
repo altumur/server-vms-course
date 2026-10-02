@@ -99,17 +99,27 @@ class DetWorker(Worker):
             src = self.rtp_source(row["cam"])
             if src is None:
                 self._stop(unit); self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "waiting", "why": "camera held by nobody"}; continue
-            if unit not in self.running:
-                if unit not in self.epochs:
-                    self.take_epoch(unit)                                       # one writer of det/<unit>/… at a time
-                self.running[unit] = self.models[row["kind"]](row)
-                self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "running", "events": 0, "server": src[0], "source": src[1]}
-            if self.may_write(unit):
-                for kind, fields in self.running[unit].observe(now):           # what the model saw, into the unit's bucket under its epoch
-                    # Suppression stands between the model and the file, last before the write, as in the
-                    # VMS worker: everything above is about whether this worker may speak about this unit
-                    # at all, and that does not change because the scene moved twice.
-                    self._write(unit, row, self.suppressor.lines(now, unit, kind, fields))
+            if unit not in self.epochs:
+                self.take_epoch(unit)                                           # one writer of det/<unit>/… at a time
+            # THE MODEL IS THE UNIT'S OWN TROUBLE (the review's third pass, M19's remainder). Its factory — a weights
+            # file missing, a mask that does not decode — and its `observe` raised out of the pass, and every unit
+            # after this one in the loop was not looked at, every pass. Now the unit says `failed` and why, its model is
+            # dropped so the next pass builds it afresh, and the others are served.
+            try:
+                if unit not in self.running:
+                    self.running[unit] = self.models[row["kind"]](row)
+                    self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "running", "events": 0, "server": src[0], "source": src[1]}
+                if self.may_write(unit):
+                    for kind, fields in self.running[unit].observe(now):       # what the model saw, into the unit's bucket under its epoch
+                        # Suppression stands between the model and the file, last before the write, as in the
+                        # VMS worker: everything above is about whether this worker may speak about this unit
+                        # at all, and that does not change because the scene moved twice.
+                        self._write(unit, row, self.suppressor.lines(now, unit, kind, fields))
+            except Exception as e:                                              # noqa: BLE001
+                log.exception("detector %s failed this pass", unit)
+                self._stop(unit)
+                self.status_by_unit[unit] = {"id": unit, "cam": row["cam"], "kind": row["kind"], "phase": "failed",
+                                             "why": f"the model failed: {e}"}
         self._flush_suppressed(now)
         for unit in list(self.running):
             if unit not in wanted:

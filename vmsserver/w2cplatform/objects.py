@@ -107,8 +107,12 @@ class FsObjectStore:
     # Creates the object only if there is none; `True` when THIS call made it. The file system's create-or-
     # tell-me-it-exists (`link` onto the final name, which fails on a name that is taken) — the one CAS a
     # store of last-writer-wins objects can offer, and the one a worker's command mark needs: two holders of
-    # one device must not both believe they were first (the review's second pass). A store without it is
-    # read back after the write instead (`VmsWorker.requests`).
+    # one device must not both believe they were first (the review's second pass). A store without it gets
+    # the command refused (`VmsWorker._mark`).
+    #
+    # DURABLE, both halves (the review's third pass): the bytes to the medium before the name is made, the
+    # directory entry after. The mark is written BEFORE the device is called; a mark the power took with it
+    # leaves no trace of a call that happened, and the next holder opens the door a second time.
     def put_new(self, key: str, data: bytes) -> bool:
         check(key, len(data), self.max_bytes)
         p = self._p(key)
@@ -117,10 +121,12 @@ class FsObjectStore:
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)
+                f.flush(); durably(f)
             try:
                 os.link(tmp, p)
             except FileExistsError:
                 return False
+            durable_dir(os.path.dirname(p))
             return True
         finally:
             try:

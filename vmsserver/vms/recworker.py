@@ -37,7 +37,7 @@ import threading
 import time
 
 from w2cplatform.console import heartbeats, holder_of
-from w2cplatform.contract import Subsystem
+from w2cplatform.contract import Subsystem, is_live
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.objects import ObjectStore
 from w2cplatform.variables import Variables
@@ -65,11 +65,20 @@ REC = Subsystem("rec")
 # pipeline started. A remount replaces the `Archive`; a sink that kept the old one would write into a closed
 # volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
 # next key frame after a remount opens a sequence in the new writer, and the recording goes on.
+#
+# PER RECORDING, WHAT WAS LOST (the review's third pass). The writer watch counts the VOLUME: one camera of thirty
+# whose group of pictures is larger than a block is refused every sample, never written at all, and the volume —
+# landing what the other twenty-nine send — says `ok`. So the sink says what the engine answered for each of ITS
+# samples to `tally(unit, status)`: `OK`, or why not — `SEQUENCE_TOO_LARGE`, `WRITER_STOPPED`, `UNAVAILABLE` (no
+# volume, no daemon) — and `SEQUENCE_LOST`, taken but an earlier sequence of this stream lost. The recorder sums
+# them per recording (`RecWorker._tally`): the status carries them, `/metrics` turns them into
+# `rec_samples_refused_total{unit,status}`, and `last_frame_at` is the moment the writer last TOOK a frame.
 class RecSink:
-    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None, tally=None):
         self.store_of = store if callable(store) else (lambda: store)
         self.unit, self.epoch, self.on_lost, self.backfill = str(unit), int(epoch), on_lost, backfill
         self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
+        self.tally = tally or (lambda unit, status: None)
         self.taken = self.refused = 0
 
     @property
@@ -83,13 +92,16 @@ class RecSink:
                 raise Unavailable("PUT_MEDIA", "no volume open")
             st = store.put(self.unit, self.epoch, sample, self.backfill)
             self.taken += 1
+            self.tally(self.unit, st)
             return st
         except Unavailable:
+            self.tally(self.unit, "UNAVAILABLE")
             if self.on_lost is not None:
                 self.on_lost()
             raise
         except ObsdError as e:
             self.refused += 1
+            self.tally(self.unit, e.name)
             if e.name == "WRITER_STOPPED" and self.on_lost is not None:
                 self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
             elif self.on_wrong is not None and classify(e).kind == "wrong":
@@ -131,10 +143,28 @@ class RecWorker(VmsWorker):
     # frame on the volume; stopping the backup at that word would leave the seam between them to nobody. With a minute of
     # overlap the two archives overlap, and backfill finds the seam from both sides.
     HOLD_AFTER = 60.0
-    # How much of the past a held backup keeps in memory (Lesson 26). When the primary is found missing —
-    # `START_GRACE` after it went quiet, plus a pass — the ring is written first, so the backup's footage
-    # starts BEFORE the moment anybody noticed. Thirty seconds covers the grace, a pass and a keyframe.
-    PREBUFFER = 30.0
+    # How old a recorder's heartbeat may be before what it said stops counting: the platform's `lost_after`.
+    LOST_AFTER = 45.0
+    # How much of the past a held backup keeps in memory (Lesson 26). When the primary is found missing the ring
+    # is written first, so the backup's footage starts BEFORE the moment anybody noticed — and the ring must
+    # reach back to the moment it stopped being written.
+    #
+    # THE PRIMARY'S SERVER DIES (the review's third pass). In one cluster, without М12's agent, nothing tells a
+    # backup the stream broke: `stream_says` is a hook nothing in this package sets — `vms/__main__` does not,
+    # only the domain's ingest does (М12, `domainvms/domain/ingest.py`) — so the book decides, and the book is
+    # the primary's recorder's heartbeat. A server that loses power at T last heartbeated at most ten seconds
+    # before, and that heartbeat stops counting at T + `LOST_AFTER` at the latest. Thirty seconds of ring, with
+    # `START_GRACE` on top, began the backup's footage at T + 35.
+    #
+    # Two changes, and both are needed. A recorder that VANISHED — its last heartbeat said `running`, and it went
+    # stale — gets no grace: the grace is for a recording that has not started yet, and this one was written
+    # until its heartbeat stopped; the time it is "not written since" is that heartbeat's, not the moment we
+    # noticed (`primary_needs_cover`). And the ring reaches past `LOST_AFTER`: that alone is longer than thirty
+    # seconds. Sixty covers it, a pass and a keyframe — the product's number too. The price is memory: twice the
+    # ring per held backup — at 4 Mbit/s 30 MB instead of 15, at 8 Mbit/s 60 MB; a recorder holding fifty
+    # backups of 4-Mbit cameras holds 1.5 GB instead of 0.75. (Enlarging the ring instead of dropping the grace
+    # would have needed 75 s — `LOST_AFTER`, the grace and a pass — for the same cover.)
+    PREBUFFER = 60.0
     # MEMORY FIRST (feedback CB). A camera that pushes its own stream can CONTINUE it after a break: its ingest
     # says how far the recording got (`have`) and the camera sends the rest from memory (`CameraPusher`). For such
     # a stream the card need not start the moment the break is noticed — a ten-second Wi-Fi drop would write
@@ -145,6 +175,11 @@ class RecWorker(VmsWorker):
     # RTSP), there is nothing to wait for, and the card writes at once, as before.
     DETECTION = 10.0                                 # how late a break is noticed: the pusher's poll, a pass
     DEFER_MARGIN = 5.0                               # a keyframe and a pass of the gate
+    # How much of a break the CAMERA keeps to continue from (`CameraPusher.hold_seconds`, М12): the deferral is
+    # bounded by it, not by our ring — a break that ends while the card still waits is in the camera's memory
+    # ONLY, and a wait longer than that memory loses the break's beginning. It was the ring's length while both
+    # were thirty seconds; the ring grew for a dead server, and the camera's memory did not.
+    CONTINUE_REACH = 30.0
     # How old the agent's last contact with the domain may be before the book of primaries it carried stops
     # counting (М12 Lesson 13). The same 45 s a heartbeat gets: past it, the backup cannot know whether the
     # primary in the other cluster is written, and records.
@@ -230,7 +265,14 @@ class RecWorker(VmsWorker):
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
         self._hold_confirmed = self.clock()          # when `volume_pass` last ran to its end
-        self.fed: dict = {}                         # recording -> (bytes offered, when that last grew): `last_frame_at`
+        self.fed: dict = {}                         # recording -> (bytes offered, when that last grew)
+        self.running_since: dict = {}               # recording -> when this recorder first saw it running, this time
+        # What the engine answered for each recording's samples (`RecSink.tally`): `{recording: {status: n}}` for
+        # every answer but `OK`, and when the writer last TOOK one of its samples. Written on the pipelines'
+        # streaming threads, read by the heartbeat: under a lock.
+        self.samples_lost: dict[str, dict[str, int]] = {}
+        self.taken_at: dict[str, float] = {}
+        self._tally_lock = threading.Lock()
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
         self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
@@ -334,7 +376,7 @@ class RecWorker(VmsWorker):
         # NAME — a fenced writer and its successor write two streams, and nothing is overwritten.
         out = dict(cam, source=src[1], source_server=src[0], via="shm" if src[1].startswith("shm://") else "rtsp",
                    sink=RecSink(lambda: self.store, cam["id"], cam.get("epoch", 0), on_lost=self._lost_engine,
-                                on_wrong=self._volume_refuses))
+                                on_wrong=self._volume_refuses, tally=self._tally))
         # A `when: offline` backup runs ON HOLD while its primary is written: the pipeline is up, subscribed,
         # and recording into a ring in memory, writing nothing (Lesson 26).
         if self._offline_backup(cam):
@@ -362,6 +404,30 @@ class RecWorker(VmsWorker):
     def note_written(self, unit, capture_t: float) -> None:
         self.written_through[str(unit)] = max(float(capture_t), self.written_through.get(str(unit), float("-inf")))
 
+    # One answer of the engine about one of a recording's samples (`RecSink.tally`).
+    def _tally(self, unit, status: str) -> None:
+        with self._tally_lock:
+            if status == "OK" or status == "SEQUENCE_LOST":
+                self.taken_at[str(unit)] = self.wall()
+            if status != "OK":
+                lost = self.samples_lost.setdefault(str(unit), {})
+                lost[status] = lost.get(status, 0) + 1
+
+    # When the recording last got a frame onto the volume: the writer's last TAKE — not the last frame offered to
+    # the sink, which a refusing engine leaves fresh for ever (the review's third pass). A recording that has
+    # taken nothing since it started is counted from its start, so its age grows from there. None: nothing
+    # measures this recording — no sink took anything and the actuator counts nothing.
+    def last_frame_at(self, uid) -> float | None:
+        key = str(uid)
+        with self._tally_lock:
+            taken = self.taken_at.get(key)
+        since = self.running_since.get(uid, self.running_since.get(key))
+        if since is None:
+            return taken
+        if taken is None:
+            return since if uid in self.fed or key in self.fed else None
+        return max(taken, since)
+
     def status_extra(self, cam: dict) -> dict:
         src = self.source(cam["cam"])
         out = {"cam": str(cam["cam"]), "source": src[1] if src else None, "via": (None if src is None else "shm" if src[1].startswith("shm://") else "rtsp")}
@@ -373,8 +439,13 @@ class RecWorker(VmsWorker):
         why = getattr(self, "unreachable_sources", {}).get(str(cam["id"]))
         if why:
             out.update(source_unreachable=True, why=f"source unreachable: {why}")
-        if cam["id"] in self.fed:
-            out["last_frame_at"] = self.fed[cam["id"]][1]
+        last = self.last_frame_at(cam["id"])
+        if last is not None:
+            out["last_frame_at"] = last
+        with self._tally_lock:
+            lost = dict(self.samples_lost.get(str(cam["id"]), {}))
+        if lost:
+            out["samples_refused"] = lost                # cumulative since this process started, per engine answer
         if str(cam["id"]) in self.written_through:
             out["written_through"] = self.written_through[str(cam["id"])]
         if str(cam["id"]) in self.depths:
@@ -490,7 +561,7 @@ class RecWorker(VmsWorker):
     resumes = None                                       # (row) -> bool
 
     def defer_for(self) -> float:
-        return max(0.0, self.PREBUFFER - self.DETECTION - self.DEFER_MARGIN)
+        return max(0.0, min(self.PREBUFFER, self.CONTINUE_REACH) - self.DETECTION - self.DEFER_MARGIN)
 
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
         now = self.wall() if now is None else now
@@ -501,8 +572,21 @@ class RecWorker(VmsWorker):
         if carried is not None:
             return carried
         names = volumes.backups(self.vars)
-        running = {str(st.get("id")) for hb in heartbeats(self.objects, self.SUB.name + "/").values()
-                   if now - hb.ts <= 45.0 for st in hb.status if st.get("phase") == "running"}
+        # Running in a LIVE heartbeat (`is_live`: a clock from the future does not keep a dead recorder alive — the
+        # review's second pass, M9), and — the third pass — running in one that went stale not long ago: a recorder
+        # that VANISHED. Its recordings were written until its last heartbeat, so that is when "not written" began,
+        # and the grace for a start does not apply; past the grace, the rule below covers it anyway.
+        running, vanished = set(), {}
+        for hb in heartbeats(self.objects, self.SUB.name + "/").values():
+            live = is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER)
+            if not live and not (now - hb.ts <= self.LOST_AFTER + self.START_GRACE):
+                continue
+            for st in hb.status:
+                if st.get("phase") == "running":
+                    if live:
+                        running.add(str(st.get("id")))
+                    else:
+                        vanished[str(st.get("id"))] = max(hb.ts, vanished.get(str(st.get("id")), hb.ts))
         need = False
         for key in self.vars.list(self.SUB.config(self.ROWS, "")):
             items, _ = self.vars.get(key)
@@ -516,7 +600,7 @@ class RecWorker(VmsWorker):
             if not should or str(other["id"]) in running:
                 self._not_written_since.pop(str(other["id"]), None)
                 continue
-            since = self._not_written_since.setdefault(str(other["id"]), now)
+            since = self._not_written_since.setdefault(str(other["id"]), min(now, vanished.get(str(other["id"]), now)))
             need = need or now - since >= self.START_GRACE
         return need
 
@@ -614,8 +698,12 @@ class RecWorker(VmsWorker):
         running = list(self.reconciler.actual)
         vals = [measure(c) for c in running] if measure else []
         # Per recording: when what it was offered last GREW. A pipeline that is up and fed nothing — a source
-        # that stalled, a fan-out that stopped — is `running` for ever; this is the number that says otherwise.
-        # A recording that has taken nothing yet is counted from when it was first seen running.
+        # that stalled, a fan-out that stopped — is `running` for ever; `last_frame_at` is the number that says
+        # otherwise, and a recording that has taken nothing yet is counted from when it was first seen running.
+        for c in running:
+            self.running_since.setdefault(c, wall)
+        for c in [c for c in self.running_since if c not in running]:
+            del self.running_since[c]
         for c, v in zip(running, vals):
             if v is None:
                 continue

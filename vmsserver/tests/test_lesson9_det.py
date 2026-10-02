@@ -168,3 +168,30 @@ def test_nothing_with_a_gpu_is_unplaceable_and_says_why():
         assert det_ctl.ensure_placed()[0].worker == "d-2"                                # a GPU arrives: placed, nothing else moves
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_one_detectors_model_failing_is_that_detectors_trouble_and_not_the_passs():
+    """The review's third pass (M19's remainder). The model's factory — a weights file missing, a mask that does not
+    decode — and its `observe` raised out of the pass, and every detector after it in the loop was not looked at,
+    every pass. The broken one says `failed` and why; the others run and write."""
+    box, ctl, det_ctl, w, srv, base = _box()
+    try:
+        gpu = _det(box, "d-1")
+
+        class Broken:
+            def __init__(self, row):
+                raise FileNotFoundError("lpr.weights")
+
+        class Sees:
+            def __init__(self, row): self.row = row
+            def observe(self, now): return [("motion", {"area": 1})]
+            def close(self): pass
+        gpu.models = {"lpr": Broken, "motion": Sees}
+        call(base, "POST", "/det/units", {"name": "1-lpr", "cam": "1", "kind": "lpr"}, {"Idempotency-Key": "k1"})
+        call(base, "POST", "/det/units", {"name": "1-motion", "cam": "1", "kind": "motion"}, {"Idempotency-Key": "k2"})
+        det_ctl.ensure_placed()
+        assert gpu.reconcile_once() == ["1-motion"]
+        assert gpu.status_by_unit["1-lpr"]["phase"] == "failed" and "lpr.weights" in gpu.status_by_unit["1-lpr"]["why"]
+        assert gpu.status_by_unit["1-motion"]["phase"] == "running" and gpu.events_written >= 1
+    finally:
+        srv.shutdown(); srv.server_close()
