@@ -568,7 +568,8 @@ def test_a_span_a_door_answered_that_does_not_parse_costs_that_door_and_not_the_
     and the door is named among those that did not answer; the good door's minutes are drawn and exported."""
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-    from w2cplatform import rows
+    import sys
+    rows = sys.modules["w2cplatform.rows"]                              # the module in use (`test_slot_fence` says why)
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
     box = Box()

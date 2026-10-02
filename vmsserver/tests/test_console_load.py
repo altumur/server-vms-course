@@ -438,9 +438,10 @@ def test_a_refusal_is_read_by_the_client_not_reset_under_it():
 def test_sixteen_addresses_that_go_on_sending_after_their_refusal_leave_the_honest_refusal_readable():
     """The review's eighth pass, minor — a run: the flood went on sending after its 503s, the 256 places of the waiting
     room (`linger`) were all its own, and the next refusals were closed at once — reset: an honest client got
-    `ConnectionResetError` in 30–35 of 48 at sixteen addresses. An address holds `LINGER_PER_ADDRESS` places, and a
-    refusal past them has what arrived of it read and dropped before it is closed (`_drain_close`). Sixteen addresses
-    hold sixty-four places of `LINGER_MAX`; the honest client's refusal waits in a place of its own and is read whole."""
+    `ConnectionResetError` in 30–35 of 48 at sixteen addresses (25 of 48 here, before). Once the room is half taken an
+    address adds no place past `LINGER_PER_ADDRESS`, so the other half is the other addresses'; and a refusal with no
+    place has what arrived of it read and dropped before it is closed (`_drain_close`). The flood fills its half; the
+    honest client's refusal waits in a place of its own and is read whole."""
     from w2cplatform import console as wc
     was = _env(CONSOLE_CONNECTIONS=2, CONSOLE_PER_ADDRESS=2, CONSOLE_RESERVE=0, CONSOLE_HEADER_TIMEOUT=30)
     box = Box()
@@ -488,10 +489,10 @@ def test_sixteen_addresses_that_go_on_sending_after_their_refusal_leave_the_hone
         t = threading.Thread(target=flood, daemon=True)
         t.start()
         for _ in range(100):
-            if len(wc.linger.socks) >= 16 * wc.LINGER_PER_ADDRESS - 8:
+            if len(wc.linger.socks) >= wc.LINGER_MAX // 2:
                 break
             time.sleep(0.05)
-        assert all(n <= wc.LINGER_PER_ADDRESS for n in dict(wc.linger.by_addr).values()), wc.linger.by_addr
+        assert len(wc.linger.socks) < wc.LINGER_MAX, len(wc.linger.socks)            # the flood's half, not the room
         body, resets = b"y" * (256 << 10), 0
         for i in range(48):
             s = _as(who, "198.51.100.77", port)

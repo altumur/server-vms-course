@@ -544,7 +544,11 @@ class _Linger:
             return _close(sock)
         key = addr_key(addr) if addr else ""
         with self.lock:
-            room = len(self.socks) < LINGER_MAX and self.by_addr.get(key, 0) < LINGER_PER_ADDRESS
+            # An address's share binds once the room is half taken: below that a client that retries fast, or a page's
+            # parallel requests, wait as they did; above it nobody adds past `LINGER_PER_ADDRESS`, so the half left is
+            # the other addresses'.
+            room = len(self.socks) < LINGER_MAX and (self.by_addr.get(key, 0) < LINGER_PER_ADDRESS
+                                                     or len(self.socks) < LINGER_MAX // 2)
             if room:
                 self.socks[sock] = (time.monotonic() + LINGER, 0, key)
                 self.by_addr[key] = self.by_addr.get(key, 0) + 1
