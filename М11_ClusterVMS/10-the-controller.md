@@ -138,7 +138,26 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
 
 Это **копия**: сами строки остаются в raft с одним писателем. Представление для чтения М12 строится из этих объектов и heartbeat'ов воркеров, и никогда — из Variables. Его `ts` — возраст, который консоль домена показывает на каждой строке этого кластера. Это мысль урока 6: RPO поднялся на уровень выше и стал числом на экране.
 
-Контроллер публикует снимок каждые пять секунд рядом с `ensure_placed()` и `redistribute()`. Эти три вызова — весь его цикл.
+Контроллер публикует снимок каждые пять секунд рядом с `ensure_placed()`, `redistribute()` и `ensure_home(1)`. Эти четыре вызова — весь его цикл, и каждый в своём `try`:
+
+```python
+    while not stop.is_set():
+        _steps("placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.publish_snapshot)
+        stop.wait(5)
+```
+
+```python
+# Each step of a controller's pass in a try of its own (the review's seventh pass, part 2): they shared one, so a step
+# that raised — one row it could not read — skipped every step after it, the snapshot the layer above reads included.
+def _steps(what: str, *steps) -> None:
+    for step in steps:
+        try:
+            step()
+        except Exception:                         # noqa: BLE001
+            logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
+```
+
+**Шаг, который упал, не отменяет остальные.** Четыре вызова стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал. Так же устроен цикл контроллера записей (`reccontroller`: `ensure_placed`, `redistribute`, `ensure_home(1)`, `unplace_deleted`).
 
 ## Шаг 6 — Консоль
 

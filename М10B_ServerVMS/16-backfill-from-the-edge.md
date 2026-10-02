@@ -245,7 +245,11 @@ POST /backfill {"cam": 41, "from": NaN, "to": …}          →  400: концы
 POST /backfill …восьмая неотвеченная заявка того же человека →  429 (пятое ревью: BACKFILLS_OPEN = 7; шестое — счёт по CAS)
 POST /backfill {"cam": 41, "from": t, "to": t + 0.5}       →  400: короче BACKFILL_MIN = 1 с (шестое ревью)
 POST /backfill {"cam": 41, "from": …, "to": now + 3600}   →  400: кончается дальше BACKFILL_AHEAD = 60 с от часов консоли (шестое ревью)
+POST /backfill {"cam": 41, "from": 0, "to": 600}          →  400: 1970 — кончается раньше, чем запись показывает или устройство держит (седьмое ревью)
+POST /backfill {"cam": 41, "from": false, "to": true}     →  400: true и false — не секунды (седьмое ревью)
 ```
+
+Две последние строки — от седьмого ревью (мелкие). `{"from": 0, "to": 600}` проходил все проверки, становился строкой и сутки держал одно из семи мест своего человека, хотя ни один регистратор такую заявку не выкачает. Теперь диапазон, который целиком старше того, что запись показывает (`visible_from` по её `retention_days`: двери никогда не покажут выкачанное), или того, что держит устройство (начало `coverage`, если держатель его объявляет), — 400 `range too old`. А `float(False)` — это 0.0, тот же 1970: булево значение в `from` или `to` — 400 `bad range` до всякой арифметики. Тест: `test_console_gate.py::test_a_backfill_of_a_time_nothing_could_hold_is_refused`.
 
 Дозапись кладёт кадры **в поток записи**, а у камеры их может быть несколько — по одной на архив, в который её пишут (урок 10). «Та самая» запись из них не выбирается сама, поэтому проситель может её назвать; без имени берётся первая, и ответ говорит, какая это была. Имя не от этой камеры — `400`, а не тихая запись не туда.
 
@@ -260,22 +264,33 @@ POST /backfill {"cam": 41, "from": …, "to": now + 3600}   →  400: конча
 Регистратор читает заявки в каждом проходе:
 
 ```python
-    # (After the fourth review: resumes from the first moment the volume — and `landing` — does not show
-    # (`_served_to`), so a restart does not read a day again from its start; `fetched` is trimmed to rows that
-    # still stand, and an answered request is not fetched again while its row waits for the console.)
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         if self.archive_busy():
             return []
         mine = {str(r["id"]) for r in self.rows}
-        ...
-            if not it or str(it.get("unit", "")) not in mine:
-                continue                                     # another recorder's recording: not ours to fetch
+        done: list[dict] = []
+        keys = sorted(self.vars.list(REC.requests_prefix()))
+        # A request answered is remembered while its ROW stands, and not after — the base worker's rule (`VmsWorker.
+        # requests`), which this override did not keep: `fetched` grew by one id per request for the life of the
+        # process, and a request whose row the console had not reaped yet was fetched again from its start (the
+        # review's fourth pass, Т-m13). The same for how far each one got.
+        present = {k.rsplit("/", 1)[1] for k in keys}
+        self.fetched = [r for r in self.fetched if r in present]
+        self._requested = {r: v for r, v in self._requested.items() if r in present}
+        self._requests_read = {r: v for r, v in self._requests_read.items() if r in present}
+        for key in keys:
             ...
-            if not srcs:
-                continue                                     # nobody holds the device and no backup answers; ask again next pass
+            if not it or str(it.get("unit", "")) not in mine or key.rsplit("/", 1)[1] in self.fetched:
+                continue                                     # another recorder's recording, or answered already
+            ...
+            unit, cam = str(it["unit"]), str(it.get("cam", it["unit"]))
+            rid = key.rsplit("/", 1)[1]
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
+            # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
+            # holder's commands): read bare, it raised out of `requests` on every pass, and no request behind it — any
+            # recording's — was fetched. Answered, so the console clears the row.
             try:
                 t0, t1 = float(it["from"]), float(it["to"])
             except (KeyError, TypeError, ValueError):
@@ -286,18 +301,25 @@ POST /backfill {"cam": 41, "from": …, "to": now + 3600}   →  400: конча
             ours = self.our_coverage(unit)
             if unit in self.reconciler.actual:
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
-            if t1 <= t0:
-                continue
+            ...
+            srcs = self.sources_of({"id": unit, "cam": cam, "home": next((r.get("home") for r in self.rows if str(r["id"]) == unit), "")})
+            if not srcs:
+                continue                                     # nobody holds the device and no backup answers; ask again next pass
+            upto = min(t1, t0 + self.RANGE_CAP)
             # Each source in turn until one serves it. A source that FAILED says nothing about the range — the
             # request stays, for the next pass; reported as fetched, the console would delete what nobody served.
             r = {}
             for src in srcs:
-                r = self.fetch_from(unit, cam, src, t0, t1)
+                r = self.fetch_from(unit, cam, src, t0, upto)
                 if not r.get("error"):
                     break
             if r.get("skipped") or r.get("error"):
                 continue
+            ...
+            self._requested.pop(rid, None)
             self.fetched.append(rid)                         # the heartbeat says so; the console removes the row
+            done.append({**r, "request": rid})
+        return done
 ```
 
 Заявка — работа **вне бюджета обычного прохода и вне окна**: её попросил человек, и она срочна по определению. Бюджет и окно — для фоновой уборки, не для ответа на запрос. Нижней границы по первой записанной секунде (шаг 10) у заявки тоже нет: человек может попросить любой час.
@@ -310,7 +332,7 @@ POST /backfill {"cam": 41, "from": …, "to": now + 3600}   →  400: конча
 
 **Не в потоке цикла.** Заявка — час с карты камеры, минуты выкачки; базовый `pump_once` обслуживает заявки на потоке цикла (`serve_requests`), и для воркера это верно — импульс реле мгновенен. У регистратора `serve_requests` ничего не делает, а `requests()` зовётся первым делом в потоке дозаписи (`backfill_in_background`), перед плановыми диапазонами: проход ждёт его `BACKFILL_WAIT` и идёт дальше, аренды продлеваются, heartbeat уходит (ревью платформы, B3; шов — `VmsWorker.serve_requests`). Тест: `test_an_operators_request_is_served_off_the_loops_thread`.
 
-Удалить строку регистратор не может: токен воркера не пишет конфигурацию (урок 10 М10A). Поэтому он **сообщает** сделанное в heartbeat (`fetched`), а строку убирает консоль (`clear_requests`); заявку, которую сутки никто не выкачал, консоль кончает сама (шаг 8). Заявку, которую он не смог обслужить — аренда истекла, источника нет, все источники ответили ошибкой, — он не называет сделанной, иначе консоль удалила бы то, чего никто не выкачал. Ошибка источника ничего не говорит о диапазоне: сессию отказали, сеть оборвалась. Строка остаётся и ждёт следующего прохода.
+Удалить строку регистратор не может: токен воркера не пишет конфигурацию (урок 10 М10A). Поэтому он **сообщает** сделанное в heartbeat (`fetched`), а строку убирает консоль (`clear_requests`); заявку, которую сутки никто не выкачал, консоль кончает сама (шаг 8). Heartbeat несёт не последние 32 id, как раньше, а каждый отвеченный, от старых к новым, сколько влезает в `FETCHED_BYTES` (8 КиБ); убранная строка уходит и из `fetched`, и следующий heartbeat несёт следующие. Консоль убирает отвеченные строки своим коротким циклом (`_clear_loop`) каждые `jobs.CLEAR_EVERY` = 2 с, не читая ни одной строки (`clear_requests(sweep=False)`: листинг семейства и heartbeat'ы его воркеров); заявки старше суток, которым нужно прочитать строку, кончает по-прежнему проход раз в 30 с. Раньше уборка шла только раз в 30 с, и за держателем, отвечающим до шестнадцати команд в секунду, строки копились без предела (седьмое ревью, M6; урок 4). Тест: `test_long_poll.py::test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares_nothing_failed`. Заявку, которую он не смог обслужить — аренда истекла, источника нет, все источники ответили ошибкой, — он не называет сделанной, иначе консоль удалила бы то, чего никто не выкачал. Ошибка источника ничего не говорит о диапазоне: сессию отказали, сеть оборвалась. Строка остаётся и ждёт следующего прохода.
 
 Тесты: `test_a_request_is_fetched_outside_the_window_and_the_budget`, `test_a_request_for_somebody_elses_recording_is_left_alone`, `test_a_request_the_recorder_could_not_serve_is_not_reported_as_served`, `test_backfill_bounds.py::test_a_request_a_source_failed_to_serve_stays_for_the_next_pass` — исполнитель, у которого выкачка падает с `range_error`: `requests` ничего не сделал, `fetched` пуст, а строка `rec/requests/1-x` на месте.
 

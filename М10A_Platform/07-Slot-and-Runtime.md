@@ -124,26 +124,18 @@ class Slot:
 **Строка, которая не разбирается, — не кандидат, и только.** Первая версия разбирала каждую строку голым `Slot.from_items`. Одна чужая строка со словом вместо числа (`until: "soon"` — правка руками, оборванная запись) бросала `ValueError` из каждого захвата: экземпляр, отдавший своё имя, оставался «никем» навсегда, а его ёмкость пропадала молча — исключение каждые восемь секунд писал в лог цикл, и больше никто (шестое ревью). Теперь слоты читает `read_slot`:
 
 ```python
-SLOTS_GARBLED: dict[str, int] = {}                # subsystem -> slot rows that did not parse, this process
-_garbled_slots: set[str] = set()
+SLOTS = Table("slot", "skipped — nobody claims it until it is mended")
+SLOTS_GARBLED, _garbled_slots = SLOTS.counts, SLOTS.bad     # subsystem -> slot rows that did not parse, this process
 
 
 def read_slot(key: str, name: str, items) -> "Slot | None":
     """The row parsed, or None — skipped, counted, and logged once."""
-    try:
-        slot = Slot.from_items(name, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        SLOTS_GARBLED[sub] = SLOTS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_slots:
-            _garbled_slots.add(key)
-            log.error("%s: the slot row does not parse (%r); skipped — nobody claims it until it is mended", key, items)
-        return None
-    _garbled_slots.discard(key)
-    return slot
+    return SLOTS.read(key, lambda: Slot.from_items(name, items))
 ```
 
-Правило то же, что у heartbeat'а, который не разбирается (`parse_heartbeat`, урок 8): беда одной строки, пропустить, посчитать, сказать один раз. Битая строка в карту `known` не попадает, а её **номер** в счёт идёт — `nxt` считается по `names`, и новый слот никогда не получит имя строки, которую кто-то должен починить. Счётчик уходит в heartbeat каждого воркера подсистемы как `slots_garbled`. Отдельной метрики в `/metrics` консоли пока нет — число видно в heartbeat'е и в логе. Тест: `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` — пять воркеров, которые держат слот через `keep_slot`, и `rejoin` держателя.
+**Сам разбор — в общем читателе строк `rows.Table`** (`w2cplatform/rows.py`, седьмое ревью). Прежний `read_slot` был своим `try` и прибавлял к счётчику на каждом **чтении**: одна оборванная строка, прочитанная на каждом шаге аренд, растила число без конца (седьмое ревью, мелкие). `Table.read(key, parse, default)` ловит то, что бросает разбор (`PARSE_ERRORS`: `ValueError`, `TypeError`, `KeyError`, `AttributeError`, `OverflowError`), возвращает `default` (у слота — `None`), считает строку **один раз**, пока она снова не разберётся (`counts`, по подсистеме — первому сегменту ключа), пишет в лог один раз и держит её ключ в `bad`. Разобралась — ушла из `bad`; испортится снова — посчитается снова. Тем же читателем идут холды (`read_hold`, таблица `HOLDS`) и назначения (`read_assignment`, `ASSIGNMENTS`); весь читатель и таблица строк хранилища — урок 8, шаг 5. Тест: `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted`.
+
+Правило то же, что у heartbeat'а, который не разбирается (`parse_heartbeat`, урок 8): беда одной строки, пропустить, посчитать, сказать один раз. Битая строка в карту `known` не попадает, а её **номер** в счёт идёт — `nxt` считается по `names`, и новый слот никогда не получит имя строки, которую кто-то должен починить. Счётчик уходит в heartbeat каждого воркера подсистемы как `slots_garbled` (`garbled_counts`), а консоль показывает его в `/metrics` как `<p>_worker_slots_garbled{worker}`; рядом — `<p>_worker_holds_garbled` и `<p>_worker_assignments_garbled` (урок 15). Тест: `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` — пять воркеров, которые держат слот через `keep_slot`, и `rejoin` держателя.
 
 Тот же `read_slot` стоит в `Controller.slots()`: контроллер читает все слоты, чтобы знать, кто уходит (`_pool`, урок 11), и одна битая строка обрывала размещение **каждой** единицы подсистемы. Тест: `test_slot_fence.py::test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names`.
 
