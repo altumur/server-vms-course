@@ -89,6 +89,34 @@ def test_two_controllers_agree_under_constraints():
     assert all(where[i] != "w-0" for i in range(2, 41, 2))                 # cctv-b cameras never on srv-a
 
 
+def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
+    """The review's eighth pass, found by the coordinator: `vms_units_unplaced` and `vms_reconcile_pass_seconds` are read
+    from the report `pass_once` writes, and the cluster's controller loops called the placement steps one by one and
+    never wrote it — on a cluster the gauges said 0 and -1 whatever was unplaced. A pass of either loop is the box's
+    pass now (`cluster.__main__._placement_pass`): the report, then the snapshot, the recordings' included."""
+    import cluster.__main__ as m
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.spec import SpecController
+    from vms.config import REC_SPEC
+    c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=2, wall=c.wall)
+    c.worker(0, "srv-a", capacity=2).heartbeat_once()
+    for i in range(3):
+        ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
+    text = SpecConsole(ctl, wall=c.wall).metrics_text()
+    assert "vms_reconcile_last_pass_age_seconds -1" in text and "vms_units_unplaced 0" in text   # no report: what it said
+    m._placement_pass("placement", ctl)
+    text = SpecConsole(ctl, wall=c.wall).metrics_text()
+    assert "vms_units_unplaced 1" in text and "vms_reconcile_last_pass_age_seconds 0" in text, text
+    assert "vms_reconcile_last_success_age_seconds 0" in text and "vms_reconcile_pass_seconds " in text
+    assert "vms_snapshot_age_seconds -1" not in text
+    rec = SpecController(REC_SPEC, c.vars, c.objects, wall=c.wall)
+    rec.create({"name": "1", "cam": "1"})
+    m._placement_pass("rec placement", rec)
+    text = SpecConsole(rec, wall=c.wall).metrics_text()
+    assert "rec_units_unplaced 1" in text and "rec_reconcile_last_pass_age_seconds 0" in text, text
+    assert "rec_snapshot_age_seconds -1" not in text                               # the recordings' snapshot, as on a box
+
+
 def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     """Who guarantees a worker runs where the archive is: Nomad, by `meta.archive`
     on the job — a label. This is the live fact behind the label: the spec says

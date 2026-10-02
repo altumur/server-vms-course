@@ -102,7 +102,7 @@ def reccontroller() -> None:
     from vms.config import REC_SPEC
     ctl = SpecController(REC_SPEC, open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")))
     while not stop.is_set():
-        _steps("rec placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.unplace_deleted)
+        _placement_pass("rec placement", ctl)
         stop.wait(5)
 
 
@@ -116,13 +116,23 @@ def _steps(what: str, *steps) -> None:
             logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
 
 
+# One pass of a placement controller, the same as the box's loop makes it (`vms/__main__._controller_loop`; the review's
+# eighth pass, found by the coordinator): `pass_once` — place, move, bring ONE unit home, each step in a try of its own —
+# and the report it writes (`<sub>/controller/pass`), which is where `/metrics` reads `<sub>_units_unplaced`,
+# `<sub>_reconcile_pass_seconds`, the last pass and the last success. The cluster's loops called the three steps one by
+# one and wrote no report: on a cluster those metrics said 0 and -1 for ever. Then the snapshot, in its own step — the
+# recordings' too, as on a box (`rec_snapshot_age_seconds` was -1 here).
+def _placement_pass(what: str, ctl) -> None:
+    _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
+
+
 def controller() -> None:
     """count = 1, the only writer of placement. No HTTP: nothing asks it anything."""
     from cluster.controller import ClusterController
     ctl = ClusterController(open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER", "cluster-a"))
     while not stop.is_set():
-        _steps("placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.publish_snapshot)
+        _placement_pass("placement", ctl)
         stop.wait(5)
 
 
@@ -152,7 +162,10 @@ def resource() -> None:
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
     res = cluster_resource(archive, server, url, open_vars(CONFIG_URL), objects)
     srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")))
-    res.heartbeat()
+    try:                                          # a store away at the start does not end the process (the eighth review)
+        res.heartbeat()
+    except Exception:                             # noqa: BLE001
+        logging.exception("resource heartbeat failed")
     try:                                          # back with an empty disk? pull my buckets from my peers first — and a
         logging.info("restore: %s", res.restore())   # restore that raises does not end the process (the seventh review)
     except Exception:                             # noqa: BLE001
@@ -172,6 +185,11 @@ def resource() -> None:
                 logging.info("policy: %s", res.pass_())
         except Exception:                         # noqa: BLE001
             logging.exception("resource pass failed")
+        try:                                      # what the restore left with peers, asked for again (the eighth review)
+            if res.restore_due():
+                logging.info("restore again: %s", res.restore())
+        except Exception:                         # noqa: BLE001
+            logging.exception("restore failed again; asked again later")
         stop.wait(10)
     srv.shutdown()
 

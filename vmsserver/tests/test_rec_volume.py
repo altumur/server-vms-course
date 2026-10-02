@@ -1396,6 +1396,53 @@ def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_
     assert r.hold == "net" and r.volume == "net" and r.store is not None and r.store.writer is not None
 
 
+def test_one_busy_pass_and_then_a_network_down_for_ten_minutes_lets_no_volume_go_and_the_recorder_writes_when_it_is_back():
+    """The review's eighth pass, part 2, reproduced: `_busy_since` was set by a `busy` and cleared only by a mount or by
+    leaving. One busy pass — the previous writer still closing — then the network to the store down (`away`, waited for
+    with no deadline) for ten minutes: the volume was let go with `archive.volume.busy`, words sending the operator to
+    look for somebody else's recorder, and the pinned recorder wrote nothing for ten more minutes once the store was
+    back. `BUSY_FOR` counts unbroken `busy` now: pinned or not, the volume is held through the outage, no alarm, and it
+    is written the pass the store answers."""
+    import vms.recworker as rw
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.obsd import Session
+    from vms.archive import Archive, ArchiveError
+    from tests.conftest import TEST_BLOCK, TEST_READ, ObsdDaemon
+    down = [False]
+
+    class Unreachable(Archive):                                        # the store's network, as the engine says it is down
+        def open(self):
+            if down[0]:
+                raise ArchiveError("away", "the network to the store does not answer", "IO_ERROR")
+            return super().open()
+    real = rw.Archive
+    rw.Archive = Unreachable
+    try:
+        for env in ({"VOLUME": "net"}, {}):
+            box, rec_con, rec_ctl = _site()
+            volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+            stuck = Session(ObsdDaemon.get().socket, client="rec-r-1")     # the previous writer, still closing
+            stuck.pid = 99999
+            theirs = Archive(f"file://{box.archive}-net", "net", 64 << 20, "rec:net", stuck, block=TEST_BLOCK, read=TEST_READ).open()
+            r = recorder(box, env=env)
+            r.lease_pass()
+            assert r.hold == "net" and r.store is None and r.archive_failure == "busy", env
+            theirs.close(); stuck.bye()                                    # it let go — and the network went down
+            down[0] = True
+            for _ in range(int(r.BUSY_FOR / 10) + 6):                      # eleven minutes of passes
+                box.clock.advance(10); box.wall.advance(10)
+                r.lease_pass()
+                assert r.hold == "net" and r.store is None and r.archive_failure == "away", (env, r.archive_failure)
+                assert "net" not in r.refused, (env, r.refused)
+            assert [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+                    if e["kind"] == "archive.volume.busy"] == [], env
+            down[0] = False                                                # the store is back
+            r.lease_pass()
+            assert r.volume == "net" and r.store is not None and r.store.writer is not None and r.archive_failure == "", env
+    finally:
+        rw.Archive = real
+
+
 def test_a_new_quota_is_a_write_into_the_volume_and_goes_under_the_same_fence():
     """The seventh pass's sweep of the paths that write into a network volume: `put`, `finish` and `seal` were fenced,
     `resize` — a new size of the ring, applied on the pass — was not. It is a write like the others now: past the hold's

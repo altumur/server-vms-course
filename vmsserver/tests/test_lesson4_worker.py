@@ -111,6 +111,24 @@ def test_restart_with_the_controller_stopped():
     assert act2.epochs == {1: 2, 2: 2, 3: 2}                  # the next epoch for each: the old instance is fenced by construction
 
 
+def test_the_failover_on_metrics_is_the_one_the_workers_measured():
+    """The review's eighth pass, found by the coordinator: `vms_failover_seconds{kind="worst"}` was the number the console
+    was built with — nothing on a cluster, 0.0 after any failover. It is measured now from what the instances wrote: the
+    replacement's start less the last heartbeat of the instance before, per worker (`kind="last"`) and the worst."""
+    from w2cplatform.console import SpecConsole
+    box, ctl = _box_with_cameras(1)
+    ctl.assign("w-1", ["1"])
+    a = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+    a.reconcile_once(); a.heartbeat_once()
+    assert 'vms_failover_seconds{kind="worst"} 0.0' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    box.wall.advance(31); box.clock.advance(31)                # the box lost power; the replacement starts 31 s later
+    b = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+    b.reconcile_once(); b.heartbeat_once()
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'vms_failover_seconds{kind="worst"} 31.0' in text and 'vms_failover_seconds{kind="last",worker="w-1"} 31.0' in text, text
+    assert 'vms_failover_seconds{kind="worst"} 48.0' in SpecConsole(ctl, worst_failover=48.0, wall=box.wall).metrics_text()
+
+
 def test_the_zombie_on_one_box():
     """Two instances of w-1 given the same assignment (a pause, then a
     replacement): the second takes the slot and the next epochs; the first

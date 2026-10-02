@@ -47,7 +47,8 @@ def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, pe
 # ROW says which: a detector, a watch and a scan name their `cam`; a scenario names units in its triggers and its
 # actions, each of which is a camera or names one. A deleted row is read too — `{days: 0}` after a delete is exactly
 # when a keep matters — and a unit whose camera cannot be told (no row, a trigger on any camera, JSON that does not
-# parse) is held by EVERY keep: not knowing whose it is is not "nobody's".
+# parse) is held by EVERY keep: not knowing whose it is is not "nobody's". Every keep whose interval READS — one that does
+# not holds its own camera and nothing of these (`keeps.as_far_as_read`; the review's eighth pass).
 ANY = None
 CAM_FIELD = (("det", "units"), ("survey", "watches"), ("detjob", "jobs"))
 
@@ -123,10 +124,13 @@ def kept_buckets(vars_):
 
     def once(progressed=None):
         store = vars_ if progressed is None else _Marked(vars_, progressed)
-        # A keep whose row does not parse holds its camera WHOLE (`keeps.whole`; the review's seventh pass): it raised
-        # out of here, and the resource's whole `retain` — every unit, every server — swept nothing while it stood.
+        # A keep whose row does not parse is held as far as it reads (`keeps.as_far_as_read`; the review's seventh pass:
+        # it raised out of here, and the resource's whole `retain` — every unit, every server — swept nothing while it
+        # stood). Its camera's buckets only: a unit of no one camera is held by the keeps that read (`sound`), and not
+        # by an interval open to the start or the end of time (the review's eighth pass, part 4).
         unread: list = []
         all_ = keeps.declared(store, unread) + unread
+        sound = [k for k in all_ if not k.garbled]
         if not all_:
             return lambda sub, unit, start, end: False
         cams = cameras_of_units(store)
@@ -141,7 +145,7 @@ def kept_buckets(vars_):
                 return keeps.held(keeps.spans_of(all_, str(unit), recs.get(str(unit), "")), start, end)
             if sub in ("det", "survey", "detjob", "auto"):
                 of = cams.get((sub, str(unit)), ANY)
-                spans = [(k.since, k.until) for k in all_] if of is ANY else \
+                spans = [(k.since, k.until) for k in sound] if of is ANY else \
                     [sp for cam in of for sp in keeps.spans_of_cam(all_, cam)]
                 return keeps.held(spans, start, end)
             return False

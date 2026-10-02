@@ -32,6 +32,8 @@ def test_the_power_pull():
     b.heartbeat_once()
     fo = ctl.failover_seconds()
     assert fo == {"w-1": 48.0}                                             # last heartbeat of A → B's start: the RTO this run
+    from cluster.console import metrics_text                               # …and the cluster's /metrics says it, measured
+    assert 'vms_failover_seconds{kind="worst"} 48.0' in metrics_text(ctl, 0.0)   # (the eighth review: it said 0.0)
     assert ctl.workers_seen()["w-1"].extra["server"] == "srv-b" and ctl.where(1) == "w-1"   # nothing was rewritten
 
 

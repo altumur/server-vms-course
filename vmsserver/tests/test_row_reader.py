@@ -82,6 +82,16 @@ def test_a_recorder_keeps_writing_into_its_volume_when_that_volumes_row_stops_pa
     assert r.hold == "a-good" and r.store is st and r.volume == "a-good"
     rows = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]}
     assert rows["a-good"]["served_by"] and "still holds it" in rows["a-good"]["why"]
+    # …and not without a word for ever (the eighth pass, a minor): past `ROW_UNREAD_AFTER` an alarm, once a day
+    from w2cplatform.eventdatabase import EventIndex
+    unreadable = lambda: [e for e in EventIndex(box.archive, "srv-a", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+                          if e["kind"] == "archive.volume.unreadable"]
+    assert unreadable() == []
+    for _ in range(3):
+        box.wall.advance(r.ROW_UNREAD_AFTER / 2); box.clock.advance(r.ROW_UNREAD_AFTER / 2)
+        r.lease_pass()
+    [alarm] = unreadable()
+    assert alarm["class"] == "alarm" and alarm["volume"] == "a-good" and alarm["seconds"] >= r.ROW_UNREAD_AFTER
     _forget_garbled()
 
 
@@ -527,3 +537,387 @@ def test_a_resource_comes_up_over_a_peer_whose_heartbeat_names_no_address():
     box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
     res.heartbeat()
     assert res.restore() == {"pulled": 0} and res.mirror()["mirrored"] == 0
+
+
+# -- the eighth pass: the peers' doors, the repeats, the labels -------------------------------------------------------
+
+def _prometheus_strict(text: str) -> None:
+    """Every line of a scrape as the text format reads it: a comment, or `name{label="value",…} number`, each label
+    value with `\\`, `"` and the newline escaped. One line that is not, and Prometheus refuses the scrape whole."""
+    import re
+    sample = re.compile(r'^[a-zA-Z_:][a-zA-Z0-9_:]*(\{[a-zA-Z_][a-zA-Z0-9_]*="(?:[^"\\\n]|\\[\\"n])*"'
+                        r'(,[a-zA-Z_][a-zA-Z0-9_]*="(?:[^"\\\n]|\\[\\"n])*")*\})? \S+$')
+    for line in text.splitlines():
+        if line and not line.startswith("#"):
+            assert sample.match(line), f"a line Prometheus refuses: {line!r}"
+            float(line.rsplit(" ", 1)[1])
+
+
+def test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page():
+    """Reproduced (part 4): a recording named `7"x` — or with a newline in it — made `rec_last_frame_age_seconds{unit="7"x"}`,
+    a line the text format cannot read, and Prometheus refused the whole `rec` scrape: every alert of the recorders gone.
+    Every label value of every metrics function goes through one escaping (`w2cplatform.console.label`): the platform's
+    page (workers, servers, tables), the recorders', the holders', the evaluators', and a recorder's own."""
+    from vms.config import AUTO_SPEC
+    from vms.console import auto_metrics, rec_metrics, vms_metrics
+    from w2cplatform.console import SpecConsole, label
+    from tests.test_lesson4_worker import _box_with_cameras
+    assert label('7"x\\y\nz') == '7\\"x\\\\y\\nz'
+    box, ctl = _box_with_cameras(1)
+    t = box.wall()
+    bad = '7"x\nnew'
+    box.objects.put(f"vms/heartbeats/{bad}", Heartbeat(bad, t, [], {"server": 's"1\n', "headroom": 1, "capacity": 2,
+                                                                     "command_counts": {"performed": 1},
+                                                                     "command_road": {"auto": {"buckets": [1], "count": 1, "sum": 0.1}}}).to_bytes())
+    box.objects.put('platform/resources/s"1/heartbeat', json.dumps(
+        {"server": 's"1\n', "ts": t, "url": "http://s1", "space": {"full": 0.5}, "rows_garbled": {'ke"ep\n': 2}}).encode())
+    _prometheus_strict(SpecConsole(ctl, wall=box.wall).metrics_text())
+    _prometheus_strict("\n".join(vms_metrics(ctl)()))
+    rec = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    box.objects.put(f"rec/heartbeats/{bad}", Heartbeat(bad, t, [
+        {"id": bad, "phase": 'run"ning', "last_frame_at": t - 5, "depth_days": 1, "samples_refused": {'B"AD\n': 2},
+         "lease": "unconfirmed", "unconfirmed_s": 3}], {
+        "server": "srv-b", "archive_failure": 'aw"ay', "writer": {"state": 's"t'}, "keep_missing": {bad: 5},
+        "volume_wait": "net is being written by r-1"}).to_bytes())
+    text = "\n".join(rec_metrics(rec)())
+    _prometheus_strict(text)
+    assert 'rec_last_frame_age_seconds{unit="7\\"x\\nnew"} 5.0' in text and 'rec_volume_wait{worker="7\\"x\\nnew"} 1' in text
+    auto = SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall)
+    box.objects.put(f"auto/heartbeats/{bad}", Heartbeat(bad, t, [], {"pass_seconds": 1, "late": 0, "wants_folded": 70}).to_bytes())
+    text = "\n".join(auto_metrics(auto)())
+    _prometheus_strict(text)
+    assert 'auto_wants_folded{worker="7\\"x\\nnew"} 70' in text
+    r = type("R", (), {"keep_state": {bad: {"missing": 5}}, "reconciler": type("C", (), {"actual": {}})(), "backfilled": 0,
+                       "dropped_seconds": 0.0, "volume_wait": ""})()
+    from vms.recworker import RecWorker
+    _prometheus_strict(RecWorker.metrics_text(r))
+    _forget_garbled()
+
+
+class _Peer:
+    """A peer resource, in process: what it lists of `srv-1`'s buckets, and what it gives back — `bad` paths it does not
+    (it raises), `dead` when its listing itself fails."""
+    def __init__(self, paths, bad=(), dead=False):
+        self.paths, self.bad, self.dead, self.asked = list(paths), set(bad), dead, []
+
+    def mirrored(self, url, server):
+        from w2cplatform.events import Bucket
+        if self.dead:
+            raise OSError(f"{url}: 503 Service Unavailable")
+        return [Bucket("vms", "7", 1, 0.0, 600.0, p, 1) for p in self.paths]
+
+    def get(self, url, server, path):
+        self.asked.append(path)
+        if path in self.bad:
+            raise OSError(f"{url}: the connection was reset at {path}")
+        return b'{"t": 1, "kind": "motion"}\n'
+
+
+def test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_come():
+    """Reproduced (part 4): a peer with a live heartbeat whose door refused gave back 0 of 20 buckets, a cut on the fourth
+    gave back 3, and `restore` ran once, at the start, in one `try` — nothing asked again while the copies aged on the
+    peers. Now one peer and one bucket are their own trouble: of 20 with one that does not come, 19 are back; a peer
+    whose listing fails does not cost the other peer's; what is left is said in the heartbeat and on `/metrics` and is
+    due again after its pause (`restore_due`, doubling); a path a peer names outside the tree is never written."""
+    import os
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.resource import RESTORE_RETRY, Resource
+    from tests.test_lesson4_worker import _box_with_cameras
+    box, ctl = _box_with_cameras(1)
+    paths = [f"vms/7/e1/{i:02d}.events.jsonl" for i in range(20)]
+    good, dead = _Peer(paths + ["../../escape.events.jsonl"], bad={paths[3]}), _Peer(["vms/8/e1/0.events.jsonl"], dead=True)
+
+    class Peers:
+        def mirrored(self, url, server):
+            return (good if url == "http://srv-2" else dead).mirrored(url, server)
+
+        def get(self, url, server, path):
+            return (good if url == "http://srv-2" else dead).get(url, server, path)
+
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    for peer in ("srv-0", "srv-2"):                                    # srv-0 sorts first: its refusal must not end the loop
+        box.objects.put(f"platform/resources/{peer}/heartbeat", json.dumps(
+            {"server": peer, "ts": box.wall(), "url": f"http://{peer}", "mirrors": {"srv-1": 20}}).encode())
+    res.heartbeat()
+    got = res.restore()
+    assert got["pulled"] == 19 and got["left"] == 1 and got["peers_failed"] == ["srv-0"], got
+    assert not os.path.exists(os.path.join(box.root, "escape.events.jsonl"))       # a path out of the tree: never written
+    assert not res.restore_due()                                                     # its pause first
+    hb = res.heartbeat()
+    assert hb["restore"]["left"] == 1 and hb["restore"]["peers_failed"] == ["srv-0"] and hb["restore"]["failed"] == 2
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'vms_resource_restore_left{server="srv-1"} 1' in text and 'vms_resource_restore_failures_total{server="srv-1"} 2' in text
+    good.bad.clear(); dead.dead = False
+    dead.paths = []                                                  # healed: it lists, and holds nothing more of srv-1
+    box.clock.advance(RESTORE_RETRY)
+    assert res.restore_due()
+    again = res.restore()
+    assert again["pulled"] == 1 and "left" not in again and not res.restore_due(), again
+    assert good.asked.count(paths[3]) == 2 and good.asked.count(paths[0]) == 1      # the one asked again, the others not
+    assert "restore" in res.heartbeat()                                             # its failures since start stay counted
+    _forget_garbled()
+
+
+def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_too_big_for_any():
+    """Reproduced (part 4): the mirror was one `try` — a peer whose door refused its listing raised out of the loop and the
+    next peer got nothing; a bucket over `MIRROR_MAX` was 413 on every pass and no bucket after it was copied to anybody.
+    Now the refusing peer is skipped and counted, the bucket too big is sent to nobody and counted once, the buckets after
+    it go; both on the heartbeat and `/metrics`. A 413 from a peer is the same: not sent again."""
+    from w2cplatform import resource as R
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.events import EventLog
+    from tests.test_lesson4_worker import _box_with_cameras
+    box, ctl = _box_with_cameras(1)
+    t = box.wall()
+    for i in range(4):
+        log = EventLog(box.archive, "vms", "7", 1)
+        for n in range(1 + (200 if i == 1 else 0)):                   # the second bucket is the big one
+            log.append(t - 86400 + i * 600 + n * 0.01, "motion", note="x" * 50)
+    sent: dict = {"srv-2": [], "srv-3": []}
+
+    class Peers:
+        def mirrored(self, url, server):
+            if url == "http://srv-2":
+                raise OSError("http://srv-2: 503 Service Unavailable")
+            return []
+
+        def put(self, url, server, path, data):
+            if len(data) > 4096 and url == "http://srv-3" and refuse_413[0]:
+                import urllib.error
+                raise urllib.error.HTTPError(url, 413, "Payload Too Large", {}, None)
+            sent[url[len("http://"):]].append(path)
+
+    refuse_413 = [False]
+    box.vars.put(R.MIRROR_KEY, {"enabled": "true", "copies": "2"})
+    res = R.Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    for peer in ("srv-2", "srv-3"):
+        box.objects.put(f"platform/resources/{peer}/heartbeat", json.dumps(
+            {"server": peer, "ts": box.wall(), "url": f"http://{peer}"}).encode())
+    real = R.MIRROR_MAX
+    R.MIRROR_MAX = 8192
+    try:
+        out = res.mirror()
+    finally:
+        R.MIRROR_MAX = real
+    assert out["mirrored"] == 3 and out["peers_failed"] == ["srv-2"] and len(sent["srv-3"]) == 3, (out, sent)
+    assert res.mirror_too_big == 1 and res.mirror_failed == 1
+    hb = res.heartbeat()
+    assert hb["mirror"] == {"failed": 1, "too_big": 1, "peers_failed": ["srv-2"]}
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'vms_resource_mirror_too_big_total{server="srv-1"} 1' in text and 'vms_resource_mirror_failures_total{server="srv-1"} 1' in text
+    # …and a peer that refuses 413 under the bound: counted, and the bucket is not sent to it again
+    res2 = R.Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    refuse_413[0] = True
+    sent["srv-3"].clear()
+    assert res2.mirror()["mirrored"] == 3 and res2.mirror_too_big == 1
+    sent["srv-3"].clear()
+    res2.mirror()
+    assert len(sent["srv-3"]) == 3 and res2.mirror_too_big == 1           # the listing is empty: the rest again, the big one not
+
+
+def test_the_peer_client_writes_only_a_whole_200_as_a_bucket_and_skips_a_garbled_line_of_a_listing():
+    """The product team's siblings: a 2xx that is not a 200 was written as a bucket (a 503 is an `HTTPError` here already);
+    one garbled line of a peer's `/mirrored` took the whole listing; an answer was read with no bound. Each is the
+    line's or the answer's trouble now."""
+    import io
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from w2cplatform.events import Bucket
+    from w2cplatform.resource import PeerClient
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            if self.path.startswith("/mirrored/"):
+                good = Bucket("vms", "7", 1, 0.0, 600.0, "vms/7/e1/a.events.jsonl", 1).line()
+                body = (good + "\n" + '{"subsystem": "vms", "unit": 7, "epoch": "one"}\n' + good.replace("/a.", "/b.") + "\n").encode()
+                self.send_response(200)
+            else:
+                body = b"partial"
+                self.send_response(206)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        listed = PeerClient().mirrored(url, "srv-1")
+        assert [b.path for b in listed] == ["vms/7/e1/a.events.jsonl", "vms/7/e1/b.events.jsonl"]
+        for call in (lambda: PeerClient().get_into(url, "srv-1", "vms/7/e1/a.events.jsonl", io.BytesIO()),
+                     lambda: PeerClient().get(url, "srv-1", "vms/7/e1/a.events.jsonl")):
+            try:
+                call()
+                raise AssertionError("a 206 was taken for a bucket")
+            except IOError as e:
+                assert "206" in str(e)
+    finally:
+        srv.shutdown()
+    from w2cplatform.rows import answer
+    try:
+        answer(io.BytesIO(b"x" * 11), 10)
+        raise AssertionError("an answer past its bound was read")
+    except ValueError:
+        pass
+    _forget_garbled()
+
+
+def _canned(box, name: str, body, status: list | None = None, volume: str = "v-canned"):
+    """A recorder's archive door that answers `body` (JSON) to every request, announced by a live heartbeat — another
+    build's door, or a proxy in front of one. Returns the server; shut it down when done."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    raw = json.dumps(body).encode()
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    box.objects.put(REC_SPEC.sub.heartbeat_key(name), Heartbeat(name, box.wall(), status or [], {
+        "server": "srv-1", "archive_url": f"http://127.0.0.1:{srv.server_address[1]}", "volume": volume}).to_bytes())
+    return srv
+
+
+def test_a_door_that_answers_a_span_another_build_writes_costs_that_span_and_not_the_scan():
+    """Reproduced (part 4): a door of another build answering `{"epoch": "e3"}` raised `int(sp["epoch"])` out of
+    `recording_read`, outside the door's `try` — the scan worker moved no job (no `try` per job), and the good door's
+    span beside it was lost too. The span is passed by and counted, the good spans stand, the door is named in
+    `garbled` and the read is partial — the job waits rather than ending `done` without those minutes; an answer that is
+    not an object is the door not answering; the scan's own progress file with a torn last line is read past it."""
+    from vms.scan import DOOR_SPANS, ScanLog, plan, recording_read
+    from tests.conftest import door, footage, store
+    box = Box()
+    t = box.wall()
+    st = store("v-good")
+    footage(st, "7", 1, t - 600, t - 300, step=10)
+    good = door(box, st, "r-good")
+    odd = _canned(box, "r-odd", {"spans": [{"epoch": "e3", "start": t - 200, "end": t - 100},
+                                           {"epoch": 3, "start": t - 100, "end": t - 50, "bytes": 10}]})
+    lists = _canned(box, "r-list", [{"epoch": 1}])
+    try:
+        got = recording_read(box.objects, "7", t - 3600, t, t)
+        assert sorted((s.epoch, s.start, s.end) for s in got.spans) == [(1, t - 600, t - 300), (3, t - 100, t - 50)], got.spans
+        assert got.garbled == ["r-odd"] and got.silent == ["r-list"] and got.partial
+        assert DOOR_SPANS.counts.get("rec") == 1
+    finally:
+        good.shutdown(); odd.shutdown(); lists.shutdown()
+    log = ScanLog(box.archive, "job-1")
+    for s in plan(got.spans, t - 3600, t):
+        log.append(s, events=1, at=t)
+    with open(log.path, "a") as f:
+        f.write('{"kind": "scan", "from": 17')                       # the half line a crash leaves
+    assert len(log.read()) == 2 and log.events() == 2
+    _forget_garbled()
+
+
+def test_a_door_that_answers_a_span_another_build_writes_stops_no_keep_from_being_copied_or_checked():
+    """The sibling the review named in `keep_pass`: `_speaks_for` read `int(sp["epoch"])` outside the door's `try`, and one
+    such door stopped the copying and the checking of every keep — `archive.keep.lost` never raised. The span is passed
+    by; the door shows and speaks for less, and what it would have covered stays short — the side a keep errs on."""
+    from tests.test_keeps import _keep, _site
+    box, k = _site()
+    t = box.wall()
+    from tests.conftest import footage
+    footage(box.src, "7", 1, t - 1200, t - 600, step=10)
+    odd = _canned(box, "r-odd", {"spans": [{"epoch": "e3", "start": t - 3000, "end": t - 2500}]})
+    try:
+        kp = _keep(box, "7", t - 1100, t - 700)
+        late = _keep(box, "7", t - 2900, t - 2600)                    # only the odd door "has" it, in a span nobody can read
+        state = k.keep_pass()
+        assert state[kp.id]["copied"] == 400 and state[kp.id]["missing"] == 0, state
+        assert state[late.id]["copied"] == 0 and state[late.id]["missing"] == 300, state
+    finally:
+        odd.shutdown(); box.src_door.shutdown()
+    _forget_garbled()
+
+
+def test_a_doors_held_since_is_laid_on_this_recorders_clock_by_the_doors_own_now():
+    """Part 2, a minor: `held_since` is the door's wall clock. A new holder 1200 s behind said it held the recording 1200 s
+    before it did and spoke for minutes it never had — the shortfall halved. The door says its `now` beside it, and the
+    age `now - held_since` is laid on this recorder's clock; a door of an older build without `now` is taken as it is."""
+    from tests.test_keeps import _site
+    box, k = _site(source=False)
+    t = box.wall()
+    lagging = _canned(box, "r-lag", {"spans": [], "held_since": t - 1200 - 600, "now": t - 1200})
+    older = _canned(box, "r-old", {"spans": [], "held_since": t - 600})
+    try:
+        url = lambda n: Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key(n))).extra["archive_url"]
+        _, held = k._door_timeline(url("r-lag"), "7", t - 3600, t)
+        assert t - 601 <= held <= t - 599, held - t                    # it took the epoch 600 s ago, by anybody's clock
+        assert k._door_timeline(url("r-old"), "7", t - 3600, t)[1] == t - 600
+    finally:
+        lagging.shutdown(); older.shutdown()
+    from tests.conftest import door, store
+    st = store("v-now")
+    srv = door(box, st, "r-now", held={"7": t - 60})
+    try:
+        import urllib.request
+        with urllib.request.urlopen(f"{url('r-now')}/timeline/7?from=0&to={t}") as r:
+            body = json.loads(r.read())
+        assert body["held_since"] == t - 60 and body["now"] == box.wall()   # the door says the clock it is on
+    finally:
+        srv.shutdown()
+
+
+def test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_units_of_no_camera():
+    """Reproduced (part 4): any field that did not parse — even `at`, when the keep was set — made the keep its camera
+    whole, from 0 to infinity, and every unit of no one camera (a scenario on any camera) whole too: 10 buckets removed
+    where a sound keep let 37 go. Now `at` is metadata, read as not said; a bound that parses is kept and the lost one is
+    open on its side; such a keep holds its camera's buckets and nothing of the units of no camera — those are held by
+    the keeps that read."""
+    from w2cplatform.events import EventLog, bucket_names_under
+    from vms.resource import vms_resource
+    box = Box()
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    now = box.wall()
+    day = lambda d: now - d * 86400
+    for d in (40, 35, 32):
+        for cam in ("7", "8"):
+            EventLog(box.archive, "vms", cam, 1).append(day(d), "motion")
+        EventLog(box.archive, "auto", "any-door", 1).append(day(d), "fired")
+    for unit in ("vms/retention/7", "vms/retention/8", "auto/retention/any-door"):
+        box.vars.put(unit, {"days": "30"})
+    box.vars.put("auto/scenarios/any-door", {"name": "any-door", "when": json.dumps([{"sub": "vms", "kind": "io.input"}]),
+                                             "then": "[]"})
+    box.vars.put(keeps.key("7-a"), {"cam": "7", "from": str(day(36)), "to": str(day(34)), "at": "yesterday"})   # sound but for `at`
+    box.vars.put(keeps.key("8-b"), {"cam": "8", "from": str(day(33)), "to": "later"})                          # its end lost
+    res.retain()
+    left = lambda sub, unit: sorted(round((now - b.start) / 86400) for b in bucket_names_under(box.archive, sub, unit, 600))
+    assert left("vms", "7") == [35]                                    # its interval, and no more
+    assert left("vms", "8") == [32]                                    # from its start on: 40 and 35 go
+    assert left("auto", "any-door") == [35]                            # held by the keep that reads, not by the open one
+    garbled: list = []
+    keeps.declared(box.vars, garbled)
+    [k8] = garbled
+    assert k8.since == day(33) and k8.until == float("inf") and k8.garbled
+    assert keeps.KEEPS.counts.get("rec") == 1 and [k.id for k in keeps.declared(box.vars)] == ["7-a"]
+    _forget_garbled()
+
+
+def test_one_resource_answering_another_shape_costs_its_window_and_not_the_merge():
+    """The sibling of the peers' doors in the merge of `/events`: `rep.get`, `rep["events"]`, `e["server"]` were read
+    after the fan-out's `try`, and one resource answering a list — or a line without `t` — raised out of `query` for
+    automation and every console. That resource is "did not answer"; a line it cannot order is passed by, counted."""
+    from w2cplatform.eventdatabase import MergedIndex, PEER_EVENTS
+    box = Box()
+    t = box.wall()
+    for s in ("srv-a", "srv-b", "srv-c"):
+        box.objects.put(f"platform/resources/{s}/heartbeat", json.dumps({"server": s, "ts": t, "url": f"http://{s}"}).encode())
+    line = {"t": t - 5, "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "id": "c-1"}
+    answers = {"http://srv-a": [1, 2], "http://srv-b": {"events": [{"t": "then", "server": "srv-b"}, {**line, "server": "srv-b", "id": "b-1"}]},
+               "http://srv-c": {"events": [line], "state": "live"}}
+    got = MergedIndex(box.objects, fetch=lambda url, params: answers[url], wall=box.wall).query(t - 60, t)
+    assert [e["id"] for e in got["events"]] == ["b-1", "c-1"] and got["incomplete"] == {"srv-a": "did not answer"}, got
+    assert PEER_EVENTS.counts.get("platform") == 1
+    _forget_garbled()

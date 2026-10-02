@@ -28,7 +28,7 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
+from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, label, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.eventdatabase import MergedIndex
@@ -1107,9 +1107,9 @@ def _histogram(metric: str, sub: str, w: str, field: str, h, les) -> list[str]:
         FIELDS.garbled(f"{sub}/{HEARTBEATS}/{w}#{field}", e)
         return []
     FIELDS.parsed(f"{sub}/{HEARTBEATS}/{w}#{field}")
-    return ([f'{metric}_bucket{{worker="{w}",le="{le:g}"}} {n}' for le, n in zip(les, counts)]
-            + [f'{metric}_bucket{{worker="{w}",le="+Inf"}} {count}', f'{metric}_sum{{worker="{w}"}} {round(total, 3)}',
-               f'{metric}_count{{worker="{w}"}} {count}'])
+    return ([f'{metric}_bucket{{worker="{label(w)}",le="{le:g}"}} {n}' for le, n in zip(les, counts)]
+            + [f'{metric}_bucket{{worker="{label(w)}",le="+Inf"}} {count}', f'{metric}_sum{{worker="{label(w)}"}} {round(total, 3)}',
+               f'{metric}_count{{worker="{label(w)}"}} {count}'])
 
 
 def rec_metrics(rec_ctl: SpecController):
@@ -1155,7 +1155,7 @@ def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str
                 missing = {}
         for keep, s in (missing.items() if isinstance(missing, dict) else ()):
             worst[str(keep)] = max(worst.get(str(keep), 0.0), _n(sub, w, f"keep_missing.{keep}", s))
-    return ["# TYPE rec_keep_missing_seconds gauge"] + [f'rec_keep_missing_seconds{{keep="{k}"}} {round(s, 1)}'
+    return ["# TYPE rec_keep_missing_seconds gauge"] + [f'rec_keep_missing_seconds{{keep="{label(k)}"}} {round(s, 1)}'
                                                           for k, s in sorted(worst.items()) if s > 0]
 
 
@@ -1175,43 +1175,47 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
         phases: dict[str, int] = {}
         for st in status[w]:
             phases[str(st.get("phase", "?"))] = phases.get(str(st.get("phase", "?")), 0) + 1
-        out += [f'rec_recordings{{worker="{w}",phase="{ph}"}} {n}' for ph, n in sorted(phases.items())]
+        out += [f'rec_recordings{{worker="{label(w)}",phase="{label(ph)}"}} {n}' for ph, n in sorted(phases.items())]
     out.append("# TYPE rec_volume_error gauge")
-    out += [f'rec_volume_error{{worker="{w}"}} {1 if hb.extra.get("volume_error") else 0}' for w, hb in hbs]
+    out += [f'rec_volume_error{{worker="{label(w)}"}} {1 if hb.extra.get("volume_error") else 0}' for w, hb in hbs]
+    # A recorder pinned to a volume another recorder holds writes nothing and says why only in its heartbeat
+    # (`volume_wait`): `volume_error` is empty, its capacity nought. 1 while it waits (the review's eighth pass, a minor).
+    out.append("# TYPE rec_volume_wait gauge")
+    out += [f'rec_volume_wait{{worker="{label(w)}"}} {1 if hb.extra.get("volume_wait") else 0}' for w, hb in hbs]
     out.append("# TYPE rec_archive_away_seconds gauge")
     away = {w: _n(sub, w, "archive_away_since", hb.extra.get("archive_away_since") or None) for w, hb in hbs}
-    out += [f'rec_archive_away_seconds{{worker="{w}"}} {round(now - away[w], 1) if away[w] else 0}' for w, hb in hbs]
+    out += [f'rec_archive_away_seconds{{worker="{label(w)}"}} {round(now - away[w], 1) if away[w] else 0}' for w, hb in hbs]
     # Why the volume stopped taking samples, by kind: `away` (the daemon, a network — waited for) or `wrong` (a
     # person has to act — the volume is handed back). One line per recorder that has a failure, none otherwise.
     out.append("# TYPE rec_archive_failure gauge")
-    out += [f'rec_archive_failure{{worker="{w}",kind="{hb.extra["archive_failure"]}"}} 1' for w, hb in hbs
+    out += [f'rec_archive_failure{{worker="{label(w)}",kind="{label(hb.extra["archive_failure"])}"}} 1' for w, hb in hbs
             if hb.extra.get("archive_failure")]
     out.append("# TYPE rec_writer gauge")                          # 1 for the state the volume's writer is in
-    out += [f'rec_writer{{worker="{w}",state="{writer[w].get("state") or "ok"}"}} 1' for w, hb in hbs]
+    out += [f'rec_writer{{worker="{label(w)}",state="{label(writer[w].get("state") or "ok")}"}} 1' for w, hb in hbs]
     # How long since each recording last took anything from its source (feedback BI; the review's
     # `rec_archive_gap_seconds`). `rec_recordings{phase="running"}` says the pipeline is up; this says it is
     # being FED. Counted from the moment the recorder says bytes last arrived — so a recorder that went silent
     # grows here too — and only for recorders whose actuator measures.
     out.append("# TYPE rec_last_frame_age_seconds gauge")
-    out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - at), 1)}'
+    out += [f'rec_last_frame_age_seconds{{unit="{label(st["id"])}"}} {round(max(0.0, now - at), 1)}'
             for w, hb in hbs for st in status[w] if st.get("last_frame_at")
             if (at := _n(sub, w, str(st.get("id")) + ".last_frame_at", st["last_frame_at"], float, None)) is not None]
     # What the engine refused of each recording's samples, by its answer (the review's third pass). The writer watch
     # counts the VOLUME, and one camera of thirty that was never written — its group of pictures larger than a block
     # — left it `ok`. A counter per recording and answer, from what the recorder's sinks were told.
     out.append("# TYPE rec_samples_refused_total counter")
-    out += [f'rec_samples_refused_total{{unit="{st["id"]}",status="{k}"}} {_n(sub, w, str(st.get("id")) + ".samples_refused." + str(k), n, int)}'
+    out += [f'rec_samples_refused_total{{unit="{label(st["id"])}",status="{label(k)}"}} {_n(sub, w, str(st.get("id")) + ".samples_refused." + str(k), n, int)}'
             for w, hb in hbs for st in status[w]
             for k, n in sorted((st.get("samples_refused") if isinstance(st.get("samples_refused"), dict) else {}).items())]
     # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")
-    out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".depth_days", st["depth_days"])}'
+    out += [f'rec_archive_depth_days{{unit="{label(st["id"])}"}} {_n(sub, w, str(st.get("id")) + ".depth_days", st["depth_days"])}'
             for w, hb in hbs for st in status[w] if "depth_days" in st]
     out.append("# TYPE rec_archive_shallow gauge")
-    out += [f'rec_archive_shallow{{unit="{st["id"]}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in status[w] if "depth_days" in st]
+    out += [f'rec_archive_shallow{{unit="{label(st["id"])}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in status[w] if "depth_days" in st]
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
-    out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".unconfirmed_s", st.get("unconfirmed_s"))}'
+    out += [f'rec_unconfirmed_seconds{{unit="{label(st["id"])}"}} {_n(sub, w, str(st.get("id")) + ".unconfirmed_s", st.get("unconfirmed_s"))}'
             for w, hb in hbs for st in status[w] if st.get("lease") == "unconfirmed"]
     return out
 
@@ -1266,23 +1270,23 @@ def vms_metrics(ctl):
                     if not _n(sub, w, f"{key}.{by}.count", h.get("count"), int) and \
                             not any(_n(sub, w, f"{key}.{by}.{k}", h.get(k), int) for k in ("ahead", "behind", "skewed")):
                         continue
-                    road += histogram(f"{metric}_seconds", f'worker="{w}",by="{by}"', h, w, f"{key}.{by}")
+                    road += histogram(f"{metric}_seconds", f'worker="{label(w)}",by="{label(by)}"', h, w, f"{key}.{by}")
                     ahead = _n(sub, w, f"{key}.{by}.ahead", h.get("ahead"), int) + _n(sub, w, f"{key}.{by}.skewed", h.get("skewed"), int)   # `skewed`: an older build's word for ahead
-                    skew += [f'{metric}_skewed_total{{worker="{w}",by="{by}",direction="ahead"}} {ahead}',
-                             f'{metric}_skewed_total{{worker="{w}",by="{by}",direction="behind"}} {_n(sub, w, f"{key}.{by}.behind", h.get("behind"), int)}']
+                    skew += [f'{metric}_skewed_total{{worker="{label(w)}",by="{label(by)}",direction="ahead"}} {ahead}',
+                             f'{metric}_skewed_total{{worker="{label(w)}",by="{label(by)}",direction="behind"}} {_n(sub, w, f"{key}.{by}.behind", h.get("behind"), int)}']
             road += [f"# TYPE {metric}_skewed_total counter"] + skew
         road.append("# TYPE vms_request_seen_to_device_seconds histogram")
         for w, hb in sorted(hbs.items()):
             h = hb.extra.get("command_wait")
             if isinstance(h, dict) and _n(sub, w, "command_wait.count", h.get("count"), int):
-                road += histogram("vms_request_seen_to_device_seconds", f'worker="{w}"', h, w, "command_wait")
+                road += histogram("vms_request_seen_to_device_seconds", f'worker="{label(w)}"', h, w, "command_wait")
         # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
         # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
         # loop is late (the review's second pass).
         from . import jobs
-        return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
+        return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{label(k)}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]
-                + [f'vms_requests_expired_total{{sub="{s}"}} {n}' for s, n in sorted(jobs.expired.items())]
+                + [f'vms_requests_expired_total{{sub="{label(s)}"}} {n}' for s, n in sorted(jobs.expired.items())]
                 + road)
     return lines
 
@@ -1300,7 +1304,7 @@ def auto_metrics(auto_ctl):
         said = lambda w, hb, key: _n(sub, w, key, hb.extra[key])             # a word in one field is not the page's end
         for key, metric in names:
             out.append(f"# TYPE {metric} gauge")
-            out += [f'{metric}{{worker="{w}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+            out += [f'{metric}{{worker="{label(w)}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
         # Counted since each evaluator started, so a scrape misses nothing that happened between two of them:
         # the road from an event to its request as a histogram, and the firings too late to file.
         from vms.autoworker import AutoWorker
@@ -1309,9 +1313,9 @@ def auto_metrics(auto_ctl):
             if hb.extra.get("latency"):
                 out += _histogram("auto_event_to_request_seconds", sub, w, "latency", hb.extra["latency"], AutoWorker.LATENCY_BUCKETS)
         out.append("# TYPE auto_fired_late_total counter")
-        out += [f'auto_fired_late_total{{worker="{w}"}} {said(w, hb, "late")}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
+        out += [f'auto_fired_late_total{{worker="{label(w)}"}} {said(w, hb, "late")}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
         out.append("# TYPE auto_firings_suppressed_total counter")     # refused by a scenario's own ceiling
-        out += [f'auto_firings_suppressed_total{{worker="{w}"}} {said(w, hb, "suppressed")}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
+        out += [f'auto_firings_suppressed_total{{worker="{label(w)}"}} {said(w, hb, "suppressed")}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
         # The long poll of the resources (`AutoWorker.long_poll_stats`), per evaluator, since it started: requests it
         # opened, those answered "a watched event was written", passes begun early for them, and requests that
         # failed or were refused. A wait that fails breaks nothing — the pass still comes — so these are where it
@@ -1319,7 +1323,13 @@ def auto_metrics(auto_ctl):
         for key, metric in (("waits", "auto_waits_total"), ("woken", "auto_woken_total"),
                             ("early_passes", "auto_early_passes_total"), ("wait_errors", "auto_wait_errors_total")):
             out.append(f"# TYPE {metric} counter")
-            out += [f'{metric}{{worker="{w}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+            out += [f'{metric}{{worker="{label(w)}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+        # The triggers an evaluator watches folded to their kinds because there are more than one request may name
+        # (`AutoWorker.wants`, `longpoll.WANTS_MAX`; the review's eighth pass): the long poll goes on, and every unit of
+        # those kinds wakes it. 0 when nothing is folded.
+        out.append("# TYPE auto_wants_folded gauge")
+        out += [f'auto_wants_folded{{worker="{label(w)}"}} {said(w, hb, "wants_folded")}' for w, hb in sorted(hbs.items())
+                if "wants_folded" in hb.extra]
         return out
     return lines
 
