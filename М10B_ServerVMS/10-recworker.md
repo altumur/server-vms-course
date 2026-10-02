@@ -29,7 +29,7 @@
 - **Урок 7** — [том, блок, последовательность, поток](07-volume-block-sequence-stream.md); имя потока `<запись>/e<эпоха>`.
 - **Урок 8** — [видимость](08-visibility-retention-timeline.md): читатель видит только закрытые блоки, `retention_days` — потолок того, что показывают.
 - **Урок 9** — `GstRecActuator`: `appsink`, каждый кадр — сэмпл в писатель тома.
-- **Урок 27** — [виды томов](27-volumes.md): `local`, `network`, `backup`, `edge`, `incidents`.
+- **Урок 27** — [виды томов](27-volumes.md): `local`, `network`, `backup`, `edge`, `incidents`. `edge` — карта камеры, и это место, а не том движка: её пишет регистратор камеры обычными файлами ([урок 26](26-a-backup-archive-of-our-own.md), шаг 10).
 - **М10A, урок 7, шаг 11** — слот и захват места; **урок 11** — `home`, `near`, `holder_near` и `ensure_home`; **урок 13** — `servers: distinct` и `idle_by_policy`.
 
 ## Чему вы научитесь
@@ -188,7 +188,9 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
-        free = volumes.servable(list(rows.values()), self.server)
+        # A camera's card is not this recorder's to take: it is the camera's buffer, and only the camera's own recorder
+        # (`vms/card.py`, `CardRecorder`) writes it — a recorder of the engine on the camera's box included.
+        free = [n for n in volumes.servable(list(rows.values()), self.server) if rows[n].kind != "edge"]
         …                                                                   # a volume that refuses writes is handed back (шаг 9)
         held = self.hold
         if held is not None and (held not in free or not self.renew_hold()):
@@ -205,7 +207,7 @@ rec/holds/<имя>      ФАКТ: кто пишет туда прямо сейч
 
 **Закреплённый регистратор, чей том не открылся, — не место.** Отдать закреплённый том ему некуда: `VOLUME` назначил его сюда. Но ёмкость он обнуляет так же, как незакреплённый со сломанным томом (ниже): иначе контроллер ставил бы записи туда, где писать нельзя. Том открылся — ёмкость полная снова.
 
-**Кто какой том может взять — асимметрия, и в ней вся арифметика.** Том на коробке (`local`, `edge`, а также `backup` и `incidents` с названным сервером — `volumes.on_a_box`) может взять только регистратор **его сервера**. Том по адресу (`network`, а также `backup` и `incidents` без сервера — `volumes.any_box`) может взять любой, а пишет ровно один, потому что `servers: distinct` над `place_by: volume` — это один регистратор на место. Поэтому один запасной на коробку принимает один сетевой том на коробку: кластер из пяти коробок впитывает пять новых архивов, не раскатывая ничего. Виды томов целиком — [урок 27](27-volumes.md); проверяет это `test_who_may_serve_what`.
+**Кто какой том может взять — асимметрия, и в ней вся арифметика.** Том на коробке (`local`, `edge`, а также `backup` и `incidents` с названным сервером — `volumes.on_a_box`) может взять только регистратор **его сервера**. Карту камеры (`edge`) — и того уже: только регистратор самой камеры. Это не том движка, а буфер камеры из обычных файлов, и регистратор движка её не берёт, даже стоя на той же коробке (урок 26, шаг 10; так в продукте). Том по адресу (`network`, а также `backup` и `incidents` без сервера — `volumes.any_box`) может взять любой, а пишет ровно один, потому что `servers: distinct` над `place_by: volume` — это один регистратор на место. Поэтому один запасной на коробку принимает один сетевой том на коробку: кластер из пяти коробок впитывает пять новых архивов, не раскатывая ничего. Виды томов целиком — [урок 27](27-volumes.md); проверяет это `test_who_may_serve_what`.
 
 **Запасной — нормальное состояние.** Процесс работает, не несёт ничего, сообщает `volume: ""` и нулевую ёмкость и ждёт (`test_a_declared_volume_is_taken_by_one_recorder_and_the_other_is_a_spare`).
 
@@ -514,6 +516,12 @@ class RecWorker(VmsWorker):
 
 ```python
     def _write_into(self, vol) -> ArchiveError | None:
+        # A camera's card is the camera's buffer, written by its own recorder as plain segment files (`vms/card.py`;
+        # the product's camera has no engine) — never mounted by the engine, here or anywhere.
+        if vol.kind == "edge":
+            return ArchiveError("wrong", f"{vol.name} is a camera's card: its camera's recorder writes it, the engine "
+                                         f"never does (vms/card.py)", "NOT_AN_ENGINE_VOLUME")
+        …
         if self.store is not None and self.store.url == vol.url and self.store.writer is not None and not self.engine_lost:
             if vol.quota_bytes and vol.quota_bytes != self.store.quota:
                 try:

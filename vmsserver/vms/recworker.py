@@ -181,6 +181,9 @@ class RecWorker(VmsWorker):
     # ONLY, and a wait longer than that memory loses the break's beginning. It was the ring's length while both
     # were thirty seconds; the ring grew for a dead server, and the camera's memory did not.
     CONTINUE_REACH = 30.0
+    # A break that ended before the card wrote leaves the ring KEPT this much longer (the product's `KeepGrace`): the
+    # camera's pusher is still taking the break out of it (`_keep`).
+    KEEP_GRACE = 10.0
     # How old the agent's last contact with the domain may be before the book of primaries it carried stops
     # counting (М12 Lesson 13). The same 45 s a heartbeat gets: past it, the backup cannot know whether the
     # primary in the other cluster is written, and records.
@@ -299,6 +302,7 @@ class RecWorker(VmsWorker):
         self._tally_lock = threading.Lock()
         self.written_through: dict = {}             # recording -> capture time of the last frame its sink took (`note_written`)
         self._cover_since: dict = {}                # held backup -> when its primary was first found needing cover (CB)
+        self._kept_until: dict = {}                 # held backup -> its ring stays kept until then: a break over without the card
         self.closed: list[str] = []                 # ranges fetched from a device or a backup: `<unit>|<from>|<to>`, for the console
         # What a clean fetch was asked for and did not get, per (recording, source) — the source does not
         # have it either (Lesson 16, the feedback's P). A summary in a heartbeat says where a card starts and
@@ -566,14 +570,22 @@ class RecWorker(VmsWorker):
             if need and by_stream and self.holding.get(uid) and self.resumes is not None and self.resumes(row):
                 since = self._cover_since.setdefault(uid, now)
                 if now - since < self.defer_for():
+                    self._keep(uid, True)                    # the break stays in the ring, not let go by its window
+                    self._kept_until.pop(uid, None)
                     continue                                 # held in memory: the camera may yet continue the stream
             if not need and uid in self._cover_since:
                 self._cover_since.pop(uid, None)            # back before the card had to write: nothing written (CB)
+                self._kept_until[uid] = now + self.KEEP_GRACE
                 done.append((uid, "back from memory"))
+            if uid in self._kept_until and now >= self._kept_until[uid]:
+                self._kept_until.pop(uid, None)
+                self._keep(uid, False)
             if need and self.holding.get(uid):
                 if self.actuator("release", {"id": row["id"], "now": now}):
                     self.holding[uid] = False
                     self._cover_since.pop(uid, None)
+                    self._kept_until.pop(uid, None)
+                    self._keep(uid, False)                   # released: what the kept ring held goes to the card first
                     done.append((uid, "released"))
                     log.warning("%s: the primary of %s is not being written — recording from %.0f s ago",
                                 self.name, uid, self.PREBUFFER)
@@ -596,6 +608,15 @@ class RecWorker(VmsWorker):
 
     def defer_for(self) -> float:
         return max(0.0, min(self.PREBUFFER, self.CONTINUE_REACH) - self.DETECTION - self.DEFER_MARGIN)
+
+    # A KEPT ring (feedback CB; the product's `Keeper`): while a break is held in memory the ring lets go of nothing by
+    # its window, and what it must let go of past its byte ceiling goes to the card instead of being dropped. Only an
+    # actuator that can keep is asked — the camera's card (`vms/card.py`, `CardActuator.keep`); a server's pipeline
+    # holds its ring in a GStreamer queue and has no such mode.
+    def _keep(self, uid, keep: bool) -> None:
+        keeper = getattr(self.actuator, "keep", None)
+        if keeper is not None:
+            keeper(uid, keep)
 
     def primary_needs_cover(self, row: dict, now: float | None = None) -> bool:
         now = self.wall() if now is None else now
@@ -870,7 +891,9 @@ class RecWorker(VmsWorker):
             return self.volume
         rows = {v.name: v for v in volumes.declared(self.vars)}
         self._shared = {n for n, v in rows.items() if volumes.any_box(v)}   # remembered: asked when the store is silent
-        free = volumes.servable(list(rows.values()), self.server)
+        # A camera's card is not this recorder's to take: it is the camera's buffer, and only the camera's own recorder
+        # (`vms/card.py`, `CardRecorder`) writes it — a recorder of the engine on the camera's box included.
+        free = [n for n in volumes.servable(list(rows.values()), self.server) if rows[n].kind != "edge"]
         # A volume that refuses writes — WRONG, not away — is handed back: its recordings should go somewhere
         # that works. And it is left alone for REFUSED_FOR, or the next pass would take it straight back:
         # opening may succeed and the first write fail again.
@@ -1003,6 +1026,11 @@ class RecWorker(VmsWorker):
     # recorder to hold the volume — names the same owner, and the daemon hands back the very writer the dead
     # process left (`reattached`): no lock waited out, nothing recovered (feedback CF).
     def _write_into(self, vol) -> ArchiveError | None:
+        # A camera's card is the camera's buffer, written by its own recorder as plain segment files (`vms/card.py`;
+        # the product's camera has no engine) — never mounted by the engine, here or anywhere.
+        if vol.kind == "edge":
+            return ArchiveError("wrong", f"{vol.name} is a camera's card: its camera's recorder writes it, the engine "
+                                         f"never does (vms/card.py)", "NOT_AN_ENGINE_VOLUME")
         self._vol_last = vol
         if self.store is not None and self.store.url == vol.url and self.store.writer is not None and not self.engine_lost:
             self._apply_quota(vol)
@@ -1406,6 +1434,16 @@ class RecWorker(VmsWorker):
     # Found the way everything here is found — in heartbeats: a recording of this camera, homed on a backup
     # volume, run by a recorder that is alive, says what it holds and serves its archive. `self` is never its
     # own source, and a backup fetches from nobody.
+    #
+    # THE CARD IS ASKED, NOT OPENED (the product's camera; feedback CB, DG). A recording on a camera's card says what it
+    # holds like any backup — `coverage` in its recorder's heartbeat, every ten seconds — and serves no door: the card is
+    # the camera's buffer, not a volume of the engine, and a camera is a box nobody can dial. Its frames come as the
+    # camera's ANSWER to a range: the range goes to the camera in the answer to its poll, the camera uploads it (М12
+    # Lesson 16). `card_range(src, t0, t1)` is that request, set by whoever runs this recorder — the ingest; unset,
+    # nobody here can ask the camera, and the card is not a source. A card that could not read the range raises
+    # (`OSError`): the copy fails and is asked again on a later pass — never an empty answer taken for "not on the card".
+    card_range = None                                    # (src, t0, t1) -> [Sample], set by whoever runs this recorder
+
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         names = volumes.backups(self.vars)
@@ -1424,18 +1462,22 @@ class RecWorker(VmsWorker):
             if items:
                 other = self.parse_row(items)
                 homes[str(other["id"])] = str(other.get("home") or "")
+        from .config import local_only
         for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
-            url = hb.extra.get("archive_url", "")
-            if not url or not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
+            if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
                 continue                      # silent, or a clock from the future (M9 of the review): not a source
-            from .config import local_only
-            if local_only(url, hb.extra.get("server", "?"), self.server):
-                continue                      # that recorder's archive door is on its own loopback: not reachable from here
+            url = hb.extra.get("archive_url", "")
+            if url and local_only(url, hb.extra.get("server", "?"), self.server):
+                url = ""                      # that recorder's archive door is on its own loopback: not reachable from here
             for st in hb.status:
-                if str(st.get("id")) in recs and st.get("coverage"):
-                    kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
-                    out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]),
-                                "recorder": name, "url": url.rstrip("/"), "coverage": st["coverage"]})
+                if str(st.get("id")) not in recs or not st.get("coverage"):
+                    continue
+                kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
+                if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
+                    continue                  # no door to a backup, nobody to ask the camera: not a source from here
+                out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
+                            "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
+                            "coverage": st["coverage"]})
         return out
 
     # Where one recording's gaps can come from, in order: the device's own archive (Lesson 16), then every
@@ -1689,6 +1731,8 @@ class RecWorker(VmsWorker):
 
         def read(a, b):
             self.actuator.range_error = ""
+            if src["kind"] == "edge":
+                return self.card_range(src, a, b)        # the camera's answer to a range of its card
             return self.read_samples(src["url"], src["recording"], a, b)
         try:
             return self._land_pieces(unit, cam, read, t0, t1, src["key"])

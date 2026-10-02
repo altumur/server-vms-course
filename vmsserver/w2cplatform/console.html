@@ -710,7 +710,10 @@ async function loadArchives() {
     // The size the ring HAS, from the recorder holding it, beside the size declared — they differ while a smaller
     // quota waits for its confirmation (`shrink_pending`, the recorder's `quota_note`), and the page used to show the
     // wish as if it were the disk.
-    const has = v.size_bytes && Math.round(v.size_bytes / GB) !== Math.round(v.quota_bytes / GB)
+    // A card (`kind: edge`) is no ring of the engine: its recorder says what the card holds of its budget, or why it is not open.
+    const has = v.card ? (v.card.state === 'recording' ? h` (${(v.card.bytes / GB).toFixed(1)} GB on the card, ${v.card.segments} segments)`
+                                                  : h` (the card is ${v.card.state}${v.card.error ? ': ' + v.card.error : ''})`)
+      : v.size_bytes && Math.round(v.size_bytes / GB) !== Math.round(v.quota_bytes / GB)
       ? h` (the ring is ${Math.round(v.size_bytes / GB)} GB)` : '';
     li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB${has} · ${v.url}</small></span>` +
                    h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''}` +

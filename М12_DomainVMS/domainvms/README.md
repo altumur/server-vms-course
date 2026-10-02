@@ -28,7 +28,7 @@ domainvms/
     alarms.py         Lesson 14 one list of alarms from every member; an alarm that leaves at once; silence as an alarm, witnessed by the ingest; a week of history at the domain
     term.py           Lesson 15 the domain on a camera: a term, a signed backup beyond the holder, moving, never a smaller term, what an old holder alone held; the root off the holder, and a theft answered by a move
     uplink.py         Lesson 10 every connection is the member's: the agent's report into the domain holder; member_copy; silence on the domain's clock
-    ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request, asks between cameras
+    ingest.py         Lesson 16 a camera nobody can reach: the recording cluster's ingest, the stream token, the long poll, the camera's pusher, uploads on request (off the card — the camera's buffer, no engine — or RANGE FAILED: `card_range`, `RangeFailed`), asks between cameras
     scenario.py       Lessons 12, 16 scenarios between cameras end to end: the pairs the book of asks is built from; the camera's side, event → ask
     books.py          Lessons 13, 16, 17 the domain's pass over every per-cluster book — sources, primaries, polls, upstream, asks — run by the signer service
     members.py        Lessons 6, 10 who the members are: the registrar adds what it admits, a leave removes; every pass reads it

@@ -40,7 +40,10 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  push after "push now" starts with them, marked — the start of an event is not lost to the
                  time the want took to arrive (AC). A viewer gets the live edge, never the ring (AF)
     ranges       a range off the card is the ANSWER to a request, by its id — samples with their own times —
-                 not a stream: the recorder asks for a minute, gets that minute or nothing (AD)
+                 not a stream: the recorder asks for a minute, gets that minute or nothing (AD). The card is the
+                 camera's buffer, not an archive engine's volume (`vms/card.py`; the product's camera has no
+                 obsd): a camera with no card, or a card that could not read the range, answers RANGE FAILED —
+                 the copy fails and is asked again later, never taken for "not on the card" (feedback DG, DH)
     the poll     answers at once the first time (a camera that has never polled has version -1), is held
                  while nothing changed, and wakes when a want runs out — a viewer's LINGER included (AF), timed
                  to the lapse itself, since nobody touches anything then (AH)
@@ -97,6 +100,12 @@ class Refused(Exception):
     """A push or a poll the ingest will not take: no token, the wrong camera, the wrong cluster, expired."""
 
 
+class RangeFailed(OSError):
+    """The camera could not read a range it was asked for — its card is not open, a segment read short — or did not
+    answer in time. An ERROR, not an answer about the card: the recorder's copy fails and backfill asks again later
+    (the product's `X-Range-Failed`). An empty answer would say "not on the card" and never be asked again."""
+
+
 def audience(cluster: str) -> str:
     return f"ingest:{cluster}"
 
@@ -106,10 +115,15 @@ def _is_ring(frame) -> bool:
 
 
 def _shift(frames: list, by: float) -> list:
-    """Frames that carry a capture time (`t`, the camera's clock) moved onto the cluster's; others as they are."""
+    """Frames that carry a capture time (`t`, the camera's clock) moved onto the cluster's; others as they are.
+    A sample record off a camera's card (`w2cplatform.obsd.Sample`, archive ms) is moved the same way."""
     if not by:
         return list(frames)
-    return [dict(f, t=float(f["t"]) + by) if isinstance(f, dict) and "t" in f else f for f in frames]
+    import dataclasses
+    ms = int(round(by * 1000))
+    return [dict(f, t=float(f["t"]) + by) if isinstance(f, dict) and "t" in f else
+            dataclasses.replace(f, begin=f.begin + ms, end=f.end + ms) if dataclasses.is_dataclass(f) and hasattr(f, "begin") else
+            f for f in frames]
 
 
 @dataclass
@@ -117,6 +131,7 @@ class _Camera:
     wants: dict[str, float] = field(default_factory=dict)        # who wants the stream -> until when (inf: for ever)
     ranges: dict[str, tuple[float, float]] = field(default_factory=dict)   # requested uploads, by id, on the CLUSTER's clock
     answers: dict[str, list] = field(default_factory=dict)       # the camera's answer to each, by id
+    failed: dict[str, str] = field(default_factory=dict)         # …or why it could not read it: the card's error, by id
     landed: list[tuple[float, float]] = field(default_factory=list)
     pushed_at: float | None = None
     offset: float = 0.0                                          # the cluster's clock minus the camera's
@@ -299,16 +314,23 @@ class Ingest:
                 self.links.setdefault((peer.name, str(ref)), PeerLink(peer, str(ref))).send(frames)
         return len(frames)
 
-    def upload(self, token: str, ref: str, rid: str, samples: list, camera_now: float | None = None) -> None:
+    def upload(self, token: str, ref: str, rid: str, samples: list, camera_now: float | None = None,
+               failed: str | None = None) -> None:
         """The camera's answer to a range request: samples with their own times, moved onto the cluster's clock,
-        kept by the id of the request at whichever ingest of the cluster asked (AD). Never the live stream."""
+        kept by the id of the request at whichever ingest of the cluster asked (AD). Never the live stream.
+        `failed`: the camera could not read the range — no samples, and why (the product's `X-Range-Failed`); the
+        request is over and the recorder waiting for it fails at once, to ask again later."""
         self._check(token, ref, camera_now)
         shifted = _shift(samples, self._cam(ref).offset)
         for ing in self._cluster():
             c = ing._cam(ref)
             if rid in c.ranges:
-                c.answers[rid] = shifted
-                c.landed.append(c.ranges.pop(rid))
+                if failed is not None:
+                    c.failed[rid] = str(failed)
+                    c.ranges.pop(rid)
+                else:
+                    c.answers[rid] = shifted
+                    c.landed.append(c.ranges.pop(rid))
         self._changed()
 
     # -- asks between cameras ---------------------------------------------------------------------------------
@@ -436,6 +458,30 @@ class Ingest:
     def answer(self, ref: str, rid: str) -> list | None:
         """The answer to one range request, or None — not yet, or never: the recorder's timeout decides."""
         return self._cam(ref).answers.get(rid)
+
+    def result(self, ref: str, rid: str) -> list | None:
+        """`answer`, and a range the camera could not read raised as `RangeFailed` — never taken for an empty answer."""
+        why = self._cam(ref).failed.get(rid)
+        if why is not None:
+            raise RangeFailed(f"camera {ref} could not read the range: {why}")
+        return self.answer(ref, rid)
+
+    def fetch_range(self, ref: str, t0: float, t1: float, wait: float = 30.0) -> list:
+        """The recorder's side, whole (the product's `Ingest.Request`): ask the camera for `[t0, t1)` of its card —
+        this cluster's clock — and wait for the upload. A camera that could not read it, or did not answer within
+        `wait`, raises `RangeFailed`: the copy fails, and backfill asks again on a later pass."""
+        rid = self.request_range(ref, t0, t1)
+        until = time.monotonic() + wait
+        while True:
+            gen = self._gen
+            got = self.result(ref, rid)
+            if got is not None:
+                return got
+            if time.monotonic() >= until:
+                for ing in self._cluster():
+                    ing._cam(ref).ranges.pop(rid, None)
+                raise RangeFailed(f"camera {ref} did not answer a range within {wait:.0f} s")
+            self._wait(gen, until)
 
     def pull(self, token: str, ref: str, who: str) -> list:
         """Lesson 17, the star: a cluster that nobody can dial either — a relay behind a mobile operator's
@@ -584,12 +630,20 @@ class _Tees:
 # while the card still waits is in memory
 # ONLY, and a shorter hold here would lose its beginning. Longer breaks: the card wrote them, from before
 # the break, and the continuation reads them off it.
+#
+# THE CARD IS OPTIONAL, AND IT IS NOT AN ARCHIVE (the product's camera; feedback CB, DG, DH). On a camera the card is
+# the camera's buffer of plain files, written from the camera's one ring with no engine (`vms/card.py`); `card` here
+# is its range reader — `CardRecorder.answer_range` of the recording on it. The pusher does not need it: a camera
+# with no card — none put in, or one that would not open — pushes and continues breaks from memory all the same, and
+# answers a range with RANGE FAILED (`upload(failed=...)`), as it does when the card could not read one: the server
+# asks again later. Answered empty, the server would remember the range as "not on the card" and never ask again.
 class CameraPusher:
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
                  hold_seconds: float = 30.0):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
         what happened: "performed", or "refused: <why>"."""
-        self.serial, self.flash, self.dial, self.card = str(serial), flash, dial, card or (lambda t0, t1: [])
+        self.serial, self.flash, self.dial, self.card = str(serial), flash, dial, card
+        self.failed_ranges: list[tuple[float, float, str]] = []        # ranges answered "could not read", and why
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
         self.clock, self.ring_seconds = clock or time.time, ring_seconds
         self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
@@ -634,11 +688,20 @@ class CameraPusher:
             return list(self.ring)
         have = float(have)
         first = float(self.ring[0]["t"]) if self.ring else self.clock()
-        older = [f for f in self.card(have, first) if isinstance(f, dict) and "t" in f] if have < first else []
+        try:
+            older = [f for f in self._read_card(have, first) if isinstance(f, dict) and "t" in f] if have < first else []
+        except OSError:
+            older = []                                                 # no card, or it could not read: memory only —
+                                                                       # what is missing is backfill's, asked again
         out = [f for f in older + self.ring if float(f["t"]) > have]
         while out and not out[0].get("key", True):
             out.pop(0)                                                 # a continuation starts on a keyframe, never mid-GOP
         return out
+
+    def _read_card(self, t0: float, t1: float) -> list:
+        if self.card is None:
+            raise OSError("this camera has no card")
+        return self.card(t0, t1)
 
     def _poll(self, road: dict, key: str, wait: float):
         """The first ingest of a road that answers, and what it said — or (None, None)."""
@@ -675,7 +738,13 @@ class CameraPusher:
                              if float(f["t"]) >= floor]
         uploaded = []
         for rid, (t0, t1) in work["ranges"].items():
-            ing.upload(token, self.serial, rid, self.card(t0, t1), camera_now=self.clock())
+            try:
+                samples = self._read_card(t0, t1)
+            except OSError as e:                                       # the card's error is said, never answered as empty
+                ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
+                self.failed_ranges.append((t0, t1, str(e)))
+                continue
+            ing.upload(token, self.serial, rid, samples, camera_now=self.clock())
             uploaded.append((t0, t1))
         performed = []
         for aid, a in work.get("asks", {}).items():
@@ -821,6 +890,15 @@ def backup_gate(ingest):
 def edge_gate(pusher):
     """The card in the camera: the camera itself knows whether its primary takes its stream."""
     return lambda row: pusher.uncovered
+
+
+def card_range(ingest, ref_of, wait: float = 30.0):
+    """`RecWorker.card_range` for a recorder of this cluster: a range of a camera's card, read by ASKING the camera
+    through this ingest — the range goes in the answer to its poll, the camera uploads it (the product's
+    `POST <ingest>/<ref>/range/<id>`). No door on the camera, no engine on it. `ref_of(src)`: the domain's name of
+    the camera the source's recording is of. A range the camera could not read raises `RangeFailed` (an `OSError`):
+    the recorder's copy fails, and its backfill asks again later."""
+    return lambda src, t0, t1: ingest.fetch_range(ref_of(src), t0, t1, wait)
 
 
 # -- the asking camera -------------------------------------------------------------------------------------

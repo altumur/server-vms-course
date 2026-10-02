@@ -1019,6 +1019,10 @@ def as_held(rec_ctl: SpecController, vol: dict, now: float, lost_after: float = 
         x = hb.extra
         if str(x.get("volume") or "") != vol["name"] or now - hb.ts > lost_after:
             continue
+        # A camera's card (`kind: edge`) is no ring of the engine: its recorder says what the card holds against its
+        # budget, and whether it opened at all (`vms/card.py`). Nothing to shrink, no size the engine formatted.
+        if isinstance(x.get("card"), dict):
+            return {"card": {k: x["card"][k] for k in ("state", "segments", "bytes", "budget", "error") if k in x["card"]}}
         size = x.get("volume_quota") or (x.get("archive_quota") if x.get("archive") and x.get("archive") == vol.get("url") else None)
         note = str(x.get("quota_note") or "")
         return {**({"size_bytes": int(size)} if size else {}),
