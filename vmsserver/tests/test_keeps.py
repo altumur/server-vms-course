@@ -101,11 +101,32 @@ def test_a_keep_holds_a_recording_whose_row_is_gone_and_one_made_after_it():
     box.src.seal()
     box.vars.put("rec/recordings/7-new", {"id": "7-new", "name": "7-new", "cam": "7"})
     box.vars.put("rec/recordings/8", {"id": "8", "name": "8", "cam": "8"})
-    _keep(box, "7", t - 1800, t - 1200, recordings=["7", "7-cloud"])   # `7` has nothing anywhere: missing, said
+    _keep(box, "7", t - 1800, t - 1200, recordings=["7", "7-cloud"])   # `7` has nothing anywhere…
     state = k.keep_pass()
     assert k.store.units() == ["7-cloud", "7-new"]                     # and nothing of camera 8
     [entry] = state.values()
-    assert entry["copied"] == 1200 and entry["missing"] == 600
+    assert entry["copied"] == 1200 and entry["missing"] == 0           # …and the door says so: not short (the fifth pass)
+
+
+def test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not_short_of_the_rest():
+    """The review's fifth pass, a major. Every recording of the keep's camera was counted over the keep's whole
+    interval: camera 7 recorded for an hour as `7` and for a minute as `7-ev`, a ten-minute keep copied whole — and
+    `7-ev` was nine minutes short for ever, `archive.keep.uncopied` and `rec_keep_missing_seconds` with it. Short is
+    only what a source's door shows and the incidents volume does not hold."""
+    box, k = _site()
+    t = box.wall()
+    box.vars.put("rec/recordings/7-ev", {"id": "7-ev", "name": "7-ev", "cam": "7"})
+    footage(box.src, "7", 1, t - 3600, t, step=10, seal=False)
+    footage(box.src, "7-ev", 1, t - 1500, t - 1440, step=10, seal=False)      # one minute, inside the keep
+    box.src.seal()
+    kp = _keep(box, "7", t - 1800, t - 1200)                           # names `7`; `7-ev` is found by its row
+    state = k.keep_pass()
+    assert state[kp.id]["copied"] == 660 and state[kp.id]["missing"] == 0
+    for _ in range(6):                                                 # past KEEP_UNCOPIED_AFTER
+        box.wall.advance(k.KEEP_EVERY); box.src_door.announce()
+        k.keep_pass()
+    assert _events(box, "archive.keep.uncopied") == []
+    assert k.keep_state[kp.id]["missing"] == 0 and k.heartbeat_extra()["keep_missing"] == {}
 
 
 def test_kept_footage_the_incidents_ring_took_is_an_alarm():

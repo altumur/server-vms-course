@@ -1073,12 +1073,16 @@ class Worker:
             return False
         now = self.clock()
         age = now - mark["at"]
-        if now - min(mark["at"], self._loop_renewed) <= self.stand_in_after():
+        # STAND_IN_FOR is counted from the loop's own last renewal, not from this step's start (the review's fifth pass,
+        # a minor): a loop that came back from one long step into another without renewing anything has made no
+        # progress, and each new step gave it five more minutes.
+        quiet = now - min(mark["at"], self._loop_renewed)
+        if quiet <= self.stand_in_after():
             return False
-        if age > self.STAND_IN_FOR:
+        if quiet > self.STAND_IN_FOR:
             mark["done"] = True
-            log.error("%s: step %s has run %.0f s; no longer standing in for it (STAND_IN_FOR %g s): its units go",
-                      self.name, mark["name"], age, self.STAND_IN_FOR)
+            log.error("%s: step %s has run %.0f s, the loop has renewed nothing for %.0f s; no longer standing in for "
+                      "it (STAND_IN_FOR %g s): its units go", self.name, mark["name"], age, quiet, self.STAND_IN_FOR)
             return False
         if not self.may_stand_in():
             return False
@@ -1113,20 +1117,37 @@ class Worker:
 
     # The place, by CAS and only while the row names this instance; never let go of here — losing it is the loop's
     # to act on (`renew_hold` clears `hold`, and a recorder mounts by what `hold` says).
+    #
+    # And only while the subsystem says the step is worth holding the place for (`may_stand_in_hold`; the review's fifth
+    # pass, a minor): a recorder's step stuck on a daemon that answers nothing writes nothing, and five minutes of a
+    # network volume held for it were five minutes no box whose daemon answers could take it. A renewal it did make is
+    # told (`note_hold_confirmed`), from before the store was asked — what a recorder fences its samples by.
     def _stand_in_hold(self) -> None:
-        if self.hold is None or not self._hold_lock.acquire(blocking=False):
+        if self.hold is None or not self.may_stand_in_hold() or not self._hold_lock.acquire(blocking=False):
             return
         try:
+            t0 = self.clock()
             key = self.sub.hold_key(self.hold)
             items, idx = self.vars.get(key)
             cur = Slot.from_items(self.hold, items)
             if cur.holder == self.instance and not cur.released:
                 self.vars.put(key, Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen,
                                         self.name or "").to_items(), cas=idx)
+                self.note_hold_confirmed(t0)
         except (OSError, Conflict):
             pass
         finally:
             self._hold_lock.release()
+
+    # Whether the stand-in may renew the place for the step that hangs now. A subsystem whose place is written through
+    # an engine says no while that engine is silent (`RecWorker.may_stand_in_hold`).
+    def may_stand_in_hold(self) -> bool:
+        return True
+
+    # The place confirmed by the store at `at` (the clock, before it was asked). Nothing here; a recorder fences its
+    # samples by it (`RecWorker.note_hold_confirmed`).
+    def note_hold_confirmed(self, at: float) -> None:
+        pass
 
     # Starts the stand-in beside a loop. Returns the event that ends it: the loop sets it when it ends. Its own
     # event, not the loop's `stop` — the stand-in must outlive nothing and wait on nothing the loop's caller owns.

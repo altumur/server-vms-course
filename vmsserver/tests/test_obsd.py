@@ -289,3 +289,44 @@ def test_a_session_past_its_linger_answers_session_lost_and_its_handles_are_gone
         raise AssertionError("a handle of a session that ended was taken")
     except SessionLost as e:
         assert isinstance(e, Unavailable) and e.name == "SESSION_LOST" and s.lost == 1
+
+
+def test_abandoning_a_session_under_calls_in_flight_answers_them_unavailable_at_once():
+    """The review's fifth pass, a minor. `abandon` closed every connection's socket and set it to None while other
+    threads were in the middle of calls on them: forty races gave three `AttributeError`s — a 500 from the archive's
+    door instead of a 503 — and twenty-eight calls that waited their whole timeout on a daemon that was answering. A
+    connection in use is shut down now, its caller answered `Unavailable` at once; and the door says 503."""
+    import random
+    import threading
+    from w2cplatform.obsd import Session, Unavailable
+    from vms.archive import Archive
+    from vms.recworker import archive_routes
+    from tests.conftest import ObsdDaemon
+    wrong, slow = [], []
+    for _ in range(40):
+        s = Session(ObsdDaemon.get().socket, client="abandoned", timeout=5)
+        vol, _ = obsd_volume(s)
+        got = []
+
+        def ask():
+            while True:
+                try:
+                    vol.space()                                        # the pass's connection
+                    vol.mount_ro().status()                            # the readers'
+                except Exception as e:                                 # noqa: BLE001
+                    got.append(e)
+                    return
+        th = threading.Thread(target=ask)
+        th.start()
+        time.sleep(random.uniform(0, 0.02))
+        t0 = time.monotonic()
+        s.abandon()
+        th.join(10)
+        took = time.monotonic() - t0
+        wrong += [e for e in got if not isinstance(e, Unavailable)]
+        if took > 1.0:
+            slow.append(took)
+    assert wrong == [] and slow == [], (wrong[:3], slow[:3])
+    st = Archive("file:///anywhere", "gone", session=s)
+    status, _, _ = archive_routes(lambda: st, time.time)("/timeline/1?from=0&to=1")
+    assert status == 503

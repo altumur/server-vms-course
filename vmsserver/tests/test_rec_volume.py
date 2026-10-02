@@ -509,3 +509,350 @@ def test_a_long_range_is_fetched_from_a_backup_a_minute_at_a_time_and_lands_whol
     assert r.our_coverage("1") == [(t - 1800, t - 600)]                            # nothing between two pieces
     assert len(landed) == len({s.begin for s in landed}) == 2400                  # and nothing twice
     assert unix_s(landed[0].begin) == t - 1800
+
+
+# -- the review's fifth pass: the volume's writer ------------------------------------------------------------------
+
+def _two_boxes_over_one_network_volume():
+    """Two daemons — two hosts — and a network volume both may serve, in one directory. Recorder A on daemon A holds
+    it and records camera 1; recorder B on daemon B is a spare. The volume's engine lock goes stale after 2 s."""
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
+    box, rec_con, rec_ctl = _site()
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    env = {"ARCHIVE_LOCK_REFRESH_S": "2"}
+    a = recorder(box, "r-1", "srv-1", obsd=Session(da.socket, client="rec-r-1", timeout=1), env=dict(env))
+    a.lease_pass(); a.heartbeat_once()
+    assert a.hold == "net"
+    _recording(box, rec_con, rec_ctl, a)
+    b = recorder(box, "r-2", "srv-2", obsd=Session(db.socket, client="rec-r-2", timeout=1), env=dict(env))
+    b.lease_pass()
+    assert b.hold is None                                              # a spare while A holds it
+    return box, da, db, a, b
+
+
+def _freeze_a_and_let_b_take_the_volume(box, da, a, b):
+    """Box A frozen whole — its daemon stopped, its recorder running no pass — past the hold's term; B takes the hold,
+    waits out the engine lock A's frozen daemon no longer refreshes, and mounts the volume."""
+    import os
+    import signal
+    os.kill(da.proc.pid, signal.SIGSTOP)
+    box.clock.advance(b.slot_ttl + b.HOLD_SKEW + 1); box.wall.advance(b.slot_ttl + b.HOLD_SKEW + 1)
+    time.sleep(3)
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        b.lease_pass()
+        if b.store is not None and b.store.writer is not None:
+            return
+        time.sleep(0.5)
+    raise AssertionError(f"B did not mount the volume: {b.archive_failure} {b.archive_error}")
+
+
+def test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there():
+    """The review's fifth pass, blocker 1, on two live daemons over one `kind: network` directory. The hold was checked
+    before `VOLUME_MOUNT_RW` and never again: box A frozen whole woke with its writer mounted, its pipeline put thirty
+    frames beside B's — all `OK` — and its pass closed the writer, the close's flush and its lock's release landing on
+    B's volume: `VOLUME_UNCLEAN` at B's every mount after, and nothing called `VOLUME_RECOVER`.
+
+    Now every sample into a network volume is fenced by the age of the hold's confirmation, and nothing of A's goes
+    in. A's writer is not closed: a daemon with the engine's patch 07 abandons it — writing nothing — and one without
+    leaves it parked, mounted and fed nothing. And B, holding the volume, recovers it if the woken engine left it
+    unclean (an engine without patch 07 flushes its queue by its own timer when it wakes) — an alarm, not `away`."""
+    import os
+    import signal
+    from w2cplatform.eventdatabase import EventIndex
+    from w2cplatform.obsd import Session
+    from tests.conftest import footage
+    from tests.test_lock_lost import _abandons
+    box, da, db, a, b = _two_boxes_over_one_network_volume()
+    p7 = _abandons(da.socket)
+    try:
+        t = box.wall()
+        assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        try:
+            _freeze_a_and_let_b_take_the_volume(box, da, a, b)
+            tb = box.wall()
+            footage(b.store, "9", 1, tb - 20, tb, seal=False)              # B records into the volume it holds
+        finally:
+            os.kill(da.proc.pid, signal.SIGCONT)
+        said = a.actuator.feed("1", t - 30, t)                         # A's pipeline, before A's pass has run
+        assert said == {"FENCED": 30}, said                            # nothing of it sent into B's volume
+        assert not a.engine_lost                                       # and not taken for the engine lost: no remount
+        a.lease_pass()                                                 # A's pass: the hold is B's
+        assert a.hold is None and a.store is None
+        writers = [w for w in Session(da.socket, client="peek").stats()["writers"] if w["owner"] == "rec:net"]
+        if p7:
+            assert a.parked == {} and writers == []                    # abandoned, writing nothing
+        else:
+            assert list(a.parked) == ["net"] and a.heartbeat_extra()["archive_parked"] == ["net"]
+            assert [w["state"] for w in writers] == ["attached"]       # not closed: its flush is not B's to receive
+        time.sleep(7)                                                  # the woken engine's own flush timer, if it has one
+        b.store.seal()                                                 # B closes its writer and mounts it again
+        assert b.store.writer is not None
+        for _ in range(3):
+            b.lease_pass()
+            assert b.store is not None and b.archive_failure == "", b.archive_error
+        recovered = [e for e in EventIndex(box.archive, "srv-2", wall=box.wall).query(0, box.wall() + 1,
+                                                                                       subsystem="rec")["events"]
+                     if e["kind"] == "archive.volume.recovered"]
+        assert all(e["class"] == "alarm" and e["volume"] == "net" and e["result"] == "recovered" for e in recovered)
+        if p7:
+            assert recovered == [] and b.store.coverage("9") == [(tb - 20, tb)]   # nothing of A's touched B's
+    finally:
+        da.stop(); db.stop()
+
+
+def test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_write_window():
+    """The fence itself, on one daemon (the review's fifth pass, blocker 1). Past `slot_ttl − lease_margin` without a
+    confirmation nothing is sent — and the sink does not take that for the engine lost; confirmed again by the pass,
+    the same pipeline writes on. A disk of this server is never fenced: nobody else can write there."""
+    box, rec_con, rec_ctl = _site()
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": f"file://{box.archive}-net", "quota_bytes": 64 << 20})
+    r = recorder(box)
+    r.lease_pass(); r.heartbeat_once()
+    assert r.hold == "net"
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+    assert r.actuator.feed("1", t - 60, t - 50) == {"OK": 10}
+    for _ in range(4):                                                 # the leases renewed, the hold not: a pass stuck
+        box.clock.advance((r.slot_ttl - r.lease_margin) / 4); box.wall.advance((r.slot_ttl - r.lease_margin) / 4)
+        r.renew_leases()
+    assert r.actuator.feed("1", t - 50, t - 40) == {"FENCED": 10}       # the hold's write window has run out
+    assert not r.engine_lost and r.samples_lost["1"] == {"FENCED": 10}
+    r.lease_pass()                                                     # confirmed again: nobody took it meanwhile
+    assert r.hold == "net" and r.actuator.feed("1", t - 40, t - 30) == {"OK": 10}
+
+    own = recorder(Box(), "r-1", "srv-1")                              # nothing declared: the box's own disk
+    own.lease_pass()
+    own.clock.advance(3600)
+    assert own._may_write_volume(own._vol_last)
+
+
+def test_an_unclean_volume_is_recovered_only_under_a_hold_confirmed_this_second():
+    """The review's fifth pass, blocker 1 and its second question. `VOLUME_UNCLEAN` is recovered by the recorder that
+    holds the volume — the hold confirmed once more right before `VOLUME_RECOVER`; refused then, nothing is recovered.
+    And an `Archive` nobody told to recover (no `on_unclean`) refuses as it always did."""
+    from w2cplatform.obsd import CODE, ObsdError
+    from vms.archive import Archive, ArchiveError
+
+    class Volume:
+        def __init__(self):
+            self.recovered = 0
+
+        def mount_rw(self, owner):
+            if not self.recovered:
+                raise ObsdError(CODE["VOLUME_UNCLEAN"], "VOLUME_MOUNT_RW", "volume was not unmounted properly")
+            return "writer"
+
+        def recover(self):
+            self.recovered += 1
+            return 1
+
+    def confirms(*answers):
+        it = iter(answers)
+
+        def confirm():
+            e = next(it)
+            if e is not None:
+                raise e
+        return confirm
+
+    said, vol = [], Volume()
+    taken = ArchiveError("wrong", "net is held by another recorder now: not mounted", "HOLD_LOST")
+    st = Archive("file:///net", "net", confirm=confirms(None, taken), on_unclean=lambda r, d: said.append(r))
+    try:
+        st._mount_rw(vol)
+        raise AssertionError("mounted without the hold")
+    except ArchiveError as e:
+        assert e.name == "HOLD_LOST" and vol.recovered == 0 and said == []
+    st = Archive("file:///net", "net", confirm=confirms(None, None), on_unclean=lambda r, d: said.append(r))
+    assert st._mount_rw(vol) == "writer" and vol.recovered == 1 and said == [1]
+    vol.recovered = 0
+    try:
+        Archive("file:///net", "net")._mount_rw(vol)
+        raise AssertionError("an archive nobody told to recover recovered")
+    except ObsdError as e:
+        assert e.name == "VOLUME_UNCLEAN" and vol.recovered == 0
+
+
+def test_a_mount_whose_answer_was_lost_leaves_its_session_and_the_next_one_picks_the_writer_up():
+    """The review's fifth pass, blocker 2. The daemon frozen right at `VOLUME_MOUNT_RW`: the client's wait ran out, the
+    mount — not sent twice — was `away`, and the writer the daemon made when it woke stayed ATTACHED to the recorder's
+    session, which its readers kept alive: every mount after it `ALREADY_LOCKED`, the volume busy until the recorder
+    was restarted. A mount that went out and did not come back leaves its session behind now, and a successor under
+    the same owner gets that writer back."""
+    import os
+    import signal
+    import threading
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=1))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        assert r.actuator.feed("1", t - 120, t - 60) == {"OK": 60}
+        first = r.session
+        real = first.call
+
+        def call(op, *a, **kw):                                        # the daemon stops the moment the mount goes out
+            if op == "VOLUME_MOUNT_RW":
+                first.call = real
+                os.kill(d.proc.pid, signal.SIGSTOP)
+                threading.Timer(1.5, lambda: os.kill(d.proc.pid, signal.SIGCONT)).start()
+            return real(op, *a, **kw)
+        first.call = call
+        r._lost_engine()                                               # a remount: the writer closed, the volume opened again
+        r.lease_pass()
+        assert r.store is None and r.archive_failure == "away"
+        assert first.abandoned and r.session is not first              # the mount's writer is an orphan: session left
+        time.sleep(1)                                                  # the daemon wakes and makes the writer
+        deadline = time.monotonic() + 10
+        while r.store is None and time.monotonic() < deadline:
+            time.sleep(OBSD_LINGER_MS / 1000)
+            r.lease_pass()
+            assert r.archive_failure != "busy" or "ALREADY_LOCKED" in r.archive_error
+        assert r.store is not None and r.store.reattached              # the writer the frozen mount made, picked up
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}
+        r.store.seal()
+        assert r.our_coverage("1") == [(t - 120, t - 60), (t - 30, t)]
+    finally:
+        d.stop()
+
+
+def test_a_volume_locked_by_our_own_owner_longer_than_a_linger_is_an_orphan_of_this_session():
+    """The review's fifth pass, blocker 2, its other half. Whatever lost the handle — `ALREADY_LOCKED` naming this
+    recorder's own owner, `rec:<volume>`, attached to a session that stays, is a writer of this session nobody here
+    holds. Not at once (a predecessor may be closing its writer this moment); after `OWN_LOCK_FOR` the session is left
+    behind, and the writer comes back to the next mount."""
+    box, rec_con, rec_ctl = _site()
+    r = recorder(box)
+    r.heartbeat_once()
+    _recording(box, rec_con, rec_ctl, r)
+    t = box.wall()
+    assert r.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+    first = r.session
+    r.store.writer = None                                              # the handle forgotten: an orphan, made by hand
+    r.lease_pass()
+    assert r.store is None and r.archive_failure == "busy" and "(rec:srv-1)" in r.archive_error
+    assert r.session is first                                          # not at once
+    box.clock.advance(r.OWN_LOCK_FOR); box.wall.advance(r.OWN_LOCK_FOR)
+    r.lease_pass()
+    assert first.abandoned and r.session is not first
+    deadline = time.monotonic() + 10
+    while r.store is None and time.monotonic() < deadline:
+        time.sleep(OBSD_LINGER_MS / 1000)
+        r.lease_pass()
+    assert r.store is not None and r.store.reattached
+    assert r.actuator.feed("1", t - 30, t) == {"OK": 30}
+
+
+def test_a_remount_on_a_frozen_daemon_costs_the_pass_one_call_and_not_three():
+    """The review's fifth pass, Т-M1. After the writer's close did not come back, the remount still sent `VOLUME_CLOSE`
+    and then `VOLUME_OPEN` on the thread that renews the leases: `close(1.0)` took two seconds and the open one more —
+    in production some thirty seconds against a lease's twenty-five. The volume's close goes with the session now,
+    and the volume is mounted again on the next pass."""
+    import os
+    import signal
+    from w2cplatform.obsd import Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=1, long_timeout=30))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        first = r.session
+        os.kill(d.proc.pid, signal.SIGSTOP)
+        try:
+            r._lost_engine()
+            t0 = time.monotonic()
+            r.lease_pass()
+            took = time.monotonic() - t0
+        finally:
+            os.kill(d.proc.pid, signal.SIGCONT)
+        assert took < 1.8, took                                        # one call's wait, the close's
+        assert first.abandoned and r.store is None and r.archive_failure == "away"
+        deadline = time.monotonic() + 10
+        while r.store is None and time.monotonic() < deadline:
+            time.sleep(OBSD_LINGER_MS / 1000)
+            r.lease_pass()
+        assert r.store is not None
+    finally:
+        d.stop()
+
+
+def test_after_a_second_restart_of_the_daemon_a_lost_session_is_not_taken_for_a_closed_handle():
+    """The review's fifth pass, a major. A restarted daemon numbers its handles from the start again, and the client's
+    list of the handles it closed outlived the session: after the second restart the new volume handle — the same
+    number as the first session's, closed at the first remount — answered `UNKNOWN_HANDLE` as `Closed`, `lost` stayed
+    False, and the volume was never mounted again. The list is the session's now, emptied when the session is lost."""
+    from w2cplatform.obsd import Session
+    from vms.archive import ArchiveError
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=5))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        assert r.actuator.feed("1", t - 120, t - 90) == {"OK": 30}
+        for n in (1, 2):
+            d.restart(kill=False)
+            try:
+                r.store.coverage("1")
+                raise AssertionError("a volume handle of a restarted daemon answered")
+            except ArchiveError as e:
+                assert e.name == "SESSION_LOST", (n, e.name)
+            assert r.store.lost
+            r.lease_pass()
+            assert r.store is not None and not r.store.lost and r.remounts == n
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}
+    finally:
+        d.stop()
+
+
+def test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_mounts_again():
+    """The review's fifth pass, a major. `seal()` — a keep's copy made readable — timed out on a frozen daemon and
+    kept the handle it had just closed: every sample after it `Closed`, `lost` False, the volume taking nothing until a
+    restart. The writer is forgotten before its close goes out now; a close that did not come back is an orphan — the
+    session is left behind on the next pass — and the volume is mounted again."""
+    import os
+    import signal
+    from w2cplatform.obsd import ObsdError, Session
+    from tests.conftest import ObsdDaemon
+    d = ObsdDaemon.fresh()
+    try:
+        box, rec_con, rec_ctl = _site()
+        r = recorder(box, obsd=Session(d.socket, client="rec-r-1", timeout=1, long_timeout=1))
+        r.heartbeat_once()
+        _recording(box, rec_con, rec_ctl, r)
+        t = box.wall()
+        assert r.actuator.feed("1", t - 120, t - 60) == {"OK": 60}
+        first = r.session
+        os.kill(d.proc.pid, signal.SIGSTOP)
+        try:
+            try:
+                r.store.seal()
+                raise AssertionError("a seal on a frozen daemon came back")
+            except ObsdError as e:
+                assert e.name == "UNAVAILABLE"
+        finally:
+            os.kill(d.proc.pid, signal.SIGCONT)
+        assert r.store.writer is None and r.store.orphan
+        assert r.actuator.feed("1", t - 60, t - 50) == {"UNAVAILABLE": 10}     # not `CLOSED`: no writer, said
+        assert r.engine_lost
+        r.lease_pass()
+        assert first.abandoned and r.session is not first
+        deadline = time.monotonic() + 10
+        while r.store is None and time.monotonic() < deadline:
+            time.sleep(OBSD_LINGER_MS / 1000)
+            r.lease_pass()
+        assert r.store is not None and r.store.writer is not None
+        assert r.actuator.feed("1", t - 30, t) == {"OK": 30}
+    finally:
+        d.stop()
