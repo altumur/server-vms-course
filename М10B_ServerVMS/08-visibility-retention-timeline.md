@@ -57,17 +57,18 @@
 - писатель остаётся смонтированным, *отсоединённым*, и ждёт `OBSD_WRITER_GRACE_S` того же `owner`;
 - регистратор, запущенный заново с `rec:<volume>`, получает того же писателя (`reattached: true`), и шва в записи нет.
 
-Если владелец не вернулся, демон по истечении срока закрывает писателя чисто, и следующий монтирующий находит чистый том (`test_after_the_grace_the_volume_is_clean_for_anybody`). Том, оставшийся нечистым после падения самого хоста, движок восстанавливает при монтировании; это его работа, и курс её не повторяет.
+Если владелец не вернулся, демон по истечении срока закрывает писателя чисто, и следующий монтирующий **на этом хосте** находит чистый том (`test_after_the_grace_the_volume_is_clean_for_anybody`). Для сетевого тома, который за это время взяла другая коробка, это закрытие — сброс и удаление lock-файла по пути, уже чужого (урок 6, шаг 12). Том, который не был чисто размонтирован, движок сам не восстанавливает: монтирование отвечает `VOLUME_UNCLEAN`. Раньше это было `away` навсегда, и `VOLUME_RECOVER` не звал никто (пятое ревью). Теперь его зовёт регистратор, который держит том, — только под холдом, подтверждённым в эту секунду, и с тревогой `archive.volume.recovered` (урок 10, шаг 11).
 
 На долю курса остаётся порядок ухода с тома. Его держит `Archive.close`:
 
 ```python
-    def close(self) -> None:
+    def close(self, timeout: float | None = None) -> bool:
         """The writer closed — after its flush — and the volume let go. In that order: closing is what makes the
-        last minutes readable, and a volume released first would be somebody else's with a writer still in it."""
+        last minutes readable, and a volume released first would be somebody else's with a writer still in it.
+        …
 ```
 
-Сначала закрыть писателя, потом отпустить удержание тома. Обратный порядок даёт два писателя в одном томе. Подробно это разобрано в [уроке 10](10-recworker.md) (`test_rec_volume.py::test_leaving_a_volume_closes_its_writer_before_the_hold_goes`).
+Сначала закрыть писателя, потом отпустить удержание тома. Обратный порядок даёт два писателя в одном томе. `False` значит, что писатель, может быть, ещё жив в сессии (закрытие или монтирование без ответа), и сессию надо оставить (урок 6, шаг 4). А писателя сетевого тома, чей холд уже потерян, регистратор не закрывает вовсе (урок 10, шаг 11). Подробно это разобрано в [уроке 10](10-recworker.md) (`test_rec_volume.py::test_leaving_a_volume_closes_its_writer_before_the_hold_goes`).
 
 ## Шаг 2 — Записано не значит видно
 
@@ -106,10 +107,20 @@
     def seal(self) -> None:
         """Close the writer and take it again: its last block is closed, and what was written is readable. What
         a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
-        if self.writer is not None:
-            self.writer.close()
-            self.writer = self._open_volume().mount_rw(self.owner)
+        if self.writer is None:
+            return
+        self._fenced("WRITER_CLOSE")               # a close is the writer's last write: under the same fence
+        w, self.writer = self.writer, None
+        try:
+            w.close()
+        …
+        try:
+            self.writer = self._mount_rw(self._open_volume())
+        …
+        self._configure()
 ```
+
+Что `seal` делает, когда закрытие не вернулось, и почему писатель забывается до закрытия, — урок 7, шаг 9.
 
 В коде регистратора `seal` зовёт копирование удержаний: скопированное должно быть видно, чтобы его посчитать и взять от него sha256.
 

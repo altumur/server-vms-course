@@ -271,15 +271,56 @@ def classify(e: Exception) -> ArchiveError:
         """One sample into the recording's stream: `OK`, or `SEQUENCE_LOST` (taken — an earlier sequence was
         lost). Raises `ObsdError` for a sample NOT taken — the caller skips to the next key frame — and
         `Unavailable` when this volume is not open for writing any more (closed, or the engine went away)."""
-        if self.writer is None:
+        w = self.writer
+        if w is None:
             raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
-        return self.writer.put(stream_name(unit, epoch, backfill), sample)
+        self._fenced("PUT_MEDIA")
+        try:
+            return w.put(stream_name(unit, epoch, backfill), sample)
+        except SessionLost:
+            self.lost = True
+            raise
+        except Closed:
+            self._closed_under(w)
+            raise
+        except ObsdError as e:
+            # The engine's own fence (its patch 07): the volume's lock is another writer's, found at its path before a
+            # block was written. Not the engine lost — a remount would only find the other writer's lock — but the
+            # place lost: nothing more is sent, and the recorder gives the volume up (`RecWorker.volume_pass`).
+            if e.name == "WRITER_STOPPED" and "lock lost" in e.detail:
+                self.lock_lost = True
+            raise
 
     def finish(self, unit, epoch: int, backfill: bool = False) -> bool:
-        return self.writer.finish(stream_name(unit, epoch, backfill)) if self.writer is not None else False
+        w = self.writer
+        if w is None:
+            return False
+        self._fenced("FINISH_MEDIA")
+        try:
+            return w.finish(stream_name(unit, epoch, backfill))
+        except SessionLost:
+            self.lost = True
+            raise
+        except Closed:
+            self._closed_under(w)
+            raise
+
+    # EVERY SAMPLE INTO A VOLUME ANY BOX MAY SERVE IS FENCED (the review's fifth pass, blocker 1). The hold was checked
+    # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
+    # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
+    # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    def _fenced(self, op: str) -> None:
+        if self.lock_lost:
+            raise Fenced(op, f"{self.name}: the engine says the volume's lock is another writer's: nothing sent")
+        if self.fence is not None and not self.fence():
+            raise Fenced(op, f"{self.name}: the hold this recorder writes it under is not confirmed: nothing sent")
 ```
 
 `put` — имя потока и вызов писателя. Граница «взят — не взят» из урока 6 проходит сквозь него без изменений: статус — кадр на томе, исключение — нет. Закрытый том (`writer is None`) — не отказ кадра, а `Unavailable`: писать больше некуда, и тот, кто пишет, должен узнать это как «движка нет», а не как «пропусти до ключевого» (шаг 13).
+
+**Каждый кадр в сетевой том — под оградой.** Холд тома проверялся только перед `VOLUME_MOUNT_RW` и больше никогда: коробка, замороженная целиком — регистратор и демон, — просыпалась со смонтированным писателем, и её конвейер клал тридцать кадров (все `OK`) в кольцо, которое за это время взяла другая коробка (пятое ревью, блокер 1; воспроизведено на двух демонах над одним каталогом `kind: network`). Теперь `put`, `finish` и `seal` сначала спрашивают `_fenced`: `fence` — функция, которую даёт регистратор (`RecWorker._may_write_volume`, урок 10, шаг 3), — отвечает, подтверждён ли холд достаточно недавно. Нет — `Fenced`, и в демон не уходит ничего. `Fenced` — подкласс `Unavailable`, но не потеря движка: движка никто не спрашивал. Вторая линия — сам движок с патчем 07 (урок 6, шаг 6): `WRITER_STOPPED` с «lock lost» ставит `lock_lost`, и дальше ограда отказывает уже по нему. Тесты: `test_rec_volume.py::test_every_sample_into_a_network_volume_needs_a_hold_confirmed_within_its_write_window`, `test_a_box_frozen_whole_writes_nothing_into_the_network_volume_another_box_took_and_closes_nothing_there`.
+
+**`Closed` на текущем писателе — писатель ушёл.** Если хэндл, который `Archive` ещё держит как свой писатель, отвечает `Closed`, значит, его закрытие ушло, а хранилище хэндл оставило. `_closed_under` обнуляет писателя и ставит `lost`, и проход монтирует том заново. Раньше каждый кадр после этого был `Closed`, `lost` не ставился никогда, и так до перезапуска (пятое ревью). `Closed` на писателе, которого уже заменил `seal`, — гонка с собственным закрытием, и её `_closed_under` не трогает.
 
 ```python
     def resize(self, quota: int) -> None:
@@ -296,9 +337,29 @@ def classify(e: Exception) -> ArchiveError:
     def seal(self) -> None:
         """Close the writer and take it again: its last block is closed, and what was written is readable. What
         a recorder does when the minutes it just wrote must be an answer now — a copied range, a stop."""
-        if self.writer is not None:
-            self.writer.close()
-            self.writer = self._open_volume().mount_rw(self.owner)
+        if self.writer is None:
+            return
+        self._fenced("WRITER_CLOSE")               # a close is the writer's last write: under the same fence
+        w, self.writer = self.writer, None
+        try:
+            w.close()
+        except SessionLost:
+            self.lost = True
+            raise
+        except Unavailable:
+            self.orphan = True                     # closed or not, nobody knows: the session is left behind
+            raise
+        except Closed:
+            self.lost = True
+            raise
+        except ObsdError:
+            pass                                   # refused: the handle is gone either way; a new writer is mounted
+        try:
+            self.writer = self._mount_rw(self._open_volume())
+        except SessionLost:
+            self.lost = True
+            raise
+        self._configure()
 ```
 
 `flush` блок не закрывает. Закрывают его заполнение, период сброса после конца последовательности (урок 6, шаг 8) или закрытие писателя. Периоды задаёт `_configure`, вызванный после каждого `mount_rw`: `sequenceFlushPeriodMs` и `blockFlushPeriodSec` — числа продукта, 10 000 и 5, из окружения регистратора (`SEQUENCE_FLUSH_MS`, `BLOCK_FLUSH_S`); ноль оставляет движку его собственные (минута на блок). Отказ `WRITER_CONFIGURE` — предупреждение в лог, не ошибка: писатель остаётся на своих настройках, и запись идёт. Но и пять секунд — не «сейчас». Поэтому, когда записанное должно стать ответом сейчас, регистратор закрывает писателя и берёт его снова. `test_written_is_readable_once_its_block_is_closed`:
@@ -309,6 +370,8 @@ def classify(e: Exception) -> ArchiveError:
     st.seal()
     assert st.coverage("7") == [(t, t + 600)]
 ```
+
+**Неудачный `seal` не оставляет мёртвого писателя.** Закрытие, не дождавшееся ответа, оставляло в `writer` только что закрытый хэндл: каждый следующий `put` получал `Closed`, `lost` оставался `False`, том инцидентов не брал ничего до перезапуска, а через 300 секунд копия удержания поднимала ложную тревогу (пятое ревью; воспроизведено `SIGSTOP` во время `seal`). Теперь писатель забывается **до** того, как уходит закрытие, что бы ни вернулось. Закрытие без ответа — `orphan`: на ближайшем `close` прохода сессия оставляется, и преемник подхватывает писателя (урок 6, шаг 4). `SessionLost` и `Closed` — `lost`. Отказ движка — хэндла нет в любом случае, монтируется новый. Новый писатель монтируется через `_mount_rw`, как при открытии, — с тем же вопросом о холде перед монтированием. И само закрытие стоит под оградой: это последняя запись писателя. Тест: `test_rec_volume.py::test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_mounts_again`.
 
 ```python
     @contextmanager
@@ -348,11 +411,16 @@ def classify(e: Exception) -> ArchiveError:
 # volume for as long as the pipeline ran, and nothing restarts a pipeline for a remount. Asked each time, the
 # next key frame after a remount opens a sequence in the new writer, and the recording goes on.
 class RecSink:
-    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None):
+    def __init__(self, store, unit, epoch: int, on_lost=None, backfill: bool = False, on_wrong=None, tally=None):
         self.store_of = store if callable(store) else (lambda: store)
         self.unit, self.epoch, self.on_lost, self.backfill = str(unit), int(epoch), on_lost, backfill
         self.on_wrong = on_wrong                     # the volume refuses writes for good: told once per sample, acted on per pass
+        self.tally = tally or (lambda unit, status: None)
         self.taken = self.refused = 0
+
+    @property
+    def store(self) -> Archive | None:
+        return self.store_of()
 
     def put(self, sample: Sample) -> str:
         try:
@@ -361,14 +429,26 @@ class RecSink:
                 raise Unavailable("PUT_MEDIA", "no volume open")
             st = store.put(self.unit, self.epoch, sample, self.backfill)
             self.taken += 1
+            self.tally(self.unit, st)
             return st
+        except Fenced as e:
+            # The hold on a network volume unconfirmed (blocker 1, the fifth pass): nothing was sent and the engine is
+            # not lost — the pass confirms the hold or lets the volume go, and a remount now would close the writer
+            # onto a volume that may be somebody else's.
+            self.refused += 1
+            self.tally(self.unit, e.name)
+            raise
         except Unavailable:
+            self.tally(self.unit, "UNAVAILABLE")
             if self.on_lost is not None:
                 self.on_lost()
             raise
         except ObsdError as e:
             self.refused += 1
-            if e.name == "WRITER_STOPPED" and self.on_lost is not None:
+            self.tally(self.unit, e.name)
+            if e.name == "WRITER_STOPPED" and getattr(store, "lock_lost", False):
+                pass                                 # the volume's lock is another writer's: the place lost, not the engine
+            elif e.name == "WRITER_STOPPED" and self.on_lost is not None:
                 self.on_lost()                       # the engine stopped this writer: a new one, on the next pass
             elif self.on_wrong is not None and classify(e).kind == "wrong":
                 self.on_wrong(e)
@@ -394,6 +474,8 @@ class RecSink:
 **Отвергнут.** `ObsdError`, и приёмник пробрасывает его конвейеру, а тот пропускает до ключевого кадра (шаг 11). Отказ кадра — обычное дело: `SEQUENCE_NEEDS_KEY_SAMPLE` после обрезанной группы, `SEQUENCE_TOO_LARGE`. Один отказ — особый: `WRITER_STOPPED` значит, что движок остановил самого писателя, и этот писатель больше ничего не возьмёт. Пропускать до ключевого бесполезно — следующий ключевой получит тот же отказ. Поэтому приёмник зовёт `on_lost`, как при пропавшем демоне, и на следующем проходе регистратор открывает нового писателя. Если отказ — `wrong` (`PERMISSION_DENIED`, `READ_ONLY`), том больше не возьмёт ничего. Приёмник говорит об этом регистратору через `on_wrong`, и на следующем проходе регистратор отдаёт том. Говорит здесь, на потоке конвейера, а действует там, в проходе. `test_an_archive_that_refuses_writes_mid_run_is_handed_back` доказывает и отдачу, и паузу `REFUSED_FOR`, без которой регистратор взял бы тот же сломанный том обратно.
 
 **Движка нет.** `Unavailable` — не ответ о кадре (урок 6, шаг 4). Приёмник зовёт `on_lost`, это `RecWorker._lost_engine`, и пробрасывает исключение — для конвейера это тоже «не взят». Шаг 13 разбирает, что дальше.
+
+**Огорожен — четвёртый исход, и он не «движка нет».** `Fenced` ловится раньше `Unavailable`: кадр не взят, счётчик `FENCED` в `tally`, а `on_lost` не зовётся. Перемонтирование сейчас закрыло бы писателя — со сбросом — в том, который, возможно, уже чужой; холд подтверждает или отпускает проход (урок 10, шаг 11). Так же `WRITER_STOPPED` при `lock_lost`: место потеряно, а не движок, и `on_lost` молчит.
 
 ```python
     def finish(self) -> None:
@@ -494,6 +576,8 @@ class RecSink:
 
 А если регистратор не вернулся? Аренда тома истекает за 45 секунд, следующий регистратор берёт том под тем же `rec:<том>` и получает писателя — отсрочка в `obsd.service` девяносто секунд, дольше аренды. Отсрочка истекла, а никто не пришёл — демон закрывает писателя чисто, и взятое остаётся на томе (`test_after_the_grace_the_volume_is_clean_for_anybody`).
 
+Всё это — про том одного хоста. Сетевой том после истечения аренды может взять регистратор **другой** коробки, со своим демоном. Писатель первого хоста он не подхватит, а конец отсрочки на первом хосте — это закрытие со сбросом и удалением lock-файла по пути, уже чужого. Без патча 07 движка это открыто; что делает регистратор, разбирает урок 10, шаг 11.
+
 **Аккуратная остановка** — другая история, и в ней важен порядок:
 
 ```python
@@ -503,23 +587,35 @@ class RecSink:
     # is the hold let go. Released together with the slot, the next recorder would find our writer still there.
 ```
 
-Сначала писатель закрывается — его сброс кладёт последние минуты на том, — и только потом аренда отпускается. `Archive.close` держит тот же порядок внутри себя: сначала читатель и писатель, потом том. На закрытие юнит даёт `StopTimeout=40`: протокол разрешает `WRITER_CLOSE` до тридцати секунд. `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` проверяет порядок `["close", "release"]` и то, что следующий регистратор монтирует чистый том (`not b.store.reattached`) и видит последние минуты. Аренды томов, спейры и передача тома — [урок 10](10-recworker.md).
+Сначала писатель закрывается — его сброс кладёт последние минуты на том, — и только потом аренда отпускается. `Archive.close` держит тот же порядок внутри себя: сначала писатель, потом том — и том, только если закрытие писателя вернулось (пятое ревью, Т-M1: иначе это ещё один вызов к молчащему демону на потоке аренд, а сессия всё равно оставляется). На закрытие юнит даёт `StopTimeout=40`: протокол разрешает `WRITER_CLOSE` до тридцати секунд. `test_a_recorder_that_stops_gives_its_volume_back_after_its_last_write_into_it` проверяет порядок `["close", "release"]` и то, что следующий регистратор монтирует чистый том (`not b.store.reattached`) и видит последние минуты. Аренды томов, спейры и передача тома — [урок 10](10-recworker.md).
 
 ## Шаг 13 — Демон пропал
 
 `RecSink` получил `Unavailable` и позвал `_lost_engine`:
 
 ```python
-    # A sink found the daemon gone. Nothing is torn down here, on the pipeline's thread: the next pass closes
-    # what is left of the store and opens it again (`volume_pass`) — at once, not after the writer watch's ten
-    # minutes, because there is nothing to wait for: the engine is not there, a new session is (feedback CF).
+    # A sink found the daemon gone — or a handle of the store answered that the daemon no longer knows this session
+    # (`SessionLost`: restarted, or the session outlived its linger; the review's third pass, blocker 4). Nothing is
+    # torn down here, on the pipeline's thread: the next pass closes what is left of the store and opens it again
+    # (`volume_pass`) — at once, not after the writer watch's ten minutes, because there is nothing to wait for: the
+    # engine is not there, a new session is (feedback CF). And it is SAID: until the remount, `archive_error`; after
+    # it, `archive_remounted`.
     def _lost_engine(self) -> None:
+        if self.store is not None and not self.store.lost and not self._may_write_volume(getattr(self.store, "row", None)):
+            return                                   # fenced, not lost (`Fenced`): the hold is the pass's to answer
+        lost = self.store is not None and self.store.lost
+        why = ("obsd no longer knows this recorder's session (restarted, or the session outlived its linger): every "
+               "handle is dead" if lost else "obsd stopped answering")
         if not self.engine_lost:
-            log.warning("%s: obsd stopped answering — remounting %s on the next pass", self.name, self.volume)
+            log.warning("%s: %s — remounting %s on the next pass", self.name, why, self.volume)
+            self._lost_why, self._lost_at = why, self.wall()
+            if not self.archive_error or lost:
+                self.archive_error, self.archive_failure = why, "away"
+                self.archive_away_since = self.archive_away_since or self.wall()
         self.engine_lost = True
 ```
 
-На потоке конвейера ничего не разбирается: там только флаг. Следующий проход видит `engine_lost`, закрывает остатки хранилища и открывает том заново. Сразу, а не через десять минут сторожа писателя: ждать нечего. Конвейеры при этом не останавливаются: их приёмники спрашивают текущий том (шаг 10) и со следующего ключевого кадра пишут в нового писателя. `test_rec_volume.py::test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost` проверяет оба пути. Минута записана, `_lost_engine` и проход перемонтировали том — у старого `Archive` писателя нет, а тот же конвейер пишет следующую минуту в новый, и видна вся запись целиком: `[(t - 120, t)]`:
+На потоке конвейера ничего не разбирается: там только флаг. Первая строка — исключение для сетевого тома, чей холд не подтверждён в окне записи: тогда это не потеря движка, а ограда (пятое ревью, блокер 1), и перемонтировать нечего, пока проход не решил судьбу холда. Следующий проход видит `engine_lost`, закрывает остатки хранилища и открывает том заново. Сразу, а не через десять минут сторожа писателя: ждать нечего. Конвейеры при этом не останавливаются: их приёмники спрашивают текущий том (шаг 10) и со следующего ключевого кадра пишут в нового писателя. `test_rec_volume.py::test_a_recording_goes_on_into_the_volume_opened_again_after_the_engine_was_lost` проверяет оба пути. Минута записана, `_lost_engine` и проход перемонтировали том — у старого `Archive` писателя нет, а тот же конвейер пишет следующую минуту в новый, и видна вся запись целиком: `[(t - 120, t)]`:
 
 ```python
     first = r.store
@@ -528,7 +624,7 @@ class RecSink:
     assert r.actuator.feed("1", t - 60, t) == {"OK": 60}               # the same pipeline, into the new writer
 ```
 
-Во второй половине теста писатель отвечает `WRITER_STOPPED`, и `engine_lost` снова поднят: новый писатель — на следующем проходе.
+Во второй половине теста писатель отвечает `WRITER_STOPPED`, и `engine_lost` снова поднят: новый писатель — на следующем проходе. Кроме `WRITER_STOPPED` с «volume lock lost» от движка с патчем 07: там замок тома чужой, перемонтирование нашло бы тот же чужой замок, и проход отдаёт том (`Archive.lock_lost`, урок 10, шаг 11).
 
 Пока демона нет, том остаётся местом регистратора. Это `away`, а не `wrong`: том не отдаётся, ёмкость не обнуляется. `test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place` проверяет это на сокете, где никто не слушает. `test_a_daemon_that_is_not_there_does_not_stop_the_recorder` гоняет минуту цикла без демона: аренды продлеваются, heartbeat идёт и говорит `archive_failure: away`. `test_when_the_daemon_answers_again_the_volume_opens_and_the_outage_is_over` — обратный конец: демон вернулся, следующий проход открыл том, ошибка очистилась.
 
