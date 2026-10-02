@@ -597,6 +597,52 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     assert rep[0] == 200 and fenced(rep) == [("7", True), ("9", False)] and rep[1]["epochs"] == "cached"
 
 
+def test_a_burst_of_timeline_requests_lists_the_resources_once_in_two_seconds():
+    """The product's DD (the course's answer to the fourth review left it open): every `GET /events` learned which
+    resources exist by listing `resources/` in the object store and reading every heartbeat there — on every poll
+    of every open page. The list is read at most once every `SEEN_FOR` seconds of the merge's monotonic clock; a
+    heartbeat comes every few seconds anyway. The resources themselves are asked on every request, as before."""
+    from w2cplatform.resource import RESOURCES
+    box = Box()
+    for server in ("srv-1", "srv-2"):
+        res = vms_resource(box.archive, server, "", box.vars, box.objects, wall=box.wall)
+        res.url = f"http://{server}"
+        res.heartbeat()
+
+    class Counting:
+        """The console's object store, counting what the review counted: listings of the resources, heartbeats read."""
+        def __init__(self, inner): self.inner, self.lists, self.reads = inner, 0, 0
+        def list(self, prefix): self.lists += prefix.startswith(RESOURCES); return self.inner.list(prefix)
+        def get(self, key): self.reads += key.startswith(RESOURCES); return self.inner.get(key)
+        def __getattr__(self, name): return getattr(self.inner, name)
+
+    objects, asked = Counting(box.objects), []
+    m = MergedIndex(objects, fetch=lambda url, p: asked.append(url) or {"events": []}, wall=box.wall, clock=box.clock)
+    con = _console_over(box, m)
+    con.clock = box.clock
+
+    class H:
+        headers: dict = {}
+        def _send(self, status, body, raw=False): self.reply = (status, body)
+
+    def ask():
+        h = H(); con.dispatch(h, "GET", "/events", {"from": str(box.wall() - 60), "to": str(box.wall())}); return h.reply
+
+    assert ask()[0] == 200 and ask()[0] == 200
+    assert (objects.lists, objects.reads) == (1, 2)                             # two requests, one listing
+    assert sorted(asked) == ["http://srv-1", "http://srv-1", "http://srv-2", "http://srv-2"]   # each resource, each time
+    box.clock.advance(m.SEEN_FOR)
+    assert ask()[0] == 200 and (objects.lists, objects.reads) == (2, 4)        # past the window: listed again
+    # a resource that appears inside the window is seen once the window is over
+    late = vms_resource(box.archive, "srv-3", "", box.vars, box.objects, wall=box.wall)
+    late.url = "http://srv-3"; late.heartbeat()
+    ask()
+    assert "http://srv-3" not in asked
+    box.clock.advance(m.SEEN_FOR)
+    ask()
+    assert asked[-3:].count("http://srv-3") == 1 and objects.lists == 3
+
+
 def test_the_consoles_records_outlive_what_they_refer_to():
     """The one rule that has to exist BEFORE the records it protects.
 

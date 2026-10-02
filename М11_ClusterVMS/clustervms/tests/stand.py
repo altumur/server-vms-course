@@ -349,7 +349,9 @@ def _merged(s):
             raise ConnectionError(name)
         return s.resources[name].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None,
                                                 p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
-    return MergedIndex(s.objects, fetch=fetch, wall=s.wall)
+    m = MergedIndex(s.objects, fetch=fetch, wall=s.wall)
+    m.SEEN_FOR = 0.0          # the stand moves only its wall: each query reads the resources afresh, as two queries a minute apart do
+    return m
 
 
 def _short(q) -> dict:

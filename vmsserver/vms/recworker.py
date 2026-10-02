@@ -309,6 +309,11 @@ class RecWorker(VmsWorker):
         # once it is closed, so a range just copied shows minutes later. Until it does, the range is ours —
         # neither a hole to copy again nor, worse, something the source did not have.
         self.landing: dict[str, list[tuple[float, float]]] = {}
+        # What the ENGINE refused of what a source delivered (`_land`): how many times each piece — (recording,
+        # source, span rounded to the stitch tolerance) — and, after `REFUSED_TIMES`, the pieces given up per
+        # (recording, source), planned no more, like `nowhere` (the review's fourth pass, an open item; the product's DD).
+        self.refusals: dict[tuple[str, str, int, int], tuple[int, float, float]] = {}   # piece -> (times, its span)
+        self.given_up: dict[tuple[str, str], list[tuple[float, float]]] = {}
         self.archive_url = ""                       # this recorder's archive door, once served (Lesson 26)
         self._rows_seen: dict[str, dict | None] = {}   # recording -> its row as last read, for the door (`_visible_from`)
         self._not_written_since: dict[str, float] = {}   # primary recording -> since when nobody writes it
@@ -829,6 +834,9 @@ class RecWorker(VmsWorker):
                 # Lesson 16: what a clean fetch found nowhere — ours missing it, the source missing it too.
                 # A number the operator wants on its own: "of what we lost, 519 s were not on the card either".
                 "nowhere_seconds": int(sum(b - a for spans in self.nowhere.values() for a, b in spans)),
+                # …and what the source HAD and the engine refused `REFUSED_TIMES` times, given up (`_refused`): the
+                # product's `backfill.refused_seconds`. Not "not on the card" — on it, and not something this volume takes.
+                "backfill": {"refused_seconds": int(sum(b - a for spans in list(self.given_up.values()) for a, b in spans))},
                 # A recorder holding an incidents volume: what each keep holds there (`keep_pass`).
                 **({"keeps": self.keep_state} if self.incidents else {}),
                 # …and what each keep is short of, alone: `{keep: seconds}` — the console's `rec_keep_missing_seconds`
@@ -1345,7 +1353,8 @@ class RecWorker(VmsWorker):
     # turn a recording on events into a recording always, a night late. An operator's request is not
     # planned: a person asked for that hour, and may ask for any hour.
     #
-    # And never what a clean fetch from THIS source already found nowhere.
+    # And never what a clean fetch from THIS source already found nowhere, nor what the engine refused of it
+    # `REFUSED_TIMES` times (`_refused`) — forgotten once older than anything planned, so neither list grows for ever.
     def gaps(self, unit, coverage: dict, now: float, planned: bool = True, source: str = "device") -> list[tuple[float, float]]:
         from .archive import visible_from
         ours = self.our_coverage(unit)
@@ -1361,6 +1370,11 @@ class RecWorker(VmsWorker):
         holes = subtract((lo, hi), ours)
         for gone in self.nowhere.get((str(unit), source), []):
             holes = [h for hole in holes for h in subtract(hole, [gone])]
+        if (str(unit), source) in self.given_up:
+            kept = self.given_up[(str(unit), source)] = [sp for sp in self.given_up[(str(unit), source)]
+                                                         if sp[1] > now - self.keep_days * 86400]
+            for gone in kept:
+                holes = [h for hole in holes for h in subtract(hole, [gone])]
         pending = [sp for sp in self.landing.get(str(unit), []) if subtract(sp, ours)]   # still not shown by the volume
         self.landing[str(unit)] = pending
         for sp in pending:
@@ -1724,6 +1738,18 @@ class RecWorker(VmsWorker):
     # back and another taken, or the lease let go. After a release `epochs.get(unit)` is None, not 0 — epoch nought
     # is a keep's copy, never a backfill's. And `landing` is what LANDED, plus what live recording had already: a
     # group the engine refused, or one that began without a key frame, stays a hole and is asked for again.
+    #
+    # NOT FOR EVER (the review's fourth pass, an open item; the product's DD). A group the engine refuses for what is
+    # IN it — no key frame to open on, larger than a block — is refused every time, and the recorder fetched it off
+    # the card every pass. Each refused piece is counted (`_refused`) and given up at the third; a piece that lands,
+    # or that live recording reached, is forgotten. A refused group also CLOSES the sequence it would have continued:
+    # left open, the next group went on in it, and the index drew the refused stretch as footage — no hole, no
+    # second fetch, and a picture of nothing on the timeline. And a sequence the engine took and then lost (put
+    # answers `SEQUENCE_LOST`: taken, an earlier one lost) is the one finished before this one opened — no longer
+    # landed, and refused like the rest. One lost in an earlier fetch cannot be told from here; that is only said.
+    REFUSED_TIMES = 3
+    REFUSALS_KEPT = 256                              # pieces counted at once; the oldest forgotten first
+
     def _land(self, unit: str, cam, samples: list[Sample], t0: float, t1: float, source: str, store=None,
               report: bool = True) -> dict:
         from w2cplatform.obsd import unix_s
@@ -1741,29 +1767,48 @@ class RecWorker(VmsWorker):
                 groups[-1].append(smp)
         delivered = stitch([(unix_s(g[0].begin), unix_s(g[-1].end)) for g in groups], self.stitch)
         last = None                                      # where the sequence being written ends
+        seq, before, refused = [], [], []                # the open sequence's groups, the previous one's; what was refused
         for g in groups:
             span = (unix_s(g[0].begin), unix_s(g[-1].end))
             if overlaps(have, span):
                 ours.append(span)                        # live recording got there while we were fetching: ours already
                 continue
             if not g[0].key:
+                refused.append(span)
                 continue                                 # no key frame to open on: a hole, asked for again
             try:
                 # A sequence is CONTINUOUS to the index: a hole inside one is drawn as footage. So what the source
                 # did not have — or what was dropped above — ends the sequence, and the next group opens another.
                 if last is not None and span[0] - last > self.stitch:
                     store.finish(unit, epoch, backfill=True)
+                    seq, before = [], seq
                 last = span[1]
                 for smp in g:
-                    store.put(unit, epoch, smp, backfill=True)
+                    if store.put(unit, epoch, smp, backfill=True) == "SEQUENCE_LOST":
+                        log.warning("%s: %s lost a fetched sequence before %.0f", self.name, unit, span[0])
+                        ours = [sp for sp in ours if sp not in before]
+                        kept, refused, before = kept - len(before), refused + before, []
                     self._offered_extra += len(smp.body)
                 kept += 1
                 ours.append(span)
+                seq.append(span)
             except Unavailable:
                 self._lost_engine()
                 break
             except ObsdError as e:                       # the engine refused the group: the next one opens on its key
                 log.warning("%s: %s refused a fetched group at %.0f: %s", self.name, unit, span[0], e.name)
+                refused.append(span)
+                last, seq, before = None, [], seq
+                try:
+                    store.finish(unit, epoch, backfill=True)
+                except Unavailable:
+                    self._lost_engine()
+                    break
+                except ObsdError:
+                    pass                                 # nothing open to close
+        if ours:
+            self.refusals = {k: v for k, v in self.refusals.items() if k[0] != unit or not overlaps(ours, v[1:])}
+        self._refused(unit, source, refused)
         if kept:
             # In the `try` too (the review's fourth pass): the engine gone between the last sample and this finish
             # raised out of `_land`, every request of the pass with it, and what had landed was not counted.
@@ -1792,6 +1837,22 @@ class RecWorker(VmsWorker):
         if failed:
             out["error"] = failed
         return out
+
+    # One more refusal of each piece. A piece is known by its span ROUNDED to the stitch tolerance: the same group
+    # fetched again comes back with the same frames, and a few milliseconds of a source's rounding are not another
+    # piece. At `REFUSED_TIMES` it is given up for this source — logged, and remembered beside `nowhere`.
+    def _refused(self, unit: str, source: str, spans: list[tuple[float, float]]) -> None:
+        q = self.stitch or 1.0
+        for a, b in spans:
+            k = (unit, source, round(a / q), round(b / q))
+            n = self.refusals.pop(k, (0,))[0] + 1         # popped and put back: the newest refusal is the last one forgotten
+            if n < self.REFUSED_TIMES:
+                self.refusals[k] = (n, a, b)
+                continue
+            self.given_up[(unit, source)] = stitch(self.given_up.get((unit, source), []) + [(a, b)], 0.0)
+            log.error("%s: %s: %.0f–%.0f from %s refused by the engine %d times — given up", self.name, unit, a, b, source, n)
+        while len(self.refusals) > self.REFUSALS_KEPT:
+            del self.refusals[next(iter(self.refusals))]
 
     # -- keeps: a COPY in the incidents volume (feedback BH; the product's design) ---------------------------
     #
@@ -2000,7 +2061,18 @@ class RecWorker(VmsWorker):
                 self._lost_engine()
                 return kept > 0                          # what went in before the engine went counts (the fourth pass)
             except ObsdError:
-                last = None                              # refused: the next group opens on its key
+                # Refused: the next group opens on its key — in a sequence of its own (the review's fourth pass, an open
+                # item). The one before is closed here; left open, the next group went on in it and the index drew the
+                # refused stretch as footage.
+                if last is not None:
+                    try:
+                        self.store.finish(rec, 0)
+                    except Unavailable:
+                        self._lost_engine()
+                        return kept > 0
+                    except ObsdError:
+                        pass
+                last = None
         if kept:
             try:
                 self.store.finish(rec, 0)

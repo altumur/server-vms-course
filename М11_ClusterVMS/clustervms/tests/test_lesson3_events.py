@@ -56,7 +56,9 @@ def _merged(c, rs):
             raise ConnectionError(s)
         return rs[s].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None, p.get("kind"),
                                  p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
-    return MergedIndex(c.objects, fetch=fetch, wall=c.wall)
+    m = MergedIndex(c.objects, fetch=fetch, wall=c.wall)
+    m.SEEN_FOR = 0.0          # these tests move only the wall: each query reads the resources afresh (the cache: М10's Lesson 13)
+    return m
 
 
 def test_events_are_indexed_by_each_resource_and_merged_by_the_console_which_holds_none():
