@@ -610,6 +610,29 @@ def _slowly(port: int, path: str, rate: float, wait: float = 10.0) -> tuple[byte
     return data, time.monotonic() - began
 
 
+def _released(door, dev, wait: float = 15.0) -> threading.Event:
+    """Set once the next connection `door` takes is given back — its handler done, its slot free. The event's `took`
+    is the seconds from this call, `dev_open` the sessions `dev` still had open at that moment."""
+    used = door.bounds.used
+    settle = time.monotonic() + 2.0                                   # the last connection's slot, given back after its EOF
+    while used["common"] and time.monotonic() < settle:
+        time.sleep(0.005)
+    began, done = time.monotonic(), threading.Event()
+    done.took = done.dev_open = None
+
+    def watch():
+        deadline = began + wait
+        while not used["common"] and time.monotonic() < deadline:
+            time.sleep(0.005)
+        while used["common"] and time.monotonic() < deadline:
+            time.sleep(0.005)
+        if not used["common"]:
+            done.took, done.dev_open = time.monotonic() - began, len(dev.open)
+            done.set()
+    threading.Thread(target=watch, daemon=True).start()
+    return done
+
+
 def test_a_viewer_who_reads_at_his_own_pace_gets_the_devices_footage_whole_and_holds_no_session_of_it():
     """The review's sixth pass, major: the door wrote a minute of footage in one `sendall`, and a socket's timeout is
     the whole of a `sendall` — a viewer reading faster than the camera recorded was cut after 36 s; and the device's
@@ -638,9 +661,17 @@ def test_a_viewer_who_reads_at_his_own_pace_gets_the_devices_footage_whole_and_h
         assert seen["other"].startswith(b"HTTP/1.1 200")              # …and serves another: it was 503, the device full
         assert not dev.open
         w.PLAYBACK_MIN_RATE, w.PLAYBACK_GRACE = 500_000, 0.5          # a floor a trickle falls under
-        cut, took = _slowly(port, "/playback/1?from=0&to=40", 100_000)
+        # When the DOOR let go is asked of the door — its connection slot back, the device's session closed — not of
+        # the client's clock. The client still reads for seconds after the cut: what the door wrote before it is in
+        # the kernel's buffers (the sender's grows on its own on macOS, 0.7–0.8 MB here), and at 100 kB/s that is
+        # 7.6–8.2 s whatever the door does — a bound of 8 s on it failed whenever the buffer came out larger, under
+        # load or after the first read; the door let go at 1.5 s every time (the reviewer's run, two agents' runs).
+        # (What cuts this trickle here is the socket's one-second timeout on a write of `STREAM_PIECE`, before the floor.)
+        let_go = _released(door, dev)
+        cut, _ = _slowly(port, "/playback/1?from=0&to=40", 100_000)
         assert b" 200 " in cut.split(b"\r\n", 1)[0] and not cut.endswith(b"0\r\n\r\n") and len(cut) < len(got)
-        assert took < 8.0 and not dev.open                            # let go, its session with it
+        assert let_go.wait(5.0) and let_go.took < 4.0, let_go.took    # let go: a second's write it did not take, past the grace
+        assert let_go.dev_open == 0 and not dev.open                  # …its session with it
     finally:
         door.shutdown()
 
