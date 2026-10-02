@@ -15,6 +15,8 @@ a server's disks and nothing about what it means:
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)
     GET  <url>/mirrored/<server>       which of <server>'s buckets this server holds copies of
     GET  <url>/events?from&to&cam&kind&subsystem&unit   this resource's EventIndex: its buckets and its copies
+    GET  <url>/events/wait?want=<sub>/<kind>,…&timeout&since   HELD until a line of a wanted kind is appended here, or the
+                                       timeout: `{changed, seq}` — a hint to look, never the events (`longpoll.py`)
     PUT  <url>/mirror/<server>/<path>  another resource leaves a copy of one of ITS closed buckets here
 
 The policy pass runs on a timer: retain each subsystem's buckets by its
@@ -86,6 +88,7 @@ log = logging.getLogger(__name__)
 
 from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
+from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
@@ -364,6 +367,11 @@ class Resource:
         # `Retry-After` — a refusal the merge reads as "did not answer", which makes the window incomplete and
         # holds automation's cursor rather than losing what this resource holds (М10B Lesson 25).
         self.events_slots = threading.BoundedSemaphore(EVENTS_INFLIGHT)
+        # The requests this resource HOLDS for readers of its events (`GET /events/wait`, `longpoll.Watch`): answered
+        # when a line of a kind the reader watches is appended to a current bucket here. Its own bound, apart from
+        # the slots above — a held request does nothing for thirty seconds, and must neither take a query's slot nor
+        # be without a ceiling of its own. It costs nothing until somebody waits: no thread, no stat.
+        self.watch = Watch(self.volumes.values(), bucket_seconds, wall)
         for path in self.volumes.values():
             os.makedirs(path, exist_ok=True)
 
@@ -839,6 +847,28 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                     return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
                 finally:
                     resource.events_slots.release()
+            # THE LONG POLL (`longpoll.py`): a reader of this resource's events asks to be told when a line of a kind
+            # it watches is written, and this request is held until one is — or `timeout` seconds, capped. The answer
+            # is `{changed, seq}` and nothing of the events: the reader makes its ordinary query next, through the
+            # route above. Asked nothing more than `/events` is: the same door, no new opening.
+            #
+            # Not under `events_slots`: a held request is not a query being answered, and sixteen of them
+            # (`WAITERS_MAX`) must not shut the door to the queries they exist to speed up. One more than that is
+            # answered at once, `full`, and its sender goes back to its pass. This server gives every request a
+            # thread and a socket with no deadline of its own, so a hold trips nothing — and a client that hung up
+            # is noticed within a second (`client_gone`), not at the timeout.
+            if self.path == "/events/wait" or self.path.startswith("/events/wait?"):
+                q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
+                try:
+                    timeout = float(q.get("timeout", WAIT_MAX))
+                    since = int(q["since"]) if q.get("since") not in (None, "") else None
+                except ValueError as e:
+                    return self._raw(400, json.dumps({"error": str(e)}).encode(), [("Content-Type", "application/json")])
+                rep = resource.watch.wait(parse_wants(q.get("want", "")), timeout, since, gone=lambda: client_gone(self.connection))
+                try:
+                    return self._raw(200, json.dumps(rep).encode(), [("Content-Type", "application/json")])
+                except OSError:
+                    return None                                   # the client went while it was held: nobody to answer
             if self.path.startswith("/events/"):
                 rel = self.path[len("/events/"):]; p = os.path.join(root, rel)
                 if not safe_rel(rel) or not rel.endswith(".events.jsonl") or not os.path.isfile(p):
@@ -870,5 +900,15 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             self._raw(204, b"")
 
     srv = ThreadingHTTPServer((host, port), H)
+    # A door that shuts lets go of the requests it holds: each is answered now (`closed`), so no reader waits out
+    # its timeout on a resource that has stopped, and no thread of this server outlives it by thirty seconds.
+    resource.watch.open()
+    shut = srv.shutdown
+
+    def shutdown() -> None:
+        resource.watch.close()
+        shut()
+
+    srv.shutdown = shutdown
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
