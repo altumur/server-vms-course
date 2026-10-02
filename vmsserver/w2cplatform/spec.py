@@ -77,6 +77,7 @@ from dataclasses import dataclass, field
 
 from urllib.parse import urlsplit
 
+from .doors import unnamable
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
@@ -852,6 +853,14 @@ class SpecController(Controller):
             # 400 to the person who typed it rather than a 500 from the store.
             if "/" in uid or uid in (".", ".."):
                 raise Refused(f"a {self.spec.name} {self.spec.id} is a name, not a path: {uid!r}")
+            # …and a name that goes into other text whole (the review's eighth pass, part 4, and its question about `|`,
+            # `"` and the newline): a label value on `/metrics` (escaped there too, for the names already stored —
+            # `console.label`), a `|`-joined field of a heartbeat (`closed`, `hits`), a log line. Refused here, the rule
+            # the domain keeps for a user's name (`domain/grants.py`, `name_refused`): no `"`, no `|`, no control
+            # character or line or paragraph separator (Unicode Cc, Zl, Zp).
+            bad = unnamable(uid)
+            if bad:
+                raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
         if reserve is not None:
             reserve(uid)                                                # into the claim, before the row exists
         if self.spec.name in REFUSE:                                   # the subsystem's own rule about what the row points at

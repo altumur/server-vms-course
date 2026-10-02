@@ -488,7 +488,25 @@ def record_on_request(rec_ctl, now: float) -> int:
 
 ```python
     def wants(self) -> list[tuple[str, str, str]]:
-        return sorted(self._watched)
+        from w2cplatform.longpoll import WANTS_MAX, fold
+        out, folded = fold(self._watched)
+        if folded != self.wants_folded:
+            if folded:
+                log.warning("%s: its triggers watch %d (subsystem, kind, unit), more than the %d one request names: %s",
+                            self.name, folded, WANTS_MAX,
+                            f"folded to {len(out)} kinds on any unit" if out else "more kinds than that too — no wait is "
+                            "held, the pass looks every poll")
+            self.wants_folded = folded
+        return out
+```
+
+```python
+def fold(wants) -> tuple[list, int]:
+    wants = sorted(set(wants))
+    if len(wants) <= WANTS_MAX:
+        return wants, 0
+    kinds = sorted({(w[0], w[1], "") for w in wants})
+    return (kinds if len(kinds) <= WANTS_MAX else []), len(wants)
 ```
 
 ```python
@@ -500,12 +518,16 @@ def record_on_request(rec_ctl, now: float) -> int:
         return {s: str(hb.get("url") or "") for s, hb in seen().items() if now - float(hb["ts"]) <= lost_after}
 ```
 
+**Больше `WANTS_MAX` троек — сворачиваются до видов, а не выключают опрос** (восьмое ревью, часть 3: регрессия седьмого, M8). Дверь принимает в одном запросе не больше `WANTS_MAX` (64) троек, и вычислитель с 65 сценариями на разных камерах — или одним `when` по 65 камерам — получал 400 на каждый запрос: пауза 2 с, снова 400, и длинный опрос был выключен навсегда. Дорога «событие → заявка» возвращалась к 1,4–2 с, и видно это было только по `auto_wait_errors_total`. Больше 64 сценариев на вычислитель — ожидаемое число (решение координатора, 2 октября). Поэтому за пределом тройки сворачиваются до `(подсистема, вид)` с любой единицей (`longpoll.fold`). Запрос держится, строка любой камеры этих видов на него отвечает, а `touched` в ответе по-прежнему называет единицы, которые изменились, — и досрочный проход по-прежнему оценивает только задетые сценарии. Чем платят: наблюдатель ресурса смотрит каждую единицу вида (та цена, которую урок 11, шаг 5а, называет для триггера без единицы), и бывает досрочный проход для камеры, которую никто не смотрит. Сколько троек свёрнуто — в heartbeat'е (`wants_folded`) и на `/metrics` (`auto_wants_folded`), и один раз в логе при каждой смене. Видов больше `WANTS_MAX` не держит ни один запрос — тогда ожидания нет, и есть только проход раз в `poll`. И ответ двери, который не объект, — неудавшееся ожидание, а не конец потока: раньше `rep.get` на списке бросал мимо `try`, и поток этого ресурса умирал до следующего `sync`. Тест: `test_long_poll.py::test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_poll_holds`.
+
 **Что вычислитель просит и у кого.** `wants` — тройки `(подсистема, вид, единица)` из триггеров всех сценариев, которые он держит, на момент последнего обычного прохода (`_plan` собирает их заодно с окнами); триггер без единицы — пустая единица, «любая»; выключенный сценарий не смотрит ничего. Ресурсы — тот же список, что у его индекса (`MergedIndex.seen`, там же и кэшируется): живые по heartbeat'у, каждый по адресу, по которому спрашивают `/events`. На каждом — один удержанный запрос, в своём потоке (`LongPoll`, `w2cplatform/longpoll.py`): ответ `changed` взводит ожидание цикла, и запрос задаётся снова, уже с номером `since` из ответа, чтобы строка между двумя запросами не упала в щель (урок 11, шаг 5а). Сменились сценарии или список ресурсов — следующий запрос несёт новое; до тех пор, не дольше тридцати секунд, новое событие находит проход. Как ресурс замечает строку и чем ограничен — урок 11, шаг 5а: смотрит на файлы десять раз в секунду и только пока кто-то ждёт; не больше шестнадцати ждущих; не дольше тридцати секунд на запрос.
 
 ```python
             self.waits += 1
             try:
                 rep = self.fetch(url, wants, self.timeout, since)
+                if not isinstance(rep, dict):            # an answer of another shape is a wait that failed, not the thread's end
+                    raise ValueError(f"the answer is a {type(rep).__name__}, not an object")
             except Exception as e:                   # noqa: BLE001 — the resource is away, or does not know the route
                 self.errors += 1
                 log.debug("%s did not hold a wait (%s); the pass looks, as it did", server, e)

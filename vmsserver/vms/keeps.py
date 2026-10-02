@@ -28,8 +28,8 @@ import json
 import math
 from dataclasses import dataclass
 
-from w2cplatform.doors import safe_segment
-from w2cplatform.rows import Table, finite
+from w2cplatform.doors import safe_segment, unnamable
+from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import Refused
 
 SUB = "rec"
@@ -51,12 +51,16 @@ class Keep:
     by: str = ""                  # who set it
     at: float = 0.0               # when
     recordings: tuple = ()        # the names of the camera's recordings when it was set
+    garbled: bool = False         # its interval did not parse whole: held as far as it reads (`as_far_as_read`)
 
+    # Only the INTERVAL can make a keep unreadable (the review's eighth pass, part 4): `at` — when it was set — is
+    # metadata, and `at: "yesterday"` made the whole keep garbled, its camera held from the start of time to its end.
+    # A word there is read as not said (0), counted once as a field (`rows.number`), and the keep holds what it says.
     @classmethod
     def from_items(cls, id_: str, d: dict) -> "Keep":
         # `finite`: a `nan` bound passes no comparison, so such a keep held nothing while it looked set (the seventh pass)
         return cls(id_, str(d.get("cam", "")), finite(d.get("from", d.get("since", 0)) or 0), finite(d.get("to", d.get("until", 0)) or 0),   # `since`/`until`: rows written before the rename (feedback BV)
-                   str(d.get("note", "")), str(d.get("by", "")), finite(d.get("at", 0) or 0),
+                   str(d.get("note", "")), str(d.get("by", "")), number(f"{key(id_)}#at", d.get("at") or None, float, 0.0),
                    tuple(str(r) for r in _names(d.get("recordings"))))
 
     def to_items(self) -> dict:
@@ -89,7 +93,7 @@ def refuse(fields: dict) -> None:
     if unknown:
         raise Refused(f"a keep has no field {unknown[0]!r}")
     cam = str(fields.get("cam", "") or "")
-    if not cam or not safe_segment(cam):
+    if not cam or not safe_segment(cam) or unnamable(cam):     # `unnamable`: the keep's id is a label on `/metrics` (eighth pass)
         raise Refused("a keep names a camera")
     try:
         since, until = float(fields.get("from")), float(fields.get("to"))
@@ -122,17 +126,28 @@ def delete(vars_, id_: str) -> None:
 # (`vms/resource.kept_buckets`: "not knowing what is kept is not nothing is", so nothing was swept and the disks
 # filled), under the incidents recorder's copying of every keep, and under each recorder's door. Now it is skipped
 # where keeps are listed, counted once until it parses again (`KEEPS`; `keeps_garbled`), logged once — and handed to
-# whoever must not read it as "no keep" through `garbled`: as a keep of its camera WHOLE (`whole`, from 0 to
-# infinity), which is what not knowing which minutes means. Retention then keeps that camera's buckets and sweeps the
-# rest; nothing is copied for it until it is mended (a whole camera is not a range to copy). A row that does not
-# even name a camera holds nothing — a keep without a camera is no keep of anything; it is counted and logged.
-KEEPS = Table("keep", "its camera is kept whole and nothing is copied for it, until it is mended")
+# whoever must not read it as "no keep" through `garbled`, held AS FAR AS IT READS (`as_far_as_read`). A row that does
+# not even name a camera holds nothing — a keep without a camera is no keep of anything; it is counted and logged.
+#
+# AS FAR AS IT READS, AND NO FURTHER (the review's eighth pass, part 4). The seventh pass held such a keep's camera whole —
+# from 0 to infinity, for ANY field that did not parse — and every unit that is about no one camera (a scenario on any
+# camera, a detector without a row) was held by it whole too: with `at: "yesterday"` 10 buckets were removed where a
+# sound keep let 37 go, three such units kept 10 of 10, and the watermark freed none of it. The rule now:
+#   - only the interval can make a keep unreadable: `at` is metadata, read as not said (`Keep.from_items`);
+#   - a bound that parses is kept, one that does not is open on its side — `from` lost holds from the start of time to
+#     `to`, `to` lost holds from `from` on, both lost hold the camera whole: what the keep could have meant, no more;
+#   - it holds ITS CAMERA'S buckets (`vms`, `rec`, and the units whose row names that camera) and nothing of the units of
+#     no one camera: those were held by every keep because a sound keep is a short interval; a garbled one is not, and
+#     holding them for all time for one word is the disk filling. Counted (`KEEPS`) and in the log, as said above;
+#   - nothing is copied for it into the incidents volume until it is mended (an open interval is not a range to copy).
+KEEPS = Table("keep", "its camera is kept as far as its interval reads, units of no one camera are not held by it, and "
+                      "nothing is copied for it, until it is mended")
 
 
 def declared(vars_, garbled: list | None = None) -> list[Keep]:
     """Every keep whose row parses. A store that does not answer RAISES, and the caller must let it: "I could not read
     the keeps" is not "there are none", and a policy that reads it so deletes what it was told to leave. A row that
-    does not parse goes into `garbled`, when the caller gives one, as `whole(...)`."""
+    does not parse goes into `garbled`, when the caller gives one, as `as_far_as_read(...)`."""
     out = []
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
         try:
@@ -140,20 +155,29 @@ def declared(vars_, garbled: list | None = None) -> list[Keep]:
         except (ValueError, TypeError, KeyError) as e:
             KEEPS.garbled(path, e)
             continue                                    # no camera to hold: counted, and said in the log
-        if items:
+        if isinstance(items, dict) and items:
             id_ = path[len(f"{SUB}/{TABLE}/"):]
             k = KEEPS.read(path, lambda: Keep.from_items(id_, items))
             if k is not None:
                 out.append(k)
             elif garbled is not None and str(items.get("cam", "") or ""):
-                garbled.append(whole(id_, items))
+                garbled.append(as_far_as_read(id_, items))
     return out
 
 
-def whole(id_: str, items: dict) -> Keep:
-    """A keep nobody can read, as a keep of its camera from the start of time to its end."""
-    return Keep(id_, str(items.get("cam", "")), 0.0, math.inf, "its row does not parse", str(items.get("by", "")), 0.0,
-                tuple(str(r) for r in _names(items.get("recordings"))))
+def as_far_as_read(id_: str, items: dict) -> Keep:
+    """A keep whose interval does not parse whole: its camera, from the bound that parses — or the start of time — to the
+    bound that parses — or its end."""
+    def bound(names, default):
+        try:
+            return finite(next((items[n] for n in names if n in items), default) or 0)
+        except PARSE_ERRORS:
+            return default
+    since, until = bound(("from", "since"), 0.0), bound(("to", "until"), math.inf)
+    if not since < until:
+        since, until = 0.0, math.inf                    # the two that parse contradict each other: not known which is wrong
+    return Keep(id_, str(items.get("cam", "")), since, until, "its row does not parse", str(items.get("by", "")), 0.0,
+                tuple(str(r) for r in _names(items.get("recordings"))), garbled=True)
 
 
 def spans_of(keeps: list[Keep], recording: str, cam: str = "") -> list[tuple[float, float]]:

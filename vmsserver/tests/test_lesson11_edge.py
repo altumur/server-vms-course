@@ -272,6 +272,32 @@ def test_a_units_id_is_a_name_and_not_a_path():
             pass
 
 
+def test_a_units_name_holds_no_quote_no_bar_and_no_control_character():
+    """The review's eighth pass (part 4, and its question): a recording named `7"x`, or with a newline, made a line of
+    `/metrics` Prometheus refuses whole, and `|` is the separator of the `closed` and `hits` fields of a heartbeat. A
+    name is refused with `"`, `|` or a control, line or paragraph separator character where it is created — at the
+    console, a 400 in words — the rule the domain keeps for a user's name. Names stored before are escaped on
+    `/metrics` (`w2cplatform.console.label`)."""
+    from w2cplatform.console import SpecConsole
+    box, ctl, con, con_vars = _box()
+    rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
+    for bad in ('7"x', "7|x", "7\nx", "7\tx", "7 x", "7 x", "7\x00x"):
+        try:
+            rec.create({"name": bad, "cam": "7"})
+            assert False, f"a name was accepted: {bad!r}"
+        except Refused as e:
+            assert "may not hold" in str(e), e
+    status, body = SpecConsole(rec, wall=box.wall).create({"name": '7"x', "cam": "7"})
+    assert status == 400 and "may not hold" in body["detail"], body
+    assert rec.create({"name": "7 · ворота", "cam": "7"})["id"] == "7 · ворота"   # a space, a dot, letters: a name
+    from vms import keeps                                              # a keep's id is its camera's: the same rule
+    try:
+        keeps.refuse({"cam": '7"x', "from": 1, "to": 2})
+        assert False, "a keep of a camera named with a quote was accepted"
+    except Refused:
+        pass
+
+
 def test_spread_by_keeps_two_copies_off_one_server():
     """The placement gap the archive's unit-keyed tree opens up. Two units that name the
     same camera exist to survive ONE server dying, so a second copy beside the first is

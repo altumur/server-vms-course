@@ -348,13 +348,36 @@ class Keep:
     def _speaks_for(spans: list[dict], held) -> list[tuple[float, float]]:
         runs: dict[int, tuple[float, float]] = {}
         for sp in spans:
-            e = int(sp.get("epoch") or 0)
+            e = sp["epoch"]                              # read by `scan.door_spans`: an int
             if e <= 0 or sp.get("source", "live") != "live":
                 continue
             a, b = runs.get(e, (sp["start"], sp["end"]))
             runs[e] = (min(a, sp["start"]), max(b, sp["end"]))
         return list(runs.values()) + ([(float(held), float("inf"))] if held is not None else [])
+
+    def _door_timeline(self, url: str, unit: str, t0: float, t1: float) -> tuple[list[dict], float | None]:
+        import json
+        import urllib.parse
+        import urllib.request
+        from w2cplatform.rows import answer, number
+        from .scan import door_spans
+        q = urllib.parse.urlencode({"from": t0, "to": t1})
+        try:
+            with urllib.request.urlopen(f"{url}/timeline/{urllib.parse.quote(str(unit))}?{q}", timeout=10) as r:
+                body = json.loads(answer(r) or b"{}")
+        except RecursionError as e:
+            raise ValueError(f"{url}: a timeline nested too deep to read") from e
+        spans, _ = door_spans(f"{REC.name}/doors/{url}#{unit}", body)
+        held = number(f"{REC.name}/doors/{url}#held_since", body.get("held_since"), float, None)
+        said_at = number(f"{REC.name}/doors/{url}#now", body.get("now"), float, None)
+        if held is not None and said_at is not None:
+            held = self.wall() - max(0.0, said_at - held)
+        return spans, held
 ```
+
+**Ответ двери читается по отрезку** (восьмое ревью, часть 4). `_speaks_for` читал `int(sp["epoch"])` вне `try` двери, и одна дверь другой сборки или прокси, ответившие `{"epoch": "e3"}`, роняли весь `keep_pass`: ни одна метка не копировалась и не проверялась, `archive.keep.lost` не поднимался. Теперь ответ двери разбирает тот же разборщик, что у скана (`scan.door_spans`, урок 21): отрезок, который не разбирается, пропускается и считается (`DOOR_SPANS`), остальные стоят. Дверь тогда показывает меньше и говорит за меньшее, и то, что она покрыла бы, остаётся недостающим — в ту сторону, в которую метке и надо ошибаться. Ответ, который вовсе не `{spans: [...]}` или длиннее `rows.ANSWER_MAX` (16 МиБ), — дверь не ответила. Тест: `test_row_reader.py::test_a_door_that_answers_a_span_another_build_writes_stops_no_keep_from_being_copied_or_checked`.
+
+**`held_since` — по часам двери, и дверь называет свои часы** (восьмое ревью, часть 2, minor). Это момент по стенным часам регистратора-держателя, а сравнивается он с интервалом метки по часам копирующего. Новый держатель, отстающий на 1200 секунд, говорил, что держит запись на 1200 секунд раньше, чем на самом деле, и «говорил за» минуты, которых у него не было: недостача занижалась вдвое. Теперь дверь кладёт рядом свои `now`, и `now - held_since` — возраст, который не искажают ничьи часы, — откладывается от часов копирующего, прочитанных после ответа: позже момента двери, так что дверь говорит за меньшее, а не за большее. Дверь старой сборки без `now` принимается как есть. Тест: `test_row_reader.py::test_a_doors_held_since_is_laid_on_this_recorders_clock_by_the_doors_own_now`.
 
 `held_since` — момент, когда регистратор взял эпоху записи (`RecWorker._held_since`). Эпоха отдаётся вместе с томом (`leave_volume`), поэтому двух томов она не охватывает никогда. `gone` — чего у источника нет. Он помнится по паре (метка, запись): запись на события, у которой в интервале метки ничего не было, потом удалили, держателя у неё больше нет — а сказанное её дверью остаётся, и ложная тревога пятого ревью не возвращается. Если дверь позже покажет это видео, оно из `gone` уходит. Тесты: `test_keeps.py::test_a_recording_that_moved_is_not_said_to_be_missing_from_its_source_by_its_new_holder` (метка на `v1` с молчащей дверью — 600 секунд недостаёт, потом тревога, копия целиком, когда дверь вернулась; дыра внутри эпохи нового держателя — «нет у источника»), `test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_none`, `test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remembered`.
 
@@ -440,7 +463,7 @@ class Keep:
 
 Хранилище не ответило — проход падает и не делает ничего. Здесь обратное правило стоило бы меньше, чем в старой лестнице: проход только копирует. Но `keep_state` в heartbeat'е, прочитанный как «меток нет», сказал бы оператору, что его доказательства нигде не держат. Тест — `test_not_being_able_to_read_the_keeps_is_not_there_are_none`.
 
-**Метка, чья строка не разбирается, — беда этой метки, а не всех.** `from: "yesterday"` в одной метке бросал из `keeps.declared`, а он стоит под копированием каждой метки, под дверью каждого регистратора и под сроком хранения событий каждой единицы на каждом сервере (`kept_buckets`: «не знаю, что отмечено» — не «ничего не отмечено», поэтому не удалялось ничего, и диски наполнялись; седьмое ревью, часть 2). Теперь строки меток читает общий читатель `rows.Table` (`KEEPS`; М10A, урок 8, шаг 5): битая строка пропускается, считается один раз, пока снова не разберётся (`keeps_garbled` в heartbeat'е), и пишется в лог один раз. Тому, кто не должен прочитать её как «метки нет», `declared(vars_, garbled)` отдаёт её через список `garbled` как метку **всей** её камеры — `keeps.whole`, от нуля до бесконечности: не знать, какие минуты отмечены, и значит «все». Срок хранения держит бакеты этой камеры и удаляет остальные по их дням. Копировать для неё проход ничего не копирует — вся камера не интервал, — но её состояние переносит как было, с пометкой `garbled: True` (`state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}`), и `keep_held` по ней не забывается: когда строку починят, пропажа из кольца `incidents` по-прежнему будет видна. Строка, в которой нет даже камеры, не держит ничего — она только посчитана и названа в логе. Тест: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`.
+**Метка, чья строка не разбирается, — беда этой метки, а не всех.** `from: "yesterday"` в одной метке бросал из `keeps.declared`, а он стоит под копированием каждой метки, под дверью каждого регистратора и под сроком хранения событий каждой единицы на каждом сервере (`kept_buckets`: «не знаю, что отмечено» — не «ничего не отмечено», поэтому не удалялось ничего, и диски наполнялись; седьмое ревью, часть 2). Теперь строки меток читает общий читатель `rows.Table` (`KEEPS`; М10A, урок 8, шаг 5): битая строка пропускается, считается один раз, пока снова не разберётся (`keeps_garbled` в heartbeat'е), и пишется в лог один раз. Тому, кто не должен прочитать её как «метки нет», `declared(vars_, garbled)` отдаёт её через список `garbled` как метку её камеры **настолько, насколько она читается** — `keeps.as_far_as_read` (восьмое ревью уточнило седьмое, у которого это была вся камера от нуля до бесконечности при любом испорченном поле). Испортить метку может только интервал: `at` — метаданные, читается как «не сказано». Граница, которая разбирается, остаётся, потерянная открыта в свою сторону, без обеих — вся камера. Срок хранения держит бакеты этой камеры в этих пределах и удаляет остальные по их дням; единицы ни одной камеры такая метка не держит (урок 11). Копировать для неё проход ничего не копирует — открытый интервал не диапазон для копии, — но её состояние переносит как было, с пометкой `garbled: True` (`state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}`), и `keep_held` по ней не забывается: когда строку починят, пропажа из кольца `incidents` по-прежнему будет видна. Строка, в которой нет даже камеры, не держит ничего — она только посчитана и названа в логе. Тесты: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`, `test_row_reader.py::test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_units_of_no_camera`.
 
 **События держатся на месте.** Бакеты событий лежат на ресурсе, и их хранит по дням ресурс платформы. Что такое метка, он не знает. Тот, кто его собрал, даёт ему функцию `kept`:
 

@@ -171,7 +171,8 @@ class DetJobWorker(Worker):
                 continue
             seen = read.spans
             missing = ([f"recorder {w}'s door did not answer" for w in read.silent]
-                       + [f"nobody serves volume {v}" for v in read.unread])
+                       + [f"nobody serves volume {v}" for v in read.unread]
+                       + [f"recorder {w}'s door answered stretches that cannot be read" for w in read.garbled])
             if not missing:
                 log_.not_waiting()                          # the deadline is for one stretch of waiting, not for the job's life
             scans = plan(seen, row["from"], row["to"])

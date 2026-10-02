@@ -1214,3 +1214,45 @@ def test_an_ordinary_pass_reads_the_catalog_once_however_many_scenarios_name_no_
     del listed[:]
     w.reconcile_once(only={("vms", "io.input", "12")})
     assert listed == [] and all(w.status_by_unit[n]["phase"] == "running" for n in names)
+
+
+def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_poll_holds():
+    """The review's eighth pass, part 3, a regression of M8: more than `WANTS_MAX` triples were sent whole, every request
+    was 400, and the evaluator's long poll was off for good — the road back at two seconds, seen only in
+    `auto_wait_errors_total`. More than 64 scenarios on one evaluator are expected; past the bound the triples fold to
+    their kinds on any unit: the request is held, a line of any camera answers it and says which camera it was (`touched`
+    — the early pass still evaluates only what it touches), and the folding is on the pulse and on `/metrics`. And an
+    answer of another shape costs that one wait, not the thread."""
+    from vms.console import auto_metrics
+    box = _real_box()
+    res, srv = _resource(box)
+    holder, cid, _dev, _called = _holder(box)
+    evaluator = _evaluator(box, cid)
+    evaluator._watched = {("vms", "io.input", str(i)) for i in range(1, 71)}   # what seventy scenarios' triggers watch
+    for unit in ("42", "77"):
+        EventLog(box.archive, "vms", unit, 1).append(time.time(), "motion")      # the units exist before anybody waits
+    assert evaluator.wants() == [("vms", "io.input", "")] and evaluator.wants_folded == 70
+    evaluator.watch_events(ON)
+    try:
+        evaluator.long_poll.sync()
+        _until(lambda: res.watch.waiting() == 1, what="the folded request to be held")
+        assert evaluator.long_poll.errors == 0
+        EventLog(box.archive, "vms", "42", 1).append(time.time(), "io.input", port="1", value="closed")
+        _until(lambda: evaluator.long_poll.woken >= 1, 3.0, "the folded request to be answered")
+        assert ("vms", "io.input", "42") in evaluator.long_poll.take_touched()
+        evaluator.heartbeat_once()
+        hb = Heartbeat.from_bytes(box.objects.get(AUTO_SPEC.sub.heartbeat_key("a-1")))
+        assert hb.extra["wants_folded"] == 70 and hb.extra["wait_errors"] == 0
+        from w2cplatform.spec import SpecController
+        text = "\n".join(auto_metrics(SpecController(AUTO_SPEC, box.vars, box.objects, wall=box.wall))())
+        assert 'auto_wants_folded{worker="a-1"} 70' in text
+    finally:
+        evaluator.stop_polling(); srv.shutdown()
+    assert longpoll.fold([("vms", f"k{i}", "1") for i in range(70)]) == ([], 70)  # more kinds than a request names: the pass
+    calls = []
+    lp = longpoll.LongPoll(longpoll.Wake(), lambda: {"srv-a": "http://srv-a"}, lambda: [("vms", "io.input", "")],
+                           backoff=0.01, fetch=lambda *a: (calls.append(1), [1, 2])[1])
+    lp.sync()
+    _until(lambda: len(calls) >= 3, 3.0, "the thread to ask again after an answer of another shape")
+    lp.close()
+    assert lp.errors >= 2

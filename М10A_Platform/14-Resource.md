@@ -179,30 +179,71 @@ Docstring называет суть: **правило, заменяющее ка
 
 ```python
     def mirror(self) -> dict:
+        """The knob. Every CLOSED bucket on this server — any subsystem — is
+        copied to the next live resource(s) after it, exactly once each (the
+        peer says what it already holds), by the server that owns it."""
         knob = mirror_settings(self.vars)
         if not knob["enabled"]:
             return {"enabled": False, "mirrored": 0, "peers": []}
-        live = self.live_resources()
+        live = {s: hb for s, hb in self.live_resources().items() if hb.get("url")}   # a peer that says no address takes nothing
         peers = peers_of(self.server, list(live), knob["copies"])
-        n, closed = 0, None
+        n, closed, failed = 0, None, []
         for peer in peers:
-            have = {b.path for b in self.peers.mirrored(live[peer]["url"], self.server)}
+            url = live[peer]["url"]
+            try:
+                have = {b.path for b in self.peers.mirrored(url, self.server)}
+            except Exception as e:                           # noqa: BLE001 — that peer's trouble, not the next one's
+                self.mirror_failed += 1
+                failed.append(peer)
+                log.warning("%s: %s did not say what it holds (%s): nothing copied to it this pass", self.server, peer, e)
+                continue
             self._progressed()
             if closed is None:
                 closed = self.closed_buckets()               # the walk once a pass, not once per peer
+            fails = 0
             for b in closed:
-                if b.path in have:
+                if b.path in have or b.path in self._too_big:
                     continue
-                with open(self.path_of(b.path), "rb") as f:
-                    put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
-                    if put_file is not None:
-                        put_file(live[peer]["url"], self.server, b.path, f, os.fstat(f.fileno()).st_size)
-                    else:
-                        self.peers.put(live[peer]["url"], self.server, b.path, f.read())
+                if fails >= PEER_FAILS:
+                    break                                    # its door is down: the rest on a later pass
+                try:
+                    with open(self.path_of(b.path), "rb") as f:
+                        size = os.fstat(f.fileno()).st_size
+                        if size > MIRROR_MAX:
+                            raise _TooBig(f"{size} bytes, over the {MIRROR_MAX} a peer takes")
+                        put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
+                        if put_file is not None:
+                            put_file(url, self.server, b.path, f, size)
+                        else:
+                            self.peers.put(url, self.server, b.path, f.read())
+                except FileNotFoundError:
+                    continue                                 # swept between the walk and here: nothing to copy
+                except Exception as e:                       # noqa: BLE001
+                    if isinstance(e, _TooBig) or getattr(e, "code", None) == 413:
+                        self._too_big.add(b.path)
+                        self.mirror_too_big += 1
+                        log.error("%s: %s is too big to mirror (%s): it is copied nowhere — the buckets after it are",
+                                  self.server, b.path, e)
+                        continue
+                    fails += 1
+                    self.mirror_failed += 1
+                    log.warning("%s: %s did not take %s (%s)", self.server, peer, b.path, e)
+                    if fails == PEER_FAILS:
+                        failed.append(peer)
+                        log.warning("%s: %s refused %d buckets in a row: the rest go to it on a later pass",
+                                    self.server, peer, PEER_FAILS)
+                    continue
+                fails = 0
                 n += 1
+                # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
+                # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
+                # "stuck" to the pulse after four `lost_after` — the resource silent, its recordings moved.
                 self._progressed()
-        return {"enabled": True, "mirrored": n, "peers": peers}
+        self.mirror_peers_failed = failed
+        return {"enabled": True, "mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
 ```
+
+**Один сосед и одно ведро — их собственная беда, а не всего зеркала** (восьмое ревью, часть 4). Раньше зеркало целиком было одной частью прохода в одном `try`. Сосед, чья дверь отказала в списке, бросал исключение из цикла — и второму соседу не копировалось ничего. Ведро больше `MIRROR_MAX` получало 413 на каждом проходе, и ни одно ведро после него не уезжало никуда, никогда. Теперь сосед, не ответивший списком, пропускается до следующего прохода и считается (`mirror_failed`). Ведро больше `MIRROR_MAX` не отправляется вовсе, а ведро, на которое сосед ответил 413, не отправляется снова; оба считаются (`mirror_too_big`), и ведра после них уходят. Любой другой отказ на ведро считается, и идёт следующее ведро; `PEER_FAILS` (3) отказов подряд оставляют соседа до следующего прохода — его дверь лежит, и год вёдер не должен превращаться в год таймаутов. Повтор зеркала — это сам проход: недоставленное ведро сосед по-прежнему не называет в своём списке, и оно уйдёт через десять минут. Счётчики и соседи, которым не всё доставлено, — в heartbeat'е ресурса (`mirror`) и на `/metrics` (`<p>_resource_mirror_failures_total`, `<p>_resource_mirror_too_big_total`). Тест: `test_row_reader.py::test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_too_big_for_any`.
 
 **Бакет не держится в памяти целиком ни с одной стороны зеркала.** Первая версия отправляла `f.read()`: шестьдесят мегабайт шторма — одним куском, по разу на бакет, а `restore` писал на диск то, что `PeerClient.get` прочитал целиком (седьмое ревью, рядом с находкой «ресурс отдаёт бакет целиком»). Теперь у клиента зеркала два метода. `put_file` отдаёт соединению открытый файл с его длиной (`Content-Length`), и `http.client` шлёт файл блоками. `get_into` пишет ответ в файл кусками по `PIECE` (64 КиБ) и сверяет с длиной, которую назвал сосед: ответ, оборвавшийся раньше, — ошибка, а не бакет поменьше, и половины копии на диске не остаётся. Клиент, которого подставляет тест, может иметь только `put` и `get`: тогда идёт прежний путь. Тест: `test_console_load.py::test_the_mirror_sends_and_takes_back_a_bucket_in_pieces_never_whole` — два настоящих ресурса по HTTP, бакет в 16 МБ туда и обратно байт в байт, а пик памяти Python на каждой стороне меньше 4 МБ.
 
@@ -248,34 +289,83 @@ def mirror_settings(vars_) -> dict:
         """The reverse, run by the owner: pull my buckets from whoever holds
         copies, then let each subsystem's hook re-index what came back."""
         with self._pulsing():
-            pulled = 0
+            pulled, left, failed, peers_failed = 0, 0, 0, []
             for peer, hb in self.live_resources().items():
-                if peer == self.server or self.server not in hb.get("mirrors", {}):
+                if peer == self.server or self.server not in hb.get("mirrors", {}) or not hb.get("url"):
                     continue
-                listed = self.peers.mirrored(hb["url"], self.server)
+                try:
+                    listed = self.peers.mirrored(hb["url"], self.server)
+                except Exception as e:                       # noqa: BLE001 — that peer's trouble, not the next one's
+                    failed += 1
+                    peers_failed.append(peer)
+                    log.warning("%s: %s did not list the copies it holds of this server (%s): asked again later",
+                                self.server, peer, e)
+                    continue
                 self._progressed()
-                for path in sorted(b.path for b in listed):
+                fails = 0
+                for path in sorted(str(b.path) for b in listed):
                     self._progressed()
+                    if not _bucket_path(path):
+                        PEER_LINES.garbled(f"platform/restore/{peer}#{path}", "not a bucket's path")
+                        continue                             # never written: it could name a place outside the tree
                     dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
                     if os.path.exists(dest):
                         continue
-                    os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+                    if fails >= PEER_FAILS:
+                        left += 1
+                        continue                             # this peer is left for this try: counted, asked again
                     try:
-                        with open(dest + ".tmp", "wb") as f:
-                            if get_into is not None:
-                                get_into(hb["url"], self.server, path, f)
-                            else:
-                                f.write(self.peers.get(hb["url"], self.server, path))
-                    except BaseException:
-                        os.remove(dest + ".tmp")                     # half a copy is no copy
-                        raise
-                    os.replace(dest + ".tmp", dest); pulled += 1
+                        self._pull(hb["url"], path, dest)
+                    except Exception as e:                   # noqa: BLE001
+                        fails += 1
+                        failed += 1
+                        left += 1
+                        log.warning("%s: %s did not give back %s (%s): asked again later", self.server, peer, path, e)
+                        if fails == PEER_FAILS:
+                            peers_failed.append(peer)
+                        continue
+                    fails = 0
+                    pulled += 1
                     self._progressed()
+            self.restore_failed += failed
+            self.restore_left, self.restore_peers_failed = left, peers_failed
+            if left or peers_failed:
+                wait = min(RESTORE_RETRY_MAX, RESTORE_RETRY * 2 ** self._restore_tries)
+                self._restore_tries += 1
+                self._restore_next = self.clock() + wait
+                log.warning("%s: restore left %d buckets with peers%s: tried again in %.0f s", self.server, left,
+                            f" ({', '.join(peers_failed)} did not answer whole)" if peers_failed else "", wait)
+            else:
+                self._restore_tries, self._restore_next = 0, 0.0
             hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
                      for sub, h in self.hooks.items()} if pulled else {}
-            return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+            return {"pulled": pulled,
+                    **({"left": left, "failed": failed} if left or failed else {}),
+                    **({"peers_failed": peers_failed} if peers_failed else {}),
+                    **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+
+    def _pull(self, url: str, path: str, dest: str) -> None:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+        try:
+            with open(dest + ".tmp", "wb") as f:
+                if get_into is not None:
+                    get_into(url, self.server, path, f)
+                else:
+                    f.write(self.peers.get(url, self.server, path))
+        except BaseException:
+            with suppress(FileNotFoundError):
+                os.remove(dest + ".tmp")
+            raise
+        os.replace(dest + ".tmp", dest)
+
+    def restore_due(self) -> bool:
+        return bool(self.restore_left or self.restore_peers_failed) and self.clock() >= self._restore_next
 ```
+
+**Один сосед и одно ведро — их беда, а то, что не вернулось, спрашивается снова** (восьмое ревью, часть 4). `restore` шёл один раз, при старте, в одном `try`. Сосед с живым heartbeat'ом и отказывающей дверью возвращал 0 вёдер из 20, обрыв на четвёртом — 3 из 20. И больше никто не спрашивал, а копии тем временем старели у соседей и выметались там. Теперь сосед, не ответивший списком, пропускается, и спрашивается следующий. Ведро, которое не пришло, считается, и тянется следующее; после `PEER_FAILS` неудач подряд сосед оставлен до следующей попытки. Путь, который сосед называет, но который не путь ведра (`..`, не `.events.jsonl`), не пишется никогда: он мог бы указать за пределы дерева (`_bucket_path`). То, что известно лежащим у соседей и не вернувшимся (`left`), и сосед, не давший списка, делают восстановление снова должным (`restore_due`): через `RESTORE_RETRY` (10 с), с удвоением до `RESTORE_RETRY_MAX` (600 с). Спрашивает цикл ресурса, каждый свой оборот (`vms/__main__.py`, М11 — `cluster/__main__.py`), пока не останется ничего. Состояние — в heartbeat'е (`restore`: `left`, `failed`, `peers_failed`, `next_in`) и на `/metrics` (`<p>_resource_restore_left`, `<p>_resource_restore_failures_total`). `.tmp` удаляется при любой неудаче, а `.tmp`, который не успел появиться, больше не прячет настоящую причину за своим `FileNotFoundError` (`_pull`). Тест: `test_row_reader.py::test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_come` — 20 вёдер, одно не приходит: вернулось 19, сосед с отказавшим списком не помешал, через паузу недостающее ведро спрошено снова и вернулось, остальные второй раз не спрашивались.
+
+**Ответ соседа — только 200 и только до предела.** Ответ, который не 200 (204, 206), бакетом не пишется (`_ok`); 4xx и 5xx `urlopen` и раньше превращал в исключение. Список `/mirrored` читается не больше `LISTING_MAX` (64 МиБ), копия — не больше `MIRROR_MAX`, и строка списка, которая не разбирается, — беда этой строки: она пропускается и считается (`PEER_LINES`), а остальной список стоит. Тест: `test_row_reader.py::test_the_peer_client_writes_only_a_whole_200_as_a_bucket_and_skips_a_garbled_line_of_a_listing`.
 
 **Возвращение домой — под тем же пульсом, что проход.** `restore` идёт при старте процесса, на том же потоке, что heartbeat, до цикла. Седьмое ревью посчитало цену: замена диска, 2000 вёдер по 50 мс каждое — 100 секунд без heartbeat'а (часть 1, M4). Всё это время ресурс для индекса событий молчит, окно считается неполным, и автоматика держит курсор. Консоль тоже показывает ресурс молчащим, хотя его дверь отвечает. Теперь пульс прохода (шаг 7) вынесен в `_pulsing`, и `restore` бьётся под ним так же, как `pass_`. Отметка прогресса ставится на каждый список соседа и на каждое ведро, вытянутое или уже лежащее на месте. Восстановление, которое движется, держит пульс. Застрявшее на соседе, который ничего не отдаёт, пульс останавливает. Тест: `test_row_reader.py::test_restore_beats_under_the_same_pulse_as_the_pass` — шесть вёдер по 30 секунд часов ящика, heartbeat свежий во время каждого.
 
@@ -367,7 +457,7 @@ VMS этой дверью не пользуется. Её видео лежит 
 | `index.forget` | память | не нужна |
 | `units()` | один `listdir` на подсистему, `isdir` на единицу | нет: ограничен числом единиц, а не вёдер |
 
-Чего отметки не закрывают. Один `os.walk` читает каталог одним списком — внутри листинга каталога в пятьдесят тысяч имён отметку поставить некуда. И всё, что вне `pass_` и `restore`, пульса не имеет вовсе: счёт копий в heartbeat'е (`mirrored_count`), двери `/buckets` и `/mirrored`. `restore` под пульсом с седьмого ревью (шаг 6).
+Чего отметки не закрывают. Один `os.walk` читает каталог одним списком — внутри листинга каталога в пятьдесят тысяч имён отметку поставить некуда. И всё, что вне `pass_` и `restore`, пульса не имеет вовсе: счёт копий в heartbeat'е (`mirrored_count`), двери `/buckets` и `/mirrored`. `restore` под пульсом с седьмого ревью (шаг 6), и его повторы тоже.
 
 **Пульс не вечен.** Проход, застрявший на диске, который никогда не ответит, бился бы пульсом сколько угодно — ресурс `live`, числа замороженные. Через `PULSE_LIMIT` × `lost_after` (четыре срока) пульс прекращается, и ресурс становится тем, чем он есть, — молчащим; пока бьётся, в heartbeat есть `pass_seconds` — сколько проход уже идёт (второе ревью). Тест: `test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`.
 
@@ -401,7 +491,7 @@ VMS этой дверью не пользуется. Её видео лежит 
 
 В настоящем коде перед `os.remove` стоит ещё одна проверка: `if kept is not None and kept(sub, unit, b.start, b.end): continue`. Ресурс не знает, что такое «сохранить»; тот, кто его собрал, может положить в `self.kept` функцию, которая раз в проход возвращает такой предикат. Зовётся она через `_call_hook(self.kept, progressed=self._progressed)`: чтобы ответить, она читает хранилище строка за строкой, и если принимает `progressed` — отмечает каждую (шестое ревью; М10B, урок 11). Если она бросает исключение, проход падает и ничего не удаляет: не знать, что оставить, — не то же, что «оставлять нечего». Зачем это нужно, показывает М10B, урок 18: удаление единицы превращает её срок в `{days: 0}`, и без предиката вместе с ней уходили бы события, которые кто-то отметил.
 
-**Поэтому предикат не бросает из-за одной строки.** Правило «бросила — не удаляем ничего» верно для молчащего хранилища и неверно для одной испорченной метки. У VMS метка `since: "yesterday"` у камеры 9 бросала исключение из её предиката. Три прохода подряд `retain` стоял в ошибках, и у камер 7 и 8 осталось 20 из 20 старых вёдер — диск заполнялся (седьмое ревью, часть 2, воспроизведено запуском). Теперь метку, которая не разбирается, предикат читает как удержание её камеры целиком: не знать, какие минуты удержаны, значит удерживать все минуты этой камеры. Остальные камеры метутся по своим срокам, а строка считается и попадает в heartbeat ресурса (`rows_garbled`). Как это устроено у VMS — М10B, урок 11. Тест: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`.
+**Поэтому предикат не бросает из-за одной строки.** Правило «бросила — не удаляем ничего» верно для молчащего хранилища и неверно для одной испорченной метки. У VMS метка `since: "yesterday"` у камеры 9 бросала исключение из её предиката. Три прохода подряд `retain` стоял в ошибках, и у камер 7 и 8 осталось 20 из 20 старых вёдер — диск заполнялся (седьмое ревью, часть 2, воспроизведено запуском). Теперь метку, которая не разбирается, предикат читает как удержание её камеры настолько, насколько метка читается: граница, которая разбирается, остаётся, а потерянная открыта в свою сторону (восьмое ревью уточнило правило седьмого, по которому камера держалась целиком при любом битом поле). Остальные камеры метутся по своим срокам, а строка считается и попадает в heartbeat ресурса (`rows_garbled`) и на `/metrics` консоли (`<p>_resource_rows_garbled{server,table}`; восьмое ревью, minor: раньше только в heartbeat'е). Как это устроено у VMS — М10B, урок 11. Тесты: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`, `test_row_reader.py::test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_units_of_no_camera`.
 
 По подсистемам и единицам, у каждой свой срок. Удаляются **только файлы бакетов**: то, что подсистема хранит рядом (прогресс скана, свой индекс), — её забота, и удаляет она это в своём проходе, по своему сроку. Разделение записано в docstring: *files only; a subsystem that indexes its buckets drops the lines in its own pass.*
 
@@ -590,7 +680,7 @@ def space_settings(vars_, last: dict | None = None) -> dict:
 
 **Хранилище не ответило — это не «ручка выключена».** Настройки — одна строка. Проход, который не смог её прочитать, останавливался на исключении, и полный диск оставался полным всё время, пока хранилища не было, — то есть ровно тогда, когда никто не смотрит (обратная связь, BI). Ресурс помнит настройки, которые прочитал последними, и действует по ним. Если он не читал их ни разу, он отвечает `{"space": "unknown"}` и не освобождает ничего: угадывать он не станет.
 
-**Строка, которая не разбирается, — тоже не «выключена».** `high: "85%"` бросал исключение из `space_settings`, и `relieve` падал на каждом проходе. На диске, занятом на 98 %, не освобождалось ничего, а последняя прочитанная настройка (`_space_knob`) лежала в руках без дела (седьмое ревью, часть 2). Строку пишет только инсталлятор управляющим токеном, мимо всякой двери, и проверить её при записи некому. Поэтому теперь каждое число читается отдельно. Число, которое не разбирается, как и `nan` или `inf` (`finite`), берётся из настроек, прочитанных последними, а если их не было — из умолчаний. Остальные числа строки остаются как есть. Строка считается один раз, пока снова не станет читаться, и один раз попадает в лог. Heartbeat ресурса говорит, по чему ватерлиния действует сейчас: `space_garbled: "platform/space does not parse (high): acting on the settings read last for it"`. В отличие от молчащего хранилища, ждать здесь незачем: хранилище ответило, и ответ ясен. Тест: `test_row_reader.py::test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so`.
+**Строка, которая не разбирается, — тоже не «выключена».** `high: "85%"` бросал исключение из `space_settings`, и `relieve` падал на каждом проходе. На диске, занятом на 98 %, не освобождалось ничего, а последняя прочитанная настройка (`_space_knob`) лежала в руках без дела (седьмое ревью, часть 2). Строку пишет только инсталлятор управляющим токеном, мимо всякой двери, и проверить её при записи некому. Поэтому теперь каждое число читается отдельно. Число, которое не разбирается, как и `nan` или `inf` (`finite`), берётся из настроек, прочитанных последними, а если их не было — из умолчаний. Остальные числа строки остаются как есть. Строка считается один раз, пока снова не станет читаться, и один раз попадает в лог. Heartbeat ресурса говорит, по чему ватерлиния действует сейчас: `space_garbled: "platform/space does not parse (high): acting on the settings read last for it"`, а `/metrics` консоли — `<p>_resource_space_garbled{server} 1` (восьмое ревью, minor: раньше это было только в heartbeat'е). В отличие от молчащего хранилища, ждать здесь незачем: хранилище ответило, и ответ ясен. Тест: `test_row_reader.py::test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so`.
 
 ## Шаг 12 — Проход, который не удаляет
 

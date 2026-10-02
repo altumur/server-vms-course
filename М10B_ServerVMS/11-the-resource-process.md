@@ -165,28 +165,42 @@ def kept_buckets(vars_):
 
     def once(progressed=None):
         store = vars_ if progressed is None else _Marked(vars_, progressed)
-        # A keep whose row does not parse holds its camera WHOLE (`keeps.whole`; the review's seventh pass): it raised
-        # out of here, and the resource's whole `retain` — every unit, every server — swept nothing while it stood.
+        # A keep whose row does not parse is held as far as it reads (`keeps.as_far_as_read`; the review's seventh pass:
+        # it raised out of here, and the resource's whole `retain` — every unit, every server — swept nothing while it
+        # stood). Its camera's buckets only: a unit of no one camera is held by the keeps that read (`sound`), and not
+        # by an interval open to the start or the end of time (the review's eighth pass, part 4).
         unread: list = []
         all_ = keeps.declared(store, unread) + unread
+        sound = [k for k in all_ if not k.garbled]
+        if not all_:
+            return lambda sub, unit, start, end: False
+        cams = cameras_of_units(store)
+        recs = {u: str(it.get("cam") or u) for u, it in _rows(store, "rec", "recordings").items()}
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
             from w2cplatform.events import tree_owner
             sub = tree_owner(sub)[0]                 # a keep holds the alarms' tree as it holds the other
             if sub == "vms":
                 return keeps.held(keeps.spans_of_cam(all_, str(unit)), start, end)
-            if sub == "rec":
-                return keeps.held(keeps.spans_of(all_, str(unit)), start, end)
+            if sub == "rec":                         # named in the keep, or a recording of its camera made since
+                return keeps.held(keeps.spans_of(all_, str(unit), recs.get(str(unit), "")), start, end)
+            if sub in ("det", "survey", "detjob", "auto"):
+                of = cams.get((sub, str(unit)), ANY)
+                spans = [(k.since, k.until) for k in sound] if of is ANY else \
+                    [sp for cam in of for sp in keeps.spans_of_cam(all_, cam)]
+                return keeps.held(spans, start, end)
             return False
         return kept
     return once
 ```
 
-**Не только `vms` и `rec`.** Так удержание держало два дерева — а тревоги детекторов, обзора, сканов и сценариев внутри отмеченного интервала уходили по своему сроку (ревью платформы, B10; четвёртое ревью). Теперь раз за проход `cameras_of_units` читает строки единиц — и удалённые тоже — и узнаёт, о какой камере каждая: детектор, обзор и скан — по полю `cam`, сценарий — по единицам в `when` и `then`. Единица, чью камеру не узнать (триггер на любую камеру, нет строки, JSON не разбирается), держится **каждым** удержанием: не знать, чья, — не значит ничья. Тест: `test_keeps.py::test_a_keep_holds_every_subsystems_events_about_its_camera`.
+**Не только `vms` и `rec`.** Так удержание держало два дерева — а тревоги детекторов, обзора, сканов и сценариев внутри отмеченного интервала уходили по своему сроку (ревью платформы, B10; четвёртое ревью). Теперь раз за проход `cameras_of_units` читает строки единиц — и удалённые тоже — и узнаёт, о какой камере каждая: детектор, обзор и скан — по полю `cam`, сценарий — по единицам в `when` и `then`. Единица, чью камеру не узнать (триггер на любую камеру, нет строки, JSON не разбирается), держится **каждым** удержанием, интервал которого читается (`sound`): не знать, чья, — не значит ничья. Удержание с испорченной границей такие единицы не держит — следующий абзац. Тест: `test_keeps.py::test_a_keep_holds_every_subsystems_events_about_its_camera`.
 
 **И читает она под пульсом прохода.** Чтобы ответить, `once` читает из хранилища удержания и строки пяти таблиц — по одной, и между ними не было ни одной отметки прогресса: часть прохода, которая всё время движется, выглядела стоящей (шестое ревью, сосед находки про `usage()` и удаления; М10A, урок 14). Теперь ресурс передаёт ей `progressed`, и все чтения идут через обёртку `_Marked`: отметка после каждой строки и каждого списка. Тест: `test_lesson10_events.py::test_reading_what_is_kept_marks_every_row_it_reads` — 600 строк на хранилище, где каждое чтение стоит десятую долю предела.
 
-**Одна испорченная метка держит свою камеру целиком, а не останавливает хранение.** `keeps.declared` разбирал каждую строку `rec/keeps/*` голым `float`. Метка камеры 9 с `since: "yesterday"` бросала исключение из `once`, а платформенный `retain` по своему правилу («не знаю, что удержано, — не удаляю ничего») не удалял ничего ни у кого. Три прохода подряд у камер 7 и 8 осталось 20 из 20 старых вёдер, и диск заполнялся (седьмое ревью, часть 2, воспроизведено запуском). Теперь метки читает общий читатель строк (`keeps.KEEPS`, М10A, урок 8, шаг 5). Строка, которая не разбирается, пропускается, считается один раз, пока снова не станет читаться, и один раз попадает в лог. В `once` она приходит как `keeps.whole` — метка своей камеры от начала времён до их конца. Не знать, какие минуты удержаны, — удерживать все минуты этой камеры. Остальные камеры метутся по своим срокам. Ресурс говорит о таких строках в heartbeat'е (`rows_garbled`). Строка без камеры не удерживает ничего: метка, не называющая камеры, ничья, и это сказано в логе. Копирующий регистратор такую метку не копирует — целая камера не интервал — и сохраняет то, что уже скопировал по ней, до её починки (урок 18). Тест: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`.
+**Одна испорченная метка держит свою камеру настолько, насколько читается, а не останавливает хранение.** `keeps.declared` разбирал каждую строку `rec/keeps/*` голым `float`. Метка камеры 9 с `since: "yesterday"` бросала исключение из `once`, а платформенный `retain` по своему правилу («не знаю, что удержано, — не удаляю ничего») не удалял ничего ни у кого. Три прохода подряд у камер 7 и 8 осталось 20 из 20 старых вёдер, и диск заполнялся (седьмое ревью, часть 2, воспроизведено запуском). Теперь метки читает общий читатель строк (`keeps.KEEPS`, М10A, урок 8, шаг 5). Строка, которая не разбирается, пропускается, считается один раз, пока снова не станет читаться, и один раз попадает в лог. Ресурс говорит о таких строках в heartbeat'е (`rows_garbled`) и на `/metrics` консоли (`<p>_resource_rows_garbled{server,table}`). Строка без камеры не удерживает ничего: метка, не называющая камеры, ничья, и это сказано в логе.
+
+**Что значит «насколько читается»** (восьмое ревью, часть 4, воспроизведено запуском). Седьмое ревью приводило такую строку к `keeps.whole` — метке её камеры от начала времён до их конца, — какое бы поле ни было испорчено, даже `at`, время постановки. И каждая единица, которая ни о какой одной камере (сценарий на любую камеру, детектор без строки), держалась ею целиком: с `at: "yesterday"` удалилось 10 вёдер там, где исправная метка отпускала 37, а у трёх таких единиц осталось 10 из 10, и ватерлиния их не освобождала. Правило теперь такое. Сделать метку нечитаемой может только интервал: `at` — метаданные, слово там читается как «не сказано» (`rows.number`), и метка держит то, что говорит. Граница, которая разбирается, остаётся; потерянная открыта в свою сторону: без `from` — от начала времён до `to`, без `to` — от `from` дальше, без обеих — камера целиком (`keeps.as_far_as_read`). Такая метка держит бакеты **своей** камеры — `vms`, `rec` и единиц, чья строка называет эту камеру, — и ничего из единиц ни одной камеры: их держат метки, которые читаются (`sound`), потому что исправная метка — короткий интервал, а испорченная — нет, и держать такие единицы вечно из-за одного слова — значит заполнять диск. Копирующий регистратор такую метку не копирует — открытый интервал не диапазон для копии — и сохраняет то, что уже скопировал по ней, до её починки (урок 18). Чего здесь нет: в `GET /keeps` битая метка не показывается, и тревоги по возрасту битой метки нет — консоль не входит в этот урок. Тесты: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`, `test_row_reader.py::test_a_garbled_keep_holds_its_camera_as_far_as_it_reads_and_nothing_of_the_units_of_no_camera`.
 
 **Две функции, а не одна.** Внешняя `once` зовётся раз за проход и читает все удержания одним запросом. Внутренняя `kept` зовётся на каждый бакет и только сравнивает интервалы. Читать хранилище на каждый бакет означало бы тысячи запросов за проход на годовом архиве.
 
@@ -227,7 +241,16 @@ def resource() -> None:
 **И у тела копии есть срок, а бакет уходит кусками** (седьмое ревью, воспроизведено запуском). После заголовков тело `PUT /mirror` читалось только под таймаутом сокета на каждое чтение. 32 соединения, объявившие по 60 МБ и шлющие по байту раз в двадцать секунд, держали долю адреса вечно, а с двух адресов — всю дверь. Теперь тело должно прийти целиком за `timeout` двери плюс секунду на каждые `BODY_RATE` байт (`body_deadline`). Не пришло — 408, и копии нет. В обратную сторону `GET /events/<бакет>` отдавал бакет одним `f.read()`. Теперь он идёт кусками по `STREAM_PIECE` с названной длиной, под темпом `Paced`, и медленный сосед получает его целым, а не никогда. Свой клиент зеркала у ресурса тоже больше не держит бакет целиком: `mirror` отдаёт соединению открытый файл (`PeerClient.put_file`), `restore` пишет ответ в файл кусками (`get_into`, урок 14 М10A). Тесты: `test_console_load.py::test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too`, `test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole`, `test_the_mirror_sends_and_takes_back_a_bucket_in_pieces_never_whole`.
 
 ```python
-    res.heartbeat(); logging.info("restore: %s", res.restore())
+    try:                                                                  # a store away at the start does not end the process
+        res.heartbeat()                                                   # (the review's eighth pass, beside М11's minor)
+    except Exception:                                                     # noqa: BLE001
+        logging.exception("resource heartbeat failed")
+    # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
+    # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
+    try:
+        logging.info("restore: %s", res.restore())
+    except Exception:                                                     # noqa: BLE001
+        logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
 ```
 
 **Порядок из двух шагов, и он строгий.**
@@ -254,11 +277,20 @@ def resource() -> None:
                 logging.info("policy: %s", res.pass_())
         except Exception:                                                 # noqa: BLE001
             logging.exception("resource pass failed")
+        # What the restore left with peers — a peer that did not answer, a bucket that did not come — is asked for again,
+        # its pause doubling up to ten minutes (`Resource.restore_due`; the review's eighth pass): it ran once, at the start.
+        try:
+            if res.restore_due():
+                logging.info("restore again: %s", res.restore())
+        except Exception:                                                 # noqa: BLE001
+            logging.exception("restore failed again; asked again later")
         stop.wait(10)
     srv.shutdown()
 ```
 
-Heartbeat каждые десять секунд, проход политики каждые десять минут.
+Heartbeat каждые десять секунд, проход политики каждые десять минут, а восстановление, оставившее вёдра у соседей, — снова, когда пройдёт его пауза.
+
+**Восстановление спрашивается снова, пока не вернётся всё** (восьмое ревью, часть 4). `restore` шёл один раз, до цикла, в одном `try`, и всё, что не пришло — сосед отказал, ведро оборвалось, — оставалось у соседей, пока копии там не старели и не выметались. Теперь `Resource.restore` берёт у каждого соседа и каждое ведро отдельно, а то, что осталось, делает восстановление должным (`restore_due`): через 10 секунд, потом через 20, 40 — до десяти минут. Цикл спрашивает об этом на каждом обороте, в своём `try`. Состояние — в heartbeat'е ресурса (`restore`) и на `/metrics` (`vms_resource_restore_left`). Как это устроено — урок 14 М10A, шаг 6. Первый heartbeat тоже в своём `try`: хранилище, не ответившее при старте, больше не обрывает процесс до цикла. Тест: `test_row_reader.py::test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_come`.
 
 **Почему периоды разные.** Heartbeat дёшев и нужен часто: по нему решают, жив ли сервер. Проход обходит дерево бакетов; чаще чем раз в десять минут в этом нет смысла.
 

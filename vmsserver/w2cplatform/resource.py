@@ -81,7 +81,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .doors import MAX_LIMIT, safe_rel, safe_segment
@@ -89,7 +89,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 log = logging.getLogger(__name__)
 
 from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
-from .rows import Table, counts as garbled_by_table, finite
+from .rows import Table, answer, counts as garbled_by_table, finite
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
@@ -98,6 +98,9 @@ MIRROR_DIR = ".mirror"
 DOOR_TIMEOUT = 30.0          # seconds the door's socket waits on a peer that sends or reads nothing
 PIECE = 1 << 16               # what the mirror's client reads at a time (`PeerClient.get_into`)
 MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
+PEER_FAILS = 3               # buckets in a row a peer did not take or give before it is left for this pass (`mirror`, `restore`)
+RESTORE_RETRY = 10.0         # a restore that left buckets with peers is tried again after this — doubling each time…
+RESTORE_RETRY_MAX = 600.0    # …up to this
 EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
 SPACE_KEY = "platform/space"
@@ -122,6 +125,16 @@ def disk_space(root: str) -> tuple[int, int]:
 def bucket_from_line(line: str) -> Bucket:
     d = json.loads(line)
     return Bucket(d["subsystem"], str(d["unit"]), int(d["epoch"]), float(d["start"]), float(d["end"]), d["path"], int(d["events"]))
+
+
+# A bucket's path as a peer names it, before anything is written by it (`restore`): segments that are each one name —
+# no `..`, nothing absolute — ending in `.events.jsonl`, the rule the door's own `/events/<path>` keeps.
+def _bucket_path(path) -> bool:
+    return isinstance(path, str) and safe_rel(path) and path.endswith(".events.jsonl")
+
+
+class _TooBig(Exception):
+    """A bucket over `MIRROR_MAX`: no peer takes it (`mirror`)."""
 
 
 # Reads the watermark. `high` and `low` are USED fractions of the disk: over `high` the resource starts
@@ -302,6 +315,18 @@ def mirrored_count(root: str, server: str) -> int:
     return sum(1 for d, _, files in os.walk(base) for f in files if parse_bucket(os.path.join(d, f), base))
 
 
+# What a peer answered that does not parse: a line of its listing, a bucket's path that is not a bucket's.
+LISTING_MAX = 64 << 20       # the longest `/mirrored/<server>` read: some 300 000 buckets
+
+
+def _ok(r, what: str) -> None:
+    if r.status != 200:
+        raise IOError(f"{what}: {r.status}, not a 200")
+
+
+PEER_LINES = Table("peer_line", "that bucket is not copied either way until the peer says it whole", "line of a peer's listing")
+
+
 # How one resource talks to another: HTTP. Tests substitute an in-process client with the same three methods
 # over directories.
 class PeerClient:
@@ -309,9 +334,15 @@ class PeerClient:
     def __init__(self, timeout: float = 5.0): self.timeout = timeout
 
     # `GET <url>/mirrored/<server>` — which of `server`'s buckets the peer already holds.
+    # A line that does not parse is that bucket's trouble (the review's eighth pass, part 4): skipped and counted
+    # (`PEER_LINES`), and the rest of the listing stands — read bare, one line took every copy of the peer with it.
+    # Read up to `LISTING_MAX` (a year of one server's buckets is some ten megabytes), and only a 200 is a listing.
     def mirrored(self, url: str, server: str) -> list[Bucket]:
         with urllib.request.urlopen(f"{url}/mirrored/{server}", timeout=self.timeout) as r:
-            return [bucket_from_line(l) for l in r.read().decode().splitlines() if l.strip()]
+            _ok(r, f"GET mirrored/{server}")
+            lines = [l for l in answer(r, LISTING_MAX).decode(errors="replace").splitlines() if l.strip()]
+        key = f"platform/mirrored/{server}@{url}#"
+        return [b for i, l in enumerate(lines) if (b := PEER_LINES.read(f"{key}{i}", lambda l=l: bucket_from_line(l))) is not None]
 
     # `PUT <url>/mirror/<server>/<path>` with the bucket's bytes; anything but 200/201/204 raises `IOError`.
     def put(self, url: str, server: str, path: str, data: bytes) -> None:
@@ -332,12 +363,14 @@ class PeerClient:
     # `GET <url>/<path>` with arbitrary bytes back — the reading half of the same door.
     def get_raw(self, url: str, path: str) -> bytes:
         with urllib.request.urlopen(f"{url}/{path.lstrip('/')}", timeout=self.timeout) as r:
-            return r.read()
+            _ok(r, f"GET {path}")
+            return answer(r, MIRROR_MAX)
 
     # `GET <url>/events/.mirror/<server>/<path>` — pull a copy back (restore).
     def get(self, url: str, server: str, path: str) -> bytes:
         with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
-            return r.read()
+            _ok(r, f"GET mirror {path}")
+            return answer(r, MIRROR_MAX)
 
     # A BUCKET IS NEVER HELD WHOLE ON EITHER SIDE OF THE MIRROR (the review's seventh pass, beside "the resource sends a
     # bucket whole"). The door sends a bucket in pieces and takes a copy in pieces now; the resource's own client read a
@@ -353,14 +386,21 @@ class PeerClient:
             if r.status not in (200, 201, 204):
                 raise IOError(f"PUT mirror {path}: {r.status}")
 
+    # Only a 200 is a bucket, and no bucket is bigger than a peer takes (`MIRROR_MAX`): what a door says on 204, 206 or
+    # past the bound is not written as one (the review's eighth pass, the product team's sibling — there, a 503's body
+    # was stored as a bucket for good; here `urlopen` raised for 4xx/5xx already, and a 2xx that is not 200 did not).
     def get_into(self, url: str, server: str, path: str, dest) -> int:
         with urllib.request.urlopen(f"{url}/events/{MIRROR_DIR}/{server}/{path}", timeout=self.timeout) as r:
+            _ok(r, f"GET mirror {path}")
             want, got = r.headers.get("Content-Length"), 0
             while True:
                 part = r.read(PIECE)
                 if not part:
                     break
-                dest.write(part); got += len(part)
+                got += len(part)
+                if got > MIRROR_MAX:
+                    raise IOError(f"GET mirror {path}: over {MIRROR_MAX} bytes, larger than any bucket")
+                dest.write(part)
         if want is not None and got != int(want):
             raise IOError(f"GET mirror {path}: {got} of {want} bytes")
         return got
@@ -430,6 +470,16 @@ class Resource:
         self.journal = Journal(self.root, "resource", wall)     # what the policy removed (`journal.py`)
         self.short: dict[str, int] = {}
         self.mirror_removed = 0                    # copies of other servers' buckets this resource has let go by age
+        # What `mirror` and `restore` could not do, said in the heartbeat and on `/metrics` (the review's eighth pass): a
+        # peer that did not answer, a bucket a peer did not take or give, one too big for the door — counted since start,
+        # and the restore's buckets still with peers, with when it is tried again (`restore_due`).
+        self.mirror_failed = self.mirror_too_big = self.restore_failed = 0
+        self.mirror_peers_failed: list[str] = []   # the peers the last `mirror` could not copy to, or not all
+        self._too_big: set[str] = set()            # buckets no peer takes (over `MIRROR_MAX`, or refused 413): not sent again
+        self.restore_left: int | None = None       # buckets known to be with peers and not back; None: no restore yet
+        self.restore_peers_failed: list[str] = []  # the peers the last `restore` could not list, or not take all from
+        self._restore_tries = 0
+        self._restore_next = 0.0                   # by `clock`: when `restore_due` says to try again
         self.retention_garbled: list[str] = []     # `<sub>/<unit>` whose days the last `retain` could not read: kept, not swept
         self._space_knob: dict | None = None       # the watermark's settings as last READ — what a pass uses when the store does not answer
         self.space_garbled = ""                    # what the watermark acts on while its row does not parse (`relieve`), for the heartbeat
@@ -597,6 +647,10 @@ class Resource:
               **({"space_garbled": self.space_garbled} if self.space_garbled else {}),
               **({"rows_garbled": garbled} if (garbled := {name: sum(c.values()) for name, c in garbled_by_table().items()
                                                            if sum(c.values())}) else {}),
+              **({"restore": self.restore_said()} if self.restore_left or self.restore_failed else {}),
+              **({"mirror": {"failed": self.mirror_failed, "too_big": self.mirror_too_big,
+                             "peers_failed": self.mirror_peers_failed}}
+                 if self.mirror_failed or self.mirror_too_big else {}),
               "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
@@ -701,6 +755,15 @@ class Resource:
     # `peers_of`, ask what it already holds and `put` every closed bucket it lacks — any subsystem's,
     # exactly once each, by the server that owns it. Returns `{enabled, mirrored, peers}`. The test shows
     # two buckets mirrored the first pass and zero the second.
+    #
+    # ONE PEER, ONE BUCKET IS ITS OWN TROUBLE (the review's eighth pass, part 4). The whole mirror was one `try` (the
+    # pass's part): a peer whose door refused its listing raised out of the loop and the next peer was given nothing; a
+    # bucket bigger than `MIRROR_MAX` was 413 on every pass, and no bucket after it was copied to anybody, ever. Now a
+    # peer that does not answer its listing is skipped for this pass; a bucket over `MIRROR_MAX` is not sent at all and
+    # one refused 413 is not sent again — both counted (`too_big`); any other refusal of a bucket is counted and the next
+    # bucket goes, and `PEER_FAILS` refusals in a row leave that peer for this pass (its door is down: a year of buckets
+    # is not a year of timeouts). What was not copied is copied on a later pass — the peer's listing still lacks it: the
+    # pass is the mirror's repeat. The counts and the peers are in the heartbeat (`mirror`) and on `/metrics`.
     def mirror(self) -> dict:
         """The knob. Every CLOSED bucket on this server — any subsystem — is
         copied to the next live resource(s) after it, exactly once each (the
@@ -710,27 +773,60 @@ class Resource:
             return {"enabled": False, "mirrored": 0, "peers": []}
         live = {s: hb for s, hb in self.live_resources().items() if hb.get("url")}   # a peer that says no address takes nothing
         peers = peers_of(self.server, list(live), knob["copies"])
-        n, closed = 0, None
+        n, closed, failed = 0, None, []
         for peer in peers:
-            have = {b.path for b in self.peers.mirrored(live[peer]["url"], self.server)}
+            url = live[peer]["url"]
+            try:
+                have = {b.path for b in self.peers.mirrored(url, self.server)}
+            except Exception as e:                           # noqa: BLE001 — that peer's trouble, not the next one's
+                self.mirror_failed += 1
+                failed.append(peer)
+                log.warning("%s: %s did not say what it holds (%s): nothing copied to it this pass", self.server, peer, e)
+                continue
             self._progressed()
             if closed is None:
                 closed = self.closed_buckets()               # the walk once a pass, not once per peer
+            fails = 0
             for b in closed:
-                if b.path in have:
+                if b.path in have or b.path in self._too_big:
                     continue
-                with open(self.path_of(b.path), "rb") as f:
-                    put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
-                    if put_file is not None:
-                        put_file(live[peer]["url"], self.server, b.path, f, os.fstat(f.fileno()).st_size)
-                    else:
-                        self.peers.put(live[peer]["url"], self.server, b.path, f.read())
+                if fails >= PEER_FAILS:
+                    break                                    # its door is down: the rest on a later pass
+                try:
+                    with open(self.path_of(b.path), "rb") as f:
+                        size = os.fstat(f.fileno()).st_size
+                        if size > MIRROR_MAX:
+                            raise _TooBig(f"{size} bytes, over the {MIRROR_MAX} a peer takes")
+                        put_file = getattr(self.peers, "put_file", None)     # in pieces, never the bucket whole (the seventh pass)
+                        if put_file is not None:
+                            put_file(url, self.server, b.path, f, size)
+                        else:
+                            self.peers.put(url, self.server, b.path, f.read())
+                except FileNotFoundError:
+                    continue                                 # swept between the walk and here: nothing to copy
+                except Exception as e:                       # noqa: BLE001
+                    if isinstance(e, _TooBig) or getattr(e, "code", None) == 413:
+                        self._too_big.add(b.path)
+                        self.mirror_too_big += 1
+                        log.error("%s: %s is too big to mirror (%s): it is copied nowhere — the buckets after it are",
+                                  self.server, b.path, e)
+                        continue
+                    fails += 1
+                    self.mirror_failed += 1
+                    log.warning("%s: %s did not take %s (%s)", self.server, peer, b.path, e)
+                    if fails == PEER_FAILS:
+                        failed.append(peer)
+                        log.warning("%s: %s refused %d buckets in a row: the rest go to it on a later pass",
+                                    self.server, peer, PEER_FAILS)
+                    continue
+                fails = 0
                 n += 1
                 # Each copy the peer took is progress (the review's fourth pass): the FIRST mirroring of a server
                 # sends a year of buckets, and without a mark per bucket a mirror that moved the whole time was
                 # "stuck" to the pulse after four `lost_after` — the resource silent, its recordings moved.
                 self._progressed()
-        return {"enabled": True, "mirrored": n, "peers": peers}
+        self.mirror_peers_failed = failed
+        return {"enabled": True, "mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
 
     # The reverse, run by the owner: for every live peer whose heartbeat lists me under `mirrors`, pull each
     # of my buckets it holds that I do not have (tmp + rename), then, if anything came back, run every
@@ -742,37 +838,104 @@ class Resource:
     # heartbeat — the resource silent to the index (the window incomplete, automation's cursor held) and to the
     # console, while its door answered. It beats as `pass_` does (`_pulsing`), with a mark per bucket pulled — and per
     # listing and per bucket already here — so a pull that moves keeps the pulse, and one that hangs on a peer stops it.
+    #
+    # ONE PEER, ONE BUCKET IS ITS OWN TROUBLE, AND WHAT IS LEFT IS ASKED FOR AGAIN (the review's eighth pass, part 4). It
+    # ran once, at the start, in one `try`: a peer whose door refused gave back 0 buckets of 20, a cut on the fourth gave
+    # back 3 — and nothing asked again, while the copies aged on the peers and were swept there. Now a peer that does not
+    # list is skipped and the next one asked; a bucket that does not come is counted and the next one pulled, and
+    # `PEER_FAILS` in a row leave that peer for this try; a path a peer lists that is not a bucket's (`..`, not
+    # `.events.jsonl`) is never written — counted, skipped. What is known to be with peers and not back (`left`), and a
+    # peer that did not list at all, make the restore due again (`restore_due`): after `RESTORE_RETRY` seconds, doubling
+    # to `RESTORE_RETRY_MAX`, from the resource's loop, until nothing is left. Its state is in the heartbeat (`restore`)
+    # and on `/metrics`. Returns `left`, `failed` and `peers_failed` beside `pulled` when there are any.
     def restore(self) -> dict:
         """The reverse, run by the owner: pull my buckets from whoever holds
         copies, then let each subsystem's hook re-index what came back."""
         with self._pulsing():
-            pulled = 0
+            pulled, left, failed, peers_failed = 0, 0, 0, []
             for peer, hb in self.live_resources().items():
                 if peer == self.server or self.server not in hb.get("mirrors", {}) or not hb.get("url"):
                     continue
-                listed = self.peers.mirrored(hb["url"], self.server)
+                try:
+                    listed = self.peers.mirrored(hb["url"], self.server)
+                except Exception as e:                       # noqa: BLE001 — that peer's trouble, not the next one's
+                    failed += 1
+                    peers_failed.append(peer)
+                    log.warning("%s: %s did not list the copies it holds of this server (%s): asked again later",
+                                self.server, peer, e)
+                    continue
                 self._progressed()
-                for path in sorted(b.path for b in listed):
+                fails = 0
+                for path in sorted(str(b.path) for b in listed):
                     self._progressed()
+                    if not _bucket_path(path):
+                        PEER_LINES.garbled(f"platform/restore/{peer}#{path}", "not a bucket's path")
+                        continue                             # never written: it could name a place outside the tree
                     dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
                     if os.path.exists(dest):
                         continue
-                    os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+                    if fails >= PEER_FAILS:
+                        left += 1
+                        continue                             # this peer is left for this try: counted, asked again
                     try:
-                        with open(dest + ".tmp", "wb") as f:
-                            if get_into is not None:
-                                get_into(hb["url"], self.server, path, f)
-                            else:
-                                f.write(self.peers.get(hb["url"], self.server, path))
-                    except BaseException:
-                        os.remove(dest + ".tmp")                     # half a copy is no copy
-                        raise
-                    os.replace(dest + ".tmp", dest); pulled += 1
+                        self._pull(hb["url"], path, dest)
+                    except Exception as e:                   # noqa: BLE001
+                        fails += 1
+                        failed += 1
+                        left += 1
+                        log.warning("%s: %s did not give back %s (%s): asked again later", self.server, peer, path, e)
+                        if fails == PEER_FAILS:
+                            peers_failed.append(peer)
+                        continue
+                    fails = 0
+                    pulled += 1
                     self._progressed()
+            self.restore_failed += failed
+            self.restore_left, self.restore_peers_failed = left, peers_failed
+            if left or peers_failed:
+                wait = min(RESTORE_RETRY_MAX, RESTORE_RETRY * 2 ** self._restore_tries)
+                self._restore_tries += 1
+                self._restore_next = self.clock() + wait
+                log.warning("%s: restore left %d buckets with peers%s: tried again in %.0f s", self.server, left,
+                            f" ({', '.join(peers_failed)} did not answer whole)" if peers_failed else "", wait)
+            else:
+                self._restore_tries, self._restore_next = 0, 0.0
             hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
                      for sub, h in self.hooks.items()} if pulled else {}
-            return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+            return {"pulled": pulled,
+                    **({"left": left, "failed": failed} if left or failed else {}),
+                    **({"peers_failed": peers_failed} if peers_failed else {}),
+                    **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+
+    # One bucket back from a peer, into `dest` through a `.tmp`: half a copy is no copy. The `.tmp` is removed whatever
+    # failed — and a `.tmp` that was never made (the open itself failed) does not hide the reason behind its own
+    # `FileNotFoundError` (the review's eighth pass, a minor).
+    def _pull(self, url: str, path: str, dest: str) -> None:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        get_into = getattr(self.peers, "get_into", None)      # in pieces, never the bucket whole (the seventh pass)
+        try:
+            with open(dest + ".tmp", "wb") as f:
+                if get_into is not None:
+                    get_into(url, self.server, path, f)
+                else:
+                    f.write(self.peers.get(url, self.server, path))
+        except BaseException:
+            with suppress(FileNotFoundError):
+                os.remove(dest + ".tmp")
+            raise
+        os.replace(dest + ".tmp", dest)
+
+    # Whether the restore is to be tried again now: it left buckets with peers, or a peer did not list, and its pause
+    # (`RESTORE_RETRY`, doubling) is over. The resource's loop asks this every turn (`vms/__main__.py`).
+    def restore_due(self) -> bool:
+        return bool(self.restore_left or self.restore_peers_failed) and self.clock() >= self._restore_next
+
+    # The restore's state as the heartbeat says it: buckets still with peers, failures since start, the peers that did
+    # not answer whole, and how long until it is tried again.
+    def restore_said(self) -> dict:
+        pending = bool(self.restore_left or self.restore_peers_failed)
+        return {"left": self.restore_left or 0, "failed": self.restore_failed, "peers_failed": self.restore_peers_failed,
+                **({"next_in": round(max(0.0, self._restore_next - self.clock()), 1)} if pending else {})}
 
     # -- the watermark -------------------------------------------------------------------
     # Retention by days is a PROMISE to the operator; this is what happens when the promise cannot be kept.
