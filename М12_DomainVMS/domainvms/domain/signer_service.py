@@ -31,6 +31,7 @@ from .identity import AuthError, IdentityStore
 from .signer import DomainRoot, Signer
 from .tokens import RevocationList, verify
 import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
+from w2cplatform.console import Bounds, ConsoleServer, Deadlined, read_body
 from w2cplatform.variables import open_vars
 
 
@@ -74,7 +75,14 @@ def main() -> None:
                       members=Members(fed.domain_holder.vars, configured=lambda: configured,
                                       domain=fed.domain_holder.name))
 
-    class H(BaseHTTPRequestHandler):
+    # THE LOGIN DOOR IS ANYBODY'S, SO IT IS BOUNDED (М10's sixth review: "every HTTP door in the code base"). Whoever
+    # reaches it has proved nothing yet — that is what it is for — and it was a thread for every connection, no
+    # deadline on a request, and a body read to whatever `Content-Length` said. The platform's server and reading
+    # (`ConsoleServer`, `Deadlined`, `read_body`): so many connections at once and so many to one address, the
+    # request line and headers under a deadline, a body of a name and a password — `MAX_BODY`, no more.
+    class H(Deadlined, BaseHTTPRequestHandler):
+        MAX_BODY = 16 << 10
+
         def _send(self, status, body):
             raw = json.dumps(body).encode()
             self.send_response(status); self.send_header("Content-Type", "application/json")
@@ -100,6 +108,8 @@ def main() -> None:
             self._send(404, {"detail": "no such route"})
 
         def do_POST(self):
+            if not read_body(self, self.MAX_BODY):
+                return
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
             try:
                 if self.path == "/login":
@@ -115,7 +125,8 @@ def main() -> None:
         def log_message(self, *a):
             pass
 
-    srv = ThreadingHTTPServer((os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445"))), H)
+    srv = ConsoleServer((os.environ.get("SIGNER_HOST", "0.0.0.0"), int(os.environ.get("SIGNER_PORT", "8445"))), H,
+                        bounds=Bounds(64, 16, reserve=0, box=0))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     stop = threading.Event()
     for s in (signal.SIGTERM, signal.SIGINT):

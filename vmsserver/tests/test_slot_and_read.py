@@ -396,3 +396,108 @@ def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one
             else:
                 os.environ[k] = v
         da.shutdown(); srv.shutdown()
+
+
+def test_a_door_that_stops_answering_after_the_first_byte_breaks_the_export_and_the_journal_says_so():
+    """The review's sixth pass, major — a run: an export of 9.85 MB whose recorder's door stopped after 1 MB was a `200`
+    of 1.9 MB with a correct last chunk, and a sha256 in the journal as a whole file has. The door was named and its
+    stretch ended — and the file went on to its end. A door that fails after the first byte is a BREAK now: the reply
+    ends without its last chunk (`IncompleteRead` to the client), and the line is `broken`, names the door, and
+    carries no digest."""
+    import http.client
+    import time
+    from vms import console as vc
+    box, ctl, rec, st, t = _export_box(size=8192)                    # five pieces of a minute for recording 7
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    real, asked = vc._door, []
+
+    def gone_after_two(url, timeout):                                 # the timelines and two minutes of frames, then nothing
+        if "/samples/" in url:
+            asked.append(url)
+            if len(asked) > 2:
+                raise ConnectionRefusedError("the recorder's door is gone")
+        return real(url, timeout)
+    vc._door = gone_after_two
+    try:
+        c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=30)
+        c.request("GET", f"/export/7?rec=7&from={t}&to={t + 300}", headers={"X-User": "ivan"})
+        r = c.getresponse()
+        assert r.status == 200 and r.getheader("Transfer-Encoding") == "chunked"
+        try:
+            r.read()
+            raise AssertionError("an export its door walked away from read as a whole file")
+        except http.client.IncompleteRead as e:
+            assert 100_000 < len(e.partial) < 300 * 8192              # two minutes of five, and no last chunk
+        for _ in range(100):
+            mine = [e for e in _journal(box) if e.get("user") == "ivan"]
+            if mine:
+                break
+            time.sleep(0.05)
+        assert "sha256" not in mine[-1] and mine[-1]["unreachable"] == "r-a"
+        assert "r-a" in mine[-1]["broken"] and "cut" in mine[-1]["broken"]
+    finally:
+        vc._door = real; da.shutdown(); srv.shutdown()
+
+
+def test_a_recorders_door_cut_between_two_sequences_is_an_error_to_its_readers_never_a_shorter_range():
+    """The same class one door down (the sixth pass: the export took a door that failed for a file that ended). A
+    recorder's door streamed its frames with no framing but the connection's end, a SEQUENCE at a time: a volume that
+    failed between two sequences left its reader whole records — a shorter range, taken for all the source holds, by
+    the console's export and by a recorder copying from a backup alike. The door writes its last chunk only when the
+    stream ended whole (`send_route`), and both readers take an answer without it for what it is."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from vms import console as vc
+    from vms.recworker import RecWorker, send_route
+    from vms.worker import fake_samples
+    first = b"".join(s.encode() for s in fake_samples(1000.0, 1002.0))          # one whole sequence
+    state = {"fail": True}
+
+    def frames():
+        yield first
+        if state["fail"]:
+            raise OSError("the volume went away")                     # between two sequences: every record so far is whole
+        yield b"".join(s.encode() for s in fake_samples(1002.0, 1004.0))
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            send_route(self, (200, frames(), "application/octet-stream"))
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        for read in (lambda: RecWorker.read_samples(None, url, "7", 1000.0, 1004.0),      # a recorder copying from a backup
+                     lambda: vc._door(f"{url}/samples/7?from=1000&to=1004", 5.0)):        # the console's export
+            try:
+                read()
+                raise AssertionError("a stream cut between two sequences read as all there was")
+            except OSError as e:
+                assert "cut short" in str(e)
+        state["fail"] = False
+        assert len(RecWorker.read_samples(None, url, "7", 1000.0, 1004.0)) == 4            # whole: as before
+    finally:
+        srv.shutdown()
+
+
+def test_one_recordings_torn_epoch_row_does_not_take_the_cameras_timeline_away():
+    """The review's sixth pass, minor: a `rec/epoch/<recording>` row that does not parse was a `ValueError` out of the
+    timeline's handler — the page got no timeline of the camera at all, every other recording of it included. Read as
+    `SpecConsole.epochs_of` reads it: that recording's spans stand as their door marked them, the others are fenced
+    by their own rows."""
+    box, ctl, rec, st, t = _export_box()
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    try:
+        box.vars.put("rec/epoch/7", {"epoch": "not a number"})
+        box.vars.put("rec/epoch/7-cloud", {"epoch": "2"})
+        with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/timeline/7?from={t}&to={t + 600}") as r:
+            spans = json.load(r)
+        by = {s["recording"]: s for s in spans}
+        assert set(by) == {"7", "7-cloud"}                            # both drawn
+        assert by["7"]["fenced"] is False and by["7-cloud"]["fenced"] is True   # …the torn one by its door's word, the other by its row
+    finally:
+        da.shutdown(); srv.shutdown()

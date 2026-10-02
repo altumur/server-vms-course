@@ -17,24 +17,38 @@
 # 2. The gid checked: the recorders join the group BY NUMBER (`GroupAdd=2101` — a container has no /etc/group of
 #    the host's), so a `vms-rec` made earlier with another number is a recorder the daemon refuses. Said, not fixed.
 # 3. `vms.tmpfiles` → /etc/tmpfiles.d/vms.conf, applied: /run/vms, /run/obsd, /data/volume.
-# 4. THE DAEMON STOPPED, if one runs (the review's fifth pass, major). On a box upgraded from a daemon that ran as
-#    root, that daemon was still writing while the volumes were handed over: it made new blocks — root's — behind
-#    the `chown -R`, and the new unit's daemon then could not open them. Nothing is handed over while it runs.
-# 5. THE UPGRADE: every volume directory — /data/volume, and each one named on the command line (a declared local
-#    volume on another disk of this box) — made if missing, and handed to `obsd:vms-rec` if anything in it is not
-#    `obsd`'s yet: a ring formatted by a daemon that ran as root. Once; `chown -R` over a ring of millions of blocks
-#    is not something to do at every boot.
-# 6. `obsd.service` → /etc/systemd/system, enabled, and RESTARTED — before any recorder (`After=obsd.service` in
-#    theirs). `enable --now` starts a unit that is stopped and leaves a running one as it is: the old root daemon
-#    went on under the old unit, its socket where the recorders no longer look, and every volume stayed `away` until
-#    somebody restarted it by hand. `restart` runs the unit as it is now written, whatever ran before. Running the
-#    script again restarts the daemon again: the recorders wait it out (`away`, then `reattached`).
+# 4. WHICH VOLUMES (the review's sixth pass, minor: the script knew /data/volume and what it was told, and a volume
+#    declared on another disk of this box stayed root's unless somebody remembered its path). /data/volume; each
+#    directory named on the command line; and every volume DECLARED for this box — the rows `rec/volumes/*` of the
+#    box's own store (`$PLATFORM_DIR/config`) that name this server and a directory. Each one found is named. A
+#    cluster whose store is not a directory (М11: Nomad variables) has no rows here to read: its paths are named on
+#    the command line, and the script says it found none.
+# 5. THE UPGRADE, and THE DAEMON STOPPED FOR IT — only for it (the fifth pass, major; the sixth, minor). A volume is
+#    handed to `obsd:vms-rec` if anything in it is not `obsd`'s yet: a ring formatted by a daemon that ran as root.
+#    That daemon was still writing while the volumes were handed over, and made new blocks — root's — behind the
+#    `chown -R`: nothing is handed over while a daemon runs. So one that runs is stopped first — and CHECKED to be
+#    down: `stop`'s failure used to be thrown away (`|| true`), and a daemon that did not stop was chowned under.
+#    The unit not active and no process called `obsd`, or the script ends with 3 and nothing handed over. And when
+#    nothing needs handing over, nothing is stopped: run again on a box that is in order, the script used to stop
+#    and restart the daemon every time — every recording interrupted for nothing.
+# 6. `obsd.service` → /etc/systemd/system when it differs from the one there, enabled, and the daemon RESTARTED when
+#    the unit changed or it was stopped above; started when it is not running; left as it is otherwise. Never
+#    `enable --now`: it starts a unit that is stopped and leaves a running one as it is — the old root daemon went
+#    on under the old unit, its socket where the recorders no longer look, and every volume stayed `away` until
+#    somebody restarted it by hand. `restart` runs the unit as it is now written. A restart of the daemon is not a
+#    writer coming back to it: its writers end with it, and each recorder mounts its volume again (`away`, then
+#    `remounted` — never `reattached`, which is the SAME daemon taking back a recorder whose session dropped). A new
+#    BINARY in place is not this script's to notice: `systemctl restart obsd.service`.
 #
-# Exit codes: 0 done; 1 the group exists with another gid; 2 not root.
+# Exit codes: 0 done; 1 the group exists with another gid; 2 not root; 3 a running daemon would not stop.
 # ================================================================================================
 set -eu
 [ "$(id -u)" = 0 ] || { echo "run it as root: it creates a user and writes /etc" >&2; exit 2; }
 HERE="$(cd "$(dirname "$0")" && pwd)"
+running() {                                         # the unit active, or a process called obsd whoever started it
+  systemctl is-active --quiet obsd.service && return 0
+  command -v pgrep >/dev/null 2>&1 && pgrep -x obsd >/dev/null 2>&1
+}
 
 install -D -m 0644 "$HERE/obsd.sysusers" /etc/sysusers.d/obsd.conf     # -D: a minimal box has no /etc/sysusers.d yet
 systemd-sysusers /etc/sysusers.d/obsd.conf
@@ -49,19 +63,66 @@ fi
 install -D -m 0644 "$HERE/vms.tmpfiles" /etc/tmpfiles.d/vms.conf
 systemd-tmpfiles --create /etc/tmpfiles.d/vms.conf
 
-systemctl stop obsd.service 2>/dev/null || true    # 4: nothing writes while the volumes change hands (a new box: no unit yet)
+# 4: the volumes — the box's own, the ones named, the ones declared for this box in its own store
+VOLS="$(mktemp)"; HAND="$(mktemp)"
+trap 'rm -f "$VOLS" "$HAND"' EXIT
+printf '%s\n' /data/volume "$@" > "$VOLS"
+STORE="${PLATFORM_DIR:-/data/platform}/config/vars"
+SERVER="${SERVER_NAME:-$(hostname)}"
+FOUND=0
+for ROW in "$STORE"/rec%2Fvolumes%2F*.json; do
+  [ -f "$ROW" ] || continue
+  grep -q "\"server\": \"$SERVER\"" "$ROW" || continue          # another box's disk, or an address any box serves
+  DIR="$(sed -n 's/.*"url": "\([^"]*\)".*/\1/p' "$ROW")"
+  DIR="${DIR#file://}"
+  case "$DIR" in /*) ;; *) continue ;; esac                      # a directory on this box, not a bucket
+  FOUND=$((FOUND + 1))
+  echo "declared for $SERVER: $DIR ($(basename "$ROW" .json | sed 's/.*%2F//'))"
+  grep -qxF "$DIR" "$VOLS" || printf '%s\n' "$DIR" >> "$VOLS"
+done
+[ "$FOUND" -gt 0 ] || echo "no volume declared for $SERVER in $STORE: only /data/volume and the paths named here are looked at"
 
-for VOL in /data/volume "$@"; do
+# 5: what is not obsd's yet — and the daemon stopped for the handing over, only for it, and seen to be down
+while IFS= read -r VOL; do
   mkdir -p "$VOL"
   if [ -n "$(find "$VOL" \( ! -user obsd -o ! -group vms-rec \) -print -quit)" ]; then
+    printf '%s\n' "$VOL" >> "$HAND"
+  fi
+done < "$VOLS"
+STOPPED=no
+if [ -s "$HAND" ]; then
+  if running; then
+    echo "stopping obsd: nothing writes while volumes change hands"
+    systemctl stop obsd.service || echo "systemctl stop obsd.service failed" >&2
+    STOPPED=yes
+  fi
+  if running; then
+    echo "obsd is still running — the unit would not stop, or a daemon was started by hand: NOTHING was handed over." >&2
+    echo "stop it, see that no process called obsd is left, and run this again" >&2
+    exit 3
+  fi
+  while IFS= read -r VOL; do
     echo "$VOL: handing it to obsd:vms-rec (formatted when the daemon ran as another user)"
     chown -R obsd:vms-rec "$VOL"
-  fi
+  done < "$HAND"
+fi
+while IFS= read -r VOL; do
   chmod 0750 "$VOL"
-done
+done < "$VOLS"
 
-install -m 0644 "$HERE/obsd.service" /etc/systemd/system/obsd.service
-systemctl daemon-reload
+# 6: the unit as written now, and the daemon restarted only when something changed under it
+CHANGED=no
+if ! cmp -s "$HERE/obsd.service" /etc/systemd/system/obsd.service; then
+  install -m 0644 "$HERE/obsd.service" /etc/systemd/system/obsd.service
+  systemctl daemon-reload
+  CHANGED=yes
+fi
 systemctl enable obsd.service
-systemctl restart obsd.service                     # 6: the unit as written now — a running one is not left as it was
+if [ "$CHANGED" = yes ] || [ "$STOPPED" = yes ]; then
+  systemctl restart obsd.service                   # a running one is not left as it was
+elif ! systemctl is-active --quiet obsd.service; then
+  systemctl start obsd.service
+else
+  echo "nothing changed: the running daemon is left as it is, and no recording is interrupted"
+fi
 echo "obsd: $(systemctl is-active obsd.service), socket /run/obsd/obsd.sock"

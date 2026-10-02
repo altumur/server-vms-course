@@ -92,7 +92,8 @@ from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
 
 MIRROR_GRACE = 3600.0     # a copy outlives its original by this: two servers, two clocks
 MIRROR_DIR = ".mirror"
-EVENTS_INFLIGHT = 8          # `/events` answered at once by one resource; past it, 503 with Retry-After
+MIRROR_MAX = 64 << 20        # the largest bucket one `PUT /mirror/…` takes: ten minutes of events, a storm included
+EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past it, 503 with Retry-After
 MIRROR_KEY = "platform/mirror"
 SPACE_KEY = "platform/space"
 RESOURCES = "platform/resources"
@@ -844,9 +845,15 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
     """The resource over HTTP. `extra(path) -> (status, bytes) | None` lets a
     subsystem add its own reads, and `extra_put(path, headers, rfile)` its
     own writes."""
+    # Bounded like every door (the review's sixth pass: the protections were the console's alone): so many connections
+    # at once and so many to one address, the next answered 503 on the spot (`door_server`); the request line and
+    # headers under a deadline (`Deadlined`). The requests this door HOLDS (`/events/wait`, `WAITERS_MAX`) and the
+    # queries it answers at once (`EVENTS_INFLIGHT`) fit inside one address's share with room to spare — they are
+    # one server's evaluators and its console. Imported here: `console.py` reads this module for `resources_seen`.
+    from .console import Deadlined, door_server
     root = resource.root
 
-    class H(BaseHTTPRequestHandler):
+    class H(Deadlined, BaseHTTPRequestHandler):
         def log_message(self, *a): pass
 
         def _raw(self, status, body, headers=()):
@@ -926,15 +933,34 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             server, _, path = rel.partition("/")
             if not safe_segment(server) or not safe_rel(path) or not path.endswith(".events.jsonl"):
                 return self._raw(400, b"")
+            # A bucket's copy, bounded and never held whole (the review's sixth pass, "every place a body is read"): it
+            # was `Content-Length` bytes read into memory, whatever that said, by a door that asks nobody. Past
+            # `MIRROR_MAX` it is 413 and nothing is read; within it the bytes go to the file a piece at a time; a
+            # body that ends early leaves no copy.
+            try:
+                n = int(self.headers.get("Content-Length", 0))
+            except ValueError:
+                return self._raw(400, b"")
+            if n < 0 or n > MIRROR_MAX:
+                self.close_connection = True
+                return self._raw(413, b"")
             dest = os.path.join(root, MIRROR_DIR, server, path)
             os.makedirs(os.path.dirname(dest), exist_ok=True)
-            n = int(self.headers.get("Content-Length", 0))
+            left = n
             with open(dest + ".tmp", "wb") as f:
-                f.write(self.rfile.read(n))
+                while left > 0:
+                    part = self.rfile.read(min(left, 1 << 16))
+                    if not part:
+                        break
+                    f.write(part); left -= len(part)
+            if left:
+                os.remove(dest + ".tmp")
+                self.close_connection = True
+                return self._raw(400, b"")
             os.replace(dest + ".tmp", dest)                     # a copy appears whole or not at all
             self._raw(204, b"")
 
-    srv = ThreadingHTTPServer((host, port), H)
+    srv = door_server((host, port), H)
     # A door that shuts lets go of the requests it holds: each is answered now (`closed`), so no reader waits out
     # its timeout on a resource that has stopped, and no thread of this server outlives it by thirty seconds.
     resource.watch.open()

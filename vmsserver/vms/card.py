@@ -72,7 +72,8 @@ or `network` volume like a server's — and is not built here.
 #   `NeedKey`, `Backwards`, `NoRecording`, a read cut short.
 # - `CardActuator(ring, card)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`, `stats(cid)`.
 # - `CardRecorder(name, vars_, objects, ring, ...)` — a `RecWorker` whose volume is the card; `answer_range`.
-# - `declare_card(vars_, server, path, budget)` — the card as the camera's own cluster declares it (`kind: edge`).
+# - `declare_card(vars_, server, path, budget, cam=…)` — the card as the camera's own cluster declares it (`kind: edge`,
+#   `cam`: whose card it is — only that camera's recordings are homed on it).
 # ================================================================================================
 from __future__ import annotations
 
@@ -1011,10 +1012,12 @@ class CardActuator:
 
 
 # -- the platform's recorder over the card ---------------------------------------------------------------------------
-def declare_card(vars_, server: str, path: str, budget: int = CARD_BUDGET, name: str = "card") -> volumes.Volume:
-    """The card as the camera's own cluster declares it — `kind: edge`, `server` the camera — as the product's camera
+def declare_card(vars_, server: str, path: str, budget: int = CARD_BUDGET, name: str = "card", cam: str = "") -> volumes.Volume:
+    """The card as the camera's own cluster declares it — `kind: edge`, `server` the camera's box, `cam` the camera's
+    id among the cluster's cameras (an edge volume says whose card it is: `volumes.refuse`) — as the product's camera
     process does at its start: a place for placement and the gate, written by the card buffer, never by an engine."""
-    return volumes.write(vars_, {"name": name, "kind": "edge", "server": server, "url": path, "quota_bytes": int(budget)})
+    return volumes.write(vars_, {"name": name, "kind": "edge", "server": server, "url": path, "quota_bytes": int(budget),
+                                 "cam": str(cam)})
 
 
 class CardRecorder(RecWorker):
@@ -1033,6 +1036,8 @@ class CardRecorder(RecWorker):
         # `card_fault`: what the card did — "would not open", "refused a write" — and `card_error`, the error it gave.
         self.card_fault, self.card_error, self.card_tries, self.card_since = "would not open", "", 0, self.wall()
         self.card_failures = 0                               # times the card was closed for refusing a write
+        self.card_cam = ""                                   # the camera whose card this is (the held volume's `cam`)
+        self.not_ours: dict[str, str] = {}                   # recordings placed here that are another camera's -> why not recorded
         self._card_retry_at = float("-inf")
         self._coverage: dict[str, tuple[float, list]] = {}
         self.prebuffer_short: dict[str, float] = {}          # recording -> when `card.prebuffer.short` was last raised
@@ -1100,7 +1105,20 @@ class CardRecorder(RecWorker):
 
     # Started only with a card open. A camera whose card would not open records nothing on it — and is a camera all
     # the same: the ring and the pusher do not need the card; a break longer than the ring is then lost.
+    #
+    # …and only a recording of THIS camera (the review's sixth pass, major). The card's recorder writes its own ring
+    # into whatever recording it is given: a recording of camera 1 homed on camera 2's card (`PUT … {"home":
+    # "card2"}`) was camera 2's frames under camera 1's name, out of camera 2's budget. The row is refused at the
+    # door now (`volumes.refuse_recording`); one that got here all the same — written before the rule, or past it —
+    # is not recorded, and its status says why.
     def enrich(self, cam: dict) -> dict | None:
+        mine = self.card_cam
+        if mine and str(cam.get("cam") or "") != mine:
+            self.waiting.add(cam["id"])
+            self.not_ours[str(cam["id"])] = (f"this is the card in camera {mine}, and the recording is camera "
+                                             f"{cam.get('cam')}'s: a card records its own camera")
+            return None
+        self.not_ours.pop(str(cam["id"]), None)
         if self.card is None:
             self.waiting.add(cam["id"])
             return None
@@ -1129,6 +1147,7 @@ class CardRecorder(RecWorker):
                 self.volume_error = "" if rows else "no card is declared for this camera"
                 return self.volume
         vol = rows[self.hold]
+        self.card_cam = vol.cam
         self._card_failing(vol)
         if self.card is None and self.clock() >= self._card_retry_at:
             self.card_tries += 1
@@ -1208,6 +1227,8 @@ class CardRecorder(RecWorker):
         out.update(self.actuator.stats(cam["id"]))
         if self.card is None and self.card_error and cam["id"] not in self.reconciler.actual:
             out["why"] = f"the card {self.card_fault}: {self.card_error}"
+        if str(cam["id"]) in self.not_ours:
+            out["why"] = self.not_ours[str(cam["id"])]
         if self._offline_backup(cam):
             out["prebuffer_s"] = round(self.ring.reach(), 1)
             if str(cam["id"]) in self.prebuffer_short:

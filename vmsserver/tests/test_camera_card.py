@@ -545,7 +545,7 @@ def _camera(card_dir=None, when="offline", budget=64 << 20):
     con.create_camera({"name": "gate", "source": CARD, "ref": "SN1"})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     card_dir = card_dir or tempfile.mkdtemp(prefix="card-")
-    declare_card(box.vars, "srv-1", card_dir, budget)
+    declare_card(box.vars, "srv-1", card_dir, budget, cam="1")
     SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create(
         {"name": "1-card", "cam": "1", "home": "card", **({"when": when} if when else {})})
     ring = CamRing(clock=box.wall)
@@ -758,10 +758,10 @@ def test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detec
     assert rec.prebuffer_pass() == {} and "prebuffer_short" not in _status(rec)
     """A card is opened by the camera's recorder as files — a bucket or a share is something no card reader opens,
     and a key to one has nowhere to go. That is a `local` or `network` volume, with an engine."""
-    volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "url": "/media/sd", "quota_bytes": 1})
+    volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})
     for bad in ({"url": "s3://cards/cam-7"}, {"url": "/media/sd", "access_secret": "x"}):
         try:
-            volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "quota_bytes": 1, **bad})
+            volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "quota_bytes": 1, **bad})
             raise AssertionError(f"{bad} was taken for a card")
         except Exception as e:                                             # Refused
             assert "card in a camera" in str(e)
@@ -771,7 +771,7 @@ def test_a_recorder_of_the_engine_never_takes_a_cameras_card():
     """The card is the camera's buffer, written by the camera's own recorder. A recorder of the engine on the same
     box — free to take, or pinned to it by mistake — does not mount it."""
     box, ctl, con, con_vars = _box()
-    declare_card(box.vars, "srv-1", tempfile.mkdtemp(prefix="card-"))
+    declare_card(box.vars, "srv-1", tempfile.mkdtemp(prefix="card-"), cam="1")
     r = recorder(box, "r-9", "srv-1", keep_days=1.0)
     r.lease_pass()
     assert r.hold is None and r.volume != "card"
@@ -790,7 +790,7 @@ def _room_and_camera():
     con.create_camera({"name": "gate", "source": CARD})
     ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     _volume(box, "disks", "local", "srv-a")
-    declare_card(box.vars, "cam-1", tempfile.mkdtemp(prefix="card-"))
+    declare_card(box.vars, "cam-1", tempfile.mkdtemp(prefix="card-"), cam="1")
     con_rec = SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall)
     con_rec.create({"name": "1", "cam": "1", "home": "disks"})
     con_rec.create({"name": "1-card", "cam": "1", "home": "card"})

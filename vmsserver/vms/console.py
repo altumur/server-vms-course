@@ -17,6 +17,8 @@ from __future__ import annotations
 import os
 from http.server import ThreadingHTTPServer
 
+import hashlib
+import http.client
 import json
 import logging
 import math
@@ -39,11 +41,15 @@ READ_NOTE_EVERY = 60.0        # the same piece of archive, by the same person: o
 READ_NOTE_BYTES = 1 << 20     # …while what left of it is less than this: a larger part is a line every time
 from .archive import subtract
 from .controller import VmsController
+from .jobs import BACKFILL_TTL
 
 EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
 SEGMENT_MAX = 3600.0          # …and one signed piece of a DEVICE's footage (`GET /segment`), after it is cut to the coverage
 BACKFILL_MAX = 86400.0        # the longest range one `POST /backfill` asks for: a hole somebody saw, a day at most
+BACKFILL_MIN = 1.0            # …and the shortest: the recorder fetches whole seconds, and less is an ask nobody can answer
+BACKFILL_AHEAD = 60.0         # …and how far past this console's clock it may end: two clocks apart, not minutes to come
 BACKFILLS_OPEN = 7            # …and how many of one person's asks may wait for a recorder at once: a week of days
+ASK_SETTLE = 60.0             # an ask counts for this long after it was made, its row there or not (`POST /backfill`)
 KEEP_MAX = 7 * 86400.0        # the longest interval one keep holds: an incident's week, not "the archive"
 EXPORTS_AT_ONCE = 2           # exports one console makes at a time (`EXPORTS_AT_ONCE` in its environment): each is held in memory
 EXPORT_RETRY = 5.0            # the `Retry-After` of an export refused for that
@@ -55,7 +61,7 @@ DOOR_TIMEOUT = 5.0            # a recorder's door that does not answer in this i
 SESSIONS_KEPT = 10000         # live sessions remembered for their hang-up: past it, the oldest is forgotten
 SESSION_LOOKBACK = 86400.0    # …and how far back the journal is asked for one this process does not remember
 SESSION_MISS_TTL = 60.0       # an id the journal did not know is not asked about again for this long
-SESSION_MISSES = 10           # look-ups that found nothing, one caller, a minute: past them, 404 without asking
+SESSION_MISSES = 10           # look-ups that ask the journal, one caller, a minute — whatever they find: past them, 429 without asking
 
 
 class LiveFront:
@@ -268,17 +274,30 @@ def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict
     return [v for k, v in sorted(stale.items()) if k not in live]
 
 
+# A row that does not PARSE is not the timeline's end either (the review's sixth pass, minor): one torn
+# `rec/epoch/<recording>` was a `ValueError` out of the handler, and the page got no timeline of the camera at all —
+# every other recording of it with that one. Read as `SpecConsole.epochs_of` reads it: the doors' own word stands
+# for that recording, and the row is named in the log.
 def _rec_epoch(ctl, unit) -> int | None:
     from w2cplatform.epoch import current_epoch
     try:
         return current_epoch(ctl.vars, f"rec/epoch/{unit}") or None
     except OSError:
         return None                                # the store did not answer: the doors' own word stands
+    except (ValueError, KeyError, TypeError) as e:
+        log.warning("rec/epoch/%s does not parse (%s): its spans are fenced by their doors' word alone", unit, e)
+        return None
 
 
+# A door's answer, whole — or an `OSError`. A recorder's door streams its frames in chunks and writes the last one only
+# when the stream was whole (`recworker.send_route`): an answer that ends without it is `http.client.IncompleteRead`,
+# which is not an `OSError` and would have gone past every `except` here as a door that answered.
 def _door(url: str, timeout: float):
-    with urllib.request.urlopen(url, timeout=timeout) as r:
-        return r.read()
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as r:
+            return r.read()
+    except http.client.HTTPException as e:
+        raise ConnectionError(f"{url}: the door's answer was cut short ({e!r})") from None
 
 
 def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_ctl=None):
@@ -371,7 +390,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 # (`NO_UNIT`): the gate asks for any grant, and the session is checked here — the id this console
                 # handed out, to the caller it handed it to, on the gateway it named then, whatever `?gateway=` says.
                 sid = path[len("/whep/session/"):]
-                held = session_of(sid, who)
+                try:
+                    held = session_of(sid, who)
+                except LookupError as e:                         # the journal was not asked: not "no such session"
+                    return 429, json.dumps({"error": "too many look-ups", "detail": f"{e}; retry in a minute"}).encode(), \
+                        [("Content-Type", "application/json"), ("Retry-After", "60")]
                 if getattr(handler, "sees", None) is not None:    # gated: the caller is a proven name
                     if held is None:
                         return 404, {"error": "no such session", "detail": "not a session this console handed out"}
@@ -471,24 +494,55 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             unit = str(body.get("rec") or "") or units[0]
             if unit not in units:
                 return 400, {"detail": f"camera {cam} has no recording {unit}", "error": "no such recording"}
-            rid = f"{unit}-{int(t0)}-{int(t1)}"
+            # AN ASK SOMEBODY CAN ANSWER (the review's sixth pass, minor). A range of milliseconds, or one that has not
+            # happened yet, was a row no recorder could ever fetch — and it held one of its person's places for good.
+            now = con_wall()
+            if t1 - t0 < BACKFILL_MIN:
+                return 400, {"detail": f"a backfill is at least {BACKFILL_MIN:.0f} s of footage", "error": "range too short"}
+            if t1 > now + BACKFILL_AHEAD:
+                return 400, {"detail": f"a backfill is a hole in what HAS been recorded: this range ends "
+                                       f"{t1 - now:.0f} s from now", "error": "range in the future"}
             who = handler.headers.get("X-User", "operator")
-            # …AND SO MANY OF THEM (the same minor): each ask is a day at most, and nothing bounded how many — a day a
-            # row, a thousand rows, and the recorder reading a card for a thousand days. One person's asks that the
-            # recorders have not answered yet are at most `BACKFILLS_OPEN` — a week of days; the next is 429 until
-            # some are fetched (the recorder answers, the console clears the row). The same range again is the same
-            # row, and is not counted twice.
-            open_ = []
-            for k in rec_ctl.vars.list(rec_ctl.spec.sub.request_key("")):
-                it = rec_ctl.vars.get(k)[0] or {}
-                if k != rec_ctl.spec.sub.request_key(rid) and str(it.get("by", "")) == who and not it.get("action"):
-                    open_.append(k)                           # a backfill of this person's (a `record` is a scenario's)
-            if len(open_) >= BACKFILLS_OPEN:
-                return 429, {"detail": f"{who} has {len(open_)} backfills the recorders have not fetched yet, as many as "
-                                       f"one person asks at once — wait for some to be fetched", "error": "too many"}
+            # …AND SO MANY OF THEM (the fifth pass's minor): each ask is a day at most, and nothing bounded how many — a
+            # day a row, a thousand rows, and the recorder reading a card for a thousand days. One person's asks that
+            # the recorders have not answered yet are at most `BACKFILLS_OPEN` — a week of days; the next is 429 until
+            # some are fetched (the recorder answers, the console clears the row) or have stood for `jobs.BACKFILL_TTL`.
+            #
+            # COUNTED BY CAS, NOT BY LOOKING (the sixth pass, minor; a run: forty POSTs at once left fifteen rows). The
+            # bound was a count of rows read before the write, and forty requests in flight all counted the same six.
+            # A person's open asks are now ONE row — `rec/requests/asks-<person>`, the list of their ids — changed by
+            # CAS: a request adds its id only on the revision it read, and the one that loses reads again. The list
+            # never holds an eighth. An id stays in it while its request's row stands (the console clears a row the
+            # recorder fetched; `jobs.clear_requests` ends one that stood for `BACKFILL_TTL`) — and for
+            # `ASK_SETTLE` after it was added, row or no row: the list is written before the request is. The same
+            # range again is the same id, and is not counted twice. No worker reads the list as a request: it names
+            # no unit and no action.
+            rid = f"{unit}-{int(t0)}-{int(t1)}"
+            ledger = rec_ctl.spec.sub.request_key("asks-" + hashlib.sha256(who.encode()).hexdigest()[:16])
+            for _ in range(50):
+                it, idx = rec_ctl.vars.get(ledger)
+                try:
+                    held = [(str(r), float(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
+                except (ValueError, TypeError):
+                    held = []
+                held = [(r, at) for r, at in held if now - at <= BACKFILL_TTL
+                        and (now - at < ASK_SETTLE or rec_ctl.vars.get(rec_ctl.spec.sub.request_key(r))[0])]
+                if rid not in [r for r, _ in held]:
+                    if len(held) >= BACKFILLS_OPEN:
+                        return 429, {"detail": f"{who} has {len(held)} backfills the recorders have not fetched yet, as "
+                                               f"many as one person asks at once — wait for some to be fetched",
+                                     "error": "too many"}
+                    held.append((rid, now))
+                try:
+                    rec_ctl.vars.put(ledger, {"asks": json.dumps(held), "by": who, "at": str(now)}, cas=idx)
+                    break
+                except Conflict:
+                    continue                                  # another request of this person's got there first: read again
+            else:
+                return 503, {"detail": "this person's list of asks would not settle — retry", "error": "busy"}
             rec_ctl.vars.put(rec_ctl.spec.sub.request_key(rid),
                              {"unit": str(unit), "cam": cam, "from": str(t0), "to": str(t1),
-                              "at": str(con_wall()), "by": who})
+                              "at": str(now), "by": who})
             # Who asked for a device's minutes to be fetched into the archive: a line, as a keep and a read are.
             journal = getattr(extra, "journal", None)
             if journal is not None:
@@ -527,8 +581,16 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # caller has `SESSION_MISSES` look-ups that find nothing a minute (`who`); past them their next unknown id is 404
     # without asking. What would make one look-up cheap — the index answering by `session` itself — is the index's
     # to grow: today it filters by kind and subsystem, and the rest is read here.
+    #
+    # EVERY LOOK-UP IS COUNTED, AND WHAT IT FOUND IS KEPT (the review's sixth pass, minor; reproduced by a run: thirty
+    # DELETEs of somebody ELSE's old session were six hundred windows read). Only look-ups that found nothing were
+    # remembered and counted — and a session that IS in the journal and is not the caller's was found, refused with
+    # 403, and found again on the next request, the whole day read each time, with no bound. A session found is put
+    # into the table above, where the next request finds it without the journal; and the caller's budget
+    # (`SESSION_MISSES` a minute) is spent by every look-up that asks the journal, whatever it finds, before it asks.
+    # Past the budget the answer is `LookupError` — the route says 429, not "no such session": it did not look.
     misses: dict[str, float] = {}
-    missed_by: dict[str, list] = {}
+    asked_by: dict[str, list] = {}
 
     def session_of(sid: str, who: str | None = None):
         with sessions_lock:
@@ -543,9 +605,12 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         with sessions_lock:
             if mono - misses.get(sid, -1e18) < SESSION_MISS_TTL:
                 return None
-            mine = missed_by[who] = [t for t in missed_by.get(who, []) if mono - t < 60.0]
+            mine = asked_by[who] = [t for t in asked_by.get(who, []) if mono - t < 60.0]
             if who is not None and len(mine) >= SESSION_MISSES:
-                return None
+                raise LookupError(f"{who} has asked the journal about {len(mine)} sessions this minute")
+            mine.append(mono)                                        # counted before it asks, whatever it finds
+            if len(asked_by) > SESSIONS_KEPT:
+                asked_by.clear()
         now = con_wall()
         lo, hi = now - SESSION_LOOKBACK, now + 1
         try:
@@ -554,7 +619,12 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 events = rep.get("events", [])
                 for e in events:
                     if str(e.get("session")) == sid:
-                        return str(e.get("user", "")), str(e.get("target", "")), str(e.get("gateway", ""))
+                        held = str(e.get("user", "")), str(e.get("target", "")), str(e.get("gateway", ""))
+                        with sessions_lock:
+                            sessions[sid] = held                     # found once: not looked for again
+                            while len(sessions) > SESSIONS_KEPT:
+                                sessions.pop(next(iter(sessions)))
+                        return held
                 if not rep.get("truncated") or not events:
                     break
                 older = min(float(e["t"]) for e in events)           # the older end of the day, the next window
@@ -569,9 +639,6 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if len(misses) > SESSIONS_KEPT:
                 for k in [k for k, t in misses.items() if mono - t >= SESSION_MISS_TTL] or list(misses)[:len(misses) // 2]:
                     misses.pop(k, None)
-            missed_by.setdefault(who, []).append(mono)
-            if len(missed_by) > SESSIONS_KEPT:
-                missed_by.clear()
         return None
 
     # The command, as a row: `(202, {queued, detail})`, or the refusal.
@@ -786,8 +853,15 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # blocker 6). Every door's answer used to be decoded into one list and the MP4 made of all of it: an hour
         # of an 8 Mbit/s camera, twice over, in the console. A stretch is now read in pieces of `EXPORT_PIECE`,
         # cut at a key frame the way the recorder cuts what it lands (`RecWorker._pieces`): a piece ends where its
-        # last group of pictures begins, and the next piece starts there. A door that fails half way ends its
-        # stretch there and is named; what came before it has gone out already.
+        # last group of pictures begins, and the next piece starts there.
+        #
+        # A DOOR THAT FAILS AFTER THE FIRST BYTE BREAKS THE EXPORT (the review's sixth pass, major; reproduced by a
+        # run). It ended its stretch and was named in the journal — and the file went on to its last chunk: an
+        # export of 9.85 MB whose door stopped after 1 MB was a `200` of 1.9 MB that every client took for whole,
+        # with a sha256 in the journal as a whole file has. A hole that could not be said in the headers is said the
+        # only way left: the reply ends WITHOUT its last chunk, and the line is `broken`, with the door's name and no
+        # digest. Before the first byte a door that does not answer is still a header (`X-Archive-Unreachable`) and
+        # a file that is whole for what it says it is.
         def frames_of(name: str, url: str, unit: str, lo: float, hi: float):
             at = lo
             while at < hi:
@@ -795,8 +869,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 try:
                     got = sorted(Sample.decode_all(_door(f"{url}/samples/{unit}?from={at}&to={top}", 30.0)),
                                  key=lambda s: s.begin)
-                except (OSError, ValueError, struct.error):
+                except (OSError, ValueError, struct.error) as e:
                     unreachable.append(name)
+                    if sent["head"]:
+                        raise ConnectionError(f"the archive door of {name} stopped answering at {at:.0f} of "
+                                              f"{unit} ({e}): the file is cut there") from None
                     return
                 nxt = top
                 if top < hi:
@@ -835,8 +912,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # taken once, the first door's. The MP4 is written as it is made (`fmp4.Writer`, one fragment per group of
         # pictures): the headers go with the first key frame, because that is when "nothing recorded" (404) and "not
         # playable" (415) can no longer be the answer. So there is no `Content-Length`, the connection's end is the
-        # file's end, and a door that fails after the first byte cannot be named in a header any more: it is in the
-        # log and in the journal's line (`unreachable`), and the file has the hole.
+        # file's end, and a door that fails after the first byte cannot be named in a header any more: the export
+        # stops there, without its last chunk (`frames_of`), and the journal's line says `broken` and `unreachable`.
         sent = {"bytes": 0, "sha": hashlib.sha256(), "head": False}
         chunked = getattr(handler, "request_version", "") == "HTTP/1.1"
 
@@ -902,7 +979,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             log.warning("an export of camera %s stopped after %d bytes: %s", cid, sent["bytes"], e)
         late = sorted(set(unreachable[said:]))
         if late:
-            log.warning("an export of camera %s has holes: %s did not answer after the first byte", cid, ",".join(late))
+            log.warning("an export of camera %s was cut: %s did not answer after the first byte", cid, ",".join(late))
         note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}",
                   {"status": 200, "bytes": sent["bytes"], "whole": broken is None,
                    **({"sha256": sent["sha"].hexdigest()} if broken is None else {"broken": broken}),
@@ -1304,13 +1381,60 @@ def job_cams(vars_):
     return cams
 
 
+# The camera behind a VOLUME, when it has one: an edge volume is the card in a camera (`volumes.Volume.cam`). `"*"`
+# for a card that does not say whose it is — a row from before cards named their camera: only a grant on the whole
+# cluster covers it. None for every other kind of volume: a disk or a bucket is the cluster's, no camera's.
+def volume_cam(vars_, name: str) -> str | None:
+    vol = volumes.volume_named(vars_, str(name)) if name else None
+    if vol is None or vol.kind != "edge":
+        return None
+    return vol.cam or "*"
+
+
+# The cameras a RECORDING reaches (the review's sixth pass, major): the one it records, and — homed on a camera's
+# card — the camera whose card that is. `PUT /rec/recordings/1-b {"home": "card2"}` with `admin` on camera 1 was 200,
+# and camera 2's card then wrote camera 2's frames into camera 1's recording, out of its own budget. Rights on the
+# camera recorded are not rights on the card: the gate asks for the route's capability on both, before and after the
+# edit (`SpecConsole.admit_cams`). That a card holds only its own camera's recordings is the controller's rule, for
+# whoever writes the row (`volumes.refuse_recording`).
+def recording_cams(vars_):
+    def cams(row: dict) -> set:
+        return {str(row.get("cam") or ""), volume_cam(vars_, str(row.get("home") or "")) or ""} - {""}
+    return cams
+
+
+# The cameras a change of `source` reaches (the same review, major): every camera of the device the row leaves and of
+# the device it moves to, when the device or the channel changes. The credentials are the device's, so
+# `PUT /cameras/1 {"source": "…/ch/2"}` under `admin` on camera 1 made the holder open channel 2 as camera 1 — its
+# viewers and its archive got camera 2's picture. Moving a camera about a device is an act on the device: `admin` on
+# every camera it carries. An edit that leaves the source where it is asks for nothing more.
+#
+# …and `ref`, the name the domain knows the camera by (М12): changed, the camera is another camera to the layer above
+# — its book of primaries, the edits it kept — which is nobody's to decide with rights on one camera: `"*"`, the
+# cluster's grant.
+def source_cams(ctl):
+    from .config import device_of
+
+    def cams(old: dict, new: dict) -> set:
+        out = set()
+        if str(old.get("ref") or "") != str(new.get("ref") or ""):
+            out.add("*")
+        a, b = str(old.get("source") or ""), str(new.get("source") or "")
+        if volumes.source_key(a) != volumes.source_key(b):
+            devices = {device_of(s) for s in (a, b) if s}
+            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) in devices}
+        return out
+    return cams
+
+
 # WHICH CAMERAS A SCENARIO IS (the review's fifth pass, its question about `auto`). A scenario's labels are placement
 # labels — where its evaluator runs — and say nothing about whose it is; a grant matching them is not a grant on the
 # cameras it acts on. A scenario is the cameras it watches and the cameras it acts on: every `unit` of a trigger (a
 # camera; a detector's, a recording's, a stream's camera through its row) and every camera of an action (`unit` of a
 # command, `cam` of a recording or a scan, and a scan's recording's camera). A trigger with no unit watches every
 # camera of its subsystem, and a unit nothing can say the camera of is anybody's: `"*"`, which only a grant on the
-# whole cluster covers.
+# whole cluster covers. And the camera whose CARD a `record` writes to (`archive`, which becomes the recording's
+# `home`; the review's sixth pass): the same reach as an operator's `home`, through a scenario.
 def scenario_cams(vars_, mounts: dict):
     from .jobs import recording_cam
 
@@ -1337,6 +1461,8 @@ def scenario_cams(vars_, mounts: dict):
             out.add(str((a.get("unit") if str(a.get("sub", "")) == "vms" else a.get("cam")) or "*"))
             if a.get("rec"):
                 out.add(recording_cam(vars_, str(a["rec"])))
+            if a.get("archive") and volume_cam(vars_, str(a["archive"])):
+                out.add(volume_cam(vars_, str(a["archive"])))
         return out
     return cams
 
@@ -1354,9 +1480,31 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     root = SpecConsole(ctl, marks_root=archive_root, wall=wall,
                        extra=vms_routes(media, live, ctl, rec_ctl), media=media, index=index,
                        metrics_extra=vms_metrics(ctl))
-    root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
-    root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
-    root.extra.index = index             # where a live session another console handed out is found (`live.view`)
+    m = Mount(root)
+    if live_ctl is not None:
+        m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
+    for name, c in (mounts or {}).items():
+        m.mount(name, SpecConsole(c, wall=wall, index=index,             # every mount answers /events from the same merge
+                                  extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
+                                         auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
+                                  metrics_extra=(rec_metrics(c) if name == "rec" else
+                                                 auto_metrics(c) if name == "auto" else None)))
+    return wire_vms(m, ctl, index)
+
+
+# WHAT THE VMS'S ROUTES NEED OF THE CONSOLE THAT SERVES THEM — in one place, for every console that does (the review's
+# sixth pass, found while sweeping "every door"). All of this was written inside `make_console`, and М11's console is
+# built by a function of its own (`cluster/console.py`), which had none of it: `/timeline/<cam>` and `/export/<cam>`
+# were not routes that name a unit there, so the gate asked for any grant at all — a viewer of camera 1 was given
+# camera 2's timeline and its footage; a recording's labels were its own placement labels; and nothing that left
+# through that console was written into the journal. A console built anywhere is wired here, or it is not the VMS's.
+def wire_vms(m: Mount, ctl, index=None) -> Mount:
+    root = m.root
+    cam_labels = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+    if root.extra is not None:
+        root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
+        root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
+        root.extra.index = index or root.index   # where a live session another console handed out is found (`live.view`)
     # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
     # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
     # which is the viewer's token on the live door.
@@ -1364,15 +1512,13 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     root.UNIT_ROUTES = SpecConsole.UNIT_ROUTES + ("timeline", "export", "whep")
     root.NO_UNIT = ("/whep/session/",)                                   # a live session is not a camera: its route checks it
     root.VIEW_POSTS = ("/whep/",)
-    m = Mount(root)
-    if live_ctl is not None:
-        m.mount("live", SpecConsole(live_ctl, wall=wall, index=index))
-    for name, c in (mounts or {}).items():
-        con = SpecConsole(c, wall=wall, index=index,                     # every mount answers /events from the same merge
-                          extra=(rec_routes(c) if name == "rec" else          # …and `rec` answers for the archives too,
-                                 auto_routes(c) if name == "auto" else None),  # `auto` for its catalogue
-                          metrics_extra=(rec_metrics(c) if name == "rec" else
-                                         auto_metrics(c) if name == "auto" else None))
+    # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
+    # their labels are read from their own rows, as a mount reads a camera's.
+    root.moved_cams = source_cams(ctl)
+    root.labels_of = cam_labels
+    controllers = {name: con.ctl for name, con in m.mounts.items()}
+    for name, con in m.mounts.items():
+        c = con.ctl
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
         # belongs beside "who deleted camera 7".
         con.journal = root.journal
@@ -1382,20 +1528,22 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         if "cam" in c.spec.fields:
             # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
             # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).
-            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass): by
-            # the field, not by a list of names that the next subsystem is missing from.
-            con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass), and
+            # a live stream, whose own labels say which gateway serves it (the sixth): by the field, not by a list
+            # of names that the next subsystem is missing from.
+            con.labels_of = cam_labels
         # …and the rows that reach a camera through ANOTHER field (the review's fifth pass, major): a scan through its
         # recording, a scenario through its triggers and actions. The gate checks every camera such a row names,
         # before and after the write (`SpecConsole.admit_cams`).
+        if name == "rec":
+            con.cams_of = recording_cams(c.vars)                       # …and a recording through the card it is homed on
         if name == "detjob":
             con.cams_of = job_cams(c.vars)
         if name == "auto":
-            con.cams_of = scenario_cams(c.vars, mounts or {})
-            con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
+            con.cams_of = scenario_cams(c.vars, controllers)
+            con.labels_of = cam_labels
         if con.extra is not None:
             con.extra.journal = root.journal
-        m.mount(name, con)
     return m
 
 

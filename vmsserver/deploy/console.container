@@ -56,6 +56,15 @@ Environment=CONSOLE_HOST=0.0.0.0
 # the port the README's `PLATFORM_DIR=… python3 -m vms controller  # the console on :8080` line refers to;
 # the page, `/spec`, `/cameras`, `/where`, `/metrics`, `/marks`, `/timeline`, `/export` all live here.
 Environment=CONSOLE_PORT=8080
+# THE BOX'S OWN DOOR (the review's sixth pass): the same console on a unix socket, beside the port. Who is "on the
+# box" — for the emergency entry's own turns (`Gate.open_glass`) and for connections of its own when the port is
+# flooded (`w2cplatform/console.py`, `Bounds`) — is whoever came through this socket, and who may is the mode of
+# the directory (0700 root, `vms.tmpfiles`) and of the socket (0660): no caller on the network, no proxy, and no
+# process of the box that is not root. On the box: `curl --unix-socket /run/vms-console/console.sock
+# http://console/session -d '{"glass": {…}}'`; from the operator's machine: `ssh -L 8080:/run/vms-console/console.sock
+# root@box`, and a browser at http://localhost:8080. A TCP peer of 127.0.0.1 is the network's, like any other.
+Environment=CONSOLE_UNIX=/run/vms-console/console.sock
+Volume=/run/vms-console:/run/vms-console:z
 # `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
 EnvironmentFile=/data/config/vms.env

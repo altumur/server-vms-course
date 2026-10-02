@@ -133,8 +133,17 @@ def test_the_pass_reports_on_itself_and_the_console_exports_it():
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
     for line in ("vms_reconcile_last_pass_age_seconds 0.0", "vms_reconcile_last_success_age_seconds 30.0",
                  "vms_reconcile_failures 1", "vms_units_unplaced 0", "vms_units_diverged 0",
-                 'vms_worker_fenced{worker="w-1"} 0', 'vms_worker_store_errors{worker="w-1"} 0'):
+                 'vms_worker_fenced{worker="w-1"} 0', 'vms_worker_store_errors{worker="w-1"} 0',
+                 'vms_worker_slots_garbled{worker="w-1"} 0'):       # slot rows it could not read (the review's sixth pass)
         assert line in text, line
+    from w2cplatform import contract
+    was = contract.SLOTS_GARBLED.get("vms", 0)
+    contract.SLOTS_GARBLED["vms"] = was + 2                            # two torn slot rows met while looking for a slot
+    try:
+        w.heartbeat_once()
+        assert f'vms_worker_slots_garbled{{worker="w-1"}} {was + 2}' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    finally:
+        contract.SLOTS_GARBLED["vms"] = was
     w.fence("slot w-1 is held by another instance now"); w.heartbeat_once()
     assert 'vms_worker_fenced{worker="w-1"} 1' in SpecConsole(ctl, wall=box.wall).metrics_text()
     assert "vms_reconcile_last_pass_age_seconds -1" in SpecConsole(VmsController(Box().vars, Box().objects), wall=box.wall).metrics_text()

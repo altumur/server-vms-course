@@ -43,7 +43,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith("/data/") or vol.startswith("/run/vms:") or vol.startswith("/run/obsd:"), vol   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
 
 
 def test_who_may_write_where_is_in_the_mounts_too():
@@ -165,21 +165,8 @@ def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and
     as it was, its socket where the recorders no longer look. The script is RUN here, every command it calls a shim
     that writes its line down, and the ORDER is the claim: the daemon stopped, then the volumes handed over, then the
     unit installed, enabled and restarted — never `enable --now`."""
-    import subprocess
-    import tempfile
-    bin_ = tempfile.mkdtemp(prefix="install-obsd-")
-    log = os.path.join(bin_, "calls")
-    says = {"id": "echo 0", "getent": "echo vms-rec:x:2101:", "find": 'echo "$2/block-0"'}
-    for name in ("id", "install", "systemd-sysusers", "getent", "systemd-tmpfiles", "systemctl", "mkdir", "find",
-                 "chown", "chmod"):
-        with open(os.path.join(bin_, name), "w") as f:
-            f.write(f'#!/bin/sh\necho "{name} $*" >> "{log}"\n{says.get(name, "true")}\n')
-        os.chmod(os.path.join(bin_, name), 0o755)
-    env = {**os.environ, "PATH": bin_ + os.pathsep + os.environ.get("PATH", "")}
-    out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "install-obsd.sh"), "/data/disk-2"], env=env,
-                         capture_output=True, text=True, timeout=30)
+    out, calls = _install_obsd("/data/disk-2")
     assert out.returncode == 0, out.stderr
-    calls = [line.strip() for line in open(log)]
 
     def at(line):
         assert line in calls, f"{line!r} not called: {calls}"
@@ -191,3 +178,68 @@ def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and
     assert max(handed) < unit_in < at("systemctl daemon-reload") < at("systemctl enable obsd.service") \
         < at("systemctl restart obsd.service")
     assert not any("--now" in line for line in calls)                                  # a running unit is not left as it was
+
+
+def _install_obsd(*args, active=True, stops=True, owned=False, same_unit=False, store=None, server="srv-1"):
+    """`install-obsd.sh` RUN, every command it calls a shim that writes its line down: `(the finished process, the
+    lines)`. `active`: a daemon runs; `stops`: `systemctl stop` stops it; `owned`: every volume is obsd's already;
+    `same_unit`: the unit installed is the one in the tree; `store`: the box's file store, for the declared volumes."""
+    import subprocess
+    import tempfile
+    bin_ = tempfile.mkdtemp(prefix="install-obsd-")
+    log, state = os.path.join(bin_, "calls"), os.path.join(bin_, "active")
+    if active:
+        open(state, "w").close()
+    says = {"id": "echo 0", "getent": "echo vms-rec:x:2101:", "find": "true" if owned else 'echo "$2/block-0"',
+            "pgrep": f'[ -f "{state}" ]', "cmp": "true" if same_unit else "false",
+            "systemctl": (f'case "$1" in is-active) [ -f "{state}" ] ;; '
+                          + (f'stop) rm -f "{state}" ;; ' if stops else "stop) false ;; ")
+                          + f'restart|start) : > "{state}" ;; esac')}
+    for name in ("id", "install", "systemd-sysusers", "getent", "systemd-tmpfiles", "systemctl", "mkdir", "find",
+                 "chown", "chmod", "pgrep", "cmp"):
+        with open(os.path.join(bin_, name), "w") as f:
+            f.write(f'#!/bin/sh\necho "{name} $*" >> "{log}"\n{says.get(name, "true")}\n')
+        os.chmod(os.path.join(bin_, name), 0o755)
+    env = {**os.environ, "PATH": bin_ + os.pathsep + os.environ.get("PATH", ""), "SERVER_NAME": server,
+           "PLATFORM_DIR": store or os.path.join(bin_, "no-store")}
+    out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "install-obsd.sh"), *args], env=env,
+                         capture_output=True, text=True, timeout=30)
+    return out, [line.strip() for line in open(log)]
+
+
+def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_go_on_if_it_did_not_stop():
+    """The review's sixth pass, minor. Three things the script did: it threw the failure of `stop` away
+    (`2>/dev/null || true`) and chowned under a daemon that had not stopped; run again on a box in order it stopped
+    and restarted the daemon all the same — every recording interrupted for nothing; and it knew only the volumes
+    it was told. Now: nothing to hand over and the unit unchanged — nothing is stopped and nothing restarted; a
+    daemon that will not stop ends the script with 3, and no `chown` ran; and a volume declared for THIS box in
+    the box's own store is found, named and handed over — another box's, and a bucket, are not."""
+    import tempfile
+    from w2cplatform.variables import FileVariables
+    out, calls = _install_obsd(owned=True, same_unit=True)                     # the box is in order
+    assert out.returncode == 0 and "left as it is" in out.stdout, out.stdout + out.stderr
+    assert not any(c.startswith(("systemctl stop", "systemctl restart", "systemctl start", "chown")) for c in calls), calls
+
+    out, calls = _install_obsd(owned=True, same_unit=True, active=False)       # in order, and the daemon down: started
+    assert out.returncode == 0 and "systemctl start obsd.service" in calls and "systemctl restart obsd.service" not in calls
+
+    out, calls = _install_obsd(owned=True)                                     # a new unit: restarted, and nothing stopped first
+    assert out.returncode == 0 and "systemctl restart obsd.service" in calls and "systemctl stop obsd.service" not in calls
+
+    out, calls = _install_obsd(stops=False)                                    # a ring to hand over, a daemon that will not stop
+    assert out.returncode == 3 and "NOTHING was handed over" in out.stderr
+    assert "systemctl stop obsd.service" in calls and not any(c.startswith("chown") for c in calls), calls
+
+    root = tempfile.mkdtemp(prefix="platform-")
+    vars_ = FileVariables(os.path.join(root, "config"))
+    vars_.put("rec/volumes/disk-2", {"kind": "local", "server": "srv-1", "url": "/data/disk-2", "quota_bytes": "1"})
+    vars_.put("rec/volumes/second", {"kind": "backup", "server": "srv-1", "url": "file:///data/second", "quota_bytes": "1"})
+    vars_.put("rec/volumes/theirs", {"kind": "local", "server": "srv-2", "url": "/data/theirs", "quota_bytes": "1"})
+    vars_.put("rec/volumes/cloud", {"kind": "network", "server": "", "url": "s3://bucket/x", "quota_bytes": "1"})
+    out, calls = _install_obsd(store=root)
+    assert out.returncode == 0, out.stderr
+    handed = sorted(c.split()[-1] for c in calls if c.startswith("chown -R obsd:vms-rec"))
+    assert handed == ["/data/disk-2", "/data/second", "/data/volume"], handed   # this box's, declared: found without being told
+    assert "declared for srv-1: /data/disk-2 (disk-2)" in out.stdout and "/data/theirs" not in out.stdout
+    out, calls = _install_obsd()                                               # no store to read: said, not passed over
+    assert "no volume declared for srv-1" in out.stdout
