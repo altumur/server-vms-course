@@ -37,7 +37,7 @@ or `network` volume like a server's — and is not built here.
 # camera's. What it needs is to cost nothing: one write buffer, no index file (the segments' names and their first
 # and last samples are the index, read when the card opens), and a write path that never makes the camera wait.
 #
-# **The camera's memory is ONE budget, in bytes** (`MEMORY_BUDGET`, 32 MiB; the review's sixth pass). The ring, what
+# **The camera's memory is ONE budget, in bytes** (`MEMORY_BUDGET`, 40 MiB; the review's sixth pass). The ring, what
 # waits for the card, and a piece of the card on its way to the server are all the same frames, and all of them are
 # held by this one process: counted in frames, or not at all, the ring's 32 MiB came with 38 MiB of spilled groups
 # and a 29 MiB answer to one range on top. `memory_split` cuts the budget three ways — `RING_BYTES`, `QUEUE_BYTES`
@@ -95,8 +95,8 @@ log = logging.getLogger("card")
 # product's camera is a 32-bit SoC that leaves this process some 32 MB for its data, and every frame the process
 # holds is in one of three places — so the three are cut out of ONE number, in bytes:
 #
-#     the ring          `RING_BYTES`       24 MiB   the last `RING_SECONDS`, as far as the bytes go: 50 s at 4 Mbit/s,
-#                                                   33 s at 6, 25 s at 8. `CamRing.reach` says which, and the recorder
+#     the ring          `RING_BYTES`       32 MiB   the last `RING_SECONDS`, as far as the bytes go: 60 s at 4 Mbit/s,
+#                                                   44 s at 6, 33 s at 8. `CamRing.reach` says which, and the recorder
 #                                                   raises an alarm when that is less than a break takes to be noticed
 #     the card's queue  `QUEUE_BYTES`       6 MiB   every recording's frames on their way to the card and what a kept
 #                                                   ring spilled, together: twelve seconds at 4 Mbit/s
@@ -104,18 +104,19 @@ log = logging.getLogger("card")
 #                                                   the card read for the server (a range's answer, a break continued)
 #
 # Until then only the ring had a ceiling in bytes: the queue was 512 frames, the spill 2048, and a range was answered
-# as one list — 31.5 MiB of ring, 38.2 MiB spilled and 28.6 MiB of one answer at 4 Mbit/s, on a camera with 32. The
-# product still counts its queue and its spill in frames and gives all 32 MiB to the ring (feedback CT, DE: 60 s /
-# 32 MiB, to be confirmed by measuring on a camera). A camera measured to have more hands `memory_split` a larger
-# budget: 42.7 MiB makes the ring 32.
+# as one list — 31.5 MiB of ring, 38.2 MiB spilled and 28.6 MiB of one answer at 4 Mbit/s. The ring is the product's:
+# 32 MiB, sixty seconds (feedback CT, DE — to be confirmed by measuring on a camera; the owner chose the product's ring
+# over a smaller one that would have kept the whole process inside 32). The queue and the pieces come ON TOP of it, in
+# bytes, where the product counts its queue and spill in frames: 40 MiB in all, every byte of it counted. A camera
+# measured to have less or more hands `memory_split` another budget, and the three shares move together.
 RING_SECONDS = 60.0                      # the ring's WINDOW — the product's sixty seconds; what it holds is `reach()`
-MEMORY_BUDGET = 32 << 20
+MEMORY_BUDGET = 40 << 20
 
 
 def memory_split(budget: int = MEMORY_BUDGET) -> tuple[int, int, int]:
-    """`(ring, queue, piece)` in bytes, out of one budget: three sixteenths wait for the card, two pieces of a
-    thirty-second each are in flight, and the ring has the rest — three quarters."""
-    queue, piece = budget * 3 // 16, budget // 32
+    """`(ring, queue, piece)` in bytes, out of one budget: three twentieths wait for the card, two pieces of a
+    fortieth each are in flight, and the ring has the rest — four fifths: 32 MiB of 40, the product's ring."""
+    queue, piece = budget * 3 // 20, budget // 40
     return budget - queue - 2 * piece, queue, piece
 
 
@@ -1038,7 +1039,7 @@ class CardRecorder(RecWorker):
 
     # THE PRE-RECORD IS WHAT THE RING HOLDS, NOT ITS WINDOW (the review's sixth pass: "30 or 60?"). Sixty seconds is the
     # ring's window, the product's and the server's `PREBUFFER`; what a camera's ring holds is that or its bytes,
-    # whichever is less — 50 s at 4 Mbit/s, 33 at 6, 25 at 8 (`CamRing.reach`). Everything that counts on the
+    # whichever is less — 60 s at 4 Mbit/s, 44 at 6, 33 at 8 (`CamRing.reach`). Everything that counts on the
     # pre-record counts on THIS number: how long the gate may wait for a pushed stream to come back (`defer_for`), what
     # a standby says it holds, and whether it is enough (`prebuffer_pass`).
     @property

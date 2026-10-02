@@ -205,12 +205,12 @@ def test_the_ring_says_whether_frames_arrive_and_what_it_holds():
 
 
 def test_the_cameras_memory_is_one_budget_cut_three_ways():
-    """The sixth review asked what the camera's memory budget is and how it is split. One number — 32 MiB — and three
+    """The sixth review asked what the camera's memory budget is and how it is split. One number — 40 MiB — and three
     shares that add up to it: the ring, the card's queue (every recording's, and the spill), and two pieces in
     flight. A camera measured to have more hands `memory_split` more, and the shares grow with it."""
     ring, queue, piece = memory_split()
-    assert (ring, queue, piece) == (RING_BYTES, QUEUE_BYTES, PIECE_BYTES) == (24 << 20, 6 << 20, 1 << 20)
-    assert ring + queue + 2 * piece == MEMORY_BUDGET == 32 << 20
+    assert (ring, queue, piece) == (RING_BYTES, QUEUE_BYTES, PIECE_BYTES) == (32 << 20, 6 << 20, 1 << 20)          # the product's ring
+    assert ring + queue + 2 * piece == MEMORY_BUDGET == 40 << 20
     assert CamRing().max_bytes == RING_BYTES
     act = CardActuator(CamRing())
     assert (act.queue_bytes, act.piece_bytes) == (QUEUE_BYTES, PIECE_BYTES)
@@ -221,7 +221,7 @@ def test_the_cameras_memory_is_one_budget_cut_three_ways():
 
 def test_the_ring_says_how_far_back_it_reaches_at_the_bitrate_it_is_given():
     """The window is sixty seconds and the ceiling is bytes: what the ring HOLDS of a camera's stream is whichever is
-    less, and it says which (`reach`). At 4 Mbit/s the ring's 24 MiB are fifty seconds, at 8 — twenty-five; a stream
+    less, and it says which (`reach`). At 8 Mbit/s the ring's 32 MiB are thirty-three seconds, at 4 — more than the window, so sixty; a stream
     it holds a whole window of reaches the window, and one it has seen too little of to measure is not guessed."""
     def at(mbit: float) -> CamRing:
         ring = CamRing()
@@ -229,8 +229,8 @@ def test_the_ring_says_how_far_back_it_reaches_at_the_bitrate_it_is_given():
             ring.add(s)
         return ring
     four, eight, one = at(4), at(8), at(1)
-    assert 48.0 <= four.reach() <= 51.0 and four.bytes <= RING_BYTES
-    assert 23.0 <= eight.reach() <= 26.0 and eight.status()["ring_reach_s"] == round(eight.reach(), 1)
+    assert four.reach() == 60.0 and four.bytes <= RING_BYTES              # 67 s of bytes: the window is less
+    assert 32.0 <= eight.reach() <= 35.0 and eight.status()["ring_reach_s"] == round(eight.reach(), 1)
     assert abs(eight.reach() - eight.status()["ring_span_s"]) <= 2.5      # full: what it reaches is what it holds
     assert one.reach() == 60.0                                            # the window is the smaller of the two
     young = CamRing()
@@ -387,7 +387,7 @@ def test_the_ring_the_queue_and_the_spill_are_bytes_out_of_one_budget():
     def waiting() -> int:
         return sum(len(s.body) for q in (rec.spill, rec.live) for s in q if hasattr(s, "body"))
     peak = 0
-    for t in range(1000, 1150, 10):                                       # 75 MB through a camera of 32
+    for t in range(1000, 1150, 10):                                       # 75 MB through a camera whose budget is 40
         for s in fake_samples(t, t + 10, step=0.5, gop=2.0, size=250_000):
             ring.add(s)
             peak = max(peak, ring.bytes + waiting())
@@ -739,17 +739,17 @@ def test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detec
     box, rec, ring, act, rec_ctl = _camera()                              # `when: offline`: on hold, the ring its pre-record
     assert rec.PREBUFFER == 60.0 and rec.prebuffer_pass() == {} and _alarms(box, "card.prebuffer.short") == []
     t = box.wall()
-    for a in range(0, 80, 10):                                            # 6 Mbit/s: the ring's 24 MiB are 33 seconds of it
+    for a in range(0, 80, 10):                                            # 6 Mbit/s: the ring's 32 MiB are 44 seconds of it
         for s in fake_samples(t + a, t + a + 10, step=0.5, gop=2.0, size=375_000):
             ring.add(s)
-    assert 32.0 <= rec.PREBUFFER <= 35.0 and rec.PREBUFFER == ring.reach()
-    assert abs(rec.prebuffered("1-card") - ring.status()["ring_span_s"]) < 1e-9 and rec.prebuffered("1-card") <= 35.0
+    assert 43.0 <= rec.PREBUFFER <= 46.0 and rec.PREBUFFER == ring.reach()
+    assert abs(rec.prebuffered("1-card") - ring.status()["ring_span_s"]) < 1e-9 and rec.prebuffered("1-card") <= 46.0
     rec.gate_pass()
     [alarm] = _alarms(box, "card.prebuffer.short")
     assert alarm["class"] == "alarm" and alarm["unit"] == "1-card" and alarm["need_s"] == 50.0
-    assert 32.0 <= alarm["reach_s"] <= 35.0 and alarm["window_s"] == 60.0
+    assert 43.0 <= alarm["reach_s"] <= 46.0 and alarm["window_s"] == 60.0
     st = _status(rec)
-    assert st["prebuffer_short"] == 50.0 and 32.0 <= st["prebuffer_s"] <= 35.0
+    assert st["prebuffer_short"] == 50.0 and 43.0 <= st["prebuffer_s"] <= 46.0
     assert f"the last {rec.prebuffered('1-card'):.0f} s are held in memory" in st["why"] and "60 s" not in st["why"]
     rec.gate_pass(); rec.gate_pass()
     assert len(_alarms(box, "card.prebuffer.short")) == 1                 # when it begins — not once a pass
