@@ -70,6 +70,9 @@ job "console" {
         # http://console/session …`, or `ssh -L 8080:/run/vms-console/console.sock`. A TCP peer of 127.0.0.1 is the
         # network's, like any other (`w2cplatform/access.py`, `is_local`).
         CONSOLE_UNIX = "/run/vms-console/console.sock"
+        # Who scrapes `/metrics` — the autoscaler and Prometheus (the review's seventh pass): their own four
+        # connections, which a flood cannot take. The cluster's network for the agents that scrape; narrow it if you can.
+        CONSOLE_MONITORS = "10.0.0.0/8"
         CLUSTER      = "room-a"
       }
       service {                                      # what the autoscaler scrapes, what М12's read model and a browser reach

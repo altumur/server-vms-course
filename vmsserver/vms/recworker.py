@@ -1893,6 +1893,12 @@ class RecWorker(VmsWorker):
         q = urllib.parse.urlencode({"from": t0, "to": t1})
         try:
             with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
+                # an answer with neither chunks nor a length cannot be told whole from cut (the seventh pass, minor;
+                # the console's `_door` refuses it the same way)
+                if r.headers.get("Content-Length") is None and \
+                        "chunked" not in (r.headers.get("Transfer-Encoding") or "").lower():
+                    raise OSError(f"{url}: the frames of {unit} came with neither chunks nor a length — whole or cut "
+                                  f"cannot be told")
                 data = r.read()
         except http.client.HTTPException as e:
             raise OSError(f"{url}: the frames of {unit} came cut short ({e!r})") from None
