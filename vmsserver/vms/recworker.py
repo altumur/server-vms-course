@@ -389,6 +389,7 @@ class RecWorker(VmsWorker):
         self.keep_state: dict[str, dict] = {}        # keep -> {copied, missing, sha256}: for the heartbeat
         self._keeps_read = False                     # `keep_held` restored from the volume and its events (`keep_pass`)
         self._keep_short: dict[str, tuple] = {}      # keep -> (short since, last `archive.keep.uncopied`) — `_keep_uncopied`
+        self._keep_garbled: dict[str, tuple] = {}    # keep -> (garbled since, last `archive.keep.garbled`) — `_keep_unreadable`
         self._keep_nowhere: dict[tuple[str, str], list] = {}   # (keep, recording) -> what a door that holds it said it has not
         self._keeper: threading.Thread | None = None
         self._keep_at = -1e18
@@ -2577,11 +2578,15 @@ class RecWorker(VmsWorker):
     #   archive.keep.uncopied an ALARM, when a keep has stayed short of what it names for `KEEP_UNCOPIED_AFTER`: no
     #                         door that answers from here has those minutes (the review's fourth pass). Said again
     #                         once a day while it lasts; the heartbeat says how much and since when, every pass
+    #   archive.keep.garbled  an ALARM, when a keep's row has not parsed for `KEEP_GARBLED_AFTER`: its camera is held
+    #                         as far as its interval reads and nothing of it is copied (`_keep_unreadable`). Said
+    #                         again once a day while it lasts
     #
     # A keep is still not "for ever": the incidents volume is a ring too. It is only one that nothing else writes
     # into, so it turns as slowly as keeps arrive.
     KEEP_EVERY = 60.0
     KEEP_UNCOPIED_AFTER = 300.0                      # five passes: a door that blinked had its chance
+    KEEP_GARBLED_AFTER = 3600.0                      # an hour: a row being mended by hand had its chance
 
     def keeps_in_background(self) -> None:
         if self._keeper is not None and self._keeper.is_alive():
@@ -2689,9 +2694,12 @@ class RecWorker(VmsWorker):
             state[k.id] = entry
         for k in unread:                                 # not read is not lifted: what it holds stays counted
             state[k.id] = {**self.keep_state.get(k.id, {}), "garbled": True}
+            self._keep_unreadable(k, state[k.id], now)
         self.keep_held = {kr: v for kr, v in self.keep_held.items() if kr[0] in state}
         self._keep_nowhere = {kr: v for kr, v in self._keep_nowhere.items() if kr[0] in state}
         self._keep_short = {kid: v for kid, v in self._keep_short.items() if kid in state}
+        # Parsed again, or lifted: that episode is over, and the next garbling is a new one.
+        self._keep_garbled = {kid: v for kid, v in self._keep_garbled.items() if state.get(kid, {}).get("garbled")}
         self.keep_state = state
         return state
 
@@ -2806,6 +2814,27 @@ class RecWorker(VmsWorker):
                           "them", self.name, k.id, missing, now - since)
             said = now
         self._keep_short[k.id] = (since, said)
+
+    # A KEEP THAT STAYS GARBLED (the review's eighth pass, part 4). A keep whose row does not parse holds its camera as
+    # far as its interval reads — with a bound lost, from the start of time or to its end — and nothing of it is copied
+    # (`keeps.as_far_as_read`). The console lists it (`garbled`, `garbled_since`), and nothing else said it: a row broken
+    # by a hand edit held a camera's footage for good, and an operator who did not open the list never knew. Since when
+    # this recorder has seen it so goes into the heartbeat (`garbled_since`), and past `KEEP_GARBLED_AFTER` it is an
+    # alarm, once per keep and episode, again once a day while it lasts — as `_keep_uncopied`. Since when is this
+    # recorder's sight of it: a recorder started again starts the hour again.
+    def _keep_unreadable(self, k, entry: dict, now: float) -> None:
+        from w2cplatform.events import ALARM, EventLog
+        since, said = self._keep_garbled.get(k.id, (now, None))
+        entry["garbled_since"] = since
+        if now - since >= self.KEEP_GARBLED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
+            unit = (sorted(k.recordings) or [str(k.cam)])[0]
+            EventLog(self.archive_root, REC.name, unit, 0).append(
+                now, "archive.keep.garbled", cls=ALARM, cam=k.cam, keep=k.id, since=since, volume=self.volume)
+            logging.error("%s: keep %s of camera %s has not been readable for %.0f min: its camera's footage is held as "
+                          "far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift "
+                          "it and set it again", self.name, k.id, k.cam, (now - since) / 60)
+            said = now
+        self._keep_garbled[k.id] = (since, said)
 
     # What this volume held of each keep when this recorder last said so: the last `archive.keep.copied` of each
     # (keep, recording), less the `archive.keep.lost` said after it — read from the events on this server, the

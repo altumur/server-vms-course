@@ -1250,7 +1250,8 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
     """The same finding, the part syntax cannot say: `nvr50.local` and `10.0.0.50` are two keys and one recorder. The
     holder learns what the device IS when it opens it (`identity` — a serial number, a MAC; `FakeDevice(identity=)`)
     and writes it into the device's row; rights and "one channel, one camera" compare by it where it is known
-    (`config.one_device`). What stays open is a spelling no holder has opened yet: it is its key alone until then."""
+    (`config.one_device`). A spelling no holder has opened yet is its key alone until a holder opens it — and a holder
+    that finds it is a second name of a device known already refuses it (the next test)."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     box = Box()
     access = Tokens({"three": [("admin", "3", ())], "admin": [("admin", None, ())]})
@@ -1266,15 +1267,69 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
         w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
         assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"     # the holder said what it is
-        # the name, never opened: its key alone — the window this leaves is the lesson's to say
-        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/7"}, token="three")[0] == 200
-        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()                          # …and a holder opens it
-        assert box.vars.get("vms/devices/acme/nvr50.local")[0]["identity"] == "ACME-SN-0042"
+        # Both names known — rows written before holders refused a second name, or by two holders at one moment: the
+        # console compares by what the device said it is.
+        box.vars.put("vms/devices/acme/nvr50.local", {**box.vars.get("vms/devices/acme/10.0.0.50")[0]})
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/7"}, token="admin")[0] == 200
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
         assert _call(base, "POST", "/requests", {"unit": "3", "action": "output", "port": 1}, token="three")[0] == 403
         assert _call(base, "PUT", "/cameras/3", {"name": "now hers no more"}, token="three")[0] == 200   # nothing moved
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
         code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")
         assert code == 400 and "camera 2 is that source already" in body["detail"], (code, body)
+    finally:
+        srv.shutdown()
+
+
+def test_a_holder_refuses_a_second_name_of_a_device_it_knows_and_opens_a_first_name():
+    """The owner's decision on the review's eighth pass. A camera moved onto `nvr50.local` — never opened, its key alone
+    — passed the console with rights on its old device and none on the new key's cameras, and the holder opened the
+    name on its next pass: the camera showed the recorder's channel, the one another camera holds as `10.0.0.50`. The
+    holder now looks the identity up when it learns it (`describe_devices`): under another key it is a second name —
+    no row written, the device closed, the camera not started and its status saying the name the device goes by, and a
+    command to it reaches no relay. A name never seen opens, which is how identities are learned; the other name's row
+    removed, this one opens too."""
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    box = Box()
+    access = Tokens({"two": [("admin", "2", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
+            "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["2"], relays=2, identity="ACME-SN-0042"),
+            "acme/10.0.0.60": FakeDevice("acme/10.0.0.60", channels=["1"], identity="ACME-SN-0060")}
+    opened: list[str] = []
+    act = FakeActuator()
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive, device_factory=lambda k: opened.append(k) or devs.get(k))
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    nvr = "driverpack://acme/nvr50.local/ch/2"
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/2.mp4"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # a first name opens
+        # The window the lesson named: `admin` on a file camera alone, moved onto the never-opened name — the console
+        # lets it by (its key alone, no camera on it) — and the holder refuses the name at open.
+        assert _call(base, "PUT", "/cameras/2", {"source": nvr}, token="two")[0] == 200
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert "acme/nvr50.local" not in w.devices and w.second_names["acme/nvr50.local"][0] == "acme/10.0.0.50"
+        assert box.vars.get("vms/devices/acme/nvr50.local")[0] is None                    # one identity, one row
+        assert not any(c.get("source") == nvr for c in act.started.values())              # no picture of the recorder
+        [st] = [x for x in w.status() if str(x["id"]) == "2"]
+        assert "already known as acme/10.0.0.50" in st["why"], st
+        _call(base, "POST", "/requests", {"unit": "2", "action": "output", "port": 1}, token="two")
+        for _ in range(3):
+            w.heartbeat_once(); w.reconcile_once(); w.requests()
+        assert devs["acme/10.0.0.50"].did == [] and devs["acme/nvr50.local"].did == []   # nobody's relay was pulsed
+        assert opened.count("acme/nvr50.local") == 1                                    # refused once, not opened every pass
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.60/ch/1"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert box.vars.get("vms/devices/acme/10.0.0.60")[0]["identity"] == "ACME-SN-0060"   # another device's first name
+
+        box.vars.delete("vms/devices/acme/10.0.0.50")                                   # the operator removes the other row
+        w.heartbeat_once(); w.reconcile_once()
+        assert "acme/nvr50.local" in w.devices and "acme/nvr50.local" not in w.second_names
+        assert box.vars.get("vms/devices/acme/nvr50.local")[0]["identity"] == "ACME-SN-0042"
     finally:
         srv.shutdown()
 

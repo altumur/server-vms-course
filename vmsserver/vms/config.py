@@ -143,9 +143,10 @@ def device_of(source: str) -> str:
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
 # is (`identity` in its row, `vms/devices/<device>`: a serial number, a MAC; the driver's word). A DNS name and the
 # address it resolves to are two keys and one identity. `one_device(vars_)(key)` is a token: equal tokens, one device;
-# the vendor is part of it, so two vendors' serial numbers do not meet. What stays open: a spelling no holder has
-# opened yet has no identity, and is its key alone until a holder opens it — which a camera moved onto it makes
-# happen within the holder's next pass (М10B Lesson 12 says what that leaves).
+# the vendor is part of it, so two vendors' serial numbers do not meet. A spelling no holder has opened yet has no
+# identity, and is its key alone until a holder opens it — which a camera moved onto it makes happen within the
+# holder's next pass; and a holder that finds it is a second name of a device known already refuses it there
+# (`VmsWorker.describe_devices`; М10B Lesson 15).
 def device_identities(vars_) -> dict[str, str]:
     prefix = SPEC.sub.config(DEVICES, "")
     out = {}

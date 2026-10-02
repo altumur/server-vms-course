@@ -107,7 +107,7 @@ from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
-                     device_row, identity_of, live_shm, live_url, said_id,
+                     device_identities, device_row, identity_of, live_shm, live_url, said_id,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
@@ -526,6 +526,7 @@ class VmsWorker(Worker):
         self.devices: dict[str, object] = {}
         self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
         self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
+        self.second_names: dict[str, tuple] = {}          # device -> (the name it is known by already, its identity): refused
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -595,7 +596,11 @@ class VmsWorker(Worker):
     # level up. A device no row names any more is closed.
     def _refresh_devices(self) -> None:
         want = {device_of(r["source"]) for r in self.rows if r.get("source")}   # a recorder's rows name none
+        self.second_names = {k: v for k, v in self.second_names.items() if k in want}
         for key in want - set(self.devices):
+            if key in self.second_names and self._still_known_as(*self.second_names[key]):
+                continue                                 # refused, and the other name still stands: not opened again
+            self.second_names.pop(key, None)
             dev = self.device_factory(key)
             if dev is not None:
                 self.devices[key] = dev
@@ -615,21 +620,62 @@ class VmsWorker(Worker):
     # …and WHICH DEVICE it is, in its own word (`identity`; the review's eighth pass): a DNS name and the address it
     # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. The
     # console reads it back to tell the two spellings apart (`config.one_device`).
+    #
+    # A SECOND NAME OF A DEVICE ALREADY KNOWN IS REFUSED (the owner's decision on the review's eighth pass). A name no
+    # holder had opened was its key alone, and a camera moved onto it — `nvr50.local`, the recorder another camera holds
+    # as `10.0.0.50` — passed the console with rights on its old device and on the new key's cameras, which were none;
+    # the holder opened it on its next pass and the camera showed the recorder's channel. Now the identity the device
+    # gives is looked up among the device rows (`device_identities`) when this holder first learns it: under ANOTHER key
+    # of the same vendor, this name is a second one — its row is not written (two rows with one identity, and a restarted
+    # holder of the first name would find the second and refuse the device by its own name), the device is closed, no
+    # camera of it is started (`_actuate`), its status says what name the device goes by (`status`), and it is said in
+    # the log once. A name never seen opens as before: that is how identities are learned. Each pass asks the store
+    # whether the other name still stands (`_still_known_as`), so removing its stale row lets this one open.
     def describe_devices(self) -> int:
         wrote = 0
         idents = self.identities
+        known: dict | None = None                        # the device rows' identities, read once a pass when needed
+        refused: list[tuple[str, str, str]] = []
         for key, dev in self.devices.items():
             caps = dev.capabilities() if hasattr(dev, "capabilities") else None
             desc, ident = describe(caps), identity_of(caps)
             if desc is None or (self.described.get(key) == desc and idents.get(key, "") == ident):
                 continue
+            if ident and idents.get(key, "") != ident:  # learned now: is it a device known by another name?
+                if known is None:
+                    known = device_identities(self.vars)
+                other = next((k for k, i in sorted(known.items())
+                              if i == ident and k != key and k.split("/", 1)[0] == key.split("/", 1)[0]), None)
+                if other is not None:
+                    refused.append((key, other, ident))
+                    continue
             path, row = self.SUB.config(DEVICES, key), device_row(desc, ident)
             items, _ = self.vars.get(path)
             if items != row:
                 self.vars.put(path, row)
                 wrote += 1
+            if known is not None and ident:
+                known[key] = ident
             self.described[key], idents[key] = desc, ident
+        for key, other, ident in refused:
+            dev = self.devices.pop(key)
+            self.described.pop(key, None); idents.pop(key, None)
+            if hasattr(dev, "close"):
+                dev.close()
+            if self.second_names.get(key) != (other, ident):
+                log.error("%s: device %s is not opened: it is the same device as %s, which is already in use under that "
+                          "name. Point its cameras at %s, or, if nothing uses that name any more, remove its device "
+                          "row", self.name, key, other, other)
+            self.second_names[key] = (other, ident)
         return wrote
+
+    # Whether the device row of `other` still says `ident` — the refusal of a second name holds while it does.
+    def _still_known_as(self, other: str, ident: str) -> bool:
+        try:
+            items, _ = self.vars.get(self.SUB.config(DEVICES, other))
+        except Exception:                                # noqa: BLE001 — a store that does not answer: the refusal stands
+            return True
+        return str((items or {}).get("identity") or "").strip() == ident
 
     # The same description, per unit, as it is carried in the heartbeat (`can`). The row is for this
     # cluster's automation; the heartbeat is how the description leaves the cluster — a domain reads
@@ -656,6 +702,8 @@ class VmsWorker(Worker):
         if verb in ("start", "restart"):
             if not self.recording_allowed:
                 return False
+            if cam.get("source") and device_of(cam["source"]) in self.second_names:
+                return False                                    # a second name of a device known already (`describe_devices`)
             if verb == "start" or unit not in self.epochs:
                 try:
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
@@ -1520,6 +1568,10 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
             elif str(cid) in self.row_errors:              # running or not: it is not following its row
                 out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
+            if cam.get("source") and device_of(cam["source"]) in self.second_names:   # running or not: its source is refused
+                other = self.second_names[device_of(cam["source"])][0]
+                out[-1]["why"] = (f"its device is already known as {other}: this name is not opened. Point the camera at "
+                                  f"{other}, or, if nothing uses that name any more, remove its device row")
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"
