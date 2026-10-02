@@ -99,13 +99,17 @@ class Slot:
 
 ```python
     def claim_slot(self, prefer: str | None = None, retries: int = 50) -> str:
+        with self._slot_lock:
+            return self._claim_slot(prefer, retries)
+
+    def _claim_slot(self, prefer: str | None, retries: int) -> str:
         prefix = self.sub.name + "/slots/"
         now = self.wall()
         for attempt in range(retries):
             if attempt:
                 cas_pause(attempt - 1)               # every candidate was taken under us: not the same race again at once
             names = [p[len(prefix):] for p in self.vars.list(prefix)]
-            known = {n: Slot.from_items(n, self.vars.get(prefix + n)[0]) for n in names}
+            known = {n: s for n in names if (s := read_slot(prefix + n, n, self.vars.get(prefix + n)[0])) is not None}
             if prefer is not None:
                 order = [prefer]
             else:
@@ -116,6 +120,32 @@ class Slot:
 ```
 
 Сначала читаются все слоты подсистемы. Потом составляется **порядок предпочтения** — и он говорит о системе больше, чем любой другой список в платформе.
+
+**Строка, которая не разбирается, — не кандидат, и только.** Первая версия разбирала каждую строку голым `Slot.from_items`. Одна чужая строка со словом вместо числа (`until: "soon"` — правка руками, оборванная запись) бросала `ValueError` из каждого захвата: экземпляр, отдавший своё имя, оставался «никем» навсегда, а его ёмкость пропадала молча — исключение каждые восемь секунд писал в лог цикл, и больше никто (шестое ревью). Теперь слоты читает `read_slot`:
+
+```python
+SLOTS_GARBLED: dict[str, int] = {}                # subsystem -> slot rows that did not parse, this process
+_garbled_slots: set[str] = set()
+
+
+def read_slot(key: str, name: str, items) -> "Slot | None":
+    """The row parsed, or None — skipped, counted, and logged once."""
+    try:
+        slot = Slot.from_items(name, items)
+    except (ValueError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        SLOTS_GARBLED[sub] = SLOTS_GARBLED.get(sub, 0) + 1
+        if key not in _garbled_slots:
+            _garbled_slots.add(key)
+            log.error("%s: the slot row does not parse (%r); skipped — nobody claims it until it is mended", key, items)
+        return None
+    _garbled_slots.discard(key)
+    return slot
+```
+
+Правило то же, что у heartbeat'а, который не разбирается (`parse_heartbeat`, урок 8): беда одной строки, пропустить, посчитать, сказать один раз. Битая строка в карту `known` не попадает, а её **номер** в счёт идёт — `nxt` считается по `names`, и новый слот никогда не получит имя строки, которую кто-то должен починить. Счётчик уходит в heartbeat каждого воркера подсистемы как `slots_garbled`. Отдельной метрики в `/metrics` консоли пока нет — число видно в heartbeat'е и в логе. Тест: `test_slot_fence.py::test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted` — пять воркеров, которые держат слот через `keep_slot`, и `rejoin` держателя.
+
+Тот же `read_slot` стоит в `Controller.slots()`: контроллер читает все слоты, чтобы знать, кто уходит (`_pool`, урок 11), и одна битая строка обрывала размещение **каждой** единицы подсистемы. Тест: `test_slot_fence.py::test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names`.
 
 **Сначала просроченные**, от самого давнего. Почему первыми: потому что за просроченным слотом стоит назначение, которое сейчас никто не исполняет. Камеры `w-1` не записываются, пока `w-1` мёртв, и самый полезный поступок нового процесса — стать `w-1`. Сортировка по `until` берёт того, кто замолчал раньше всех: он ждёт дольше.
 
@@ -128,7 +158,11 @@ class Slot:
 ```python
             for cand in order:
                 items, idx = self.vars.get(prefix + cand)
-                cur = Slot.from_items(cand, items)
+                cur = read_slot(prefix + cand, cand, items)
+                if cur is None:
+                    if prefer is None:
+                        continue                               # garbled since the listing: not a candidate
+                    cur = Slot(cand)                           # the runtime named this slot: taken, and written whole again
                 if prefer is None and not cur.claimable(now):
                     continue                                   # a preferred slot is taken regardless: the scheduler
                 new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1)
@@ -141,6 +175,8 @@ class Slot:
 ```
 
 Ключ перечитывается **перед самой записью**, а не берётся из карты `known`: между составлением порядка и попыткой могло пройти время. Проверка `claimable` повторяется на свежих данных. И запись идёт с `cas=idx` — если кто-то успел между чтением и записью, `Conflict`, и кандидат пропускается.
+
+Строка, которая перестала разбираться между списком и перечитыванием, пропускается так же. Исключение одно: имя назвал рантайм (`prefer`). Тогда битая строка читается как пустая и записывается заново целиком — процесс, которому планировщик дал `w-9`, не должен падать в цикле перезапусков из-за строки, которую его же захват и починит.
 
 Пятьдесят попыток внешнего цикла — на случай, когда несколько процессов стартуют разом и расходятся по именам не с первого раза. `released=False` в новой строке означает «занято»: захват — это не отпускание.
 
@@ -165,11 +201,23 @@ class Slot:
 
 ```python
     def renew_slot(self) -> bool:
+        with self._slot_lock:
+            return self._renew_slot()
+
+    def _own_slot(self) -> tuple[Slot, int]:
+        key = self.sub.slot_key(self.name)
+        items, idx = self.vars.get(key)
+        cur = read_slot(key, self.name, items)
+        if cur is None:
+            cur = Slot(self.name, self.instance, 0.0, False, self.slot.gen if self.slot is not None else 0)
+        return cur, idx
+
+    def _renew_slot(self) -> bool:
         if self.slot is None:
-            return True
-        items, idx = self.vars.get(self.sub.slot_key(self.name))
-        cur = Slot.from_items(self.name, items)
-        if cur.holder != self.instance:
+            return self.seeking is None           # a fixed name never claimed is itself; a name given up is nobody's here
+        self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # a garbled row: what it ran with stands
+        cur, idx = self._own_slot()
+        if cur.holder != self.instance or cur.released:          # released: `retire` let go of it; a late renewal does not take it back
             return False
         new = Slot(self.name, self.instance, self.wall() + self.slot_ttl, False, cur.gen)
         try:
@@ -180,7 +228,9 @@ class Slot:
         return True
 ```
 
-Читаем, сравниваем `holder` со своим экземпляром, продлеваем `until`. Три исхода.
+Читаем, сравниваем `holder` со своим экземпляром, продлеваем `until`. Замок `_slot_lock` — потому что строку продлевают два потока, цикл и «подменщик» (урок 8); строка про схему — урок 17. Три исхода — и четвёртый, которого в первой версии не было.
+
+**Своя строка не разбирается — это не «держит другой».** Голое чтение бросало `ValueError` из каждого продления: после него в шаге не продлевались аренды, не уходил heartbeat, и воркер умирал для контроллера из-за одного поля в собственной строке (шестое ревью, рядом с находкой про чужую строку). `_own_slot` читает такую строку как ту, что экземпляр записал последней, и продление по CAS записывает её заново целиком. Чужой экземпляр битую строку не возьмёт: `_claim_slot` её пропускает — кроме процесса, которому рантайм дал это самое имя, и тогда строка снова разбирается и называет его. Тест: `test_slot_fence.py::test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names`.
 
 **Слота нет вовсе (`self.slot is None`) — `True`.** Процесс с фиксированным именем, который не проходил через захват (так делают тесты и некоторые точки входа), не должен отсекаться из-за отсутствующей строки. Но не тот, кто своё имя только что **отдал**: воркер, увидевший в своей строке чужой экземпляр, отпускает единицы и ищет свободный слот (`keep_slot`, урок 8), и пока не нашёл — он никто (`seeking`), и продление отвечает `False`.
 
@@ -196,16 +246,16 @@ class Slot:
 
 ```python
     def release_slot(self) -> None:
-        if self.slot is None:
-            return
-        items, idx = self.vars.get(self.sub.slot_key(self.name))
-        cur = Slot.from_items(self.name, items)
-        if cur.holder == self.instance:
-            try:
-                self.vars.put(self.sub.slot_key(self.name), Slot(self.name, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
-            except Conflict:
-                pass
-        self.slot = None
+        with self._slot_lock:
+            if self.slot is None:
+                return
+            cur, idx = self._own_slot()
+            if cur.holder == self.instance:
+                try:
+                    self.vars.put(self.sub.slot_key(self.name), Slot(self.name, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
+                except Conflict:
+                    pass
+            self.slot = None
 ```
 
 Записывается `released=True` и `until = сейчас`. Вызывается это из одного места — обработки `SIGTERM` в цикле процесса, то есть тогда, когда процессу **сказали** остановиться.
@@ -380,6 +430,7 @@ def server(env: dict, given: str | None = None) -> str:
 | Два процесса считают себя `w-1` | Захват без CAS, либо `holder` — это имя, а не экземпляр. Экземпляр обязан быть уникальным на процесс: хост, pid и случайный хвост. |
 | Слот отпускается при падении | `release_slot` вызывается из `finally` или обработчика любого исключения. Он должен вызываться **только** по `SIGTERM`: крах обязан молчать. |
 | Камеры упавшего воркера переезжают и тут же возвращаются | Подсистема перераспределяет по `lapsed` вместо `released`. Это как раз лишний переезд и лишняя эпоха. |
+| Воркер, отдавший имя, остаётся «никем», в логе `ValueError` из захвата на каждом шаге аренд | В `<подсистема>/slots/` есть строка, которая не разбирается, а слоты читаются голым `Slot.from_items`. Читайте через `read_slot`: битая строка — не кандидат; число таких строк — `slots_garbled` в heartbeat'е (шестое ревью). |
 | Слоты не продлеваются, воркеры теряют имена | Продление вызывается реже, чем `slot_ttl` — или не вызывается вовсе: так было у воркеров детекторов, сканов, обзора и шлюза, которые брали слот один раз при старте (найдено после четвёртого ревью; теперь их шаг аренд зовёт `keep_slot`). В цикле процесса оно идёт каждые `(TTL − margin)/3`; пока шаг висит, его делает «подменщик» (урок 8). |
 | В М11 продление слотов — самая частая запись в raft | Так и есть. Отсюда `slot_ttl = 45`, а не 5: TTL задаёт частоту продлений. |
 | Процесс, которому планировщик дал индекс, не может взять имя | С `prefer` проверка `claimable` пропускается сознательно. Если её вернуть, перепланирование перестанет работать — старая строка будет держать новое имя. |

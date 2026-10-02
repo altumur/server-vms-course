@@ -1785,7 +1785,16 @@ class RecWorker(VmsWorker):
             rid = key.rsplit("/", 1)[1]
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
-            t0, t1 = float(it["from"]), float(it["to"])
+            # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
+            # holder's commands): read bare, it raised out of `requests` on every pass, and no request behind it — any
+            # recording's — was fetched. Answered, so the console clears the row.
+            try:
+                t0, t1 = float(it["from"]), float(it["to"])
+            except (KeyError, TypeError, ValueError):
+                log.error("%s: request %s refused: from=%r to=%r is not a range", self.name, rid, it.get("from"), it.get("to"))
+                self.fetched.append(rid)
+                done.append({"unit": unit, "cam": cam, "request": rid, "error": "`from` and `to` are not a range"})
+                continue
             ours = self.our_coverage(unit)
             if unit in self.reconciler.actual:
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)

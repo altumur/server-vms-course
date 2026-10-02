@@ -1004,6 +1004,106 @@ def test_a_walk_over_many_buckets_keeps_the_pulse_with_a_mark_per_bucket_and_ope
         ev_mod.parse_bucket, ev_mod.read_bucket = real_parse, real_read
 
 
+class _slow_disk:
+    """The disk made slow by the box's clock, as the test above makes the names slow: every `stat` of a file and every
+    removal costs a tenth of the pulse's limit. `worst` is the pulse's own question — how long since the pass last
+    got somewhere — asked at each of them."""
+    def __init__(self, box, res, limit):
+        self.box, self.res, self.cost, self.worst, self.stats, self.removed = box, res, limit / 10, 0.0, 0, 0
+
+    def _op(self):
+        self.worst = max(self.worst, self.box.clock() - self.res._progress_at)
+        self.box.clock.advance(self.cost)
+
+    def __enter__(self):
+        self.getsize, self.remove = os.path.getsize, os.remove
+
+        def getsize(path):
+            self._op(); self.stats += 1
+            return self.getsize(path)
+
+        def remove(path):
+            self._op(); self.removed += 1
+            return self.remove(path)
+
+        os.path.getsize, os.remove = getsize, remove
+        return self
+
+    def __exit__(self, *exc):
+        os.path.getsize, os.remove = self.getsize, self.remove
+
+
+def _year_of_buckets(box, n, root=None, t0=None):
+    from w2cplatform.events import bucket_path
+    t0 = box.wall() - 60 * 86400 if t0 is None else t0
+    for i in range(n):
+        p = bucket_path(root or box.archive, "vms", "7", 1, t0 + i * 600)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w") as f:
+            f.write(json.dumps({"t": 0, "kind": "stats"}) + "\n")
+
+
+def test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_per_file():
+    """The review's sixth pass (П-M10's remainder). The fifth pass gave the walks by NAME a mark per bucket; the two
+    parts beside them kept the old grain. `usage()` marked once per directory — and every bucket of an epoch is in ONE
+    directory — and the removals in `retain` marked nothing: the names were all marked first, while the list was
+    built, and then the files went one after another. By the model of the test above, 2000 buckets were 399.8 s
+    without a mark in `usage` and 371 s in `retain` against a limit of 2 s: the pulse stopped, and a resource
+    measuring or sweeping a year of one camera was reported silent. A mark per file measured and per file removed —
+    this server's buckets, and the copies it keeps of another's."""
+    from w2cplatform.resource import MIRROR_DIR, MIRROR_GRACE, Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock,
+                   lost_after=0.5)
+    limit = res.PULSE_LIMIT * res.lost_after
+    n = 2000
+    box.vars.put("vms/retention", {"days": "30"})
+    _year_of_buckets(box, n)                                                        # two weeks of them, the newest 46 days old: past the 30 kept
+    _year_of_buckets(box, n, root=os.path.join(box.archive, MIRROR_DIR, "srv-2"))   # …and as many copies of a peer's
+    with _slow_disk(box, res, limit) as disk:
+        res._progressed()
+        assert res.usage() > 0 and disk.stats >= 2 * n
+        assert disk.worst < limit, f"measuring the tree went {disk.worst:.1f} s without a mark (limit {limit:g} s)"
+        disk.worst = 0.0
+        res._progressed()
+        assert res.retain() == n and disk.removed == 2 * n and res.mirror_removed == n
+        assert disk.worst < limit, f"the removals went {disk.worst:.1f} s without a mark (limit {limit:g} s)"
+    assert res.usage() < 4096 and MIRROR_GRACE > 0                                  # what is left is the journal's line
+
+
+def test_reading_what_is_kept_marks_every_row_it_reads():
+    """The sibling in the VMS's own hook (`vms/resource.py`). Before anything is swept the retention asks what
+    somebody said to keep, and the answer is read from the store row by row — the keeps, and the rows of every
+    subsystem whose units are about a camera — with no mark between them: on a store that takes its time, a part of
+    the pass that moved the whole while and looked stuck. The hook is handed `progressed`, as a subsystem's pass is."""
+    from vms import keeps
+    from vms.resource import vms_resource
+    box = Box()
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    res.clock, res.lost_after = box.clock, 0.5
+    limit = res.PULSE_LIMIT * res.lost_after
+    t = box.wall()
+    keeps.write(box.vars, {"cam": "7", "from": t - 600, "to": t}, ["7"], "anna", t)
+    for i in range(300):
+        box.vars.put(f"det/units/{i}-motion", {"id": f"{i}-motion", "cam": str(i), "kind": "motion"})
+        box.vars.put(f"rec/recordings/{i}", {"id": str(i), "cam": str(i)})
+    worst = [0.0]
+    real = type(box.vars).get
+
+    def slow_get(path, *a, **kw):
+        worst[0] = max(worst[0], box.clock() - res._progress_at)
+        box.clock.advance(limit / 10)
+        return real(box.vars, path, *a, **kw)
+
+    box.vars.get = slow_get
+    try:
+        res._progressed()
+        assert res.retain() == 0
+    finally:
+        del box.vars.get
+    assert worst[0] < limit, f"reading what is kept went {worst[0]:.1f} s without a mark (limit {limit:g} s)"
+
+
 def test_a_file_that_vanishes_under_the_walk_and_a_part_that_raises_end_only_themselves():
     """The review's third pass (minor; Н-M9's remainder). `usage()` ran outside any part and `part` caught only
     `OSError`: one `.tmp` renamed between the listing and the `stat` took the whole pass — watermark and mirror with

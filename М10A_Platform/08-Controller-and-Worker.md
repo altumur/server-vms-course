@@ -292,15 +292,102 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 Два правила в двенадцати строках. Досрочный проход начинается не раньше чем через `WAKE_GAP` (0,25 с) после **начала** предыдущего: тысяча ответов в секунду — четыре прохода в секунду, и это весь предел нагрузки, которую подсказка может создать. И событие сбрасывается **перед** проходом, а не после: ответ, пришедший, пока проход идёт, — о строке, которую этот проход мог уже не увидеть, и он остаётся взведённым для следующего ожидания. Шаги, которые идут по часам, — аренды, heartbeat — остаются по часам: досрочный проход их не приближает, и это проверяет тест с потоком событий (`test_long_poll.py::test_a_flood_of_changes_is_one_early_pass_per_gap_and_the_lease_step_stays_on_its_clock`). Потерянный ответ стоит ожидания, которое он сберёг бы, — и ничего больше; что именно будит и кого, решает наследник (М10B, урок 25, шаг 10).
 
 ```python
+    def keep_slot(self, let_go) -> list[str]:
+        if self.seeking is not None:
+            self._seek_slot()
+            return []
+        try:
+            mine = self.renew_slot()
+        except OSError as e:
+            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
+            return []
+        except SchemaTooNew:
+            if not self.name_taken():
+                raise
+            mine = False
+        if mine:
+            return []
+        lost = list(self.epochs)
+        self.give_up_name()                       # fenced from this line, whatever `let_go` does
+        try:
+            let_go()
+        finally:
+            self.release_all()
+        self._seek_slot()
+        return lost
+
+    def give_up_name(self) -> str:
+        with self._slot_lock:
+            if self.seeking is None:
+                self.seeking = self.name
+            self.slot = None
+            return self.seeking
+
+    def _seek_slot(self) -> bool:
+        was = self.seeking
+        try:
+            self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # nobody to be on a store past this build
+            self.claim_slot()
+        except Exception as e:                    # noqa: BLE001
+            log.warning("%s: gave slot %s up and no other could be claimed (%s): nobody, taking nothing; trying again "
+                        "on the next step", self.instance, was, e)
+            return False
+        self.seeking = None
+        log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
+        return True
+```
+
+**Держатель камер и регистратор отдают имя той же строкой.** У них свой путь: не `keep_slot`, а отсечение экземпляра (`fence`) и возвращение на следующем проходе (`rejoin`; М10B, урок 4, шаг 9). Правило «никто, пока нет слота» до этого пути не дошло. `rejoin` сбрасывал слот, звал `claim_slot` и ловил только `RuntimeError`: хранилище моргнуло на захвате — `OSError` уходил наружу, экземпляр оставался без слота и со старым именем, `renew_slot` без слота отвечал «это я», и heartbeat с `fenced: true` ложился поверх heartbeat'а законного держателя имени, проход за проходом. Между отсечением и первым `rejoin` он писался так же (шестое ревью; тот же класс, что блокер 3 пятого, на соседнем пути). Теперь `lease_pass`, прочитав в строке слота чужой экземпляр, сначала зовёт `give_up_name()` — и только потом `fence`; `rejoin` берёт слот через тот же `_seek_slot`. Что огорожено, пока `seeking`, — один список на всех воркеров:
+
+| Что делается под именем | Чем закрыто, пока слота нет |
+|---|---|
+| продление строки слота (`renew_slot`), цикл и «подменщик» | `False`: слота нет, имя отдано |
+| «подменщик»: аренды, слот, холд (`stand_in_once`) | `may_stand_in()` — `False` |
+| чтение назначения (`assignment`) | пустое, хранилище не спрашивается |
+| взятие эпохи (`take_epoch`) | `NoSlot` |
+| heartbeat (`heartbeat`) | не пишется |
+| отпускание слота при остановке (`release_slot`) | ничего не пишет: слота нет |
+| возврат холда «по имени» (`_claim_hold`, `named`) | строка слота называет другой экземпляр — как любой чужой, ждёт срок |
+
+`_seek_slot` ловит любое исключение захвата, а не только `OSError` и `RuntimeError`: что бы ни случилось, экземпляр остаётся никем и пробует на следующем шаге. И сначала сверяет схему — на хранилище новее своей сборки имён не берут. Тест: `test_slot_fence.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds` — `VmsWorker`, `RecWorker` и регистратор на камере (`CardRecorder`, он наследует этот путь), включая оборот настоящего `run` с аккуратной остановкой: чужой heartbeat цел, чужая строка слота не отпущена.
+
+**Огороженный со слотом в руках узнаёт, что имя заняли.** Сосед того же класса, которого ревью не называло. Хранилище, поднятое выше сборки, отсекает воркер, а строка слота остаётся его: `renew_slot` бросает `SchemaTooNew` раньше, чем читает строку. Продлений нет, строка протухает, новая сборка берёт имя — а старый процесс строку больше не читал и продолжал писать heartbeat поверх нового держателя. У пяти воркеров на `keep_slot` то же: отказ продления уходит из шага аренд, а heartbeat идёт в своём `try`. Теперь на каждом шаге аренд такой экземпляр читает свою строку (`name_taken`), и с шага, который видит в ней чужой экземпляр, он никто:
+
+```python
+    def name_taken(self) -> bool:
+        with self._slot_lock:
+            if self.slot is None:
+                return self.seeking is not None
+            try:
+                cur, _ = self._own_slot()
+            except OSError:
+                return False
+            if cur.holder == self.instance:
+                return False
+            self.seeking, self.slot = self.name, None
+            return True
+```
+
+Пока строка его — он говорит под своим именем, что отсечён; молчащее хранилище ничего не значит. Тесты: `test_slot_fence.py::test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name` и `test_a_worker_on_a_store_raised_past_its_build_is_nobody_once_another_instance_takes_its_name`. Открытым остаётся окно в один шаг аренд (около восьми секунд): heartbeat, ушедший между захватом имени другим экземпляром и следующим чтением строки, ляжет поверх чужого один раз, и следующий heartbeat законного держателя его перепишет. Так же, как у неотсечённого воркера: о потере слота он узнаёт на шаге аренд, а не перед каждым heartbeat'ом.
+
+```python
     def conflicts(self) -> int:
         return sum(l.conflicts for l in self.leases.values())
 
     def heartbeat(self, status: list[dict], **extra) -> None:
+        extra.setdefault("schema", SCHEMA)
+        extra.setdefault("build", BUILD)
+        if self.stand_in_renewals:
+            extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
+        if SLOTS_GARBLED.get(self.sub.name):
+            extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
+        if self.seeking is not None:
+            return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),
                          Heartbeat(self.name, self.wall(), status, extra).to_bytes())
 ```
 
-Сумма конфликтов по всем арендам — то, что уходит в heartbeat и в метрику. И сама публикация: `**extra` принимает что угодно, потому что платформа это не разбирает (урок 4).
+Сумма конфликтов по всем арендам — то, что уходит в heartbeat и в метрику. И сама публикация: `**extra` принимает что угодно, потому что платформа это не разбирает (урок 4). Сама платформа кладёт в каждый heartbeat схему и сборку (урок 17), счётчик «подменщика» и число строк слотов, которые процесс не смог разобрать (`slots_garbled`, урок 7).
 
 ```python
     def reconcile_once(self, now: float) -> list:

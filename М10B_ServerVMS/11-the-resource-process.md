@@ -150,8 +150,9 @@ def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, pe
         # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
         # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
         # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
-        # nothing is swept: not knowing what is kept is not "nothing is".
-        kept = self.kept() if self.kept is not None else None
+        # nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by row, so it is
+        # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
+        kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
 ```
 
 VMS отвечает на этот вопрос:
@@ -162,8 +163,9 @@ VMS отвечает на этот вопрос:
 def kept_buckets(vars_):
     from . import keeps
 
-    def once():
-        all_ = keeps.declared(vars_)
+    def once(progressed=None):
+        store = vars_ if progressed is None else _Marked(vars_, progressed)
+        all_ = keeps.declared(store)
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
             from w2cplatform.events import tree_owner
@@ -178,6 +180,8 @@ def kept_buckets(vars_):
 ```
 
 **Не только `vms` и `rec`.** Так удержание держало два дерева — а тревоги детекторов, обзора, сканов и сценариев внутри отмеченного интервала уходили по своему сроку (ревью платформы, B10; четвёртое ревью). Теперь раз за проход `cameras_of_units` читает строки единиц — и удалённые тоже — и узнаёт, о какой камере каждая: детектор, обзор и скан — по полю `cam`, сценарий — по единицам в `when` и `then`. Единица, чью камеру не узнать (триггер на любую камеру, нет строки, JSON не разбирается), держится **каждым** удержанием: не знать, чья, — не значит ничья. Тест: `test_keeps.py::test_a_keep_holds_every_subsystems_events_about_its_camera`.
+
+**И читает она под пульсом прохода.** Чтобы ответить, `once` читает из хранилища удержания и строки пяти таблиц — по одной, и между ними не было ни одной отметки прогресса: часть прохода, которая всё время движется, выглядела стоящей (шестое ревью, сосед находки про `usage()` и удаления; М10A, урок 14). Теперь ресурс передаёт ей `progressed`, и все чтения идут через обёртку `_Marked`: отметка после каждой строки и каждого списка. Тест: `test_lesson10_events.py::test_reading_what_is_kept_marks_every_row_it_reads` — 600 строк на хранилище, где каждое чтение стоит десятую долю предела.
 
 **Две функции, а не одна.** Внешняя `once` зовётся раз за проход и читает все удержания одним запросом. Внутренняя `kept` зовётся на каждый бакет и только сравнивает интервалы. Читать хранилище на каждый бакет означало бы тысячи запросов за проход на годовом архиве.
 
@@ -251,7 +255,7 @@ Heartbeat каждые десять секунд, проход политики 
 
 **Почему `last_policy` ставится до прохода.** Проход, упавший с исключением, повторится через десять минут, а не через десять секунд. Иначе ресурс при недоступном хранилище обходил бы дерево шесть раз в минуту и каждый раз падал.
 
-Платформенный `pass_` идёт по порядку: проходы подсистем (у VMS их нет), `retain` с удержаниями, `relieve`, `mirror` (урок 14 М10A). Пока он идёт, отдельный поток повторяет последний heartbeat с новым временем. На годовом архиве проход длиннее срока, после которого ресурс считают молчащим, и без этого пульса сервер объявили бы мёртвым посреди прохода. Это проверяет `test_lesson10_events.py::test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`. Пульс повторяется, только пока проход движется: каждое ведро в обходах `retain` и `mirror` отмечает прогресс, а список закрытых вёдер читается по именам, без разбора файлов (пятое ревью; урок 14 М10A).
+Платформенный `pass_` идёт по порядку: проходы подсистем (у VMS их нет), `retain` с удержаниями, `relieve`, `mirror` (урок 14 М10A). Пока он идёт, отдельный поток повторяет последний heartbeat с новым временем. На годовом архиве проход длиннее срока, после которого ресурс считают молчащим, и без этого пульса сервер объявили бы мёртвым посреди прохода. Это проверяет `test_lesson10_events.py::test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`. Пульс повторяется, только пока проход движется: каждое ведро в обходах `retain` и `mirror` отмечает прогресс, а список закрытых вёдер читается по именам, без разбора файлов (пятое ревью; урок 14 М10A). Так же отмечаются каждый файл, измеренный в `usage()`, каждое удаление в `retain` и каждая строка, которую читает `kept_buckets` (шестое ревью: по модели теста 2000 вёдер давали 399,8 с без отметки в `usage` и 371 с в `retain` при пределе 2 с; тест `test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_per_file`).
 
 `srv.shutdown()` на выходе. Слота нет, отпускать нечего, и различения «аккуратная остановка против падения» здесь тоже нет: ресурс никуда не переезжает.
 

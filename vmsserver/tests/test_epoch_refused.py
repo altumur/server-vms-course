@@ -102,3 +102,81 @@ def test_the_gateway_refuses_one_camera_and_subscribes_the_next():
     gw.reconcile_once(); gw.heartbeat_once()
     hb = Heartbeat.from_bytes(box.objects.get(LIVE_SPEC.sub.heartbeat_key("g-1")))
     assert set(gw.upstreams) == {"7", "8"} and "refused" not in hb.extra
+
+
+# -- commands: a request is a row too, and one row's trouble is that row's (the review's sixth pass) ---------------
+
+def _two_doors(box):
+    """Two devices held with no stream (`live: on-demand`): no epoch until the first command to each."""
+    from tests.test_group_by import _ctl, _holder, _worker
+    ctl, con = _ctl(box)
+    doors = [con.create_camera({"name": f"door {i}", "source": f"driverpack://acme/10.0.0.9{i}/ch/1", "live": "on-demand"})["id"]
+             for i in (1, 2)]
+    _worker(box, "w-1", "srv-a"); ctl.ensure_placed()
+    w = _holder(box, relays=2); w.reconcile_once()
+    return con, doors, w
+
+
+def _ask(box, con, rid, unit, **fields):
+    from vms.config import SPEC
+    con.vars.put(SPEC.sub.request_key(rid), {"unit": str(unit), "action": "output", "port": "1",
+                                             "valid_until": str(box.wall() + 30), **fields})
+
+
+def test_a_command_to_a_unit_whose_epoch_is_garbled_is_refused_alone_and_the_other_devices_are_commanded():
+    """П-M11's remainder. A unit held without a lease takes its epoch before its first command (`requests`), and that
+    `take_epoch` stood outside any `try`: with `vms/epoch/1` garbled, the `ValueError` went out of `requests` and of
+    every `pump_once` after it — the review ran it for 600 s, the request's whole life — and the command to door 2,
+    behind it in the pass, never reached its device. Now the refusal is that command's: answered, counted, said in
+    the unit's status, and the pass goes on to the next request."""
+    box = Box()
+    con, (one, two), w = _two_doors(box)
+    box.vars.put(f"vms/epoch/{one}", GARBLED)
+    _ask(box, con, "a-1", one)
+    _ask(box, con, "b-2", two)
+    for _ in range(3):                                                 # every pump, not once
+        w.pump_once()
+    assert w.devices["acme/10.0.0.92"].did == [("output", 1, "pulse", 0)], "the command behind the garbled one never reached its device"
+    assert w.devices["acme/10.0.0.91"].did == [] and str(one) not in w.leases
+    assert w.fetched == ["a-1", "b-2"]                                 # both answered: the console clears the rows
+    assert (w.commands["performed"], w.commands["refused"]) == (1, 1)
+    st = {s["id"]: s for s in w.status()}
+    assert "epoch could not be taken" in st[one]["why"] and "why" not in st[two]
+    w.heartbeat_once()
+    hb = Heartbeat.from_bytes(box.objects.get("vms/heartbeats/w-1"))
+    assert hb.extra["command_counts"]["refused"] == 1 and hb.extra["fetched"] == "a-1,b-2"
+    box.vars.put(f"vms/epoch/{one}", {"epoch": "3"})                    # mended by hand: the next command is performed
+    _ask(box, con, "c-1", one)
+    w.pump_once()
+    assert w.devices["acme/10.0.0.91"].did == [("output", 1, "pulse", 0)] and w.epochs[str(one)] == 4
+    assert "why" not in {s["id"]: s for s in w.status()}[one]
+
+
+def test_a_command_whose_deadline_does_not_parse_is_refused_alone():
+    """The sibling the review did not name, a few lines above: `valid_until` was read with a bare `float`. A row with
+    a word there raised out of every pump for ever — it never reached the check that expires it — and no command
+    behind it was performed."""
+    box = Box()
+    con, (one, two), w = _two_doors(box)
+    _ask(box, con, "a-1", one, valid_until="soon")
+    _ask(box, con, "b-2", two)
+    for _ in range(2):
+        w.pump_once()
+    assert w.devices["acme/10.0.0.92"].did == [("output", 1, "pulse", 0)] and w.devices["acme/10.0.0.91"].did == []
+    assert w.fetched == ["a-1", "b-2"] and (w.commands["performed"], w.commands["refused"]) == (1, 1)
+
+
+def test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next():
+    """The same class in `RecWorker.requests`, which takes no epoch but reads `from` and `to` bare: a request row
+    with a word there raised out of the backfill thread's `requests` on every pass, and no request behind it — any
+    recording's — was ever fetched. It is answered (the console clears the row) and said in the log."""
+    from tests.test_backfill_bounds import NOW, _ours, _recorder
+    from vms.config import REC_SPEC
+    act = FakeActuator()
+    box, r, con_rec = _recorder(act)
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-a"), {"unit": "1", "cam": "1", "from": "yesterday", "to": str(NOW - 29700), "at": str(NOW), "by": "anna"})
+    con_rec.vars.put(REC_SPEC.sub.request_key("1-b"), {"unit": "1", "cam": "1", "from": str(NOW - 30000), "to": str(NOW - 29700), "at": str(NOW), "by": "anna"})
+    done = {d["request"]: d for d in r.requests(now=NOW)}
+    assert "not a range" in done["1-a"]["error"] and "error" not in done["1-b"]
+    assert r.fetched == ["1-a", "1-b"] and len(act.fetched) >= 1

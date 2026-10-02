@@ -446,6 +446,10 @@ class Resource:
     # A file that goes between the listing and the `stat` — a `.tmp` renamed into place, a bucket the retention
     # removed — is not there to count, and is not the end of the walk (the review's third pass): one vanished file
     # used to take the whole policy pass with it.
+    #
+    # A mark of progress per FILE (the review's sixth pass): it was one per directory, and every bucket of an epoch
+    # is in one directory — a year of one camera is fifty thousand `stat`s between two marks, and on a cold disk the
+    # pulse called a walk that moved the whole time "stuck".
     def usage(self, volume: str | None = None) -> int:
         roots = [self.volumes[volume]] if volume is not None else list(self.volumes.values())
         total = 0
@@ -457,6 +461,8 @@ class Resource:
                         total += os.path.getsize(os.path.join(d, f))
                     except FileNotFoundError:
                         continue
+                    finally:
+                        self._progressed()
         return total
 
     # The pass is getting somewhere: what the pulse measures its limit by (`pass_`). Cheap — a clock read.
@@ -533,15 +539,20 @@ class Resource:
         removed = []
         # What each unit keeps, decided before anything is swept, because the console's floor is read off
         # the others (`console_floor`).
-        days_of = {(sub, unit): retention_days(self.vars, sub, unit)
-                   for sub, units in self.units().items() for unit in units}
+        days_of = {}
+        for sub, units in self.units().items():
+            for unit in units:
+                days_of[(sub, unit)] = retention_days(self.vars, sub, unit)
+                self._progressed()                                      # a row read per unit: each is a step
         floor = console_floor(days_of)
         # What somebody said to keep (feedback BH). The resource does not know what a keep is: whoever built
         # it may set `self.kept` — called once a pass, it returns `(subsystem, unit, start, end) -> bool`.
         # It matters most for `{days: 0}`, which is what a deleted unit's retention becomes: without this,
         # deleting the unit erased the very events somebody had marked. If it raises, the pass fails and
-        # nothing is swept: not knowing what is kept is not "nothing is".
-        kept = self.kept() if self.kept is not None else None
+        # nothing is swept: not knowing what is kept is not "nothing is". It reads the store row by row, so it is
+        # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
+        kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
+        self._progressed()
         swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
@@ -549,11 +560,15 @@ class Resource:
                 days = max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)]
                 for path in self.volumes.values():
                     # by NAME: no file is opened to be swept; and a mark per bucket, not per unit (the review's fifth pass)
+                    # …and a mark per REMOVAL (the sixth): the names are all marked while the list is built, and then
+                    # the files go one after another — a year past its days is fifty thousand unlinks, and the pulse
+                    # saw none of them.
                     for b in bucket_names_under(path, sub, unit, self.bucket_seconds, self._progressed):
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
                             os.remove(os.path.join(path, b.path)); removed.append(b.path)
+                            self._progressed()
                             n, a, z = swept.get((sub, unit), (0, b.start, b.end))
                             swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
         # What the pass removed, per unit, in the journal: whose buckets, how many, of what period, by what
@@ -561,6 +576,7 @@ class Resource:
         for (sub, unit), (n, a, z) in sorted(swept.items()):
             self.journal.say("events.removed", of=sub, target=unit, buckets=n, since=a, until=z,
                              days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)])
+            self._progressed()                                          # a line written to the medium per unit
         # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
         # walk above — `units()` skips hidden directories, on purpose: a copy is not this server's data — so
         # with the mirror on it only ever grew. A copy is kept by the days of ITS unit, as the original is,
@@ -579,6 +595,7 @@ class Resource:
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):
                                 os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
+                                self._progressed()
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
         return len(removed)
