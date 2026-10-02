@@ -904,6 +904,18 @@ class VmsWorker(Worker):
     def pump_once(self) -> None:
         """The bus, drained: what elements posted becomes events — if I still
         hold the epoch — and what died becomes `lost` and a `silent` event."""
+        self.drain_bus()
+        try:
+            self.serve_requests()                       # …and what somebody asked this device to DO
+        except OSError as e:                            # the requests are rows in the store: no store, none this pass
+            self.store_errors += 1
+            log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
+
+    # The bus alone — on the pass, and on every beat between passes (`beat_once`): a device's event waited for the
+    # pass, up to `poll` seconds, before it was a line any scenario could see — the part of the road from an event to
+    # a device that no histogram measured, because the event's time is stamped when it is drained (the product drains
+    # it in its loop of commands too). On the loop's thread either way: the actuator and the reconciler have no other.
+    def drain_bus(self) -> None:
         dead, posted = self.actuator.pump()
         for cid, kind, fields in posted:
             self.observe(cid, kind, **fields)
@@ -911,11 +923,6 @@ class VmsWorker(Worker):
             self.reconciler.lost(cid, self.now())
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
         self.flush_suppressed()                         # …storms that ENDED, which no observation will close
-        try:
-            self.serve_requests()                       # …and what somebody asked this device to DO
-        except OSError as e:                            # the requests are rows in the store: no store, none this pass
-            self.store_errors += 1
-            log.warning("%s: the store did not answer for the requests (%s)", self.name, e)
 
     # Where the requests are served: here, on the loop's thread — a pulse and a preset take a moment. A recorder's
     # request is an hour off a camera's card and takes minutes: it serves them on its backfill thread
@@ -1594,9 +1601,10 @@ class VmsWorker(Worker):
 
     # BETWEEN TWO PASSES: THE REQUESTS, EVERY BEAT (2 October 2026). The wait between passes is `poll` seconds, and a
     # command filed a moment after a pass waited all of it: the second half of the road from an event to a device,
-    # a second on average. The loop now wakes every `beat` seconds inside that wait and does ONE thing — `beat_once`,
-    # the look at the request rows that `pump_once` ends with. Not a pass: the assignment is not read again, nothing
-    # is reconciled, the bus is not drained. And not a new way in: the same `requests`, the same rows, the same rules.
+    # a second on average. The loop now wakes every `beat` seconds inside that wait and does what `pump_once` does —
+    # `beat_once`: the bus drained (a device's event is a line within a beat, not at the next pass) and the look at the
+    # request rows. Not a pass: the assignment is not read again, nothing is reconciled. And not a new way in: the
+    # same `drain_bus`, the same `requests`, the same rows, the same rules.
     #
     # The lease step and the heartbeat stay where they were — once per turn of the loop, by the clock: a beat brings
     # neither forward. A beat that hangs on the store is a `guarded` step like any other, and the stand-in renews
@@ -1619,6 +1627,7 @@ class VmsWorker(Worker):
     def beat_once(self) -> None:
         try:
             with self.guarded("beat"):
+                self.drain_bus()
                 self.serve_requests()
         except Exception as e:                        # noqa: BLE001 — a beat that raised is a beat to make again
             if not self._beat_failed:

@@ -101,6 +101,10 @@ def _site(env: dict, poll: float = 2.0):
     res, srv = _resource(box)
     holder, cid, dev, called = _holder(box)
     holder.reconcile_once()                                              # the device described: the scenario is checked against it
+    # A line before the loops start: the watcher finds a unit's NEW epoch by listing directories once a second
+    # (`longpoll.Watch`), so the first line a fresh epoch ever writes is noticed up to a second late — said in
+    # lesson 25. The road measured here is the road of a camera that has been writing, as nearly all of them have.
+    holder.observe(cid, "io.ready")
     evaluator = _evaluator(box, cid)
     evaluator.watch_events(env)                                          # what `__main__.autoworker` does before `run`
     stop = threading.Event()
@@ -544,6 +548,33 @@ def test_a_command_is_performed_within_a_beat_and_only_on_the_pass_when_the_beat
         assert off.called[0] - filed > 0.8 and off.holder.passes == passes + 1
     finally:
         off.close()
+
+
+def test_a_devices_event_is_a_line_within_a_beat_and_only_on_the_pass_when_the_beat_is_off():
+    """What a device posts on its bus becomes an event when the holder drains the bus — and that was the pass: up
+    to `poll` seconds before any scenario could see it, a part of the road no histogram measured, because the
+    event's time is stamped when it is drained. Every beat drains the bus now (`drain_bus`, as the product does in
+    its loop of commands); with `COMMANDS_BEAT=0` the event waits for the pass, as it always did."""
+    for beat, within in ((COMMANDS_BEAT, 0.6), (0.0, None)):
+        one = _looping(beat=beat)
+        try:
+            seen: list[float] = []
+            observe = one.holder.observe
+            one.holder.observe = lambda cid, kind, **f: (seen.append(time.monotonic()) if kind == "io.input" else None,
+                                                         observe(cid, kind, **f))[1]
+            time.sleep(0.3)                                          # well inside the wait between two passes
+            passes = one.holder.passes
+            posted = time.monotonic()
+            one.holder.actuator.post(one.cid, "io.input", port="1", state="on")
+            if within is not None:
+                _until(lambda: seen, 1.0, "the event to be drained on a beat")
+                assert seen[0] - posted < within and one.holder.passes == passes     # no pass was made for it
+            else:
+                time.sleep(0.8)
+                assert seen == [] and one.holder.passes == passes                     # nothing drains until the pass
+                _until(lambda: seen, 3.0, "the event to be drained on the pass")
+        finally:
+            one.close()
 
 
 def test_a_fenced_holder_on_a_beat_does_not_act():
