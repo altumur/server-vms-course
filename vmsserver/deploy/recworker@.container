@@ -35,6 +35,12 @@ Wants=obsd.service
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms recorder
 Environment=RECORDER_NAME=%i
+# WHICH BOX this is — systemd's machine id, expanded by systemd on the host (`%m`): the host part of this instance's
+# name, by which a network volume's hold follows the name to a restart ON THIS BOX at once (`RecWorker.hold_follows_name`,
+# `box_instance`). Not the container's hostname: `Network=host` shares the network namespace, not the UTS one, and two
+# boxes may be named alike — two clones of one VM — where their machine ids differ (a clone whose
+# `/etc/machine-id` was copied with it is the same box to this; `systemd-machine-id-setup` on first boot mends that).
+Environment=BOX_ID=%m
 # WHICH ARCHIVE this instance writes into — the place the policy counts in (`place_by: volume`).
 # Deliberately NOT set here, and that is the whole difference between a disk and a bucket:
 #

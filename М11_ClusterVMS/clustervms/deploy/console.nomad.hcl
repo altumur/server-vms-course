@@ -21,6 +21,14 @@ variable "image" {
   default = "localhost/clustervms:latest"
 }
 
+# The addresses of the scrapers that are not on the node itself — the Prometheus the autoscaler reads (`autoscaler.nomad.hcl`
+# asks it at its node's 127.0.0.1:9090; it scrapes every node's :8080 from that node's address), comma-separated.
+# `CONSOLE_MONITORS` below; an empty item is no address (`w2cplatform/console.py`, `monitors_from`).
+variable "monitors" {
+  type    = string
+  default = ""
+}
+
 job "console" {
   datacenters = ["room-a"]
   type        = "system"
@@ -71,8 +79,12 @@ job "console" {
         # network's, like any other (`w2cplatform/access.py`, `is_local`).
         CONSOLE_UNIX = "/run/vms-console/console.sock"
         # Who scrapes `/metrics` — the autoscaler and Prometheus (the review's seventh pass): their own four
-        # connections, which a flood cannot take. The cluster's network for the agents that scrape; narrow it if you can.
-        CONSOLE_MONITORS = "10.0.0.0/8"
+        # connections, which a flood cannot take, two to an address. THE ADDRESSES THAT SCRAPE, NOT THE NETWORK THEY
+        # LIVE IN (the eighth pass: `10.0.0.0/8` let any eight boxes of the cluster's network take the lane, and
+        # Prometheus was blind): this node's own loopback and address — a scraper or `vms-scaler` on the node, Nomad's
+        # checks — and what `monitors` names: the Prometheus the autoscaler reads, wherever it runs
+        # (`nomad job run -var monitors=10.0.4.9 console.nomad.hcl`). A listed address is trusted.
+        CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"
         CLUSTER      = "room-a"
       }
       service {                                      # what the autoscaler scrapes, what М12's read model and a browser reach

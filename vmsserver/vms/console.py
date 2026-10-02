@@ -28,7 +28,8 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, label, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
+from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, label,  # noqa: F401
+                                 path_id, send_file)   # (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.eventdatabase import MergedIndex
@@ -299,17 +300,31 @@ def _rec_epoch(ctl, unit) -> int | None:
 # proxy that took the framing off — ends where the connection ends, and a door that failed half way looked exactly
 # like a door that had nothing more. Such an answer is refused here, as a cut one is: the export says the door did not
 # answer, it does not write a shorter film.
-def _door(url: str, timeout: float):
+#
+# …AND READ UP TO A BOUND WHEN IT IS A LIST (the review's eighth pass, part 4, left to this group): a door's `/timeline`
+# was read whole whatever its size, and each span parsed bare — `int(sp["epoch"])` of a door of another build or a proxy
+# raised out of the camera's timeline and its export. `limit`: at most so many bytes (`rows.answer`, a `ValueError`
+# past it — the door did not answer); the spans are read by `door_spans` below.
+def _door(url: str, timeout: float, limit: int | None = None):
+    from w2cplatform.rows import answer
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
-            framed = r.headers.get("Content-Length") is not None or \
-                "chunked" in (r.headers.get("Transfer-Encoding") or "").lower()
-            if not framed:
+            if not framed(r):                            # …and a length that is a number (the eighth pass): `framed`
                 raise ConnectionError(f"{url}: the door's answer has neither chunks nor a length — whether it is whole "
                                       f"cannot be told")
-            return r.read()
+            return r.read() if limit is None else answer(r, limit)
     except http.client.HTTPException as e:
         raise ConnectionError(f"{url}: the door's answer was cut short ({e!r})") from None
+
+
+# A recorder door's timeline of one recording, each span read alone (`scan.door_spans`): `(spans, whole)`, or an
+# `OSError`/`ValueError` — the door did not answer. A span that does not parse costs that span, and `whole` is False:
+# the reader names the door, it does not take the rest for all the door holds.
+def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list[dict], bool]:
+    from w2cplatform.rows import ANSWER_MAX
+    from .scan import door_spans
+    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX))
+    return door_spans(f"rec/doors/{name}#{unit}", body)
 
 
 def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_ctl=None):
@@ -686,6 +701,12 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         rid = str(body.get("id") or key)
         if "/" in rid or rid in (".", "..") or len(rid) > 200:
             return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
+        # …and the rule a unit's name keeps (the eighth pass's sibling: `doors.unnamable` — no `"`, `|`, control
+        # characters): a request's id goes into the holder's log lines and its heartbeat whole.
+        from w2cplatform.doors import unnamable
+        if unnamable(rid):
+            return 400, {"detail": f"a request id may not hold {', '.join(repr(c) for c in unnamable(rid))}",
+                         "error": "bad id"}
         # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity` reached
         # the row as `nan`/`inf`, and a holder performed such a command hours late. A word is refused here as well.
         try:
@@ -696,6 +717,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
         row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
                "valid_until": str(until)}
+        # The device the rights were asked on (`command_cams`): the holder performs the command only on that device
+        # (`VmsWorker.requests`) — a camera moved onto a recorder in the ten minutes a command may wait is not the
+        # camera the person had the right to command (the review's eighth pass).
+        from .config import device_of
+        src = str((ctl.camera(unit) or {}).get("source") or "")
+        if src:
+            row["device"] = device_of(src)
         for f in ("port", "state", "pulse_ms", "n"):
             if body.get(f) is not None:
                 row[f] = str(body[f])
@@ -775,12 +803,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             cur = _rec_epoch(ctl, unit)
             for name, url, hb in doors:
                 try:
-                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={min(t1, 1e11)}", DOOR_TIMEOUT))
+                    got, said_whole = door_timeline(name, url, unit, t0, min(t1, 1e11))
                 except (OSError, ValueError):
                     unreachable.append(name)
                     continue
-                for sp in body.get("spans", []):
-                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < int(sp.get("epoch", 0)) < cur)
+                if not said_whole:
+                    unreachable.append(name)             # spans it said that do not parse: its picture is not whole
+                for sp in got:
+                    fenced = bool(sp.get("fenced")) or (cur is not None and 0 < sp["epoch"] < cur)
                     ours.append({**sp, "fenced": fenced, "recording": unit, "recorder": name,
                                  "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
         extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall()) if ctl is not None else []
@@ -935,13 +965,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             spans, where = [], {}
             for name, url, _ in doors:
                 try:
-                    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT))
+                    got, said_whole = door_timeline(name, url, unit, t0, t1)
                 except (OSError, ValueError):
                     unreachable.append(name)
                     continue
-                for sp in body.get("spans", []):
-                    span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
-                                str(sp.get("source", "live")))
+                if not said_whole:
+                    unreachable.append(name)             # a span it said that does not parse: named, as a silent door
+                for sp in got:
+                    span = Span(unit, sp["epoch"], sp["start"], sp["end"], sp["bytes"], sp["source"])
                     spans.append(span)
                     where.setdefault(span, (name, url))
             stretches = sorted(authoritative(spans, t0, t1), key=lambda x: x[1])
@@ -1298,8 +1329,22 @@ def vms_metrics(ctl):
         return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{label(k)}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]
                 + [f'vms_requests_expired_total{{sub="{label(s)}"}} {n}' for s, n in sorted(jobs.expired.items())]
-                + road)
+                + road + beat_lines(sub, hbs))
     return lines
+
+
+# What a holder's beat waits on, per holder, from its heartbeat (the review's eighth pass, minor: none of it was on
+# `/metrics`): devices whose last call did not answer inside `PERFORM_GRACE` — a look does not wait for them —
+# calls into devices not back yet, and the answers said again after a restart instead of performed twice
+# (`VmsWorker._answered_before`). A holder says each only when it is not zero: a line for every holder, 0 when unsaid.
+def beat_lines(sub: str, hbs: dict) -> list[str]:
+    out = []
+    for metric, field, kind in (("vms_devices_slow", "devices_slow", "gauge"),
+                                ("vms_commands_in_flight", "commands_in_flight", "gauge"),
+                                ("vms_commands_reanswered_total", "commands_reanswered", "counter")):
+        out.append(f"# TYPE {metric} {kind}")
+        out += [f'{metric}{{worker="{label(w)}"}} {_n(sub, w, field, hb.extra.get(field) or 0, int)}' for w, hb in sorted(hbs.items())]
+    return out
 
 
 # What automation adds: each evaluator's last pass, from its heartbeat — how long it took, how many queries it
@@ -1385,11 +1430,23 @@ def rec_routes(rec_ctl: SpecController):
             # The list is what THIS caller may see (feedback CG): a keep says which camera, which minutes and why,
             # and lifting or checking one already asked by its camera — the list did not. A camera of another
             # cluster (`ref:…`) has no labels here, as at every gate.
+            # …and a keep whose row does not parse is SHOWN, as it holds (the review's eighth pass, part 4): hidden, the
+            # camera it holds as far as its interval reads was held by something nobody could see or lift. Its line says
+            # so — `garbled`, the interval it holds — and since when this console has seen it so (`garbled_since`).
             sees = getattr(handler, "sees", None)
-            shown = keeps.declared(rec_ctl.vars)
+            garbled: list = []
+            shown = keeps.declared(rec_ctl.vars, garbled) + garbled
             if sees is not None:
                 shown = [k for k in shown if sees(str(k.cam), handler.labels_for(k.cam))]
-            return 200, {"keeps": [k.shown() for k in shown]}
+            first = extra.__dict__.setdefault("garbled_seen", {})
+            now = rec_ctl.wall()
+            for k in garbled:
+                first.setdefault(k.id, now)
+            for gone in set(first) - {k.id for k in garbled}:
+                first.pop(gone, None)
+            return 200, {"keeps": [{**k.shown(), **({"garbled": True, "garbled_since": first[k.id],
+                                                     "to": k.until if k.until != float("inf") else None} if k.garbled else {})}
+                                   for k in shown]}
         if method == "POST" and path in ("/keeps", "/keeps/"):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             try:
@@ -1429,7 +1486,16 @@ def rec_routes(rec_ctl: SpecController):
             view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, now, objects=rec_ctl.objects)
             spare = spare_workers(rec_ctl)
             view = {**view, "volumes": [{**v, **as_held(rec_ctl, v, now)} for v in view["volumes"]]}
-            return 200, {**view, "spare": len(spare), "spares": sorted(spare),
+            # A recorder pinned to a volume whose hold is another's writes nothing and says why (`volume_wait`): only its
+            # heartbeat said so, and on this page it was a spare with no capacity (the review's eighth pass, part 2,
+            # minor). Its line, and on the volume it waits for.
+            waiting = [{"recorder": w, "why": str(hb.extra["volume_wait"])}
+                       for w, hb in sorted(heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items())
+                       if hb.extra.get("volume_wait") and now - hb.ts <= 45.0]
+            view["volumes"] = [{**v, **({"waiting": [x["recorder"] for x in waiting if x["why"].startswith(f"{v['name']} ")]}
+                                        if any(x["why"].startswith(f"{v['name']} ") for x in waiting) else {})}
+                               for v in view["volumes"]]
+            return 200, {**view, "spare": len(spare), "spares": sorted(spare), **({"waiting": waiting} if waiting else {}),
                          # `live` so that whatever acts on `needed` does not have to ask the orchestrator
                          # how many recorders are running — the console already knows, from heartbeats,
                          # and one source for the pair means the two numbers cannot disagree.
@@ -1533,19 +1599,51 @@ def recording_cams(vars_):
 # …and `ref`, the name the domain knows the camera by (М12): changed, the camera is another camera to the layer above
 # — its book of primaries, the edits it kept — which is nobody's to decide with rights on one camera: `"*"`, the
 # cluster's grant.
-def source_cams(ctl):
-    from .config import device_of
+#
+# …ONE DEVICE BY ITS ONE SPELLING, AND BY ITS OWN WORD (the review's eighth pass, major; a run): `…/10.0.0.50:80/ch/2`,
+# `…/ACME/…`, `…/10.0.0.50./…` were other devices than `…/10.0.0.50/…`, and the move asked about nobody else's camera.
+# Devices are compared by `device_of` (one spelling) and, where a holder has opened them, by what the device says it
+# is (`config.one_device`) — a DNS name and its address are then one device too.
+#
+# …AND THE SCENARIOS THAT COMMAND THE CAMERA (the same pass, minor). A scenario's `output` on a camera that was its
+# device's only channel was checked against that camera alone; moved onto a recorder's channel, the same scenario
+# pulsed the RECORDER's relay — a port chosen by somebody with no right on the recorder. Rights are asked when a row is
+# written, and a scenario is not rewritten when the camera under it moves. So the move asks for them: whoever moves a
+# camera to another device answers for every scenario that commands it — `admin` on each camera such a scenario
+# reaches (`scenario_cams`), the cluster's grant for one that watches any camera. `scenarios`: the scenarios' rows and
+# their reach, when the console fronts `auto`.
+def source_cams(ctl, scenarios=None):
+    from .config import device_of, one_device
 
     def cams(old: dict, new: dict) -> set:
         out = set()
         if str(old.get("ref") or "") != str(new.get("ref") or ""):
             out.add("*")
         a, b = str(old.get("source") or ""), str(new.get("source") or "")
-        if volumes.source_key(a) != volumes.source_key(b):
-            devices = {device_of(s) for s in (a, b) if s}
-            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) in devices}
+        if a == b:
+            return out                                   # the source as it was: nothing moved, nothing to look up
+        same = one_device(ctl.vars)
+        if volumes.source_key(a, same) != volumes.source_key(b, same):
+            devices = {same(device_of(s)) for s in (a, b) if s}
+            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) in devices}
+            if scenarios is not None and same(device_of(a)) != same(device_of(b)):
+                rows, reach = scenarios
+                for row in rows():
+                    if str(old.get("id")) in commanded(row):
+                        out |= reach(row)
         return out
     return cams
+
+
+# The cameras a scenario COMMANDS — `output`, `preset` on a camera (`then`, `sub: vms`).
+def commanded(row: dict) -> set:
+    then = row.get("then")
+    try:
+        then = json.loads(then or "[]") if isinstance(then, (str, bytes)) else then
+    except ValueError:
+        return {"*"}
+    return {str(a.get("unit")) for a in (then or []) if isinstance(a, dict) and str(a.get("sub", "")) == "vms"
+            and str(a.get("action", "")) in ("output", "preset") and a.get("unit")}
 
 
 # THE CAMERAS A COMMAND TO A DEVICE REACHES (the review's seventh pass, major; a run: a guard with `edit` on camera 1 of
@@ -1558,14 +1656,18 @@ def source_cams(ctl):
 # only channel — a camera with a card, a file — asks for nothing more than it did. The way out, when a site needs a
 # guard to press one relay of a recorder: a binding in the device's description (`relay → channel`, `preset →
 # channel`) which this function would read, and which no driver here gives yet.
+#
+# The device is the one `source_cams` compares by (the eighth pass): one spelling, and the device's own word once a
+# holder has opened it — the recorder under `nvr50.local` and under `10.0.0.50` is one recorder.
 def device_cams(ctl, cam) -> set:
-    from .config import device_of
+    from .config import device_of, one_device
     row = ctl.camera(cam)
     src = str((row or {}).get("source") or "")
     if not src:
         return {str(cam)}
-    dev = device_of(src)
-    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) == dev}
+    same = one_device(ctl.vars)
+    dev = same(device_of(src))
+    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
 
 
 def command_cams(ctl):
@@ -1669,11 +1771,13 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
     root.VIEW_POSTS = ("/whep/",)
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
-    root.moved_cams = source_cams(ctl)
+    # …and, moved to another device, every camera of every scenario that commands it (the eighth pass).
+    controllers = {name: con.ctl for name, con in m.mounts.items()}
+    auto = controllers.get("auto")
+    root.moved_cams = source_cams(ctl, (auto.units, scenario_cams(auto.vars, controllers, ctl)) if auto is not None else None)
     # …and a command to a device reaches every camera of the device (`command_cams`).
     root.body_cams = command_cams(ctl)
     root.labels_of = cam_labels
-    controllers = {name: con.ctl for name, con in m.mounts.items()}
     for name, con in m.mounts.items():
         c = con.ctl
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"

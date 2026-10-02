@@ -414,7 +414,7 @@ const PIECE = 600;
 
 Тот же класс стоял этажом ниже, у самой двери регистратора, и ревью его не называло. `/samples/<unit>` шёл без разметки, только до конца соединения, и по **последовательности** за раз — так что том, отказавший между двумя последовательностями, оставлял читателю целые записи и ничего, что отличило бы их от всех: укороченный диапазон, принятый за всё, что есть у источника, — и экспортом консоли, и регистратором, копирующим из резервной записи. Теперь дверь пишет кадры chunked и последний кусок — только когда поток кончился целым (`send_route`), а оба читателя берут ответ без него за то, что он есть: `IncompleteRead` — ошибка (`RecWorker.read_samples`, `vms.console._door`). Тест: `test_slot_and_read.py::test_a_recorders_door_cut_between_two_sequences_is_an_error_to_its_readers_never_a_shorter_range`.
 
-**Ответ без рамки — не целый ответ.** Куски или длина — то, по чему короткий ответ отличается от целого; ответ без того и другого — дверь, говорящая на HTTP/1.0, или прокси, снявший разметку, — кончается там, где кончилось соединение, и дверь, отказавшая посреди, выглядела ровно как дверь, которой больше нечего дать (седьмое ревью, minor). `_door` теперь требует `Transfer-Encoding: chunked` или `Content-Length` и иначе поднимает `ConnectionError`: экспорт говорит, что дверь не ответила, а не пишет фильм короче. Так же читает кадры регистратор, копирующий из резервной записи (`RecWorker.read_samples`). Тест: `test_slot_and_read.py::test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one`.
+**Ответ без рамки — не целый ответ.** Куски или длина — то, по чему короткий ответ отличается от целого; ответ без того и другого — дверь, говорящая на HTTP/1.0, или прокси, снявший разметку, — кончается там, где кончилось соединение, и дверь, отказавшая посреди, выглядела ровно как дверь, которой больше нечего дать (седьмое ревью, minor). `_door` теперь требует `Transfer-Encoding: chunked` или `Content-Length` и иначе поднимает `ConnectionError`: экспорт говорит, что дверь не ответила, а не пишет фильм короче. Так же читает кадры регистратор, копирующий из резервной записи (`RecWorker.read_samples`). **Но заголовок — ещё не рамка** (восьмое ревью, minor). Проверялось, есть ли заголовок, и `Content-Length: ten`, `-1` или `Transfer-Encoding: gzip, chunked` на ответе, оборванном закрытием, принимались за целый ответ. Теперь оба читателя спрашивают `http.client`, прочёл ли он из ответа длину или куски (`w2cplatform.console.framed`: `r.chunked` — только при `chunked` без других кодировок, `r.length` — только при длине-числе не меньше нуля). Тест: `test_slot_and_read.py::test_an_answer_with_neither_chunks_nor_a_length_is_not_taken_for_a_whole_one` — все три заголовка на ответе, оборванном посередине, отказ у обоих читателей.
 
 ```python
         sent = {"bytes": 0, "sha": hashlib.sha256(), "head": False}
@@ -645,7 +645,10 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     root.VIEW_POSTS = ("/whep/",)
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
     # their labels are read from their own rows, as a mount reads a camera's.
-    root.moved_cams = source_cams(ctl)
+    # …and, moved to another device, every camera of every scenario that commands it (the eighth pass).
+    controllers = {name: con.ctl for name, con in m.mounts.items()}
+    auto = controllers.get("auto")
+    root.moved_cams = source_cams(ctl, (auto.units, scenario_cams(auto.vars, controllers, ctl)) if auto is not None else None)
     # …and a command to a device reaches every camera of the device (`command_cams`).
     root.body_cams = command_cams(ctl)
     root.labels_of = cam_labels
@@ -657,13 +660,14 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
 
 ```python
 def device_cams(ctl, cam) -> set:
-    from .config import device_of
+    from .config import device_of, one_device
     row = ctl.camera(cam)
     src = str((row or {}).get("source") or "")
     if not src:
         return {str(cam)}
-    dev = device_of(src)
-    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and device_of(str(r["source"])) == dev}
+    same = one_device(ctl.vars)
+    dev = same(device_of(src))
+    return {str(cam)} | {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
 
 
 def command_cams(ctl):
@@ -676,6 +680,15 @@ def command_cams(ctl):
 ```
 
 Выход для объекта, где охраннику нужно нажимать одно реле регистратора, — привязка в описании устройства (`реле → канал`, `пресет → канал`), которую `device_cams` читала бы; ни один драйвер курса её пока не даёт. Чего это не делает: камера, добавленная к устройству **после** того, как сценарий записан, не спрашивается — сценарий продолжает действовать на устройство с ней, как и с `source_cams`. Тест: `test_console_gate.py::test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_and_through_a_scenario` — `output` и `preset` с `edit` на одну камеру регистратора — 403, с `edit` на обе — 202, у камеры-файла с правом на неё — 202; сценарий с `vms.output` на камеру регистратора правит и удаляет только тот, у кого `admin` на обе.
+
+**Устройство — по одному написанию и по слову самого устройства.** «Устройство» в `device_cams` и `source_cams` было строкой адреса как есть. Тот же регистратор под другим написанием — регистр, порт по умолчанию, точка в конце имени, DNS-имя вместо IP — считался другим устройством. Пользователь с `admin` только на файловую камеру 3 ставил ей `source` `driverpack://ACME/10.0.0.50/ch/2`. PUT отвечал 200, затем `output` на порт 1 — 202. Держатель открывал канал 2 под именем камеры 3, и регистратор выполнял импульс (восьмое ревью, major, воспроизведено запуском). Так снова открылась закрытая в шестом ревью находка про `source` на канал чужой камеры. Теперь обе функции сравнивают устройства по каноническому ключу `device_of` (урок 15, шаг 1). А где держатель уже открыл устройство, они сравнивают по тому, что устройство сказало о себе (`identity`, `config.one_device`). Правило «один канал — одна камера» (`volumes.refuse_camera`) сравнивает так же. Открытым остаётся одно: имя, которое ещё ни один держатель не открывал, — только свой ключ (урок 15 говорит, что это оставляет). Тесты: `test_console_gate.py::test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of_it` и `test_console_gate.py::test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it`.
+
+**Права на действие спрашиваются ещё раз, когда камера переезжает и когда команда исполняется.** Права на действие спрашиваются при записи. Сценарий с `output` на камеру — единственный канал своего устройства — записал тот, у кого `admin` на неё. Потом камеру перенесли на канал регистратора, и тот же сценарий стал жать реле **регистратора**, выбранное человеком без прав на регистратор (восьмое ревью, minor). Так же ручная команда: её `valid_until` — до `MAX_VALID`, 600 с. Закрыто с двух сторон, у каждой своё окно:
+
+- **сценарий живёт без срока — его спрашивает переезд.** Кто переносит камеру на другое устройство, отвечает за каждый сценарий, который ею командует: `source_cams` добавляет все камеры такого сценария (`commanded`, `scenario_cams`), и нужен `admin` на каждую. Сценарий без `unit` в триггере — `"*"`, то есть грант на кластер. Перенос внутри одного устройства ничего сверх прежнего не спрашивает. Команда сценария, поданная до переезда, живёт свой `valid_for` (30 с по умолчанию) — это окно остаётся;
+- **ручная команда — с устройством, на котором спросили права.** `file_request` пишет в строку `device` — ключ устройства камеры в момент подачи. Держатель исполняет команду только на нём, иначе отказывает простыми словами: «camera 3 was moved to another device after this command was given: it was not performed — give it again if it is still wanted» (`VmsWorker.requests`). Строка без `device` — сценария или консоли старой сборки — исполняется, как раньше.
+
+Почему держатель, а не консоль: в момент исполнения у держателя есть строка камеры, а прав человека у него нет, и носить их ему незачем. Сравнить устройство из строки команды с устройством камеры сейчас — достаточно. Тесты: `test_console_gate.py::test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios_that_command_it` и `test_long_poll.py::test_a_command_is_performed_only_on_the_device_it_was_given_for`.
 
 **Одна функция для обеих сборок.** До шестого ревью всё это стояло внутри `make_console`, а консоль М11 собирается своей функцией (`cluster/console.py`) — и не получала ничего: `/timeline/<cam>` и `/export/<cam>` не были там маршрутами, называющими единицу, и в кластере, который спрашивает, кто звонит, зритель камеры 1 получал таймлайн и кадры камеры 2 за любой грант; метка записи была её меткой размещения; и то, что уходило через эту консоль, не попадало в журнал. Теперь то, что консоли VMS нужно у ворот и в журнале, — `wire_vms(m, ctl, index)`, и её зовут обе сборки. Тест: М11, `test_lesson5_controller.py::test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the_boxes_does`.
 

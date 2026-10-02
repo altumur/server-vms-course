@@ -14,6 +14,9 @@ from tests.test_lesson4_worker import _box_with_cameras
 
 def test_a_door_announces_what_it_bound():
     assert is_loopback("127.0.0.1") and is_loopback("localhost") and is_loopback("127.0.0.53") and not is_loopback("0.0.0.0")
+    # …by what the address is, not how it is spelt (the review's eighth pass, the sweep of spellings)
+    assert all(is_loopback(h) for h in ("LOCALHOST", "localhost.", "::ffff:127.0.0.1", "0:0:0:0:0:0:0:1", "[::1]"))
+    assert not any(is_loopback(h) for h in ("127.example.com", "", "::", "10.0.0.5"))
     assert announce_host("127.0.0.1", "srv-a") == "127.0.0.1"          # bound to loopback: says loopback
     assert announce_host("0.0.0.0", "srv-a") == "srv-a" and announce_host("10.0.0.5", "srv-a") == "srv-a"
     assert announce_host(None, "srv-a") == "srv-a"                     # not told: the name, as it always was

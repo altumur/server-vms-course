@@ -3,6 +3,13 @@
 # that is harmless here: same key, same signatures. The key lives in the
 # Variable domain/signer — a software key on purpose; a TPM would pin the
 # job to one server and defeat the failover it just gained.
+
+# The scrapers that are not on the node itself, comma-separated (`CONSOLE_MONITORS` below).
+variable "monitors" {
+  type    = string
+  default = ""
+}
+
 job "domain-signer" {
   region      = "north"          # the domain holder: a stated decision, recorded where the directory can report it
   datacenters = ["*"]
@@ -28,7 +35,11 @@ job "domain-signer" {
 
     task "signer" {
       driver = "podman"
-      config { image = "vms/domainvms:latest"; args = ["python3", "-m", "domain.signer_service"] }
+      config {
+        image   = "vms/domainvms:latest"
+        args    = ["python3", "-m", "domain.signer_service"]
+        volumes = ["/run/vms-console:/run/vms-console"]   # the box's own door's directory (`SIGNER_UNIX` below)
+      }
       identity { env = true }    # NOMAD_TOKEN: may write domain/signer, identity/*, domain/keys, domain/revoked, and the books
       template {
         data        = <<-EOT
@@ -41,6 +52,10 @@ job "domain-signer" {
           # job mints, so their pass runs here. The same list as the domain's console; CENTRE/STAR, Lesson 17.
           CLUSTERS=north=nomad://nomad.north:4646|http://minio.north:9000/cluster-restore,south=nomad://nomad.south:4646|http://minio.south:9000/cluster-restore
           LOST_AFTER=45
+          # The box's own door to the door in (`/login` through a flood, from the node: `--unix-socket`), and the
+          # monitors' lane for `/healthz` (М10's eighth review: in the code, and not turned on here).
+          SIGNER_UNIX=/run/vms-console/signer.sock
+          CONSOLE_MONITORS=127.0.0.1,{{ env "attr.unique.network.ip-address" }},${var.monitors}
         EOT
         destination = "local/signer.env"
         env         = true

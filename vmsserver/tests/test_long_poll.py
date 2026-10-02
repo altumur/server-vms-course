@@ -802,7 +802,7 @@ def test_a_holder_reads_a_request_row_once_and_another_holders_rows_never_again(
     assert reads == ["vms/requests/new"] and dev.did[-1] == ("output", 2, "pulse", 0)   # a new row: read, and performed
 
 
-def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float = 0.25, start: int = 0):
+def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float = 0.25, start: int = 0, prefix: str = ""):
     """`rate` commands a second for `seconds`, by the box's clocks: the holder looks every `beat`, heartbeats every
     ten seconds (and renews its leases), the console clears every `CLEAR_EVERY` — as the processes do. Returns the standing rows after each
     beat, and the next request number."""
@@ -814,7 +814,7 @@ def _commands_at(box, holder, cid, con, rate: float, seconds: float, beat: float
         while owed >= 1.0:
             owed -= 1.0
             n += 1
-            box.vars.put(f"vms/requests/c-{n:05d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(box.wall()),
+            box.vars.put(f"vms/requests/{prefix}c-{n:05d}", {"unit": str(cid), "action": "output", "port": "1", "at": str(box.wall()),
                                                      "by": "auto/door", "valid_until": str(box.wall() + 30), "filed": str(box.wall())})
         holder.requests()
         if t - last_hb >= 10.0:
@@ -868,6 +868,92 @@ def test_at_three_commands_a_second_the_rows_stay_bounded_and_a_restart_declares
     box.vars.put("vms/requests/c-99999", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
     again.requests()
     assert again.commands["unknown"] == 1                            # no answer in the mark: not known, said so
+
+
+def test_at_sixteen_commands_a_second_with_ids_of_two_hundred_characters_the_rows_stay_bounded():
+    """The review's eighth pass, minor — a run: the answers a heartbeat carried were bounded in BYTES, `FETCHED_BYTES /
+    (len(id) + 1)`: forty ids of 200 characters every ten seconds, four commands a second cleared, and above that the
+    rows grew without a bound (30 a second: 1108 standing in 90 s). An id is said by its digest when it is long
+    (`config.said_id`, matched the same way by `clear_requests`), every answer costs at most 21 bytes, and a heartbeat
+    carries `FETCHED_COUNT` — the burst the beat allows for the ten seconds between two heartbeats."""
+    from vms.config import said_id
+    assert said_id("c-00001") == "c-00001" and said_id("x" * 41).startswith("#") and len(said_id("x" * 200)) == 21
+    assert said_id("a,b").startswith("#") and said_id('a"b').startswith("#") and said_id("a\nb").startswith("#")
+    box = Box()
+    holder, cid, dev, _called = _holder(box)
+    holder.reconcile_once()
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    rate = float(VmsWorker.COMMANDS_BURST)
+    standing, n = _commands_at(box, holder, cid, con, rate=rate, seconds=60.0, prefix="x" * 190)
+    assert n == 960 and len(dev.did) == 960
+    late = standing[len(standing) // 2:]
+    assert max(late) <= rate * (10 + 2) + rate, f"standing rows in the second half of the minute: {max(late)}"
+    assert max(standing[-40:]) <= max(standing[40:80]) + rate, f"the rows grow: {standing[40:80]} … {standing[-40:]}"
+    assert len(holder.fetched_said()) <= VmsWorker.FETCHED_BYTES
+
+
+def test_an_answer_the_store_did_not_take_is_written_again_and_a_restart_declares_nothing_failed():
+    """The review's eighth pass, minor — a run, 5 of 5: the answer is written into the command's mark when the device has
+    said it (`_confirm`); one write the store refused, and a restart in the ten seconds after, and the next instance
+    found the bare mark — `unknown`, a `command.failed`. The answer is owed now (`_marks_owed`) and written again at
+    every look until the store takes it. And what the beat waits on is on `/metrics`: slow devices, calls in flight,
+    answers said again (`beat_lines`)."""
+    from vms.console import vms_metrics
+    box = Box()
+    holder, cid, dev, _called = _holder(box)
+    holder.reconcile_once()
+    real, refusing = box.objects.put, {"on": True}
+
+    def put(key, data, *a, **k):
+        if refusing["on"] and key.startswith("vms/commands/") and b'"outcome"' in data:
+            raise OSError("the store is away")
+        return real(key, data, *a, **k)
+    box.objects.put = put
+    box.vars.put("vms/requests/r-1", {"unit": str(cid), "action": "output", "port": "1", "valid_until": str(box.wall() + 30)})
+    holder.requests()
+    assert dev.did == [("output", 1, "pulse", 0)] and "r-1" in holder._marks_owed
+    assert "outcome" not in json.loads(box.objects.get("vms/commands/r-1"))           # the store did not take the answer
+    holder.requests()
+    assert "r-1" in holder._marks_owed                                                # still away: still owed
+    refusing["on"] = False
+    holder.requests()                                                                 # the next look writes it
+    assert not holder._marks_owed and json.loads(box.objects.get("vms/commands/r-1"))["outcome"] == "performed"
+    holder.release_slot()
+    again = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+                      wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=lambda key: dev)
+    again.reconcile_once()
+    again.requests()
+    assert again.reanswered == 1 and again.commands["unknown"] == 0 and len(dev.did) == 1
+    assert "command.failed" not in [k for _, _, k in again.observed]
+    again.heartbeat_once()
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    text = "\n".join(vms_metrics(con)())
+    for line in ('vms_commands_reanswered_total{worker="w-1"} 1', 'vms_devices_slow{worker="w-1"} 0',
+                 'vms_commands_in_flight{worker="w-1"} 0'):
+        assert line in text, line
+
+
+def test_a_command_is_performed_only_on_the_device_it_was_given_for():
+    """The review's eighth pass, minor: rights on a command are asked when it is given, on every camera of the device
+    (`command_cams`), and it may wait ten minutes (`MAX_VALID`). A camera moved onto another device meanwhile is not
+    the camera the person had the right to command: the console writes the device into the row (`device`), and the
+    holder performs it only there — refused, in plain words, otherwise. A row with no `device` is as before."""
+    box = Box()
+    holder, cid, dev, _called = _holder(box)
+    holder.reconcile_once()
+    until = str(box.wall() + 300)
+    box.vars.put("vms/requests/moved", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until,
+                                        "device": "acme/10.0.0.91"})
+    box.vars.put("vms/requests/here", {"unit": str(cid), "action": "output", "port": "2", "valid_until": until,
+                                       "device": "acme/10.0.0.90"})
+    box.vars.put("vms/requests/old", {"unit": str(cid), "action": "output", "port": "1", "valid_until": until})
+    done = []
+    for _ in range(3):
+        done += holder.requests()
+    assert sorted(dev.did) == [("output", 1, "pulse", 0), ("output", 2, "pulse", 0)]    # `here` and `old`; not `moved`
+    refused = [d for d in done if d["request"] == "moved"]
+    assert holder.commands["refused"] == 1 and len(refused) == 1
+    assert "was moved to another device after this command was given" in refused[0]["error"], refused
 
 
 def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_the_lease():

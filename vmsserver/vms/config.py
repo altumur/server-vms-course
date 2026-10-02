@@ -55,6 +55,7 @@ here is controller-derived status — that is in the worker's heartbeat.
 from __future__ import annotations
 
 import os
+import re
 
 from w2cplatform.spec import PLATFORM_FIELDS, SubsystemSpec
 
@@ -76,19 +77,89 @@ def live_shm(cid, shm_dir: str = SHM_DIR) -> str:
     return f"shm://{shm_dir}/{cid}.shm"
 
 
+# ONE DEVICE, ONE SPELLING (the review's eighth pass, major; a run). `device_of` took the address as it was typed, and the
+# same recorder under another spelling was another device: `driverpack://ACME/10.0.0.50/ch/2`, `…/10.0.0.50:80/…`,
+# `…/10.0.0.50./…` — with `admin` on a file camera of her own, a user moved it onto channel 2 of a recorder whose
+# cameras were not hers (`source_cams` found no camera of "that" device), and then pulsed its relay (`device_cams`).
+# So the key is canonical: the scheme and the host in lower case, a name's trailing dot gone, an address in the one
+# form the resolver dials (`012.0.0.50`, `10.50`, `::ffff:10.0.0.50` are `10.0.0.50`, and `10.0.0.050` is `10.0.0.40`
+# — what `inet_aton` and `ipaddress` say they are), the scheme's own port dropped (`DEFAULT_PORTS`), credentials never
+# part of it. The row keeps what the
+# operator typed; what is compared, grouped and keyed by is this. What syntax cannot say — a DNS name and the address
+# it resolves to are one device — the device says itself, once a holder has opened it (`one_device` below).
+DEFAULT_PORTS = {"driverpack": 80, "rtsp": 554, "rtsps": 322, "http": 80, "https": 443}   # driverpack: the device's web port
+
+
+def _host(raw: str, scheme: str) -> str:
+    """`host[:port]` in one spelling (`device_of`)."""
+    import ipaddress
+    import socket
+    raw = raw.rsplit("@", 1)[-1]                         # credentials are not the device
+    host, port = raw, ""
+    if raw.startswith("["):                              # `[v6]` or `[v6]:port`
+        end = raw.find("]")
+        if end > 0:
+            host, port = raw[1:end], (raw[end + 2:] if raw[end + 1:end + 2] == ":" else "")
+    elif raw.count(":") == 1:
+        host, port = raw.split(":")
+    host = host.strip().lower().rstrip(".")
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+        if re.fullmatch(r"(0x[0-9a-f]+|[0-9]+)(\.(0x[0-9a-f]+|[0-9]+)){0,3}", host):
+            try:
+                ip = ipaddress.ip_address(socket.inet_aton(host))   # `012.0.0.50`, `10.50`: what the resolver dials
+            except OSError:
+                ip = None
+    if ip is not None:
+        ip = getattr(ip, "ipv4_mapped", None) or ip
+        host = str(ip) if ip.version == 4 else f"[{ip}]"
+    if port.isdigit():
+        port = "" if int(port) == DEFAULT_PORTS.get(scheme) else str(int(port))
+    return host + (f":{port}" if port else "")
+
+
 def device_of(source: str) -> str:
     """The thing DriverPack connects to. Cameras sharing it share one session:
     `driverpack://acme/10.0.0.50/ch/17` and `…/ch/18` are two channels of one NVR;
     a camera with an SD card is a device with one channel. Pure parsing — the
-    vendor's own addressing stays opaque, only the grouping is ours."""
+    vendor's own addressing stays opaque, only the grouping is ours — and one
+    spelling for one address (`_host`)."""
     from urllib.parse import urlsplit
-    u = urlsplit(source)
-    if u.scheme != "driverpack":
-        return source
+    u = urlsplit(str(source).strip())
+    scheme = u.scheme.lower()
+    if scheme != "driverpack":
+        if not u.netloc:
+            return str(source)                           # not an address: a path, a name — as it is
+        return f"{scheme}://{_host(u.netloc, scheme)}{u.path}" + (f"?{u.query}" if u.query else "")
     parts = [p for p in u.path.split("/") if p]
-    if u.netloc == "file":
+    vendor = u.netloc.strip().lower().rstrip(".")
+    if vendor == "file":
         return "file/" + parts[0] if parts else "file"
-    return f"{u.netloc}/{parts[0]}" if parts else u.netloc
+    return f"{vendor}/{_host(parts[0], scheme)}" if parts else vendor
+
+
+# WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
+# is (`identity` in its row, `vms/devices/<device>`: a serial number, a MAC; the driver's word). A DNS name and the
+# address it resolves to are two keys and one identity. `one_device(vars_)(key)` is a token: equal tokens, one device;
+# the vendor is part of it, so two vendors' serial numbers do not meet. What stays open: a spelling no holder has
+# opened yet has no identity, and is its key alone until a holder opens it — which a camera moved onto it makes
+# happen within the holder's next pass (М10B Lesson 12 says what that leaves).
+def device_identities(vars_) -> dict[str, str]:
+    prefix = SPEC.sub.config(DEVICES, "")
+    out = {}
+    for path in vars_.list(prefix):
+        items, _ = vars_.get(path)
+        ident = str((items or {}).get("identity") or "").strip()
+        if ident:
+            out[path[len(prefix):]] = ident
+    return out
+
+
+def one_device(vars_):
+    ids = device_identities(vars_)
+    return lambda key: ("id", key.split("/", 1)[0], ids[key]) if key in ids else ("at", key)
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
@@ -130,10 +201,20 @@ def describe(caps: dict | None) -> dict | None:
             "ptz": bool(caps.get("ptz")), "presets": int(caps.get("presets", 0) or 0)}
 
 
-def device_row(desc: dict) -> dict:
-    """The description as a row: strings, a list comma-joined — the store's shape (М10A Lesson 9)."""
+def device_row(desc: dict, identity: str = "") -> dict:
+    """The description as a row: strings, a list comma-joined — the store's shape (М10A Lesson 9). And what the device
+    says it IS, when it says (`identity_of`): not a capability — it is not in `can`, it does not leave the cluster —
+    but what the console tells two spellings of one device apart by (`one_device`)."""
     return {"events": ",".join(desc["events"]), "rays": str(desc["rays"]), "relays": str(desc["relays"]),
-            "ptz": "true" if desc["ptz"] else "false", "presets": str(desc["presets"])}
+            "ptz": "true" if desc["ptz"] else "false", "presets": str(desc["presets"]),
+            **({"identity": identity} if identity else {})}
+
+
+# The device's own word for which device it is — `capabilities()["identity"]`: a serial number, a MAC, whatever the
+# driver reads from the hardware. "" when it says nothing; a driver that cannot read one leaves its spellings to
+# `device_of` alone.
+def identity_of(caps: dict | None) -> str:
+    return str((caps or {}).get("identity") or "").strip()[:200]
 
 
 def parse_device_row(items: dict | None) -> dict | None:
@@ -153,6 +234,29 @@ def channel_of(source: str) -> str | None:
     u = urlsplit(source)
     parts = [p for p in u.path.split("/") if p]
     return parts[2] if u.netloc != "file" and len(parts) >= 3 and parts[1] == "ch" else None
+
+
+# …and the channel as two sources are COMPARED by (the eighth pass's sibling of `device_of`): `…/ch/02` and `…/ch/2`,
+# `…/CH/2` are one channel. Not what the driver is handed — that is the row's `source`, as typed.
+def channel_key(source: str) -> str:
+    from urllib.parse import urlsplit
+    u = urlsplit(str(source).strip())
+    parts = [p for p in u.path.split("/") if p]
+    if u.netloc.lower() == "file" or len(parts) < 3 or parts[1].lower() != "ch":
+        return ""
+    return str(int(parts[2])) if parts[2].isdigit() else parts[2]
+
+
+# How a holder says a request it answered, in its heartbeat's `fetched` (`VmsWorker.fetched_said`), and how the console
+# matches it (`jobs.clear_requests`): the id itself when it is short and plain; else `#` and a digest of it — an id of
+# 200 characters, or one with a comma (the list's separator), a quote or a control character in it, costs 21 bytes
+# like any other (the review's eighth pass).
+def said_id(rid: str) -> str:
+    rid = str(rid)
+    if len(rid) <= 40 and not rid.startswith("#") and rid.isprintable() and not any(c in rid for c in ',"\\'):
+        return rid
+    import hashlib
+    return "#" + hashlib.sha256(rid.encode()).hexdigest()[:20]
 
 
 # A port an instance was told, where `auto` (or `0`) means "ask the operating system for a free one".
@@ -188,8 +292,19 @@ def port_of(value, default: int) -> int:
 LOOPBACK = "127.0.0.1"
 
 
+# Loopback by what the address IS, not by how it is written (the eighth pass's sweep of spellings): `LOCALHOST`,
+# `localhost.`, `::ffff:127.0.0.1`, `0:0:0:0:0:0:0:1` were "beyond loopback" and announced under the server's name.
 def is_loopback(host: str) -> bool:
-    return host in ("localhost", "::1", "[::1]") or host.startswith("127.")
+    import ipaddress
+    h = str(host or "").strip().lower().rstrip(".")
+    h = h[1:-1] if h.startswith("[") and h.endswith("]") else h
+    if h == "localhost" or h.endswith(".localhost"):
+        return True
+    try:
+        ip = ipaddress.ip_address(h.split("%", 1)[0])
+    except ValueError:
+        return False
+    return (getattr(ip, "ipv4_mapped", None) or ip).is_loopback
 
 
 def announce_host(bound: str | None, server: str) -> str:

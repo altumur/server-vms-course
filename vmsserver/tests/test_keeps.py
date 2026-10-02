@@ -375,6 +375,32 @@ def test_the_console_sets_a_keep_lists_it_and_lifts_it():
     assert route(None, "GET", "/keeps", {})[1]["keeps"] == []
 
 
+def test_a_garbled_keep_is_shown_as_it_holds_and_a_recorder_waiting_for_its_volume_is_on_the_volumes_page():
+    """The review's eighth pass. Part 4: a keep whose row does not parse holds its camera as far as its interval reads,
+    and `GET /keeps` did not list it — a hold nobody could see or lift. It is listed now, `garbled`, with the interval
+    it holds and since when this console has seen it so. Part 2: a recorder pinned to a volume whose hold is another's
+    says why only in its heartbeat (`volume_wait`); the volumes page names it, on the volume it waits for."""
+    from w2cplatform.contract import Heartbeat
+    box = Box()
+    rec = SpecController(REC_SPEC, box.vars.as_writer("console", REC_SPEC.acl_console()), box.objects, wall=box.wall)
+    route = rec_routes(rec)
+    t = box.wall()
+    box.vars.put("rec/keeps/7-bad", {"cam": "7", "from": "yesterday", "to": str(t), "note": "", "by": "anna", "recordings": '["7"]'})
+    _keep(box, "9", t - 900, t - 300)
+    status, view = route(None, "GET", "/keeps", {})
+    by = {k["id"]: k for k in view["keeps"]}
+    assert status == 200 and set(by) == {"7-bad", f"9-{int(t - 900)}-{int(t - 300)}"}
+    bad = by["7-bad"]
+    assert bad["garbled"] is True and bad["from"] == 0.0 and bad["to"] == t and bad["garbled_since"] == t
+    assert json.dumps(view)                                              # no `Infinity` in the answer
+    volumes.write(box.vars, {"name": "net", "kind": "network", "url": "s3://bucket/net", "quota_bytes": TEST_QUOTA})
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-9"), Heartbeat("r-9", t, [], {
+        "server": "srv-9", "volume": "", "volume_wait": "net is being written by r-2: this recorder is pinned to it"}).to_bytes())
+    status, page = route(None, "GET", "/volumes", {})
+    net = next(v for v in page["volumes"] if v["name"] == "net")
+    assert net["waiting"] == ["r-9"] and page["waiting"][0]["recorder"] == "r-9"
+
+
 def test_a_keep_written_before_its_fields_were_renamed_still_holds():
     """`since`/`until` became `from`/`to` (feedback BQ). A row written before that, read by the new names only,
     would hold nothing — an interval from 0 to 0 — and the footage would go by its days, silently. It is read by

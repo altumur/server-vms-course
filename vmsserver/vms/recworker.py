@@ -34,10 +34,11 @@ from __future__ import annotations
 import logging
 import os
 import random
+import socket
 import threading
 import time
 
-from w2cplatform.console import heartbeats, holder_of
+from w2cplatform.console import framed, heartbeats, holder_of
 from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
@@ -58,6 +59,22 @@ from .writerwatch import WriterWatch
 def host_of(instance: str) -> str | None:
     parts = str(instance or "").rsplit(":", 2)
     return parts[0] if len(parts) == 3 and parts[0] and parts[1].isdigit() else None
+
+
+# …AND THE HOST IS THE BOX, NOT ITS NAME (the review's eighth pass, minor). It was `socket.gethostname()`: two boxes named
+# alike — `localhost`, `fedora`, two clones of one VM — were "the same host", and the second instance took the first's
+# network volume at once, its writer still mounted on the other box; the engine stopped the first (patch 07), with no
+# wait to spare. The host part is `BOX_ID` when the runtime says it: systemd's machine id (`%m`, in the unit — a
+# container's own hostname is not the box's: Quadlet's `Network=host` shares the network, not the UTS namespace),
+# Nomad's node id (`${node.unique.id}`, in the job). Not said: the hostname, as before. And an allocation's id, which
+# says no host, gets one only from `BOX_ID`: `<box>:<pid>:<alloc>` — still unique to the incarnation; without it the
+# allocation's id alone, and the instance waits (the safe side).
+def box_instance(env: dict, given: str | None = None) -> str:
+    import uuid
+    box, given = str(env.get("BOX_ID") or "").strip(), given or env.get("INSTANCE_ID") or ""
+    if given:
+        return f"{box}:{os.getpid()}:{given}" if box else given
+    return f"{box or socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
 
 
 # What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13), and
@@ -228,6 +245,7 @@ class RecWorker(VmsWorker):
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
         events_root = archive_root or env.get("ARCHIVE", "/data/archive")
+        instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
                          slot_ttl, archive_root=events_root, env=env)
         # The host's ObjectStorage daemon, and this process's one session with it. Every volume this recorder
@@ -1283,7 +1301,9 @@ class RecWorker(VmsWorker):
     # fifty seconds with nothing recorded — feedback CF undone). The row's `holder` is `host:pid:rnd`: the same host is
     # the same daemon, and that daemon lets one writer at a time hold the volume — the new instance's mount is
     # `ALREADY_LOCKED` while the old one's writer is attached, frozen or not, and picks it up (`reattached`) once it is
-    # detached. An instance named otherwise — `NOMAD_ALLOC_ID`, `INSTANCE_ID` — says no host: it waits, the safe side.
+    # detached. An instance named otherwise — `NOMAD_ALLOC_ID`, `INSTANCE_ID` — says no host: it waits, the safe side,
+    # unless the runtime said the box (`BOX_ID`, `box_instance`). The host is the box's id where one is said — two boxes
+    # named alike are two hosts (the eighth pass).
     # A hold let go on purpose — its writer closed first (`leave_volume`, `after_stop`) — is taken at once by anybody.
     def hold_follows_name(self, place: str, holder: str = "") -> bool:
         if place not in self._shared:
@@ -2093,9 +2113,9 @@ class RecWorker(VmsWorker):
         try:
             with urllib.request.urlopen(f"{url}/samples/{urllib.parse.quote(str(unit))}?{q}", timeout=30) as r:
                 # an answer with neither chunks nor a length cannot be told whole from cut (the seventh pass, minor;
-                # the console's `_door` refuses it the same way)
-                if r.headers.get("Content-Length") is None and \
-                        "chunked" not in (r.headers.get("Transfer-Encoding") or "").lower():
+                # the console's `_door` refuses it the same way) — and a length that is not a number is none (`framed`,
+                # the eighth pass)
+                if not framed(r):
                     raise OSError(f"{url}: the frames of {unit} came with neither chunks nor a length — whole or cut "
                                   f"cannot be told")
                 data = r.read()

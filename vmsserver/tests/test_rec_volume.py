@@ -1357,6 +1357,34 @@ def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_o
     assert elsewhere.hold is None and elsewhere.store is None
 
 
+def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
+    """The review's eighth pass, minor — a run: the host in an instance's name was `socket.gethostname()`, and two boxes
+    named alike (`localhost`, `fedora`, two clones of a VM) were one host: the second instance took the first's network
+    volume at once and mounted it six seconds later — no wait to spare, only the engine's fence. The host part is the
+    box's id when the runtime says it (`BOX_ID`: systemd's `%m` in the unit, Nomad's `${node.unique.id}` in the job);
+    an allocation's id gets a host only from it; and the hostname is what is left when nothing is said."""
+    import os
+    import socket
+    from vms.recworker import box_instance, host_of
+    assert host_of(box_instance({"BOX_ID": "4f1c0ad2e9"})) == "4f1c0ad2e9"
+    assert host_of(box_instance({})) == socket.gethostname()                       # nothing said: as before
+    assert box_instance({"INSTANCE_ID": "alloc-1"}) == "alloc-1" and host_of("alloc-1") is None   # no host: it waits
+    assert box_instance({"INSTANCE_ID": "alloc-1", "BOX_ID": "node-7"}) == f"node-7:{os.getpid()}:alloc-1"
+    box = Box()
+    a = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
+    twin = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-b"})              # the same hostname, another box
+    again = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
+    for r in (twin, again):
+        r._shared = {"net"}
+    assert host_of(a.instance) == "machine-a" and host_of(twin.instance) == "machine-b"
+    assert not twin.hold_follows_name("net", a.instance)                           # waits out the hold
+    assert again.hold_follows_name("net", a.instance)                              # this box: at once, as before
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    assert "Environment=BOX_ID=%m" in open(os.path.join(here, "deploy", "recworker@.container")).read()
+    m11 = os.path.join(os.path.dirname(here), "М11_ClusterVMS", "clustervms", "deploy", "recworker.nomad.hcl")
+    assert 'BOX_ID      = "${node.unique.id}"' in open(m11).read()
+
+
 def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_go_with_an_alarm():
     """The review's open item: `busy` from a live daemon had no deadline. A network volume this recorder holds and
     cannot mount, because another writer still has it open — a recorder elsewhere stuck with its writer mounted — was

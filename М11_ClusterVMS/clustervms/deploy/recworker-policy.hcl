@@ -21,5 +21,6 @@ namespace "default" {
     # The cluster's key, read by this job's template: a network volume's secret is opened by the process that mounts
     # the volume (the review's fourth pass, blocker 3). The third job with it, after the console and the worker.
     path "secrets/vms"          { capabilities = ["read"] }
+    path "platform/schema"      { capabilities = ["read"] }   # the store's schema, checked first (`check_schema`; М10's eighth review)
   }
 }

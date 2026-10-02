@@ -130,6 +130,11 @@ job "recworker" {
         SERVER_NAME = "${node.unique.name}"
         LABELS      = "${meta.labels}"
         INSTANCE_ID = "${NOMAD_ALLOC_ID}"
+        # WHICH BOX: the Nomad client's node id — kept in its data directory, the same across restarts of the agent and
+        # of this allocation, and not the hostname, which two boxes may share (М10's eighth review). The host part of
+        # the instance's name (`<node>:<pid>:<alloc>`, `vms/recworker.py`, `box_instance`): a network volume's hold
+        # follows this recorder's name at once to its next allocation on the SAME node; on another node it waits.
+        BOX_ID      = "${node.unique.id}"
         OBJECTS   = "variables://objects"
         CAPACITY  = "50"                             # recordings this server's disks and NIC can take — its own number
         ARCHIVE   = "${meta.archive}"                # the label the constraint placed by, handed to the recorder: its events; its own volume goes beside it, `/data/volume`
