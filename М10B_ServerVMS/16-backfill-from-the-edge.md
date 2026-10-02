@@ -250,6 +250,9 @@ POST /backfill {"cam": 41, "from": 0, "to": …}            →  400: не дл�
 Консоль кладёт заявку строкой `rec/requests/<запись>-<from>-<to>`. Идентификатор выводится из диапазона, поэтому повторный POST того же диапазона — та же строка, а не вторая выкачка. Регистратор читает заявки в каждом проходе:
 
 ```python
+    # (After the fourth review: resumes from the first moment the volume — and `landing` — does not show
+    # (`_served_to`), so a restart does not read a day again from its start; `fetched` is trimmed to rows that
+    # still stand, and an answered request is not fetched again while its row waits for the console.)
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         if self.archive_busy():

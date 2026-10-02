@@ -127,7 +127,13 @@ def test_who_may_write_where_is_in_the_mounts_too():
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
     assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory — and the daemon's socket
+    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
+    # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
+    for n in os.listdir(DEPLOY):
+        if n.endswith(".container"):
+            assert ("/run/obsd" in vols(n)) == (n == "recworker@.container"), n
+    rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
+    assert rec_env["OBSD_SOCKET"] == "/run/obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/vms.key"   # it opens a volume's secret
     assert "/data/archive" not in vols("reccontroller.container")
     assert vols("resource.container")["/data/platform"] == "/data/platform:z"       # the heartbeat is written; rows are only read
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
@@ -268,8 +274,12 @@ Description=ObjectStorage daemon — the archive's engine, one per host
 After=local-fs.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/obsd --socket /run/vms/obsd.sock
-RuntimeDirectory=vms
+ExecStart=/usr/local/bin/obsd --socket /run/obsd/obsd.sock
+User=obsd
+Group=vms-rec
+Environment=OBSD_CLIENT_GROUP=vms-rec
+RuntimeDirectory=obsd
+RuntimeDirectoryMode=0750
 RuntimeDirectoryPreserve=yes
 Environment=OBSD_WRITER_GRACE_S=90
 Environment=OBSD_LOG_LEVEL=warning
@@ -283,7 +293,7 @@ WantedBy=multi-user.target
 
 Шапка юнита говорит главное одной фразой:
 
-> *Not a container and not one of the VMS's processes: the engine the recorders write their footage through, over a unix socket in /run/vms (`w2cplatform/obsd.py`). One per host — it keeps one writer per volume, and that rule means something only if every recorder on the box asks the same daemon.*
+> *Not a container and not one of the VMS's processes: the engine the recorders write their footage through, over a unix socket in /run/obsd (`w2cplatform/obsd.py`). One per host — it keeps one writer per volume, and that rule means something only if every recorder on the box asks the same daemon.*
 
 **Почему один на коробку.** Правило «один писатель на том» держит демон (урок 6). Второй демон на той же коробке о писателях первого не знает: два регистратора, спросившие два разных демона, получили бы двух писателей одного тома — и порчу вместо отказа. Поэтому демон — не часть процесса регистратора и не контейнер рядом с каждым регистратором, а роль хоста, как файловая система. Второй экземпляр на том же сокете демон и сам не запустит: README говорит, что он берёт `flock` на `<socket>.lock`.
 
@@ -293,7 +303,19 @@ WantedBy=multi-user.target
 
 **`--socket /run/obsd/obsd.sock`** (до третьего ревью — `/run/vms/obsd.sock`, см. шаг 3). Сокет был в том же tmpfs, который каждый регистратор уже монтирует ради разделяемой памяти воркеров (шаг 3). Нового монтирования не понадобилось. `OBSD_SOCKET` не задан нигде, потому что это и есть путь по умолчанию на Linux — и у демона, и у клиента (`w2cplatform.obsd.default_socket`).
 
-**`RuntimeDirectory=vms` и `RuntimeDirectoryPreserve=yes`.** `/run/vms` существует до старта демона, а перезапуск демона не уносит с собой сокеты разделяемой памяти воркеров: каталог общий, и стереть его при остановке значило бы оборвать каждую раздачу на коробке.
+**`User=obsd`, `Group=vms-rec`, `OBSD_CLIENT_GROUP=vms-rec`.** Демон работает своим пользователем и пускает, кроме себя, только группу клиентов — регистраторы входят в неё по номеру (`GroupAdd=2101` в `recworker@.container`: у контейнера нет `/etc/group` хоста). Пир без группы демон отвергает сам, пир не из группы не пройдёт и права на сокет. На Linux группа учитывается любая, и дополнительная тоже; на macOS — только основная (так ответила сессия, которая ведёт движок). Нужна сборка `obsd`, которая этот параметр знает: изменение исходников от 2 октября 2026, не патч.
+
+**`RuntimeDirectory=obsd`, `RuntimeDirectoryMode=0750`, `RuntimeDirectoryPreserve=yes`.** Каталог сокета, `obsd:vms-rec`, systemd создаёт **до** демона: сам демон создал бы его 0700, и ни один регистратор в него бы не вошёл. И не уносит при перезапуске. `/run/vms` этот юнит больше не создаёт — он общий для коробки (ниже).
+
+### Подготовка коробки: пользователь, группа, каталоги
+
+Юнит, который называет несуществующего пользователя, не стартует (217/USER), а без демона не пишет никто. И `/run/vms` создавал только он — без демона не стартовали ни `vmsworker@`, ни `recworker@`, которые его монтируют (четвёртое ревью, блокер 2: после третьего ревью коробку под нового пользователя не готовил никто). Поэтому у коробки три файла установки:
+
+- `deploy/obsd.sysusers` → `/etc/sysusers.d/obsd.conf`: группа `vms-rec` с **фиксированным** номером 2101 (по нему её находят контейнеры), пользователь `obsd`, член этой группы.
+- `deploy/vms.tmpfiles` → `/etc/tmpfiles.d/vms.conf`: `/run/vms` 0755 root (разделяемая память воркеров), `/run/obsd` 0750 `obsd:vms-rec` (для регистратора, который стартует раньше демона), `/data/volume` 0750 `obsd:vms-rec` (собственный том сервера — его открывает демон, значит, он и владелец).
+- `deploy/install-obsd.sh`: ставит оба, отказывается, если `vms-rec` уже есть с другим номером, **один раз** отдаёт `obsd:vms-rec` кольца, отформатированные, когда демон работал от root (`/data/volume` и пути, переданные аргументами, — объявленные локальные тома), и включает `obsd.service`.
+
+Почему не `StateDirectory=`, как у продукта (`/var/lib/vms-obsd`): `/var/lib` лежит на слоте корневого раздела, который обновление системы заменяет, а архив курса — на разделе данных (М9, урок 5). Прогон на Linux (Debian 13, systemd первым процессом): обновление с демона под root на `obsd` — кольца переданы, демон работает от `obsd`/`vms-rec`, регистратор с группой пишет, root без группы и пользователь не из группы получают отказ, `/run/vms` и `/run/obsd` создаются при остановленном демоне. Тест: `test_deploy_units.py::test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_files` — каждый пользователь, группа и каталог, которые называет юнит, создаются файлами установки.
 
 **`OBSD_WRITER_GRACE_S=90`** — сколько писатель, чей регистратор пропал, ждёт того же владельца (`rec:<том>`). Захват тома умершего процесса истекает за 45 секунд, и тот, кто возьмёт том следующим, назовёт того же владельца (урок 10, шаг 8). Ожидание длиннее — значит, он подберёт писателя целиком. У самого демона по умолчанию 60 секунд, у продукта на ящике было 20 — и писатель хозяина не дождался. Тест проверяет неравенство, а не число: `int(env["OBSD_WRITER_GRACE_S"]) > 45`.
 
@@ -301,7 +323,7 @@ WantedBy=multi-user.target
 
 **`TimeoutStopSec=60`.** По SIGTERM демон закрывает каждого писателя чисто, и каждый может сбрасываться до 30 секунд. README демона так и просит: дайте супервизору не меньше 60 секунд на остановку.
 
-И одна строка README, которую стоит знать на коробке: пиру с другим uid демон отказывает. На коробке курса это выполняется само: системные юниты Quadlet запускают контейнеры от root, и `obsd.service` работает от root — `User=` нет ни там, ни там.
+И одна строка README, которую стоит знать на коробке: пиру с другим uid демон отказывает, если тот не в `OBSD_CLIENT_GROUP`. До четвёртого ревью это выполнялось само — контейнеры и демон работали от root, — и сокет мог открыть любой процесс коробки, процесс воркера со сторонним драйвером тоже. Теперь демон — `obsd`, регистраторы — члены `vms-rec`, а воркер сокета не видит вовсе.
 
 Тест читает юнит так же, как контейнеры:
 
@@ -311,13 +333,15 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
     only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
     from w2cplatform.obsd import default_socket
     u = unit("obsd.service")
-    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms/obsd.sock"
-    assert u["Service"]["RuntimeDirectory"] == "vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/obsd/obsd.sock"
+    assert u["Service"]["RuntimeDirectory"] == "obsd" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["RuntimeDirectoryMode"] == "0750"                              # its group gets in; the daemon's own 0700 would not let it
     env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
     assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
+    assert u["Service"]["User"] == "obsd" and env["OBSD_CLIENT_GROUP"] == u["Service"]["Group"]   # its own user; the recorders' group
     import sys
     if sys.platform != "darwin":
-        assert default_socket() == "/run/vms/obsd.sock"
+        assert default_socket() == "/run/obsd/obsd.sock"                                # where the unit puts it, not the daemon's own default
 ```
 
 ### Откуда берётся `/usr/local/bin/obsd`
@@ -327,7 +351,7 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
 ```bash
 ObjectStorage/standalone-build/build.sh /tmp/obsd-build          # копирует исходники движка, применяет патчи к копии, собирает
 install -m 755 /tmp/obsd-build/build/obsd /usr/local/bin/obsd
-systemctl daemon-reload && systemctl enable --now obsd
+deploy/install-obsd.sh                                          # пользователь и группа, каталоги, кольца под root — obsd, юнит
 ```
 
 Скрипт не трогает дерево ObjectStorage: он копирует то, что нужно движку, в `<out>/src`, применяет патчи из `patches/` к копии и собирает `<out>/build/obsd` через CMake. С `--tests` он заодно собирает и прогоняет тесты демона (`obsd_ut`) и движка (`os_engine_ut`). Тот же бинарник нужен тестам курса: без него они падают с подсказкой — `OBSD_BIN=<out>/build/obsd` или `obsd` в `PATH`.
@@ -462,9 +486,10 @@ CMD ["python3", "-m", "vms", "worker"]
 # once the ring is full. A volume that exists keeps its size until a declaration (`rec/volumes/<name>`) says
 # another.
 # ARCHIVE_QUOTA_BYTES=
-# the host's ObjectStorage daemon. Unset: /run/vms/obsd.sock, where `obsd.service` puts it. How long a
-# recorder waits for one answer from it: shorter than a lease, or a silent daemon fences every recording.
-# OBSD_SOCKET=/run/vms/obsd.sock
+# the host's ObjectStorage daemon: /run/obsd/obsd.sock, where `obsd.service` puts it — set in the recorder's own
+# unit, the one process that mounts that directory. How long a recorder waits for one answer from it: shorter
+# than a lease, or a silent daemon fences every recording.
+# OBSD_SOCKET=/run/obsd/obsd.sock
 # OBSD_TIMEOUT=10
 ```
 
@@ -472,7 +497,7 @@ CMD ["python3", "-m", "vms", "worker"]
 
 **`ARCHIVE_QUOTA_BYTES`** — размер собственного тома сервера, когда он форматируется впервые. Квота — это размер кольца (урок 10, шаг 3), и спрашивается она один раз: отформатированный том свой размер не меняет, пока объявление не скажет другой. Без неё — четыре пятых свободного места, но не больше, чем держит диск под нижней отметкой ватерлинии, когда кольцо заполнится.
 
-**`OBSD_SOCKET`** — где демон. Задавать его на коробке незачем: умолчание клиента совпадает с тем, что `obsd.service` передаёт демону.
+**`OBSD_SOCKET`** — где демон: `/run/obsd/obsd.sock`. Его задаёт юнит регистратора — единственного процесса, который этот каталог монтирует; умолчание клиента совпадает. Размер нового тома без `ARCHIVE_QUOTA_BYTES` спрашивается у демона (`VOLUME_SPACE` того каталога, куда он будет писать), а не у диска контейнера: на коробке с системным SSD и HDD под данные доля SSD дала бы пару часов архива (четвёртое ревью).
 
 **`OBSD_TIMEOUT`** — сколько регистратор ждёт одного ответа демона. Десять секунд — треть аренды. Поставь больше аренды — и один молчащий демон отсечёт регистратор со всеми записями (урок 10, шаг 10).
 
@@ -495,7 +520,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
         for vol in …:
-            assert vol.startswith("/data/") or vol.startswith("/run/vms:"), vol           # /run/vms: the shared-memory sockets — a tmpfs, not state
+            assert vol.startswith("/data/") or vol.startswith("/run/vms:") or vol.startswith("/run/obsd:"), vol   # sockets on a tmpfs, not state
 ```
 
 **Таблица диспетчера извлекается регулярным выражением из исходника** и сверяется с юнитами. Здесь видны все шестнадцать глаголов — десять этого урока и шесть, которые добавят уроки 20–25.
@@ -567,7 +592,9 @@ systemctl restart obsd                  # регистраторы держат 
 - **Токен на подсистему вместо токена на процесс.** Ошибка в консоли сможет переразместить камеры.
 - **Медиа, смонтированные регистратору.** Второе соединение к камере станет возможным — и однажды случится.
 - **Демон движка внутри контейнера регистратора.** Два регистратора — два демона, два писателя одного тома и порча вместо отказа.
-- **Демон без `RuntimeDirectoryPreserve`.** Его перезапуск сотрёт `/run/vms` вместе с разделяемой памятью воркеров.
+- **Юнит без `RuntimeDirectoryMode=0750`.** Демон сам создаст каталог сокета 0700, и ни один регистратор до сокета не дойдёт.
+- **Пользователь из юнита, которого никто не создал.** 217/USER, демона нет, запись стоит; на обновлённой коробке — кольца root, которых демон не откроет. Для этого `install-obsd.sh`.
+- **`/run/vms` из юнита демона.** Без демона не стартуют ни воркер, ни регистратор; каталог — коробки (`vms.tmpfiles`).
 - **`OBSD_WRITER_GRACE_S` короче истечения захвата.** Следующий держатель тома не застанет писателя.
 - **`StopTimeout` регистратора короче сброса писателя.** Штатная остановка станет падением, и том 45 секунд никто не возьмёт.
 - **`TimeoutStopSec` демона короче шестидесяти секунд.** Писатели не успеют закрыться чисто, и тома после остановки придётся восстанавливать.
@@ -595,7 +622,7 @@ systemctl restart obsd                  # регистраторы держат 
 2. Смонтируйте регистратору `/data/media`. Опишите, чем это опасно через год.
 3. Поставьте `StopTimeout=10` у `recworker@`. Остановите регистратор посреди записи и посмотрите, сколько ждал следующий держатель тома и что он нашёл в томе.
 4. Поставьте `OBSD_WRITER_GRACE_S=20`. Убейте регистратор `kill -9` и проследите, кто и когда возьмёт том.
-5. Уберите `RuntimeDirectoryPreserve=yes` и перезапустите демон при работающей записи через разделяемую память. Что стало с подпиской регистратора?
+5. Уберите `RuntimeDirectoryMode=0750` из `obsd.service`, удалите `/run/obsd` и перезапустите демон. Что видит регистратор и что говорит его `volume_error`?
 6. Смонтируйте регистратору `/data/archive` как `/archive` и задайте `ARCHIVE=/archive`. Что регистратор назовёт демону и что ответит демон?
 7. Соберите образ с `obsd` внутри и запустите демон в каждом контейнере регистратора. Объявите сетевой том и поднимите два регистратора на одной коробке. Что пойдёт не так и почему ни один из двух этого не заметит?
 8. Соберите отдельный образ для консоли. Перечислите, что теперь надо делать при выпуске новой версии.

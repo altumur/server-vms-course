@@ -338,6 +338,8 @@ def server(env: dict, given: str | None = None) -> str:
     def hold_key(self, place: str) -> str:
         return f"{self.name}/holds/{place}"
 
+    # A stale hold of ANOTHER holder is taken only after this process watched its row stand still for `slot_ttl +
+    # HOLD_SKEW` by its own monotonic clock — `until` was written by another host's clock (the review's fourth pass).
     def claim_hold(self, candidates: list[str], retries: int = 20) -> str | None:
         for attempt in range(retries):
             if attempt:

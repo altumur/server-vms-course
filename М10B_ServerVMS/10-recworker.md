@@ -351,8 +351,8 @@ class RecWorker(VmsWorker):
         self.default_volume = str(self.server or "default")
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
         self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
-        q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
+        self.default_quota = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
+        # 0: sized at its first FORMAT by the disk the DAEMON writes to (`_share_of_space`, `VOLUME_SPACE`)
         self.volume = str(env.get("VOLUME") or self.default_volume)
         self.store: Archive | None = None            # the volume open for writing, if one is
 ```
@@ -578,10 +578,15 @@ class RecWorker(VmsWorker):
     # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
     # (`space_settings`, 0.75 by default) once the ring is full. …
     @staticmethod
-    def _share_of_free(root: str, low: float = 0.75) -> int:
-        …
-        return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
+    def _share_of_space(space: dict, low: float = 0.75) -> int:
+        free, total = int(space.get("available") or 0), int(space.get("capacity") or 0)
+        if not total:
+            return 0
+        used = total - int(space.get("free") or free)
+        return max(1 << 30, min(int(free * 0.8), free - (2 << 30), int(total * low) - used))
 ```
+
+**Диск — тот, куда пишет демон.** Доля считалась от диска, который видит **контейнер** регистратора, а кольцо лежит там, куда пишет демон хоста: на коробке с системным SSD и HDD под данные том форматировался на долю SSD — пара часов архива вместо дней, и дальше этот размер считался настоящим (четвёртое ревью). Теперь перед `FORMAT` регистратор спрашивает у демона `VOLUME_SPACE` каталога тома (или ближайшего существующего над ним) и считает долю от ответа. И heartbeat держателя говорит о томе правду: `volume_quota` — настоящий размер от демона; `shrink_pending` — объявленный меньший размер, пока он не применён (без `shrink_confirmed` он не применится); `resize_error` — почему движок отказал в новом размере (повтор каждый проход); применённое уменьшение — событие `archive.volume.shrunk`. Консоль показывает это на странице томов (урок 27). Тест: `test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to`.
 
 Третье слагаемое появилось после того, как его нашли на расчёте. Диск общий с событиями ресурса, а ватерлиния ресурса включена по умолчанию. Кольцо, заполнившее диск выше её отметки, оставило бы недостачу навсегда: у VMS больше нечем ответить на «освободи». Поэтому кольцо по умолчанию кончается раньше нижней отметки.
 

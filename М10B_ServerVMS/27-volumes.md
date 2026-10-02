@@ -123,8 +123,8 @@ def servable(vols: list[Volume], server: str) -> list[str]:
         self.default_volume = str(self.server or "default")
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
         self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
-        q = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
-        self.default_quota = q or self._share_of_free(os.path.dirname(beside))
+        self.default_quota = default_quota if default_quota is not None else int(env.get("ARCHIVE_QUOTA_BYTES", "0") or 0)
+        # 0: sized at its first FORMAT by the disk the DAEMON writes to (`_share_of_space`, `VOLUME_SPACE`)
 ```
 
 Имя тома — имя сервера, путь — `volume` рядом с деревом событий ресурса: `/data/volume` возле `/data/archive`. Рядом, а не внутри, потому что внутри обходы ресурса приняли бы кольцо за подсистему и посчитали бы его блоки занятым местом дерева. Комментарий называет, зачем том вообще такой: это то, что значила любая коробка с одним диском до появления строк, — одно место, `home: srv-a` остаётся верным, а `place_by: volume` ведёт себя в точности как `place_by: server`.
@@ -139,7 +139,7 @@ def servable(vols: list[Volume], server: str) -> list[str]:
     # answers `free` any more. At least a gigabyte, whatever the arithmetic says. Asked once, when it is first
     # formatted; a volume that exists keeps the size it has.
     @staticmethod
-    def _share_of_free(root: str, low: float = 0.75) -> int:
+    def _share_of_space(space: dict, low: float = 0.75) -> int:   # (was `_share_of_free(root)`: the container's disk, not the daemon's — урок 10)
         ...
         return max(1 << 30, min(int(u.free * 0.8), u.free - (2 << 30), int(u.total * low) - u.used))
 ```
