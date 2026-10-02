@@ -272,7 +272,13 @@ POST /backfill …восьмая неотвеченная заявка того 
                 continue                                     # nobody holds the device and no backup answers; ask again next pass
             # Not past what we can see, while the recording is live: those minutes are in a block being written,
             # and fetching them would write them twice. A recording that is not running may be asked for anything.
-            t0, t1 = float(it["from"]), float(it["to"])
+            try:
+                t0, t1 = float(it["from"]), float(it["to"])
+            except (KeyError, TypeError, ValueError):
+                log.error("%s: request %s refused: from=%r to=%r is not a range", self.name, rid, it.get("from"), it.get("to"))
+                self.fetched.append(rid)
+                done.append({"unit": unit, "cam": cam, "request": rid, "error": "`from` and `to` are not a range"})
+                continue
             ours = self.our_coverage(unit)
             if unit in self.reconciler.actual:
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
@@ -291,6 +297,8 @@ POST /backfill …восьмая неотвеченная заявка того 
 ```
 
 Заявка — работа **вне бюджета обычного прохода и вне окна**: её попросил человек, и она срочна по определению. Бюджет и окно — для фоновой уборки, не для ответа на запрос. Нижней границы по первой записанной секунде (шаг 10) у заявки тоже нет: человек может попросить любой час.
+
+**Заявка, диапазон которой не разбирается, — отказ ей одной.** Консоль не примет `NaN` и слова (выше), но строка в хранилище — это строка: её можно поправить руками или записать другой сборкой. `requests` читал `from` и `to` голым `float`, и одна такая заявка бросала исключение из всего метода на каждом проходе: ни одна заявка за ней — любой записи этого регистратора — не выкачивалась (шестое ревью; тот же класс, что команда к единице с битой эпохой, М10B, урок 4, шаг 8). Теперь она отвечена — id уходит в `fetched`, и консоль убирает строку, — в логе сказано почему, а проход идёт к следующей. Тест: `test_epoch_refused.py::test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next`.
 
 **Но не дальше видимого, пока запись идёт.** Минуты после конца видимого покрытия лежат в блоке, который пишется прямо сейчас (шаг 10, Q). Выкачай их с карты — и они лягут в том второй раз. Поэтому у живой записи конец заявки обрезается по концу видимого (или по `settle`, если видимого нет). Запись, которая не идёт, можно просить за любые минуты: дописывать в неё некому.
 
