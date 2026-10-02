@@ -77,6 +77,7 @@ from dataclasses import dataclass, field
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
+from .rows import Table, garbled_counts
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .variables import Conflict, Variables, cas_pause
 
@@ -503,23 +504,16 @@ def slot_number(name: str) -> int:
 # and the controller's `slots()` — what placement asks who is leaving — stopped every pass at it. The row is skipped
 # where slots are listed, counted (`SLOTS_GARBLED`, in every worker's heartbeat as `slots_garbled`) and logged once
 # until it parses again.
-SLOTS_GARBLED: dict[str, int] = {}                # subsystem -> slot rows that did not parse, this process
-_garbled_slots: set[str] = set()
+#
+# Through the one reader of rows (`rows.Table`; the review's seventh pass): counted once per ROW until it parses again
+# — it was once per read, so one torn row read every lease step grew the count for ever (the seventh pass, a minor).
+SLOTS = Table("slot", "skipped — nobody claims it until it is mended")
+SLOTS_GARBLED, _garbled_slots = SLOTS.counts, SLOTS.bad     # subsystem -> slot rows that did not parse, this process
 
 
 def read_slot(key: str, name: str, items) -> "Slot | None":
     """The row parsed, or None — skipped, counted, and logged once."""
-    try:
-        slot = Slot.from_items(name, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        SLOTS_GARBLED[sub] = SLOTS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_slots:
-            _garbled_slots.add(key)
-            log.error("%s: the slot row does not parse (%r); skipped — nobody claims it until it is mended", key, items)
-        return None
-    _garbled_slots.discard(key)
-    return slot
+    return SLOTS.read(key, lambda: Slot.from_items(name, items))
 
 
 # An assignment row is the same (the sixth pass, the follow-up) — and it has one number in it, `rev`. Read bare, a
@@ -531,45 +525,27 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
 # `rev 0`: counted (`ASSIGNMENTS_GARBLED`; in the pass report and in a worker's heartbeat as `assignments_garbled`)
 # and logged once. The controller's next change to the row writes it whole; `rev` starts again, which costs nothing
 # — it is published, never compared across writes.
-ASSIGNMENTS_GARBLED: dict[str, int] = {}          # subsystem -> assignment rows that did not parse, this process
-_garbled_assignments: set[str] = set()
+ASSIGNMENTS = Table("assignment", "read for the units it names")
+ASSIGNMENTS_GARBLED, _garbled_assignments = ASSIGNMENTS.counts, ASSIGNMENTS.bad
 
 
 def read_assignment(key: str, worker: str, items) -> "Assignment":
     """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
-    try:
-        a = Assignment.from_items(worker, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        ASSIGNMENTS_GARBLED[sub] = ASSIGNMENTS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_assignments:
-            _garbled_assignments.add(key)
-            log.error("%s: the assignment row does not parse (%r); read for the units it names", key, items)
-        return Assignment(worker, [u for u in str(items.get("units", "")).split(",") if u])
-    _garbled_assignments.discard(key)
-    return a
+    return ASSIGNMENTS.read(key, lambda: Assignment.from_items(worker, items),
+                            Assignment(worker, [u for u in str((items or {}).get("units", "")).split(",") if u]))
 
 
 # The same for a PLACE's row, `<name>/holds/<place>` — the same row, read by the same people (the review's sixth pass,
 # beside the slot's). Read bare, one garbled hold among the candidates raised out of every claim: a recorder took no
 # volume at all, and the console's list of volumes failed whole. The row is that place's trouble: no candidate until
-# it is mended, counted (`HOLDS_GARBLED`, `holds_garbled` in the heartbeat), logged once.
-HOLDS_GARBLED: dict[str, int] = {}                # subsystem -> hold rows that did not parse, this process
+# it is mended, counted (`HOLDS_GARBLED`, `holds_garbled` in the heartbeat and on `/metrics`), logged once.
+HOLDS = Table("hold", "skipped — nobody takes that place until it is mended")
+HOLDS_GARBLED = HOLDS.counts                      # subsystem -> hold rows that did not parse, this process
 
 
 def read_hold(key: str, place: str, items) -> "Slot | None":
     """A place's row parsed, or None — skipped, counted, and logged once."""
-    try:
-        hold = Slot.from_items(place, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        HOLDS_GARBLED[sub] = HOLDS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_slots:
-            _garbled_slots.add(key)
-            log.error("%s: the hold row does not parse (%r); skipped — nobody takes that place until it is mended", key, items)
-        return None
-    _garbled_slots.discard(key)
-    return hold
+    return HOLDS.read(key, lambda: Slot.from_items(place, items))
 
 
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
@@ -1444,12 +1420,11 @@ class Worker:
         extra.setdefault("build", BUILD)
         if self.stand_in_renewals:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
-        if SLOTS_GARBLED.get(self.sub.name):
-            extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
-        if ASSIGNMENTS_GARBLED.get(self.sub.name):
-            extra.setdefault("assignments_garbled", ASSIGNMENTS_GARBLED[self.sub.name])   # …and its own assignment (`read_assignment`)
-        if HOLDS_GARBLED.get(self.sub.name):
-            extra.setdefault("holds_garbled", HOLDS_GARBLED[self.sub.name])   # …and hold rows (`read_hold`)
+        # Rows of this subsystem this process could not read, by table (`rows.Table`): `slots_garbled` (`read_slot`),
+        # `assignments_garbled` (its own assignment), `holds_garbled` (`read_hold`), and those of a subsystem's own
+        # tables — a recorder's `volumes_garbled`, `keeps_garbled`.
+        for name, n in garbled_counts(self.sub.name).items():
+            extra.setdefault(name, n)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),

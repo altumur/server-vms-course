@@ -37,10 +37,15 @@ shows ONE cause, not thirty greyed cameras.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass
 
-from .federation import Answer, DomainDirectory, Federation, Unreachable
+from w2cplatform.rows import PARSE_ERRORS
+
+from .federation import MEMBER_OBJECTS, Answer, DomainDirectory, Federation, Unreachable
+
+log = logging.getLogger("domain.readview")
 
 
 @dataclass
@@ -140,12 +145,17 @@ class ReadView:
                     self.retry_at[name] = now + min(self.backoff_max, self.backoff * 2 ** (self.failures[name] - 1))
                 continue
             hbs, snap = got
+            # Each worker's heartbeat is that worker's (М10's seventh review, part 2): the member's reads skip what does
+            # not parse (`federation.published`), and what parses and still is not numbers is skipped here, counted.
             for w, hb in hbs.items():
-                self.snapshots[(name, w)] = Snapshot(w, name, float(hb.get("ts", 0)), str(hb.get("server", "?")),
-                                                     list(hb.get("status", [])),
-                                                     {k: hb[k] for k in DOORS if hb.get(k) is not None})
+                try:
+                    self.snapshots[(name, w)] = Snapshot(w, name, float(hb.get("ts", 0)), str(hb.get("server", "?")),
+                                                         list(hb.get("status", [])),
+                                                         {k: hb[k] for k in DOORS if hb.get(k) is not None})
+                except PARSE_ERRORS as e:
+                    MEMBER_OBJECTS.garbled(f"{name}/vms/heartbeats/{w}", e)
             self.configured[name] = snap.get("cameras", [])
-            self.configured_at[name] = float(snap.get("ts", 0))
+            self.configured_at[name] = float(snap.get("ts", 0) or 0)
             self.cluster_ok[name] = now
             self.cluster_down_since.pop(name, None)
             self.failures.pop(name, None)
@@ -192,9 +202,12 @@ class ReadView:
             age = max(0.0, now - s.ts)
             state = "unreachable" if s.cluster in self.cluster_down_since else ("stale" if age > self.lost_after else "live")
             for st in s.status:
-                out.append(Row(int(st["id"]), st.get("name", ""), s.worker, s.cluster, s.server, st.get("phase", "?"),
-                               st.get("position", "?"), int(st.get("revision", 0)), int(st.get("observed_revision", 0)),
-                               int(st.get("epoch", 0)), age, state, str(st.get("ref", ""))))
+                try:
+                    out.append(Row(int(st["id"]), st.get("name", ""), s.worker, s.cluster, s.server, st.get("phase", "?"),
+                                   st.get("position", "?"), int(st.get("revision", 0)), int(st.get("observed_revision", 0)),
+                                   int(st.get("epoch", 0)), age, state, str(st.get("ref", ""))))
+                except PARSE_ERRORS as e:                  # one entry of one worker: that entry's (the seventh review)
+                    MEMBER_OBJECTS.garbled(f"{s.cluster}/vms/heartbeats/{s.worker}#{st.get('id')}", e)
         # What the workers report, and then what the cluster says exists and nobody reports. The second
         # set is small by construction — it is the cameras that are NOT running — and it is the set an
         # operator is looking for when something has gone wrong.
@@ -218,8 +231,13 @@ class ReadView:
                 ref = row.get("ref") or ""
                 if ident(cl, ref, cam) in seen:
                     continue
+                try:
+                    revision = int(row.get("revision", 0))
+                except PARSE_ERRORS as e:
+                    MEMBER_OBJECTS.garbled(f"{cl}/vms/snapshot#{cam}", e)
+                    revision = 0                           # the row is shown; its revision is not known
                 out.append(Row(cam, str(row.get("name", "")), str(row.get("worker") or ""), cl,
-                               str(row.get("server") or "?"), "unobserved", "", int(row.get("revision", 0)),
+                               str(row.get("server") or "?"), "unobserved", "", revision,
                                0, 0, age, "configured", str(ref)))
         out.sort(key=lambda r: (r.cluster, r.worker, r.camera))
         return out

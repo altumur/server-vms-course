@@ -103,8 +103,15 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
     for full in domain_objects.list(b):
         if full not in keep:
             domain_objects.delete(full)                            # gone from the member: gone from its report
+    # The mark of the last report, read to count on from. A mark that does not parse — half a write — raised here
+    # before the new one was written, so it was never written again: the member stopped reporting for good, by one
+    # object (М10's seventh review, part 2). It starts again from the clock's milliseconds — a number the domain has
+    # not seen, which is all `_Fresh` asks of a sequence — and is written whole.
     prev = domain_objects.get(b + REPORTED)
-    seq = (json.loads(prev).get("seq", 0) if prev else 0) + 1
+    try:
+        seq = (int(json.loads(prev).get("seq", 0)) if prev else 0) + 1
+    except (ValueError, TypeError, AttributeError):
+        seq = int(now * 1000)
     domain_objects.put(b + REPORTED, json.dumps({"ts": now, "seq": seq, "items": len(want)}).encode())   # last: the report is whole
     return written + 1
 
@@ -112,7 +119,10 @@ def report(member: str, member_vars, member_objects, domain_objects, now: float,
 def reported_at(member: str, domain_objects) -> float | None:
     """The time the member stamped its last report with — ITS clock. For how old the report is, ask the copy."""
     raw = domain_objects.get(base(member) + REPORTED)
-    return float(json.loads(raw)["ts"]) if raw else None
+    try:
+        return float(json.loads(raw)["ts"]) if raw else None
+    except (ValueError, TypeError, KeyError):
+        return None                                                  # a mark nobody can read says no time (the seventh review)
 
 
 class _Fresh:
@@ -127,10 +137,17 @@ class _Fresh:
         raw = self.store.get(self.base + REPORTED)
         if not raw:
             raise Unreachable(f"{self.member} has never reported to the domain")
-        mark, now = json.loads(raw), self.wall()
+        try:
+            mark, now = json.loads(raw), self.wall()
+            ts = float(mark["ts"])
+        except (ValueError, TypeError, KeyError) as e:
+            # Not a report the domain can read: as if the member had not reported (М10's seventh review) — it raised a
+            # `ValueError` out of every read of the member, which nothing above takes for a silent member.
+            raise Unreachable(f"{self.member}'s last report mark does not parse ({e}): the member writes it again "
+                              f"with its next report") from None
         if mark.get("seq") != self.seq:                              # a new report: seen now, by our clock
             self.seq, self.seen_at = mark.get("seq"), now
-            self.offset = now - float(mark["ts"])                    # our clock minus theirs, as of this report
+            self.offset = now - ts                                   # our clock minus theirs, as of this report
         age = now - self.seen_at
         if age > self.lost_after:
             raise Unreachable(f"{self.member} has not reported for {age:.0f} s")

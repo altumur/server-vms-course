@@ -29,7 +29,8 @@ import urllib.request
 
 from w2cplatform.access import token_of
 from w2cplatform.console import PAGE, ClaimLost, Mount, SpecConsole, heartbeats, holder_of, holders, path_id, send_file   # noqa: F401  (PAGE, send_file re-exported for М11)
-from w2cplatform.contract import slot_number
+from w2cplatform.contract import HEARTBEATS, slot_number
+from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Conflict
@@ -652,7 +653,12 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         rid = str(body.get("id") or key)
         if "/" in rid or rid in (".", "..") or len(rid) > 200:
             return 400, {"detail": "a request id is a name, not a path", "error": "bad id"}
-        until = float(body.get("valid_until") or now + 30)
+        # A deadline is a finite number of seconds (the review's seventh pass, M3): JSON's `NaN` and `Infinity` reached
+        # the row as `nan`/`inf`, and a holder performed such a command hours late. A word is refused here as well.
+        try:
+            until = finite(body.get("valid_until") or now + 30)
+        except (TypeError, ValueError):
+            return 400, {"detail": f"`valid_until` is a time in seconds, not {body.get('valid_until')!r}", "error": "bad deadline"}
         if until - now > 600:                                     # the holder refuses it (`VmsWorker.MAX_VALID`): say so at the door
             return 400, {"detail": "a command's `valid_until` is at most ten minutes away", "error": "too far"}
         row = {"unit": unit, "action": action, "at": str(now), "by": handler.headers.get("X-User", "operator"),
@@ -1049,6 +1055,30 @@ def spare_workers(rec_ctl: SpecController) -> list[str]:
     return sorted(out)
 
 
+# EVERY NUMBER A HEARTBEAT CARRIES ONTO THIS PAGE GOES THROUGH `_n` (the review's seventh pass, part 2): read bare —
+# `int(v)`, `float(archive_away_since)`, `round(h["sum"])` — one word in one field of one recorder raised, and the
+# subsystem's whole `/metrics` was gone, every alert with it; printed bare, a word made a line Prometheus refuses, and
+# a scrape with one such line is refused whole. A field that is a word, `nan` or `inf` is read as not said — 0, or the
+# line is left out — counted once per heartbeat and field (`rows.number`, `<sub>_console_rows_garbled{table="field"}`).
+def _n(sub: str, w: str, field: str, value, kind=float, default=0):
+    return number(f"{sub}/{HEARTBEATS}/{w}#{field}", value, kind, default)
+
+
+# One worker's histogram from its heartbeat — `{buckets: [...], count, sum}` — as Prometheus lines, or none at all when
+# any part of it is not numbers: half a histogram is a wrong one.
+def _histogram(metric: str, sub: str, w: str, field: str, h, les) -> list[str]:
+    try:
+        counts = [int(finite(b)) for b in h["buckets"]]
+        count, total = int(finite(h["count"])), finite(h["sum"])
+    except PARSE_ERRORS as e:
+        FIELDS.garbled(f"{sub}/{HEARTBEATS}/{w}#{field}", e)
+        return []
+    FIELDS.parsed(f"{sub}/{HEARTBEATS}/{w}#{field}")
+    return ([f'{metric}_bucket{{worker="{w}",le="{le:g}"}} {n}' for le, n in zip(les, counts)]
+            + [f'{metric}_bucket{{worker="{w}",le="+Inf"}} {count}', f'{metric}_sum{{worker="{w}"}} {round(total, 3)}',
+               f'{metric}_count{{worker="{w}"}} {count}'])
+
+
 def rec_metrics(rec_ctl: SpecController):
     def lines() -> list[str]:
         view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, rec_ctl.wall(), objects=rec_ctl.objects)
@@ -1080,8 +1110,8 @@ def rec_metrics(rec_ctl: SpecController):
 # was copied as nothing, pass after pass, while `rec_keeps_unprotected` said 0 and the ring came for the minutes. The
 # largest any live recorder reports, per keep; none while every keep is whole.
 def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str]:
-    now, worst = rec_ctl.wall(), {}
-    for hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).values():
+    now, worst, sub = rec_ctl.wall(), {}, rec_ctl.spec.sub.name
+    for w, hb in heartbeats(rec_ctl.objects, sub).items():
         if now - hb.ts > lost_after:
             continue
         missing = hb.extra.get("keep_missing") or {}
@@ -1091,7 +1121,7 @@ def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str
             except ValueError:
                 missing = {}
         for keep, s in (missing.items() if isinstance(missing, dict) else ()):
-            worst[str(keep)] = max(worst.get(str(keep), 0.0), float(s or 0))
+            worst[str(keep)] = max(worst.get(str(keep), 0.0), _n(sub, w, f"keep_missing.{keep}", s))
     return ["# TYPE rec_keep_missing_seconds gauge"] + [f'rec_keep_missing_seconds{{keep="{k}"}} {round(s, 1)}'
                                                           for k, s in sorted(worst.items()) if s > 0]
 
@@ -1100,7 +1130,8 @@ def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str
 # nothing assigned both showed "0 running"; a volume that would not open, a writer that stalled, an archive that
 # went away were in the heartbeat and on the page, and there was nothing to put an alert on.
 def _recorders(rec_ctl: SpecController) -> list[str]:
-    hbs = sorted(heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items())
+    sub = rec_ctl.spec.sub.name
+    hbs = sorted(heartbeats(rec_ctl.objects, sub).items())
     now = rec_ctl.wall()
     out = ["# TYPE rec_recordings gauge"]
     for w, hb in hbs:
@@ -1111,9 +1142,8 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_volume_error gauge")
     out += [f'rec_volume_error{{worker="{w}"}} {1 if hb.extra.get("volume_error") else 0}' for w, hb in hbs]
     out.append("# TYPE rec_archive_away_seconds gauge")
-    out += [f'rec_archive_away_seconds{{worker="{w}"}} '
-            f'{round(now - float(hb.extra["archive_away_since"]), 1) if float(hb.extra.get("archive_away_since") or 0) else 0}'
-            for w, hb in hbs]
+    away = {w: _n(sub, w, "archive_away_since", hb.extra.get("archive_away_since") or None) for w, hb in hbs}
+    out += [f'rec_archive_away_seconds{{worker="{w}"}} {round(now - away[w], 1) if away[w] else 0}' for w, hb in hbs]
     # Why the volume stopped taking samples, by kind: `away` (the daemon, a network — waited for) or `wrong` (a
     # person has to act — the volume is handed back). One line per recorder that has a failure, none otherwise.
     out.append("# TYPE rec_archive_failure gauge")
@@ -1126,22 +1156,25 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     # being FED. Counted from the moment the recorder says bytes last arrived — so a recorder that went silent
     # grows here too — and only for recorders whose actuator measures.
     out.append("# TYPE rec_last_frame_age_seconds gauge")
-    out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
-            for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
+    out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - at), 1)}'
+            for w, hb in hbs for st in hb.status if st.get("last_frame_at")
+            if (at := _n(sub, w, str(st.get("id")) + ".last_frame_at", st["last_frame_at"], float, None)) is not None]
     # What the engine refused of each recording's samples, by its answer (the review's third pass). The writer watch
     # counts the VOLUME, and one camera of thirty that was never written — its group of pictures larger than a block
     # — left it `ok`. A counter per recording and answer, from what the recorder's sinks were told.
     out.append("# TYPE rec_samples_refused_total counter")
-    out += [f'rec_samples_refused_total{{unit="{st["id"]}",status="{k}"}} {n}' for w, hb in hbs for st in hb.status
-            for k, n in sorted((st.get("samples_refused") or {}).items())]
+    out += [f'rec_samples_refused_total{{unit="{st["id"]}",status="{k}"}} {_n(sub, w, str(st.get("id")) + ".samples_refused." + str(k), n, int)}'
+            for w, hb in hbs for st in hb.status
+            for k, n in sorted((st.get("samples_refused") if isinstance(st.get("samples_refused"), dict) else {}).items())]
     # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")
-    out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {st["depth_days"]}' for w, hb in hbs for st in hb.status if "depth_days" in st]
+    out += [f'rec_archive_depth_days{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".depth_days", st["depth_days"])}'
+            for w, hb in hbs for st in hb.status if "depth_days" in st]
     out.append("# TYPE rec_archive_shallow gauge")
     out += [f'rec_archive_shallow{{unit="{st["id"]}"}} {1 if st.get("shallow") else 0}' for w, hb in hbs for st in hb.status if "depth_days" in st]
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
-    out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {st["unconfirmed_s"]}'
+    out += [f'rec_unconfirmed_seconds{{unit="{st["id"]}"}} {_n(sub, w, str(st.get("id")) + ".unconfirmed_s", st.get("unconfirmed_s"))}'
             for w, hb in hbs for st in hb.status if st.get("lease") == "unconfirmed"]
     return out
 
@@ -1152,11 +1185,13 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
 def vms_metrics(ctl):
     def lines() -> list[str]:
         total = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
-        hbs = heartbeats(ctl.objects, ctl.spec.sub.name)
-        for hb in hbs.values():
-            for k, v in (hb.extra.get("command_counts") or {}).items():
+        sub = ctl.spec.sub.name
+        hbs = heartbeats(ctl.objects, sub)
+        for w, hb in hbs.items():
+            counts = hb.extra.get("command_counts")
+            for k, v in (counts.items() if isinstance(counts, dict) else ()):
                 if k in total:
-                    total[k] += int(v)
+                    total[k] += _n(sub, w, f"command_counts.{k}", v, int)
         # The road to the device, where it ends (`VmsWorker._measure`), per holder, since it started. Two histograms
         # for two clocks: `vms_event_to_device_seconds` from the event's moment to the call — the whole road, as
         # true as the writer's clock and the holder's agree (`…_skewed_total`: the times they did not); and
@@ -1166,17 +1201,11 @@ def vms_metrics(ctl):
         for metric, key in (("vms_event_to_device_seconds", "command_road"), ("vms_request_to_device_seconds", "command_wait")):
             road.append(f"# TYPE {metric} histogram")
             for w, hb in sorted(hbs.items()):
-                h = hb.extra.get(key)
-                if not h:
-                    continue
-                for le, n in zip(VmsWorker.ROAD_BUCKETS, h["buckets"]):
-                    road.append(f'{metric}_bucket{{worker="{w}",le="{le:g}"}} {n}')
-                road.append(f'{metric}_bucket{{worker="{w}",le="+Inf"}} {h["count"]}')
-                road.append(f'{metric}_sum{{worker="{w}"}} {round(h["sum"], 3)}')
-                road.append(f'{metric}_count{{worker="{w}"}} {h["count"]}')
+                if hb.extra.get(key):
+                    road += _histogram(metric, sub, w, key, hb.extra[key], VmsWorker.ROAD_BUCKETS)
         road.append("# TYPE vms_event_to_device_skewed_total counter")
-        road += [f'vms_event_to_device_skewed_total{{worker="{w}"}} {hb.extra["command_road"].get("skewed", 0)}'
-                 for w, hb in sorted(hbs.items()) if hb.extra.get("command_road")]
+        road += [f'vms_event_to_device_skewed_total{{worker="{w}"}} {_n(sub, w, "command_road.skewed", hb.extra["command_road"].get("skewed"), int)}'
+                 for w, hb in sorted(hbs.items()) if isinstance(hb.extra.get("command_road"), dict)]
         # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
         # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
         # loop is late (the review's second pass).
@@ -1196,27 +1225,23 @@ def auto_metrics(auto_ctl):
         names = (("pass_seconds", "auto_pass_seconds"), ("queries", "auto_queries_per_pass"),
                  ("lag_seconds", "auto_cursor_lag_seconds"), ("latency_seconds", "auto_firing_latency_seconds"))
         out = []
-        hbs = heartbeats(auto_ctl.objects, auto_ctl.spec.sub.name)
+        sub = auto_ctl.spec.sub.name
+        hbs = heartbeats(auto_ctl.objects, sub)
+        said = lambda w, hb, key: _n(sub, w, key, hb.extra[key])             # a word in one field is not the page's end
         for key, metric in names:
             out.append(f"# TYPE {metric} gauge")
-            out += [f'{metric}{{worker="{w}"}} {hb.extra[key]}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+            out += [f'{metric}{{worker="{w}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
         # Counted since each evaluator started, so a scrape misses nothing that happened between two of them:
         # the road from an event to its request as a histogram, and the firings too late to file.
         from vms.autoworker import AutoWorker
         out.append("# TYPE auto_event_to_request_seconds histogram")
         for w, hb in sorted(hbs.items()):
-            lat = hb.extra.get("latency")
-            if not lat:
-                continue
-            for le, n in zip(AutoWorker.LATENCY_BUCKETS, lat["buckets"]):
-                out.append(f'auto_event_to_request_seconds_bucket{{worker="{w}",le="{le:g}"}} {n}')
-            out.append(f'auto_event_to_request_seconds_bucket{{worker="{w}",le="+Inf"}} {lat["count"]}')
-            out.append(f'auto_event_to_request_seconds_sum{{worker="{w}"}} {round(lat["sum"], 3)}')
-            out.append(f'auto_event_to_request_seconds_count{{worker="{w}"}} {lat["count"]}')
+            if hb.extra.get("latency"):
+                out += _histogram("auto_event_to_request_seconds", sub, w, "latency", hb.extra["latency"], AutoWorker.LATENCY_BUCKETS)
         out.append("# TYPE auto_fired_late_total counter")
-        out += [f'auto_fired_late_total{{worker="{w}"}} {hb.extra["late"]}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
+        out += [f'auto_fired_late_total{{worker="{w}"}} {said(w, hb, "late")}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
         out.append("# TYPE auto_firings_suppressed_total counter")     # refused by a scenario's own ceiling
-        out += [f'auto_firings_suppressed_total{{worker="{w}"}} {hb.extra["suppressed"]}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
+        out += [f'auto_firings_suppressed_total{{worker="{w}"}} {said(w, hb, "suppressed")}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
         # The long poll of the resources (`AutoWorker.long_poll_stats`), per evaluator, since it started: requests it
         # opened, those answered "a watched event was written", passes begun early for them, and requests that
         # failed or were refused. A wait that fails breaks nothing — the pass still comes — so these are where it
@@ -1224,7 +1249,7 @@ def auto_metrics(auto_ctl):
         for key, metric in (("waits", "auto_waits_total"), ("woken", "auto_woken_total"),
                             ("early_passes", "auto_early_passes_total"), ("wait_errors", "auto_wait_errors_total")):
             out.append(f"# TYPE {metric} counter")
-            out += [f'{metric}{{worker="{w}"}} {hb.extra[key]}' for w, hb in sorted(hbs.items()) if key in hb.extra]
+            out += [f'{metric}{{worker="{w}"}} {said(w, hb, key)}' for w, hb in sorted(hbs.items()) if key in hb.extra]
         return out
     return lines
 
@@ -1238,7 +1263,7 @@ def auto_metrics(auto_ctl):
 # `archive_quota` when the held volume IS the box's own (`archive`, whose size that field has always been). A volume
 # no live recorder holds has no `size_bytes`: nobody can say.
 def as_held(rec_ctl: SpecController, vol: dict, now: float, lost_after: float = 45.0) -> dict:
-    for hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).values():
+    for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items():
         x = hb.extra
         if str(x.get("volume") or "") != vol["name"] or now - hb.ts > lost_after:
             continue
@@ -1248,7 +1273,8 @@ def as_held(rec_ctl: SpecController, vol: dict, now: float, lost_after: float = 
             return {"card": {k: x["card"][k] for k in ("state", "segments", "bytes", "budget", "error") if k in x["card"]}}
         size = x.get("volume_quota") or (x.get("archive_quota") if x.get("archive") and x.get("archive") == vol.get("url") else None)
         note = str(x.get("quota_note") or "")
-        return {**({"size_bytes": int(size)} if size else {}),
+        size = _n(rec_ctl.spec.sub.name, w, "volume_quota", size, int, None)   # a word in a heartbeat is not a size
+        return {**({"size_bytes": size} if size else {}),
                 "shrink_pending": bool(x.get("shrink_pending") or note), **({"quota_note": note} if note else {})}
     return {}
 
@@ -1298,7 +1324,7 @@ def rec_routes(rec_ctl: SpecController):
             return 201, {"keep": k.shown()}
         if method == "DELETE" and path.startswith("/keeps/"):
             id_ = path_id(path)
-            if not any(k.id == id_ for k in keeps.declared(rec_ctl.vars)):
+            if not rec_ctl.vars.get(keeps.key(id_))[0]:     # a row that does not parse is a keep too: it can be lifted (the seventh pass)
                 return 404, {"detail": f"no keep {id_}", "error": "no such keep"}
             keeps.delete(rec_ctl.vars, id_)
             said("archive.keep.lifted", handler, keep=id_)
@@ -1344,7 +1370,8 @@ def rec_routes(rec_ctl: SpecController):
             return 201, out
         if method == "DELETE" and path.startswith("/volumes/"):
             name = path_id(path)
-            if not any(v.name == name for v in volumes.declared(rec_ctl.vars)):
+            unread: set = set()                        # a row that does not parse is a declaration too: the page says to delete it
+            if not any(v.name == name for v in volumes.declared(rec_ctl.vars, unread)) and name not in unread:
                 return 404, {"detail": f"no volume {name}", "error": "no such volume"}
             # The row goes; the recorder holding it finds out on its next pass, stops what it was writing
             # there and takes something else. The FOOTAGE is not touched — deleting the declaration is not
@@ -1385,7 +1412,10 @@ def job_cams(vars_):
 # for a card that does not say whose it is — a row from before cards named their camera: only a grant on the whole
 # cluster covers it. None for every other kind of volume: a disk or a bucket is the cluster's, no camera's.
 def volume_cam(vars_, name: str) -> str | None:
-    vol = volumes.volume_named(vars_, str(name)) if name else None
+    try:
+        vol = volumes.volume_named(vars_, str(name)) if name else None
+    except volumes.Unreadable:
+        return "*"                                     # a row nobody can read may be a card: only the whole cluster's grant covers it (the seventh pass)
     if vol is None or vol.kind != "edge":
         return None
     return vol.cam or "*"

@@ -469,26 +469,37 @@ def _requests_loop(rec_ctl=None, det_ctl=None, job_ctl=None, every: float = 2.0)
     import time
     from .jobs import detect_on_request, expire, expire_recordings, record_on_request
     while not stop.is_set():
+        # Each end in a try of its own (the review's seventh pass, M2): the requests and the expiry shared one, so a
+        # request the first could not turn into work kept the second from ending anything — a recording asked for
+        # ten minutes went on for as long as the request stood.
         if rec_ctl is not None:
             try:
                 started = record_on_request(rec_ctl, time.time())
-                ended = expire_recordings(rec_ctl, time.time())
-                if started or ended:
-                    logging.info("%s: %d recording(s) started on request, %d ended", rec_ctl.spec.name, started, ended)
+                if started:
+                    logging.info("%s: %d recording(s) started on request", rec_ctl.spec.name, started)
             except Exception:                         # noqa: BLE001
-                logging.exception("timed recordings failed — a scenario's minutes may not have started, "
-                                  "or a finished one is still recording")
+                logging.exception("recordings on request failed — a scenario's minutes may not have started")
+            try:
+                ended = expire_recordings(rec_ctl, time.time())
+                if ended:
+                    logging.info("%s: %d recording(s) on request ended", rec_ctl.spec.name, ended)
+            except Exception:                         # noqa: BLE001
+                logging.exception("ending timed recordings failed — a finished one may still be recording")
         if det_ctl is not None and rec_ctl is not None and job_ctl is not None:
             # The detectors' family, the same two ends: a request becomes a detector with an end, or a scan
             # job of `job_ctl`; a detector whose `until` passed is deleted.
             try:
                 made = detect_on_request(det_ctl, job_ctl, rec_ctl, time.time())
-                ended = expire(det_ctl, time.time())
-                if made or ended:
-                    logging.info("%s: %d asked for by scenarios, %d detector(s) ended", det_ctl.spec.name, made, ended)
+                if made:
+                    logging.info("%s: %d asked for by scenarios", det_ctl.spec.name, made)
             except Exception:                         # noqa: BLE001
-                logging.exception("detector requests failed — a scenario's detection may not have started, "
-                                  "or a finished one is still running")
+                logging.exception("detector requests failed — a scenario's detection may not have started")
+            try:
+                ended = expire(det_ctl, time.time())
+                if ended:
+                    logging.info("%s: %d detector(s) on request ended", det_ctl.spec.name, ended)
+            except Exception:                         # noqa: BLE001
+                logging.exception("ending timed detectors failed — a finished one may still be running")
         stop.wait(every)
 
 

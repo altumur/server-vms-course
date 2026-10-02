@@ -100,6 +100,7 @@ from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
 from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
+from w2cplatform.rows import finite
 from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
@@ -1097,8 +1098,12 @@ class VmsWorker(Worker):
             # to ANY device of this holder was performed behind it: a `valid_until` that is not a number (which never
             # reaches the check that expires it), and, below, the epoch of a unit held without a lease, when its row
             # `<sub>/epoch/<unit>` does not parse. Each is a refusal now, answered like the others here.
+            #
+            # …and `nan`, `inf` are not a time either (the review's seventh pass, M3): `float("nan")` passed all three
+            # checks below — every comparison with it is false — and a holder that came up three hours later performed
+            # the command. `finite` refuses them with the words.
             try:
-                until = float(it.get("valid_until", 0) or 0)
+                until = finite(it.get("valid_until", 0) or 0)
             except (TypeError, ValueError):
                 self._refused(rid, row, it, f"`valid_until` is not a time: {it.get('valid_until')!r}", done)
                 continue
@@ -1622,17 +1627,27 @@ class VmsWorker(Worker):
             # heartbeating (called dead at 45 s), and an outage it could have waited out ended the recording
             # instead. A pass that failed is a pass to retry; the process that ran it still holds
             # its units, and saying so is not something a failure elsewhere gets to switch off.
+            #
+            # …and the two in a try EACH (the review's seventh pass, part 2, blocker 1). The comment above promised it
+            # and the code had one `try` for both: one volume row with a word for its size raised out of the
+            # recorder's lease step, and the heartbeat after it never went — every recorder of the cluster dead to the
+            # controller at 45 s, the holds of network volumes unconfirmed, the engine's fence refusing every frame. A
+            # lease step that raised is retried on the next turn (`last_lease` stays); the heartbeat goes regardless.
             try:
                 if self.clock() - last_lease >= lease_every:
                     with self.guarded("lease"):
                         self.lease_pass()
                     last_lease = self.clock()
+            except Exception:                              # noqa: BLE001
+                self.pass_failures += 1
+                log.exception("%s: the lease step failed; will retry, and the heartbeat goes all the same", self.name)
+            try:
                 if self.clock() - last_hb >= 10.0:
                     with self.guarded("heartbeat"):
                         self.heartbeat_once()
                     last_hb = self.clock()
             except Exception:                              # noqa: BLE001
-                log.exception("%s: lease or heartbeat failed; will retry", self.name)
+                log.exception("%s: heartbeat failed; will retry", self.name)
             self.between(poll, stop, beat)                 # `stop.wait(poll)`, with a look at the requests every `beat`
         stand_in.set()
         self.before_stop_all()

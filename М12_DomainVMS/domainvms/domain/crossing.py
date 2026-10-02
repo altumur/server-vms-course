@@ -48,7 +48,8 @@ from cluster.variables import Conflict
 from vms.archive import subtract
 
 from .agent import POLL_PATH, PRIMARIES_PATH, SOURCES_PATH
-from .federation import Unreachable
+from .federation import Unreachable, a_heartbeat, published
+from w2cplatform.rows import PARSE_ERRORS
 from .tokens import kid_of
 from .api import ApiError
 
@@ -204,8 +205,8 @@ class Crossings:
             try:
                 keys = c.objects.list("rec/snapshot/")
                 for key in keys:
-                    raw = c.objects.get(key)
-                    for r in (json.loads(raw).get("recordings", []) if raw else []):
+                    shard = published(name, key, c.objects.get(key), _recordings) or {}   # one torn shard is that shard's
+                    for r in shard.get("recordings", []):
                         if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") == "offline":
                             return name, str(r.get("name") or r.get("id"))
             except Unreachable:
@@ -220,8 +221,7 @@ class Crossings:
         try:
             keys = c.objects.list("rec/heartbeats/") if c is not None else []
             for key in keys:
-                raw = c.objects.get(key)
-                hb = json.loads(raw) if raw else {}
+                hb = published(cluster, key, c.objects.get(key), a_heartbeat) or {}    # …and one recorder's heartbeat, its
                 if not hb.get("archive_url") or now - float(hb.get("ts", 0)) > lost_after:
                     continue
                 for st in hb.get("status", []):
@@ -279,7 +279,7 @@ class Crossings:
                 continue
             entry = self._primary(ref, on, now, lost_after)
             have, _ = self.vars.get(f"{PRIMARIES_PATH}/{known[0]}")
-            was = json.loads((have or {}).get(ref, "{}"))
+            was = _entry((have or {}).get(ref), {})          # an entry nobody can read: as if there were none
             ingest = self._ingest(ref, on, known[0], now, was.get("ingest"))
             if ingest:
                 entry["ingest"] = ingest
@@ -307,14 +307,13 @@ class Crossings:
                 raise Unreachable(on)
             rows = []
             for key in c.objects.list("rec/snapshot/"):
-                raw = c.objects.get(key)
-                rows += [r for r in (json.loads(raw).get("recordings", []) if raw else [])
+                shard = published(on, key, c.objects.get(key), _recordings) or {}
+                rows += [r for r in shard.get("recordings", [])
                          if str(r.get("cam")) == f"ref:{ref}" and str(r.get("when") or "") != "offline"]
             names = sorted(str(r.get("name") or r.get("id")) for r in rows)
             running, named = set(), set()
             for key in c.objects.list("rec/heartbeats/"):
-                raw = c.objects.get(key)
-                hb = json.loads(raw) if raw else None
+                hb = published(on, key, c.objects.get(key), a_heartbeat)
                 if not hb:
                     continue
                 named |= {str(st.get("id")) for st in hb.get("status", [])}          # fresh or not: it knew of it
@@ -322,7 +321,7 @@ class Crossings:
                     running |= {str(st.get("id")) for st in hb.get("status", []) if st.get("phase") == "running"}
         except Unreachable:
             return entry
-        until_ok = lambda r: float(r.get("until") or 0) == 0 or float(r.get("until") or 0) > now
+        until_ok = lambda r: _until(r) == 0 or _until(r) > now      # an `until` nobody can read: no end known (`_until`)
         should = any(bool(r.get("enabled", True)) and until_ok(r) for r in rows)
         return {**entry, "recording": ",".join(names), "should": should,
                 "written": any(n in running for n in names),
@@ -345,8 +344,11 @@ class Crossings:
             raw = None
         if raw is None:
             return old                                   # the recording cluster is silent: keep what the camera has
-        urls = json.loads(raw)["urls"]
-        if old and old.get("urls") == urls and float(old["until"]) - now > self.token_lifetime / 2 \
+        announced = published(on, INGEST, raw, lambda v: list(v["urls"]))
+        if announced is None:
+            return old                                   # …and one whose announcement does not parse, the same (the seventh review)
+        urls = announced["urls"]
+        if old and old.get("urls") == urls and _until(old) - now > self.token_lifetime / 2 \
                 and kid_of(old.get("token", "")) == self.issuer.kid:
             return old
         token = self.issuer.issue(home, self.token_lifetime, now=now, aud=audience(on), ref=ref, kind="stream")
@@ -365,7 +367,7 @@ class Crossings:
             if on is None:
                 continue
             have, _ = self.vars.get(f"{POLL_PATH}/{home}")
-            old = json.loads((have or {}).get(ref, "null"))
+            old = _entry((have or {}).get(ref), None)
             ingest = self._ingest(ref, on, home, now, old)
             if ingest:
                 books.setdefault(home, {})[ref] = json.dumps({**ingest, "cluster": on}, sort_keys=True)
@@ -416,7 +418,7 @@ class Crossings:
 
     def _remembered_push(self, ref: str, on: str, cam_nets, rec_nets) -> str | None:
         items, idx = self.vars.get(ROADS)
-        mem = json.loads((items or {}).get(ref, "null"))
+        mem = _entry((items or {}).get(ref), None)
         if not mem:
             return None
         if mem.get("on") == on and mem.get("nets") == self._nets_mark(cam_nets, rec_nets):
@@ -438,9 +440,8 @@ class Crossings:
         try:
             keys = c.objects.list("rec/heartbeats/") if c is not None else []
             for key in keys:
-                raw = c.objects.get(key)
-                hb = json.loads(raw) if raw else {}
-                if self.wall() - float(hb.get("ts", 0)) > lost_after:
+                hb = published(on, key, c.objects.get(key), a_heartbeat) or {}
+                if not hb or self.wall() - float(hb.get("ts", 0)) > lost_after:
                     continue
                 for st in hb.get("status", []):
                     if str(st.get("cam")) == f"ref:{ref}" and st.get("source_unreachable"):
@@ -582,9 +583,8 @@ def neighbour_writes(objects, recording: str, now: float, lost_after: float = 45
     """Whether the primary's recorder, read through its server's door, says the recording is running."""
     try:
         for key in objects.list("rec/heartbeats/"):
-            raw = objects.get(key)
-            hb = json.loads(raw) if raw else {}
-            if now - float(hb.get("ts", 0)) > lost_after:
+            hb = published("neighbour", key, objects.get(key), a_heartbeat) or {}   # one torn heartbeat says nothing
+            if not hb or now - float(hb.get("ts", 0)) > lost_after:
                 continue
             if any(str(st.get("id")) == recording and st.get("phase") == "running" for st in hb.get("status", [])):
                 return True
@@ -600,8 +600,10 @@ def camera_taken(door_objects, serial: str, me: str) -> bool | None:
         raw = door_objects.get(f"vms/heartbeats/{serial}")
     except Unreachable:
         return None
-    hb = json.loads(raw) if raw else {}
-    return any(t != me for t in hb.get("taken_by", []))
+    hb = published("camera", f"vms/heartbeats/{serial}", raw, lambda v: list(v.get("taken_by", [])), None)
+    if raw and hb is None:
+        return None                                      # what the camera said cannot be read: nothing known, change nothing
+    return any(t != me for t in (hb or {}).get("taken_by", []))
 
 
 class ColdStandby:
@@ -634,3 +636,29 @@ class ColdStandby:
                 return "closed: the primary writes again"
             return "pulling: the overlap"
         return "cold: the primary writes"
+
+
+# -- what the books read of others, one entry at a time (М10's seventh review, part 2) ----------------------------------
+def _recordings(shard: dict) -> None:
+    """A rec snapshot shard: its `recordings` are objects."""
+    if not all(isinstance(r, dict) for r in shard.get("recordings", [])):
+        raise TypeError("a recording row is not an object")
+
+
+def _entry(raw, default):
+    """One entry of a book this domain wrote itself (a JSON string in a row), or `default` when it does not parse."""
+    if raw is None:
+        return default
+    try:
+        return json.loads(raw)
+    except PARSE_ERRORS:
+        return default
+
+
+def _until(r: dict) -> float:
+    """A row's `until` as a number: 0 — no end — when it is not one."""
+    try:
+        from w2cplatform.rows import finite
+        return finite(r.get("until") or 0)
+    except PARSE_ERRORS:
+        return 0.0

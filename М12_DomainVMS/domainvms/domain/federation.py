@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 
 from cluster.objectstore import ObjectStore
 from cluster.variables import Variables
+from w2cplatform.rows import Table, finite
 
 SNAPSHOT = "vms/snapshot/"           # a PREFIX: one object per worker, the shape the heartbeats already have
 HEARTBEATS = "vms/heartbeats/"        # its sibling: the workers' own reports, one object each
@@ -43,6 +44,43 @@ REACHES = "domain/reaches"
 class Unreachable(Exception):
     """The region did not answer. Raised by a cluster's Variables/objects
     when the link is down; the fakes raise it on demand."""
+
+
+# ONE OBJECT A MEMBER PUBLISHED THAT DOES NOT PARSE IS THAT OBJECT'S TROUBLE (М10's seventh review, part 2). The domain
+# read every member's heartbeats, snapshot shards, recorders' heartbeats and books with a bare `json.loads` and bare
+# numbers: one torn object raised out of the read view's pass — every cluster's time froze, `/api/cameras` and
+# `DomainDirectory.where` failed, and the console's loop swallowed it without a word. Every such read goes through
+# `published` now, the platform's one reader of rows (`w2cplatform.rows`): the object is skipped, counted once per
+# `<cluster>/<key>` until it parses again (`MEMBER_OBJECTS`), logged once, and what reads it decides what "skipped"
+# means — a shard nobody can read makes the cluster's copy the oldest there can be; a heartbeat, a worker not seen.
+MEMBER_OBJECTS = Table("member_object", "skipped — the rest of what the member published is read", "published object")
+
+
+def _a_dict(v) -> dict:
+    if not isinstance(v, dict):
+        raise TypeError(f"not an object: {type(v).__name__}")
+    return v
+
+
+def published(cluster: str, key: str, raw, check=None, default=None):
+    """The JSON of one object `cluster` published under `key`, or `default` when there is none or it does not parse —
+    or does not pass `check` (which raises a parse error for the wrong shape): counted once, logged once."""
+    if not raw:
+        return default
+
+    def parse():
+        v = _a_dict(json.loads(raw))
+        if check is not None:
+            check(v)
+        return v
+    return MEMBER_OBJECTS.read(f"{cluster}/{key}", parse, default)
+
+
+def a_heartbeat(hb: dict) -> None:
+    """The shape every reader of a worker's heartbeat relies on: a finite `ts`, a list of status entries."""
+    finite(hb.get("ts", 0))
+    if not all(isinstance(st, dict) for st in hb.get("status", [])):
+        raise TypeError("a status entry is not an object")
 
 
 @dataclass
@@ -82,7 +120,10 @@ class Cluster:
             raw = self.objects.get(key)
             if not raw:
                 continue
-            shard = json.loads(raw)
+            shard = published(self.name, key, raw, _a_shard)
+            if shard is None:
+                oldest = 0.0                       # a shard nobody can read has no age: the copy is as old as can be
+                continue
             ts = float(shard.get("ts", 0))
             oldest = ts if oldest is None else min(oldest, ts)
             for row in shard.get("cameras", []):
@@ -100,11 +141,17 @@ class Cluster:
         was the price of a key layout that put every worker's name at the top."""
         out = {}
         for key in self.objects.list(HEARTBEATS):
-            raw = self.objects.get(key)
-            if raw:
-                hb = json.loads(raw)
+            hb = published(self.name, key, self.objects.get(key), lambda hb: (str(hb["worker"]), a_heartbeat(hb)))
+            if hb is not None:
                 out[hb["worker"]] = hb
         return out
+
+
+def _a_shard(shard: dict) -> None:
+    """A snapshot shard: a finite `ts`, and its cameras rows (objects) — what `snapshot` and its readers rely on."""
+    finite(shard.get("ts", 0))
+    if not all(isinstance(r, dict) for r in shard.get("cameras", [])):
+        raise TypeError("a camera row is not an object")
 
 
 @dataclass
@@ -187,7 +234,7 @@ class DomainDirectory:
         for cl, snap in scan.items():
             out[cl] = {}
             for row in snap.get("cameras", []):
-                out[cl].setdefault(row.get("worker") or "(unplaced)", []).append(row.get("ref") or f"{cl}/{row['id']}")
+                out[cl].setdefault(row.get("worker") or "(unplaced)", []).append(row.get("ref") or f"{cl}/{row.get('id')}")
         return out, down
 
     def ages(self) -> dict[str, float]:

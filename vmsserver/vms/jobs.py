@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import time
 
+from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import Refused, SpecController
 
 TERMINAL = ("done", "failed")
@@ -47,6 +48,28 @@ expired: dict[str, int] = {"rec": 0, "det": 0}
 
 def _expired(sub: str) -> None:
     expired[sub] = expired.get(sub, 0) + 1
+
+
+# ONE REQUEST ROW THAT DOES NOT PARSE IS THAT REQUEST'S (the review's seventh pass, M2). `valid_until: "soon"` in one
+# `rec/requests/*` row raised out of `record_on_request`, before the rows after it: for seventy-five minutes no
+# recording was made on request for anybody and no finished one was ended (`expire_recordings` shared the call). The
+# same in `detect_on_request`. A request whose deadline or numbers are not numbers — or are `nan`, `inf` — cannot be
+# performed: nobody can say whether it is still meant. It is REFUSED, as a request that asks for nothing is: logged
+# once, counted once (`REQUESTS`, `<sub>_console_rows_garbled{table="request"}` on `/metrics`) and cleared — a request
+# is a moment's ask, not configuration, and one left standing would be refused again on every turn of the loop.
+REQUESTS = Table("request", "refused and cleared: a request nobody can read cannot be performed")
+
+
+def _deadline(it: dict) -> float:
+    """A request's `valid_until`, 0 when it has none; a `ValueError` when it is not a finite number."""
+    return finite(it.get("valid_until", 0) or 0)
+
+
+# A number a heartbeat carries into one of these loops — `closed`, `hits`, a job's `from`/`to` in its status: read
+# through `rows.number`, so one word in one recorder's heartbeat is that span's trouble, counted once (the review's
+# seventh pass, part 2: one `closed: "7|then|now"` and no scan over arrived footage was made for any recorder).
+def _hb_key(ctl, worker: str, field: str) -> str:
+    return f"{ctl.sub.heartbeat_key(worker)}#{field}"
 
 
 # The camera a recording NAME belongs to: its row's `cam` — alive, or a tombstone, which keeps it (`SpecController.
@@ -111,14 +134,18 @@ def record_on_request(rec_ctl, now: float) -> int:
         if not it or str(it.get("action", "")) != "record":
             continue                                        # a backfill: the recorder's, not ours
         rid = key.rsplit("/", 1)[1]
-        until = float(it.get("valid_until", 0) or 0)
+        try:
+            until, minutes = _deadline(it), finite(it.get("minutes", 0) or 0)
+        except PARSE_ERRORS as e:
+            REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
+            rec_ctl.vars.delete(key)
+            continue
         if until and now > until:
             rec_ctl.vars.delete(key)                        # asked for too late to mean what it meant
             _expired(rec_ctl.spec.name)
             log.warning("%s: %s expired before it was turned into a recording", rec_ctl.spec.name, rid)
             continue
         cam = str(it.get("cam") or it.get("unit") or "")
-        minutes = float(it.get("minutes", 0) or 0)
         if not cam or minutes <= 0:
             rec_ctl.vars.delete(key)
             log.warning("%s: %s asks to record nothing: %s", rec_ctl.spec.name, rid, it)
@@ -132,7 +159,7 @@ def record_on_request(rec_ctl, now: float) -> int:
                     fields["home"] = str(it["archive"])
                 rec_ctl.create(fields)
                 started += 1
-            elif float(row.get("until") or 0) < ends:
+            elif number(f"{rec_ctl.sub.config(rec_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
                 rec_ctl.update(name, {"until": ends})       # keep recording, not record twice
                 started += 1
         except Refused as e:                                # a refusal is an answer, and it is ours to log
@@ -156,10 +183,13 @@ def record_on_request(rec_ctl, now: float) -> int:
 #
 # Any subsystem whose row has an `until` ends the same way — a detector asked for ten minutes too
 # (`detect_on_request`) — so the function is the field's, not the recorder's.
+#
+# A row's `until` that is not a finite number is that row's (the seventh pass): skipped, counted (`rows.number`), and
+# the rows after it still end — it raised out of here, and with it every recording due to end stayed recording.
 def expire(ctl, now: float) -> int:
     gone = 0
     for row in ctl.units():
-        until = float(row.get("until") or 0)
+        until = number(f"{ctl.sub.config(ctl.spec.rows, str(row['id']))}#until", row.get("until") or 0)
         if until and now > until:
             ctl.delete(row["id"])
             gone += 1
@@ -202,7 +232,12 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
         if not it:
             continue
         action = str(it.get("action", ""))
-        until = float(it.get("valid_until", 0) or 0)
+        try:
+            until = _deadline(it)
+        except PARSE_ERRORS as e:
+            REQUESTS.garbled(key, e)                        # refused, cleared: counted and said once
+            det_ctl.vars.delete(key)
+            continue
         if until and now > until:
             det_ctl.vars.delete(key)                        # asked for too late to mean what it meant
             _expired(det_ctl.spec.name)
@@ -217,6 +252,10 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
                 _scan(job_ctl, rec_ctl, cam, kind, it, same, now)
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused: %s", det_ctl.spec.name, rid, e)
+        except PARSE_ERRORS as e:
+            # …and so is a request whose numbers are not numbers (`minutes`, `at`, `before`, `after`): it was "not an
+            # answer" below, so it stood and was tried — and failed — every two seconds for ever (the seventh pass).
+            REQUESTS.garbled(key, e)
         except Exception as e:                              # noqa: BLE001 — not an answer: stays, and is tried again
             log.warning("%s: %s could not be turned into work this pass: %s", det_ctl.spec.name, rid, e)
             continue
@@ -240,12 +279,12 @@ def _settings(det_ctl, cam: str, kind: str, it: dict) -> dict:
 
 
 def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:
-    minutes = float(it.get("minutes", 0) or 0)
+    minutes = finite(it.get("minutes", 0) or 0)
     if minutes <= 0:
         raise Refused(f"detect asks for no minutes: {dict(it)}")
     for d in det_ctl.units():
         if str(d.get("cam")) == cam and str(d.get("kind")) == kind and d.get("enabled", True) \
-                and not float(d.get("until") or 0):
+                and not number(f"{det_ctl.sub.config(det_ctl.spec.rows, str(d['id']))}#until", d.get("until") or 0):
             log.info("%s: camera %s is watched for %s already (%s) — nothing to start", det_ctl.spec.name, cam, kind, d["id"])
             return 0
     name, ends = f"{cam}-{kind}{DETECT_KEY}", now + minutes * 60
@@ -253,16 +292,16 @@ def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> i
     if row is None:
         det_ctl.create({"name": name, "cam": cam, "kind": kind, "until": ends, **same})
         return 1
-    if float(row.get("until") or 0) < ends:
+    if number(f"{det_ctl.sub.config(det_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
         det_ctl.update(name, {"until": ends})               # keep watching, not watch twice
         return 1
     return 0
 
 
 def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:
-    at = float(it.get("at", 0) or now)
-    before = float(it.get("before", SCAN_BEFORE) or 0)
-    after = float(it.get("after", SCAN_AFTER) or 0)
+    at = finite(it.get("at", 0) or now)
+    before = finite(it.get("before", SCAN_BEFORE) or 0)
+    after = finite(it.get("after", SCAN_AFTER) or 0)
     t0, t1 = at - before, at + after
     if t1 <= t0:
         raise Refused(f"scan asks for an empty interval: before {before}, after {after}")
@@ -331,9 +370,9 @@ def clear_requests(ctl) -> int:
         if not it or it.get("action") or not (("from" in it and "to" in it) or "asks" in it):
             continue                                        # a command or a `record`: its own `valid_until` ends it
         try:
-            old = now - float(it.get("at", now) or now) > BACKFILL_TTL
+            old = now - finite(it.get("at", now) or now) > BACKFILL_TTL
         except (TypeError, ValueError):
-            old = False
+            old = False                                     # `nan` too: not known to be old (the seventh pass)
         if old:
             try:
                 ctl.vars.delete(key, cas=idx)               # by CAS: asked again this instant, it is a new ask
@@ -356,11 +395,14 @@ def reap(ctl) -> dict:
     placed: dict[str, str] = {}
     state: dict[str, str] = {}
     ends: dict[str, float] = {}
+    # Every number here is read through `rows.number` (the review's seventh pass, part 2): a row's `to`, and what a
+    # worker's heartbeat says of a job — one word in one of them raised out of the reaper, and no job of the family was
+    # moved to `done`, every thirty seconds.
     for row in ctl.units():
         if str(row.get("state", "")) in TERMINAL:
             continue                                        # already moved; the predicate un-places it, not us
         state[str(row["id"])] = str(row.get("state", ""))
-        ends[str(row["id"])] = float(row.get("to") or 0)
+        ends[str(row["id"])] = number(f"{ctl.sub.config(ctl.spec.rows, str(row['id']))}#to", row.get("to") or 0)
         p = ctl.placement(row["id"])
         if p is not None:
             placed[str(row["id"])] = p.worker
@@ -371,7 +413,8 @@ def reap(ctl) -> dict:
         if str(state.get(uid, "")) == phase:
             continue                                        # already says it: a row that moves every pass is a
                                                             # revision that moves every pass, for every reader downstream
-        if phase in TERMINAL and "to" in st and float(st["to"]) != ends.get(uid):
+        said = lambda field, kind=float: number(_hb_key(ctl, str(st.get("worker")), f"{uid}.{field}"), st.get(field), kind)
+        if phase in TERMINAL and "to" in st and number(_hb_key(ctl, str(st.get("worker")), f"{uid}.to"), st["to"], float, None) != ends.get(uid):
             continue                                        # finished an OLDER shape of the row: a scenario widened it
                                                             # since (`_scan`), and the worker has not seen the new end
         fields = {"state": phase}
@@ -382,7 +425,7 @@ def reap(ctl) -> dict:
         if phase in TERMINAL:
             moved[phase] += 1
             log.info("%s %s: %s (%.0f s of footage, %d event(s))", ctl.spec.name, uid, phase,
-                     float(st.get("covered", 0)), int(st.get("events", 0)))
+                     said("covered"), said("events", int))
     return moved
 
 
@@ -400,7 +443,10 @@ def forget_finished(ctl, now: float) -> int:
     for row in ctl.units():
         if str(row.get("state", "")) not in TERMINAL:
             continue
-        ended = float(row.get("ended") or 0) or float(row.get("to") or 0)
+        at = ctl.sub.config(ctl.spec.rows, str(row["id"]))
+        ended = number(f"{at}#ended", row.get("ended") or 0) or number(f"{at}#to", row.get("to") or 0)
+        if not ended:
+            continue                                        # when it ended is not known (`rows.number`): not "long ago"
         if now - ended > FINISHED_RETENTION_SECONDS:
             ctl.delete(row["id"])
             gone += 1
@@ -423,8 +469,9 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
     for st in job_ctl.read_model():
         if str(st.get("phase", "")) != "fetching":
             continue
-        unit, t0, t1 = str(st.get("rec", "")), float(st.get("from", 0)), float(st.get("to", 0))
-        if not unit or t1 <= t0:
+        hk = _hb_key(job_ctl, str(st.get("worker")), str(st.get("id")))
+        unit, t0, t1 = str(st.get("rec", "")), number(f"{hk}.from", st.get("from", 0), float, None), number(f"{hk}.to", st.get("to", 0), float, None)
+        if not unit or t0 is None or t1 is None or t1 <= t0:          # an end that is a word: not a range to ask for
             continue
         rid = f"{unit}-{int(t0)}-{int(t1)}"
         key = rec_ctl.sub.request_key(rid)
@@ -452,12 +499,15 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
 def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
     from w2cplatform.console import heartbeats
     made = 0
-    for _, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
+    for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
         for span in str(hb.extra.get("closed", "")).split(","):
             parts = span.split("|")
             if len(parts) != 3:
                 continue
-            unit, t0, t1 = parts[0], float(parts[1]), float(parts[2])
+            unit = parts[0]
+            t0, t1 = (number(_hb_key(rec_ctl, w, f"closed.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
+            if t0 is None or t1 is None:
+                continue                                    # that span's trouble, counted once: the others are scanned
             rec = rec_ctl.unit(unit)
             if rec is None or t1 <= t0:
                 continue
@@ -492,13 +542,14 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
 def keep_what_fired(survey_ctl, rec_ctl) -> int:
     from w2cplatform.console import heartbeats
     asked = 0
-    for _, hb in heartbeats(survey_ctl.objects, survey_ctl.spec.name + "/").items():
+    for w, hb in heartbeats(survey_ctl.objects, survey_ctl.spec.name + "/").items():
         for span in str(hb.extra.get("hits", "")).split(","):
             parts = span.split("|")
             if len(parts) != 3:
                 continue
-            cam, t0, t1 = parts[0], float(parts[1]), float(parts[2])
-            if t1 <= t0:
+            cam = parts[0]
+            t0, t1 = (number(_hb_key(survey_ctl, w, f"hits.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
+            if t0 is None or t1 is None or t1 <= t0:
                 continue
             unit = next((str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam), None)
             if unit is None:

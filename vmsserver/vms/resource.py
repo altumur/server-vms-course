@@ -123,7 +123,10 @@ def kept_buckets(vars_):
 
     def once(progressed=None):
         store = vars_ if progressed is None else _Marked(vars_, progressed)
-        all_ = keeps.declared(store)
+        # A keep whose row does not parse holds its camera WHOLE (`keeps.whole`; the review's seventh pass): it raised
+        # out of here, and the resource's whole `retain` — every unit, every server — swept nothing while it stood.
+        unread: list = []
+        all_ = keeps.declared(store, unread) + unread
         if not all_:
             return lambda sub, unit, start, end: False
         cams = cameras_of_units(store)

@@ -555,15 +555,21 @@ class AutoWorker(Worker):
                     with self.guarded("lease"):
                         self.lease_pass()
                     last_lease = self.clock()
-                # The heartbeat goes out once per ordinary pass, as it always did — and an EARLY pass does not add
-                # one: woken four times a second, the evaluator still says it is alive every `poll`, not every
-                # quarter of a second. The lease step above is by the clock already.
+            except Exception:                         # noqa: BLE001
+                log.exception("%s: the lease step failed; the heartbeat goes all the same", self.name)
+            # …and the heartbeat in one of ITS own (the review's seventh pass, part 2): they shared a `try`, so a lease
+            # step that raised took the heartbeat with it — the same shape that silenced every recorder.
+            #
+            # The heartbeat goes out once per ordinary pass, as it always did — and an EARLY pass does not add one:
+            # woken four times a second, the evaluator still says it is alive every `poll`, not every quarter of a
+            # second. The lease step above is by the clock already.
+            try:
                 if not woken or self.clock() - last_hb >= poll:
                     with self.guarded("heartbeat"):
                         self.heartbeat_once()
                     last_hb = self.clock()
             except Exception:                         # noqa: BLE001
-                log.exception("%s: lease or heartbeat failed", self.name)
+                log.exception("%s: heartbeat failed", self.name)
             woken = self.wait_next(poll, stop)        # `stop.wait(poll)` — or sooner, when an event a scenario watches was written
         stand_in.set()
         self.stop_polling()                           # no request is held at a resource for a loop that ended

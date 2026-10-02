@@ -40,7 +40,8 @@ administrator's list, and the claim that makes one of them served."""
 # ## Public API
 # - `Volume` — one row, as a frozen dataclass; `key(name)`, `refuse(fields)`, `write(vars_, fields)`,
 #   `delete(vars_, name)`.
-# - `declared(vars_)` — every volume row, enabled and not.
+# - `declared(vars_, garbled=None)` — every volume row that parses, enabled and not; `read_volume` — one row, through
+#   the one reader of rows (`VOLUMES`, `w2cplatform.rows`).
 # - `servable(vols, server)` — the names a recorder on `server` may take, best first: its own disks, then
 #   the network archives anybody may serve.
 # - `holders(vars_, sub)` — `{volume: Slot}`: who is serving what, for the console.
@@ -49,6 +50,7 @@ administrator's list, and the claim that makes one of them served."""
 from dataclasses import dataclass
 
 from w2cplatform.contract import Slot, Subsystem, read_hold
+from w2cplatform.rows import Table
 from w2cplatform.secrets import is_secret_field
 from w2cplatform.spec import Refused
 
@@ -159,6 +161,15 @@ def refuse(fields: dict) -> None:
     # the engine formats a ring of exactly that many bytes. "This whole filesystem" twice on one partition
     # would be two rings each believing the disk is theirs. The console offers the size the box's own volume
     # already has when it declares the first one, so the ordinary answer is a number the operator can change.
+    #
+    # The numbers are checked AS numbers here, at the door (the review's seventh pass): `"1e12"` or `"64M"` raised a bare
+    # `ValueError` out of this check — nothing was written, and the console answered with an error that was not a
+    # refusal. `shrink_confirmed` was not checked at all and raised on the way to the row.
+    for f in ("quota_bytes", "shrink_confirmed"):
+        try:
+            int(fields.get(f, 0) or 0)
+        except (ValueError, TypeError):
+            raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
         raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "
                       "(the console offers the size the box's own volume already has)")
@@ -205,15 +216,36 @@ def delete(vars_, name: str) -> None:
     vars_.delete(key(name))
 
 
-def declared(vars_) -> list[Volume]:
-    """Every declared volume, in name order. Includes the disabled ones: the
-    console shows them, and `servable` is what filters."""
+# A VOLUME ROW THAT DOES NOT PARSE IS THAT VOLUME'S TROUBLE (the review's seventh pass, part 2, blocker 1). `quota_bytes:
+# "1e12"` or `"64M"` in ONE row — written by hand, or by an older build — raised out of `declared`, and `declared` is
+# under every recorder's lease step (`RecWorker.volume_pass`), the console's page of volumes, a camera card's look at
+# its card and the scan's list of disabled volumes: every recorder of the cluster stopped heartbeating, because the
+# step and the heartbeat shared a `try`. The row is skipped where volumes are listed, counted once until it parses
+# again (`volumes_garbled` in a recorder's heartbeat, `rec_worker_volumes_garbled` and `rec_console_rows_garbled` on
+# `/metrics`), logged once — and named: `declared(garbled=…)` collects the names for whoever must not read the
+# absence as "withdrawn" (the volumes page says the row does not parse; the recorder that holds it keeps it by the row
+# it read last).
+VOLUMES = Table("volume", "skipped — not offered, not taken, not withdrawn from whoever holds it, until it is mended")
+
+
+def read_volume(name: str, items) -> "Volume | None":
+    """One declared volume, or None when its row does not parse — counted once, logged once."""
+    return VOLUMES.read(key(name), lambda: Volume.from_items(name, items))
+
+
+def declared(vars_, garbled: set | None = None) -> list[Volume]:
+    """Every declared volume whose row parses, in name order. Includes the disabled ones: the console shows them, and
+    `servable` is what filters. The names of rows that do not parse go into `garbled`, when the caller gives one."""
     out = []
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
         name = path[len(f"{SUB}/{TABLE}/"):]
         items, _ = vars_.get(path)
         if items:
-            out.append(Volume.from_items(name, items))
+            vol = read_volume(name, items)
+            if vol is not None:
+                out.append(vol)
+            elif garbled is not None:
+                garbled.add(name)
     return out
 
 
@@ -274,8 +306,8 @@ def holders(vars_, sub: Subsystem, garbled: set | None = None) -> dict[str, Slot
 # without a word. `wanted`/`serving` is the same arithmetic one line up: how many processes the declared
 # list needs, and how many of them exist.
 def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=None) -> dict:
-    garbled: set = set()
-    vols, held = declared(vars_), holders(vars_, sub, garbled)
+    garbled, unread = set(), set()
+    vols, held = declared(vars_, unread), holders(vars_, sub, garbled)
     broken = _unwritable(objects, sub, now, lost_after) if objects is not None else {}
     writing = _writing(objects, sub, now, lost_after) if objects is not None else {}
     refusing = _refusing(objects, sub, now, lost_after) if objects is not None else {}
@@ -297,7 +329,18 @@ def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=
             why += "; " + "; ".join(refusing[v.name])   # …and the recorders that will not take it say why not
         rows.append({**row, "name": v.name, "served_by": slot.holder if live and not err else None,
                      "writing": writing.get(v.name) if live and not err else None, "why": why})
-    wanted = len([v for v in vols if v.enabled])
+    # A declaration whose row does not parse is on the page as what it is — named, with what to do — and counted as
+    # wanted: somebody declared it, and nobody can tell whether it is enabled. Its holder, if a recorder still holds
+    # it, is shown; it writes by the row it read last (`RecWorker.volume_pass`).
+    for name in sorted(unread):
+        slot = held.get(name)
+        live = slot is not None and not slot.released and slot.holder != "" and now <= slot.until
+        rows.append({"name": name, "served_by": slot.holder if live else None, "writing": None, "garbled": True,
+                     "why": f"its row ({key(name)}) does not parse, so no recorder takes it and the console cannot show "
+                            f"it: mend the row — declare the volume again — or delete it"
+                            + (f"; {slot.holder} still holds it and writes by the row it read last" if live else "")})
+    rows.sort(key=lambda r: r["name"])
+    wanted = len([v for v in vols if v.enabled]) + len(unread)
     return {"volumes": rows, "wanted": wanted, "serving": len([r for r in rows if r["served_by"]])}
 
 
@@ -443,14 +486,27 @@ def rank_near_recording(ctl, recording_id: str) -> int:
 # is here, at the one door every writer of rows goes through (`spec.register_refuse`): a card holds only its own
 # camera's recordings; a channel is one camera. WHO MAY is the gate's (`vms/console.py`: `recording_cams`,
 # `source_cams`): the camera behind `home`, and every camera of the device a `source` leaves or moves to.
+#
+# A row that does not parse is not "no volume" here (the review's seventh pass): read as None, a card whose row was
+# garbled would take any camera's recording. `volume_named` raises `Unreadable` for it, and a recording is not homed
+# on a volume nobody can read.
+class Unreadable(Refused):
+    """The volume's row does not parse."""
+
+
 def volume_named(vars_, name: str) -> "Volume | None":
     items, _ = vars_.get(key(name))
-    return Volume.from_items(name, items) if items else None
+    if not items:
+        return None
+    vol = read_volume(name, items)
+    if vol is None:
+        raise Unreadable(f"volume {name}'s row ({key(name)}) does not parse: mend it — declare the volume again — first")
+    return vol
 
 
 def refuse_recording(ctl, uid, old: dict | None, new: dict) -> None:
     home = str(new.get("home") or "")
-    vol = volume_named(ctl.vars, home) if home else None
+    vol = volume_named(ctl.vars, home) if home else None      # `Unreadable` is a refusal: nothing is homed on it
     if vol is None or vol.kind != "edge":
         return
     if not vol.cam:

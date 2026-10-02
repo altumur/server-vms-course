@@ -102,11 +102,18 @@ def reccontroller() -> None:
     from vms.config import REC_SPEC
     ctl = SpecController(REC_SPEC, open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")))
     while not stop.is_set():
-        try:
-            ctl.ensure_placed(); ctl.redistribute(); ctl.ensure_home(1); ctl.unplace_deleted()
-        except Exception:                         # noqa: BLE001
-            logging.exception("rec placement pass failed")
+        _steps("rec placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.unplace_deleted)
         stop.wait(5)
+
+
+# Each step of a controller's pass in a try of its own (the review's seventh pass, part 2): they shared one, so a step
+# that raised — one row it could not read — skipped every step after it, the snapshot the layer above reads included.
+def _steps(what: str, *steps) -> None:
+    for step in steps:
+        try:
+            step()
+        except Exception:                         # noqa: BLE001
+            logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
 
 
 def controller() -> None:
@@ -115,10 +122,7 @@ def controller() -> None:
     ctl = ClusterController(open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER", "cluster-a"))
     while not stop.is_set():
-        try:
-            ctl.ensure_placed(); ctl.redistribute(); ctl.ensure_home(1); ctl.publish_snapshot()
-        except Exception:                         # noqa: BLE001
-            logging.exception("placement pass failed")
+        _steps("placement", ctl.ensure_placed, ctl.redistribute, lambda: ctl.ensure_home(1), ctl.publish_snapshot)
         stop.wait(5)
 
 
@@ -151,10 +155,17 @@ def resource() -> None:
     res.heartbeat(); logging.info("restore: %s", res.restore())    # back with an empty disk? pull my buckets from my peers first
     last_policy = 0.0
     while not stop.is_set():
+        # Two jobs, two tries, as М10's resource loop has them (`vms/__main__.py`; the review's seventh pass, part 2):
+        # they shared one here, so a heartbeat that raised skipped the pass, and a pass that raised was tried again
+        # every ten seconds instead of every ten minutes.
         try:
             res.heartbeat()
+        except Exception:                         # noqa: BLE001
+            logging.exception("resource heartbeat failed")
+        try:
             if time.time() - last_policy >= 600:
-                logging.info("policy: %s", res.pass_()); last_policy = time.time()
+                last_policy = time.time()         # a pass that raised is tried in ten minutes, not in ten seconds
+                logging.info("policy: %s", res.pass_())
         except Exception:                         # noqa: BLE001
             logging.exception("resource pass failed")
         stop.wait(10)

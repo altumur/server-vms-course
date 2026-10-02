@@ -172,7 +172,8 @@ class Members:
             if sub != REPORTED or name in doc["members"] or name == self.domain:
                 continue
             raw = domain_objects.get(key)
-            mark = json.loads(raw) if raw else {}
+            from .federation import published
+            mark = published(name, key, raw) or {}        # a mark nobody can read: knocking, with no time (the seventh review)
             out.append({"name": name, "reported": mark.get("ts"), "reports": mark.get("seq"),
                         **self.pinned(name, domain_objects, own)})
         return sorted(out, key=lambda x: x["name"])
