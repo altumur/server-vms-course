@@ -1217,6 +1217,17 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_unconfirmed_seconds gauge")            # a recording going on under an epoch the store has not confirmed
     out += [f'rec_unconfirmed_seconds{{unit="{label(st["id"])}"}} {_n(sub, w, str(st.get("id")) + ".unconfirmed_s", st.get("unconfirmed_s"))}'
             for w, hb in hbs for st in status[w] if st.get("lease") == "unconfirmed"]
+    # A camera's stream, as its pusher says it in the camera recorder's heartbeat (`stream`, `vms/card.py`; the eighth
+    # review): how far behind the live edge, whether the uplink carries it, and the seconds the stream did not carry —
+    # `cut` to the live edge, `left` to backfill after a break, `failed` where the card could not give them.
+    streams = {w: hb.extra["stream"] for w, hb in hbs if isinstance(hb.extra.get("stream"), dict)}
+    out.append("# TYPE rec_stream_behind_seconds gauge")
+    out += [f'rec_stream_behind_seconds{{worker="{label(w)}"}} {_n(sub, w, "stream.behind_s", s.get("behind_s"))}' for w, s in streams.items()]
+    out.append("# TYPE rec_stream_lagging gauge")
+    out += [f'rec_stream_lagging{{worker="{label(w)}"}} {1 if s.get("lagging") is True else 0}' for w, s in streams.items()]
+    out.append("# TYPE rec_stream_skipped_seconds_total counter")
+    out += [f'rec_stream_skipped_seconds_total{{worker="{label(w)}",why="{why}"}} {_n(sub, w, f"stream.{why}_s", s.get(f"{why}_s"))}'
+            for w, s in streams.items() for why in ("cut", "left", "failed")]
     return out
 
 

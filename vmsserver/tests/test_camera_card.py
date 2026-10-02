@@ -550,6 +550,77 @@ def test_a_recording_held_again_and_released_again_writes_no_interval_twice():
     assert stitch(card.coverage("1-card")) == [(1000.0, 1034.0)]          # not waiting for 5000 to come round again
 
 
+def test_a_hold_in_the_middle_of_a_group_leaves_the_segment_open_and_the_release_loses_no_frame_of_it():
+    """The eighth review, found running its probe whole: the gate put a released recording on hold again in the middle
+    of a group of pictures. The hold closed the segment, a segment opens on a key frame, and the release that followed
+    skipped the rest of the group — on the card nowhere, counted nowhere, while the ring still held it; the camera's
+    pusher, reading the card for what memory had let go of, pushed the frames after the hole as if they followed. Now a
+    hold — and a restart on hold under the same epoch — leaves the segment open, forced onto the card, and the release
+    goes on in it from the frame after the last: every frame once, one segment, nothing dropped. Under a new epoch the
+    segment closes, as before."""
+    ring, card, act = _act(window=60.0)
+    act("start", {"id": "1-card", "epoch": 1, "hold": True})
+    _film(ring, 1000, 1005, act=act)
+    act("release", {"id": "1-card"})
+    act.drain()
+    later = _frames(1005, 1020)                                           # key frames at 1005, 1007, 1009, 1011…
+    for s in [s for s in later if s.begin < archive_ms(1010)]:
+        ring.add(s)
+    act.drain()                                                           # …written to 1009.5, a delta of the group of 1009
+    act("restart", {"id": "1-card", "epoch": 1, "hold": True})            # on hold again, in the middle of that group
+    assert card.follows("1-card/e1", archive_ms(1009.5)) and act.stats("1-card")["hold"] is True
+    assert not act.hold("1-card", True)                                   # (already: nothing changes)
+    for s in [s for s in later if s.begin >= archive_ms(1010)]:           # 1010 and 1010.5: the rest of the group
+        ring.add(s)
+    act.drain()
+    act("release", {"id": "1-card"})
+    act.drain()
+    _film(ring, 1020, 1024, act=act)
+    begins = [s.begin for s in card.range("1-card", 0, 2000)]
+    assert begins == [archive_ms(1000 + i / 2) for i in range(48)]        # every frame, once, in order
+    assert card.stats()[0] == 1 and act.stats("1-card")["samples_dropped"] == 0 and "seconds_lost" not in act.stats("1-card")
+    act("restart", {"id": "1-card", "epoch": 2, "hold": True})            # a new epoch: its own segment, from a key frame
+    assert not card.follows("1-card/e1", archive_ms(1023.5)) and card.stats()[0] == 1
+    ring, card, act = _act(window=60.0)                                   # …and what a new epoch costs is counted
+    act("start", {"id": "1-card", "epoch": 1})
+    frames = _frames(1000, 1010)
+    for s in [s for s in frames if s.begin < archive_ms(1003)]:
+        ring.add(s)
+    act.drain()                                                           # to 1002.5, in the group of 1002
+    act("restart", {"id": "1-card", "epoch": 2, "hold": True})
+    for s in [s for s in frames if s.begin >= archive_ms(1003)]:
+        ring.add(s)
+    act("release", {"id": "1-card"})
+    act.drain()
+    assert act.stats("1-card")["samples_dropped"] == 2                    # 1003 and 1003.5: passed over, and said
+
+
+def test_a_write_is_given_time_by_what_it_moves_before_the_card_is_said_stalled():
+    """The eighth review, a minor: the watch said a card STALLED when one write took longer than `stall_after`, however
+    much it moved — a slow, healthy card forcing five seconds of stream at once was a stalled one. What a write may take
+    is `stall_after` and its bytes at `STALL_FLOOR`: two mebibytes a second and a half, then the stall."""
+    import threading
+    import time
+    from vms.card import STALL_FLOOR
+    from w2cplatform.obsd import video
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"), stall_after=0.3)
+    real, seen = card._write, {}
+
+    def slow(data):
+        time.sleep(0.6)
+        real(data)
+    card._write = slow
+    for name, size in (("big", 2 * STALL_FLOOR), ("small", 300)):
+        t = threading.Thread(target=card.append, args=(f"{name}/e1", video(archive_ms(1000), archive_ms(1001),
+                                                                            b"\x00" * size, True)), daemon=True)
+        t.start()
+        time.sleep(0.45)
+        seen[name] = (card.stalled(), round(card.stall_limit(), 1))
+        t.join(5)
+    assert seen["big"] == (False, 2.3)                                    # 0.3 s and two seconds for two mebibytes
+    assert seen["small"][0] is True                                       # a few hundred bytes for 0.45 s: stalled
+
+
 # -- the recorder on the camera -----------------------------------------------------------------------------------------
 def _camera(card_dir=None, when="offline", budget=64 << 20):
     """A camera that is a cluster of its own: its row, its card declared (`kind: edge`), a recording on the card and
@@ -818,8 +889,9 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
     "lost" after 45 s with no reason, and the card said `recording` all along. Now the card's I/O and what the card
     holds are two locks, and the I/O is watched: while one write hangs, the heartbeat and the status come at once, a
     range is refused at once (`Stalled`, an error — never an empty answer), and the card is said `stalled` — in the
-    heartbeat, in `volume_error`, as `writer: stuck` for the console's `rec_writer`, and as the alarm `card.failing`.
-    When the write returns, the card records again and nothing is said."""
+    heartbeat, in `volume_error`, as `writer: stuck` for the console's `rec_writer`, and — once the stall has lasted
+    `STALL_ALARM` times what the write may take (the eighth review: a slow, healthy card was an alarm) — as the alarm
+    `card.failing`. When the write returns, the card records again and nothing is said."""
     import threading
     import time
     from vms.card import Stalled
@@ -856,8 +928,11 @@ def test_a_card_write_that_hangs_holds_neither_the_heartbeat_nor_a_range_and_the
         assert hb.extra["writer"]["state"] == "stuck"
         lines = _recorders(rec_ctl)
         assert 'rec_writer{worker="r-1",state="stuck"} 1' in lines and 'rec_volume_error{worker="r-1"} 1' in lines
+        rec.gate_pass()
+        assert _alarms(box, "card.failing") == []                        # a slow write is not yet the alarm (the eighth review)…
+        time.sleep(rec.STALL_ALARM * card.stall_limit() - card.stalled_for() + 0.1)
         rec.gate_pass(); rec.gate_pass()
-        [alarm] = _alarms(box, "card.failing")
+        [alarm] = _alarms(box, "card.failing")                           # …one that lasts is, once
         assert alarm["class"] == "alarm" and alarm["state"] == "stalled" and "does not answer" in alarm["error"]
     finally:
         gate.set()
@@ -896,6 +971,69 @@ def test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detec
     assert rec.defer_for() == 15.0                                        # the wait counts on what the ring holds, too
     rec.stream_says = lambda row: False                                   # a camera that pushes hears of a break in ten seconds
     assert rec.prebuffer_pass() == {} and "prebuffer_short" not in _status(rec)
+
+
+def test_a_ring_that_dips_short_and_back_is_one_alarm_until_it_has_reached_far_enough_for_a_while():
+    """The product's sibling of the eighth review: `card.prebuffer.short` had no hysteresis. What the ring reaches is
+    measured on what it holds, and a bitrate that moves around the line went short, long, short — every turn a new
+    alarm. The status says what is true now; the alarm is one episode, over only when the ring has reached far enough
+    for `WELL_FOR`."""
+    box, rec, ring, act, rec_ctl = _camera()
+    t = box.wall()
+
+    def film(size, seconds=70):
+        nonlocal t
+        for s in fake_samples(t, t + seconds, step=0.5, gop=2.0, size=size):
+            ring.add(s)
+        t += seconds
+        box.wall.advance(seconds)
+        rec.gate_pass()
+    film(375_000)                                                         # 6 Mbit/s: 44 s, short of 50
+    assert len(_alarms(box, "card.prebuffer.short")) == 1 and "prebuffer_short" in _status(rec)
+    film(100_000)                                                         # 1.6 Mbit/s: the whole window — long again
+    assert "prebuffer_short" not in _status(rec)
+    film(375_000)                                                         # short again, inside the episode: no new alarm
+    assert len(_alarms(box, "card.prebuffer.short")) == 1 and "prebuffer_short" in _status(rec)
+    for _ in range(int(rec.WELL_FOR // 70) + 1):
+        film(100_000)                                                     # long enough for long enough: the episode ends
+    film(375_000)
+    assert len(_alarms(box, "card.prebuffer.short")) == 2
+
+
+def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_alarm_an_episode_of_lagging():
+    """The eighth review, blocker 1: the pusher's `continued` — the seconds cut to the live edge, left to backfill,
+    failed off the card — reached neither a heartbeat, nor a metric, nor an alarm. Whoever runs the camera's pusher
+    beside its recorder hands its word over (`stream_said`): it is the heartbeat's `stream`, the console's
+    `rec_stream_behind_seconds`, `rec_stream_lagging` and `rec_stream_skipped_seconds_total{why}`, and a stream that
+    lags — the uplink does not carry it — is the alarm `camera.uplink.short`, one an episode: a lagging stream is cut to
+    the live edge, lags no more for a minute or two and lags again, and that is not a new alarm each time."""
+    from vms.console import _recorders
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera()
+    said = {"state": "pushing", "road": "primary", "behind_s": 31.5, "lagging": True, "cut_s": 61.0, "left_s": 4.0,
+            "failed_s": 0.0, "failed": 0}
+    rec.stream_said = lambda: dict(said)
+    rec.heartbeat_once()
+    assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == said
+    lines = _recorders(rec_ctl)
+    assert 'rec_stream_behind_seconds{worker="r-1"} 31.5' in lines and 'rec_stream_lagging{worker="r-1"} 1' in lines
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="cut"} 61.0' in lines
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="left"} 4.0' in lines
+    rec.gate_pass(); rec.gate_pass()
+    [alarm] = _alarms(box, "camera.uplink.short")
+    assert alarm["class"] == "alarm" and alarm["behind_s"] == 31.5 and alarm["cut_s"] == 61.0
+    for lagging in (False, True, False, True):                            # cut, caught up, lagging again: one episode
+        said["lagging"] = lagging
+        box.wall.advance(60); rec.gate_pass()
+    assert len(_alarms(box, "camera.uplink.short")) == 1
+    said["lagging"] = False
+    box.wall.advance(rec.WELL_FOR); rec.gate_pass()                       # well long enough: over
+    said["lagging"] = True
+    rec.gate_pass()
+    assert len(_alarms(box, "camera.uplink.short")) == 2
+    rec.stream_said = lambda: 1 / 0                                       # the pusher's trouble is not the heartbeat's end
+    rec.heartbeat_once()
+    assert "ZeroDivisionError" in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]["error"]
     """A card is opened by the camera's recorder as files — a bucket or a share is something no card reader opens,
     and a key to one has nowhere to go. That is a `local` or `network` volume, with an engine."""
     volumes.refuse({"name": "card", "kind": "edge", "server": "cam-7", "cam": "7", "url": "/media/sd", "quota_bytes": 1})

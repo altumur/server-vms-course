@@ -483,3 +483,124 @@ def test_the_whole_camera_holds_its_frames_inside_its_memory_budget_through_a_br
     tail = [t for t in writer.times if t >= reach]
     assert tail[0] - reach < 1.0 and writer.repeats == 0
     assert all(round(b - a, 3) == 0.04 for a, b in zip(tail, tail[1:]))  # …every frame of it, once, in order
+
+
+# -- the eighth review, blocker 1: what the stream skips is on the card --------------------------------------------------
+def _gate(ring, act, pusher, wall, row):
+    """The card's gate as the camera's recorder runs it — `RecWorker.gate_pass` itself, with its deferral, its kept ring,
+    its release and its hold again — over the camera's real ring and card writer, told by the pusher (`edge_gate`,
+    `edge_resumes`). The book (`carried_primary`) says the primary is written: only the stream can open the card."""
+    from types import SimpleNamespace
+    from domain.ingest import edge_gate, edge_resumes
+    from vms.card import CardRecorder
+    from vms.recworker import RecWorker
+
+    class Gate(CardRecorder):
+        def __init__(self):                                             # the gate alone: no slot, no store, no engine
+            self.ring, self.actuator, self.wall, self.name, self.rows = ring, act, wall, "cam", [row]
+            self.reconciler = SimpleNamespace(actual={row["id"]})
+            self.holding = {row["id"]: True}
+            self._primary_back_since, self._cover_since, self._kept_until = {}, {}, {}
+            self.stream_says, self.resumes = edge_gate(pusher), edge_resumes(pusher)
+
+        def _offline_backup(self, r):
+            return True
+
+        def carried_primary(self, r, now):
+            return False
+
+        def _actuate(self, verb, r):                                    # held again: a restart, its hold by the gate's rule
+            self.holding[r["id"]] = hold = not self.primary_needs_cover(r)
+            return self.actuator(verb, {"id": r["id"], "epoch": 1, "hold": hold})
+
+        def gate_pass(self, now=None):
+            return RecWorker.gate_pass(self, now)
+    return Gate()
+
+
+def test_below_the_streams_bitrate_what_the_stream_skips_is_on_the_card_and_backfill_lands_it():
+    """The eighth review, blocker 1, run as its probe ran it: the road answers every poll, and the uplink carries 0.75 of
+    an 8 Mbit/s stream for 400 s. The stream fell behind, memory let go of what it had not sent, the pusher cut to the
+    live edge and logged the seconds as backfill's — and the card `when: offline` never wrote, because a road that
+    answers is not "uncovered": 126 s the recorder never got, none of them on the card. Now a stream behind by what
+    memory holds is LAGGING, and lagging is uncovered: the real gate opens the card at once (a lagging stream is not
+    one memory will continue), the stream goes on off the card while it can, and what the cut skips is on the card.
+    Every frame the recorder did not get is on the card, and backfill — ranges asked of the camera — lands it all."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    from vms.worker import FAKE_PPS, FAKE_SPS
+    from w2cplatform.obsd import archive_ms, unix_s, video
+    wall = Clock(100_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    start, size = wall(), 100_000                                       # ten frames a second of 100 kB: 8 Mbit/s
+
+    def frame(i):                                                       # the sensor's frame `i`: a key frame every two seconds
+        t, key = start + i / 10, i % 20 == 0
+        body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * size
+        return video(archive_ms(t), archive_ms(t + 0.1), body, key, 1280, 720)
+
+    class Writer:                                                       # the recorder's writer: newer than its last, or nothing
+        def __init__(self):
+            self.ms = []
+
+        def push(self, f):
+            if not self.ms or archive_ms(f["t"]) > self.ms[-1]:
+                self.ms.append(archive_ms(f["t"]))
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
+    try:
+        ring = CamRing(clock=wall)
+        act = CardActuator(ring, card, threaded=False)
+        row = {"id": "1-card", "cam": "1", "when": "offline"}
+        act("start", {"id": "1-card", "epoch": 1, "hold": True})        # a standby: on hold, the ring its pre-record
+        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
+                              ring=ring)
+        gate = _gate(ring, act, pusher, wall, row)
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        w = ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        ingest.written = lambda ref: unix_s(w.ms[-1]) if w.ms else None
+        fast, rate = ingest.push, 0.75 * size * 10
+
+        def slow(token, ref, frames, camera_now=None):                  # a push takes as long as its bodies take
+            took = fast(token, ref, frames, camera_now=camera_now)
+            wall.advance(sum(len(f["sample"].body) for f in frames if "sample" in f) / rate)
+            return took
+        ingest.push, n, lagged = slow, 0, set()
+
+        def second():
+            nonlocal n
+            while start + n / 10 <= wall():
+                ring.add(frame(n))
+                n += 1
+            act.drain()
+            pusher.pass_once([])
+            gate.gate_pass()
+            act.drain()
+            wall.advance(0.5)
+        while wall() - start < 400:
+            second()
+            lagged.add(pusher.lag)
+        said, newest = pusher.said(), w.ms[-1]
+        missed = [m for m in sorted(set(archive_ms(start + i / 10) for i in range(n)) - set(w.ms)) if m < newest]
+        cover = [(archive_ms(a), archive_ms(b)) for a, b in card.coverage("1-card")]
+        assert pusher.continued["cut_s"] > 50 and len(missed) > 500     # the stream did skip: a minute and more of it…
+        assert [m for m in missed if not any(a <= m <= b for a, b in cover)] == []     # …and every frame of it is on the card
+        assert lagged == {True, False} and said["cut_s"] == pusher.continued["cut_s"] and "behind_s" in said
+        assert pusher.continued["failed_s"] == 0 and act.stats("1-card")["samples_dropped"] == 0   # no hole on the card
+        # Backfill: the recorder asks the camera for each hole in what it wrote, from a key frame before it.
+        ingest.push = fast
+        holes = [(a, b) for a, b in zip(w.ms, w.ms[1:]) if b - a > 150]
+        rids = {ingest.request_range(SERIAL, unix_s(a) - 2.0, unix_s(b), recording="1-card") for a, b in holes}
+        landed = set()
+        for _ in range(600):
+            if not rids:
+                break
+            second()
+            for rid in list(rids):                                      # (taken as each lands: the ingest keeps none for long)
+                got = ingest.result(SERIAL, rid)
+                if got is not None:
+                    landed |= {s.begin for s in got}
+                    rids.discard(rid)
+    finally:
+        shutil.rmtree(card.path, ignore_errors=True)
+    assert holes and not rids
+    assert [m for m in missed if m not in landed] == []                 # all of it, off the card
