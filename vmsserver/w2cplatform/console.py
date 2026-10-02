@@ -76,6 +76,12 @@ rule in this file.
 #   request (including DELETE, where it is ignored).
 # - `/events` relies on a `MergedIndex` behind the console — every live resource's own event index, merged; without one it is an honest 503,
 #   and the page tolerates that.
+# - What a request may cost before anybody knows who sent it (the review's fifth pass): the caller is proved from the
+#   headers (`Gate.caller`) before a byte of the body is read; the body is read once, under `MAX_BODY` (`MAX_BLOB`
+#   for a blob's bytes) and a deadline (`read_body`); the request's line and headers arrive whole within
+#   `CONSOLE_TIMEOUT` (`DeadlineReader`); and `CONSOLE_CONNECTIONS` are served at once, the next answered 503
+#   (`ConsoleServer`). A row that reaches a camera through another field says so (`cams_of`), and a write to it asks
+#   for the route's capability on every such camera, before and after (`admit_cams`).
 # ================================================================================================
 from __future__ import annotations
 
@@ -108,7 +114,12 @@ from .events import ALARM, EventLog
 # all is that SOMETHING happens when it is crossed. A norm with nothing acting on it is a comment.
 PER_MINUTE = 60.0
 CONSOLE_TIMEOUT = 30.0        # seconds a console's socket waits on a client that sends or reads nothing (`CONSOLE_TIMEOUT`)
-from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, caller_addr, session_cookie, token_of
+                              # — and the most a request's line and headers may take, whole (`Mount.handler`)
+CONSOLE_CONNECTIONS = 64      # connections one console serves at once (`CONSOLE_CONNECTIONS`): past it, 503 at once
+MAX_BODY = 1 << 20            # the largest body a request may declare (`CONSOLE_MAX_BODY`): rows, marks, commands are JSON
+MAX_BLOB = 32 << 20           # …except the bytes of a blob field (`CONSOLE_MAX_BLOB`): a mask, not a film
+BODY_RATE = 64 << 10          # bytes a second a body is given on top of `CONSOLE_TIMEOUT` to arrive in, whole
+from .access import COOKIE, GLASS_COOKIE, OPEN_ROUTES, Denied, Gate, caller_addr, is_local, session_cookie, token_of
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -259,6 +270,72 @@ def say_where(host: str) -> None:
 
 class NoSuchRoute(Exception):
     """A path with more after its id than its route takes: 404, before the gate is asked."""
+
+
+# A REQUEST HAS A DEADLINE, NOT ONLY ITS READS (the review's fifth pass, major). `timeout` on the socket bounds one
+# read: a client that sent a byte of its headers every second and a half, under a timeout of two, held its thread
+# for as long as it liked — and three hundred of them were three hundred threads, all before the gate. The handler's
+# reads go through this: each one is given what is left of the request's deadline (`deadline()`), at most the
+# socket's own timeout, and past the deadline the read is a `TimeoutError` — which `BaseHTTPRequestHandler` answers
+# by closing the connection. Only READS: what the console writes back (an export) is the socket timeout's, and the
+# export's own rule (`vms/console.py`).
+class DeadlineReader(io.RawIOBase):
+    def __init__(self, sock, deadline, op_timeout: float):
+        self.sock, self.deadline, self.op = sock, deadline, op_timeout
+
+    def readable(self) -> bool:
+        return True
+
+    def readinto(self, b) -> int:
+        left = self.deadline() - time.monotonic()
+        if left <= 0:
+            raise TimeoutError("the request did not arrive whole within its deadline")
+        self.sock.settimeout(min(self.op, left))
+        try:
+            return self.sock.recv_into(b)
+        finally:
+            self.sock.settimeout(self.op)
+
+
+# …AND A CONSOLE SERVES SO MANY AT ONCE. `ThreadingHTTPServer` made a thread for every connection, with no bound:
+# `CONSOLE_CONNECTIONS` of them are served, and the next is answered 503 with `Retry-After` on the spot — a line
+# written into its socket by the accepting thread, which neither reads it nor waits on it for more than a second.
+# Exports are connections too: they hold a slot of their own (`EXPORTS_AT_ONCE`) inside this bound.
+BUSY = (b"HTTP/1.0 503 Service Unavailable\r\nContent-Type: application/json\r\nRetry-After: 1\r\nConnection: close\r\n"
+        b"Content-Length: %d\r\n\r\n%s")
+
+
+class ConsoleServer(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self, addr, handler, limit: int | None = None):
+        n = int(os.environ.get("CONSOLE_CONNECTIONS", CONSOLE_CONNECTIONS)) if limit is None else int(limit)
+        self.slots, self.refused = threading.BoundedSemaphore(max(1, n)), 0
+        super().__init__(addr, handler)
+
+    def process_request(self, request, client_address):
+        if not self.slots.acquire(blocking=False):
+            self.refused += 1
+            body = json.dumps({"error": "busy", "detail": "this console serves as many connections as it serves at once "
+                                                          "(CONSOLE_CONNECTIONS) — retry"}).encode()
+            try:
+                request.settimeout(1.0)
+                request.sendall(BUSY % (len(body), body))
+            except OSError:
+                pass
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self.slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self.slots.release()
 
 
 class ClaimLost(Exception):
@@ -1145,9 +1222,10 @@ class SpecConsole:
             # The emergency entry (`Gate.open_glass`): who, why and the one local password. What comes back is
             # a session in this process's memory, carried by a cookie of its own.
             g = body["glass"]
+            peer = str(getattr(h, "client_address", ("?",))[0])
             try:
                 sid, payload = self.gate.open_glass(str(g.get("who", "")), str(g.get("why", "")), str(g.get("password", "")),
-                                                    addr=caller_addr(h.headers, str(getattr(h, "client_address", ("?",))[0])))
+                                                    addr=caller_addr(h.headers, peer), local=is_local(peer))
             except Denied as e:
                 if e.retry_after is not None:                            # the emergency door's pace: when the next turn is
                     h._extra_headers = (("Retry-After", str(max(1, int(e.retry_after + 0.999)))),)
@@ -1169,20 +1247,128 @@ class SpecConsole:
         user = f"break-glass({payload.get('who')})" if payload.get("via") == "break-glass" else payload.get("sub")
         return h._send(200, {"gated": True, "user": user, "until": payload.get("exp"), "login": login})
 
+    # THE BODY, READ ONCE, BOUNDED, AFTER THE CALLER IS KNOWN (the review's fifth pass, major). `Content-Length` is
+    # checked before a byte is read: past `MAX_BODY` (a blob's bytes: `MAX_BLOB`) it is 413, and the connection is
+    # closed rather than drained; a length that is not a number is 400. What is read is read here, under a deadline
+    # of its own — `CONSOLE_TIMEOUT` and a second for every `BODY_RATE` bytes — and put back as memory, so `_named`,
+    # `_idem` and every route read it as if nobody had. A body that does not arrive in time is 408. True: read, go
+    # on; False: refused, and the reply sent.
+    def read_body(self, h, limit: int) -> bool:
+        raw = (h.headers.get("Content-Length") or "").strip()
+        if not raw or raw == "0":
+            return True
+        try:
+            n = int(raw)
+            if n < 0:
+                raise ValueError(raw)
+        except ValueError:
+            h.close_connection = True
+            h._send(400, {"detail": f"Content-Length is a number of bytes, not {raw!r}", "error": "bad length"})
+            return False
+        if n > limit:
+            h.close_connection = True                    # not drained: the rest of it is not read at all
+            h._send(413, {"detail": f"a body of {n} bytes; this console takes at most {limit} here", "error": "too large"})
+            return False
+        if hasattr(h, "deadline"):
+            h.deadline = time.monotonic() + float(getattr(h, "timeout", None) or CONSOLE_TIMEOUT) + n / BODY_RATE
+        try:
+            data = h.rfile.read(n)
+        except (TimeoutError, OSError) as e:
+            h.close_connection = True
+            try:
+                h._send(408, {"detail": f"the body did not arrive whole in time: {e}", "error": "timeout"})
+            except OSError:
+                pass
+            return False
+        if len(data) < n:
+            h.close_connection = True
+            h._send(400, {"detail": f"the body ended after {len(data)} of {n} bytes", "error": "short body"})
+            return False
+        h.rfile = io.BytesIO(data)
+        return True
+
+    # THE CAMERAS A ROW NAMES, THROUGH ANY FIELD (the review's fifth pass, major). `cam` was made fixed, and the gate
+    # checks the camera in it — but a row can name a camera through other fields: a scan's `rec` is a recording, and
+    # its footage is that recording's camera's; a scenario's `when` and `then` name the cameras it watches and acts
+    # on. `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 pointed a scan at camera 2's archive,
+    # and a scenario edited under a grant that matched its PLACEMENT labels sent commands to camera 12. A subsystem
+    # whose rows do that says so: `cams_of(row) -> {camera, …}`, every camera the row reaches, `"*"` for "any camera"
+    # (a trigger with no unit) — which only a grant on the whole cluster covers. A write to such a row is admitted
+    # only when the caller holds the route's capability on every camera of the row as it IS and as it WILL BE: the
+    # old value, so a row cannot be taken from a camera one may not touch; the new one, so it cannot be pointed at
+    # one. A row that names no camera of its own (`cam`) — a scenario — IS its cameras: an edit or a delete of it is
+    # asked of them alone, and its own labels, which say where its evaluator runs, grant nothing on it
+    # (`is_its_units`). Creating one still asks for a grant on the whole cluster, as every create here does.
+    cams_of = None
+
+    def _row_written(self, method: str, path: str):
+        """`(old row or None, True)` for a write to one of this console's rows — `(None, False)` for anything else."""
+        if self.cams_of is None or method not in ("POST", "PUT", "DELETE"):
+            return None, False
+        rows_path = "/" + self.spec.rows
+        if (path != rows_path and not path.startswith(rows_path + "/")) or len(path.split("/")) > 3:
+            return None, False                           # not a row; or a blob's bytes: no field that names a unit
+        pid = path_id(path)
+        try:
+            return (self.ctl.unit(self.spec.parse_id(pid)) if pid else None), True
+        except (ValueError, KeyError):
+            return None, True
+
+    def is_its_units(self, method: str, path: str) -> bool:
+        old, written = self._row_written(method, path)
+        return written and method in ("PUT", "DELETE") and old is not None and "cam" not in old
+
+    def admit_cams(self, h, method: str, path: str) -> None:
+        old, written = self._row_written(method, path)
+        if not written:
+            return
+        new = None
+        if method != "DELETE":
+            try:
+                body = json.loads(h.rfile.getvalue() or b"{}") if isinstance(h.rfile, io.BytesIO) else {}
+            except ValueError:
+                body = {}
+            new = {**(old or {}), **body} if isinstance(body, dict) else old
+        cams = set()
+        for row in (old, new):
+            if row is not None:
+                try:
+                    cams |= {str(c) for c in (self.cams_of(row) or ())}
+                except Exception:                        # noqa: BLE001 — a row nobody can read the units of is anybody's
+                    cams.add("*")
+        cap = self.needs(method, path)[0]
+        for cam in sorted(cams) or ["*"]:                # a row that names no unit at all is anybody's: the cluster's grant
+            self.gate.admit(h.headers, cap, None if cam == "*" else cam, [] if cam == "*" else self._labels(cam, None))
+
     def dispatch(self, h, method: str, path: str, q: dict) -> None:
         """Answer one request for this subsystem. `path` is the route (`/<rows>`, `/where/7`), the mount
         prefix already removed; `h` is the handler (its `_send`, `_body`, `headers`, `rfile`)."""
         con, ctl, spec = self, self.ctl, self.spec
         rows_path = "/" + spec.rows
         if path == "/session":
+            if not self.read_body(h, int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
+                return
             return self.session(h, method)
         try:
             self.route_id(method, path)                  # `/<rows>/1/2`: no such route — said before the gate reads an id
         except NoSuchRoute as e:
             return h._send(404, {"detail": str(e), "error": "no such path"})
+        if path not in OPEN_ROUTES:                     # who is calling: from the headers, before a byte of the body
+            try:
+                self.gate.caller(h.headers)
+            except Denied as e:
+                h.close_connection = True
+                return h._send(e.status, {"detail": e.why, "error": "denied"})
+        blob = method == "PUT" and path.startswith(rows_path + "/") and len(path.split("/")) == 4
+        if not self.read_body(h, int(os.environ.get("CONSOLE_MAX_BLOB", MAX_BLOB)) if blob
+                              else int(os.environ.get("CONSOLE_MAX_BODY", MAX_BODY))):
+            return
         if path not in OPEN_ROUTES:                     # the gate: open while this cluster has no key set, shut when it cannot check
             try:
-                self.gate.admit(h.headers, *self.needs(method, path, self._named(h, method, path, q)))
+                need = self.needs(method, path, self._named(h, method, path, q))
+                if not self.is_its_units(method, path):
+                    self.gate.admit(h.headers, *need)
+                self.admit_cams(h, method, path)
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
@@ -1314,7 +1500,7 @@ class SpecConsole:
     # Starts the server in a daemon thread and returns it (tests use `port=0` and read `server_address`).
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
         say_where(host)
-        srv = ThreadingHTTPServer((host, port), self.handler())
+        srv = ConsoleServer((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         return srv
 
@@ -1450,6 +1636,13 @@ class Mount:
             # and write: the request line and headers (slowloris) as much as an export's body.
             timeout = float(os.environ.get("CONSOLE_TIMEOUT", CONSOLE_TIMEOUT))
 
+            # …and the request's line and headers have `timeout` to arrive in WHOLE (`DeadlineReader`); its body is
+            # given a deadline of its own when it is read (`SpecConsole.read_body`).
+            def setup(self):
+                super().setup()
+                self.deadline = time.monotonic() + self.timeout
+                self.rfile = io.BufferedReader(DeadlineReader(self.connection, lambda: self.deadline, self.timeout))
+
             def log_message(self, *a): pass
 
             def _route(self, method):
@@ -1475,6 +1668,6 @@ class Mount:
 
     def serve(self, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
         say_where(host)
-        srv = ThreadingHTTPServer((host, port), self.handler())
+        srv = ConsoleServer((host, port), self.handler())
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         return srv

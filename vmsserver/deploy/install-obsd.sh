@@ -17,11 +17,18 @@
 # 2. The gid checked: the recorders join the group BY NUMBER (`GroupAdd=2101` — a container has no /etc/group of
 #    the host's), so a `vms-rec` made earlier with another number is a recorder the daemon refuses. Said, not fixed.
 # 3. `vms.tmpfiles` → /etc/tmpfiles.d/vms.conf, applied: /run/vms, /run/obsd, /data/volume.
-# 4. THE UPGRADE: every volume directory — /data/volume, and each one named on the command line (a declared local
+# 4. THE DAEMON STOPPED, if one runs (the review's fifth pass, major). On a box upgraded from a daemon that ran as
+#    root, that daemon was still writing while the volumes were handed over: it made new blocks — root's — behind
+#    the `chown -R`, and the new unit's daemon then could not open them. Nothing is handed over while it runs.
+# 5. THE UPGRADE: every volume directory — /data/volume, and each one named on the command line (a declared local
 #    volume on another disk of this box) — made if missing, and handed to `obsd:vms-rec` if anything in it is not
 #    `obsd`'s yet: a ring formatted by a daemon that ran as root. Once; `chown -R` over a ring of millions of blocks
 #    is not something to do at every boot.
-# 5. `obsd.service` → /etc/systemd/system, enabled and started — before any recorder (`After=obsd.service` in theirs).
+# 6. `obsd.service` → /etc/systemd/system, enabled, and RESTARTED — before any recorder (`After=obsd.service` in
+#    theirs). `enable --now` starts a unit that is stopped and leaves a running one as it is: the old root daemon
+#    went on under the old unit, its socket where the recorders no longer look, and every volume stayed `away` until
+#    somebody restarted it by hand. `restart` runs the unit as it is now written, whatever ran before. Running the
+#    script again restarts the daemon again: the recorders wait it out (`away`, then `reattached`).
 #
 # Exit codes: 0 done; 1 the group exists with another gid; 2 not root.
 # ================================================================================================
@@ -42,6 +49,8 @@ fi
 install -D -m 0644 "$HERE/vms.tmpfiles" /etc/tmpfiles.d/vms.conf
 systemd-tmpfiles --create /etc/tmpfiles.d/vms.conf
 
+systemctl stop obsd.service 2>/dev/null || true    # 4: nothing writes while the volumes change hands (a new box: no unit yet)
+
 for VOL in /data/volume "$@"; do
   mkdir -p "$VOL"
   if [ -n "$(find "$VOL" \( ! -user obsd -o ! -group vms-rec \) -print -quit)" ]; then
@@ -53,5 +62,6 @@ done
 
 install -m 0644 "$HERE/obsd.service" /etc/systemd/system/obsd.service
 systemctl daemon-reload
-systemctl enable --now obsd.service
+systemctl enable obsd.service
+systemctl restart obsd.service                     # 6: the unit as written now — a running one is not left as it was
 echo "obsd: $(systemctl is-active obsd.service), socket /run/obsd/obsd.sock"

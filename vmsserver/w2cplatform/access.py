@@ -108,11 +108,28 @@ def session_cookie(token: str, seconds: float, secure: bool = False) -> str:
 # caller writes in it — one guesser would be a thousand addresses; not taken at all, behind a proxy every caller is
 # the proxy (the review's third pass, major).
 def caller_addr(headers, peer: str) -> str:
-    trusted = {a.strip() for a in os.environ.get("TRUSTED_PROXY", "").split(",") if a.strip()}
+    trusted = trusted_proxies()
     if peer not in trusted:
         return peer
     hops = [a.strip() for a in (headers.get("X-Forwarded-For", "") or "").split(",") if a.strip()]
     return next((a for a in reversed(hops) if a not in trusted), peer)
+
+
+def trusted_proxies() -> set:
+    return {a.strip() for a in os.environ.get("TRUSTED_PROXY", "").split(",") if a.strip()}
+
+
+# Whether the caller is ON THIS BOX: the socket's own peer is a loopback address, and not a proxy this console was
+# told to trust (whose callers are wherever the proxy says). A TCP peer of 127.0.0.1 is not something a caller on the
+# network can write — unlike `X-Forwarded-For`. The emergency door's local lane (`Gate.open_glass`).
+def is_local(peer: str) -> bool:
+    import ipaddress
+    try:
+        ip = ipaddress.ip_address(str(peer).split("%", 1)[0])
+    except ValueError:
+        return False
+    ip = getattr(ip, "ipv4_mapped", None) or ip
+    return ip.is_loopback and str(peer) not in trusted_proxies()
 
 
 def cookie(headers, name: str) -> str | None:
@@ -159,11 +176,24 @@ class Gate:
     # the pace, so a right password from an address that has not been refused gets in at once or after one turn.
     # Only a flood keeps the turns taken — from thirty fresh addresses each quarter of an hour, each of them
     # refused five times — and then the right password still competes for every turn, and the alarm says so.
+    #
+    # …AND THE BOX HAS A LANE OF ITS OWN (the review's fifth pass, Ч-M3's remainder). A refusal by the pace spends
+    # no try of the address — and so forty addresses, each inside its five a window, keep every network turn
+    # taken for good: the right password competed with them for each one, and the reviewer's simulation left the
+    # operator outside for an hour. Three ways out were named; the one taken is a separate pace for the caller on
+    # the box itself (`is_local`: a loopback peer that is no trusted proxy — on the console's host, or through an
+    # SSH tunnel to it). Nobody on the network can take its turns, and guessing from the network stays exactly as
+    # slow as it was. The other two were not: counting pace refusals against the address shuts out the operator
+    # whose own attempts the flood turned into refusals — five of them, and a quarter of an hour; a queue for
+    # addresses with no wrong attempt gives every FRESH address an unpaced guess, and a flood is fresh addresses.
+    # What stays: an operator who can reach neither the box nor an unflooded network still competes, and the
+    # alarm `access.break_glass.limited` says the door is under a flood. The per-address limit holds for the box
+    # too — five wrong guesses from loopback close loopback for the window; whoever is on the box is not a stranger.
     GLASS_TRIES, GLASS_WINDOW = 5, 900.0
     GLASS_RATE, GLASS_BURST, GLASS_WAIT = 10.0, 10, 10.0
     _glass_tries: dict = {}
     _glass_limited: dict = {}                            # key -> when its `limited` alarm was written: once a window
-    _glass_pace: dict = {"tat": 0.0}                     # the pace's theoretical arrival time (GCRA), on `_glass_clock`
+    _glass_pace: dict = {"tat": 0.0, "local": 0.0}       # each lane's theoretical arrival time (GCRA), on `_glass_clock`
     _glass_lock = threading.Lock()
     _glass_clock = staticmethod(time.monotonic)          # the pace's clock and its wait: a test sets its own
     _glass_sleep = staticmethod(time.sleep)
@@ -172,7 +202,7 @@ class Gate:
     def forget_glass(cls) -> None:
         """The counts are the process's: a test starts from none."""
         with cls._glass_lock:
-            cls._glass_tries.clear(); cls._glass_limited.clear(); cls._glass_pace["tat"] = 0.0
+            cls._glass_tries.clear(); cls._glass_limited.clear(); cls._glass_pace.update(tat=0.0, local=0.0)
 
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
@@ -231,6 +261,15 @@ class Gate:
                                   f"verify a token ({name}: {e}): it admits nobody") from None
         return self._loaded
 
+    # WHO, BEFORE WHAT (the review's fifth pass, major). The console read a request's body before the gate — `_named`
+    # looked in it for the unit an action names — and read it whole, whatever `Content-Length` said: a POST with no
+    # token and 400 MiB declared grew the console by 800 MiB and was then told 401. The caller is proved first, from
+    # the headers alone — no token is 401 and not a byte of the body is read — and what the caller may do on the
+    # unit the body names is asked after (`admit`). The payload, or None when this console is open.
+    def caller(self, headers) -> dict | None:
+        access = self.access()
+        return None if access is None else self.payload(headers, access)
+
     # The caller's payload: from a token, or from an emergency session of this process. `Denied` if neither.
     def payload(self, headers, access: Access) -> dict:
         sid = cookie(headers, GLASS_COOKIE)
@@ -246,7 +285,7 @@ class Gate:
 
     # Open an emergency session: `(session id, payload)`. Every attempt is an alarm, the refused ones too — the
     # account exists to be used rarely and seen always.
-    def open_glass(self, who: str, why: str, password: str, addr: str = "?") -> tuple[str, dict]:
+    def open_glass(self, who: str, why: str, password: str, addr: str = "?", local: bool = False) -> tuple[str, dict]:
         import secrets
         from .events import ALARM
         access = self.access()
@@ -259,6 +298,7 @@ class Gate:
         now = self.wall()
         limits = {addr: self.GLASS_TRIES}
         interval = 60.0 / self.GLASS_RATE
+        lane = "local" if local else "tat"               # the box's own turns, or the network's
         with self._glass_lock:                           # check and reserve in one step: no attempt slips between them
             tries = self._glass_tries[addr] = [t for t in self._glass_tries.get(addr, []) if now - t < self.GLASS_WINDOW]
             if len(tries) >= self.GLASS_TRIES:
@@ -268,22 +308,24 @@ class Gate:
             # The pace (GCRA): every check moves the theoretical arrival time on by one interval; a check may run
             # while that time is within the burst of now, and waits for it otherwise.
             mono = self._glass_clock()
-            tat = max(self._glass_pace["tat"], mono)
+            tat = max(self._glass_pace[lane], mono)
             wait = tat - (self.GLASS_BURST - 1) * interval - mono
             if wait > self.GLASS_WAIT:
-                full = mono - self._glass_limited.get("*", -1e18) >= self.GLASS_WINDOW
+                full = mono - self._glass_limited.get("*" + lane, -1e18) >= self.GLASS_WINDOW
                 if full:
-                    self._glass_limited["*"] = mono
+                    self._glass_limited["*" + lane] = mono
             else:
                 full = None
-                self._glass_pace["tat"] = tat + interval
+                self._glass_pace[lane] = tat + interval
                 self._glass_tries[addr].append(now)
         if full is not None:
             if full and self.journal is not None:
                 self.journal().say("access.break_glass.limited", cls=ALARM, user=f"break-glass({who})", addr=addr,
-                                   rate=self.GLASS_RATE, all=True)
+                                   rate=self.GLASS_RATE, all=True, lane="box" if local else "network")
             raise Denied(429, f"the emergency door checks {self.GLASS_RATE:.0f} passwords a minute and every turn is "
-                              f"taken: retry in {wait:.0f} s", retry_after=wait)
+                              f"taken: retry in {wait:.0f} s"
+                              + ("" if local else " — on the box itself (or through an SSH tunnel to its loopback) the "
+                                                  "door has turns of its own"), retry_after=wait)
         if wait > 0:
             self._glass_sleep(wait)                      # its turn: a pace, not a refusal
         try:

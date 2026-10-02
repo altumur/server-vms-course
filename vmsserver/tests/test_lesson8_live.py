@@ -560,3 +560,51 @@ def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses()
         assert _whep(base, 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)   # hers: hung up
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_a_hang_up_of_an_unknown_session_reads_the_whole_day_once_and_then_asks_nobody():
+    """The review's fifth pass, minor: `DELETE /whep/session/<any id>` asked the journals of every server for a day, each
+    time, and past `MAX_LIMIT` views a day an old session was 404. The day is read a window at a time, newest first,
+    until the session is found — the oldest of more views than a window holds is found; an id that was not found is
+    not looked up again for `SESSION_MISS_TTL`; and one caller's look-ups that find nothing are `SESSION_MISSES` a
+    minute — past them, 404 without asking."""
+    from w2cplatform.doors import MAX_LIMIT
+    from vms import console as vc
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    now = box.wall()
+    views = [{"t": now - 86000 + i, "kind": "live.view", "user": "anna", "target": "1", "session": f"s{i}", "gateway": "g-1"}
+             for i in range(MAX_LIMIT * 2 + 500)]                    # more views in a day than one window holds
+
+    class Index:
+        asked = 0
+
+        def query(self, t0, t1, kind=None, subsystem=None, limit=1000, keep="newest", **kw):
+            Index.asked += 1
+            got = [e for e in views if t0 <= e["t"] < t1]
+            return {"events": got[-limit:], "truncated": len(got) > limit}
+
+    class Live:
+        hung = []
+
+        def hangup(self, sid, g, token=None):
+            Live.hung.append((sid, g))
+            return 200, {}
+
+    class H:
+        def __init__(self, who):
+            self.headers, self.sees, self.client_address = {"X-User": who}, (lambda u, l: True), ("1.2.3.4", 0)
+    route = vc.vms_routes(True, Live(), ctl, None)
+    route.index, route.journal = Index(), None
+    assert route(H("anna"), "DELETE", "/whep/session/s0", {})[0] == 200 and Live.hung == [("s0", "g-1")]   # the oldest
+    assert Index.asked == 3                                           # three windows, newest first
+    Index.asked = 0
+    assert route(H("boris"), "DELETE", "/whep/session/s5", {})[0] == 403             # found, and not his
+    Index.asked = 0
+    assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3
+    assert route(H("boris"), "DELETE", "/whep/session/nope", {})[0] == 404 and Index.asked == 3   # not asked again
+    for i in range(vc.SESSION_MISSES - 1):
+        route(H("boris"), "DELETE", f"/whep/session/x{i}", {})
+    before = Index.asked
+    assert route(H("boris"), "DELETE", "/whep/session/x-more", {})[0] == 404 and Index.asked == before   # his budget spent
+    assert route(H("anna"), "DELETE", "/whep/session/y", {})[0] == 404 and Index.asked > before         # hers is not

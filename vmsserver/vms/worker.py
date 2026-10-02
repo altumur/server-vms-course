@@ -1180,17 +1180,46 @@ class VmsWorker(Worker):
     # gateway does for viewers (Lesson 13), one floor down. On a camera, this competes with live for the
     # one uplink; on an NVR it usually does not.
     def playback(self, cam, t0: float, t1: float) -> bytes:
+        return b"".join(self.playback_pieces(cam, t0, t1))
+
+    # …A PIECE AT A TIME (the review's fifth pass, major). The door read the whole range in one `read` and wrote it in
+    # one buffer: a thousand seconds of a 100 kB/s card was 100 MB in the holder — the process holding every camera
+    # of its server — and a signed day of a card was enough to take it down. What a device's `read` gives is the
+    # driver's to say, and the code here has only one driver, the fake: `read(session) -> bytes`, the whole range at
+    # once. So the door never asks it for more than `PLAYBACK_PIECE` seconds: the range is cut to the device's
+    # coverage, then read piece by piece — a session opened for each and closed before the next, so the door still
+    # holds one of the device's sessions, not one per piece — and each piece goes out as it comes. A driver whose
+    # `read` yields chunks (a stream: what a DriverPack session reading a card would be) is passed on chunk by chunk.
+    # The first piece is read before anything is sent (the door takes it with `next`), so "no such archive" (404) and
+    # "the device is full" (503) are still answers; a device that fails later ends the reply short, and the client
+    # sees it (`playback_handler`).
+    PLAYBACK_PIECE = 60.0
+
+    def playback_pieces(self, cam, t0: float, t1: float):
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
-        if dev is None or dev.coverage(cam) is None:
+        cov = dev.coverage(cam) if dev is not None else None
+        if cov is None:
             raise KeyError(cam)
-        sid = dev.open_playback(cam, t0, t1)            # OverflowError when the device is full
-        try:
-            return dev.read(sid)
-        finally:
-            dev.close_playback(sid)
+        t0, t1 = max(float(t0), float(cov.get("from", t0))), min(float(t1), float(cov.get("to", t1)))
+
+        def pieces():
+            at = t0
+            while at < t1:
+                b = min(t1, at + self.PLAYBACK_PIECE)
+                sid = dev.open_playback(cam, at, b)      # OverflowError when the device is full
+                try:
+                    got = dev.read(sid)
+                    if isinstance(got, (bytes, bytearray, memoryview)):
+                        yield bytes(got)
+                    else:
+                        yield from got                   # a driver that streams
+                finally:
+                    dev.close_playback(sid)
+                at = b
+        return pieces()
 
     # What the heartbeat says per unit beyond the platform's fields: the worker publishes `live_url` — where a
     # recorder, a gateway or a detector subscribes; never a viewer.
@@ -1350,14 +1379,37 @@ class VmsWorker(Worker):
                 if refused is not None:
                     return self._send(refused[0], {"detail": refused[1], "error": "denied"})
                 try:
-                    data = gw.playback(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    first = next(pieces, None)                   # the first piece read before the reply is chosen
                 except KeyError:
                     return self._send(404, {"detail": "this camera has no archive of its own here",
                                             "error": "no device archive"})
                 except OverflowError as e:                       # the device's ceiling, not ours
                     return self._send(503, {"detail": str(e), "error": str(e)})
+                # A stream, and its end said (`playback_pieces`): to a client that speaks HTTP/1.1, chunks and the last
+                # one only when every piece went — a device that failed half way is a reply that ends short, which
+                # the client SEES; to an HTTP/1.0 one, the bytes until the connection closes, as before.
+                chunked = self.request_version == "HTTP/1.1"
+                if chunked:
+                    self.protocol_version = "HTTP/1.1"
                 self.send_response(200); self.send_header("Content-Type", "video/mp4")
-                self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+                self.send_header("Transfer-Encoding" if chunked else "Connection", "chunked" if chunked else "close")
+                if chunked:
+                    self.send_header("Connection", "close")
+                self.end_headers()
+                self.close_connection = True
+                try:
+                    for piece in ([first] if first else []):
+                        self.wfile.write(b"%x\r\n%s\r\n" % (len(piece), piece) if chunked else piece)
+                    for piece in pieces:
+                        if piece:
+                            self.wfile.write(b"%x\r\n%s\r\n" % (len(piece), piece) if chunked else piece)
+                    if chunked:
+                        self.wfile.write(b"0\r\n\r\n")
+                except (OSError, OverflowError, KeyError) as e:  # the client went, or the device failed after the first byte
+                    log.warning("%s: playback of camera %s ended short: %s", gw.name, cam, e)
+                finally:
+                    pieces.close()
 
         return H
 

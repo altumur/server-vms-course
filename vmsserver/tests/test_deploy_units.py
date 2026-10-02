@@ -154,6 +154,40 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     script = open(os.path.join(DEPLOY, "install-obsd.sh")).read()
     for needed in ("obsd.sysusers", "systemd-sysusers", "vms.tmpfiles", "systemd-tmpfiles --create",
                    f'"$GID" != {rec["GroupAdd"]}', f"chown -R {svc['User']}:{svc['Group']}", own,
-                   "obsd.service", "systemctl enable --now obsd.service"):
+                   "obsd.service", "systemctl enable obsd.service", "systemctl restart obsd.service"):
         assert needed in script, needed
     assert os.access(os.path.join(DEPLOY, "install-obsd.sh"), os.X_OK)
+
+
+def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and_restarts_it_after():
+    """The review's fifth pass, major: on a box upgraded from a daemon that ran as root, `install-obsd.sh` ran `chown -R`
+    while that daemon still wrote — making new blocks of root's behind it — and `enable --now` left the running daemon
+    as it was, its socket where the recorders no longer look. The script is RUN here, every command it calls a shim
+    that writes its line down, and the ORDER is the claim: the daemon stopped, then the volumes handed over, then the
+    unit installed, enabled and restarted — never `enable --now`."""
+    import subprocess
+    import tempfile
+    bin_ = tempfile.mkdtemp(prefix="install-obsd-")
+    log = os.path.join(bin_, "calls")
+    says = {"id": "echo 0", "getent": "echo vms-rec:x:2101:", "find": 'echo "$2/block-0"'}
+    for name in ("id", "install", "systemd-sysusers", "getent", "systemd-tmpfiles", "systemctl", "mkdir", "find",
+                 "chown", "chmod"):
+        with open(os.path.join(bin_, name), "w") as f:
+            f.write(f'#!/bin/sh\necho "{name} $*" >> "{log}"\n{says.get(name, "true")}\n')
+        os.chmod(os.path.join(bin_, name), 0o755)
+    env = {**os.environ, "PATH": bin_ + os.pathsep + os.environ.get("PATH", "")}
+    out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "install-obsd.sh"), "/data/disk-2"], env=env,
+                         capture_output=True, text=True, timeout=30)
+    assert out.returncode == 0, out.stderr
+    calls = [line.strip() for line in open(log)]
+
+    def at(line):
+        assert line in calls, f"{line!r} not called: {calls}"
+        return calls.index(line)
+    stop = at("systemctl stop obsd.service")
+    handed = [i for i, line in enumerate(calls) if line.startswith("chown -R obsd:vms-rec")]
+    assert len(handed) == 2 and stop < min(handed)                                     # both volumes, after the stop
+    unit_in = at("install -m 0644 " + os.path.join(DEPLOY, "obsd.service") + " /etc/systemd/system/obsd.service")
+    assert max(handed) < unit_in < at("systemctl daemon-reload") < at("systemctl enable obsd.service") \
+        < at("systemctl restart obsd.service")
+    assert not any("--now" in line for line in calls)                                  # a running unit is not left as it was

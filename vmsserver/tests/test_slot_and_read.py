@@ -231,17 +231,105 @@ def test_an_export_of_a_camera_with_two_recordings_and_no_rec_is_both_of_them():
         da.shutdown(); srv.shutdown()
 
 
+def test_an_honest_slow_client_gets_the_whole_export_and_a_cut_one_is_seen_as_cut():
+    """The review's fifth pass, major: an export was cut at a budget of 900 s of the clock, and went out as `200` with
+    a file that simply ended — an hour of an 8 Mbit/s camera over a 10 Mbit/s VPN was always nineteen minutes, and
+    nothing said so. The bound is the client's pace now (`EXPORT_MIN_RATE`, after `EXPORT_GRACE`): a client reading
+    slowly but above it gets the file whole, however long that takes, ending with the last chunk; one below it is cut,
+    and the reply ends WITHOUT the last chunk — what curl, a browser and `http.client` read as an error — and the
+    journal says `broken` with no digest."""
+    import socket
+    import time
+    box, ctl, rec, st, t = _export_box(size=8192)                    # some 2.5 MB for recording 7's five minutes
+    was = {k: os.environ.get(k) for k in ("EXPORT_GRACE", "EXPORT_MIN_RATE")}
+    os.environ["EXPORT_GRACE"], os.environ["EXPORT_MIN_RATE"] = "0.3", "500000"
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    port = srv.server_address[1]
+
+    def fetch(who: str, rate: float):                                 # reads no faster than `rate` bytes a second
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192)
+        s.connect(("127.0.0.1", port))
+        s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: {who}\r\n\r\n".encode())
+        data, began = b"", time.monotonic()
+        s.settimeout(10)
+        while True:
+            got = s.recv(8192)
+            if not got:
+                break
+            data += got
+            ahead = len(data) / rate - (time.monotonic() - began)
+            if ahead > 0:
+                time.sleep(ahead)
+        s.close()
+        return data, time.monotonic() - began
+    try:
+        whole, took = fetch("fiona", 2_000_000)
+        assert b"Transfer-Encoding: chunked" in whole and whole.endswith(b"\r\n0\r\n\r\n") and len(whole) > 2_000_000
+        assert took > 1.0                                             # slow, and whole: no clock cut it
+        assert [e.get("sha256") for e in _journal(box) if e.get("user") == "fiona"][-1]
+        cut, _ = fetch("gleb", 100_000)
+        assert b" 200 " in cut.split(b"\r\n", 1)[0] and not cut.endswith(b"0\r\n\r\n") and len(cut) < len(whole)
+        mine = [e for e in _journal(box) if e.get("user") == "gleb"]
+        assert mine and "sha256" not in mine[-1] and "EXPORT_MIN_RATE" in mine[-1].get("broken", "")
+    finally:
+        for k, v in was.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        da.shutdown(); srv.shutdown()
+
+
+def test_every_download_cut_off_after_real_footage_is_a_line_of_its_own():
+    """The review's fifth pass, Ч-m5's remainder: a whole export was always a line, and a broken one was folded into
+    the minute's — two downloads of an interval, each cut after 3.6 MB, were one line. A part is folded only while it
+    is a player's scrub, under `READ_NOTE_BYTES`; two cut downloads past it are two lines, each with its bytes."""
+    import socket
+    import time
+    from vms import console as vc
+    box, ctl, rec, st, t = _export_box(size=32768)                   # some 10 MB for recording 7's five minutes
+    srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
+    da = door(box, st, "r-a", "srv-a")
+    port = srv.server_address[1]
+
+    def cut_after(n: int) -> None:
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: hana\r\n\r\n".encode())
+        got = 0
+        while got < n:
+            got += len(s.recv(65536))
+        s.close()                                                     # the player went away
+    def lines(n: int) -> list:
+        for _ in range(200):
+            mine = [e for e in _journal(box) if e.get("user") == "hana"]
+            if len(mine) >= n:
+                break
+            time.sleep(0.05)
+        return mine
+    try:
+        cut_after(3 * vc.READ_NOTE_BYTES)
+        assert len(lines(1)) == 1                                     # the first is over, its slot free again
+        cut_after(3 * vc.READ_NOTE_BYTES)                             # the same interval, inside the same minute
+        mine = lines(2)
+        assert len(mine) == 2 and all("broken" in e and e["bytes"] >= vc.READ_NOTE_BYTES for e in mine)
+    finally:
+        da.shutdown(); srv.shutdown()
+
+
 def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one_slot():
     """The review's fourth pass, major: two sockets that asked for an export and read nothing held both slots until
     the console restarted, and every other export was 503. The console's sockets have a timeout (`CONSOLE_TIMEOUT`):
     a client that reads nothing for that long is let go, and its slot with it. One person makes one export at a time
-    (`EXPORTS_PER_USER`), and an export longer than `EXPORT_BUDGET` is cut off there, and says so in the journal.
-    The timeout covers the request's own line and headers too: half a request line is let go the same way."""
+    (`EXPORTS_PER_USER`), and a client slower than `EXPORT_MIN_RATE` is cut off — the client sees the cut (no last
+    chunk: `IncompleteRead`, the review's fifth pass) and the journal says so. The timeout covers the request's own
+    line and headers too: half a request line is let go the same way."""
     import socket
     import time
     import urllib.error
     box, ctl, rec, st, t = _export_box(size=32768)                   # some 20 MB: more than any socket's buffers hold
-    was = {k: os.environ.get(k) for k in ("CONSOLE_TIMEOUT", "EXPORT_BUDGET")}
+    was = {k: os.environ.get(k) for k in ("CONSOLE_TIMEOUT", "EXPORT_GRACE", "EXPORT_MIN_RATE")}
     os.environ["CONSOLE_TIMEOUT"] = "1"
     srv = serve(ctl, box.archive, port=0, wall=box.wall, mounts={"rec": rec})
     da = door(box, st, "r-a", "srv-a")
@@ -287,11 +375,18 @@ def test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one
             s.close()
         held = []
         time.sleep(1.5)
-        os.environ["EXPORT_BUDGET"] = "0"                            # …and an export past its budget stops there
-        code, body = export("erin")
-        assert code == 200 and len(body) < 10000
+        os.environ["EXPORT_GRACE"], os.environ["EXPORT_MIN_RATE"] = "0", "1e12"   # …and a client slower than the floor is cut
+        import http.client
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/export/7?rec=7&from={t}&to={t + 60}", headers={"X-User": "erin"})
+        with urllib.request.urlopen(req) as r:
+            assert r.status == 200 and r.headers.get("Transfer-Encoding") == "chunked"
+            try:
+                r.read()
+                raise AssertionError("a file cut short read as a whole one")
+            except http.client.IncompleteRead as e:                  # the cut is SEEN: no last chunk (the fifth pass)
+                assert len(e.partial) < 10000
         mine = [e for e in _journal(box) if e.get("user") == "erin"]
-        assert mine and "sha256" not in mine[-1] and "budget" in mine[-1].get("broken", "")
+        assert mine and "sha256" not in mine[-1] and "EXPORT_MIN_RATE" in mine[-1].get("broken", "")
     finally:
         for s in held:
             s.close()
