@@ -88,25 +88,29 @@ class ObsdDaemon:
     def __init__(self):
         import atexit
         import shutil
-        import subprocess
-        import time
         binary = os.environ.get("OBSD_BIN") or shutil.which("obsd")
         if not binary or not os.access(binary, os.X_OK):
             raise RuntimeError(OBSD_HINT)
+        self.binary = binary
         self.dir = tempfile.mkdtemp(prefix="obsd-")              # the system's temp dir: a unix socket path is short
         self.socket = os.path.join(self.dir, "run", "obsd.sock")
         if len(self.socket.encode()) > 100:
             raise RuntimeError(f"the socket path {self.socket} is longer than unix sockets allow; set TMPDIR shorter")
+        self._start()
+        atexit.register(self.stop)
+
+    def _start(self) -> None:
+        import subprocess
+        import time
         env = dict(os.environ, OBSD_WRITER_GRACE_S=str(OBSD_GRACE_S), OBSD_SESSION_LINGER_MS=str(OBSD_LINGER_MS),
                    OBSD_LOG_LEVEL=os.environ.get("OBSD_LOG_LEVEL", "error"))
-        self.log = open(os.path.join(self.dir, "obsd.log"), "w")
-        self.proc = subprocess.Popen([binary, "--socket", self.socket], env=env, stdout=self.log, stderr=subprocess.STDOUT)
+        self.log = open(os.path.join(self.dir, "obsd.log"), "a")
+        self.proc = subprocess.Popen([self.binary, "--socket", self.socket], env=env, stdout=self.log, stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 10
         while not os.path.exists(self.socket):
             if self.proc.poll() is not None or time.monotonic() > deadline:
                 raise RuntimeError(f"obsd did not start: see {self.log.name}")
             time.sleep(0.05)
-        atexit.register(self.stop)
 
     def stop(self) -> None:
         if self.proc.poll() is None:
@@ -116,11 +120,32 @@ class ObsdDaemon:
             except Exception:                                    # noqa: BLE001
                 self.proc.kill()
 
+    # The daemon restarted under its clients (the review's third pass, blocker 4): `kill` is a crash — SIGKILL, no
+    # writer closed — and otherwise SIGTERM, every writer closed cleanly. The socket stays where it was; every
+    # session the daemon knew is gone, and a client that says HELLO again under its token gets a new, empty one.
+    def restart(self, kill: bool = True) -> None:
+        if kill:
+            self.proc.kill()
+            self.proc.wait(timeout=10)
+        else:
+            self.stop()
+        try:
+            os.unlink(self.socket)
+        except FileNotFoundError:
+            pass
+        self._start()
+
     @classmethod
     def get(cls) -> "ObsdDaemon":
         if cls._one is None:
             cls._one = cls()
         return cls._one
+
+    @classmethod
+    def fresh(cls) -> "ObsdDaemon":
+        """A daemon of the test's own, on a socket of its own: what a test that restarts it uses, so that every other
+        test's sessions on the shared one are left alone."""
+        return cls()
 
 
 def obsd_session(client: str = "test", token: str | None = None):
@@ -180,7 +205,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     from w2cplatform.contract import Heartbeat
     from vms.config import REC_SPEC
-    from vms.recworker import archive_routes
+    from vms.recworker import archive_routes, send_route
     routes = archive_routes(lambda: st, box.wall)
 
     class H(BaseHTTPRequestHandler):
@@ -188,12 +213,7 @@ def door(box, st, name: str = "r-door", server: str = "srv-1", status: list | No
             pass
 
         def do_GET(self):
-            got = routes(self.path)
-            if got is None:
-                self.send_response(404); self.end_headers(); return
-            code, body, ctype = got
-            self.send_response(code); self.send_header("Content-Type", ctype)
-            self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            send_route(self, routes(self.path))                 # frames are streamed, as the recorder's own door does
 
     srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()

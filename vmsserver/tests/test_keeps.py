@@ -238,3 +238,29 @@ def test_the_list_of_keeps_is_what_the_caller_may_see():
     open_ = SimpleNamespace(headers={}, sees=None, labels_for=lambda u: [])
     cams = lambda h: sorted(k["cam"] for k in route(h, "GET", "/keeps", {})[1]["keeps"])   # noqa: E731
     assert cams(boris) == ["1"] and cams(vera) == ["3"] and cams(open_) == ["1", "3", "ref:SN-A"]
+
+
+def test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_an_alarm():
+    """The review's third pass, a minor: what each keep held in the incidents volume was in memory only, so a recorder
+    started again compared against nothing, and kept footage its ring took meanwhile was never `archive.keep.lost`.
+    What was copied is a DURABLE event now, with how much of the keep the volume held, and a recorder starts from it."""
+    box, k = _site(quota=16 << 20)
+    t = box.wall()
+    for smp in fake_samples(t - 1200, t, step=10, size=256 << 10):
+        box.src.put("7", 1, smp)
+    box.src.finish("7", 1); box.src.seal()
+    first = _keep(box, "7", t - 1200, t - 900)
+    k.keep_pass()
+    [copied] = _events(box, "archive.keep.copied")
+    assert copied["seconds"] == 300
+    k.after_stop()                                                     # the recorder of the incidents volume goes away…
+
+    again = recorder(box, "r-keep", "srv-1", acl=False)                # …and a new process takes the volume
+    again.lease_pass()
+    assert again.volume == "evidence" and again.keep_held == {}
+    _keep(box, "7", t - 800, t - 500); _keep(box, "7", t - 400, t - 100)
+    again.keep_pass()                                                  # its own copies push the first keep out of the ring
+    box.src_door.shutdown()
+    state = again.keep_pass()
+    lost = [a for a in _events(box, "archive.keep.lost") if a["keep"] == first.id]
+    assert lost and lost[0]["seconds"] > 0 and state[first.id]["missing"] > 0

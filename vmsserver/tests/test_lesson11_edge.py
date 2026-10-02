@@ -223,13 +223,15 @@ def test_backfill_closes_our_gaps_and_what_it_fetches_is_ours():
     assert r.backfill(budget=1, now=_noon(now)) == []                       # midday local: not the window
     done = r.backfill(budget=1, now=now, force=True)                        # the operator asked
     assert done and done[0]["groups"] > 0 and done[0]["source"] == "device"
+    while more := r.backfill(budget=1, now=now, force=True):                # `RANGE_CAP` a pass: the hour comes in turns
+        done += more
 
     r.store.seal()                                                          # its block closed: the volume shows it
     edge = _backfilled(r)
     assert edge and all(s.epoch == r.epochs["1"] for s in edge)             # the recorder's CURRENT epoch
     assert edge[0].stream == f"1/e{r.epochs['1']}/backfill"                 # ours, beside what live recording wrote
     assert r.our_coverage(1) == [(now - 80000, now - 66400)]                # the hole is closed
-    assert r.backfilled == done[0]["groups"] and "rec_groups_backfilled" in r.metrics_text()
+    assert r.backfilled == sum(d["groups"] for d in done) and "rec_groups_backfilled" in r.metrics_text()
 
 
 def test_subtraction_is_one_rule():
@@ -809,7 +811,10 @@ def test_a_request_is_fetched_outside_the_window_and_the_budget():
     con_rec.vars.put(REC_SPEC.sub.request_key("1-a"),
                      {"unit": "1", "cam": "1", "from": str(now - 76400), "to": str(now - 70000),
                       "at": str(now), "by": "anna"})
-    r.pump_once()                                                           # the ORDINARY pass, not a direct call:
+    for _ in range(30):                                                     # the ORDINARY pass, not a direct call:
+        r.pump_once(); r._backfiller.join(10.0)                             # (`RANGE_CAP` a pass: an hour and more in turns)
+        if r.fetched:
+            break
     assert r.fetched == ["1-a"]                                             # a pass nobody runs is the bug this project has had twice
     r.store.seal()
     assert _backfilled(r)

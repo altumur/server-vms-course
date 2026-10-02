@@ -221,3 +221,70 @@ def test_a_fetch_from_a_slow_card_does_not_hold_the_pass():
     r.pump_once()
     r._backfiller.join(5)
     assert started == [1, 1]                                          # it came back: the next range may go
+
+
+# -- the review's third pass ---------------------------------------------------------------------------------------
+
+def test_a_silent_daemon_costs_a_pass_one_wait_and_not_one_per_question():
+    """One connection, one lock, no deadline: forty cameras' samples queued behind a silent daemon ten seconds each,
+    the pass behind them. A connection that went silent fails at once for a timeout after — the pass's budget — so
+    twenty questions of a daemon that answers none wait for one of them."""
+    import time
+    from w2cplatform.obsd import Unavailable
+    silent = _Silent()
+    try:
+        s = Session(silent.path, client="t", timeout=0.3)
+        t0 = time.monotonic()
+        for _ in range(20):
+            try:
+                s.call("STATS")
+                raise AssertionError("a silent daemon answered")
+            except Unavailable:
+                pass
+        assert time.monotonic() - t0 < 1.5, "every question waited its own timeout"
+    finally:
+        silent.close()
+
+
+def test_the_engine_lost_while_the_store_is_silent_is_mounted_again_by_the_last_rows():
+    """The daemon restarted during the store's own election: `volume_pass` began by reading the declared volumes,
+    raised, and opened nothing again — no writer for the whole silence. The recorder mounts by the rows it read
+    last: a disk of its server at once; a network volume only while its hold is still in its term for longer than
+    a mount can take — and not past that, when another box may have taken it."""
+    from vms import volumes
+    box = Box()
+    volumes.write(box.vars, {"name": "disk-a", "kind": "local", "url": os.path.join(box.root, "disk-a"), "server": "srv-1",
+                             "quota_bytes": 64 << 20})
+    r = recorder(box, acl=False)
+    r.lease_pass()
+    assert r.volume == "disk-a" and r.store is not None
+    first = r.store
+
+    def silent(*a, **k):
+        raise OSError(5, "the store does not answer")
+    real_declared, real_renew = volumes.declared, r.renew_hold
+    volumes.declared, r.renew_hold = silent, silent
+    try:
+        r._lost_engine()
+        r.lease_pass()
+        assert r.store is not None and r.store is not first and not r.engine_lost      # mounted again, by the last row
+        assert r.volume == "disk-a" and r.remounts == 1
+    finally:
+        volumes.declared, r.renew_hold = real_declared, real_renew
+
+    net = Box()
+    volumes.write(net.vars, {"name": "net", "kind": "network", "url": tempfile.mkdtemp(prefix="net-"), "quota_bytes": 64 << 20})
+    n = recorder(net, acl=False)
+    n.lease_pass()
+    assert n.volume == "net" and n.store is not None
+    volumes.declared, n.renew_hold = silent, silent
+    try:
+        n._lost_engine()
+        n.lease_pass()                                                  # the hold confirmed a moment ago: still ours
+        assert n.store is not None and n.remounts == 1
+        n._lost_engine()
+        net.clock.advance(n.slot_ttl - n.lease_margin - 1)              # in its term — but not for as long as a mount takes
+        n.lease_pass()
+        assert n.store is None and "could not be confirmed" in n.archive_error
+    finally:
+        volumes.declared, n.renew_hold = real_declared, real_renew

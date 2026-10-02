@@ -43,7 +43,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith("/data/") or vol.startswith("/run/vms:"), vol           # /run/vms: the shared-memory sockets — a tmpfs, not state
+            assert vol.startswith("/data/") or vol.startswith("/run/vms:") or vol.startswith("/run/obsd:"), vol   # sockets on a tmpfs, not state
 
 
 def test_who_may_write_where_is_in_the_mounts_too():
@@ -58,7 +58,13 @@ def test_who_may_write_where_is_in_the_mounts_too():
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
     assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
-    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory — and the daemon's socket
+    assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
+    # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
+    for n in os.listdir(DEPLOY):
+        if n.endswith(".container"):
+            assert ("/run/obsd" in vols(n)) == (n == "recworker@.container"), n
+    rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
+    assert rec_env["OBSD_SOCKET"] == "/run/obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/vms.key"   # it opens a volume's secret
     assert "/data/archive" not in vols("reccontroller.container")
     assert vols("resource.container")["/data/platform"] == "/data/platform:z"       # the heartbeat is written; rows are only read
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
@@ -82,10 +88,11 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
     only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
     from w2cplatform.obsd import default_socket
     u = unit("obsd.service")
-    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms/obsd.sock"
-    assert u["Service"]["RuntimeDirectory"] == "vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/obsd/obsd.sock"
+    assert u["Service"]["RuntimeDirectory"] == "obsd vms" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
     env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
     assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
+    assert u["Service"]["User"] == "obsd" and env["OBSD_CLIENT_GROUP"] == u["Service"]["Group"]   # its own user; the recorders' group
     import sys
     if sys.platform != "darwin":
-        assert default_socket() == "/run/vms/obsd.sock"
+        assert default_socket() == "/run/vms/obsd.sock"                                 # the daemon's own default; the unit says otherwise

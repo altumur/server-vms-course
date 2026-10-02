@@ -32,6 +32,7 @@ import os
 import socket
 import struct
 import threading
+import time
 import uuid
 from dataclasses import dataclass, field
 
@@ -109,6 +110,22 @@ class Unavailable(ObsdError):
         self.name = "UNAVAILABLE"
 
 
+class SessionLost(Unavailable):
+    """The daemon does not know a handle of this session (`UNKNOWN_HANDLE`): every handle the session had is gone.
+
+    Two ways to get here, and the client cannot tell them apart — nor does it need to (the engine's session, asked):
+    the daemon was restarted, or every connection of the session was gone longer than `OBSD_SESSION_LINGER_MS`.
+    Either way the HELLO that reconnected under the same token made a NEW, empty session, and `HELLO` says nothing
+    that would show it — its `pid` repeats in a container and after a reboot. So the rule is the reply: any
+    `UNKNOWN_HANDLE` is the engine lost, and the answer is a remount (the review's third pass, blocker 4). Before
+    it, the client reconnected in silence, the old handles answered `UNKNOWN_HANDLE`, and a recorder took that for
+    a passing outage and wrote into dead handles until somebody restarted it."""
+
+    def __init__(self, op: str, why: str):
+        super().__init__(op, why)
+        self.status, self.name = CODE["UNKNOWN_HANDLE"], "SESSION_LOST"
+
+
 @dataclass
 class Sample:
     """One frame as the engine stores it. `begin`/`end` are the archive's milliseconds; `sub` the coded header."""
@@ -169,13 +186,32 @@ class Entry:
 NOT_RESENT = frozenset({"PUT_MEDIA", "FINISH_MEDIA", "VOLUME_FORMAT", "VOLUME_MOUNT_RW", "WRITER_CLOSE", "WRITER_RESIZE"})
 
 
+# The ops a READER sends, and a WRITER's: each kind goes on a connection of its own (`Session.call`).
+READ_OPS = frozenset({"VOLUME_MOUNT_RO", "READER_CLOSE", "READER_INFO", "READER_STATUS", "READER_STREAMS",
+                      "READER_TIMELINE", "READER_SEQUENCES", "READER_FIND", "READ_SEQUENCE"})
+WRITE_OPS = frozenset({"WRITER_CONFIGURE", "PUT_MEDIA", "FINISH_MEDIA", "WRITER_FLUSH", "WRITER_RESIZE", "WRITER_CLOSE"})
+
+
+class _Lane:
+    """One connection of a session: its socket, its own lock, its own request ids."""
+
+    def __init__(self, name: str):
+        self.name = name
+        self.sock: socket.socket | None = None
+        self.lock = threading.Lock()
+        self.id = 0
+        self.sent: str | None = None                 # the op whose request went out on this attempt
+        self.silent_until = 0.0                      # after a silence: fail at once until then (`Session.call`)
+
+
 class Session:
-    """One session with the daemon, over one connection. Thread-safe: one request at a time on the wire.
+    """One session with the daemon. Thread-safe: one request at a time on each of its connections.
 
     A connection that breaks is opened again under the SAME session token — the daemon keeps a session whose
     connection is gone for `OBSD_SESSION_LINGER_MS`, handles and writers included — and the request is sent
     once more. A daemon that does not answer at all is `Unavailable`, which a recorder treats as "the engine
-    is lost": remount, at once (feedback CF).
+    is lost": remount, at once (feedback CF). A daemon that answers `UNKNOWN_HANDLE` is `SessionLost`: the
+    session the token named is gone — restarted, or past its linger — and every handle with it.
 
     A daemon that takes the request and says nothing is `Unavailable` too, after `timeout` — and is NOT asked
     again: a broken connection is a reason to resend, a silence is not, and asking twice would double the wait
@@ -184,21 +220,40 @@ class Session:
 
     And a request that was SENT before the connection broke is resent only if sending it twice is harmless. A
     sample, a finish, a format or a mount may have been done by the daemon before the break; done twice, it is
-    a frame written twice or a volume formatted twice. Those raise `Unavailable` instead, and the caller decides."""
+    a frame written twice or a volume formatted twice. Those raise `Unavailable` instead, and the caller decides.
+
+    THREE CONNECTIONS, NOT ONE (the review's third pass). The protocol lets a session have several, any of them
+    using any of its handles. On one connection behind one lock with no deadline, everything waited for
+    everything: forty streams' samples queued behind a silent daemon ten seconds each, the pass that renews the
+    leases behind them, and a long read held every stream's writing. So the writer's ops, the readers' and the
+    rest — the pass: open, format, mount, space — each have a connection of their own, and a connection's lock is
+    waited for at most `timeout`: one held by a request that does not come back answers `Unavailable` to the next
+    caller instead of queueing it. And a connection that went silent fails at once for `timeout` after — the
+    pass's budget: a pass that asks twenty things of a daemon that answers none waits for one of them."""
 
     def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
                  timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
         self.path, self.client, self.timeout, self.log_level = path or default_socket(), client, timeout, log_level
         self.long_timeout = max(long_timeout, timeout)
         self.token = token or f"{client}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
-        self._sock: socket.socket | None = None
-        self._sent: str | None = None                # the op whose request went out on this attempt
-        self._lock = threading.Lock()
-        self._id = 0
+        self._lanes: dict[str, _Lane] = {}
+        self._guard = threading.Lock()
         self.server: dict = {}
+        self.lost = 0                                # how many times the daemon answered UNKNOWN_HANDLE
 
     # -- the wire -------------------------------------------------------------------------------------
-    def _connect(self) -> None:
+    def lane(self, name: str) -> _Lane:
+        with self._guard:
+            ln = self._lanes.get(name)
+            if ln is None:
+                ln = self._lanes[name] = _Lane(name)
+            return ln
+
+    @staticmethod
+    def lane_of(op: str) -> str:
+        return "read" if op in READ_OPS else "write" if op in WRITE_OPS else "pass"
+
+    def _connect(self, ln: _Lane) -> None:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(self.timeout)
         try:
@@ -206,64 +261,84 @@ class Session:
         except OSError as e:
             s.close()
             raise Unavailable("connect", f"{self.path}: {e}") from None
-        self._sock = s
-        self.server = self._exchange("HELLO", {"proto": [PROTO, PROTO], "client": self.client, "pid": os.getpid(),
-                                               "session": self.token, "logLevel": self.log_level})[0]
+        ln.sock = s
+        self.server = self._exchange(ln, "HELLO", {"proto": [PROTO, PROTO], "client": self.client, "pid": os.getpid(),
+                                                   "session": self.token, "logLevel": self.log_level})[0]
 
-    def _recv(self, n: int) -> bytes:
+    @staticmethod
+    def _recv(ln: _Lane, n: int) -> bytes:
         buf = bytearray()
         while len(buf) < n:
-            chunk = self._sock.recv(n - len(buf))
+            chunk = ln.sock.recv(n - len(buf))
             if not chunk:
                 raise ConnectionError("obsd closed the connection")
             buf += chunk
         return bytes(buf)
 
-    def _exchange(self, op: str, js: dict | None, tail: bytes = b"") -> tuple[dict, bytes]:
-        self._id = (self._id + 1) & 0xFFFFFFFF
-        rid = self._id
+    def _exchange(self, ln: _Lane, op: str, js: dict | None, tail: bytes = b"") -> tuple[dict, bytes]:
+        ln.id = (ln.id + 1) & 0xFFFFFFFF
+        rid = ln.id
         j = json.dumps(js or {}).encode() if js is not None else b""
         body = HEADER.pack(rid, OP[op], 0, 0, len(j)) + j + tail
-        self._sock.sendall(struct.pack("<I", len(body)) + body)
-        self._sent = op
+        ln.sock.sendall(struct.pack("<I", len(body)) + body)
+        ln.sent = op
         while True:
-            (n,) = struct.unpack("<I", self._recv(4))
-            frame = self._recv(n)
+            (n,) = struct.unpack("<I", self._recv(ln, 4))
+            frame = self._recv(ln, n)
             got, _op, flags, status, jl = HEADER.unpack_from(frame)
             if got != rid:
                 continue                                  # a reply to a request we stopped waiting for
             reply = json.loads(frame[HEADER.size:HEADER.size + jl] or b"{}")
+            if status == CODE["UNKNOWN_HANDLE"]:
+                self.lost += 1
+                raise SessionLost(op, str(reply.get("detail", "")) or "no such handle in this session")
             if status != 0:
                 raise ObsdError(status, op, str(reply.get("detail", "")))
             return reply, frame[HEADER.size + jl:]
 
     def call(self, op: str, js: dict | None = None, tail: bytes = b"", long: bool = False) -> tuple[dict, bytes]:
-        with self._lock:
+        ln = self.lane(self.lane_of(op))
+        wait = self.long_timeout if long else self.timeout
+        if not ln.lock.acquire(timeout=self.timeout):
+            raise Unavailable(op, f"the {ln.name} connection is held by a request unanswered for {self.timeout:g} s")
+        try:
+            if time.monotonic() < ln.silent_until:
+                raise Unavailable(op, f"no answer in {wait:g} s on the {ln.name} connection a moment ago")
             for attempt in (0, 1):
-                self._sent = None
+                ln.sent = None
                 try:
-                    if self._sock is None:
-                        self._connect()
-                    self._sock.settimeout(self.long_timeout if long else self.timeout)
-                    return self._exchange(op, js, tail)
+                    if ln.sock is None:
+                        self._connect(ln)
+                    ln.sock.settimeout(wait)
+                    return self._exchange(ln, op, js, tail)
                 except ObsdError:
                     raise
                 except socket.timeout:
-                    self._drop()
-                    raise Unavailable(op, f"no answer in {self.long_timeout if long else self.timeout:g} s") from None
+                    self._drop(ln)
+                    ln.silent_until = time.monotonic() + self.timeout
+                    raise Unavailable(op, f"no answer in {wait:g} s") from None
                 except (OSError, ConnectionError) as e:
-                    self._drop()
-                    if attempt or (self._sent == op and op in NOT_RESENT):
+                    self._drop(ln)
+                    if attempt or (ln.sent == op and op in NOT_RESENT):
                         raise Unavailable(op, str(e)) from None
-        raise AssertionError("unreachable")
+            raise AssertionError("unreachable")
+        finally:
+            ln.lock.release()
 
-    def _drop(self) -> None:
-        if self._sock is not None:
+    @staticmethod
+    def _drop(ln: _Lane) -> None:
+        if ln.sock is not None:
             try:
-                self._sock.close()
+                ln.sock.close()
             except OSError:
                 pass
-        self._sock = None
+        ln.sock = None
+
+    def _drop_all(self) -> None:
+        with self._guard:
+            lanes = list(self._lanes.values())
+        for ln in lanes:
+            self._drop(ln)
 
     # -- the session --------------------------------------------------------------------------------
     def ping(self) -> None:
@@ -277,12 +352,11 @@ class Session:
         try:
             self.call("BYE")
         finally:
-            self._drop()
+            self._drop_all()
 
     def vanish(self) -> None:
-        """Drop the connection WITHOUT `BYE` — what a process that dies does. Its writers are detached and wait."""
-        with self._lock:
-            self._drop()
+        """Drop every connection WITHOUT `BYE` — what a process that dies does. Its writers are detached and wait."""
+        self._drop_all()
 
     def open_volume(self, uri: str | None = None, params: dict | None = None, max_parallel_reads: int = 0) -> "Volume":
         js = {"uri": uri} if uri else {"params": {k: str(v) for k, v in (params or {}).items()}}
@@ -300,8 +374,9 @@ class Volume:
         return bool(self.session.call("VOLUME_EXISTS", {"volume": self.handle})[0].get("exists"))
 
     def format(self, size: int, max_block: int = 0, optimal_read: int = 0, label: str = "",
-               check_space: bool = False) -> dict:
-        tun = {k: v for k, v in (("maxBlockSize", max_block), ("optimalReadSize", optimal_read)) if v}
+               check_space: bool = False, lock_refresh: int = 0) -> dict:
+        tun = {k: v for k, v in (("maxBlockSize", max_block), ("optimalReadSize", optimal_read),
+                                 ("lockRefreshSec", lock_refresh)) if v}
         return self.session.call("VOLUME_FORMAT", {"volume": self.handle, "size": int(size), "label": label,
                                                    "checkSpace": check_space, **({"tunables": tun} if tun else {})})[0]["info"]
 
