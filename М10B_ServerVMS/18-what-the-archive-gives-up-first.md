@@ -175,8 +175,8 @@
 ```python
     def depth_pass(self, now: float | None = None) -> dict:
         from w2cplatform.events import ALARM, EventLog
-        if self.store is None or self.clock() - self._depth_at < self.DEPTH_EVERY:
-            return self.depths
+        if self.store is None or self.engine_lost or self.clock() - self._depth_at < self.DEPTH_EVERY:
+            return self.depths                       # (an engine found lost is not asked again on the leases' thread)
         self._depth_at, now = self.clock(), self.wall() if now is None else now
         try:
             closed = int(self.store.status().get("firstBlockId", 0)) > 0
@@ -317,7 +317,8 @@ class Keep:
                     self.store.seal()                    # what was copied is readable now — and counted below
                 self.keep_held[(k.id, rec)] = held = inside(k, rec)
                 got += held
-                missing += self._keep_short_of(subtract((k.since, k.until), self.store.coverage(rec)), shown)
+                missing += self._keep_short_of((k.id, rec), subtract((k.since, k.until), self.store.coverage(rec)), shown,
+                                               {u for u, recs in held_at.items() if rec in recs})
 ```
 
 Копирует он только то, чего в томе ещё нет: интервал метки минус покрытие (`subtract`, та же функция, что у дозаписи) — и из этого только то, что дверь источника показывает на своём таймлайне (`_doors_show`, ниже). Источник — двери архивов других регистраторов (`recorder_doors`), по очереди, до первой, которая отдала кадры. Дверь, которая не ответила, — не повод останавливаться: может ответить следующая, а если нет — спросит следующий проход.
@@ -327,6 +328,22 @@ class Keep:
 **Несделанная копия видна.** Метка, которую ни одна дверь не может дополнить — дверь источника на петлевом интерфейсе другого сервера, — каждый проход давала `copied = []`, а `rec_keeps_unprotected` оставался нулём: кольцо доходило до отмеченного молча (четвёртое ревью). Теперь двери на чужом loopback пропускаются (`local_only`), у каждой метки в heartbeat'е — `missing_since`, общий `keep_missing` (`{метка: секунды}`) и `rec_keep_missing_seconds{keep}` в `/metrics`; метка, недокопированная дольше пяти проходов (`KEEP_UNCOPIED_AFTER`, 300 с), — тревога `archive.keep.uncopied`, повтор раз в сутки. А перезапущенный регистратор тома `incidents` восстанавливает, что держал, по **покрытию самого тома** для каждой записи каждой метки, а не только по событиям `archive.keep.copied`, которые уходят по сроку. Тесты: `test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm`, `test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_every_recording_of_a_keep`.
 
 **«Не хватает» — только того, что есть у источника.** Сразу после этого тревога загорелась у любой камеры со второй записью: каждая запись камеры считалась по всему интервалу метки. Камера писала час как `7` и минуту как `7-ev`, десятиминутная метка скопирована целиком — и `7-ev` навсегда «не хватало» девяти минут, с тревогой, с `rec_keep_missing_seconds` и с вопросом к дверям каждую минуту (пятое ревью; воспроизведено запуском). Теперь проход один раз спрашивает `/timeline` у каждой двери, которая отвечает (`_doors_show`), и копирует только то, что дверь показывает. В `missing` (`_keep_short_of`) идёт только то, что показывает отвечающий источник и чего нет в томе `incidents`. Если не отвечает ни одна дверь, считается весь пробел, как раньше: никто не может сказать, что этих минут нет. Тест: `test_keeps.py::test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not_short_of_the_rest`.
+
+**«У источника нет» говорит только дверь, которая эту запись держит.** Предыдущее правило верило любой ответившей двери — и это оказалось регрессией (шестое ревью; воспроизведено запуском). Дверь записи недостижима, а дверь регистратора **другой** камеры ответила «у меня этой записи нет». Это правда про любую дверь, кроме нужной, — а читалось как «у источника нет»: `copied 0, missing 0`, тревоги нет, и кольцо записи молча шло к отмеченным минутам. Теперь дверь говорит за запись в двух случаях: её регистратор держит эту запись сейчас (запись есть в его heartbeat'е — `held_at`) или дверь показывает видео этой записи в интервале метки. Пустой ответ любой другой двери не значит ничего:
+
+```python
+    def _keep_short_of(self, key: tuple[str, str], short: list, shown: dict, holders: set) -> float:
+        everything = stitch([sp for spans in shown.values() for sp in spans], 0.0)
+        gone = [p for g in self._keep_nowhere.get(key, []) for p in subtract(g, everything)]
+        if any(spans or url in holders for url, spans in shown.items()):
+            gone = stitch(gone + [p for want in short for p in subtract(want, everything)], 0.0)   # the source does not have these either
+        self._keep_nowhere[key] = gone
+        return sum(b - a for want in short for a, b in subtract(want, gone))
+```
+
+`gone` — чего у источника нет. Его пополняет только дверь, которая за запись говорит, и он помнится по паре (метка, запись): запись на события, у которой в интервале метки ничего не было, потом удалили, держателя у неё больше нет — а сказанное её дверью остаётся, и ложная тревога пятого ревью не возвращается. Если дверь позже покажет это видео, оно из `gone` уходит. Тесты: `test_keeps.py::test_a_door_that_does_not_hold_the_recording_does_not_say_its_source_has_none`, `test_the_recordings_own_recorder_saying_it_has_nothing_is_believed_and_remembered`.
+
+Что остаётся. Память `gone` — в процессе: после перезапуска регистратора тома `incidents` запись без держателя и без видео снова считается недостающей, и тревога придёт. Запись, которую метка называет, а не держит и не показывает никто, недостаёт целиком — так и должно быть, никто не может сказать, что её минут нет. И запись, которая переехала: если дверь нового регистратора отвечает, а дверь старого тома молчит, минуты до переезда недостающими не считаются, пока старая дверь не ответит и их не скопируют.
 
 **Копия, которая не запечаталась, не оставляет мёртвого писателя.** `seal` после копии, не дождавшийся ответа демона, раньше оставлял в томе `incidents` закрытый хэндл: копии больше не ложились, а через 300 секунд поднималась ложная тревога `keep.uncopied`. Теперь `seal` забывает писателя до закрытия, и следующий проход монтирует том заново (урок 7, шаг 9; `test_rec_volume.py::test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_mounts_again`).
 
