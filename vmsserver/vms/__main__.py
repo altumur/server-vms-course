@@ -16,6 +16,9 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
                                      number is a door only the first instance on the box can open
     GATEWAY_NAME=g-1                 its slot (systemd: %i); CAPACITY here is viewers
     DET_NAME=d-1                     a detector worker's slot; CAPACITY here is streams; NOMAD_META_labels=gpu says where it is
+    COMMANDS_BEAT=0.25               worker: how often it looks at its request rows between passes, in seconds; 0 — only on the pass
+    LONG_POLL=0                      autoworker: do not ask the resources to say when a watched event is written; it finds
+                                     them on its pass, every PASS_SECONDS, as it did (`w2cplatform/longpoll.py`)
 """
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -83,7 +86,7 @@ from w2cplatform.objects import FsObjectStore
 from w2cplatform.variables import open_vars
 
 from .controller import VmsController
-from .worker import FakeActuator, VmsWorker
+from .worker import FakeActuator, VmsWorker, commands_beat
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
 root = os.environ.get("PLATFORM_DIR", "/data/platform")
@@ -141,7 +144,9 @@ def worker() -> None:
     srv = w.serve_playback()                             # `$PLAYBACK_HOST`, loopback by default — it was every interface
     logging.info("worker %s (instance %s) claimed its slot; playback on %s", w.name, w.instance, srv.server_address)
     try:
-        w.run(stop=stop)
+        # `beat`: between two passes it looks at its request rows every quarter of a second (`COMMANDS_BEAT`; 0 —
+        # only on the pass). A command is the second half of the road from an event to a device (`VmsWorker.between`).
+        w.run(stop=stop, beat=commands_beat(os.environ))
     finally:
         srv.shutdown()
 
@@ -180,6 +185,9 @@ def recorder() -> None:
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "127.0.0.1"), int(os.environ.get("ARCHIVE_PORT", "0")))
     logging.info("recorder %s (instance %s) claimed its slot; archive door %s", r.name, r.instance, r.archive_url)
     try:
+        # No beat between its passes: what a recorder serves from `rec/requests` is a backfill — minutes off a card,
+        # on its backfill thread — and a quarter of a second saved on that is nothing. A scenario's `record` is not
+        # its to serve at all: the console turns it into a recording (`_requests_loop`).
         r.run(stop=stop)
     finally:
         srv.shutdown()
@@ -285,6 +293,10 @@ def autoworker() -> None:
                    capacity=int(os.environ.get("CAPACITY", "50")),
                    archive_root=os.environ.get("ARCHIVE", "/data/archive"))
     logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-3:]))
+    # The long poll (`w2cplatform/longpoll.py`): a request held at every resource it asks, answered when an event
+    # one of its scenarios watches is written there — the pass begins then, not at the end of its two seconds.
+    # `LONG_POLL=0`: nothing is held.
+    a.watch_events()
     a.run(stop=stop)
 
 

@@ -63,14 +63,16 @@ class AutoWorker(Worker):
     # somebody's window, is not filed twice; short enough to be a handful of strings.
     REMEMBER = 900.0
     # How far BEHIND `now` the cursor is allowed to stop, and the reason there is a distance at all: the
-    # merge is not a stream this process reads. A resource tails its files on a timer and the console
-    # merges over HTTP, so an event written at T becomes visible some seconds later. A cursor set to `now`
+    # merge is not a stream this process reads. A line's `t` is its WRITER's clock at the moment it wrote, and
+    # the line is in an answer only later: after it reached the file, by a clock that may run behind this
+    # one's, from a peer's copy when its own server is silent. A cursor set to `now`
     # is already past it, and `t <= since` then skips it FOR EVER — no refusal, no log line, just a
     # scenario that does not fire, which is the most expensive silence in this subsystem.
     #
     # The asymmetry decides the number: re-reading a stretch costs a comparison (the firing ids are
     # deterministic and the ones just filed are still remembered), running ahead costs a firing. Five
-    # seconds is comfortably more than the tail period.
+    # seconds was chosen against the three-second tail a resource read its files by until 28 September; the
+    # index stats the files on every query now, and the distance stays for the clocks.
     SETTLE = 5.0
     # Rows per (subsystem, kind) query. The index now keeps the NEWEST end of an overflowing window and
     # says `truncated` when it had to cut, so this is a budget rather than a trap — but a scenario still
@@ -112,6 +114,7 @@ class AutoWorker(Worker):
         # cursor trails `now`, and the longest road from an event to the request it filed.
         self._asked: dict[tuple[str, str, str], dict] = {}
         self._needed: dict[tuple[str, str, str], float] = {}
+        self._watched: set[tuple[str, str]] = set()   # (subsystem, kind) of every trigger held: what `wants` says
         self.pass_stats = {"pass_seconds": 0.0, "queries": 0, "lag_seconds": 0.0, "latency_seconds": 0.0}
         self.latency = {"buckets": [0] * len(self.LATENCY_BUCKETS), "sum": 0.0, "count": 0}
         self.late = 0                                 # firings not filed: their request was expired before it left
@@ -202,12 +205,39 @@ class AutoWorker(Worker):
 
     def _plan(self, rows: dict, now: float) -> None:
         self._asked, self._needed = {}, {}
+        watched: set[tuple[str, str]] = set()
         for row in rows.values():
             if row is None or not row["enabled"]:
                 continue
             t0 = self._since(row, now) - float(row.get("within") or 0)
             for key in self._keys(row):
                 self._needed[key] = min(self._needed.get(key, t0), t0)
+                watched.add(key[:2])
+        self._watched = watched
+
+    # What this evaluator asks the resources to tell it about (`Worker.wants`, `w2cplatform/longpoll.py`): the
+    # `(subsystem, kind)` of every trigger of every scenario it holds, as of its last pass. A line of such a kind,
+    # appended on a resource, answers the request this evaluator holds there, and the next pass begins now; a line
+    # of any other kind answers nobody. The unit is not in the pair: an answer for the neighbouring unit's event is
+    # an early pass that files nothing, and the list stays a handful. When the scenarios change, the next request
+    # carries the new list.
+    def wants(self) -> list[tuple[str, str]]:
+        return sorted(self._watched)
+
+    # The resources this evaluator's index asks — the same list, read the same way (`MergedIndex.seen`, cached
+    # there): those live by their heartbeats, each with the address its `/events` is asked at. The long poll is
+    # held at that address and no other. An index that keeps no such list (a test's) has nowhere to hold one.
+    def _resources(self) -> dict[str, str]:
+        seen = getattr(self.index, "seen", None)
+        if seen is None:
+            return {}
+        now, lost_after = self.wall(), getattr(self.index, "lost_after", 45.0)
+        return {s: str(hb.get("url") or "") for s, hb in seen().items() if now - float(hb["ts"]) <= lost_after}
+
+    # Called by the process before `run`: ask the resources to say when an event a scenario watches is written,
+    # instead of finding it at the end of a two-second wait. `LONG_POLL=0`: not asked, the loop as it was.
+    def watch_events(self, env: dict | None = None):
+        return self.poll_events(self._resources, env)
 
     @staticmethod
     def _keys(row: dict) -> list[tuple[str, str, str]]:
@@ -387,8 +417,13 @@ class AutoWorker(Worker):
     # uses for an operator's own command, and for the same reason: an action that arrives after its moment is
     # not a late action, it is a wrong one. It used to be the scenario's `within`, which is another thing: how
     # far apart two triggers may be. A scenario with `within: 5` then got requests that lived five seconds,
-    # while the road from the event to the holder takes up to seven with nothing loaded — the tail, the pass,
-    # the holder's pass — and they expired unperformed on an idle box.
+    # while the road from the event to the holder took up to four with nothing loaded — this evaluator's pass
+    # and the holder's, two seconds each; the index has had no tail to wait for since 28 September, it stats the
+    # files on every query — and a request that met a slow pass on its way expired unperformed on an idle box.
+    # Since 2 October 2026 neither wait is two seconds on a sound box (this pass begins when the resource says
+    # the event was written; the holder looks at its requests four times a second), and both still CAN be: the
+    # two-second pass is what is left when a wait is refused or a beat is switched off, and thirty seconds must
+    # outlive that too.
     # Returns whether the requests were filed. A firing whose requests would be expired before they leave — a
     # cold start looks five minutes back, and `valid_for` is thirty seconds — is not filed (feedback AY): the
     # holder would only count it `expired`, and `expired` is the number that says the ROAD grew longer. It is
@@ -445,7 +480,16 @@ class AutoWorker(Worker):
         self.heartbeat(self.status(), server=self.server, instance=self.instance,
                        labels=",".join(self.labels), capacity=self.capacity, headroom=self.headroom(),
                        filed=self.filed, late=self.late, suppressed=self.suppressed, latency=self.latency,
-                       pass_failures=self.pass_failures, **self.pass_stats)
+                       pass_failures=self.pass_failures, **self.pass_stats, **self.long_poll_stats())
+
+    # The long poll, counted since this process started — and nothing at all when it is off: requests it opened at
+    # the resources (`waits`), those answered "changed" (`woken`), passes begun early for them (`early_passes`),
+    # and requests that failed or were refused (`wait_errors`). `waits` growing with `woken` at 0 is a quiet box;
+    # `wait_errors` growing is a resource that does not hold the wait — and the road is the two-second pass again.
+    def long_poll_stats(self) -> dict:
+        lp = self.long_poll
+        return {} if lp is None else {"waits": lp.waits, "woken": lp.woken, "early_passes": self.wake.early,
+                                      "wait_errors": lp.errors}
 
     def pump_once(self) -> None:
         return None                                   # nothing to drain: this worker runs no pipelines
@@ -454,9 +498,17 @@ class AutoWorker(Worker):
     # test noticed, because every test drives `reconcile_once` by hand (feedback on the event log's load).
     #
     # The period is not a habit copied from the neighbours. It is one link of the road from an event to an
-    # action — the resource's tail, `SETTLE`, this period, the holder's own pass — and it multiplies the load:
+    # action — this period, then the holder's own pass — and it multiplies the load:
     # every pass asks every scenario's window. Two seconds is the same as the holder's pass, so neither
     # dominates; `PASS_SECONDS` changes it, and the latency it costs is the operator's to accept.
+    #
+    # Since 2 October 2026 the period is the road's CEILING and not its length. The evaluator holds a request at
+    # every resource it asks (`watch_events`, `w2cplatform/longpoll.py`), answered when a line of a kind its
+    # scenarios watch is appended there, and the wait below ends at that answer — never sooner than `WAKE_GAP`
+    # after the last pass began, so a storm of events is four passes a second and not a pass per event. The answer
+    # decides nothing: the pass is this same pass — the same window, cursor, `SETTLE` and firing ids. With no
+    # answer — a resource away, its waiters' room full, the long poll switched off (`LONG_POLL=0`), a line
+    # written into an old bucket, which no resource watches — the pass comes at the end of the period, as before.
     # Staying itself. The loop used to pass and heartbeat and renew NOTHING: thirty seconds after it started the
     # leases on its scenarios ran out, `may_write` said no for every one of them, and the evaluator went on
     # heartbeating and decided nothing, for ever; fifteen seconds later its slot lapsed and another process could
@@ -481,7 +533,8 @@ class AutoWorker(Worker):
         poll = float(os.environ.get("PASS_SECONDS", "2")) if poll is None else poll
         stop = stop or threading.Event()
         lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
-        last_lease = self.clock()
+        last_lease = last_hb = self.clock()
+        woken = False                               # whether this pass began early, at a resource's answer (`Worker.wait_next`)
         stand_in = self.start_stand_in()            # renews for a step that hangs, for a while (feedback DD)
         while not stop.is_set():
             try:
@@ -495,10 +548,16 @@ class AutoWorker(Worker):
                     with self.guarded("lease"):
                         self.lease_pass()
                     last_lease = self.clock()
-                with self.guarded("heartbeat"):
-                    self.heartbeat_once()
+                # The heartbeat goes out once per ordinary pass, as it always did — and an EARLY pass does not add
+                # one: woken four times a second, the evaluator still says it is alive every `poll`, not every
+                # quarter of a second. The lease step above is by the clock already.
+                if not woken or self.clock() - last_hb >= poll:
+                    with self.guarded("heartbeat"):
+                        self.heartbeat_once()
+                    last_hb = self.clock()
             except Exception:                         # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed", self.name)
-            stop.wait(poll)
+            woken = self.wait_next(poll, stop)        # `stop.wait(poll)` — or sooner, when an event a scenario watches was written
         stand_in.set()
+        self.stop_polling()                           # no request is held at a resource for a loop that ended
         self.release_slot()

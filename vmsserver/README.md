@@ -16,6 +16,8 @@ vmsserver/
     obsd.py                    М10B L6  the client of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
                                archive time; a silence is `Unavailable` after a timeout and is not asked twice
     eventdatabase.py           Lesson 10  EventIndex — a resource's own buckets, read where they lie, with a bounded cache; MergedIndex — what a console has instead: every live resource's /events, merged
+    longpoll.py                М10B L25  a hint the reader pulls: Watch — the requests a resource holds until a watched line is appended (GET /events/wait);
+                               LongPoll — one held request per resource; Wake — a loop's early pass, never sooner than a quarter of a second
     spec.py                    Lesson 6  the controller as data: SubsystemSpec (rows, fields, derived rows, placement by name — requires, servers, near — snapshot, the two ACLs) and SpecController, the one controller every subsystem runs
     console.py                 Lesson 7  the console as data: SpecConsole over the same spec — the page, /spec, /<rows>, /where, /metrics with the subsystem's prefix, /marks, the writes with the spec's refusals; a subsystem registers extra routes;
                                Mount — one process fronting several subsystems, the root at / and the others under their names (/live/…, /det/…)

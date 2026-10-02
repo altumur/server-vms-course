@@ -35,8 +35,8 @@ shape is generic by running a subsystem that counts seconds through it.
 # and it is deliberately small: a config prefix `<name>/*` writable by the controller only; assignment rows
 # `<name>/workers/<worker>`; a heartbeat object `<name>/<worker>/heartbeat`; an epoch prefix
 # `<name>/epoch/<unit>` the workers take by CAS; an event log on the resource (`events.py`); and a slot
-# prefix `<name>/slots/<worker>` — identity by claim. It depends on `variables.py`, `objects.py` and
-# `epoch.py` and nothing else. `spec.SpecController` extends `Controller`; `vms.worker.VmsWorker` and the
+# prefix `<name>/slots/<worker>` — identity by claim. It depends on `variables.py`, `objects.py`,
+# `epoch.py` and `longpoll.py` (a loop's early pass) and nothing else. `spec.SpecController` extends `Controller`; `vms.worker.VmsWorker` and the
 # gateway (`vms/liveworker.py`) and the detector (`vms/detworker.py`) extend `Worker`. The file's own docstring settles who
 # decides how many workers there are: not the controller. The scheduler runs `count` of them; the platform's
 # part is to give those interchangeable processes stable names — the slots — so assignments survive a
@@ -77,6 +77,7 @@ from dataclasses import dataclass, field
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
+from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .variables import Conflict, Variables, cas_pause
 
 log = logging.getLogger(__name__)
@@ -711,6 +712,11 @@ class Worker:
         self._step_lock = threading.Lock()
         self.stand_in_renewals = 0                # renewals the stand-in made for a hung step, since start: in the heartbeat
         self._loop_renewed = clock()              # when the loop last renewed its leases (`renew_leases`)
+        # The long poll (`longpoll.py`): the wait this worker's loop sleeps in, and the requests it holds at the
+        # resources. Neither exists until the process asks for them (`poll_events`) — a worker made without them
+        # waits `stop.wait(poll)`, exactly as before.
+        self.wake: Wake | None = None
+        self.long_poll: LongPoll | None = None
 
     # -- identity by claim ----------------------------------------------------------
     # Become somebody. Lists the slot rows; with `prefer` (Nomad's `NOMAD_ALLOC_INDEX`, systemd's `%i`) the
@@ -1203,6 +1209,40 @@ class Worker:
 
         threading.Thread(target=look, name=f"{self.name}-stand-in", daemon=True).start()
         return done
+
+    # -- the early pass: a hint, never a channel (`longpoll.py`) ------------------------------------------
+    # A loop finds its work by looking, every `poll` seconds. A worker whose work begins with a line in the event
+    # log may ask the resources to tell it when such a line is written — a request each resource HOLDS and answers
+    # then (`GET /events/wait`). The answer says "look now" and nothing else: the pass that follows is the
+    # ordinary pass, reading what it would have read at the end of its wait. An answer that never comes costs the
+    # wait it would have saved; a flood of them is one early pass per `WAKE_GAP`.
+    #
+    #   wants()         what this worker watches: pairs `(subsystem, kind)`. Its subsystem's to say
+    #   poll_events()   the process asks for the long poll, before the loop: `resources()` is `{server: url}`,
+    #                   the resources this worker asks anyway. `LONG_POLL=0`: nothing is asked, nothing changes
+    #   wait_next()     the loop's wait between passes: `stop.wait(poll)`, cut short by an answer
+    def wants(self) -> list[tuple[str, str]]:
+        return []
+
+    def poll_events(self, resources, env=None) -> LongPoll | None:
+        if self.long_poll is None and long_poll_enabled(os.environ if env is None else env):
+            self.wake = Wake()
+            self.long_poll = LongPoll(self.wake, resources, self.wants)
+        return self.long_poll
+
+    def wait_next(self, poll: float, stop) -> bool:
+        """The loop's wait between passes. True when it was cut short — the pass that follows began early."""
+        if self.wake is None:
+            stop.wait(poll)
+            return False
+        if self.long_poll is not None:
+            self.long_poll.sync()                 # a held request at every resource asked now: once a pass, never raises
+        return self.wake.wait_next(poll, stop)
+
+    # The loop ended: no request is asked again. One that is held ends by itself, at its answer.
+    def stop_polling(self) -> None:
+        if self.long_poll is not None:
+            self.long_poll.close()
 
     # Sum of `conflicts` over all leases; goes into the heartbeat.
     def conflicts(self) -> int:

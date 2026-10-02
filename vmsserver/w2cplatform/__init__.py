@@ -8,6 +8,7 @@ stateless shards writing bulk data; nothing here knows what a camera is.
     spec.py        the controller as data: SubsystemSpec from <sub>.subsystem.yaml, SpecController
     console.py     the console as data: SpecConsole over the same spec; console.html, the one page
     events.py, eventdatabase.py, resource.py   buckets, the event index each resource reads its own by, the resource job
+    longpoll.py    a reader of the events asks a resource to hold a request until a line it watches is written
 
 М11 replaces variables.py with Nomad Variables and objects.py with MinIO,
 behind the same interfaces, and changes nothing above this line.
