@@ -120,6 +120,36 @@ def test_the_relay_archive_asked_for_by_the_centre_is_uploaded_by_the_relay():
     assert centre.answer(SERIAL, rid) == [("east-archive", SERIAL, 5000.0, 5600.0)]   # out of the relay's archive
 
 
+def test_the_relay_passes_on_the_recording_the_centre_named_and_says_when_its_archive_could_not_read():
+    """The card's rule one level up, all of it (the sixth review found it on the camera; the relay answers ranges the
+    same way). The recording the centre names reaches the relay's archive reader — unnamed, the relay would answer
+    out of whichever recording of the camera it reads first; and an archive that could not read the range is said as
+    RANGE FAILED, at once: the centre's copy fails and asks again, instead of waiting out its timeout on a relay
+    whose pass fell over."""
+    from domain.ingest import RangeFailed
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    asked = []
+
+    def archive(ref, t0, t1, recording=None):
+        asked.append(recording)
+        if recording == "SN7001-lost":
+            raise OSError("the archive door of r-east did not answer")
+        return [("east-archive", recording, t0, t1)]
+    fwd.archive = archive
+    rid = centre.request_range(SERIAL, 5000.0, 5600.0, recording="SN7001-copy")
+    fwd.pass_once()
+    assert asked == ["SN7001-copy"] and centre.result(SERIAL, rid) == [("east-archive", "SN7001-copy", 5000.0, 5600.0)]
+    rid = centre.request_range(SERIAL, 5000.0, 5600.0, recording="SN7001-lost")
+    fwd.pass_once()
+    try:
+        centre.result(SERIAL, rid)
+        raise AssertionError("an archive that could not read the range was answered")
+    except RangeFailed as e:
+        assert "did not answer" in str(e)
+    assert centre.cams[SERIAL].ranges == {}                           # the request is over: the centre asks again later
+
+
 def test_the_star_the_camera_pushes_to_the_centre_and_the_relay_pulls_its_cameras_from_there():
     """A relay behind a mobile operator, or a cloud cluster that takes no inbound: nobody can push to it.
     The camera's book names the centre; the relay, wanting the stream for its recorder, pulls it — calling

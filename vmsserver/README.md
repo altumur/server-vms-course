@@ -35,9 +35,12 @@ vmsserver/
                                takes a volume (declared, by hold, or its server's own) and writes into it through obsd under owner rec:<volume>; re-subscribes when the
                                camera's holder moves; serves its volume at its archive door (/timeline, /samples); backfill, backups, keeps into an incidents volume
     volumes.py                 М10B L27  the volumes an operator declares — local, network, backup, edge, incidents — and who may serve which
-    card.py                    М10B L26  the camera's card WITHOUT an engine, as the product does it: CamRing (one ring of 60 s / 32 MiB in memory),
-                               CardBuffer (segment files with a byte budget, oldest deleted, a range reader that raises), CardActuator (hold, keep,
-                               a 512-frame queue that drops to the next key frame, a dead recording on a write error), CardRecorder (RecWorker's gate over the card)
+    card.py                    М10B L26  the camera's card WITHOUT an engine, as the product does it — and the camera's memory as ONE budget in bytes
+                               (32 MiB: ring 24, the card's queue 6, two pieces of 1): CamRing (one ring, a window of 60 s, `reach()` at the bitrate it is given),
+                               CardBuffer (segment files with a byte budget, oldest deleted, an open segment a stream, a range reader that hands over pieces
+                               and raises), CardActuator (hold, keep by recording, a queue in bytes that drops to the next key frame, the ring taken a piece
+                               at a time, a recording that goes on from where it stopped), CardRecorder (RecWorker's gate over the card; a failing card closed,
+                               said and opened again; `card.prebuffer.short`)
     vms.subsystem.yaml         Lesson 6  the VMS's controller, as a spec: cameras numbered, seven operator fields, vms/retention/<cam> derived, labels-subset placement, requires: resource (for its events), the snapshot
     controller.py              Lesson 6  vmscontroller: the platform's SpecController run from the spec, in the VMS's words (create_camera, cameras)
     console.py                 Lesson 7  the console, its own process with its own token (the operator's rows, never placement): SpecConsole plus the VMS's media routes —

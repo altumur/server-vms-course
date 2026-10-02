@@ -43,7 +43,16 @@ What the product found running it on a box (feedback AC–AG), all of it here:
                  not a stream: the recorder asks for a minute, gets that minute or nothing (AD). The card is the
                  camera's buffer, not an archive engine's volume (`vms/card.py`; the product's camera has no
                  obsd): a camera with no card, or a card that could not read the range, answers RANGE FAILED —
-                 the copy fails and is asked again later, never taken for "not on the card" (feedback DG, DH)
+                 the copy fails and is asked again later, never taken for "not on the card" (feedback DG, DH).
+                 The request NAMES the recording on the card; the answer comes up in PIECES of bytes the camera
+                 can hold (`vms.card.PIECE_BYTES`), the recorder waits for each piece as long as a piece of that
+                 size takes, and the ingest forgets an answer the moment it has handed it over (the sixth review)
+    frames       two forms, each for its road, and ONE place that turns the one into the other. The card's frame
+                 is a sample record (`w2cplatform.obsd.Sample`: archive ms, the key flag, the body) — as it lies
+                 on the card and as it travels in a range's answer, never re-made. The PUSH's frame, in this
+                 module, is a dict with `t` (when it was captured, the camera's clock) and `key`. A break
+                 continued off the card puts card frames into the push, and the PUSHER makes them push frames
+                 (`wire`): it is the only one that holds both. The record rides inside (`sample`), untouched
     the poll     answers at once the first time (a camera that has never polled has version -1), is held
                  while nothing changed, and wakes when a want runs out — a viewer's LINGER included (AF), timed
                  to the lapse itself, since nobody touches anything then (AH)
@@ -75,11 +84,15 @@ stream id names the camera) and the long poll is an HTTP request held for up to 
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import secrets
 import threading
 import time
 from dataclasses import dataclass, field
+
+from vms.card import PIECE_BYTES       # what one piece of a camera's card may weigh: a share of the camera's memory
+from w2cplatform.obsd import unix_s
 
 from .federation import Unreachable
 from .gateway import Forbidden, LeakyQueue, LiveTee
@@ -94,6 +107,26 @@ REMEMBER = 900.0
 PEER_BUFFER = 50                       # frames one ingest holds for a peer that is not keeping up: two seconds (AJ)
 MAX_LIVE_ASKS = 16                     # live asks one asking camera may hold at one ingest: a ceiling, not a queue
 ANSWER_GRACE = 5.0                     # past the deadline by this, an ask nobody knows of is lost, not late
+# A RANGE IS WAITED FOR A PIECE AT A TIME (the sixth review). The recorder waited one fixed number for the whole
+# answer, whatever it weighed: a camera that answered in 1.2 s to a wait of 1 failed four requests out of four, and
+# read its card four times for it. The answer comes in pieces of at most `PIECE_BYTES`, so the wait is for the NEXT
+# piece, and it is what a piece of that size takes: the camera's poll coming round and the card being read
+# (`POLL_ROUND`), and the piece itself over the slowest uplink a range is served on at all (`UPLINK_FLOOR`, the pace
+# the console's export holds a download to). A megabyte: 21 s. A camera that keeps sending is waited for; one that
+# sent nothing for that long has failed the range.
+POLL_ROUND = 5.0
+UPLINK_FLOOR = 64 << 10                # bytes a second
+# What the ingest keeps of a range nobody came for (the sixth review: it kept every answer, for good — twenty requests,
+# twenty answers and 19 MiB; a day of backfill took the ingest of every camera down). An answer is deleted when it is
+# handed over; one nobody collected — its recorder gave up, or died — goes after `ANSWER_KEPT`; and of what landed,
+# only the last `LANDED_KEPT` ranges are remembered.
+ANSWER_KEPT = 60.0
+LANDED_KEPT = 64
+
+
+def piece_wait(piece: int = PIECE_BYTES) -> float:
+    """How long the next piece of a range is waited for: the poll's round, and `piece` bytes at the uplink's floor."""
+    return POLL_ROUND + piece / UPLINK_FLOOR
 
 
 class Refused(Exception):
@@ -114,24 +147,49 @@ def _is_ring(frame) -> bool:
     return isinstance(frame, dict) and bool(frame.get("ring"))
 
 
+def _is_sample(frame) -> bool:
+    return dataclasses.is_dataclass(frame) and hasattr(frame, "begin")
+
+
 def _shift(frames: list, by: float) -> list:
     """Frames that carry a capture time (`t`, the camera's clock) moved onto the cluster's; others as they are.
-    A sample record off a camera's card (`w2cplatform.obsd.Sample`, archive ms) is moved the same way."""
+    A sample record off a camera's card (`w2cplatform.obsd.Sample`, archive ms) is moved the same way — on its own,
+    in a range's answer, and inside a push frame made of it (`wire`)."""
     if not by:
         return list(frames)
-    import dataclasses
     ms = int(round(by * 1000))
-    return [dict(f, t=float(f["t"]) + by) if isinstance(f, dict) and "t" in f else
-            dataclasses.replace(f, begin=f.begin + ms, end=f.end + ms) if dataclasses.is_dataclass(f) and hasattr(f, "begin") else
+
+    def moved(s):
+        return dataclasses.replace(s, begin=s.begin + ms, end=s.end + ms)
+    return [dict(f, t=float(f["t"]) + by, **({"sample": moved(f["sample"])} if _is_sample(f.get("sample")) else {}))
+            if isinstance(f, dict) and "t" in f else
+            moved(f) if _is_sample(f) else
             f for f in frames]
+
+
+# THE ONE PLACE A CARD'S FRAME BECOMES A PUSH'S (the sixth review: "which is the card's contract for the pusher —
+# `Sample` or `dict` — and who turns the one into the other?"). The card's is `Sample`, and a range's answer carries
+# it as it is. The push's is a dict with `t` and `key`. They met in one place — a break continued off the card — and
+# nobody turned anything: the continuation kept `isinstance(f, dict)`, the card gave `Sample`, and every frame read
+# off the card was thrown away. The PUSHER turns it, here, because it alone holds both; the record itself goes along
+# as `sample`, for the recorder to write as it is.
+def wire(sample, **marks) -> dict:
+    """A sample record off the card as a frame of the push: its capture time on the camera's clock, its key flag,
+    and the record itself."""
+    return {"t": unix_s(sample.begin), "key": bool(sample.key), "sample": sample, **marks}
 
 
 @dataclass
 class _Camera:
     wants: dict[str, float] = field(default_factory=dict)        # who wants the stream -> until when (inf: for ever)
-    ranges: dict[str, tuple[float, float]] = field(default_factory=dict)   # requested uploads, by id, on the CLUSTER's clock
-    answers: dict[str, list] = field(default_factory=dict)       # the camera's answer to each, by id
-    failed: dict[str, str] = field(default_factory=dict)         # …or why it could not read it: the card's error, by id
+    # Requested uploads, by id: `(t0, t1, recording)` — the CLUSTER's clock, and the recording on the card (None: the
+    # camera's one). An answer on its way is `parts` — `(pieces so far, samples, when the last piece came)`; whole, it
+    # is `answers`, with when it landed; `failed` is why the camera could not read it. All three go when the range is
+    # handed over (`result`), and after `ANSWER_KEPT` if nobody came (`_forget`).
+    ranges: dict[str, tuple] = field(default_factory=dict)
+    parts: dict[str, tuple] = field(default_factory=dict)
+    answers: dict[str, tuple] = field(default_factory=dict)
+    failed: dict[str, tuple] = field(default_factory=dict)
     landed: list[tuple[float, float]] = field(default_factory=list)
     pushed_at: float | None = None
     offset: float = 0.0                                          # the cluster's clock minus the camera's
@@ -259,6 +317,7 @@ class Ingest:
         cam.polled_at = now
         push, ranges, asks = False, {}, {}
         for ing in self._cluster():
+            ing._forget(now)
             c = ing._cam(ref)
             c.wants = {w: u for w, u in c.wants.items() if u > now}       # a want that ran out wakes the poll (AF)
             push = push or bool(c.wants)
@@ -275,8 +334,11 @@ class Ingest:
         said = (push, tuple(sorted(ranges.items())), tuple(sorted(asks)), uncovered)   # a new ask, a lost recorder: news
         if said != cam.said:
             cam.said, cam.version = said, cam.version + 1
+        # A range is told with the recording it is of, and with the size of a piece the recorder waits for
+        # (`piece_wait`): the camera sends its answer in pieces no larger (the product's `PollRange`, and two fields more).
         out = {"push": push, "version": cam.version,
-               "ranges": {rid: (t0 - cam.offset, t1 - cam.offset) for rid, (t0, t1) in ranges.items()},
+               "ranges": {rid: {"from": t0 - cam.offset, "to": t1 - cam.offset, "recording": rec, "piece": PIECE_BYTES}
+                          for rid, (t0, t1, rec) in ranges.items()},
                "asks": {aid: {"action": a["action"], "by": a["by"], "deadline": a["deadline"] - cam.offset}
                         for aid, a in asks.items()}}
         if uncovered is not None:
@@ -315,23 +377,48 @@ class Ingest:
         return len(frames)
 
     def upload(self, token: str, ref: str, rid: str, samples: list, camera_now: float | None = None,
-               failed: str | None = None) -> None:
+               failed: str | None = None, more: bool = False, seq: int = 0) -> bool:
         """The camera's answer to a range request: samples with their own times, moved onto the cluster's clock,
         kept by the id of the request at whichever ingest of the cluster asked (AD). Never the live stream.
         `failed`: the camera could not read the range — no samples, and why (the product's `X-Range-Failed`); the
-        request is over and the recorder waiting for it fails at once, to ask again later."""
+        request is over and the recorder waiting for it fails at once, to ask again later.
+
+        IN PIECES (the sixth review): `more` — this is a piece and more follow; `seq` — which piece, from nought. The
+        answer is whole, and handed to the recorder, when a piece comes without `more`; a piece out of its turn fails
+        the range — an answer with a piece missing would be taken for all the card has. Returns whether anybody still
+        waits for this range: False tells the camera to stop reading its card for a recorder that has given up."""
         self._check(token, ref, camera_now)
-        shifted = _shift(samples, self._cam(ref).offset)
+        shifted, now, wanted = _shift(samples, self._cam(ref).offset), self.wall(), False
         for ing in self._cluster():
             c = ing._cam(ref)
-            if rid in c.ranges:
-                if failed is not None:
-                    c.failed[rid] = str(failed)
-                    c.ranges.pop(rid)
-                else:
-                    c.answers[rid] = shifted
-                    c.landed.append(c.ranges.pop(rid))
+            if rid not in c.ranges:
+                continue
+            n, have, _ = c.parts.pop(rid, (0, [], 0.0))
+            if failed is None and seq != n:
+                failed = f"piece {seq} of the answer came where piece {n} was due"
+            if failed is not None:
+                c.failed[rid] = (str(failed), now)
+                c.ranges.pop(rid)
+            elif more:
+                c.parts[rid] = (n + 1, have + shifted, time.monotonic())
+                wanted = True
+            else:
+                c.answers[rid] = (have + shifted, now)
+                t0, t1, _rec = c.ranges.pop(rid)
+                c.landed = (c.landed + [(t0, t1)])[-LANDED_KEPT:]
+                wanted = True
         self._changed()
+        return wanted
+
+    def _forget(self, now: float) -> None:
+        """What nobody came for goes: an answer or a failure `ANSWER_KEPT` old, and a piece of an answer whose
+        request is gone. Every poll and every request sweeps — as asks are swept (`_sweep`)."""
+        for c in list(self.cams.values()):
+            for kept in (c.answers, c.failed):
+                for rid in [k for k, v in list(kept.items()) if now - v[1] >= ANSWER_KEPT]:
+                    kept.pop(rid, None)
+            for rid in [k for k in list(c.parts) if k not in c.ranges]:
+                c.parts.pop(rid, None)
 
     # -- asks between cameras ---------------------------------------------------------------------------------
     def ask(self, token: str, target: str, action: dict, deadline: float, camera_now: float | None = None) -> str:
@@ -456,32 +543,48 @@ class Ingest:
         return None
 
     def answer(self, ref: str, rid: str) -> list | None:
-        """The answer to one range request, or None — not yet, or never: the recorder's timeout decides."""
-        return self._cam(ref).answers.get(rid)
+        """The answer to one range request, or None — not yet, or never: the recorder's timeout decides. A LOOK: the
+        answer stays until somebody takes it (`result`), or `ANSWER_KEPT` passes."""
+        got = self._cam(ref).answers.get(rid)
+        return None if got is None else got[0]
 
     def result(self, ref: str, rid: str) -> list | None:
-        """`answer`, and a range the camera could not read raised as `RangeFailed` — never taken for an empty answer."""
-        why = self._cam(ref).failed.get(rid)
+        """The answer, TAKEN — handed over once, and forgotten here (the sixth review: every answer stayed in the
+        ingest for good) — and a range the camera could not read raised as `RangeFailed`, never taken for an empty
+        answer. None: not yet."""
+        cam = self._cam(ref)
+        why = cam.failed.pop(rid, None)
         if why is not None:
-            raise RangeFailed(f"camera {ref} could not read the range: {why}")
-        return self.answer(ref, rid)
+            raise RangeFailed(f"camera {ref} could not read the range: {why[0]}")
+        got = cam.answers.pop(rid, None)
+        return None if got is None else got[0]
 
-    def fetch_range(self, ref: str, t0: float, t1: float, wait: float = 30.0) -> list:
-        """The recorder's side, whole (the product's `Ingest.Request`): ask the camera for `[t0, t1)` of its card —
-        this cluster's clock — and wait for the upload. A camera that could not read it, or did not answer within
-        `wait`, raises `RangeFailed`: the copy fails, and backfill asks again on a later pass."""
-        rid = self.request_range(ref, t0, t1)
-        until = time.monotonic() + wait
-        while True:
-            gen = self._gen
-            got = self.result(ref, rid)
-            if got is not None:
-                return got
-            if time.monotonic() >= until:
-                for ing in self._cluster():
-                    ing._cam(ref).ranges.pop(rid, None)
-                raise RangeFailed(f"camera {ref} did not answer a range within {wait:.0f} s")
-            self._wait(gen, until)
+    def fetch_range(self, ref: str, t0: float, t1: float, wait: float | None = None, recording: str | None = None) -> list:
+        """The recorder's side, whole (the product's `Ingest.Request`): ask the camera for `[t0, t1)` of `recording`
+        on its card — this cluster's clock — and wait for the upload. A camera that could not read it, or sent no
+        piece of its answer for `wait` (unset: `piece_wait()`, what a piece takes), raises `RangeFailed`: the copy
+        fails, and backfill asks again later. The wait is for the NEXT piece — each one that arrives starts it again
+        — so a minute of a slow uplink is waited for as long as it keeps coming, and a camera that went quiet is given
+        up after one piece's time. Whatever happens, nothing of the request stays here."""
+        wait = piece_wait() if wait is None else wait
+        rid = self.request_range(ref, t0, t1, recording)
+        asked = time.monotonic()
+        try:
+            while True:
+                gen = self._gen
+                got = self.result(ref, rid)
+                if got is not None:
+                    return got
+                came = [p[2] for ing in self._cluster() for p in [ing._cam(ref).parts.get(rid)] if p is not None]
+                until = max([asked] + came) + wait
+                if time.monotonic() >= until:
+                    raise RangeFailed(f"camera {ref} did not answer a range: nothing of it came for {wait:.0f} s")
+                self._wait(gen, until)
+        finally:
+            for ing in self._cluster():
+                c = ing._cam(ref)
+                for kept in (c.ranges, c.parts, c.answers, c.failed):
+                    kept.pop(rid, None)
 
     def pull(self, token: str, ref: str, who: str) -> list:
         """Lesson 17, the star: a cluster that nobody can dial either — a relay behind a mobile operator's
@@ -525,10 +628,13 @@ class Ingest:
     def _has_subscribers(self, ref: str) -> bool:
         return any(tee.subscribers for (r, _kind), tee in list(self.tees.items()) if r == str(ref))
 
-    def request_range(self, ref: str, t0: float, t1: float) -> str:
-        """A range on this cluster's clock; the camera is told it on its own (AC)."""
+    def request_range(self, ref: str, t0: float, t1: float, recording: str | None = None) -> str:
+        """A range on this cluster's clock; the camera is told it on its own (AC). `recording`: which recording ON
+        THE CARD — the camera may hold several, and one it does not hold is answered RANGE FAILED, not empty (the
+        sixth review). None: the camera's one recording."""
+        self._forget(self.wall())
         rid = secrets.token_hex(4)
-        self._cam(ref).ranges[rid] = (t0, t1)
+        self._cam(ref).ranges[rid] = (t0, t1, None if recording is None else str(recording))
         self._changed()
         return rid
 
@@ -621,28 +727,37 @@ class _Tees:
 # One pass of the camera's pusher, after its agent has carried the book home. `dial(url)` is the camera
 # opening a connection OUT — it raises Unreachable when that address does not answer, and then the next one
 # in the book is tried. `frames_now` is what the sensor produced since the last pass, each with its capture
-# time on the camera's clock (`t`); `card(t0, t1)` reads a range off the card, on that clock too. `clock` is
+# time on the camera's clock (`t`); `card(recording, t0, t1, max_bytes)` reads a range off the card, on that clock
+# too, a piece at a time (below). `clock` is
 # the camera's own clock, stated in every request (AC). `ring_seconds`: the ring kept while nobody wants the
 # stream, flushed first — marked — when somebody does (AC). `hold_seconds`: how much of a BREAK it keeps in
 # memory — while it was pushing and lost its road — to continue the stream from when the road comes back (CB).
 # It has to reach as far back as the card's gate waits before it writes (`RecWorker.defer_for` plus how late the
-# break is noticed — `RecWorker.CONTINUE_REACH`, 30 s; the card's ring itself is longer, `PREBUFFER`): a break that ends
+# break is noticed — `RecWorker.CONTINUE_REACH`, 30 s; the card's own ring holds what its bytes hold of the stream,
+# `CardRecorder.PREBUFFER`, and the gate waits no longer than the shorter of the two): a break that ends
 # while the card still waits is in memory
 # ONLY, and a shorter hold here would lose its beginning. Longer breaks: the card wrote them, from before
-# the break, and the continuation reads them off it.
+# the break, and the continuation reads them off it — a piece at a time (`_continue`).
 #
 # THE CARD IS OPTIONAL, AND IT IS NOT AN ARCHIVE (the product's camera; feedback CB, DG, DH). On a camera the card is
 # the camera's buffer of plain files, written from the camera's one ring with no engine (`vms/card.py`); `card` here
-# is its range reader — `CardRecorder.answer_range` of the recording on it. The pusher does not need it: a camera
+# is its range reader — `CardRecorder.answer_range`. The pusher does not need it: a camera
 # with no card — none put in, or one that would not open — pushes and continues breaks from memory all the same, and
 # answers a range with RANGE FAILED (`upload(failed=...)`), as it does when the card could not read one: the server
 # asks again later. Answered empty, the server would remember the range as "not on the card" and never ask again.
+#
+# THE CARD'S READER (the sixth review): `card(recording, t0, t1, max_bytes)` gives the range as an ITERATOR OF PIECES
+# — lists of `Sample`, each at most `max_bytes` — read off the card as each is asked for; `recording` is the one the
+# request names (None: the camera's one), and one the card does not hold is an error. Nothing of the card is in
+# this process but the piece in hand: a camera has some 32 MB for everything (`vms.card.MEMORY_BUDGET`), and a
+# reader that returned the range as one list put ten minutes at 4 Mbit/s — 272 MiB — into it, to continue one break.
 class CameraPusher:
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
-                 hold_seconds: float = 30.0):
+                 hold_seconds: float = 30.0, recording: str | None = None):
         """`perform(action) -> outcome` carries out an ask from another camera (a preset, a relay) and says
-        what happened: "performed", or "refused: <why>"."""
-        self.serial, self.flash, self.dial, self.card = str(serial), flash, dial, card
+        what happened: "performed", or "refused: <why>". `recording`: this camera's recording on its card — what a
+        break is continued from (None: the card's one)."""
+        self.serial, self.flash, self.dial, self.card, self.recording = str(serial), flash, dial, card, recording
         self.failed_ranges: list[tuple[float, float, str]] = []        # ranges answered "could not read", and why
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
         self.clock, self.ring_seconds = clock or time.time, ring_seconds
@@ -683,25 +798,47 @@ class CameraPusher:
     # The continuation of a broken push (CB): everything after `have` — the recorder's own word, on this camera's
     # clock — that the camera still holds, from the first keyframe: off the card up to where the ring begins,
     # then the ring. Without `have` (an ingest that cannot say) it is the ring, as at an event's start.
-    def _continuation(self, have) -> list:
+    #
+    # THE CARD'S PART GOES OUT AS IT IS READ (the sixth review, blocker 3). It was read whole into one list — ten
+    # minutes of a break at 4 Mbit/s, 272 MiB in a camera with 32 — and then all of it was thrown away: the card's
+    # reader gives `Sample`, and this kept only dicts. So the camera went down with its ring, the break it was
+    # keeping and its live stream, to send nothing. Now a piece of at most `PIECE_BYTES` is read, turned into push
+    # frames (`wire`) and pushed, and only then is the next one read: what the camera holds of its card is one piece.
+    # Returns how many frames went out, and the ring's part — which goes with the pass's own frames, as before.
+    #
+    # The ring follows the card's part in the middle of a group of pictures only when the card's part reached it —
+    # its last frame ends where the ring begins. A card that could not be read, that holds less, or no card at all
+    # leaves a hole before the ring, and after a hole the stream starts on a keyframe; what is missing is backfill's.
+    def _continue(self, ing, token: str, have) -> tuple[int, list]:
+        ring = list(self.ring)
         if have is None:
-            return list(self.ring)
+            return 0, ring
         have = float(have)
-        first = float(self.ring[0]["t"]) if self.ring else self.clock()
-        try:
-            older = [f for f in self._read_card(have, first) if isinstance(f, dict) and "t" in f] if have < first else []
-        except OSError:
-            older = []                                                 # no card, or it could not read: memory only —
+        ring = [f for f in ring if float(f["t"]) > have]
+        first = float(ring[0]["t"]) if ring else self.clock()
+        sent, reached = 0, have
+        if have < first:
+            try:
+                for piece in self._read_card(self.recording, have, first, PIECE_BYTES):
+                    out = [wire(s, ring=True) for s in piece if unix_s(s.begin) > have]
+                    while out and not sent and not out[0]["key"]:
+                        out.pop(0)                                     # a continuation starts on a keyframe, never mid-GOP
+                    if out:
+                        ing.push(token, self.serial, out, camera_now=self.clock())
+                        sent, reached = sent + len(out), unix_s(piece[-1].end)
+                    piece = out = None                                 # let go BEFORE the next is read: one piece, not two
+            except OSError:
+                reached = have                                         # no card, or it could not read: memory only —
                                                                        # what is missing is backfill's, asked again
-        out = [f for f in older + self.ring if float(f["t"]) > have]
-        while out and not out[0].get("key", True):
-            out.pop(0)                                                 # a continuation starts on a keyframe, never mid-GOP
-        return out
+        if not sent or reached < first - 0.002:
+            while ring and not ring[0].get("key", True):
+                ring.pop(0)
+        return sent, ring
 
-    def _read_card(self, t0: float, t1: float) -> list:
+    def _read_card(self, recording, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
         if self.card is None:
             raise OSError("this camera has no card")
-        return self.card(t0, t1)
+        return self.card(recording, t0, t1, max_bytes)
 
     def _poll(self, road: dict, key: str, wait: float):
         """The first ingest of a road that answers, and what it said — or (None, None)."""
@@ -721,14 +858,15 @@ class CameraPusher:
         if work["push"]:
             batch = list(frames_now)
             if self.broken_at is not None:                             # a break ends here: continue, don't restart
-                more = self._continuation(work.get("have"))
-                self.resumed += len(more)
+                sent, more = self._continue(ing, token, work.get("have"))   # the card's part is pushed as it is read
+                self.resumed += sent + len(more)
+                pushed += sent
                 batch = [dict(f, ring=True) for f in more] + batch
                 self.ring, self.broken_at = [], None
             elif self.pushing != key and self.ring:                    # a start, here: the ring first, marked
                 batch = [dict(f, ring=True) for f in self.ring] + batch
                 self.ring = []
-            pushed = ing.push(token, self.serial, batch, camera_now=self.clock())
+            pushed += ing.push(token, self.serial, batch, camera_now=self.clock())
             self.pushing = key
             timed = [f for f in batch if isinstance(f, dict) and "t" in f]
             if timed:
@@ -737,21 +875,39 @@ class CameraPusher:
                 self.tail = [f for f in self.tail + [{k: v for k, v in f.items() if k != "ring"} for f in timed]
                              if float(f["t"]) >= floor]
         uploaded = []
-        for rid, (t0, t1) in work["ranges"].items():
-            try:
-                samples = self._read_card(t0, t1)
-            except OSError as e:                                       # the card's error is said, never answered as empty
-                ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
-                self.failed_ranges.append((t0, t1, str(e)))
-                continue
-            ing.upload(token, self.serial, rid, samples, camera_now=self.clock())
-            uploaded.append((t0, t1))
+        for rid, r in work["ranges"].items():
+            t0, t1 = r["from"], r["to"]
+            if self._upload(ing, token, rid, r):
+                uploaded.append((t0, t1))
         performed = []
         for aid, a in work.get("asks", {}).items():
             outcome = "expired" if a["deadline"] <= self.clock() else self.perform(a["action"])   # too late: not done
             ing.answer_ask(token, self.serial, aid, outcome)
             performed.append((a["action"], outcome))
         return pushed, uploaded, performed
+
+    # One range of the card, answered (the sixth review). The request names the recording and the size of a piece; the
+    # card is read a piece at a time and each piece is uploaded before the next is read — `more` on every one of
+    # them, and an upload with nothing in it and no `more` to say the answer is whole. A minute at 4 Mbit/s was read
+    # into one list of 28.6 MiB; it is thirty pieces of a megabyte now, one of them in memory. The ingest says, with
+    # every piece, whether anybody still waits: a recorder that gave up is not read the rest of the card for.
+    # An error of the card at ANY piece is said (`failed`), never answered as "that was all".
+    def _upload(self, ing, token: str, rid: str, r: dict) -> bool:
+        t0, t1 = r["from"], r["to"]
+        piece = min(int(r.get("piece") or PIECE_BYTES), PIECE_BYTES)
+        recording = r.get("recording") or self.recording
+        seq = 0
+        try:
+            for samples in self._read_card(recording, t0, t1, piece):
+                if not ing.upload(token, self.serial, rid, samples, camera_now=self.clock(), more=True, seq=seq):
+                    return False                                       # nobody waits for it any more
+                seq, samples = seq + 1, None                           # let go BEFORE the next is read: one piece, not two
+        except OSError as e:                                           # the card's error is said, never answered as empty
+            ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
+            self.failed_ranges.append((t0, t1, str(e)))
+            return False
+        ing.upload(token, self.serial, rid, [], camera_now=self.clock(), seq=seq)
+        return True
 
     def pass_once(self, frames_now: list, wait: float = 0.0) -> dict:
         """One pass. `wait`: how long the poll may be held when nothing changed — the camera's long poll.
@@ -892,13 +1048,18 @@ def edge_gate(pusher):
     return lambda row: pusher.uncovered
 
 
-def card_range(ingest, ref_of, wait: float = 30.0):
+def card_range(ingest, ref_of, wait: float | None = None):
     """`RecWorker.card_range` for a recorder of this cluster: a range of a camera's card, read by ASKING the camera
     through this ingest — the range goes in the answer to its poll, the camera uploads it (the product's
     `POST <ingest>/<ref>/range/<id>`). No door on the camera, no engine on it. `ref_of(src)`: the domain's name of
     the camera the source's recording is of. A range the camera could not read raises `RangeFailed` (an `OSError`):
-    the recorder's copy fails, and its backfill asks again later."""
-    return lambda src, t0, t1: ingest.fetch_range(ref_of(src), t0, t1, wait)
+    the recorder's copy fails, and its backfill asks again later — after a backoff (`RecWorker._source_answered`).
+
+    The request NAMES the source's recording (`src["recording"]`): the card may hold several, and unnamed, a request
+    for `2-card` was answered out of `1-card` — nothing in the range, remembered as "not on the card", never asked
+    again (the sixth review). `wait`: how long each PIECE of the answer is waited for; unset, what a piece takes
+    (`piece_wait`)."""
+    return lambda src, t0, t1: ingest.fetch_range(ref_of(src), t0, t1, wait, recording=src.get("recording"))
 
 
 # -- the asking camera -------------------------------------------------------------------------------------
