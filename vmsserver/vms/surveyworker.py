@@ -136,25 +136,40 @@ class SurveyWorker(Worker):
 
             if unit not in self.epochs:
                 self.take_epoch(unit)                    # one writer of survey/<unit>/… at a time
-            model = self.running.get(unit)
-            if model is None:
-                model = self.running[unit] = self.models[row["kind"]](row)
-            if not self.may_write(unit):
+            # THE UNIT'S OWN TROUBLE (the review's third pass, M19's remainder): a door that answers with an error that
+            # is not "busy", a model's factory or its `observe` raised out of the pass, and every watch after this one
+            # was not looked at. A failed read ends this watch's window where it got to, like a busy door; a failed
+            # model fails this unit — `failed`, and why — and is built afresh next pass.
+            busy, failed, fired, watched = False, "", [], []
+            try:
+                model = self.running.get(unit)
+                if model is None:
+                    model = self.running[unit] = self.models[row["kind"]](row)
+                if not self.may_write(unit):
+                    continue
+                for a, b in (spans if spans is not None else [want]):
+                    try:
+                        self.fetch(play_url, a, b)       # the door: this is what costs a session
+                    except _Busy:
+                        busy = True
+                        break
+                    except Exception as e:               # noqa: BLE001 — the holder's door failed: not a busy one, not ours
+                        busy, failed = True, f"the holder's door failed: {e}"
+                        break
+                    watched.append((a, b))
+                    for ts, kind, fields in self._watch(model, a, b):
+                        EventLog(self.archive_root, SURVEY, unit, self.epochs[unit]).append(
+                            ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
+                        self.events_written += 1
+                        fired.append(ts)
+            except Exception as e:                       # noqa: BLE001
+                log.exception("survey %s failed this pass", unit)
+                self._stop(unit)
+                if watched:
+                    front.set(watched[-1][1])            # what WAS watched is written: watching it again would write it twice
+                self.status_by_unit[unit] = self._status(unit, row, "failed", why=f"the model failed: {e}",
+                                                         front=front, newest=newest)
                 continue
-
-            busy, fired, watched = False, [], []
-            for a, b in (spans if spans is not None else [want]):
-                try:
-                    self.fetch(play_url, a, b)           # the door: this is what costs a session
-                except _Busy:
-                    busy = True
-                    break
-                watched.append((a, b))
-                for ts, kind, fields in self._watch(model, a, b):
-                    EventLog(self.archive_root, SURVEY, unit, self.epochs[unit]).append(
-                        ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
-                    self.events_written += 1
-                    fired.append(ts)
             # The frontier moves over the whole window, not from span to span. A gap in the device's own
             # recording is nothing to watch and nothing to come back for — leaving the frontier at its edge
             # would park the survey in front of every quiet night for ever. When the door closed half way, it
@@ -172,7 +187,7 @@ class SurveyWorker(Worker):
             if busy:
                 # Not a failure and not a retry: the two sessions belong to the operator watching this gap and
                 # to the recorder saving it, and a survey is the one of the three that can wait.
-                self.status_by_unit[unit] = self._status(unit, row, "waiting", why="the device has no free session",
+                self.status_by_unit[unit] = self._status(unit, row, "waiting", why=failed or "the device has no free session",
                                                          front=front, newest=newest)
                 continue
             self.status_by_unit[unit] = self._status(unit, row, "running", front=front, newest=newest)

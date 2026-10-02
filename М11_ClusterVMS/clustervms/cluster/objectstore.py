@@ -28,6 +28,7 @@ import urllib.request
 from typing import Protocol
 
 from w2cplatform.limits import check
+from w2cplatform.variables import Conflict
 
 
 class ObjectStore(Protocol):
@@ -77,6 +78,27 @@ class FsObjectStore:
             f.write(data)
         os.replace(p + ".tmp", p)                  # an object appears whole or not at all
 
+    # Create-only, as М10's `FsObjectStore.put_new` does it: `link` onto a name that is taken fails. Without it a
+    # worker on a bench store refuses device commands (`VmsWorker._mark`; the platform review's third pass).
+    def put_new(self, key: str, data: bytes) -> bool:
+        import tempfile
+        from w2cplatform.events import durable_dir, durably
+        p = os.path.join(self.root, key)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(data)
+                f.flush(); durably(f)
+            try:
+                os.link(tmp, p)
+            except FileExistsError:
+                return False
+            durable_dir(os.path.dirname(p))
+            return True
+        finally:
+            os.remove(tmp)
+
     def get(self, key: str) -> bytes | None:
         p = os.path.join(self.root, key)
         if not os.path.exists(p):
@@ -123,6 +145,19 @@ class VariablesObjectStore:
     def list(self, prefix: str) -> list[str]:
         base = f"{self.prefix}/"
         return sorted(p[len(base):] for p in self.vars.list(base + prefix))
+
+    # Creates the object only if there is none; `True` when THIS call made it. A Variable written with `cas=0`
+    # succeeds only where no Variable is — raft's create-only, and the one a worker's command mark needs: two
+    # holders of one device in the same two seconds must not both believe they were first (the platform review's
+    # third pass). The heartbeat's `put` stays last-writer-wins, as it should; this is the other promise, asked
+    # for by name. Raft has it on disk before it answers — nothing to fsync here.
+    def put_new(self, key: str, data: bytes) -> bool:
+        check(key, len(data), self.max_bytes)
+        try:
+            self.vars.put(self._path(key), {"data": data.decode("utf-8")}, cas=0)
+        except Conflict:
+            return False
+        return True
 
     def delete(self, key: str) -> None:
         self.vars.delete(self._path(key))

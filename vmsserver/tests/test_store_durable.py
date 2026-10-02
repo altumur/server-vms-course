@@ -104,3 +104,25 @@ def test_two_writers_of_one_object_do_not_share_the_file_in_flight():
     assert len(set(seen)) == 2 and all(n.startswith("w-1.") and n.endswith(".tmp") for n in seen)
     assert store.get("vms/heartbeats/w-1") == b'{"a": 2}'
     assert store.list("vms/heartbeats/") == ["vms/heartbeats/w-1"]            # nothing left in flight, nothing listed
+
+
+def test_a_command_mark_is_on_the_medium_before_its_name_and_its_name_after():
+    """The review's third pass (minor). `put_new` is the mark a worker writes BEFORE it calls a device; written with
+    no barrier, the power going after the call took the mark with it, and the next holder opened the door a second
+    time. The bytes reach the medium before the name is made, the directory entry after it — and a mark that loses
+    the race pays for the bytes only."""
+    box = Box()
+    store = FsObjectStore(os.path.join(box.root, "objects"))
+    mark = os.path.join(box.root, "objects", "vms", "commands", "r1")
+    g = FsObjectStore.put_new.__globals__
+    real, calls = (g["durably"], g["durable_dir"]), []
+    g["durably"] = lambda f: calls.append(("file", os.path.exists(mark)))
+    g["durable_dir"] = lambda p: calls.append(("dir", os.path.exists(os.path.join(p, "r1"))))
+    try:
+        assert store.put_new("vms/commands/r1", b'{"instance": "a"}')
+        assert calls == [("file", False), ("dir", True)]                   # bytes before the name, the entry after
+        calls.clear()
+        assert not store.put_new("vms/commands/r1", b'{"instance": "b"}') and [c[0] for c in calls] == ["file"]
+    finally:
+        g["durably"], g["durable_dir"] = real
+    assert store.get("vms/commands/r1") == b'{"instance": "a"}'

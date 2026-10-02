@@ -98,6 +98,32 @@ def test_re_uploading_a_marked_blob_calls_the_whole_sweep_off():
     assert box.objects.get(f"det/blobs/{again}") == MASK_A, "the sweep deleted a blob a row names"
 
 
+def test_an_upload_between_the_sweepers_last_look_and_its_delete_is_put_back():
+    """The review's third pass (m5): the window left after the decision stayed on the row was two store calls wide —
+    the sweeper reads "still doomed", `put_blob` takes the digest off and writes the object, the sweeper deletes it,
+    and the row then names nothing. The sweeper now reads the row again after the delete: a digest that left the
+    list in between is being uploaded, and its bytes — the same bytes, the key is their digest — are put back."""
+    box = Box()
+    ctl, _ = _det(box)
+    ctl.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_A)})
+    ctl.update("7-linecross", {"mask": ctl.put_blob(MASK_B)})      # A orphaned
+    ctl.sweep_blobs()                                              # …and marked
+    box.wall.advance(301)
+    ctl.create({"name": "8-linecross", "cam": "8", "kind": "linecross"})
+    real, again = box.objects.delete, []
+
+    def delete(key):                                               # the upload lands exactly in the window
+        if not again:
+            again.append(ctl.put_blob(MASK_A))
+        return real(key)
+    box.objects.delete = delete
+    rep = ctl.sweep_blobs()
+    ctl.update("8-linecross", {"mask": again[0]})                  # the row lands
+    assert box.objects.get(f"det/blobs/{again[0]}") == MASK_A, "the sweep deleted a blob being uploaded"
+    assert rep["deleted"] == 0 and ctl.blob(again[0]) == MASK_A
+
+
 def test_the_sweep_is_bounded_because_its_own_bookkeeping_is_a_row():
     """`det/sweep` is a Variable, and a Variable has the store's ceiling over it
     (Lesson 26). So the sweep collects at most `limit` per pass — the rule applies

@@ -39,9 +39,13 @@
 # - Verified where: the README says `gstvms/` is written to GStreamer's Python binding and not exercised in
 #   the test run; the logic it calls (`resolve`, the recorder's sink into a live `obsd`) is. The zombie with two
 #   real worker processes and `kill -9` mid-recording are the box's exercises.
-# - Bus callbacks run on the GLib main context; since the worker runs no GLib main loop, `add_signal_watch`
-#   delivery depends on the default main context being iterated — the code as written relies on it, and the
-#   worker's loop only reads the lists `pump` hands back.
+# - How the buses are read. The WORKER's pipelines use `add_signal_watch`: its process runs a GLib main loop
+#   for the RTSP fan-out, and the callbacks fill the lists `pump` hands back. The RECORDER runs no loop, so it
+#   polls instead — `pop_filtered` for ERROR, EOS and ELEMENT on every pump (`gstvms/ending.py`, the review's
+#   first pass B5 and third pass): a signal watch without a loop fires never. How it stops a pipeline and what it
+#   does with a dead one is there too, without `gi`, so the tests hold it with a fake pipeline. What only a box
+#   proves: that `rtspsrc` and `shmsrc` turn the pipeline's EOS into one behind their last buffer, and that ten
+#   seconds drain a sixty-second ring into a real daemon.
 # ================================================================================================
 from __future__ import annotations
 
@@ -55,6 +59,7 @@ from gi.repository import Gst  # noqa: E402
 
 from . import driverpacksrc  # noqa: E402,F401 — registers the element
 from .observes import observes      # noqa: E402 — which bus messages are observations; no GStreamer needed to test it
+from .ending import RecEnding       # noqa: E402 — how a recorder's pipeline ends; no GStreamer needed to test it
 
 log = logging.getLogger("gstvms")
 Gst.init(None)
@@ -214,48 +219,35 @@ class GstActuator:
             self("stop", {"id": cid})
 
 
-class GstRecActuator(GstActuator):
+class GstRecActuator(RecEnding, GstActuator):
     """The recorder's: `rtspsrc` on the camera's fan-out URL — or `shmsrc` on the worker's shared-memory
     branch when the worker is on this server — then `appsink`, each access unit a sample into the volume's
     writer under the recorder's epoch. No fan-out of its own; nothing here reads a camera."""
+
+    gst = Gst
 
     def __init__(self, watchdog_ms: int = 8000):
         self.watchdog = watchdog_ms
         self.fanout = None
         self.range_error = ""                            # why the last range pipeline failed, if it did (Lesson 16)
         self.pipelines, self.dead, self.posted = {}, [], []
+        self.sinks, self.blocks, self.released, self.offered_bytes = {}, {}, set(), {}
 
-    # No GLib loop here: the buses are POLLED on every pump — an error (the watchdog's, after `watchdog_ms` without a
-    # frame; a source that closed) makes the recording dead, an element's message an observation.
+    # No GLib loop here: the buses are POLLED on every pump (`RecEnding.pump`) — an error (the watchdog's, after
+    # `watchdog_ms` without a frame; a source that failed) or an EOS nobody asked for makes the recording dead, an
+    # element's message an observation.
     def _watch_bus(self, p, cid) -> None:
         pass
 
-    def pump(self):
-        for cid, p in list(self.pipelines.items()):
-            bus = p.get_bus()
-            while True:
-                msg = bus.pop_filtered(Gst.MessageType.ERROR | Gst.MessageType.ELEMENT)
-                if msg is None:
-                    break
-                if msg.type == Gst.MessageType.ERROR:
-                    self.dead.append(cid)
-                else:
-                    self._posted(cid, msg)
-        return super().pump()
-
-    # `release` opens a held pipeline's ring; every other verb is the worker's.
+    # `release` opens a held pipeline's ring; `stop` and `restart` end the running pipeline the recorder's way —
+    # drained, NULL, its open sequence closed (`RecEnding._end`): what was taken is kept, and a restart (back on
+    # hold, a new source) must not let the next frames continue a sequence after a gap — a hole inside a
+    # sequence is drawn as footage. Then the worker's verb, with nothing left to stop.
     def __call__(self, verb: str, cam: dict) -> bool:
         if verb == "release":
             return self._release(cam["id"])
-        if verb in ("stop", "restart") and cam["id"] in getattr(self, "sinks", {}):
-            # The open sequence closed: what was taken is kept — and a restart (back on hold, a new source) must not
-            # let the next frames continue it after a gap: a hole inside a sequence is drawn as footage. Closed AFTER
-            # the pipeline is down: a key frame handed to the sink between `finish` and NULL would open a sequence
-            # nobody closes (the review's first pass, blocker 4, in its obsd form).
-            sink = self.sinks.pop(cam["id"])
-            ok = super().__call__(verb, cam)
-            sink.finish()
-            return ok
+        if verb in ("stop", "restart"):
+            self._end([cam["id"]])
         return super().__call__(verb, cam)
 
     # A pipeline that starts on hold: block the ring's source pad before the first buffer can pass. And on every
@@ -268,9 +260,7 @@ class GstRecActuator(GstActuator):
         from w2cplatform.obsd import ObsdError, archive_ms, video
         sink = p.get_by_name("sink")
         if sink is not None and cam.get("sink") is not None:
-            self.offered_bytes = getattr(self, "offered_bytes", {})
             self.offered_bytes.setdefault(cam["id"], 0)
-            self.sinks = getattr(self, "sinks", {})
             self.sinks[cam["id"]] = writer = cam["sink"]
             skipping = {"until_key": False}
 
@@ -297,20 +287,25 @@ class GstRecActuator(GstActuator):
             sink.connect("new-sample", on_sample)
         if cam.get("hold"):
             pad = p.get_by_name("ring").get_static_pad("src")
-            self.blocks = getattr(self, "blocks", {})
             self.blocks[cam["id"]] = pad.add_probe(Gst.PadProbeType.BLOCK_DOWNSTREAM, lambda *_: Gst.PadProbeReturn.OK)
 
     def offered(self, cid):
-        return getattr(self, "offered_bytes", {}).get(cid)
+        return self.offered_bytes.get(cid)
 
     # Unblock — and drop what the ring pushes until its first KEYFRAME: the leaky queue dropped its oldest
     # buffers one at a time, so it may begin mid-GOP, and the engine opens a sequence only on a key frame. The
     # product measured the result on a box: recording began 28.5 s before the hold was lifted.
+    #
+    # Removing the blocking probe wakes the queue's thread at once — it does not wait for the next buffer to
+    # arrive — but the ring then drains at the pace of the writer, and a stop in the same pass (a break the
+    # recorder is told to stop during: `RecWorker._release_if_broken`) would throw the rest away. So the pipeline
+    # is remembered as RELEASED, and its stop waits for the drain (`RecEnding._budget`; the review's third pass).
     def _release(self, cid) -> bool:
         p = self.pipelines.get(cid)
-        probe = getattr(self, "blocks", {}).pop(cid, None)
+        probe = self.blocks.pop(cid, None)
         if p is None or probe is None:
             return False
+        self.released.add(cid)
         pad = p.get_by_name("ring").get_static_pad("src")
 
         def to_keyframe(pad_, info):

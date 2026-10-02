@@ -724,6 +724,12 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_last_frame_age_seconds gauge")
     out += [f'rec_last_frame_age_seconds{{unit="{st["id"]}"}} {round(max(0.0, now - float(st["last_frame_at"])), 1)}'
             for w, hb in hbs for st in hb.status if st.get("last_frame_at")]
+    # What the engine refused of each recording's samples, by its answer (the review's third pass). The writer watch
+    # counts the VOLUME, and one camera of thirty that was never written — its group of pictures larger than a block
+    # — left it `ok`. A counter per recording and answer, from what the recorder's sinks were told.
+    out.append("# TYPE rec_samples_refused_total counter")
+    out += [f'rec_samples_refused_total{{unit="{st["id"]}",status="{k}"}} {n}' for w, hb in hbs for st in hb.status
+            for k, n in sorted((st.get("samples_refused") or {}).items())]
     # How far back each recording goes, and whether its volume's ring has closed inside the floor it was promised
     # (`min_depth_days`; feedback BM).
     out.append("# TYPE rec_archive_depth_days gauge")

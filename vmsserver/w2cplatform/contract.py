@@ -137,8 +137,23 @@ def schema_version(vars_) -> int:
 # rolling upgrade: it understands the old layout. The version is raised afterwards, once, by the operator —
 # never by the first new process to start, which would lock out every machine not yet upgraded and turn a
 # rolling upgrade into an outage.
-def check_schema(vars_) -> int:
-    have = schema_version(vars_)
+#
+# A ROW THAT DOES NOT PARSE (the review's third pass). `platform/schema` is one row every process reads — at
+# construction and at every slot renewal — and a hand edit that made `version` a word raised out of `renew_slot`
+# in every process at once: no lease renewed, no heartbeat, the whole fleet fenced by one bad field. Two cases,
+# decided apart. A process that already RAN against this store passes `last` — the version it read whole — and
+# keeps it: the layout did not change under it because a field stopped parsing, and a raise that newer builds
+# would get is a raise only a version that PARSES as newer earns. A process that never read it has nothing to
+# keep, and refuses to start, loudly, as for a newer layout: it cannot name the layout it would be reading.
+def check_schema(vars_, last: int | None = None) -> int:
+    try:
+        have = schema_version(vars_)
+    except (ValueError, TypeError) as e:
+        if last is None:
+            raise SchemaTooNew(f"{SCHEMA_KEY} does not parse ({e}), and this process has never read it: it does not "
+                               f"start on a layout it cannot name") from None
+        log.warning("%s does not parse (%s); schema %d, as last read, stands", SCHEMA_KEY, e, last)
+        return last
     if have > SCHEMA:
         raise SchemaTooNew(f"store is at schema {have}; this build understands {SCHEMA}")
     return have
@@ -196,13 +211,25 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
 # a box without it still gets away with, and the metric is what says the tolerance is being approached.
 FUTURE_TOLERANCE = 5.0
 SKEW_MAX: dict[str, float] = {}
+# …and the other direction (the review's third pass, M9). A clock running BEHIND makes a live process look old: its
+# heartbeat is `lost_after` from "dead" sooner than it should be, and the maximum above never sees it — its skew is
+# negative. What can be measured is the oldest heartbeat still judged LIVE, `ts - now` at its most negative: the
+# heartbeat period plus the store's lag on a sound cluster (ten-odd seconds), creeping towards `-lost_after` when a
+# clock falls behind. On `/metrics` as `<sub>_heartbeat_skew_seconds_min`. A dead process's heartbeat is not live
+# and is not counted: the number is about clocks, not about who died — and neither is a caller whose window is no
+# liveness at all (`workers_seen(max_age=1e12)`, which LISTS every worker ever seen): wider than `SKEW_MIN_WITHIN`.
+SKEW_MIN: dict[str, float] = {}
+SKEW_MIN_WITHIN = 300.0
 
 
 def is_live(sub: str, ts: float, now: float, lost_after: float) -> bool:
     skew = ts - now
     if skew > SKEW_MAX.get(sub, 0.0):
         SKEW_MAX[sub] = skew
-    return -FUTURE_TOLERANCE <= now - ts <= lost_after
+    live = -FUTURE_TOLERANCE <= now - ts <= lost_after
+    if live and lost_after <= SKEW_MIN_WITHIN and skew < SKEW_MIN.get(sub, 0.0):
+        SKEW_MIN[sub] = skew
+    return live
 
 
 # The one row that says which server is going away for a while. It is the platform's, not a subsystem's —
@@ -651,7 +678,7 @@ class Worker:
                  lease_ttl: float = 30.0, lease_margin: float = 5.0, clock=time.monotonic, wall=time.time,
                  instance: str | None = None, slot_ttl: float = 45.0):
         self.sub, self.vars, self.objects = sub, vars_, objects
-        check_schema(vars_)                       # a build older than the store does not run at all
+        self.schema_seen = check_schema(vars_)    # a build older than the store does not run at all; kept for `renew_slot`
         self.clock, self.wall = clock, wall
         self.lease_ttl, self.lease_margin = lease_ttl, lease_margin
         # How long past a lease's end DATA may still be written while the store is silent (`Lease.may_record`).
@@ -733,7 +760,7 @@ class Worker:
         # understands less, and a build that checked at construction and has not heartbeaten yet is not live to
         # it: the version is raised under a process that passed its check a moment ago. So the check is repeated
         # where the slot is renewed, and the worker fences on it as it would on a slot held by somebody else.
-        check_schema(self.vars)
+        self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # a garbled row: what it ran with stands
         items, idx = self.vars.get(self.sub.slot_key(self.name))
         cur = Slot.from_items(self.name, items)
         if cur.holder != self.instance or cur.released:          # released: `retire` let go of it; a late renewal does not take it back

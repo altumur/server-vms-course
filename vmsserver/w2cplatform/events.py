@@ -257,7 +257,8 @@ class EventLog:
     # the bucket span (10 minutes by default).
     def __init__(self, root: str, subsystem: str, unit: str, epoch: int, bucket_seconds: int = 600):
         self.root, self.subsystem, self.unit, self.epoch, self.bucket_seconds = root, subsystem, str(unit), epoch, bucket_seconds
-        self._synced_dirs: set[str] = set()       # bucket directories this writer has made durable
+        self._synced: set[str] = set()            # bucket FILES whose directory entry this writer has made durable
+        self._synced_dirs: set[str] = set()       # …and epoch directories whose own entry it has
 
     # The bucket file that time `t` falls in, for this epoch — in the alarms' tree for an alarm.
     def path_for(self, t: float, cls: str = OBSERVATION) -> str:
@@ -304,15 +305,24 @@ class EventLog:
             f.write(json.dumps(line) + "\n"); f.flush()
             if cls == ALARM or durable:              # `durable`: the journal's lines — a deletion's "who" (the review's second pass)
                 durably(f)
-        # …and the directory entry that names the file, once per bucket this writer has touched.
+        # …and the directory entry that names the file, once per bucket FILE this writer has touched.
         #
         # Not "when the alarm created the file": an OBSERVATION may have created it a moment ago and paid
         # for no barrier at all, so the entry can still be only in the cache while the alarm's bytes are
         # on the platter — the bytes safe and nothing pointing at them. What decides is whether THIS
-        # writer has made this directory durable yet, and a set of paths answers that without a stat.
-        if (cls == ALARM or durable) and os.path.dirname(p) not in self._synced_dirs:
-            durable_dir(os.path.dirname(p))
-            self._synced_dirs.add(os.path.dirname(p))
+        # writer has made this file's entry durable yet, and a set of paths answers that without a stat.
+        #
+        # Per FILE, not per directory (the review's third pass): every bucket of an epoch lives in one `e<epoch>`
+        # directory, so "once per directory" synced the first bucket's entry and none after it — ten minutes later
+        # the next bucket's alarms were on the platter with nothing naming them. And the first time this writer
+        # reaches an `e<epoch>` directory, its parent is synced too: a new epoch's directory is itself an entry.
+        if (cls == ALARM or durable) and p not in self._synced:
+            d = os.path.dirname(p)
+            durable_dir(d)
+            if d not in self._synced_dirs:
+                durable_dir(os.path.dirname(d))
+                self._synced_dirs.add(d)
+            self._synced.add(p)
         return p
 
 

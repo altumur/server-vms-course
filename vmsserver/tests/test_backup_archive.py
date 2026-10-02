@@ -246,6 +246,26 @@ def test_a_released_backup_writes_the_seconds_before_anybody_noticed():
     assert backup.our_coverage("1-copy") == [(start, released_at)]     # on the volume, at its own time
 
 
+def test_a_primary_whose_server_dies_is_covered_from_before_it_died():
+    """The review's third pass. The primary's server loses power: its recorder says nothing more — not even that it
+    stopped. In one cluster nothing else tells the backup (`stream_says` is the domain's hook, unset here), so the
+    book decides, and the book is that recorder's last heartbeat, which counts for `LOST_AFTER`. Thirty seconds of
+    ring plus the grace for a start began the backup's footage 35 s after the death. Now a recorder that VANISHED
+    gets no grace — it was written until its last heartbeat — and the ring reaches past `LOST_AFTER`."""
+    box, rec_ctl, primary, backup, w = _site(when="offline")
+    box.wall.advance(100)
+    w.heartbeat_once(); primary.heartbeat_once(); backup.reconcile_once()
+    died = box.wall()                                                  # its last heartbeat said `running`; then nothing
+    box.wall.advance(backup.LOST_AFTER - 5)
+    w.heartbeat_once(); backup.reconcile_once()
+    assert backup.holding["1-copy"] is True                            # its heartbeat still counts: written, as far as anyone knows
+    box.wall.advance(6)
+    w.heartbeat_once(); backup.reconcile_once()                        # stale: vanished — covered at once, no grace on top
+    [(uid, start, end)] = backup.actuator.released
+    assert uid == "1-copy" and end == died + backup.LOST_AFTER + 1
+    assert start <= died                                               # the ring reaches back to before the power went
+
+
 def test_the_backup_goes_back_on_hold_a_minute_after_the_primary_is_back():
     """The primary is written again — by its heartbeat. Its first minutes are not on the volume yet, and will not be
     visible until their block closes; stopping the backup at that word would leave the seam to nobody. So the backup

@@ -47,6 +47,19 @@ def test_detect_is_a_detector_with_an_end_and_a_second_request_extends_it():
     assert det.unit("7-lpr-auto")["until"] == box.wall() + 600 and len(det.units()) == 2   # extended, not a second
 
 
+def test_a_request_with_params_of_its_own_still_carries_the_detectors_mask_and_labels():
+    """The review's third pass (Н-m7). A request that brought `params` brought ONLY them: the standing detector's
+    mask and labels stayed behind, and the scenario's detector watched the whole frame on whatever worker came first.
+    The request's params win; the rest of the setup travels."""
+    box = Box(); det, job, rec = _site(box)
+    det.create({"name": "7-lpr", "cam": "7", "kind": "lpr", "enabled": False, "params": "lpr-settings",
+                "labels": ["gpu"], "mask": det.put_blob(b"m" * 64)})
+    _ask(box, "f1-0", action="detect", cam="7", kind="lpr", minutes=10, params="night-settings")
+    assert detect_on_request(det, job, rec, box.wall()) == 1
+    row, standing = det.unit("7-lpr-auto"), det.unit("7-lpr")
+    assert row["params"] == "night-settings" and row["labels"] == ["gpu"] and row["mask"] == standing["mask"]
+
+
 def test_a_camera_already_watched_by_hand_is_not_watched_twice():
     """An enabled detector with no end already counts every car; a second model would count each one twice."""
     box = Box(); det, job, rec = _site(box)
