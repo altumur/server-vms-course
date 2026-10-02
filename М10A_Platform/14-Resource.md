@@ -198,6 +198,17 @@ Docstring называет суть: **правило, заменяющее ка
 
 Выключено по умолчанию: ручка `platform/mirror`, которую ставит инсталлятор. Включено — каждый сосед спрашивается, что у него уже есть, и досылается недостающее.
 
+**`copies`, которое не разбирается, — одна копия.** `mirror_settings` разбирал `copies` голым `int`, и `copies: "two"` бросал исключение из зеркала на каждом проходе: зеркало, которое оператор включил, не копировало ничего (седьмое ревью, рядом с ватерлинией). `enabled` — слово, сравниваемое со словом, оно читается всегда. Число теперь идёт через общий читатель строк (урок 8, шаг 5):
+
+```python
+def mirror_settings(vars_) -> dict:
+    items, _ = vars_.get(MIRROR_KEY)
+    return {"enabled": bool(items) and items.get("enabled") == "true",
+            "copies": MIRROR.read(MIRROR_KEY, lambda: int(finite((items or {}).get("copies", 1))), 1)}
+```
+
+Не разобралось — одна копия: меньше, чем попросил выключатель, который прочитан, быть не может. Строка считается один раз, пока снова не станет читаться, и один раз попадает в лог. Тест: `test_row_reader.py::test_a_mirror_whose_copies_do_not_parse_mirrors_to_one_peer`.
+
 **Сосед — источник истины о том, что у него лежит.** Не отметка «я это отправлял», хранимая у отправителя: она разошлась бы при потере диска у получателя, и копии считались бы существующими, не существуя. Спросить — это один запрос на проход, и он делает операцию идемпотентной: тест показывает два скопированных бакета на первом проходе и ноль на втором.
 
 ```python
@@ -226,21 +237,29 @@ Docstring называет суть: **правило, заменяющее ка
     def restore(self) -> dict:
         """The reverse, run by the owner: pull my buckets from whoever holds
         copies, then let each subsystem's hook re-index what came back."""
-        pulled = 0
-        for peer, hb in self.live_resources().items():
-            if peer == self.server or self.server not in hb.get("mirrors", {}):
-                continue
-            for path in sorted(b.path for b in self.peers.mirrored(hb["url"], self.server)):
-                dest = os.path.join(self.root, path)
-                if os.path.exists(dest):
+        with self._pulsing():
+            pulled = 0
+            for peer, hb in self.live_resources().items():
+                if peer == self.server or self.server not in hb.get("mirrors", {}):
                     continue
-                os.makedirs(os.path.dirname(dest), exist_ok=True)
-                with open(dest + ".tmp", "wb") as f:
-                    f.write(self.peers.get(hb["url"], self.server, path))
-                os.replace(dest + ".tmp", dest); pulled += 1
-        hooks = {sub: h.pass_(self.wall()) for sub, h in self.hooks.items()} if pulled else {}
-        return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+                listed = self.peers.mirrored(hb["url"], self.server)
+                self._progressed()
+                for path in sorted(b.path for b in listed):
+                    self._progressed()
+                    dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
+                    if os.path.exists(dest):
+                        continue
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    with open(dest + ".tmp", "wb") as f:
+                        f.write(self.peers.get(hb["url"], self.server, path))
+                    os.replace(dest + ".tmp", dest); pulled += 1
+                    self._progressed()
+            hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
+                     for sub, h in self.hooks.items()} if pulled else {}
+            return {"pulled": pulled, **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
 ```
+
+**Возвращение домой — под тем же пульсом, что проход.** `restore` идёт при старте процесса, на том же потоке, что heartbeat, до цикла. Седьмое ревью посчитало цену: замена диска, 2000 вёдер по 50 мс каждое — 100 секунд без heartbeat'а (часть 1, M4). Всё это время ресурс для индекса событий молчит, окно считается неполным, и автоматика держит курсор. Консоль тоже показывает ресурс молчащим, хотя его дверь отвечает. Теперь пульс прохода (шаг 7) вынесен в `_pulsing`, и `restore` бьётся под ним так же, как `pass_`. Отметка прогресса ставится на каждый список соседа и на каждое ведро, вытянутое или уже лежащее на месте. Восстановление, которое движется, держит пульс. Застрявшее на соседе, который ничего не отдаёт, пульс останавливает. Тест: `test_row_reader.py::test_restore_beats_under_the_same_pulse_as_the_pass` — шесть вёдер по 30 секунд часов ящика, heartbeat свежий во время каждого.
 
 Обратная операция, и запускает её **владелец при старте**. Сценарий: сервер вернулся после замены диска, его дерево пусто, а копии его закрытых бакетов лежат у соседей.
 
@@ -330,7 +349,7 @@ VMS этой дверью не пользуется. Её видео лежит 
 | `index.forget` | память | не нужна |
 | `units()` | один `listdir` на подсистему, `isdir` на единицу | нет: ограничен числом единиц, а не вёдер |
 
-Чего отметки не закрывают. Один `os.walk` читает каталог одним списком — внутри листинга каталога в пятьдесят тысяч имён отметку поставить некуда. И всё, что вне `pass_`, пульса не имеет вовсе: `restore` при старте, счёт копий в heartbeat'е (`mirrored_count`), двери `/buckets` и `/mirrored`.
+Чего отметки не закрывают. Один `os.walk` читает каталог одним списком — внутри листинга каталога в пятьдесят тысяч имён отметку поставить некуда. И всё, что вне `pass_` и `restore`, пульса не имеет вовсе: счёт копий в heartbeat'е (`mirrored_count`), двери `/buckets` и `/mirrored`. `restore` под пульсом с седьмого ревью (шаг 6).
 
 **Пульс не вечен.** Проход, застрявший на диске, который никогда не ответит, бился бы пульсом сколько угодно — ресурс `live`, числа замороженные. Через `PULSE_LIMIT` × `lost_after` (четыре срока) пульс прекращается, и ресурс становится тем, чем он есть, — молчащим; пока бьётся, в heartbeat есть `pass_seconds` — сколько проход уже идёт (второе ревью). Тест: `test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`.
 
@@ -363,6 +382,8 @@ VMS этой дверью не пользуется. Её видео лежит 
 **Копии тоже стареют.** `.mirror/<сервер>/…` не входит ни в один обход: `units()` пропускает скрытые каталоги, и намеренно — копия не данные этого сервера. Поэтому при включённом зеркале каталог только рос. Теперь `retain` проходит и по нему: копия живёт столько дней, сколько её единица, как оригинал, и метка удержания защищает её так же. Удаляется она на час позже оригинала (`MIRROR_GRACE`): у двух серверов двое часов, и копию, убранную чуть раньше оригинала, владелец на следующем проходе прислал бы снова.
 
 В настоящем коде перед `os.remove` стоит ещё одна проверка: `if kept is not None and kept(sub, unit, b.start, b.end): continue`. Ресурс не знает, что такое «сохранить»; тот, кто его собрал, может положить в `self.kept` функцию, которая раз в проход возвращает такой предикат. Зовётся она через `_call_hook(self.kept, progressed=self._progressed)`: чтобы ответить, она читает хранилище строка за строкой, и если принимает `progressed` — отмечает каждую (шестое ревью; М10B, урок 11). Если она бросает исключение, проход падает и ничего не удаляет: не знать, что оставить, — не то же, что «оставлять нечего». Зачем это нужно, показывает М10B, урок 18: удаление единицы превращает её срок в `{days: 0}`, и без предиката вместе с ней уходили бы события, которые кто-то отметил.
+
+**Поэтому предикат не бросает из-за одной строки.** Правило «бросила — не удаляем ничего» верно для молчащего хранилища и неверно для одной испорченной метки. У VMS метка `since: "yesterday"` у камеры 9 бросала исключение из её предиката. Три прохода подряд `retain` стоял в ошибках, и у камер 7 и 8 осталось 20 из 20 старых вёдер — диск заполнялся (седьмое ревью, часть 2, воспроизведено запуском). Теперь метку, которая не разбирается, предикат читает как удержание её камеры целиком: не знать, какие минуты удержаны, значит удерживать все минуты этой камеры. Остальные камеры метутся по своим срокам, а строка считается и попадает в heartbeat ресурса (`rows_garbled`). Как это устроено у VMS — М10B, урок 11. Тест: `test_row_reader.py::test_one_garbled_keep_holds_its_camera_whole_and_the_others_are_swept`.
 
 По подсистемам и единицам, у каждой свой срок. Удаляются **только файлы бакетов**: то, что подсистема хранит рядом (прогресс скана, свой индекс), — её забота, и удаляет она это в своём проходе, по своему сроку. Разделение записано в docstring: *files only; a subsystem that indexes its buckets drops the lines in its own pass.*
 
@@ -480,13 +501,29 @@ def disk_space(root: str) -> tuple[int, int]:
 ## Шаг 11 — Две отметки
 
 ```python
-def space_settings(vars_) -> dict:
+def space_defaults() -> dict:
+    return {"enabled": os.environ.get("WATERMARK_DEFAULT", "on") != "off", "high": 0.85, "low": 0.75, "min_days": 3.0}
+
+
+def space_settings(vars_, last: dict | None = None) -> dict:
+    """The watermark's settings; with `garbled: [field, …]` when a number of the row does not parse."""
     items, _ = vars_.get(SPACE_KEY)
     d = items or {}
-    default_on = os.environ.get("WATERMARK_DEFAULT", "on") != "off"
-    return {"enabled": d.get("enabled") == "true" if "enabled" in d else default_on,
-            "high": float(d.get("high", 0.85)), "low": float(d.get("low", 0.75)),
-            "min_days": float(d.get("min_days", 3))}
+    dflt = space_defaults()
+    out = {"enabled": d.get("enabled") == "true" if "enabled" in d else dflt["enabled"]}
+    garbled, errors = [], []
+    for f in ("high", "low", "min_days"):
+        try:
+            out[f] = finite(d.get(f, dflt[f]))
+        except (ValueError, TypeError) as e:
+            out[f] = (last or dflt).get(f, dflt[f])
+            garbled.append(f); errors.append(f"{f}: {e}")
+    if garbled:
+        SPACE.garbled(SPACE_KEY, "; ".join(errors))
+        out["garbled"] = garbled
+    else:
+        SPACE.parsed(SPACE_KEY)
+    return out
 ```
 
 **Включена, пока её не выключили.** Первая версия делала наоборот, как у зеркала: нет строки — ватерлинии нет. Разница между двумя ручками в том, что происходит, если о них забыли. Забытое зеркало — это отсутствие копий, о котором спросят при первом отказе диска. Забытая ватерлиния — это полный диск без всякой политики: запись регистратора падает, а вместе с ней хранилище конфигурации и журнал событий на том же разделе, и никто ничего не решал (ревью платформы, «поведение при заполнении диска выбирает код»; обратная связь, BM). Поэтому без строки ватерлиния работает на умолчаниях, а `enabled: false` — решение её не иметь, и его кто-то принимает. Строка, которая только подстраивает отметки, её не выключает.
@@ -507,11 +544,13 @@ def space_settings(vars_) -> dict:
 
 **Хранилище не ответило — это не «ручка выключена».** Настройки — одна строка. Проход, который не смог её прочитать, останавливался на исключении, и полный диск оставался полным всё время, пока хранилища не было, — то есть ровно тогда, когда никто не смотрит (обратная связь, BI). Ресурс помнит настройки, которые прочитал последними, и действует по ним. Если он не читал их ни разу, он отвечает `{"space": "unknown"}` и не освобождает ничего: угадывать он не станет.
 
+**Строка, которая не разбирается, — тоже не «выключена».** `high: "85%"` бросал исключение из `space_settings`, и `relieve` падал на каждом проходе. На диске, занятом на 98 %, не освобождалось ничего, а последняя прочитанная настройка (`_space_knob`) лежала в руках без дела (седьмое ревью, часть 2). Строку пишет только инсталлятор управляющим токеном, мимо всякой двери, и проверить её при записи некому. Поэтому теперь каждое число читается отдельно. Число, которое не разбирается, как и `nan` или `inf` (`finite`), берётся из настроек, прочитанных последними, а если их не было — из умолчаний. Остальные числа строки остаются как есть. Строка считается один раз, пока снова не станет читаться, и один раз попадает в лог. Heartbeat ресурса говорит, по чему ватерлиния действует сейчас: `space_garbled: "platform/space does not parse (high): acting on the settings read last for it"`. В отличие от молчащего хранилища, ждать здесь незачем: хранилище ответило, и ответ ясен. Тест: `test_row_reader.py::test_a_garbled_watermark_row_acts_on_the_settings_read_last_and_says_so`.
+
 ## Шаг 12 — Проход, который не удаляет
 
 ```python
     def relieve(self) -> dict:
-        knob = space_settings(self.vars)
+        knob = space_settings(self.vars, self._space_knob)   # упрощено: в коде ещё молчащее хранилище и `space_garbled`
         if not knob["enabled"]:
             return {"space": "off"}
         for name in self.volumes:                      # по томам: место не усредняется

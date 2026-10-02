@@ -179,20 +179,17 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 **Строка назначения, которая не разбирается, — беда одного воркера.** В строке одно число, `rev`, и первая версия разбирала его голым `int`. `rev` со словом вместо числа (правка руками, оборванная запись) бросал `ValueError` из `assignments()` — а на нём стоит весь проход контроллера: сверка назначений со строками размещения, каждый перенос, `/where`. Одна строка одного воркера, и ни одна единица подсистемы не размещалась; сам воркер падал на ней каждый проход (шестое ревью, найдено при обходе соседей битой строки слота). Теперь строку читает `read_assignment`:
 
 ```python
+ASSIGNMENTS = Table("assignment", "read for the units it names")
+ASSIGNMENTS_GARBLED, _garbled_assignments = ASSIGNMENTS.counts, ASSIGNMENTS.bad
+
+
 def read_assignment(key: str, worker: str, items) -> "Assignment":
     """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
-    try:
-        a = Assignment.from_items(worker, items)
-    except (ValueError, TypeError, AttributeError):
-        sub = key.split("/", 1)[0]
-        ASSIGNMENTS_GARBLED[sub] = ASSIGNMENTS_GARBLED.get(sub, 0) + 1
-        if key not in _garbled_assignments:
-            _garbled_assignments.add(key)
-            log.error("%s: the assignment row does not parse (%r); read for the units it names", key, items)
-        return Assignment(worker, [u for u in str(items.get("units", "")).split(",") if u])
-    _garbled_assignments.discard(key)
-    return a
+    return ASSIGNMENTS.read(key, lambda: Assignment.from_items(worker, items),
+                            Assignment(worker, [u for u in str((items or {}).get("units", "")).split(",") if u]))
 ```
+
+`Table` — общий читатель строк платформы (`w2cplatform/rows.py`), о нём в конце шага.
 
 То, что строка **решает**, — список `units`, а список имён не может не разобраться. Он читается как есть, с `rev 0`; строка считается (`assignments_garbled` в отчёте прохода и в heartbeat'е воркера) и один раз попадает в лог. Следующая запись контроллера в эту строку пишет её целиком, и `rev` начинается заново — это ничего не стоит: ревизию публикуют, но нигде не сравнивают между записями. Тесты: `test_garbled_rows.py::test_a_garbled_assignment_row_is_that_workers_trouble_and_the_pass_goes_on`, `test_a_worker_whose_own_assignment_row_is_garbled_carries_out_what_it_names`; каталог М11 читает те же строки тем же `read_assignment`.
 

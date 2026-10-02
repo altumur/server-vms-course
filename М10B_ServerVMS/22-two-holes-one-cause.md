@@ -80,12 +80,15 @@
 def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
     from w2cplatform.console import heartbeats
     made = 0
-    for _, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
+    for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
         for span in str(hb.extra.get("closed", "")).split(","):
             parts = span.split("|")
             if len(parts) != 3:
                 continue
-            unit, t0, t1 = parts[0], float(parts[1]), float(parts[2])
+            unit = parts[0]
+            t0, t1 = (number(_hb_key(rec_ctl, w, f"closed.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
+            if t0 is None or t1 is None:
+                continue                                    # that span's trouble, counted once: the others are scanned
             rec = rec_ctl.unit(unit)
             if rec is None or t1 <= t0:
                 continue
@@ -94,6 +97,8 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
                 if str(d.get("cam", "")) != cam or not d.get("enabled", True):
                     continue
 ```
+
+**Слово в одном отрезке — беда этого отрезка.** Концы отрезка разбирались голым `float`. Один регистратор с `closed: "7|then|now"` — и исключение выходило из всего прохода: ни одного скана поверх пришедших кадров ни у одного регистратора, и так раз в 30 секунд, пока отрезок висит в heartbeat'е (седьмое ревью, часть 2). Теперь числа читает `rows.number`, общий читатель строк и полей heartbeat'а (М10A, урок 8, шаг 5). Конец, который не разбирается, как и `nan` или `inf`, даёт `None`. Отрезок пропускается и считается один раз на свой ключ, пока снова не станет читаться, а остальные отрезки превращаются в задачи. Так же устроены остальные проходы этого семейства: `keep_what_fired` по `hits` обзора, `reap`, `forget_finished` и `ask_for_footage` (урок 21). Тест: `test_row_reader.py::test_one_word_in_a_recorders_closed_spans_stops_no_scan_and_no_keep`.
 
 **Камера задачи — камера её записи.** Проход берёт `cam` из строки записи и кладёт ту же запись в `rec`, так что его задачи согласованы по построению. После пятого ревью это правило консоли, а не совпадение: задачу, чей `rec` — запись другой камеры, консоль не создаёт, а `rec` у созданной не меняется (`refuse_job`, `DetJobController`, урок 21). Проход пишет строки своим `SpecController`, мимо ворот, и правило ему не мешает: он сам его соблюдает.
 
