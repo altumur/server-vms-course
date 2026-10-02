@@ -390,15 +390,23 @@ def buckets_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> 
 # the start plus the bucket's length. `buckets_under` also opens every file to count its lines, which is what
 # `/buckets` answers and what nothing that SWEEPS needs: the retention pass read a year of archive, every
 # pass, to delete the files of one day (the platform review; feedback BI).
-def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int) -> list[Bucket]:
+#
+# `progressed`, if given, is called for every directory listed and every bucket named (the review's fifth pass,
+# Т-M13's remainder): a year of one camera is fifty thousand buckets, and on a cold disk listing them is minutes —
+# one mark per UNIT left the resource's pulse calling a walk that moved the whole time "stuck".
+def bucket_names_under(root: str, subsystem: str, unit: str, bucket_seconds: int, progressed=None) -> list[Bucket]:
     out = []
     for d, _, files in os.walk(unit_dir(root, subsystem, unit)):
+        if progressed is not None:
+            progressed()
         for f in files:
             p = os.path.join(d, f)
             parsed = parse_bucket(p, root)
             if parsed:
                 sub, u, epoch, start = parsed
                 out.append(Bucket(sub, u, epoch, start, start + bucket_seconds, os.path.relpath(p, root), 0))
+                if progressed is not None:
+                    progressed()
     return sorted(out, key=lambda b: (b.start, b.epoch))
 
 

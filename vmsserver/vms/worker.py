@@ -426,6 +426,7 @@ class VmsWorker(Worker):
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
+        self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -593,6 +594,16 @@ class VmsWorker(Worker):
                         # for every unit after it.
                         log.warning("%s: camera %s not started: the store did not answer for its epoch (%s)", self.name, unit, e)
                         return False
+                except Exception as e:                          # noqa: BLE001
+                    # …and a row `vms/epoch/<unit>` that does not parse is THIS camera's trouble too (the review's fifth
+                    # pass, the class det and survey were mended for in the fourth): the `ValueError` went out through the
+                    # reconciler and ended the pass — the cameras after this one were not started, and one taken away
+                    # was not stopped, every pass. A failed start now, retried with the reconciler's backoff, and why
+                    # in the camera's status.
+                    log.error("%s: camera %s not started: its epoch could not be taken (%s)", self.name, unit, e)
+                    self.epoch_errors[unit] = str(e)
+                    return False
+                self.epoch_errors.pop(unit, None)
             else:
                 cam = dict(cam, epoch=self.epochs[unit])
             if not self.may_record(unit):                       # data: a lease that ran out in silence still records
@@ -1125,6 +1136,8 @@ class VmsWorker(Worker):
                         **self.status_extra(cam)})
             if str(cid) in self.sealed_errors and phase != "running":
                 out[-1]["why"] = f"its password cannot be opened: {self.sealed_errors[str(cid)]}"
+            elif str(cid) in self.epoch_errors and phase != "running":
+                out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"

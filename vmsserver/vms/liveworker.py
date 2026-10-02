@@ -109,6 +109,7 @@ class LiveWorker(Worker):
         self.swept = 0                                              # sessions closed because their viewer was gone
         self.subscriptions = 0                                      # how many times an RTP source was opened — the test's number
         self._unplaced_since: dict[str, float] = {}                 # stream rows nobody holds -> when this gateway first saw them so
+        self.refused: dict[str, str] = {}                           # cameras whose epoch could not be taken -> why (the heartbeat's `refused`)
         self.lock = threading.Lock()
 
     # -- where a camera's RTP is: the VMS heartbeat, never a call to the worker ----------------------
@@ -146,7 +147,16 @@ class LiveWorker(Worker):
             idle = [cam for cam, up in self.upstreams.items() if not up.peers and up.idle_since is not None]
         for cam in fresh:
             if sources[cam] is not None and cam not in self.epochs:
-                self.take_epoch(cam)                                # one gateway per fan-out, fenced like any unit
+                # One camera's epoch is that camera's trouble (the review's fifth pass): a garbled `live/epoch/<cam>` raised
+                # out of the pass, and no camera after it was subscribed, none taken away was dropped — every pass.
+                try:
+                    self.take_epoch(cam)                            # one gateway per fan-out, fenced like any unit
+                    self.refused.pop(cam, None)
+                except Exception as e:                              # noqa: BLE001
+                    self.refused[cam] = f"its epoch could not be taken: {e}"
+                    log.error("%s: camera %s not subscribed: its epoch could not be taken: %s", self.name, cam, e)
+        for cam in [c for c in self.refused if c not in wanted]:
+            del self.refused[cam]                                   # not ours any more: nothing to say about it
         rows = {cam: self.ctl.unit(cam) for cam in idle} if self.ctl is not None else {}
         orphans = self._orphans(now, wanted) if self.ctl is not None else []
         dropped, deleted = [], []
@@ -303,7 +313,7 @@ class LiveWorker(Worker):
         self.heartbeat([up.to_status() for up in self.upstreams.values()], server=self.server, instance=self.instance,
                        labels=",".join(self.labels), url=self.url, capacity=self.capacity, headroom=self.headroom(),
                        sessions=len(self.sessions), subscriptions=self.subscriptions, conflicts=self.conflicts(),
-                       swept=self.swept, resets=self.resets)
+                       swept=self.swept, resets=self.resets, **({"refused": dict(self.refused)} if self.refused else {}))
 
     def metrics_text(self) -> str:
         return (f"# TYPE live_sessions gauge\nlive_sessions {len(self.sessions)}\n"

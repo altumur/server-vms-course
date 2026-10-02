@@ -145,7 +145,14 @@ class AutoWorker(Worker):
                 self.status_by_unit[unit] = {"id": unit, "phase": "pending", "why": "disabled"}
                 continue
             if unit not in self.epochs:
-                self.take_epoch(unit)                # its own events — "this scenario fired" — need one writer
+                # Its epoch is this scenario's trouble (the review's fifth pass): a garbled `auto/epoch/<unit>` raised out
+                # of the pass, and no scenario after it was decided — every pass, and nowhere said.
+                try:
+                    self.take_epoch(unit)            # its own events — "this scenario fired" — need one writer
+                except Exception as e:               # noqa: BLE001
+                    self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": f"its epoch could not be taken: {e}"}
+                    log.error("%s: %s not evaluated: its epoch could not be taken: %s", self.name, unit, e)
+                    continue
             if not self.may_write(unit):             # the lease says another instance has it: decide nothing…
                 # …and say so. The status of the last pass this instance made would otherwise stay, and say
                 # `holding` for a window this instance no longer asks for (feedback AV). What it was waiting
@@ -458,23 +465,16 @@ class AutoWorker(Worker):
     #
     # The rules are the worker's (`VmsWorker.lease_pass`): a store that did not answer is not "no"; a lost lease
     # is one scenario's — its epoch is given up and the next pass takes a new one; a slot held by another
-    # instance means this one is nobody, and it takes a free slot and starts from nothing.
+    # instance means this one is nobody, and it takes a free slot and starts from nothing — by `keep_slot`, the
+    # platform's, and no copy of it here (the review's fifth pass, blocker 3: the copy left the evaluator under
+    # the other instance's name when the claim of a free slot failed). Nothing runs here to stop: what it decided
+    # is filed.
     def lease_pass(self) -> list[str]:
-        try:
-            mine = self.renew_slot()
-        except OSError as e:
-            log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
-            mine = True
-        if not mine:
-            was, lost = self.name, list(self.epochs)
-            self.release_all(); self.slot = None
-            self.claim_slot()
-            log.warning("%s: slot %s is held by another instance now; going on as %s", self.instance, was, self.name)
-            return lost
+        gone = self.keep_slot(lambda: None)
         lost = self.renew_leases()
         for unit in lost:
             self.release(unit)                        # the next pass takes a new epoch for it, if it is still mine
-        return lost
+        return gone + lost
 
     def run(self, poll: float | None = None, stop=None) -> None:
         import threading
