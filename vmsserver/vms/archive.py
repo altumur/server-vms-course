@@ -32,6 +32,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
@@ -185,11 +186,15 @@ class ArchiveError(Exception):
     busy    another writer holds it on this host (`ALREADY_LOCKED`) — a recorder of the same volume that has
             not let go yet, or one whose grace the daemon is still waiting out
 
-    `away` and `busy` have NO deadline, on purpose — a network volume as much as a disk (the review's fifth pass, its
-    third question): handing a volume back for a daemon that is restarted in a minute reshuffles every recording on it,
-    so the recorder keeps it, and while this host's engine stays broken its recordings are written nowhere. That is
-    the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the heartbeat show the operator
-    since when, and the operator decides — stops the recorder or takes the volume from it."""
+    `away` and `busy` have NO deadline for a disk of this server, on purpose (the review's fifth pass, its third
+    question): nobody else can write there, and handing it back for a daemon that is restarted in a minute reshuffles
+    every recording on it. So the recorder keeps it, and while this host's engine stays broken its recordings are
+    written nowhere. That is the cost, and it is said, not hidden: `archive_failure` and `archive_away_since` in the
+    heartbeat show the operator since when, and the operator decides.
+
+    A volume ANY box may serve has one (the review's sixth pass): while this host's engine answers nothing, the hold is
+    renewed for `RecWorker.ENGINE_SILENT_FOR` and no longer — then the volume is let go, for a box whose engine does
+    answer (`RecWorker.volume_pass`)."""
 
     def __init__(self, kind: str, detail: str, name: str = ""):
         self.kind, self.detail, self.name = kind, detail, name    # `name`: the engine's status, or UNAVAILABLE
@@ -199,7 +204,8 @@ class ArchiveError(Exception):
 class Fenced(Unavailable):
     """A sample NOT sent: the volume is one any box may serve, and the hold this recorder writes it under has not been
     confirmed within its write window (`Archive.fence`). Not the engine lost — nothing was asked of it — and not a
-    refusal by the engine: the recorder's own fence (the review's fifth pass, blocker 1)."""
+    refusal by the engine: the recorder's own check before sending (the review's fifth pass, blocker 1; what it is and
+    is not — `Archive._fenced`)."""
 
     def __init__(self, op: str, why: str):
         super().__init__(op, why)
@@ -232,7 +238,8 @@ class Archive:
     hold on a volume any box may serve, confirmed at that moment and not a pass ago (`RecWorker._confirm_hold`).
 
     `fence`: asked before every sample and every finish, and a False sends nothing (`Fenced`) — the same hold, its
-    confirmation young enough to write under (`RecWorker._may_write_volume`; the review's fifth pass, blocker 1).
+    confirmation young enough to write under (`RecWorker._may_write_volume`; the review's fifth pass, blocker 1). A
+    check before sending, not the fence: that is the engine's (`_fenced`).
 
     `on_unclean`: given, a mount the engine refuses as `VOLUME_UNCLEAN` is RECOVERED — `confirm` asked once more first,
     so never without a hold confirmed this second — told `(result, detail)`, and mounted again. Not given, it is the
@@ -262,6 +269,14 @@ class Archive:
         # a `WRITER_CLOSE` that did not come back. Whoever owns the session leaves it behind (`close` says False).
         self.orphan = False
         self.lock_lost = False                     # the engine refused a sample: the volume's lock is another writer's
+        # What this writer TOOK of each stream since it was mounted: `{stream: [first begin, last end]}`, archive ms.
+        # Taken is not written — a sequence waits in the writer's queue, a block is open — and a writer given up
+        # writes nothing more: what of this no reader sees then is footage lost, and is counted (`unwritten`).
+        # `_recent`: per stream, when each of its last frames was taken — what bounds the loss when nobody can look.
+        self.taken: dict[str, list[int]] = {}
+        self._recent: dict[str, deque] = {}
+        self._taken_at = 0.0                       # when the engine last took a frame of any stream (monotonic)
+        self.dropped: dict[str, tuple[float, float]] = {}   # …the loss, after `abandon`: `{stream: (from, to)}`, unix seconds
 
     def _open_volume(self):
         with self._opening:                        # the door, the backfill and the pass may all ask first
@@ -389,8 +404,11 @@ class Archive:
         if w is None:
             raise Unavailable("PUT_MEDIA", f"{self.name} is not open for writing")
         self._fenced("PUT_MEDIA")
+        name = stream_name(unit, epoch, backfill)
         try:
-            return w.put(stream_name(unit, epoch, backfill), sample)
+            status = w.put(name, sample)
+            self._took(name, sample)
+            return status
         except SessionLost:
             self.lost = True
             raise
@@ -423,6 +441,15 @@ class Archive:
     # before `VOLUME_MOUNT_RW` and never again: a box frozen whole — recorder and daemon — woke with its writer
     # mounted, and its pipelines put thirty frames into a ring another box had taken meanwhile, all `OK`. The hold's
     # confirmation is asked on every sample now, the way a lease is (`Lease.may_write`): too old, and nothing is sent.
+    #
+    # A CHECK BEFORE SENDING, NOT A TOKEN (the review's sixth pass). Nothing travels with the sample that the engine
+    # could refuse it by: a process frozen between this check and the send puts that one sample into a volume another
+    # box has mounted meanwhile, and it is taken — reproduced: one frame `OK`. The fence of a volume is the ENGINE's,
+    # and the course requires an engine that has one (ObjectStorage's patch 07): it checks the volume's lock at its
+    # path before every block, status and removal, stops a writer whose lock is another's (`WRITER_STOPPED`, "volume
+    # lock lost" — `lock_lost` here) and never removes a lock that is not its own. So that one frame is refused with
+    # its block. What this check adds is time: nothing is SENT from ten seconds before anybody else may take the hold
+    # (`RecWorker._may_write_volume`), instead of from the engine's next block.
     def _fenced(self, op: str) -> None:
         if self.lock_lost:
             raise Fenced(op, f"{self.name}: the engine says the volume's lock is another writer's: nothing sent")
@@ -430,26 +457,70 @@ class Archive:
             raise Fenced(op, f"{self.name}: the hold this recorder writes it under is not confirmed: nothing sent")
 
     def abandon(self, timeout: float | None = None) -> bool:
-        """The writer given up WITHOUT writing anything more (`Writer.abandon`, the engine's patch 07) and the volume
-        let go: True when that is done — or the daemon no longer knows the writer. False when the daemon does not
-        have the operation, or did not answer: the writer is left as it was, mounted and fed nothing."""
-        w = self.writer
+        """The writer given up WITHOUT writing anything more (`Writer.abandon`: the engine's `WRITER_ABANDON`) and the
+        volume let go: True when that is done — or the daemon no longer knows the writer. False when the daemon did
+        not answer: the writer may be alive in the session, and whoever owns the session leaves it behind.
+
+        What the writer had taken and not written is lost with it, and `dropped` says how much (the review's sixth
+        pass; `unwritten`). Counted after the writer is given up: the giving up does not wait for a count."""
+        w, self.writer = self.writer, None
+        answered = True
         if w is not None:
             try:
-                if not w.abandon(timeout):
-                    return False
+                w.abandon(timeout)
             except (SessionLost, Closed):
                 pass                               # not the daemon's any more: nothing to give up
             except Unavailable:
-                return False
-        self.writer = None
-        if self.volume is not None:
+                answered = False
+        self.dropped = self.unwritten(look=answered) if w is not None else {}
+        if self.volume is not None and answered:
             try:
                 self.volume.close()
             except ObsdError:
                 pass
-            self.volume = None
-        return True
+        self.volume = None
+        return answered
+
+    # One frame the engine took: the stream's span since the mount, and when — kept for as long as the frame may be
+    # unwritten: a sequence is cut after `sequence_flush_ms`, its block written `block_flush_s` later (`_configure`).
+    def _took(self, name: str, sample: Sample) -> None:
+        span = self.taken.setdefault(name, [sample.begin, sample.end])
+        span[0], span[1] = min(span[0], sample.begin), max(span[1], sample.end)
+        now = self._taken_at = time.monotonic()
+        recent = self._recent.setdefault(name, deque())
+        recent.append((now, sample.begin))
+        while now - recent[0][0] > self._flush_window():
+            recent.popleft()
+
+    def _flush_window(self) -> float:              # seconds a taken frame may stay unwritten in a working engine, with room
+        return (self.sequence_flush_ms or 10_000) / 1000 + (self.block_flush_s or 60) + 5
+
+    def unwritten(self, look: bool = True) -> dict[str, tuple[float, float]]:
+        """Of what this writer took, what is not on the volume: `{stream: (from, to)}`, unix seconds. `look`: ask a
+        reader — from the end of what it sees of the stream to the last frame taken, exactly. Without looking (the
+        daemon does not answer) it is a bound: the frames taken within the engine's flush periods of the last one it
+        took — the daemon was answering then, and whatever was older had been written."""
+        taken = {name: tuple(span) for name, span in list(self.taken.items())}
+        seen: dict[str, int] | None = None
+        if look and taken:
+            try:
+                with self.reading() as r:
+                    seen = {}
+                    for name in taken:
+                        last = r.find(name, FOREVER, backwards=True)
+                        seen[name] = last.end if last is not None else NEVER
+            except ArchiveError:
+                seen = None                        # the volume does not answer after all: the bound
+        out = {}
+        for name, (first, last) in taken.items():
+            if seen is not None:
+                start = max(first, seen[name])
+            else:
+                recent = [b for at, b in list(self._recent.get(name, ())) if at >= self._taken_at - self._flush_window()]
+                start = min(recent) if recent else last
+            if last > start:
+                out[name] = (unix_s(start), unix_s(last))
+        return out
 
     # `Closed` on the writer this store still uses — not one a seal has already replaced — is a writer that is gone:
     # its close went out and the store kept the handle (the review's fifth pass). Counted as the engine lost, so the
@@ -478,6 +549,7 @@ class Archive:
             return
         self._fenced("WRITER_CLOSE")               # a close is the writer's last write: under the same fence
         w, self.writer = self.writer, None
+        self.taken, self._recent = {}, {}          # the close is the flush: what was taken is written
         try:
             w.close()
         except SessionLost:

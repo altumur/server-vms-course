@@ -522,6 +522,28 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
     return slot
 
 
+# The same for a PLACE's row, `<name>/holds/<place>` — the same row, read by the same people (the review's sixth pass,
+# beside the slot's). Read bare, one garbled hold among the candidates raised out of every claim: a recorder took no
+# volume at all, and the console's list of volumes failed whole. The row is that place's trouble: no candidate until
+# it is mended, counted (`HOLDS_GARBLED`, `holds_garbled` in the heartbeat), logged once.
+HOLDS_GARBLED: dict[str, int] = {}                # subsystem -> hold rows that did not parse, this process
+
+
+def read_hold(key: str, place: str, items) -> "Slot | None":
+    """A place's row parsed, or None — skipped, counted, and logged once."""
+    try:
+        hold = Slot.from_items(place, items)
+    except (ValueError, TypeError, AttributeError):
+        sub = key.split("/", 1)[0]
+        HOLDS_GARBLED[sub] = HOLDS_GARBLED.get(sub, 0) + 1
+        if key not in _garbled_slots:
+            _garbled_slots.add(key)
+            log.error("%s: the hold row does not parse (%r); skipped — nobody takes that place until it is mended", key, items)
+        return None
+    _garbled_slots.discard(key)
+    return hold
+
+
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
 # so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
 # and the reason the controller is never on the recovery path.
@@ -739,6 +761,7 @@ class Worker:
         self._step_lock = threading.Lock()
         self.stand_in_renewals = 0                # renewals the stand-in made for a hung step, since start: in the heartbeat
         self._loop_renewed = clock()              # when the loop last renewed its leases (`renew_leases`)
+        self._stood_in_since: float | None = None # what `STAND_IN_FOR` is counted from, while steps are being stood in for
         # The long poll (`longpoll.py`): the wait this worker's loop sleeps in, and the requests it holds at the
         # resources. Neither exists until the process asks for them (`poll_events`) — a worker made without them
         # waits `stop.wait(poll)`, exactly as before.
@@ -905,6 +928,12 @@ class Worker:
     # Anybody else still waits for the TTL — the product's own lesson, from its archive daemon: a place
     # kept for its owner must be kept LONGER than the time the owner takes to come back.
     #
+    # ONLY A PLACE THAT CANNOT BE WRITTEN FROM TWO HOSTS FOLLOWS THE NAME (the review's sixth pass, blocker 2). The
+    # instance that took the name may be on another box, and the one it took it from frozen, not dead. Where the place
+    # is a disk that is harmless — the two are on one host. Where any box may write it, taking it at once skipped the
+    # one wait the previous holder's write window is measured against (`_hold_stale`), and two instances of one name
+    # wrote one volume. The subsystem says which places follow (`hold_follows_name`); the rest wait like anybody's.
+    #
     # THE TTL BY THIS HOST'S CLOCK (the review's fourth pass, Т-M5). Anybody else took a hold when the wall clock HERE
     # passed the `until` the holder wrote by ITS wall clock: two machines five seconds apart, and a holder renewing
     # every pass looked lapsed to its neighbour — two writers in one ring, which on s3 the engine's lock does not
@@ -943,16 +972,19 @@ class Worker:
                 cas_pause(attempt - 1)
             contended = False
             rows = {c: self.vars.get(self.sub.hold_key(c)) for c in candidates}
+            # A row that does not parse is no candidate, and stops nobody from taking another (`read_hold`).
+            held = {c: read_hold(self.sub.hold_key(c), c, rows[c][0]) for c in candidates}
+            candidates = [c for c in candidates if held[c] is not None]
             # Only while the slot IS this instance's: the instance systemd replaced has the same name, and must not
             # take the place back from its successor on its way out. The slot is read only when a hold names it.
-            mine = [c for c in candidates if self.name and Slot.from_items(c, rows[c][0]).by == self.name]
-            named = bool(mine) and Slot.from_items(self.name, self.vars.get(self.sub.slot_key(self.name))[0]).holder == self.instance
+            mine = [c for c in candidates if self.name and held[c].by == self.name]
+            slot = read_slot(self.sub.slot_key(self.name), self.name, self.vars.get(self.sub.slot_key(self.name))[0]) if mine else None
+            named = slot is not None and slot.holder == self.instance      # (a slot row that does not parse proves nothing)
             mine = mine if named else []
             for cand in mine + [c for c in candidates if c not in mine]:
                 key, now = self.sub.hold_key(cand), self.wall()
-                items, idx = rows[cand]
-                cur = Slot.from_items(cand, items)
-                ours = named and cur.by == self.name and cur.holder != self.instance
+                idx, cur = rows[cand][1], held[cand]
+                ours = named and cur.by == self.name and cur.holder != self.instance and self.hold_follows_name(cand)
                 if not ours and not self._hold_stale(cand, cur, idx):
                     continue                                   # somebody live is writing there
                 try:
@@ -965,6 +997,11 @@ class Worker:
             if not contended:
                 return None                                    # every place is held: a spare
         return None
+
+    # Whether `place`, held under this worker's NAME by another instance, is taken back at once (`_claim_hold`). Yes,
+    # unless the subsystem knows the place can be written from another host (`RecWorker.hold_follows_name`).
+    def hold_follows_name(self, place: str) -> bool:
+        return True
 
     # Still mine? Same three lines as `renew_slot`, and the same meaning when it says no: another process
     # holds this place now, so this one must stop writing into it. Losing a hold is NOT losing the slot —
@@ -980,28 +1017,37 @@ class Worker:
             if self.hold is None:
                 return True
             key = self.sub.hold_key(self.hold)
-            items, idx = self.vars.get(key)
-            cur = Slot.from_items(self.hold, items)
+            cur, idx = self._own_hold()
             if cur.holder != self.instance:
                 self.hold = None
                 return False
             try:
                 self.vars.put(key, Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen, self.name or "").to_items(), cas=idx)
             except Conflict:
-                again = Slot.from_items(self.hold, self.vars.get(key)[0])
-                if again.holder == self.instance and not again.released:
+                again = read_hold(key, self.hold, self.vars.get(key)[0])
+                if again is not None and again.holder == self.instance and not again.released:
                     return True
                 self.hold = None
                 return False
             return True
+
+    # The row of the place this instance holds, read now. One that does not parse is not a row naming ANOTHER holder:
+    # it is read as the row this instance last wrote — as its slot's is (`_own_slot`) — so a renewal or a release
+    # writes it whole again, by CAS. Nobody else takes a hold row that does not parse (`_claim_hold` skips it).
+    def _own_hold(self) -> tuple[Slot, int]:
+        key = self.sub.hold_key(self.hold)
+        items, idx = self.vars.get(key)
+        cur = read_hold(key, self.hold, items)
+        if cur is None:
+            cur = Slot(self.hold, self.instance, 0.0, False, 0, self.name or "")
+        return cur, idx
 
     # Let go on purpose: an orderly stop, or the administrator deleted the volume. `released` is what
     # tells that apart from a crash, and a released place is taken again at once instead of after a TTL.
     def release_hold(self) -> None:
         if self.hold is None:
             return
-        items, idx = self.vars.get(self.sub.hold_key(self.hold))
-        cur = Slot.from_items(self.hold, items)
+        cur, idx = self._own_hold()
         if cur.holder == self.instance:
             try:
                 self.vars.put(self.sub.hold_key(self.hold), Slot(self.hold, self.instance, self.wall(), True, cur.gen, self.name or "").to_items(), cas=idx)
@@ -1154,8 +1200,10 @@ class Worker:
     # (`stand_in_after`) gets its leases, its slot row and its place renewed for it — the slot and the place by CAS
     # and only while they still name this instance, by the same rules the loop renews them by.
     #
-    #   only for a while      `STAND_IN_FOR` from the step's start. A step hung for ever must not hold units for
-    #                         ever: after that the stand-in stops, the leases run out, and the units honestly go
+    #   only for a while      `STAND_IN_FOR`, from the loop's last renewal before the first step it stood in for — one
+    #                         count for a run of hung steps, begun again only by a step that renewed and needed nobody
+    #                         (`stand_in_once`). A step hung for ever must not hold units for ever: after that the
+    #                         stand-in stops, the leases run out, and the units honestly go
     #   never a revival       a slot row another instance took, a lease fenced or let go, an instance its
     #                         subsystem fenced (`may_stand_in`): the stand-in renews none of them and decides
     #                         nothing — what a lost slot or lease MEANS is the loop's, when it comes back
@@ -1193,6 +1241,10 @@ class Worker:
             if outer:
                 with self._step_lock:
                     mark, self._step = self._step, None
+                    # A step in which the loop renewed by itself and came back before anybody had to stand in: the loop
+                    # works again, and the next hung step is counted from its own start (`stand_in_once`).
+                    if mark and self._loop_renewed >= mark["at"] and self.clock() - mark["at"] <= self.stand_in_after():
+                        self._stood_in_since = None
                 if mark and mark["said"]:
                     log.warning("%s: step %s came back after %.0f s", self.name, step, self.clock() - mark["at"])
 
@@ -1207,13 +1259,21 @@ class Worker:
         # STAND_IN_FOR is counted from the loop's own last renewal, not from this step's start (the review's fifth pass,
         # a minor): a loop that came back from one long step into another without renewing anything has made no
         # progress, and each new step gave it five more minutes.
+        #
+        # …AND NOT FROM A RENEWAL MADE INSIDE THE STEP THAT THEN HANGS (the review's sixth pass). The lease step renews
+        # first and works after: hung there, it had renewed a moment ago by its own count, and every such step was given
+        # five minutes more — six in a row held the units and the place for 1680 s (simulated). The five minutes run
+        # from the renewal before the FIRST step that had to be stood in for (`_stood_in_since`), and start again only
+        # after a step in which the loop renewed and needed nobody (`guarded`).
         quiet = now - min(mark["at"], self._loop_renewed)
         if quiet <= self.stand_in_after():
             return False
-        if quiet > self.STAND_IN_FOR:
+        since = self._stood_in_since if self._stood_in_since is not None else now - quiet
+        if now - since > self.STAND_IN_FOR:
             mark["done"] = True
-            log.error("%s: step %s has run %.0f s, the loop has renewed nothing for %.0f s; no longer standing in for "
-                      "it (STAND_IN_FOR %g s): its units go", self.name, mark["name"], age, quiet, self.STAND_IN_FOR)
+            log.error("%s: step %s has run %.0f s, and the loop has not renewed clear of a hung step for %.0f s; no "
+                      "longer standing in for it (STAND_IN_FOR %g s): its units go", self.name, mark["name"], age,
+                      now - since, self.STAND_IN_FOR)
             return False
         if not self.may_stand_in():
             return False
@@ -1239,6 +1299,7 @@ class Worker:
                 lease.renew()
         self._stand_in_hold()
         mark["last"] = now
+        self._stood_in_since = since
         self.stand_in_renewals += 1
         if not mark["said"]:
             mark["said"] = True
@@ -1260,8 +1321,8 @@ class Worker:
             t0 = self.clock()
             key = self.sub.hold_key(self.hold)
             items, idx = self.vars.get(key)
-            cur = Slot.from_items(self.hold, items)
-            if cur.holder == self.instance and not cur.released:
+            cur = read_hold(key, self.hold, items)        # one that does not parse is the loop's to mend, not the stand-in's
+            if cur is not None and cur.holder == self.instance and not cur.released:
                 self.vars.put(key, Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen,
                                         self.name or "").to_items(), cas=idx)
                 self.note_hold_confirmed(t0)
@@ -1346,6 +1407,8 @@ class Worker:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
         if SLOTS_GARBLED.get(self.sub.name):
             extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
+        if HOLDS_GARBLED.get(self.sub.name):
+            extra.setdefault("holds_garbled", HOLDS_GARBLED[self.sub.name])   # …and hold rows (`read_hold`)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
         self.objects.put(self.sub.heartbeat_key(self.name),

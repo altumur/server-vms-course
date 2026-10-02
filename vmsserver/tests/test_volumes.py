@@ -144,18 +144,46 @@ def test_a_recorder_started_again_under_its_name_takes_its_volume_back_at_once()
     """Feedback CF. `r-1` is killed and systemd starts it again, under the same slot: it is the same worker. Its
     slot follows at once (`claim_slot(prefer=…)`), and now its volume does too — it used to wait out the hold's
     TTL, 45 s in which nothing on that volume was recorded. Anybody else still waits for the TTL, and the old
-    instance learns on its next pass that the place is not its own any more."""
+    instance learns on its next pass that the place is not its own any more.
+
+    A DISK of its server, that is (the review's sixth pass, blocker 2): there the two instances are on one host, and
+    the daemon keeps one writer per volume. A volume any box may serve is the next test."""
     box = Box()
-    _net(box, "s3-main")
-    old, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-b")
-    assert old.volume_pass() == "s3-main" and spare.volume_pass() == ""
-    assert Slot.from_items("s3-main", box.vars.get("rec/holds/s3-main")[0]).by == "r-1"
+    _disk(box, "disk-a")
+    old, spare = _recorder(box, "r-1", "srv-a"), _recorder(box, "r-2", "srv-a")
+    assert old.volume_pass() == "disk-a" and spare.volume_pass() == ""
+    assert Slot.from_items("disk-a", box.vars.get("rec/holds/disk-a")[0]).by == "r-1"
 
     box.wall.advance(5)                                                # kill -9, and up again five seconds later
     again = _recorder(box, "r-1", "srv-a")
     assert spare.volume_pass() == ""                                   # not the spare's: the hold has not lapsed
-    assert again.volume_pass() == "s3-main" and again.hold == "s3-main"
+    assert again.volume_pass() == "disk-a" and again.hold == "disk-a"
     assert old.volume_pass() == "" and old.hold is None                # the old instance is a spare now
+
+
+def test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go():
+    """The review's sixth pass, blocker 2. The instance that takes a recorder's name may be on ANOTHER box, and the one
+    it takes it from frozen, not dead, with its writer mounted — and the hold followed the name at once: no wait, which
+    is the one thing the previous holder's write window is measured against. For a volume any box may serve the same
+    name waits like anybody: the row unchanged for `slot_ttl + HOLD_SKEW` by its own clock. A hold LET GO — the writer
+    closed first — is still taken at once."""
+    box = Box()
+    _net(box, "s3-main")
+    old = _recorder(box, "r-1", "srv-a")
+    assert old.volume_pass() == "s3-main"
+    box.wall.advance(5); box.clock.advance(5)
+    again = _recorder(box, "r-1", "srv-b")                             # the same slot, started on another box
+    assert again.volume_pass() == "" and again.hold is None            # not at once: the old one may be writing
+    assert old.store is not None and old._may_write_volume(old.store.row)
+    box.wall.advance(again.slot_ttl); box.clock.advance(again.slot_ttl)
+    assert again.volume_pass() == ""                                   # a term, and not yet the skew on top
+    box.wall.advance(again.HOLD_SKEW); box.clock.advance(again.HOLD_SKEW)
+    assert not old._may_write_volume(old.store.row)                    # the old one's window closed ten seconds ago
+    assert again.volume_pass() == "s3-main" and again.hold == "s3-main"
+
+    again.leave_volume("test: let go on purpose")                      # its writer closed, then the hold released
+    third = _recorder(box, "r-1", "srv-c")
+    assert third.volume_pass() == "s3-main"                            # a released hold: at once, whoever asks
 
 
 def test_a_withdrawn_volume_stops_the_recordings_and_leaves_the_process_running():
@@ -754,29 +782,42 @@ def test_a_new_volume_without_a_quota_is_sized_by_the_disk_the_daemon_writes_to(
     """The review's fourth pass. The box's own volume, with no `ARCHIVE_QUOTA_BYTES`, was formatted at a share of the
     disk the RECORDER measured — in its container, where `/data/volume` is not mounted: the container's system SSD, not
     the data disk, and that size stood from then on as the volume's own. The daemon opens the path, so the daemon is
-    asked, before `FORMAT`: `VOLUME_SPACE` of the directory, or of the nearest one above it that exists."""
+    asked, before `FORMAT`: `VOLUME_SPACE` of the directory, or of the nearest one above it that exists.
+
+    How FULL the disk is, is the test's own (the review's sixth pass): the size was compared with a share of the free
+    space this machine happened to have, and on a disk three quarters full — a neighbour writing — the share is the
+    floor of one gigabyte and the test failed. The daemon's answer stands for the path and the disk's size; what is
+    free on it is said here: half."""
     import shutil
     from collections import namedtuple
+    from w2cplatform.obsd import Volume
     from vms.recworker import RecWorker
     box = Box()
-    real, real_share, given = shutil.disk_usage, RecWorker._share_of_space, []
+    real, real_share, real_space, given = shutil.disk_usage, RecWorker._share_of_space, Volume.space, []
     ssd = namedtuple("usage", "total used free")(200 << 30, 190 << 30, 10 << 30)
     shutil.disk_usage = lambda path: ssd                               # what a container would have measured
     RecWorker._share_of_space = staticmethod(lambda space, low=0.75: given.append(space) or real_share(space, low))
+
+    def half_free(vol):                                                # the daemon's disk, half of it free
+        got = real_space(vol)
+        return {**got, "free": int(got["capacity"]) // 2, "available": int(got["capacity"]) // 2}
+    Volume.space = half_free
     try:
         r = _recorder(box, "r-1", "srv-a", default_quota=0)
         r.lease_pass()
+        assert r.store is not None and r.store.formatted
+        space = r.store.space_where()                                  # the daemon's numbers for the volume's disk
+        from vms.archive import Archive
+        from tests.conftest import obsd_session
+        deep = Archive(f"file://{box.root}/a/b/volume", "deep", 0, "rec:deep", obsd_session("deep"))
+        assert deep.space_where()["capacity"] == space["capacity"]    # not there yet: the nearest directory above it
     finally:
-        shutil.disk_usage, RecWorker._share_of_space = real, staticmethod(real_share)
-    assert r.store is not None and r.store.formatted
-    space = r.store.space_where()                                      # the daemon's numbers for the volume's disk
+        shutil.disk_usage, RecWorker._share_of_space, Volume.space = real, staticmethod(real_share), real_space
     assert [g["capacity"] for g in given] == [space["capacity"]] != [ssd.total]
-    assert r.store.quota == real_share(given[0]) > 1 << 30
+    assert space["capacity"] > 16 << 30, "the suite's temp directory is on a disk too small to tell a share from the floor"
+    assert r.store.quota == real_share(given[0])
+    assert abs(r.store.quota - space["capacity"] // 4) <= 1            # a quarter: up to the low mark of a disk half full
     assert r.heartbeat_extra()["archive_quota"] == r.store.quota       # what the console offers: the size it has
-    from vms.archive import Archive
-    from tests.conftest import obsd_session
-    deep = Archive(f"file://{box.root}/a/b/volume", "deep", 0, "rec:deep", obsd_session("deep"))
-    assert deep.space_where()["capacity"] == space["capacity"]        # not there yet: the nearest directory above it
 
 
 def test_a_hold_renewed_by_a_box_whose_clock_is_behind_is_not_taken_from_it():
@@ -798,6 +839,43 @@ def test_a_hold_renewed_by_a_box_whose_clock_is_behind_is_not_taken_from_it():
         assert spare.volume_pass() == ""                               # forty seconds of a still row: not yet a term
     box.wall.advance(20); box.clock.advance(20)
     assert spare.volume_pass() == "net"                                # past a term and the skew, by the spare's own clock
+
+
+def test_one_garbled_hold_row_is_that_volumes_trouble_and_nobody_elses():
+    """The review's sixth pass, beside the garbled slot row. Every claim parsed every candidate's hold row bare: one
+    with a word for a number — a hand edit — raised out of the claim, and a recorder took no volume at all; the
+    console's list of volumes failed whole on the same row. It is that place's trouble now: no candidate until it is
+    mended, counted in the heartbeat (`holds_garbled`), named on the volumes page. And the row of a volume this
+    recorder HOLDS, garbled under it, is not a row naming somebody else: the renewal writes it whole again."""
+    from w2cplatform.contract import Heartbeat
+    garbled_row = {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"}
+    box = Box()
+    _disk(box, "a-bad"); _disk(box, "b-good")
+    box.vars.put("rec/holds/a-bad", garbled_row)
+    r = _recorder(box, "r-1", "srv-a")
+    counter = type(r).heartbeat.__globals__["HOLDS_GARBLED"]              # the module the workers run on (`test_portability`)
+    before = counter.get("rec", 0)
+    assert r.volume_pass() == "b-good" and r.store is not None           # it raised `ValueError` here
+    assert box.vars.get("rec/holds/a-bad")[0] == garbled_row             # left for a person to mend
+    assert counter.get("rec", 0) > before
+    r.heartbeat_once()
+    assert Heartbeat.from_bytes(box.objects.get(REC_SPEC.sub.heartbeat_key("r-1"))).extra["holds_garbled"] == counter["rec"]
+    rows = {v["name"]: v for v in volumes.served(box.vars, REC_SPEC.sub, box.wall(), objects=box.objects)["volumes"]}
+    assert rows["b-good"]["served_by"] and "rec/holds/a-bad) does not parse" in rows["a-bad"]["why"]
+    assert set(volumes.holders(box.vars, REC_SPEC.sub)) == {"b-good"}
+
+    box.vars.put("rec/holds/b-good", garbled_row)                        # …and its own, garbled under it
+    box.wall.advance(8); box.clock.advance(8)
+    with r.guarded("pass"):
+        box.wall.advance(30); box.clock.advance(30)
+        assert r.stand_in_once()                                         # the stand-in neither raises nor mends
+        assert box.vars.get("rec/holds/b-good")[0] == garbled_row
+    assert r.volume_pass() == "b-good" and r.hold == "b-good"            # not taken for somebody else's: kept
+    mended = Slot.from_items("b-good", box.vars.get("rec/holds/b-good")[0])
+    assert mended.holder == r.instance and mended.until == box.wall() + r.slot_ttl and mended.by == "r-1"
+    box.vars.put("rec/holds/b-good", garbled_row)
+    r.leave_volume("test: let go of it")
+    assert Slot.from_items("b-good", box.vars.get("rec/holds/b-good")[0]).released   # a release writes it whole too
 
 
 def test_a_renewal_that_lost_to_one_of_ours_keeps_the_hold():
