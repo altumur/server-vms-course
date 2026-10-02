@@ -467,7 +467,7 @@ class AutoWorker(Worker):
             mine = True
         if not mine:
             was, lost = self.name, list(self.epochs)
-            self.epochs.clear(); self.leases.clear(); self.slot = None
+            self.release_all(); self.slot = None
             self.claim_slot()
             log.warning("%s: slot %s is held by another instance now; going on as %s", self.instance, was, self.name)
             return lost
@@ -482,17 +482,23 @@ class AutoWorker(Worker):
         stop = stop or threading.Event()
         lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
         last_lease = self.clock()
+        stand_in = self.start_stand_in()            # renews for a step that hangs, for a while (feedback DD)
         while not stop.is_set():
             try:
-                self.reconcile_once()
+                with self.guarded("pass"):
+                    self.reconcile_once()
             except Exception:                         # noqa: BLE001 — one bad pass is a late decision, not a dead evaluator
                 self.pass_failures += 1
                 log.exception("%s: pass failed", self.name)
             try:                                      # in a try of its own: a pass that raises still holds its scenarios
                 if self.clock() - last_lease >= lease_every:
-                    self.lease_pass(); last_lease = self.clock()
-                self.heartbeat_once()
+                    with self.guarded("lease"):
+                        self.lease_pass()
+                    last_lease = self.clock()
+                with self.guarded("heartbeat"):
+                    self.heartbeat_once()
             except Exception:                         # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed", self.name)
             stop.wait(poll)
+        stand_in.set()
         self.release_slot()

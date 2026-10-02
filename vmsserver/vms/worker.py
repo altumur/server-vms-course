@@ -742,7 +742,7 @@ class VmsWorker(Worker):
         except OSError:
             return None                               # not known: a fenced instance can wait a pass
         was = self.name
-        self.epochs.clear(); self.leases.clear()
+        self.release_all()
         self.rows, self.assignment_rev = [], 0
         self.reconciler.clear()
         self.slot = None
@@ -753,6 +753,11 @@ class VmsWorker(Worker):
         log.warning("%s: was fenced as %s (%s); rejoined as %s", self.instance, was, self.fenced_reason, name)
         self.recording_allowed, self.was_fenced, self.fenced_reason = True, self.fenced_reason, None
         return name
+
+    # A fenced instance is nobody: the stand-in renews nothing for it — not the slot row that may still name it (a store
+    # raised past this build fences it with its slot in hand), not its leases (feedback DD).
+    def may_stand_in(self) -> bool:
+        return self.recording_allowed
 
     # Once: log at error, set `recording_allowed = False` and `fenced_reason`, `actuator.stop_all()`,
     # `reconciler.clear()` — the pipelines were stopped underneath the loop. Idempotent (a second call
@@ -1363,7 +1368,8 @@ class VmsWorker(Worker):
 
     # The loop as a process. Every `poll` seconds: `reconcile_once`, `pump_once`, `lease_pass` every `max(1,
     # (lease_ttl − lease_margin)/3)` s (≈8.3 s by default, well inside the 25 s the lease allows),
-    # `heartbeat_once` every 10 s; any exception is logged and the loop continues. On `stop`:
+    # `heartbeat_once` every 10 s; any exception is logged and the loop continues. Each of those is a `guarded`
+    # step, and the stand-in (`Worker.start_stand_in`) renews the slot and leases for one that hangs. On `stop`:
     # `actuator.stop_all()` (with GStreamer, EOS lets the last access units reach each sink —
     # `vmsworker@.container` gives it `StopTimeout=20`), a last heartbeat, then `release_slot()` — "an
     # orderly stop says so; a crash says nothing", which is what lets the controller tell scale-in
@@ -1377,7 +1383,11 @@ class VmsWorker(Worker):
         # counts from boot, so `clock() - 0 >= 10` happens to be true here on the first pass — and Go's
         # monotonic counts from process start, where it is false, which left a Go worker invisible to the
         # controller for ten seconds. The two loops now do the same thing for a reason instead of by luck.
-        self.heartbeat_once()
+        # Every step below is `guarded`, and the stand-in renews for one that hangs (feedback DD): a pass, a pump, a
+        # recorder's call into obsd. It ends with the loop.
+        stand_in = self.start_stand_in()
+        with self.guarded("heartbeat"):
+            self.heartbeat_once()
         last_lease, last_hb = 0.0, self.clock()
         while not stop.is_set():
             # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
@@ -1385,14 +1395,16 @@ class VmsWorker(Worker):
             # (feedback BC). They shared a `try`, so a store that was away skipped the pump on every pass: a
             # device's alarms piled up in memory, a pipeline that fell over was not noticed.
             try:
-                if not self.recording_allowed:
-                    self.rejoin()                          # a fence is not for ever: a free slot, from nothing
-                self.reconcile_once()
+                with self.guarded("pass"):
+                    if not self.recording_allowed:
+                        self.rejoin()                      # a fence is not for ever: a free slot, from nothing
+                    self.reconcile_once()
             except Exception:                              # noqa: BLE001
                 self.pass_failures += 1                    # …and counted: a loop that raises every pass is alive and says so
                 log.exception("%s: pass failed; will retry", self.name)
             try:
-                self.pump_once()
+                with self.guarded("pump"):
+                    self.pump_once()
             except Exception:                              # noqa: BLE001
                 self.pass_failures += 1
                 log.exception("%s: pump failed; will retry", self.name)
@@ -1404,12 +1416,17 @@ class VmsWorker(Worker):
             # its units, and saying so is not something a failure elsewhere gets to switch off.
             try:
                 if self.clock() - last_lease >= lease_every:
-                    self.lease_pass(); last_lease = self.clock()
+                    with self.guarded("lease"):
+                        self.lease_pass()
+                    last_lease = self.clock()
                 if self.clock() - last_hb >= 10.0:
-                    self.heartbeat_once(); last_hb = self.clock()
+                    with self.guarded("heartbeat"):
+                        self.heartbeat_once()
+                    last_hb = self.clock()
             except Exception:                              # noqa: BLE001
                 log.exception("%s: lease or heartbeat failed; will retry", self.name)
             stop.wait(poll)
+        stand_in.set()
         self.before_stop_all()
         self.actuator.stop_all()
         self.heartbeat_once()

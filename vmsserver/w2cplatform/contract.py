@@ -71,6 +71,7 @@ import socket
 import threading
 import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 
 from .blobs import BLOBS, is_digest
@@ -697,6 +698,13 @@ class Worker:
         # first saw each place's row as it is now — the clock a stale hold is judged by (`claim_hold`).
         self._hold_lock = threading.RLock()
         self._hold_seen: dict[str, tuple[int, float]] = {}
+        # The slot row is renewed from two threads now — the loop, and the stand-in while a step hangs — and one
+        # claim, renewal or release of it happens at a time (feedback DD).
+        self._slot_lock = threading.RLock()
+        self._step: dict | None = None            # the loop's step in progress (`guarded`): name, start, the stand-in's notes
+        self._step_lock = threading.Lock()
+        self.stand_in_renewals = 0                # renewals the stand-in made for a hung step, since start: in the heartbeat
+        self._loop_renewed = clock()              # when the loop last renewed its leases (`renew_leases`)
 
     # -- identity by claim ----------------------------------------------------------
     # Become somebody. Lists the slot rows; with `prefer` (Nomad's `NOMAD_ALLOC_INDEX`, systemd's `%i`) the
@@ -719,6 +727,10 @@ class Worker:
         and the old holder finds out on its next renewal. Without it, take a
         lapsed slot — its assignment is waiting — before an unused number. Holding is renewed by `renew_slot`; losing it fences the
         instance. The controller never hands names out; a process takes one."""
+        with self._slot_lock:
+            return self._claim_slot(prefer, retries)
+
+    def _claim_slot(self, prefer: str | None, retries: int) -> str:
         prefix = self.sub.name + "/slots/"
         now = self.wall()
         for attempt in range(retries):
@@ -759,6 +771,10 @@ class Worker:
     def renew_slot(self) -> bool:
         """Still me? Read the slot; if another instance holds it now, the
         instance is fenced as a whole. Extends `until` by CAS otherwise."""
+        with self._slot_lock:
+            return self._renew_slot()
+
+    def _renew_slot(self) -> bool:
         if self.slot is None:
             return True
         # The store's schema, again (the review's second pass, m4). `set_schema` refuses while a LIVE build
@@ -912,16 +928,17 @@ class Worker:
         """An orderly stop (SIGTERM from the scheduler: scale-in, or a drain).
         Says so in the row — `released` — which is what tells scale-in from a
         crash. A crash says nothing, and the slot merely lapses."""
-        if self.slot is None:
-            return
-        items, idx = self.vars.get(self.sub.slot_key(self.name))
-        cur = Slot.from_items(self.name, items)
-        if cur.holder == self.instance:
-            try:
-                self.vars.put(self.sub.slot_key(self.name), Slot(self.name, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
-            except Conflict:
-                pass
-        self.slot = None
+        with self._slot_lock:
+            if self.slot is None:
+                return
+            items, idx = self.vars.get(self.sub.slot_key(self.name))
+            cur = Slot.from_items(self.name, items)
+            if cur.holder == self.instance:
+                try:
+                    self.vars.put(self.sub.slot_key(self.name), Slot(self.name, self.instance, self.wall(), True, cur.gen).to_items(), cas=idx)
+                except Conflict:
+                    pass
+            self.slot = None
 
     # Reads my row.
     def assignment(self) -> Assignment:
@@ -941,10 +958,19 @@ class Worker:
                                   self.unconfirmed_max)
         return epoch
 
-    # Forget the unit's epoch and lease (the worker stopped it).
+    # Forget the unit's epoch and lease (the worker stopped it). The lease is marked let go as well: the stand-in may
+    # hold it from before, and a lease the loop released is renewed by nobody.
     def release(self, unit: str) -> None:
         self.epochs.pop(unit, None)
-        self.leases.pop(unit, None)
+        lease = self.leases.pop(unit, None)
+        if lease is not None:
+            lease.release()
+
+    # Forget every unit — a worker that is nobody now and starts from nothing.
+    def release_all(self) -> None:
+        for unit in list(self.leases):
+            self.release(unit)
+        self.epochs.clear()
 
     # The unit's lease says so, and there is one.
     def may_write(self, unit: str) -> bool:
@@ -964,7 +990,136 @@ class Worker:
     # stop.
     def renew_leases(self) -> list[str]:
         """Returns the units whose lease was lost — fenced or expired."""
+        self._loop_renewed = self.clock()         # what the stand-in measures a hung step's danger from
         return [u for u, l in self.leases.items() if not l.renew()]
+
+    # -- the stand-in ----------------------------------------------------------------
+    # THE LOOP THAT WORKS IS THE LOOP THAT RENEWS (feedback DD; the fourth review's open item). A step hung on a call
+    # to the store or the engine — a pass, a pump, a recorder's call into obsd — stopped renewing too: after the
+    # lease's TTL the worker's units went to a neighbour, though the process was alive and about to come back. So
+    # every step of a loop marks its start and end (`guarded`), and beside the loop a thread (`start_stand_in`)
+    # looks every `STAND_IN_WAKE` seconds: a step that has run longer than half of what a lease allows
+    # (`stand_in_after`) gets its leases, its slot row and its place renewed for it — the slot and the place by CAS
+    # and only while they still name this instance, by the same rules the loop renews them by.
+    #
+    #   only for a while      `STAND_IN_FOR` from the step's start. A step hung for ever must not hold units for
+    #                         ever: after that the stand-in stops, the leases run out, and the units honestly go
+    #   never a revival       a slot row another instance took, a lease fenced or let go, an instance its
+    #                         subsystem fenced (`may_stand_in`): the stand-in renews none of them and decides
+    #                         nothing — what a lost slot or lease MEANS is the loop's, when it comes back
+    #   never in the way      the slot lock taken only if free: a loop renewing it right now needs no stand-in
+    #
+    # The product's `Worker.RunStandIn` is the same rule; there the stand-in renews leases and the slot row. Here it
+    # renews the place (`hold`) as well — a recorder's network volume lapses as fast as its slot, and a recorder hung
+    # in obsd is the case this was written for.
+    STAND_IN_FOR = 300.0          # five minutes: long enough for a store or a daemon to come back, short of "for ever"
+    STAND_IN_WAKE = 2.0           # how often the stand-in looks; far inside `stand_in_after`
+    STAND_IN_AFTER = 0.5          # of the lease's write window (`ttl − margin`): 12.5 s of the default 25
+
+    # How long the units may go un-renewed under a running step before the stand-in renews for it — counted from the
+    # step's start or the loop's last renewal, whichever is EARLIER. From the step alone it was too late: a step may
+    # start a whole renewal period after the loop renewed (a holder renews every `(ttl − margin)/3`), and half the
+    # window after THAT, plus a look, is the window's end.
+    def stand_in_after(self) -> float:
+        return (self.lease_ttl - self.lease_margin) * self.STAND_IN_AFTER
+
+    # Whether this instance may be stood in for at all. A subsystem that fences an instance says no once it has.
+    def may_stand_in(self) -> bool:
+        return True
+
+    # Marks one step of the loop. Nested steps are one step: the outermost one's start is what the stand-in judges.
+    @contextmanager
+    def guarded(self, step: str):
+        with self._step_lock:
+            outer = self._step is None
+            if outer:
+                self._step = {"name": step, "at": self.clock(), "last": None, "said": False, "done": False}
+        try:
+            yield
+        finally:
+            if outer:
+                with self._step_lock:
+                    mark, self._step = self._step, None
+                if mark and mark["said"]:
+                    log.warning("%s: step %s came back after %.0f s", self.name, step, self.clock() - mark["at"])
+
+    # One look of the stand-in. Returns True when it renewed.
+    def stand_in_once(self) -> bool:
+        with self._step_lock:
+            mark = self._step
+        if mark is None or mark["done"]:
+            return False
+        now = self.clock()
+        age = now - mark["at"]
+        if now - min(mark["at"], self._loop_renewed) <= self.stand_in_after():
+            return False
+        if age > self.STAND_IN_FOR:
+            mark["done"] = True
+            log.error("%s: step %s has run %.0f s; no longer standing in for it (STAND_IN_FOR %g s): its units go",
+                      self.name, mark["name"], age, self.STAND_IN_FOR)
+            return False
+        if not self.may_stand_in():
+            return False
+        if mark["last"] is not None and now - mark["last"] < max(1.0, (self.lease_ttl - self.lease_margin) / 3):
+            return False                              # as often as the loop renews, not every look
+        if not self._slot_lock.acquire(blocking=False):
+            return False                              # the loop is renewing it this moment
+        try:
+            mine = self.renew_slot()
+        except SchemaTooNew:
+            mine = False                              # the loop fences on it when it comes back; nothing to hold
+        except OSError:
+            mine = True                               # silence is not "taken": the leases judge silence themselves
+        finally:
+            self._slot_lock.release()
+        if not mine:
+            mark["done"] = True
+            log.error("%s: step %s has run %.0f s and slot %s is not this instance's now: not standing in",
+                      self.name, mark["name"], age, self.name)
+            return False
+        for unit, lease in list(self.leases.items()):
+            if self.leases.get(unit) is lease:        # not one the loop let go of meanwhile (and `released` closes the rest)
+                lease.renew()
+        self._stand_in_hold()
+        mark["last"] = now
+        self.stand_in_renewals += 1
+        if not mark["said"]:
+            mark["said"] = True
+            log.warning("%s: step %s has run %.0f s; standing in for it — leases and slot renewed, for up to %g s",
+                        self.name, mark["name"], age, self.STAND_IN_FOR)
+        return True
+
+    # The place, by CAS and only while the row names this instance; never let go of here — losing it is the loop's
+    # to act on (`renew_hold` clears `hold`, and a recorder mounts by what `hold` says).
+    def _stand_in_hold(self) -> None:
+        if self.hold is None or not self._hold_lock.acquire(blocking=False):
+            return
+        try:
+            key = self.sub.hold_key(self.hold)
+            items, idx = self.vars.get(key)
+            cur = Slot.from_items(self.hold, items)
+            if cur.holder == self.instance and not cur.released:
+                self.vars.put(key, Slot(self.hold, self.instance, self.wall() + self.slot_ttl, False, cur.gen,
+                                        self.name or "").to_items(), cas=idx)
+        except (OSError, Conflict):
+            pass
+        finally:
+            self._hold_lock.release()
+
+    # Starts the stand-in beside a loop. Returns the event that ends it: the loop sets it when it ends. Its own
+    # event, not the loop's `stop` — the stand-in must outlive nothing and wait on nothing the loop's caller owns.
+    def start_stand_in(self) -> threading.Event:
+        done = threading.Event()
+
+        def look():
+            while not done.wait(self.STAND_IN_WAKE):
+                try:
+                    self.stand_in_once()
+                except Exception:                     # noqa: BLE001 — the stand-in must not die of one bad look
+                    log.exception("%s: the stand-in failed; will look again", self.name)
+
+        threading.Thread(target=look, name=f"{self.name}-stand-in", daemon=True).start()
+        return done
 
     # Sum of `conflicts` over all leases; goes into the heartbeat.
     def conflicts(self) -> int:
@@ -979,6 +1134,8 @@ class Worker:
         # second is for the person looking at a half-upgraded cluster.
         extra.setdefault("schema", SCHEMA)
         extra.setdefault("build", BUILD)
+        if self.stand_in_renewals:
+            extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
         self.objects.put(self.sub.heartbeat_key(self.name),
                          Heartbeat(self.name, self.wall(), status, extra).to_bytes())
 
