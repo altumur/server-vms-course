@@ -204,6 +204,9 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
           <label>key <input type="password" name="access_secret" placeholder="network only" style="width:8em"></label>
           <button type="submit">Declare</button>
         </div>
+        <div class="row">
+          <label title="A smaller capacity for a volume that exists erases its oldest footage: the recorder does it only with this"><input type="checkbox" name="shrink"> smaller than it is: erase its oldest footage</label>
+        </div>
         <div class="err" id="archerr"></div>
       </form>
     </details>
@@ -704,8 +707,15 @@ async function loadArchives() {
   const ul = $('#archlist'); ul.innerHTML = '';
   for (const v of d.volumes || []) {
     const li = document.createElement('li'); li.className = v.served_by ? 'running' : '';
-    li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB · ${v.url}</small></span>` +
-                   h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''} <a href="#" data-act="del">delete</a></small>`;
+    // The size the ring HAS, from the recorder holding it, beside the size declared — they differ while a smaller
+    // quota waits for its confirmation (`shrink_pending`, the recorder's `quota_note`), and the page used to show the
+    // wish as if it were the disk.
+    const has = v.size_bytes && Math.round(v.size_bytes / GB) !== Math.round(v.quota_bytes / GB)
+      ? h` (the ring is ${Math.round(v.size_bytes / GB)} GB)` : '';
+    li.innerHTML = h`<span><span class="dot"></span>${v.name} <small>${v.kind} · ${Math.round(v.quota_bytes / GB)} GB${has} · ${v.url}</small></span>` +
+                   h`<small>${v.served_by ? 'served by ' + v.served_by : v.why}${v.writing ? raw(' · <span class="bad">' + esc(v.writing) + '</span>') : ''}` +
+                   h`${v.shrink_pending ? raw(' · <span class="bad">' + esc('not shrunk: ' + (v.quota_note || 'waiting for its confirmation')) + '</span>') : ''}` +
+                   h` <a href="#" data-act="del">delete</a></small>`;
     li.querySelector('[data-act=del]').onclick = async e => {
       e.preventDefault();
       if (!confirm(`Stop using ${v.name}? The footage already written stays where it is — this removes the declaration, not the archive.`)) return;
@@ -733,8 +743,11 @@ $('#archadd').onsubmit = async e => {
   if (f.server) body.server = f.server;
   if (f.access_key) body.access_key = f.access_key;
   if (f.access_secret) body.access_secret = f.access_secret;
-  try { await send('POST', '/rec/volumes', body); e.target.reset(); loadArchives(); }
-  catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
+  if (f.shrink) body.shrink_confirmed = body.quota_bytes;            // the operator's second word: the same number
+  try {
+    const r = await send('POST', '/rec/volumes', body); e.target.reset(); loadArchives();
+    if (r && r.warning) $('#archerr').textContent = r.warning;       // a smaller size, not confirmed: said, not done
+  } catch (err) { $('#archerr').textContent = 'refused: ' + err.message; }
 };
 async function loadRec(streams = true) {
   if (rec === null) { try { const r = await fetch('/rec/spec'); rec = r.ok ? await r.json() : false; } catch (_) { rec = false; } }

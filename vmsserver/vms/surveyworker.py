@@ -92,7 +92,8 @@ class SurveyWorker(Worker):
         if found is None or not found[2].get("coverage") or not found[2].get("index_url"):
             return None
         cov = found[2]["coverage"]
-        return found[2]["index_url"], found[2].get("playback_url", ""), float(cov["from"]), float(cov["to"])
+        from .playback import process_url                # the door asks a gated cluster's processes for this camera's capability
+        return found[2]["index_url"], process_url(found), float(cov["from"]), float(cov["to"])
 
     # -- the pass: advance every watch by at most a budget of media seconds ----------------------------
     def reconcile_once(self, now: float | None = None) -> list[str]:

@@ -235,6 +235,59 @@ def test_labels_are_taken_only_when_one_gateway_carries_all_of_them():
         srv.shutdown(); srv.server_close()
 
 
+def test_a_session_is_hung_up_through_another_console_or_after_a_restart():
+    """The review's fourth pass, minor: who opened a live session lived in one console's memory — through another
+    replica, or after a restart, the hang-up was 404 and the session lived until the gateway's sweep. A session this
+    console does not remember is found where every console says it handed one out: `live.view` in the journal, which
+    the event index merges across servers. Still only its viewer's to hang up."""
+    from tests.test_console_gate import Tokens
+    from w2cplatform.eventdatabase import EventIndex
+    from vms.console import make_console
+    box, ctl, live_ctl, w, srv, base = _box()
+    srv.shutdown(); srv.server_close()
+    con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
+    access = Tokens({"anna": [("view", "1", ())], "boris": [("view", "1", ())]})
+
+    def console():
+        m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
+                         live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall),
+                         index=EventIndex(box.archive, "srv-1", wall=box.wall))
+        for con in (m.root, *m.mounts.values()):
+            con.gate.impl = access
+        s = m.serve("127.0.0.1", 0)
+        return s, f"http://127.0.0.1:{s.server_address[1]}"
+    a, b = console(), console()
+    as_ = lambda who: {"Authorization": f"Bearer {who}"}
+    try:
+        g = _gateway(box, "g-1")
+        _whep(a[1], 1, headers=as_("anna")); live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+        code, _, loc = _whep(a[1], 1, headers=as_("anna"))
+        assert code == 201 and len(g.sessions) == 1
+        assert _whep(b[1], 1, headers=as_("boris"), method="DELETE", path=loc)[0] == 403     # the other console knows whose it is
+        assert _whep(b[1], 1, headers=as_("anna"), method="DELETE", path=loc)[0] in (200, 204)
+        assert g.sessions == {}                                                              # hung up, on the gateway it was on
+    finally:
+        a[0].shutdown(); b[0].shutdown()
+
+
+def test_a_second_viewer_asking_for_other_labels_is_told_whose_labels_the_stream_has():
+    """The review's second pass (Н-M8), unchanged until the fourth: the labels of the FIRST viewer applied to every next
+    viewer of the camera — one fan-out per camera, placed by its row — and a second viewer's `?labels=` was dropped
+    without a word. Labels are the stream row's: a viewer asking for labels the row does not carry is 409, naming the
+    row's; asking for none, or for some of the row's, watches the stream that exists."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        _gateway(box, "g-1", labels=""); _gateway(box, "g-2", labels="public,eu")
+        assert _whep(base, 1, path="/whep/1?labels=public,eu")[0] == 503 and live_ctl.unit("1")["labels"] == ["public", "eu"]
+        code, body, _ = _whep(base, 1, path="/whep/1?labels=rack-7")
+        assert code == 409 and json.loads(body)["labels"] == ["eu", "public"] and "eu,public" in json.loads(body)["error"]
+        assert live_ctl.unit("1")["labels"] == ["public", "eu"] and live_ctl.unit("1")["revision"] == 1   # the row as it was
+        assert _whep(base, 1)[0] == 503                                  # no labels: the stream that exists
+        assert _whep(base, 1, path="/whep/1?labels=public")[0] == 503   # a subset of the row's: the same stream serves it
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_the_two_subsystems_share_the_platform_and_see_nothing_of_each_other():
     box, ctl, live_ctl, w, srv, base = _box()
     try:

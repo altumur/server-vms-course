@@ -36,6 +36,7 @@ import importlib
 import logging
 import os
 import threading
+import time
 from typing import Protocol
 
 TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set in a cluster's store (М12)
@@ -56,9 +57,9 @@ log = logging.getLogger("w2cplatform.access")
 class Denied(Exception):
     """401: nobody proved who they are. 403: they did, and may not. 503: this console cannot check."""
 
-    def __init__(self, status: int, why: str):
+    def __init__(self, status: int, why: str, retry_after: float | None = None):
         super().__init__(why)
-        self.status, self.why = status, why
+        self.status, self.why, self.retry_after = status, why, retry_after
 
 
 class Access(Protocol):
@@ -144,21 +145,56 @@ class Gate:
     #
     # The limit is still asked BEFORE the password, the right one included, and that is the point of it: a door
     # that checks the password while the limit is full and lets the right one in limits nothing — the guesser keeps
-    # guessing, and the right guess opens it. So while the window is full — this address's, or the process's
-    # (`GLASS_TRIES_ALL`: guesses spread over many addresses) — it is 429 for everybody until the window ends. The
-    # price is that twenty wrong guesses from several addresses close the emergency door for fifteen minutes; for
-    # the one account that can do everything, guessed is worse than late. The alarm says it happened, and a person
-    # at the box who must get in sooner restarts the console: the counts live in its memory.
-    GLASS_TRIES, GLASS_TRIES_ALL, GLASS_WINDOW = 5, 20, 900.0
+    # guessing, and the right guess opens it. So while an ADDRESS's window is full it is 429 for that address until
+    # the window ends.
+    #
+    # THE PROCESS'S LIMIT IS A PACE, NOT A BAN (the review's fourth pass, major). It was a window too: twenty wrong
+    # guesses from anywhere and the door was shut to everybody, the right password included — and kept shut for as
+    # long as somebody sent a wrong one now and then (the product's own check: one every 45 s from four addresses held
+    # its sliding window shut for good). The emergency door exists for the hour the domain is down; one stranger
+    # could keep the operator at the box out of it. Now the process checks at most `GLASS_RATE` passwords a minute,
+    # `GLASS_BURST` at once: a check past the pace WAITS its turn — up to `GLASS_WAIT` seconds, held in its thread —
+    # and only one that would wait longer is 429 with `Retry-After`. Guessing across addresses is as slow as it was
+    # (ten a minute is fourteen thousand a day, against a password nobody chose to be short); a trickle never fills
+    # the pace, so a right password from an address that has not been refused gets in at once or after one turn.
+    # Only a flood keeps the turns taken — from thirty fresh addresses each quarter of an hour, each of them
+    # refused five times — and then the right password still competes for every turn, and the alarm says so.
+    GLASS_TRIES, GLASS_WINDOW = 5, 900.0
+    GLASS_RATE, GLASS_BURST, GLASS_WAIT = 10.0, 10, 10.0
     _glass_tries: dict = {}
     _glass_limited: dict = {}                            # key -> when its `limited` alarm was written: once a window
+    _glass_pace: dict = {"tat": 0.0}                     # the pace's theoretical arrival time (GCRA), on `_glass_clock`
     _glass_lock = threading.Lock()
+    _glass_clock = staticmethod(time.monotonic)          # the pace's clock and its wait: a test sets its own
+    _glass_sleep = staticmethod(time.sleep)
+
+    @classmethod
+    def forget_glass(cls) -> None:
+        """The counts are the process's: a test starts from none."""
+        with cls._glass_lock:
+            cls._glass_tries.clear(); cls._glass_limited.clear(); cls._glass_pace["tat"] = 0.0
 
     def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
         self._said_open = False
         self._seen_keys = False                          # a cluster that WAS in a domain does not become open again
         self._loaded: Access | None = None
+
+    # Whether this cluster asks at all: a key set, or the marks of a member that lost it — without loading
+    # anything that verifies a token. For a door that checks something other than a token (the device's playback
+    # door checks the console's signature, `vms/playback.py`) and must ask exactly when the console asks.
+    # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
+    def gated(self) -> bool:
+        if self.impl is not None:
+            return True
+        try:
+            items, _ = self.vars.get(TRUST_KEYS)
+            marked = None if items else next((p for p in DOMAIN_MARKS if self.vars.get(p)[0]), None)
+        except OSError as e:
+            raise Denied(503, f"this process cannot read the cluster's trust ({e}): it admits nobody until it can") from None
+        if items:
+            self._seen_keys = True
+        return bool(items or marked or self._seen_keys)
 
     def access(self) -> Access | None:
         if self.impl is not None:
@@ -221,16 +257,35 @@ class Gate:
         if not hasattr(access, "glass"):
             raise Denied(501, "this cluster's access has no emergency account")
         now = self.wall()
-        limits = {addr: self.GLASS_TRIES, "*": self.GLASS_TRIES_ALL}
+        limits = {addr: self.GLASS_TRIES}
+        interval = 60.0 / self.GLASS_RATE
         with self._glass_lock:                           # check and reserve in one step: no attempt slips between them
-            for k, limit in limits.items():
-                tries = self._glass_tries[k] = [t for t in self._glass_tries.get(k, []) if now - t < self.GLASS_WINDOW]
-                if len(tries) >= limit:
-                    raise Denied(429, f"too many emergency entries refused ({len(tries)} in {self.GLASS_WINDOW:.0f} s): "
-                                      f"the door is closed to {'this address' if k == addr else 'everybody'} for a while — "
-                                      f"the right password too, until the window ends")
-            for k in limits:
-                self._glass_tries[k].append(now)
+            tries = self._glass_tries[addr] = [t for t in self._glass_tries.get(addr, []) if now - t < self.GLASS_WINDOW]
+            if len(tries) >= self.GLASS_TRIES:
+                raise Denied(429, f"too many emergency entries refused from this address ({len(tries)} in "
+                                  f"{self.GLASS_WINDOW:.0f} s): it is closed to this address for a while — the right "
+                                  f"password too, until the window ends")
+            # The pace (GCRA): every check moves the theoretical arrival time on by one interval; a check may run
+            # while that time is within the burst of now, and waits for it otherwise.
+            mono = self._glass_clock()
+            tat = max(self._glass_pace["tat"], mono)
+            wait = tat - (self.GLASS_BURST - 1) * interval - mono
+            if wait > self.GLASS_WAIT:
+                full = mono - self._glass_limited.get("*", -1e18) >= self.GLASS_WINDOW
+                if full:
+                    self._glass_limited["*"] = mono
+            else:
+                full = None
+                self._glass_pace["tat"] = tat + interval
+                self._glass_tries[addr].append(now)
+        if full is not None:
+            if full and self.journal is not None:
+                self.journal().say("access.break_glass.limited", cls=ALARM, user=f"break-glass({who})", addr=addr,
+                                   rate=self.GLASS_RATE, all=True)
+            raise Denied(429, f"the emergency door checks {self.GLASS_RATE:.0f} passwords a minute and every turn is "
+                              f"taken: retry in {wait:.0f} s", retry_after=wait)
+        if wait > 0:
+            self._glass_sleep(wait)                      # its turn: a pace, not a refusal
         try:
             payload = access.glass(who, why, password)
         except Denied:
@@ -242,7 +297,7 @@ class Gate:
             for k, limit in full:
                 if self.journal is not None:
                     self.journal().say("access.break_glass.limited", cls=ALARM, user=f"break-glass({who})",
-                                       addr=addr, tries=limit, window=self.GLASS_WINDOW, **({"all": True} if k == "*" else {}))
+                                       addr=addr, tries=limit, window=self.GLASS_WINDOW)
             if self.journal is not None:
                 self.journal().say("access.break_glass.refused", cls=ALARM, user=f"break-glass({who})", why=why, addr=addr)
             raise

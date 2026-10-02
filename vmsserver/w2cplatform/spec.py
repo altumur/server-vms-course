@@ -799,12 +799,23 @@ class SpecController(Controller):
     # into the row; bump `revision` (the trigger from М9 Lesson 5, now in the controller — the worker
     # restarts what it runs on a new revision); write. Derived rows are refreshed only if one of their
     # source fields changed.
+    #
+    # THE UNIT A ROW IS ABOUT IS FIXED AT ITS CREATION (the review's fourth pass, major). A recording, a detector, a
+    # stream is ABOUT a camera — `cam`, the field the console's gate reads to know whose grant to check — and the gate
+    # checks the camera the row names NOW. `PUT /rec/recordings/1 {"cam": "2"}` with `admin` on camera 1 passed on
+    # camera 1 and moved the recording to camera 2: the recorder wrote camera 2 into a tree camera 1's viewers read; a
+    # detector took its alarms and scenarios along. Rights on both cameras would make the move legal for somebody who
+    # holds both, and it would still be one camera's history going on as another's; so `cam` does not change. The
+    # same value is no change — the page sends the whole form.
     def update(self, uid, fields: dict) -> dict:
         self.spec.refuse(fields)
         def mutate(it):
             if not it or it.get("deleted") == "true":
                 raise KeyError(uid)
             r = self.spec.row(it)
+            if "cam" in fields and "cam" in r and str(self.spec.fields["cam"].parse(fields["cam"])) != str(r["cam"]):
+                raise Refused(f"`cam` is fixed when the unit is created: {uid} is about {r['cam']} — delete it and "
+                              f"create one for {fields['cam']}")
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller

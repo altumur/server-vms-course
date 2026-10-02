@@ -39,11 +39,16 @@ from .archive import subtract
 from .controller import VmsController
 
 EXPORT_MAX = 3600.0           # the longest interval one export answers: the page asks for minutes, a person for an hour
+BACKFILL_MAX = 86400.0        # the longest range one `POST /backfill` asks for: a hole somebody saw, a day at most
+KEEP_MAX = 7 * 86400.0        # the longest interval one keep holds: an incident's week, not "the archive"
 EXPORTS_AT_ONCE = 2           # exports one console makes at a time (`EXPORTS_AT_ONCE` in its environment): each is held in memory
 EXPORT_RETRY = 5.0            # the `Retry-After` of an export refused for that
+EXPORTS_PER_USER = 1          # of those, how many one caller makes at once (`EXPORTS_PER_USER`): one person cannot take them all
+EXPORT_BUDGET = 900.0         # the longest one export may take (`EXPORT_BUDGET`): a client that reads a byte a minute lets go here
 EXPORT_PIECE = 60.0           # an export reads a stretch this much at a time: what one recording holds in memory
 DOOR_TIMEOUT = 5.0            # a recorder's door that does not answer in this is named, not waited for
 SESSIONS_KEPT = 10000         # live sessions remembered for their hang-up: past it, the oldest is forgotten
+SESSION_LOOKBACK = 86400.0    # …and how far back the journal is asked for one this process does not remember
 
 
 class LiveFront:
@@ -86,7 +91,22 @@ class LiveFront:
     def offer(self, cam: str, sdp: str, labels: list[str], token: str | None = None):
         if self.ctl.camera(cam) is None:
             return 404, {"error": f"no camera {cam}", "detail": f"no camera {cam}"}
-        if self.live.unit(cam) is None:
+        row = self.live.unit(cam)
+        if row is not None and labels and not set(labels) <= set(row.get("labels") or []):
+            # THE LABELS ARE THE STREAM'S, AND THE FIRST VIEWER SET THEM (the review's second pass, Н-M8; unchanged in the
+            # third). There is one fan-out per camera, placed by its row's labels, and a second viewer's `?labels=` was
+            # dropped without a word: the guard who asked for the stream with the public address got the one on the
+            # private gateway the first viewer had wanted. Asked for labels the row does not carry, the answer is 409,
+            # naming the row's: the stream that exists is served from a gateway covering those, and a viewer who needs
+            # another one says so to whoever may change the row — a second fan-out of one camera is a second session
+            # on the device, which is the device's to give (М10B Lesson 13), not a viewer's to take.
+            have = sorted(row.get("labels") or [])
+            return 409, {"error": f"the stream of camera {cam} is served by labels {','.join(have) or '(none)'}, not "
+                                  f"{','.join(sorted(labels))}",
+                         "detail": "one fan-out per camera, placed by its row's labels: ask without `labels` (or with a "
+                                   "subset of the row's) to watch it, or change the row `live/streams/" + str(cam) + "`",
+                         "labels": have}
+        if row is None:
             # The viewer chooses where the stream is served from (`?labels=`: Lesson 13, a stream for the gateway
             # with a public address) — from among the places that EXIST. A label no live gateway carries made a
             # row nothing could place, and every next viewer of the camera was told "retry" for ever (the review's
@@ -178,6 +198,12 @@ def device_playback(objects, cam, now: float) -> str | None:
     return None if found is None else found[2]["playback_url"]
 
 
+# …and the door's key with it (`vms/playback.py`): `(url, key)`, the key None for a holder that announced none.
+def device_door(objects, cam, now: float) -> tuple[str, str | None] | None:
+    found = holder_of(objects, "vms/", cam, now, field="playback_url")
+    return None if found is None else (found[2]["playback_url"], found[1].extra.get("playback_key") or None)
+
+
 # What the DEVICE has and we do not — drawn only where our own footage does not cover it. The same
 # subtraction the recorder fetches by (Lesson 16): one rule, two uses, so the picture and the work cannot
 # disagree. A span like this is the one that will disappear — our archive keeps thirty days, a card keeps
@@ -204,7 +230,20 @@ def recordings_of(rec_ctl, cam) -> list[str]:
     if rec_ctl is None:
         return [str(cam)]                      # no rec controller mounted: the old assumption, said out loud
     units = [str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == str(cam)]
-    return units or [str(cam)]                 # nothing declared: the camera's own name, so old footage still shows
+    return units or ([str(cam)] if own_name_is_hers(rec_ctl, cam) else [])   # nothing declared: the camera's own name, so old footage still shows
+
+
+# Whether the tree named after the camera may be read as the camera's — the fallback above, and a keep's names.
+# Only when no recording of that NAME says it is another camera's, alive or deleted (a tombstone keeps its `cam`):
+# a recording called «1» that records camera 2 made `/timeline/1` and `/export/1` serve camera 2's frames to camera
+# 1's viewers, journalled as camera 1, and `POST /backfill` for camera 1 wrote into camera 2's tree (the review's
+# fourth pass, major). A store that does not answer is not "nobody's": the name is not taken.
+def own_name_is_hers(rec_ctl, cam) -> bool:
+    try:
+        items, _ = rec_ctl.vars.get(rec_ctl._row_key(rec_ctl.spec.parse_id(str(cam))))
+    except (OSError, ValueError, KeyError):
+        return False
+    return not items or str(items.get("cam", cam)) == str(cam)
 
 
 # Every recorder that serves its archive, live: `[(name, url, heartbeat)]`. A recorder holds ONE volume and its
@@ -275,20 +314,23 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # bytes. Then "is this the file you gave out" is answered by the journal: whoever holds the file takes its
     # digest and compares. A player seeking inside a file is a part, and a part has no digest.
     #
-    # Once a minute per (who, piece) as a part and once a minute as a whole: otherwise a download right after
-    # watching would be swallowed by the watching.
+    # A part — a player that moved on before the piece ended, the connection closed under it — once a minute per
+    # (who, piece): a page scrubbing through a span makes dozens. A WHOLE file always (the review's fourth pass,
+    # minor): the same interval exported twice in a minute was one line, and the second file need not be the first
+    # — a door that answered this time, a block that closed meanwhile — so its digest is the one somebody will hold.
     def note_read(handler, rel: str, sent: dict) -> None:
         import hashlib
         user = handler.headers.get("X-User", "operator")
         addr = (getattr(handler, "client_address", None) or ("",))[0]
         now, whole = con_wall(), bool(sent.get("whole"))
         with reads_lock:
-            if now - seen_reads.get((user, rel, whole), -1e18) < READ_NOTE_EVERY:
+            if not whole and now - seen_reads.get((user, rel), -1e18) < READ_NOTE_EVERY:
                 return
             if len(seen_reads) > 10000:
                 for k in [k for k, t in seen_reads.items() if now - t >= READ_NOTE_EVERY]:
                     del seen_reads[k]
-            seen_reads[(user, rel, whole)] = now
+            if not whole:
+                seen_reads[(user, rel)] = now
         parts = rel.split("/")
         digest = sent.get("sha256") or (hashlib.sha256(sent["data"]).hexdigest() if whole and "data" in sent else None)
         log.info("archive read: %s got %s (%s, %d bytes) from %s", user, rel, sent.get("status"), sent.get("bytes", 0), addr)
@@ -296,7 +338,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         if journal is not None:
             journal.say("archive.read", user=user, media=rel, addr=addr, status=sent.get("status"), bytes=sent.get("bytes", 0),
                         **({"sha256": digest} if digest else {}), **({"recording": parts[1]} if len(parts) > 1 else {}),
-                        **({"unreachable": sent["unreachable"]} if sent.get("unreachable") else {}))
+                        **({"unreachable": sent["unreachable"]} if sent.get("unreachable") else {}),
+                        **({"broken": sent["broken"]} if sent.get("broken") else {}))
 
     def extra(handler, method, path, q):
         if live is not None and path.startswith("/whep/"):
@@ -328,8 +371,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 # (`NO_UNIT`): the gate asks for any grant, and the session is checked here — the id this console
                 # handed out, to the caller it handed it to, on the gateway it named then, whatever `?gateway=` says.
                 sid = path[len("/whep/session/"):]
-                with sessions_lock:
-                    held = sessions.get(sid)
+                held = session_of(sid)
                 if getattr(handler, "sees", None) is not None:    # gated: the caller is a proven name
                     if held is None:
                         return 404, {"error": "no such session", "detail": "not a session this console handed out"}
@@ -407,10 +449,20 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             cam, t0, t1 = str(body.get("cam", "")), float(body.get("from", 0)), float(body.get("to", 0))
             if not cam or t1 <= t0:
                 return 400, {"detail": "a backfill wants a camera and a range", "error": "bad range"}
+            # A RANGE A PERSON CAN MEAN (the review's fourth pass, Т-B6's remainder). The recorder fetches in pieces and
+            # a pass takes at most `RANGE_CAP` of a range, but the row took thirty-one years, and the recorder read a
+            # device's card from its first second until it was done. A backfill is a hole somebody saw on a timeline:
+            # a day at most, and a longer hole is several asks, each of which says what it costs.
+            if t1 - t0 > BACKFILL_MAX:
+                return 400, {"detail": f"a backfill is a range of at most {BACKFILL_MAX:.0f} s (a day): ask for a longer "
+                                       f"hole a day at a time", "error": "range too long"}
             # WHICH recording gets the missing footage: the one the operator named, or the camera's first.
             # A backfill writes into a unit's tree, and with several recordings of one camera there is no
             # "the" tree any more — the caller says, or takes the first and the answer says which it was.
             units = recordings_of(rec_ctl, cam)
+            if not units:
+                return 404, {"detail": f"camera {cam} has no recording, and the tree named after it is another camera's",
+                             "error": "no such recording"}
             unit = str(body.get("rec") or "") or units[0]
             if unit not in units:
                 return 400, {"detail": f"camera {cam} has no recording {unit}", "error": "no such recording"}
@@ -431,6 +483,36 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             return timeline(path_id(path), q)
         if path.startswith("/export/"):
             return export(handler, path_id(path), q)
+        return None
+
+    # `(who, camera, gateway)` of a live session this console — or ANOTHER console — handed out, or None.
+    #
+    # The table above is one process's memory: a hang-up through another replica of the console, or after a restart,
+    # found nothing and was 404, and the session lived on until the gateway's sweep (the review's fourth pass, minor).
+    # What every console already writes for every session it hands out is `live.view` — who, which camera, the
+    # session, the gateway — durably, into the journal the event index merges across every server. So a session this
+    # process does not remember is looked up there: the last `SESSION_LOOKBACK` of `live.view` lines. Not a row in the
+    # store: the console's token writes the operator's rows, and a session per viewer is not one; not the gateway: it
+    # holds the session, and not who opened it. A session older than the look-back, or written while the journal could
+    # not be, is 404 as before — and its viewer's tab closing is the gateway's grace.
+    def session_of(sid: str):
+        with sessions_lock:
+            held = sessions.get(sid)
+        if held is not None:
+            return held
+        index = getattr(extra, "index", None)
+        if index is None or not sid:
+            return None
+        from w2cplatform.doors import MAX_LIMIT
+        now = con_wall()
+        try:
+            rep = index.query(now - SESSION_LOOKBACK, now + 1, kind="live.view", subsystem="audit", limit=MAX_LIMIT)
+        except Exception as e:                                       # noqa: BLE001 — the journal is away: not found, said
+            log.warning("a hang-up of %s could not ask the journal who opened it: %s", sid, e)
+            return None
+        for e in rep.get("events", []):
+            if str(e.get("session")) == sid:
+                return str(e.get("user", "")), str(e.get("target", "")), str(e.get("gateway", ""))
         return None
 
     # The command, as a row: `(202, {queued, detail})`, or the refusal.
@@ -462,19 +544,35 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
 
     # `GET /segment?cam=` — the device's own footage, through its holder's playback door: the URL, and a line.
     def segment(handler, q: dict):
-        url = device_playback(ctl.objects, q.get("cam"), con_wall())
-        if url is None:
+        from . import playback as pb
+        cam, raw0, raw1 = str(q.get("cam") or ""), q.get("from", 0), q.get("to", 1e12)
+        try:
+            t0, t1 = pb.times(raw0, raw1)
+        except (TypeError, ValueError):
+            return 400, {"detail": "from and to are unix seconds, and to is after from", "error": "bad range"}
+        door = device_door(ctl.objects, cam, con_wall())
+        if door is None:
             return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
+        url, key = door
+        who = handler.headers.get("X-User", "operator")
         # The door to the DEVICE's footage is handed out here, and the footage then goes holder → browser:
         # this console never sees the bytes, so what it can say is that it gave the door, to whom, for which
         # minutes (the review's third pass, Н-B1's remainder: it went with no line at all). One line per URL
         # handed out — a page asks once per click, not once per byte range.
+        #
+        # …and the address is SIGNED (the review's fourth pass, blocker 4): this camera, these minutes, this viewer,
+        # for `playback.TTL` seconds, with the door's own key from its heartbeat. The door checks it: the camera
+        # edited, the minutes stretched or the address kept for tomorrow are 403 there. A holder that announced no
+        # key is an older build, whose door asks nobody: its bare address, as before.
         journal = getattr(extra, "journal", None)
+        until = con_wall() + pb.TTL
         if journal is not None:
-            journal.say("archive.read", user=handler.headers.get("X-User", "operator"), source="device",
-                        target=str(q.get("cam")), addr=(getattr(handler, "client_address", None) or ("",))[0],
-                        **{"from": q.get("from", 0), "to": q.get("to", 1e12)})
-        return 200, {"playback": f"{url}?from={q.get('from', 0)}&to={q.get('to', 1e12)}"}
+            journal.say("archive.read", user=who, source="device", target=cam,
+                        addr=(getattr(handler, "client_address", None) or ("",))[0],
+                        **{"from": raw0, "to": raw1}, **({"until": round(until)} if key else {}))
+        if key is None:
+            return 200, {"playback": f"{url}?from={raw0}&to={raw1}"}
+        return 200, {"playback": f"{url}?{pb.signed_query(key, cam, t0, t1, who, con_wall())}", "until": round(until)}
 
     # A camera's timeline: every recording of it, from every recorder's door — each holds one volume, and what a
     # recording wrote over its life may be in more than one. A door that does not answer is NAMED, not waited
@@ -525,21 +623,42 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # made (`_export`), so one holds about a minute per recording; and past the bound the next is 503 with
     # `Retry-After`, which a client waits out — each export is also a minute of reading from a recorder's door.
     exporting = threading.BoundedSemaphore(max(1, int(os.environ.get("EXPORTS_AT_ONCE", EXPORTS_AT_ONCE))))
+    # …AND NOBODY HOLDS THEM ALL, NOR FOR EVER (the review's fourth pass, major). Two sockets that asked for an export
+    # and read nothing held both slots until the console restarted: every other export was 503, and `view` on one
+    # camera was enough. Three bounds now: the connection's own (`CONSOLE_TIMEOUT` on every socket of the console —
+    # a client that reads nothing for that long is let go), the export's (`EXPORT_BUDGET`: one that reads a byte
+    # just inside each timeout is cut off at the budget, and says so), and the person's (`EXPORTS_PER_USER`: one
+    # caller cannot take every slot).
+    per_user: dict[str, int] = {}
+    per_user_lock = threading.Lock()
+
+    def busy(why: str):
+        return 503, json.dumps({"detail": why, "error": "busy"}).encode(), [("Content-Type", "application/json"),
+                                                                            ("Retry-After", str(int(EXPORT_RETRY)))]
 
     def export(handler, cid: str, q: dict):
-        if not exporting.acquire(blocking=False):
-            return 503, json.dumps({"detail": "this console is making as many exports as it makes at once — retry",
-                                    "error": "busy"}).encode(), [("Content-Type", "application/json"),
-                                                                 ("Retry-After", str(int(EXPORT_RETRY)))]
+        who = (getattr(handler, "headers", None) or {}).get("X-User", "operator")
+        mine = max(1, int(os.environ.get("EXPORTS_PER_USER", EXPORTS_PER_USER)))
+        with per_user_lock:
+            if per_user.get(who, 0) >= mine:
+                return busy(f"{who} is making {per_user[who]} export(s) already, as many as one person makes at once — retry")
+            per_user[who] = per_user.get(who, 0) + 1
         try:
-            return _export(handler, cid, q)
+            if not exporting.acquire(blocking=False):
+                return busy("this console is making as many exports as it makes at once — retry")
+            try:
+                return _export(handler, cid, q)
+            finally:
+                exporting.release()
         finally:
-            exporting.release()
+            with per_user_lock:
+                per_user[who] -= 1
+                if not per_user[who]:
+                    del per_user[who]
 
     def _export(handler, cid: str, q: dict):
         import hashlib
         import heapq
-        import itertools
         import struct
         from . import fmp4
         try:
@@ -589,6 +708,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 yield from got
                 at = nxt
 
+        # One recording's frames, its stretches in order. A function, so that `unit` and `where` are THIS recording's:
+        # the generator expression this was closed over the loop's variables, and was run by the merge after the loop
+        # — every recording's stretches were looked up in the LAST recording's `where`, and an export of a camera with
+        # two recordings and no `rec` ended in a `KeyError` with no reply and no line (the review's fourth pass, major).
+        def stream_of(unit: str, where: dict, stretches: list):
+            for span, lo, hi in stretches:
+                yield from frames_of(*where[span], unit, lo, hi)
+
         streams = []
         for unit in units:
             spans, where = [], {}
@@ -604,7 +731,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     spans.append(span)
                     where.setdefault(span, (name, url))
             stretches = sorted(authoritative(spans, t0, t1), key=lambda x: x[1])
-            streams.append(itertools.chain.from_iterable(frames_of(*where[span], unit, lo, hi) for span, lo, hi in stretches))
+            streams.append(stream_of(unit, where, stretches))
 
         # The recordings of the camera merged by time — one piece per recording held at a time — and each moment
         # taken once, the first door's. The MP4 is written as it is made (`fmp4.Writer`, one fragment per group of
@@ -620,8 +747,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 sent["bytes"] += len(b); sent["sha"].update(b)
 
         writer, frag, end, broken, said = None, [], None, None, 0
+        deadline = time.monotonic() + float(os.environ.get("EXPORT_BUDGET", EXPORT_BUDGET))
         try:
             for smp in heapq.merge(*streams, key=lambda s: s.begin):
+                if sent["head"] and time.monotonic() > deadline:
+                    raise TimeoutError(f"the export took longer than its budget of {float(os.environ.get('EXPORT_BUDGET', EXPORT_BUDGET)):.0f} s")
                 if end is not None and smp.begin < end:
                     continue                             # this moment came from another door already
                 if writer is None:
@@ -659,7 +789,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             log.warning("an export of camera %s has holes: %s did not answer after the first byte", cid, ",".join(late))
         note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}",
                   {"status": 200, "bytes": sent["bytes"], "whole": broken is None,
-                   **({"sha256": sent["sha"].hexdigest()} if broken is None else {}),
+                   **({"sha256": sent["sha"].hexdigest()} if broken is None else {"broken": broken}),
                    **({"unreachable": ",".join(late)} if late else {})})
         return ()
     return extra
@@ -747,8 +877,30 @@ def rec_metrics(rec_ctl: SpecController):
                 # pass, B10). Not zero is evidence somebody asked for and the ring will take all the same.
                 "# TYPE rec_keeps_unprotected gauge",
                 f"rec_keeps_unprotected {0 if volumes.incidents(rec_ctl.vars) else len(keeps.declared(rec_ctl.vars))}",
+                *_keep_missing(rec_ctl),
                 *_recorders(rec_ctl)]
     return lines
+
+
+# The seconds of each keep that are not in the incidents volume yet, as the recorder copying keeps says (`keep_missing`
+# in its heartbeat: `{keep: seconds}`) — the review's fourth pass, major: a keep whose source door nobody could reach
+# was copied as nothing, pass after pass, while `rec_keeps_unprotected` said 0 and the ring came for the minutes. The
+# largest any live recorder reports, per keep; none while every keep is whole.
+def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str]:
+    now, worst = rec_ctl.wall(), {}
+    for hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).values():
+        if now - hb.ts > lost_after:
+            continue
+        missing = hb.extra.get("keep_missing") or {}
+        if isinstance(missing, str):
+            try:
+                missing = json.loads(missing)
+            except ValueError:
+                missing = {}
+        for keep, s in (missing.items() if isinstance(missing, dict) else ()):
+            worst[str(keep)] = max(worst.get(str(keep), 0.0), float(s or 0))
+    return ["# TYPE rec_keep_missing_seconds gauge"] + [f'rec_keep_missing_seconds{{keep="{k}"}} {round(s, 1)}'
+                                                          for k, s in sorted(worst.items()) if s > 0]
 
 
 # What each recorder says about itself, from its heartbeat (feedback BG). A fenced recorder and a recorder with
@@ -854,6 +1006,26 @@ def auto_metrics(auto_ctl):
     return lines
 
 
+# What the recorder holding a volume says about it, beside what was declared (the review's fourth pass, major): the
+# size the ring HAS (`size_bytes`) and a declared shrink it has not applied (`shrink_pending`, and its `quota_note`).
+# The row is the operator's wish; the heartbeat is the ring. A smaller quota declared without `shrink_confirmed` used
+# to show as the new size on the page while the ring stayed as it was, and both rings filled the disk.
+#
+# The size: `volume_quota` when the recorder says it (the held volume's own size, read from the engine), else
+# `archive_quota` when the held volume IS the box's own (`archive`, whose size that field has always been). A volume
+# no live recorder holds has no `size_bytes`: nobody can say.
+def as_held(rec_ctl: SpecController, vol: dict, now: float, lost_after: float = 45.0) -> dict:
+    for hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).values():
+        x = hb.extra
+        if str(x.get("volume") or "") != vol["name"] or now - hb.ts > lost_after:
+            continue
+        size = x.get("volume_quota") or (x.get("archive_quota") if x.get("archive") and x.get("archive") == vol.get("url") else None)
+        note = str(x.get("quota_note") or "")
+        return {**({"size_bytes": int(size)} if size else {}),
+                "shrink_pending": bool(x.get("shrink_pending") or note), **({"quota_note": note} if note else {})}
+    return {}
+
+
 def rec_routes(rec_ctl: SpecController):
     # Who set a keep, lifted it, shrank a volume or withdrew one — into the journal (`w2cplatform/journal.py`).
     def said(kind: str, handler, **fields) -> None:
@@ -878,9 +1050,14 @@ def rec_routes(rec_ctl: SpecController):
             body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             try:
                 keeps.refuse(body)
+                # A keep is copied into the incidents volume piece by piece, and nothing bounded what it named: a keep
+                # of thirty-one years asked for the whole archive (the review's fourth pass, Т-B6's remainder).
+                if float(body["to"]) - float(body["from"]) > KEEP_MAX:
+                    raise Refused(f"a keep holds at most {KEEP_MAX / 86400:.0f} days: a longer stretch is several keeps")
                 # The recordings of the camera as they are NOW, and the camera's own name: a recording
-                # deleted before today left a tree called after the camera, and nothing else says whose it is.
-                names = set(recordings_of(rec_ctl, body["cam"])) | {str(body["cam"])}
+                # deleted before today left a tree called after the camera, and nothing else says whose it is —
+                # unless a recording of that name says it was ANOTHER camera's (`own_name_is_hers`).
+                names = set(recordings_of(rec_ctl, body["cam"])) | ({str(body["cam"])} if own_name_is_hers(rec_ctl, body["cam"]) else set())
                 k = keeps.write(rec_ctl.vars, body, sorted(names), handler.headers.get("X-User", "operator"), rec_ctl.wall())
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
@@ -907,6 +1084,7 @@ def rec_routes(rec_ctl: SpecController):
             now = rec_ctl.wall()
             view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, now, objects=rec_ctl.objects)
             spare = spare_workers(rec_ctl)
+            view = {**view, "volumes": [{**v, **as_held(rec_ctl, v, now)} for v in view["volumes"]]}
             return 200, {**view, "spare": len(spare), "spares": sorted(spare),
                          # `live` so that whatever acts on `needed` does not have to ask the orchestrator
                          # how many recorders are running — the console already knows, from heartbeats,
@@ -923,10 +1101,20 @@ def rec_routes(rec_ctl: SpecController):
                 vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
-            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:     # "give this archive less": the ring shrinks, its oldest minutes go
-                said("archive.volume.shrunk", handler, volume=vol.name, quota_bytes=vol.quota_bytes, was=was.quota_bytes)
-            return 201, {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items()
-                                    if not k.endswith("_secret")}}
+            out = {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items() if not k.endswith("_secret")}}
+            # "Give this archive less": REQUESTED, not done (the review's fourth pass, major). The recorder shrinks a ring
+            # only when the row also says `shrink_confirmed` equal to the new size — shrinking erases its oldest minutes —
+            # and the journal said `shrunk` the moment the row was written: the page showed 4 TB, the journal "shrunk",
+            # and the ring stayed 8 TB. The console's line is the request, with whether it was confirmed; the size the
+            # ring HAS is the recorder's to say (its heartbeat, shown with the volume), and its line when it applied it.
+            if was is not None and 0 < vol.quota_bytes < was.quota_bytes:
+                confirmed = vol.shrink_confirmed == vol.quota_bytes
+                said("archive.volume.shrink_requested", handler, volume=vol.name, quota_bytes=vol.quota_bytes,
+                     was=was.quota_bytes, confirmed=confirmed)
+                if not confirmed:
+                    out["warning"] = (f"{vol.name} keeps its size: shrinking erases the oldest footage, so the recorder "
+                                      f"applies it only when the row says shrink_confirmed: {vol.quota_bytes}")
+            return 201, out
         if method == "DELETE" and path.startswith("/volumes/"):
             name = path_id(path)
             if not any(v.name == name for v in volumes.declared(rec_ctl.vars)):
@@ -969,6 +1157,7 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
                        metrics_extra=vms_metrics(ctl))
     root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
     root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
+    root.extra.index = index             # where a live session another console handed out is found (`live.view`)
     # What the VMS's routes need at the gate (`w2cplatform/access.py`): a backfill ACTS; a timeline and a live
     # stream name a camera; asking for a live stream is a POST that changes nothing — `view` on that camera,
     # which is the viewer's token on the live door.
@@ -991,9 +1180,11 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
         if name == "rec":
             con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/keeps",)   # a keep is set by an operator; a volume by an administrator
             con.ID_ROUTES = ("keeps", "volumes")                       # one id each, and nothing after it
-        if name in ("rec", "live", "det"):
+        if "cam" in c.spec.fields:
             # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
             # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).
+            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass): by
+            # the field, not by a list of names that the next subsystem is missing from.
             con.labels_of = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
         if con.extra is not None:
             con.extra.journal = root.journal

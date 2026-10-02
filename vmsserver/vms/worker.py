@@ -1238,7 +1238,11 @@ class VmsWorker(Worker):
     # it by extending this, not by rewriting the heartbeat.
     def heartbeat_extra(self) -> dict:
         return {"fetched": ",".join(self.fetched[-32:]),
-                **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {})}
+                **({"command_counts": dict(self.commands)} if any(self.commands.values()) else {}),
+                # The playback door's key, once the door is open (`vms/playback.py`): what the console signs a viewer's
+                # address with, and what a process derives its capability from. Here and not in a camera's status:
+                # statuses are the read model the page shows.
+                **({"playback_key": self.playback_key} if getattr(self, "playback_key", None) else {})}
 
     # -- the playback door ---------------------------------------------------------------------------
     # The holder's second surface, and the reason it is HTTP and not the RTSP fan-out: a browser has to
@@ -1254,10 +1258,60 @@ class VmsWorker(Worker):
     # ceiling (М10A Lesson 25 and 26), and a field that grows with the device does not belong in it. The
     # heartbeat keeps the summary — two numbers, enough to draw a timeline and to know there is something
     # to ask about — and whoever needs the spans pays a request for them.
+    #
+    # WHO MAY READ THE CARD (the review's fourth pass, blocker 4). `/playback/<cam>` asks — when the cluster is gated,
+    # as the console does (`Gate.gated`) — for one of two things: the console's signature over this camera, these
+    # minutes, an expiry and the viewer (`?…&exp&v&sig`, what `GET /segment` hands a browser), or the capability a
+    # process derives from this door's key for this camera (`/playback/<cam>/<capability>`, the recorder and the
+    # survey: `playback.process_url`). Neither: 403, and an `access.denied` line. A viewer's read is a line too,
+    # `archive.read` with `source=device` — the console said it handed the address out; this says it was used,
+    # by whom and from where. The listing and the device list stay as they were: where the footage is, not the
+    # footage — a door between processes until mutual TLS.
+    PLAYBACK_TIMEOUT = 30.0          # a client that sends or reads nothing for this long lets its thread go
+
+    def playback_journal(self):
+        from w2cplatform.journal import Journal
+        if getattr(self, "_playback_journal", None) is None:
+            self._playback_journal = Journal(self.archive_root, f"door-{self.name}", self.wall)
+        return self._playback_journal
+
+    # `None` when the request may be served; else `(status, reason)`. `rest` is what follows `/playback/<cam>`.
+    def playback_refusal(self, cam: str, rest: str, q: dict, addr: str):
+        from w2cplatform.access import Denied, Gate
+        from . import playback as pb
+        if getattr(self, "_playback_gate", None) is None:
+            self._playback_gate = Gate(self.vars, self.wall)
+        try:
+            if not self._playback_gate.gated():
+                return None                              # an open cluster: the console it fronts is open too
+        except Denied as e:
+            return e.status, e.why
+        key = getattr(self, "playback_key", None)
+        if not key:
+            return 503, "this door has no key: it admits nobody in a gated cluster"
+        import hmac
+        if rest:
+            if hmac.compare_digest(rest, pb.capability(key, cam)):
+                return None                              # a process of this cluster, for this camera
+            why = "a capability for another camera, or another door"
+        else:
+            try:
+                who = pb.check_signed(key, cam, q, self.wall())
+                self.playback_journal().say("archive.read", user=who, source="device", target=cam, addr=addr,
+                                            **{"from": q.get("from"), "to": q.get("to"), "worker": self.name})
+                return None
+            except PermissionError as e:
+                why = str(e)
+        self.playback_journal().say("access.denied", user=str(q.get("v") or "?"), capability="playback", target=cam,
+                                    addr=addr, why=why, worker=self.name)
+        return 403, why
+
     def playback_handler(self):
         gw = self
 
         class H(SendMixin, BaseHTTPRequestHandler):
+            timeout = gw.PLAYBACK_TIMEOUT
+
             def log_message(self, *a): pass
 
             def do_GET(self):
@@ -1270,10 +1324,15 @@ class VmsWorker(Worker):
                         return self._send(501, {"detail": "this driver cannot list what the device holds",
                                                 "error": "no index"})
                     return self._send(200, {"spans": [{"from": a, "to": b} for a, b in spans]})
-                if not u.path.startswith("/playback/"):
+                segs = u.path.split("/")                         # "", "playback", <cam>[, <capability>]
+                if len(segs) not in (3, 4) or segs[1] != "playback" or not segs[2]:
                     return self._send(404, {"detail": "no such route", "error": "no such path"})
+                cam = segs[2]
+                refused = gw.playback_refusal(cam, segs[3] if len(segs) == 4 else "", q, str(self.client_address[0]))
+                if refused is not None:
+                    return self._send(refused[0], {"detail": refused[1], "error": "denied"})
                 try:
-                    data = gw.playback(u.path.rsplit("/", 1)[1], float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    data = gw.playback(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
                 except KeyError:
                     return self._send(404, {"detail": "this camera has no archive of its own here",
                                             "error": "no device archive"})
@@ -1290,6 +1349,8 @@ class VmsWorker(Worker):
     # a crash loop every two seconds.
     def serve_playback(self, host: str | None = None, port: int | None = None) -> ThreadingHTTPServer:
         from .config import opened_beyond_loopback
+        from .playback import new_key
+        self.playback_key = getattr(self, "playback_key", None) or new_key()   # the door's own, announced in the heartbeat
         host = (self.playback_host or LOOPBACK) if host is None else host
         self.playback_host = host                        # what it is bound to is what the heartbeat announces
         opened_beyond_loopback(f"{self.name}: the door to the devices' own archives", host, log)

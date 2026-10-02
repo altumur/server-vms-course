@@ -55,9 +55,10 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
         srv.shutdown()
     said = _audit(box)
     assert [(e["kind"], e["user"]) for e in said] == [
-        ("archive.keep.made", "anna"), ("archive.keep.lifted", "boris"), ("archive.volume.shrunk", "boris"),
+        ("archive.keep.made", "anna"), ("archive.keep.lifted", "boris"), ("archive.volume.shrink_requested", "boris"),
         ("archive.volume.withdrawn", "anna"), ("unit.deleted", "boris"), ("unit.deleted", "anna")]
-    assert said[2]["quota_bytes"] == 10 ** 11 and said[2]["was"] == 10 ** 12
+    assert said[2]["quota_bytes"] == 10 ** 11 and said[2]["was"] == 10 ** 12   # requested: the recorder applies it (the review's fourth pass)
+    assert said[2]["confirmed"] is False
     gone = [e for e in _raw(box) if e["kind"] == "unit.deleted"]
     assert [(e["subsystem"], e["unit"]) for e in gone] == [("audit", "console")] * 2       # whose line it is…
     assert [(e["of"], e["target"]) for e in gone] == [("rec", "1"), ("vms", str(cam))]     # …and what it is about
