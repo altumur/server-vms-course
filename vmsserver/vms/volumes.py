@@ -63,6 +63,13 @@ FIELDS = ("kind", "url", "server", "quota_bytes", "access_key", "access_secret",
 # storage somewhere else, which is as independent of the primary's server as a second disk is. An EDGE volume
 # is the card in a camera that runs the platform: always one box, the camera itself. An INCIDENTS volume —
 # where kept footage is copied to (`RecWorker.keep_pass`) — is either, like a backup one.
+#
+# THE CARD IS A PLACE, NOT A VOLUME OF THE ENGINE (the product's camera: its design note §12 and §14; feedback CB,
+# DG). Declared here like the others — placement needs a place, the gate needs to know a recording is a standby —
+# and written as nothing else is: by the camera's own recorder, as plain segment files with a byte budget
+# (`vms/card.py`, `CardBuffer`), never mounted through obsd. A camera has 32 MB of memory where the engine wants
+# 20–25 for a writer. `quota_bytes` is the card's budget, `url` its directory on the camera. An engine on a camera —
+# a NAS, a mini-disk — would be a `local` or `network` volume like a server's, not `edge`; the course does not build it.
 def on_a_box(v: "Volume") -> bool:
     return v.kind in ("local", "edge") or (v.kind in ("backup", "incidents") and bool(v.server))
 
@@ -127,6 +134,12 @@ def refuse(fields: dict) -> None:
         raise Refused("a local volume is a disk on one server: name it")
     if kind == "edge" and not str(fields.get("server", "")):
         raise Refused("an edge volume is the card in one camera: name it")
+    # A card is a directory on the camera, written by the camera's recorder without an engine (`vms/card.py`): an
+    # address — a bucket, a share — or a key to one is something no card reader can open.
+    if kind == "edge" and ("://" in str(fields.get("url", "")).replace("file://", "", 1)
+                           or fields.get("access_secret") or fields.get("access_key")):
+        raise Refused("an edge volume is the card in a camera — a directory on it, with no key: an address is a "
+                      "local or network volume")
     if kind == "network" and str(fields.get("server", "")):
         raise Refused("a network volume is served by whichever box takes it — leave `server` empty")
     # EVERY declared volume has a size, local ones included, and that is what lets a disk hold more than one:
@@ -295,13 +308,16 @@ def _writing(objects, sub: Subsystem, now: float, lost_after: float) -> dict[str
 # that dropped, the seconds its recorder took to move — the way Lesson 16 closes them from a device's archive,
 # except that this archive is OURS: a recording, in a volume, served by a recorder's door.
 #
-#     edge     the card in the camera itself. Written by the camera's own recorder from its own sensor: no
-#              network between them, so it records whatever the network does
+#     edge     the card in the camera itself. Written by the camera's own recorder from its own ring: no
+#              network between them, so it records whatever the network does. Not a volume of the engine — the
+#              camera's buffer of plain files (`vms/card.py`); read by ASKING the camera for a range
+#              (`RecWorker.card_range`), never through a door
 #     backup   a second server's disk (or an address). Its stream comes over the network — and a camera that
 #              pushes sends it there only when its primary does not take it (М11 lesson 1, М12 lesson 16)
 #
 # Inside a cluster they are the same rules — a filter for placement, `when: offline`, a source for the primary
-# — so everything here takes both. They are named apart because across clusters they behave apart.
+# — so everything here takes both. They are named apart because across clusters they behave apart, and because
+# they are written and read apart: the engine and a door for a backup, the card's buffer and a range answer for an edge.
 STANDBY = ("backup", "edge")
 
 

@@ -3,8 +3,9 @@
 Lesson 16 closed a recording's gaps from the DEVICE's archive — whatever a camera keeps on its card, read
 through the holder's playback door. The product found that door closed (its DriverPack binding has no
 playback calls yet) and a better one open: our own archives. A critical camera is recorded twice — its
-primary recording, and a BACKUP recording on a volume of kind `backup`: a second server's disk, or the
-card of a camera that runs this platform. The primary closes any hole from the backup — a link that
+primary recording, and a BACKUP recording on a standby volume: a second server's disk (`backup`), or the
+card of a camera that runs this platform (`edge` — the camera's buffer, no engine: `vms/card.py`, and the camera
+cluster's tests below run on it). The primary closes any hole from the backup — a link that
 dropped, the seconds its own recorder took to move — by COPYING the backup's footage, cut to the hole, with
 the times it was recorded at. The mechanism is Lesson 16's, over a second kind of source.
 """
@@ -302,29 +303,28 @@ def test_a_primary_switched_off_never_releases_the_ring():
 
 
 def test_a_backup_volume_is_a_box_or_an_address():
-    """With a server it is a disk on that box — a camera's card, a second server's disk — and only that box
-    serves it. Without one it is an address any box may serve, like a network volume: a second storage
-    elsewhere is as independent of the primary's server as a second disk is."""
+    """With a server it is a disk on that box — a second server's disk — and only that box serves it. Without one
+    it is an address any box may serve, like a network volume: a second storage elsewhere is as independent of the
+    primary's server as a second disk is. (A camera's card is not a backup volume: it is `edge`, the camera's
+    buffer — `tests/test_camera_card.py`.)"""
     volumes.refuse({"name": "copy", "kind": "backup", "url": "s3://copies/site-1", "quota_bytes": 1})   # accepted
-    vols = [volumes.Volume("card", "backup", "/data/card", "cam-7", 1), volumes.Volume("cloud", "backup", "s3://c", "", 1)]
-    assert volumes.servable(vols, "cam-7") == ["card", "cloud"]
+    vols = [volumes.Volume("copy", "backup", "/data/copy", "srv-b", 1), volumes.Volume("cloud", "backup", "s3://c", "", 1)]
+    assert volumes.servable(vols, "srv-b") == ["copy", "cloud"]
     assert volumes.servable(vols, "srv-a") == ["cloud"]
 
 
 def _camera_cluster():
     """A camera that is a cluster of its own (М12 Lesson 10): its row, `ref` its serial, and ONE recording
     here — the backup on its card, `when: offline`. Its primary is a row of another cluster, the server room
-    that records it (М12 Lesson 13), and nothing of it is in this cluster: no row, no heartbeat."""
+    that records it (М12 Lesson 13), and nothing of it is in this cluster: no row, no heartbeat.
+
+    The card is the camera's buffer, as in the product: the platform's recorder over the camera's ring and a card of
+    plain files (`vms/card.py`, `CardRecorder`) — no engine. The ring is the camera's sensor (`ring_film`); the
+    card's writer runs when the test says (`act.drain()`)."""
     import json
-    box, ctl, con, con_vars = _box()
-    w = _holder(box, lambda k: FakeDevice(k, channels=["1"]))
-    con.create_camera({"name": "gate", "source": CARD, "ref": "SN1"})
-    ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
-    _volume(box, "card", "edge", "srv-1")
-    SpecController(REC_SPEC, con_vars, box.objects, wall=box.wall).create({"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
-    card = _recorder(box, "r-1", "srv-1", "card")
-    SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall).ensure_placed()
-    card.reconcile_once(); card.heartbeat_once()
+    from tests.test_camera_card import _camera
+    box, card, ring, act, _ = _camera()
+    card.ring_film = lambda seconds: _film_on(box, ring, act, seconds)
 
     def carry(should=True, written=True, seen=True, starting=False):   # what the camera's agent does on a pass
         book = {"SN1": json.dumps({"cluster": "room", "recording": "SN1", "should": should, "written": written,
@@ -335,6 +335,21 @@ def _camera_cluster():
         if seen:
             box.objects.put("domain/seen", json.dumps({"ts": box.wall()}).encode())
     return box, card, next(r for r in card.rows if r["id"] == "1-card"), carry
+
+
+def _film_on(box, ring, act, seconds: float, step: float = 0.5) -> None:
+    """`seconds` of the camera's frames into its ring, the wall moving with them; the card's writer catches up."""
+    from tests.test_camera_card import _film
+    t = box.wall()
+    _film(ring, t, t + seconds, step=step, act=act)
+    box.wall.advance(seconds)
+
+
+def _on_card(card) -> list:
+    """What the card holds of the recording: its segments' spans, stitched."""
+    from vms.archive import stitch
+    card.actuator.drain()
+    return stitch(card.card.coverage("1-card")) if card.card is not None else []
 
 
 def test_a_card_learns_about_its_primary_in_another_cluster_from_the_book_its_agent_carries():
@@ -436,58 +451,64 @@ def test_a_recorder_says_when_it_cannot_reach_its_source():
 
 
 # -- memory first: a card that waits for a stream the camera can continue (feedback CB) ---------------------
+# The card is the camera's (`vms/card.py`): on hold the ring is the pre-record and the card has nothing; a break the
+# camera can continue is KEPT in the ring for `defer_for`; released, the card gets the ring — from before the break.
 def test_a_short_break_of_a_pushed_stream_never_touches_the_card():
-    """The camera pushes its stream and can continue it after a break. A ten-second drop: the card's gate
-    waits `defer_for`, the stream comes back, and nothing was written — no card wear, no backfill."""
+    """The camera pushes its stream and can continue it after a break. A ten-second drop: the card's gate keeps
+    the ring and waits `defer_for`, the stream comes back, and nothing was written — no card wear, no backfill."""
     box, card, row, carry = _camera_cluster()
     carry(written=True)
+    card.ring_film(30)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True                          # the break: the primary does not take the stream
     card.gate_pass()
-    assert card.holding["1-card"] is True and card.actuator.released == []
+    assert card.holding["1-card"] is True and card.actuator.stats("1-card")["keep"] is True
     assert "held in memory" in next(s for s in card.status() if s["id"] == "1-card")["why"]
-    box.wall.advance(10)
+    card.ring_film(10)
     card.stream_says = lambda r: False                         # back before the card had to write
     assert ("1-card", "back from memory") in card.gate_pass()
-    assert card.actuator.released == [] and card.holding["1-card"] is True
+    assert _on_card(card) == [] and card.holding["1-card"] is True
+    box.wall.advance(card.KEEP_GRACE); card.gate_pass()
+    assert card.actuator.stats("1-card")["keep"] is False      # the pusher had its grace: the ring is ordinary again
 
 
 def test_a_long_break_releases_the_ring_from_before_the_break():
     box, card, row, carry = _camera_cluster()
     carry(written=True)
-    box.wall.advance(100)                                      # the ring is full
+    card.ring_film(100)                                        # the ring is full: its sixty seconds
     card.resumes = lambda r: True
     card.stream_says = lambda r: True
     broke = box.wall()
     card.gate_pass()
-    box.wall.advance(card.defer_for() + 1)
+    card.ring_film(card.defer_for() + 1)                       # kept: nothing let go by the window meanwhile
     card.gate_pass()
-    [(uid, start, end)] = card.actuator.released
-    assert uid == "1-card" and start <= broke - card.DETECTION      # still reaching back past the break
-    assert card.holding["1-card"] is False
+    [(start, end)] = _on_card(card)
+    assert start <= broke - card.DETECTION and end == box.wall()   # still reaching back past the break, live after it
+    assert card.holding["1-card"] is False and card.actuator.stats("1-card")["keep"] is False
 
 
 def test_where_nobody_can_continue_the_stream_the_card_writes_at_once():
     box, card, row, carry = _camera_cluster()
     carry(written=True)
-    box.wall.advance(100)                                      # the ring is full
+    card.ring_film(100)                                        # the ring is full
     card.resumes = lambda r: False                             # a camera a server pulls: nothing to continue
     card.stream_says = lambda r: True
     card.gate_pass()
-    assert len(card.actuator.released) == 1
+    [(start, end)] = _on_card(card)
+    assert end - start >= card.PREBUFFER - 2                   # the whole ring, from its first key frame
 
 
 def test_a_card_stopped_during_a_break_writes_what_it_held():
     """Inside the deferral the ring is the ONLY copy of the break. Stopping used to drop it."""
     box, card, row, carry = _camera_cluster()
     carry(written=True)
-    box.wall.advance(100)
+    card.ring_film(100)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True
     card.gate_pass()
-    assert card.actuator.released == []
+    assert _on_card(card) == []
     card._actuate("stop", row)
-    assert len(card.actuator.released) == 1
+    assert _on_card(card) and _on_card(card)[0][1] == box.wall()
 
 
 def test_a_recorder_says_how_far_it_wrote():
@@ -502,21 +523,22 @@ def test_a_break_the_book_reports_is_written_at_once_not_deferred():
     thing the ring is for — would be gone (the review's second pass)."""
     box, card, row, carry = _camera_cluster()
     carry(written=True)
-    box.wall.advance(100)                                      # the ring is full
+    card.ring_film(100)                                        # the ring is full
     card.resumes = lambda r: True                              # the camera could continue the stream…
     carry(written=False)                                       # …but it is the book that says the room stopped writing
     card.gate_pass()
-    assert len(card.actuator.released) == 1 and card.holding["1-card"] is False
+    assert len(_on_card(card)) == 1 and card.holding["1-card"] is False
 
 
 def test_an_orderly_stop_writes_the_rings_held_through_a_break():
     """`stop_all` goes past `_actuate`: the hook before it writes what the rings hold (the review's second pass)."""
     box, card, row, carry = _camera_cluster()
     carry(written=True)
-    box.wall.advance(100)
+    card.ring_film(100)
     card.resumes = lambda r: True
     card.stream_says = lambda r: True
     card.gate_pass()
-    assert card.actuator.released == []
+    assert _on_card(card) == []
     card.before_stop_all()
-    assert len(card.actuator.released) == 1
+    card.actuator.stop_all()
+    assert len(_on_card(card)) == 1
