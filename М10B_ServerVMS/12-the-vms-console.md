@@ -299,14 +299,35 @@ const PIECE = 600;
 
 ```python
     def export(handler, cid: str, q: dict):
-        from .fmp4 import from_samples
+        who = (getattr(handler, "headers", None) or {}).get("X-User", "operator")
+        mine = max(1, int(os.environ.get("EXPORTS_PER_USER", EXPORTS_PER_USER)))
+        with per_user_lock:
+            if per_user.get(who, 0) >= mine:
+                return busy(f"{who} is making {per_user[who]} export(s) already, as many as one person makes at once — retry")
+            per_user[who] = per_user.get(who, 0) + 1
+        whole = []                                       # the last chunk, held back until the slots are free again
         try:
-            t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
-        except ValueError:
-            return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
-        if t1 <= t0 or t1 - t0 > EXPORT_MAX:
-            return 400, {"detail": f"an export is an interval of at most {EXPORT_MAX:.0f} s", "error": "bad range"}
+            if not exporting.acquire(blocking=False):
+                return busy("this console is making as many exports as it makes at once — retry")
+            try:
+                return _export(handler, cid, q, whole)
+            finally:
+                exporting.release()
+        finally:
+            with per_user_lock:
+                per_user[who] -= 1
+                if not per_user[who]:
+                    del per_user[who]
+            # The file is whole, its line is in the journal and its slots are given back: only now is the client told
+            # it is done — a client that asks for the next export the moment this one ends finds its slot free.
+            for b in whole:
+                try:
+                    handler.wfile.write(b)
+                except OSError:
+                    pass
 ```
+
+`export` — только слоты: один человек, все сразу, и последний кусок, отложенный до их возврата. Сам экспорт — `_export`, ниже.
 
 **И не держать слот вечно.** Клиент, который запросил экспорт и не читает ответ, держал слот до перезапуска консоли, а у её соединений не было срока вовсе (четвёртое ревью, воспроизведено двумя молчащими сокетами). Теперь у каждого соединения консоли срок сокета (`CONSOLE_TIMEOUT`, 30 с на каждое чтение и запись, и не только на тело экспорта; строка запроса и заголовки после пятого ревью приходят целиком за те же 30 с — `DeadlineReader`, М10A, урок 15), у экспорта — предел по темпу клиента (`EXPORT_MIN_RATE`, ниже; оборванный — `broken` в строке журнала), и один человек держит один слот (`EXPORTS_PER_USER`). Экспорт камеры с двумя записями без `rec` падал на замыкании генератора — теперь поток каждой записи строится со своими значениями (`stream_of`). Тесты: `test_a_client_that_reads_nothing_lets_its_export_go_and_one_person_holds_one_slot`, `test_an_export_of_a_camera_with_two_recordings_and_no_rec_is_both_of_them`. И каждая целая выгрузка — строка журнала всегда; склеиваются по минуте только куски для плеера.
 
@@ -317,16 +338,55 @@ const PIECE = 600;
 **Интервал, и ограниченный.** `EXPORT_MAX = 3600.0`: страница просит минуты, человек — до часа. Экспорт собирался в памяти целиком, и запрос «с 1970 года» без потолка был бы способом уронить консоль; теперь он идёт потоком (выше), а потолок остался — час видео это и час чтения у двери. Концы в неправильном порядке и интервал длиннее часа — 400.
 
 ```python
+    def _export(handler, cid: str, q: dict, whole: list | None = None):
+        import hashlib
+        import heapq
+        import struct
+        from . import fmp4
+        try:
+            t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
+        except ValueError:
+            return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
+        if t1 <= t0 or t1 - t0 > EXPORT_MAX:
+            return 400, {"detail": f"an export is an interval of at most {EXPORT_MAX:.0f} s", "error": "bad range"}
         # Each moment from the EPOCH that owns it, across every door — a door applies `authoritative` to the
         # volume it holds, and a fenced writer's stream may be in another volume than the survivor's. So the doors'
         # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
         # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
         # caller can see.
-        from w2cplatform.obsd import Sample
+        from w2cplatform.obsd import Sample, unix_s
         from .archive import Span, authoritative
-        units = [str(q["rec"])] if q.get("rec") else recordings_of(rec_ctl, cid)
+        units = recordings_of(rec_ctl, cid)
+        if q.get("rec"):
+            units = [u for u in units if u == str(q["rec"])]
+            if not units:
+                return 404, {"detail": f"recording {q['rec']} is not a recording of camera {cid}", "error": "not hers"}
         doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
-        got, unreachable = [], []
+        unreachable: list[str] = []
+
+        def frames_of(name: str, url: str, unit: str, lo: float, hi: float):
+            at = lo
+            while at < hi:
+                top = min(hi, at + EXPORT_PIECE)
+                try:
+                    got = sorted(Sample.decode_all(_door(f"{url}/samples/{unit}?from={at}&to={top}", 30.0)),
+                                 key=lambda s: s.begin)
+                except (OSError, ValueError, struct.error):
+                    unreachable.append(name)
+                    return
+                nxt = top
+                if top < hi:
+                    cut = next((i for i in range(len(got) - 1, -1, -1) if got[i].key and unix_s(got[i].begin) > at), None)
+                    if cut is not None:
+                        nxt, got = unix_s(got[cut].begin), got[:cut]
+                yield from got
+                at = nxt
+
+        def stream_of(unit: str, where: dict, stretches: list):
+            for span, lo, hi in stretches:
+                yield from frames_of(*where[span], unit, lo, hi)
+
+        streams = []
         for unit in units:
             spans, where = [], {}
             for name, url, _ in doors:
@@ -339,59 +399,103 @@ const PIECE = 600;
                     span = Span(unit, int(sp.get("epoch", 0)), float(sp["start"]), float(sp["end"]), int(sp.get("bytes", 0)),
                                 str(sp.get("source", "live")))
                     spans.append(span)
-                    where.setdefault(span, url)
-            for span, lo, hi in authoritative(spans, t0, t1):
-                try:
-                    got += Sample.decode_all(_door(f"{where[span]}/samples/{unit}?from={lo}&to={hi}", 30.0))
-                except (OSError, ValueError):
-                    unreachable.append(next(n for n, u, _ in doors if u == where[span]))
+                    where.setdefault(span, (name, url))
+            stretches = sorted(authoritative(spans, t0, t1), key=lambda x: x[1])
+            streams.append(stream_of(unit, where, stretches))
 ```
+
+`frames_of` читает отрезок кусками по `EXPORT_PIECE` и режет кусок по последнему ключевому кадру, как регистратор режет то, что сажает (`RecWorker._pieces`): следующий кусок начинается с этого кадра. `stream_of` — функция, а не генераторное выражение в цикле, чтобы `unit` и `where` были этой записи (четвёртое ревью, выше). `rec` выбирает одну из записей **этой** камеры — запись другой камеры 404 (второе ревью).
 
 **Каждый момент — от эпохи, которая им владеет, через все двери.** Интервал записи может лежать в двух томах: поток отсечённого писателя в одном, поток выжившего в другом. Каждая дверь применяет `authoritative` только к своему тому (`Archive.samples`, урок 8). Спроси консоль `/samples` у всех дверей и возьми кадры того, кто отсортировался первым, — минуты перекрытия пришли бы от зомби, если его дверь стоит в списке раньше. Поэтому консоль сначала спрашивает таймлайны всех дверей (быстро, `DOOR_TIMEOUT`), запускает `authoritative` над всеми спанами сразу и запоминает, какая дверь держит какой спан (`where`). Потом каждый отрезок читается у двери его владельца. Таймаут чтения кадров — 30 секунд, а не 5: дверь читает кадры, а не индекс.
 
 `test_slot_and_read.py::test_an_export_takes_each_moment_from_the_epoch_that_owns_it_whichever_door_holds_it` кладёт `e1` зомби в том `a`, а `e2` выжившего — в том `b`, с минуты 5 по 10 и с кадрами крупнее. С одной дверью `a` экспорт берёт всё из `e1`. С обеими он длиннее больше чем на 25 крупных кадров: минуты 5–10 пришли из `e2`, хотя дверь `r-a` стоит в списке первой.
 
-**Дверь, которая не ответила, названа.** Её имя попадает в `unreachable` — и когда не ответил таймлайн, и когда не пришли кадры отрезка. Экспорт всё равно отдаётся, с тем, что есть, а заголовок `X-Archive-Unreachable` перечисляет молчавшие двери. Кусок с дырой, о которой вызывающий знает, лучше, чем отказ целиком, и лучше, чем дыра молча.
+**Дверь, которая не ответила, названа.** Её имя попадает в `unreachable` — и когда не ответил таймлайн, и когда не пришли кадры отрезка. Экспорт всё равно отдаётся, с тем, что есть, а заголовок `X-Archive-Unreachable` перечисляет двери, молчавшие до первого байта. Дверь, отказавшая позже, в заголовок уже не попадёт: она в логе и в поле `unreachable` строки журнала. Кусок с дырой, о которой вызывающий знает, лучше, чем отказ целиком, и лучше, чем дыра молча.
 
 ```python
-        frames, end = [], None
-        for smp in sorted(got, key=lambda s: s.begin):
-            if end is not None and smp.begin < end:
-                continue                                 # this moment came from another door already
-            if not frames and not smp.key:
-                continue
-            frames.append(smp)
-            end = smp.end
-        if not frames:
-            return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
+        sent = {"bytes": 0, "sha": hashlib.sha256(), "head": False}
+        chunked = getattr(handler, "request_version", "") == "HTTP/1.1"
+
+        class Out:
+            def write(self, b: bytes) -> None:
+                if not b:
+                    return
+                handler.wfile.write(b"%x\r\n%s\r\n" % (len(b), b) if chunked else b)
+                sent["bytes"] += len(b); sent["sha"].update(b)
+
+        writer, frag, end, broken, said = None, [], None, None, 0
+        floor = float(os.environ.get("EXPORT_MIN_RATE", EXPORT_MIN_RATE))
+        grace = float(os.environ.get("EXPORT_GRACE", EXPORT_GRACE))
+        began = time.monotonic()
+        try:
+            for smp in heapq.merge(*streams, key=lambda s: s.begin):
+                took = time.monotonic() - began
+                if sent["head"] and took > grace and sent["bytes"] < floor * took:
+                    raise TimeoutError(f"the client took {sent['bytes']} bytes in {took:.0f} s, slower than the "
+                                       f"{floor:.0f} bytes a second an export is given (EXPORT_MIN_RATE)")
+                if end is not None and smp.begin < end:
+                    continue                             # this moment came from another door already
+                if writer is None:
+                    if not smp.key:
+                        continue
+                    try:
+                        sps, pps = fmp4.param_sets(smp.body)
+                        width, height = struct.unpack("<II", smp.sub[:8]) if len(smp.sub) >= 8 else (0, 0)
+                        writer = fmp4.Writer(Out(), sps, pps, width, height)
+                    except ValueError as e:
+                        return 415, {"detail": str(e), "error": "not playable"}
+                    if chunked:
+                        handler.protocol_version = "HTTP/1.1"
+                    handler.send_response(200)
+                    handler.send_header("Content-Type", "video/mp4")
+                    if unreachable:
+                        handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
+                    if chunked:
+                        handler.send_header("Transfer-Encoding", "chunked")
+                    handler.send_header("Connection", "close")
+                    handler.end_headers()
+                    handler.close_connection = True
+                    sent["head"], said = True, len(unreachable)
+                if smp.key and frag:
+                    writer.write_fragment(frag)
+                    frag = []
+                frag.append(fmp4.Sample(fmp4.to_avcc(smp.body), max(1, int(smp.end - smp.begin)), smp.key))
+                end = smp.end
+            if writer is None:
+                return 404, {"detail": f"no footage of camera {cid} in that interval", "error": "nothing recorded"}
+            writer.write_fragment(frag)
+            if chunked:
+                if whole is None:
+                    handler.wfile.write(b"0\r\n\r\n")
+                else:
+                    whole.append(b"0\r\n\r\n")
 ```
 
-**Каждый момент — один раз.** Кадры всех отрезков сортируются по времени. Кадр, который начинается раньше конца уже взятого, пропускается: этот момент уже пришёл. Нужно это и после `authoritative`: дверь начинает каждый отрезок с ключевого кадра на его первом моменте или раньше (урок 8), и подводка следующего отрезка ложится на конец предыдущего.
+**Каждый момент — один раз.** Кадры всех записей сводятся по времени (`heapq.merge`: в памяти около куска на запись). Кадр, который начинается раньше конца уже взятого, пропускается: этот момент уже пришёл. Нужно это и после `authoritative`: дверь начинает каждый отрезок с ключевого кадра на его первом моменте или раньше (урок 8), и подводка следующего отрезка ложится на конец предыдущего.
 
 **Файл начинается с ключевого кадра.** Иначе плеер ничего не покажет до первого ключевого.
 
 **Пусто — 404, а не пустой файл.** Пустой MP4 плеер покажет как испорченный файл. 404 с `nothing recorded` говорит, что записи в этом интервале нет.
 
-```python
-        try:
-            data = from_samples(frames)
-        except ValueError as e:
-            return 415, {"detail": str(e), "error": "not playable"}
-```
-
-`fmp4.from_samples` превращает кадры в фрагментированный MP4: фрагмент на группу кадров, параметры потока из первого ключевого кадра, ничего не декодируется и не перекодируется. Кадры доходят до браузера ровно такими, какими их отдала камера. Почему фрагментированный и как устроены коробки — урок 24.
+**Заголовки — на первом ключевом кадре.** До него ответом ещё может быть 404 «нечего отдать» или 415 «не играется»; после — уже нет. `fmp4.Writer` пишет фрагментированный MP4 фрагмент за фрагментом — фрагмент на группу кадров, параметры потока (`param_sets`) из первого ключевого кадра, ничего не декодируется и не перекодируется. Кадры доходят до браузера ровно такими, какими их отдала камера. `fmp4.from_samples`, который собирает тот же файл целиком в памяти, экспорт больше не зовёт; урок 24 разбирает устройство файла на нём, потому что там оно видно целиком. Почему фрагментированный и как устроены коробки — урок 24.
 
 ```python
-        handler.send_response(200)
-        handler.send_header("Content-Type", "video/mp4")
-        handler.send_header("Content-Length", str(len(data)))
-        if unreachable:
-            handler.send_header("X-Archive-Unreachable", ",".join(sorted(set(unreachable))))
-        handler.end_headers()
-        handler.wfile.write(data)
-        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}", {"status": 200, "bytes": len(data), "whole": True, "data": data})
+        except (OSError, ValueError) as e:              # the caller went away, or a frame would not convert
+            if not sent["head"]:
+                raise
+            broken = str(e)
+            log.warning("an export of camera %s stopped after %d bytes: %s", cid, sent["bytes"], e)
+        late = sorted(set(unreachable[said:]))
+        if late:
+            log.warning("an export of camera %s has holes: %s did not answer after the first byte", cid, ",".join(late))
+        note_read(handler, f"rec/{','.join(units)}/{t0:.0f}-{t1:.0f}",
+                  {"status": 200, "bytes": sent["bytes"], "whole": broken is None,
+                   **({"sha256": sent["sha"].hexdigest()} if broken is None else {"broken": broken}),
+                   **({"unreachable": ",".join(late)} if late else {})})
         return ()
 ```
+
+`TimeoutError` от предела по темпу — подкласс `OSError`, поэтому медленный клиент кончается так же, как ушедший: `broken` в строке журнала, без суммы.
 
 `return ()` — вторая форма протокола `extra`: ответ уже отправлен, платформа ничего не дописывает.
 

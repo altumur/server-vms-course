@@ -440,10 +440,12 @@ def digest(data: bytes) -> str:
 ```python
             rest = path[len(rows_path) + 1:]
             if "/" in rest:                                              # /<rows>/<id>/<field>: the bytes of a blob
-                uid, _, field = rest.partition("/")
+                field = rest.partition("/")[2]
                 n = int(h.headers.get("Content-Length", 0))
-                return h._send(*con.put_blob(spec.parse_id(uid), field, h.rfile.read(n)))
+                return h._send(*con.put_blob(self._uid(path), field, h.rfile.read(n), h.headers.get("X-User", "operator")))
 ```
+
+Id единицы маршрут берёт через `_uid` — тот же `path_id`, по которому её проверили ворота (урок 15, третье ревью). `h.rfile.read(n)` здесь уже не читает сокет: тело прочитано раньше, в `read_body`, после того как ворота узнали вызывающего, и под потолком `MAX_BLOB` (32 МиБ, `CONSOLE_MAX_BLOB`) — потолком маршрута блоба вместо `MAX_BODY` (1 МиБ) у остальных. Блоб, чей `Content-Length` больше `MAX_BLOB`, получает 413 до первого прочитанного байта (урок 15, пятое ревью). Это потолок запроса к консоли; потолок хранилища — ниже.
 
 И единственное место во всей системе, где «смените объектное хранилище» — правильный ответ:
 
