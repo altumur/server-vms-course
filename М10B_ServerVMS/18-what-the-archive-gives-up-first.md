@@ -298,24 +298,37 @@ class Keep:
 **Проход копирования.** Раз в минуту (`KEEP_EVERY`), в своём потоке, как дозапись (урок 16), регистратор тома `incidents` проходит по меткам и по записям каждой метки:
 
 ```python
-                for a, b in subtract((k.since, k.until), self.store.coverage(rec)):
+                gaps = subtract((k.since, k.until), self.store.coverage(rec))
+                shown = self._doors_show(rec, k.since, k.until, doors) if gaps else {}
+                for a, b in gaps:
                     for name, url in doors:
-                        try:
-                            samples = self.read_samples(url, rec, a, b)
+                        # Only what this door shows of the gap (the fifth pass): asked for the rest, it answered
+                        # nothing, every minute, for ever.
+                        have = [(max(a, x), min(b, y)) for x, y in shown.get(url, []) if min(b, y) > max(a, x)]
+                        try:                             # in pieces (blocker 6): an hour's keep is not an hour in memory
+                            copied = [self._copy_in(rec, smp) for lo, hi in have for _, _, smp in
+                                      self._pieces(lambda x, y: self.read_samples(url, rec, x, y), lo, hi) if smp]
                         except OSError:
-                            continue                     # that door is down: another may have it, the next pass asks again
-                        if samples and self._copy_in(rec, samples):
+                            copied = []                  # that door is down: another may have it, the next pass asks again
+                        if any(copied):
                             touched.append(rec)
                             break
                 if rec in touched:
                     self.store.seal()                    # what was copied is readable now — and counted below
+                self.keep_held[(k.id, rec)] = held = inside(k, rec)
+                got += held
+                missing += self._keep_short_of(subtract((k.since, k.until), self.store.coverage(rec)), shown)
 ```
 
-Копирует он только то, чего в томе ещё нет: интервал метки минус покрытие (`subtract`, та же функция, что у дозаписи). Источник — двери архивов других регистраторов (`recorder_doors`), по очереди, до первой, которая отдала кадры. Дверь, которая не ответила, — не повод останавливаться: может ответить следующая, а если нет — спросит следующий проход.
+Копирует он только то, чего в томе ещё нет: интервал метки минус покрытие (`subtract`, та же функция, что у дозаписи) — и из этого только то, что дверь источника показывает на своём таймлайне (`_doors_show`, ниже). Источник — двери архивов других регистраторов (`recorder_doors`), по очереди, до первой, которая отдала кадры. Дверь, которая не ответила, — не повод останавливаться: может ответить следующая, а если нет — спросит следующий проход.
 
 `seal` закрывает писателя и берёт его снова. Читатель видит только закрытые блоки (урок 7), а проход сразу после копии считает, сколько метки лежит в томе. Без `seal` он посчитал бы ноль.
 
 **Несделанная копия видна.** Метка, которую ни одна дверь не может дополнить — дверь источника на петлевом интерфейсе другого сервера, — каждый проход давала `copied = []`, а `rec_keeps_unprotected` оставался нулём: кольцо доходило до отмеченного молча (четвёртое ревью). Теперь двери на чужом loopback пропускаются (`local_only`), у каждой метки в heartbeat'е — `missing_since`, общий `keep_missing` (`{метка: секунды}`) и `rec_keep_missing_seconds{keep}` в `/metrics`; метка, недокопированная дольше пяти проходов (`KEEP_UNCOPIED_AFTER`, 300 с), — тревога `archive.keep.uncopied`, повтор раз в сутки. А перезапущенный регистратор тома `incidents` восстанавливает, что держал, по **покрытию самого тома** для каждой записи каждой метки, а не только по событиям `archive.keep.copied`, которые уходят по сроку. Тесты: `test_a_keep_no_door_from_here_can_fill_is_counted_and_then_an_alarm`, `test_a_restarted_recorder_starts_from_what_the_incidents_volume_holds_for_every_recording_of_a_keep`.
+
+**«Не хватает» — только того, что есть у источника.** Сразу после этого тревога загорелась у любой камеры со второй записью: каждая запись камеры считалась по всему интервалу метки. Камера писала час как `7` и минуту как `7-ev`, десятиминутная метка скопирована целиком — и `7-ev` навсегда «не хватало» девяти минут, с тревогой, с `rec_keep_missing_seconds` и с вопросом к дверям каждую минуту (пятое ревью; воспроизведено запуском). Теперь проход один раз спрашивает `/timeline` у каждой двери, которая отвечает (`_doors_show`), и копирует только то, что дверь показывает. В `missing` (`_keep_short_of`) идёт только то, что показывает отвечающий источник и чего нет в томе `incidents`. Если не отвечает ни одна дверь, считается весь пробел, как раньше: никто не может сказать, что этих минут нет. Тест: `test_keeps.py::test_a_second_recording_of_the_camera_that_holds_a_minute_of_the_keep_is_not_short_of_the_rest`.
+
+**Копия, которая не запечаталась, не оставляет мёртвого писателя.** `seal` после копии, не дождавшийся ответа демона, раньше оставлял в томе `incidents` закрытый хэндл: копии больше не ложились, а через 300 секунд поднималась ложная тревога `keep.uncopied`. Теперь `seal` забывает писателя до закрытия, и следующий проход монтирует том заново (урок 7, шаг 9; `test_rec_volume.py::test_a_seal_that_did_not_come_back_leaves_no_dead_writer_and_the_next_pass_mounts_again`).
 
 Метка на час копируется не одним чтением, а кусками по минуте (`_pieces`, урок 16), каждый садится до следующего, и sha256 считается по ходу; читатель у каждого куска свой (урок 7) — общий читатель, которого закрывал проход, не давал часовой копии получиться никогда (третье ревью, блокеры 5–6). И `archive.keep.copied` пишется с барьером и несёт `seconds`: регистратор тома `incidents`, перезапущенный, восстанавливает, что держал (`_keeps_held_before` — последнее `copied` минус `lost` после него), и тревога `archive.keep.lost` о минутах, которые кольцо забрало, пока он был выключен, всё равно приходит. Тест: `test_keeps.py::test_kept_footage_the_ring_took_while_the_recorder_was_restarting_is_still_an_alarm`.
 
