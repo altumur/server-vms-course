@@ -18,6 +18,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from w2cplatform.rows import answer
+
+from .objectstore import GET_MAX
+
 
 def _sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
@@ -88,7 +92,7 @@ class S3ObjectStore:
     def get(self, key: str) -> bytes | None:
         try:
             with self._request("GET", key) as r:
-                return r.read()
+                return answer(r, GET_MAX)                # a stated ceiling (`objectstore.GET_MAX`; the eighth review)
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None
@@ -101,5 +105,5 @@ class S3ObjectStore:
         import re
         q = "list-type=2&prefix=" + urllib.parse.quote(prefix, safe="")
         with self._request("GET", "", b"", q) as r:
-            body = r.read().decode()
+            body = answer(r, GET_MAX).decode()
         return sorted(re.findall(r"<Key>([^<]+)</Key>", body))

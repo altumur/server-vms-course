@@ -28,7 +28,7 @@ import json
 import math
 from dataclasses import dataclass
 
-from w2cplatform.doors import safe_segment
+from w2cplatform.doors import safe_segment, unnamable
 from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import Refused
 
@@ -93,7 +93,7 @@ def refuse(fields: dict) -> None:
     if unknown:
         raise Refused(f"a keep has no field {unknown[0]!r}")
     cam = str(fields.get("cam", "") or "")
-    if not cam or not safe_segment(cam):
+    if not cam or not safe_segment(cam) or unnamable(cam):     # `unnamable`: the keep's id is a label on `/metrics` (eighth pass)
         raise Refused("a keep names a camera")
     try:
         since, until = float(fields.get("from")), float(fields.get("to"))

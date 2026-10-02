@@ -28,6 +28,7 @@ import urllib.request
 from typing import Protocol
 
 from w2cplatform.limits import check
+from w2cplatform.rows import answer
 from w2cplatform.variables import Conflict
 
 
@@ -37,6 +38,13 @@ class ObjectStore(Protocol):
     def put(self, key: str, data: bytes) -> None: ...
     def get(self, key: str) -> bytes | None: ...
     def list(self, prefix: str) -> list[str]: ...
+
+
+# The heaviest object a READ takes (the review's eighth pass, a sibling of the peers' answers): `get` read the whole body
+# whatever its size, so a store or a proxy gone wrong was memory without a ceiling in every reader of heartbeats and
+# snapshots. Objects here are heartbeats and snapshot shards — kilobytes; past this the read is refused with a
+# `ValueError` (`rows.answer`), never truncated: half an object is worse than none.
+GET_MAX = 64 << 20
 
 
 class HttpObjectStore:
@@ -55,7 +63,7 @@ class HttpObjectStore:
     def get(self, key: str) -> bytes | None:
         try:
             with urllib.request.urlopen(f"{self.base}/{key}", timeout=self.timeout) as r:
-                return r.read()
+                return answer(r, GET_MAX)
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None
