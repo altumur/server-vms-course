@@ -20,6 +20,8 @@ the host's obsd — the `obsd` system job, which is not a Python process).
                                        authentication, so it opens exactly where the job said it is reachable
     RESOURCE_URL                       resource: how the console reaches this server's events
     CAPACITY                           worker: cameras it can carry on this server
+    COMMANDS_BEAT                      worker: how often it looks at its request rows between passes, seconds (0.25);
+                                       0 — only on the pass. Each look is one list of `vms/requests/` in the store
 """
 from __future__ import annotations
 
@@ -65,7 +67,11 @@ def worker() -> None:
     w = ClusterWorker(open_vars(CONFIG_URL), objects, act)
     w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # a door announces what it bound
     logging.info("worker %s on %s (alloc %s) claimed its slot; labels %s", w.name, w.server, w.alloc, w.labels)
-    w.run(stop=stop)                              # SIGTERM from Nomad → release_slot(): scale-in, not a crash
+    # `beat`: between two passes the worker looks at its request rows every quarter of a second (`COMMANDS_BEAT`;
+    # 0 — only on the pass), as on a box (М10B Lesson 25). Here each look is a list of `vms/requests/` in Nomad's
+    # Variables: an ordinary read, answered by the leader — not a blocking query, and not a stale one.
+    from vms.worker import commands_beat
+    w.run(stop=stop, beat=commands_beat(os.environ))   # SIGTERM from Nomad → release_slot(): scale-in, not a crash
 
 
 def recorder() -> None:

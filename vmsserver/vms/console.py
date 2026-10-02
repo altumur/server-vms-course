@@ -665,7 +665,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         except Conflict:
             row = ctl.vars.get(ctl.spec.sub.request_key(rid))[0] or row   # the same request, filed already: its row is the answer
         return 202, {"queued": {"id": rid, **row},
-                     "detail": "the worker holding this device performs it on its next pass; "
+                     "detail": "the worker holding this device performs it at its next look at the requests; "
                                "after valid_until it expires unperformed"}
 
     # `GET /segment?cam=` — the device's own footage, through its holder's playback door: the URL, and a line.
@@ -1152,17 +1152,39 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
 def vms_metrics(ctl):
     def lines() -> list[str]:
         total = {"performed": 0, "refused": 0, "expired": 0, "unknown": 0}
-        for hb in heartbeats(ctl.objects, ctl.spec.sub.name).values():
+        hbs = heartbeats(ctl.objects, ctl.spec.sub.name)
+        for hb in hbs.values():
             for k, v in (hb.extra.get("command_counts") or {}).items():
                 if k in total:
                     total[k] += int(v)
+        # The road to the device, where it ends (`VmsWorker._measure`), per holder, since it started. Two histograms
+        # for two clocks: `vms_event_to_device_seconds` from the event's moment to the call — the whole road, as
+        # true as the writer's clock and the holder's agree (`…_skewed_total`: the times they did not); and
+        # `vms_request_to_device_seconds` from the holder's first sight of the row to the call, by its clock alone.
+        from .worker import VmsWorker
+        road: list[str] = []
+        for metric, key in (("vms_event_to_device_seconds", "command_road"), ("vms_request_to_device_seconds", "command_wait")):
+            road.append(f"# TYPE {metric} histogram")
+            for w, hb in sorted(hbs.items()):
+                h = hb.extra.get(key)
+                if not h:
+                    continue
+                for le, n in zip(VmsWorker.ROAD_BUCKETS, h["buckets"]):
+                    road.append(f'{metric}_bucket{{worker="{w}",le="{le:g}"}} {n}')
+                road.append(f'{metric}_bucket{{worker="{w}",le="+Inf"}} {h["count"]}')
+                road.append(f'{metric}_sum{{worker="{w}"}} {round(h["sum"], 3)}')
+                road.append(f'{metric}_count{{worker="{w}"}} {h["count"]}')
+        road.append("# TYPE vms_event_to_device_skewed_total counter")
+        road += [f'vms_event_to_device_skewed_total{{worker="{w}"}} {hb.extra["command_road"].get("skewed", 0)}'
+                 for w, hb in sorted(hbs.items()) if hb.extra.get("command_road")]
         # …and the requests of automation this console dropped as too old (`jobs.expired`): a scenario said
         # `fired` and nothing happened. Zero is the number this should stay at; climbing, it says the requests'
         # loop is late (the review's second pass).
         from . import jobs
         return (["# TYPE vms_commands_total counter"] + [f'vms_commands_total{{outcome="{k}"}} {v}' for k, v in total.items()]
                 + ["# TYPE vms_requests_expired_total counter"]
-                + [f'vms_requests_expired_total{{sub="{s}"}} {n}' for s, n in sorted(jobs.expired.items())])
+                + [f'vms_requests_expired_total{{sub="{s}"}} {n}' for s, n in sorted(jobs.expired.items())]
+                + road)
     return lines
 
 
@@ -1195,6 +1217,14 @@ def auto_metrics(auto_ctl):
         out += [f'auto_fired_late_total{{worker="{w}"}} {hb.extra["late"]}' for w, hb in sorted(hbs.items()) if "late" in hb.extra]
         out.append("# TYPE auto_firings_suppressed_total counter")     # refused by a scenario's own ceiling
         out += [f'auto_firings_suppressed_total{{worker="{w}"}} {hb.extra["suppressed"]}' for w, hb in sorted(hbs.items()) if "suppressed" in hb.extra]
+        # The long poll of the resources (`AutoWorker.long_poll_stats`), per evaluator, since it started: requests it
+        # opened, those answered "a watched event was written", passes begun early for them, and requests that
+        # failed or were refused. A wait that fails breaks nothing — the pass still comes — so these are where it
+        # is seen: `auto_wait_errors_total` growing is the road back at two seconds.
+        for key, metric in (("waits", "auto_waits_total"), ("woken", "auto_woken_total"),
+                            ("early_passes", "auto_early_passes_total"), ("wait_errors", "auto_wait_errors_total")):
+            out.append(f"# TYPE {metric} counter")
+            out += [f'{metric}{{worker="{w}"}} {hb.extra[key]}' for w, hb in sorted(hbs.items()) if key in hb.extra]
         return out
     return lines
 
