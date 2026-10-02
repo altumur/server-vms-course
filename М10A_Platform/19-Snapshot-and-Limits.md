@@ -438,14 +438,33 @@ def digest(data: bytes) -> str:
 ## Шаг 15 — Маршрут, который возит не JSON
 
 ```python
-            rest = path[len(rows_path) + 1:]
-            if "/" in rest:                                              # /<rows>/<id>/<field>: the bytes of a blob
-                field = rest.partition("/")[2]
-                n = int(h.headers.get("Content-Length", 0))
-                return h._send(*con.put_blob(self._uid(path), field, h.rfile.read(n), h.headers.get("X-User", "operator")))
+    def blob_route(self, h, path: str) -> None:
+        field = path.split("/")[3]
+        f = self.spec.fields.get(field)
+        if f is None or f.type != "blob":
+            h.close_connection = True
+            return h._send(404, {"detail": f"{field} is not a blob field", "error": "no such blob field"})
+        try:
+            known = self.ctl.unit(self._uid(path)) is not None
+        except (ValueError, KeyError):
+            known = False
+        if not known:
+            h.close_connection = True
+            return h._send(404, {"detail": "no such unit", "error": "no such unit"})
+        if not blobs_slots().acquire(blocking=False):
+            h.close_connection = True
+            h._extra_headers = (("Retry-After", "1"),)
+            return h._send(503, {"detail": "this console takes so many blobs at once (BLOBS_AT_ONCE) — retry", "error": "busy"})
+        try:
+            if not self.read_body(h, int(os.environ.get("CONSOLE_MAX_BLOB", MAX_BLOB))):
+                return
+            n = int(h.headers.get("Content-Length", 0) or 0)
+            return h._send(*self.put_blob(self._uid(path), field, h.rfile.read(n), h.headers.get("X-User", "operator")))
+        finally:
+            blobs_slots().release()
 ```
 
-Id единицы маршрут берёт через `_uid` — тот же `path_id`, по которому её проверили ворота (урок 15, третье ревью). `h.rfile.read(n)` здесь уже не читает сокет: тело прочитано раньше, в `read_body`, после того как ворота узнали вызывающего, и под потолком `MAX_BLOB` (32 МиБ, `CONSOLE_MAX_BLOB`) — потолком маршрута блоба вместо `MAX_BODY` (1 МиБ) у остальных. Блоб, чей `Content-Length` больше `MAX_BLOB`, получает 413 до первого прочитанного байта (урок 15, пятое ревью). Это потолок запроса к консоли; потолок хранилища — ниже.
+Id единицы маршрут берёт через `_uid` — тот же `path_id`, по которому её проверили ворота (урок 15, третье ревью). Сюда запрос доходит уже **допущенным**: ворота спросили право `admin` на единицу по пути до того, как прочитан хоть байт тела (урок 15, шестое ревью — токен без гранта слал 32 МиБ восемь раз подряд, и консоль держала 331 МиБ до своего 403). Поле не блоб-поле этой спеки или единицы нет — 404, и тело не читается. Потолок `MAX_BLOB` (32 МиБ, `CONSOLE_MAX_BLOB`) — только у этого маршрута, у остальных `MAX_BODY` (1 МиБ); блоб, чей `Content-Length` больше, получает 413 до первого прочитанного байта. И читается не больше `BLOBS_AT_ONCE` (2) блобов сразу — каждый это `MAX_BLOB` памяти, пока его читают и кладут, — следующему 503 с `Retry-After`, как лишнему экспорту. `h.rfile.read(n)` здесь уже не читает сокет: тело прочитано в `read_body` и лежит в памяти. Это потолок запроса к консоли; потолок хранилища — ниже. Тест: `test_console_load.py::test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a_blob_routes`.
 
 И единственное место во всей системе, где «смените объектное хранилище» — правильный ответ:
 
