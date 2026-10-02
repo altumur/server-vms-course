@@ -141,10 +141,13 @@ def labels_from_environment(env: dict) -> list[str]:
         self.previous_hb, self.previous_instance = 0.0, ""
         raw = objects.get(self.sub.heartbeat_key(self.name))
         if raw:
-            old = Heartbeat.from_bytes(raw)
-            if old.extra.get("instance") != self.instance:
+            from w2cplatform.contract import parse_heartbeat
+            old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
+            if old is not None and old.extra.get("instance") != self.instance:
                 self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
 ```
+
+**Битый прежний heartbeat — как будто его нет.** `Heartbeat.from_bytes` без защиты поднимал исключение из конструктора, и процесс уходил в цикл перезапусков из-за того самого объекта, который его первый heartbeat заменил бы. Теперь разбор идёт через `parse_heartbeat` (М10A, урок 8): объект, который не разбирается, пропущен — нечего мерить для переезда, и это вся цена (третье ревью, остаток M6). Тест: `test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same`.
 
 Последнее в конструкторе, и оно про измерение, а не про работу. Новый процесс читает heartbeat, оставленный **предыдущим жильцом этого слота**, и запоминает его отметку времени. Разница между ней и первым собственным heartbeat'ом — это наблюдаемое время подхвата, то самое `failover_seconds`, которое в уроке 18 М10A отдавалось расчётной величиной.
 

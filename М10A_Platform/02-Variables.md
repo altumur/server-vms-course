@@ -348,6 +348,8 @@ def epoch_row(path: str) -> bool:
 def refuse_delete(path: str, writer: str | None, acl: dict) -> None:
     if epoch_row(path):
         raise Forbidden(f"{path} is an epoch: a counter nobody deletes")
+    if path.startswith("domain/") and writer != DOMAIN_WRITER:
+        raise Forbidden(f"{path} is the domain agent's: nobody else deletes it")   # (the third review)
     if writer is not None and acl:
         allowed = acl.get(writer, [])
         if not any(path == p or (p.endswith("*") and path.startswith(p[:-1])) for p in allowed):

@@ -71,6 +71,25 @@ PUT /v1/var/rec/holds/disks-a?namespace=default&cas=0
 → 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1004}
 
 # recworker (allocation 0 on srv-a)
+GET /v1/var/rec/holds/disks-a?namespace=default
+→ 200 {
+  "Path": "rec/holds/disks-a",
+  "Items": {
+    "holder": "alloc-0001",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "by": "r-0"
+  },
+  "ModifyIndex": 1004
+}
+
+# recworker (allocation 0 on srv-a)
+PUT /v1/var/rec/holds/disks-a?namespace=default&cas=1004
+{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1", "by": "r-0"}}
+→ 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1005}
+
+# recworker (allocation 0 on srv-a)
 PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
 {
   "Items": {
@@ -114,4 +133,4 @@ PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/rec/heartbeats/r-0", "ModifyIndex": 1005}
+→ 200 {"Path": "objects/rec/heartbeats/r-0", "ModifyIndex": 1006}

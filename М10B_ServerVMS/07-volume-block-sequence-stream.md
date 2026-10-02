@@ -311,18 +311,24 @@ def classify(e: Exception) -> ArchiveError:
 ```
 
 ```python
-    def reader(self):
-        if self._reader is not None:
+    @contextmanager
+    def reading(self):
+        try:
+            r = self._open_volume().mount_ro()
+        except (ObsdError, ValueError) as e:
+            raise self._classified(e) from None
+        try:
+            yield r
+        except ObsdError as e:
+            raise self._classified(e) from None
+        finally:
             try:
-                self._reader.close()
+                r.close()
             except ObsdError:
                 pass
-        try:
-            self._reader = self._open_volume().mount_ro()
-        except ObsdError as e:
-            raise classify(e) from None
-        return self._reader
 ```
+
+**Читатель на вопрос — и только свой.** Первая версия держала **один** читатель на том (`self._reader`) и закрывала его, открывая следующий. Им одновременно читали дверь архива, дозапись, копия удержаний и проход, который зовёт `status()` раз в две секунды: проход закрывал читателя под дверью посреди ответа, дверь получала `UNKNOWN_HANDLE`, экспорт выходил с дырами, а копия часовой метки не получалась никогда (третье ревью, блокер 5). Теперь каждый вопрос монтирует своего читателя и закрывает его в `finally`; любой `ObsdError` внутри проходит через `classify`, так что дверь, ловящая `ArchiveError`, ловит всё, что может сказать том. Тест: `test_rec_volume.py::test_readers_do_not_close_each_other_in_the_middle_of_a_read`.
 
 **Свежий читатель на каждый вопрос.** Читатель, смонтированный минуту назад, держит картину минутной давности и не увидит блоков, закрытых после. Старый читатель закрывается, новый монтируется. `spans` берёт одного читателя на один вопрос, а вызывающий, который спрашивает больше, передаёт своего: `spans(..., reader=r)`.
 

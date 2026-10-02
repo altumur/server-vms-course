@@ -1355,8 +1355,8 @@ class RecWorker(VmsWorker):
                 homes[str(other["id"])] = str(other.get("home") or "")
         for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
             url = hb.extra.get("archive_url", "")
-            if not url or now - hb.ts > 45.0:
-                continue
+            if not url or not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
+                continue                      # silent, or a clock from the future (M9 of the review): not a source
             from .config import local_only
             if local_only(url, hb.extra.get("server", "?"), self.server):
                 continue                      # that recorder's archive door is on its own loopback: not reachable from here

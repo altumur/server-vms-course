@@ -580,7 +580,8 @@ class _Tees:
 # stream, flushed first — marked — when somebody does (AC). `hold_seconds`: how much of a BREAK it keeps in
 # memory — while it was pushing and lost its road — to continue the stream from when the road comes back (CB).
 # It has to reach as far back as the card's gate waits before it writes (`RecWorker.defer_for` plus how late the
-# break is noticed: the card's own ring, 30 s): a break that ends while the card still waits is in memory
+# break is noticed — `RecWorker.CONTINUE_REACH`, 30 s; the card's ring itself is longer, `PREBUFFER`): a break that ends
+# while the card still waits is in memory
 # ONLY, and a shorter hold here would lose its beginning. Longer breaks: the card wrote them, from before
 # the break, and the continuation reads them off it.
 class CameraPusher:
