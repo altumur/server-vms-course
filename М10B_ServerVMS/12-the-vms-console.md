@@ -621,7 +621,7 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
     root = SpecConsole(ctl, marks_root=archive_root, wall=wall,
                        extra=vms_routes(media, live, ctl, rec_ctl), media=media, index=index,
                        metrics_extra=vms_metrics(ctl))
-    root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
+    m = Mount(root)
 ```
 
 **VMS на корне**, остальные подсистемы — путями. Оператор открывает `/` и видит камеры; `/rec/`, `/det/`, `/live/` — та же страница над другими спецификациями.
@@ -632,7 +632,7 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
 
 `index` — один `MergedIndex` на все монтирования. У консоли нет своего индекса событий: она спрашивает ресурсы по HTTP и сливает ответы (урок 13 М10A). События камеры, детекторов и отметки приходят одним запросом.
 
-`root.extra.journal = root.journal` — куда `note_read` пишет `archive.read`. Журнал один на процесс: монтирования получают тот же (`con.journal = root.journal`), потому что «кто удалил запись 7» стоит рядом с «кто удалил камеру 7».
+`root.extra.journal = root.journal` (в `wire_vms`, ниже) — куда `note_read` пишет `archive.read`. Журнал один на процесс: монтирования получают тот же (`con.journal = root.journal`), потому что «кто удалил запись 7» стоит рядом с «кто удалил камеру 7».
 
 Ворота доступа (урок 15 М10A) узнают маршруты VMS — в `wire_vms`, одной функции на всякую сборку консоли VMS:
 
