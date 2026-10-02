@@ -248,7 +248,7 @@ class MergedIndex:
 
 ```python
     def query(self, t0, t1, cam=None, …) -> dict:
-        now = self.wall(); seen = resources_seen(self.objects)
+        now = self.wall(); seen = self.seen()
         live = {s for s, hb in seen.items() if now - float(hb["ts"]) <= self.lost_after}
         …
         for server in sorted(live):
@@ -257,6 +257,8 @@ class MergedIndex:
             except Exception:                                   # live by heartbeat, not answering
                 unreachable.append(server); continue
 ```
+
+`seen()` — список ресурсов, перечитанный не чаще раза в `SEEN_FOR` (2 с): так слияние не перечисляет все пульсы на каждый опрос страницы (М10A, урок 15; обратная связь DD).
 
 Спрашиваются живые по heartbeat'у. Ресурс, который бился, но не ответил, попадает в `unreachable` — **«живой по сигналу, но не отвечающий»** — и запрос идёт дальше. Один медленный сервер не должен рушить ответ; таймаут три секунды.
 
