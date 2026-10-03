@@ -21,8 +21,8 @@ raft would: one of them wins the CAS.
 # snapshots, media) goes to `objects.py` instead. The store is a directory: one JSON file per path under
 # `<root>/vars/`, one counter file for the index, one lock file. Every write is write-then-rename and
 # serialised by an `fcntl` lock, so two processes on the same box see exactly what two clients of one raft
-# would: one of them wins the CAS. М11 swaps this class for real Nomad Variables behind the same `Variables`
-# Protocol.
+# would: one of them wins the CAS. A box keeps it; М11's cluster swaps it for `configstore://`, the same semantics
+# replicated by raft over the servers (`storemachine.py`, `configstore.py`), behind the same `Variables` Protocol.
 #
 # ## Module-level names
 # - `Conflict` — exception: the `cas` index passed to `put`/`delete` did not equal the path's current
@@ -115,10 +115,11 @@ def safe_path(path: str) -> str:
 # and ACL map; it keeps no cache, so any number of instances over the same directory — in one process or
 # many — are equivalent.
 # -- the seam: which store is behind the contract, said as a URL ------------------------------------
-# A process is told `CONFIG_URL` and nothing else. `file://` is in-process — on a box there is no daemon,
-# no hop and no second quorum, which is the whole reason this is a factory and not a service. Every other
-# scheme is registered by the package that implements it (`cluster/variables.py` registers `nomad://` at
-# import), so the platform names no vendor and adding Kubernetes later adds a file, not a branch here.
+# A process is told `PLATFORM_STORE` (`store_url`; `CONFIG_URL` is its old name, still read) and nothing
+# else. `file://` is in-process — on a box there is no daemon, no hop and no second quorum, which is the
+# whole reason this is a factory and not a service. Every other scheme is registered by the module that
+# implements it, so the platform's loops name no backend and adding Kubernetes later adds a file, not a
+# branch here.
 #
 # This is the same seam Objects already have in М11 (`open_store(OBJECTS)`); Config just never got it, and
 # that is why swapping the store meant editing sixteen constructors in three modules and two languages.
@@ -126,14 +127,24 @@ _SCHEMES: dict[str, object] = {}
 
 
 # The platform's own backends, by the module that registers each. `file://` is answered above without a
-# lookup because it is what a box with no URL at all gets; `memory://` is the other one shipped here.
-# Anything else — `nomad://`, `k8s://` — is a module somebody else imports, and this table is not where it
-# goes: that is the difference between a backend the platform HAS and a backend it ALLOWS.
-#
-# `raft://` is the third, and EXPERIMENTAL: the prototype of the replicated store that takes Nomad's place
-# (the owner's decision of 3 October: the cluster without an orchestrator). Its handle is plain HTTP to the
-# store daemon on this server; only the daemon needs the raft library (`raftvars.py`).
-_BUILTIN = {"memory": "w2cplatform.memvariables", "raft": "w2cplatform.raftvars"}
+# lookup because it is what a box with no URL at all gets; `memory://` is the dev box's and the tests'.
+# `configstore://` is the cluster's (the owner's decision of 3 October: the cluster without an orchestrator): the
+# socket of the store daemon on this server, plain HTTP, standard library only — only the daemon needs the
+# raft library (`configstorevars.py` the handle, `configstore.py` the daemon). Anything else — `k8s://` — is a module
+# somebody else imports, and this table is not where it goes: that is the difference between a backend the
+# platform HAS and a backend it ALLOWS.
+# The cluster store's scheme is the product's name, said once (`configstorevars` registers under it).
+STORE_SCHEME = "configstore"
+_BUILTIN = {"file": "w2cplatform.variables", "memory": "w2cplatform.memvariables",
+            STORE_SCHEME: "w2cplatform.configstorevars"}
+
+
+# Which store a process opens, from its environment: `PLATFORM_STORE` first — the cluster's unit says
+# `configstore:///run/configstore/<role>.sock` — then `CONFIG_URL`, the name a box's units and the product's older ones
+# still carry (product P7), then `default`. One function, so no process reads the two names in its own order.
+def store_url(env=None, default: str | None = None) -> str | None:
+    env = os.environ if env is None else env
+    return env.get("PLATFORM_STORE") or env.get("CONFIG_URL") or default
 
 
 def register_scheme(scheme: str, factory) -> None:
@@ -142,7 +153,7 @@ def register_scheme(scheme: str, factory) -> None:
 
 
 def open_vars(url: str, writer: str | None = None, acl: dict[str, list[str]] | None = None):
-    """`file:///data/platform/config` · `nomad://127.0.0.1:4646` · whatever else registered.
+    """`file:///data/platform/config` · `configstore:///run/configstore/vmsworker.sock` · whatever else registered.
 
     A bare path is read as `file://` so the box keeps working with no URL at all."""
     if "://" not in url:

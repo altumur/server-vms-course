@@ -83,7 +83,7 @@ import sys
 import threading
 
 from w2cplatform.objects import FsObjectStore
-from w2cplatform.variables import open_vars
+from w2cplatform.variables import open_vars, store_url
 
 from .controller import VmsController
 from .worker import FakeActuator, VmsWorker, commands_beat
@@ -91,9 +91,10 @@ from .worker import FakeActuator, VmsWorker, commands_beat
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
 root = os.environ.get("PLATFORM_DIR", "/data/platform")
 # The store seam: a process is told a URL and nothing else (`w2cplatform.variables.open_vars`). On a box
-# this is `file://` — in-process, no daemon, no hop. `CONFIG_URL=nomad://…` in a cluster, `k8s://…` later;
-# not one of those names appears in the loop.
-CONFIG_URL = os.environ.get("CONFIG_URL") or "file://" + os.path.join(root, "config")
+# this is `file://` — in-process, no daemon, no hop. `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` in a
+# cluster (`CONFIG_URL` is the old name, still read: `store_url`), `k8s://…` later; not one of those names
+# appears in the loop.
+CONFIG_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
 stop = threading.Event()
 
 
