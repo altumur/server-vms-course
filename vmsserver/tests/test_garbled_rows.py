@@ -483,19 +483,21 @@ def test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fa
 _DAMAGE = {
     "torn": lambda raw: raw[:len(raw) // 2],
     "items not a map": lambda raw: json.dumps({"items": ["a", "b"], "index": json.loads(raw)["index"]}),
-    "values not strings": lambda raw: json.dumps({"items": {k: 7 for k in json.loads(raw)["items"]},
-                                                  "index": json.loads(raw)["index"]}),
+    "index not a number": lambda raw: json.dumps({"items": json.loads(raw)["items"], "index": "seven"}),
 }
+_NOT_STRINGS = lambda raw: json.dumps({"items": {k: [7, True, 1e999] for k in json.loads(raw)["items"]},  # noqa: E731
+                                       "index": json.loads(raw)["index"]}).replace("Infinity", "1e999")
 
 
 def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the_routes_go_on():
-    """The eleventh review, a minor: a torn file of the course's file store — or one whose `items` are not a map, or whose
-    values are not strings, which Nomad never answers — raised whatever `json` raised out of `FileVariables.get`, and
-    the routes that read the drain, a slot, a placement, a worker's row, a hold or a decommission bare fell whole:
-    `/servers`, `/unplaceable`, `/drain`, `/where` gave no answer at all. `get` raises one error now (`Garbled`, a
-    `ValueError` naming the row); the readers of those rows read it as that row not parsing (`contract.stored`) — counted
-    and logged once — and every route answers. A write replaces such a row whole (`Controller.write`, `cas=TORN`): the
-    controller's next pass places a unit whose placement nobody could read again; a create-only write conflicts."""
+    """The eleventh review, a minor: a torn file of the course's file store — or one whose `items` are not a map — raised
+    whatever `json` raised out of `FileVariables.get`, and the routes that read the drain, a slot, a placement, a
+    worker's row, a hold or a decommission bare fell whole: `/servers`, `/unplaceable`, `/drain`, `/where` gave no answer
+    at all. `get` raises one error now (`Garbled`, a `ValueError` naming the row); the readers of those rows read it as
+    that row not parsing (`contract.stored`) — counted and logged once — and every route answers. Values that are not
+    strings, which Nomad never answers, come back as their JSON text: the field's trouble, as a Nomad value's. A write
+    replaces a row that does not read whole (`Controller.write`, `cas=TORN`): the controller's next pass places a unit
+    whose placement nobody could read again; a create-only write conflicts."""
     import urllib.error
     import urllib.request
     from w2cplatform.variables import TORN, Conflict, Garbled
@@ -541,6 +543,13 @@ def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the
                 answers = {r: get(r) for r in routes}
                 want = {r: 404 if (r, key) == ("/where/1", "vms/placement/1") else 200 for r in routes}   # placed nowhere
                 assert answers == want, (key, how, answers)
+            # Values that are not strings: each its JSON text, as Nomad would hold it — the field's parse error, not the row's.
+            with open(f, "w") as fh:
+                fh.write(_NOT_STRINGS(raw))
+            items, _ = box.vars.get(key)
+            assert set(items.values()) == {"[7, true, Infinity]"}, items
+            answers = {r: get(r) for r in routes}
+            assert all(isinstance(s, int) for s in answers.values()), (key, answers)   # every route answers
             with open(f, "w") as fh:
                 fh.write(raw)
         _forget_garbled()

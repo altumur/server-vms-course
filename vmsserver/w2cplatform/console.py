@@ -975,7 +975,9 @@ class SendMixin:
 # `Refused` — 400 to whoever sent it, and nothing written.
 def object_body(h) -> dict:
     try:
-        body = h._body()
+        # A subsystem's route is handed a length and a stream (`headers`, `rfile`), not always this console's handler.
+        reader = getattr(h, "_body", None)
+        body = reader() if reader is not None else json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}")
     except PARSE_ERRORS as e:
         raise Refused(f"the body is not JSON that can be read ({type(e).__name__})") from None
     if not isinstance(body, dict):

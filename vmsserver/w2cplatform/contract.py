@@ -335,8 +335,8 @@ def draining(vars_) -> str:
 
 
 # A ROW THE STORE CANNOT READ, WHERE A ROUTE OR A PASS READS IT (the eleventh review, a minor). `Variables.get` raises
-# `Garbled` for a row it holds and cannot read — the course's file store: a torn file, items that are not a map of
-# strings — and read bare, one such row took `/servers`, `/unplaceable`, `/drain` and `/where` down whole, and every
+# `Garbled` for a row it holds and cannot read — the course's file store: a torn file, items that are not a map — and
+# read bare, one such row took `/servers`, `/unplaceable`, `/drain` and `/where` down whole, and every
 # controller pass with them: the drain, a slot, a hold, a worker's assignment, a placement, a decommission. Those are
 # read through `stored` (or inside their table's read, as the drain): the row's error in its items' place (`Unread`),
 # which each of them reads as that row not parsing — counted in its table, logged once — and the rest go on. A write

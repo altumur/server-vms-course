@@ -269,14 +269,16 @@ class Corrupt(Exception):
 # Variable as a map of strings; a file of this store can be torn (a hand edit, a disk that lied about a write), hold
 # `items` that are not a map, or values that are not strings — and `get` raised whatever `json` or `dict` raised, or
 # handed the non-strings on, and the routes that read the drain, a slot, a placement or a worker's row bare fell whole
-# with it. One error now, a `ValueError` naming the row: every reader of rows reads it as that row not parsing
-# (`rows.PARSE_ERRORS`, `rows.Table`), as it reads a Nomad row whose values do not parse. Such a row's version is `TORN`:
-# a write that means to replace it says so (`put(cas=TORN)`, `Controller.write`), and one that read anything else conflicts.
+# with it. A torn file, `items` that are not a map, an index that is no whole number: one error now, a `ValueError`
+# naming the row — every reader of rows reads it as that row not parsing (`rows.PARSE_ERRORS`, `rows.Table`). A value
+# that is not a string is handed on as its JSON text, a string, as Nomad would hold it: the field's parse error, read
+# by the field's reader as a Nomad value that does not parse is. A row that does not read has the version `TORN`: a
+# write that means to replace it says so (`put(cas=TORN)`, `Controller.write`), and one that read anything else conflicts.
 TORN = "torn"
 
 
 class Garbled(ValueError):
-    """A row the store holds and cannot read: a torn file, items that are not a map of strings."""
+    """A row the store holds and cannot read: a torn file, items that are not a map, an index that is no number."""
 
     def __init__(self, key: str, why: str):
         self.key, self.index = key, TORN
@@ -410,13 +412,16 @@ class FileVariables:
         try:
             d = json.loads(raw)
             items, idx = d["items"], d["index"]
-            if not isinstance(items, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in items.items()):
-                raise TypeError("its items are not a map of strings")
+            if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
+                raise TypeError("its items are not a map")
             if isinstance(idx, bool) or not isinstance(idx, int):
                 raise TypeError("its index is not a whole number")
+            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what Nomad would hold
+            # had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
+            items = {k: v if isinstance(v, str) else json.dumps(v) for k, v in items.items()}
         except (ValueError, TypeError, KeyError, RecursionError) as e:
             raise Garbled(path, f"{type(e).__name__}: {e}") from None
-        return dict(items), idx
+        return items, idx
 
     # The version a write compares its `cas` with: the row's index, 0 for none — and `TORN` for a row that does not read.
     def _current(self, path: str):
