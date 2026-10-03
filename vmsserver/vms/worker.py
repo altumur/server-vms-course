@@ -145,10 +145,49 @@ VMS = Subsystem("vms")
 # Bytes a door may hold at once, across its connections: `take(n, wait)` — True once `n` are free (within `wait`
 # seconds), False if not; `force(n)` counts bytes it has whatever the limit says (a piece larger than was asked for: it
 # is in memory already); `give(n)` frees them. The holder's playback door (`VmsWorker.playback_pieces`).
+#
+# …AND A PERSON'S SHARE OF IT (the review's ninth pass, minor; a run: four accounts with `view`, four connections each,
+# a piece of 4 MiB per connection — the door's 64 MiB were theirs, and everybody else's playback was 503). A signed
+# viewer's pieces are taken by `take_share(who, most, least, wait)`: at most `share(who)` bytes held by him at once —
+# the budget over the people holding any of it, the asker counted, plus one — and a person who holds some already takes
+# only while a share stays free beside what is held: that one is the reserve, and only somebody who holds nothing takes
+# of it — a newcomer, or a viewer with one connection, who holds nothing each time he asks for his next piece. The piece
+# shrinks to what is left, down to `least`; below that it waits, as `take` does. `give` and `force` name him, so his
+# bytes are counted where they go.
 class ByteBudget:
     def __init__(self, limit: int):
         self.limit, self.used = int(limit), 0
+        self.held: dict[str, int] = {}                   # signed viewer -> the bytes his pieces hold now
         self.cond = threading.Condition()
+
+    def share(self, who: str) -> int:
+        people = len(self.held) + (0 if who in self.held else 1)
+        return self.limit // (people + 1)
+
+    def take_share(self, who: str, most: int, least: int, wait: float) -> int:
+        deadline = time.monotonic() + wait
+        with self.cond:
+            while True:
+                mine, share = self.held.get(who, 0), self.share(who)
+                # Somebody who holds bytes already leaves a share free for whoever comes next; a newcomer may take of it.
+                room = self.limit - self.used - (share if mine else 0)
+                n = min(int(most), share - mine, room)
+                if n >= least:
+                    self.used += n
+                    self.held[who] = self.held.get(who, 0) + n
+                    return n
+                left = deadline - time.monotonic()
+                if left <= 0:
+                    return 0
+                self.cond.wait(left)
+
+    def _mine(self, who: str | None, n: int) -> None:
+        if who is not None:
+            left = self.held.get(who, 0) + n
+            if left > 0:
+                self.held[who] = left
+            else:
+                self.held.pop(who, None)
 
     def take(self, n: int, wait: float) -> bool:
         deadline = time.monotonic() + wait
@@ -161,16 +200,18 @@ class ByteBudget:
             self.used += n
             return True
 
-    def force(self, n: int) -> None:
+    def force(self, n: int, who: str | None = None) -> None:
         with self.cond:
             self.used += n
+            self._mine(who, n)
             if n < 0:
                 self.cond.notify_all()
 
-    def give(self, n: int) -> None:
+    def give(self, n: int, who: str | None = None) -> None:
         if n:
             with self.cond:
                 self.used -= n
+                self._mine(who, -n)
                 self.cond.notify_all()
 
 
@@ -532,7 +573,7 @@ class VmsWorker(Worker):
         self.devices: dict[str, object] = {}
         self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
         self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
-        self.second_names: dict[str, tuple] = {}          # device -> (the name it is known by already, its identity): refused
+        self.coincidences: dict[str, tuple] = {}          # device -> (another key whose row says its identity, the identity): said
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -612,12 +653,8 @@ class VmsWorker(Worker):
     def _refresh_devices(self) -> None:
         until = time.monotonic() + self.DEVICE_HOLD
         want = {device_of(r["source"]) for r in self.rows if r.get("source")}   # a recorder's rows name none
-        self.second_names = {k: v for k, v in self.second_names.items() if k in want}
         opens = []
         for key in want - set(self.devices):
-            if key in self.second_names and self._still_known_as(*self.second_names[key]):
-                continue                                 # refused, and the other name still stands: not opened again
-            self.second_names.pop(key, None)
             opens.append((("open", key), None, lambda key=key: self.device_factory(key)))
         for (_, key), dev in self._ask_devices(opens, until).items():
             if dev is not None:
@@ -625,7 +662,7 @@ class VmsWorker(Worker):
         closes = []
         for key in set(self.devices) - want:
             dev = self.devices.pop(key)
-            self.described.pop(key, None); self.identities.pop(key, None)
+            self.described.pop(key, None); self.identities.pop(key, None); self.coincidences.pop(key, None)
             if hasattr(dev, "close"):
                 closes.append((("close", id(dev)), dev, dev.close))
         with self._dev_lock:                             # opens that came back after their device stopped being wanted
@@ -640,6 +677,9 @@ class VmsWorker(Worker):
             for k in [k for k, c in self._dev_calls.items() if k[0] != "open" and k[1] not in held and c["returned"].is_set()]:
                 del self._dev_calls[k]
         self._said_coverage = {k: v for k, v in self._said_coverage.items() if k[1] in held}
+        for key, (other, ident) in list(self.coincidences.items()):
+            if not self._still_known_as(other, ident):   # the other row went, or says another device now: said no more
+                self.coincidences.pop(key, None)
         self.describe_devices(until)
 
     # NO CALL INTO A DEVICE WAITS ON THE LOOP'S THREAD (the scaling pass after the eighth review). `perform` was made on a
@@ -754,16 +794,27 @@ class VmsWorker(Worker):
     # resolves to are two keys here and one recorder, and only the process that opened it can ask the hardware. The
     # console reads it back to tell the two spellings apart (`config.one_device`).
     #
-    # A SECOND NAME OF A DEVICE ALREADY KNOWN IS REFUSED (the owner's decision on the review's eighth pass). A name no
-    # holder had opened was its key alone, and a camera moved onto it — `nvr50.local`, the recorder another camera holds
-    # as `10.0.0.50` — passed the console with rights on its old device and on the new key's cameras, which were none;
-    # the holder opened it on its next pass and the camera showed the recorder's channel. Now the identity the device
-    # gives is looked up among the device rows (`device_identities`) when this holder first learns it: under ANOTHER key
-    # of the same vendor, this name is a second one — its row is not written (two rows with one identity, and a restarted
-    # holder of the first name would find the second and refuse the device by its own name), the device is closed, no
-    # camera of it is started (`_actuate`), its status says what name the device goes by (`status`), and it is said in
-    # the log once. A name never seen opens as before: that is how identities are learned. Each pass asks the store
-    # whether the other name still stands (`_still_known_as`), so removing its stale row lets this one open.
+    # A NAME WHOSE IDENTITY ANOTHER KEY HAS IS SAID, NOT REFUSED (the owner's decisions on the review's ninth pass). The
+    # eighth pass made the holder refuse such a name as a second name of a device known already. Two runs of the ninth
+    # showed what that cost. An identity is the driver's word, and a serial number is not unique: firmware clones say the
+    # same one, and the second clone was refused for good, its status pointing at the other clone's address. And a word
+    # is not always said: a recorder that answered two passes without its serial had its row rewritten without one, the
+    # other name took the identity meanwhile, and after a restart the holder refused the recorder by its own name — 0 of
+    # its 2 cameras recorded. Now:
+    #
+    #   an empty word unsays nothing   what the device said before — in memory, or in its row when this holder has just
+    #                                  started — stands until the device says something else
+    #   a coincidence is said          an identity learned now and found under another key (`device_identities`, any
+    #                                  vendor) is written all the same, said in the log once, counted (`coincidences`:
+    #                                  `identity_coincidences` in the heartbeat, `vms_device_identity_coincidences` on
+    #                                  `/metrics`) and named in the status of every camera of the device (`warning`) —
+    #                                  two names of one device or two devices with one serial: an operator can tell
+    #                                  which, the holder cannot
+    #
+    # Who may point a camera at a name is the console's question, and it asks it exactly where no identity is known yet:
+    # a device no holder has opened is a grant on the whole cluster (`vms/console.py`, `source_cams`); one opened, every
+    # camera of every key with its identity. Each pass asks the store whether the other row still says it
+    # (`_still_known_as`, `_refresh_devices`), so removing a stale row ends the warning.
     #
     # Asked through `_ask_devices` (the scaling pass): a device that did not answer this pass has its description as it
     # was — not known is not "no relays".
@@ -771,51 +822,55 @@ class VmsWorker(Worker):
         wrote = 0
         idents = self.identities
         known: dict | None = None                        # the device rows' identities, read once a pass when needed
-        refused: list[tuple[str, str, str]] = []
         heard = self._ask_devices([(("capabilities", id(d)), d, d.capabilities) for d in self.devices.values()
                                    if hasattr(d, "capabilities")], until)
         for key, dev in self.devices.items():
             if hasattr(dev, "capabilities") and ("capabilities", id(dev)) not in heard:
                 continue                                 # not known this pass: as it was
             caps = heard.get(("capabilities", id(dev)))
-            desc, ident = describe(caps), identity_of(caps)
-            if desc is None or (self.described.get(key) == desc and idents.get(key, "") == ident):
+            desc, said = describe(caps), identity_of(caps)
+            if desc is None:
                 continue
-            if ident and idents.get(key, "") != ident:  # learned now: is it a device known by another name?
+            ident = said or idents.get(key, "")          # an empty word does not unsay a known one
+            if self.described.get(key) == desc and idents.get(key, "") == ident:
+                continue
+            path = self.SUB.config(DEVICES, key)
+            items, _ = self.vars.get(path)
+            if not ident and isinstance(items, dict):
+                ident = str(items.get("identity") or "").strip()   # …nor the one its row keeps, when this holder has just started
+            if ident and idents.get(key, "") != ident:  # learned now: does another key's row say the same?
                 if known is None:
                     known = device_identities(self.vars)
-                other = next((k for k, i in sorted(known.items())
-                              if i == ident and k != key and k.split("/", 1)[0] == key.split("/", 1)[0]), None)
+                other = next((k for k, i in sorted(known.items()) if i == ident and k != key), None)
                 if other is not None:
-                    refused.append((key, other, ident))
-                    continue
-            path, row = self.SUB.config(DEVICES, key), device_row(desc, ident)
-            items, _ = self.vars.get(path)
+                    self._coincide(key, other, ident)
+                else:
+                    self.coincidences.pop(key, None)
+            row = device_row(desc, ident)
             if items != row:
                 self.vars.put(path, row)
                 wrote += 1
             if known is not None and ident:
                 known[key] = ident
             self.described[key], idents[key] = desc, ident
-        for key, other, ident in refused:
-            dev = self.devices.pop(key)
-            self.described.pop(key, None); idents.pop(key, None)
-            if hasattr(dev, "close"):
-                self._ask_devices([(("close", id(dev)), dev, dev.close)], until)
-            if self.second_names.get(key) != (other, ident):
-                log.error("%s: device %s is not opened: it is the same device as %s, which is already in use under that "
-                          "name. Point its cameras at %s, or, if nothing uses that name any more, remove its device "
-                          "row", self.name, key, other, other)
-            self.second_names[key] = (other, ident)
         return wrote
 
-    # Whether the device row of `other` still says `ident` — the refusal of a second name holds while it does.
+    def _coincide(self, key: str, other: str, ident: str) -> None:
+        if self.coincidences.get(key) == (other, ident):
+            return                                       # said once, while it holds
+        self.coincidences[key] = (other, ident)
+        log.warning("%s: device %s gives the same serial number (%s) as device %s. Either they are one device under two "
+                    "names, or two devices with one serial number (firmware clones). Both are recorded. If it is one "
+                    "device, point all its cameras at one of the two names and remove the device row of the other "
+                    "(vms/devices/...)", self.name, key, ident, other)
+
+    # Whether the device row of `other` still says `ident` — the warning about a coincidence holds while it does.
     def _still_known_as(self, other: str, ident: str) -> bool:
         try:
             items, _ = self.vars.get(self.SUB.config(DEVICES, other))
-        except Exception:                                # noqa: BLE001 — a store that does not answer: the refusal stands
+        except Exception:                                # noqa: BLE001 — a store that does not answer: the warning stands
             return True
-        return str((items or {}).get("identity") or "").strip() == ident
+        return str((items or {}).get("identity") or "").strip() == ident if isinstance(items, dict) else False
 
     # The same description, per unit, as it is carried in the heartbeat (`can`). The row is for this
     # cluster's automation; the heartbeat is how the description leaves the cluster — a domain reads
@@ -842,8 +897,6 @@ class VmsWorker(Worker):
         if verb in ("start", "restart"):
             if not self.recording_allowed:
                 return False
-            if cam.get("source") and device_of(cam["source"]) in self.second_names:
-                return False                                    # a second name of a device known already (`describe_devices`)
             if verb == "start" or unit not in self.epochs:
                 try:
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
@@ -1708,10 +1761,11 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
             elif str(cid) in self.row_errors:              # running or not: it is not following its row
                 out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
-            if cam.get("source") and device_of(cam["source"]) in self.second_names:   # running or not: its source is refused
-                other = self.second_names[device_of(cam["source"])][0]
-                out[-1]["why"] = (f"its device is already known as {other}: this name is not opened. Point the camera at "
-                                  f"{other}, or, if nothing uses that name any more, remove its device row")
+            if cam.get("source") and device_of(cam["source"]) in self.coincidences:   # recorded, and said (`describe_devices`)
+                other = self.coincidences[device_of(cam["source"])][0]
+                out[-1]["warning"] = (f"its device gives the same serial number as {other}: either one device under two "
+                                      f"names, or two devices with one serial number. It is recorded. If it is one device, "
+                                      f"point all its cameras at one of the two names and remove the other's device row")
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"
@@ -1750,7 +1804,8 @@ class VmsWorker(Worker):
             if "channels" not in st or "playbacks" not in st:
                 failed = [q for q in ("channels", "in_use") if (q, id(dev)) in self._dev_said]
                 st["state"] = "failed" if failed and id(dev) not in self._slow else "slow"
-            out.append({**st, **({"can": self.described[key]} if key in self.described else {})})
+            out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
+                        **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
         return out
 
     def _status_asks(self, devices) -> list:
@@ -1843,6 +1898,17 @@ class VmsWorker(Worker):
     # bound alone, as before.
     PLAYBACK_PER_PERSON = 4
 
+    # …AND HIS BYTES ARE A SHARE THAT LEAVES ROOM FOR THE NEXT ONE (the review's ninth pass, minor; a run): four people ×
+    # four connections × a piece of 4 MiB were the door's 64 MiB, and a fifth person's playback was 503. A signed viewer's
+    # pieces hold at most his share (`ByteBudget.take_share`: the budget over the people holding any of it, plus one),
+    # and a person who holds some already leaves a share free — the reserve, which only somebody holding nothing takes
+    # of: at the defaults four such people hold 52 MiB, and a viewer comes in beside them. A piece is cut to what is left,
+    # down to `PLAYBACK_MIN_PIECE`. And a piece to a slow reader is at most what he takes in
+    # `PLAYBACK_PACE_SECONDS` at the pace he took the last one: a reader at 80 kB/s held 4 MiB for fifty seconds, and the
+    # shares of people who came after him waited for it.
+    PLAYBACK_MIN_PIECE = 256 << 10
+    PLAYBACK_PACE_SECONDS = 10.0
+
     def _playback_count(self, table: str, key: str, step: int, limit: int) -> bool:
         counts = self.__dict__.setdefault(table, {})            # one, whichever connection asks first
         with self.__dict__.setdefault("_playback_sigs_lock", threading.Lock()):
@@ -1866,7 +1932,9 @@ class VmsWorker(Worker):
     def playback_budget(self) -> "ByteBudget":
         return self.__dict__.setdefault("_playback_budget", ByteBudget(self.PLAYBACK_BUDGET))
 
-    def playback_pieces(self, cam, t0: float, t1: float):
+    # `who`: the signed viewer the pieces are for — his share of the budget (`take_share`); None for a process of the
+    # cluster, held by the budget and its signature bound alone.
+    def playback_pieces(self, cam, t0: float, t1: float, who: str | None = None):
         row = next((r for r in self.rows if str(r["id"]) == str(cam)), None)
         if row is None:
             raise KeyError(cam)
@@ -1878,16 +1946,25 @@ class VmsWorker(Worker):
         budget = self.playback_budget()
 
         def pieces():
-            at, span, held = t0, min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE), 0
+            at, rate, pace, held = t0, None, None, 0
             try:
                 while at < t1:
-                    budget.give(held)                    # the last piece is the client's now: its bytes are free
+                    budget.give(held, who)               # the last piece is the client's now: its bytes are free
                     held = 0
                     want = self.PLAYBACK_PIECE_BYTES
-                    if not budget.take(want, self.PLAYBACK_BUDGET_WAIT):
+                    if pace is not None:                 # a slow reader: what he takes in `PLAYBACK_PACE_SECONDS`
+                        want = max(self.PLAYBACK_MIN_PIECE, min(want, int(pace * self.PLAYBACK_PACE_SECONDS)))
+                    if who is None:
+                        held = want if budget.take(want, self.PLAYBACK_BUDGET_WAIT) else 0
+                    else:
+                        held = budget.take_share(who, want, min(want, self.PLAYBACK_MIN_PIECE), self.PLAYBACK_BUDGET_WAIT)
+                    if not held:
                         raise OverflowError(f"this door holds {budget.limit} bytes of footage at once, and they are "
                                             f"all being sent — retry")
-                    held = want
+                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes held come to at the rate
+                    # the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
+                    span = min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE) if rate is None else \
+                        max(1.0, min(self.PLAYBACK_PIECE, held / max(rate, 1.0)))
                     b = min(t1, at + span)
                     sid = dev.open_playback(cam, at, b)  # OverflowError when the device is full
                     try:
@@ -1896,14 +1973,16 @@ class VmsWorker(Worker):
                     finally:
                         dev.close_playback(sid)          # before a byte of the piece is sent
                     size = sum(len(c) for c in got)
-                    budget.force(size - held)            # what the piece really is, whatever was asked
+                    budget.force(size - held, who)       # what the piece really is, whatever was asked
                     held = size
                     rate = size / max(b - at, 1e-3)
-                    span = max(1.0, min(self.PLAYBACK_PIECE, self.PLAYBACK_PIECE_BYTES / max(rate, 1.0)))
+                    sent = time.monotonic()
                     yield from got
+                    took = time.monotonic() - sent       # how long the client took to take it
+                    pace = size / took if took > 1.0 else None
                     at = b
             finally:
-                budget.give(held)
+                budget.give(held, who)
         return pieces()
 
     # What the heartbeat says per unit beyond the platform's fields: the worker publishes `live_url` — where a
@@ -2017,6 +2096,8 @@ class VmsWorker(Worker):
                 # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
                 # and `vms_commands_in_flight` (`vms/console.py`, `beat_lines`).
                 **({"devices_slow": len(self._slow)} if self._slow else {}),
+                # Devices whose identity another key's row says too (`describe_devices`; the ninth pass): said, not refused.
+                **({"identity_coincidences": len(self.coincidences)} if self.coincidences else {}),
                 **({"commands_in_flight": len(self._performing)} if self._performing else {}),
                 # The road to the device, as histograms since this process started (`_measure`).
                 **({"command_road": self.road, "command_request": self.request_road, "command_wait": self.wait}
@@ -2078,7 +2159,7 @@ class VmsWorker(Worker):
         from w2cplatform.access import Denied, Gate
         from . import playback as pb
         if getattr(self, "_playback_gate", None) is None:
-            self._playback_gate = Gate(self.vars, self.wall)
+            self._playback_gate = Gate(self.vars, self.wall, glass=False)   # whether the cluster asks: no session of its own
         try:
             if not self._playback_gate.gated():
                 return None                              # an open cluster: the console it fronts is open too
@@ -2163,16 +2244,16 @@ class VmsWorker(Worker):
                     return self._send(503, {"detail": f"{who} is reading {gw.PLAYBACK_PER_PERSON} pieces of footage at "
                                                       f"once already — close one first", "error": "busy"})
                 try:
-                    return self._play(cam, q)
+                    return self._play(cam, q, who)
                 finally:
                     if held:
                         gw.playback_signature(held, -1)
                     if who is not None:
                         gw.playback_person(who, -1)
 
-            def _play(self, cam, q):
+            def _play(self, cam, q, who=None):
                 try:
-                    pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)))
+                    pieces = gw.playback_pieces(cam, float(q.get("from", 0)), float(q.get("to", 1e12)), who)
                     first = next(pieces, None)                   # the first piece read before the reply is chosen
                 except KeyError:
                     return self._send(404, {"detail": "this camera has no archive of its own here",

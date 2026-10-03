@@ -139,17 +139,23 @@ def labels_from_environment(env: dict) -> list[str]:
 
 ```python
         self.previous_hb, self.previous_instance = 0.0, ""
+        ...
+        self.previous_server = ""
+        ...
         raw = objects.get(self.sub.heartbeat_key(self.name))
         if raw:
             from w2cplatform.contract import parse_heartbeat
             old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
             if old is not None and old.extra.get("instance") != self.instance:
                 self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
+                self.previous_server = str(old.extra.get("server", ""))
 ```
 
 **Битый прежний heartbeat — как будто его нет.** `Heartbeat.from_bytes` без защиты поднимал исключение из конструктора, и процесс уходил в цикл перезапусков из-за того самого объекта, который его первый heartbeat заменил бы. Теперь разбор идёт через `parse_heartbeat` (М10A, урок 8): объект, который не разбирается, пропущен — нечего мерить для переезда, и это вся цена (третье ревью, остаток M6). Тест: `test_a_worker_whose_slot_left_a_garbled_heartbeat_starts_all_the_same`.
 
 Последнее в конструкторе, и оно про измерение, а не про работу. Новый процесс читает heartbeat, оставленный **предыдущим жильцом этого слота**, и запоминает его отметку времени. Разница между ней и первым собственным heartbeat'ом — это наблюдаемое время подхвата, то самое `failover_seconds`, которое в уроке 18 М10A отдавалось расчётной величиной.
+
+**Вместе со временем воркер запоминает и сервер предшественника — `previous_server`, иначе переезд меряется по двум часам.** `started − previous_hb` вычитает часы машины, где поднялся новый экземпляр, из часов машины, где жил старый; на двух серверах их расхождение попадает прямо в число: десять минут дрейфа дают десятиминутный переезд или отрицательный (девятое ревью). Поэтому воркер переписывает `server` из найденного heartbeat'а в свой, а читатель — `SpecController.failover_seconds` — вычитает только когда `previous_server` совпадает с `server`: тогда оба времени взяты по одним часам. Если серверы разные, читатель берёт то, что видел сам по своим часам: когда heartbeat под этим именем перестал двигаться и когда под ним появился другой экземпляр. На одной коробке сервер всегда один, и тест `test_lesson4_worker.py::test_the_failover_on_metrics_is_the_one_the_workers_measured` получает свои 31 секунду вычитанием; два сервера с часами, разошедшимися на десять минут, проверяет М11: `test_lesson4_failover.py::test_a_failover_between_two_servers_is_measured_on_one_clock_or_not_at_all`.
 
 Проверка `old.extra.get("instance") != self.instance` отсекает собственный перезапуск в пределах одного экземпляра: подхват — это смена жильца, а не перечитывание своего.
 

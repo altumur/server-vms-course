@@ -175,9 +175,10 @@ vms/blobs/<digest>          консоль
         """The workers write their own heartbeats and nothing else."""
         return [f"{self.name}/{HEARTBEATS}/*"]
 
+    ...
     def acl_objects_controller(self) -> list[str]:
-        """The controller publishes the snapshot shards — the only thing that leaves the cluster."""
-        return [f"{self.name}/snapshot/*"]
+        """The controller publishes the snapshot shards — the only thing that leaves the cluster — and its pass report."""
+        return [f"{self.name}/snapshot/*", f"{self.name}/{CONTROLLER_PASS}"]
 
     def acl_objects_console(self) -> list[str]:
         """The console stores the bytes of a `blob` field, beside the row that names them."""
@@ -185,6 +186,8 @@ vms/blobs/<digest>          консоль
 ```
 
 Рядом с `acl_controller()` и `acl_console()`, из той же спеки. Источник правды один — и теперь его можно с чем-то сравнить.
+
+**Контроллер пишет не только шарды, но и отчёт о проходе** (девятое ревью, major). `pass_once` пишет `<name>/controller/pass` (`CONTROLLER_PASS = "controller/pass"` в `contract.py`; урок 11, шаг 9) — единственный объект, из которого `/metrics` берёт `<name>_units_unplaced` и последний проход. Список выше грантовал только шарды, политика, сверенная с ним, тоже — и на кластере с ACL отчёт получал 403 каждые пять секунд, а метрики стояли на `-1` и `0`. Ни один список его не называл, и все проверки сходились друг с другом. Теперь путь в списке, а в `vmscontroller-policy.hcl` и `reccontroller-policy.hcl` — `path "objects/<sub>/controller/pass"`. Тест: `test_policies.py::test_every_write_the_code_makes_is_granted` (М11) сверяет политику с тем, что процессы стенда **пишут**, а не с тем, что перечислено в списках.
 
 ## Шаг 5 — Тест, который сверяет файл с кодом
 

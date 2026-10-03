@@ -496,21 +496,30 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 ## Шаг 17 — Два `try`
 
 ```python
-        ctl.pass_once(1)                              # place, move, bring ONE unit home — and report on itself; it does not raise
-        # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
-        # inside the block above, placement had already succeeded — and the log said "placement pass
-        # failed", naming the one thing that had not. The reverse hid the other half: a placement that
-        # threw skipped the publish, the layer above went quietly stale, and the word "snapshot" appeared
-        # nowhere. Two jobs, two failures, two sentences.
-        try:
-            ctl.publish_snapshot()
-        except Exception:                             # noqa: BLE001
+    while not stop.is_set():
+        # ONE pass around both (the scaling pass after the eighth review): the snapshot asks every unit's row, placement
+        # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
+        # (`contract.one_pass`; what the pass wrote is read back from the store).
+        with ctl.one_pass():
+            ctl.pass_once(1)                          # place, move, bring ONE unit home — and report on itself; it does not raise
+            # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
+            # inside the block above, placement had already succeeded — and the log said "placement pass
+            # failed", naming the one thing that had not. The reverse hid the other half: a placement that
+            # threw skipped the publish, the layer above went quietly stale, and the word "snapshot" appeared
+            # nowhere. Two jobs, two failures, two sentences.
+            try:
+                ctl.publish_snapshot()
+            except Exception:                         # noqa: BLE001
+                ...
+        stop.wait(5)
 ```
+
+**Размещение и публикация — внутри одного `one_pass`** (урок 8, шаг 1). Снимок спрашивает строку, размещение и сервер каждой единицы — то, что проход размещения только что прочитал; удержанные на проход, эти ответы стоят снимку ноль чтений, а написанное проходом читается обратно из хранилища. После `stop.wait(5)` следующий проход читает всё заново. Тест: `test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once`.
 
 И вторая фраза говорит о последствии, а не о вызове:
 
 ```python
-            logging.exception("publishing the snapshot failed — the layer above is now reading a stale copy")
+                logging.exception("publishing the snapshot failed — the layer above is now reading a stale copy")
 ```
 
 Разница между «publish_snapshot failed» и этой строкой — разница между «сломался вызов» и «вот что теперь неправда». Второе — то, что нужно человеку в три часа ночи.
@@ -524,17 +533,29 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 ```python
     def snapshot_age(self, now: float | None = None) -> float | None:
         import json
+        from .contract import FUTURE_TOLERANCE, SKEW_MAX
+        from .rows import FIELDS
+        now = self.wall() if now is None else now
         oldest = None
         prefix = self.sub.snapshot_prefix()
         for key in self.objects.list(prefix):
             raw = self.objects.get(key)
             if not raw:
                 continue
-            ts = float(json.loads(raw).get("ts", 0))
+            try:
+                ts = finite(json.loads(raw).get("ts", 0))   # `nan` passes every `min` and read as fresh (the review's eighth pass)
+            except PARSE_ERRORS:
+                ts = 0.0                              # a shard that does not parse has no age: the oldest there can be
+            if ts - now > FUTURE_TOLERANCE:
+                SKEW_MAX[self.sub.name] = max(SKEW_MAX.get(self.sub.name, 0.0), ts - now)
+                FIELDS.garbled(f"{key}#ts", ValueError(f"{ts - now:.0f} s ahead of this clock: no age anybody can vouch for"))
+                ts = 0.0
+            else:
+                FIELDS.parsed(f"{key}#ts")
             oldest = ts if oldest is None else min(oldest, ts)
         if oldest is None:
             return None
-        return max(0.0, (self.wall() if now is None else now) - oldest)
+        return max(0.0, now - oldest)
 ```
 
 Соблазн — завести в контроллере поле `last_published_at`. Не годится, и по трём причинам сразу:
@@ -546,6 +567,10 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 А из хранилища на этот вопрос ответит **кто угодно, кто может читать объекты**, — и поэтому его может отдать консоль, у которой порт есть.
 
 **Возраст целого — возраст самого старого шарда.** То же правило, что у читателя в М12: один шард, переставший переписываться, **и есть** отставание кластера, а самый свежий показал бы RPO лучше настоящего. Число такого рода имеет право ошибаться только в пессимистичную сторону.
+
+**Шард, у которого нет времени, — самый старый.** Шард, который не разбирается, поднимал исключение, а вместе с ним падал весь `/metrics`; теперь `PARSE_ERRORS` дают `ts = 0.0` — старше не бывает. То же для `ts`, который не число: `finite` не пропускает `nan`, `inf` и `-inf` (восьмое ревью), а `nan` иначе проходил бы любой `min` и читался бы как свежий. Тест: `test_garbled_rows.py::test_a_garbled_snapshot_shard_makes_the_published_copy_old_and_never_fresh`.
+
+**`ts` из будущего — не свежесть** (девятое ревью). Контроллер, чьи часы ушли на час вперёд и потом остановились, писал шарды на час вперёд, и `max(0, now − ts)` читал их как возраст 0 весь этот час: копия наверху «свежая», хотя её никто не публикует. Шард, опередивший часы читателя больше чем на `FUTURE_TOLERANCE` (5 с, правило heartbeat'ов из урока 8), возраста, за который можно поручиться, не имеет. Он считается самым старым (`ts = 0.0`), один раз записывается как испорченное поле `<ключ>#ts` (`FIELDS.garbled`, на `/metrics` — `<p>_console_rows_garbled{table="field"}`), а его опережение уходит в `SKEW_MAX` подсистемы — в `<p>_heartbeat_skew_seconds_max`, где часы, ушедшие вперёд, уже измеряются. Шард в пределах допуска — обычный, и `FIELDS.parsed` снимает с ключа отметку. Тест: `test_garbled_rows.py::test_a_snapshot_written_by_a_clock_running_ahead_is_not_fresh_and_its_lead_is_measured`.
 
 ## Шаг 19 — Метрика, которая растёт
 

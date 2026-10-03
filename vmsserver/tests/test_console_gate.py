@@ -1292,8 +1292,10 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
     """The same finding, the part syntax cannot say: `nvr50.local` and `10.0.0.50` are two keys and one recorder. The
     holder learns what the device IS when it opens it (`identity` — a serial number, a MAC; `FakeDevice(identity=)`)
     and writes it into the device's row; rights and "one channel, one camera" compare by it where it is known
-    (`config.one_device`). A spelling no holder has opened yet is its key alone until a holder opens it — and a holder
-    that finds it is a second name of a device known already refuses it (the next test)."""
+    (`config.one_device`). A spelling no holder has opened yet is a grant on the whole cluster (the ninth pass: the next
+    test). "One channel, one camera" is asked by the key alone: a serial number is not unique (the owner's decision on
+    the ninth pass), so `nvr50.local/ch/2` is not refused for camera 2's `10.0.0.50/ch/2` — whoever moves a camera there
+    is asked for every camera of both, which is the rights' part."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     box = Box()
     access = Tokens({"three": [("admin", "3", ())], "admin": [("admin", None, ())]})
@@ -1318,62 +1320,151 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
         assert _call(base, "POST", "/requests", {"unit": "3", "action": "output", "port": 1}, token="three")[0] == 403
         assert _call(base, "PUT", "/cameras/3", {"name": "now hers no more"}, token="three")[0] == 200   # nothing moved
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="three")[0] == 403
-        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")
-        assert code == 400 and "camera 2 is that source already" in body["detail"], (code, body)
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")[0] == 403
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")[0] == 200
     finally:
         srv.shutdown()
 
 
-def test_a_holder_refuses_a_second_name_of_a_device_it_knows_and_opens_a_first_name():
-    """The owner's decision on the review's eighth pass. A camera moved onto `nvr50.local` — never opened, its key alone
-    — passed the console with rights on its old device and none on the new key's cameras, and the holder opened the
-    name on its next pass: the camera showed the recorder's channel, the one another camera holds as `10.0.0.50`. The
-    holder now looks the identity up when it learns it (`describe_devices`): under another key it is a second name —
-    no row written, the device closed, the camera not started and its status saying the name the device goes by, and a
-    command to it reaches no relay. A name never seen opens, which is how identities are learned; the other name's row
-    removed, this one opens too."""
+def _opened(box, *keys) -> None:
+    """Device rows as their holders write them once they have opened the devices and learned what each is (`identity`)."""
+    for key in keys:
+        box.vars.put(f"vms/devices/{key}", {"events": "command", "rays": "0", "relays": "1", "ptz": "false",
+                                            "presets": "0", "identity": f"SN-{key}"})
+
+
+def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_the_cluster():
+    """The review's ninth pass, major (a) — a run, and the owner's decision on its question. The eighth pass closed the
+    second name at the holder, when the holder learned what the device is — and the course's build has no device
+    factory: no holder ever learns it. `admin` on camera 3 moved it onto `nvr50.local/ch/2`, the recorder another
+    camera holds as `10.0.0.50`: 200, and its command pulsed the recorder's relay (202). A move to a device no holder
+    has opened is now a grant on the whole cluster, whatever the spelling (`source_cams`, `Devices.known`): a DNS name,
+    leading zeros, full-width digits, an ideographic full stop, another driver's name for the address. Once a holder has
+    opened a device and said what it is, a move onto it asks for every camera of it, as before."""
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive)                           # the course's build: no device factory
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert not box.vars.list("vms/devices/")                       # nobody has learned what any device is
+        for spelt in ("driverpack://acme/nvr50.local/ch/2", "driverpack://acme/010.000.000.050/ch/2",
+                      "driverpack://acme/１０.０.０.５０/ch/2", "driverpack://acme/10。0。0。50/ch/2",
+                      "driverpack://onvif/10.0.0.50/ch/2", "rtsp://10.0.0.50/Streaming/Channels/201"):
+            code, body = _call(base, "PUT", "/cameras/3", {"source": spelt}, token="three")
+            assert code == 403, (spelt, code, body)
+        assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"
+        assert _call(base, "PUT", "/cameras/3", {"name": "still hers"}, token="three")[0] == 200   # nothing moved
+        # A device a holder has opened and said what it is: the move asks for its cameras — here none — and no more.
+        _opened(box, "acme/10.0.0.70")
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/1"}, token="three")[0] == 200
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.70/ch/4"}, token="three")[0] == 200   # within it
+        # …and the cluster's administrator may point a camera anywhere, as before
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/9"}, token="admin")[0] == 200
+    finally:
+        srv.shutdown()
+
+
+def test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before():
+    """The review's ninth pass, major (в) — a run: a recorder that answered two passes without its serial number had its
+    row rewritten without one (`describe_devices`); `nvr50.local`, opened meanwhile, took the identity, and after a
+    restart the holder refused the recorder by its own name — 0 of its 2 cameras recorded. What a device said before —
+    in the holder's memory, or in its row for a holder that has just started — stands until it says something else."""
     from vms.worker import FakeActuator, FakeDevice, VmsWorker
     box = Box()
-    access = Tokens({"two": [("admin", "2", ())], "admin": [("admin", None, ())]})
+    access = Tokens({"admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
-    devs = {"acme/10.0.0.50": FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042"),
-            "acme/nvr50.local": FakeDevice("acme/nvr50.local", channels=["2"], relays=2, identity="ACME-SN-0042"),
-            "acme/10.0.0.60": FakeDevice("acme/10.0.0.60", channels=["1"], identity="ACME-SN-0060")}
-    opened: list[str] = []
-    act = FakeActuator()
-    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
-                  archive_root=box.archive, device_factory=lambda k: opened.append(k) or devs.get(k))
+    nvr = FakeDevice("acme/10.0.0.50", channels=["1", "2"], relays=2, identity="ACME-SN-0042")
+    alias = FakeDevice("acme/nvr50.local", channels=["2"], relays=2, identity="ACME-SN-0042")
+    devs = {"acme/10.0.0.50": nvr, "acme/nvr50.local": alias}
     placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
-    nvr = "driverpack://acme/nvr50.local/ch/2"
-    try:
-        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
-        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/2.mp4"}, token="admin")[0] == 201
-        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # a first name opens
-        # The window the lesson named: `admin` on a file camera alone, moved onto the never-opened name — the console
-        # lets it by (its key alone, no camera on it) — and the holder refuses the name at open.
-        assert _call(base, "PUT", "/cameras/2", {"source": nvr}, token="two")[0] == 200
-        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert "acme/nvr50.local" not in w.devices and w.second_names["acme/nvr50.local"][0] == "acme/10.0.0.50"
-        assert box.vars.get("vms/devices/acme/nvr50.local")[0] is None                    # one identity, one row
-        assert not any(c.get("source") == nvr for c in act.started.values())              # no picture of the recorder
-        [st] = [x for x in w.status() if str(x["id"]) == "2"]
-        assert "already known as acme/10.0.0.50" in st["why"], st
-        _call(base, "POST", "/requests", {"unit": "2", "action": "output", "port": 1}, token="two")
-        for _ in range(3):
-            w.heartbeat_once(); w.reconcile_once(); w.requests()
-        assert devs["acme/10.0.0.50"].did == [] and devs["acme/nvr50.local"].did == []   # nobody's relay was pulsed
-        assert opened.count("acme/nvr50.local") == 1                                    # refused once, not opened every pass
-        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.60/ch/1"}, token="admin")[0] == 201
-        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
-        assert box.vars.get("vms/devices/acme/10.0.0.60")[0]["identity"] == "ACME-SN-0060"   # another device's first name
 
-        box.vars.delete("vms/devices/acme/10.0.0.50")                                   # the operator removes the other row
+    def holder():
+        act = FakeActuator()
+        return act, VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
+                              archive_root=box.archive, device_factory=lambda k: devs.get(k))
+    act, w = holder()
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"
+        nvr.identity = ""                                             # two passes without its serial
+        for _ in range(2):
+            w.heartbeat_once(); w.reconcile_once()
+            assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # not unsaid
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert w.coincidences == {"acme/nvr50.local": ("acme/10.0.0.50", "ACME-SN-0042")}   # the new name is the one said
+        act, w = holder()                                             # a restart, the recorder still silent about itself
         w.heartbeat_once(); w.reconcile_once()
-        assert "acme/nvr50.local" in w.devices and "acme/nvr50.local" not in w.second_names
-        assert box.vars.get("vms/devices/acme/nvr50.local")[0]["identity"] == "ACME-SN-0042"
+        assert box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "ACME-SN-0042"   # the row's word stands
+        assert {1, 2} <= set(act.running), act.running                # both of the recorder's cameras record
+        nvr.identity = "ACME-SN-0042"
+        w.heartbeat_once(); w.reconcile_once()
+        assert {1, 2, 3} <= set(act.running), act.running
     finally:
         srv.shutdown()
+
+
+def test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidence_is_said():
+    """The owner's decision on the review's ninth pass (г): a serial number is not unique — firmware clones say the same
+    one — and the eighth pass refused the second clone for good, its status pointing at the first clone's address. Both
+    open and record now; the coincidence is said (`describe_devices`): in the log once, in the status of the camera
+    (`warning`), in the holder's device list (`same_serial_as`), counted on `/metrics`. "One channel, one camera" asks
+    by the key, so a clone's channel 1 is not the other clone's (`refuse_camera`); rights take the two for one device,
+    which asks for more (`one_device`). The other row gone, the warning goes."""
+    from vms.worker import FakeActuator, FakeDevice, VmsWorker
+    box = Box()
+    access = Tokens({"guard": [("edit", "1", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    devs = {k: FakeDevice(k, channels=["1"], relays=1, identity="CLONE-0000") for k in ("acme/10.0.0.50", "acme/10.0.0.60")}
+    act = FakeActuator()
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive, device_factory=lambda k: devs.get(k))
+    placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    said: list[str] = []
+
+    class Catch(logging.Handler):
+        def emit(self, record):
+            said.append(record.getMessage())
+    catch = Catch(level=logging.WARNING)
+    logging.getLogger("vmsworker").addHandler(catch)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
+        w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.60/ch/1"}, token="admin")[0] == 201
+        for _ in range(3):
+            w.heartbeat_once(); placer.ensure_placed(); w.reconcile_once()
+        assert set(act.running) == {1, 2}                              # both clones record
+        assert box.vars.get("vms/devices/acme/10.0.0.60")[0]["identity"] == "CLONE-0000"
+        [st] = [x for x in w.status() if str(x["id"]) == "2"]
+        assert st["phase"] == "running" and "same serial number as acme/10.0.0.50" in st["warning"], st
+        assert "why" not in st
+        assert [d.get("same_serial_as") for d in w.device_status()] == [None, "acme/10.0.0.50"]
+        assert len([m for m in said if "firmware clones" in m]) == 1   # said once, not every pass
+        w.heartbeat_once()
+        text = m_text(base)
+        assert 'vms_device_identity_coincidences{worker="w-1"} 1' in text, text
+        # rights take the two for one device: the guard of camera 1 does not pulse what may be camera 2's relay
+        assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1}, token="guard")[0] == 403
+        box.vars.delete("vms/devices/acme/10.0.0.50")                  # the operator: the other row is stale
+        w.heartbeat_once(); w.reconcile_once()
+        assert not w.coincidences and "warning" not in [x for x in w.status() if str(x["id"]) == "2"][0]
+    finally:
+        logging.getLogger("vmsworker").removeHandler(catch)
+        srv.shutdown()
+
+
+def m_text(base: str) -> str:
+    with urllib.request.urlopen(f"{base}/metrics", timeout=10) as r:
+        return r.read().decode()
 
 
 def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios_that_command_it():
@@ -1392,6 +1483,7 @@ def test_a_camera_moved_to_another_device_asks_for_every_camera_of_the_scenarios
             assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
         for f in ("3", "4"):
             assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
+        _opened(box, "acme/10.0.0.50", "file/3b.mp4")                  # devices a holder has opened (the ninth pass)
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://file/3b.mp4"}, token="mover")[0] == 200   # no scenario yet
         gate = {"name": "gate", "when": [{"sub": "vms", "kind": "motion", "unit": "4"}],
                 "then": [{"sub": "vms", "action": "output", "unit": "3", "port": 1}]}
@@ -1440,6 +1532,107 @@ def test_a_backfill_of_a_time_nothing_could_hold_is_refused():
         assert _call(base, "POST", "/backfill", {"cam": "1", "from": t - 4000, "to": t - 3000}, token="guard")[0] == 202
     finally:
         srv.shutdown(); door.shutdown()
+
+
+def _raw_call(url, method="GET", body: bytes | None = None, headers=None):
+    req = urllib.request.Request(url, data=body, method=method, headers=headers or {})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status, r.read(), dict(r.headers)
+    except urllib.error.HTTPError as e:
+        return e.code, e.read(), dict(e.headers)
+
+
+def test_the_door_in_is_the_consoles_alone_and_takes_a_token_or_an_emergency_entry_and_nothing_else():
+    """The product's own finding on the review's ninth pass (C): its `POST /session/break-glass` was served by every door
+    that mounts the shared gate — a recorder, the live gateway. Here `/session` is routed by the console alone; swept
+    door by door — the holder's playback door, the live gateway, a recorder's archive door, the resource — none answers
+    it, and none opens an emergency session. And the gate a door holds does not take the console's emergency session
+    either (`Gate(glass=False)`): one opened at the console, in the same process, was a viewer at the gateway. At the
+    console a body that is not an object holding a string token — a list, a token that is a list or a number, nested
+    brackets, no JSON at all — is 400 (the review's ninth pass, minor: it was no answer at all, the handler raised)."""
+    from types import SimpleNamespace
+    from tests.test_lesson8_live import OFFER, _gateway
+    from vms.recworker import RecWorker
+    from vms.resource import vms_resource
+    from vms.worker import FakeActuator, VmsWorker
+    from w2cplatform.access import GLASS_COOKIE
+    from w2cplatform.resource import serve as serve_resource
+    Gate.forget_glass(); held = dict(Gate._glass)          # sessions other tests left in this process
+    box = Box()
+    access = Tokens({"admin": [("admin", None, ())], "viewer": [("view", "1", ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    g = _gateway(box, "g-1")
+    g.gate.impl = access
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  archive_root=box.archive)
+    holder = w.serve_playback("127.0.0.1", 0)
+    rec_door = RecWorker.serve_archive(SimpleNamespace(store=None, wall=box.wall, epochs={}, server="srv-1",
+                                                       _visible_from=lambda *a: None, _kept_of=lambda *a: None,
+                                                       _held_since=lambda *a: None), "127.0.0.1", 0)
+    res = serve_resource(vms_resource(box.archive, "srv-1", "", box.vars, box.objects, wall=box.wall), "127.0.0.1", 0)
+    doors = {"holder": f"http://127.0.0.1:{holder.server_address[1]}", "gateway": g.url,
+             "recorder": f"http://127.0.0.1:{rec_door.server_address[1]}", "resource": f"http://127.0.0.1:{res.server_address[1]}"}
+    entry = json.dumps({"glass": {"who": "carol", "why": "the domain is down", "password": "open-sesame"}}).encode()
+    try:
+        for name, url in doors.items():
+            for path in ("/session", "/session/break-glass"):
+                code, _, hdrs = _raw_call(url + path, "POST", entry, {"Content-Type": "application/json"})
+                assert code in (404, 405, 501) and "Set-Cookie" not in hdrs, (name, path, code)
+            assert _raw_call(url + "/session")[0] in (404, 405, 501), name
+        assert Gate._glass == held                                     # nothing was opened anywhere
+        for bad in (b"[1]", b'{"token": ["a", "b"]}', b'{"token": 7}', b"[" * 8000 + b"]" * 8000, b"{not json"):
+            code, body, _ = _raw_call(base + "/session", "POST", bad, {"Content-Type": "application/json"})
+            assert code == 400, (bad[:20], code, body[:200])
+        code, _, hdrs = _raw_call(base + "/session", "POST", entry, {"Content-Type": "application/json"})
+        assert code == 200 and hdrs["Set-Cookie"].startswith(GLASS_COOKIE + "="), (code, hdrs)   # the console's door
+        sid = hdrs["Set-Cookie"].split(";", 1)[0].split("=", 1)[1]
+        assert _call(base, "GET", "/cameras", token=None)[0] == 401
+        assert _raw_call(base + "/cameras", headers={"Cookie": f"{GLASS_COOKIE}={sid}"})[0] == 200   # …in its own process
+        code, _, _ = _raw_call(g.url + "/whep/1", "POST", OFFER.encode(),
+                               {"Content-Type": "application/sdp", "Cookie": f"{GLASS_COOKIE}={sid}"})
+        assert code == 401, code                                       # the gateway takes a token, not the console's session
+        assert _raw_call(g.url + "/whep/1", "POST", OFFER.encode(),
+                         {"Content-Type": "application/sdp", "Authorization": "Bearer viewer"})[0] == 404   # a token: admitted
+    finally:
+        for s in (srv, holder, rec_door, res):
+            s.shutdown()
+        Gate._glass.clear(); Gate._glass.update(held)
+
+
+def test_a_press_of_a_relay_and_a_move_of_a_camera_read_the_rows_of_their_devices_not_every_device_row():
+    """The review's ninth pass, minor — a count: `one_device` read every device row there is on every command, move and
+    scenario edit; rows are never removed, and with 1000 of them one press of a relay was 1009 reads of the store (in
+    М11, a thousand HTTP calls to Nomad). A device's row is read when a right is asked about that device, once a
+    request (`config.Devices`), and "one channel, one camera" reads none (`refuse_camera`). Counted as here — every
+    read of the process, the gate's too — before and after: 1013 → 14 for the press, 2019 → 19 for the move; pinned with
+    room, and not growing with the stale rows."""
+    from w2cplatform.variables import FileVariables
+    box = Box()
+    for i in range(1000):                                              # devices that came and went: their rows stay
+        box.vars.put(f"vms/devices/acme/10.1.{i // 250}.{i % 250}", {"events": "command", "relays": "1", "identity": f"SN-{i}"})
+    box.vars.put("vms/devices/acme/10.0.0.50", {"events": "command", "relays": "2", "identity": "SN-NVR"})
+    mounts, srv, base = _console_with_jobs(box, Tokens({"admin": [("admin", None, ())]}))
+    reads = [0]
+    real = FileVariables.get
+
+    def counted(self, path):
+        reads[0] += 1
+        return real(self, path)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.50/ch/{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        FileVariables.get = counted
+        assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1}, token="admin")[0] == 202
+        press, reads[0] = reads[0], 0
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/10.0.0.50/ch/7"}, token="admin")[0] == 200
+        move = reads[0]
+    finally:
+        FileVariables.get = real
+        srv.shutdown()
+    print(f"reads: a press of a relay {press}, a move of a camera {move} (1000 stale device rows)")
+    assert press <= 40 and move <= 50, (press, move)
 
 
 def test_a_units_name_holds_no_comma_and_no_digit_but_ascii_and_a_stored_one_stops_no_list():

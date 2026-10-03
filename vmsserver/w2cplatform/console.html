@@ -52,7 +52,8 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
     *back to the node's* (`DELETE`); then what this process fronts, from `/mounts`.
 - `main`
   - `#title` — the selected unit's label, or "Pick one".
-  - `#meta` — phase · worker · server · epoch · placement reason · "last known state" when stale.
+  - `#meta` — phase · worker · server · epoch · placement reason · the holder's `why` and `warning` · "last known
+    state" when stale.
         - `#recbox` — the unit's recordings, from `/rec/recordings` when the console mounts `rec`: one line per
     recording of this camera with the recorder's word on it (phase, worker, server) and *stop*, and
     `#recadd` — an archive to write to (empty: this box's disks) and days to keep.
@@ -381,6 +382,7 @@ async function select(id) {
   let why = '';
   try { const w = await (await fetch(`/where/${encodeURIComponent(id)}`)).json(); why = w.reason || ''; } catch (_) {}
   $('#meta').textContent = [c.phase, c.worker && `on ${c.worker}`, c.server, c.epoch ? `epoch ${c.epoch}` : null, why,
+                            c.why, c.warning,   // the holder's word on this unit: why it is not running, what to check
                             c.worker_state === 'stale' ? 'last known state' : null].filter(Boolean).join(' · ');
   for (const li of $('#units').children) li.classList.toggle('on', li.dataset.id === String(id));
   fillEdit(c);

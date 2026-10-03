@@ -608,3 +608,43 @@ def test_a_span_a_door_answered_that_does_not_parse_costs_that_door_and_not_the_
         assert set(tl["unreachable"]) == {"r-bad", "r-door"}
     finally:
         srv.shutdown(); dsrv.shutdown(); bad.shutdown()
+
+
+def test_a_door_whose_timeline_is_brackets_past_the_parsers_depth_is_a_door_that_did_not_answer():
+    """The review's ninth pass, minor — a run: a door that answered nested brackets (there 100 000 of them, 200 KB; how
+    deep the parser goes depends on the stack it runs on) raised `RecursionError` out of `door_timeline`, which no caller
+    catches — the camera's timeline and its export were 500, the good door's footage lost with them. Whatever the parser
+    raises (`PARSE_ERRORS`) is the door not answering: named, and the other door's minutes drawn and exported."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from w2cplatform.contract import Heartbeat
+    from vms.config import REC_SPEC
+    box = Box()
+    ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    st = store()
+    t = box.wall()
+    footage(st, "7", 3, t - 3600, t - 3000)
+    dsrv = door(box, st)
+
+    class Deep(BaseHTTPRequestHandler):                               # a door — or a proxy — answering brackets
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            body = b"[" * 1_000_000 + b"]" * 1_000_000      # how deep the parser goes is the stack's: past it here
+            self.send_response(200); self.send_header("Content-Length", str(len(body))); self.end_headers()
+            self.wfile.write(body)
+    deep = ThreadingHTTPServer(("127.0.0.1", 0), Deep)
+    threading.Thread(target=deep.serve_forever, daemon=True).start()
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-deep"), Heartbeat("r-deep", box.wall(), [], {
+        "server": "srv-9", "archive_url": f"http://127.0.0.1:{deep.server_address[1]}", "volume": "other"}).to_bytes())
+    srv = serve(ctl, box.archive, port=0, wall=box.wall)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        with urllib.request.urlopen(f"{base}/timeline/7?from={t - 3600}&to={t - 3000}") as r:
+            tl = json.loads(r.read())
+        assert tl["unreachable"] == ["r-deep"] and tl["segments"] and all(s["recorder"] == "r-door" for s in tl["segments"])
+        with urllib.request.urlopen(f"{base}/export/7?from={t - 3600}&to={t - 3300}") as r:
+            assert r.status == 200 and r.read()[4:8] == b"ftyp" and r.headers.get("X-Archive-Unreachable") == "r-deep"
+    finally:
+        srv.shutdown(); dsrv.shutdown(); deep.shutdown()

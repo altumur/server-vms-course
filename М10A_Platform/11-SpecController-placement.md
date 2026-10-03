@@ -977,24 +977,53 @@ Docstring называет суть: **копия с возрастом, а не
 
 ```python
     def failover_seconds(self) -> dict[str, float]:
-        """Per worker: the gap between the heartbeat before its current instance
-        started and that instance's first — measured from what the workers wrote."""
-        out = {}
+        """Per worker: the gap between the heartbeat before its current instance started and that instance's start —
+        on one clock, or not at all."""
+        from .rows import FIELDS, number
+        now, out, unmeasured = self.wall(), {}, 0
         for w, hb in self.workers_seen(max_age=1e12).items():
-            started = float(hb.extra.get("started", hb.ts))
-            prev = float(hb.extra.get("previous_hb", 0) or 0)
-            if prev:
-                out[w] = round(started - prev, 1)
+            hk = self.sub.heartbeat_key(w)
+            instance = str(hb.extra.get("instance", ""))
+            was = self._hb_moved.get(w)                   # (instance, ts, when this reader saw it move)
+            if was is not None and was[0] != instance:
+                self._failover_seen[w] = round(now - was[2], 1)   # another instance, seen by this reader: its clock only
+            if was is None or was[:2] != (instance, hb.ts):
+                self._hb_moved[w] = (instance, hb.ts, now)
+            prev = number(f"{hk}#previous_hb", hb.extra.get("previous_hb"), float, None)
+            if not prev:
+                continue                                  # no instance before this one under that name: no failover
+            server = hb.extra.get("server")
+            if server is not None and hb.extra.get("previous_server") == server:
+                started = number(f"{hk}#started", hb.extra.get("started"), float, None) if "started" in hb.extra else hb.ts
+                gap = None if started is None else round(started - prev, 1)
+            else:
+                gap = self._failover_seen.get(w)
+            if gap is not None and gap < 0:
+                FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"{gap} s before this instance started: a clock stepped back"))
+                gap = None
+            if gap is None:
+                unmeasured += 1
+                continue
+            out[w] = gap
+            self.failover_worst = max(self.failover_worst, gap)
+        self.failovers_unmeasured = unmeasured
         return out
 ```
 
-Сколько секунд прошло между последним сигналом **предыдущего** экземпляра слота и первым сигналом нынешнего.
+Сколько секунд прошло между последним сигналом **предыдущего** экземпляра слота и стартом нынешнего.
 
-Откуда берутся эти числа: при старте воркер читает heartbeat, лежащий под его именем (урок 8), и, если он написан другим экземпляром, запоминает его время как `previous_hb`, а своё — как `started`. Обе величины он публикует в своём heartbeat'е. Контроллер просто вычитает.
+Откуда берутся эти числа: при старте воркер читает heartbeat, лежащий под его именем (урок 8), и, если он написан другим экземпляром, запоминает его время как `previous_hb`, сервер того экземпляра — как `previous_server`, а своё время старта — как `started`. Все три он публикует в своём heartbeat'е.
 
-Смысл в том, **кто измеряет**. Не контроллер по своим часам, не монитор снаружи — сам воркер, по тому, что осталось на диске от его предшественника. Это время от «прошлый замолчал» до «нынешний заговорил», то есть настоящий провал в работе, и в М11 оно становится числом в паспорте продукта: `vms_failover_seconds{kind="worst"}`.
+**Вычитать можно только времена по одним часам.** Раньше контроллер просто вычитал `started − previous_hb`. Но `started` написан часами машины, где работает замена, а `previous_hb` — часами машины, где работал предшественник, и на двух машинах их расхождение попадало прямо в число: отстань srv-b на десять минут, и переключение за 48 секунд выходило −552 (девятое ревью). Теперь путей два, и каждый — на одних часах:
 
-`if prev` отбрасывает воркеров, у которых предшественника не было: первый запуск переключением не является.
+- **тот же сервер** (`previous_server` равен `server`): `started − previous_hb`, оба числа по часам этой машины. Измеряет сам воркер, по тому, что осталось на диске от предшественника;
+- **другой сервер**: то, что видел **этот читатель** по своим часам. `_hb_moved` запоминает для каждого воркера экземпляр, `ts` его heartbeat'а и когда читатель увидел, что heartbeat сдвинулся; когда под тем же именем появился другой экземпляр, `_failover_seen` получает `now` минус момент последнего сдвига. Точность — с какой частотой читатель смотрит: консоль считает это на каждом скрейпе `/metrics`.
+
+Ни того ни другого — другой сервер, а читатель не видел предшественника живым (консоль запущена после сбоя) — число не считается: никакого числа из двух часов. Отрицательный промежуток (одни часы шагнули назад) — тоже не число; он записывается как испорченное поле `previous_hb` (`FIELDS.garbled`). Оба случая считаются в `failovers_unmeasured` — сколько воркеров сейчас с переключением, которое не измерено; на `/metrics` это `<p>_failovers_unmeasured` (урок 15). Каждое число читается через `rows.number`: `previous_hb: -inf` делал `worst` бесконечным, и тревога горела бы вечно.
+
+`if not prev` отбрасывает воркеров, у которых предшественника не было: первый запуск переключением не является.
+
+**`failover_worst` — наибольшее, что этот процесс измерил за всё время**, а не наибольшее из последних: иначе более короткое переключение того же воркера стирало бы длинное. Это время от «прошлый замолчал» до «нынешний заговорил», то есть настоящий провал в работе, и в М11 оно становится числом в паспорте продукта: `vms_failover_seconds{kind="worst"}`. Тесты: `test_lesson4_failover.py::test_a_failover_between_two_servers_is_measured_on_one_clock_or_not_at_all` (М11: srv-b отстаёт на десять минут — читатель меряет 48 с, а не −552; консоль, запущенная после сбоя, не меряет и считает; `-inf` не число; после более короткого второго сбоя `worst` остаётся 48) и `test_lesson4_worker.py::test_the_failover_on_metrics_is_the_one_the_workers_measured` (тот же сервер, 31 с).
 
 ## Шаг 22 — `counter` запускается
 
