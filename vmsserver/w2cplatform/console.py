@@ -111,7 +111,7 @@ from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
                        is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
-from .rows import PARSE_ERRORS, counts as garbled_by_table, number
+from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, number
 from .eventdatabase import refence
 from .events import ALARM, EventLog
 
@@ -145,7 +145,12 @@ from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate,
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
-from .spec import Refused, SpecController
+from .spec import GARBLED_ROW, Refused, SpecController
+
+# A unit's row the timeline's gate reads for its labels (`SpecConsole.dispatch`, `/events`): one that does not parse is
+# that unit's events withheld from a grant by label, and nobody else's timeline (the scaling pass after the eighth review).
+UNIT_LABELS = Table("unit", "its events are shown only to a grant that needs no labels: the unit's own, or the whole "
+                    "cluster's", "unit's row, read for its labels")
 from .variables import Conflict, Forbidden
 
 log = logging.getLogger(__name__)
@@ -2209,14 +2214,48 @@ class SpecConsole:
                     sees = self._visible(h)
                     if sees is not None:                 # …and so are the events: a unit's, to whoever may view that unit;
                         known: dict = {}                 # what names no unit — the journal — to whoever may view the whole cluster
+                        unread: dict[str, str] = {}      # unit -> why its labels could not be read
+                        withheld: dict[str, int] = {}    # …and how many of its events this caller was not shown for it
+
+                        # ONE UNIT'S ROW IS ONE UNIT'S EVENTS (the scaling pass after the eighth review). The labels a
+                        # grant may name were read with `ctl.unit` bare: one row that does not parse was a `ValueError`
+                        # and a 400 for the whole timeline of everybody the gate checks (a `KeyError`, no reply at all).
+                        # The row is read through `rows.Table` now (`UNIT_LABELS`: counted once, logged once, on
+                        # `/metrics`); its unit is judged with no labels — the unit's own grant and the whole cluster's
+                        # still see its events, a grant by label cannot, since what the row says is not known — and what
+                        # was left out for that reason is said in the answer (`withheld`), by unit. A `cam` that is no id
+                        # of this subsystem names no row: judged with no labels, nothing withheld. A store that does not
+                        # answer for the row is that unit's too, said the same way.
+                        def labels_of(unit: str) -> list:
+                            if unit == "*" or not spec.rows or "cam" in (spec.fields or {}):
+                                return []
+                            try:
+                                uid = spec.parse_id(unit)
+                            except ValueError:
+                                return []
+                            try:
+                                row = UNIT_LABELS.read(ctl._row_key(uid), lambda: ctl.unit(uid), GARBLED_ROW)
+                            except OSError as err:
+                                unread[unit] = f"the store did not answer for its row ({err})"
+                                return []
+                            if row is GARBLED_ROW:
+                                unread[unit] = "its row does not parse"
+                                return []
+                            labels = (row or {}).get("labels") or []
+                            return [str(x) for x in labels] if isinstance(labels, (list, tuple)) else []
 
                         def may_see(e):
                             unit = "*" if e.get("cam") is None else str(e["cam"])
                             if unit not in known:
-                                row = None if unit == "*" else ctl.unit(spec.parse_id(unit)) if spec.rows and "cam" not in (spec.fields or {}) else None
-                                known[unit] = sees(unit, list((row or {}).get("labels") or []))
+                                known[unit] = bool(sees(unit, labels_of(unit)))
+                            if not known[unit] and unit in unread:
+                                withheld[unit] = withheld.get(unit, 0) + 1
                             return known[unit]
                         rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
+                        if withheld:
+                            rep["withheld"] = [{"unit": u, "events": n, "why": f"{unread[u]}: what labels it carries is "
+                                                f"not known, and a grant by label cannot be checked against it"}
+                                               for u, n in sorted(withheld.items())]
                     if not narrow and con.epochs_stale:
                         rep = {**rep, "epochs": "cached"}         # fenced by the epochs read before the store went quiet
                     return h._send(200, con.timeline(rep, t0, t1))

@@ -455,3 +455,99 @@ def test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given
         box.vars.put(w.sub.slot_key(was), Slot(was, "somebody-else", box.wall() + 45, False, 9).to_items())
         lost = w.keep_slot(lambda: None)
         assert lost == ["u"] and "u" not in w.epochs and w.name != was, type(w).__name__
+
+
+# -- the stand-in's heartbeat (the scaling pass after the eighth review) ---------------------------------------------
+
+def _hb(box, w):
+    return Heartbeat.from_bytes(box.objects.get(w.sub.heartbeat_key(w.name)))
+
+
+def test_a_hung_step_does_not_make_the_holder_look_dead_and_the_heartbeat_says_whose_words_it_repeats():
+    """The stand-in renewed the leases and the slot and wrote no heartbeat: 45 s into a hung step the controller and the
+    recorders judged the holder dead while its leases were held for five minutes. Now, while it stands in, it says the
+    loop's LAST heartbeat again — the same status, a new `ts`, `stood_in` with the step, how long, and `as_of` (the `ts`
+    of the heartbeat whose status it is) — whenever the last one is `STAND_IN_HEARTBEAT` old; never anything it computed.
+    A minute hung: no moment with a heartbeat older than `lost_after`. Back, the loop's own heartbeat says no `stood_in`."""
+    box = Box()
+    w = _holder(box)
+    w.take_epoch("1")
+    w.renew_leases()
+    w.heartbeat_once()
+    loop = _hb(box, w)
+    oldest = 0.0
+    with w.guarded("pass"):
+        for _ in range(30):                                         # 30 × 2 s, a look of the stand-in each
+            _tick(box, 2)
+            w.stand_in_once()
+            hb = _hb(box, w)
+            oldest = max(oldest, box.wall() - hb.ts)
+        assert hb.ts > loop.ts and hb.status == loop.status
+        assert hb.extra["stood_in"]["step"] == "pass" and hb.extra["stood_in"]["as_of"] == loop.ts
+        assert hb.extra["stood_in"]["for"] >= 50 and hb.extra["stand_in_renewals"] == w.stand_in_renewals
+    # the first one goes with the stand-in's first renewal; after it, one every `STAND_IN_HEARTBEAT` and a look
+    assert oldest <= max(w.stand_in_after() + w.STAND_IN_WAKE, w.STAND_IN_HEARTBEAT + w.STAND_IN_WAKE) < 45.0, oldest
+    w.heartbeat_once()
+    assert "stood_in" not in _hb(box, w).extra                     # the loop's own words again
+
+
+def test_the_stand_in_says_no_heartbeat_over_a_fresh_one_nor_under_a_name_another_instance_took():
+    """It writes only when the last heartbeat — the loop's or its own — is `STAND_IN_HEARTBEAT` old: a loop that wrote
+    one a moment ago is not overwritten with an older status. And a slot another instance took ends its standing in
+    before it says anything under that name."""
+    box = Box()
+    w = _holder(box)
+    w.take_epoch("1")
+    w.renew_leases()
+    w.heartbeat_once()
+    with w.guarded("heartbeat"):
+        _tick(box, 14)
+        w.heartbeat_once()                                          # the loop wrote one inside the step
+        fresh = _hb(box, w)
+        assert w.stand_in_once()                                    # it renews the leases…
+        assert _hb(box, w) == fresh                                 # …and leaves the fresh heartbeat as it is
+    box2 = Box()
+    v = _holder(box2)
+    v.take_epoch("1")
+    v.renew_leases()
+    v.heartbeat_once()
+    before = _hb(box2, v)
+    box2.vars.put(v.sub.slot_key(v.name), Slot(v.name, "somebody-else", box2.wall() + 45, False, 9).to_items())
+    with v.guarded("pass"):
+        for _ in range(10):
+            _tick(box2, 5)
+            v.stand_in_once()
+    assert _hb(box2, v) == before                                   # nothing said under a name that is not its own
+
+
+def test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_hangs():
+    """The real `run` of each worker, with the real stand-in thread: a pass hung thirty seconds of the box's clock, and
+    the heartbeat under the worker's name is re-dated inside it — `stood_in` names the pass."""
+    box = Box()
+    for w in _all_workers(box):
+        w.STAND_IN_WAKE = 0.01
+        w.take_epoch("u")
+        w.renew_leases()
+        stop, seen = threading.Event(), {}
+
+        def said_again(w=w):
+            raw = w.objects.get(w.sub.heartbeat_key(w.name))
+            return raw is not None and "stood_in" in Heartbeat.from_bytes(raw).extra
+
+        def hung(*a, w=w, **kw):
+            if seen:
+                stop.set(); return []
+            _tick(box, 20)
+            _wait_for(lambda: getattr(w, "stand_in_renewals", 0) >= 1)
+            _tick(box, 10)
+            _wait_for(said_again)
+            seen["hb"] = Heartbeat.from_bytes(w.objects.get(w.sub.heartbeat_key(w.name)))
+            return []
+
+        w.reconcile_once = hung
+        t = threading.Thread(target=w.run, kwargs={"poll": 0.01, "stop": stop}, daemon=True)
+        t.start(); t.join(10)
+        assert not t.is_alive(), type(w).__name__
+        hb = seen.get("hb")
+        assert hb is not None and hb.extra.get("stood_in", {}).get("step") == "pass", f"{type(w).__name__}: {hb and hb.extra}"
+        assert box.wall() - hb.ts <= w.STAND_IN_HEARTBEAT, type(w).__name__
