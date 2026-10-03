@@ -163,13 +163,20 @@ def _steps(what: str, *steps) -> None:
 # `<sub>_reconcile_pass_seconds`, the last pass and the last success. The cluster's loops called the three steps one by
 # one and wrote no report: on a cluster those metrics said 0 and -1 for ever. Then the snapshot, in its own step — the
 # recordings' too, as on a box (`rec_snapshot_age_seconds` was -1 here).
+#
+# Both in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): the snapshot asks every unit's
+# row, placement and server, and the placement pass has just read them — a thousand cameras cost the two together some
+# 64 000 reads of Nomad's leader every five seconds, 2 000-odd now (`vmsserver/tests/test_read_budget.py`).
 def _placement_pass(what: str, ctl) -> None:
-    _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
+    with ctl.one_pass():
+        _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
 ```
 
 **Шаг, который упал, не отменяет остальные.** Шаги стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал.
 
 **Проход — тот же, что на коробке** (восьмое ревью ServerVMS, нашёл координатор). Цикл кластера звал `ensure_placed`, `redistribute` и `ensure_home(1)` по одному и не писал отчёта прохода, а `/metrics` берёт из этого отчёта (`<sub>/controller/pass`) `vms_units_unplaced`, `vms_reconcile_pass_seconds`, последний проход и последний успех. На кластере эти метрики навсегда показывали 0 и -1. Теперь `_placement_pass` зовёт `pass_once(1)` платформы (`SpecController.pass_once`): те же три шага, каждый в своём `try`, и отчёт, который он пишет, — как цикл контроллера на коробке (`vms/__main__._controller_loop`). Снимок — отдельным шагом. Так же устроен цикл контроллера записей (`reccontroller`: `_placement_pass("rec placement", ctl)`), и у записей теперь тоже публикуется снимок — `rec_snapshot_age_seconds` на кластере больше не -1.
+
+**Проход и снимок — один проход чтений** (заход по масштабу после восьмого ревью). Здесь каждое чтение — HTTP-запрос к лидеру raft, и проход на тысяче камер делал их 64 159 раз в пять секунд. Каждый шаг заново читал строки и размещения, а снимок и `ensure_home` перечитывали все heartbeat'ы на каждую камеру. Теперь `_placement_pass` открывает `ctl.one_pass()` вокруг обоих шагов (`w2cplatform/contract.py`): каждый ключ и листинг читаются один раз за проход, запись забывает то, чего коснулась, а проигранный CAS читает хранилище заново. Снимок в том же проходе не читает ничего. Посчитано на хранилище в памяти, не на Nomad: 2 079 чтений за проход, около двух на камеру. Как это меняет пределы кластера, разобрано в записках, «Чего эта схема стоит и сколько выдержит», раздел 10.2. Тест: `vmsserver/tests/test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once`.
 
 ## Шаг 6 — Консоль
 

@@ -553,6 +553,95 @@ def read_hold(key: str, place: str, items) -> "Slot | None":
     return HOLDS.read(key, lambda: Slot.from_items(place, items))
 
 
+# -- one pass, one read of each key (the scaling pass after the eighth review) ----------------------------------------
+# A controller's pass asks a dozen questions per unit — its row, its placement, which server a worker is on, whether
+# that server's resource answers, who is leaving — and every question was a read of the store, asked again for the
+# next unit. A thousand cameras on twenty workers cost one idle pass some 64 000 reads (`tests/test_read_budget.py`
+# counts them): the snapshot alone read every heartbeat again for every camera, and `ensure_home` every recorder's.
+# Within one pass an answer cannot be more than a pass old anyway; so inside `one_pass` the store is asked ONCE per key
+# and per listing, and the answer is kept until the pass ends — never longer: nothing survives between passes, and
+# the process can still be killed anywhere.
+#
+# Writes go to the store as they did, and a write FORGETS what it touched — the key, and every listing it could be in —
+# so the pass reads back what it wrote, not what it had read before. A write that fails forgets too: a CAS that lost
+# is retried by `Controller.write` against the store, not against the copy that lost.
+class _PassStore:
+    """One store's reads for one pass: each `get` and `list` asked once; a write forgets what it touched."""
+
+    def __init__(self, real):
+        self.real, self._got, self._listed, self._memo = real, {}, {}, {}
+
+    def get(self, key):
+        if key not in self._got:
+            self._got[key] = self.real.get(key)
+        got = self._got[key]
+        if isinstance(got, tuple) and got and isinstance(got[0], dict):
+            return dict(got[0]), got[1]               # Variables' items are a copy, as the store's own are
+        return got
+
+    def list(self, prefix, *a, **kw):
+        if a or kw:
+            return self.real.list(prefix, *a, **kw)
+        if prefix not in self._listed:
+            self._listed[prefix] = list(self.real.list(prefix))
+        return list(self._listed[prefix])
+
+    # What a pass derives from one prefix — every heartbeat under it parsed, the rows grouped by a field — kept like a
+    # read, and forgotten like one: by a write to anything under the prefix.
+    def memo(self, prefix: str, read, name: str = ""):
+        if (prefix, name) not in self._memo:
+            self._memo[(prefix, name)] = read()
+        return self._memo[(prefix, name)]
+
+    def _forget(self, key: str) -> None:
+        self._got.pop(key, None)
+        for p in [p for p in self._listed if key.startswith(p)]:
+            del self._listed[p]
+        for p in [p for p in self._memo if key.startswith(p[0])]:
+            del self._memo[p]
+
+    def _wrote(self, call, key, *a, **kw):
+        try:
+            return call(key, *a, **kw)
+        finally:
+            self._forget(key)
+
+    def put(self, key, *a, **kw):
+        return self._wrote(self.real.put, key, *a, **kw)
+
+    def delete(self, key, *a, **kw):
+        return self._wrote(self.real.delete, key, *a, **kw)
+
+    def put_durable(self, key, data):
+        return self._wrote(getattr(self.real, "put_durable", self.real.put), key, data)
+
+    def put_new(self, key, data):
+        return self._wrote(self.real.put_new, key, data)
+
+    def __getattr__(self, name):
+        return getattr(self.real, name)
+
+
+@contextmanager
+def one_pass(*ctls):
+    """Inside: each controller reads each key of its stores once, and sees what it writes. Controllers over the same store
+    share its reads (the console's loops write through one and read through another). Only on the calling thread — the
+    console's doors read through the same controller from theirs, and see the store. A pass inside a pass is the outer one."""
+    stores: dict[int, _PassStore] = {}
+    opened = []
+    for c in ctls:
+        if c._reads() is not None:
+            continue
+        v, o = c.__dict__["_vars"], c.__dict__["_objects"]
+        c._pass_local.reads = (stores.setdefault(id(v), _PassStore(v)), stores.setdefault(id(o), _PassStore(o)))
+        opened.append(c)
+    try:
+        yield
+    finally:
+        for c in opened:
+            c._pass_local.reads = None
+
+
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
 # so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
 # and the reason the controller is never on the recovery path.
@@ -562,8 +651,41 @@ class Controller:
 
     # Keeps the `Subsystem`, the two stores and a wall clock (tests inject a fake).
     def __init__(self, sub: Subsystem, vars_: Variables, objects: ObjectStore, wall=time.time):
+        self._pass_local = threading.local()
         self.sub, self.vars, self.objects, self.wall = sub, vars_, objects, wall
         check_schema(vars_)                       # a build older than the store does not run at all
+
+    # The stores — or, inside `one_pass` on this thread, the pass's reads of them. Assigning sets the store itself.
+    def _reads(self):
+        local = self.__dict__.get("_pass_local")
+        return getattr(local, "reads", None) if local is not None else None
+
+    @property
+    def vars(self):
+        r = self._reads()
+        return r[0] if r is not None else self.__dict__["_vars"]
+
+    @vars.setter
+    def vars(self, v):
+        self.__dict__["_vars"] = v
+
+    @property
+    def objects(self):
+        r = self._reads()
+        return r[1] if r is not None else self.__dict__["_objects"]
+
+    @objects.setter
+    def objects(self, o):
+        self.__dict__["_objects"] = o
+
+    def one_pass(self):
+        return one_pass(self)
+
+    # A prefix's heartbeats, parsed — once per pass inside one (`_PassStore.memo`), on every call outside. `rows`: what is
+    # derived from rows under the prefix rather than from objects (`SpecController._rows_by`).
+    def _per_pass(self, prefix: str, read, name: str = "", rows: bool = False):
+        store = self.vars if rows else self.objects
+        return store.memo(prefix, read, name) if isinstance(store, _PassStore) else read()
 
     # The one write primitive: read `(items, idx)`, call `mutate(dict(items or {}))`; if it returns `None`
     # nothing is written and the current items are returned; otherwise `put(cas=idx)`; on `Conflict` re-read
@@ -594,13 +716,24 @@ class Controller:
         the controller keeps — a fact it reads."""
         out = {}
         now = self.wall()
-        # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
-        for key in self.objects.list(self.sub.heartbeats_prefix()):
-            raw = self.objects.get(key)
-            hb = parse_heartbeat(key, raw) if raw else None
-            if hb is not None and is_live(self.sub.name, hb.ts, now, max_age):
+        for hb in self._heartbeats():
+            if is_live(self.sub.name, hb.ts, now, max_age):
                 out[hb.worker] = hb
         return out
+
+    # Every heartbeat under the prefix, parsed, whatever its age — read once per pass (`_per_pass`): `capacity_of`,
+    # `server_of`, `place_of` ask it per unit and per candidate, and each asking was a listing and a read of every one.
+    def _heartbeats(self) -> list[Heartbeat]:
+        def read():
+            out = []
+            # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
+            for key in self.objects.list(self.sub.heartbeats_prefix()):
+                raw = self.objects.get(key)
+                hb = parse_heartbeat(key, raw) if raw else None
+                if hb is not None:
+                    out.append(hb)
+            return out
+        return self._per_pass(self.sub.heartbeats_prefix(), read)
 
     # Reads one worker's row. One whose `rev` does not parse is read for the units it names (`read_assignment`).
     def assignment(self, worker: str) -> Assignment:
@@ -780,6 +913,11 @@ class Worker:
         self.stand_in_renewals = 0                # renewals the stand-in made for a hung step, since start: in the heartbeat
         self._loop_renewed = clock()              # when the loop last renewed its leases (`renew_leases`)
         self._stood_in_since: float | None = None # what `STAND_IN_FOR` is counted from, while steps are being stood in for
+        # The loop's last heartbeat as it wrote it — `(status, extra, ts)` — and when any heartbeat last went (the clock):
+        # what the stand-in re-dates for a hung step (`_stand_in_heartbeat`). One write at a time, from either thread.
+        self._last_heartbeat: tuple | None = None
+        self._heartbeat_at: float | None = None
+        self._heartbeat_lock = threading.Lock()
         # The long poll (`longpoll.py`): the wait this worker's loop sleeps in, and the requests it holds at the
         # resources. Neither exists until the process asks for them (`poll_events`) — a worker made without them
         # waits `stop.wait(poll)`, exactly as before.
@@ -1301,6 +1439,7 @@ class Worker:
         if not self.may_stand_in():
             return False
         if mark["last"] is not None and now - mark["last"] < max(1.0, (self.lease_ttl - self.lease_margin) / 3):
+            self._stand_in_heartbeat(mark, age)       # between two renewals: the heartbeat, if it is due
             return False                              # as often as the loop renews, not every look
         if not self._slot_lock.acquire(blocking=False):
             return False                              # the loop is renewing it this moment
@@ -1328,6 +1467,44 @@ class Worker:
             mark["said"] = True
             log.warning("%s: step %s has run %.0f s; standing in for it — leases and slot renewed, for up to %g s",
                         self.name, mark["name"], age, self.STAND_IN_FOR)
+        self._stand_in_heartbeat(mark, age)
+        return True
+
+    # …AND THE HEARTBEAT (the scaling pass after the eighth review). The stand-in renewed the leases and the slot and wrote
+    # no heartbeat: 45 s into a hung step the controller and the recorders judged the holder dead — the recorders lost the
+    # fan-out they record from, the controller moved its units — while the stand-in held its leases for five minutes. So
+    # while it stands in, it writes one whenever the last is `STAND_IN_HEARTBEAT` old, and only after it has confirmed the
+    # slot is this instance's in this step (`mark["last"]`).
+    #
+    # WHAT IT MAY SAY. Nothing it has not seen: it does not ask the subsystem for a status — that is the loop's state,
+    # mid-step on the loop's thread, and computing it here would be a second writer of it — and it does not send an empty
+    # one, which would tell every reader the units have no holder, the very failure this is for. It says the LOOP'S LAST
+    # heartbeat again, as the loop wrote it, with a new `ts` and `stood_in`: the step that hangs, for how long, and
+    # `as_of` — the `ts` of the heartbeat whose status this is. A reader that needs only "alive, and where the fan-out
+    # is" has it; one that wants to know how fresh the status is reads `as_of`. A pipeline that died under the hung step
+    # is in that status as running until the loop comes back — for at most `STAND_IN_FOR`, after which the stand-in
+    # stops, the heartbeat goes stale too, and the units honestly go.
+    STAND_IN_HEARTBEAT = 10.0     # the loop's heartbeat rhythm (`VmsWorker.run`)
+
+    def _stand_in_heartbeat(self, mark: dict, age: float) -> bool:
+        if self._last_heartbeat is None or self.seeking is not None or not self._heartbeat_lock.acquire(blocking=False):
+            return False                              # nothing to say again, nobody to say it as, or the loop is writing
+        try:
+            if self._heartbeat_at is not None and self.clock() - self._heartbeat_at < self.STAND_IN_HEARTBEAT:
+                return False
+            status, extra, ts = self._last_heartbeat
+            said = {**extra, "stand_in_renewals": self.stand_in_renewals,
+                    "stood_in": {"step": mark["name"], "for": round(age, 1), "as_of": ts}}
+            self.objects.put(self.sub.heartbeat_key(self.name), Heartbeat(self.name, self.wall(), status, said).to_bytes())
+            self._heartbeat_at = self.clock()
+        except OSError:
+            return False                              # the store is what hangs: the leases judge that themselves
+        finally:
+            self._heartbeat_lock.release()
+        if not mark.get("heartbeat_said"):
+            mark["heartbeat_said"] = True
+            log.warning("%s: step %s has run %.0f s; its last heartbeat (of %.0f s ago) said again for it", self.name,
+                        mark["name"], age, self.wall() - ts)
         return True
 
     # The place, by CAS and only while the row names this instance; never let go of here — losing it is the loop's
@@ -1435,8 +1612,10 @@ class Worker:
             extra.setdefault(name, n)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
-        self.objects.put(self.sub.heartbeat_key(self.name),
-                         Heartbeat(self.name, self.wall(), status, extra).to_bytes())
+        with self._heartbeat_lock:                # …and what a stand-in says again for a hung step (`_stand_in_heartbeat`)
+            ts = self.wall()
+            self.objects.put(self.sub.heartbeat_key(self.name), Heartbeat(self.name, ts, status, extra).to_bytes())
+            self._last_heartbeat, self._heartbeat_at = (status, extra, ts), self.clock()
 
     # A UNIT'S OWN ROW THAT DOES NOT PARSE (the sixth pass, the follow-up). The controller has passed such a row by
     # since the second pass (`SpecController.units`); the workers read the rows of the units they were assigned in

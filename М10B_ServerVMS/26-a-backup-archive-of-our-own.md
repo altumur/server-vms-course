@@ -88,11 +88,13 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
         # summary, cheap to carry in every heartbeat. The primary plans from it, and what it copies is what the
         # backup's door hands over (Lesson 26).
-        if volumes.is_backup(cam, self.vars):
+        if volumes.is_backup(cam, names=self._look().backups()):
             ours = self.our_coverage(cam["id"])
             if ours:
                 out["coverage"] = {"from": ours[0][0], "to": ours[-1][1], "fragments": len(ours)}
 ```
+
+Какие тома резервные, heartbeat спрашивает один раз, а не по разу на запись. Раньше `is_backup(cam, self.vars)` перечитывал список томов для каждой строки: регистратор тысячи записей читал хранилище на каждый heartbeat 24 000 раз — тома и heartbeat'ы держателей для каждой записи. Теперь — 24 раза: ответ берётся из прохода (`self._look()`, шаг 3).
 
 Сводка считается по индексу тома резервной, поэтому она видимая: последние минуты в открытом блоке в ней ещё не числятся. Основной это и нужно — копировать она может только то, что дверь резервной уже может отдать.
 
@@ -122,30 +124,37 @@ rec/recordings/7-copy   {cam: 7, home: copy}          ← copy — том вид
 ```python
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
-        names = volumes.backups(self.vars)
+        look = self._look()
+        names = look.backups()
         if not names or volumes.is_backup(row, names=names):
             return []
-        ...
-        for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
+        recs = {str(o["id"]) for o in look.by_cam().get(str(row["cam"]), ())
+                if str(o["id"]) != str(row["id"]) and volumes.is_backup(o, names=names)}
+        out, edge_homes, homes = [], look.edges(), look.homes()
+        from .config import local_only
+        units = look.units(self.SUB.name)
+        for name, _, hb, st in sorted((e for rid in recs for e in units.get(rid, ())), key=lambda e: e[:2]):
             if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
                 continue                      # silent, or a clock from the future (M9 of the review): not a source
+            if not st.get("coverage"):
+                continue
             url = hb.extra.get("archive_url", "")
-            ...
-            for st in hb.status:
-                if str(st.get("id")) not in recs or not st.get("coverage"):
-                    continue
-                kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
-                if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
-                    continue                  # no door to a backup, nobody to ask the camera: not a source from here
-                if self._source_waits(f"{kind}:{st['id']}"):
-                    continue                  # it failed a range just now: not asked again yet (`_source_answered`)
-                out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
-                            "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
-                            "coverage": st["coverage"]})
+            if url and local_only(url, hb.extra.get("server", "?"), self.server):
+                url = ""                      # that recorder's archive door is on its own loopback: not reachable from here
+            kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
+            if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
+                continue                      # no door to a backup, nobody to ask the camera: not a source from here
+            if self._source_waits(f"{kind}:{st['id']}"):
+                continue                      # it failed a range just now: not asked again yet (`_source_answered`)
+            out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
+                        "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
+                        "coverage": st["coverage"]})
         return out
 ```
 
 `recs` — записи той же камеры, чей дом — резервный том. Источник — только у регистратора, чей heartbeat живой (моложе `LOST_AFTER` = 45 секунд) и кто публикует сводку. Резервной на диске нужна ещё и дверь.
+
+**Строки и heartbeat'ы читаются раз за проход, а не раз на запись.** Функция отвечала на вопрос об одной записи, перебирая всё: строки всех записей дважды (`_recordings()` — список и чтение каждой строки) и heartbeat'ы всех регистраторов. А дозапись задаёт этот вопрос по каждой своей записи, и цена прохода росла как квадрат числа записей (масштабный проход, измерено счётчиком на `get` и `list` обоих хранилищ). На тысяче записей и пятистах резервных один проход дозаписи читал хранилище 3 032 003 раза и шёл 112 секунд. Теперь проход смотрит в хранилище один раз (`Look`, декоратор `one_look`). Строки, heartbeat'ы регистраторов и держателей, имена резервных томов читаются при первом вопросе, а дальше ответы берутся из словарей: записи по камере (`by_cam`), записи статусов по записи (`units`), дома по имени (`homes`). Тот же проход стоит 1531 чтение. Прочитанное принадлежит проходу: следующий читает заново. Долгий проход перечитывает через `Look.FRESH` (10 секунд, период heartbeat'а), так что дозапись, потратившая минуты на один диапазон, ищет источники следующей записи не по старым heartbeat'ам. Решения прежние: старый и новый код прогнаны на одном сценарии (живые, пропавшие, мёртвые и «из будущего» регистраторы, надгробия, карта, дверь на loopback), расхождений ноль. Тесты: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording` (потолки на тысяче записей и линейность: вдвое больше записей — не больше чем вдвое больше чтений) и `test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_again`.
 
 **Карту не открывают — у камеры спрашивают** (как в продукте; обратная связь CB, DG). Двери у регистратора камеры нет: карта — не том движка, а камеру, которая толкает поток, никто не может набрать. Кадры карты приходят **ответом камеры** на запрос диапазона. Сервер кладёт диапазон в ответ на опрос камеры, камера выгружает его (урок 16 М12). Этот запрос — крючок `card_range(src, t0, t1)`. Ставит его тот, кто запускает регистратор: в М12 — приём (`domain/ingest.py`, `card_range`). Без крючка спросить камеру некому, и карта источником не считается.
 
@@ -299,8 +308,11 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 Вторая дверь платформы — порядок среди нескольких совпадений:
 
 ```python
-def rank_near_recording(ctl, recording_id: str) -> int:
-    names = backups(ctl.vars)
+def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int:
+    memo = {} if memo is None else memo
+    if "backups" not in memo:
+        memo["backups"] = backups(ctl.vars)
+    names = memo["backups"]
     if not names:
         return 0
     items, _ = ctl.vars.get(f"{SUB}/recordings/{recording_id}")
@@ -313,6 +325,8 @@ def rank_near_recording(ctl, recording_id: str) -> int:
 
 Платформа по-прежнему не знает, что такое резерв: она сортирует найденных по числу, которое вернула подсистема, а при равенстве — по имени, чтобы два прохода пришли к одному серверу. Тест: `test_the_camera_stands_beside_the_backup_recording` — `holder_near("1") == ("r-2", "srv-b")`.
 
+**Какие тома резервные, читается раз на взгляд, а не раз на запись.** `memo` — словарь, который платформа держит, пока живёт один взгляд на heartbeat'ы регистраторов (`NearIndex`, урок 11 М10A). Раньше список томов перечитывался для каждой записи, которую ранжировали, а ранжировали и единственную найденную. Теперь тома читаются один раз, строка каждой записи — один раз, когда её ранжируют, а одну найденную не ранжируют вовсе (масштабный проход). Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`.
+
 ## Шаг 8 — Писать за сбой, никогда за решение
 
 Резервная, которая пишет всегда, стоит второго архива и, на карте, второго потока через аплинк камеры. Часто это правильно. Но есть установки, где резервная нужна **только** когда основная не пишется: `when: offline`.
@@ -322,16 +336,26 @@ def rank_near_recording(ctl, recording_id: str) -> int:
 Правило то же, что у дозаписи в шаге 10 урока 16: **прикрывается сбой, а не решение.** Резервная пишет за основную, которая **должна** писаться — включена, и её `until` не прошёл, — и не пишется:
 
 ```python
+        for other in look.by_cam().get(str(row["cam"]), ()):
+            if str(other["id"]) == str(row["id"]) or volumes.is_backup(other, names=names):
+                continue
+            ...
+            said = [hb.ts for _, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
+            running = any(is_live(self.SUB.name, ts, now, self.LOST_AFTER) for ts in said)
+            gone = [ts for ts in said if not is_live(self.SUB.name, ts, now, self.LOST_AFTER)
+                    and now - ts <= self.LOST_AFTER + self.START_GRACE]
             until = float(other.get("until") or 0)
             should = bool(other.get("enabled")) and (until == 0 or until > now)
-            if not should or str(other["id"]) in running:
+            if not should or running:
                 self._not_written_since.pop(str(other["id"]), None)
                 continue
-            since = self._not_written_since.setdefault(str(other["id"]), min(now, vanished.get(str(other["id"]), now)))
+            since = self._not_written_since.setdefault(str(other["id"]), min(now, max(gone) if gone else now))
             need = need or now - since >= self.START_GRACE
 ```
 
-(`vanished` — основная, чей регистратор **пропал**: для неё отсчёт идёт от его последнего heartbeat'а, а не от момента, когда это заметили; об этом — в шаге 9, «Кольцо должно доставать до смерти сервера основной».)
+(`gone` — основная, чей регистратор **пропал**: его heartbeat уже не живой, но замолчал не дольше `LOST_AFTER + START_GRACE` назад. Для неё отсчёт идёт от его последнего heartbeat'а, а не от момента, когда это заметили; об этом — в шаге 9, «Кольцо должно доставать до смерти сервера основной».)
+
+**Другие записи камеры и что о них говорят регистраторы — из прохода, а не из хранилища.** Масштабный проход: правило читало строки всех записей и heartbeat'ы всех регистраторов для каждой резервной, а шлюз спрашивает его о каждой. На тысяче записей и пятистах резервных один проход шлюза читал хранилище 755 500 раз и шёл 30 секунд. Теперь записи той же камеры берутся из словаря по камере (`look.by_cam()`), а что о каждой сказали регистраторы — из словаря по записи (`look.units`). И то и другое прочитано один раз за проход (шаг 3): тот же проход шлюза стоит 1508 чтений. Книга основных (`carried_primary`, урок 13 М12) — тоже раз за проход, а не раз на резервную. Если хранилище не ответило, проход это помнит: шлюз пропускается и считается, как раньше, а хранилище не спрашивают пятьсот раз. Тест: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording`.
 
 «Пишется» — значит у живого регистратора кластера (heartbeat моложе 45 секунд) эта запись числится `running`. Только что замолчавшей основной даются секунды — `START_GRACE = 20`, число продукта, намеренное на коробке: так начинается **каждая** запись по событию — строка появилась, конвейер поднимается, — и будить резервную на каждое событие не нужно. Тест: `test_an_offline_backup_stands_in_for_a_failure_and_never_for_a_decision`.
 
