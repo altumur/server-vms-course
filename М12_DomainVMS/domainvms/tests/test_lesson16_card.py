@@ -614,7 +614,8 @@ def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorde
     both passed them over — −5 s lost 5.0 s, −30 s lost 30.0, at the recorder and on the card, and nothing counted
     them. Now the camera's ring keeps one line of time that only goes forward (`CamRing._timed`): every frame captured
     reaches the recorder once, on the cluster's clock where it was captured, every frame is on the card once, and the
-    step back is counted and said. A step forward loses nothing either, and the ingest says the camera's clock moved."""
+    step back is counted and said. A step forward loses nothing either, and is taken up on the line as well (the tenth
+    review: the camera's steady clock tells it from a pause): the ingest's offset moves for neither."""
     from vms.card import CamRing, CardActuator, CardBuffer
     from vms.worker import FAKE_PPS, FAKE_SPS
     from w2cplatform.obsd import archive_ms, video
@@ -625,7 +626,7 @@ def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorde
         camclock = lambda: wall() + skew[0]                             # the camera's clock: the cluster's, then stepped
         card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
         try:
-            ring = CamRing(clock=camclock)
+            ring = CamRing(clock=camclock, steady=wall)                 # (the camera's steady clock: the true one)
             act = CardActuator(ring, card, threaded=False)
             act("start", {"id": "1-card", "epoch": 1})                  # the card writes every frame
             pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=camclock, ring=ring)
@@ -663,7 +664,8 @@ def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorde
             assert abs(said["clock_back_s"] + step) < 0.01 and ring.status()["clock_back_s"] == -step   # …and said
         else:
             assert ring.clock_back == 0 and "clock_back_s" not in said
-        assert ingest.cams[SERIAL].clock_steps == (1 if step > 0 else 0)   # a step back moves no offset; forward, it is said
+            assert ring.clock_forward == 1 and abs(said["clock_forward_s"] - step) < 0.01, step
+        assert ingest.cams[SERIAL].clock_steps == 0                    # neither moves the offset
 
 
 def test_a_lagging_stream_keeps_on_the_card_what_it_skipped_until_backfill_has_it_and_backfill_waits_for_the_uplink():
@@ -763,3 +765,194 @@ def test_a_lagging_stream_keeps_on_the_card_what_it_skipped_until_backfill_has_i
         shutil.rmtree(card.path, ignore_errors=True)
     assert holes and not rids and pieces_while_lagging == []
     assert [m for m in missed if m not in landed] == [] and card.evicted_owed == 0     # all of it, off the card
+
+
+# -- the tenth review -----------------------------------------------------------------------------------------------------
+def _sensor(ring, start, camclock, wall, n, size=200):
+    """Ten frames a second up to now into the camera's ring, each stamped by the camera's clock where it was captured and
+    carrying its number; returns the next number."""
+    from vms.worker import FAKE_PPS, FAKE_SPS
+    from w2cplatform.obsd import archive_ms, video
+    while start + n / 10 <= wall():
+        t, key = camclock() - (wall() - start - n / 10), n % 20 == 0
+        body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + \
+            b"\x80" * size + n.to_bytes(8, "big")
+        ring.add(video(archive_ms(t), archive_ms(t + 0.1), body, key, 1280, 720))
+        n += 1
+    return n
+
+
+def _number(s) -> int:
+    return int.from_bytes(s.body[-8:], "big")
+
+
+def test_backfill_across_a_forward_step_of_the_cameras_clock_asks_the_card_for_the_hole_and_lands_it_where_captured():
+    """The tenth review, blocker, its probe `pl4_fwd_backfill`: the road goes 20–80 s, the camera's clock steps forward J
+    in the middle, and the server asks the card for its hole, [19.9, 50.5] on its own clock. The ingest moved the range
+    onto the camera's clock by the offset after the step, and the card answered what was captured at [19.9 + J, 50.5 + J],
+    laid into the archive at [19.9, 50.5]: at J = 10, the frames of 30–60.4 s ten seconds early; at J = 30, those of 50–80.4
+    thirty seconds early — the wrong pictures at the wrong time, and the hole never asked for. The camera's ring takes the
+    step forward up on its line now (`CamLine`), so one offset holds for the whole of it: the answer is the frames
+    captured in the hole (asked from the key frame before it), each where it was captured; with what the stream carried, every
+    frame of the two minutes is at the server once."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    from w2cplatform.obsd import unix_s
+    for jump in (10.0, 30.0):
+        wall = Clock(100_000.0)
+        fed, north, south, signer, ingest, cam, *_ = _site(wall)
+        skew, down = [0.0], set()
+        camclock = lambda: wall() + skew[0]
+
+        def dial(url):
+            if url in down:
+                raise Unreachable(f"{url} did not answer")
+            return ingest
+        card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
+        try:
+            ring = CamRing(clock=camclock, steady=wall)
+            act = CardActuator(ring, card, threaded=False)
+            act("start", {"id": "1-card", "epoch": 1})                  # the card writes every frame
+            pusher = CameraPusher(SERIAL, cam.flash, dial, card=card.pieces, recording="1-card", ring=ring)
+            ingest.want(SERIAL, "recorder:r")
+            ingest.subscribe(SERIAL, "recorder:r")
+            live = []
+
+            class Writer:
+                def push(self, f):
+                    live.append((_number(f["sample"]), f["t"]))
+            ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+            ingest.written = lambda ref: live[-1][1] if live else None
+            start, n = wall(), 0
+
+            def second():
+                nonlocal n
+                n = _sensor(ring, start, camclock, wall, n)
+                act.drain()
+                pusher.pass_once([])
+                wall.advance(0.5)
+            while wall() - start < 120:
+                second()
+                at = wall() - start
+                if abs(at - 20) < 0.26:
+                    down.update(URLS)
+                if abs(at - 50) < 0.26:
+                    skew[0] += jump                                     # the camera's clock steps forward, mid-break
+                if abs(at - 80) < 0.26:
+                    down.clear()
+            rid = ingest.request_range(SERIAL, start + 18.0, start + 50.5, recording="1-card")   # (from a key frame)
+            answer = None
+            for _ in range(40):
+                second()
+                answer = ingest.result(SERIAL, rid)
+                if answer is not None:
+                    break
+        finally:
+            shutil.rmtree(card.path, ignore_errors=True)
+        got = [_number(s) for s in answer]
+        assert got == list(range(180, 505)), (jump, got[:3], got[-3:])  # the hole, from the key frame before it
+        assert all(abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002 for s in answer), jump   # where captured
+        assert all(abs(t - (start + i / 10)) < 0.002 for i, t in live), jump
+        newest = max(i for i, _ in live)
+        assert sorted(set(i for i, _ in live) | set(got)) == list(range(newest + 1)), jump    # all of it, once somewhere
+        assert ring.clock_forward == 1 and ingest.cams[SERIAL].clock_steps == 0
+
+
+def _camera_process(wall, vars_, objects, root, flash, dial):
+    """The camera's process as the course builds it: its ring, its card's recorder (`CardRecorder`, the card a volume of
+    the camera's own cluster) and its pusher — tied in the one call a camera's process makes (`camera_process`)."""
+    import os
+    from domain.ingest import camera_process
+    from vms.card import CamRing, CardActuator, CardRecorder
+    from vms.config import REC_SPEC
+    from w2cplatform.spec import SpecController
+    ring = CamRing(clock=wall, steady=wall)
+    act = CardActuator(ring, threaded=False)
+    rec = CardRecorder("r-cam", vars_, objects, ring, act, clock=wall, wall=wall, server="cam-1",
+                       archive_root=os.path.join(root, "archive"), env={})
+    rec.lease_pass(); rec.heartbeat_once()
+    SpecController(REC_SPEC, vars_, objects, wall=wall).ensure_placed()
+    rec.reconcile_once(); rec.heartbeat_once()
+    assert rec.card is not None and "1-card" in rec.reconciler.actual
+    rec.card.segment_span = 10.0
+    return ring, act, rec, camera_process(SERIAL, flash, dial, rec)
+
+
+def test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_wired_as_a_camera_wires_it():
+    """The tenth review, two majors, run through the camera's own wiring (`camera_process`: the course's camera built its
+    pusher and its card's recorder nowhere, and the hooks were set by the tests alone). The road goes at 20 s and is
+    back at 100: the card wrote the break, the stream continued its last thirty seconds from memory, and 20–70 s are
+    owed — backfill's, off the card. The camera's process then starts again, the road down, and its card fills: the
+    pusher of the new process said owed only what came after its own start, so the card let go of 20–70 FIRST — on no
+    copy, `evicted_owed` nought, no alarm. What the server has is kept on the card now (`delivery`, the recorder's note)
+    and the new pusher takes it back (`remember`): the card lets go of what the server has, and every owed frame is
+    still on it. The same run with the note taken away is the review's: the owed seconds gone, uncounted."""
+    import os
+    from vms.card import declare_card
+    from vms.config import REC_SPEC
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.spec import SpecController
+    from w2cplatform.variables import FileVariables
+    from w2cplatform.obsd import archive_ms
+    out = {}
+    for note in (True, False):
+        wall = Clock(100_000.0)
+        fed, north, south, signer, ingest, cam, *_ = _site(wall)
+        root, down = tempfile.mkdtemp(prefix="camproc-"), set()
+        vars_, objects = FileVariables(os.path.join(root, "config")), FsObjectStore(os.path.join(root, "objects"))
+        card_dir = tempfile.mkdtemp(prefix="card-")
+        declare_card(vars_, "cam-1", card_dir, 64 << 20, cam="1")
+        SpecController(REC_SPEC, vars_, objects, wall=wall).create(
+            {"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
+
+        def dial(url):
+            if url in down:
+                raise Unreachable(f"{url} did not answer")
+            return ingest
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        live = []
+
+        class Writer:
+            def push(self, f):
+                if not live or f["t"] > live[-1]:
+                    live.append(f["t"])
+        ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        ingest.written = lambda ref: live[-1] if live else None
+        try:
+            ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
+            start, n = wall(), 0
+
+            def second(until):
+                nonlocal n
+                while wall() - start < until:
+                    n = _sensor(ring, start, wall, wall, n)
+                    act.drain(); pusher.pass_once([]); rec.gate_pass(); act.drain()
+                    wall.advance(0.5)
+                    at = wall() - start
+                    if abs(at - 20) < 0.26:
+                        down.update(URLS)
+                    if abs(at - 100) < 0.26:
+                        down.clear()
+            second(200)
+            missed = [m for m in (archive_ms(start + i / 10) for i in range(200, 700))
+                      if m not in {archive_ms(t) for t in live}]
+            assert len(missed) > 400                                    # 20–70 s: owed, on the card
+            card_bytes = rec.card.stats()[1]
+            rec.note_pass(force=True)
+            del ring, act, rec, pusher                                  # the camera's process ends — no goodbye
+            if not note:
+                os.remove(os.path.join(card_dir, "delivered.json"))
+            wall.advance(60.0)                                          # …and starts again a minute later
+            down.update(URLS)
+            ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
+            rec.card.budget = int(card_bytes * 1.1)                     # the card nearly full of the first process
+            start, n = wall(), 0
+            second(70)
+            cover = [(archive_ms(a), archive_ms(b)) for a, b in rec.card.coverage("1-card")]
+            out[note] = (len([m for m in missed if not any(a <= m <= b for a, b in cover)]),
+                         rec.card.evicted_owed, rec.card.stats()[1] <= rec.card.budget)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+            shutil.rmtree(card_dir, ignore_errors=True)
+    assert out[True] == (0, 0, True), out                              # every owed frame kept; what went, the server had
+    assert out[False][0] > 0 and out[False][1] == 0, out                # the review's: owed seconds gone, uncounted
