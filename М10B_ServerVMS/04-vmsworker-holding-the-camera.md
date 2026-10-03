@@ -475,16 +475,19 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 ## Шаг 7 — Heartbeat: единственное, что воркер публикует
 
 ```python
-    def heartbeat_once(self) -> None:
+    def _heartbeat_now(self) -> None:
         self.heartbeat(self.status(), server=self.server, instance=self.instance, alloc=self.alloc,
                        labels=",".join(self.labels), assignment_rev=self.assignment_rev,
                        fenced=not self.recording_allowed, conflicts=self.conflicts(), passes=self.passes,
+                       ...
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
-                       archive=self.archive_root)
+                       previous_server=self.previous_server,
+                       ...
+                       **{"archive": self.archive_root, **self.heartbeat_extra()})
 ```
 
-Один объект, четырнадцать полей — и **вся система читает их по именам**:
+`heartbeat_once` (шаг 3а) сначала один раз опрашивает устройства, а потом вызывает `_heartbeat_now`. Вырезаны счётчики сбоев (`store_errors`, `pass_failures`, `unconfirmed`, `was_fenced`) и наблюдение устройств (`devices=self.device_status()`); `heartbeat_extra()` — то, что добавляет к heartbeat'у подсистема (`fetched` у всех). Ниже — поля, которые здесь показаны, и **вся система читает их по именам**:
 
 | Поле | Кто читает | Зачем |
 |---|---|---|
@@ -494,9 +497,11 @@ POST /requests {"unit": 12, "action": "output", "port": 2, "state": "pulse", "pu
 | `fenced` | страница | почему он ничего не делает |
 | `conflicts` | `vms_epoch_conflicts` | сработало ли отсечение |
 | `assignment_rev` | страница | видел ли он последнее назначение |
-| `previous_hb`, `previous_instance` | `failover_seconds` | как быстро подхватили |
+| `started`, `previous_hb`, `previous_instance`, `previous_server` | `failover_seconds` | как быстро подхватили — по одним часам |
 | `archive` | `/servers` | куда идут его события |
 | `status` | `read_model`, `/cameras`, `vms_cameras_running` | что с каждой камерой |
+
+`previous_server` — сервер, на котором жил предыдущий экземпляр слота (урок 3). `failover_seconds` вычитает `previous_hb` из `started` только когда он совпадает с `server`: тогда оба времени взяты по часам одной машины. На другом сервере читатель меряет переезд по своим часам — иначе в число попало бы расхождение часов двух машин.
 
 Стоит остановиться на том, чего здесь **нет**: ни одной записи в хранилище конфигурации. Воркер публикует объект — и всё. Контроллер, консоль, автомасштабирование, метрики, страница — все читают один объект, никто не спрашивает воркера ни о чём.
 

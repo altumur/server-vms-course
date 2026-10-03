@@ -92,6 +92,8 @@ def device_of(source: str) -> str:
 - камера напрямую — вырожденный случай: устройство с одним каналом;
 - устройство, которое больше не называет ни одна строка, закрывается.
 
+**Ни один вызов в устройство не ждёт на потоке цикла.** Раньше сессия открывалась прямо в проходе. Фабрика, бросившая исключение (отказ в соединении — это `OSError`), выходила из прохода как «хранилище не ответило», и устройства после неё не открывались ни в одном проходе. А зависшая фабрика держала проход вечно. Теперь открытие и закрытие идут через `_ask_devices`, как и остальные вызовы в устройство (`capabilities`, `channels`, `in_use`, `coverage`). Каждый вызов выполняется на своём потоке. Цикл ждёт вызовы одного раунда вместе, не дольше `DEVICE_GRACE` (0,2 с) и не дольше срока `until`, который проход берёт из `DEVICE_HOLD` (0,5 с). Устройство, чей прошлый вызов ещё не вернулся, второй раз не спрашивают. Устройство, ответившее позже `DEVICE_GRACE`, попадает в `_slow`, и его больше не ждут, пока оно не ответит сразу. Ошибка — слово этого устройства: о ней говорится в логе один раз, а в следующем проходе устройство открывают снова. Зависшее открытие не ждут: устройство держится с того прохода, в котором открытие вернулось. Тест: `test_long_poll.py::test_a_device_that_refuses_to_open_or_never_opens_is_that_devices_and_the_pass_goes_on` — из трёх устройств одно отказывает, одно висит; проход идёт меньше пяти секунд, держится третье, все три камеры запущены, отказавшее открывают второй раз, а зависшее — нет.
+
 **Это тот же `tee`**, поднятый на уровень выше. Один источник, много применений — и теперь применения бывают двух родов.
 
 ## Шаг 2 — Два рода выдачи
@@ -102,7 +104,7 @@ def device_of(source: str) -> str:
         out = {"live_url": live_url(announce_host(self.rtsp_host, self.server), cam["id"], self.fanout_port()),
                "live_shm": live_shm(cam["id"], self.shm_dir), **({"can": can} if can else {})}
         dev = self.device_of_row(cam)
-        cov = dev.coverage(cam["id"]) if dev is not None else None
+        cov = self._coverage_of(dev, cam["id"]) if dev is not None else None
         if cov is not None:
             out["playback_url"] = playback_url(announce_host(self.playback_host, self.server), cam["id"], self.playback_port)
             out["coverage"] = cov                         # the SUMMARY: from, to, fragments — never the index
@@ -266,15 +268,31 @@ NVR знает свои каналы. Соблазн — чтобы воркер
 ```python
     def device_status(self) -> list[dict]:
         ...
-        for key, dev in sorted(self.devices.items()):
-            chans = [str(c) for c in (dev.channels() if hasattr(dev, "channels") else [])]
+        devices = sorted(self.devices.items())
+        heard = self._heard if self._heard is not None else self._ask_devices(self._status_asks(devices))
+        out = []
+        for key, dev in devices:
             have = known.get(key, set())
-            out.append({"device": key, "channels": len(chans), "known": sorted(have),
-                        "unimported": [c for c in chans if c not in have],
-                        "playbacks": dev.in_use(), "max_playbacks": dev.max_playbacks,
-                        **({"can": self.described[key]} if key in self.described else {})})
+            st: dict = {"device": key}
+            if not hasattr(dev, "channels"):
+                st.update(channels=0, known=sorted(have), unimported=[])
+            elif ("channels", id(dev)) in heard:
+                chans = [str(c) for c in heard[("channels", id(dev))] or []]
+                st.update(channels=len(chans), known=sorted(have), unimported=[c for c in chans if c not in have])
+            else:
+                st["known"] = sorted(have)
+            if ("in_use", id(dev)) in heard:
+                st["playbacks"] = heard[("in_use", id(dev))]
+            st["max_playbacks"] = getattr(dev, "max_playbacks", None)
+            if "channels" not in st or "playbacks" not in st:
+                failed = [q for q in ("channels", "in_use") if (q, id(dev)) in self._dev_said]
+                st["state"] = "failed" if failed and id(dev) not in self._slow else "slow"
+            out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
+                        **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
         return out
 ```
+
+**Устройство, которое не ответило, названо, а не обнулено.** Два вопроса к каждому устройству, `channels` и `in_use`, задаются через `_ask_devices`: в общем раунде heartbeat (`heartbeat_once` кладёт ответы в `_heard`) или отдельно, когда дверь воспроизведения отвечает на `/devices`. Если ответа нет, полей `channels` и `playbacks` в строке устройства нет совсем: «0 каналов» было бы неправдой. Вместо них стоит `state`. `slow` — последний вызов не ответил за `DEVICE_GRACE` или ещё не вернулся. `failed` — устройство ответило ошибкой, и её слова в логе. Число медленных устройств идёт в heartbeat как `devices_slow`. Покрытие камеры такого устройства (`_coverage_of`) остаётся тем, что устройство сказало последним. Тест: `test_long_poll.py::test_a_hundred_devices_of_two_hundred_that_never_answer_cost_a_pass_and_a_heartbeat_a_fifth_of_a_second` — сто устройств из двухсот висят; проход и heartbeat укладываются в `DEVICE_HOLD` с запасом на хранилище, каждое зависшее спрошено один раз, `state: slow` стоит ровно у зависших, у них нет `channels` и `playbacks`, а покрытие каждой камеры прежнее; когда устройства снова отвечают, `state` и `devices_slow` пропадают.
 
 Воркер говорит: «устройство `acme/10.0.0.50`: 32 канала, 14 заведено, 18 нет». Страница показывает, **строки создаёт оператор** своим токеном, одной кнопкой на канал или пачкой.
 

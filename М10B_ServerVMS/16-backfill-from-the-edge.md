@@ -82,9 +82,15 @@
     def gaps(self, unit, coverage: dict, now: float, planned: bool = True, source: str = "device") -> list[tuple[float, float]]:
         from .archive import visible_from
         ours = self.our_coverage(unit)
-        row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
-        lo = max(float(coverage["from"]), now - self.keep_days * 86400, visible_from(row, now))
-        hi = min(float(coverage["to"]), now - self.settle, ours[-1][1] if ours else now)
+        row = self._row_of(unit)
+        ...
+        c = coverage if isinstance(coverage, dict) else {}
+        start = number(f"rec/coverage/{source}/{unit}#from", c.get("from"), float, None)
+        end = number(f"rec/coverage/{source}/{unit}#to", c.get("to"), float, None)
+        if start is None or end is None:
+            return []
+        lo = max(start, now - self.keep_days * 86400, visible_from(row, now))
+        hi = min(end, now - self.settle, ours[-1][1] if ours else now)
         ...
         holes = subtract((lo, hi), ours)
 ```
@@ -93,27 +99,37 @@
 
 Начнём с простых границ; остальное в `gaps` — находки с коробки, им посвящён шаг 10.
 
-`now - self.keep_days * 86400` и `visible_from(row, now)` — **не тащить старше того, что двери покажут.** Комментарий над методом: *Not older than what the doors would SHOW — the row's `retention_days` (`visible_from`) — nor than `keep_days`: a range fetched past the ceiling is a range nobody will be shown.* `keep_days` в процессе берётся из `RETENTION_DAYS` (30 по умолчанию). Но у записи может быть свой срок, `retention_days` в её строке, и он бывает короче: дверь обрежет по нему всё, что старше (урок 8). Без второй границы запись со сроком в неделю тянула бы с карты тридцатидневные часы, которых никто никогда не увидит. Каждый такой час — сессия устройства, потраченная впустую.
+**Строка записи берётся из словаря, а не обходом.** `_row_of(unit)` собирает словарь «id → строка» один раз на каждый новый список `self.rows` и отвечает из него. Раньше `gaps` искал строку обходом всех строк. Обход на каждую запись — квадрат числа записей за проход, и всё это на Python (проход масштабирования). Тот же `_row_of` даёт строку и заявкам (шаг 8). Тест: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording` — при вдвое большем числе записей проход дозаписи читает хранилище не больше чем вдвое больше раз.
+
+**Сводка источника читается через `rows.number`.** Начало и конец покрытия приходят из чужого heartbeat. Слово в них бросало исключение из дозаписи всех записей после этой (седьмое ревью). Теперь значение, которое не читается, считается «не сказанным»: тогда брать у источника нечего, и `gaps` возвращает пустой список.
+
+`now - self.keep_days * 86400` и `visible_from(row, now)` — **не тащить старше того, что двери покажут.** Комментарий над методом: *Not older than what the doors would SHOW — the row's `retention_days` (`visible_from`) — nor than `keep_days`: a range fetched past the ceiling is a range nobody will be shown.* `keep_days` в процессе берётся из `RETENTION_DAYS` (30 по умолчанию). Но у записи может быть свой срок, `retention_days` в её строке, и он бывает короче: дверь обрежет по нему всё, что старше (урок 8). Без второй границы запись со сроком в неделю тянула бы с карты тридцатидневные часы, которых никто никогда не увидит. Каждый такой час — сессия устройства, потраченная впустую. Срок, который не читается как число дней, `visible_from` превращает в `now` (урок 8). Тогда `lo` не меньше `now`, `hi` меньше `lo`, и для такой записи дозапись не планирует ничего, пока строку не поправят.
 
 `now - self.settle` — **не тащить самое свежее.** Последние минуты пишутся прямо сейчас, и с точки зрения `our_coverage` их нет. Без отступа регистратор стал бы дозаписывать то, что сам же записывает. `settle = 900` секунд по умолчанию. Шаг 10 покажет, почему этого отступа мало и чем его заменили.
 
 ## Шаг 4 — Бюджет и окно
 
 ```python
+    @one_look
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
-        if not (force or self.in_window(now)) or self.archive_busy():
-            return []
+        windowed = force or self.in_window(now)
+        if self.archive_busy() or not (windowed or self._look().edges()):
+            return []                                    # (outside the window only a camera's card may say "now")
         done: list[dict] = []
-        names = volumes.backups(self.vars)
+        names = self._look().backups()
         for row in self.rows:
             if len(done) >= budget:
                 break
             if volumes.is_backup(row, names=names):
                 continue
             for src in self.sources_of(row):
+                says = self._uplink_says(src)
+                if not (force or (windowed if says is None else says)):
+                    continue
                 for (t0, t1) in self.gaps(row["id"], src["coverage"], now, source=src["key"])[:budget - len(done)]:
-                    done.append(self.fetch_from(row["id"], row["cam"], src, t0, t1))
+                    # RANGE_CAP of a gap a pass: what is left of it is a gap on the next one
+                    done.append(self.fetch_from(row["id"], row["cam"], src, t0, min(t1, t0 + self.RANGE_CAP)))
                 if len(done) >= budget:
                     break
         return done
@@ -121,7 +137,9 @@
 
 Дозапись конкурирует с живым на аплинке устройства (урок 15), значит идти «сколько получится» она не может.
 
-**Бюджет** — прецедент есть: `rebalance(budget)` из урока 13, ограниченная работа по требованию, а не в обычном проходе. Здесь то же: не более `budget` диапазонов за проход. В процессе — `BACKFILL_BUDGET` (1); ноль значит «только то, что попросил оператор».
+**Бюджет** — прецедент есть: `rebalance(budget)` из урока 13, ограниченная работа по требованию, а не в обычном проходе. Здесь то же: не более `budget` диапазонов за проход. В процессе — `BACKFILL_BUDGET` (1); ноль значит «только то, что попросил оператор». И каждый диапазон не длиннее `RANGE_CAP` (600 с): от дыры берётся `min(t1, t0 + self.RANGE_CAP)`, а остаток останется дырой и попадёт в следующий проход (шаг 5). Тест: `test_lesson11_edge.py::test_backfill_closes_our_gaps_and_what_it_fetches_is_ours` — дыра в 6400 секунд закрывается за несколько проходов, по `RANGE_CAP` за проход.
+
+**Один взгляд за проход.** `@one_look` даёт проходу один `Look` — то, что проход прочёл о кластере, каждую часть один раз: строки записей, heartbeat подсистем, имена резервных (`backups()`) и пограничных (`edges()`) томов. Раньше `volumes.backups(self.vars)` и источники каждой записи читали хранилище заново. На тысяче записей и пятистах резервных один проход дозаписи читал хранилище 3 032 003 раза. Прочитанное живёт не дольше прохода и не дольше `Look.FRESH` (10 с): выкачка, потратившая минуты на один диапазон, спрашивает источники следующей записи по свежим heartbeat. Тест: `test_recorder_reads.py::test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_again`.
 
 **Окно** — новое, и его в курсе ещё не было. Закрывать суточную дыру в час пик — худшее, что можно сделать: канал занят живым, оператор смотрит, а мы качаем позавчерашнее.
 
@@ -137,6 +155,8 @@
 Ветка `a < b else` — окно через полночь: `(22, 6)` означает «с десяти вечера до шести утра», и без этой ветки оно бы никогда не наступало. В процессе — `BACKFILL_WINDOW=22-6`.
 
 **Местное время, а не UTC.** Единственное место в курсе, где местное время правильно: «ночью» — это ночь там, где стоит камера, а не там, где сервер. Везде остальное — UTC, и урок должен сказать, почему здесь исключение.
+
+**Окно — для аплинка, о котором никто ничего не знает.** Окно держит дозапись подальше от аплинка устройства по часам, потому что регистратор не знает, занят ли этот аплинк. Камера, которая сама шлёт поток на сервер, это знает. Она говорит об этом в heartbeat своего рекордера карты: `stream.lagging` (`CameraPusher._judge_lag`, урок 26). Девятое ревью спросило, задумано ли окно 22–6 для карты камеры, и владелец ответил «нет»: то, что отстающий поток пропустил, ждало ночи, а карта, заполненная вечерним отставанием, теряла это раньше. Теперь для такого источника слово камеры заменяет окно. `backup_sources` кладёт в источник вида `edge` поле `lagging`, если камера его сказала, а `_uplink_says(src)` переводит его в ответ: `True` — аплинк свободен, `False` — поток отстаёт, `None` — источник о своём аплинке молчит. Карту просят, как только камера сказала, что аплинк снова несёт поток, в любой час. Пока камера говорит, что поток отстаёт, карту не просят, даже внутри окна. Источники, которые о своём аплинке молчат, остаются под окном: архив устройства, дверь резервного сервера, карта камеры, которая не шлёт поток. Поэтому вне окна проход вообще идёт дальше первой строки, только когда объявлены тома `edge` (`self._look().edges()`). `force` по-прежнему обходит и окно, и слово камеры. Тест: `test_camera_card.py::test_what_a_lagging_stream_skipped_is_backfilled_as_soon_as_the_camera_says_its_uplink_is_free_whatever_the_hour` — без слова камеры вне окна не просят ничего; в окне, пока камера говорит `lagging: True`, тоже ничего; днём, после `lagging: False`, дыра в сто секунд приходит с `edge:1-card`.
 
 Источников у записи бывает несколько: сначала устройство, потом резервные записи той же камеры (`sources_of`, урок 26). Резервная запись сама не дозаписывается ни из кого — это правило урока 26, и здесь оно стоит первой строкой цикла.
 
@@ -302,7 +322,7 @@ POST /backfill {"cam": 41, "from": false, "to": true}     →  400: true и fals
             if unit in self.reconciler.actual:
                 t1 = min(t1, ours[-1][1] if ours else now - self.settle)
             ...
-            srcs = self.sources_of({"id": unit, "cam": cam, "home": next((r.get("home") for r in self.rows if str(r["id"]) == unit), "")})
+            srcs = self.sources_of({"id": unit, "cam": cam, "home": (self._row_of(unit) or {}).get("home", "")})
             if not srcs:
                 continue                                     # nobody holds the device and no backup answers; ask again next pass
             upto = min(t1, t0 + self.RANGE_CAP)
@@ -491,7 +511,7 @@ GET <дверь регистратора>/timeline/41
 - Диапазон ограничен с обеих сторон: не старше `keep_days` и потолка видимости записи (`visible_from`), не свежее конца видимого (иначе гонка с самим собой) — и, по плану, не раньше первой видимой секунды (иначе запись по событию станет постоянной). Заявка живой записи тоже обрезается по концу видимого.
 - Заявка пробует источники по очереди; ошибка источника оставляет её на следующий проход, а не отчитывает как сделанную. Садящееся считается нашим и при посадке: дважды одно не пишется.
 - То, чего источник после чистой выкачки не отдал, запоминается по паре (запись, источник) и больше не планируется; отданное помнится как садящееся, пока том его не покажет.
-- Бюджет ограничивает объём, окно — время суток, и окно единственное в курсе считается по местному времени. Выкачка идёт на своей нити.
+- Бюджет ограничивает объём, окно — время суток, и окно единственное в курсе считается по местному времени. Карта камеры, которая сама говорит о своём аплинке (`stream.lagging`), окна не ждёт: её слово заменяет часы. Выкачка идёт на своей нити.
 - Дозаписанное пишется текущей эпохой регистратора в поток `<запись>/e<эпоха>/backfill` его тома и **является нашим**: кольцо, двери, срок показа — как у всего остального.
 - Разрыв в выкачанном закрывает последовательность: дыра внутри неё нарисовалась бы записью.
 - Перекрытие проверяется дважды: при планировании и при посадке, по группе кадров.
