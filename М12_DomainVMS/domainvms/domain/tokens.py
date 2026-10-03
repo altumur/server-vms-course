@@ -153,7 +153,7 @@ def kid_of(token: str) -> str | None:
     move the holder's key is new, and after a theft the old one is no longer trusted anywhere)."""
     try:
         return json.loads(_unb64(token.split(".")[0])).get("kid")
-    except (IndexError, *PARSE_ERRORS):              # a header ten thousand deep too (the ninth review's sweep)
+    except (IndexError, *PARSE_ERRORS):                  # `RecursionError` too (the ninth pass's sweep of `verify`)
         return None
 
 
@@ -197,28 +197,41 @@ class TokenIssuer:
         return self.kid
 
 
+def _moment(v) -> bool:
+    """A claim's time: a finite number of seconds (`exp`, `iat`) — not a word, a bool, `NaN` or 10**400."""
+    import math
+    try:
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    except OverflowError:
+        return False
+
+
 def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float | None = None,
            skew: float = 60.0, kind: str | None = None) -> dict:
     """Offline. Returns the payload (the subject is payload["sub"]). `kind`: what this door accepts (`KINDS`);
     a token for something else is refused however good its signature."""
     now = time.time() if now is None else now
-    # Everything read before the signature is checked is a stranger's, and what it raises is "not a token" (the review's
-    # ninth pass, minor): a header that is a list (`.get`), a `kid` that is a list (`kid in keys` — unhashable), a token
-    # that is not a string, `[` ten thousand deep — each was a 500 at the door instead of a 401.
+    # GARBAGE IS "NOT A TOKEN", WHATEVER SHAPE IT TAKES (the review's ninth pass, minor; a run): a header that is a list,
+    # a `kid` that is a list, brackets nested past the parser's depth were an `AttributeError`, a `TypeError`, a
+    # `RecursionError` out of here — before the signature was looked at — and every door that asks this was 500 instead of
+    # 401. And a token whose signature holds but whose claims are not numbers and a string is refused too: no signer of
+    # ours writes one.
     try:
         h, p, s = token.split(".")
         header, payload = json.loads(_unb64(h)), json.loads(_unb64(p))
-        if not isinstance(header, dict) or not isinstance(payload, dict) or not isinstance(header.get("kid", ""), str):
-            raise TypeError("a token's header and payload are objects, its kid a string")
+        kid = header.get("kid", "")
+        if not isinstance(kid, str) or not isinstance(payload, dict):
+            raise TypeError("a token's header names a key and its payload is an object")
     except PARSE_ERRORS:
-        raise BadSignature("not a token")
-    kid = header.get("kid", "")
+        raise BadSignature("not a token") from None
     if not keys.usable(kid, now):
         raise UnknownKey(f"kid {kid!r} is not in the trusted set (or retired)")
     try:
         Ed25519PublicKey.from_public_bytes(keys.keys[kid]).verify(_unb64(s), f"{h}.{p}".encode())
-    except (InvalidSignature, *PARSE_ERRORS):         # a signature that is not base64 is not one either
-        raise BadSignature("signature does not verify")
+    except (InvalidSignature, *PARSE_ERRORS):
+        raise BadSignature("signature does not verify") from None
+    if not (_moment(payload.get("exp")) and _moment(payload.get("iat")) and isinstance(payload.get("jti"), str)):
+        raise BadSignature("its claims are not what a signer of this domain writes")
     if now > payload["exp"] + skew:
         raise Expired(f"expired {now - payload['exp']:.0f}s ago")
     if now < payload["iat"] - skew:

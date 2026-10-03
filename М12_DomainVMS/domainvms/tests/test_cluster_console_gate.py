@@ -13,7 +13,7 @@ from cluster.objectstore import FsObjectStore
 from cluster.variables import FakeVariables
 from domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
 from domain.grants import Grant, grants_from_items, grants_to_items
-from domain.tokens import RevocationList, TokenIssuer
+from domain.tokens import RevocationList, TokenError, TokenIssuer, verify
 from vms.console import make_console
 from vms.controller import VmsController
 
@@ -223,3 +223,94 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         assert raw("DELETE", "/session", headers=me)[0] == 200 and raw("GET", "/cameras", headers=me)[0] == 401     # closed: gone from memory
     finally:
         srv.shutdown()
+
+
+def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
+    """The review's ninth pass, minor — a run: a token whose header is a list, whose `kid` is a list, or whose part is
+    brackets nested past the parser's depth raised out of `tokens.verify` before the signature was looked at — an
+    `AttributeError`, a `TypeError`, a `RecursionError` — and the console answered 500 (no answer at all) instead of
+    401. And a token whose signature holds and whose `exp` is a word, `NaN` or 10**400, or whose `jti` is a list: no
+    signer of ours writes one, and it is refused too. Each is 401 at a cluster's console and at `POST /session`."""
+    from domain.tokens import _b64
+    clk = Clock(1_757_500_000.0)
+    signer = TokenIssuer("acme")
+    vars_, ctl, srv, base = _cluster(clk)
+    vars_.put(KEYS_PATH, signer.keyset().to_items())
+    vars_.put(GRANTS_PATH, grants_to_items([Grant("root", "admin", None, clk() + 86400)]))
+    good = json.dumps({"alg": "EdDSA", "kid": signer.kid}).encode()
+
+    def signed(payload: str) -> str:
+        head = _b64(good) + "." + _b64(payload.encode())
+        return head + "." + _b64(signer.key.sign(head.encode()))
+    now = clk()
+    garbage = [
+        _b64(b"[1, 2]") + "." + _b64(b"{}") + ".x",                                      # a header that is a list
+        _b64(json.dumps({"kid": ["a"]}).encode()) + "." + _b64(b"{}") + ".x",             # a `kid` that is a list
+        _b64(good) + "." + _b64(b"[1]") + ".x",                                           # a payload that is a list
+        ["a", "list"],                                                                   # not even a string (a body's token)
+        signed(json.dumps({"sub": "root", "iat": now, "exp": "ten", "jti": "j1"})),
+        signed('{"sub": "root", "iat": %s, "exp": NaN, "jti": "j2"}' % now),
+        signed('{"sub": "root", "iat": %s, "exp": 1%s, "jti": "j3"}' % (now, "0" * 400)),
+        signed(json.dumps({"sub": "root", "iat": now, "exp": now + 900, "jti": ["j4"]})),
+    ]
+    try:
+        assert _call(base, "GET", "/cameras", signer.issue("root", 900, now=now))[0] == 200   # ours: admitted
+        for tok in garbage:
+            if isinstance(tok, str):
+                code, body = _call(base, "GET", "/cameras", tok)
+                assert code == 401, (tok[:40], code, body)
+            code, body = _call(base, "POST", "/session", body={"token": tok})
+            assert code in (400, 401) and (code == 401 or not isinstance(tok, str)), (tok[:40], code, body)
+        for tok in garbage + [_b64(good) + "." + _b64(b"[" * 1_000_000 + b"]" * 1_000_000) + ".x"]:   # past the depth: offline
+            try:
+                verify(tok, signer.keyset(), now=now)
+                raise AssertionError(f"{tok[:40]!r} verified")
+            except TokenError:
+                pass
+    finally:
+        srv.shutdown()
+
+
+def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401():
+    """The sweep of the same minor at the signer's own door (`signer_service`, `POST /login`, `POST /revoke`): a body
+    that is not an object, a name that is not a string, a token that does not verify were 500 — `/revoke` let the
+    token's own error out, which nobody caught. The signer is run as its process is, on a store of files."""
+    import os
+    import signal
+    import socket
+    import subprocess
+    import sys
+    import time
+    root = tempfile.mkdtemp(prefix="signer-")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    env = {**os.environ, "DOMAIN_ID": "acme", "CONFIG_URL": f"file://{root}/vars", "OBJECT_STORE_URL": f"file://{root}/objects",
+           "SIGNER_HOST": "127.0.0.1", "SIGNER_PORT": str(port)}
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    proc = subprocess.Popen([sys.executable, "-m", "domain.signer_service"], cwd=here, env=env,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def post(path: str, raw: bytes) -> int:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=raw, method="POST",
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            return e.code
+    try:
+        for _ in range(100):
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=1):
+                    break
+            except OSError:
+                time.sleep(0.1)
+        assert post("/login", b'{"user": "nobody", "password": "x"}') == 401   # the door works: no such user
+        for bad in (b"[1]", b"{not json", b'{"user": ["a"], "password": "x"}', b'{"password": "x"}'):
+            assert post("/login", bad) == 400, bad
+        for bad in (b'{"token": "a.b.c"}', b'{"token": ["a"]}', b"{}", b'{"token": "' + b"x" * 200 + b'"}'):
+            assert post("/revoke", bad) == 401, bad
+    finally:
+        proc.send_signal(signal.SIGTERM)
+        proc.wait(10)

@@ -547,12 +547,13 @@ def refuse_recording(ctl, uid, old: dict | None, new: dict) -> None:
 
 # What two sources are the same camera by: the device and the channel on it, as the holder groups them
 # (`config.device_of`, `channel_key`) — `…/ch/2` and `…/ch/2/` are one channel; so are `…/10.0.0.50:80/ch/02` and
-# `…/10.0.0.50/ch/2` (the review's eighth pass: one device, one spelling). `same`: `config.one_device(vars_)` — the
-# device's own word, where a holder has opened it, so a DNS name and its address are one device too.
-def source_key(source: str, same=None) -> tuple:
+# `…/10.0.0.50/ch/2` (the review's eighth pass: one device, one spelling). By the KEY, not by what the device says it
+# is (the owner's decision on the ninth pass: a serial number is not unique): whether a source moved (`source_cams`) and
+# whether a channel is taken (`refuse_camera`). The device's own word groups devices for the rights a move asks, and
+# only there (`config.one_device`).
+def source_key(source: str) -> tuple:
     from .config import channel_key, device_of
-    dev = device_of(str(source))
-    return (same(dev) if same is not None else dev), channel_key(str(source))
+    return device_of(str(source)), channel_key(str(source))
 
 
 # A camera's `source` is nobody else's. Asked only when the source is new to this row — a camera being created, or
@@ -563,20 +564,24 @@ def source_key(source: str, same=None) -> tuple:
 # …and so is its `ref`, the name the layer above knows it by (М12): the domain's book of primaries, the edits it keeps
 # for a cluster that is off and its directory all find a camera by it, so two cameras under one `ref` are one camera
 # to the domain — and whichever it finds first gets the other's edits. The same rule, for the same reason.
+#
+# …BY THE KEY, NOT BY THE DEVICE'S WORD (the owner's decision on the review's ninth pass): a serial number is not unique
+# — firmware clones say the same one — so `identity` is no ground to refuse. Compared by it, the camera of a clone was
+# "camera 1 is that source already" for as long as the other clone stood, and a second name of one device is a matter
+# of rights, which the gate asks (`source_cams`: a device nobody has opened is the cluster's grant). It reads no device
+# row either (the same pass, minor: every device row on every move).
 def refuse_camera(ctl, uid, old: dict | None, new: dict) -> None:
-    from .config import one_device
     src, ref = str(new.get("source") or ""), str(new.get("ref") or "")
     moved = bool(src) and (old is None or str(old.get("source") or "") != src)    # as typed: nothing to look up
-    same = one_device(ctl.vars) if moved else None
-    new_src = moved and (old is None or source_key(str(old.get("source") or ""), same) != source_key(src, same))
+    new_src = moved and (old is None or source_key(str(old.get("source") or "")) != source_key(src))
     new_ref = bool(ref) and (old is None or str(old.get("ref") or "") != ref)
     if not new_src and not new_ref:
         return
-    mine = source_key(src, same)
+    mine = source_key(src)
     for row in ctl.units():
         if str(row["id"]) == str(uid):
             continue
-        if new_src and row.get("source") and source_key(str(row["source"]), same) == mine:
+        if new_src and row.get("source") and source_key(str(row["source"])) == mine:
             raise Refused(f"camera {row['id']} is that source already: one channel of a device is one camera — "
                           f"change that camera, or delete it first")
         if new_ref and str(row.get("ref") or "") == ref:

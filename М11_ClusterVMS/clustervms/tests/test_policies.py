@@ -277,13 +277,39 @@ def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():
     """The same from the code's constants, for what the stand reaches only in part: the gate asks for the key set and
     every row that marks a member (`TRUST_KEYS`, `DOMAIN_MARKS`) at the console and at the holder's door; a domain's
     image reads the grants by cluster (`domain/grants/<cluster>`); every process checks `platform/schema` first."""
-    from w2cplatform.access import DOMAIN_MARKS, TRUST_KEYS
+    from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
     from w2cplatform.contract import SCHEMA_KEY
-    for policy in ("console-policy.hcl", "vmsworker-policy.hcl"):
-        for key in (TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/acme"):
-            assert may(policy, "read", key), f"{policy} does not let it read {key}"
+    for key in (TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/acme"):
+        assert may("console-policy.hcl", "read", key), f"console-policy.hcl does not let it read {key}"
+    for key in (TRUST_KEYS, MEMBER_MARK):                # the holder's door verifies no token (`Gate.gated`)
+        assert may("vmsworker-policy.hcl", "read", key), f"vmsworker-policy.hcl does not let it read {key}"
     for policy in set(ROLES.values()):
         assert may(policy, "read", SCHEMA_KEY), f"{policy} does not let it read {SCHEMA_KEY}"
+
+
+def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
+    """М10's ninth review, minor: the holder's policy granted every row that marks a member — the grants and
+    `domain/break_glass`, the emergency password's hash, among them — while its playback door verifies no token and asks
+    only whether the cluster is in a domain (`Gate.gated`: the key set, and `domain/member` while there is none). Not
+    wider than the code: the policy's `domain/*` is exactly those two rows, and what the door read in the stand is in
+    them."""
+    import tempfile
+    from vms.worker import FakeActuator, VmsWorker
+    from w2cplatform.access import MEMBER_MARK, TRUST_KEYS
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.variables import FileVariables
+    granted = {pat for pat, caps in rules("vmsworker-policy.hcl") if pat.startswith("domain") and caps & {"read", "list"}}
+    assert granted == {TRUST_KEYS, MEMBER_MARK}, sorted(granted)
+    root = tempfile.mkdtemp()
+    vars_, read = FileVariables(f"{root}/vars"), []
+    real = vars_.get
+    vars_.get = lambda path: (read.append(path), real(path))[1]
+    w = VmsWorker("w-1", vars_, FsObjectStore(f"{root}/objects"), FakeActuator(), archive_root=f"{root}/archive")
+    assert w.playback_refusal("1", "", {}, "127.0.0.1") is None        # an open cluster: the door asks nobody
+    vars_.put(MEMBER_MARK, {"cluster": "acme"})                       # a member that lost its keys: it asks
+    assert w.playback_refusal("1", "", {}, "127.0.0.1")[0] == 503      # …and has no key of its own yet: shut
+    made = {p for p in read if p.startswith("domain")}
+    assert made == {TRUST_KEYS, MEMBER_MARK}, sorted(made)
 
 
 def test_the_clusters_key_is_read_by_the_three_jobs_that_open_a_password_and_nobody_else():

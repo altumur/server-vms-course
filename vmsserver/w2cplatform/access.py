@@ -47,6 +47,7 @@ TRUST_KEYS = "domain/keys"            # where a domain's agent puts the key set 
 # shut across a restart of the console, which a flag in one process's memory did not. `domain/primaries` is not one
 # of them: the recorder writes it in a cluster of its own.
 DOMAIN_MARKS = ("domain/member", "domain/root", "domain/grants", "domain/revoked", "domain/break_glass")   # `domain/member`: written by the agent on every pass that leaves keys (the review's fourth pass)
+MEMBER_MARK = DOMAIN_MARKS[0]         # the one a door that verifies no token reads (`Gate.gated`; the review's ninth pass)
 RANK = {"view": 0, "edit": 1, "admin": 2}
 OPEN_ROUTES = ("/", "/index.html", "/metrics", "/healthz", "/session")   # the page, what monitoring reads, and the door in
 COOKIE = "w2c_token"
@@ -209,8 +210,15 @@ class Gate:
         with cls._glass_lock:
             cls._glass_tries.clear(); cls._glass_limited.clear(); cls._glass_pace.update(tat=0.0, local=0.0)
 
-    def __init__(self, vars_, wall, journal=None, impl: Access | None = None):
+    # THE EMERGENCY DOOR IS THE CONSOLE'S (the product's own finding on the review's ninth pass: its `POST /session/break-
+    # glass` was served by every door that mounts the shared gate — a recorder, the live gateway). Here `/session` is
+    # routed by the console alone (`SpecConsole.dispatch`), and a session lives in the memory of the process that opened
+    # it — but the gate a door holds read the session cookie all the same, so a door running in the console's process
+    # would have taken one. `glass=False` — a door that is not the console (the gateway, the holder's playback door):
+    # no emergency session is opened through it or honoured by it; a token is.
+    def __init__(self, vars_, wall, journal=None, impl: Access | None = None, glass: bool = True):
         self.vars, self.wall, self.journal, self.impl = vars_, wall, journal, impl
+        self.glass = glass
         self._said_open = False
         self._seen_keys = False                          # a cluster that WAS in a domain does not become open again
         self._loaded: Access | None = None
@@ -219,12 +227,18 @@ class Gate:
     # anything that verifies a token. For a door that checks something other than a token (the device's playback
     # door checks the console's signature, `vms/playback.py`) and must ask exactly when the console asks.
     # `Denied(503)` when the store does not answer: "I cannot tell" is not "open".
+    #
+    # …BY THE KEY SET AND THE MEMBERSHIP ROW ALONE (the review's ninth pass, minor): it read every mark the console reads,
+    # and so the holder's policy let it read `domain/break_glass` — the emergency password's hash — and the grants, of
+    # which it needs nothing but that they exist. `domain/member` is written by the domain's agent on every pass that
+    # leaves keys, and a cluster that lost its keys still has it; the other marks are the console's, which verifies
+    # tokens and reads them anyway.
     def gated(self) -> bool:
         if self.impl is not None:
             return True
         try:
             items, _ = self.vars.get(TRUST_KEYS)
-            marked = None if items else next((p for p in DOMAIN_MARKS if self.vars.get(p)[0]), None)
+            marked = None if items else (MEMBER_MARK if self.vars.get(MEMBER_MARK)[0] else None)
         except OSError as e:
             raise Denied(503, f"this process cannot read the cluster's trust ({e}): it admits nobody until it can") from None
         if items:
@@ -277,7 +291,7 @@ class Gate:
 
     # The caller's payload: from a token, or from an emergency session of this process. `Denied` if neither.
     def payload(self, headers, access: Access) -> dict:
-        sid = cookie(headers, GLASS_COOKIE)
+        sid = cookie(headers, GLASS_COOKIE) if self.glass else None
         if sid:
             held = self._glass.get(sid)
             if held is not None and float(held.get("exp", 0)) > self.wall():
@@ -293,6 +307,8 @@ class Gate:
     def open_glass(self, who: str, why: str, password: str, addr: str = "?", local: bool = False) -> tuple[str, dict]:
         import secrets
         from .events import ALARM
+        if not self.glass:
+            raise Denied(404, "the emergency entry is the console's: this door has none")
         access = self.access()
         if access is None:
             raise Denied(400, "this console is open: there is nothing to break into")

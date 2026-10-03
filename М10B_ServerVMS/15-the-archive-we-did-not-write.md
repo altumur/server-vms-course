@@ -62,11 +62,11 @@ def device_of(source: str) -> str:
 
 **Одно устройство — одно написание ключа.** Ключ брался из адреса как есть, и тот же регистратор под другим написанием был другим устройством: `driverpack://ACME/10.0.0.50/ch/2`, `…/10.0.0.50:80/…`, `…/10.0.0.50./…`. Через это пользователь с `admin` на свою файловую камеру ставил ей `source` на канал 2 чужого регистратора, а потом жал его реле (восьмое ревью, major, воспроизведено запуском; права — урок 12). Теперь ключ канонический (`_host`). Схема и хост — в нижнем регистре, точка в конце имени убрана. Адрес — в той форме, в какой его наберёт резолвер: `012.0.0.50`, `10.50` и `::ffff:10.0.0.50` — это `10.0.0.50`, а `10.0.0.050` — это `10.0.0.40` (восьмеричная запись, так читает `inet_aton`). Порт схемы по умолчанию убран (`DEFAULT_PORTS`; у `driverpack` это 80, веб-порт устройства). Учётные данные в ключ не входят. Строка камеры хранит то, что набрал оператор, — канонический ключ нужен для сравнения, группировки и ключа строки устройства. Канал сравнивается так же (`channel_key`): `…/ch/02` и `…/CH/2` — один канал. Раз ключ один, и `group_by: device` отправляет оба написания к одному воркеру в одну сессию. Тест: `test_console_gate.py::test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of_it`.
 
-**Чего не скажет синтаксис, говорит само устройство.** `nvr50.local` и `10.0.0.50` — два ключа и один регистратор, и разбором строки этого не узнать. Держатель, открыв устройство, спрашивает, что оно такое: `capabilities()["identity"]` — серийный номер, MAC, то, что драйвер прочёл у железа (`FakeDevice(identity=…)` в тестах). Ответ ложится в строку устройства (`identity` в `vms/devices/<устройство>`, `describe_devices`) и не уходит из кластера: в `can` его нет. Консоль сравнивает устройства по нему там, где он известен (`config.one_device`; вендор — часть сравнения, серийные номера двух вендоров не встретятся). Тест: `test_console_gate.py::test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it`.
+**Чего не скажет синтаксис, говорит само устройство.** `nvr50.local` и `10.0.0.50` — два ключа и один регистратор, и разбором строки этого не узнать. Держатель, открыв устройство, спрашивает, что оно такое: `capabilities()["identity"]` — серийный номер, MAC, то, что драйвер прочёл у железа (`FakeDevice(identity=…)` в тестах). Ответ ложится в строку устройства (`identity` в `vms/devices/<устройство>`, `describe_devices`) и не уходит из кластера: в `can` его нет. Консоль сравнивает устройства по нему там, где он известен, — для прав, и только для них (`config.one_device`, урок 12). Вендор в сравнение больше не входит (девятое ревью): один регистратор под двумя драйверами — один регистратор, а случайно совпавшие строки двух вендоров только спросят больше прав. Тест: `test_console_gate.py::test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it`.
 
-**Второе имя устройства, которое уже известно, держатель не открывает** (решение владельца по восьмому ревью). Написание, которое ещё ни один держатель не открывал, консоль знает только как свой ключ. Переезд камеры на такое имя проходил с правами на старое устройство и на камеры нового ключа, а их ещё не было. Держатель открывал новое имя на следующем проходе, и камера показывала картинку канала — канала регистратора, который другая камера держит как `10.0.0.50`. Теперь держатель, впервые узнав `identity` устройства, ищет её среди строк устройств (`device_identities`, `describe_devices`). Если она уже записана под **другим** ключом того же вендора, новое имя — второе. Его строка не пишется: будь две строки с одной `identity`, перезапущенный держатель первого имени нашёл бы второе и отказал бы устройству под его собственным именем. Устройство закрывается, камеры на этом имени не стартуют (`_actuate`), и в логе это сказано один раз. Статус камеры простыми словами говорит, под каким именем устройство уже известно: *its device is already known as acme/10.0.0.50: this name is not opened. Point the camera at acme/10.0.0.50, or, if nothing uses that name any more, remove its device row*. Отказ запомнен (`second_names`), и устройство не открывается заново на каждом проходе. Каждый проход держатель одним чтением спрашивает хранилище, стоит ли ещё строка другого имени (`_still_known_as`): оператор удалил устаревшую строку — новое имя открывается. Имя, которого никто не видел, открывается как раньше: только так `identity` и узнаётся. Команда на камеру с отказанным именем не доходит ни до одного реле: у держателя нет такого устройства. Тест: `test_console_gate.py::test_a_holder_refuses_a_second_name_of_a_device_it_knows_and_opens_a_first_name` — камера, переехавшая на DNS-имя регистратора, который другая камера держит по IP, не открыта и картинки не показывает; команда на неё не пульсирует реле; первое имя другого устройства открывается; после удаления строки первого имени открывается и второе.
+**Совпадение серийного номера держатель называет, но не отказывает** (решения владельца по девятому ревью). В восьмом ревью держатель, впервые узнав `identity` устройства и найдя её под **другим** ключом, считал новое имя вторым именем известного устройства и не открывал его. Девятое ревью показало запуском две цены этого правила. Серийный номер не уникален: у клонов прошивки он одинаковый, и второй клон получал отказ навсегда, а статус советовал перейти на адрес первого. И устройство не всегда называет себя: регистратор, два прохода ответивший без серийного номера, получал строку без `identity` — пустое слово стирало известное. Второе имя, открытое в это время, забирало идентичность себе, и после перезапуска держатель отказывал регистратору под его собственным именем: из двух его камер не писала ни одна. Теперь в `describe_devices` два правила. Пустое слово ничего не отменяет: то, что устройство сказало раньше, — в памяти держателя или в строке устройства у только что запущенного держателя — остаётся, пока оно не скажет другое. Совпадение называется, а не запрещает: `identity`, найденная под другим ключом (`device_identities`, теперь без вендора), записывается всё равно, говорится в логе один раз, считается (`identity_coincidences` в heartbeat, `vms_device_identity_coincidences` на `/metrics`), а в статусе каждой камеры этого устройства стоит предупреждение `warning`: *its device gives the same serial number as acme/10.0.0.50: either one device under two names, or two devices with one serial number. It is recorded. If it is one device, point all its cameras at one of the two names and remove the other's device row*. В списке устройств держателя — `same_serial_as`. Отличить второе имя от клона может оператор, держатель — нет. Камера пишет в обоих случаях. Каждый проход держатель одним чтением на совпадение спрашивает хранилище, стоит ли ещё строка другого имени (`_still_known_as`): удалили — предупреждение уходит. Кто вправе направить камеру на какое имя, решает консоль, и защита от второго имени переехала туда: на устройство, которое не открывал ни один держатель, `source` меняет только тот, у кого грант на кластер (урок 12). Тесты: `test_console_gate.py::test_an_empty_word_from_a_device_does_not_unsay_what_it_said_before` — два прохода без серийного номера строка его хранит, после перезапуска обе камеры регистратора пишут; `test_console_gate.py::test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidence_is_said` — оба клона пишут, предупреждение в статусе, одна строка лога, число на `/metrics`, и после удаления строки первого клона предупреждения нет.
 
-**Что остаётся открытым.** Строки устройств никто не удаляет. Если единственная камера устройства сама переехала с IP на DNS-имя, строка старого имени остаётся, и держатель отказывает новому имени, пока оператор не удалит строку `vms/devices/<старое имя>` в хранилище — маршрута консоли для этого нет. Два держателя, впервые открывшие два имени одного устройства в одну и ту же секунду, запишут обе строки, и отказа не будет. Консоль сравнивает такие имена по `identity` (`one_device`), так что права на реле спрашиваются за весь регистратор.
+**Что остаётся открытым.** Строки устройств никто не удаляет: устаревшая строка старого имени даёт предупреждение о совпадении, пока оператор не удалит `vms/devices/<старое имя>` в хранилище, — маршрута консоли для этого нет. Камера, которую администратор кластера сам направил на второе имя известного устройства, пишет — это его решение, и держатель только предупреждает о нём.
 
 ```python
         self.devices: dict[str, object] = {}
@@ -74,9 +74,14 @@ def device_of(source: str) -> str:
 
 ```python
     def _refresh_devices(self) -> None:
+        until = time.monotonic() + self.DEVICE_HOLD
         want = {device_of(r["source"]) for r in self.rows if r.get("source")}   # a recorder's rows name none
+        opens = []
         for key in want - set(self.devices):
-            dev = self.device_factory(key)
+            opens.append((("open", key), None, lambda key=key: self.device_factory(key)))
+        for (_, key), dev in self._ask_devices(opens, until).items():
+            if dev is not None:
+                self.devices[key] = dev
             ...
 ```
 
@@ -134,22 +139,31 @@ def device_of(source: str) -> str:
     PLAYBACK_BUDGET_WAIT = 5.0
     PLAYBACK_PER_SIGNATURE = 2
 
-    def playback_pieces(self, cam, t0: float, t1: float):
+    def playback_pieces(self, cam, t0: float, t1: float, who: str | None = None):
         ...
         t0, t1 = max(float(t0), float(cov.get("from", t0))), min(float(t1), float(cov.get("to", t1)))
         budget = self.playback_budget()
 
         def pieces():
-            at, span, held = t0, min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE), 0
+            at, rate, pace, held = t0, None, None, 0
             try:
                 while at < t1:
-                    budget.give(held)                    # the last piece is the client's now: its bytes are free
+                    budget.give(held, who)               # the last piece is the client's now: its bytes are free
                     held = 0
                     want = self.PLAYBACK_PIECE_BYTES
-                    if not budget.take(want, self.PLAYBACK_BUDGET_WAIT):
+                    if pace is not None:                 # a slow reader: what he takes in `PLAYBACK_PACE_SECONDS`
+                        want = max(self.PLAYBACK_MIN_PIECE, min(want, int(pace * self.PLAYBACK_PACE_SECONDS)))
+                    if who is None:
+                        held = want if budget.take(want, self.PLAYBACK_BUDGET_WAIT) else 0
+                    else:
+                        held = budget.take_share(who, want, min(want, self.PLAYBACK_MIN_PIECE), self.PLAYBACK_BUDGET_WAIT)
+                    if not held:
                         raise OverflowError(f"this door holds {budget.limit} bytes of footage at once, and they are "
                                             f"all being sent — retry")
-                    held = want
+                    # Seconds: `PLAYBACK_FIRST` for the first piece; then as many as the bytes held come to at the rate
+                    # the last piece came at — never more than `PLAYBACK_PIECE`, never less than one.
+                    span = min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE) if rate is None else \
+                        max(1.0, min(self.PLAYBACK_PIECE, held / max(rate, 1.0)))
                     b = min(t1, at + span)
                     sid = dev.open_playback(cam, at, b)  # OverflowError when the device is full
                     try:
@@ -158,14 +172,16 @@ def device_of(source: str) -> str:
                     finally:
                         dev.close_playback(sid)          # before a byte of the piece is sent
                     size = sum(len(c) for c in got)
-                    budget.force(size - held)            # what the piece really is, whatever was asked
+                    budget.force(size - held, who)       # what the piece really is, whatever was asked
                     held = size
                     rate = size / max(b - at, 1e-3)
-                    span = max(1.0, min(self.PLAYBACK_PIECE, self.PLAYBACK_PIECE_BYTES / max(rate, 1.0)))
+                    sent = time.monotonic()
                     yield from got
+                    took = time.monotonic() - sent       # how long the client took to take it
+                    pace = size / took if took > 1.0 else None
                     at = b
             finally:
-                budget.give(held)
+                budget.give(held, who)
         return pieces()
 ```
 
@@ -192,7 +208,30 @@ def device_of(source: str) -> str:
                                                       f"once already — close one first", "error": "busy"})
 ```
 
-Соединение держит один кусок за раз, поэтому на человека приходится `PLAYBACK_PER_PERSON × PLAYBACK_PIECE_BYTES` — 16 МиБ из 64 при умолчаниях. Три четверти двери остаются другим людям. «Кто» — только имя, над которым дверь проверила подпись консоли (`check_signed` кладёт его в `seen`). Параметру `v`, который никто не проверял, дверь не верит, а в открытом кластере, где подписей нет, человека нет вовсе: там остаются пределы подписи и адреса. Процесс кластера (возможность на камеру) держит, как и раньше, только предел подписи. Чего это не делает: четыре человека с `view` вместе занимают весь бюджет. Тест: `test_console_load.py::test_one_viewer_holds_a_share_of_the_holders_door_however_many_addresses_he_was_signed` — из шестнадцати подписей одного зрителя обслужены четыре, остальным — 503 со словами «pieces of footage at once». Бюджет занят не больше чем на долю одного человека, и другой зритель получает 200.
+Соединение держит один кусок за раз, поэтому на человека приходится `PLAYBACK_PER_PERSON × PLAYBACK_PIECE_BYTES` — 16 МиБ из 64 при умолчаниях. Три четверти двери остаются другим людям. «Кто» — только имя, над которым дверь проверила подпись консоли (`check_signed` кладёт его в `seen`). Параметру `v`, который никто не проверял, дверь не верит, а в открытом кластере, где подписей нет, человека нет вовсе: там остаются пределы подписи и адреса. Процесс кластера (возможность на камеру) держит, как и раньше, только предел подписи. Тест: `test_console_load.py::test_one_viewer_holds_a_share_of_the_holders_door_however_many_addresses_he_was_signed` — из шестнадцати подписей одного зрителя обслужены четыре, остальным — 503 со словами «pieces of footage at once». Бюджет занят не больше чем на долю одного человека, и другой зритель получает 200.
+
+**Доля человека — байты, и одна доля всегда остаётся следующему.** Четыре соединения по куску в 4 МиБ — это 16 МиБ на человека, и четыре человека с `view` вместе занимали все 64 МиБ: у пятого воспроизведение получало 503 (девятое ревью, minor, воспроизведено запуском). Теперь куски подписанного зрителя берутся из его доли бюджета (`ByteBudget.take_share`):
+
+```python
+    def take_share(self, who: str, most: int, least: int, wait: float) -> int:
+        deadline = time.monotonic() + wait
+        with self.cond:
+            while True:
+                mine, share = self.held.get(who, 0), self.share(who)
+                # Somebody who holds bytes already leaves a share free for whoever comes next; a newcomer may take of it.
+                room = self.limit - self.used - (share if mine else 0)
+                n = min(int(most), share - mine, room)
+                if n >= least:
+                    self.used += n
+                    self.held[who] = self.held.get(who, 0) + n
+                    return n
+                left = deadline - time.monotonic()
+                if left <= 0:
+                    return 0
+                self.cond.wait(left)
+```
+
+Доля (`share`) — бюджет, делённый на число людей, которые держат его байты, считая спрашивающего, **плюс один**. Кто уже держит байты, берёт ещё только так, чтобы рядом с занятым осталась свободной одна доля. Это резерв, и брать из него может только тот, кто не держит ничего: новый человек — или зритель с одним соединением, который отдаёт кусок перед тем, как просить следующий. Кусок урезается до того, что осталось, но не меньше `PLAYBACK_MIN_PIECE` (256 КиБ); меньше — ждёт, как `take`. При умолчаниях четыре нечитающих человека по четыре соединения, пришедшие друг за другом, держат 52 МиБ, и пятый получает кусок рядом с ними. Вторая половина — кусок медленному читателю. Дверь мерит, сколько клиент забирал прошлый кусок, и следующий — не больше того, что он заберёт за `PLAYBACK_PACE_SECONDS` (10 с) в том же темпе. Читатель на 80 кБ/с держал кусок в 4 МиБ пятьдесят секунд, теперь — около 800 КБ (с полом в секунду записи камеры). Тесты: `test_console_load.py::test_four_viewers_do_not_take_the_holders_whole_budget_and_the_next_one_is_served` — четыре человека по четыре нечитающих соединения держат меньше бюджета, пятый получает 200 с целым ответом (до правки — 503); `test_console_load.py::test_a_slow_readers_next_piece_is_what_he_takes_in_ten_seconds_at_his_pace` — после 1,5 с на первый кусок следующий не больше 250 КБ, у быстрого — кусок по байтам. Чего это не делает: бюджет конечен. Каждый новый человек берёт кусок из резерва, и при умолчаниях семь нечитающих учётных записей сразу всё-таки занимают его целиком. Медленное чтение выше пола темпа обходится им дороже: кусок такого читателя — его темп за десять секунд, и на 64 МиБ нужно около двадцати учётных записей.
 
 **И сама дверь — та же, что у консоли.** Защиты консоли (М10A, урок 15, шаг 14) были только у консоли: триста медленных соединений к этой двери — триста два потока в держателе, процессе, который держит все камеры сервера (то же ревью, major). Сервер двери — `door_server`: `PLAYBACK_CONNECTIONS` (32) соединений сразу, `PLAYBACK_PER_ADDRESS` (8) с одного адреса, следующему — 503 на месте; строка запроса и заголовки — под сроком (`Deadlined`); неизвестная камера в `/recordings/<cam>` — 404, а не разорванное соединение. Тест: `test_console_load.py::test_the_holders_door_is_bounded_and_deadlined_like_the_consoles`.
 

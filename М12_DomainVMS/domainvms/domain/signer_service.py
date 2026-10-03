@@ -32,7 +32,7 @@ from cluster.variables import NomadVariables
 from .agent import KEYS_PATH, DomainPublisher
 from .identity import AuthError, IdentityStore
 from .signer import DomainRoot, Signer
-from .tokens import RevocationList, verify
+from .tokens import RevocationList, TokenError, verify
 import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.rows import PARSE_ERRORS
@@ -127,16 +127,29 @@ def main() -> None:
         def do_POST(self):
             if not read_body(self, self.MAX_BODY):
                 return
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            # The door in is anybody's, and so is its body (the ninth review's sweep of "a garbage token is 500, not
+            # 401"): a body that is not an object, a name or a password that is not a string, a token that does not
+            # verify were a 500 here — `/revoke` raised the token's own error, which nobody caught.
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                if not isinstance(body, dict):
+                    raise TypeError("not an object")
+            except PARSE_ERRORS:
+                return self._send(400, {"detail": "the body is a JSON object"})
             try:
                 if self.path == "/login":
-                    return self._send(200, {"token": ids.login(body["user"], body["password"])})
+                    user, password = body.get("user"), body.get("password")
+                    if not isinstance(user, str) or not isinstance(password, str):
+                        return self._send(400, {"detail": "a login names a user and a password, both strings"})
+                    return self._send(200, {"token": ids.login(user, password)})
                 if self.path == "/revoke":
-                    revoked.revoke(verify(body["token"], signer.tokens.keyset()))
+                    revoked.revoke(verify(body.get("token"), signer.tokens.keyset()))
                     pub.publish_revoked(revoked)
                     return self._send(200, {"revoked": True})
             except AuthError:
                 return self._send(401, {"detail": "bad credentials"})
+            except TokenError as e:
+                return self._send(401, {"detail": f"token refused: {e}"})
             self._send(404, {"detail": "no such route"})
 
         def log_message(self, *a):

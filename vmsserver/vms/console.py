@@ -185,6 +185,8 @@ class LiveFront:
             return e.code, {"error": f"gateway {g} said {e.code}"}
         except OSError:
             return 503, {"error": f"gateway {g} is not answering"}
+        except PARSE_ERRORS:                             # an answer nobody can read (the ninth pass's sweep of `door_timeline`)
+            return 502, {"error": f"gateway {g} answered something that is not JSON"}
 
     # `GET /whep/<cam>`: the stream row, which gateway, and that gateway's status line for it — what the page shows.
     def status(self, cam: str) -> dict:
@@ -320,11 +322,18 @@ def _door(url: str, timeout: float, limit: int | None = None):
 # A recorder door's timeline of one recording, each span read alone (`scan.door_spans`): `(spans, whole)`, or an
 # `OSError`/`ValueError` — the door did not answer. A span that does not parse costs that span, and `whole` is False:
 # the reader names the door, it does not take the rest for all the door holds.
+#
+# …and an answer that does not parse is a door that did not answer, whatever the parser raised (`PARSE_ERRORS`; the
+# review's ninth pass, a run): a door's 200 KB of nested brackets was a `RecursionError`, which no caller catches —
+# the timeline and the export were 500 instead of naming the door.
 def door_timeline(name: str, url: str, unit, t0: float, t1: float) -> tuple[list[dict], bool]:
     from w2cplatform.rows import ANSWER_MAX
     from .scan import door_spans
-    body = json.loads(_door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX))
-    return door_spans(f"rec/doors/{name}#{unit}", body)
+    raw = _door(f"{url}/timeline/{unit}?from={t0}&to={t1}", DOOR_TIMEOUT, ANSWER_MAX)
+    try:
+        return door_spans(f"rec/doors/{name}#{unit}", json.loads(raw))
+    except PARSE_ERRORS as e:
+        raise ValueError(f"{url}: the door's timeline does not parse ({type(e).__name__})") from None
 
 
 def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_ctl=None):
@@ -1182,7 +1191,7 @@ def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str
         if isinstance(missing, str):
             try:
                 missing = json.loads(missing)
-            except ValueError:
+            except PARSE_ERRORS:                         # `RecursionError` too (the ninth pass's sweep of `door_timeline`)
                 missing = {}
         for keep, s in (missing.items() if isinstance(missing, dict) else ()):
             worst[str(keep)] = max(worst.get(str(keep), 0.0), _n(sub, w, f"keep_missing.{keep}", s))
@@ -1342,6 +1351,7 @@ def beat_lines(sub: str, hbs: dict) -> list[str]:
     out = []
     for metric, field, kind in (("vms_devices_slow", "devices_slow", "gauge"),
                                 ("vms_commands_in_flight", "commands_in_flight", "gauge"),
+                                ("vms_device_identity_coincidences", "identity_coincidences", "gauge"),   # the ninth pass
                                 ("vms_commands_reanswered_total", "commands_reanswered", "counter")):
         out.append(f"# TYPE {metric} {kind}")
         out += [f'{metric}{{worker="{label(w)}"}} {_n(sub, w, field, hb.extra.get(field) or 0, int)}' for w, hb in sorted(hbs.items())]
@@ -1613,6 +1623,15 @@ def recording_cams(vars_):
 # camera to another device answers for every scenario that commands it — `admin` on each camera such a scenario
 # reaches (`scenario_cams`), the cluster's grant for one that watches any camera. `scenarios`: the scenarios' rows and
 # their reach, when the console fronts `auto`.
+#
+# …AND A DEVICE NOBODY HAS OPENED IS THE CLUSTER'S (the owner's decision on the review's ninth pass; a run: in the
+# course's build there is no device factory, no holder ever learns what a device is, and `admin` on camera 3 moved it
+# onto `nvr50.local/ch/2` — the recorder another camera holds as `10.0.0.50` — and pulsed its relay, 202). A move to a
+# device whose identity no holder has written (`Devices.known`) asks for the cluster's grant, `"*"`, whatever the
+# spelling: a DNS name, `010.000.000.050`, full-width digits are all keys nobody can say the device of. Once a holder
+# has opened it, the move asks for every camera of that device, as before. Whether the source moved is asked by the KEY
+# (`source_key` without identities): two clones with one serial number are two devices (the same decision), and a
+# camera moved from one to the other has moved.
 def source_cams(ctl, scenarios=None):
     from .config import device_of, one_device
 
@@ -1623,15 +1642,18 @@ def source_cams(ctl, scenarios=None):
         a, b = str(old.get("source") or ""), str(new.get("source") or "")
         if a == b:
             return out                                   # the source as it was: nothing moved, nothing to look up
-        same = one_device(ctl.vars)
-        if volumes.source_key(a, same) != volumes.source_key(b, same):
+        if volumes.source_key(a) != volumes.source_key(b):
+            same = one_device(ctl.vars)
             devices = {same(device_of(s)) for s in (a, b) if s}
             out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) in devices}
-            if scenarios is not None and same(device_of(a)) != same(device_of(b)):
-                rows, reach = scenarios
-                for row in rows():
-                    if str(old.get("id")) in commanded(row):
-                        out |= reach(row)
+            if device_of(a) != device_of(b):
+                if b and not same.known(device_of(b)):
+                    out.add("*")                         # nobody can say which device that is: the cluster's grant
+                if scenarios is not None:
+                    rows, reach = scenarios
+                    for row in rows():
+                        if str(old.get("id")) in commanded(row):
+                            out |= reach(row)
         return out
     return cams
 
@@ -1641,8 +1663,10 @@ def commanded(row: dict) -> set:
     then = row.get("then")
     try:
         then = json.loads(then or "[]") if isinstance(then, (str, bytes)) else then
-    except ValueError:
+    except PARSE_ERRORS:
         return {"*"}
+    if not isinstance(then, (list, type(None))):
+        return {"*"}                                     # nobody can say what it commands: the cluster's grant
     return {str(a.get("unit")) for a in (then or []) if isinstance(a, dict) and str(a.get("sub", "")) == "vms"
             and str(a.get("action", "")) in ("output", "preset") and a.get("unit")}
 

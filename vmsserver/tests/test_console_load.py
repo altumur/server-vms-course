@@ -892,6 +892,74 @@ def test_one_viewer_holds_a_share_of_the_holders_door_however_many_addresses_he_
         door.shutdown()
 
 
+def test_four_viewers_do_not_take_the_holders_whole_budget_and_the_next_one_is_served():
+    """The review's ninth pass, minor — a run: the share was per person and counted in connections, so four accounts
+    with `view`, four connections each and a piece of 4 MiB per connection were the door's 64 MiB — a fifth viewer's
+    playback was 503. A signed viewer's pieces are a share of the budget now (`ByteBudget.take_share`: the budget over
+    the people holding any of it, plus one), and somebody who holds bytes already leaves a share free beside them — the
+    reserve, which only somebody holding nothing takes of. Four people who read nothing hold less than the budget, and
+    the fifth is served."""
+    from vms import playback as pb
+    from w2cplatform.access import TRUST_KEYS
+    from vms.worker import FakeDevice
+    box = Box()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 3600.0)}, max_playbacks=64, bps=1_000_000)
+    piece, budget = 1 << 20, 8 << 20                              # a second of this camera a piece; eight pieces
+    w, door = _holder(box, dev, PLAYBACK_PIECE_BYTES=piece, PLAYBACK_BUDGET=budget, PLAYBACK_FIRST=1.0,
+                      PLAYBACK_MIN_PIECE=128 << 10, PLAYBACK_BUDGET_WAIT=0.5, PLAYBACK_CONNECTIONS=32,
+                      PLAYBACK_PER_ADDRESS=32)
+    box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # a cluster in a domain: the door asks who
+    port = door.server_address[1]
+    signed = lambda who, t0, t1: f"/playback/1?{pb.signed_query(w.playback_key, '1', t0, t1, who, box.wall())}"
+
+    def nobody_reads(path: str) -> socket.socket:
+        s = socket.socket()
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        s.connect(("127.0.0.1", port))
+        s.sendall(f"GET {path} HTTP/1.1\r\nHost: x\r\n\r\n".encode())
+        return s
+    idle = []
+    try:
+        for who in ("mallory", "trudy", "eve", "oscar"):              # four accounts, four connections each
+            for i in range(w.PLAYBACK_PER_PERSON):
+                idle.append(nobody_reads(signed(who, i * 60.0, i * 60.0 + 600)))
+                time.sleep(0.15)
+        time.sleep(0.8)                                               # the ones past their share waited, and were refused
+        held = w.playback_budget().used
+        assert held < budget, held                                    # not the whole budget
+        reply, _ = _raw(port, f"GET {signed('anna', 0.0, 2.0)} HTTP/1.1\r\nHost: x\r\n\r\n".encode(), wait=10.0)
+        assert reply.startswith(b"HTTP/1.1 200") and reply.endswith(b"0\r\n\r\n"), reply[:160]   # the fifth: served
+    finally:
+        for s in idle:
+            s.close()
+        door.shutdown()
+
+
+def test_a_slow_readers_next_piece_is_what_he_takes_in_ten_seconds_at_his_pace():
+    """The same pass's minor, its second half: a piece held for a slow reader is held for as long as he takes to read it
+    — 4 MiB at 80 kB/s, fifty seconds of somebody's share. The next piece is at most what he took in
+    `PLAYBACK_PACE_SECONDS` at the pace he took the last one (`playback_pieces`); a reader who keeps up is not cut."""
+    from vms.worker import FakeDevice
+    box = Box()
+    dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 3600.0)}, max_playbacks=64, bps=100_000)
+    w, door = _holder(box, dev, PLAYBACK_PIECE_BYTES=1 << 20, PLAYBACK_FIRST=1.0, PLAYBACK_MIN_PIECE=16 << 10,
+                      PLAYBACK_PACE_SECONDS=3.0)
+    door.shutdown()                                                   # the pieces are asked for here, without the wire
+    fast = w.playback_pieces("1", 0.0, 30.0, who="anna")
+    next(fast); next(fast)                                            # taken at once: the next piece is bytes, not a pace
+    quick = int((dev.fetched[-1][2] - dev.fetched[-1][1]) * dev.bps)
+    fast.close()
+    slow = w.playback_pieces("1", 100.0, 130.0, who="bob")
+    next(slow)
+    time.sleep(1.5)                                                   # 100 kB taken in 1.5 s: 67 kB/s
+    next(slow)
+    slowly = int((dev.fetched[-1][2] - dev.fetched[-1][1]) * dev.bps)
+    slow.close()
+    assert quick >= 900_000, quick                                    # ten seconds of the camera: the piece of bytes
+    assert slowly <= 250_000, slowly                                  # three seconds at his pace, not ten of the camera
+    assert w.playback_budget().used == 0 and not w.playback_budget().held   # every byte given back
+
+
 def test_a_viewer_slower_than_the_floor_is_let_go_by_the_floor_not_by_a_sockets_timeout():
     """The review's eighth pass: no test reached `PLAYBACK_MIN_RATE` — in the one there was, the socket's one-second
     timeout cut the trickle first. Here the socket waits thirty seconds and the viewer reads steadily, every write
