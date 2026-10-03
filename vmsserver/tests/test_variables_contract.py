@@ -1,13 +1,16 @@
 """The contract every Variables backend must keep — one suite, any backend.
 
-A store is swapped by changing `CONFIG_URL`, which is only safe if "it works"
-means something checkable. This is that meaning: file today, Nomad in М11,
-Kubernetes when there is a site for it. A new backend is accepted when this file
-is green against it, not when it looks right.
+A store is swapped by changing `PLATFORM_STORE` (`CONFIG_URL` by its old name),
+which is only safe if "it works" means something checkable. This is that meaning:
+`file://` on a box, `configstore://` — our own store replicated by raft — in М11's
+cluster, Kubernetes when there is a site for it. A new backend is accepted when
+this file is green against it, not when it looks right: `test_configstore.py`
+runs every clause against a group of one and of three, `test_configstorevars.py`
+against the daemon's socket, `test_storemachine.py` against the bare machine.
 
 Run against another backend by pointing `CONTRACT_URL` at it:
 
-    CONTRACT_URL=nomad://127.0.0.1:4646 python3 tests/run.py
+    CONTRACT_URL=configstore:///tmp/cs/admin.sock python3 tests/run.py
 
 The contract, in eight clauses:
 
