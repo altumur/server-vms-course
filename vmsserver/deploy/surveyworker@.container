@@ -17,6 +17,7 @@ After=network.target
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms surveyworker
 Environment=SURVEY_NAME=%i
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 Volume=/data/platform:/data/platform:z
 Volume=/data/archive:/data/archive:z

@@ -37,6 +37,7 @@ Image=localhost/vmsserver:latest
 Exec=python3 -m vms controller
 # it needs `PLATFORM_DIR` (the stores), `CAPACITY` (the fallback for a worker whose heartbeat says nothing)
 # and `LOG_LEVEL`; the rest of the file is harmless to it.
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 # the only mount: the config store for rows, assignments, placement, slots and the object store for
 # heartbeats (read) and the snapshot (write). No `/data/archive`: "the ACL says which rows

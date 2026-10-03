@@ -31,7 +31,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
                            "livecontroller", "detworker", "detcontroller", "detjobworker", "detjobcontroller",
                            "surveyworker", "surveycontroller", "autoworker", "autocontroller"}
     for name, entry in [("vmsworker@.container", "worker"), ("vmscontroller.container", "controller"),
-                        ("console.container", "console"), ("resource.container", "resource"),
+                        ("console.container", "console"), ("w2c-resource.container", "resource"),
                         ("recworker@.container", "recorder"), ("reccontroller.container", "reccontroller"),
                         ("liveworker@.container", "gateway"), ("livecontroller.container", "livecontroller"),
                         ("detworker@.container", "detworker"), ("detcontroller.container", "detcontroller"),
@@ -41,9 +41,10 @@ def test_the_units_run_the_entrypoints_the_package_has():
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
-        assert u["Container"]["EnvironmentFile"] == "/data/config/vms.env"             # the data partition, never a rootfs slot
+        # the data partition, never a rootfs slot; the platform's half first, the VMS's after it (a name in both: the VMS's)
+        assert u["Container"]["EnvironmentFile"] == ["/data/config/w2c.env", "/data/config/vms.env"]
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith(("/data/", "/run/vms:", "/run/obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
 
 
 def test_who_may_write_where_is_in_the_mounts_too():
@@ -62,14 +63,14 @@ def test_who_may_write_where_is_in_the_mounts_too():
     # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
-            assert ("/run/obsd" in vols(n)) == (n == "recworker@.container"), n
+            assert ("/run/vms-obsd" in vols(n)) == (n == "recworker@.container"), n
     rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
-    assert rec_env["OBSD_SOCKET"] == "/run/obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/vms.key"   # it opens a volume's secret
+    assert rec_env["OBSD_SOCKET"] == "/run/vms-obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/platform.key"   # it opens a volume's secret
     assert "/data/archive" not in vols("reccontroller.container")
-    assert vols("resource.container")["/data/platform"] == "/data/platform:z"       # the heartbeat is written; rows are only read
+    assert vols("w2c-resource.container")["/data/platform"] == "/data/platform:z"   # the heartbeat is written; rows are only read
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
     assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
-    assert unit("resource.container")["Service"]["Restart"] == "always"             # a process, not a timer: the database lives in it
+    assert unit("w2c-resource.container")["Service"]["Restart"] == "always"         # a process, not a timer: the database lives in it
 
 
 def test_the_image_carries_the_three_packages_and_nothing_else():
@@ -79,8 +80,37 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     assert "postgres" not in cf.lower()                                                # the per-box database is gone (М10 Lesson 1)
     assert 'CMD ["python3", "-m", "vms", "worker"]' in cf
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
-    assert all(k in env for k in ("PLATFORM_DIR=/data/platform", "ARCHIVE=/data/archive", "CAPACITY="))
+    assert "PLATFORM_DIR=/data/platform" in open(os.path.join(DEPLOY, "w2c.env.example")).read()
+    assert all(k in env for k in ("ARCHIVE=/data/archive", "CAPACITY="))
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
+
+
+def _env_names(name: str) -> set:
+    """The variables an env example sets or offers (`NAME=` at the start of a line, commented out or not)."""
+    return set(re.findall(r"^#? ?([A-Z][A-Z0-9_]*)=", open(os.path.join(DEPLOY, name)).read(), re.M))
+
+
+def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
+    """The product's rule on the platform's names (3 October): the platform is w2c, the VMS one of its subsystems, and
+    `/etc/vms/vms.env` split into the platform's `w2c.env` — its directory, its store, the server's name, labels, box
+    id — and the VMS's `vms.env`. The course's box keeps its root, `/data/config/`. Every unit reads both, the
+    platform's first (checked per unit above); the spares' units read them too, in both layouts; and each name is in
+    its own half and only there."""
+    platform, vms = _env_names("w2c.env.example"), _env_names("vms.env.example")
+    assert {"PLATFORM_DIR", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
+    assert {"ARCHIVE", "CAPACITY", "MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET"} <= vms
+    assert not platform & vms, platform & vms
+    for n in os.listdir(DEPLOY):
+        if n.startswith("w2c-spares") and n.endswith(".service"):
+            assert unit(n)["Service"]["EnvironmentFile"] == ["-/data/config/w2c.env", "-/data/config/vms.env",
+                                                             "-/etc/w2c/w2c.env", "-/etc/vms/vms.env"], n
+    # the cluster's key ring: one file of the platform's, in the three units that open sealed fields and no other
+    keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
+             and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
+    assert keyed == {"console.container", "vmsworker@.container", "recworker@.container"}, keyed
+    for n in keyed:
+        assert "/data/secrets/platform.key:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
+    assert unit("w2c-resource.container")["Unit"]["Description"].startswith("w2c ")   # the platform's process
 
 
 def test_the_archives_engine_is_the_hosts_own_daemon():
@@ -88,19 +118,40 @@ def test_the_archives_engine_is_the_hosts_own_daemon():
     only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
     from w2cplatform.obsd import default_socket
     u = unit("obsd.service")
-    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/obsd/obsd.sock"
-    assert u["Service"]["RuntimeDirectory"] == "obsd" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
+    assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms-obsd/obsd.sock"
+    assert u["Service"]["RuntimeDirectory"] == "vms-obsd" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
     assert u["Service"]["RuntimeDirectoryMode"] == "0750"                              # its group gets in; the daemon's own 0700 would not let it
     env = dict(e.split("=", 1) for e in u["Service"]["Environment"])
     assert int(env["OBSD_WRITER_GRACE_S"]) > 45                                         # the writer outlasts a hold that lapses
-    assert u["Service"]["User"] == "obsd" and env["OBSD_CLIENT_GROUP"] == u["Service"]["Group"]   # its own user; the recorders' group
+    assert u["Service"]["User"] == "vms-obsd" and env["OBSD_CLIENT_GROUP"] == u["Service"]["Group"]   # its own user; the recorders' group
     import sys
-    if sys.platform != "darwin":
-        assert default_socket() == "/run/obsd/obsd.sock"                                # where the unit puts it, not the daemon's own default
+    from unittest import mock
+    with mock.patch.dict(os.environ, {"OBSD_SOCKET": ""}), mock.patch.object(sys, "platform", "linux"):
+        assert default_socket() == "/run/vms-obsd/obsd.sock"                            # where the unit puts it: the product's path
+    with mock.patch.dict(os.environ, {"OBSD_SOCKET": ""}), mock.patch.object(sys, "platform", "darwin"):
+        assert default_socket() == f"/tmp/vms-obsd-{os.getuid()}.sock"                 # the daemon's own default on macOS
+
+
+def test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems():
+    """The client is the platform's library, and a session its caller did not name said `vms` in HELLO and in its
+    token, whatever the process (the course's decision on the platform's names). Now it is the process's name:
+    `python3 -m vms recorder` is `vms`, `tests/run.py` is `run`; a caller that names itself is said as it named."""
+    import sys
+    from unittest import mock
+    from w2cplatform.obsd import Session, process_name
+    with mock.patch.object(sys, "argv", ["/usr/lib/python3/site-packages/vms/__main__.py", "recorder"]):
+        assert process_name() == "vms"
+    with mock.patch.object(sys, "argv", ["/srv/w2c/tests/run.py"]):
+        assert process_name() == "run" and Session("/nonexistent/obsd.sock").client == "run"
+        assert Session("/nonexistent/obsd.sock").token.startswith("run-")
+    with mock.patch.object(sys, "argv", [""]):
+        assert process_name() == "python"
+    assert Session("/nonexistent/obsd.sock", client="rec-r-1").client == "rec-r-1"
 
 
 def _sysusers() -> tuple[set, dict, set]:
-    """`obsd.sysusers` as (users, {group: gid}, {(user, group)})."""
+    """`obsd.sysusers` as (users, {group: gid}, {(user, group)}) — a user's primary group (`u <name> -:<group>`)
+    counted as one it is in."""
     users, groups, members = set(), {}, set()
     for line in open(os.path.join(DEPLOY, "obsd.sysusers")):
         f = line.split()
@@ -108,6 +159,8 @@ def _sysusers() -> tuple[set, dict, set]:
             continue
         if f[0] == "u":
             users.add(f[1])
+            if ":" in f[2]:
+                members.add((f[1], f[2].split(":", 1)[1]))
         elif f[0] == "g":
             groups[f[1]] = f[2]
         elif f[0] == "m":
@@ -115,13 +168,14 @@ def _sysusers() -> tuple[set, dict, set]:
     return users, groups, members
 
 
-def _tmpfiles() -> dict:
-    """`vms.tmpfiles` as {path: (type, mode, user, group)}."""
+def _tmpfiles(*names: str) -> dict:
+    """`w2c.tmpfiles` and `vms.tmpfiles` (or the ones named) as {path: (type, mode, user, group)}."""
     out = {}
-    for line in open(os.path.join(DEPLOY, "vms.tmpfiles")):
-        f = line.split()
-        if f and not f[0].startswith("#"):
-            out[f[1]] = (f[0], f[2], f[3], f[4])
+    for name in names or ("w2c.tmpfiles", "vms.tmpfiles"):
+        for line in open(os.path.join(DEPLOY, name)):
+            f = line.split()
+            if f and not f[0].startswith("#"):
+                out[f[1]] = (f[0], f[2], f[3], f[4])
     return out
 
 
@@ -130,7 +184,12 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     handed it; /run/vms was made only by that unit, so without the daemon neither the holder nor the recorder started.
     Every user and group a unit names is in `obsd.sysusers` — the clients' group with the number the recorders join it
     by — every host directory under /run a container mounts is in `vms.tmpfiles`, the box's own volume is the daemon's,
-    and `install-obsd.sh` installs both files, checks the number and hands an old ring over."""
+    and `install-obsd.sh` installs both files, checks the number and hands an old ring over. Since the platform's names
+    (3 October): the platform's directories — its stores, its secrets — are `w2c.tmpfiles`, installed beside it, and
+    the daemon's user and group are the product's `vms-obsd`."""
+    assert set(_tmpfiles("w2c.tmpfiles")) == {"/data/platform", "/data/secrets"}
+    assert _tmpfiles("w2c.tmpfiles")["/data/secrets"][1:] == ("0700", "root", "root")   # the key ring: root's alone
+    assert not any(p.startswith("/data/platform") or p.startswith("/data/secrets") for p in _tmpfiles("vms.tmpfiles"))
     users, groups, members = _sysusers()
     dirs = _tmpfiles()
     svc = unit("obsd.service")["Service"]
@@ -152,7 +211,7 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     own = os.path.join(os.path.dirname(archive), "volume")                                # the box's own volume, beside ARCHIVE
     assert dirs[own][2:] == (svc["User"], svc["Group"])                                   # the daemon opens it, as itself
     script = open(os.path.join(DEPLOY, "install-obsd.sh")).read()
-    for needed in ("obsd.sysusers", "systemd-sysusers", "vms.tmpfiles", "systemd-tmpfiles --create",
+    for needed in ("obsd.sysusers", "systemd-sysusers", "w2c.tmpfiles", "vms.tmpfiles", "systemd-tmpfiles --create",
                    f'"$GID" != {rec["GroupAdd"]}', f"chown -R {svc['User']}:{svc['Group']}", own,
                    "obsd.service", "systemctl enable obsd.service", "systemctl restart obsd.service"):
         assert needed in script, needed
@@ -172,7 +231,7 @@ def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and
         assert line in calls, f"{line!r} not called: {calls}"
         return calls.index(line)
     stop = at("systemctl stop obsd.service")
-    handed = [i for i, line in enumerate(calls) if line.startswith("chown -R obsd:vms-rec")]
+    handed = [i for i, line in enumerate(calls) if line.startswith("chown -R vms-obsd:vms-obsd")]
     assert len(handed) == 2 and stop < min(handed)                                     # both volumes, after the stop
     unit_in = at("install -m 0644 " + os.path.join(DEPLOY, "obsd.service") + " /etc/systemd/system/obsd.service")
     assert max(handed) < unit_in < at("systemctl daemon-reload") < at("systemctl enable obsd.service") \
@@ -190,7 +249,7 @@ def _install_obsd(*args, active=True, stops=True, owned=False, same_unit=False, 
     log, state = os.path.join(bin_, "calls"), os.path.join(bin_, "active")
     if active:
         open(state, "w").close()
-    says = {"id": "echo 0", "getent": "echo vms-rec:x:2101:", "find": "true" if owned else 'echo "$2/block-0"',
+    says = {"id": "echo 0", "getent": "echo vms-obsd:x:2101:", "find": "true" if owned else 'echo "$2/block-0"',
             "pgrep": f'[ -f "{state}" ]', "cmp": "true" if same_unit else "false",
             "systemctl": (f'case "$1" in is-active) [ -f "{state}" ] ;; '
                           + (f'stop) rm -f "{state}" ;; ' if stops else "stop) false ;; ")
@@ -238,7 +297,7 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
     vars_.put("rec/volumes/cloud", {"kind": "network", "server": "", "url": "s3://bucket/x", "quota_bytes": "1"})
     out, calls = _install_obsd(store=root)
     assert out.returncode == 0, out.stderr
-    handed = sorted(c.split()[-1] for c in calls if c.startswith("chown -R obsd:vms-rec"))
+    handed = sorted(c.split()[-1] for c in calls if c.startswith("chown -R vms-obsd:vms-obsd"))
     assert handed == ["/data/disk-2", "/data/second", "/data/volume"], handed   # this box's, declared: found without being told
     assert "declared for srv-1: /data/disk-2 (disk-2)" in out.stdout and "/data/theirs" not in out.stdout
     out, calls = _install_obsd()                                               # no store to read: said, not passed over
@@ -280,7 +339,7 @@ def _spares(*args, pages=None, env=None, active=(), linux=True):
             os.symlink(shutil.which(tool), os.path.join(bin_, tool))
         path = bin_
     full = {"PATH": path, "CONSOLE": "http://console", "SERVER_NAME": "srv-a", "SPARES_DIR": os.path.join(bin_, "spares"),
-            "SPARES_RUN": os.path.join(bin_, "run") if not linux else "/opt/vms/bin/vms-run.sh", **(env or {})}
+            "SPARES_RUN": os.path.join(bin_, "run") if not linux else "/opt/w2c/bin/w2c-run.sh", **(env or {})}
     out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "w2c-spares.sh"), *args], env=full, capture_output=True,
                          text=True, timeout=30)
     if not linux:
@@ -292,6 +351,9 @@ def _spares(*args, pages=None, env=None, active=(), linux=True):
             subprocess.run(["kill", open(os.path.join(full["SPARES_DIR"], pid)).read().strip()], capture_output=True)
     return out, calls
 
+
+# What a spare is handed (the product's layout): the platform's env file, then the VMS's — the two every unit reads.
+ENVS = "--property=EnvironmentFile=-/etc/w2c/w2c.env --property=EnvironmentFile=-/etc/vms/vms.env"
 
 NEEDED = """# TYPE vms_workers_needed gauge
 vms_workers_needed{labels=""} 1
@@ -314,10 +376,8 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
     assert out.returncode == 0, out.stderr
     started = [c for c in calls if c.startswith("systemd-run")]
     assert started == [
-        "systemd-run --unit vms-vmsworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR= "
-        "/opt/vms/bin/vms-run.sh worker",
-        "systemd-run --unit vms-vmsworker-spare-2 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR=vlan:dmz "
-        "/opt/vms/bin/vms-run.sh worker"], calls
+        f"systemd-run --unit vms-vmsworker-spare-1 {ENVS} --setenv SPARE_FOR= /opt/w2c/bin/w2c-run.sh worker",
+        f"systemd-run --unit vms-vmsworker-spare-2 {ENVS} --setenv SPARE_FOR=vlan:dmz /opt/w2c/bin/w2c-run.sh worker"], calls
     assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
     assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
     out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"},
@@ -332,7 +392,7 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     recorder by `rec_recorders_needed` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
     no_row = NEEDED.replace('server="srv-a"', 'server="srv-c"')
     out, calls = _spares("vmsworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
-    assert [c.split()[2] + " " + c.split()[5] for c in calls if c.startswith("systemd-run")] == \
+    assert [c.split()[2] + " " + c.split()[6] for c in calls if c.startswith("systemd-run")] == \
         ["vms-vmsworker-spare-1 SPARE_FOR=", "vms-vmsworker-spare-2 SPARE_FOR=vlan:x"], calls
     out, calls = _spares("vmsworker", pages={})
     assert out.returncode == 0 and calls == [] and "no answer" in out.stderr, out.stderr
@@ -341,9 +401,8 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     out, calls = _spares(pages={"/rec/metrics": "rec_recorders_needed 1\n", "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
                          env={"SPARES_ROLES": "recworker,liveworker"})
     assert [c for c in calls if c.startswith("systemd-run")] == [
-        "systemd-run --unit vms-recworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env /opt/vms/bin/vms-run.sh recorder",
-        "systemd-run --unit vms-liveworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR= "
-        "/opt/vms/bin/vms-run.sh gateway"], calls
+        f"systemd-run --unit vms-recworker-spare-1 {ENVS} /opt/w2c/bin/w2c-run.sh recorder",
+        f"systemd-run --unit vms-liveworker-spare-1 {ENVS} --setenv SPARE_FOR= /opt/w2c/bin/w2c-run.sh gateway"], calls
 
 
 def test_the_spares_script_on_macos_starts_a_spare_with_nohup_and_counts_it_by_its_pid():

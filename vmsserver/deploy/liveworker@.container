@@ -22,6 +22,7 @@ Environment=GATEWAY_HOST=0.0.0.0
 # known number overrides it per instance:
 # `/etc/containers/systemd/liveworker@g-1.container.d/port.conf` with `Environment=GATEWAY_PORT=8082`.
 Environment=GATEWAY_PORT=auto
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 Volume=/data/platform:/data/platform:z
 Network=host

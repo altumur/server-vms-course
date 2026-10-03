@@ -227,7 +227,7 @@ def new_key_file(path: str, kid: str = "k1", store: str | None = None) -> None:
         f.write(f"{kid} {_secrets.token_bytes(32).hex()}\n")
 
 
-if __name__ == "__main__":                              # python3 -m w2cplatform.sealing new /data/secrets/vms.key
+if __name__ == "__main__":                              # python3 -m w2cplatform.sealing new /data/secrets/platform.key
     import sys
     if len(sys.argv) == 3 and sys.argv[1] == "new":
         new_key_file(sys.argv[2], store=os.environ.get("PLATFORM_DIR", "/data/platform"))

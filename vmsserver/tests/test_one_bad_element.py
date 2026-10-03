@@ -71,7 +71,7 @@ def test_a_heartbeat_whose_server_or_worker_is_no_name_is_that_heartbeats_and_no
     assert list(con.servers()["servers"]) == ["srv-a"]
     assert ctl.unplaceable() == []                                     # placed on w-1 by the pass below, or eligible there
     text = con.metrics_text()
-    assert "vms_resources_live 1" in text and 'vms_worker_headroom{worker="w-1",server="srv-a"}' in text
+    assert "w2c_resources_live 1" in text and 'vms_worker_headroom{worker="w-1",server="srv-a"}' in text
     assert GARBLED["vms"] >= 4 and GARBLED["platform"] >= 2                # counted as heartbeats that do not parse
     assert list(resources_seen(box.objects)) == ["srv-a"]
     ctl.pass_once()
@@ -632,3 +632,31 @@ def test_channel_of_reads_any_value_as_channel_key_and_device_of_do():
     for v in (5, None, ["a"], int(BIG), "rtsp://[::1/x", "driverpack://acme/h/ch/" + "9" * 5000):
         channel_of(v), channel_key(v), device_of(v)
     assert channel_of(5) is None and channel_key(None) == ""
+
+
+def test_the_resources_are_said_once_per_console_under_the_platforms_name():
+    """A resource is the PLATFORM's — one per server, whatever subsystems write into it — and every mounted console
+    said its numbers again under its own prefix: `vms_resources_live`, `det_resources_live`, `detjob_…`, one fact as
+    many times as there were subsystems (the course's decision on the platform's names). Now `w2c_resources_live` and
+    `w2c_resource_*`, on the root's page of a `Mount` only — a console mounted later included — and on a console that
+    serves alone; no subsystem's page carries a resource line under any prefix."""
+    from w2cplatform.console import Mount, SpecConsole
+    from w2cplatform.spec import SpecController
+    from vms.config import DET_SPEC, DETJOB_SPEC, SPEC
+    box = Box()
+    t = box.wall()
+    box.objects.put("platform/resources/srv-a/heartbeat", json.dumps(
+        {"server": "srv-a", "ts": t, "url": "http://a", "space": {"full": 0.5}, "short": 0}).encode())
+    con = lambda spec: SpecConsole(SpecController(spec, box.vars, box.objects, wall=box.wall), wall=box.wall)
+    alone = con(SPEC).metrics_text()
+    assert "w2c_resources_live 1" in alone and 'w2c_resource_full{server="srv-a"} 0.5' in alone
+    root, jobs, det = con(SPEC), con(DETJOB_SPEC), con(DET_SPEC)
+    m = Mount(root, {"detjob": jobs})
+    m.mount("det", det)
+    pages = {c.spec.name: c.metrics_text() for c in (root, jobs, det)}
+    assert pages["vms"].count("\nw2c_resources_live 1\n") == 1 and 'w2c_resource_short_bytes{server="srv-a"} 0' in pages["vms"]
+    for name, text in pages.items():
+        assert "_resources_live" not in text.replace("w2c_resources_live", ""), name   # never under a subsystem's prefix
+        assert f"{name}_resource_" not in text, name
+        if name != "vms":
+            assert "w2c_resource" not in text, name                                     # said once: by the root

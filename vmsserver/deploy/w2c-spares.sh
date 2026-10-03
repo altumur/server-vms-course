@@ -42,10 +42,13 @@ ME="${0##*/}"
 CONSOLE="${CONSOLE:-http://127.0.0.1:8080}"
 SERVER="${SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"
 # THE PLATFORM'S NAMES — spelled here and nowhere else below, so a rename is these lines: what a role's unit runs
-# (`<SPARES_RUN> <verb>`), the environment every unit reads (handed to a spare too), and where the macOS spares keep
-# their pids and logs. A spare itself is a process of a VMS subsystem, and keeps the subsystem's names: the unit
-# `vms-<role>-spare-<n>`, the group `vms-<role>` of its role's store socket.
-SPARES_RUN="${SPARES_RUN:-/opt/vms/bin/vms-run.sh}"
+# (`<SPARES_RUN> <verb>`), the two environment files every unit reads (handed to a spare too: the platform's, then
+# the VMS's — a name in both is the second's), and where the macOS spares keep their pids and logs. The defaults are
+# the product's layout (`/opt/w2c`, `/etc/w2c/w2c.env`, `/etc/vms/vms.env`); the course's box sets them in its own
+# `/data/config/w2c.env`, which the timer's service reads. A spare itself is a process of a VMS subsystem, and keeps
+# the subsystem's names: the unit `vms-<role>-spare-<n>`, the group `vms-<role>` of its role's store socket.
+SPARES_RUN="${SPARES_RUN:-/opt/w2c/bin/w2c-run.sh}"
+W2C_ENV="${W2C_ENV:-/etc/w2c/w2c.env}"
 ENV_FILE="${ENV_FILE:-/etc/vms/vms.env}"
 SPARES_DIR="${SPARES_DIR:-/var/run/w2c-spares}"
 NAME=vms
@@ -78,11 +81,12 @@ start() {                                           # sh has no locals: the argu
         getent group "$NAME-$1" >/dev/null 2>&1 && group="--property=SupplementaryGroups=$NAME-$1"   # its role's store socket
         if [ -n "$5" ]; then
             # shellcheck disable=SC2086
-            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$ENV_FILE" $group \
-                --setenv SPARE_FOR="$4" "$SPARES_RUN" "$3"
+            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$W2C_ENV" \
+                --property=EnvironmentFile=-"$ENV_FILE" $group --setenv SPARE_FOR="$4" "$SPARES_RUN" "$3"
         else
             # shellcheck disable=SC2086
-            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$ENV_FILE" $group "$SPARES_RUN" "$3"
+            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$W2C_ENV" \
+                --property=EnvironmentFile=-"$ENV_FILE" $group "$SPARES_RUN" "$3"
         fi
     else
         mkdir -p "$SPARES_DIR"

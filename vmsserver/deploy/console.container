@@ -71,15 +71,16 @@ Volume=/run/vms-console:/run/vms-console:z
 #Environment=CONSOLE_MONITORS=10.0.0.5
 # `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 # read-write: the console's token writes camera rows, `next_id`, derived retention rows and idempotency
 # keys, and reads heartbeats for the read model.
 Volume=/data/platform:/data/platform:z
 # The cluster's key (`w2cplatform/sealing.py`): the console seals device passwords with it, the holder opens
 # them for the pipeline. Mounted into these two units ONLY — a key beside the store, in /data/platform, would
-# be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/vms.key`.
-Volume=/data/secrets/vms.key:/run/secrets/vms.key:ro,z
-Environment=SECRETS_KEY=/run/secrets/vms.key
+# be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/platform.key`.
+Volume=/data/secrets/platform.key:/run/secrets/platform.key:ro,z
+Environment=SECRETS_KEY=/run/secrets/platform.key
 # read-write, as the header says: operator marks are the console's own event buckets,
 # `console/<hostname:pid>/e1/…` on this server's resource (`POST /marks` → `SpecConsole.mark`), and that is
 # the one thing it writes there. It never touches

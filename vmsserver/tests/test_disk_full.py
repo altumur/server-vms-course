@@ -64,11 +64,11 @@ def test_what_could_not_be_freed_is_a_number_anybody_can_read():
     assert (rep["freed"], rep["short"]) == (2000, 148_000) and res.heartbeat()["short"] == 148_000
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_resource_short_bytes{server="srv-1"} 148000' in text and 'vms_resource_full{server="srv-1"} 0.9' in text
+    assert 'w2c_resource_short_bytes{server="srv-1"} 148000' in text and 'w2c_resource_full{server="srv-1"} 0.9' in text
 
     res.space_probe = lambda root: (1_000_000, 500_000)                # somebody added a disk
     assert res.relieve()["space"] == "ok" and res.heartbeat()["short"] == 0
-    assert 'vms_resource_short_bytes{server="srv-1"} 0' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'w2c_resource_short_bytes{server="srv-1"} 0' in SpecConsole(ctl, wall=box.wall).metrics_text()
 
 
 def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_not():

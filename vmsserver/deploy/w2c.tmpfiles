@@ -1,0 +1,20 @@
+# /etc/tmpfiles.d/w2c.conf — the PLATFORM's directories on this box, made at every boot whoever starts first.
+# Installed and applied by install-obsd.sh (`systemd-tmpfiles --create`), beside `vms.conf` (the VMS's directories).
+# ================================================================================================
+# NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
+# ================================================================================================
+# # w2c.tmpfiles — the platform's stores and its secrets
+#
+# **Role.** The platform is w2c and the VMS one of its subsystems (the product's rule, 3 October), and the box's
+# directories split the same way: what every process of the platform needs is here, what the VMS's processes need is
+# in `vms.tmpfiles`. The product's pair is `/etc/tmpfiles.d/w2c.conf` (its `/var/lib/w2c`, `/run/configstore`) and
+# `vms.conf`; the course's box keeps its state on the data partition (М9 Lesson 5), so its paths are under /data.
+#
+# - `/data/platform` — `PLATFORM_DIR` (`w2c.env`): the config store's files and the objects (heartbeats, the
+#   snapshot). Every unit mounts it; a unit whose `Volume=` names a host directory that does not exist does not start.
+# - `/data/secrets` — the cluster's key ring, `platform.key` (`python3 -m w2cplatform.sealing new
+#   /data/secrets/platform.key`), 0700 root: mounted, as one file, into the three units that open sealed fields and
+#   nowhere else, and never inside `/data/platform` — a copy of the store must not carry the key that opens it.
+# ================================================================================================
+d /data/platform 0755 root root -
+d /data/secrets  0700 root root -

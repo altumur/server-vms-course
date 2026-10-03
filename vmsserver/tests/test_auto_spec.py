@@ -275,3 +275,23 @@ def test_the_form_is_built_from_the_catalogue():
     assert cat["vms"]["7"]["can"]["presets"] == 5 and cat["vms"]["20"]["can"] is None
     assert cat["det"] == {"7-motion": {"cam": "7", "raises": ["motion"]}}
     assert list(cat["vms"]) == ["7", "12", "20"]                        # numeric ids in numeric order
+
+
+def test_the_pages_scenario_form_takes_its_subsystem_from_the_spec_and_names_none_of_its_own():
+    """The page is the platform's (`w2cplatform/console.html`), and its scenario form said `vms` itself: the units
+    from `catalog.vms`, the trigger `vms|<unit>|<kind>`, the action `{sub: 'vms', …}` — a page over another root
+    subsystem would have offered nothing and filed actions for a subsystem it does not show (the course's decision on
+    the platform's names). Now the form takes the root console's `spec.name`, and the catalogue keys the units by
+    that same name — the two halves agree, and the page's code names no subsystem in that form."""
+    import os
+    import re
+    from vms.config import SPEC
+    from vms.console import auto_routes
+    page = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "w2cplatform",
+                             "console.html"), encoding="utf-8").read()
+    form = page.split("// -- automation:", 1)[1].split("// -- the administrator's knob", 1)[0]
+    assert "catalog[spec.name]" in form and "sub: spec.name" in form and "${spec.name}|${current}|" in form
+    assert not re.search(r"catalog\.vms|'vms'|`vms\|", form), "the form names a subsystem of its own"
+    box = Box(); con = _con(box)
+    code, cat = auto_routes(con)(None, "GET", "/catalog", {})
+    assert code == 200 and isinstance(cat.get(SPEC.name), dict)          # what the form reads, by the spec's name

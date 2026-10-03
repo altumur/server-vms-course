@@ -10,6 +10,7 @@ After=network.target
 [Container]
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms detcontroller
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 Volume=/data/platform:/data/platform:z
 Network=host

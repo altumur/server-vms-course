@@ -13,9 +13,12 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/w2c-spares.sh recworker
-# CONSOLE, MAX_RECORDERS, SERVER_NAME, SPARES_RUN — the same files the units read, so the box has one place to
-# configure. `-` because a box that has not written one yet is a box with the defaults, not a failure.
+# CONSOLE, MAX_RECORDERS, SERVER_NAME, SPARES_RUN — the same files the units read (the platform's `w2c.env`, then
+# the VMS's `vms.env`; on the course's box under /data/config, in the product's layout under /etc), so the box has
+# one place to configure. `-` because a box that has not written one yet is a box with the defaults, not a failure.
+EnvironmentFile=-/data/config/w2c.env
 EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/w2c/w2c.env
 EnvironmentFile=-/etc/vms/vms.env
 # It starts units, so it cannot be locked down to nothing — but it has no reason to write anywhere, and
 # `ProtectSystem=strict` makes the difference visible in the unit rather than in a review comment.

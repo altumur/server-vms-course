@@ -1,4 +1,4 @@
-# /etc/containers/systemd/resource.container — the resource process: the
+# /etc/containers/systemd/w2c-resource.container — the resource process: the
 # events' tree has no controller; it has a policy pass, a heartbeat, its HTTP
 # and the event index over that tree. The same process М11 runs as the
 # `resource` system job on every server, so the box and the cluster have one
@@ -7,11 +7,13 @@
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # resource.container — the resource process: the policy pass, the heartbeat, /events from the event
+# # w2c-resource.container — the resource process: the policy pass, the heartbeat, /events from the event
 # index
 #
-# **Role.** The Quadlet unit at `/etc/containers/systemd/resource.container`, from which Quadlet
-# generates `resource.service`. `python3 -m vms resource` builds the platform's `Resource` over
+# **Role.** The Quadlet unit at `/etc/containers/systemd/w2c-resource.container`, from which Quadlet
+# generates `w2c-resource.service` — the product's name (its `w2c-resource.service`; the course's unit was
+# `resource.container`): the resource is the PLATFORM's process, not the VMS's, and the platform's names are
+# w2c. `python3 -m vms resource` builds the platform's `Resource` over
 # `/data/archive` — the event trees, and the VMS's keeps for their retention — serves the platform's HTTP on
 # `127.0.0.1:8090` (`/buckets`, `/events`, `/mirrored`, `PUT /mirror`), heartbeats `platform/resources/<server>/heartbeat` every
 # ten seconds (how the console finds it), runs the policy pass every 600 s, and keeps an `EventIndex`
@@ -19,7 +21,11 @@
 # `/events` asks. Footage is not its business: it is in volumes, behind the host's obsd. Checked by
 # `tests/test_deploy_units.py` (`/data/platform` read-write, for the heartbeat).
 #
-# - `Description=VMS resource — the policy pass, the heartbeat, the event index`
+# - `Description=w2c resource — the policy pass, the heartbeat, the event index`
+#
+# - It runs as root in its container, like every unit of the box, and not as the product's user `w2c`: its policy
+#   pass deletes the buckets the workers write under `/data/archive` as root, and a resource of another uid could
+#   not, without a group and a mode on the whole tree the course's box does not have.
 #
 # - `Image=localhost/vmsserver:latest`
 #
@@ -37,7 +43,7 @@
 #   cutoff, `mirror` `0` when every closed bucket already has its copy.
 # ================================================================================================
 [Unit]
-Description=VMS resource — the policy pass, the heartbeat, the event index
+Description=w2c resource — the policy pass, the heartbeat, the event index
 After=network.target
 
 [Container]
@@ -47,7 +53,8 @@ Image=localhost/vmsserver:latest
 Exec=python3 -m vms resource
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
-# `PLATFORM_DIR` (to read the camera rows and write the heartbeat), `ARCHIVE`.
+# `PLATFORM_DIR` (to read the camera rows and write the heartbeat) from the platform's file, `ARCHIVE` from the VMS's.
+EnvironmentFile=/data/config/w2c.env
 EnvironmentFile=/data/config/vms.env
 # read-write: the heartbeat is an object under `platform/resources/<server>/`. Rows are only read (the
 # camera rows, `vms/retention/<cam>`, `platform/mirror`): the Variables are opened with no writer.

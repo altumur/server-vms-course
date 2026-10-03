@@ -30,7 +30,7 @@
 # - `gstreamer1.0-plugins-base/good/bad` — `filesrc`, `qtdemux`, `h264parse`, `identity`, `tee`, `queue`,
 #   `appsink`, `fakesink` (base/good), `watchdog`, `rtspsrc`, `shmsrc`/`shmsink` (good/bad): every element the
 #   launch strings in `gstvms/actuator.py` name. The archive's engine is NOT in this image: `obsd` is the host's
-#   (`obsd.service`), reached over the socket in /run/vms.
+#   (`obsd.service`), reached over the socket in /run/vms-obsd.
 #
 # - `curl` — for a `podman healthcheck` or a hand check of `/metrics` on the box; nothing in the package
 #   calls it.
@@ -44,8 +44,8 @@
 # ## Notes
 # - Everything the verbs import is in the apt line: the standard library, PyYAML for the spec, and the
 #   GStreamer stack for `gstvms`. Without the last, `__main__.worker` still runs, with the fake actuator.
-# - Nothing is configured in the image: stores, roots and capacity all come from `/data/config/vms.env`
-#   through the units — an OS or image update changes no data path (М9 Lesson 5).
+# - Nothing is configured in the image: stores, roots and capacity all come from `/data/config/w2c.env` (the
+#   platform's) and `/data/config/vms.env` (the VMS's) through the units — an OS or image update changes no data path (М9 Lesson 5).
 # ================================================================================================
 # A slim Debian base: the GStreamer stack comes from Debian's packages, so no compiling and one apt line.
 FROM docker.io/library/debian:bookworm-slim

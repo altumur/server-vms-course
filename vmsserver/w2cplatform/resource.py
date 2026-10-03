@@ -81,7 +81,7 @@ home. No controller is involved in any of it.
 # - `retain` and `mirror` both walk the tree each pass; on one box that is cheap, and it keeps the job
 #   stateless.
 # - The console's `/resources` route is `resources_seen` with a `live | silent` label by `lost_after`;
-#   `/metrics` counts `<sub>_resources_live` the same way.
+#   `/metrics` counts `w2c_resources_live` the same way.
 # ================================================================================================
 from __future__ import annotations
 
@@ -695,7 +695,7 @@ class Resource:
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
         # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
         # the one state the watermark cannot mend, and it used to be a number in a log line: said in the
-        # heartbeat, it is a metric on any console (`<sub>_resource_short_bytes`) and somebody's alert.
+        # heartbeat, it is a metric on any console (`w2c_resource_short_bytes`) and somebody's alert.
         from .journal import Journal
         self.journal = Journal(self.root, "resource", wall)     # what the policy removed (`journal.py`)
         self.short: dict[str, int] = {}
