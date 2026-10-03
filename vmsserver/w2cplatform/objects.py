@@ -1,26 +1,29 @@
 """An object store: large, or frequent, never queried by key. A directory
-here; MinIO or S3 in М11. An object appears whole or not at all."""
+here, and a directory on every server in М11 (`cluster://`). An object appears
+whole or not at all."""
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # objects.py — the object store: a directory on one box, MinIO/S3 in М11
+# # objects.py — the object store: a directory on one box, a directory on every server in М11
 #
 # **Role in the module.** Lesson 1's second store. Where `variables.py` holds small rows that must be
 # consistent and CAS-able, the object store holds things that are large or written often and are never
 # queried by key: worker heartbeats (`<sub>/<worker>/heartbeat`), resource heartbeats
 # (`platform/resources/<server>/heartbeat`) and the controller's snapshot, one object per worker under
 # `<sub>/snapshot/`. Every one of them is sharded by the writer it describes, and that is why each stays
-# small however large the cluster gets: a store has a ceiling (Nomad Variables: 64 KiB on the object). Its one
+# small however large the cluster gets: a store may declare a ceiling (`limits.py`; Nomad Variables had 64 KiB on
+# the object, which is where the sharding came from), and a shard fits whatever ceiling a store declares. Its one
 # promise is that an object appears whole or not at all. The `ObjectStore` Protocol is the interface
 # `Controller`, `Worker`, `Resource` and `SpecController` type against; `FsObjectStore` is the one-box
-# implementation and М11 replaces it with MinIO behind the same three methods.
+# implementation, and М11 keeps it on every server: `ClusterObjectStore` (`cluster/objectstore.py`) writes into
+# this server's directory and reads the others' through their resources (`resource.py`, `/v1/objects`).
 #
 # ## Module-level names
 # None beyond the two classes.
 #
 # ## Notes
-# - The walk in `list` is O(files under root), fine for heartbeats on one box; М11's MinIO gives a real
-#   prefix listing.
+# - The walk in `list` is O(files under root), fine for heartbeats on one box; М11 walks one directory per server
+#   and its resource answers the union (`GET /v1/objects?scope=cluster`).
 # - `delete` exists, and exactly one caller uses it: the blob sweep (Lesson 29). Everything else in the
 #   platform still relies on objects NEVER going away — a stale heartbeat simply ages and readers filter by
 #   `ts`, and a worker restarting reads the heartbeat its previous instance left to measure its own
@@ -151,6 +154,15 @@ class FsObjectStore:
                 return f.read()
         except FileNotFoundError:
             return None
+
+    # `(written, size)` of the object, or `None`: the file's mtime and length. What a server's resource says of each
+    # object it holds (`GET /v1/objects`), and what the freshest of several copies is chosen by (`ClusterObjectStore`).
+    def stat(self, key: str) -> tuple[float, int] | None:
+        try:
+            st = os.stat(self._p(key))
+        except FileNotFoundError:
+            return None
+        return st.st_mtime, st.st_size
 
     # Walks the whole tree, skips `.tmp` files (an in-flight `put`), and returns the sorted keys (paths
     # relative to `root`) that start with `prefix`. `Controller.workers_seen` lists `<sub>/` and keeps keys

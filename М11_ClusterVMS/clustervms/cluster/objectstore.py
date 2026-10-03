@@ -1,35 +1,47 @@
 """The cluster's object store — М10's `w2cplatform.objects.ObjectStore`
-contract, which holds three small things: worker heartbeats, resource
-heartbeats, and the snapshot the domain's read model is built from.
+contract: worker heartbeats, resource heartbeats, the controllers' snapshot
+shards and pass reports, the masks and models a row names by digest.
 
-On a cluster of this size the implementation is `VariablesObjectStore`:
-objects as Nomad Variables under `objects/…`. A heartbeat is ~10 KB every
-ten seconds from a dozen workers and three resources — a couple of raft
-writes a second — which is not the volume the "keep raft small" rule was
-about, and it removes a whole store (MinIO, its quorum, its credentials)
-from the cluster. The contract is the point: `vms/` and `w2cplatform/` do
-not know which one they are talking to. When a cluster grows to where its
-heartbeats are a raft load, `open_store("s3+http://…")` is the same three
-calls against MinIO or S3 (`s3.py`), and that is also the adapter a rented
-cluster uses (М12 Lesson 8). Footage never goes to any of these.
+On this cluster the implementation is `ClusterObjectStore`, `cluster://`:
+each server keeps its objects as files in its own directory, and its resource
+answers for them over HTTP (`w2cplatform/resource.py`, `/v1/objects`). A put
+is a local file — every object has ONE writer, and almost every one is written
+again within a pass, so no consensus is needed to hold it. A read is the local
+file when it is a blob (any copy that hashes to its name is the object),
+otherwise the freshest copy among every server's, asked of the local
+resource with `scope=cluster`. A listing is the union of every server's,
+cached for a second. No ceiling: `max_bytes = 0` — the 64 KiB of a Nomad
+Variable went with the Variables.
 
-Two adapters with one contract. `HttpObjectStore` PUTs and GETs against any
-endpoint that accepts plain HTTP object semantics (MinIO with a bucket
-policy, nginx with dav, an S3 presigned pattern behind a proxy).
-`FsObjectStore` is a directory — the tests, and a bench with a shared mount.
-An S3 adapter with signed requests is a twenty-line boto3 wrapper on the
-same two methods; it is not here because the appliance image carries no boto3.
+Two kinds of object are not files. A key that must be created ONCE across
+the cluster — a worker's mark before a device command (`*/commands/*`,
+`put_new`) — is a row `objects/<key>` in the replicated store, through
+`VariablesObjectStore`: a directory's `link` is create-only on one server,
+and two holders of a device sit on two. And a blob is copied by the resource
+to the next live peers on the events mirror's ring (`Resource.mirror_blobs`),
+and deleted by the sweep on every server that answers.
+
+`vms/`, `w2cplatform/` and the domain do not know which store they hold. The
+other adapters stay for what they are for: `s3+http://…` (`s3.py`) for a
+rented cluster (М12 Lesson 8), `http://` for a plain object endpoint, a
+directory for the tests. Footage never goes to any of these.
 """
 from __future__ import annotations
 
+import json
+import logging
 import os
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Protocol
 
 from w2cplatform.limits import check
 from w2cplatform.rows import answer
 from w2cplatform.variables import Conflict
+
+log = logging.getLogger(__name__)
 
 
 class ObjectStore(Protocol):
@@ -127,9 +139,14 @@ class FsObjectStore:
 
 
 class VariablesObjectStore:
-    """Objects as Variables: `<prefix>/<key>` -> {data: <utf-8 text>}. Keys are
-    the platform's (`vms/w-1/heartbeat`); the store is whatever Variables
-    the caller holds, with the ACL that comes with its token."""
+    """Objects as rows: `<prefix>/<key>` -> {data: <utf-8 text>}. Keys are the
+    platform's (`vms/commands/r-7`); the store is whatever Variables the caller
+    holds, with the rights that come with its door.
+
+    Its job on the cluster is NARROWED to the keys that must be created once
+    across every server — `ClusterObjectStore` sends those here (`CREATE_ONLY`)
+    and everything else to files. The class itself still holds any key: a test,
+    or the module's stand, may run every object through one store."""
 
     def __init__(self, vars_, prefix: str = "objects"):
         self.vars, self.prefix = vars_, prefix.strip("/")
@@ -171,9 +188,221 @@ class VariablesObjectStore:
         self.vars.delete(self._path(key))
 
 
-def open_store(url: str) -> ObjectStore:
-    """file:///path · http(s)://host/bucket (anonymous) · s3+http(s)://host/bucket?region=r (SigV4,
-    credentials from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY — on a server, from a Variable)."""
+# -- the cluster's objects: files on every server -------------------------------------------------------------------
+
+# The keys that are created ONCE across the cluster, by glob over segments (`*` is one segment; a last `*` is the rest):
+# a worker's mark before a device command. A directory's `link` is create-only on ONE server, and two holders of a
+# device are on two (the platform review's third pass, on a cluster). The camera's clock chunks (`ingest/clock/*` in
+# the product) belong here the day the course has them: one more line, nothing else changes.
+CREATE_ONLY = ("*/commands/*",)
+LIST_FRESH = 1.0                 # seconds a listing of every server is used again before it is asked again
+DOOR_TIMEOUT = 10.0              # what the resource on this server has to answer: its own reads of peers take ≤ 5 s
+
+
+def _match(pattern: list[str], key: list[str]) -> bool:
+    for i, p in enumerate(pattern):
+        if i == len(pattern) - 1 and p == "*":
+            return len(key) > i and all(key[i:])
+        if i >= len(key) or (p != "*" and p != key[i]) or not key[i]:
+            return False
+    return len(key) == len(pattern)
+
+
+def is_create_only(key: str) -> bool:
+    """A key `CREATE_ONLY` names: a row in the replicated store, never a file."""
+    return any(_match(p.split("/"), key.split("/")) for p in CREATE_ONLY)
+
+
+# Whether some key under `prefix` could be create-only — so a listing of it asks the store too. `vms/` could
+# (`vms/commands/…`), `vms/heartbeats/` could not.
+def _may_hold_create_only(prefix: str) -> bool:
+    *whole, part = prefix.split("/")
+    for pattern in (p.split("/") for p in CREATE_ONLY):
+        ok = True
+        for i, seg in enumerate(whole):
+            if i >= len(pattern):
+                ok = pattern[-1] == "*"
+                break
+            if pattern[i] != "*" and pattern[i] != seg:
+                ok = False
+                break
+        else:
+            i = len(whole)
+            ok = i >= len(pattern) and pattern[-1] == "*" or i < len(pattern) and (pattern[i] == "*" or pattern[i].startswith(part))
+        if ok:
+            return True
+    return False
+
+
+class ObjectsUnavailable(OSError):
+    """The resource on this server did not answer: the cluster's objects cannot be read from here now. An `OSError`,
+    which every caller already reads as "the store did not answer" — never as "there is nothing" (a controller that
+    took a silent door for an empty listing would call every worker of the other servers dead)."""
+
+
+def _store_from_env():
+    from w2cplatform import variables as v
+    store_url = getattr(v, "store_url", None)
+    url = store_url(os.environ) if store_url is not None else (os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL"))
+    if not url:
+        raise ValueError("a create-only object is a row in the store, and no store was named: "
+                         "PLATFORM_STORE=store:///run/vmsstore/<role>.sock")
+    return v.open_vars(url)
+
+
+class ClusterObjectStore:
+    """`cluster:///data/platform/objects?resource=http://127.0.0.1:8090` — this server's objects as files under `root`,
+    every server's through the resource on this one (`/v1/objects`), the create-only keys as rows in the store."""
+
+    max_bytes = 0                       # files on a disk: no ceiling worth naming (the 64 KiB went with the Variables)
+
+    def __init__(self, root: str, resource: str = "http://127.0.0.1:8090", vars_=None, timeout: float = DOOR_TIMEOUT,
+                 wall=time.time, clock=time.monotonic, list_fresh: float = LIST_FRESH):
+        from w2cplatform.objects import FsObjectStore as Files
+        self.local = Files(root)        # this server's files: what the resource serves as `scope=local`
+        self.resource = resource.rstrip("/")
+        self.timeout, self.wall, self.clock, self.list_fresh = timeout, wall, clock, list_fresh
+        self._vars, self._rows = vars_, None
+        self._listed: dict[str, tuple[float, set[str]]] = {}   # prefix -> (by `clock`, keys) — `list`
+        self.missing: list[str] = []    # the servers the last answer of the resource named as not answering
+
+    # The rows of the create-only keys, opened on first use: from the handle the process gave, else from its environment.
+    @property
+    def rows(self) -> VariablesObjectStore:
+        if self._rows is None:
+            self._rows = VariablesObjectStore(self._vars if self._vars is not None else _store_from_env())
+        return self._rows
+
+    # -- the door on this server -----------------------------------------------------------------------------------
+    def _door(self, method: str, path: str, query: dict) -> tuple[int, bytes, dict]:
+        url = f"{self.resource}{path}?{urllib.parse.urlencode(query)}"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, method=method), timeout=self.timeout) as r:
+                return r.status, answer(r, GET_MAX), dict(r.headers)
+        except urllib.error.HTTPError as e:
+            body = e.read()
+            if e.code == 404:
+                return 404, body, dict(e.headers)
+            raise ObjectsUnavailable(f"the resource on this server refused {method} {path} ({e.code}: "
+                                     f"{body[:200].decode(errors='replace')})") from None
+        except (OSError, ValueError) as e:
+            raise ObjectsUnavailable(f"the resource on this server does not answer at {self.resource} ({e}): the "
+                                     f"cluster's objects cannot be read from here until it does") from None
+
+    def _said_missing(self, missing) -> None:
+        missing = sorted(missing or [])
+        if missing != self.missing:
+            if missing:
+                log.warning("objects: %s did not answer — their objects are left out of what is read here", ", ".join(missing))
+            else:
+                log.info("objects: every server answers again")
+        self.missing = missing
+
+    # -- the contract --------------------------------------------------------------------------------------------------
+    # A local file — the one writer of the key is on this server — with the writer's clock as `written`: the copy a
+    # reader takes when the key is on several servers (a controller that moved, a worker's name taken up elsewhere) is
+    # the one written last. A create-only key is a row whatever writes it.
+    def put(self, key: str, data: bytes) -> None:
+        if is_create_only(key):
+            self.rows.put(key, data)
+        else:
+            self._file(self.local.put, key, data)
+        self._seen(key, True)
+
+    # The same, through the medium before the name (a blob a row is about to name: `SpecController.put_blob`).
+    def put_durable(self, key: str, data: bytes) -> None:
+        if is_create_only(key):
+            self.rows.put(key, data)
+        else:
+            self._file(self.local.put_durable, key, data)
+        self._seen(key, True)
+
+    def _file(self, write, key: str, data: bytes) -> None:
+        write(key, data)
+        t = self.wall()
+        os.utime(self.local._p(key), (t, t))
+
+    # Create-only across the cluster: a row written with `cas=0` (`VariablesObjectStore.put_new`) — `True` when THIS
+    # call made it. Only for a key `CREATE_ONLY` names: create-only on files is create-only on one server, and a key
+    # asked for here and read from files elsewhere would be two objects under one name.
+    def put_new(self, key: str, data: bytes) -> bool:
+        if not is_create_only(key):
+            raise ValueError(f"{key}: a create-only object is one of {', '.join(CREATE_ONLY)} — add its pattern to "
+                             f"CREATE_ONLY, so every reader looks for it in the store")
+        made = self.rows.put_new(key, data)
+        self._seen(key, True)
+        return made
+
+    # A blob from this server's file when it hashes to its name; anything else — and a blob whose copy here does not —
+    # the freshest copy among every server's, asked of the resource here (`scope=cluster`). `None` when nobody that
+    # answered has it; `ObjectsUnavailable` when the resource here does not answer.
+    def get(self, key: str) -> bytes | None:
+        from w2cplatform.blobs import BlobMismatch, verify
+        from w2cplatform.resource import is_blob_key
+        if is_create_only(key):
+            return self.rows.get(key)
+        if is_blob_key(key):
+            data = self.local.get(key)
+            if data is not None:
+                try:
+                    return verify(key.rsplit("/", 1)[1], data)
+                except BlobMismatch as e:
+                    log.error("objects: this server's copy of %s is not the blob (%s): read from another server", key, e)
+        status, body, headers = self._door("GET", "/v1/objects/" + urllib.parse.quote(key), {"scope": "cluster"})
+        self._said_missing([s for s in headers.get("X-Missing", "").split(",") if s])
+        return None if status == 404 else body
+
+    # Every server's keys under `prefix` (the resource's `scope=cluster`), with the create-only rows when the prefix
+    # could hold any — asked again after `list_fresh` seconds; what this process wrote or deleted meanwhile is in it.
+    def list(self, prefix: str) -> list[str]:
+        cached = self._listed.get(prefix)
+        if cached is not None and self.clock() - cached[0] < self.list_fresh:
+            return sorted(cached[1])
+        status, body, _ = self._door("GET", "/v1/objects", {"prefix": prefix, "scope": "cluster"})
+        try:
+            said = json.loads(body)
+            keys = set(said["objects"])
+        except (ValueError, TypeError, KeyError) as e:
+            raise ObjectsUnavailable(f"the resource on this server answered a listing that is not one ({e})") from None
+        self._said_missing(said.get("missing"))
+        if _may_hold_create_only(prefix) and (self._vars is not None or self._rows is not None
+                                              or os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL")):
+            keys |= {k for k in self.rows.list(prefix) if is_create_only(k)}
+        self._listed[prefix] = (self.clock(), keys)
+        return sorted(keys)
+
+    # A create-only row, by the store. A blob on EVERY server that answers (the sweep, `SpecController.sweep_blobs`):
+    # `True` if any had it; a server that did not answer keeps its copy and the next sweep finds it. Anything else is
+    # this server's file only — its one writer is here.
+    def delete(self, key: str) -> bool:
+        from w2cplatform.resource import is_blob_key
+        self._seen(key, False)
+        if is_create_only(key):
+            self.rows.delete(key)
+            return True
+        if is_blob_key(key):
+            status, body, _ = self._door("DELETE", "/v1/objects/" + urllib.parse.quote(key), {"scope": "cluster"})
+            said = json.loads(body) if status == 200 else {}
+            self._said_missing(said.get("missing"))
+            return any((said.get("deleted") or {}).values())
+        return self.local.delete(key)
+
+    def _seen(self, key: str, present: bool) -> None:
+        for prefix, (_, keys) in self._listed.items():
+            if key.startswith(prefix):
+                (keys.add if present else keys.discard)(key)
+
+
+def open_store(url: str, vars_=None) -> ObjectStore:
+    """cluster:///path?resource=http://127.0.0.1:8090 (this server's files, every server's through its resource; the
+    create-only keys in the store `vars_`, else the one the environment names) · file:///path · http(s)://host/bucket
+    (anonymous) · s3+http(s)://host/bucket?region=r (SigV4, credentials from AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+    — on a server, from a row)."""
+    if url.startswith("cluster://"):
+        from urllib.parse import parse_qs, urlsplit
+        u = urlsplit(url)
+        resource = parse_qs(u.query).get("resource", ["http://127.0.0.1:8090"])[0]
+        return ClusterObjectStore(u.path or "/data/platform/objects", resource, vars_)
     if url.startswith(("s3+http://", "s3+https://")):
         from urllib.parse import parse_qs, urlsplit
         from .s3 import S3ObjectStore

@@ -1,6 +1,6 @@
-# objectstore.py — the cluster's object store: М10's `ObjectStore` contract over Nomad Variables, plain HTTP, a directory, or S3
+# objectstore.py — the cluster's object store: files on every server (`cluster://`), the create-only keys in the store, and the other adapters
 
-**Role in the module.** Lesson 1. `w2cplatform.objects.ObjectStore` (see `../../../vmsserver/w2cplatform/objects.py.md`) is three calls — `put`, `get`, `list` — holding three small things: worker heartbeats (`vms/<w>/heartbeat`), resource heartbeats (`platform/resources/<server>/heartbeat`) and the snapshot (`vms/snapshot`). The docstring's design decision: on a cluster of this size the implementation is `VariablesObjectStore` — objects as Nomad Variables under `objects/…`. A dozen 10 KB heartbeats every ten seconds is a couple of raft writes a second, not the load the "keep raft small" rule is about, and it removes a whole store (MinIO, its quorum, its credentials) from the cluster. The contract is the point: `vms/` and `w2cplatform/` never know which adapter they hold. `open_store("s3+http://…")` swaps in `s3.py` for a cluster whose heartbeats *are* a raft load, or a rented one (М12 Lesson 8). Footage never goes to any of these. Used by `__main__` (all four jobs, via `open_store(OBJECTS)`) and by the tests (`FsObjectStore`, `VariablesObjectStore`).
+**Role in the module.** Lesson 1, and Lesson 6's objects step. `w2cplatform.objects.ObjectStore` (see `../../../vmsserver/w2cplatform/objects.py`) is three calls — `put`, `get`, `list` — holding worker heartbeats (`vms/heartbeats/<w>`), resource heartbeats (`platform/resources/<server>/heartbeat`), the controllers' snapshot shards and pass reports, and the blobs a row names by digest. The docstring's design decision (the owner's, 3 October: the cluster without an orchestrator): every object has ONE writer and almost every one is written again within a pass, so no consensus is needed to hold it — each server keeps its own objects as files, and its resource answers for them over HTTP (`w2cplatform/resource.py`, `/v1/objects`). `ClusterObjectStore` writes here and reads everywhere. What must be created once across the cluster (`CREATE_ONLY`: a worker's mark before a device command) is a row in the replicated store through `VariablesObjectStore`; a blob is copied by the resource to the next live peers (`Resource.mirror_blobs`) and deleted by the sweep on every server that answers. No ceiling: the 64 KiB went with the Variables. `vms/` and `w2cplatform/` never know which adapter they hold; `s3+http://…` stays for a rented cluster (М12 Lesson 8). Footage never goes to any of these. Used by `__main__` (via `open_store(OBJECTS)`) and by the tests.
 
 ## `class ObjectStore(Protocol)`
 The contract restated locally: `put(key, data: bytes)`, `get(key) -> bytes | None`, `list(prefix) -> list[str]`. Keys are the platform's slash-separated names, never absolute.
@@ -35,8 +35,35 @@ The file's bytes, or `None` if absent.
 ### `list(self, prefix) -> list[str]`
 Walks the tree, skips `.tmp` leftovers, returns sorted relative keys starting with `prefix`.
 
+## `CREATE_ONLY`, `is_create_only(key)`, `_may_hold_create_only(prefix)`
+The keys created once across the cluster, as globs over segments (`*` one segment, a last `*` the rest): `*/commands/*`. A directory's `link` is create-only on one server, and two holders of a device are on two. The product's camera clock chunks (`ingest/clock/*`) join with one line. `_may_hold_create_only` tells whether a listing of a prefix must ask the store too (`vms/` yes, `vms/heartbeats/` no).
+
+## `class ObjectsUnavailable(OSError)`
+The resource on THIS server did not answer: nothing of the cluster can be read from here. An `OSError`, read by every caller as "the store did not answer" — a controller that took a silent door for an empty listing would call every other server's worker dead.
+
+## `class ClusterObjectStore`
+`cluster:///data/platform/objects?resource=http://127.0.0.1:8090`. `max_bytes = 0`.
+
+### `__init__(self, root, resource="http://127.0.0.1:8090", vars_=None, timeout=10.0, wall=time.time, clock=time.monotonic, list_fresh=1.0)`
+`local` is М10's `FsObjectStore(root)` — what the resource here serves as `scope=local`. `vars_` is the store for the create-only rows; without it they are opened from the environment on first use (`store_url`, else `PLATFORM_STORE`, else `CONFIG_URL`). `missing` is the servers the last answer named as silent.
+
+### `put(key, data)`, `put_durable(key, data)`
+A create-only key goes to the rows; anything else to the local file, its mtime set to the writer's `wall` — the `written` a reader picks the freshest copy by.
+
+### `put_new(key, data) -> bool`
+Only for a `CREATE_ONLY` key (a `ValueError` naming `CREATE_ONLY` otherwise): `VariablesObjectStore.put_new`, a row written with `cas=0`.
+
+### `get(key) -> bytes | None`
+A create-only key from the rows. A blob from the local file when it hashes to its name (a copy that does not is logged and skipped). Anything else — and a blob not here or rotted here — `GET /v1/objects/<key>?scope=cluster` at the resource here: the freshest copy, or `None`. `X-Missing` goes into `missing`.
+
+### `list(prefix) -> list[str]`
+`GET /v1/objects?prefix=&scope=cluster`, the union of every server's, plus the create-only rows when the prefix may hold any; cached for `list_fresh` seconds, with what this process wrote or deleted meanwhile in it (`_seen`).
+
+### `delete(key) -> bool`
+A create-only row by the store; a blob by `DELETE /v1/objects/<key>?scope=cluster` — here and on every server that answers (the sweep); anything else, this server's file.
+
 ## `class VariablesObjectStore`
-Objects as Variables: key `vms/w-1/heartbeat` becomes the Variable `objects/vms/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the ACL comes with the token: a worker's policy grants `objects/vms/*`, a resource's `objects/platform/resources/*`, the controller's `objects/vms/snapshot` (see the `*-policy.hcl` notes).
+NARROWED on the cluster to the create-only keys (`ClusterObjectStore` routes them here); the class still holds any key, which the module's stand uses. Objects as Variables: key `vms/w-1/heartbeat` becomes the Variable `objects/vms/w-1/heartbeat` with a single item `{data: <utf-8 text>}`. The store is whatever `Variables` the caller holds, so the ACL comes with the token: a worker's policy grants `objects/vms/*`, a resource's `objects/platform/resources/*`, the controller's `objects/vms/snapshot` (see the `*-policy.hcl` notes).
 
 ### `__init__(self, vars_, prefix="objects")`
 `vars_` is any `Variables` (`NomadVariables` in a job, `FakeVariables.as_writer(...)` in tests); `prefix` is stripped of slashes.
@@ -58,8 +85,9 @@ Deletes the Variable; beyond the Protocol, for a bench to purge a stale heartbea
 
 ## Functions
 
-### `open_store(url) -> ObjectStore`
+### `open_store(url, vars_=None) -> ObjectStore`
 The URL scheme picks the adapter, as the docstring lists:
+- `cluster:///path?resource=http://host:port` — `ClusterObjectStore(path, resource|"http://127.0.0.1:8090", vars_)`.
 - `s3+http://host/bucket?region=r`, `s3+https://…` — `S3ObjectStore(endpoint, bucket, region|"us-east-1")` from `s3.py`, SigV4 with credentials from `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` (on a server those come from a Variable through a template, never from the image). The `s3+` is sliced off before `urlsplit`.
 - `http://`, `https://` — `HttpObjectStore` (anonymous, no listing).
 - `file:///path` — `FsObjectStore`.
@@ -67,5 +95,6 @@ The URL scheme picks the adapter, as the docstring lists:
 - anything else — treated as a bare directory path.
 
 ## Notes
-- The module docstring's last paragraph ("An S3 adapter with signed requests is a twenty-line boto3 wrapper … not here because the appliance image carries no boto3") predates `s3.py`, which implements SigV4 in the standard library and is wired into `open_store`.
+- `tests/test_cluster_objects.py`: three servers, a resource door each on a real socket, one `FakeVariables` — a heartbeat written on srv-a read on srv-b; the copy written last wins; a silent peer named, a silent door here `ObjectsUnavailable`; a blob mirrored, a rotted copy refused and read elsewhere; a 1 MiB shard; the command marks as rows conflicting across servers; the sweep deleting on the peers.
+- A server whose resource is down hides its objects — its workers' heartbeats among them — from every other server's reads until it answers again; the slots' leases in the store are what decide a worker's fate, not the heartbeat alone.
 - `test_the_object_store_on_this_cluster_is_variables`: a `Worker` heartbeats through a `VariablesObjectStore`, the controller's `workers_seen()` reads it back, and a token without `objects/*` gets `Forbidden` on `put`.
