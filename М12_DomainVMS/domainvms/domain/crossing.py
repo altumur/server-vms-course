@@ -48,7 +48,7 @@ from cluster.variables import Conflict
 from vms.archive import subtract
 
 from .agent import POLL_PATH, PRIMARIES_PATH, SOURCES_PATH
-from .federation import Unreachable, a_heartbeat, published
+from .federation import Unreachable, _names, a_heartbeat, published
 from w2cplatform.rows import PARSE_ERRORS
 from .tokens import kid_of
 from .api import ApiError
@@ -226,7 +226,13 @@ class Crossings:
     # What the backup on the other server HOLDS, as its recorder says in its heartbeat — the same summary and
     # door a backup of this cluster gives (М10B lesson 26): coverage, and the URL of its archive. Carried in the
     # PRIMARY's source book, so that the primary, back, knows where to take its hole from.
+    #
+    # Its `archive_url` through the members' one reader too (the review's ninth pass, major): read bare, a list there —
+    # `hb["archive_url"].rstrip("/")` — raised out of the whole `sources` step, and a camera of another cluster added
+    # since went into no book. A url that is not a string is THAT heartbeat's trouble, counted once under
+    # `<cluster>/<key>#archive_url`: no backup archive from it, and the book is written for every camera.
     def _backup_archive(self, cluster: str, recording: str, now: float, lost_after: float = 45.0) -> dict | None:
+        from .federation import MEMBER_OBJECTS
         c = self.view.fed.clusters.get(cluster)
         try:
             keys = c.objects.list("rec/heartbeats/") if c is not None else []
@@ -234,10 +240,17 @@ class Crossings:
                 hb = published(cluster, key, c.objects.get(key), a_heartbeat) or {}    # …and one recorder's heartbeat, its
                 if not hb.get("archive_url") or now - float(hb.get("ts", 0)) > lost_after:
                     continue
+                url = MEMBER_OBJECTS.read(f"{cluster}/{key}#archive_url", lambda: _an_address(hb["archive_url"]))
+                if url is None:
+                    continue
                 for st in hb.get("status", []):
                     if str(st.get("id")) == recording and st.get("coverage"):
-                        return {"cluster": cluster, "recording": recording, "url": hb["archive_url"].rstrip("/"),
-                                "coverage": st["coverage"], "as_of": float(hb["ts"])}
+                        # …and its coverage, which the primary's recorder reads as two numbers (`plan_takeback`)
+                        cov = MEMBER_OBJECTS.read(f"{cluster}/{key}#{recording}/coverage", lambda: _a_coverage(st["coverage"]))
+                        if cov is None:
+                            continue
+                        return {"cluster": cluster, "recording": recording, "url": url.rstrip("/"),
+                                "coverage": cov, "as_of": float(hb["ts"])}
         except Unreachable:
             return None
         return None
@@ -342,7 +355,7 @@ class Crossings:
     # holds is past half its life — the book is flash on the camera, and a token minted every pass would
     # rewrite it every pass.
     def _ingest(self, ref: str, on: str, home: str, now: float, old: dict | None) -> dict | None:
-        from .ingest import INGEST, audience
+        from .ingest import INGEST, _urls, audience
         if on in self.star and self.centre:
             on = self.centre                             # a star: the camera pushes to the centre, never to its relay
         c = self.view.fed.clusters.get(on)
@@ -354,7 +367,10 @@ class Crossings:
             raw = None
         if raw is None:
             return old                                   # the recording cluster is silent: keep what the camera has
-        announced = published(on, INGEST, raw, lambda v: list(v["urls"]))
+        # `_urls`, the one check of an announcement (the review's ninth pass, major): `list(v["urls"])` passed a STRING —
+        # its letters are a list — and the book of primaries told the camera to push to "https://east/ingest2" as a
+        # string; the camera found no road in it and stopped pushing. A list of strings, or the road the book had.
+        announced = published(on, INGEST, raw, _urls)
         if announced is None:
             return old                                   # …and one whose announcement does not parse, the same (the seventh review)
         urls = announced["urls"]
@@ -614,7 +630,9 @@ def camera_taken(door_objects, serial: str, me: str) -> bool | None:
         raw = door_objects.get(f"vms/heartbeats/{serial}")
     except Unreachable:
         return None
-    hb = published("camera", f"vms/heartbeats/{serial}", raw, lambda v: list(v.get("taken_by", [])), None)
+    # a list of names, checked as one (`_names`, the ninth review's sibling of `_urls`): `list("srv-b")` passed a string
+    # as its letters, and every letter is "someone but me" — the standby read the camera as taken and never pulled
+    hb = published("camera", f"vms/heartbeats/{serial}", raw, lambda v: _names(v.get("taken_by", [])), None)
     if raw and hb is None:
         return None                                      # what the camera said cannot be read: nothing known, change nothing
     return any(t != me for t in (hb or {}).get("taken_by", []))
@@ -657,6 +675,22 @@ def _recordings(shard: dict) -> None:
     """A rec snapshot shard: its `recordings` are objects."""
     if not all(isinstance(r, dict) for r in shard.get("recordings", [])):
         raise TypeError("a recording row is not an object")
+
+
+def _an_address(v) -> str:
+    """A door's address another cluster published: a string (the review's ninth pass — a list raised in `.rstrip`)."""
+    if not isinstance(v, str):
+        raise TypeError(f"an address is a string, not {type(v).__name__}")
+    return v
+
+
+def _a_coverage(v) -> dict:
+    """A recording's coverage another cluster published: `{"from", "to"}`, two finite numbers — the shape the primary's
+    recorder reads it in."""
+    from w2cplatform.rows import finite
+    if not isinstance(v, dict):
+        raise TypeError(f"a coverage is an object, not {type(v).__name__}")
+    return {**v, "from": finite(v["from"]), "to": finite(v["to"])}
 
 
 def _entry(raw, default):

@@ -143,6 +143,19 @@ class Console:
                 auth = self.headers.get("Authorization", "")
                 return auth[7:] if auth.startswith("Bearer ") else None
 
+            # The body of a PUT or a POST, an object — or None, the 400 already sent (the ninth review's sweep): read bare,
+            # a body that was not JSON, or JSON that was not an object, dropped the connection with no answer at all.
+            def _body(self):
+                from w2cplatform.rows import PARSE_ERRORS
+                try:
+                    body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                    if not isinstance(body, dict):
+                        raise TypeError(f"the body is a JSON object, not {type(body).__name__}")
+                except PARSE_ERRORS as e:
+                    self._send(400, {"detail": f"the body does not parse: {e}"})
+                    return None
+                return body
+
             def do_GET(self):
                 u = urlsplit(self.path)
                 q = {k: v[0] for k, v in parse_qs(u.query).items()}
@@ -191,8 +204,9 @@ class Console:
                     return self._send(400, {"detail": "Idempotency-Key header is required: a retried PUT must be the same PUT"})
                 if not read_body(self, self.MAX_BODY):
                     return
-                n = int(self.headers.get("Content-Length", 0))
-                fields = json.loads(self.rfile.read(n) or b"{}")
+                fields = self._body()
+                if fields is None:
+                    return
                 try:
                     resp = console.api.update_camera(u.path.rsplit("/", 1)[1], fields, key, self._token())
                     self._send(202 if resp.get("pending") else 200, resp)    # kept for a cluster that is off: accepted, not applied
@@ -205,7 +219,9 @@ class Console:
                     return self._send(404, {"detail": "no such route"})
                 if not read_body(self, self.MAX_BODY):
                     return
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                body = self._body()
+                if body is None:
+                    return
                 try:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):
@@ -236,7 +252,9 @@ class Console:
                 from cluster.variables import Conflict
                 if not read_body(self, self.MAX_BODY):
                     return
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                body = self._body()
+                if body is None:
+                    return
                 try:
                     subject = console.api._subject(self._token())
                     if console.admin is not None and subject is not None and not console.admin(subject):

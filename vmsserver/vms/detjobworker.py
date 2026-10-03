@@ -365,4 +365,6 @@ class DetJobWorker(Worker):
 # The camera an event carries: its number when it is one, else as written — `ref:<serial>`, a camera of another cluster
 # (the review's seventh pass: `int(row["cam"])` raised on it, out of the job's pass, and every job after it waited).
 def _cam(cam):
-    return int(cam) if str(cam).isdigit() else str(cam)
+    from w2cplatform.doors import numeric                    # not `isdigit` + `int`: `7²` raised the same way (the ninth pass)
+    n = numeric(cam)
+    return str(cam) if n is None else n

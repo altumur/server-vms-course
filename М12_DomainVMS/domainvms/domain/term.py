@@ -267,12 +267,12 @@ class DomainHolder:
             return out
         for key in self.backups.list("backup/rev-"):
             raw = self.backups.get(key)
-            try:
-                doc = json.loads(raw)                    # its own, in its own store: read, not verified
-            except (TypeError, ValueError):
+            try:                                         # its own, in its own store: read, not verified — and one
+                doc = json.loads(raw)                    # that does not parse is that backup's, numbers included (the
+                if int(doc.get("term", -1)) == self.term and doc.get("holder") == self.name:   # ninth review's sweep)
+                    out[int(doc["rev"])] = doc.get("state", {})
+            except PARSE_ERRORS:
                 continue
-            if int(doc.get("term", -1)) == self.term and doc.get("holder") == self.name:
-                out[int(doc["rev"])] = doc.get("state", {})
         return out
 
     def stranded_items(self) -> dict | None:
@@ -669,7 +669,7 @@ def stranded(old_vars, restored_state: dict) -> list:
                     try:
                         if json.loads(v).get("rev") == json.loads(theirs[k]).get("rev"):
                             continue                     # the same edit, closed further here: not the operator's
-                    except (TypeError, ValueError, AttributeError):
+                    except PARSE_ERRORS:
                         pass
                 out.append([path, k, v])
     return out

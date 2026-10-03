@@ -360,3 +360,120 @@ def test_the_detector_passes_a_garbled_row_by_and_keeps_what_it_runs():
         assert fresh.status_by_unit["1-lpr"]["phase"] == "failed" and "row does not parse" in fresh.status_by_unit["1-lpr"]["why"]
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_days_that_are_no_number_of_days_keep_the_units_buckets_and_nought_still_sweeps():
+    """The product team's sibling of the review's ninth pass: `days: "nan"` passed `float`, and `nan` days passed no
+    comparison — nothing swept and nothing said; `-1` swept every bucket of the unit, the current one too; `inf` is no
+    number any controller writes. Each is a row that does not read: the unit's buckets are kept, the row counted once
+    (`retentions_garbled`) and named in the heartbeat (`retention_garbled`). `days: 0` — a deleted unit's — still
+    sweeps."""
+    from w2cplatform.events import EventLog, bucket_names_under
+    from w2cplatform.resource import RETENTION, Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    t = box.wall()
+    days = {"1": "ten", "2": "nan", "3": "inf", "4": "-1", "5": "0", "6": "-inf"}
+    for unit, d in days.items():
+        EventLog(box.archive, "vms", unit, 1).append(t - 3 * 86400, "stats", "observation")
+        box.vars.put(f"vms/retention/{unit}", {"days": d})
+    assert res.retain() == 1                                           # the `0`: nothing of the rest
+    assert res.retain() == 0                                           # and the next pass sweeps none of them either
+    for unit in ("1", "2", "3", "4", "6"):
+        assert len(bucket_names_under(box.archive, "vms", unit, 600)) == 1, unit
+    assert bucket_names_under(box.archive, "vms", "5", 600) == []
+    named = ["vms/1", "vms/2", "vms/3", "vms/4", "vms/6"]
+    assert res.retention_garbled == named
+    hb = res.heartbeat()
+    assert hb["retention_garbled"] == named and hb["rows_garbled"]["retention"] == 5, hb.get("rows_garbled")
+    assert RETENTION.counts == {"vms": 5}                              # twice read, once counted
+    box.vars.put("vms/retention/2", {"days": "1"})                     # mended: swept by its days, and no longer named
+    assert res.retain() == 1 and "vms/2" not in res.retention_garbled and RETENTION.counts == {"vms": 5}
+    _forget_garbled()
+
+
+def test_a_recordings_ceiling_that_is_no_number_of_days_hides_and_does_not_fall_back_to_thirty():
+    """The same sibling at the recorder's door: `retention_days` is how far back a recording is SHOWN — "nobody sees more
+    than a week" — and the door read it with `float`: a word raised out of the door and the backfill's plan, `nan` was a
+    ceiling nothing is under, `inf` showed everything, `-1` hid a day ahead. Not said is thirty days, as before; said and
+    not a number of days, nothing older than now is shown or fetched — never a default — counted once and named."""
+    from vms.archive import CEILINGS, visible_from
+    now = 1_757_500_000.0
+    assert visible_from(None, now) == now - 30 * 86400 and visible_from({"id": "1"}, now) == now - 30 * 86400
+    assert visible_from({"id": "1", "retention_days": "7"}, now) == now - 7 * 86400
+    assert visible_from({"id": "1", "retention_days": "0"}, now) == now                       # nought: what it says
+    for bad in ("ten", "nan", "inf", "-1", ["7"]):
+        assert visible_from({"id": "r9", "retention_days": bad}, now) == now, bad
+    assert CEILINGS.counts == {"rec": 1} and CEILINGS.named("rec/recordings/") == {"r9#retention_days"}
+    assert visible_from({"id": "r9", "retention_days": "7"}, now) == now - 7 * 86400          # mended
+    assert CEILINGS.named("rec/recordings/") == set()
+    _forget_garbled()
+
+
+# -- the ninth review: numbers past any number, a clock ahead, a step that fails every pass --------------------------
+
+def test_a_heartbeat_with_a_number_past_any_number_or_nested_ten_thousand_deep_stops_no_placement():
+    """Two parse errors the readers' own lists left out (the ninth review's sweep). `headroom: Infinity` — JSON reads
+    it — made `int(inf)` raise `OverflowError` past `_number`'s `(ValueError, TypeError)`: `capacity_of` and
+    `headroom` are asked of every candidate, so no unit was placed. A heartbeat of `[` ten thousand deep raised
+    `RecursionError` past `parse_heartbeat`'s list, out of `workers_seen` — every reader of heartbeats. The field is
+    "not said", the heartbeat is skipped, both counted; the pass places."""
+    box, ctl = _box_with_cameras(3)
+    _worker(box, "w-1", "srv-a")
+    box.objects.put("vms/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
+        "server": "srv-b", "capacity": 1e400, "headroom": float("inf"), "started": 10**400}).to_bytes())
+    box.objects.put("vms/heartbeats/w-3", b"[" * 10000)
+    box.objects.put("vms/heartbeats/w-4", json.dumps({"worker": "w-4", "ts": 10**400, "status": []}).encode())
+    assert ctl.capacity_of("w-2") == ctl.capacity and ctl.headroom() == 50
+    assert set(ctl.workers_seen()) == {"w-1", "w-2"}
+    rep = ctl.pass_once()
+    assert rep["ok"] and rep["unplaced"] == 0, rep
+    _forget_garbled()
+
+
+def test_a_snapshot_written_by_a_clock_running_ahead_is_not_fresh_and_its_lead_is_measured():
+    """A controller whose clock ran an hour ahead and then stopped wrote shards an hour ahead: `max(0, now − ts)` read
+    them as age 0 for that hour — the copy above "fresh" while nothing published it. A shard further ahead than the
+    heartbeats' tolerance has no age anybody can vouch for: the oldest there can be, counted once, and its lead goes
+    into `heartbeat_skew_seconds_max`."""
+    from w2cplatform.contract import SKEW_MAX
+    from w2cplatform.rows import FIELDS
+    box, ctl = _placed(2)
+    ctl.publish_snapshot()
+    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 3600, "cameras": []}).encode())
+    assert ctl.snapshot_age() == box.wall()
+    assert SKEW_MAX.get("vms", 0) >= 3600 and "vms/snapshot/w-1#ts" in FIELDS.bad
+    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 2, "cameras": []}).encode())   # within tolerance
+    assert ctl.snapshot_age() == 0 and "vms/snapshot/w-1#ts" not in FIELDS.bad
+    SKEW_MAX.pop("vms", None)
+    _forget_garbled()
+
+
+def test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fails_every_pass_is_said_once():
+    """`failures: 1e400` in the last report made `int(inf)` raise `OverflowError` before any step ran, and the report
+    is only written at the end of a pass: that subsystem's controller placed nothing, for ever. And a step that failed
+    on every pass put its trace in the log every five seconds (the eighth review's minor «трейс _steps»): the trace
+    once per spell now, "works again" when it does."""
+    import logging
+    box, ctl = _placed(2)
+    box.objects.put("vms/controller/pass", json.dumps({"failures": 1e400}).encode())
+    assert ctl.pass_once()["ok"]
+    records = []
+
+    class Keep(logging.Handler):
+        def emit(self, record):
+            records.append(record)
+    spec_log = logging.getLogger(type(ctl).pass_once.__module__)
+    keep = Keep(); spec_log.addHandler(keep)
+    real = ctl.redistribute
+    try:
+        ctl.redistribute = lambda: (_ for _ in ()).throw(RuntimeError("a store that says no"))
+        for _ in range(3):
+            assert not ctl.pass_once()["ok"]
+        ctl.redistribute = real
+        assert ctl.pass_once()["ok"]
+    finally:
+        spec_log.removeHandler(keep)
+    traced = [r for r in records if r.exc_info and "redistribute" in r.getMessage()]
+    again = [r for r in records if "redistribute works again" in r.getMessage()]
+    assert len(traced) == 1 and len(again) == 1, [r.getMessage() for r in records]

@@ -27,6 +27,7 @@ PUT /v1/var/objects/vms/heartbeats/w-2?namespace=default
       "started": 1757500000.0,
       "previous_hb": 0.0,
       "previous_instance": "",
+      "previous_server": "",
       "devices": [],
       "archive": "/data/archive",
       "fetched": "",

@@ -79,6 +79,7 @@ from datetime import datetime, timezone
 
 from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, alarm_tree, bucket_path,
                      bucket_start, subsystems_under, tree_owner, when)
+from .doors import numeric
 from .resource import MIRROR_DIR, mirrored_servers, resources_seen
 from .rows import PARSE_ERRORS, Table, answer, finite
 
@@ -294,7 +295,7 @@ class EventIndex:
                             at = float(fields.get("occurred", t)) if by == "occurred" else t
                             if not t0 <= at < t1 or (kind is not None and k != kind) or (cls is not None and c != cls):
                                 continue
-                            the_cam = ecam if ecam is not None else (int(u) if u.isdigit() else None)
+                            the_cam = ecam if ecam is not None else numeric(u)      # `7²` is no number (the ninth pass)
                             if cam is not None and the_cam != cam:
                                 continue
                             seq, seen = seq + 1, seen + 1
@@ -321,9 +322,11 @@ class EventIndex:
 
     # A unit is skipped for camera `cam` only when everything read of it so far named one OTHER camera; a unit
     # never read, or one naming several, is read. A numeric unit is its own camera.
+    # A number by `doors.numeric`, not `isdigit` + `int`: a unit's directory `7²` raised out of every query by camera
+    # (the review's ninth pass).
     def _may_be(self, server: str, sub: str, unit: str, cam: int) -> bool:
-        if unit.isdigit() and not self._cams.get((server, sub, unit)):
-            return int(unit) == cam
+        if numeric(unit) is not None and not self._cams.get((server, sub, unit)):
+            return numeric(unit) == cam
         seen = self._cams.get((server, sub, unit))
         return not seen or len(seen) > 1 or cam in seen
 

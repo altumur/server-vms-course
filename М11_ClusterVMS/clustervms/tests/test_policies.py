@@ -60,11 +60,11 @@ def write_patterns(policy: str) -> set[str]:
 def _keys(prefixes: list[str], sample: str) -> list[str]:
     """A concrete key under each granted prefix — a pattern is checked by what it
     has to match, not by comparing two strings that look alike."""
-    return [OBJECTS + p.rstrip("*") + sample for p in prefixes]
+    return [OBJECTS + (p[:-1] + sample if p.endswith("*") else p) for p in prefixes]   # an exact path is itself
 
 
 def test_every_object_the_code_writes_is_granted():
-    """Direction one: take the keys the platform actually writes and find them a rule."""
+    """Direction one, from the code's own lists: a concrete key under each prefix the spec says a process writes."""
     cases = [
         ("vmsworker-policy.hcl", _keys(WORKER_OBJECTS, "w-1")),          # its heartbeat, and the mark it leaves before a command
         ("recworker-policy.hcl", _keys(REC_SPEC.sub.acl_objects_worker(), "r-1")),
@@ -183,39 +183,84 @@ def _doors(s) -> None:
     finally:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
-    v, o = s.as_process("reccontroller", "reccontroller", REC_SPEC.acl_controller())
+    v, o = s.as_process("reccontroller", "reccontroller",
+                        REC_SPEC.acl_controller() + [OBJECTS + p for p in REC_SPEC.sub.acl_objects_controller()])
     rc = SpecController(REC_SPEC, v, o, wall=s.wall)
     rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
+    # The pass as the loops run it (`cluster/__main__._placement_pass`): it writes its report (`<sub>/controller/pass`)
+    # — the write no policy granted, and no scene made (the review's ninth pass) — and then the snapshot.
+    for c in (ctl, rc):
+        c.pass_once(1); c.publish_snapshot()
+
+
+# The scenes whose point is a write the store refuses: their 403 is the lesson, not the code writing outside its grant.
+REFUSED_ON_PURPOSE = ("a_worker_may_not_write_a_camera", "who_may_write_what")
+
+
+def code_calls() -> tuple[dict[str, set[tuple[str, str]]], dict[str, set[tuple[str, str, int]]]]:
+    """`({policy: {("read" | "list", path)}}, {policy: {("PUT" | "DELETE", path, status)}})`: every read and every write
+    of the store each process made — the module's stand, every scene, under each process's own name, and `_doors`."""
+    from urllib.parse import unquote
+    import tests.stand as stand
+    made, real = [], stand.Stand.__init__
+    current = {"scene": ""}
+
+    def init(self, *a, **k):
+        real(self, *a, **k)
+        made.append((current["scene"], self))
+    stand.Stand.__init__ = init
+    try:
+        for scene in stand.SCENES.values():
+            current["scene"] = scene.__name__
+            scene()
+        current["scene"] = "_doors"
+        _doors(stand.Stand())
+    finally:
+        stand.Stand.__init__ = real
+    reads: dict[str, set] = {}
+    writes: dict[str, set] = {}
+    for scene, s in made:
+        for c in s.log.calls:
+            role = c.who.split()[0]
+            if c.who == "console" or role not in ROLES:
+                continue                                 # `console` alone is the scene's own hand, not a process
+            if c.method == "GET":
+                if c.url.startswith("/v1/vars?prefix="):
+                    op, path = "list", unquote(c.url[len("/v1/vars?prefix="):].split("&", 1)[0])
+                else:
+                    op, path = "read", unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
+                reads.setdefault(ROLES[role], set()).add((op, path))
+            elif scene not in REFUSED_ON_PURPOSE:
+                path = unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
+                writes.setdefault(ROLES[role], set()).add((c.method, path, c.status))
+    return reads, writes
 
 
 def code_reads() -> dict[str, set[tuple[str, str]]]:
     """`{policy: {("read" | "list", path)}}`: every read of the store each process made."""
-    from urllib.parse import unquote
-    import tests.stand as stand
-    made, real = [], stand.Stand.__init__
+    return code_calls()[0]
 
-    def init(self, *a, **k):
-        real(self, *a, **k)
-        made.append(self)
-    stand.Stand.__init__ = init
-    try:
-        for scene in stand.SCENES.values():
-            scene()
-        _doors(stand.Stand())
-    finally:
-        stand.Stand.__init__ = real
-    out: dict[str, set] = {}
-    for s in made:
-        for c in s.log.calls:
-            role = c.who.split()[0]
-            if c.method != "GET" or c.who == "console" or role not in ROLES:
-                continue                                 # `console` alone is the scene's own hand, not a process
-            if c.url.startswith("/v1/vars?prefix="):
-                op, path = "list", unquote(c.url[len("/v1/vars?prefix="):].split("&", 1)[0])
-            else:
-                op, path = "read", unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
-            out.setdefault(ROLES[role], set()).add((op, path))
-    return out
+
+def test_every_write_the_code_makes_is_granted():
+    """THE WRITES AS THE PROCESSES MAKE THEM (the review's ninth pass, major). The checks above compared the policy files
+    with the spec's `acl_*` lists — which are written by hand too: the controller's pass wrote its report to
+    `objects/<sub>/controller/pass`, no list named it, the policy did not grant it, and every check here agreed. On a
+    cluster with an ACL that was `Forbidden` every five seconds and `<sub>_units_unplaced` 0 for ever. So: every PUT and
+    DELETE a process made in the stand — every scene, and the passes and doors the scenes do not run — is allowed by
+    that process's policy; and the stand refused none of them (a 403 there is the stand's grants and the code
+    disagreeing, the same drift one level down), except in the scenes whose point is the refusal."""
+    _, writes = code_calls()
+    assert {"vmsworker-policy.hcl", "recworker-policy.hcl", "vmscontroller-policy.hcl", "reccontroller-policy.hcl",
+            "console-policy.hcl", "resource-policy.hcl"} <= set(writes), sorted(writes)
+    refused, outside = [], []
+    for policy, made in sorted(writes.items()):
+        for method, path, status in sorted(made):
+            if status == 403:
+                refused.append(f"{policy}: {method} {path}")
+            if not may(policy, "write", path):
+                outside.append(f"{policy}: {method} {path}")
+    assert not outside, "the code writes what its policy does not grant:\n" + "\n".join(outside)
+    assert not refused, "the stand refused a write the code made:\n" + "\n".join(refused)
 
 
 def test_every_row_the_code_reads_is_granted():

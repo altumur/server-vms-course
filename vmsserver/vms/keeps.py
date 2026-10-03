@@ -93,10 +93,10 @@ def refuse(fields: dict) -> None:
     if unknown:
         raise Refused(f"a keep has no field {unknown[0]!r}")
     cam = str(fields.get("cam", "") or "")
-    if not cam or not safe_segment(cam) or unnamable(cam):     # `unnamable`: the keep's id is a label on `/metrics` (eighth pass)
+    if not cam or not safe_segment(cam) or unnamable(cam, unit=True):     # `unnamable`: the keep's id is a label on `/metrics` (eighth pass)
         raise Refused("a keep names a camera")
-    try:
-        since, until = float(fields.get("from")), float(fields.get("to"))
+    try:                                                       # `finite`: `to: Infinity` was a keep its own reader calls torn
+        since, until = finite(fields.get("from")), finite(fields.get("to"))
     except (TypeError, ValueError):
         raise Refused("a keep is an interval: `from` and `to`, unix seconds") from None
     if not 0 < since < until:
@@ -152,7 +152,7 @@ def declared(vars_, garbled: list | None = None) -> list[Keep]:
     for path in sorted(vars_.list(f"{SUB}/{TABLE}/")):
         try:
             items, _ = vars_.get(path)                  # a file store's row that is not even JSON raises in the read itself
-        except (ValueError, TypeError, KeyError) as e:
+        except PARSE_ERRORS as e:                       # …a row nested past what JSON reads too (`RecursionError`)
             KEEPS.garbled(path, e)
             continue                                    # no camera to hold: counted, and said in the log
         if isinstance(items, dict) and items:

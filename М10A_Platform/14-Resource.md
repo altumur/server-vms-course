@@ -289,60 +289,86 @@ def mirror_settings(vars_) -> dict:
         """The reverse, run by the owner: pull my buckets from whoever holds
         copies, then let each subsystem's hook re-index what came back."""
         with self._pulsing():
-            pulled, left, failed, peers_failed = 0, 0, 0, []
-            for peer, hb in self.live_resources().items():
-                if peer == self.server or self.server not in hb.get("mirrors", {}) or not hb.get("url"):
-                    continue
-                try:
-                    listed = self.peers.mirrored(hb["url"], self.server)
-                except Exception as e:                       # noqa: BLE001 — that peer's trouble, not the next one's
-                    failed += 1
-                    peers_failed.append(peer)
-                    log.warning("%s: %s did not list the copies it holds of this server (%s): asked again later",
-                                self.server, peer, e)
-                    continue
+            try:
+                return self._restore()
+            except Exception:
+                wait = self._restore_later()
+                log.warning("%s: restore did not run through: tried again in %.0f s", self.server, wait)
+                raise
+
+    def _restore(self) -> dict:
+        pulled, left, failed, peers_failed = 0, 0, 0, []
+        now, seen = self.wall(), resources_seen(self.objects)
+        live = {s: hb for s, hb in seen.items()
+                if s != self.server and is_live("platform", float(hb["ts"]), now, self.lost_after)}
+        for peer, hb in live.items():
+            if peer in self._restored_from or not self._holds_mine(peer, hb):
+                continue
+            try:
+                listed = self.peers.mirrored(hb["url"], self.server)
+            except Exception as e:                           # noqa: BLE001 — that peer's trouble, not the next one's
+                failed += 1
+                peers_failed.append(peer)
+                log.warning("%s: %s did not list the copies it holds of this server (%s): asked again later",
+                            self.server, peer, e)
+                continue
+            self._progressed()
+            fails, left_before = 0, left
+            for path in sorted(str(b.path) for b in listed):
                 self._progressed()
+                if not _bucket_path(path):
+                    PEER_LINES.garbled(f"platform/restore/{peer}#{path}", "not a bucket's path")
+                    continue                                 # never written: it could name a place outside the tree
+                dest = self.path_of(path)              # back onto the volume that held it, or the emptiest
+                if os.path.exists(dest):
+                    continue
+                if fails >= PEER_FAILS:
+                    left += 1
+                    continue                                 # this peer is left for this try: counted, asked again
+                try:
+                    self._pull(hb["url"], path, dest)
+                except Exception as e:                       # noqa: BLE001
+                    fails += 1
+                    failed += 1
+                    left += 1
+                    log.warning("%s: %s did not give back %s (%s): asked again later", self.server, peer, path, e)
+                    if fails == PEER_FAILS:
+                        peers_failed.append(peer)
+                    continue
                 fails = 0
-                for path in sorted(str(b.path) for b in listed):
-                    self._progressed()
-                    if not _bucket_path(path):
-                        PEER_LINES.garbled(f"platform/restore/{peer}#{path}", "not a bucket's path")
-                        continue                             # never written: it could name a place outside the tree
-                    dest = self.path_of(path)          # back onto the volume that held it, or the emptiest
-                    if os.path.exists(dest):
-                        continue
-                    if fails >= PEER_FAILS:
-                        left += 1
-                        continue                             # this peer is left for this try: counted, asked again
-                    try:
-                        self._pull(hb["url"], path, dest)
-                    except Exception as e:                   # noqa: BLE001
-                        fails += 1
-                        failed += 1
-                        left += 1
-                        log.warning("%s: %s did not give back %s (%s): asked again later", self.server, peer, path, e)
-                        if fails == PEER_FAILS:
-                            peers_failed.append(peer)
-                        continue
-                    fails = 0
-                    pulled += 1
-                    self._progressed()
-            self.restore_failed += failed
-            self.restore_left, self.restore_peers_failed = left, peers_failed
-            if left or peers_failed:
-                wait = min(RESTORE_RETRY_MAX, RESTORE_RETRY * 2 ** self._restore_tries)
-                self._restore_tries += 1
-                self._restore_next = self.clock() + wait
-                log.warning("%s: restore left %d buckets with peers%s: tried again in %.0f s", self.server, left,
-                            f" ({', '.join(peers_failed)} did not answer whole)" if peers_failed else "", wait)
-            else:
-                self._restore_tries, self._restore_next = 0, 0.0
-            hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
-                     for sub, h in self.hooks.items()} if pulled else {}
-            return {"pulled": pulled,
-                    **({"left": left, "failed": failed} if left or failed else {}),
-                    **({"peers_failed": peers_failed} if peers_failed else {}),
-                    **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+                pulled += 1
+                self._progressed()
+            if left == left_before:
+                self._restored_from.add(peer)                # all it listed is here: not asked again
+        self.restore_failed += failed
+        self.restore_left, self.restore_peers_failed = left, peers_failed
+        if not left and not peers_failed and (live or not any(s != self.server for s in seen)):
+            self._restore_ok = True
+        if left or peers_failed:
+            wait = self._restore_later()
+            log.warning("%s: restore left %d buckets with peers%s: tried again in %.0f s", self.server, left,
+                        f" ({', '.join(peers_failed)} did not answer whole)" if peers_failed else "", wait)
+        elif not self._restore_ok:
+            wait = self._restore_later()
+            log.warning("%s: no other resource is live to give back what it holds of this server: asked again in "
+                        "%.0f s", self.server, wait)
+        else:
+            self._restore_tries, self._restore_next = 0, self.clock() + RESTORE_RETRY_MAX   # the next look for a late peer
+        hooks = {sub: _call_hook(h.pass_, self.wall(), progressed=self._progressed)
+                 for sub, h in self.hooks.items()} if pulled else {}
+        return {"pulled": pulled,
+                **({"left": left, "failed": failed} if left or failed else {}),
+                **({"peers_failed": peers_failed} if peers_failed else {}),
+                **{f"{s}.{k}": v for s, r in hooks.items() for k, v in r.items()}}
+
+    def _holds_mine(self, peer: str, hb: dict) -> bool:
+        return peer != self.server and self.server in hb.get("mirrors", {}) and bool(hb.get("url"))
+
+    def _restore_later(self) -> float:
+        wait = min(RESTORE_RETRY_MAX, RESTORE_RETRY * 2 ** min(self._restore_tries, 10))
+        self._restore_tries += 1
+        self._restore_next = self.clock() + wait
+        return wait
 
     def _pull(self, url: str, path: str, dest: str) -> None:
         os.makedirs(os.path.dirname(dest), exist_ok=True)
@@ -360,12 +386,24 @@ def mirror_settings(vars_) -> dict:
         os.replace(dest + ".tmp", dest)
 
     def restore_due(self) -> bool:
-        return bool(self.restore_left or self.restore_peers_failed) and self.clock() >= self._restore_next
+        if self.clock() < self._restore_next:
+            return False
+        if not self._restore_ok or self.restore_left or self.restore_peers_failed:
+            return True
+        self._restore_next = self.clock() + RESTORE_RETRY_MAX     # the next look, whatever this one finds or raises
+        return any(peer not in self._restored_from and self._holds_mine(peer, hb)
+                   for peer, hb in self.live_resources().items())
 ```
 
 **Один сосед и одно ведро — их беда, а то, что не вернулось, спрашивается снова** (восьмое ревью, часть 4). `restore` шёл один раз, при старте, в одном `try`. Сосед с живым heartbeat'ом и отказывающей дверью возвращал 0 вёдер из 20, обрыв на четвёртом — 3 из 20. И больше никто не спрашивал, а копии тем временем старели у соседей и выметались там. Теперь сосед, не ответивший списком, пропускается, и спрашивается следующий. Ведро, которое не пришло, считается, и тянется следующее; после `PEER_FAILS` неудач подряд сосед оставлен до следующей попытки. Путь, который сосед называет, но который не путь ведра (`..`, не `.events.jsonl`), не пишется никогда: он мог бы указать за пределы дерева (`_bucket_path`). То, что известно лежащим у соседей и не вернувшимся (`left`), и сосед, не давший списка, делают восстановление снова должным (`restore_due`): через `RESTORE_RETRY` (10 с), с удвоением до `RESTORE_RETRY_MAX` (600 с). Спрашивает цикл ресурса, каждый свой оборот (`vms/__main__.py`, М11 — `cluster/__main__.py`), пока не останется ничего. Состояние — в heartbeat'е (`restore`: `left`, `failed`, `peers_failed`, `next_in`) и на `/metrics` (`<p>_resource_restore_left`, `<p>_resource_restore_failures_total`). `.tmp` удаляется при любой неудаче, а `.tmp`, который не успел появиться, больше не прячет настоящую причину за своим `FileNotFoundError` (`_pull`). Тест: `test_row_reader.py::test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_come` — 20 вёдер, одно не приходит: вернулось 19, сосед с отказавшим списком не помешал, через паузу недостающее ведро спрошено снова и вернулось, остальные второй раз не спрашивались.
 
 **Ответ соседа — только 200 и только до предела.** Ответ, который не 200 (204, 206), бакетом не пишется (`_ok`); 4xx и 5xx `urlopen` и раньше превращал в исключение. Список `/mirrored` читается не больше `LISTING_MAX` (64 МиБ), копия — не больше `MIRROR_MAX`, и строка списка, которая не разбирается, — беда этой строки: она пропускается и считается (`PEER_LINES`), а остальной список стоит. Тест: `test_row_reader.py::test_the_peer_client_writes_only_a_whole_200_as_a_bucket_and_skips_a_garbled_line_of_a_listing`.
+
+**Восстановление не сделано, пока хоть одна попытка не прошла с кем-то, кого можно спросить** (девятое ревью, major, воспроизведено пробой). Восьмое ревью сделало повтор, но должным `restore` становился только тогда, когда что-то осталось у соседа, до которого он достучался. Попытка, которая упала целиком (хранилище не ответило при старте с новым диском), и попытка, не заставшая ни одного живого соседа (после общего отключения питания сервер встал раньше соседей), не оставляли ничего известного — и больше не повторялись. За 20 минут вернулось 0 вёдер из 20, а `vms_resource_restore_left` показывал 0. Теперь `_restore_ok` становится истиной только после попытки без ошибок, в которой был живой сосед — или не нашлось ни одного другого ресурса, когда-либо писавшего heartbeat: одному серверу копии держать некому, и его восстановление сделано с первой попытки, а не повторяется всю жизнь коробки. Пока не сделано, `restore_due` истинно после паузы (`_restore_later`: те же 10 с с удвоением до 600 с), а в heartbeat'е — `restore: {done: false, left: -1}`; −1 значит «не известно»: ни один сосед не спрошен. Попытка, бросившая исключение, ставит паузу до того, как исключение уходит из `restore`. И сосед, который появился позже — лежал во время восстановления, пока другой сосед был жив, — спрашивается, когда его увидят: сделанное восстановление раз в `RESTORE_RETRY_MAX` читает heartbeat'ы и ищет живого соседа, который держит копии этого сервера и ещё их не отдал. Сосед, отдавший всё, что назвал (`_restored_from`), больше не спрашивается: всё, что у него появилось потом, пришло от этого же сервера. Тесты: `test_row_reader.py::test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_late_peer_is_asked` (0 вёдер, пока соседи молчат; 10 от первого соседа, когда он встал; 10 от второго, когда встал он, — первый второй раз не спрошен; хранилище, не ответившее при старте, — повтор после паузы), `test_one_server_alone_is_restored_once_and_not_asked_again_for_ever`.
+
+**Пауза не переполняется** (девятое ревью, minor). `RESTORE_RETRY * 2 ** tries` на 1024-й попытке больше любого `float`, и `OverflowError` вылетал раньше, чем ставилась пауза, — дальше `restore` шёл каждые 10 секунд с трейсом. Показатель теперь ограничен: `2 ** min(self._restore_tries, 10)`. Тест: `test_row_reader.py::test_the_restores_pause_does_not_overflow_after_a_thousand_tries`.
+
+**Целым считается только ответ с рамкой** (девятое ревью, minor, и соседний путь). Ответ без длины и без чанков — прокси, снявший рамку, — кончается там, где кончилось соединение. Дверь соседа, упавшая на половине, давала бакет покороче, и он записывался навсегда; `Content-Length: ten` бросал голый `ValueError` уже после того, как тело записано. Теперь `get_into` спрашивает `framed` (тот же вопрос, что задаёт консоль дверям регистраторов) до первого байта, берёт длину у самого `http.client` — число или ничего — и превращает оборванные чанки в `IOError`: ведро спрашивается снова. Тот же читатель (`_whole`) стоит на списке `/mirrored` и на `get`/`get_raw`: список, оборванный на середине, выглядел бы соседом, у которого меньше копий, а `restore` теперь считает соседа, отдавшего всё названное, отработанным. Тест: `test_row_reader.py::test_the_peer_client_takes_no_answer_without_a_frame_and_no_length_that_is_not_a_number`.
 
 **Возвращение домой — под тем же пульсом, что проход.** `restore` идёт при старте процесса, на том же потоке, что heartbeat, до цикла. Седьмое ревью посчитало цену: замена диска, 2000 вёдер по 50 мс каждое — 100 секунд без heartbeat'а (часть 1, M4). Всё это время ресурс для индекса событий молчит, окно считается неполным, и автоматика держит курсор. Консоль тоже показывает ресурс молчащим, хотя его дверь отвечает. Теперь пульс прохода (шаг 7) вынесен в `_pulsing`, и `restore` бьётся под ним так же, как `pass_`. Отметка прогресса ставится на каждый список соседа и на каждое ведро, вытянутое или уже лежащее на месте. Восстановление, которое движется, держит пульс. Застрявшее на соседе, который ничего не отдаёт, пульс останавливает. Тест: `test_row_reader.py::test_restore_beats_under_the_same_pulse_as_the_pass` — шесть вёдер по 30 секунд часов ящика, heartbeat свежий во время каждого.
 
@@ -486,6 +524,8 @@ VMS этой дверью не пользуется. Её видео лежит 
 **Проход не читает то, что метёт.** В настоящем коде вместо `buckets_under` стоит `bucket_names_under`: тот же список, но из одних имён. Путь бакета говорит всё, что нужно политике, — чей он, какая эпоха, когда начался, — а конец равен началу плюс длина бакета. `buckets_under` ещё и открывает каждый файл, чтобы посчитать строки; это нужно маршруту `/buckets` и не нужно никому, кто удаляет. Проход хранения читал год архива, каждый раз, чтобы удалить файлы одного дня; heartbeat так же пересчитывал все зеркальные копии каждые десять секунд (ревью платформы; обратная связь, BI). Теперь ни тот, ни другой не открывает ни одного бакета.
 
 **Срок, который не прочитать, — не ноль дней.** Сроки всех единиц читаются одним циклом, до первого удаления, и `retention_days` разбирает `days` голым `float`. Одна строка `<подсистема>/retention/<единица>` со словом вместо числа бросала исключение из всего `retain`: ничьи бакеты не удалялись, каждый проход (шестое ревью, обход соседей битой строки). Теперь такая единица в этом проходе не метётся — её срок считается бесконечным, — она названа в `retention_garbled` и в логе, а остальные метутся по своим срокам; то же для копий соседей. Тест: `test_garbled_rows.py::test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_are_swept`.
+
+**`nan`, `inf` и `-1` — тоже не число дней** (девятое ревью: команда продукта нашла это у себя, и в курсе было то же). `float("nan")` — число, и слово-проверка его пропускала: `nan` дней не проходили ни одного сравнения, ничего не удалялось и ничего не говорилось. `-1` удалял все бакеты единицы, текущий тоже, а `inf` не пишет ни один контроллер. Теперь `retention_days` пропускает `days` через `_days_of`: только конечное число не меньше нуля, иначе исключение. `_days` ловит всё, что бросает разбор (`PARSE_ERRORS`: строка-список без `.get` тоже), держит бакеты единицы, считает строку один раз, пока она снова не станет читаться (`RETENTION`, `rows_garbled.retention` в heartbeat'е и на `/metrics`), и называет единицу в heartbeat'е (`retention_garbled`). Раньше здесь было предупреждение в логе на каждом проходе и ни одного счётчика. `days: 0` остаётся тем, чем был, — сроком удалённой единицы, и метёт. Тест: `test_garbled_rows.py::test_days_that_are_no_number_of_days_keep_the_units_buckets_and_nought_still_sweeps` — `"ten"`, `"nan"`, `"inf"`, `"-1"`, `"-inf"` держат, `"0"` метёт, починенная строка метётся по своим дням.
 
 **Копии тоже стареют.** `.mirror/<сервер>/…` не входит ни в один обход: `units()` пропускает скрытые каталоги, и намеренно — копия не данные этого сервера. Поэтому при включённом зеркале каталог только рос. Теперь `retain` проходит и по нему: копия живёт столько дней, сколько её единица, как оригинал, и метка удержания защищает её так же. Удаляется она на час позже оригинала (`MIRROR_GRACE`): у двух серверов двое часов, и копию, убранную чуть раньше оригинала, владелец на следующем проходе прислал бы снова.
 

@@ -1633,3 +1633,42 @@ def test_a_press_of_a_relay_and_a_move_of_a_camera_read_the_rows_of_their_device
         srv.shutdown()
     print(f"reads: a press of a relay {press}, a move of a camera {move} (1000 stale device rows)")
     assert press <= 40 and move <= 50, (press, move)
+
+
+def test_a_units_name_holds_no_comma_and_no_digit_but_ascii_and_a_stored_one_stops_no_list():
+    """The review's ninth pass, a minor and the product team's sibling B: an assignment is its units joined by `,` — a
+    recording named `1,9` made its recorder take `9` and never start `1,9`, and its fetched range scanned recording 9's
+    camera. And `"7²".isdigit()` is true while `int("7²")` raises: `POST /rec/recordings {"name": "7²"}` was 201, and
+    every `GET /rec/recordings` after it went unanswered. Both are refused at creation now (`doors.unnamable`, `unit`);
+    a unit stored under such a name before is listed as it stands, counted and named once (`UNIT_NAMES`), and one with a
+    comma is written into no assignment (`UNLISTED`) — never split into names it is not."""
+    from w2cplatform.contract import UNLISTED
+    from w2cplatform.doors import numeric
+    from w2cplatform.spec import UNIT_NAMES, _unit_key
+    from tests.test_slot_fence import _forget_garbled
+    assert numeric("12") == 12 and numeric("7²") is None and numeric("٣") is None and numeric("9" * 5000) is None
+    assert _unit_key("9" * 5000) == (1, "9" * 5000)                                  # past what `int` takes: a name
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"})[0] == 201
+        for bad in ("1,9", "7²", "٣", "７", "1,"):
+            code, body = _call(base, "POST", "/rec/recordings", {"name": bad, "cam": "1"})
+            assert code == 400 and "may not hold" in body.get("detail", ""), (bad, code, body)
+        assert _call(base, "POST", "/rec/recordings", {"name": "1-9", "cam": "1"})[0] == 201
+        for old in ("7²", "1,9"):                                                    # as an older build let them in
+            box.vars.put(f"rec/recordings/{old}", {"id": old, "name": old, "cam": "1"})
+        code, body = _call(base, "GET", "/rec/recordings")
+        assert code == 200, (code, body)
+        assert sorted(r["id"] for r in body["configured"])[:3] == ["1,9", "1-9", "7²"], body["configured"]
+        assert _call(base, "GET", "/rec/recordings")[0] == 200
+        assert UNIT_NAMES.counts == {"rec": 2} and UNIT_NAMES.named("rec/recordings/") == {"7²", "1,9"}   # once each
+    finally:
+        srv.shutdown()
+    on = SpecController(REC_SPEC, box.vars.as_writer("reccontroller", REC_SPEC.acl_controller()), box.objects, wall=box.wall)
+    assert on.assign_add("r-1", "1,9").units == [] and box.vars.get("rec/workers/r-1")[0] is None   # no write at all
+    a = on.assign("r-1", ["1-9", "1,9", "7²"])
+    assert a.units == ["1-9", "7²"] and box.vars.get("rec/workers/r-1")[0]["units"] == "1-9,7²"
+    assert on.assign_remove("r-1", "7²").units == ["1-9"]
+    assert UNLISTED.counts == {"rec": 1}, UNLISTED.counts                            # the one unit, said once
+    _forget_garbled()

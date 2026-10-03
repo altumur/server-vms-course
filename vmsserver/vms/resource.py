@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.resource import Resource
+from w2cplatform.rows import Table
 
 
 def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, peers=None,
@@ -52,26 +53,52 @@ def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, pe
 ANY = None
 CAM_FIELD = (("det", "units"), ("survey", "watches"), ("detjob", "jobs"))
 
+# ONE TORN ROW OF A UNIT IS THAT UNIT'S (the review's ninth pass, major). `_rows` read every row bare: one that is not
+# JSON in `det/units/55`, `auto/scenarios/s1` or `rec/recordings/r9` raised out of `kept_buckets`, and so out of the
+# resource's whole `retain` — `removed=None`, every unit of the server kept 10 of 10, every pass, the copies too; and
+# only the log said so. Now each row is read alone (`rows.Table`): one that does not read — not JSON, not a map, a `cam`
+# that is not a value — is left out, counted once until it parses again (`unit_rows_garbled` in the resource's
+# heartbeat), logged once, and its NAME is handed back: its unit is a unit of no one camera (`ANY`), held by every keep
+# that reads — "not knowing whose it is is not nobody's", the rule a missing row already had.
+UNIT_ROWS = Table("unit_row", "its unit is held by every keep that reads, as a unit of no one camera, until it is mended",
+                  "unit's row")
+GARBLED = object()                                   # what `UNIT_ROWS.read` gives for a row that does not read
 
-def _rows(vars_, sub: str, table: str) -> dict[str, dict]:
+
+def _rows(vars_, sub: str, table: str, garbled: set | None = None) -> dict[str, dict]:
     prefix = f"{sub}/{table}/"
     out = {}
     for path in vars_.list(prefix):
-        items, _ = vars_.get(path)
+        def read(path=path):
+            items, _ = vars_.get(path)               # a file store's row that is not even JSON raises in the read itself
+            if items and not isinstance(items, dict):
+                raise TypeError(f"a row is a map, not {type(items).__name__}")
+            if items and not isinstance(items.get("cam", ""), (str, int, type(None))):
+                raise TypeError(f"`cam` is a value, not {type(items['cam']).__name__}")
+            return items
+        items = UNIT_ROWS.read(path, read, GARBLED)
+        if items is GARBLED:
+            if garbled is not None:
+                garbled.add(path[len(prefix):])
+            continue
         if items:
             out[path[len(prefix):]] = items          # deleted rows included: their `cam` is what a keep needs
     return out
 
 
-def cameras_of_units(vars_) -> dict[tuple[str, str], set | None]:
-    """`{(subsystem, unit): {cam, …} | ANY}` for the subsystems whose units are about cameras without being named after one."""
+def cameras_of_units(vars_, unread: set | None = None) -> dict[tuple[str, str], set | None]:
+    """`{(subsystem, unit): {cam, …} | ANY}` for the subsystems whose units are about cameras without being named after one.
+    A recording whose row does not read goes into `unread`, when the caller gives one: its camera is not known."""
     import json
     out: dict[tuple[str, str], set | None] = {}
     by_sub = {sub: {u: str(it.get("cam", "")) for u, it in _rows(vars_, sub, table).items()} for sub, table in CAM_FIELD}
     for sub, units in by_sub.items():
         for unit, cam in units.items():
             out[(sub, unit)] = {cam} if cam else ANY
-    recs = {u: str(it.get("cam") or u) for u, it in _rows(vars_, "rec", "recordings").items()}
+    torn: set = set()
+    recs = {u: str(it.get("cam") or u) for u, it in _rows(vars_, "rec", "recordings", torn).items()}
+    if unread is not None:
+        unread |= torn
 
     def cams_of(sub: str, unit: str) -> set | None:
         if not unit:
@@ -81,7 +108,7 @@ def cameras_of_units(vars_) -> dict[tuple[str, str], set | None]:
         if sub == "det":
             return {by_sub["det"][unit]} if by_sub["det"].get(unit) else ANY
         if sub == "rec":
-            return {recs.get(unit, unit)}
+            return ANY if unit in torn else {recs.get(unit, unit)}   # a torn recording row: whose, not known
         return ANY
 
     for unit, it in _rows(vars_, "auto", "scenarios").items():
@@ -133,7 +160,8 @@ def kept_buckets(vars_):
         sound = [k for k in all_ if not k.garbled]
         if not all_:
             return lambda sub, unit, start, end: False
-        cams = cameras_of_units(store)
+        torn: set = set()                            # recordings whose rows do not read: whose camera, not known
+        cams = cameras_of_units(store, torn)
         recs = {u: str(it.get("cam") or u) for u, it in _rows(store, "rec", "recordings").items()}
 
         def kept(sub: str, unit: str, start: float, end: float) -> bool:
@@ -142,7 +170,10 @@ def kept_buckets(vars_):
             if sub == "vms":
                 return keeps.held(keeps.spans_of_cam(all_, str(unit)), start, end)
             if sub == "rec":                         # named in the keep, or a recording of its camera made since
-                return keeps.held(keeps.spans_of(all_, str(unit), recs.get(str(unit), "")), start, end)
+                named = keeps.spans_of(all_, str(unit), recs.get(str(unit), ""))
+                if str(unit) in torn:                # …or, its row torn, a unit of no one camera: every keep that reads
+                    named = named + [(k.since, k.until) for k in sound]
+                return keeps.held(named, start, end)
             if sub in ("det", "survey", "detjob", "auto"):
                 of = cams.get((sub, str(unit)), ANY)
                 spans = [(k.since, k.until) for k in sound] if of is ANY else \

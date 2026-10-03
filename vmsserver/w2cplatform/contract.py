@@ -77,7 +77,8 @@ from dataclasses import dataclass, field
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
-from .rows import Table, garbled_counts
+from .doors import LIST_SEPARATOR, numeric
+from .rows import PARSE_ERRORS, Table, garbled_counts
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .variables import Conflict, Variables, cas_pause
 
@@ -107,6 +108,7 @@ UNPLACED = "unplaced"
 # A prefix that cannot be bounded by a policy is a layout problem, not a missing ACL feature.
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
+CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
 
 
 # `<subsystem>/heartbeats/<worker>`, or the resource's `platform/resources/<server>/heartbeat`, which has
@@ -206,7 +208,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
         # read model, the running gauge — each a loop over every worker.
         if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
             raise TypeError("a status entry is not an object")
-    except (ValueError, KeyError, TypeError, AttributeError):
+    except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1
         if key not in _garbled_keys:
@@ -386,9 +388,13 @@ class Subsystem:
         """The workers write their own heartbeats and nothing else."""
         return [f"{self.name}/{HEARTBEATS}/*"]
 
+    # …and the report on its pass (the review's ninth pass, major): `pass_once` writes `<name>/controller/pass`, the one
+    # object `/metrics` reads `<name>_units_unplaced` and the last pass from, and this list — and the policy checked
+    # against it — granted only the shards: on a cluster with an ACL the report was a 403 every five seconds and the
+    # metrics stayed -1 and 0. `tests/test_policies.py` checks the policy against what the stand's processes WRITE now.
     def acl_objects_controller(self) -> list[str]:
-        """The controller publishes the snapshot shards — the only thing that leaves the cluster."""
-        return [f"{self.name}/snapshot/*"]
+        """The controller publishes the snapshot shards — the only thing that leaves the cluster — and its pass report."""
+        return [f"{self.name}/snapshot/*", f"{self.name}/{CONTROLLER_PASS}"]
 
     def acl_objects_console(self) -> list[str]:
         """The console stores the bytes of a `blob` field, beside the row that names them."""
@@ -423,8 +429,17 @@ class Assignment:
     rev: int = 0
 
     # `{"units": "1,2,3", "rev": n}` — the Variables row form (strings only).
-    def to_items(self) -> dict:
-        return {"units": ",".join(self.units), "rev": self.rev}
+    #
+    # A NAME WITH THE SEPARATOR IN IT IS NOT WRITTEN INTO THE LIST (the review's ninth pass, the product team's sibling B).
+    # Joined, `1,9` read back as `1` and `9`: its worker started `9` — another unit, or nothing — and never `1,9`, and no
+    # reader can tell the two apart afterwards. `create` refuses such a name now (`doors.unnamable`, `unit`); a unit
+    # stored under one before is left out of every assignment — unplaced, not split — counted and named once
+    # (`UNLISTED`), and logged. So whatever reads `units` back reads only whole names.
+    def to_items(self, key: str = "") -> dict:
+        for u in self.units:
+            if LIST_SEPARATOR in str(u):
+                UNLISTED.garbled(f"{key or self.worker}#{u}", f"{LIST_SEPARATOR!r} in its name")
+        return {"units": LIST_SEPARATOR.join(u for u in self.units if LIST_SEPARATOR not in str(u)), "rev": self.rev}
 
     # The inverse; a missing row is an empty assignment with `rev 0`. Empty strings in the list are dropped.
     @classmethod
@@ -500,7 +515,8 @@ class Slot:
 # to pick the next unused number.
 def slot_number(name: str) -> int:
     tail = name.rsplit("-", 1)[-1]
-    return int(tail) if tail.isdigit() else 0
+    n = numeric(tail)                                   # not `isdigit` + `int`: `w-²` raised (the ninth pass's sibling)
+    return 0 if n is None else n
 
 
 # A slot row that does not parse — a hand edit, half a write — is ONE row's trouble, as a heartbeat's is
@@ -532,6 +548,9 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
 # — it is published, never compared across writes.
 ASSIGNMENTS = Table("assignment", "read for the units it names")
 ASSIGNMENTS_GARBLED, _garbled_assignments = ASSIGNMENTS.counts, ASSIGNMENTS.bad
+# A unit whose name holds the list's separator: written into no assignment (`Assignment.to_items`; the ninth pass).
+UNLISTED = Table("unlisted", "it is assigned to nobody — the list would split it; create it again under a name without "
+                             "a comma", "unit in an assignment")
 
 
 def read_assignment(key: str, worker: str, items) -> "Assignment":
@@ -747,7 +766,7 @@ class Controller:
     def assign(self, worker: str, units: list[str]) -> Assignment:
         def mutate(items):
             rev = self._assignment(worker, items).rev + 1
-            return Assignment(worker, sorted(set(units), key=str), rev).to_items()
+            return Assignment(worker, sorted(set(units), key=str), rev).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Read-modify-write adding one unit; returns `None` from the mutator (no write) if already present. Two
@@ -759,7 +778,10 @@ class Controller:
             a = self._assignment(worker, items)
             if unit in a.units:
                 return None
-            return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items()
+            if LIST_SEPARATOR in str(unit):                 # never into the list (`Assignment.to_items`): no write either
+                UNLISTED.garbled(f"{self.sub.assignment(worker)}#{unit}", f"{LIST_SEPARATOR!r} in its name")
+                return None
+            return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # The mirror of `assign_add`.
@@ -768,7 +790,7 @@ class Controller:
             a = self._assignment(worker, items)
             if unit not in a.units:
                 return None
-            return Assignment(worker, [u for u in a.units if u != unit], a.rev + 1).to_items()
+            return Assignment(worker, [u for u in a.units if u != unit], a.rev + 1).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Every row under `<name>/workers/`.

@@ -35,6 +35,8 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from cryptography.x509.oid import NameOID
 
+from w2cplatform.rows import PARSE_ERRORS
+
 from .tokens import ROOT_KID, KeySet, TokenIssuer
 
 HOUR, DAY, YEAR = 3600.0, 86400.0, 365 * 86400.0
@@ -226,7 +228,7 @@ def is_recovery_file(blob: bytes) -> bool:
     """A root's recovery file (Lesson 15), or the signer's backup of Lessons 4 and 7 (both keys)."""
     try:
         return "root_key" in json.loads(blob)
-    except ValueError:
+    except PARSE_ERRORS:                             # a number (`in` raises `TypeError`), `[` ten thousand deep (the ninth review's sweep)
         return False
 
 
@@ -258,7 +260,7 @@ class Signer:
                 self.root = Root(x509.load_pem_x509_certificate(items["ca_cert"].encode()), key)
                 self.tokens = TokenIssuer(domain, Ed25519PrivateKey.from_private_bytes(bytes.fromhex(items["token_key"])), items["kid"])
                 self.generation = int(items.get("gen", "1"))
-            except (ValueError, TypeError, KeyError, AttributeError) as e:
+            except PARSE_ERRORS as e:
                 raise RuntimeError(f"the domain's keys in domain/signer do not parse ({e}): the signer does not start "
                                    f"rather than make new ones — restore the row from the holder's backup") from None
             if items.get("issued") == "true":
