@@ -65,7 +65,7 @@ disconnect {
 **Правильный ответ** — переменная с CAS:
 
 ```
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1021
 {"Items": {"epoch": "2"}}
 ```
 
@@ -102,9 +102,9 @@ PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
 
 ```
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/slots/w-1?namespace=default&cas=1010
+PUT /v1/var/vms/slots/w-1?namespace=default&cas=1013
 {"Items": {"holder": "alloc-B", "until": "1757500093.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1022}
+→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1025}
 ```
 
 Имя замена забирает сразу, а место — не всякое: холд сетевого тома идёт за именем только на хосте прежнего держателя (седьмое ревью М10; М10B, урок 10), а замена — новая аллокация на `srv-b`, и держатель записан идентификатором аллокации, который хоста не называет. Регистратор-замена с тем же `NOMAD_ALLOC_INDEX` ждёт холд неизменным `slot_ttl + HOLD_SKEW` по своим часам, если прежний экземпляр не отпустил его сам, — ведь `srv-a` мог не умереть, а замереть со смонтированным писателем (шестое ревью М10, блокер 2).
@@ -120,13 +120,13 @@ GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
 
 ```
 GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1,2,3", "rev": "3"}, "ModifyIndex": 1017}
+→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1,2,3", "rev": "3"}, "ModifyIndex": 1020}
 
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1018}
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1021}
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1021
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1023}
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1026}
 ```
 
 — и так для камер 2 и 3. И публикует свой heartbeat, в котором говорит, кого сменил и когда тот замолчал:
@@ -177,18 +177,18 @@ PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
 
 ```
 # vmscontroller
-PUT /v1/var/vms/placement/1?namespace=default&cas=1012
+PUT /v1/var/vms/placement/1?namespace=default&cas=1015
 {"Items": {"worker": "w-2", "reason": "server srv-a gone: slot w-1 lapsed and its resource silent; most free capacity (50); on srv-b", ...}}
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1035}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1038}
 ```
 
 `w-2` на `srv-b` берёт следующую эпоху каждой камеры и начинает писать:
 
 ```
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1021
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1041}
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1044}
 ```
 
 Когда `srv-a` вернётся, его воркер возьмёт `w-1` снова, прочитает пустое назначение и ничего не будет писать. Назад ничего не переезжает: добавить место для записи — значит не двигать ничего, как и при добавлении воркера (урок 4).

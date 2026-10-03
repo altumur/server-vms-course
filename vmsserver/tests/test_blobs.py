@@ -2,8 +2,9 @@
 
 Some units carry one opaque lump — a detector's per-pixel mask, a panel's
 firmware, a model. It belongs to exactly one unit, the platform never reads
-inside it, and it does not fit in a row: a Nomad Variable holds 64 KiB and a
-per-pixel mask for 1920x1080 is 345 KB as base64.
+inside it, and it does not belong in a row: a row is small, and a store may
+say how small (Nomad's Variables said 64 KiB; `limits.py`), while a per-pixel
+mask for 1920x1080 is 345 KB as base64.
 
 Moving such configuration wholesale into the object store is the obvious fix
 and the wrong one: an object has no CAS, no one writer and no `revision`, so

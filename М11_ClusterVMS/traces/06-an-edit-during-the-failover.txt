@@ -17,11 +17,11 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1005
+  "ModifyIndex": 1008
 }
 
 # console
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1005
+PUT /v1/var/vms/cameras/1?namespace=default&cas=1008
 {
   "Items": {
     "id": "1",
@@ -39,7 +39,7 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=1005
     "kind": "video"
   }
 }
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1011}
+→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1014}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/platform/schema?namespace=default
@@ -51,7 +51,7 @@ GET /v1/var/platform/decommission/srv-b?namespace=default
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-1", "ModifyIndex": 1006}]
+→ 200 [{"Path": "vms/slots/w-1", "ModifyIndex": 1009}]
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/slots/w-1?namespace=default
@@ -63,7 +63,7 @@ GET /v1/var/vms/slots/w-1?namespace=default
     "released": "false",
     "gen": "1"
   },
-  "ModifyIndex": 1006
+  "ModifyIndex": 1009
 }
 
 # vmsworker (allocation 1 on srv-b)
@@ -76,13 +76,13 @@ GET /v1/var/vms/slots/w-1?namespace=default
     "released": "false",
     "gen": "1"
   },
-  "ModifyIndex": 1006
+  "ModifyIndex": 1009
 }
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/slots/w-1?namespace=default&cas=1006
+PUT /v1/var/vms/slots/w-1?namespace=default&cas=1009
 {"Items": {"holder": "alloc-0077", "until": "1757500065.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1012}
+→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1015}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
@@ -117,12 +117,12 @@ GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
       "build": "dev"
     }
   },
-  "ModifyIndex": 1007
+  "ModifyIndex": 1010
 }
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1009}
+→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1012}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/cameras/1?namespace=default
@@ -143,14 +143,14 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1011
+  "ModifyIndex": 1014
 }
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1010}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1013}
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1010
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1013
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1013}
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1016}

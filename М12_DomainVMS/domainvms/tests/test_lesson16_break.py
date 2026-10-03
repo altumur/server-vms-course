@@ -746,3 +746,108 @@ def test_a_camera_clock_that_runs_fast_or_a_first_request_that_travelled_long_lo
         assert max(abs(e) for e in errors) <= late + 0.01, (case, max(errors), min(errors))
         assert max(abs(e) for e in errors[-500:]) <= OFFSET_HOLD + 0.05, case          # …and it does not grow
         assert ingest.cams[SERIAL].clock_steps >= 1, case
+
+
+# -- the product's DZ, checked in the course --------------------------------------------------------------------------
+def _travelled(delay, line: bool, seconds: float = 180.0):
+    """A camera pushing ten frames a second (`line`: the course's pusher, its clock on its line; not: a camera that states
+    its raw clock and stamps its frames by it, fifty a second, its own requests) whose every request — poll, push, upload
+    — takes `delay(name, t) -> (there, back)`: the ingest's clock moves on by `there` before the request is served and by
+    `back` before the camera hears the answer. Returns the ingest and the writer, and when each frame was captured."""
+    wall = Clock(1000.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    w, captured, n, last = _Writer(ingest), {}, 0, wall()
+    if line:
+        real = pusher.dial
+
+        class Slow:
+            def __init__(self, ing):
+                self.ing = ing
+
+            def __getattr__(self, name):
+                fn = getattr(self.ing, name)
+                if name not in ("poll", "push", "upload", "answer_ask"):
+                    return fn
+
+                def call(*a, **kw):
+                    there, back = delay(name, wall() - 1000)
+                    wall.advance(there)
+                    try:
+                        return fn(*a, **kw)
+                    finally:
+                        wall.advance(back)
+                return call
+        pusher.dial = lambda url: Slow(real(url))
+        while wall() < 1000 + seconds:
+            frames = []
+            while last + 0.1 <= wall():
+                last, n = last + 0.1, n + 1
+                captured[n] = last
+                frames.append({"t": last, "key": n % 20 == 1, "n": n})
+            pusher.pass_once(frames)
+            wall.advance(0.1)
+        return ingest, w, captured
+    token, k, pending = _token(ingest, pusher), 0, []
+    while wall() < 1000 + seconds:
+        while last + 0.02 <= wall():
+            last, n = last + 0.02, n + 1
+            captured[n] = last
+            pending.append({"t": last, "key": n % 25 == 1, "n": n})
+        name, sent = ("poll" if k % 10 == 0 else "push"), wall()
+        there, back = delay(name, sent - 1000)
+        wall.advance(there)
+        if name == "poll":
+            ingest.poll(token, SERIAL, camera_now=sent)
+        else:
+            ingest.push(token, SERIAL, pending, camera_now=sent)
+            pending = []
+        wall.advance(back + 0.1)
+        k += 1
+    return ingest, w, captured
+
+
+def test_a_request_that_travelled_long_is_not_a_step_of_the_cameras_clock_and_loses_no_frame():
+    """The product's DZ ("a network delay of 1–3 s gave false steps of the camera's clock back"), checked in the course by
+    measurement. Bursts of 1–3 s on every request, both ways, shorter than `OFFSET_RISE`, moved nothing here before either:
+    a rise waits for every request of half a minute. But ONE request that took longer than `CLOCK_STEP` on its way was a
+    move up taken at once: its frames landed that much late, the next quick request took the offset back down at once, and
+    the frames of the seconds after it were not newer than `have` — dropped, counted nowhere (a push of 5.5 s: 54 of 1800
+    frames, 2 `clock_steps`; of 40 s: 399). No rise is taken at once now (`RISE_REQUESTS`, `OFFSET_RISE`): a poll or a push
+    of 5.5 to 40 s on its way, the camera on its line or stating its raw clock, moves no offset and puts every frame once
+    where it was captured. And a first pass whose requests all travelled eight seconds — its frames put eight seconds late
+    — is slewed back (`_firm`), not jumped: none lost."""
+    import random
+
+    def once(d, kind):
+        rnd, done = random.Random(2), [False]
+
+        def delay(name, t):
+            x = rnd.uniform(0.0, 0.05)
+            if name == kind and not done[0] and t > 60.0:
+                done[0], x = True, d
+            return x, 0.0                                              # all of it on the way there: what moves the offset
+        return delay
+
+    def burst(a, b):
+        rnd = random.Random(1)
+
+        def delay(name, t):
+            d = rnd.uniform(1.0, 3.0) if a <= t < b else rnd.uniform(0.0, 0.05)
+            return d / 2, d / 2
+        return delay
+    for line in (True, False):
+        for kind, d in (("push", 5.5), ("push", 12.0), ("push", 40.0), ("poll", 12.0)):
+            ingest, w, captured = _travelled(once(d, kind), line)
+            got = [f["n"] for f in w.passes[0]]
+            assert ingest.cams[SERIAL].clock_steps == 0, (line, kind, d)
+            assert got == sorted(set(got)) and w.repeats == 0, (line, kind, d)
+            # (a stall of 40 s outruns the pusher's memory: what it cut is said in `cut_s` — the card's and backfill's)
+            assert (line and d == 40.0) or got == list(range(1, max(got) + 1)), (line, kind, d, max(got) - len(got))
+            assert max(abs(f["t"] - captured[f["n"]]) for f in w.passes[0]) < 0.06, (line, kind, d)
+        ingest, w, captured = _travelled(burst(60.0, 85.0), line)          # 25 s of 1–3 s, both ways
+        assert ingest.cams[SERIAL].clock_steps == 0 and w.repeats == 0, line
+        assert max(abs(f["t"] - captured[f["n"]]) for f in w.passes[0]) < 0.06, line
+        ingest, w, captured = _travelled(lambda name, t: (8.0, 0.0) if t < 16.5 else (0.01, 0.0), line, 120.0)
+        got = [f["n"] for f in w.passes[0]]
+        assert got == list(range(1, max(got) + 1)) and w.repeats == 0, (line, max(got) - len(got))
+        assert ingest.cams[SERIAL].clock_steps == 1, line                  # the first pass's travel, slewed back

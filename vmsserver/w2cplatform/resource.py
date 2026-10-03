@@ -20,11 +20,21 @@ a server's disks and nothing about what it means:
                                        look, never the events; one held request per `client` (`longpoll.py`)
     PUT  <url>/mirror/<server>/<path>  another resource leaves a copy of one of ITS closed buckets here
 
+    platform/doors/<server>                 {url, since}: where this server's resource answers — a row in the store,
+                                            said at start and whenever the address changes (`say_door`)
+    GET    <url>/v1/objects?prefix=&scope=local|cluster   the objects this server holds, or every server's (the doors):
+                                       `{server, objects: {key: {written, server, size}}, missing: [server]}`
+    GET    <url>/v1/objects/<key>?scope=local|cluster     one object; the freshest copy by `written` (headers
+                                       `X-Written`, `X-Server`; `X-Missing` names the doors that did not answer)
+    PUT    <url>/v1/objects/<sub>/blobs/sha256-…          a peer leaves a copy of a blob here, verified before stored
+    DELETE <url>/v1/objects/<sub>/blobs/sha256-…?scope=   a blob let go here, or on every server (the sweep); blobs only
+
 The policy pass runs on a timer: retain each subsystem's buckets by its
 policy; relieve the disk if it is over the high mark — the resource measures
 and says how many bytes to free, each subsystem decides what to give up;
 mirror closed buckets to the next live resource(s) after this one
-in sorted order — nobody assigns peers, the rule is the assignment; and any
+in sorted order — nobody assigns peers, the rule is the assignment; copy
+this server's blobs to the same peers (`mirror_blobs`); and any
 subsystem-specific pass a subsystem registered (the VMS registers none: its
 footage is in volumes of ObjectStorage, not on this tree). `restore` is the reverse of mirror, run by
 the owner at start: a server back with an empty disk pulls its buckets
@@ -57,6 +67,8 @@ home. No controller is involved in any of it.
 #   data.
 # - `MIRROR_KEY = "platform/mirror"` — the Variable `{enabled, copies}`.
 # - `RESOURCES = "platform/resources"` — the object-store prefix for resource heartbeats.
+# - `DOORS = "platform/doors"` — the store rows `platform/doors/<server> {url, since}`: where each resource answers for
+#   its server's objects (`say_door`, `doors`); `/v1/objects?scope=cluster` asks every door it names.
 #
 # ### `__init__(self, root, server, url, vars_, objects, bucket_seconds=600, wall=time.time, peers=None,
 # lost_after=45.0)` `root` is the tree (created), `server` the name that goes into heartbeats and peer
@@ -73,9 +85,11 @@ home. No controller is involved in any of it.
 # ================================================================================================
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
+import re
 import shutil
 import threading
 import time
@@ -105,6 +119,54 @@ EVENTS_INFLIGHT = 8         # `/events` answered at once by one resource; past i
 MIRROR_KEY = "platform/mirror"
 SPACE_KEY = "platform/space"
 RESOURCES = "platform/resources"
+
+# THE OBJECTS OF A CLUSTER ARE FILES ON EVERY SERVER (the owner's decision of 3 October: the cluster without an
+# orchestrator). Each process writes its objects into its own server's directory; this door answers what is here
+# (`scope=local`) and what every server holds (`scope=cluster`, the union, the freshest copy of a key by `written`).
+# Who the other servers are is a row each resource writes in the store — `platform/doors/<server> {url, since}` —
+# because the heartbeats that would say it are objects themselves, behind these very doors.
+DOORS = "platform/doors"
+DOORS_FRESH = 10.0           # seconds the doors read from the store are used before they are read again
+OBJECT_MAX = 64 << 20        # the largest object one `/v1/objects` read or blob `PUT` moves: a blob is a mask or a model
+OBJECTS_TIMEOUT = 2.0        # what a peer has to answer a read of the cluster's objects; its silence is named, not waited out
+PEER_REST = 10.0             # a peer that did not answer is not asked again for this long — named `missing` meanwhile
+SCOPES = ("local", "cluster")
+_BLOB_KEY = re.compile(r"^(?:[^/]+/)+blobs/sha256-[0-9a-f]{64}$")
+
+
+# A blob's key: `<sub>/blobs/sha256-<hex>` — the one kind of object a peer may put here, or a sweep delete: immutable,
+# named by its bytes, so any copy that hashes to its name is the object (`blobs.py`).
+def is_blob_key(key: str) -> bool:
+    return isinstance(key, str) and safe_rel(key) and bool(_BLOB_KEY.match(key))
+
+
+# The store of THIS server's files: a cluster store's `local`, or the store itself (a box's `FsObjectStore`).
+def local_store(objects):
+    return getattr(objects, "local", objects)
+
+
+# `(written, size)` of one object here, or `None`. A store of files says its mtime (`FsObjectStore.stat`); one that
+# cannot (a shared store in a test) says the length and `0` for when — nobody's copy is fresher than another's there.
+def _stat(store, key: str) -> tuple[float, int] | None:
+    stat = getattr(store, "stat", None)
+    if stat is not None:
+        return stat(key)
+    data = store.get(key)
+    return None if data is None else (0.0, len(data))
+
+
+# A prefix of keys, as a request names it: `""`, or segments that are each one name with the last possibly empty
+# (`vms/heartbeats/`) or a name's beginning (`vms/heartbeats/w-`). Nothing absolute, no `..`.
+def _safe_prefix(prefix: str) -> bool:
+    if prefix == "":
+        return True
+    parts = prefix.split("/")
+    return not prefix.startswith("/") and all(safe_segment(p) for p in parts[:-1]) \
+        and (parts[-1] == "" or safe_segment(parts[-1]))
+
+
+DOOR_ROWS = Table("door", "that server's objects are not asked for until it is mended", "row of a door")
+PEER_OBJECTS = Table("peer_object", "that object of the peer is left out of the cluster's listing", "entry of a peer's objects")
 
 
 # The disk under `root`, not the tree on it: `f_bavail` and not `f_bfree`, because reserved blocks are not
@@ -529,6 +591,50 @@ class PeerClient:
             raise IOError(f"GET mirror {path}: {got} of {want} bytes")
         return got
 
+    # -- another server's objects (`/v1/objects`, always `scope=local`: a peer answers for itself, never for others) --
+    # `GET <url>/v1/objects?prefix=…` — `{key: {written, server, size}}` of what that server holds. Only a 200 is a
+    # listing, whole (`_whole`), and only a map is one.
+    def objects(self, url: str, prefix: str, timeout: float | None = None) -> dict:
+        q = urllib.parse.urlencode({"prefix": prefix, "scope": "local"})
+        with urllib.request.urlopen(f"{url}/v1/objects?{q}", timeout=timeout or self.timeout) as r:
+            _ok(r, "GET /v1/objects")
+            d = json.loads(_whole(r, "GET /v1/objects", LISTING_MAX))
+        objs = d.get("objects") if isinstance(d, dict) else None
+        if not isinstance(objs, dict):
+            raise IOError(f"GET /v1/objects at {url}: the answer is not a listing of objects")
+        return objs
+
+    # `GET <url>/v1/objects/<key>` — `(bytes, written, server)`, or `None` when that server has no such object.
+    def object(self, url: str, key: str, timeout: float | None = None) -> tuple[bytes, float, str] | None:
+        import urllib.error
+        try:
+            with urllib.request.urlopen(f"{url}/v1/objects/{urllib.parse.quote(key)}?scope=local",
+                                        timeout=timeout or self.timeout) as r:
+                _ok(r, f"GET {key}")
+                data = _whole(r, f"GET {key}", OBJECT_MAX)
+                return data, finite(r.headers.get("X-Written", "")), str(r.headers.get("X-Server", ""))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            raise
+
+    # `PUT <url>/v1/objects/<sub>/blobs/sha256-…` — a copy of one of this server's blobs; the peer hashes it before it
+    # keeps it. Anything but 204 is an `IOError` (a refusal raises from `urlopen` already).
+    def put_blob(self, url: str, key: str, data: bytes) -> None:
+        req = urllib.request.Request(f"{url}/v1/objects/{urllib.parse.quote(key)}", data=data, method="PUT",
+                                     headers={"Content-Type": "application/octet-stream"})
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            if r.status != 204:
+                raise IOError(f"PUT {key}: {r.status}, not a 204")
+
+    # `DELETE <url>/v1/objects/<key>?scope=local` — the peer lets its copy of a blob go; `True` if it had one.
+    def delete_object(self, url: str, key: str, timeout: float | None = None) -> bool:
+        req = urllib.request.Request(f"{url}/v1/objects/{urllib.parse.quote(key)}?scope=local", method="DELETE")
+        with urllib.request.urlopen(req, timeout=timeout or self.timeout) as r:
+            _ok(r, f"DELETE {key}")
+            d = json.loads(_whole(r, f"DELETE {key}", LISTING_MAX))
+        return isinstance(d, dict) and isinstance(d.get("deleted"), dict) and any(d["deleted"].values())
+
 
 # A subsystem's hook is called with what it takes of the optional words, and nothing it does not: `volume` (the
 # disk that is short — older hooks do not take one) and `progressed` (the pass's pulse: a hook that works for
@@ -621,6 +727,15 @@ class Resource:
         # the slots above — a held request does nothing for thirty seconds, and must neither take a query's slot nor
         # be without a ceiling of its own. It costs nothing until somebody waits: no thread, no stat.
         self.watch = Watch(self.volumes.values(), bucket_seconds, wall)
+        # The cluster's objects (`/v1/objects`): the address this process said in `platform/doors/<server>`, the doors
+        # as last read, the peers left alone for a while after they did not answer, and the blobs a peer did not take.
+        self._door_said = ""
+        self._door_refused = False                 # said once in the log while the store refuses the row
+        self._doors: tuple[float, dict] | None = None
+        self._peer_rest: dict[str, float] = {}     # server -> by `clock`, until when it is not asked (`_fan_out`)
+        self._peers_silent: set[str] = set()       # the peers that did not answer when last asked: logged once a spell
+        self.blobs_failed = 0
+        self.blob_peers_failed: list[str] = []
         for path in self.volumes.values():
             os.makedirs(path, exist_ok=True)
 
@@ -784,11 +899,277 @@ class Resource:
               **({"mirror": {"failed": self.mirror_failed, "too_big": self.mirror_too_big,
                              "peers_failed": self.mirror_peers_failed}}
                  if self.mirror_failed or self.mirror_too_big else {}),
+              # …and the blobs' copies the same way (`mirror_blobs`): what peers did not take, since start
+              **({"blobs": {"failed": self.blobs_failed, "peers_failed": self.blob_peers_failed}}
+                 if self.blobs_failed else {}),
               "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
                           for r in self.volumes.values() for s in mirrored_servers(r)}}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
         self._last_heartbeat = hb
+        self.say_door()
         return hb
+
+    # -- the cluster's objects ------------------------------------------------------------
+    # `platform/doors/<server> {url, since}` — where this resource answers, for the other resources that read every
+    # server's objects (`doors`). Said by the first heartbeat of the process, and again whenever the address differs
+    # from what the row says: one read at start, nothing after. `since` is when this address was first said. A store
+    # that refuses the row (a grant missing) or does not answer is not the heartbeat's trouble: said once in the log,
+    # asked again by the next heartbeat; meanwhile the other servers do not find this one's objects.
+    def say_door(self) -> bool:
+        if not self.url or self._door_said == self.url:
+            return False
+        key = f"{DOORS}/{self.server}"
+        try:
+            items, _ = self.vars.get(key)
+            if not items or items.get("url") != self.url:
+                self.vars.put(key, {"url": self.url, "since": str(self.wall())})
+        except Exception as e:                               # noqa: BLE001 — the door unsaid is not the heartbeat unsent
+            if not self._door_refused:
+                self._door_refused = True
+                log.error("%s: could not say where this resource answers (%s: %s): the other servers do not find its "
+                          "objects until it is said — asked again with every heartbeat", self.server, key, e)
+            return False
+        self._door_said, self._door_refused = self.url, False
+        return True
+
+    # `{server: url}` of every OTHER resource that said its door, read from the store at most every `DOORS_FRESH`
+    # seconds. A row that is not a door (`url` not an http address, a server that is not a name) is left out and
+    # counted once (`DOOR_ROWS`): that server's objects are missing from the cluster's answers, the others' are not.
+    def doors(self) -> dict[str, str]:
+        now = self.clock()
+        if self._doors is not None and now - self._doors[0] < DOORS_FRESH:
+            return self._doors[1]
+        out = {}
+        for path in self.vars.list(DOORS + "/"):
+            server = path[len(DOORS) + 1:]
+            if server == self.server:
+                continue
+            items, _ = self.vars.get(path)
+
+            def url(items=items, server=server) -> str:
+                u = (items or {}).get("url")
+                if not safe_segment(server) or not isinstance(u, str) or not u.startswith(("http://", "https://")):
+                    raise ValueError(f"not a door: {items!r}")
+                return u.rstrip("/")
+            u = DOOR_ROWS.read(path, url)
+            if u:
+                out[server] = u
+        self._doors = (now, out)
+        return out
+
+    # `call(url)` on every other door AT ONCE, each within `OBJECTS_TIMEOUT`: `({server: answer}, [missing])`. A peer
+    # that does not answer — down, refused, a body that does not parse — is MISSING, named to the caller, and not asked
+    # again for `PEER_REST` seconds (named meanwhile): a server gone costs one timeout per spell, not one per read. Its
+    # silence is logged when it starts and when it ends, not on every read.
+    def _fan_out(self, call, servers: dict[str, str] | None = None) -> tuple[dict, list[str]]:
+        doors = self.doors() if servers is None else servers
+        now, results, missing = self.clock(), {}, []
+        asked = {s: u for s, u in doors.items() if self._peer_rest.get(s, 0.0) <= now}
+        missing += [s for s in doors if s not in asked]
+
+        def one(s, u):
+            try:
+                results[s] = (True, call(u))
+            except Exception as e:                           # noqa: BLE001 — that peer's trouble, not the answer's
+                results[s] = (False, e)
+        threads = [threading.Thread(target=one, args=(s, u), daemon=True) for s, u in asked.items()]
+        for t in threads:
+            t.start()
+        deadline = time.monotonic() + 2 * OBJECTS_TIMEOUT + 1.0
+        for t in threads:
+            t.join(max(0.0, deadline - time.monotonic()))
+        out = {}
+        for s in asked:
+            ok, value = results.get(s, (False, TimeoutError(f"no answer in {2 * OBJECTS_TIMEOUT + 1.0:.0f} s")))
+            if ok:
+                out[s] = value
+                if s in self._peers_silent:
+                    self._peers_silent.discard(s)
+                    log.warning("%s: %s answers for its objects again", self.server, s)
+                continue
+            missing.append(s)
+            self._peer_rest[s] = self.clock() + PEER_REST
+            if s not in self._peers_silent:
+                self._peers_silent.add(s)
+                log.warning("%s: %s did not answer for its objects (%s): left out of the cluster's answers, asked again "
+                            "in %.0f s", self.server, s, value, PEER_REST)
+        return out, sorted(missing)
+
+    # What this server holds under `prefix` — `{key: {written, server, size}}` — or, `scope=cluster`, every server's:
+    # the union, and for a key on several servers the copy written last (`written`; a blob's copies are one object).
+    # Returns `(objects, missing)`: the doors that did not answer, named. A peer's entry that is not one (a `written`
+    # that is not a finite number) is left out and counted once (`PEER_OBJECTS`).
+    def objects_listing(self, prefix: str, scope: str = "local") -> tuple[dict, list[str]]:
+        local = local_store(self.objects)
+        out = {}
+        for key in local.list(prefix):
+            st = _stat(local, key)
+            if st is not None:
+                out[key] = {"written": st[0], "server": self.server, "size": st[1]}
+        if scope != "cluster":
+            return out, []
+        answers, missing = self._fan_out(lambda u: self.peers.objects(u, prefix, OBJECTS_TIMEOUT))
+        for server, objs in sorted(answers.items()):
+            for key, e in objs.items():
+                def entry(e=e, server=server) -> dict:
+                    return {"written": finite(e["written"]), "server": server, "size": int(finite(e.get("size", 0)))}
+                got = PEER_OBJECTS.read(f"platform/objects/{server}#{key}", entry)
+                if got is None or not isinstance(key, str) or not key.startswith(prefix):
+                    continue
+                if key not in out or got["written"] > out[key]["written"]:
+                    out[key] = got
+        return out, missing
+
+    # One object: `((bytes, written, server) | None, missing)`. Here, `scope=local`; `scope=cluster` — the freshest copy
+    # among every server's, by `written`. A BLOB is one object wherever it is, so it is taken from the first copy that
+    # hashes to its name — this server's first, then each peer's in turn — and a copy that does not is refused,
+    # logged, and the next one asked (`blobs.verify`; the reader checks again).
+    def object_read(self, key: str, scope: str = "local") -> tuple[tuple[bytes, float, str] | None, list[str]]:
+        from .blobs import BlobMismatch, verify
+        local = local_store(self.objects)
+        mine = None
+        st = _stat(local, key)
+        if st is not None:
+            data = local.get(key)
+            if data is not None:
+                mine = (data, st[0], self.server)
+        if scope != "cluster":
+            return mine, []
+        blob = is_blob_key(key)
+        digest_ = key.rsplit("/", 1)[1] if blob else ""
+        if blob and mine is not None:
+            try:
+                verify(digest_, mine[0])
+                return mine, []
+            except BlobMismatch as e:
+                log.error("%s: this server's copy of %s is not the blob (%s): asked of the others", self.server, key, e)
+                mine = None
+        if blob:                                             # one copy is enough: the peers in turn, not all at once
+            missing = []
+            for server, url in sorted(self.doors().items()):
+                got, gone = self._fan_out(lambda u: self.peers.object(u, key, OBJECTS_TIMEOUT), {server: url})
+                missing += gone
+                copy = got.get(server)
+                if copy is None:
+                    continue
+                try:
+                    verify(digest_, copy[0])
+                except BlobMismatch as e:
+                    log.error("%s: %s's copy of %s is not the blob (%s): refused, asked of the next", self.server,
+                              server, key, e)
+                    continue
+                return (copy[0], copy[1], server), missing
+            return None, missing
+        got, missing = self._fan_out(lambda u: self.peers.object(u, key, OBJECTS_TIMEOUT))
+        best = mine
+        for server, copy in sorted(got.items()):
+            if copy is not None and (best is None or copy[1] > best[1]):
+                best = (copy[0], copy[1], server)
+        return best, missing
+
+    # A blob let go: here, and `scope=cluster` on every other server that answers (the sweep, `SpecController.sweep_blobs`
+    # through `ClusterObjectStore.delete`). `({server: had it}, missing)` — a server that did not answer keeps its copy,
+    # and the next sweep finds it again in the cluster's listing: an orphan, swept then.
+    def object_delete(self, key: str, scope: str = "local") -> tuple[dict[str, bool], list[str]]:
+        if not is_blob_key(key):
+            raise ValueError(f"{key}: only a blob is deleted through this door")
+        deleted = {self.server: bool(local_store(self.objects).delete(key))}
+        if scope != "cluster":
+            return deleted, []
+        got, missing = self._fan_out(lambda u: self.peers.delete_object(u, key, OBJECTS_TIMEOUT))
+        deleted.update({s: bool(v) for s, v in got.items()})
+        return deleted, missing
+
+    # A peer's copy of a blob, from a request's body: `n` bytes into a file beside the object, HASHED AS THEY COME, and
+    # kept only if they hash to the key's digest — a copy that does not is refused and leaves nothing (`BlobMismatch`):
+    # a peer's disk that rotted, or a door that cut the body, does not become this server's blob. A body that ends short
+    # is an `EOFError`; a late one raises what the door's deadline raises.
+    def take_blob(self, key: str, rfile, n: int) -> None:
+        import tempfile
+        from .blobs import BlobMismatch
+        from .events import durable_dir, durably
+        if not is_blob_key(key):
+            raise ValueError(f"{key}: only a blob is put here")
+        local = local_store(self.objects)
+        p = getattr(local, "_p", None)
+        if p is None:
+            raise ValueError("this server's objects are not files: nothing to put a copy into")
+        dest = p(key)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(dest), prefix=os.path.basename(dest) + ".", suffix=".tmp")
+        try:
+            h, left = hashlib.sha256(), n
+            with os.fdopen(fd, "wb") as f:
+                while left > 0:
+                    part = rfile.read(min(left, PIECE))
+                    if not part:
+                        raise EOFError(f"{key}: the body ended {left} bytes short of {n}")
+                    h.update(part); f.write(part); left -= len(part)
+                actual = f"sha256-{h.hexdigest()}"
+                if actual != key.rsplit("/", 1)[1]:
+                    raise BlobMismatch(f"{key}: the bytes sent hash to {actual} — not stored")
+                f.flush(); durably(f)
+            os.replace(tmp, dest)
+            durable_dir(os.path.dirname(dest))
+        finally:
+            with suppress(FileNotFoundError):
+                os.remove(tmp)
+
+    # THE BLOBS GO TO THE PEERS THE BUCKETS GO TO (the owner's decision of 3 October). A blob is the one object that
+    # must not be lost — a mask, a model: the row names its digest, and nothing writes it again — while every other
+    # object is written again within a pass. So each blob this server holds is copied to the next `copies` live
+    # resources on the ring the events mirror uses (`peers_of`, `platform/mirror {copies}`), each peer asked first what
+    # it holds. NOT behind the knob's `enabled`: the knob is about buckets, and a blob on one disk is a unit that does
+    # not start when that disk goes. A store that is not files on this server (Variables, S3, a test's shared store)
+    # has one copy for everybody — nothing to mirror. The same rules as `mirror`: a peer that does not list is left
+    # for this pass, `PEER_FAILS` refusals in a row too; what was not copied goes on a later pass — the peer's listing
+    # still lacks it. Returns `{mirrored, peers[, peers_failed]}`.
+    def mirror_blobs(self) -> dict:
+        local = local_store(self.objects)
+        if not callable(getattr(local, "stat", None)):
+            return {"mirrored": 0, "peers": []}
+        blobs = [k for k in local.list("") if is_blob_key(k)]
+        put_blob = getattr(self.peers, "put_blob", None)
+        if not blobs or put_blob is None:
+            return {"mirrored": 0, "peers": []}
+        live = {s: hb for s, hb in self.live_resources().items() if hb.get("url")}
+        peers = peers_of(self.server, list(live), mirror_settings(self.vars)["copies"])
+        n, failed = 0, []
+        for peer in peers:
+            url = live[peer]["url"]
+            try:
+                have = set()
+                for prefix in sorted({k.rsplit("/", 1)[0] + "/" for k in blobs}):
+                    have |= set(self.peers.objects(url, prefix))
+            except Exception as e:                           # noqa: BLE001
+                self.blobs_failed += 1
+                failed.append(peer)
+                log.warning("%s: %s did not say which blobs it holds (%s): none copied to it this pass", self.server, peer, e)
+                continue
+            self._progressed()
+            fails = 0
+            for key in blobs:
+                if key in have:
+                    continue
+                if fails >= PEER_FAILS:
+                    break
+                data = local.get(key)
+                if data is None:
+                    continue                                 # swept between the walk and here
+                try:
+                    put_blob(url, key, data)
+                except Exception as e:                       # noqa: BLE001
+                    fails += 1
+                    self.blobs_failed += 1
+                    log.warning("%s: %s did not take %s (%s)", self.server, peer, key, e)
+                    if fails == PEER_FAILS:
+                        failed.append(peer)
+                    continue
+                fails = 0
+                n += 1
+                self._progressed()
+        self.blob_peers_failed = failed
+        return {"mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
 
     # `resources_seen` filtered to heartbeats younger than `lost_after`.
     def live_resources(self) -> dict[str, dict]:
@@ -1295,6 +1676,7 @@ class Resource:
         part("usage", measure, "usage")
         part("relieve", self.relieve)
         part("mirror", self.mirror)
+        part("blobs", self.mirror_blobs, "blobs")
         if errors:
             out["errors"] = errors
         return out
@@ -1320,6 +1702,13 @@ class Resource:
 #         - `PUT /mirror/<server>/<path>` — another resource leaves a copy of one of its closed buckets. 400
 #       if `..`, empty server, or not `.events.jsonl`; writes to `.mirror/<server>/<path>` via tmp + rename
 #       (a copy appears whole or not at all); 204. Any other PUT is 404.
+# - `/v1/objects` (the cluster's objects, `objects_listing` / `object_read` / `take_blob` / `object_delete`):
+#   - `GET /v1/objects?prefix=&scope=local|cluster` — `{server, objects: {key: {written, server, size}}[, missing]}`.
+#   - `GET /v1/objects/<key>?scope=…` — the bytes, `X-Written`, `X-Server` (and `X-Missing`); 404 when nobody has it.
+#   - `PUT /v1/objects/<sub>/blobs/sha256-…` — a peer's copy of a blob, hashed before it is kept: 204; 400 when the
+#     bytes are not the blob; 405 for anything that is not a blob; 413 past `OBJECT_MAX`.
+#   - `DELETE /v1/objects/<sub>/blobs/sha256-…?scope=…` — `{deleted: {server: bool}[, missing]}`; 405 if not a blob.
+#   - a scope, key, prefix or length that does not say what it means: 400 with the reason in words.
 def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=None, extra_put=None) -> ThreadingHTTPServer:
     """The resource over HTTP. `extra(path) -> (status, bytes) | None` lets a
     subsystem add its own reads, and `extra_put(path, headers, rfile)` its
@@ -1342,7 +1731,100 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             for k, v in headers: self.send_header(k, v)
             self.end_headers(); self.wfile.write(body)
 
+        # -- the cluster's objects (`/v1/objects`) -------------------------------------------------------------------
+        # A request that does not say what it means is answered 400 with the reason in words, never a stack trace and
+        # never a guess: a scope that is neither `local` nor `cluster`, a key or a prefix that is not one (`..`, a
+        # leading `/`), a length that is not a number.
+        def _json(self, status, body, headers=()):
+            return self._raw(status, json.dumps(body).encode(), [("Content-Type", "application/json"), *headers])
+
+        def _v1(self):
+            """`(key | None, scope, prefix)` of a `/v1/objects` request, or `None` when it was answered (400) here."""
+            path, _, query = self.path.partition("?")
+            q = {k: v[0] for k, v in urllib.parse.parse_qs(query, keep_blank_values=True).items()}
+            scope = q.get("scope", "local")
+            if scope not in SCOPES:
+                self._json(400, {"error": f"scope is 'local' (this server's objects) or 'cluster' (every server's), "
+                                          f"not {scope!r}"})
+                return None
+            if path == "/v1/objects":
+                prefix = q.get("prefix", "")
+                if not _safe_prefix(prefix):
+                    self._json(400, {"error": f"prefix {prefix!r} is not the beginning of a key: names separated by "
+                                              f"'/', nothing absolute, no '..'"})
+                    return None
+                return None, scope, prefix
+            key = urllib.parse.unquote(path[len("/v1/objects/"):])
+            if not safe_rel(key):
+                self._json(400, {"error": f"{key!r} is not a key: names separated by '/', nothing absolute, no '..'"})
+                return None
+            return key, scope, ""
+
+        def _objects_get(self):
+            asked = self._v1()
+            if asked is None:
+                return None
+            key, scope, prefix = asked
+            if key is None:
+                objs, missing = resource.objects_listing(prefix, scope)
+                return self._json(200, {"server": resource.server, "objects": objs,
+                                        **({"missing": missing} if scope == "cluster" else {})})
+            got, missing = resource.object_read(key, scope)
+            gone = [("X-Missing", ",".join(missing))] if missing else []
+            if got is None:
+                return self._json(404, {"error": f"no object {key} on {'any server that answered' if scope == 'cluster' else resource.server}",
+                                        **({"missing": missing} if missing else {})}, gone)
+            data, written, server = got
+            return self._raw(200, data, [("Content-Type", "application/octet-stream"), ("X-Written", repr(float(written))),
+                                         ("X-Server", server), *gone])
+
+        def do_DELETE(self):
+            if not (self.path.startswith("/v1/objects/")):
+                return self._raw(404, b"")
+            asked = self._v1()
+            if asked is None:
+                return None
+            key, scope, _ = asked
+            if not is_blob_key(key):
+                return self._json(405, {"error": f"{key} is not a blob: only a blob (<sub>/blobs/sha256-…) is deleted "
+                                                 f"through this door — every other object is written again by its writer"})
+            deleted, missing = resource.object_delete(key, scope)
+            return self._json(200, {"deleted": deleted, **({"missing": missing} if missing else {})})
+
+        def _objects_put(self):
+            asked = self._v1()
+            if asked is None:
+                return None
+            key, _, _ = asked
+            if key is None or not is_blob_key(key):
+                return self._json(405, {"error": f"{key} is not a blob: a peer puts only a blob (<sub>/blobs/sha256-…) "
+                                                 f"here — every other object is written by its own writer on its own server"})
+            raw = self.headers.get("Content-Length")
+            try:
+                n = int(raw)
+            except (TypeError, ValueError):
+                self.close_connection = True
+                return self._json(400, {"error": f"Content-Length {raw!r} is not a number of bytes"})
+            if n < 0 or n > OBJECT_MAX:
+                self.close_connection = True
+                return self._json(413, {"error": f"{n} bytes: a copy of a blob here is at most {OBJECT_MAX}"})
+            from .blobs import BlobMismatch
+            body_deadline(self, n)
+            try:
+                resource.take_blob(key, self.rfile, n)
+            except BlobMismatch as e:
+                return self._json(400, {"error": f"{e}: the copy is refused, this server keeps what it had"})
+            except EOFError as e:
+                self.close_connection = True
+                return self._json(400, {"error": str(e)})
+            except (TimeoutError, OSError) as e:
+                self.close_connection = True
+                return self._json(408, {"error": f"the body did not arrive in time ({e})"})
+            return self._raw(204, b"")
+
         def do_GET(self):
+            if self.path == "/v1/objects" or self.path.startswith(("/v1/objects?", "/v1/objects/")):
+                return self._objects_get()
             if self.path.startswith("/buckets/"):
                 _, _, sub, unit = (self.path.split("/", 3) + [""])[:4]
                 if not (safe_segment(sub) and safe_segment(unit)):     # a name, not a way out of the tree (`doors`)
@@ -1444,6 +1926,8 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
         # for every door that reads a body. A trickle is let go at the grace; a copy at the rate the deadline assumed is
         # not touched. What a holder of the door's share must now SEND is `BODY_RATE` a connection.
         def do_PUT(self):
+            if self.path.startswith("/v1/objects/"):
+                return self._objects_put()
             try:
                 n = int(self.headers.get("Content-Length", 0))
             except ValueError:

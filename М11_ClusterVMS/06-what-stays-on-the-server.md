@@ -54,9 +54,9 @@
 
 ```
 # console
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1005
+PUT /v1/var/vms/cameras/1?namespace=default&cas=1008
 {"Items": {..., "revision": "2", "name": "edited during the failover", ...}}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1011}
+→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1014}
 ```
 
 Консоль ответила оператору только после того, как raft принял запись. Правка уже на всех трёх серверах — на двух живых и в журнале, который `srv-a` догонит, когда вернётся.
@@ -65,11 +65,11 @@ Nomad поднимает замену на `srv-b`. Она берёт слот `
 
 ```
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/slots/w-1?namespace=default&cas=1006
-→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1012}
+PUT /v1/var/vms/slots/w-1?namespace=default&cas=1009
+→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1015}
 
 GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1009}
+→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1012}
 
 GET /v1/var/vms/cameras/1?namespace=default
 → 200 {"Path": "vms/cameras/1", "Items": {..., "revision": "2", "name": "edited during the failover", ...}, ...}
@@ -78,8 +78,8 @@ GET /v1/var/vms/cameras/1?namespace=default
 И берёт эпоху — следующую:
 
 ```
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1010
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1013}
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1013
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1016}
 ```
 
 Камера запущена с новым именем. Для этого не понадобилось ничего опубликовать, никуда скопировать, ничего восстановить. Тест заканчивается строкой, которую стоит прочитать дважды:
