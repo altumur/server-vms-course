@@ -391,3 +391,165 @@ def test_an_engine_answer_this_build_cannot_read_is_a_wrong_volume_and_not_a_cra
     for e in (KeyError("writer"), OverflowError("cannot convert float infinity to integer"), TypeError("list")):
         got = classify(e)
         assert isinstance(got, ArchiveError) and got.kind == "wrong" and "cannot read" in str(got), (e, got)
+
+
+# -- what the tenth round left beside its walks -----------------------------------------------------------------------
+BIG = "1" + "0" * 400                                                 # a JSON integer no float holds: `OverflowError`
+
+
+def test_a_moment_of_four_hundred_digits_in_a_request_is_that_requests_in_the_holder_and_the_recorder():
+    """`float()` of an integer of 400 digits raises `OverflowError`, which `(TypeError, ValueError)` does not catch. A
+    hand edit left one in a command's `at` and the holder's measure of the road raised out of `requests` — no command
+    behind it performed; in a backfill's `from` the recorder's `requests` raised the same way. Read by `finite` now: the
+    command is performed and its road not measured, the backfill is refused alone and the next one served."""
+    from tests.test_long_poll import _holder
+    box = Box()
+    holder, cid, dev, called = _holder(box)
+    holder.reconcile_once()
+    now = box.wall()
+    for rid in ("a", "b"):
+        box.vars.put(f"vms/requests/{rid}", {"unit": str(cid), "action": "output", "port": "1", "at": str(now),
+                                             "filed": str(now), "by": "auto/door", "valid_until": str(now + 30)})
+    _hand_edit(box, "vms/requests/a", "at", BIG)
+    _hand_edit(box, "vms/requests/a", "filed", BIG)
+    holder.requests()
+    assert holder.commands["performed"] == 2 and len(called) == 2
+    assert holder.road["auto"]["count"] == 1 and holder.request_road["auto"]["count"] == 1   # "b" alone is measured
+
+    from tests.test_backfill_bounds import NOW, _ours, _recorder
+    from vms.worker import FakeActuator
+    box, r, con_rec = _recorder(FakeActuator())
+    _ours(box, r, 1, ((NOW - 3600, NOW - 2400),))
+    for rid in ("1-a", "1-b"):
+        con_rec.vars.put(REC_SPEC.sub.request_key(rid), {"unit": "1", "cam": "1", "from": str(NOW - 30000),
+                                                         "to": str(NOW - 29700), "at": str(NOW), "by": "anna"})
+    _hand_edit(box, REC_SPEC.sub.request_key("1-a"), "from", BIG)
+    done = {d["request"]: d for d in r.requests(now=NOW)}
+    assert "not a range" in done["1-a"]["error"] and "error" not in done["1-b"]
+
+
+def test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_goes_on():
+    """`drain_bus` handed every posted line to `observe` bare: a driver's `occurred` of 400 digits raised `OverflowError`
+    past `float`'s `(TypeError, ValueError)`, a field `class` raised in `EventLog.append`, a value JSON cannot carry a
+    `TypeError` — out of the loop, and the lines after it, of any camera, and the dead cameras' `lost` were gone. Now a
+    moment that is no number is dropped and counted (`fields_garbled`), a line that cannot be written is dropped and
+    counted (`events_refused`, `vms_device_events_refused_total`), and the rest of the bus is written."""
+    from w2cplatform import rows
+    from w2cplatform.console import heartbeats
+    from w2cplatform.events import read_bucket
+    from vms.console import beat_lines
+    from vms.controller import VmsController
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    ctl = VmsController(box.vars, box.objects, wall=box.wall)
+    for i in (1, 2):
+        ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
+    ctl.assign("w-1", ["1", "2"])
+    act = FakeActuator()
+    w = VmsWorker("w-1", box.vars, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w.reconcile_once()
+    act.post(1, "io.input", port="1", occurred=int(BIG))              # a driver's integer of 400 digits
+    act.post(1, "io.input", port="2", occurred=float("nan"))          # …and `nan`, which `float` took for a time
+    act.post(1, "motion", **{"class": "alarm"})                        # a field `EventLog` refuses
+    act.post(2, "motion", region={1, 2})                               # a value JSON cannot carry
+    act.post(2, "io.input", port="3")                                  # …and the line after them all
+    act.dead.append(1)
+    w.drain_bus()
+    assert w.events_refused == 2
+    lines = {cid: read_bucket(w.observe(cid, "probe")) for cid in (1, 2)}
+    one = {e["kind"] + e.get("port", ""): e for e in lines[1]}
+    assert "occurred" not in one["io.input1"] and "occurred" not in one["io.input2"] and "silent" in one
+    assert any(e["kind"] == "io.input" and e.get("port") == "3" for e in lines[2])
+    assert rows.counts()["field"].get("vms") == 1                      # both moments: one spell of camera 1's `occurred`
+    w.heartbeat_once()
+    assert 'vms_device_events_refused_total{worker="w-1"} 2' in beat_lines("vms", heartbeats(box.objects, "vms/"))
+    _forget_garbled()
+
+
+def test_the_pushers_seconds_that_are_no_number_cost_the_card_neither_its_pass_nor_its_episode():
+    """`footage_pass` read the pusher's `failed_s` by `float`: `nan` made `lost_seen` `nan` for good (`lost <= nan` is
+    never true, so every pass after was footage lost again), and 400 digits raised out of `gate_pass` before `note_pass`.
+    Through `rows.number` now: a value that is no number is read as nothing lost, counted, and the episode goes on."""
+    from w2cplatform import rows
+    from tests.test_camera_card import _alarms, _camera
+    box, rec, ring, act, rec_ctl = _camera()
+    said = {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0, "failed": 0}
+    rec.stream_said = lambda: dict(said)
+    for bad in (float("nan"), int(BIG), "ten", [1]):
+        said["failed_s"] = bad
+        rec.gate_pass()                                                # nothing raised, nothing said lost
+        assert rec.lost_seen == 0.0 and _alarms(box, "camera.footage.lost") == []
+    assert rows.counts()["field"].get("rec", 0) >= 1
+    said["failed_s"] = 4.0
+    rec.gate_pass()
+    assert len(_alarms(box, "camera.footage.lost")) == 1 and rec.lost_seen == 4.0
+    _forget_garbled()
+
+
+def test_a_keep_line_whose_seconds_or_moment_is_no_number_is_that_lines():
+    """`_keeps_held_before` read the event lines of what this volume held of each keep by `float` and sorted them by
+    `events.when`: a line hand-edited to 400 digits of `seconds` or `t: "yesterday"` raised out of the keeps' pass, and
+    no keep of the volume was looked at. That line is read as not said now, counted; the others are summed as before."""
+    from w2cplatform import rows
+    from w2cplatform.events import EventLog
+    from vms.recworker import REC, RecWorker
+    box = Box()
+    t = box.wall()
+    p = EventLog(box.archive, REC.name, "1", 1).path_for(t)
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    good = {"t": t, "kind": "archive.keep.copied", "keep": "k1", "recording": "1", "volume": "v1", "seconds": 30.0, "id": "a"}
+    with open(p, "w") as f:
+        f.write(json.dumps(good) + "\n")
+        f.write(json.dumps({**good, "seconds": "__big__", "id": "b"}).replace('"__big__"', BIG) + "\n")
+        f.write(json.dumps({**good, "t": "yesterday", "seconds": 50.0, "id": "c"}) + "\n")
+        f.write(json.dumps({**good, "kind": "archive.keep.lost", "t": t + 1, "seconds": 10.0, "id": "d"}) + "\n")
+        f.write("5\n")                                                 # a line that is no object
+    me = types.SimpleNamespace(archive_root=box.archive, volume="v1")
+    held = RecWorker._keeps_held_before(me, [types.SimpleNamespace(id="k1")], lambda k: ["1"], lambda k, rec: 0.0)
+    assert held == {("k1", "1"): 20.0}, held
+    assert rows.counts()["field"].get(REC.name, 0) >= 1                 # both lines: one spell of recording 1's copies
+    _forget_garbled()
+
+
+def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged():
+    """`_unplaceable` and `_would_strand` called `eligible` bare for each unit, while the controller's steps stood past
+    one unit already: a filter that raised on one row — a field that reads and does not compare, an `admit` that trips
+    on it — took `/unplaceable` and `/drain` down for every unit. That unit is listed now as one nothing can serve (with
+    why), counted once a walk (`unit_judged`), and the other units are judged."""
+    from w2cplatform import rows, spec
+    from w2cplatform.console import Mount, SpecConsole
+    from tests.test_lesson4_worker import _box_with_cameras
+    box, ctl = _box_with_cameras(3)
+    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
+
+    def admit(c, row, w):
+        if str(row["id"]) == "2":
+            raise TypeError("'<' not supported between instances of 'str' and 'int'")
+        return True
+
+    was = spec.ADMIT.get("vms")
+    spec.ADMIT["vms"] = admit
+    try:
+        got = {str(u["id"]): u for u in ctl.unplaceable()}
+        assert set(got) == {"2"} and "could not be checked" in got["2"]["why"], got
+        ctl.pass_once()
+        assert ctl.placement(1).worker == "w-1" and ctl.placement(3).worker == "w-1" and ctl.placement(2) is None
+        assert ctl.would_strand("srv-b") == ["2"]                     # the others are not on it; "2" is on nobody
+        ctl.drain("srv-a")
+        status, rep = Mount(SpecConsole(ctl, wall=box.wall)).drain_route("GET", {})
+        assert status == 200 and set(rep["subsystems"]["vms"]["would_strand"]) == {"1", "2", "3"}, rep
+        assert rows.counts()["unit_judged"].get("vms") == 2, rows.counts()["unit_judged"]   # one spell in each walk
+    finally:
+        spec.ADMIT.pop("vms", None)
+        if was is not None:
+            spec.ADMIT["vms"] = was
+        _forget_garbled()
+
+
+def test_channel_of_reads_any_value_as_channel_key_and_device_of_do():
+    """The devices group closed `channel_of` for a `[` with no `]`; `channel_key` and `device_of` read `str(source)`, and
+    `channel_of` alone raised on a value that is not a string (`5`, `None`). Now the three read it as a string."""
+    from vms.config import channel_key, channel_of, device_of
+    for v in (5, None, ["a"], int(BIG), "rtsp://[::1/x", "driverpack://acme/h/ch/" + "9" * 5000):
+        channel_of(v), channel_key(v), device_of(v)
+    assert channel_of(5) is None and channel_key(None) == ""

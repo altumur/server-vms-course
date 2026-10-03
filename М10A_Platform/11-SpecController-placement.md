@@ -609,16 +609,20 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
         live = self._pool(None)
         out = []
         for r in self.units():
-            if self.placement(r["id"]) is None and not self.retired(r) and not self.eligible(r, live):
+            if self.placement(r["id"]) is None and not self.retired(r) and not self._eligible_or_none(r, live, "unplaceable"):
                 u = {"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 why = self.unplaced_reason(r["id"])
                 if why and why != "deleted":           # what took its place away — a server that stopped reaching it
                     u["why"] = why
+                elif self._row_key(r["id"]) + "#unplaceable" in UNIT_JUDGED.bad:
+                    u["why"] = "its row could not be checked against any server: see the log"
                 out.append(u)
         return out
 ```
 
 Единицы, которые не размещены и которых **не может взять никто из живых**. Отдельный вопрос, отдельный ответ — и в нём названы метки, из-за которых это вышло, и число живых воркеров. А если место у единицы **отняли** — её сервер перестал видеть её VLAN, и никто живой его не видит (шаг 17, `ensure_reach`), — ещё и `why`: причина из её строки размещения, `srv-a no longer reaches vlan:a; nothing live reaches it`. Ту же причину отдаёт `/where/<id>`.
+
+`_eligible_or_none` — это `eligible`, который на одной единице может упасть, не уронив ответ (десятое ревью: этот обход и сухой прогон `/drain` были последними обходами единиц без защиты на единицу; урок 17, шаг 3). Если фильтры единицы бросают исключение на её строке — поле прочиталось, но не сравнивается, `admit` подсистемы спотыкается о него, — `eligible` для неё пуст, а единица считается раз за серию (таблица `unit_judged`). В ответе она стоит как неразмещаемая, со словами *its row could not be checked against any server: see the log*: размещение её тоже не поставит. Остальные единицы проверяются как обычно. Тест: `test_one_bad_element.py::test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged`.
 
 Разница между «неразмещаемой» и «просто ждущей» существенна для оператора. Камера, ждущая, потому что система заполнена, дождётся следующего воркера. Камера с меткой `vlan:cctv-c`, которую не видит ни один сервер, не дождётся никогда — и об этом надо сказать, а не оставлять её в списке ожидающих.
 

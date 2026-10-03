@@ -100,7 +100,7 @@ from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
 from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import PARSE_ERRORS, finite
+from w2cplatform.rows import PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
@@ -591,6 +591,7 @@ class VmsWorker(Worker):
         self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
         self.coincidences: dict[str, tuple] = {}          # device -> (another key whose row says its identity, the identity): said
         self.identity_changes = 0                         # a key whose device said another identity than before (`describe_devices`)
+        self.events_refused = 0                           # lines a device posted that could not be written (`drain_bus`)
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -1217,13 +1218,12 @@ class VmsWorker(Worker):
         # posted the line knows it (the review's second pass, M11) — a driver that reads the device's clock passes
         # it in the fields; one that does not passes nothing, and no second time is invented. It is kept out of
         # the suppressor's identity: a repeat is the same thing, whatever the device's clock said each time.
-        occurred = fields.pop("occurred", None)
-        if occurred is not None:
-            try:
-                occurred = float(occurred)
-            except (TypeError, ValueError):
-                log.warning("%s: camera %s posted %s with occurred=%r, not a time; dropped", self.name, cid, kind, occurred)
-                occurred = None
+        #
+        # …through `rows.number` (the review's tenth pass): `float` let `nan` and `inf` through as a time, and a driver's
+        # integer of 400 digits raised `OverflowError` past `(TypeError, ValueError)` — out of `drain_bus`, and every line
+        # the bus had handed over after it, any camera's, and every dead camera's `lost` with it, was gone. Now the
+        # moment alone is dropped, and counted once a spell per camera (the heartbeat's `fields_garbled`).
+        occurred = number(f"{self.SUB.name}/{cid}#occurred", fields.pop("occurred", None), default=None)
         self.observed.append((cid, t, kind))
         # Suppression stands between the observation and the file, and it is the LAST thing before the
         # write for a reason: everything above this line — the epoch, the fence, `observed` — is about
@@ -1297,10 +1297,23 @@ class VmsWorker(Worker):
     # pass, up to `poll` seconds, before it was a line any scenario could see — the part of the road from an event to
     # a device that no histogram measured, because the event's time is stamped when it is drained (the product drains
     # it in its loop of commands too). On the loop's thread either way: the actuator and the reconciler have no other.
+    #
+    # ONE LINE A DEVICE POSTED THAT CANNOT BE WRITTEN IS THAT LINE (the review's tenth pass): a driver's fields go into
+    # `EventLog.append`, which refuses `class` and `v` with a `ValueError`, and a value JSON cannot carry raised a
+    # `TypeError` — out of this loop, and what the bus had handed over after that line, any camera's, was gone with
+    # every dead camera's `lost`. Now the line is dropped, logged and counted (`events_refused`, on `/metrics` as
+    # `vms_device_events_refused_total`); a resource that does not answer (`OSError`) is not the line's, and is left
+    # to the loop as before.
     def drain_bus(self) -> None:
         dead, posted = self.actuator.pump()
-        for cid, kind, fields in posted:
-            self.observe(cid, kind, **fields)
+        for item in posted:
+            try:
+                cid, kind, fields = item
+                self.observe(cid, kind, **fields)
+            except PARSE_ERRORS as e:
+                self.events_refused += 1
+                log.error("%s: a device posted an event that cannot be written (%s: %.200s); dropped — the other events "
+                          "are written", self.name, type(e).__name__, e)
         for cid in dead:
             self.reconciler.lost(cid, self.now())
             self.observe(cid, "silent")                 # the event with no picture behind it, by definition
@@ -1444,12 +1457,12 @@ class VmsWorker(Worker):
                     h["buckets"][i] += 1
 
         def two_clocks(h: dict, since, behind_of: float | None = None) -> None:
+            # `finite`, not `float`: a moment of 400 digits — a JSON integer, from a hand-edited row — raised
+            # `OverflowError` out of `requests` past a `(TypeError, ValueError)` (the review's tenth pass, a sibling)
             try:
-                at = float(since)
+                at = finite(since)
             except (TypeError, ValueError):
-                return                                   # a row that does not say when: not counted here
-            if at != at or at in (float("inf"), float("-inf")):
-                return
+                return                                   # a row that does not say when (a word, `nan`, `10**400`): not counted here
             seconds = self.wall() - at
             if seconds < 0:
                 h["ahead"] += 1                          # the writer's clock is ahead of this one: said, not hidden
@@ -2210,6 +2223,8 @@ class VmsWorker(Worker):
                 **({"devices_opening": len(opening)} if (opening := self._opening()) else {}),
                 # Keys whose device said another identity than before (`_changed`): counted since the process started.
                 **({"identity_changes": self.identity_changes} if self.identity_changes else {}),
+                # Lines a device posted that could not be written (`drain_bus`; the tenth pass): counted, not raised.
+                **({"events_refused": self.events_refused} if self.events_refused else {}),
                 # Devices whose identity another key's row says too (`describe_devices`; the ninth pass): said, not refused.
                 **({"identity_coincidences": len(self.coincidences)} if self.coincidences else {}),
                 **({"commands_in_flight": len(self._performing)} if self._performing else {}),

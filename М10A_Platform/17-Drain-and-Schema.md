@@ -114,12 +114,21 @@ def draining(vars_) -> str:
             pl = self.placement(uid)
             if pl is not None and self.server_of(pl.worker) != server:
                 continue                                   # it is not on that server: not its business
-            if not self.eligible(row, pool):
-                out.append(str(uid))
+            if not self._eligible_or_none(row, pool, "would_strand"):
+                out.append(str(uid))                       # …nor one whose filters raise: nobody can say it lands
         return out
+
+    # `eligible`, or `[]` when this unit's filters raise on its row — one unit's trouble, counted once a spell
+    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in an `admit` took
+    # `/unplaceable` and `/drain` down for every unit (the review's tenth pass).
+    def _eligible_or_none(self, row: dict, pool: list[str], walk: str) -> list[str]:
+        key = f"{self._row_key(row['id'])}#{walk}"
+        return UNIT_JUDGED.read(key, lambda: self.eligible(row, pool), [])
 ```
 
 Тем же `eligible`, который будет отвечать по-настоящему через минуту. Это важно: сухой прогон, считающий по своей формуле, рано или поздно разойдётся с настоящим размещением, и разойдётся молча. Тест: `test_lesson11_edge.py::test_the_dry_run_answers_before_the_reboot_not_after`.
+
+**Единица, чьи фильтры бросают исключение, стоит только себя.** `eligible` звался голым на каждую единицу. Поле, которое прочиталось, но падает в сравнении или в `admit` подсистемы, роняло `/drain` целиком, для всех единиц, хотя шаги контроллера уже переступали через одну единицу (десятое ревью закрыло корни: пульс без имени сервера, `device_of`, — а защиты на единицу у этого обхода не было). Теперь `eligible` идёт через `_eligible_or_none`. Единица, на которой он упал, для сухого прогона — та, которую никто не примет: про неё нельзя сказать, что она приедет, а настоящее размещение её тоже не поставит (`ensure_placed` пропускает её с исключением в логе). Она считается раз за серию на обход (таблица `unit_judged`, на `/metrics` консоли — `<p>_console_rows_garbled{table="unit_judged"}`), и остальные единицы считаются как обычно. Тест: `test_one_bad_element.py::test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_judged`.
 
 **Сухой прогон — один проход по чтениям.** Для каждой единицы он спрашивает её размещение, сервер её воркера и `eligible` по пулу, а `eligible` — heartbeat'ы и запас каждого воркера; без кэша это было бы по чтению хранилища на каждый вопрос каждой единицы. Поэтому `would_strand` открывает `one_pass` (урок 8, шаг 1): внутри каждый ключ читается один раз, а между вызовами не помнится ничего. Сам расчёт — в `_would_strand`. `drain_state` консоли зовёт `would_strand` на каждый `GET /drain` и получает свежие чтения: проход кончается вместе с вызовом. А позванный изнутри уже открытого прохода, `one_pass` ничего нового не открывает — проход внутри прохода считается внешним.
 

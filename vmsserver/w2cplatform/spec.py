@@ -124,6 +124,12 @@ UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma 
 # (`SpecController.server_labels`).
 SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of it — if none were read, it takes no unit "
                       "that needs a label — and nothing moves off it", "server's labels")
+# A unit whose filters raise while `/unplaceable` or `/drain` judges it (`_unplaceable`, `_would_strand`; the review's tenth
+# pass, the walks the other steps had guarded already): a field that reads and does not compare, an `admit` that trips
+# on it. Nobody can say a worker would take it, and nothing will: it is listed as one nothing can serve, and the other
+# units are judged as before.
+UNIT_JUDGED = Table("unit_judged", "it is listed as a unit nothing can serve — `/unplaceable`, `/drain` — until it is "
+                    "mended; the other units are judged", "unit's row")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
 # (a comma) or in a path. The product's rule (`labelWord`). ONE alphabet (the review's tenth pass, major): a camera's
 # `labels` (any subsystem's under `labels-subset`, at creation and for a label new to a row), a server's row, the
@@ -1546,9 +1552,16 @@ class SpecController(Controller):
             pl = self.placement(uid)
             if pl is not None and self.server_of(pl.worker) != server:
                 continue                                   # it is not on that server: not its business
-            if not self.eligible(row, pool):
-                out.append(str(uid))
+            if not self._eligible_or_none(row, pool, "would_strand"):
+                out.append(str(uid))                       # …nor one whose filters raise: nobody can say it lands
         return out
+
+    # `eligible`, or `[]` when this unit's filters raise on its row — one unit's trouble, counted once a spell
+    # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in an `admit` took
+    # `/unplaceable` and `/drain` down for every unit (the review's tenth pass).
+    def _eligible_or_none(self, row: dict, pool: list[str], walk: str) -> list[str]:
+        key = f"{self._row_key(row['id'])}#{walk}"
+        return UNIT_JUDGED.read(key, lambda: self.eligible(row, pool), [])
 
     # `near: <sub>`: the worker of that subsystem whose heartbeat status lists this unit's id in phase
     # `running` — `(worker, server)` — or None. The recorder says `near: vms`: the camera's holder.
@@ -1906,11 +1919,13 @@ class SpecController(Controller):
         live = self._pool(None)
         out = []
         for r in self.units():
-            if self.placement(r["id"]) is None and not self.retired(r) and not self.eligible(r, live):
+            if self.placement(r["id"]) is None and not self.retired(r) and not self._eligible_or_none(r, live, "unplaceable"):
                 u = {"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 why = self.unplaced_reason(r["id"])
                 if why and why != "deleted":           # what took its place away — a server that stopped reaching it
                     u["why"] = why
+                elif self._row_key(r["id"]) + "#unplaceable" in UNIT_JUDGED.bad:
+                    u["why"] = "its row could not be checked against any server: see the log"
                 out.append(u)
         return out
 

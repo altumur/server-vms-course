@@ -302,7 +302,7 @@ def channel_of(source: str) -> str | None:
     """`driverpack://<vendor>/<host>/ch/<n>` -> "<n>"; None when the device has one channel."""
     from urllib.parse import urlsplit
     try:
-        u = urlsplit(source)
+        u = urlsplit(str(source))                        # `str` as `channel_key` and `device_of` read it: `5` raised here
     except ValueError:                                   # not a URL at all (`[` with no `]`): no channel to name
         return None
     parts = [p for p in u.path.split("/") if p]

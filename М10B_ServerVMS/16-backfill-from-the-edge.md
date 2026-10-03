@@ -311,8 +311,10 @@ POST /backfill {"cam": 41, "from": false, "to": true}     →  400: true и fals
             # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
             # holder's commands): read bare, it raised out of `requests` on every pass, and no request behind it — any
             # recording's — was fetched. Answered, so the console clears the row.
+            # …`finite`, not `float` (the review's tenth pass): `from` of 400 digits, a JSON integer a hand edit leaves,
+            # raised `OverflowError` past this `except`, and the same pass stopped again.
             try:
-                t0, t1 = float(it["from"]), float(it["to"])
+                t0, t1 = finite(it["from"]), finite(it["to"])
             except (KeyError, TypeError, ValueError):
                 log.error("%s: request %s refused: from=%r to=%r is not a range", self.name, rid, it.get("from"), it.get("to"))
                 self.fetched.append(rid)
@@ -344,7 +346,7 @@ POST /backfill {"cam": 41, "from": false, "to": true}     →  400: true и fals
 
 Заявка — работа **вне бюджета обычного прохода и вне окна**: её попросил человек, и она срочна по определению. Бюджет и окно — для фоновой уборки, не для ответа на запрос. Нижней границы по первой записанной секунде (шаг 10) у заявки тоже нет: человек может попросить любой час.
 
-**Заявка, диапазон которой не разбирается, — отказ ей одной.** Консоль не примет `NaN` и слова (выше), но строка в хранилище — это строка: её можно поправить руками или записать другой сборкой. `requests` читал `from` и `to` голым `float`, и одна такая заявка бросала исключение из всего метода на каждом проходе: ни одна заявка за ней — любой записи этого регистратора — не выкачивалась (шестое ревью; тот же класс, что команда к единице с битой эпохой, М10B, урок 4, шаг 8). Теперь она отвечена — id уходит в `fetched`, и консоль убирает строку, — в логе сказано почему, а проход идёт к следующей. Тест: `test_epoch_refused.py::test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next`.
+**Заявка, диапазон которой не разбирается, — отказ ей одной.** Консоль не примет `NaN` и слова (выше), но строка в хранилище — это строка: её можно поправить руками или записать другой сборкой. `requests` читал `from` и `to` голым `float`, и одна такая заявка бросала исключение из всего метода на каждом проходе: ни одна заявка за ней — любой записи этого регистратора — не выкачивалась (шестое ревью; тот же класс, что команда к единице с битой эпохой, М10B, урок 4, шаг 8). Теперь она отвечена — id уходит в `fetched`, и консоль убирает строку, — в логе сказано почему, а проход идёт к следующей. Тест: `test_epoch_refused.py::test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next`. После шестого ревью оставался один вид такой строки: целое из четырёхсот цифр, которое JSON хранит как есть. `float` даёт на нём `OverflowError`, а этот `except` его не ловил, и проход снова падал. Теперь `from` и `to` читает `finite` (`rows.finite`): переполнение, `nan` и `inf` для него — `ValueError`. Тест: `test_one_bad_element.py::test_a_moment_of_four_hundred_digits_in_a_request_is_that_requests_in_the_holder_and_the_recorder`.
 
 **Но не дальше видимого, пока запись идёт.** Минуты после конца видимого покрытия лежат в блоке, который пишется прямо сейчас (шаг 10, Q). Выкачай их с карты — и они лягут в том второй раз. Поэтому у живой записи конец заявки обрезается по концу видимого (или по `settle`, если видимого нет). Запись, которая не идёт, можно просить за любые минуты: дописывать в неё некому.
 
