@@ -79,11 +79,11 @@ PUT /v1/var/vms/placement/3?namespace=default&cas=0
 # console
 GET /v1/vars?prefix=vms/workers/&namespace=default
 GET /v1/var/vms/workers/w-0?namespace=default
-→ 200 {"Path": "vms/workers/w-0", "Items": {"units": "1,4,7", "rev": "3"}, "ModifyIndex": 1041}
+→ 200 {"Path": "vms/workers/w-0", "Items": {"units": "1,4,7", "rev": "3"}, "ModifyIndex": 1044}
 GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "2,5,8", "rev": "3"}, "ModifyIndex": 1043}
+→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "2,5,8", "rev": "3"}, "ModifyIndex": 1046}
 GET /v1/var/vms/workers/w-2?namespace=default
-→ 200 {"Path": "vms/workers/w-2", "Items": {"units": "3,6,9", "rev": "3"}, "ModifyIndex": 1045}
+→ 200 {"Path": "vms/workers/w-2", "Items": {"units": "3,6,9", "rev": "3"}, "ModifyIndex": 1048}
 
 # where(1..9) = {1: 'w-0', 2: 'w-1', 3: 'w-2', 4: 'w-0', 5: 'w-1', 6: 'w-2', 7: 'w-0', 8: 'w-1', 9: 'w-2'}; scans = 1
 ```
@@ -102,12 +102,12 @@ GET /v1/var/vms/workers/w-2?namespace=default
 # vmscontroller B
 PUT /v1/var/vms/placement/1?namespace=default&cas=0
 {"Items": {"worker": "w-0", "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live", ...}}
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1012}
+→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1015}
 
 # vmscontroller B
 PUT /v1/var/vms/workers/w-0?namespace=default&cas=0
 {"Items": {"units": "1", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1013}
+→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1016}
 
 # vmscontroller A
 PUT /v1/var/vms/placement/1?namespace=default&cas=0

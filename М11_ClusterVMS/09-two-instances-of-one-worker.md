@@ -55,11 +55,11 @@ w-1: FENCED (slot w-1 is held by another instance now). Stopping every pipeline.
 
 ```
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1023}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1026}
 GET /v1/var/vms/epoch/2?namespace=default
 → 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1027}
 GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1025}
+→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1028}
 ```
 
 Каждая говорит то же самое, этажом ниже:
@@ -73,7 +73,7 @@ GET /v1/var/vms/epoch/3?namespace=default
 ```
 # vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1025}
+→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1028}
 
 # a.conflicts() = 3, a.recording_allowed = False
 ```
@@ -120,13 +120,13 @@ GET /v1/var/vms/epoch/3?namespace=default
 
 ```
 # vmscontroller
-PUT /v1/var/vms/placement/2?namespace=default&cas=1014
+PUT /v1/var/vms/placement/2?namespace=default&cas=1017
 {"Items": {"worker": "w-2", "reason": "operator: srv-b sees that VLAN", "at": "1757500000.0", "rev": "2"}}
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1024}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1027}
 
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1017
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1020
 {"Items": {"units": "1,3", "rev": "4"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1025}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1028}
 
 PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 {"Items": {"units": "2", "rev": "1"}}
@@ -139,7 +139,7 @@ PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 
 ```
 # vmsworker (allocation 2 on srv-b)
-PUT /v1/var/vms/epoch/2?namespace=default&cas=1019
+PUT /v1/var/vms/epoch/2?namespace=default&cas=1022
 {"Items": {"epoch": "2"}}
 → 200 {"Path": "vms/epoch/2", "ModifyIndex": 1027}
 ```

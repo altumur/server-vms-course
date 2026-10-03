@@ -8,7 +8,7 @@ GET /v1/var/platform/decommission/srv-b?namespace=default
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-1", "ModifyIndex": 1010}]
+→ 200 [{"Path": "vms/slots/w-1", "ModifyIndex": 1013}]
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/slots/w-1?namespace=default
@@ -20,7 +20,7 @@ GET /v1/var/vms/slots/w-1?namespace=default
     "released": "false",
     "gen": "1"
   },
-  "ModifyIndex": 1010
+  "ModifyIndex": 1013
 }
 
 # vmsworker (allocation 1 on srv-b)
@@ -33,13 +33,13 @@ GET /v1/var/vms/slots/w-1?namespace=default
     "released": "false",
     "gen": "1"
   },
-  "ModifyIndex": 1010
+  "ModifyIndex": 1013
 }
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/slots/w-1?namespace=default&cas=1010
+PUT /v1/var/vms/slots/w-1?namespace=default&cas=1013
 {"Items": {"holder": "alloc-B", "until": "1757500093.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1022}
+→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1025}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
@@ -114,12 +114,12 @@ GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
       "build": "dev"
     }
   },
-  "ModifyIndex": 1021
+  "ModifyIndex": 1024
 }
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1,2,3", "rev": "3"}, "ModifyIndex": 1017}
+→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1,2,3", "rev": "3"}, "ModifyIndex": 1020}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/cameras/1?namespace=default
@@ -140,7 +140,7 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1005
+  "ModifyIndex": 1008
 }
 
 # vmsworker (allocation 1 on srv-b)
@@ -162,7 +162,7 @@ GET /v1/var/vms/cameras/2?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1007
+  "ModifyIndex": 1010
 }
 
 # vmsworker (allocation 1 on srv-b)
@@ -184,35 +184,35 @@ GET /v1/var/vms/cameras/3?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1009
+  "ModifyIndex": 1012
 }
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1018}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1021}
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1018
+PUT /v1/var/vms/epoch/1?namespace=default&cas=1021
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1023}
+→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1026}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/epoch/2?namespace=default
-→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "1"}, "ModifyIndex": 1019}
+→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "1"}, "ModifyIndex": 1022}
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/epoch/2?namespace=default&cas=1019
+PUT /v1/var/vms/epoch/2?namespace=default&cas=1022
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1024}
+→ 200 {"Path": "vms/epoch/2", "ModifyIndex": 1027}
 
 # vmsworker (allocation 1 on srv-b)
 GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "1"}, "ModifyIndex": 1020}
+→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "1"}, "ModifyIndex": 1023}
 
 # vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/epoch/3?namespace=default&cas=1020
+PUT /v1/var/vms/epoch/3?namespace=default&cas=1023
 {"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/3", "ModifyIndex": 1025}
+→ 200 {"Path": "vms/epoch/3", "ModifyIndex": 1028}
 
 # vmsworker (allocation 1 on srv-b)
 PUT /v1/var/objects/vms/heartbeats/w-1?namespace=default
@@ -287,6 +287,6 @@ PUT /v1/var/objects/vms/heartbeats/w-1?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/heartbeats/w-1", "ModifyIndex": 1026}
+→ 200 {"Path": "objects/vms/heartbeats/w-1", "ModifyIndex": 1029}
 
 # the controller reads the heartbeats: failover_seconds() = {'w-1': 48.0}
