@@ -393,6 +393,42 @@ def test_a_spare_does_not_take_the_name_of_a_hung_worker_and_takes_a_dead_ones()
     assert other.name == "w-1"                                               # dead: its name, and what it was assigned
 
 
+def test_a_spare_and_the_console_judge_a_hung_worker_by_the_controllers_limit_not_their_own():
+    """The product's alignment of the owner's decision: a spare asked whether a lapsed slot's worker is hung through a
+    controller built in its own process — with `HUNG_MOVE_AFTER` as compiled in, while the controller read its own from
+    its environment. Told an hour, the controller held w-1's cameras back at seventeen minutes and the spare took the name
+    `w-1`, and the cameras with it: a second writer. Told a minute, the controller had moved them and the spare still
+    would not take the name. The controller says its limit in its pass report (`hung_move_after`); the spare and the
+    console's `/servers` judge by it (`published_hung_limit`)."""
+    from w2cplatform.contract import published_hung_limit
+    site = _Site()
+    box, ctl = site.box, site.ctl
+    ctl.hung_move_after = 3600.0                                             # the controller's environment: an hour
+    site.tick(100)
+    ctl.pass_once()
+    assert published_hung_limit(box.objects, SPEC.sub) == 3600.0
+    site.tick(HUNG_MOVE_AFTER)                                               # past the compiled-in fifteen minutes
+    rep = ctl.pass_once()
+    assert site.fate() == "hung" and rep["workers_hung"] == ["w-1"] and sorted(ctl.assignment("w-1").units) == site.on_w1
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+    assert spare.name == "w-3"                                               # not w-1: the controller still calls it hung
+    _, _, _, srv, base = _console(box)
+    try:
+        row = next(w for w in _call(base, "GET", "/servers")[1]["servers"]["srv-1"]["workers"] if w["worker"] == "w-1")
+    finally:
+        srv.shutdown()
+    assert row["hung"] and "3600 s" in row["hung_why"], row
+
+    site = _Site()
+    box, ctl = site.box, site.ctl
+    ctl.hung_move_after = 60.0                                               # …and told a minute
+    site.tick(100); site.tick(100)
+    rep = ctl.pass_once()
+    assert site.fate() == "hung_moved" and ctl.assignment("w-1").units == [], rep
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+    assert spare.name == "w-1"                                               # moved: the name is a lapsed one's, taken
+
+
 def test_the_resource_says_which_workers_are_placed_and_which_run():
     """`workers_here`: a registration whose lock is held is in `workers` and `running`; one let go is in `workers` only; a
     newer registration under the same name replaces an old one let go; a resource heartbeat carries both, and a `ts`

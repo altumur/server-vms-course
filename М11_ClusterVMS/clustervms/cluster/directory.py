@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from w2cplatform.contract import read_assignment
+from w2cplatform.contract import ASSIGNMENTS, read_assignment, stored
 
 
 class Directory:
@@ -24,7 +24,7 @@ class Directory:
             out = {}
             for path in self.vars.list(self.prefix):
                 worker = path[len(self.prefix):]
-                items, _ = self.vars.get(path)
+                items, _ = stored(self.vars, path, ASSIGNMENTS)        # …nor one the store cannot read at all
                 out[worker] = read_assignment(path, worker, items).units   # one garbled `rev` is not the end of the scan
             self._cache, self._at, self.scans = out, self.clock(), self.scans + 1
         return self._cache

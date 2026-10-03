@@ -875,3 +875,77 @@ def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written
     centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
     fwd.pass_once()
     assert SERIAL not in relay.up_have
+
+
+# -- the eleventh review -------------------------------------------------------------------------------------------------
+def test_what_the_ingests_and_the_forwarder_did_not_hand_on_is_on_the_domain_consoles_metrics():
+    """The eleventh review, a minor: an ingest's `lost` (a subscriber's full queue, a peer cut, repeats, frames far ahead)
+    and `clock_steps` were in its object and nowhere a monitor reads, and the forwarder's `dropped` and `holes` nowhere
+    at all. The forwarder leaves an object beside its ingest's (`Forwarder.publish`), and the domain's console says both
+    on `/metrics` (`stream_metrics`), every line labelled with its cluster; an object that does not parse is counted
+    and the rest are said; a console that asks for `view` asks for it here too."""
+    import urllib.error
+    import urllib.request
+    from domain.api import ConsoleAPI
+    from domain.console import Console
+    from domain.federation import DomainDirectory
+    from domain.federation import Unreachable as Gone
+    from w2cplatform.rows import counts
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    centre.want(SERIAL, "recorder:centre")
+    centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    relay.subscribe(SERIAL, "viewer:v", maxsize=1, edge=True)          # a viewer at the relay that does not read
+    fwd.pass_once()
+
+    def second():
+        wall.advance(1)
+        pusher.pass_once([{"t": wall(), "key": True}])
+    second(); second()
+    push, left = centre.push, {"n": 1}
+
+    def took_but_lost(*a, **kw):
+        out = push(*a, **kw)
+        if left["n"]:
+            left["n"] -= 1
+            raise Gone("the answer was lost")
+        return out
+    centre.push = took_but_lost
+    fwd.pass_once(); second(); fwd.pass_once()                         # the centre gets two frames again: repeats
+    fwd._kept("SN7002", [{"t": 1000 + i / 25, "key": i % 50 == 0} for i in range(25 * 30)])   # past what it holds
+    relay.cams[SERIAL].clock_steps = 2                                  # (as two moves of the held offset leave it)
+    centre.publish_polled(north.objects); relay.publish_polled(east.objects); fwd.publish(east.objects)
+    east.objects.put("rec/polled/torn", b'{"cluster": "east", "lost": ')
+    fed = Federation()
+    fed.add(north); fed.add(east)
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None),
+                  refresh_interval=60)
+    srv = con.serve(port=0)
+    try:
+        text = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/metrics").read().decode()
+    finally:
+        con.stop(srv)
+    lines = text.splitlines()
+    held = fwd.dropped["SN7002"]
+    assert held > 0
+    assert f'ingest_frames_lost_total{{cluster="north",ingest="{CENTRE_URLS[0]}",camera="{SERIAL}",why="repeats"}} 2' in lines, text
+    assert any(ln.startswith(f'ingest_frames_lost_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}",why="dropped"}} ')
+               and int(ln.split()[-1]) > 0 for ln in lines), text
+    assert f'ingest_clock_steps_total{{cluster="east",ingest="{RELAY_URLS[0]}",camera="{SERIAL}"}} 2' in lines
+    assert f'forwarder_frames_dropped_total{{cluster="east",forwarder="east",camera="SN7002",where="held"}} {held}' in lines
+    assert f'forwarder_holes_total{{cluster="east",forwarder="east",camera="{SERIAL}"}} 0' in lines
+    assert sum(counts()["member_object"].values()) >= 1                 # the torn one: counted, the rest said
+    con = Console(DomainDirectory(fed), ReadView(fed, wall=wall), ConsoleAPI(DomainDirectory(fed), lambda n: None,
+                  verifier=lambda t: t), refresh_interval=60, viewer=lambda s: s == "boris")
+    srv = con.serve(port=0)
+    try:
+        def status(who=None):
+            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/metrics",
+                                         headers={"Authorization": f"Bearer {who}"} if who else {})
+            try:
+                return urllib.request.urlopen(req).status
+            except urllib.error.HTTPError as e:
+                return e.code
+        assert (status(), status("vera"), status("boris")) == (401, 403, 200)
+    finally:
+        con.stop(srv)

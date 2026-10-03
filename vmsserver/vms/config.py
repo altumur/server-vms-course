@@ -343,8 +343,8 @@ def channel_key(source: str) -> str:
 # is device `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
 def shown_source(source: str) -> str:
     """The source as a refusal or a log may say it: what stands before an `@` hidden, and every credential parameter."""
-    from w2cplatform.secrets import hide_in_url
-    s = re.sub(r"[^/@]*@", "…@", str(source))
+    from w2cplatform.secrets import USERINFO, hide_in_url
+    s = USERINFO.sub("…@", str(source))             # anchored: one scan, whatever its length (the eleventh review)
     return hide_in_url(s) if "://" in s else s
 
 

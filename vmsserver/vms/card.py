@@ -755,6 +755,12 @@ class _Segment:
         self.delta = 0                                       # what its records' times lack (`CardBuffer.relabel`)
 
 
+def _fsync_dir(path: str) -> None:
+    """A rename in `path` forced onto the card — the platform's barrier for a directory (`durable_dir`)."""
+    from w2cplatform.events import durable_dir
+    durable_dir(path)
+
+
 def _read_record(f):
     """One sample record from `f`, or None at the end or at a record cut short."""
     head = f.read(SMPL.size)
@@ -1018,6 +1024,13 @@ class CardBuffer:
     # what it held is counted as let go of unknowing (`evicted_unknown_ms`) — said by the recorder of a camera whose stream
     # is said (`CardRecorder._stream`), where that is a wiring left half done.
     owed = None                                              # () -> [(t0, t1)] | None, set by whoever runs the card and the pusher
+    # WHAT CAME BEFORE ANYBODY KNEW IS UNKNOWN TOO (the eleventh review, a minor): the pusher knows what the server has
+    # from its `since` on — where its process began, or where the card's note of the process before it began — and what
+    # the card holds from before that went oldest first and silently: a card with no note (none, torn, or another
+    # camera's) let go of what the server may never have had, uncounted. `unknown` says where that knowledge begins
+    # (unix seconds on the card's line, None: nothing before it is in doubt), and what a segment held before it is
+    # counted as let go of unknowing (`evicted_unknown_ms`) — the order does not change.
+    unknown = None                                           # () -> float | None, set by whoever runs the card and the pusher
 
     def _owed_ms(self) -> list[tuple[int, int]] | None:
         if self.owed is None:
@@ -1031,6 +1044,16 @@ class CardBuffer:
             log.warning("card: what the stream skipped could not be read (%s): the budget goes oldest first", e)
             return None
 
+    def _unknown_ms(self) -> int | None:
+        if self.unknown is None:
+            return None
+        try:
+            at = self.unknown()
+            return None if at is None else archive_ms(at)
+        except Exception as e:                               # noqa: BLE001 — the pusher's trouble is not the card's write
+            log.warning("card: where what the server has is known from could not be read (%s): counted as unknown", e)
+            return 1 << 62
+
     @staticmethod
     def _holds(seg: _Segment, owed: list[tuple[int, int]]) -> int:
         """How much of `owed` the segment holds, in ms."""
@@ -1042,6 +1065,7 @@ class CardBuffer:
                 return
         owed = self._owed_ms()                               # (outside the card's lock: it is the pusher's list)
         unknown, owed = owed is None, owed or []
+        before = None if unknown else self._unknown_ms()     # …and where its knowledge begins
         while True:
             with self._lock:
                 if self.bytes <= self.budget:
@@ -1055,6 +1079,8 @@ class CardBuffer:
                 self._drop_locked(old)
                 if unknown:
                     self.evicted_unknown_ms += max(0, old.last - old.first)
+                elif before is not None:
+                    self.evicted_unknown_ms += max(0, min(old.last, before) - old.first)
                 if lost:
                     self.evicted_owed += 1
                     self.evicted_owed_ms += lost
@@ -1085,6 +1111,11 @@ class CardBuffer:
     # server had never got. It is kept on the card, as a small file beside the recordings — never a segment, never in
     # the budget's way — written whole and put in place in one rename, so a power loss leaves the last whole note or the
     # one before. Through the card's I/O: a card that does not answer is not waited for.
+    #
+    # THE RENAME IS NOT DURABLE UNTIL ITS DIRECTORY IS (the eleventh review, a minor): the new note was forced onto the
+    # card and the rename was not — on FAT a power cut after it could leave the old name, or neither. The directory is
+    # forced after the rename (`_fsync_dir`): the note in place is the note on the card. The line's note (`LINE_NOTE`) is
+    # written here too.
     def read_note(self, name: str) -> bytes | None:
         """The note `name` the card keeps, or None."""
         try:
@@ -1105,6 +1136,7 @@ class CardBuffer:
                 f.flush()
                 os.fsync(f.fileno())
             os.replace(path + ".new", path)
+            _fsync_dir(self.path)
 
     def coverage(self, recording: str) -> list[tuple[float, float]]:
         """What the card holds of `recording` (every epoch), in unix seconds: one span per segment, in order."""
@@ -1128,13 +1160,17 @@ class CardBuffer:
         with self._io():
             with self._lock:
                 segs = [s for s in self.segs if s.bytes > 0 and lo <= s.first and s.last_begin <= hi]
+            dirs = set()
             for seg in segs:
                 new = os.path.join(os.path.dirname(seg.path), f"{seg.first - seg.delta}@{seg.delta + delta}.smpl")
                 os.replace(seg.path, new)
+                dirs.add(os.path.dirname(new))
                 with self._lock:
                     seg.path, seg.delta = new, seg.delta + delta
                     seg.first, seg.last, seg.last_begin = seg.first + delta, seg.last + delta, seg.last_begin + delta
                 n += 1
+            for d in sorted(dirs):                           # durable before the line's note says the line moved
+                _fsync_dir(d)
         return n
 
     def recordings(self) -> list[str]:
@@ -1926,6 +1962,9 @@ class CardRecorder(RecWorker):
     # () -> [(t0, t1)]: what the card holds that the server has not got (the pusher's `owed_spans`), set by whoever runs
     # both — the card's budget lets go of it last (`CardBuffer.owed`; the ninth review).
     stream_owed = None
+    # () -> float | None: where what the pusher knows of the server begins (its `unknown_before`) — what the card lets go
+    # of from before it is counted as let go of unknowing (`CardBuffer.unknown`; the eleventh review).
+    stream_unknown = None
     # () -> dict and (dict) -> None: what the pusher knows the server has (`CameraPusher.delivery`), kept on the card in
     # a note beside its segments every `NOTE_EVERY` and when the card closes, and handed to the pusher of the camera's
     # next process when the card opens (`CameraPusher.remember`; the tenth review: a camera started again let go first,
@@ -1943,6 +1982,9 @@ class CardRecorder(RecWorker):
     def _owed(self) -> list | None:
         return list(self.stream_owed()) if self.stream_owed is not None else None
 
+    def _unknown(self) -> float | None:
+        return self.stream_unknown() if self.stream_unknown is not None else None
+
     def evicted_s(self) -> float:
         """Seconds the card's budget let go of before the server had them — every card this recorder opened."""
         card = self.card
@@ -1958,11 +2000,11 @@ class CardRecorder(RecWorker):
             return {"error": f"{type(e).__name__}: {e}"}
         if said is not None and self.evicted_s():
             said["evicted_s"] = self.evicted_s()         # (the console's `rec_stream_skipped_seconds_total{why="evicted"}`)
+        unknown = (self._unknown_before + (self.card.evicted_unknown_ms if self.card is not None else 0)) / 1000.0
+        if said is not None and unknown:                 # half wired, or from before the pusher knew (no note on the card)
+            said["evicted_unknown_s"] = round(unknown, 1)
         if said is not None and self.stream_owed is None:
             said["owed"] = "unknown"                     # half wired: the card cannot tell what the server has
-            unknown = (self._unknown_before + (self.card.evicted_unknown_ms if self.card is not None else 0)) / 1000.0
-            if unknown:
-                said["evicted_unknown_s"] = round(unknown, 1)
             if not self._owed_unknown_said:
                 self._owed_unknown_said = True
                 log.warning("%s: the camera's stream is said here and what the server has not got is not: the card lets go "
@@ -2073,7 +2115,7 @@ class CardRecorder(RecWorker):
                 told(json.loads(raw))
         except Exception as e:                           # noqa: BLE001 — a torn note is one the card did not keep
             log.warning("%s: the card's note of what the server has does not read (%s): what the card holds from before "
-                        "this process is taken for owed from where this process began", self.name, e)
+                        "this process is counted as let go of unknowing when the card is full", self.name, e)
             return False
         return bool(raw)
 
@@ -2140,6 +2182,7 @@ class CardRecorder(RecWorker):
             try:
                 self.card = CardBuffer(vol.url, budget=vol.quota_bytes)
                 self.card.owed = self._owed                  # what the server has not got goes last (the ninth review)
+                self.card.unknown = self._unknown            # …and what came before it knew is counted (the eleventh)
                 self.actuator.card = self.card
                 self.remember_card()                         # …and what it had before this process (the tenth review)
                 self.card_fault, self.card_error, self.card_since = "would not open", "", self.wall()

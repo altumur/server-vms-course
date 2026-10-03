@@ -10,6 +10,7 @@ Every card here is the REAL one (`vms.card.CardBuffer`; the sixth review): its r
 sample records, as much as a camera can hold — and the tests that count what the camera holds count it over the ten
 minutes at 4 Mbit/s the review measured.
 """
+import json
 import shutil
 import tempfile
 import threading
@@ -885,77 +886,130 @@ def test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_w
     pusher of the new process said owed only what came after its own start, so the card let go of 20–70 FIRST — on no
     copy, `evicted_owed` nought, no alarm. What the server has is kept on the card now (`delivery`, the recorder's note)
     and the new pusher takes it back (`remember`): the card lets go of what the server has, and every owed frame is
-    still on it. The same run with the note taken away is the review's: the owed seconds gone, uncounted."""
+    still on it. The same run with the note taken away was the review's: the owed seconds gone, uncounted — gone still
+    (nobody can say they were owed), and counted now (the eleventh review: `test_a_card_with_no_note_…`)."""
+    out = {note: _restart_with_a_full_card("kept" if note else "none") for note in (True, False)}
+    assert out[True][:3] == (0, 0, True), out                          # every owed frame kept; what went, the server had
+    assert out[False][0] > 0 and out[False][1] == 0, out                # owed seconds gone, as owed uncounted…
+    assert out[False][3] >= out[False][0] * 100, out                    # …and as let go of unknowing, counted
+
+
+def test_a_card_with_no_note_a_torn_note_or_another_cameras_note_counts_what_it_lets_go_of_and_offers_no_strange_footage():
+    """The eleventh review, a minor: without `delivered.json` — none, torn (a rename a power cut undid on a card without its
+    directory forced), or written by another camera — what the card held from before the new process went oldest first
+    and was counted nowhere, and a card moved from another camera handed that camera's note and footage to this one. Now
+    what lies before the pusher's `since` is unknown (`CameraPusher.unknown_before`, `CardBuffer.unknown`): let go of in
+    the same order, counted (`evicted_unknown_ms`, the heartbeat's `evicted_unknown_s`). The note names its camera
+    (`serial`): another camera's note is not taken, and a range of the card from before this process is refused as not
+    this camera's (`foreign_before`), while what this camera wrote since is given. The kept note counts nothing."""
+    out = {case: _restart_with_a_full_card(case) for case in ("kept", "none", "torn", "foreign")}
+    assert out["kept"][:4] == (0, 0, True, 0), out
+    for case in ("none", "torn", "foreign"):
+        missing, owed, within, unknown_ms, said_s, old_range, new_range = out[case]
+        assert missing > 0 and owed == 0 and within, (case, out[case])
+        assert unknown_ms >= missing * 100 and said_s == round(unknown_ms / 1000.0, 1), (case, out[case])
+        assert new_range is True, (case, out[case])
+        assert old_range is (case != "foreign"), (case, out[case])     # another camera's footage: not this one's
+    assert out["kept"][5] is True and out["kept"][6] is True
+
+
+def _restart_with_a_full_card(case: str):
+    """The tenth review's run: the road down 20–100 s, the camera's process started again, its card filled. `case` — what
+    the new process finds of the card's note: `kept`, `none`, `torn` (half its bytes), `foreign` (another camera's).
+    Returns (owed frames gone, `evicted_owed`, within budget, `evicted_unknown_ms`, the heartbeat's `evicted_unknown_s`,
+    whether a range of the first process's footage is given, whether one of the second's is)."""
     import os
     from vms.card import declare_card
     from vms.config import REC_SPEC
+    from w2cplatform.console import heartbeats
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.spec import SpecController
     from w2cplatform.variables import FileVariables
     from w2cplatform.obsd import archive_ms
-    out = {}
-    for note in (True, False):
-        wall = Clock(100_000.0)
-        fed, north, south, signer, ingest, cam, *_ = _site(wall)
-        root, down = tempfile.mkdtemp(prefix="camproc-"), set()
-        vars_, objects = FileVariables(os.path.join(root, "config")), FsObjectStore(os.path.join(root, "objects"))
-        card_dir = tempfile.mkdtemp(prefix="card-")
-        declare_card(vars_, "cam-1", card_dir, 64 << 20, cam="1")
-        SpecController(REC_SPEC, vars_, objects, wall=wall).create(
-            {"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
+    note = case
+    wall = Clock(100_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    root, down = tempfile.mkdtemp(prefix="camproc-"), set()
+    vars_, objects = FileVariables(os.path.join(root, "config")), FsObjectStore(os.path.join(root, "objects"))
+    card_dir = tempfile.mkdtemp(prefix="card-")
+    declare_card(vars_, "cam-1", card_dir, 64 << 20, cam="1")
+    SpecController(REC_SPEC, vars_, objects, wall=wall).create(
+        {"name": "1-card", "cam": "1", "home": "card", "when": "offline"})
 
-        def dial(url):
-            if url in down:
-                raise Unreachable(f"{url} did not answer")
-            return ingest
-        ingest.want(SERIAL, "recorder:r")
-        ingest.subscribe(SERIAL, "recorder:r")
-        live = []
+    def dial(url):
+        if url in down:
+            raise Unreachable(f"{url} did not answer")
+        return ingest
+    ingest.want(SERIAL, "recorder:r")
+    ingest.subscribe(SERIAL, "recorder:r")
+    live = []
 
-        class Writer:
-            def push(self, f):
-                if not live or f["t"] > live[-1]:
-                    live.append(f["t"])
-        ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
-        ingest.written = lambda ref: live[-1] if live else None
-        try:
-            ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
-            start, n = wall(), 0
+    class Writer:
+        def push(self, f):
+            if not live or f["t"] > live[-1]:
+                live.append(f["t"])
+    ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+    ingest.written = lambda ref: live[-1] if live else None
+    try:
+        ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
+        start, n = wall(), 0
 
-            def second(until):
-                nonlocal n
-                while wall() - start < until:
-                    n = _sensor(ring, start, wall, wall, n)
-                    act.drain(); pusher.pass_once([]); rec.gate_pass(); act.drain()
-                    wall.advance(0.5)
-                    at = wall() - start
-                    if abs(at - 20) < 0.26:
-                        down.update(URLS)
-                    if abs(at - 100) < 0.26:
-                        down.clear()
-            second(200)
-            missed = [m for m in (archive_ms(start + i / 10) for i in range(200, 700))
-                      if m not in {archive_ms(t) for t in live}]
-            assert len(missed) > 400                                    # 20–70 s: owed, on the card
-            card_bytes = rec.card.stats()[1]
-            rec.note_pass(force=True)
-            del ring, act, rec, pusher                                  # the camera's process ends — no goodbye
-            if not note:
-                os.remove(os.path.join(card_dir, "delivered.json"))
-            wall.advance(60.0)                                          # …and starts again a minute later
-            down.update(URLS)
-            ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
-            rec.card.budget = int(card_bytes * 1.1)                     # the card nearly full of the first process
-            start, n = wall(), 0
-            second(70)
-            cover = [(archive_ms(a), archive_ms(b)) for a, b in rec.card.coverage("1-card")]
-            out[note] = (len([m for m in missed if not any(a <= m <= b for a, b in cover)]),
-                         rec.card.evicted_owed, rec.card.stats()[1] <= rec.card.budget)
-        finally:
-            shutil.rmtree(root, ignore_errors=True)
-            shutil.rmtree(card_dir, ignore_errors=True)
-    assert out[True] == (0, 0, True), out                              # every owed frame kept; what went, the server had
-    assert out[False][0] > 0 and out[False][1] == 0, out                # the review's: owed seconds gone, uncounted
+        def second(until):
+            nonlocal n
+            while wall() - start < until:
+                n = _sensor(ring, start, wall, wall, n)
+                act.drain(); pusher.pass_once([]); rec.gate_pass(); act.drain()
+                wall.advance(0.5)
+                at = wall() - start
+                if abs(at - 20) < 0.26:
+                    down.update(URLS)
+                if abs(at - 100) < 0.26:
+                    down.clear()
+        second(200)
+        missed = [m for m in (archive_ms(start + i / 10) for i in range(200, 700))
+                  if m not in {archive_ms(t) for t in live}]
+        assert len(missed) > 400                                    # 20–70 s: owed, on the card
+        card_bytes = rec.card.stats()[1]
+        rec.note_pass(force=True)
+        del ring, act, rec, pusher                                  # the camera's process ends — no goodbye
+        first = start
+        kept = os.path.join(card_dir, "delivered.json")
+        if note == "none":
+            os.remove(kept)
+        elif note == "torn":
+            with open(kept, "rb") as f:
+                raw = f.read()
+            with open(kept, "wb") as f:
+                f.write(raw[:len(raw) // 2])
+        elif note == "foreign":
+            with open(kept) as f:
+                d = json.load(f)
+            assert d["serial"] == SERIAL                            # the note names the camera that wrote it
+            d["serial"] = "another-camera"
+            with open(kept, "w") as f:
+                json.dump(d, f)
+        wall.advance(60.0)                                          # …and starts again a minute later
+        down.update(URLS)
+        ring, act, rec, pusher = _camera_process(wall, vars_, objects, root, cam.flash, dial)
+        rec.card.budget = int(card_bytes * 1.1)                     # the card nearly full of the first process
+        start, n = wall(), 0
+        second(70)
+        cover = [(archive_ms(a), archive_ms(b)) for a, b in rec.card.coverage("1-card")]
+        rec.heartbeat_once()
+        said = heartbeats(objects, "rec/")["r-cam"].extra["stream"].get("evicted_unknown_s", 0)
+
+        def given(t0, t1):
+            try:
+                return any(True for _ in pusher._read_card("1-card", t0, t1))
+            except OSError:
+                return False
+        lo = max(a for a, _ in rec.card.coverage("1-card") if a < start)  # the first process's newest left
+        return (len([m for m in missed if not any(a <= m <= b for a, b in cover)]),
+                rec.card.evicted_owed, rec.card.stats()[1] <= rec.card.budget, rec.card.evicted_unknown_ms, said,
+                given(lo, lo + 5), given(start + 50, start + 55))
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+        shutil.rmtree(card_dir, ignore_errors=True)
 
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------

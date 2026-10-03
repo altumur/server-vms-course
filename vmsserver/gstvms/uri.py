@@ -42,7 +42,9 @@ def resolve(uri: str, media_dir: str | None = None) -> str:
     """Anything but driverpack://file/<name> is the real DriverPack's."""
     media_dir = media_dir or os.environ.get("MEDIA_DIR", "/data/media")
     u = urlsplit(uri)
-    shown = re.sub(r"[^/@]*@", "…@", str(uri))      # what stands before an `@` is a login: never in an error (the tenth round)
+    # What stands before an `@` is a login: never in an error (the tenth round). Tried only where a run begins — after
+    # the start, a `/` or an `@` — or a long name with no `@` was a scan from every position (the eleventh review).
+    shown = re.sub(r"(?<![^/@])[^/@]*@", "…@", str(uri))
     cut = re.search(r"[?;]", shown)                  # …nor its parameters, where a camera's login often is (`?usr=…&pwd=…`,
     if cut:                                          # `;password=…`): the actuator logs this message (the eleventh review)
         shown = shown[:cut.start() + 1] + "…"

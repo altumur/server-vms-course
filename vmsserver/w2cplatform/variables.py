@@ -56,7 +56,7 @@ import time
 from typing import Protocol
 
 from .events import durable_dir, durably
-from .limits import NO_CEILING, check
+from .limits import NO_CEILING, TooLarge, check
 
 
 class Conflict(Exception):
@@ -269,6 +269,44 @@ class Corrupt(Exception):
     """The store cannot say what it holds — and says so, instead of starting again."""
 
 
+# A ROW THE STORE HOLDS AND CANNOT READ IS THAT ROW'S PARSE ERROR (the eleventh review, a minor). Nomad answers every
+# Variable as a map of strings; a file of this store can be torn (a hand edit, a disk that lied about a write), hold
+# `items` that are not a map, or values that are not strings — and `get` raised whatever `json` or `dict` raised, or
+# handed the non-strings on, and the routes that read the drain, a slot, a placement or a worker's row bare fell whole
+# with it. A torn file, `items` that are not a map, an index that is no whole number: one error now, a `ValueError`
+# naming the row — every reader of rows reads it as that row not parsing (`rows.PARSE_ERRORS`, `rows.Table`). A value
+# that is not a string is handed on as its JSON text, a string, as Nomad would hold it: the field's parse error, read
+# by the field's reader as a Nomad value that does not parse is. A row that does not read has the version `TORN`: a
+# write that means to replace it says so (`put(cas=TORN)`, `Controller.write`), and one that read anything else conflicts.
+TORN = "torn"
+
+
+class Garbled(ValueError):
+    """A row the store holds and cannot read: a torn file, items that are not a map, an index that is no number."""
+
+    def __init__(self, key: str, why: str):
+        self.key, self.index = key, TORN
+        super().__init__(f"the stored row {key} does not read ({why})")
+
+
+# A KEY IS A FILE NAME HERE (the eleventh review, a minor): a unit's name of 100 000 characters became a file name the
+# disk refused — `OSError: File name too long`, answered as "the store did not answer" with the store's local path in
+# the reply. A key is at most `KEY_BYTES` bytes as this store spells it on disk — a file name of 255 bytes less
+# `.json.tmp`; a `/` and a `%` take three bytes each, a letter outside ASCII two to four. Longer: refused at the write, in
+# words (`KeyTooLong`, the store's own limit as `TooLarge` says one: 413 at the console); at a read, no such row — none
+# could have been written; a delete finds nothing to remove.
+KEY_BYTES = 255 - len(".json.tmp")
+
+
+class KeyTooLong(TooLarge):
+    """A key longer than this store can name a file."""
+
+    def __init__(self, key: str, size: int):
+        super().__init__(key if len(key) <= 64 else key[:64] + "…", size, KEY_BYTES,
+                         f"a key is at most {KEY_BYTES} bytes here, as a file's name (a / or a % counts three): "
+                         f"a shorter name")
+
+
 class FileVariables:
     # `root` is the store directory; `<root>/vars/` is created. `writer` is this handle's identity (None
     # means unrestricted). `acl` is `{writer: [allowed prefixes]}`; when both `writer` and a non-empty `acl`
@@ -309,6 +347,8 @@ class FileVariables:
         # `a/b` would be the same file, and `list` would report one of them — the same "two keys, one
         # place" bug `safe_path` refuses above, arriving through the encoding instead of through the path.
         name = safe_path(path).replace("%", "%25").replace("/", "%2F")
+        if len(name.encode()) > KEY_BYTES:
+            raise KeyTooLong(path, len(name.encode()))
         return os.path.join(self.dir, name + ".json")
 
     # Opens the lock file and takes an exclusive lock on it (`_lock_exclusive`, by OS); the returned file object is used as a
@@ -369,11 +409,30 @@ class FileVariables:
     # place. Items come back as a fresh dict of strings.
     def get(self, path: str) -> tuple[dict | None, int]:
         try:
-            with open(self._file(path)) as f:
-                d = json.load(f)
-        except FileNotFoundError:
+            with open(self._file(path), "rb") as f:
+                raw = f.read()
+        except (FileNotFoundError, KeyTooLong):          # a key too long to be a file: nothing could be written there
             return None, 0
-        return dict(d["items"]), int(d["index"])
+        try:
+            d = json.loads(raw)
+            items, idx = d["items"], d["index"]
+            if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
+                raise TypeError("its items are not a map")
+            if isinstance(idx, bool) or not isinstance(idx, int):
+                raise TypeError("its index is not a whole number")
+            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what Nomad would hold
+            # had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
+            items = {k: v if isinstance(v, str) else json.dumps(v) for k, v in items.items()}
+        except (ValueError, TypeError, KeyError, RecursionError) as e:
+            raise Garbled(path, f"{type(e).__name__}: {e}") from None
+        return items, idx
+
+    # The version a write compares its `cas` with: the row's index, 0 for none — and `TORN` for a row that does not read.
+    def _current(self, path: str):
+        try:
+            return self.get(path)[1]
+        except Garbled as e:
+            return e.index
 
     # The write. First the ACL: if this handle has a writer and an ACL, the path must match one of the
     # writer's allowed patterns or `Forbidden` is raised — before taking the lock. Then, under the lock:
@@ -391,8 +450,9 @@ class FileVariables:
         # Checked before the lock and before the write: an oversized row never half-lands, and the value
         # that is already there is still the value that is there.
         check(path, items_bytes(items), self.max_bytes)
+        self._file(path)                                # a key too long for a file's name: refused before the lock
         with self._locked():
-            _, current = self.get(path)
+            current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
             idx = self._next_index()
@@ -408,8 +468,12 @@ class FileVariables:
     # the same CAS check as `put`, remove the file (a missing file is not an error) and burn an index.
     def delete(self, path: str, cas: int | None = None) -> None:
         refuse_delete(path, self.writer, self.acl)
+        try:
+            self._file(path)
+        except KeyTooLong:
+            return                                      # nothing could have been written under it
         with self._locked():
-            _, current = self.get(path)
+            current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
             try:

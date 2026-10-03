@@ -975,7 +975,9 @@ class SendMixin:
 # `Refused` — 400 to whoever sent it, and nothing written.
 def object_body(h) -> dict:
     try:
-        body = h._body()
+        # A subsystem's route is handed a length and a stream (`headers`, `rfile`), not always this console's handler.
+        reader = getattr(h, "_body", None)
+        body = reader() if reader is not None else json.loads(h.rfile.read(int(h.headers.get("Content-Length", 0) or 0)) or b"{}")
     except PARSE_ERRORS as e:
         raise Refused(f"the body is not JSON that can be read ({type(e).__name__})") from None
     if not isinstance(body, dict):
@@ -1488,7 +1490,8 @@ class SpecConsole:
         row.update(holds=held.get(w, []), hung=False, hung_since=None, slot_garbled=False, slot_until=None)
         try:
             key = ctl.sub.slot_key(w)
-            items, _ = ctl.vars.get(key)
+            from .contract import SLOTS, stored
+            items, _ = stored(ctl.vars, key, SLOTS)      # one the store cannot read: garbled, as one that does not parse
             if not items:
                 return                                   # a name no process claimed (one given in the unit file): no slot to judge
             slot = read_slot(key, w, items)
@@ -1496,7 +1499,8 @@ class SpecConsole:
             if slot is not None and slot.released:
                 row["released"] = True
                 return
-            fate, _, why = ctl.slot_fate(w, slot)
+            from .contract import published_hung_limit     # the controller's limit, not this process's (`slot_fate`)
+            fate, _, why = ctl.slot_fate(w, slot, hung_after=published_hung_limit(ctl.objects, ctl.sub))
             if fate == "hung":
                 row.update(hung=True, hung_since=ctl.hung_since(w, slot), hung_why=why)
         except (*PARSE_ERRORS, OSError):
@@ -1531,12 +1535,11 @@ class SpecConsole:
                          if sees is None or sees(str(u), self._labels(str(u), None))]
                 return 200, {"server": server, "labels": sorted(rows[server]) if server in rows else None,
                              "labels_source": ctl.labels_source(server), "would_move": moves}
-            try:
-                body = h._body() if method == "PUT" else {}
-            except ValueError as e:                      # not JSON: an answer, not a connection dropped (the tenth pass)
-                raise Refused(f'the body is not JSON ({e}): {{"labels": ["vlan:cctv-a", …]}}')
+            # Through `object_body` (the eleventh review, a minor): `ValueError` alone let a body nested past what JSON
+            # reads (`RecursionError`) through, and the connection dropped with no answer.
+            body = object_body(h) if method == "PUT" else {}
             if method == "PUT":
-                labels = ctl.set_server_labels(server, body.get("labels") if isinstance(body, dict) else None)
+                labels = ctl.set_server_labels(server, body.get("labels"))
                 self.journal.say("server.labels.set", of=self.spec.name, server=server, labels=",".join(labels), user=user)
                 return 200, {"server": server, "labels": labels, "labels_source": "console",
                              "will_move": ctl.would_move(server, labels)}
@@ -2771,10 +2774,21 @@ class Mount:
                 con, path = mnt.resolve(u.path)
                 con.dispatch(self, method, path, q)
 
-            def do_GET(self): self._route("GET")
-            def do_POST(self): self._route("POST")
-            def do_PUT(self): self._route("PUT")
-            def do_DELETE(self): self._route("DELETE")
+            # WHAT THE STORE CANNOT HOLD IS SAID, ON EVERY ROUTE (the eleventh review, a minor): a key longer than the
+            # store can name a file (`variables.KeyTooLong`) — a keep, a volume, a server's labels under a name of
+            # 100 000 characters — raised past the routes that knew only `TooLarge` of a row's size, and the connection
+            # dropped with no answer. The store's own limit, in its words, to whoever asked: 413. Raised before a
+            # write, so nothing of the reply was sent.
+            def _answered(self, method):
+                try:
+                    self._route(method)
+                except TooLarge as e:
+                    self._send(413, {"detail": str(e), "error": "too large for the store"})
+
+            def do_GET(self): self._answered("GET")
+            def do_POST(self): self._answered("POST")
+            def do_PUT(self): self._answered("PUT")
+            def do_DELETE(self): self._answered("DELETE")
 
         return H
 

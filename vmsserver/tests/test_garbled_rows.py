@@ -476,3 +476,148 @@ def test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fa
     traced = [r for r in records if r.exc_info and "redistribute" in r.getMessage()]
     again = [r for r in records if "redistribute works again" in r.getMessage()]
     assert len(traced) == 1 and len(again) == 1, [r.getMessage() for r in records]
+
+
+# -- the course's file store: a row it holds and cannot read, a key it cannot name (the eleventh review) ---------------
+
+_DAMAGE = {
+    "torn": lambda raw: raw[:len(raw) // 2],
+    "items not a map": lambda raw: json.dumps({"items": ["a", "b"], "index": json.loads(raw)["index"]}),
+    "index not a number": lambda raw: json.dumps({"items": json.loads(raw)["items"], "index": "seven"}),
+}
+_NOT_STRINGS = lambda raw: json.dumps({"items": {k: [7, True, 1e999] for k in json.loads(raw)["items"]},  # noqa: E731
+                                       "index": json.loads(raw)["index"]}).replace("Infinity", "1e999")
+
+
+def test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the_routes_go_on():
+    """The eleventh review, a minor: a torn file of the course's file store — or one whose `items` are not a map — raised
+    whatever `json` raised out of `FileVariables.get`, and the routes that read the drain, a slot, a placement, a
+    worker's row, a hold or a decommission bare fell whole: `/servers`, `/unplaceable`, `/drain`, `/where` gave no answer
+    at all. `get` raises one error now (`Garbled`, a `ValueError` naming the row); the readers of those rows read it as
+    that row not parsing (`contract.stored`) — counted and logged once — and every route answers. Values that are not
+    strings, which Nomad never answers, come back as their JSON text: the field's trouble, as a Nomad value's. A write
+    replaces a row that does not read whole (`Controller.write`, `cas=TORN`): the controller's next pass places a unit
+    whose placement nobody could read again; a create-only write conflicts."""
+    import urllib.error
+    import urllib.request
+    from w2cplatform.variables import TORN, Conflict, Garbled
+    from vms.config import SPEC
+    from vms.controller import VmsController
+    from tests.test_console_gate import _console
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        c2 = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                      archive_root=box.archive)
+        w.heartbeat_once()
+        ctl.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"}); c2.ensure_placed()
+        w.reconcile_once(); w.heartbeat_once()
+        box.vars.put("platform/drain", {"server": "", "at": "1"})
+        box.vars.put("rec/holds/v1", Slot("v1", "i-1", box.wall() + 60, False, 1, "r-1").to_items())
+        box.vars.put("platform/decommission/srv-9", {"by": "anna", "at": "1", "why": "gone"})
+
+        def get(path):
+            try:
+                with urllib.request.urlopen(base + path, timeout=10) as r:
+                    return r.status
+            except urllib.error.HTTPError as e:
+                return e.code
+            except OSError as e:                                          # no answer at all: the review's
+                return type(e).__name__
+        routes = ("/servers", "/unplaceable", "/drain", "/where/1", "/cameras", "/metrics", "/rec/volumes")
+        assert {r: get(r) for r in routes} == {r: 200 for r in routes}
+        for key in ("platform/drain", "vms/slots/w-1", "vms/placement/1", "vms/workers/w-1", "rec/holds/v1",
+                    "platform/decommission/srv-9"):
+            f = box.vars._file(key)
+            with open(f) as fh:
+                raw = fh.read()
+            for how, damage in _DAMAGE.items():
+                with open(f, "w") as fh:
+                    fh.write(damage(raw))
+                try:
+                    box.vars.get(key)
+                    raise AssertionError(f"{key} {how}: read as a row")
+                except Garbled as e:
+                    assert isinstance(e, ValueError) and key in str(e) and e.index == TORN
+                answers = {r: get(r) for r in routes}
+                want = {r: 404 if (r, key) == ("/where/1", "vms/placement/1") else 200 for r in routes}   # placed nowhere
+                assert answers == want, (key, how, answers)
+            # Values that are not strings: each its JSON text, as Nomad would hold it — the field's parse error, not the row's.
+            with open(f, "w") as fh:
+                fh.write(_NOT_STRINGS(raw))
+            items, _ = box.vars.get(key)
+            assert set(items.values()) == {"[7, true, Infinity]"}, items
+            answers = {r: get(r) for r in routes}
+            assert all(isinstance(s, int) for s in answers.values()), (key, answers)   # every route answers
+            with open(f, "w") as fh:
+                fh.write(raw)
+        _forget_garbled()
+        # A write replaces it whole; a create-only one conflicts; the controller's pass places again what nobody can read.
+        f = box.vars._file("vms/placement/1")
+        with open(f) as fh:
+            raw = fh.read()
+        with open(f, "w") as fh:
+            fh.write(raw[:20])
+        try:
+            box.vars.put("vms/placement/1", {"worker": "w-1"}, cas=0)
+            raise AssertionError("a create-only write over a row that is there")
+        except Conflict:
+            pass
+        assert c2.placement(1) is None                                    # read as placed nowhere…
+        c2.ensure_placed()
+        assert c2.placement(1).worker == "w-1"                            # …placed again, the row written whole
+        assert "garbled" not in c2.vars.get("vms/placement/1")[0]
+    finally:
+        srv.shutdown()
+        _forget_garbled()
+
+
+def test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_words_and_is_no_row_at_a_read():
+    """The eleventh review, a minor: a recording named with 100 000 characters became a file name the disk refused —
+    "File name too long", answered 503 "the store did not answer" with the store's local path in the reply, and a keep
+    for such a camera dropped the connection. A key is at most `KEY_BYTES` here, as a file's name: longer is refused at
+    the write (`KeyTooLong`, the store's limit as `TooLarge` says one: 413, in words, no path); a read finds no such row;
+    a delete removes nothing. And a `source` of 100 000 characters, which is a field, not a key, is taken in a moment
+    (the login hidden in it was looked for from every position: minutes of a console's thread)."""
+    import time
+    import urllib.error
+    import urllib.request
+    from w2cplatform.limits import TooLarge
+    from w2cplatform.variables import KEY_BYTES, KeyTooLong
+    from tests.test_console_gate import _console
+    box = Box()
+    long = "x" * 100_000
+    try:
+        box.vars.put("rec/recordings/" + long, {"cam": "1"})
+        raise AssertionError("a key no file can be named after")
+    except KeyTooLong as e:
+        assert isinstance(e, TooLarge) and e.limit == KEY_BYTES == 246 and "a shorter name" in str(e) and len(str(e)) < 400
+    assert box.vars.get("rec/recordings/" + long) == (None, 0)
+    box.vars.delete("rec/recordings/" + long)
+    edge = "vms/cameras/" + "y" * (KEY_BYTES - len("vms%2Fcameras%2F"))
+    box.vars.put(edge, {"id": "1"})                                       # at the limit: a row
+    assert box.vars.get(edge)[0] == {"id": "1"}
+    ctl, rec, m, srv, base = _console(box)
+
+    def call(method, path, body, key="k"):
+        req = urllib.request.Request(base + path, data=json.dumps(body).encode(), method=method,
+                                     headers={"Content-Type": "application/json", "Idempotency-Key": key})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status, json.loads(r.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read() or b"{}")
+    try:
+        for path, body in (("/rec/recordings", {"name": long, "cam": "1"}),
+                           ("/rec/keeps", {"cam": long, "from": 1, "to": 2}),
+                           ("/rec/volumes", {"name": long, "url": "file:///tmp/x", "server": "srv-1", "quota_bytes": 1 << 30})):
+            status, said = call("POST", path, body, key=f"k{len(path)}")
+            assert status == 413 and "a shorter name" in said["detail"] and box.root not in said["detail"], (path, said)
+        status, said = call("POST", "/cameras", {"name": "c"}, key="%" * 100)   # an Idempotency-Key: 300 bytes as a file's name
+        assert status == 413 and "a shorter name" in said["detail"], said
+        t = time.monotonic()
+        status, _ = call("POST", "/cameras", {"source": "driverpack://file/" + long + ".mp4"}, key="k-src")
+        assert status == 201 and time.monotonic() - t < 5.0
+    finally:
+        srv.shutdown()

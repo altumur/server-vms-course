@@ -193,6 +193,38 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
         srv.shutdown()
 
 
+def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_labels_and_an_offer_that_is_no_text_too():
+    """The eleventh review, a minor: `POST /rec/keeps` and `POST /rec/volumes` (a body not JSON, or nested past what
+    JSON reads) and `PUT /servers/<s>/labels` (nested) dropped the connection with no answer — they read the body bare,
+    beside the routes the tenth round had closed. Through `object_body` now: 400, in words, nothing written. The sibling
+    of the same class: an offer of a live view that is no text (bytes that are not UTF-8), at the console and at the
+    gateway, was the same dropped connection; 400 now."""
+    from tests.test_console_gate import _console
+    from tests.test_lesson8_live import OFFER, _box as _live_box, _gateway
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        n = 0
+        for method, path in (("POST", "/rec/keeps"), ("POST", "/rec/volumes"), ("PUT", "/servers/srv-1/labels")):
+            for data in (b"{not json", BODY_DEEP.encode(), b"[1, 2]"):
+                n += 1
+                assert _raw(base, method, path, data, f"k{n}") == 400, (method, path, data[:12])
+        assert box.vars.list("rec/keeps/") == [] and box.vars.list("rec/volumes/") == []
+    finally:
+        srv.shutdown()
+    box, ctl, live_ctl, w, srv, base = _live_box()
+    try:
+        g = _gateway(box, "g-1")
+        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 503    # the first offer makes the stream: placed next
+        live_ctl.ensure_placed(); g.reconcile_once(); g.heartbeat_once()
+        bad = b"v=0\r\n\xff\xfe\xfa"
+        assert _raw(base, "POST", "/whep/1", bad) == 400               # the console's
+        assert _raw(g.url, "POST", "/whep/1", bad) == 400              # the gateway's own
+        assert _raw(base, "POST", "/whep/1", OFFER.encode()) == 201 and len(g.sessions) == 1
+    finally:
+        srv.shutdown()
+
+
 def _chunked(base: str, method: str, path: str, body: bytes) -> bytes:
     """`body` sent in one chunk, with `Transfer-Encoding: chunked` and no `Content-Length`: the reply's first line."""
     import socket
