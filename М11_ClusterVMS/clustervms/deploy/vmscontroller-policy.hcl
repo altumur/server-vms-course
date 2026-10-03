@@ -1,13 +1,13 @@
 # deploy/vmscontroller-policy.hcl — bound to job vmscontroller's workload identity.
 # The only writer of PLACEMENT: which worker runs which camera, a released
-# slot's redistribution, an operator's `retire`, and the snapshot that leaves
+# slot's redistribution, a dead worker's slot freed, and the snapshot that leaves
 # the cluster. It never writes a camera row — those are the console's.
 namespace "default" {
   variables {
     path "vms/workers/*"        { capabilities = ["write", "read", "list"] }
     path "vms/placement/*"      { capabilities = ["write", "read", "list"] }
     path "vms/slots/*"          { capabilities = ["write", "read", "list"] }
-    path "vms/retire/*"         { capabilities = ["write", "read", "list", "destroy"] }   # the operator's "never coming back", from the console: read each pass, deleted when done, the reason written into one refused
+    path "vms/decommissioned/*" { capabilities = ["write", "read", "list", "destroy"] }   # its mark that a server's decommission was carried out (М10A Lesson 7, step 7), gone with the request
     path "objects/vms/snapshot/*" { capabilities = ["write", "read", "list"] }   # one object per worker (М10A Lesson 25)
     path "objects/vms/controller/pass" { capabilities = ["write", "read"] }   # its pass report, where /metrics reads vms_units_unplaced (the ninth review: a 403 every pass)
     path "objects/*"            { capabilities = ["read", "list"] }

@@ -88,7 +88,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 log = logging.getLogger(__name__)
 
-from .contract import BUILD, SCHEMA, check_schema, is_live, parse_heartbeat
+from .contract import BUILD, PRESENCE, SCHEMA, check_schema, is_live, parse_heartbeat
 from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
@@ -276,10 +276,71 @@ def peers_of(server: str, live: list[str], copies: int) -> list[str]:
 
 # Every resource heartbeat under `platform/resources/`, keyed by `server`, whatever its age. Callers filter
 # by `ts`.
+# THE WORKERS OF THIS SERVER (the owner's decision, 3 Oct, on the review's eleventh pass): `(workers, running)`, each
+# `{subsystem: [name]}` — the product's fields. Each worker registers here (`Worker.present`): it holds a lock on
+# `<root>/.workers/<instance>.lock` for as long as its process lives, and says beside it what it is called (`.json`).
+# WORKERS: every registration this server has — the slots placed on it. RUNNING: those whose lock cannot be taken — a
+# process that still lives, hung or not.
+# A registration whose process ended stays placed (the server's supervisor brings it back under its name) until a newer
+# registration here says the same name, or until it has said nothing for `PRESENCE_KEPT` (the worker touches its lock
+# at every heartbeat) — then it is removed: the server does not run it any more. A `.json` that does not read is a
+# process whose name is not known yet: under `?`, so it is taken for nobody's.
+PRESENCE_KEPT = 86400.0
+
+
+def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    import fcntl
+    now = time.time() if now is None else now
+    d = os.path.join(root, PRESENCE) if root else None
+    try:
+        names = sorted(os.listdir(d)) if d else []
+    except OSError:
+        return {}, {}
+    seen = []                                                 # (sub, name, alive, touched, lock path)
+    for n in names:
+        if not n.endswith(".lock"):
+            continue
+        lock = os.path.join(d, n)
+        try:
+            with open(lock, "rb") as f:
+                try:
+                    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    alive = False
+                    fcntl.flock(f, fcntl.LOCK_UN)
+                except OSError:                               # held: the process lives
+                    alive = True
+            touched = os.path.getmtime(lock)
+            try:
+                with open(lock[:-len(".lock")] + ".json") as j:
+                    said = json.load(j)
+                sub, name = str(said["sub"]), str(said["name"])
+            except (OSError, *PARSE_ERRORS):
+                sub, name = "?", n[:-len(".lock")]
+        except OSError:
+            continue
+        seen.append((sub, name, alive, touched, lock))
+    placed: dict[str, set] = {}
+    alive_: dict[str, set] = {}
+    for sub, name, alive, touched, lock in seen:
+        newer = any(o[:2] == (sub, name) and (o[2] or o[3] > touched) for o in seen if o[4] != lock)
+        if not alive and (newer or now - touched > PRESENCE_KEPT):
+            for path in (lock[:-len(".lock")] + ".json", lock):
+                with suppress(OSError):
+                    os.remove(path)
+            continue
+        if name:
+            placed.setdefault(sub, set()).add(name)
+            if alive:
+                alive_.setdefault(sub, set()).add(name)
+    return ({k: sorted(v) for k, v in placed.items()}, {k: sorted(v) for k, v in alive_.items()})
+
+
 def resources_seen(objects) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
         hb = dict(json.loads(raw))
-        hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it — `server` a name
+        hb["server"], finite(hb["ts"])                         # what every reader of this dict asks of it — `server` a name
+        # (`ts` a finite number: `Infinity` was a resource live for ever, `NaN` one silent — and a silent resource MOVES
+        # a recorder's units; the review's eleventh pass, the sibling of the slot's `until`)
         # (`parse_heartbeat` checks it: `["srv-x"]` was the key of `out` below, and `/metrics`, `restore` and the mirror
         # raised on it — the review's tenth pass)
         # …and what the mirror asks of it (the review's seventh pass): `url` to send to and take back from, `mirrors` a
@@ -704,6 +765,10 @@ class Resource:
               "schema": SCHEMA, "build": BUILD,                      # what this build understands, and what it is
               "usage": self.usage_cached(), "usage_at": self.usage_at,
               "space": self.space(), "volumes": self.spaces(), "units": self.units(),
+              # The workers placed on this server and those whose process runs, by subsystem (`workers_here`): what
+              # tells a hung worker from a dead one (`Controller.slot_fate`; the owner's decision on the review's eleventh
+              # pass). The files' own clock, not `wall`: what is compared is a file's age
+              **dict(zip(("workers", "running"), workers_here(self.root))),
               "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
               "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
               # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's

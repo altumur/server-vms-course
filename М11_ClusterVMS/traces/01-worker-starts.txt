@@ -3,6 +3,10 @@ GET /v1/var/platform/schema?namespace=default
 → 404
 
 # vmsworker (allocation 0 on srv-a)
+GET /v1/var/platform/decommission/srv-a?namespace=default
+→ 404
+
+# vmsworker (allocation 0 on srv-a)
 GET /v1/vars?prefix=vms/slots/&namespace=default
 → 200 []
 

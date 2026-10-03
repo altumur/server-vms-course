@@ -813,31 +813,26 @@ served 3/4 · 0 spare        объявлено четыре, обслужива
 
 **`GET /servers` говорит обе правды.** У каждого сервера теперь `labels` (по чему размещают), `labels_node` (что говорят его воркеры) и `labels_source` — `console` или `node`; `labels_unread: true` — строка есть, но не прочиталась, и с сервера ничего не снимают (М10A, урок 11). Страница показывает это строкой «reaches …» в блоке сервера, с *edit* и *back to the node's*; перед записью она спрашивает `GET …/labels?labels=…` и называет в подтверждении камеры, которые переедут или встанут неразмещёнными. Тест: `tests/test_server_labels.py::test_the_page_is_told_which_cameras_an_edit_will_move`. Та же правда нужна была ещё в одном месте — проверке `?labels=` зрителя живого видео: она читала метки шлюза из heartbeat'а, теперь спрашивает `labels_of`, как размещение (`tests/test_lesson8_live.py::test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own`).
 
-## Шаг 11 — Воркер, который не вернётся
+## Шаг 11 — Сервер, который не вернётся
 
-**Сказать «этот процесс не вернётся» теперь можно из консоли, а слот снимает контроллер** (решение владельца курса — перенести эту дверь из продукта). `retire` (М10A, урок 7) был словом оператора, которое негде было сказать: у контроллера нет порта, а токен консоли не пишет `slots/*`. Теперь это платформенный маршрут консоли, и у каждой смонтированной подсистемы он свой (`/workers/…` у VMS, `/rec/workers/…` у регистратора):
+**Оператор управляет серверами, а не воркерами** (решение владельца курса после одиннадцатого ревью). Здесь была дверь `POST /workers/<w>/retire` — «этот процесс не вернётся», — и ревью показало, во что она обходится. Цикл воркера завис, конвейеры писали, ресурс сервера отвечал; страница видела молчащий воркер с истёкшим слотом, предлагала *retire*, и после нажатия у камер 1 и 3 было два писателя. Оператор не может знать, умер процесс или завис, — а дверь спрашивала именно это. Её больше нет. Что делать со слотом, который перестал продлеваться, контроллер решает сам, по одному правилу (`slot_fate`, М10A, урок 7, шаг 7): зависший на отвечающем сервере остаётся со своими камерами — тревога `worker.hung`, — умерший отдаёт их, незнакомый серверу освобождается.
+
+Человеку остаются два слова, оба о машине. Дренаж (М10A, урок 17) — сервер вернётся. Списание — не вернётся. Маршрут живёт на `Mount`, рядом с `/drain`: сервер несёт все подсистемы, и спросить, отвечает ли он, надо у каждой. Имена — те же, что в продукте:
 
 ```python
-    # THE OPERATOR'S DOOR TO `retire`: `POST /workers/<worker>/retire {"why": "…", "gen": n}`.
-    #
-    # `Controller.retire` said "the operator's statement that a slot is gone for good", and no operator could make it:
-    # the controller has no port, and this console's token has no `slots/*` — a console that could write a slot would
-    # be a second controller. So the console writes a REQUEST (`<sub>/retire/<worker>`, `request_retire`) and the
-    # controller retires the slot on its next pass (`apply_retires`), as a drain is written here and read there.
-    #
-    # Refused in words before anything is written: a worker alive — its lease runs, or it was heard from within 45 s —
-    # (409, `alive`); the name taken by another process since the page showed it, when the page sends the `gen` it
-    # showed (409, `generation`); released already (409); no such worker (404). Names no unit: `admin` on the whole
-    # cluster (`needs`) — a retired worker's cameras all move. A journal line with the name, the generation and why.
-    # The answer says what will move and what stays held: a volume the worker held is not given back by a retire.
-    def retire_route(self, h, path: str) -> tuple:
+    # THE OPERATOR'S DOOR TO A SERVER'S END: `POST /servers/<server>/decommission {"why": "…"}`, `DELETE` to withdraw it or
+    # to bring the machine back. On the Mount, as `/drain`: a machine carries every subsystem, and whether it still answers
+    # is asked of each (the product's door).
+    def decommission_route(self, h, method: str, path: str, user: str = "operator") -> tuple:
 ```
 
-**Права — `admin` на весь кластер, как у меток сервера.** Путь не называет камеры, а уедут все камеры воркера. Админ одной камеры, грант по метке и `view` получают 403, и ничего не пишется (`tests/test_retire_door.py::test_retiring_a_worker_needs_admin_on_the_whole_cluster`).
+**Права — `admin` на весь кластер, как у дренажа.** Путь не называет камеры, а уедут все камеры сервера. Тело — объект JSON, иначе 400; сервер, о котором никто здесь не слышал, — 404.
 
-**Консоль пишет просьбу и строку журнала, и ничего больше.** `202` с `{"state": "requested", "gen", "units", "holds"}`: консоль записала `vms/retire/<w> {gen, by, at, why}` и строку журнала `worker.retire.requested` с автором. Слот она не трогает. Контроллер на следующем проходе проверяет оба условия заново, снимает слот, удаляет просьбу, и `redistribute` увозит камеры. Отказ на проходе остаётся в строке (`refused`), и страница его показывает. `holds` — тома, которые воркер держал: снятие их не отпускает, и `note` в ответе советует отозвать том, если он сгорел вместе с сервером.
+**Пока сервер отвечает, ответ — 409, и признак назван.** Три признака, каждого достаточно (`decommission_refusal` у каждой подсистемы): ресурс сервера слышали в последние 45 с; воркера этого сервера слышали в последние 45 с; воркер этого сервера продлевает слот или перестал меньше 45 с назад. Ответ словами: `srv-1 answers: its resource was heard 3 s ago — take the server out of service and switch it off first`. Ничего не пишется. Сервер, чей ресурс не слышали никогда, проходит — с `warning`: выключен ли он, сказать нельзя, и платформа верит оператору.
 
-**Страница предлагает *retire* только там, где это можно.** `GET /servers` теперь говорит про каждого воркера `gen`, `released`, `retirable`, `retire_refusal` (почему нельзя — словами), `retire` (просьба, если она есть, с тем, что о ней сказал контроллер) и `holds`. Ссылка *retire* стоит только у воркера с `retirable: true`. Страница спрашивает причину и шлёт `gen`, который показала: если имя за это время занял другой процесс, консоль ответит 409 `generation`. Тесты: `tests/test_retire_door.py::test_a_dead_worker_is_retired_from_the_console_on_the_next_pass_and_its_name_gets_no_cameras`, `…::test_a_request_whose_generation_is_older_than_the_slots_is_refused`, `…::test_a_retired_recorder_keeps_the_volume_it_held_and_the_answer_names_it`.
+**Замолчавший — 202, и дальше работают контроллеры.** Консоль пишет одну строку `platform/decommission/<server> {by, at, why}` (её пишет только консоль) и строку журнала `server.decommission_requested`. Ответ по каждой подсистеме называет воркеров сервера, единицы, которые уедут, и занятые места: освобождение слота их не отпускает, и `note` советует отозвать том, если он сгорел вместе с сервером. Каждый контроллер на следующем проходе (`apply_decommissions`) проверяет признаки заново, освобождает слоты этого сервера и пишет отметку `<sub>/decommissioned/<server> {asked_at, at, slots, units, holds}`; в журнале — `server.decommissioned`. `redistribute` увозит камеры. На этот сервер больше ничего не размещается, а процессу на нём не дают слот (`ServerDecommissioned`), пока `DELETE /servers/<server>/decommission` не вернёт его — `200`, строка журнала `server.decommission_withdrawn`; отметку контроллер убирает сам.
+
+**Страница показывает обе вещи.** `GET /servers` говорит про каждый сервер `decommission` (просьба), `decommissioned` (отметка контроллера), `decommissionable`, `decommission_refusal` (какой признак), `decommission_warning`, `lost` (места, которые остались заняты), `resource` и `resource_heard_at`; про каждого воркера — `hung` и `hung_since`, `slot_garbled` и `slot_until` (у строки слота, которая не разбирается, — `null`). В блоке сервера — ссылка *decommission* (или почему нельзя сейчас), «decommissioned by …» с *bring back*, а у зависшего воркера — красная строка `hung: …`. Метрики: `vms_servers_decommissioned_total`, `vms_slots_released_total`, `vms_decommission_requests_standing`, `vms_workers_hung`. Тесты: `tests/test_slot_fate.py::test_a_server_is_decommissioned_only_once_it_is_silent_and_then_never_placed_on_until_it_is_brought_back`, `…::test_a_server_whose_resource_was_never_heard_is_decommissioned_with_a_warning`, `…::test_a_hung_worker_on_a_server_that_answers_keeps_its_cameras_and_no_second_holder_is_made`.
 
 ## Результат
 
@@ -863,8 +858,8 @@ GET  /rec/volumes                 → тома: заявленные, кто и�
 GET  /rec/keeps                   → удержания
 GET  /det/units                   → детекторы
 GET  /live/streams                → вещания
-POST /workers/w-2/retire          → 202 {state: requested, gen, units, holds} — слот снимет контроллер на проходе;
-                                    409, пока воркер жив или имя занял другой процесс
+POST /servers/srv-c/decommission  → 202 {state: requested, subsystems: {vms: {workers, units, holds}, …}} — слоты
+                                    освободят контроллеры; 409, пока сервер отвечает (признак назван)
 ```
 
 Один процесс, один порт, одна страница — и все подсистемы.

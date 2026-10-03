@@ -1,0 +1,38 @@
+# console
+PUT /v1/var/platform/decommission/srv-c?namespace=default
+{"Items": {"by": "anna", "at": "1757500100.0", "why": "srv-c burnt"}}
+→ 200 {"Path": "platform/decommission/srv-c", "ModifyIndex": 1019}
+
+# vmscontroller
+PUT /v1/var/vms/slots/w-2?namespace=default&cas=1009
+{"Items": {"holder": "alloc-0002", "until": "1757500045.0", "released": "true", "gen": "1"}}
+→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1020}
+
+# vmscontroller
+PUT /v1/var/vms/decommissioned/srv-c?namespace=default
+{"Items": {"asked_at": "1757500100.0", "at": "1757500100.0", "slots": "w-2", "units": "2", "holds": ""}}
+→ 200 {"Path": "vms/decommissioned/srv-c", "ModifyIndex": 1021}
+
+# vmscontroller
+PUT /v1/var/vms/placement/2?namespace=default&cas=1014
+{
+  "Items": {
+    "worker": "w-1",
+    "reason": "slot w-2 released; most free capacity (49); on srv-b",
+    "at": "1757500100.0",
+    "rev": "2"
+  }
+}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1022}
+
+# vmscontroller
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1015
+{"Items": {"units": "", "rev": "2"}}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1023}
+
+# vmscontroller
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1013
+{"Items": {"units": "1,2", "rev": "2"}}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1024}
+
+# … and 137 GET requests, omitted

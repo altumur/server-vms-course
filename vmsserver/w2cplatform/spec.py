@@ -87,7 +87,7 @@ from urllib.parse import urlsplit
 from .doors import numeric, unnamable
 from .secrets import credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -470,7 +470,7 @@ class SubsystemSpec:
         # A table's name becomes a key family and an ACL prefix, so it is a name and not a path, and it may
         # not be the unit rows under another spelling — two writers on one family with different rules.
         for t in spec.tables:
-            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers", "retire"):
+            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers", "decommissioned"):
                 raise ValueError(f"spec {spec.name}: `tables:` takes a fresh row family name, not {t!r}")
         leaks = [n for n in spec.snapshot if is_secret_field(n)]
         if leaks:
@@ -555,8 +555,8 @@ class SubsystemSpec:
                f"{self.name}/sweep",                                                          # what the blob sweep marked, and when
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
                f"{self.name}/servers/*",                                                      # what a server reaches, as the administrator says it (feedback DQ)
-               f"{self.name}/retire/*",                                                       # "this slot's process will never come back": the controller retires it (`apply_retires`)
-               DRAIN_KEY]                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
+               DRAIN_KEY,                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
+               DECOMMISSION + "*"]                                                            # "this machine is gone for good": the operator's, every subsystem reads it
         for d in self.derived:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
         out += [f"{self.name}/{t}/*" for t in self.tables]              # the administrator's lists: `rec/volumes/*`
@@ -566,12 +566,10 @@ class SubsystemSpec:
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the
     # console cannot place and the controller cannot edit; `test_the_console_over_http` proves
     # `con.place(1)` raises `Forbidden`.
-    #
-    # …and `<name>/retire/*`, the operator's requests to retire a slot: the controller reads them, deletes one it has
-    # done and writes into one it refused why (`Controller.apply_retires`). The console writes them and never a slot.
     def acl_controller(self) -> list[str]:
         """Placement: what the controller (count = 1) may write — never a unit's row."""
-        return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*", f"{self.name}/retire/*"]
+        return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*",
+                f"{self.name}/decommissioned/*"]                       # its mark that a server's decommission was carried out
 
     # Whether ids are numbers; convert a string id accordingly.
     @property
@@ -1510,16 +1508,9 @@ class SpecController(Controller):
         return idle
 
     # -- what the worker's server must have: a resource, when the spec says so ---------------------
-    # The state of the resource on a server, from `platform/resources/<server>/heartbeat`: `"live"` (younger
-    # than `lost_after`), `"silent"` (older), `"unknown"` (never heartbeaten — a box before its resource
-    # process starts, a bench). Nomad's `meta.archive` constraint puts a worker where disks are declared;
-    # this is the live fact: whether the resource there still answers.
-    def resource_state(self, server: str, lost_after: float = 45.0) -> str:
-        from .resource import RESOURCES, resources_seen            # the platform's own reader of the resource heartbeats
-        hb = self._per_pass(RESOURCES + "/", lambda: resources_seen(self.objects)).get(server)   # asked per worker, read once a pass
-        if hb is None:
-            return "unknown"
-        return "live" if is_live("platform", float(hb["ts"]), self.wall(), lost_after) else "silent"
+    # The state of the resource on a server (`Controller.resource_state`: `live`, `silent`, `unknown`). Nomad's
+    # `meta.archive` constraint puts a worker where disks are declared; this is the live fact: whether the resource
+    # there still answers.
 
     # Workers whose server's resource is silent, when the spec requires one: not placed on, and (in
     # `redistribute`) moved off. A worker on a server whose resource was never seen passes — "silent" is
@@ -1541,17 +1532,18 @@ class SpecController(Controller):
     # claims the name and inherits the assignment (Lesson 4) — AND the resource on the slot's last known
     # server is silent. One silence is a crash and is left alone; two independent silences from the same
     # server are a fact about the server. Only when the spec requires a resource.
+    #
+    # That is still the rule where the server's resource cannot say who runs on it (`_moves_off_silent`). Where it can,
+    # the one rule decides (`Controller.slot_fate`; the owner's decision on the review's eleventh pass): a dead process,
+    # a silent server, a hung one past `hung_move_after` — `move`, `hung_moved`. The name stays from when it meant only the
+    # first.
     def gone_servers(self, lost_after: float = 45.0) -> dict[str, str]:
-        """Lapsed slots whose server's resource is silent too: {slot: server}."""
-        if self.spec.requires != "resource" or self.policy()["servers"] != "distinct":
-            return {}                                                    # shared: a dead server's slot is Nomad's to reschedule onto a neighbour
-        now = self.wall(); out = {}
-        for name, slot in self.slots().items():
-            if slot.lapsed(now) and now > slot.until + lost_after and self.assignment(name).units:
-                server = self.server_of(name)
-                if server != "?" and self.resource_state(server, lost_after) == "silent":
-                    out[name] = server
-        return out
+        """Slots that stopped renewing whose units move now (`slot_fate`: move, hung_moved): {slot: server}."""
+        return {w: server for w, (fate, server, _) in self.fates().items()
+                if fate in ("move", "hung_moved") and self.assignment(w).units}
+
+    def _moves_off_silent(self) -> bool:
+        return self.spec.requires == "resource" and self.policy()["servers"] == "distinct"   # shared: Nomad's to reschedule onto a neighbour
 
     # The given list, or the workers seen heartbeating in the last 45 s; minus those whose resource is
     # silent when the spec requires one; sorted.
@@ -1568,10 +1560,17 @@ class SpecController(Controller):
         server = self.draining()
         return [w for w in workers if server and self.server_of(w) == server] if server else []
 
+    # Workers on a server decommissioned (`Controller.decommission`): not placed on, and moved off — whatever comes
+    # back on that machine, until the operator brings it back (`recommission`).
+    def on_decommissioned(self, workers) -> list[str]:
+        gone = self.decommission_requests()
+        return [w for w in workers if self.server_of(w) in gone] if gone else []
+
     def _pool(self, workers):
         pool = sorted(workers if workers is not None else self.workers_seen())
         leaving = {n for n, s in self.slots().items() if s.released}
-        gone = set(self.without_resource(pool)) | set(self.idle_by_policy(pool)) | leaving | set(self.on_draining(pool))
+        gone = set(self.without_resource(pool)) | set(self.idle_by_policy(pool)) | leaving | set(self.on_draining(pool)) \
+            | set(self.on_decommissioned(pool))
         return [w for w in pool if w not in gone]
 
     # The dry run. Which units nothing else could serve if this server went away — asked BEFORE it does,
@@ -1816,13 +1815,18 @@ class SpecController(Controller):
     #   diverged           assignments this pass had to bring back to what the placement rows say
     #   garbled            rows that do not parse — units nobody serves until somebody mends the row
     #   reach_moves        units moved, or unplaced, because their server no longer reaches them (`ensure_reach`)
-    #   retired            slots retired this pass at the operator's request (`apply_retires`); `retire_refused` the
-    #                      requests it left standing, each with its reason written in the row
+    #   slots_released     slots the controller released this pass — a worker its server's resource lists nowhere
+    #                      (`release_unlisted`), every slot of a server decommissioned (`apply_decommissions`) — and
+    #                      `slots_released_total` since the store was new; `servers_decommissioned` and its `_total` the
+    #                      decommissions carried out; `decommission_requests_standing` those whose server still
+    #                      answers; `workers_hung` workers whose process runs on a server that answers and that neither
+    #                      renew nor speak (`slot_fate`) — the product's names
     #
     # The steps each in a `try` of their own (the review's second pass, M7): they shared one, so a
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass. Four since
     # `ensure_reach` (feedback DQ), in the product's order: placed, reach, redistribute, home. And before them the
-    # operator's requests to retire a slot (`apply_retires`), as the product's `Pass` has them first.
+    # decommissions (`apply_decommissions`) and the slots nobody runs any more (`release_unlisted`), so `redistribute`
+    # moves what they list in the same pass.
     PASS_KEY = CONTROLLER_PASS                        # granted by `acl_objects_controller` (the review's ninth pass)
 
     # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
@@ -1846,13 +1850,19 @@ class SpecController(Controller):
         self.last_diverged = 0
         errors = []
         self.last_reach_moves = 0
-        retires = {"retired": [], "refused": {}}
+        decom = {"decommissioned": [], "released": [], "standing": {}}
+        slots = {"released": {}, "hung": {}, "hung_moved": []}
 
-        # The operator's "gone for good" FIRST (`Controller.apply_retires`): a slot it releases is then read by
-        # `redistribute` below, which moves what it listed in this same pass.
-        def apply_retires():
-            retires.update(self.apply_retires())
-        for step, run in (("apply_retires", apply_retires),                       # the console's requests: a dead slot retired, both guards asked again
+        # The operator's decommissions and the slots nobody runs any more FIRST (`Controller.apply_decommissions`,
+        # `release_unlisted`): a slot they release is then read by `redistribute` below, which moves what it listed in
+        # this same pass.
+        def apply_decommissions():
+            decom.update(self.apply_decommissions())
+
+        def release_unlisted():
+            slots.update(self.release_unlisted())
+        for step, run in (("apply_decommissions", apply_decommissions),           # a server gone for good, once it is silent
+                          ("release_unlisted", release_unlisted),                 # a slot its server's resource lists nowhere
                           ("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
                           ("ensure_reach", self.ensure_reach),                     # a unit its server no longer reaches: moved, or unplaced with why
                           ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
@@ -1871,13 +1881,18 @@ class SpecController(Controller):
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
         rep["reach_moves"] = self.last_reach_moves     # units moved or unplaced because their server no longer reaches them
-        rep["retired"] = retires["retired"]            # slots retired this pass at the operator's request
-        rep["retire_refused"] = len(retires["refused"])   # requests left standing, each with its reason in the row
         # …and since the store was new, a counter (the review's tenth pass, minor): the gauge of the last pass showed a
         # third of the moves to a scrape every 15 s
         from .rows import number
-        rep["reach_moves_total"] = number(f"{self.sub.name}/{self.PASS_KEY}#reach_moves_total",
-                                          prev.get("reach_moves_total", 0), int, 0) + self.last_reach_moves
+        total = lambda field, n: number(f"{self.sub.name}/{self.PASS_KEY}#{field}", prev.get(field, 0), int, 0) + n
+        rep["reach_moves_total"] = total("reach_moves_total", self.last_reach_moves)
+        released = sorted({*slots["released"], *decom["released"]})
+        rep["slots_released"] = released                            # released this pass: unlisted, or on a decommissioned server
+        rep["slots_released_total"] = total("slots_released_total", len(released))
+        rep["servers_decommissioned"] = decom["decommissioned"]     # decommissions carried out this pass
+        rep["servers_decommissioned_total"] = total("servers_decommissioned_total", len(decom["decommissioned"]))
+        rep["decommission_requests_standing"] = len(decom["standing"])   # asked, and the server still answers
+        rep["workers_hung"] = sorted(slots["hung"])                 # its process runs, and it neither renews nor speaks
         # The units of groups `ensure_reach` left whole where they are, and the servers whose row did not read on the last
         # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
         rep["reach_waiting"] = self.last_reach_waiting
@@ -2038,7 +2053,7 @@ class SpecController(Controller):
             log.info("%s: %s", self.sub.name, e)
             return None
 
-    # The controller's one unasked move: for each released slot (scale-in, or `retire`) that still lists
+    # The controller's one unasked move: for each released slot (scale-in, or released by the controller) that still lists
     # units, move each to the live worker with the most free capacity; stop when the system is full (the
     # unit waits, listed where it was). A merely lapsed slot is not touched: that is a crash, and its
     # process returns under the same name. Two more cases when the spec requires a resource: a live worker
@@ -2049,7 +2064,7 @@ class SpecController(Controller):
     # `slot w-3 released; …`.
     def redistribute(self, workers: list[str] | None = None) -> list[tuple]:
         """The controller's one unasked move: a slot that was RELEASED — the
-        scheduler scaled in, or an operator retired it — still lists units. Move
+        scheduler scaled in, or the controller freed it — still lists units. Move
         them to the workers that are here. A slot that merely lapsed is not
         touched: that is a crash, and its process returns under the same name."""
         self.unplace_deleted()
@@ -2071,8 +2086,12 @@ class SpecController(Controller):
         for w in self.on_draining(seen):                               # an operator said this machine is about to stop
             if self.assignment(w).units:
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")
-        for w, server in self.gone_servers().items():                  # the server is gone: its slot lapsed and its resource silent
-            gone_for.setdefault(w, f"server {server} gone: slot {w} lapsed and its resource silent")
+        for w in self.on_decommissioned(seen):                         # …or that it is gone for good, and something on it speaks
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"server {self.server_of(w)} decommissioned")
+        for w, (fate, server, why) in self.fates().items():           # a slot that stopped renewing, and its units move (`slot_fate`)
+            if fate in ("move", "hung_moved") and self.assignment(w).units:
+                gone_for.setdefault(w, why)
         idx = None                                    # one look at what is followed, taken when a unit is moved
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]

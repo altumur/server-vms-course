@@ -7,6 +7,7 @@ import threading
 import urllib.error
 import urllib.request
 
+from w2cplatform.resource import Resource
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Forbidden
 from vms.config import LIVE_SPEC, SPEC
@@ -167,8 +168,14 @@ def test_a_dead_gateway_loses_its_fan_outs_to_the_survivor_and_viewers_reconnect
         g2.heartbeat_once(); w.heartbeat_once()      # g-1 silent for a minute; g-2 and the camera's holder still here
 
         assert live_ctl.released_slots() == []                                           # a crash releases nothing…
-        assert live_ctl.redistribute() == []                                             # …and the controller moves nothing on its own
-        live_ctl.retire("g-1")                                                           # the operator (or Nomad's stop) releases the slot
+        assert live_ctl.redistribute() == []                                             # …and nobody can say g-1 is dead: nothing moves
+        # …until the server can (the owner's decision on the review's eleventh pass): g-1 registered with srv-1's
+        # resource, its process ended, and the resource says g-1 is placed there and not alive — its fan-out moves
+        g1.present(box.archive); g1.heartbeat_once(); g1.absent()
+        box.clock.advance(100); box.wall.advance(100)
+        g2.heartbeat_once(); w.heartbeat_once()
+        Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall).heartbeat()
+        assert live_ctl.slot_fate("g-1", live_ctl.slots()["g-1"])[0] == "move", live_ctl.slot_fate("g-1", live_ctl.slots()["g-1"])
         assert [m[:3] for m in live_ctl.redistribute()] == [("1", "g-1", "g-2")]
         g2.reconcile_once(); g2.heartbeat_once()
         code, _, loc = _whep(base, 1)
