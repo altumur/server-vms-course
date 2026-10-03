@@ -33,7 +33,9 @@ What the product found running it on a box (feedback AC–AG), all of it here:
 
     clocks       a frame carries the time it was CAPTURED, on the camera's clock — MPEG-TS over SRT has no
                  wall time of its own. The ingest moves it onto the cluster's clock by the difference the
-                 camera states in every request, and moves a range request back onto the camera's. Stamped by
+                 camera states in its requests — held, not measured anew each time (`OFFSET_HOLD`; the camera's
+                 clock is on a line steps do not move, `vms.card.CamLine`) — and moves a range request back
+                 onto the camera's. Stamped by
                  arrival instead, the seam with backfill is off by the clock difference, and a ring flushed at
                  an event's start collapses into one instant (AC)
     the ring     lives on the CAMERA: while nobody wants the stream it keeps the last seconds, and the first

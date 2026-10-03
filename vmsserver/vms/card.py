@@ -66,8 +66,10 @@ or `network` volume like a server's — and is not built here.
 #
 # ## Public API
 # - `memory_split(budget)` — `(ring, queue, piece)`; `MEMORY_BUDGET`, `RING_BYTES`, `QUEUE_BYTES`, `PIECE_BYTES`.
-# - `CamRing(window, max_bytes)` — `add(sample)`, `subscribe(fn)`, `set_keep(keep, spill, who)`, `after(t_ms)`,
-#   `piece(t_ms, max_bytes)`, `reach()`, `status(now)`.
+# - `CamLine(clock, steady)` — the camera's line of time: `place(begin, end)`, `now()`, `skew()`.
+# - `CamRing(window, max_bytes, clock, steady)` — `add(sample)`, `subscribe(fn)`, `set_keep(keep, spill, who)`,
+#   `after(t_ms)`, `piece(t_ms, max_bytes)`, `reach()`, `now()`, `skew()`, `status(now)`.
+# - `CardBuffer.read_note(name)`, `write_note(name, data)` — a small file beside the segments (what the server has).
 # - `CardBuffer(path, budget)` — `append(stream, sample)`, `finish(stream)`, `coverage(recording)`, `pieces(recording,
 #   t0, t1, max_bytes)`, `range(recording, t0, t1)`, `stats()`, `err`, `close()`. Raises `CardError` (an `OSError`):
 #   `NeedKey`, `Backwards`, `NoRecording`, a read cut short.
