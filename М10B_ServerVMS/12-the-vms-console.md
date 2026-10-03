@@ -811,6 +811,32 @@ served 3/4 · 0 spare        объявлено четыре, обслужива
 
 **`GET /servers` говорит обе правды.** У каждого сервера теперь `labels` (по чему размещают), `labels_node` (что говорят его воркеры) и `labels_source` — `console` или `node`; `labels_unread: true` — строка есть, но не прочиталась, и с сервера ничего не снимают (М10A, урок 11). Страница показывает это строкой «reaches …» в блоке сервера, с *edit* и *back to the node's*; перед записью она спрашивает `GET …/labels?labels=…` и называет в подтверждении камеры, которые переедут или встанут неразмещёнными. Тест: `tests/test_server_labels.py::test_the_page_is_told_which_cameras_an_edit_will_move`. Та же правда нужна была ещё в одном месте — проверке `?labels=` зрителя живого видео: она читала метки шлюза из heartbeat'а, теперь спрашивает `labels_of`, как размещение (`tests/test_lesson8_live.py::test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own`).
 
+## Шаг 11 — Воркер, который не вернётся
+
+**Сказать «этот процесс не вернётся» теперь можно из консоли, а слот снимает контроллер** (решение владельца курса — перенести эту дверь из продукта). `retire` (М10A, урок 7) был словом оператора, которое негде было сказать: у контроллера нет порта, а токен консоли не пишет `slots/*`. Теперь это платформенный маршрут консоли, и у каждой смонтированной подсистемы он свой (`/workers/…` у VMS, `/rec/workers/…` у регистратора):
+
+```python
+    # THE OPERATOR'S DOOR TO `retire`: `POST /workers/<worker>/retire {"why": "…", "gen": n}`.
+    #
+    # `Controller.retire` said "the operator's statement that a slot is gone for good", and no operator could make it:
+    # the controller has no port, and this console's token has no `slots/*` — a console that could write a slot would
+    # be a second controller. So the console writes a REQUEST (`<sub>/retire/<worker>`, `request_retire`) and the
+    # controller retires the slot on its next pass (`apply_retires`), as a drain is written here and read there.
+    #
+    # Refused in words before anything is written: a worker alive — its lease runs, or it was heard from within 45 s —
+    # (409, `alive`); the name taken by another process since the page showed it, when the page sends the `gen` it
+    # showed (409, `generation`); released already (409); no such worker (404). Names no unit: `admin` on the whole
+    # cluster (`needs`) — a retired worker's cameras all move. A journal line with the name, the generation and why.
+    # The answer says what will move and what stays held: a volume the worker held is not given back by a retire.
+    def retire_route(self, h, path: str) -> tuple:
+```
+
+**Права — `admin` на весь кластер, как у меток сервера.** Путь не называет камеры, а уедут все камеры воркера. Админ одной камеры, грант по метке и `view` получают 403, и ничего не пишется (`tests/test_retire_door.py::test_retiring_a_worker_needs_admin_on_the_whole_cluster`).
+
+**Консоль пишет просьбу и строку журнала, и ничего больше.** `202` с `{"state": "requested", "gen", "units", "holds"}`: консоль записала `vms/retire/<w> {gen, by, at, why}` и строку журнала `worker.retire.requested` с автором. Слот она не трогает. Контроллер на следующем проходе проверяет оба условия заново, снимает слот, удаляет просьбу, и `redistribute` увозит камеры. Отказ на проходе остаётся в строке (`refused`), и страница его показывает. `holds` — тома, которые воркер держал: снятие их не отпускает, и `note` в ответе советует отозвать том, если он сгорел вместе с сервером.
+
+**Страница предлагает *retire* только там, где это можно.** `GET /servers` теперь говорит про каждого воркера `gen`, `released`, `retirable`, `retire_refusal` (почему нельзя — словами), `retire` (просьба, если она есть, с тем, что о ней сказал контроллер) и `holds`. Ссылка *retire* стоит только у воркера с `retirable: true`. Страница спрашивает причину и шлёт `gen`, который показала: если имя за это время занял другой процесс, консоль ответит 409 `generation`. Тесты: `tests/test_retire_door.py::test_a_dead_worker_is_retired_from_the_console_on_the_next_pass_and_its_name_gets_no_cameras`, `…::test_a_request_whose_generation_is_older_than_the_slots_is_refused`, `…::test_a_retired_recorder_keeps_the_volume_it_held_and_the_answer_names_it`.
+
 ## Результат
 
 ```bash
@@ -835,6 +861,8 @@ GET  /rec/volumes                 → тома: заявленные, кто и�
 GET  /rec/keeps                   → удержания
 GET  /det/units                   → детекторы
 GET  /live/streams                → вещания
+POST /workers/w-2/retire          → 202 {state: requested, gen, units, holds} — слот снимет контроллер на проходе;
+                                    409, пока воркер жив или имя занял другой процесс
 ```
 
 Один процесс, один порт, одна страница — и все подсистемы.

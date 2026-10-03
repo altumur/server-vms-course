@@ -109,6 +109,7 @@ UNPLACED = "unplaced"
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
 CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
+RETIRE = "retire"          # `<name>/retire/<worker>`: an operator's "this slot's process will never come back" (`Controller.apply_retires`)
 
 
 # `<subsystem>/heartbeats/<worker>`, or the resource's `platform/resources/<server>/heartbeat`, which has
@@ -131,6 +132,23 @@ class SchemaTooNew(Exception):
 
 class NoSlot(RuntimeError):
     """This instance gave its slot up and has not claimed another yet: it is nobody, and takes nothing."""
+
+
+class NoSuchSlot(LookupError):
+    """No process ever took this name: there is no slot to retire (`Controller.retire_refusal`)."""
+
+
+class RetireRefused(Exception):
+    """A retire request the slot does not allow now — `kind`: "alive", "released" or "generation"."""
+
+    def __init__(self, why: str, kind: str):
+        super().__init__(why)
+        self.kind = kind
+
+
+# How long a worker must have been silent before its slot may be retired from the console: the platform's usual
+# "lost", on top of a lease that ran out (`Controller.retire_refusal`).
+RETIRE_LOST_AFTER = 45.0
 
 
 # The store's layout version — absent means "whatever this build is", which is a fresh install.
@@ -354,6 +372,16 @@ class Subsystem:
 
     def requests_prefix(self) -> str:
         return f"{self.name}/{REQUESTS}/"
+
+    # `<name>/retire/<worker>` — the operator's word that a slot's process will never come back, as a REQUEST: the
+    # console writes it, the controller reads it on its next pass and retires the slot (`Controller.apply_retires`).
+    # The shape `platform/drain` has. The console may not write `slots/*` — a console that could would be a second
+    # controller — so the door to `retire` is a row the controller reads, one per worker.
+    def retire_key(self, worker: str) -> str:
+        return f"{self.name}/{RETIRE}/{worker}"
+
+    def retire_prefix(self) -> str:
+        return f"{self.name}/{RETIRE}/"
 
     # `<name>/servers/<server>` — what a SERVER reaches, as the administrator says it from the console (`{labels}`;
     # feedback DQ). Where there is none, the labels its workers report (the node's `LABELS`) answer, as they always did.
@@ -939,6 +967,155 @@ class Controller:
                 return None
             return Slot(worker, s.holder, s.until, True, s.gen).to_items()
         return Slot.from_items(worker, self.write(key, mutate))
+
+    # -- the operator's door to `retire`: a request the console writes and the controller acts on ----------------
+    # `retire` was a method nobody could call: the controller has no port, and the console may not write `slots/*`
+    # (a console that could would be a second controller). So the door is a ROW, the way `platform/drain` is: the
+    # console writes `<name>/retire/<worker> {gen, by, at, why}` (`request_retire`, `POST /workers/<w>/retire`), and
+    # the controller, on its next pass, retires the slot (`apply_retires`) — and `redistribute`, in the same pass,
+    # moves what the slot still lists onto the workers that are here (`slot <w> released`).
+    #
+    # Two guards, each asked twice — by the console before it writes and by the controller before it acts:
+    #   - the slot is not ALIVE: its lease ran out (`until`) and its worker has not been heard from for
+    #     `RETIRE_LOST_AFTER`. A live worker retired stops renewing (`_renew_slot` refuses a released row) and its
+    #     units move for nothing;
+    #   - the request names the slot's GENERATION. A process that claims the name afterwards takes a new one
+    #     (`_claim_slot`: `gen + 1`), so a request left over from the burnt box never retires its successor.
+    #
+    # What it is NOT: a way to move cameras off a dead worker — that is the placement's (a released slot, a server
+    # gone: `spec.gone_servers`). It closes the NAME: a released slot is out of the pool (`SpecController._pool`), and a
+    # process that heartbeats under it again is given nothing. Nor does it give back what the process HELD: a place
+    # (`<name>/holds/<place>`, a recorder's volume) stays held — a local disk is held through a silence on purpose —
+    # and the console names it (`holds_of`), so the administrator knows to withdraw the volume that burnt with its box.
+    def retire_refusal(self, worker: str) -> tuple[str, str, str]:
+        """`(gen, kind, why)`: the generation the slot is at ("" for a row that does not parse), and why it may NOT be
+        retired now — `kind` "released" or "alive", "" when it may. `NoSuchSlot` when the name is no slot here."""
+        key = self.sub.slot_key(worker)
+        items, _ = self.vars.get(key)
+        if not items:
+            raise NoSuchSlot(f"{self.sub.name} has no worker called {worker!r}: no process ever took that name")
+        s, now = read_slot(key, worker, items), self.wall()
+        gen = "" if s is None else str(s.gen)        # a row that does not parse: no lease to read, the heartbeat decides
+        if s is not None and s.released:
+            return gen, "released", f"{worker} is released already: its name is free and nothing is placed on it"
+        if s is not None and s.until > now:
+            return gen, "alive", (f"{worker} is alive: it holds its name for another {int(s.until - now) + 1} s — "
+                                  f"a worker that renews is not retired")
+        raw = self.objects.get(self.sub.heartbeat_key(worker))
+        hb = parse_heartbeat(self.sub.heartbeat_key(worker), raw) if raw else None
+        if hb is not None and now - hb.ts <= RETIRE_LOST_AFTER:   # a heartbeat dated ahead of this clock is alive too
+            return gen, "alive", (f"{worker} is alive: it was heard from {max(0, int(now - hb.ts))} s ago — retired, "
+                                  f"what it runs would move for nothing; wait until it has been silent "
+                                  f"{int(RETIRE_LOST_AFTER)} s")
+        return gen, "", ""
+
+    # The console's half: refused while the slot is alive or released; with `gen` (what the page showed), refused when
+    # the name has a newer generation now. Otherwise the request is written, naming the generation it is about —
+    # overwritten whole, so asking again clears what the controller said about an earlier one.
+    def request_retire(self, worker: str, by: str, why: str = "", gen=None) -> dict:
+        have, kind, refusal = self.retire_refusal(worker)
+        if kind:
+            raise RetireRefused(refusal, kind)
+        if gen is not None and str(gen) != have:
+            raise RetireRefused(f"{worker} is another process now (generation {have or '?'}, the page showed {gen}): "
+                                f"somebody took the name since the page was read — look again before retiring it",
+                                "generation")
+        row = {"gen": have, "by": str(by), "at": str(self.wall()), "why": str(why or "")[:500]}
+        self.vars.put(self.sub.retire_key(worker), row)
+        return row
+
+    # Every request standing, by worker: what the console shows beside a worker, and what the pass reads.
+    def retire_requests(self) -> dict[str, dict]:
+        prefix, out = self.sub.retire_prefix(), {}
+        for path in self.vars.list(prefix):
+            items, _ = self.vars.get(path)
+            if items:
+                out[path[len(prefix):]] = dict(items)
+        return out
+
+    # The controller's half, the first step of its pass (`SpecController._pass_once`): each request is checked again —
+    # alive, the generation — and the slot retired by CAS that checks both once more against the row it writes over.
+    # Done: the request is deleted. Refused: it is left, with the reason in it (`refused`, written only when it
+    # changes), so the console shows why. A request about a slot that is alive waits — the same generation dying later
+    # is the operator's word coming true; one whose generation moved never applies again; one about a slot released
+    # already is deleted: the name is free, there is nothing to do. `{"retired": [...], "refused": {worker: why}}`.
+    def apply_retires(self) -> dict:
+        retired, refused = [], {}
+        prefix = self.sub.retire_prefix()
+        for path in sorted(self.vars.list(prefix)):
+            worker = path[len(prefix):]
+            items, idx = self.vars.get(path)
+            if not items:
+                continue
+            asked = str(items.get("gen", ""))
+            try:
+                have, kind, _ = self.retire_refusal(worker)
+            except NoSuchSlot:
+                have, kind = "", "unknown"
+            except (ValueError, OSError) as e:        # one request the store cannot answer for is that request's: the rest go on
+                refused[worker] = f"could not be checked: {e}"
+                continue
+            if kind == "released":
+                self._drop_retire(path, idx)
+                continue
+            why = {"unknown": f"there is no slot called {worker}",
+                   "alive": (f"{worker} is alive — its lease runs, or it was heard from within {int(RETIRE_LOST_AFTER)} s: "
+                             f"a live worker is not retired; the request waits")}.get(kind, "")
+            if not kind and asked != have:
+                why = (f"the request names generation {asked or '?'}; {worker} is at {have or '?'} now — another process "
+                       f"took the name since, and this request is not about it")
+            if not why and not self._retire_gen(worker, have):
+                why = f"{worker} renewed its name while the controller looked: a live worker is not retired"
+            if why:
+                refused[worker] = why
+                if items.get("refused") != why:
+                    try:
+                        self.vars.put(path, {**items, "refused": why}, cas=idx)
+                    except Conflict:
+                        pass                          # the console asked again meanwhile: the next pass reads that
+                continue
+            log.warning("%s: slot %s retired at the operator's request (by %s: %s)", self.sub.name, worker,
+                        items.get("by", "?"), items.get("why", "") or "no reason given")
+            retired.append(worker)
+            self._drop_retire(path, idx)
+        return {"retired": retired, "refused": refused}
+
+    # `retire`, by CAS, only while the row is still the generation asked about and its lease has run out.
+    def _retire_gen(self, worker: str, gen: str) -> bool:
+        key, done = self.sub.slot_key(worker), [False]
+
+        def mutate(items):
+            s, now = read_slot(key, worker, items), self.wall()
+            done[0] = False
+            if s is None:                             # still a row that does not parse: written whole, released, nobody's
+                if gen != "":
+                    return None
+                done[0] = True
+                return Slot(worker, "", now, True, 0).to_items()
+            if str(s.gen) != gen or s.released or s.until > now:
+                return None
+            done[0] = True
+            return Slot(worker, s.holder, s.until, True, s.gen).to_items()
+        self.write(key, mutate)
+        return done[0]
+
+    def _drop_retire(self, path: str, idx) -> None:
+        try:
+            self.vars.delete(path, cas=idx)
+        except Conflict:
+            pass                                      # rewritten since it was read: the next pass reads the new one
+
+    # The places a worker's process holds (`<name>/holds/<place>`, `by` its slot): what a retire leaves held.
+    def holds_of(self, worker: str) -> list[str]:
+        return self.holds_by().get(worker, [])
+
+    def holds_by(self) -> dict[str, list[str]]:
+        prefix, out = self.sub.name + "/holds/", {}
+        for path in self.vars.list(prefix):
+            h = read_hold(path, path[len(prefix):], self.vars.get(path)[0])
+            if h is not None and not h.released and h.holder and h.by:
+                out.setdefault(h.by, []).append(path[len(prefix):])
+        return {w: sorted(p) for w, p in out.items()}
 
 
 # Runs its assignment and reports. Reads `<name>/workers/<me>` and the units it names; writes its heartbeat
