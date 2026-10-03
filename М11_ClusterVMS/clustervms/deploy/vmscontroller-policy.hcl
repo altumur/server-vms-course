@@ -8,6 +8,7 @@ namespace "default" {
     path "vms/placement/*"      { capabilities = ["write", "read", "list"] }
     path "vms/slots/*"          { capabilities = ["write", "read", "list"] }
     path "objects/vms/snapshot/*" { capabilities = ["write", "read", "list"] }   # one object per worker (М10A Lesson 25)
+    path "objects/vms/controller/pass" { capabilities = ["write", "read"] }   # its pass report, where /metrics reads vms_units_unplaced (the ninth review: a 403 every pass)
     path "objects/*"            { capabilities = ["read", "list"] }
     # WHAT IT READS, NOT EVERYTHING (М10's eighth review): it had `path "*"`, which read `secrets/vms` too — the key
     # the console's policy says only three jobs read. The rows it places from, the other subsystem's rows its

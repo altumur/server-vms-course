@@ -1156,3 +1156,50 @@ def test_a_line_whose_values_only_convert_is_merged_as_converted_and_stops_no_ti
     assert [e["t"] for e in got["events"]] == [t - 9, t - 7, t - 5], got
     assert got["events"][0]["epoch"] == 2 and got["events"][0]["id"] == "['b', 1]" and not got["events"][0]["fenced"]
     _forget_garbled()
+
+
+# -- the ninth review: a field is a row, whatever its text says; a number too big for a float -------------------------
+
+def test_a_recorders_closed_spans_with_a_word_in_them_are_one_garbled_field_however_often_the_list_moves():
+    """The eighth review's minor, not fixed until the ninth: each end of each span was read under a key holding the
+    span's TEXT, so a recorder whose `closed` kept a word in it counted a new garbled "row" every time its list moved —
+    8640 a day from one field. One key per heartbeat and field now: counted once while any span does not read, and
+    parsed again when none is left; the readable spans are work as before."""
+    from vms import jobs
+    from vms.config import DET_SPEC, DETJOB_SPEC, SURVEY_SPEC
+    from w2cplatform.rows import FIELDS
+    box = Box()
+    t = box.wall()
+    rec = _rec_console(box)
+    det = SpecController(DET_SPEC, box.vars.as_writer("console", DET_SPEC.acl_console()), box.objects, wall=box.wall)
+    job = SpecController(DETJOB_SPEC, box.vars.as_writer("console", DETJOB_SPEC.acl_console()), box.objects, wall=box.wall)
+    survey = SpecController(SURVEY_SPEC, box.vars, box.objects, wall=box.wall)
+    rec.create({"name": "8", "cam": "8"}); det.create({"name": "8-lpr", "cam": "8", "kind": "lpr"})
+    before = FIELDS.counts.get("rec", 0)
+    for i in range(20):                                                   # the list moves on every heartbeat
+        box.objects.put("rec/heartbeats/r-1", Heartbeat("r-1", t, [], {
+            "closed": f"7|then{i}|now,8|{t - 600 - i}|{t - 300}"}).to_bytes())
+        assert jobs.scan_what_arrived(rec, det, job) == 1
+    assert FIELDS.counts.get("rec", 0) - before == 1 and "rec/heartbeats/r-1#closed" in FIELDS.bad
+    box.objects.put("rec/heartbeats/r-1", Heartbeat("r-1", t, [], {"closed": f"8|{t - 900}|{t - 800}"}).to_bytes())
+    jobs.scan_what_arrived(rec, det, job)
+    assert "rec/heartbeats/r-1#closed" not in FIELDS.bad
+    before = FIELDS.counts.get("survey", 0)
+    for i in range(5):
+        box.objects.put("survey/heartbeats/s-1", Heartbeat("s-1", t, [], {"hits": f"7|soon{i}|later"}).to_bytes())
+        jobs.keep_what_fired(survey, rec)
+    assert FIELDS.counts.get("survey", 0) - before == 1
+    _forget_garbled()
+
+
+def test_a_number_too_big_for_a_float_is_a_value_error_like_any_number_that_is_not_one():
+    """`float(10**400)` raises `OverflowError`, and a caller that caught `(TypeError, ValueError)` around `finite` — an
+    ask's deadline at the ingest — answered 500. `finite` says it the way it says `nan`: `ValueError`."""
+    from w2cplatform.rows import finite, number
+    for x in (10**400, -10**400, "1e400", float("nan")):
+        try:
+            finite(x); raise AssertionError(f"{x!r:.20} must be refused")
+        except ValueError:
+            pass
+    assert number("test/x#n", 10**400, float, None) is None and finite("12.5") == 12.5
+    _forget_garbled()

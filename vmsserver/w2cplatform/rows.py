@@ -89,8 +89,14 @@ FIELDS = Table("field", "read as not said", "number in it")
 
 def finite(x) -> float:
     """`float(x)`, and a `ValueError` for `nan` and `inf` — a number that passes every comparison and means nothing:
-    `nan < now` is false, so a deadline of `nan` was never past (the review's seventh pass, M3)."""
-    v = float(x)
+    `nan < now` is false, so a deadline of `nan` was never past (the review's seventh pass, M3). An integer too big
+    for a float (`10**400`, which JSON carries as it is) raises `OverflowError` in `float()`: a `ValueError` here too,
+    so a caller that catches `(TypeError, ValueError)` is not passed by it (the review's ninth pass: an ask with a
+    deadline of `10**400` was a 500)."""
+    try:
+        v = float(x)
+    except OverflowError:
+        raise ValueError(f"{x!r:.40} is not a finite number") from None
     if not math.isfinite(v):
         raise ValueError(f"{x!r} is not a finite number")
     return v

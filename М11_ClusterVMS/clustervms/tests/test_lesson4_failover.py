@@ -23,18 +23,57 @@ def test_the_power_pull():
     replacement on B at t=45 (+ a schedule). It claims w-1, reads its assignment,
     takes the next epoch for every camera and records — asking nobody."""
     c, ctl, a, act_a = _recording()
+    assert ctl.failover_seconds() == {}                                    # the console's scrape: w-1 alive, nothing to measure
     t_dead = c.wall()
     c.wall.advance(LOST_AFTER + 3)                                        # lost_after, then placement
     act_b = FakeActuator(); b = c.worker(1, "srv-b", actuator=act_b)
-    assert b.name == "w-1" and b.previous_instance == a.instance
+    assert b.name == "w-1" and b.previous_instance == a.instance and b.previous_server == "srv-a"
     assert b.reconcile_once() == [("start", 1), ("start", 2), ("start", 3)]
     assert act_b.epochs == {1: 2, 2: 2, 3: 2} and b.server == "srv-b"
     b.heartbeat_once()
     fo = ctl.failover_seconds()
-    assert fo == {"w-1": 48.0}                                             # last heartbeat of A → B's start: the RTO this run
+    assert fo == {"w-1": 48.0}           # A's heartbeat last moved → B there, by the reader's clock: the RTO this run
     from cluster.console import metrics_text                               # …and the cluster's /metrics says it, measured
     assert 'vms_failover_seconds{kind="worst"} 48.0' in metrics_text(ctl, 0.0)   # (the eighth review: it said 0.0)
     assert ctl.workers_seen()["w-1"].extra["server"] == "srv-b" and ctl.where(1) == "w-1"   # nothing was rewritten
+
+
+def test_a_failover_between_two_servers_is_measured_on_one_clock_or_not_at_all():
+    """The review's ninth pass (the product's sibling D): `started − previous_hb` subtracted srv-b's clock from srv-a's,
+    and their disagreement was in the number — srv-b ten minutes behind made a 48-second failover −552. Now a failover
+    to another server is what the READER saw, by its own clock: when the old instance's heartbeat last moved, when the
+    new one was first there. A reader that did not see the old one alive measures nothing — it counts it — and a number
+    that is not finite is no number: `previous_hb: -inf` made `worst` infinite."""
+    from cluster.console import metrics_text
+    from cluster.worker import ClusterWorker
+    c, ctl, a, _ = _recording()
+    fresh = ClusterController(c.vars, c.objects, wall=c.wall)              # a console started after the failure
+    ctl.failover_seconds()                                                  # this one scraped while srv-a was alive
+    c.wall.advance(LOST_AFTER + 3)
+    b = ClusterWorker(c.vars.as_writer("vmsworker", ["vms/epoch/*", "vms/slots/*"]), c.objects, FakeActuator(),
+                      env=c.env(1, "srv-b"), clock=c.clock, wall=lambda: c.wall() - 600.0)   # srv-b's clock: 10 min behind
+    b.reconcile_once(); b.heartbeat_once()
+    assert ctl.failover_seconds() == {"w-1": 48.0}                          # by the reader's clock — not −552
+    assert fresh.failover_seconds() == {} and fresh.failovers_unmeasured == 1
+    assert "vms_failovers_unmeasured 1" in metrics_text(fresh, 0.0)
+    # the same server: one clock, the workers' own numbers (`started − previous_hb`)
+    c2, ctl2, a2, _ = _recording()
+    c2.wall.advance(31)
+    again = c2.worker(1, "srv-a"); again.reconcile_once(); again.heartbeat_once()
+    assert ClusterController(c2.vars, c2.objects, wall=c2.wall).failover_seconds() == {"w-1": 31.0}
+    # a number that is not one: not said, counted — and the worst stays the worst this reader measured
+    from w2cplatform.contract import Heartbeat
+    hb = Heartbeat.from_bytes(c2.objects.get("vms/heartbeats/w-1"))
+    c2.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", hb.ts, hb.status, {**hb.extra, "previous_hb": "-inf"}).to_bytes())
+    from w2cplatform.rows import FIELDS
+    assert ctl2.failover_seconds() == {} and "vms/heartbeats/w-1#previous_hb" in FIELDS.bad   # not said: counted once
+    assert 'vms_failover_seconds{kind="worst"} 0.0' in metrics_text(ctl2, 0.0)
+    c.wall.advance(10)                                                      # w-1 fails again, a shorter failover
+    third = c.worker(1, "srv-c"); third.reconcile_once(); third.heartbeat_once()
+    text = metrics_text(ctl, 0.0)
+    assert 'vms_failover_seconds{kind="last",worker="w-1"} 10.0' in text and 'vms_failover_seconds{kind="worst"} 48.0' in text
+    import sys
+    sys.modules["w2cplatform.rows"].forget()          # the counts are the process's: every later heartbeat would carry them
 
 
 def test_a_server_gone_with_nowhere_to_reschedule_the_controller_moves_the_cameras():

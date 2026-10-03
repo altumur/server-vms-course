@@ -80,7 +80,7 @@ from urllib.parse import urlsplit
 from .doors import numeric, unnamable
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -688,7 +688,7 @@ def _sweep_list(items) -> tuple[list, float]:
     try:
         marked = json.loads((items or {}).get("digests", "[]"))
         at = float((items or {}).get("at", 0))
-    except (ValueError, TypeError):
+    except PARSE_ERRORS:                              # `[` ten thousand deep too (`RecursionError`, the ninth review's sweep)
         return [], 0.0
     return (marked, at) if isinstance(marked, list) else ([], 0.0)
 
@@ -718,6 +718,12 @@ class SpecController(Controller):
         self.cluster = cluster or os.environ.get("CLUSTER", "cluster-a")               # the name the snapshot carries; one box is a cluster of one
         self.rows_garbled = 0                                                            # rows the last `units()` could not parse (the review's second pass, M7)
         self._garbled_rows: set[str] = set()
+        # What `failover_seconds` saw, by this process's clock: per worker the instance, its `ts` and when that last moved;
+        # the gaps it saw between two instances; the largest it measured; and how many it could not measure.
+        self._hb_moved: dict[str, tuple] = {}
+        self._failover_seen: dict[str, float] = {}
+        self.failover_worst, self.failovers_unmeasured = 0.0, 0
+        self._pass_failing: set[str] = set()             # the steps of `pass_once` whose last run raised: said once each
         # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
         # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
         from .sealing import Sealer
@@ -751,19 +757,15 @@ class SpecController(Controller):
     def _said(self, worker: str):
         return self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age").get(worker)
 
+    # Through `rows.number` (the review's ninth pass, the sibling of `failover_seconds`): its own `(ValueError, TypeError)`
+    # let `int(inf)` — `headroom: Infinity`, which JSON reads — raise `OverflowError` out of `headroom()`, and every
+    # placement with it; and `inf` passed as a number.
     def _number(self, worker: str, hb, field: str, kind=float):
-        """A numeric field of a worker's heartbeat, or None if it is absent or not a number (logged once)."""
+        """A numeric field of a worker's heartbeat, or None if it is absent or not a finite number (counted once)."""
+        from .rows import number
         if field not in hb.extra:
             return None
-        try:
-            return kind(hb.extra[field])
-        except (ValueError, TypeError):
-            key = f"{self.sub.heartbeat_key(worker)}#{field}"
-            if key not in self._garbled_rows:
-                self._garbled_rows.add(key)
-                log.warning("%s: heartbeat of %s says %s=%r, not a number; read as not said", self.sub.name, worker,
-                            field, hb.extra[field])
-            return None
+        return number(f"{self.sub.heartbeat_key(worker)}#{field}", hb.extra[field], kind, None)
 
     # The `labels` string of its heartbeat, split on commas.
     def labels_of(self, worker: str) -> set[str]:
@@ -1028,7 +1030,7 @@ class SpecController(Controller):
     def _parsed(self, uid):
         try:
             return self.unit(uid)
-        except (ValueError, KeyError, TypeError) as e:
+        except PARSE_ERRORS as e:                     # a `json` field ten thousand deep too (the ninth review's sweep)
             p = self._row_key(uid)
             if p not in self._garbled_rows:
                 self._garbled_rows.add(p)
@@ -1496,7 +1498,7 @@ class SpecController(Controller):
     #
     # The three steps each in a `try` of their own (the review's second pass, M7): they shared one, so a
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass.
-    PASS_KEY = "controller/pass"
+    PASS_KEY = CONTROLLER_PASS                        # granted by `acl_objects_controller` (the review's ninth pass)
 
     # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
     # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
@@ -1512,7 +1514,7 @@ class SpecController(Controller):
         prev = self.pass_report() or {}
         try:
             failures = int(prev.get("failures", 0))
-        except (ValueError, TypeError):
+        except PARSE_ERRORS:                          # `1e400` too: `int(inf)` raised out of the pass, every pass (the ninth review's sweep)
             failures = 0                              # a count that is a word: counted from here
         rep = {"ts": now, "ok": True, "error": "", "failures": failures,
                "last_success": prev.get("last_success")}
@@ -1525,7 +1527,9 @@ class SpecController(Controller):
                 run()
             except Exception as e:                    # noqa: BLE001
                 errors.append(f"{step}: {e}")
-                log.exception("%s: placement pass failed at %s", self.sub.name, step)
+                self._failed(step, f"placement pass failed at {step}")
+            else:
+                self._works(step)
         if errors:
             rep.update(ok=False, error="; ".join(errors), failures=rep["failures"] + 1)
         else:
@@ -1540,8 +1544,24 @@ class SpecController(Controller):
                     rep[name] = counts[self.sub.name] # said when there are any, as a worker's heartbeat says them
             self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
         except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
-            log.exception("%s: the pass could not report on itself", self.sub.name)
+            self._failed("report", "the pass could not report on itself")
+        else:
+            self._works("report")
         return rep
+
+    # A STEP THAT FAILS EVERY PASS IS SAID ONCE (the eighth review's minor, closed in the ninth): `log.exception` on every
+    # pass put the same trace in the log every five seconds — a policy that refused the report did it for days — and
+    # buried the first one, the one that says why. The trace once per spell, as `domain/steps.py` has it for М12's
+    # loops; "works again" when the step succeeds; the count of failed passes is the report's `failures`.
+    def _failed(self, step: str, what: str) -> None:
+        if step not in self._pass_failing:
+            self._pass_failing.add(step)
+            log.exception("%s: %s; tried again on every pass, said again when it works", self.sub.name, what)
+
+    def _works(self, step: str) -> None:
+        if step in self._pass_failing:
+            self._pass_failing.discard(step)
+            log.warning("%s: %s works again", self.sub.name, step)
 
     # The last pass's report, or None — and None for one that does not parse (the sixth pass, the follow-up):
     # `pass_once` reads it first, and "it does not raise" is what the loop calling it relies on. Half a write under
@@ -1554,7 +1574,7 @@ class SpecController(Controller):
             return None
         try:
             rep = json.loads(raw)
-        except ValueError:
+        except PARSE_ERRORS:
             log.warning("%s: the last pass's report does not parse; this pass writes it again", self.sub.name)
             return None
         return rep if isinstance(rep, dict) else None
@@ -1971,8 +1991,17 @@ class SpecController(Controller):
     # The age of the whole is the age of the STALEST shard, the same rule М12's reader uses: a directory is
     # only as fresh as its oldest part, and taking the newest would report an RPO better than the real one —
     # which is exactly the direction a number like this must never be wrong in.
+    #
+    # A `ts` FROM THE FUTURE IS NOT FRESH (the review's ninth pass, minor): a controller whose clock ran an hour ahead
+    # and then stopped wrote shards an hour ahead — `max(0, now − ts)` read them as age 0 for that hour, the copy above
+    # "fresh" while nothing published it. A shard further ahead than `FUTURE_TOLERANCE` (the heartbeats' rule) has no
+    # age anybody can vouch for: the oldest there can be, counted once (`fields_garbled`), and its lead goes into the
+    # subsystem's `heartbeat_skew_seconds_max`, where a clock running ahead is already measured.
     def snapshot_age(self, now: float | None = None) -> float | None:
         import json
+        from .contract import FUTURE_TOLERANCE, SKEW_MAX
+        from .rows import FIELDS
+        now = self.wall() if now is None else now
         oldest = None
         prefix = self.sub.snapshot_prefix()
         for key in self.objects.list(prefix):
@@ -1983,10 +2012,16 @@ class SpecController(Controller):
                 ts = finite(json.loads(raw).get("ts", 0))   # `nan` passes every `min` and read as fresh (the review's eighth pass)
             except PARSE_ERRORS:
                 ts = 0.0                              # a shard that does not parse has no age: the oldest there can be
+            if ts - now > FUTURE_TOLERANCE:
+                SKEW_MAX[self.sub.name] = max(SKEW_MAX.get(self.sub.name, 0.0), ts - now)
+                FIELDS.garbled(f"{key}#ts", ValueError(f"{ts - now:.0f} s ahead of this clock: no age anybody can vouch for"))
+                ts = 0.0
+            else:
+                FIELDS.parsed(f"{key}#ts")
             oldest = ts if oldest is None else min(oldest, ts)
         if oldest is None:
             return None
-        return max(0.0, (self.wall() if now is None else now) - oldest)
+        return max(0.0, now - oldest)
 
     # Writes one object per worker under `<name>/snapshot/`.
     def publish_snapshot(self) -> None:
@@ -2020,16 +2055,53 @@ class SpecController(Controller):
                                f"{len(shard[self.spec.rows])} units on {name}; the snapshot is already one "
                                f"object per worker, so the store is the thing to change (OBJECTS=…)") from e
 
-    # Per worker: `started − previous_hb` from the heartbeat's own fields — the gap between the last
-    # heartbeat of the previous instance and this instance's start, measured from what the workers wrote,
-    # not by the controller.
+    # Per worker: the gap between the last heartbeat of the previous instance and this instance's start.
+    #
+    # ON ONE CLOCK (the review's ninth pass, minor; the product's sibling D). `started − previous_hb` subtracted the clock
+    # of the box the replacement runs on from the clock of the box the instance before it ran on: on two machines their
+    # disagreement was IN the number — ten minutes of drift, a ten-minute failover, or a negative one. Two ways now,
+    # each on one clock:
+    #
+    #   the same server   the instance before ran where this one runs (`previous_server` = `server`, written by the
+    #                     replacement from the heartbeat it found): `started − previous_hb`, both by that box's clock
+    #   another server    what THIS reader saw, by its own clock: when the heartbeat under that name last moved, and
+    #                     when another instance was first there — as late as the reader looks (the console reads it on
+    #                     every scrape, the stand when a scene says so)
+    #
+    # Neither — another server, and this reader did not see the instance before alive — is not measured: no number made
+    # of two clocks. Nor is a negative gap (one clock that stepped back). Both are counted (`failovers_unmeasured`, on
+    # `/metrics`). Every number through `rows.number`: `previous_hb: -inf` made `worst` infinite and the alert burn for
+    # ever. `failover_worst` is the largest this process has measured: the largest of the LAST ones forgot a failover as
+    # soon as the same worker had a shorter one.
     def failover_seconds(self) -> dict[str, float]:
-        """Per worker: the gap between the heartbeat before its current instance
-        started and that instance's first — measured from what the workers wrote."""
-        out = {}
+        """Per worker: the gap between the heartbeat before its current instance started and that instance's start —
+        on one clock, or not at all."""
+        from .rows import FIELDS, number
+        now, out, unmeasured = self.wall(), {}, 0
         for w, hb in self.workers_seen(max_age=1e12).items():
-            started = self._number(w, hb, "started") if "started" in hb.extra else hb.ts
-            prev = self._number(w, hb, "previous_hb")
-            if prev and started is not None:
-                out[w] = round(started - prev, 1)
+            hk = self.sub.heartbeat_key(w)
+            instance = str(hb.extra.get("instance", ""))
+            was = self._hb_moved.get(w)                   # (instance, ts, when this reader saw it move)
+            if was is not None and was[0] != instance:
+                self._failover_seen[w] = round(now - was[2], 1)   # another instance, seen by this reader: its clock only
+            if was is None or was[:2] != (instance, hb.ts):
+                self._hb_moved[w] = (instance, hb.ts, now)
+            prev = number(f"{hk}#previous_hb", hb.extra.get("previous_hb"), float, None)
+            if not prev:
+                continue                                  # no instance before this one under that name: no failover
+            server = hb.extra.get("server")
+            if server is not None and hb.extra.get("previous_server") == server:
+                started = number(f"{hk}#started", hb.extra.get("started"), float, None) if "started" in hb.extra else hb.ts
+                gap = None if started is None else round(started - prev, 1)
+            else:
+                gap = self._failover_seen.get(w)
+            if gap is not None and gap < 0:
+                FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"{gap} s before this instance started: a clock stepped back"))
+                gap = None
+            if gap is None:
+                unmeasured += 1
+                continue
+            out[w] = gap
+            self.failover_worst = max(self.failover_worst, gap)
+        self.failovers_unmeasured = unmeasured
         return out

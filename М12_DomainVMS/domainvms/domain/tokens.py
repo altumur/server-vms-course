@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
-from w2cplatform.rows import Table
+from w2cplatform.rows import PARSE_ERRORS, Table
 
 # The rows of trust a cluster holds — the key set, the root it pinned, the revocation list — as the domain's agent
 # carried them (the review's seventh pass left "the trust readers" open). One that does not parse is counted here once
@@ -153,7 +153,7 @@ def kid_of(token: str) -> str | None:
     move the holder's key is new, and after a theft the old one is no longer trusted anywhere)."""
     try:
         return json.loads(_unb64(token.split(".")[0])).get("kid")
-    except (ValueError, IndexError, AttributeError):
+    except (IndexError, *PARSE_ERRORS):              # a header ten thousand deep too (the ninth review's sweep)
         return None
 
 
@@ -202,17 +202,22 @@ def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float
     """Offline. Returns the payload (the subject is payload["sub"]). `kind`: what this door accepts (`KINDS`);
     a token for something else is refused however good its signature."""
     now = time.time() if now is None else now
+    # Everything read before the signature is checked is a stranger's, and what it raises is "not a token" (the review's
+    # ninth pass, minor): a header that is a list (`.get`), a `kid` that is a list (`kid in keys` — unhashable), a token
+    # that is not a string, `[` ten thousand deep — each was a 500 at the door instead of a 401.
     try:
         h, p, s = token.split(".")
         header, payload = json.loads(_unb64(h)), json.loads(_unb64(p))
-    except (ValueError, json.JSONDecodeError):
+        if not isinstance(header, dict) or not isinstance(payload, dict) or not isinstance(header.get("kid", ""), str):
+            raise TypeError("a token's header and payload are objects, its kid a string")
+    except PARSE_ERRORS:
         raise BadSignature("not a token")
     kid = header.get("kid", "")
     if not keys.usable(kid, now):
         raise UnknownKey(f"kid {kid!r} is not in the trusted set (or retired)")
     try:
         Ed25519PublicKey.from_public_bytes(keys.keys[kid]).verify(_unb64(s), f"{h}.{p}".encode())
-    except InvalidSignature:
+    except (InvalidSignature, *PARSE_ERRORS):         # a signature that is not base64 is not one either
         raise BadSignature("signature does not verify")
     if now > payload["exp"] + skew:
         raise Expired(f"expired {now - payload['exp']:.0f}s ago")

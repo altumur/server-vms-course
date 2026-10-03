@@ -78,7 +78,7 @@ from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
 from .doors import LIST_SEPARATOR, numeric
-from .rows import Table, garbled_counts
+from .rows import PARSE_ERRORS, Table, garbled_counts
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .variables import Conflict, Variables, cas_pause
 
@@ -108,6 +108,7 @@ UNPLACED = "unplaced"
 # A prefix that cannot be bounded by a policy is a layout problem, not a missing ACL feature.
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
+CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
 
 
 # `<subsystem>/heartbeats/<worker>`, or the resource's `platform/resources/<server>/heartbeat`, which has
@@ -207,7 +208,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
         # read model, the running gauge — each a loop over every worker.
         if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
             raise TypeError("a status entry is not an object")
-    except (ValueError, KeyError, TypeError, AttributeError):
+    except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1
         if key not in _garbled_keys:
@@ -387,9 +388,13 @@ class Subsystem:
         """The workers write their own heartbeats and nothing else."""
         return [f"{self.name}/{HEARTBEATS}/*"]
 
+    # …and the report on its pass (the review's ninth pass, major): `pass_once` writes `<name>/controller/pass`, the one
+    # object `/metrics` reads `<name>_units_unplaced` and the last pass from, and this list — and the policy checked
+    # against it — granted only the shards: on a cluster with an ACL the report was a 403 every five seconds and the
+    # metrics stayed -1 and 0. `tests/test_policies.py` checks the policy against what the stand's processes WRITE now.
     def acl_objects_controller(self) -> list[str]:
-        """The controller publishes the snapshot shards — the only thing that leaves the cluster."""
-        return [f"{self.name}/snapshot/*"]
+        """The controller publishes the snapshot shards — the only thing that leaves the cluster — and its pass report."""
+        return [f"{self.name}/snapshot/*", f"{self.name}/{CONTROLLER_PASS}"]
 
     def acl_objects_console(self) -> list[str]:
         """The console stores the bytes of a `blob` field, beside the row that names them."""
