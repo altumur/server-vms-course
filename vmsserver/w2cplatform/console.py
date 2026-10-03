@@ -1679,6 +1679,10 @@ class SpecConsole:
                   # falls on it
                   f"# TYPE {p}_units_moved_for_reach_total counter",
                   f"{p}_units_moved_for_reach_total {r('reach_moves_total', int)}",
+                  # units of groups left whole on a server that no longer reaches them, and servers whose labels row did
+                  # not read on the pass's last read (the eleventh review: each was a log line or a page only)
+                  f"# TYPE {p}_units_waiting_for_reach gauge", f"{p}_units_waiting_for_reach {r('reach_waiting', int)}",
+                  f"# TYPE {p}_servers_labels_unread gauge", f"{p}_servers_labels_unread {r('servers_labels_unread', int)}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.

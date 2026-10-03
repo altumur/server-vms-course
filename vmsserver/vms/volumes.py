@@ -184,6 +184,14 @@ def refuse(fields: dict) -> None:
     if "@" in url.split("//", 1)[-1].split("/", 1)[0]:
         raise Refused("a volume's url names the archive, never the key to it: the credentials go in "
                       "`access_secret` — this string is printed on the page and published in heartbeats")
+    # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): `…/bucket?X-Amz-Credential=…` or
+    # `?secret=…` was taken, and printed and published the same. The rule and its list: `secrets.is_credential_param`.
+    from w2cplatform.secrets import credential_params
+    creds = credential_params(url)
+    if creds:
+        raise Refused(f"a volume's url names the archive, never the key to it ({', '.join(dict.fromkeys(creds))}): the "
+                      f"credentials go in `access_key` / `access_secret` — this string is printed on the page and "
+                      f"published in heartbeats")
 
 
 def write(vars_, fields: dict, sealer=None) -> Volume:

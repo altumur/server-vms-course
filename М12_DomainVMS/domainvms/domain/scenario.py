@@ -32,7 +32,7 @@ from __future__ import annotations
 import json
 
 from w2cplatform.doors import numeric
-from w2cplatform.rows import PARSE_ERRORS, finite
+from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 from .federation import Unreachable
 from .ingest import ASK_DEADLINE_MAX, Refused
@@ -85,8 +85,30 @@ def _within(then: dict) -> float:
     return w
 
 
+# ONE SCENARIO THAT IS NOT ONE IS THAT SCENARIO'S, COUNTED (the product's cross-check of vmsserver's eleventh review): a
+# scenario that is not an object, or whose `when` or `then` is not one, raised `AttributeError` out of every reader of
+# the document — the book of asks for every camera (`pairs`), the refusals, a camera's every event — or, read past, was
+# gone without a word. Each is skipped now, counted once until it is mended (`SCENARIOS`, in the console's `/healthz`
+# beside the other things others wrote that do not parse), logged once; the others are read.
+SCENARIOS = Table("scenario", "skipped — the other scenarios are read", "scenario of the shared settings")
+
+
 def _scenarios(settings: dict) -> list[dict]:
-    return [sc for sc in settings.get("scenarios", []) if sc.get("enabled", True)]
+    scs = settings.get("scenarios") or []
+    if not isinstance(scs, list):
+        SCENARIOS.garbled("settings/scenarios", TypeError(f"the scenarios are a list, not {type(scs).__name__}"))
+        return []
+    SCENARIOS.parsed("settings/scenarios")
+    out = []
+    for i, sc in enumerate(scs):
+        key = f"settings/scenarios/{i}"
+        if not isinstance(sc, dict) or not all(isinstance(sc.get(k, {}), dict) for k in ("when", "then")):
+            SCENARIOS.garbled(key, TypeError("a scenario is an object with a `when` and a `then` that are objects"))
+            continue
+        SCENARIOS.parsed(key)
+        if sc.get("enabled", True):
+            out.append(sc)
+    return out
 
 
 def _action(then: dict) -> dict:

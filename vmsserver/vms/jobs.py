@@ -24,7 +24,7 @@ import logging
 import time
 
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite, number
-from w2cplatform.spec import GARBLED_ROW, Refused, SpecController
+from w2cplatform.spec import GARBLED_ROW, Refused, SpecController, take_written
 
 TERMINAL = ("done", "failed")
 # What a job's row may say, and what the worker's phase is allowed to move it to. The console mirrors the
@@ -129,11 +129,20 @@ class DetJobController(SpecController):
 #                ceiling): tried again after a pause that doubles from two seconds to `RETRY_MAX`, not every turn — one
 #                that has no `valid_until` was tried every two seconds for ever
 #   deadlines    per subsystem, the rows that have an `until` and when: the rows are read whole every `REREAD` seconds,
-#                and between those reads only a row whose `until` has come is read again — and ended only if the row
-#                read then still says so. An `until` this console writes is noted at once; one another console
-#                SHORTENED is seen within `REREAD` (one it lengthened is seen before anything is ended: the row is read)
+#                and between those reads only a row whose `until` has come or is `NEAR` is read again — and ended
+#                only if the row read then still says so.
+#
+# WHEN AN END TAKES EFFECT, said as it is (the eleventh review: the tenth's wording "an `until` this console writes is
+# noted at once" was untrue for the console's DOOR — `until = now + 1` through it ended the recording 23 s later; only
+# the loop's own writes were noted). Every row this PROCESS writes — the loop's, and the door's through any controller
+# of the process — is read at the loop's next turn (`spec.take_written`): an end given at any console's door takes
+# effect within a turn, two seconds, since every console runs this loop and the first to end a row deletes it for all.
+# What another console's loop remembers of the row: an end made LATER is seen before anything is ended (the row is
+# read); one made EARLIER is seen within a turn when the end it remembers is `NEAR`, else within `REREAD` — by then the
+# console that wrote it has ended the row.
 class Remembered:
     REREAD = 30.0
+    NEAR = 10.0                                         # seconds before a remembered end its row is read every turn
     RETRY_MAX = 300.0
 
     def __init__(self):
@@ -260,20 +269,33 @@ def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int
 # the rows after it still end — it raised out of here, and with it every recording due to end stayed recording.
 #
 # With `mem` (the request loop's, every two seconds) the rows are read whole every `Remembered.REREAD` seconds, and
-# between those reads only a row whose remembered `until` has come — read again, and ended on what it says then.
+# between those reads only a row whose remembered `until` has come or is near, and a row this process wrote since the
+# last turn — read again, and ended on what it says then (`Remembered`, "when an end takes effect").
 def expire(ctl, now: float, mem: Remembered | None = None) -> int:
     gone = 0
     sub = ctl.spec.name
+    written = take_written(sub) if mem is not None else set()    # what this process wrote since the last turn (the door)
     if mem is None or mem.due(f"{sub}#until", now):
         rows = ctl.units()
         if mem is not None:
             mem.read_whole(f"{sub}#until", now)
             mem.deadlines[sub] = {}
     else:
-        due = sorted(u for u, until in mem.deadlines.get(sub, {}).items() if now > until)
-        rows = [r for r in (ctl._parsed(ctl.spec.parse_id(u)) for u in due) if r is not None and r is not GARBLED_ROW]
+        # Read again: a row whose remembered end has come; a row this process wrote since the last turn — an `until` given
+        # through the console's door, the loop's memory never heard of it (the eleventh review: it ended up to `REREAD`
+        # late); and a row whose remembered end is NEAR (`Remembered.NEAR`) — another console that shortened it is seen
+        # in a turn, not in `REREAD`.
+        mine = mem.deadlines.get(sub, {})
+        due = sorted(set(u for u, until in mine.items() if until - now <= mem.NEAR) | written)
+        rows = []
         for u in due:
-            mem.deadlines[sub].pop(u, None)                 # read again just now: what it says goes back in below
+            try:
+                r = ctl._parsed(ctl.spec.parse_id(u))
+            except PARSE_ERRORS:
+                continue                                    # a name that is no id of this subsystem: nothing to end
+            if r is not None and r is not GARBLED_ROW:
+                rows.append(r)
+            mine.pop(u, None)                               # read again just now: what it says goes back in below
     for row in rows:
         until = number(f"{ctl.sub.config(ctl.spec.rows, str(row['id']))}#until", row.get("until") or 0)
         if until and now > until:

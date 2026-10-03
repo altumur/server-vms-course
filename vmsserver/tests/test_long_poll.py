@@ -1552,6 +1552,127 @@ def test_a_recorder_of_thirty_two_channels_is_asked_one_question_at_a_time_and_i
     assert all(st.get("coverage") for st in seen[-1].status), [st["id"] for st in seen[-1].status if not st.get("coverage")]
 
 
+def test_a_question_that_hangs_after_its_round_ended_names_the_device_slow_and_coverage_stays_as_said_last():
+    """The eleventh review, a major — a run: `channels` answers, then `in_use`, begun after the round's wait was over,
+    never comes back. It was judged only in the round that asked it, so the recorder stayed "healthy" — `devices_slow`
+    empty, the log silent — while its 32 `coverage` questions queued behind the hung one: coverage at 0 of 32. Every
+    round now judges what each line it asks is answering: the device is `slow`, with `since`, counted, and each of its
+    cameras keeps the coverage it said last."""
+    box = _real_box()
+    hang, gate = threading.Event(), threading.Event()
+
+    class HangsLate(FakeDevice):
+        def channels(self):
+            if hang.is_set():
+                time.sleep(0.15)                                     # inside the round's wait: not slow
+            return super().channels()
+
+        def in_use(self):
+            if hang.is_set():
+                gate.wait(30)                                        # begun at ~0.15 s, after the wait ends: never back
+            return super().in_use()
+
+    cov = {str(c): (0.0, 60.0) for c in range(1, 33)}
+    holder, cams = _nvr_holder(box, 32, lambda key: HangsLate(key, channels=[str(c) for c in range(1, 33)], coverage=cov))
+    try:
+        holder.reconcile_once()
+        for _ in range(2):
+            holder.heartbeat_once()
+            time.sleep(0.2)
+        hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+        assert all(st.get("coverage") for st in hb.status) and "devices_slow" not in hb.extra
+        hang.set()
+        begun = time.time()
+        holder.heartbeat_once()                                      # `in_use` begins after this round's wait
+        time.sleep(0.3)
+        holder.heartbeat_once()                                      # …and is judged in this one
+        hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+        d = hb.extra["devices"][0]
+        assert d.get("state") == "slow" and begun <= d["since"] <= time.time(), d
+        assert hb.extra.get("devices_slow") == 1
+        assert sum(1 for st in hb.status if st.get("coverage") == {"from": 0.0, "to": 60.0, "fragments": 0}) == 32
+    finally:
+        gate.set()
+
+
+def test_the_playback_doors_questions_go_on_the_devices_line_with_the_heartbeats():
+    """The eleventh review, a minor — a run: `/recordings` and `/playback` asked the device's `coverage` and listing
+    beside its line — the heartbeat and four requests were five calls at once into a recorder that answers one at a time,
+    and the comment said "two at most". The door's questions now go on the line, waited for there (`_door_ask`): never
+    two questions in the device at once, and every request answered."""
+    box = _real_box()
+    lock, inside, most = threading.Lock(), [0], [0]
+
+    class OneAtATime(FakeDevice):
+        def _one(self, real, *a):
+            with lock:
+                inside[0] += 1
+                most[0] = max(most[0], inside[0])
+            try:
+                time.sleep(0.01)
+                return real(*a)
+            finally:
+                with lock:
+                    inside[0] -= 1
+
+        def channels(self): return self._one(super().channels)
+        def in_use(self): return self._one(super().in_use)
+        def coverage(self, cam): return self._one(super().coverage, cam)
+        def recordings(self, cam, t0, t1): return self._one(super().recordings, cam, t0, t1)
+
+    cov = {str(c): (0.0, 60.0) for c in range(1, 5)}
+    index = {str(c): [(0.0, 60.0)] for c in range(1, 5)}
+    holder, cams = _nvr_holder(box, 4, lambda key: OneAtATime(key, channels=[str(c) for c in range(1, 5)],
+                                                              coverage=cov, index=index))
+    holder.reconcile_once()
+    got, errors = [], []
+
+    def ask(cam):
+        try:
+            got.append(holder.recordings(cam, 0.0, 30.0))
+        except Exception as e:                                        # noqa: BLE001
+            errors.append(e)
+
+    doors = [threading.Thread(target=ask, args=(c,)) for c in cams]
+    for t in doors:
+        t.start()
+    holder.heartbeat_once()
+    for t in doors:
+        t.join(10)
+    assert not errors and got == [[(0.0, 30.0)]] * 4, (errors, got)
+    assert most[0] == 1, f"{most[0]} questions in the recorder at once"
+
+
+def test_a_door_asking_a_hung_device_answers_busy_and_piles_no_more_than_a_handful_on_its_line():
+    """The other side of the door's questions going on the line: a device whose listing never comes back. Each request
+    is answered "ask again" (`TimeoutError`, the door's 503) after `DOOR_ASK_WAIT`, and the requests do not pile up on
+    the device's line — at most `DOOR_ASKS_PER_DEVICE` of the door's questions wait there, however many are asked."""
+    box = _real_box()
+    gate = threading.Event()
+
+    class HungIndex(FakeDevice):
+        def recordings(self, cam, t0, t1):
+            gate.wait(30)
+            return super().recordings(cam, t0, t1)
+
+    holder, cams = _nvr_holder(box, 1, lambda key: HungIndex(key, channels=["1"], coverage={"1": (0.0, 60.0)},
+                                                             index={"1": [(0.0, 60.0)]}))
+    holder.DOOR_ASK_WAIT = 0.2
+    holder.reconcile_once()
+    try:
+        for i in range(8):
+            try:
+                holder.recordings(cams[0], float(i), 30.0)
+                raise AssertionError("a hung listing answered")
+            except TimeoutError:
+                pass
+        with holder._dev_lock:
+            piled = sum(1 for k in holder._dev_calls if str(k[0]).startswith("door-"))
+        assert piled <= holder.DOOR_ASKS_PER_DEVICE, piled
+    finally:
+        gate.set()
+
+
 def test_a_slow_question_does_not_keep_a_relay_from_being_answered_in_its_look():
     """The same finding's second half: the set of slow devices was one for questions and commands, so a device whose
     index takes a second to list was "slow" for its relay too — the command's answer went to the next look. Now a slow

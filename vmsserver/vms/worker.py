@@ -571,6 +571,7 @@ class VmsWorker(Worker):
         self._dev_pending: dict[int, int] = {}           # device -> its calls through `_ask_devices` not returned yet
         self._dev_queues: dict = {}                      # device (or ("open", key)) -> its questions not begun yet, in order
         self._dev_runners: set = set()                   # …and the lines a thread is working through now: one per device
+        self._dev_heads: dict = {}                       # …and the call each of those lines is in now (`_ask_devices` judges it)
         self._dev_said: set = set()                      # devices said slow, (question, device) said failing: once a spell
         self._open_failed: dict[str, str] = {}           # device key -> why it did not open, until it opens
         self._said_coverage: dict[tuple, object] = {}    # ("coverage", device, camera) -> what the device said last
@@ -725,22 +726,36 @@ class VmsWorker(Worker):
     # requests at once into a box that answers one at a time, and at 10 ms an answer it was `slow` in five heartbeats
     # of six, 20 of its cameras without coverage. Now the questions of a round to one device are asked in order on the
     # device's one line (`_dev_run`), and `took` is counted from when a question was BEGUN: one queued behind the
-    # device's others is not slow, and its answer is collected by the next round. Two calls at most are in a device at
-    # once — this line's question and a command (`requests`, one at a time of its own) — and a question that is slow
-    # no longer names the device slow for the commands: `_slow_asks` here, `_slow` there (a relay is waited for in its
-    # look again, whatever the device's index takes to list).
+    # device's others is not slow, and its answer is collected by the next round. A question that is slow no longer
+    # names the device slow for the commands: `_slow_asks` here, `_slow` there (a relay is waited for in its look again,
+    # whatever the device's index takes to list).
+    #
+    # WHAT IS IN A DEVICE AT ONCE, said as it is (the eleventh review, a minor; a run: "two at most" was untrue — the
+    # heartbeat and four door requests were five calls at once). Questions — the heartbeat's, the description's, and the
+    # playback door's `coverage` and listing (`recordings`, `playback_pieces`; the product's cross-check found its card
+    # poll beside the line too) — go on this one line, one at a time. Beside it: one command (`requests`, one at a time
+    # of its own), and the door's READS of the archive (`open_playback`, `read`, `close_playback`) — those are the
+    # device's own sessions, as many as its `max_playbacks` lets in (it refuses the next: 503), and a read takes as long
+    # as a piece of footage takes, which a question queued behind it must not be judged by.
     #
     # `asks` is `[(key, device, call)]`, the key `(question, id(device), …)` (an open: `("open", device key)`). Returns
     # `{key: answer}` for the calls that answered; a key that is absent is NOT KNOWN — and every caller reads it so:
-    # a description not changed, a device said `slow` in the heartbeat, the coverage it said last.
+    # a description not changed, a device said `slow` in the heartbeat, the coverage it said last. `grace`: a door's
+    # longer wait (`DOOR_ASK_WAIT`, off the loop) — and a door waits for the same question already on the line rather
+    # than taking "not known" at once.
     DEVICE_GRACE = 0.2                                   # the one wait for a round of calls into devices: `PERFORM_GRACE`'s
     DEVICE_HOLD = 0.5                                    # seconds the device calls of one pass, or one heartbeat, may hold it
+    DOOR_ASK_WAIT = 5.0                                  # seconds the playback door waits for a question on the device's line
 
-    def _ask_devices(self, asks, until: float | None = None) -> dict:
+    def _ask_devices(self, asks, until: float | None = None, grace: float | None = None) -> dict:
         start = time.monotonic()
-        until = start + self.DEVICE_HOLD if until is None else until
-        out, waiting = {}, []
+        door = grace is not None
+        grace = self.DEVICE_GRACE if grace is None else grace
+        until = start + max(self.DEVICE_HOLD, grace) if until is None else until
+        out, waiting, lines = {}, [], set()
         for key, dev, fn in asks:
+            line = ("open", key[1]) if dev is None else id(dev)
+            lines.add(line)
             with self._dev_lock:
                 call = self._dev_calls.get(key)
                 if call is not None and call["returned"].is_set():
@@ -748,9 +763,11 @@ class VmsWorker(Worker):
                     self._collect(key, call, out)
                     continue
                 if call is not None:
+                    if door:
+                        waiting.append((key, call))      # a door waits for the one already asked
                     continue                             # still not back, or not begun: not asked twice
-                call = self._dev_calls[key] = {"dev": dev, "fn": fn, "returned": threading.Event(), "since": self.wall()}
-                line = ("open", key[1]) if dev is None else id(dev)
+                call = self._dev_calls[key] = {"key": key, "dev": dev, "fn": fn, "returned": threading.Event(),
+                                               "since": self.wall()}
                 if dev is not None:
                     self._dev_pending[id(dev)] = self._dev_pending.get(id(dev), 0) + 1
                 self._dev_queues.setdefault(line, []).append(call)
@@ -758,12 +775,22 @@ class VmsWorker(Worker):
                 self._dev_runners.add(line)
             if begin:
                 threading.Thread(target=self._dev_run, args=(line,), name=f"{self.name}-device", daemon=True).start()
-            if dev is None or id(dev) not in self._slow_asks:
+            if door or dev is None or id(dev) not in self._slow_asks:
                 waiting.append((key, call))
-        deadline = min(time.monotonic() + self.DEVICE_GRACE, until)
+        deadline = min(time.monotonic() + grace, until)
         for key, call in waiting:
             call["returned"].wait(max(0.0, deadline - time.monotonic()))
-        for key, call in waiting:
+        # THE HEAD OF EVERY LINE THIS ROUND ASKS IS JUDGED IN THIS ROUND (the eleventh review, a major; a run). A question
+        # was judged only in the round that asked it: `in_use` begun just after that round's wait — behind `channels` —
+        # and never back was not asked again (rightly) and never looked at again, so the device stayed "healthy",
+        # `devices_slow` empty, the log silent, and its 32 `coverage` questions queued behind it for ever: coverage at 0
+        # of 32. Now every round looks at what each line it asks is answering now (`_dev_heads`), whoever asked it: out
+        # longer than `DEVICE_GRACE`, the device is `slow` (said once; `since` in `device_status`), and each of its cameras
+        # keeps the coverage it said last (`_coverage_of`). Not waited for again: it was waited for once.
+        with self._dev_lock:
+            asked = {id(c) for _, c in waiting}
+            heads = [(h["key"], h) for h in (self._dev_heads.get(line) for line in lines) if h is not None and id(h) not in asked]
+        for key, call in waiting + heads:
             with self._dev_lock:
                 if call["returned"].is_set():
                     if self._dev_calls.get(key) is call:
@@ -800,13 +827,16 @@ class VmsWorker(Worker):
                     self._dev_runners.discard(line)
                     return
                 call = queue.pop(0)
-                call["t0"] = time.monotonic()
+                call["t0"], call["begun"] = time.monotonic(), self.wall()
+                self._dev_heads[line] = call             # what the line is answering now: judged by every round (`_ask_devices`)
             try:
                 call["out"] = call["fn"]()
             except Exception as e:                       # noqa: BLE001 — the device's word, whatever it is
                 call["error"] = str(e) or type(e).__name__
             call["took"] = time.monotonic() - call["t0"]
             with self._dev_lock:
+                if self._dev_heads.get(line) is call:
+                    del self._dev_heads[line]
                 if call["dev"] is not None:
                     n = self._dev_pending.get(id(call["dev"]), 1) - 1
                     if n > 0:
@@ -1491,8 +1521,9 @@ class VmsWorker(Worker):
             return None
         try:
             mark = json.loads(raw)
-        except ValueError:
-            return {"instance": "?"}                     # a mark that does not parse is still a mark
+        except PARSE_ERRORS:                             # nested past JSON's depth too: `RecursionError` left `requests()` on
+            return {"instance": "?"}                     # every pass and no command was performed (the eleventh review) —
+                                                         # a mark that does not parse is still a mark, that command's
         return mark if isinstance(mark, dict) else {"instance": "?"}
 
     def sweep_marks(self) -> int:
@@ -1801,8 +1832,17 @@ class VmsWorker(Worker):
     # One command against an open device. Two verbs, because two are what an operator points at; a third
     # belongs here and not in a new place. Unknown verbs raise, which the caller turns into a refusal
     # recorded on the unit — an operator who asked for something this device cannot do gets an answer.
+    #
+    # …AND AN ARGUMENT IS A NUMBER OR A WORD (the product's cross-check of the eleventh review: an argument had no size).
+    # `state` went to the driver as it stood in the row, as long as the row's ceiling let it be; one longer than
+    # `ARG_MAX` is that command's refusal, its value not repeated.
+    ARG_MAX = 32
+
     def perform(self, dev, row: dict, it: dict) -> dict:
         action = str(it.get("action", ""))
+        long = [f for f in ("port", "state", "pulse_ms", "n") if len(str(it.get(f, ""))) > self.ARG_MAX]
+        if long:
+            raise ValueError(f"`{long[0]}` is {len(str(it[long[0]]))} characters long: an argument is a number or a word")
         if action == "output":
             port, state, ms = int(it.get("port", 0)), str(it.get("state", "pulse")), int(it.get("pulse_ms", 0) or 0)
             if not hasattr(dev, "output"):
@@ -1914,6 +1954,8 @@ class VmsWorker(Worker):
             if missing:
                 failed = [q for q in missing if (q, id(dev)) in self._dev_said]
                 st["state"] = "slow" if id(dev) in slow else ("failed" if failed else "asking")
+                if st["state"] != "failed" and (since := self._asking_since(dev)) is not None:
+                    st["since"] = since                  # since when the device has not answered (the eleventh review)
             out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
                         **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
         opening = self._opening()
@@ -1930,6 +1972,16 @@ class VmsWorker(Worker):
         with self._dev_lock:
             return {k[1]: c["since"] for k, c in self._dev_calls.items()
                     if k[0] == "open" and k[1] not in self.devices and not c["returned"].is_set()}
+
+    # The wall time the question a device is answering now was begun — or, with none begun, the earliest of those waiting
+    # on its line; None when nothing is.
+    def _asking_since(self, dev) -> float | None:
+        with self._dev_lock:
+            head = self._dev_heads.get(id(dev))
+            if head is not None:
+                return head.get("begun")
+            waiting = [c["since"] for c in self._dev_calls.values() if c["dev"] is dev and not c["returned"].is_set()]
+        return min(waiting) if waiting else None
 
     def _status_asks(self, devices) -> list:
         return [((q, id(d)), d, getattr(d, q)) for _, d in devices for q in ("channels", "in_use") if hasattr(d, q)]
@@ -1954,10 +2006,52 @@ class VmsWorker(Worker):
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
-        if dev is None or dev.coverage(cam) is None:
+        if dev is None or self._door_coverage(dev, cam) is None:
             raise KeyError(cam)
         lister = getattr(dev, "recordings", None)
-        return None if lister is None else lister(cam, t0, t1)
+        if lister is None:
+            return None
+        return self._door_ask(dev, ("door-recordings", id(dev), str(cam), float(t0), float(t1)), lambda: lister(cam, t0, t1))
+
+    # A question the playback door puts to a device, ON THE DEVICE'S LINE (the eleventh review, a minor): `coverage` and
+    # the listing went into the device beside the heartbeat's questions, and a recorder that answers one request at a
+    # time had five at once. Waited for up to `DOOR_ASK_WAIT`, off the loop; the device's own error is raised as it was;
+    # an answer that does not come is a `TimeoutError` — the door's 503, "ask again".
+    DOOR_ASKS_PER_DEVICE = 4                             # a door's questions on one device's line at once: the next is 503
+
+    def _door_ask(self, dev, key, fn):
+        def run():
+            try:
+                return True, fn()
+            except Exception as e:                       # noqa: BLE001 — the device's word, raised to the door below
+                return False, e
+        with self._dev_lock:                             # what the door gave up on and came back since: nobody asks it again
+            for k in [k for k, c in self._dev_calls.items() if str(k[0]).startswith("door-") and c["returned"].is_set()
+                      and time.monotonic() - c["t0"] - c.get("took", 0.0) > self.DOOR_ASK_WAIT]:
+                del self._dev_calls[k]
+            waiting = sum(1 for k, c in self._dev_calls.items() if str(k[0]).startswith("door-") and c["dev"] is dev)
+        if waiting >= self.DOOR_ASKS_PER_DEVICE and key not in self._dev_calls:
+            raise TimeoutError(f"the device has {waiting} questions of this door on its line already — ask again")
+        heard = self._ask_devices([(key, dev, run)], grace=self.DOOR_ASK_WAIT)
+        if key not in heard:
+            raise TimeoutError(f"the device has not answered within {self.DOOR_ASK_WAIT:.0f} s — it is busy or does not "
+                               f"answer; ask again")
+        ok, value = heard[key]
+        if not ok:
+            raise value
+        return value
+
+    # …and what a door asks first: the camera's coverage, by the line — or, when it does not come, what the device said
+    # of it last (`_said_coverage`, the heartbeat's): an archive that was there a moment ago is still worth a request.
+    def _door_coverage(self, dev, cam):
+        if not hasattr(dev, "coverage"):
+            return None
+        try:
+            return self._door_ask(dev, ("door-coverage", id(dev), str(cam)), lambda: dev.coverage(cam))
+        except TimeoutError:
+            if ("coverage", id(dev), str(cam)) in self._said_coverage:
+                return self._said_coverage[("coverage", id(dev), str(cam))]
+            raise
 
     # A range out of the device's own archive. The ceiling belongs to the hardware, not to this worker:
     # capacity here is still cameras, and an exhausted device is a 503 — the same admission control the
@@ -2062,7 +2156,7 @@ class VmsWorker(Worker):
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
-        cov = dev.coverage(cam) if dev is not None else None
+        cov = self._door_coverage(dev, cam) if dev is not None else None   # by the device's line (the eleventh review)
         if cov is None:
             raise KeyError(cam)
         t0, t1 = max(float(t0), float(cov.get("from", t0))), min(float(t1), float(cov.get("to", t1)))
@@ -2346,6 +2440,8 @@ class VmsWorker(Worker):
                                                 "error": "no device archive"})
                     except ValueError:
                         return self._send(400, {"detail": "from and to are unix seconds", "error": "bad range"})
+                    except TimeoutError as e:                    # the device's line did not come to it (`_door_ask`)
+                        return self._send(503, {"detail": str(e), "error": "device busy"})
                     if spans is None:
                         return self._send(501, {"detail": "this driver cannot list what the device holds",
                                                 "error": "no index"})
@@ -2391,6 +2487,8 @@ class VmsWorker(Worker):
                     return self._send(400, {"detail": "from and to are unix seconds", "error": "bad range"})
                 except OverflowError as e:                       # the device's ceiling, not ours
                     return self._send(503, {"detail": str(e), "error": str(e)})
+                except TimeoutError as e:                        # the device's line did not come to it (`_door_ask`)
+                    return self._send(503, {"detail": str(e), "error": "device busy"})
                 # A stream, and its end said (`playback_pieces`): to a client that speaks HTTP/1.1, chunks and the last
                 # one only when every piece went — a device that failed half way is a reply that ends short, which
                 # the client SEES; to an HTTP/1.0 one, the bytes until the connection closes, as before. Written a

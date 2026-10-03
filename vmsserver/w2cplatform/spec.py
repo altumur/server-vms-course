@@ -78,13 +78,14 @@ from __future__ import annotations
 import logging
 import os
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import is_secret_field
+from .secrets import credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
 from .events import Suppress
@@ -670,6 +671,14 @@ class SubsystemSpec:
                 if u.username or u.password or "@" in u.netloc or ("@" in u.path and u.netloc.lower() != "file"):
                     raise Refused(f"{name} may not carry a login: put it in cred_username / cred_secret — "
                                   f"a url field is in the snapshot, and the snapshot leaves the cluster")
+                # …NOR IN ITS PARAMETERS (the eleventh review, blocker 4; the rule and its list: `secrets.is_credential_param`):
+                # `…/videostream.cgi?usr=admin&pwd=…` went past the login rule into the snapshot and onto every viewer's
+                # page. The refusal names the parameters, never their values.
+                creds = credential_params(str(fields[name]))
+                if creds:
+                    raise Refused(f"{name} may not carry a credential in its parameters ({', '.join(dict.fromkeys(creds))}): "
+                                  f"put the login in cred_username and the password or token in cred_secret — a url "
+                                  f"field is in the snapshot, and the snapshot leaves the cluster")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/cam7#@nvr50/ch/1` is
                 # device `cam7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
@@ -746,6 +755,28 @@ def register_near_rank(spec_name: str, fn) -> None:
     NEAR_RANK[spec_name] = fn
 
 
+# THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
+# tenth's `REREAD`, not fixed). The console's request loop reads its rows whole every `jobs.Remembered.REREAD` seconds
+# and, between, only the rows it remembers ending; an `until` given through the console's DOOR was written by another
+# controller of the same process, which the loop's memory never heard of — a recording given `until = now + 1` there
+# ended 23 s later. Every `create` and `update` notes its unit here (`wrote`); a reader takes what was written since it
+# last looked (`take_written`) and reads those rows at its next turn. One reader per process takes them — the console
+# runs one request loop — and a reader in ANOTHER process is told nothing: the store has no change feed to tell it by.
+_WRITTEN: dict[str, set[str]] = {}
+_WRITTEN_LOCK = threading.Lock()
+
+
+def wrote(spec_name: str, uid) -> None:
+    with _WRITTEN_LOCK:
+        _WRITTEN.setdefault(spec_name, set()).add(str(uid))
+
+
+def take_written(spec_name: str) -> set[str]:
+    """The units of `spec_name` this process wrote since the last call — and forgotten here."""
+    with _WRITTEN_LOCK:
+        return _WRITTEN.pop(spec_name, set())
+
+
 # ONE LOOK AT THE FOLLOWED SUBSYSTEM (the scaling pass): `SpecController.near_index`. Its live workers' `running` entries,
 # by the value `near` matches — their unit id, or the field `near.of` names — in the order the heartbeats were read:
 # `[(their unit id, worker, server)]`. And what ranking them has read (`memo`, `ranks`), for as long as the look lives.
@@ -816,6 +847,8 @@ class SpecController(Controller):
         self._server_rows_last: dict | None = None       # the servers' labels last read from the console's rows (`server_labels`)
         self._server_rows_unread: set[str] = set()       # …and the servers whose row is there and did not read on that read
         self.last_reach_moves = 0                        # what the last `ensure_reach` moved or unplaced (the pass report)
+        self.last_reach_waiting = 0                      # …and the units of groups it left whole where they are (the eleventh)
+        self._reach_said: set = set()                    # …those groups, said in the log once a spell
         # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
         # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
         from .sealing import Sealer
@@ -1146,10 +1179,12 @@ class SpecController(Controller):
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
                 self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
+                wrote(self.spec.name, uid)                          # for this process's readers that remember (`take_written`)
                 self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
         self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
+        wrote(self.spec.name, uid)
         self._derived(r, uid)
         return r
 
@@ -1196,6 +1231,7 @@ class SpecController(Controller):
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
             return self._sealed(self.spec.items(r), uid)
         r = self.spec.row(self.write(self._row_key(uid), mutate))
+        wrote(self.spec.name, uid)                       # for this process's readers that remember (`take_written`)
         if any(f in fields for d in self.spec.derived for f in d.items.values()):
             self._derived(r, uid)
         return r
@@ -1357,7 +1393,11 @@ class SpecController(Controller):
         admit = ADMIT.get(self.spec.name)
         if admit is not None:
             out = [w for w in out if admit(self, row, w)]
-        with_group = self.worker_with_group(row, out)
+        # The group's worker is looked for in the pool as GIVEN, not in what the filters left (the eleventh review, a
+        # minor): a channel whose group's worker no longer passed them — its server's row unread this pass, a label
+        # given to this one channel — found no group in `out` and was placed alone on another worker, two sessions to one
+        # recorder. Such a unit has no worker: it waits, and `_unplaceable` says beside whom.
+        with_group = self.worker_with_group(row, workers)
         return [w for w in out if w == with_group] if with_group else out
 
     # The worker already carrying a unit of this row's group, if there is one and it is still in the pool.
@@ -1689,6 +1729,21 @@ class SpecController(Controller):
             note += f"; away from home {home}"
         return best, free, note
 
+    # Of `pool`, the workers with room for `n` units — a group placed or moved whole — or `pool` as it was when none has
+    # it: what fits is placed, as before, rather than nothing. One worker in `pool` (the group pinned already) is the pool.
+    def _room_for_group(self, pool: list[str], n: int) -> list[str]:
+        if n <= 1 or len(pool) <= 1:
+            return pool
+        return [w for w in pool if self.capacity_of(w) - self.load(w) >= n] or pool
+
+    # How many units of `row`'s group — `row` with them — have no place yet: what its first placement must make room for.
+    def _group_waiting(self, row: dict) -> int:
+        value = self.group_value(row) if self.spec.group_by else ""
+        if not value:
+            return 1
+        return sum(1 for o in self._rows_by("group", self.group_value).get(value, ())
+                   if not self.retired(o) and (str(o["id"]) == str(row["id"]) or self.placement(o["id"]) is None))
+
     # `most-free-capacity`: the worker with the largest `capacity_of − load`, strictly positive; ties go to
     # the first in sorted order.
     def _best(self, pool: list[str]) -> tuple[str | None, int]:
@@ -1718,6 +1773,11 @@ class SpecController(Controller):
         if row is None or self.retired(row):
             return None                                 # finished work is not placed, and not "unplaceable" either
         pool = self.eligible(row, self._pool(workers))
+        # The FIRST unit of a group placed decides where the group goes (`eligible` pins the rest to it): onto a worker
+        # with room for every unit of the group waiting to be placed, when one has it (the product's cross-check of the
+        # eleventh review — two channels of four fitted on the near worker, and the other two were unplaceable for good).
+        if len(pool) > 1:                               # pinned to its group's worker already: nothing to choose
+            pool = self._room_for_group(pool, self._group_waiting(row))
         best, free, near = self._pick(pool, uid, self.near_index())      # the pass's one look (`near_index`), not one per unit
         if best is None:
             return None                                 # "the system is full" — or nothing that can reach it; never "w-1 is full"
@@ -1818,6 +1878,10 @@ class SpecController(Controller):
         from .rows import number
         rep["reach_moves_total"] = number(f"{self.sub.name}/{self.PASS_KEY}#reach_moves_total",
                                           prev.get("reach_moves_total", 0), int, 0) + self.last_reach_moves
+        # The units of groups `ensure_reach` left whole where they are, and the servers whose row did not read on the last
+        # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
+        rep["reach_waiting"] = self.last_reach_waiting
+        rep["servers_labels_unread"] = len(self._server_rows_unread)
         try:
             rep["unplaced"] = len(self.unplaced())
             rep["garbled"] = self.rows_garbled
@@ -1922,8 +1986,11 @@ class SpecController(Controller):
             if self.placement(r["id"]) is None and not self.retired(r) and not self._eligible_or_none(r, live, "unplaceable"):
                 u = {"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 why = self.unplaced_reason(r["id"])
+                beside = self._row_key(r["id"]) + "#unplaceable" not in UNIT_JUDGED.bad and self.worker_with_group(r, live)
                 if why and why != "deleted":           # what took its place away — a server that stopped reaching it
                     u["why"] = why
+                elif beside:                           # its group is held where it may not go (`eligible`)
+                    u["why"] = f"its {self.spec.group_by} is held on {beside}, which does not take it: one {self.spec.group_by}, one worker"
                 elif self._row_key(r["id"]) + "#unplaceable" in UNIT_JUDGED.bad:
                     u["why"] = "its row could not be checked against any server: see the log"
                 out.append(u)
@@ -2022,6 +2089,8 @@ class SpecController(Controller):
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
                 pool = self.eligible(row, live) if row else live
+                if row and len(pool) > 1:                # the first of a group goes where the whole group has room (the
+                    pool = self._room_for_group(pool, len(self._reach_group(row, gone)))   # eleventh review's sibling)
                 idx = self.near_index() if idx is None else idx
                 best, free, near = self._pick(pool, uid, idx)
                 if best is None:
@@ -2080,9 +2149,19 @@ class SpecController(Controller):
     # THE GROUP MOVES WHOLE, OR NOT THIS PASS (the review's tenth pass, minor): an administrator of one camera of a
     # four-channel recorder changed its `labels`, and the channel went alone to another holder — two sessions to one
     # recorder, for good. A unit with a group (`group_by`: the VMS's device) moves with every unit of its group on its
-    # worker, onto a worker that takes them all, in one pass — past the budget when the group is the pass's first move;
-    # with no such worker, the units whose server no longer reaches them give their place back and the rest stay: an
-    # unplaced channel holds no session.
+    # worker, onto a worker that takes them all, in one pass.
+    #
+    # …ONTO ANY WORKER THAT HAS ROOM FOR ALL OF IT, AND NEVER SPLIT, NEVER PAST THE BUDGET (the eleventh review: a major,
+    # a minor, and the remark on the budget; the product's cross-check). The target was `_pick`'s ONE worker — the near
+    # one first — and when that one had two places for a four-channel recorder the pass gave all four back "nothing live
+    # reaches it", while srv-c with fifty reached them; the next placement put two on srv-b and two nowhere, for good.
+    # Now the target is picked among the workers that reach every unit of the group AND have room for the whole of it
+    # (near and home still first among those). With none, a unit alone gives its place back with the true reason (none
+    # reaches it, or none that reaches it has room); a GROUP stays where it is, whole — giving back the units its server
+    # stopped reaching split it, and they were then placed beside the others' worker on another — said in the log once
+    # and counted (`last_reach_waiting`, `reach_waiting` in the pass report), and asked again next pass. And a group is
+    # moved inside the pass's budget: 32 channels with a budget of 10 were 32 epochs and seams in one pass. A group
+    # bigger than the budget waits the same way, said with its size — the budget is raised, or it is moved by hand.
     #
     # …and A LABEL NO ROW CAN SAY IS NOT A REASON TO MOVE (the same pass, major): a camera stored with `склад` before the
     # one alphabet was placed by a node's word; a server's row cannot hold the word, so the camera stays where it is,
@@ -2090,15 +2169,28 @@ class SpecController(Controller):
     # report counts them (`reach_moves`, and `reach_moves_total` since the store was new).
     def ensure_reach(self, budget: int = REACH_BUDGET, workers: list[str] | None = None) -> list[tuple]:
         """Units whose worker no longer passes the constraint, moved to one that does — or unplaced, with the reason."""
-        self.last_reach_moves = 0
+        self.last_reach_moves = self.last_reach_waiting = 0
         rule = CONSTRAINTS[self.spec.constraint]
         if budget <= 0 or self.spec.constraint == "none" or self.server_labels() is None:
             return []
         unread = set(self._server_rows_unread)
         pool = self._pool(workers)
-        live, moves, idx, done = set(pool), [], None, set()
+        live, moves, idx, done, waits = set(pool), [], None, set(), set()
+
+        def wait(group, worker, words):                   # the group stays whole where it is: said once a spell, counted
+            key = (str(group[0]["id"]), worker)
+            waits.add(key)
+            self.last_reach_waiting += len(group)
+            if key not in self._reach_said:
+                self._reach_said.add(key)
+                log.warning("%s: %s and %d more of one %s stay on %s, which no longer reaches %s: %s — asked again every "
+                            "pass", self.sub.name, group[0]["id"], len(group) - 1, self.spec.group_by, worker,
+                            group[0]["id"], words)
+
+        whole = True                                      # every unit looked at: what waits no longer is unsaid below
         for row in self.units():
             if len(moves) >= budget:
+                whole = False
                 break
             uid = row["id"]
             if str(uid) in done:
@@ -2116,26 +2208,32 @@ class SpecController(Controller):
             if why is None:
                 continue                                  # a label no server's row can say: it stays, counted
             group = self._reach_group(row, pl.worker)
-            if len(group) > 1 and moves and len(moves) + len(group) > budget:
-                break                                     # the group goes whole, next pass
             done |= {str(m["id"]) for m in group}
+            if len(group) > budget:
+                wait(group, pl.worker, f"its {len(group)} units are more than the {budget} moves a pass may make "
+                                       f"(REACH_BUDGET) — raise it, or move them by hand")
+                continue
+            if len(moves) + len(group) > budget:
+                whole = False
+                break                                     # the group goes whole, next pass
             idx = self.near_index() if idx is None else idx
             others = [w for w in pool if w != pl.worker]
             fits = None
             for m in group:
                 e = set(self.eligible(m, others))
                 fits = e if fits is None else fits & e
-            best, free, near = self._pick([w for w in others if w in fits], uid, idx)
-            if best is not None and free < len(group):
-                best = None                               # no worker takes the whole group
+            reach = [w for w in others if w in fits]
+            roomy = [w for w in reach if self.capacity_of(w) - self.load(w) >= len(group)]
+            best, free, near = self._pick(roomy, uid, idx)
             if best is None:
-                for m in group:
-                    if m is row or not rule(m, has):
-                        mwhy = why if m is row else (self._why_off(m, server, has) or why)
-                        if self.unplace_from(m["id"], pl.worker, f"{mwhy}; nothing live reaches it"):
-                            moves.append((m["id"], pl.worker, None))
-                            log.warning("%s: %s gave its place on %s back: %s; nothing live reaches it", self.sub.name,
-                                        m["id"], pl.worker, mwhy)
+                lack = "nothing live reaches it" if not reach else \
+                    f"no live worker that reaches it has room for {'it' if len(group) == 1 else f'its {len(group)} units'}"
+                if len(group) > 1:
+                    wait(group, pl.worker, lack)
+                    continue
+                if self.unplace_from(uid, pl.worker, f"{why}; {lack}"):
+                    moves.append((uid, pl.worker, None))
+                    log.warning("%s: %s gave its place on %s back: %s; %s", self.sub.name, uid, pl.worker, why, lack)
                 continue
             for m in group:
                 reason = (f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}" if m is row else
@@ -2144,6 +2242,8 @@ class SpecController(Controller):
                     break                                 # somebody moved it first: the rest of the group waits for the next pass
                 moves.append((m["id"], pl.worker, best))
                 log.warning("%s: %s moved from %s to %s: %s", self.sub.name, m["id"], pl.worker, best, reason)
+        if whole:
+            self._reach_said &= waits
         self.last_reach_moves = len(moves)
         return moves
 
@@ -2205,20 +2305,34 @@ class SpecController(Controller):
         dead_band = self.spec.dead_band if dead_band is None else dead_band
         workers = self._pool(workers)
         moves = []
-        for _ in range(budget):
+        while len(moves) < budget:
             if len(workers) < 2:
                 break
             loads = {w: self.load(w) / self.capacity_of(w) for w in workers}
             hi, lo = max(workers, key=loads.get), min(workers, key=loads.get)
             if loads[hi] - loads[lo] < dead_band:
                 break
-            cands = sorted(self.assignment(hi).units, key=_unit_key)
-            if not cands or self.load(lo) + 1 > self.capacity_of(lo):
+            # A unit goes with its group, inside the budget, onto a worker that takes every unit of it and has room for
+            # them all — else the next unit is looked at (the product's cross-check of the eleventh review: this moved
+            # `cands[0]` alone, the first channel of a recorder onto another worker, and asked no filter at all).
+            group = None
+            for unit in sorted(self.assignment(hi).units, key=_unit_key):
+                row = self._parsed(self.spec.parse_id(unit)) if self.spec.group_by else None
+                g = self._reach_group(row, hi) if row and row is not GARBLED_ROW else None
+                ids = [m["id"] for m in g] if g else [self.spec.parse_id(unit)]
+                if len(moves) + len(ids) > budget or self.load(lo) + len(ids) > self.capacity_of(lo):
+                    continue
+                if g and not all(lo in self.eligible(m, [w for w in workers if w != hi]) for m in g):
+                    continue
+                group = ids
                 break
-            uid = self.spec.parse_id(cands[0])
-            if not self.move_from(uid, hi, lo, f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)"):
-                break                                     # the picture changed under this pass: the next one looks again
-            moves.append((uid, hi, lo))
+            if group is None:
+                break
+            why = f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)"
+            for i, uid in enumerate(group):
+                if not self.move_from(uid, hi, lo, why if i == 0 else f"with {group[0]}, one {self.spec.group_by}: {why}"):
+                    return moves                          # the picture changed under this pass: the next one looks again
+                moves.append((uid, hi, lo))
         return moves
 
     # -- what the console and the layer above read -------------------------------------------
@@ -2394,7 +2508,9 @@ class SpecController(Controller):
             w = self.where(r["id"])
             self.sub.snapshot_key(w)              # refuses a worker named `unplaced` before it shadows the shard
             sh = out.setdefault(w or UNPLACED, {"cluster": self.cluster, "worker": w, "ts": now, self.spec.rows: []})
-            sh[self.spec.rows].append({**{k: r[k] for k in keep if k in r}, "worker": w,
+            # An address leaves with no credential in it (`hide_in_url`; the eleventh review, blocker 4): a row stored before
+            # the refusal, or by another build, carried its `?pwd=` into the domain's directory.
+            sh[self.spec.rows].append({**{k: hide_in_url(r[k]) for k in keep if k in r}, "worker": w,
                                        "server": self.server_of(w or "")})
         return out
 
@@ -2497,6 +2613,14 @@ class SpecController(Controller):
     # `/metrics`). Every number through `rows.number`: `previous_hb: -inf` made `worst` infinite and the alert burn for
     # ever. `failover_worst` is the largest this process has measured: the largest of the LAST ones forgot a failover as
     # soon as the same worker had a shorter one.
+    #
+    # …AND A GAP HAS A CEILING (the eleventh review: the ninth's remainder, not touched in the tenth). A finite absurd
+    # `previous_hb` — `-1e308` — passed `rows.number` and made `worst` 1e308, for the life of the process: the alert
+    # burned for ever on one garbled field. A gap longer than `FAILOVER_CEILING` is not measured — a unit held by nobody
+    # for a month is a worker brought back, not a failover anybody alerts on, and a `previous_hb` that gives one is far
+    # more often not a time at all — and is counted with the other unmeasured ones, the field said once.
+    FAILOVER_CEILING = 30 * 86400.0
+
     def failover_seconds(self) -> dict[str, float]:
         """Per worker: the gap between the heartbeat before its current instance started and that instance's start —
         on one clock, or not at all."""
@@ -2521,6 +2645,9 @@ class SpecController(Controller):
                 gap = self._failover_seen.get(w)
             if gap is not None and gap < 0:
                 FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"{gap} s before this instance started: a clock stepped back"))
+                gap = None
+            elif gap is not None and gap > self.FAILOVER_CEILING:
+                FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"a gap of {gap:.3g} s is no failover: past {self.FAILOVER_CEILING:.0f} s"))
                 gap = None
             if gap is None:
                 unmeasured += 1

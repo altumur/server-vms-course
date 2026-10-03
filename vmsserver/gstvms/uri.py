@@ -43,6 +43,9 @@ def resolve(uri: str, media_dir: str | None = None) -> str:
     media_dir = media_dir or os.environ.get("MEDIA_DIR", "/data/media")
     u = urlsplit(uri)
     shown = re.sub(r"[^/@]*@", "…@", str(uri))      # what stands before an `@` is a login: never in an error (the tenth round)
+    cut = re.search(r"[?;]", shown)                  # …nor its parameters, where a camera's login often is (`?usr=…&pwd=…`,
+    if cut:                                          # `;password=…`): the actuator logs this message (the eleventh review)
+        shown = shown[:cut.start() + 1] + "…"
     if u.scheme != "driverpack":
         raise ValueError(f"not a driverpack URI: {shown}")
     if u.netloc != "file":

@@ -729,6 +729,55 @@ def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_fo
     assert fwd.asks_book() == {"a|b": json.loads(road)}                   # torn now: the one read last
 
 
+def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other_scenarios_asks():
+    """vmsserver's eleventh review, a major — a run: `publish_asks` read the entries of the upstream book and of the book
+    of asks bare, and `upstream/east[SN7001] = "{"` — the entry the test above tears — raised out of it for every
+    scenario: no camera's right to ask was issued again. Each entry is read through `BOOKS` now: a torn entry of the
+    book of asks is issued anew, a torn upstream entry is "not pushed up" — counted, and every scenario is served. A
+    scenario that is not an object is skipped and counted (`SCENARIOS`), and both show on the console's `/healthz`."""
+    from domain.agent import UPSTREAM_PATH
+    from domain.ingest import ASKS_PATH, BOOKS, publish_asks
+    from domain.scenario import SCENARIOS, pairs
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
+    gate.boot()
+    crossings = domain_pass.crossings
+    crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
+    DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
+                published=gate.local_objects()).sync()
+    crossings.view.refresh()
+    scenarios = [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}]
+    home = crossings.view.last_known("SN7002")[0]
+    assert json.loads(publish_asks(crossings, scenarios)[home][SERIAL])["roads"]
+    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
+    north.vars.put(f"{UPSTREAM_PATH}/east", {**(items or {}), SERIAL: "{"}, cas=idx)      # the upstream entry, torn
+    items, idx = north.vars.get(f"{ASKS_PATH}/{home}")
+    north.vars.put(f"{ASKS_PATH}/{home}", {**items, SERIAL: '{"roads": [{"cluster": "east", "until": "'}, cas=idx)
+    books = publish_asks(crossings, scenarios)
+    roads = json.loads(books[home][SERIAL])["roads"]
+    assert roads and all(r["token"] for r in roads)                     # issued anew
+    assert {f"{UPSTREAM_PATH}/east/{SERIAL}", f"{ASKS_PATH}/{home}/{SERIAL}"} <= BOOKS.bad
+    settings = {"scenarios": [7, {"when": [], "then": {}},
+                              {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}
+    assert [(p["trigger"], p["target"]) for p in pairs(settings)] == [("SN7002", SERIAL)]
+    assert {"settings/scenarios/0", "settings/scenarios/1"} <= SCENARIOS.bad
+    from domain.console import GARBLED_SHOWN
+    assert {"book_entry", "scenario"} <= set(GARBLED_SHOWN)
+
+
+def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address():
+    """vmsserver's eleventh review, blocker 4, and the product's cross-check (the domain's snapshot): a camera that is its
+    own cluster publishes its row as its snapshot, and an edit through its door takes any field — a `cred_secret`, or a
+    `source` with `?pwd=…`, went into the domain's directory as written. The snapshot carries no secret field and no
+    credential in an address (`secrets.mask_secrets`), as a cluster's shards do."""
+    cam = DeviceCluster(SERIAL, FakeVariables(), wall=Clock())
+    cam.boot()
+    cam._update(1, {"source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2", "cred_secret": "Hunter2"}, None)
+    snap = cam.ram.get(f"vms/snapshot/{SERIAL}")
+    assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=***&pwd=***")
+
+
 # -- the ninth review ----------------------------------------------------------------------------------------------------
 def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_counted_as_a_possible_hole():
     """The ninth review, a minor (and the product's sibling E): the centre keeps the batch it handed over until the relay

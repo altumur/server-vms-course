@@ -129,6 +129,22 @@ def test_the_failover_on_metrics_is_the_one_the_workers_measured():
     assert 'vms_failover_seconds{kind="worst"} 48.0' in SpecConsole(ctl, worst_failover=48.0, wall=box.wall).metrics_text()
 
 
+def test_a_previous_heartbeat_that_is_no_time_makes_no_failover_however_finite():
+    """The eleventh review, the ninth's remainder: `previous_hb: -1e308` is a finite number, passed `rows.number`, and made
+    the worst failover 1e308 for the life of the console — an alert that burns for ever on one garbled field. A gap past
+    `FAILOVER_CEILING` is not measured: counted with the unmeasured ones, and the worst stays what was measured."""
+    from w2cplatform.contract import Heartbeat
+    box, ctl = _box_with_cameras(1)
+    for prev in ("-1e308", "1", str(box.wall() - 31)):
+        box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {
+            "server": "srv-a", "previous_server": "srv-a", "instance": f"i-{prev}", "started": str(box.wall()),
+            "previous_hb": prev}).to_bytes())
+        got = ctl.failover_seconds()
+        if prev == "-1e308" or prev == "1":
+            assert got == {} and ctl.failovers_unmeasured == 1 and ctl.failover_worst < 1e6, (prev, got)
+    assert got == {"w-1": 31.0} and ctl.failover_worst == 31.0
+
+
 def test_the_zombie_on_one_box():
     """Two instances of w-1 given the same assignment (a pause, then a
     replacement): the second takes the slot and the next epochs; the first
