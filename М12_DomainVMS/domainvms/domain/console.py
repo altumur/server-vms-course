@@ -40,8 +40,9 @@ from .readview import ReadView
 
 log = logging.getLogger("domain.console")
 # The tables of what others wrote that `/healthz` counts (`w2cplatform.rows`): members' objects, grants, user records,
-# and the trust rows a cluster holds (the review's eighth pass: "counted, named" — and shown).
-GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row")
+# and the trust rows a cluster holds (the review's eighth pass: "counted, named" — and shown); the entries of the books
+# and the scenarios of the shared settings, which were counted and shown nowhere (vmsserver's eleventh review's sibling).
+GARBLED_SHOWN = ("member_object", "grant", "user", "trust_row", "book_entry", "scenario")
 
 
 class Console:

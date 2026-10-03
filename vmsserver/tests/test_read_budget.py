@@ -443,17 +443,46 @@ def test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_
                                      "by": "auto/x", "valid_until": str(NOW + 30)})
     jobs.record_on_request(rec, NOW, mem)
     assert jobs.expire(rec, NOW, mem) == 0
+    from w2cplatform.spec import take_written
     rec.update("4-auto", {"until": NOW + 3600})              # another console: a scenario asked for camera 4 again
     rec.update("5", {"until": NOW + 5})                      # another console ends recording 5 in five seconds
+    take_written("rec")                                      # …in ANOTHER process: nothing in this one hears of it
     v = Reads(vars_)
     rec.vars = v
-    assert jobs.expire(rec, NOW + 10, mem) == 0              # 5's end is not known here yet; nothing read
-    assert v.n == 0
+    assert jobs.expire(rec, NOW + 10, mem) == 0              # 5's end is not known here yet; nothing read but the two
+    assert v.n == 2                                          # ends five seconds away (`Remembered.NEAR`: every turn)
     assert jobs.expire(rec, NOW + 16, mem) == 1              # 3-auto ends on time; 4-auto is read, and stays
     assert v.n <= 6, v.n                                     # the two rows due, and the delete's own CAS
     assert rec.unit("3-auto") is None and rec.unit("4-auto") is not None
     assert jobs.expire(rec, NOW + Remembered.REREAD + 1, mem) == 1   # the whole read: 5 is ended
     assert rec.unit("5") is None
+
+
+def test_an_end_given_at_the_consoles_door_takes_effect_at_the_next_turn_not_at_the_next_whole_read():
+    """The eleventh review, the tenth's `REREAD` not fixed — a run: `until = now + 1` given to a recording through the
+    console's door ended it 23 s later, and the tenth's answer said "an end this console writes is noted at once". It
+    was noted only when the request loop itself wrote it; the door writes through another controller of the process.
+    Every `create` and `update` of the process notes its unit now (`spec.wrote`), and the loop's next turn reads those
+    rows (`take_written`): the recording ends at the first turn after its end — and costs that row's read, not a whole
+    read. A remembered end that is near is read every turn, so one another console moved earlier is seen in a turn."""
+    from vms import jobs
+    from vms.jobs import Remembered
+    from w2cplatform.spec import SpecController, take_written
+    from vms.config import REC_SPEC
+    vars_, objects = cluster(10, 2, 2)
+    c, mem = _console(vars_, objects), Remembered()
+    rec, door = c["rec"], SpecController(REC_SPEC, vars_, objects)
+    assert jobs.expire(rec, NOW, mem) == 0                    # the whole read: no row has an end
+    door.update("5", {"until": NOW + 1})                       # the console's door, the same process
+    v = Reads(vars_)
+    rec.vars = v
+    assert jobs.expire(rec, NOW + 2, mem) == 1 and rec.unit("5") is None
+    assert v.n <= 4, v.n                                       # that row, and the delete's own CAS: no whole read
+    door.update("6", {"until": NOW + 8})
+    assert jobs.expire(rec, NOW + 4, mem) == 0                 # noted: 6 ends at NOW + 8
+    door.update("6", {"until": NOW + 5})
+    take_written("rec")                                        # moved earlier by ANOTHER process's console
+    assert jobs.expire(rec, NOW + 6, mem) == 1 and rec.unit("6") is None   # near: read every turn, seen in one
 
 
 def _waiting(vars_, objects, sub: str, k: int) -> None:

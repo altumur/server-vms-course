@@ -282,6 +282,25 @@ def test_a_bucket_line_nested_past_jsons_depth_does_not_stop_the_watch():
     assert kinds == {"motion"} and upto == os.path.getsize(p)
 
 
+def test_a_bucket_line_nested_past_jsons_depth_or_with_no_time_is_that_lines_for_every_reader_of_a_bucket():
+    """The eleventh review's sweep of `mark_of` (`except ValueError` before `json.loads`): the two readers of a bucket's
+    lines beside the watch — `read_bucket` (the resource's `/buckets`, repair, the recorder's look back) and the event
+    database's line cache (`/events`) — let `RecursionError` out of the whole bucket, and the cache a line with no `t`
+    or a word in it too; `read_bucket` handed a line that is a number to readers that take objects. Each is that line's,
+    counted as torn, and the lines beside it are read."""
+    import tempfile
+    import w2cplatform.events as ev
+    from w2cplatform.eventdatabase import EventIndex
+    good = json.dumps({"t": 1000.0, "kind": "motion", "cam": 1})
+    p = os.path.join(tempfile.mkdtemp(), "x.events.jsonl")
+    with open(p, "wb") as f:
+        f.write((DEEP + "\n7\n" + '{"t": "noon", "kind": "motion"}\n' + good + "\n").encode() + b"\xff\xfe\n")
+    torn = ev.torn
+    assert [e["kind"] for e in ev.read_bucket(p) if e.get("t") == 1000.0] == ["motion"] and ev.torn - torn == 3
+    db = EventIndex(tempfile.mkdtemp())
+    assert [ln[1] for ln in db._lines(p)] == ["motion"] and db.torn == 4
+
+
 def test_a_frontier_or_a_waiting_file_that_does_not_read_is_not_there():
     """A survey's `frontier.json` that is a list (`TypeError`), a number past a float, or nested past JSON's depth raised
     out of `Frontier.read` — out of the survey's and the evaluator's pass, every pass; a scan's `waiting.json` the same.

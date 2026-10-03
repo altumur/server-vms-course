@@ -202,8 +202,13 @@ class DeviceCluster:
               "coverage": self.coverage, **({"push": True} if self.pushes else {}),
               "polls": True,                                     # Lesson 16, step 8: a member camera keeps a poll open
               "taken_by": sorted(self.taken_by)}
+        # The row as a snapshot may carry it (vmsserver's eleventh review, blocker 4, and the product's cross-check): an
+        # edit through this camera's door takes any field, and a `*_secret`, or an address with `?pwd=…`, went into the
+        # domain's directory. No secret field, and an address with no credential in it (`mask_secrets`), as a cluster's.
+        from w2cplatform.secrets import is_secret_field, mask_secrets
+        shown = {k: v for k, v in mask_secrets([row])[0].items() if not is_secret_field(k)}
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
-                "cameras": [{**row, "worker": self.serial, "server": self.serial}]}
+                "cameras": [{**shown, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())
         self.ram.put(f"vms/snapshot/{self.serial}", json.dumps(snap).encode())
 

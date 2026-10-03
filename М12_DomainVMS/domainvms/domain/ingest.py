@@ -2147,6 +2147,29 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
                 "token": crossings.issuer.issue(sub, lifetime, now=now, **claims)}
 
+    # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S (vmsserver's eleventh review, a major; a run): the entries
+    # of the book of asks and of the upstream book were read bare, and `upstream/east[SN7001] = "{"` — the very entry the
+    # chain's test tears — raised out of the whole of this, for every scenario: no token re-issued anywhere. Each entry
+    # is read through `BOOKS` now (counted once, logged once, under `<book>/<entry>`): a torn entry of the book of asks
+    # is issued anew — the old road is not there to keep — and a torn entry of the upstream book is "not pushed up".
+    def roads_of(key: str, raw) -> dict:
+        def parse():
+            out = {}
+            for r in _an_object(json.loads(raw))["roads"]:
+                _a_road(r)
+                finite(r["until"])
+                out[str(r["cluster"])] = r
+            return out
+        return BOOKS.read(key, parse, {}) if raw else {}
+
+    def upstream_of(key: str, raw) -> dict:
+        def parse():
+            v = _an_object(json.loads(raw))
+            if v.get("mode") == "push":
+                _urls(v)                                     # a road up is its addresses
+            return v
+        return BOOKS.read(key, parse, {}) if raw else {}
+
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
         acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
@@ -2156,15 +2179,15 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         home = known_a[0]
         via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that relay
         have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
-        old = {r["cluster"]: r for r in json.loads((have or {}).get(b, '{"roads": []}'))["roads"]}
+        old = roads_of(f"{ASKS_PATH}/{home}/{b}", (have or {}).get(b))
         up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = json.loads((up or {}).get(b, "{}"))
+        above = upstream_of(f"{UPSTREAM_PATH}/{on}/{b}", (up or {}).get(b))
         if via and on != via:
             # The target is in another relay. The only road this camera has is its own relay, marked UP; the
             # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
             # road down to the target: it polls the top, or its relay forwards it there.
             ohave, _ = crossings.vars.get(f"{ASKS_PATH}/{via}")
-            oold = {r["cluster"]: r for r in json.loads((ohave or {}).get(f"{b}|{a}", '{"roads": []}'))["roads"]}
+            oold = roads_of(f"{ASKS_PATH}/{via}/{b}|{a}", (ohave or {}).get(f"{b}|{a}"))
             mine, theirs = urls_of(via, old.get(via)), urls_of(top, oold.get(top))
             if not (on == top or above.get("mode") == "push") or mine is None or theirs is None:
                 continue

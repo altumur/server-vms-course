@@ -143,3 +143,67 @@ def test_neither_half_of_the_credential_leaves_the_cluster():
     assert "Hunter2" not in json.dumps(snap) and "admin" not in json.dumps(snap)
     # what the snapshot IS for — М12 reads these three and nothing else about a row
     assert row["worker"] is None and "server" in row and "ref" in row
+
+
+# A camera's login in the parameters of its address: (what is typed, the parameter the refusal names).
+CRED_QUERIES = [("http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2", "usr"),
+                ("http://10.0.0.5/snap.jpg?user=admin&password=Hunter2", "user"),
+                ("rtsp://10.0.0.5/live?channel=1&token=Hunter2", "token"),
+                ("http://10.0.0.5/ISAPI/stream?auth=SHVudGVyMg==", "auth"),
+                ("https://cam.example/v1/live?api_key=Hunter2", "api_key"),
+                ("http://10.0.0.5/mjpg?loginuse=admin&loginpas=Hunter2", "loginuse"),
+                ("rtsp://10.0.0.5/live;password=Hunter2", "password"),
+                ("http://10.0.0.5/live?P%77D=Hunter2", "P%77D"),
+                ("http://10.0.0.5/live?access-key=Hunter2&sig=Hunter2", "access-key")]
+
+
+def test_a_credential_in_an_addresss_parameters_is_refused_and_a_stored_one_is_said_nowhere():
+    """The eleventh review, blocker 4 — a run: `http://10.0.0.5/videostream.cgi?usr=admin&pwd=…` was 201 and `GET
+    /cameras` handed the password to anybody who may view the camera, while `cred_secret` read `***`; the product's
+    cross-check found every kind of key it tried taken, in the domain's snapshot, and raw in the log. Now a parameter
+    whose NAME is a credential's (`secrets.is_credential_param`) is refused where a url field is written, the refusal
+    names it and never its value; a query that carries none is taken; and a row stored before the rule shows no
+    password on the page, in the snapshot, in the device's key, in a refusal or in the element's error."""
+    from gstvms.uri import resolve
+    from vms.config import device_of, shown_source
+    from w2cplatform.secrets import hide_in_url
+    box = Box()
+    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    for src, named in CRED_QUERIES:
+        try:
+            con.create_camera({"name": "gate", "source": src})
+            raise AssertionError(f"a credential rode in on the parameters: {src}")
+        except Refused as e:
+            assert named in str(e) and "Hunter2" not in str(e) and "SHVudGVyMg" not in str(e), str(e)
+    assert con.cameras() == []
+    ok = con.create_camera({"name": "nvr", "source": "rtsp://10.0.0.5/cam/realmonitor?channel=1&subtype=0"})
+    assert ok["source"].endswith("?channel=1&subtype=0")             # a query that says what to send is a query
+    try:                                                              # an edit is the same door
+        con.update_camera(ok["id"], {"source": CRED_QUERIES[0][0]})
+        raise AssertionError("an update let a credential in")
+    except Refused:
+        pass
+
+    # …one stored before the rule (or by another build): said nowhere
+    key = f"vms/cameras/{ok['id']}"
+    items, idx = box.vars.get(key)
+    box.vars.as_writer("console", SPEC.acl_console()).put(key, {**items, "source": CRED_QUERIES[0][0]}, cas=idx)
+    srv = serve(con, box.archive, port=0, wall=box.wall)
+    try:
+        page = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/cameras").read().decode()
+        upd = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/cameras/{ok['id']}", method="PUT",
+                                     data=json.dumps({"name": "nvr 2"}).encode(), headers={"Idempotency-Key": "n2"})
+        one = urllib.request.urlopen(upd).read().decode()            # the reply to an edit, kept for a retry
+    finally:
+        srv.shutdown()
+    assert "Hunter2" not in page and "Hunter2" not in one and "videostream.cgi?usr=***&pwd=***" in page
+    ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+    ctl.publish_snapshot()
+    assert "Hunter2" not in json.dumps(published_snapshot(box.objects, "vms"))
+    for src, _ in CRED_QUERIES:
+        assert "Hunter2" not in device_of(src) and "Hunter2" not in shown_source(src) and "Hunter2" not in hide_in_url(src)
+        try:
+            resolve(src)
+            raise AssertionError("the element opened an address that is not a file")
+        except ValueError as e:
+            assert "Hunter2" not in str(e) and "SHVudGVyMg" not in str(e), str(e)

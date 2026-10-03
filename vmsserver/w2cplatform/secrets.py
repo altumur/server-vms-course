@@ -38,8 +38,15 @@ Everything between those two points renders it as `***`."""
 # - `mask_secrets(rows)` — copies of the rows with every secret masked. An EMPTY secret stays empty, so a
 #   page can tell "not set" from "set" — a mask over an empty string would make every camera look
 #   configured. Copies, never in place: the caller usually holds the row it is about to hand to a worker.
+#   An address in a row (a value with `://`) has its login and its credential parameters hidden too (`hide_in_url`).
+# - `is_credential_param(name)`, `credential_params(url)`, `hide_in_url(value)` — a credential carried in an
+#   address's parameters (the eleventh review, blocker 4): refused where a url field is written
+#   (`SubsystemSpec.refuse`), hidden wherever a stored one is said.
 # ================================================================================================
 from __future__ import annotations
+
+import re
+from urllib.parse import unquote_plus
 
 SECRET_MASK = "***"
 
@@ -50,9 +57,64 @@ def is_secret_field(name: str) -> bool:
     return name.endswith("_secret")
 
 
-# Copies of `rows` with every secret field masked. Empty stays empty.
+# Copies of `rows` with every secret field masked. Empty stays empty. An address keeps its host and path and loses
+# what is a credential in it (`hide_in_url`): a row stored before the refusal below shows no password either.
 def mask_secrets(rows: list[dict]) -> list[dict]:
     out = []
     for r in rows:
-        out.append({k: (SECRET_MASK if is_secret_field(k) and v else v) for k, v in r.items()})
+        out.append({k: (SECRET_MASK if is_secret_field(k) and v else hide_in_url(v)) for k, v in r.items()})
     return out
+
+
+# A PASSWORD IN AN ADDRESS'S PARAMETERS IS A PASSWORD (the eleventh review, blocker 4; a run). The rule "no login in a url
+# field" looked at the userinfo and at an `@`; `http://10.0.0.5/videostream.cgi?usr=admin&pwd=…` — how many cameras
+# take their login — was 201, and `GET /cameras` handed the password to whoever may view the camera, while
+# `cred_secret` beside it read `***`. The product's cross-check found the same with every kind of key it tried, in the
+# domain's snapshot and raw in the log.
+#
+# THE RULE IS A NAMED LIST, NOT "NO QUERY". A query is how many cameras are told WHAT to send (`?channel=1&subtype=0`,
+# `/Streaming/Channels/101?transportmode=unicast`), and refusing every query would refuse those cameras for a
+# parameter that carries no secret. So a parameter is a credential by its NAME, case and `-`/`_` aside:
+#
+#   a stem anywhere      pass, pwd, psw, secret, token, auth, cred   (`password`, `pwd`, `access_token`, `x-auth`)
+#   one of the names     user, usr, username, userid, login, loginuse, loginpas, account, key, apikey, sig, signature,
+#                        sid, session
+#   a suffix             `_key`                                       (`api_key`, `access_key`)
+#
+# Read in the query and in a path segment's `;name=value` (a matrix parameter, which some RTSP servers read the login
+# from); `%`-escapes undone first, so `p%77d` is `pwd`. A name outside the list is a parameter like any other: the list
+# is what the refusal names, and a camera that hides its password under another name is one to add to it.
+_CRED_STEMS = ("pass", "pwd", "psw", "secret", "token", "auth", "cred")
+_CRED_NAMES = frozenset({"user", "usr", "username", "userid", "login", "loginuse", "loginpas", "account", "key",
+                         "apikey", "sig", "signature", "sid", "session"})
+
+
+def is_credential_param(name: str) -> bool:
+    n = unquote_plus(str(name)).strip().lower().replace("-", "_")
+    return n in _CRED_NAMES or n.endswith("_key") or any(s in n for s in _CRED_STEMS)
+
+
+def _params(url: str) -> list[tuple[str, str]]:
+    s = str(url).split("#", 1)[0]
+    head, _, query = s.partition("?")
+    parts = re.split(r"[&;]", query) if query else []
+    parts += [p for seg in head.split("://", 1)[-1].split("/") for p in seg.split(";")[1:]]
+    return [(name, v) for name, eq, v in (p.partition("=") for p in parts) if eq]
+
+
+def credential_params(url: str) -> list[str]:
+    """The names of the parameters of `url` that carry a credential, as written."""
+    return [name for name, _ in _params(url) if is_credential_param(name)]
+
+
+# …and a stored one is never said (a row kept from before the refusal; one another build wrote): whatever stands before
+# an `@` — a userinfo, or one in a path that names its host there — and the value of every credential parameter. Only a
+# string with `://` in it is an address; anything else comes back as it was.
+_PARAM = re.compile(r"([?&;])([^=&;#?/]*)=([^&;#]*)")
+
+
+def hide_in_url(value):
+    if not isinstance(value, str) or "://" not in value:
+        return value
+    s = re.sub(r"[^/@]*@", "…@", value)
+    return _PARAM.sub(lambda m: f"{m[1]}{m[2]}={SECRET_MASK}" if m[3] and is_credential_param(m[2]) else m[0], s)
