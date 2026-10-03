@@ -2083,9 +2083,13 @@ class RecWorker(VmsWorker):
                     continue                  # no door to a backup, nobody to ask the camera: not a source from here
                 if self._source_waits(f"{kind}:{st['id']}"):
                     continue                  # it failed a range just now: not asked again yet (`_source_answered`)
-                out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
-                            "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
-                            "coverage": st["coverage"]})
+                src = {"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
+                       "recorder": name, "url": url.rstrip("/") if kind == "backup" else "", "coverage": st["coverage"]}
+                stream = hb.extra.get("stream")
+                if kind == "edge" and isinstance(stream, dict) and isinstance(stream.get("lagging"), bool):
+                    src["lagging"] = stream["lagging"]       # the camera's own word on its uplink (`backfill`); a word
+                                                             # that is no yes or no is none, and the window decides
+                out.append(src)
         return out
 
     # Where one recording's gaps can come from, in order: the device's own archive (Lesson 16), then every
@@ -2360,10 +2364,23 @@ class RecWorker(VmsWorker):
         self._backfiller.start()
         self._backfiller.join(timeout=self.BACKFILL_WAIT)
 
+    # THE WINDOW IS FOR AN UPLINK NOBODY CAN SEE (the ninth review, the owner's decision on its question: "the edge window
+    # 22–6 — intended?" — no). The window keeps backfill off a device's uplink by the hour, because nothing here knows
+    # whether that uplink is busy. A camera that pushes DOES know, and says it in its card recorder's heartbeat
+    # (`stream.lagging`, `CameraPusher._judge_lag`): what a lagging stream skipped is on the card, and it is asked for as
+    # soon as the camera says its uplink carries the stream again — whatever the hour — and not at all while it says it
+    # does not, inside the window too. A source that says nothing of its uplink — a device's archive, a backup server's
+    # door, a card whose camera does not push — keeps the window.
+    @staticmethod
+    def _uplink_says(src: dict) -> bool | None:
+        """Whether this source's own uplink is free now, by its own word; None — it says nothing (the window decides)."""
+        return None if src.get("kind") != "edge" or "lagging" not in src else not src["lagging"]
+
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
-        if not (force or self.in_window(now)) or self.archive_busy():
-            return []
+        windowed = force or self.in_window(now)
+        if self.archive_busy() or not (windowed or volumes.edges(self.vars)):
+            return []                                    # (outside the window only a camera's card may say "now")
         done: list[dict] = []
         names = volumes.backups(self.vars)
         for row in self.rows:
@@ -2372,6 +2389,9 @@ class RecWorker(VmsWorker):
             if volumes.is_backup(row, names=names):
                 continue
             for src in self.sources_of(row):
+                says = self._uplink_says(src)
+                if not (force or (windowed if says is None else says)):
+                    continue
                 for (t0, t1) in self.gaps(row["id"], src["coverage"], now, source=src["key"])[:budget - len(done)]:
                     # RANGE_CAP of a gap a pass: what is left of it is a gap on the next one
                     done.append(self.fetch_from(row["id"], row["cam"], src, t0, min(t1, t0 + self.RANGE_CAP)))

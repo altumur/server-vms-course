@@ -727,3 +727,45 @@ def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_fo
     assert set(fwd.asks_book()) == {"a|b"}                                # never read whole: not a road
     east.vars.put(ASKS_PATH, {"a|b": "[", "c|d": "{"}, cas=east.vars.get(ASKS_PATH)[1])
     assert fwd.asks_book() == {"a|b": json.loads(road)}                   # torn now: the one read last
+
+
+# -- the ninth review ----------------------------------------------------------------------------------------------------
+def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_counted_as_a_possible_hole():
+    """The ninth review, a minor (and the product's sibling E): the centre keeps the batch it handed over until the relay
+    says it has it — in memory. The answer to batch 3 was lost on the way down, the centre restarted, and frame 3 went
+    with it: nothing anywhere counted it. The relay cannot know whether such a batch was there, but it knows the centre
+    restarted — the mark's `boot` changed — and counts that as a possible hole (`holes`, in `stats`), once per restart;
+    a pull whose answer is lost with no restart is handed over again and counts nothing."""
+    from domain.chain import Forwarder
+
+    def centre():
+        ing = Ingest("north", CENTRE_URLS, keys=lambda: {})
+        ing._check = lambda *a, **k: {}                                # (the tokens are the other tests')
+        ing.subscribe("7", "up:east", maxsize=1000)
+        return ing
+    at = {"centre": centre()}
+    relay = Ingest("east", RELAY_URLS, keys=lambda: {})
+    rq = relay.subscribe("7", "recorder:east", maxsize=1000)
+    fwd = Forwarder("east", relay, FakeVariables(), lambda url: at["centre"], needs=lambda ref: True)
+
+    def pull(t, lost=False):
+        ing = at["centre"]
+        ing._take("7", [{"t": float(t), "key": True}])
+        real = ing.pull
+        if lost:
+            def answer_lost(*a, **kw):
+                real(*a, **kw)
+                raise Unreachable("the answer to the pull was lost")
+            ing.pull = answer_lost
+        try:
+            fwd._pull(ing, "7", {"token": "t"})
+        except Unreachable:
+            pass
+        ing.pull = real
+    pull(1); pull(2, lost=True); pull(4)
+    assert [f["t"] for f in rq.drain()] == [1, 2, 4] and fwd.stats()["7"]["holes"] == 0   # handed over again: no hole
+    pull(5, lost=True)                                                  # batch 5 handed over, its answer lost…
+    at["centre"] = centre()                                             # …and the centre restarts
+    pull(6); pull(7)
+    assert [f["t"] for f in rq.drain()] == [6, 7]                       # 5 is gone with the centre —
+    assert fwd.stats()["7"]["holes"] == 1                               # — and counted, once

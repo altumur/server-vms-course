@@ -98,6 +98,7 @@ from dataclasses import dataclass, field
 
 from vms.card import PIECE_BYTES       # what one piece of a camera's card may weigh: a share of the camera's memory
 from vms.card import RING_BYTES        # …and the camera's ring: what a pusher with no camera ring keeps at most
+from vms.card import RING_AHEAD        # …and how much later than the camera's clock a frame's time may be (`_timed`)
 from w2cplatform.obsd import archive_ms, unix_s
 
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite
@@ -120,6 +121,11 @@ MAX_LIVE_ASKS = 16                     # live asks one asking camera may hold at
 # had no upper bound): an ask is "do it now", and the product's commands live up to 600 s (`valid_until`). One kept
 # for a year was one more live ask for a year, against the ceiling above.
 ASK_DEADLINE_MAX = 600.0
+# What became of one asker's asks, kept per target camera (the ninth review, a minor: a deadline already past was taken —
+# never counted as live, expired at the next touch — and its outcome kept for `REMEMBER`: 20 000 of them, and every ask
+# swept them all, 27.5 s of the ingest's CPU). A deadline that has passed is refused now, and of each asker's outcomes at
+# a camera the last `OUTCOMES_KEPT` are kept — the oldest forgotten first, as a reader past `REMEMBER` finds it gone.
+OUTCOMES_KEPT = 4 * MAX_LIVE_ASKS
 ANSWER_GRACE = 5.0                     # past the deadline by this, an ask nobody knows of is lost, not late
 # A RANGE IS WAITED FOR A PIECE AT A TIME (the sixth review). The recorder waited one fixed number for the whole
 # answer, whatever it weighed: a camera that answered in 1.2 s to a wait of 1 failed four requests out of four, and
@@ -136,6 +142,18 @@ UPLINK_FLOOR = 64 << 10                # bytes a second
 # only the last `LANDED_KEPT` ranges are remembered.
 ANSWER_KEPT = 60.0
 LANDED_KEPT = 64
+# A FRAME FROM THE FUTURE IS NOT A FRAME (the ninth review, major). A subscriber is given only what is newer than the last
+# frame it was given (`_InOrder`), and one frame stamped `t = 1e300` — or `"1e400"` — was the last frame for ever: 250 of
+# 250 frames after it dropped as repeats until the recorder subscribed anew, seen only in `repeats`. A camera's frame is
+# moved onto this cluster's clock by the offset stated in the SAME request (`_check`), and it was captured before that
+# request was sent: on this clock it cannot be later than now by more than the request's own travel. A frame a peer or
+# this cluster's forwarder hands on is on a clock of the same cluster, or of the one above, set by NTP. So a frame later
+# than this ingest's clock by more than `FRAME_AHEAD` — or whose time is not a finite number — is refused, counted per
+# camera (`ahead`, under `lost`), logged once, and given to nobody: it never becomes anybody's last frame.
+FRAME_AHEAD = 60.0
+# How far one request's offset may move from the last before it is the camera's clock having stepped (`clock_steps`): a
+# request's travel moves it by its own jitter — on a cellular uplink, seconds.
+CLOCK_STEP = 5.0
 
 
 # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S TROUBLE (the eighth review's sibling, left here by the М12
@@ -243,8 +261,10 @@ class _Camera:
     landed: list[tuple[float, float]] = field(default_factory=list)
     pushed_at: float | None = None
     offset: float = 0.0                                          # the cluster's clock minus the camera's
+    told: bool = False                                           # …and the camera has stated its clock at least once
+    clock_steps: int = 0                                         # times that offset jumped by more than `CLOCK_STEP`
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
-    outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, and when: performed, refused, expired
+    outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, when, and whose ask: (outcome, at, by)
     version: int = 0
     said: tuple | None = None                                    # what the last poll was told
     polled_at: float | None = None                               # when it last polled, on the cluster's clock
@@ -283,6 +303,7 @@ class Ingest:
         self._v0 = secrets.randbelow(1 << 40)
         self.tees: dict[tuple[str, str], "_InOrder"] = {}
         self.cams: dict[str, _Camera] = {}
+        self.ahead: dict[str, int] = {}                           # per camera: frames refused for a time from the future
         # Asks going UP (Lesson 17): left here by a camera that sees only this relay, for a camera elsewhere;
         # this relay's forwarder takes them to the centre. {id: {target, action, deadline, by, lifted}}
         self.up: dict[str, dict] = {}
@@ -325,8 +346,10 @@ class Ingest:
         now = self.wall()
         cams = {ref: round(now - c.polled_at, 3) for ref, c in self.cams.items() if c.polled_at is not None}
         key = f"{POLLED}/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.name)
+        steps = {ref: c.clock_steps for ref, c in list(self.cams.items()) if c.clock_steps}
         objects.put(key, json.dumps({"cluster": self.cluster, "ingest": self.name, "ts": now, "cameras": cams,
-                                     **({"lost": lost} if (lost := self.lost()) else {})}).encode())
+                                     **({"lost": lost} if (lost := self.lost()) else {}),
+                                     **({"clock_steps": steps} if steps else {})}).encode())
         return cams
 
     def lost(self) -> dict[str, dict]:
@@ -343,6 +366,8 @@ class Ingest:
         for (peer, ref), link in list(self.links.items()):
             if link.dropped:
                 out.setdefault(ref, {}).setdefault("peers", {})[peer] = link.dropped
+        for ref, n in list(self.ahead.items()):
+            out.setdefault(ref, {})["ahead"] = n
         return out
 
     def _cam(self, ref) -> _Camera:
@@ -366,7 +391,14 @@ class Ingest:
         if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
             raise Refused(f"stream token is for {p.get('ref')} at {p.get('aud')}, not {ref} at {audience(self.cluster)}")
         if camera_now is not None:                               # every request says what time the camera thinks it is
-            self._cam(ref).offset = self.wall() - _finite_clock(camera_now)
+            cam, offset = self._cam(ref), self.wall() - _finite_clock(camera_now)
+            # A camera's clock that STEPS is said here (the ninth review's blocker, at the ingest): the camera puts its
+            # frames on a line of its own that only goes forward, and states its clock on that line (`CameraPusher.clock`),
+            # so a step back moves no offset; a camera of another build, or a step forward, moves it — counted, logged.
+            if cam.told and abs(offset - cam.offset) > CLOCK_STEP:
+                cam.clock_steps += 1
+                log.warning("camera %s: its clock stepped by %.0f s between two requests", ref, cam.offset - offset)
+            cam.offset, cam.told = offset, True
         return p
 
     def _keys(self):
@@ -417,10 +449,10 @@ class Ingest:
             c.wants = {w: u for w, u in c.wants.items() if u > now}       # a want that ran out wakes the poll (AF)
             push = push or bool(c.wants)
             ranges.update(c.ranges)
-            c.outcomes = {k: v for k, v in c.outcomes.items() if now - v[1] < REMEMBER}
+            _forget_outcomes(c, now)
             for aid, a in list(c.asks.items()):
                 if a["deadline"] <= now:                                  # dies at its deadline, never kept
-                    c.outcomes[aid] = ("expired", now)
+                    _settle(c, aid, "expired", a["by"], now)
                     del c.asks[aid]
                 else:
                     asks[aid] = a
@@ -448,7 +480,7 @@ class Ingest:
 
     def push(self, token: str, ref: str, frames: list, camera_now: float | None = None) -> int:
         self._check(token, ref, camera_now)
-        frames = _shift(frames, self._cam(ref).offset)
+        frames = self._timely(ref, _shift(self._timely(ref, frames, future=False), self._cam(ref).offset))
         have = self.written(ref) if self.written is not None else None
         if have is not None:
             # What the recorder already wrote does not go to it twice (CB). `have` is conservative — a heartbeat
@@ -456,6 +488,25 @@ class Ingest:
             # last it was given (`_InOrder`; the eighth review).
             frames = [f for f in frames if not (isinstance(f, dict) and "t" in f and float(f["t"]) <= have)]
         return self._take(ref, frames)
+
+    def _timely(self, ref: str, frames: list, future: bool = True) -> list:
+        """The frames whose time is a finite number and — `future` — not later than this ingest's clock by more than
+        `FRAME_AHEAD`; the rest refused, counted (`ahead`), logged once per camera. A frame with no time passes."""
+        limit, out = self.wall() + FRAME_AHEAD, []
+        for f in frames:
+            if isinstance(f, dict) and "t" in f:
+                try:
+                    t = finite(f["t"])
+                except PARSE_ERRORS:
+                    t = None
+                if t is None or (future and t > limit):
+                    n = self.ahead[str(ref)] = self.ahead.get(str(ref), 0) + 1
+                    if n == 1:
+                        log.warning("camera %s: a frame stamped %r — %s: refused, and given to nobody", ref, f["t"],
+                                    "no time at all" if t is None else f"{t - limit + FRAME_AHEAD:.0f} s later than now")
+                    continue
+            out.append(f)
+        return out
 
     def _take(self, ref: str, frames: list) -> int:
         live = self.tees.setdefault((str(ref), "live"), _InOrder(ref))
@@ -559,6 +610,8 @@ class Ingest:
         if deadline + shift > now + ASK_DEADLINE_MAX:
             raise Refused(f"an ask's deadline is at most {ASK_DEADLINE_MAX:.0f} s ahead; this one is "
                           f"{deadline + shift - now:.0f} s ahead")
+        if deadline + shift <= now:
+            raise Refused(f"an ask's deadline has passed: it was {now - deadline - shift:.0f} s ago")
         for ing in self._cluster():
             ing._sweep(now)
         live = (sum(1 for c in list(self.cams.values()) for a in list(c.asks.values()) if a["by"] == by and a["deadline"] > now)
@@ -594,9 +647,9 @@ class Ingest:
         for c in list(self.cams.values()):
             for aid, a in list(c.asks.items()):
                 if a["deadline"] <= now:
-                    c.outcomes[aid] = ("expired", now)
+                    _settle(c, aid, "expired", a["by"], now)
                     c.asks.pop(aid, None)
-            c.outcomes = {k: v for k, v in list(c.outcomes.items()) if now - v[1] < REMEMBER}
+            _forget_outcomes(c, now)
 
     # The forwarder's side of asks going up: take the new ones, put one back when the centre did not answer (it
     # is tried again until its deadline), and settle each with what the centre said became of it.
@@ -618,7 +671,7 @@ class Ingest:
     def settle_up(self, aid: str, outcome: str) -> None:
         a = self.up.pop(aid, None)
         if a is not None:
-            self._cam(a["target"]).outcomes[aid] = (outcome, self.wall())
+            _settle(self._cam(a["target"]), aid, outcome, a["by"], self.wall())
             self._changed()
 
     def outcome_wait(self, target: str, aid: str, wait: float = 0.0) -> str | None:
@@ -638,8 +691,7 @@ class Ingest:
         for ing in self._cluster():
             c = ing._cam(ref)
             if aid in c.asks:
-                del c.asks[aid]
-                c.outcomes[aid] = (outcome, self.wall())
+                _settle(c, aid, outcome, c.asks.pop(aid)["by"], self.wall())
         self._changed()                                    # the forwarder that carried it down answers up at once
 
     def carry_ask(self, ref: str, aid: str, ask: dict) -> None:
@@ -736,8 +788,10 @@ class Ingest:
         return _Batch(frames, seq + 1, self.boot)
 
     def inject(self, ref: str, frames: list) -> int:
-        """A stream arriving from this cluster's own forwarder or a peer ingest — already on this cluster's clock."""
-        return self._take(ref, frames)
+        """A stream arriving from this cluster's own forwarder or a peer ingest — already on this cluster's clock. Its
+        frames are held to the same bound as a camera's (`_timely`): a relay is no less able to hand on a frame from the
+        future than a camera to send one."""
+        return self._take(ref, self._timely(ref, frames))
 
     def wanted(self, ref: str) -> bool:
         cam = self.cams.get(str(ref))
@@ -788,7 +842,9 @@ class Ingest:
         return list(cam.landed) if cam else []
 
     def _relay(self, ref: str, frames: list) -> int:
-        """Frames taken from a peer: to this ingest's subscribers, without counting as a camera pushing HERE."""
+        """Frames taken from a peer: to this ingest's subscribers, without counting as a camera pushing HERE — and held
+        to the bound of this ingest's clock, as every frame here is (`_timely`)."""
+        frames = self._timely(ref, frames)
         live = self.tees.setdefault((str(ref), "live"), _InOrder(ref))
         edge = self.tees.setdefault((str(ref), "edge"), _InOrder(ref))
         for f in frames:
@@ -796,6 +852,25 @@ class Ingest:
             if not _is_ring(f):
                 edge.push(f)
         return len(frames)
+
+
+def _settle(c: _Camera, aid: str, outcome: str, by: str, now: float) -> None:
+    """What became of ask `aid` of `by`, kept for its asker to read — and of `by`'s outcomes at this camera only the last
+    `OUTCOMES_KEPT` (the ninth review)."""
+    c.outcomes[aid] = (outcome, now, by)
+    mine = [k for k, v in c.outcomes.items() if v[2:3] == (by,)]
+    for k in mine[:-OUTCOMES_KEPT]:
+        del c.outcomes[k]
+
+
+def _forget_outcomes(c: _Camera, now: float) -> None:
+    """Outcomes older than `REMEMBER` go — from the oldest, which is first: kept in the order they were settled, so a
+    touch costs what it forgets and not every outcome kept (the ninth review: each ask rebuilt the whole dict)."""
+    while c.outcomes:
+        k = next(iter(c.outcomes))
+        if now - c.outcomes[k][1] < REMEMBER:
+            return
+        del c.outcomes[k]
 
 
 def _is_key(frame) -> bool:
@@ -1006,25 +1081,66 @@ class _RingFrames:
         """Seconds of the stream memory holds when it is full: the ring's window, or less at a high bitrate."""
         return self.ring.reach()
 
+    def skew(self) -> float:
+        """What the ring's line of time adds to the camera's clock (`CamRing.skew`): the steps back it took up."""
+        return self.ring.skew()
+
+    def steps(self) -> dict:
+        r = self.ring
+        return {"clock_back_s": round(r.clock_back_ms / 1000.0, 3), "ahead": r.ahead}
+
 
 class _OwnFrames:
     """What a pusher given no camera ring keeps itself: the course's model frames (dicts with `t`), in the order they
-    were captured, for `window` seconds and at most `max_bytes` — the bounds of the camera's ring. A frame not newer
-    than the newest held is not taken (`stale`): a capture clock goes forward."""
+    were captured, for `window` seconds and at most `max_bytes` — the bounds of the camera's ring. `clock` is the
+    camera's own.
+
+    ON ONE LINE OF TIME, as the camera's ring keeps it (`vms.card.CamRing._timed`; the ninth review, blocker). A frame
+    not newer than the one before it was "stale" here, and not taken: a camera clock that stepped back thirty seconds
+    lost the thirty seconds after it, counted only in a field nobody read. Now such a frame is the clock having
+    stepped back: from it on the step is added to the camera's times (`shift`), the frame lands right after the one
+    before — a frame's interval later, at most a second — and the step is counted (`clock_back`, `clock_back_s`). A
+    frame later than both the one before it and the camera's clock by more than `RING_AHEAD` has no capture time: kept,
+    right after the one before, counted (`ahead`); the line does not move for it."""
 
     def __init__(self, window: float, max_bytes: int, clock):
         self.window, self.max_bytes, self.clock = float(window), int(max_bytes), clock
         self.frames: list[dict] = []
-        self.bytes = self.stale = 0
+        self.bytes = 0
+        self.shift, self._prev, self._gap = 0.0, None, 0.001
+        self.clock_back, self.clock_back_s, self.ahead = 0, 0.0, 0
+
+    def skew(self) -> float:
+        return self.shift
+
+    def steps(self) -> dict:
+        return {"clock_back_s": round(self.clock_back_s, 3), "ahead": self.ahead}
+
+    def _timed(self, f: dict) -> dict:
+        t, prev = _t(f) + self.shift, self._prev
+        if prev is not None and t <= prev:
+            step = prev + self._gap - t
+            self.shift, t = self.shift + step, t + step
+            self.clock_back, self.clock_back_s = self.clock_back + 1, self.clock_back_s + step
+            if step >= 1.0:
+                log.warning("the camera's clock stepped back %.1f s: its frames go on right after the last one", step)
+        elif t > max(prev if prev is not None else float("-inf"), self.clock() + self.shift) + RING_AHEAD:
+            self.ahead += 1
+            if self.ahead == 1 or self.ahead % 1000 == 0:
+                log.warning("a frame came stamped %.0f s later than the camera's clock (%d such so far): kept, at the time "
+                            "of the frame before it", t - self.clock() - self.shift, self.ahead)
+            t = prev + self._gap if prev is not None else self.clock() + self.shift
+        elif prev is not None:
+            self._gap = min(1.0, max(0.001, t - prev))
+        self._prev = t
+        return f if t == _t(f) else dict(f, t=t)
 
     def add(self, frames: list) -> None:
         for f in frames:
-            if self.frames and _t(f) <= _t(self.frames[-1]):
-                self.stale += 1
-                continue
+            f = self._timed(f)
             self.frames.append(f)
             self.bytes += _weight(f)
-        floor, drop = self.clock() - self.window, 0
+        floor, drop = self.clock() + self.shift - self.window, 0
         while drop < len(self.frames) and (_t(self.frames[drop]) < floor or self.bytes > self.max_bytes):
             self.bytes -= _weight(self.frames[drop])
             drop += 1
@@ -1074,6 +1190,11 @@ _CARD_BACK = 10.0                      # a read of the card that goes on mid-gro
 # How late the card's gate acts on what the pusher says (`uncovered`): a pass of the gate and a key frame — the
 # recorder's `DEFER_MARGIN`. The pusher says "lagging" this much before what it has not sent would leave memory.
 GATE_NOTICE = 5.0
+DELIVERED_KEPT = 256                   # stretches an ingest took, remembered for the card's budget (`delivered`)
+DELIVERED_SEAM = 0.25                  # two pieces this close are one stretch: a hole the stream skips is a group at least
+# The uplink has room for a range's piece when this pass's push left the stream this close to its newest frame — a pass and
+# a piece behind the live edge at most (`uplink_free`).
+UPLINK_FREE = 2.0
 
 
 class CameraPusher:
@@ -1086,14 +1207,20 @@ class CameraPusher:
         self.serial, self.flash, self.dial, self.card, self.recording = str(serial), flash, dial, card, recording
         self.failed_ranges: list[tuple[float, float, str]] = []        # ranges answered "could not read", and why
         self.perform = perform or (lambda action: "refused: this camera performs no actions")
-        self.clock, self.ring_seconds = clock or time.time, ring_seconds
+        self.ring_seconds = ring_seconds
         self.versions: dict[str, int] = {}                             # per road; -1 first: answered at once (AF)
         self.pushing, self.road = None, None                           # the road it pushes on, if any
         self.uncovered: bool | None = None                             # the primary does not take the stream
         self.state = "no book yet"
         self.hold_seconds = hold_seconds
+        base = clock or time.time
         self.frames = (_RingFrames(ring) if ring is not None else
-                       _OwnFrames(max(hold_seconds, ring_seconds), RING_BYTES, self.clock))
+                       _OwnFrames(max(hold_seconds, ring_seconds), RING_BYTES, base))
+        # THE CAMERA'S CLOCK ON THE FRAMES' LINE (the ninth review, blocker). Its frames are on a line that only goes
+        # forward (`_timed`): a clock that stepped back is taken up there. Every time the pusher compares with a frame's
+        # — where the stream stands, how far behind it is, what memory reaches — and every time it states to the ingest
+        # (`camera_now`, which the ingest's offset is made of) is on that same line, so a step moves nothing anywhere.
+        self.clock = lambda: base() + self.frames.skew()
         # WHERE THE STREAM STANDS — all the pusher keeps of it. `sent`: the capture time of the last frame an ingest
         # took. `cursor`: `(after, joined)`, where the next piece begins — past `after`, from a key frame unless the
         # frame at `after` is known to be followed with nothing missing. `live_from`: frames up to it are what came
@@ -1123,6 +1250,15 @@ class CameraPusher:
         self._entry: dict | None = None                                # its book's entry, as read last (`entry`)
         self.uploading: dict[str, dict] = {}                           # ranges being answered, piece by piece
         self._outcomes: dict[str, str] = {}                            # asks performed and not yet acknowledged
+        # WHAT THE SERVER HAS, FOR THE CARD'S BUDGET (the ninth review, major). The card's budget let go of its oldest
+        # first, and a card filled by a lagging stream — it writes all of it, what the uplink carried too — let go of
+        # what the stream had skipped before anybody had asked for it. So the pusher remembers what an ingest TOOK
+        # (`delivered`, `[from, to]` on the frames' line, which is the card's: both are written from one ring) and what
+        # a range the camera uploaded gave the server (`_paid`), from `since` — what was on the card before this process
+        # began is nobody's to say. The card asks what it holds that the server has not got (`owed_spans`: from `since`
+        # on, all but what was delivered) and lets go of that last (`CardBuffer.owed`).
+        self.delivered: list[list[float]] = []
+        self.since = self.clock()
 
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
@@ -1246,6 +1382,34 @@ class CameraPusher:
             log.info("camera %s: its stream is %.0f s behind again: the uplink carries it", self.serial, behind)
         return self.lag
 
+    def _paid(self, t0: float, t1: float) -> None:
+        """The server has `[t0, t1)` now — an ingest took it in the stream, or a range of the card was uploaded whole:
+        merged into what touches it; past `DELIVERED_KEPT` stretches the oldest is forgotten, and `since` moves past it
+        (what is older is nobody's to say, as what was on the card before this process began)."""
+        if t1 <= t0:
+            return
+        merged: list[list[float]] = []
+        for a, b in sorted(self.delivered + [[float(t0), float(t1)]]):
+            if merged and a <= merged[-1][1] + DELIVERED_SEAM:
+                merged[-1][1] = max(merged[-1][1], b)
+            else:
+                merged.append([a, b])
+        if len(merged) > DELIVERED_KEPT:
+            self.since = max(self.since, merged[-DELIVERED_KEPT - 1][1])
+            merged = merged[-DELIVERED_KEPT:]
+        self.delivered = merged
+
+    def owed_spans(self) -> list[tuple[float, float]]:
+        """What the card holds that the server has not got, as far as this pusher knows — from `since` on, everything
+        but what was delivered: what the stream skipped, what it has not sent yet, a break. On the frames' line, which
+        is the card's. The card lets go of it last (`CardBuffer.owed`)."""
+        out, at = [], self.since
+        for a, b in self.delivered:
+            if a > at:
+                out.append((at, a))
+            at = max(at, b)
+        return out + [(at, float("inf"))]
+
     def can_continue(self) -> bool:
         """Whether a break of this stream may be left to memory (`RecWorker.resumes`): not while it lags."""
         return not self.lag
@@ -1254,9 +1418,10 @@ class CameraPusher:
         """What the camera's recorder says of the stream in its heartbeat (`CardRecorder.stream_said`): where it goes,
         how far behind, whether the uplink carries it, and the seconds of it the stream did not carry (`continued`)."""
         c = dict(self.continued)
+        steps = {k: v for k, v in self.frames.steps().items() if v}     # the camera's clock, taken up (`_timed`)
         return {"state": self.state, "road": self.road, "behind_s": round(self.behind(), 1), "lagging": self.lag,
                 "cut_s": c["cut_s"], "left_s": c["left_s"], "failed_s": c["failed_s"], "failed": c["failed"],
-                **({"failed_why": c["failed_why"]} if c["failed_why"] else {})}
+                **({"failed_why": c["failed_why"]} if c["failed_why"] else {}), **steps}
 
     # The next piece from the cursor: off the card while the stream is behind what memory holds — after a break that
     # memory does not reach back to, and when memory let go of frames the uplink had not sent yet (a camera's ring at a
@@ -1305,7 +1470,7 @@ class CameraPusher:
                 return out, True
         piece, whole = self.frames.piece(after, room, joined=joined)
         if piece and not whole and after is not None and not self._hole_said and _t(piece[0]) > after:
-            self._hole(_t(piece[0]) - after)
+            self._hole(after, _t(piece[0]))
         self._hole_said = False
         return piece, False
 
@@ -1314,7 +1479,8 @@ class CameraPusher:
     # where the pusher cut to the live edge (`cut_s`). Two more come by themselves, and were silent: the card's part of a
     # break ended before memory begins (it holds less — it opened late, it was slow), and memory let go of frames the
     # uplink had not sent yet (a camera's ring at a high bitrate holds less than `lag_limit`). Counted, and logged.
-    def _hole(self, gap: float) -> None:
+    def _hole(self, t0: float, t1: float) -> None:
+        gap = t1 - t0
         if self.resuming:
             self.continued["failed"] += 1
             self.continued["failed_s"] = round(self.continued["failed_s"] + gap, 1)
@@ -1439,9 +1605,10 @@ class CameraPusher:
             self.broken_at = None
         self.pushing = key
         if piece:
+            s = piece[-1].get("sample") if isinstance(piece[-1], dict) else None
+            self._paid(_t(piece[0]), unix_s(s.end) if _is_sample(s) and s.end > s.begin else _t(piece[-1]))   # (`owed_spans`)
             self.sent = _t(piece[-1])
             self.cursor = (self.sent, False)
-            s = piece[-1].get("sample") if isinstance(piece[-1], dict) else None
             self._sent_end = (s.end, max(1, (s.end - s.begin) // 2)) if _is_sample(s) and s.end > s.begin else None
 
     def _resend(self, ing, token: str, work: dict) -> bool:
@@ -1463,8 +1630,21 @@ class CameraPusher:
     # 3 and the camera started again from piece 0 — the ingest failed the range; at 5 % lost answers one range in ten
     # landed). The ingest takes a repeat of the piece it took last as a repeat (`Ingest.upload`). An error of the card at
     # ANY piece is said (`failed`), never answered as "that was all".
+    #
+    # BACKFILL TAKES WHAT THE STREAM LEAVES OF THE UPLINK (the ninth review, a minor: in a model with one uplink for both,
+    # the ranges' pieces went beside a stream that was falling behind — `cut_s` 183 → 363 s, the lag coming back as soon
+    # as it had gone). A camera has one uplink, and the live stream is first: a range's piece goes only when this pass's
+    # push left the stream at its live edge — less than `UPLINK_FREE` behind its newest frame — and never while it lags.
+    # So backfill takes what is left over: on an uplink of 1.5 × the stream the stream stays a couple of seconds behind
+    # and the ranges go in between; below the stream's bitrate they wait. The ingest waits for a range's next piece as
+    # long as a piece takes, and the server's backfill does not ask a camera that says its stream lags at all
+    # (`RecWorker.backfill`). What the stream skipped stays on the card meanwhile, the last thing it lets go of
+    # (`owed_spans`).
+    def uplink_free(self) -> bool:
+        return not self.lag and (self.pushing is None or self.behind() < UPLINK_FREE)
+
     def _uploads(self, ing, token: str, work: dict) -> tuple[list, bool]:
-        ranges = work["ranges"]
+        ranges = work["ranges"] if self.uplink_free() else {}
         done, budget = [], PIECE_BYTES
         for rid, r in ranges.items():
             if budget <= 0:
@@ -1496,6 +1676,7 @@ class CameraPusher:
                 budget -= size
                 if landed:
                     done.append((u["from"], u["to"]))
+                    self._paid(u["from"], u["to"])
                 if final or landed:
                     break
         return done, True

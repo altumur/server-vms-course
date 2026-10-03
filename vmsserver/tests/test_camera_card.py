@@ -1188,3 +1188,126 @@ def test_a_camera_that_failed_a_range_is_not_asked_again_at_once():
     silent["camera"] = False
     [done] = primary.backfill(budget=1, now=now, force=True)
     assert "error" not in done and "edge:1-card" not in primary._source_asks  # landed: the failures are forgotten
+
+
+# -- the ninth review ----------------------------------------------------------------------------------------------------
+def test_the_ring_takes_up_a_clock_that_steps_back_and_keeps_a_frame_from_the_future_at_the_time_before_it():
+    """The ninth review, blocker: every reader of the ring stands on a frame's time, and a camera clock that stepped
+    back thirty seconds made the next thirty seconds "not newer" for all of them. The ring keeps one line of time that
+    only goes forward: the frames after the step land right after the last one, every subscriber — the card's writer —
+    gets them so, and the step is counted (`clock_back`, `clock_back_s` in its status) and is the ring's `skew`, which
+    the pusher states the camera's clock on. A frame stamped later than both the frame before and the camera's clock
+    (the review's major, at the camera) is kept right after the frame before and counted; the line does not move for
+    it."""
+    import dataclasses
+    now = [1010.0]
+    ring = CamRing(window=600.0, clock=lambda: now[0])
+    seen = []
+    ring.subscribe(seen.append)
+    _film(ring, 1000, 1010)
+    _film(ring, 980, 990)                                                 # the clock stepped back thirty seconds
+    first, absurd = _frames(990, 991)
+    ring.add(first)
+    ring.add(dataclasses.replace(absurd, begin=absurd.begin + 10 ** 12, end=absurd.end + 10 ** 12))
+    _film(ring, 991, 995)
+    begins = [s.begin for s in ring.after(0)]
+    assert len(begins) == 20 + 20 + 2 + 8 and begins == [s.begin for s in seen]   # every frame, held and handed on
+    assert all(b - a == 500 for a, b in zip(begins, begins[1:]))          # one line, nothing skipped, nothing twice
+    assert ring.clock_back == 1 and ring.clock_back_ms == 30_000 and ring.skew() == 30.0 and ring.ahead == 1
+    st = ring.status()
+    assert st["clock_back"] == 1 and st["clock_back_s"] == 30.0 and st["frames_ahead"] == 1
+
+
+def test_a_full_card_lets_go_last_of_what_the_server_has_not_got_and_counts_what_it_lets_go_of_all_the_same():
+    """The ninth review, major: a lagging stream opens the card, the card writes all of it, and its budget let go of the
+    oldest first — the very seconds the stream had skipped, before backfill came for them. The card asks the camera's
+    pusher what the server has not got (`owed`) and lets go of the oldest segment that holds none of it; when every
+    closed segment holds some, the oldest goes all the same, and what of the owed it held is counted (`evicted_owed`,
+    `evicted_owed_ms`). With nothing to ask, the oldest goes first, as before."""
+    d = tempfile.mkdtemp(prefix="card-")
+    card = CardBuffer(d, budget=20_000, segment_span=10.0)
+    owed = [(1030.0, 1050.0)]                                             # skipped by the stream, not backfilled yet
+    card.owed = lambda: owed
+    for s in _frames(1000, 1100):
+        card.append("1-card/e1", s)
+    cover = card.coverage("1-card")
+    assert cover[0] == (1030.0, 1040.0) and cover[1] == (1040.0, 1050.0) and cover[-1][1] == 1100.0
+    assert card.evicted_owed == 0 and card.stats()[1] <= card.budget      # what was delivered went first, within budget
+    owed[:] = [(1000.0, float("inf"))]                                    # nothing on it the server has
+    for s in _frames(1100, 1130):
+        card.append("1-card/e1", s)
+    assert card.coverage("1-card")[0][0] >= 1050.0 and card.evicted_owed >= 2 and card.evicted_owed_ms >= 20_000
+
+
+def test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_unsent_is_on_metrics():
+    """The ninth review, a minor ("what was cut is not seen outside in full"): `failed_s` — the seconds the stream could
+    not carry and the card did not give — was a field and a metric and no alarm, and what a card's budget let go of
+    before the server had it was nowhere. Their sum growing is the alarm `camera.footage.lost`, one an episode; the
+    card's count is the stream's `evicted_s` in the heartbeat, `rec_stream_skipped_seconds_total{why="evicted"}`, and
+    the card opened by the recorder asks the pusher what it owes (`stream_owed`)."""
+    from vms.console import _recorders
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera()
+    said = {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0, "failed": 0}
+    rec.stream_said = lambda: dict(said)
+    rec.stream_owed = lambda: [(box.wall() - 100, float("inf"))]
+    assert rec.card.owed() == [(box.wall() - 100, float("inf"))]          # the card asks the pusher, through the recorder
+    rec.gate_pass()
+    assert _alarms(box, "camera.footage.lost") == []
+    said.update(failed_s=4.0, failed=1, failed_why="the card has a hole where the stream goes on")
+    rec.gate_pass()
+    [alarm] = _alarms(box, "camera.footage.lost")
+    assert alarm["class"] == "alarm" and alarm["lost_s"] == 4.0 and "hole" in alarm["why"]
+    rec.card.evicted_owed_ms = 12_500                                     # the card's budget let go of 12.5 s unsent
+    box.wall.advance(60); rec.gate_pass()
+    assert len(_alarms(box, "camera.footage.lost")) == 1                  # more of it, inside the episode: no new alarm
+    rec.heartbeat_once()
+    hb = heartbeats(box.objects, "rec/")["r-1"].extra
+    assert hb["stream"]["evicted_s"] == 12.5 and hb["card"]["evicted_s"] == 12.5
+    assert 'rec_stream_skipped_seconds_total{worker="r-1",why="evicted"} 12.5' in _recorders(rec_ctl)
+    box.wall.advance(rec.WELL_FOR); rec.gate_pass()                       # nothing more lost for long enough: over
+    said["failed_s"] = 5.0
+    rec.gate_pass()
+    assert len(_alarms(box, "camera.footage.lost")) == 2
+
+
+def test_what_a_lagging_stream_skipped_is_backfilled_as_soon_as_the_camera_says_its_uplink_is_free_whatever_the_hour():
+    """The ninth review's question, and the owner's decision: the edge window `22-6` was not intended — what a lagging
+    stream skipped waited for the night, and a card filled by an evening's lag lost it before then. The window keeps
+    backfill off an uplink nobody can see; a camera that pushes says whether its uplink carries its stream
+    (`stream.lagging` in its card recorder's heartbeat): its card is asked as soon as it says so, at any hour, and not
+    while it says it does not — inside the window too. A card whose camera says nothing keeps the window."""
+    import time as _time
+    box, primary, cam, ring, act, asked = _room_and_camera()
+    now = box.wall()
+    _film(ring, now - 4100, now - 3800, step=1.0, act=act)
+    _ours(primary, ((now - 7200, now - 4000), (now - 3900, now - 600)))
+    box.clock.advance(cam.COVERAGE_EVERY); cam.heartbeat_once()
+    hour = _time.localtime(now).tm_hour
+    primary.window = ((hour + 1) % 24, (hour + 2) % 24)                   # the night is not now
+    assert primary.backfill(budget=1, now=now) == [] and not asked        # no word from the camera: the window decides
+    said = {"state": "pushing", "lagging": True, "behind_s": 40.0, "cut_s": 100.0}
+    cam.stream_said = lambda: dict(said)
+    cam.heartbeat_once()
+    primary.window = (hour, (hour + 1) % 24)                              # the night IS now…
+    assert primary.backfill(budget=1, now=now) == [] and not asked        # …but the camera says its stream lags
+    said["lagging"] = False
+    cam.heartbeat_once()
+    primary.window = ((hour + 1) % 24, (hour + 2) % 24)                   # day again, and the uplink is free
+    done = primary.backfill(budget=1, now=now)
+    assert [(d["from"], d["to"], d["source"]) for d in done] == [(now - 4000, now - 3900, "edge:1-card")] and asked
+
+
+def test_what_the_card_holds_is_said_on_the_cameras_clock_after_its_clock_stepped_back():
+    """The ninth review's blocker, its sibling on the card's word: the card is written on the ring's line of time, which
+    runs ahead of the camera's clock by the step back it took up. The server lays what the card says it holds beside its
+    own coverage, on the cluster's clock — said on the line, every span would be thirty seconds late, and the first
+    thirty seconds of each gap never asked for. The card recorder says its spans on the camera's clock: the line less
+    the ring's `skew`."""
+    box, rec, ring, act, rec_ctl = _camera(when=None)
+    t = box.wall()
+    _film(ring, t - 60, t - 40, act=act)                                  # stamped by a clock thirty seconds fast…
+    _film(ring, t - 70, t - 50, act=act)                                  # …which NTP set right: thirty seconds back
+    assert ring.skew() == 30.0 and act.stats("1-card")["samples_written"] == 80
+    box.clock.advance(rec.COVERAGE_EVERY)
+    assert _status(rec)["coverage"] == {"from": t - 90, "to": t - 50, "fragments": 1}   # the camera's clock, one stretch

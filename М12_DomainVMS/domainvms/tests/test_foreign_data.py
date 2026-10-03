@@ -456,3 +456,37 @@ def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said
     from domain.scenario import misfit
     assert misfit("cam", {"ptz": True, "presets": "five"}, {"action": "preset", "arg": 3}) is None
     assert misfit("cam", {"relays": "two"}, {"action": "output", "arg": 1}) == "cam has no relays"
+
+
+def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are_bounded_without_crowding_out_another():
+    """The ninth review, a minor, run as its probe ran it: 20 000 asks with `deadline = now − 1` were taken — a deadline
+    already past was never a live ask, so `MAX_LIVE_ASKS` never counted it — each became an "expired" outcome kept for
+    `REMEMBER`, and every ask swept all of them: 27.5 s of the ingest's CPU. A deadline that has passed is refused now;
+    an asker that lets its asks run out as fast as it may keeps at most `OUTCOMES_KEPT` outcomes at a camera, the
+    oldest forgotten first; and another asker's outcome is not pushed out by it."""
+    from domain.ingest import OUTCOMES_KEPT
+    wall = Clock(10_000.0)
+    south, _ = make_cluster("south")
+    signer = Signer("acme", south.vars, now=wall)
+    DomainPublisher(south.vars).publish_keys(signer.tokens.keyset())
+    ing = Ingest("south", ["srt://south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
+    acts = [{"action": "preset", "arg": i} for i in range(MAX_LIVE_ASKS)]
+
+    def token(by):
+        return signer.tokens.issue(f"cam-{by}", 3600, now=wall(), aud=audience("south"), ask="SN5", by=by, acts=acts,
+                                   kind="ask")
+    flood, other = token("GATE"), token("YARD")
+    for deadline in (wall() - 1, wall()):
+        try:
+            ing.ask(flood, "SN5", acts[0], deadline); raise AssertionError("a deadline that has passed must be refused")
+        except Refused as e:
+            assert "passed" in str(e)
+    assert ing.cams.get("SN5") is None or not ing.cams["SN5"].asks
+    kept = ing.ask(other, "SN5", acts[0], wall() + 1)                     # another asker's ask, expired like the rest
+    for _ in range(40):                                                   # sixteen live asks at a time, run out, again
+        for i in range(MAX_LIVE_ASKS):
+            ing.ask(flood, "SN5", acts[i], wall() + 1)
+        wall.advance(2)
+    assert ing.ask_outcome("SN5", kept) == "expired"                      # not crowded out by 640 of GATE's
+    outcomes = ing.cams["SN5"].outcomes
+    assert sum(1 for v in outcomes.values() if v[2] == "GATE") == OUTCOMES_KEPT and len(outcomes) == OUTCOMES_KEPT + 1
