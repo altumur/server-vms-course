@@ -433,11 +433,23 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 ```python
     PASS_KEY = "controller/pass"
 
+    # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
+    # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
+    # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
+    # snapshot opens the pass around both (`vms/__main__._controller_loop`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
+        with one_pass(self):
+            return self._pass_once(home_budget)
+
+    def _pass_once(self, home_budget: int) -> dict:
         import json
         started, now = time.monotonic(), self.wall()
         prev = self.pass_report() or {}
-        rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
+        try:
+            failures = int(prev.get("failures", 0))
+        except (ValueError, TypeError):
+            failures = 0                              # a count that is a word: counted from here
+        rep = {"ts": now, "ok": True, "error": "", "failures": failures,
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
         errors = []
@@ -457,6 +469,10 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
         rep["diverged"] = self.last_diverged
         try:
             rep["unplaced"] = len(self.unplaced())
+            rep["garbled"] = self.rows_garbled
+            for name, counts in (("slots_garbled", SLOTS_GARBLED), ("assignments_garbled", ASSIGNMENTS_GARBLED)):
+                if counts.get(self.sub.name):         # rows of the contract this process could not read (`contract.py`):
+                    rep[name] = counts[self.sub.name] # said when there are any, as a worker's heartbeat says them
             self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
         except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
             log.exception("%s: the pass could not report on itself", self.sub.name)
@@ -487,7 +503,9 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 
 Это же объясняет, почему `retire_when` — не `enabled`. Выключенную камеру читает воркер, а не размещение: она сохраняет назначение и строку в списке консоли. «Стоять видимой и ничего не делать» и «кончиться» — разные вещи, и спека называет, какое поле и какие значения означают второе.
 
-Стоимость: чтение всех строк плюс по чтению размещения на каждую. При пятидесяти камерах — сто с небольшим обращений к хранилищу раз в пять секунд. На коробке это чтение файлов, в М11 — HTTP; и это та цифра, при которой в М11 появится кэш на чтения консоли, но не контроллера.
+Стоимость: чтение всех строк плюс по чтению размещения на каждую. При пятидесяти камерах — сто с небольшим обращений к хранилищу раз в пять секунд. На коробке это чтение файлов, в М11 — HTTP.
+
+**Внутри прохода каждый ключ читается один раз** (заход по масштабу после восьмого ревью). Сто с небольшим было оценкой по логике, а не по коду. Каждый шаг прохода заново читал строки и размещения. Каждый вопрос «на каком сервере воркер» (`server_of`, `capacity_of`, `place_of`) заново читал все heartbeat'ы, а задавался он на каждую единицу и на каждого кандидата. Снимок спрашивал сервер каждой камеры, `ensure_home` про каждую камеру читал heartbeat'ы всех регистраторов (`holder_near`), а каждая ждущая камера перечитывала строки всех камер (`worker_with_group`). Сосчитано на хранилище в памяти, тысяча камер на двадцати воркерах, у каждой запись: 64 159 чтений за проход со снимком. Шестьсот камер, из которых пятьсот ждут места: 671 887 чтений и десять секунд процессора. Теперь `pass_once` идёт внутри `one_pass` (`w2cplatform/contract.py`). Ключ и листинг спрашиваются у хранилища один раз и помнятся до конца прохода — не дольше, так что правило урока 8 «каждый проход начинается с чтения» остаётся в силе. Запись идёт в хранилище как была и забывает то, чего коснулась: проход читает обратно своё написанное. CAS, проигравший другому экземпляру, тоже забывает ключ, и повтор в `write` читает хранилище, а не копию. Память прохода видна только потоку, который его открыл: двери консоли читают через тот же контроллер со своих потоков и видят хранилище. Heartbeat'ы читаются и разбираются раз за проход (`_per_pass`), строки, разложенные по устройству или по полю `spread_by`, — тоже (`_rows_by`). Цикл процесса открывает один проход на размещение и снимок вместе, и снимок не читает ничего заново. Теперь те же тысяча камер стоят 2 080 чтений, а пятьсот ждущих из шестисот — 1 250 и 0,14 секунды: `2 × единицы + 3 × воркеры + серверы` и около десятка одиночных строк. Тесты: `test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once` держит потолок. `test_a_busy_pass_decides_exactly_what_the_pass_that_read_everything_again_decided` гоняет занятый проход — новые и удалённые камеры, отпущенный слот, камеру не дома — с памятью прохода и без неё на одном сценарии, и решения совпадают. `test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again` проверяет запись, CAS и чужой поток. Что осталось: два чтения на единицу за проход. Листинг хранилища отдаёт только пути, и узнать, какая строка изменилась, можно только прочитав её. Убрать их могут диффы по `ModifyIndex`, которого клиент пока не передаёт.
 
 ## Шаг 10 — Перемещение
 
