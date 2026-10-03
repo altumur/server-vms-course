@@ -216,6 +216,12 @@ def one_look(fn):
     return run
 
 
+# The look the pass of `rec` is taking on this thread — or, outside a pass, one of its own. `rec` needs only its two
+# stores: М12's two-server tests run `carried_primary` over an object that has nothing else.
+def look_of(rec) -> Look:
+    return RecWorker._LOOKS.__dict__.get("by", {}).get(id(rec)) or Look(rec)
+
+
 # What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
 # sample the engine did not take raises, and the pipeline skips to the next key frame. A daemon that stopped
 # answering is not an answer about the sample: the recorder is told, and remounts on its next pass (feedback CF).
@@ -872,7 +878,7 @@ class RecWorker(VmsWorker):
     # nobody can vouch for, and then the backup records: it cannot know, and not knowing is a failure.
     def carried_primary(self, row: dict, now: float) -> bool | None:
         """None: the camera's primary is not in another cluster — decide as always. Else: whether to cover."""
-        look = self._look()
+        look = look_of(self)                                     # a recorder, or only its two stores (М12's gate)
         items = look.primaries()                                 # once a pass, not once a backup (the scaling pass)
         if not items:
             return None
@@ -2203,7 +2209,7 @@ class RecWorker(VmsWorker):
             looks.pop(id(self), None)
 
     def _look(self) -> Look:
-        return self._LOOKS.__dict__.get("by", {}).get(id(self)) or Look(self)
+        return look_of(self)
 
     # Every recording's row, parsed — and one that does not parse passed by (`Worker.row_garbled`; the sixth pass, the
     # follow-up). The recorder walks ALL of them to answer a question about one — who else records this camera,
