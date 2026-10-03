@@ -651,6 +651,36 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
 
 **Что у сервера есть, карта помнит и через перезапуск камеры.** Десятое ревью, major. Долг толкатель считал с начала своего процесса (`since`): что лежало на карте до него, было «ничьё», и при полной карте уходило первым. А это ровно то, что отстающий поток срезал и дозапись ещё не взяла: процесс камеры перезапустился — при бюджете 200 МиБ 153 с нигде, `evicted_owed` = 0, тревоги нет. Теперь регистратор камеры кладёт на карту записку — что сервер уже получил (`CameraPusher.delivery`): файл `delivered.json` рядом с сегментами, раз в `NOTE_EVERY` (30 с) и при закрытии карты, целиком и одним переименованием (`CardBuffer.write_note`). Карта открылась — записка уходит толкателю нового процесса (`CardRecorder.remember_card` → `CameraPusher.remember`). Секунды между последней запиской и падением считаются должными: карта держит их дольше, а не отпускает вслепую. Тест — через проводку камеры: `М12 test_lesson16_card.py::test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_wired_as_a_camera_wires_it`. С запиской каждый должный кадр на карте; без неё (проба ревью) 300 кадров, 30 с, ушли без счёта.
 
+**Без записки то, что было до `since`, — «неизвестно», и уходит со счётом.** Одиннадцатое ревью, minor. Записки может не быть: её нет, она не читается, или переименование на FAT откатилось после пропажи питания, потому что каталог не сбрасывали на диск. Тогда сегменты старше `since` уходили первыми и без счёта — ровно то, что десятый заход закрыл для случая с запиской. Теперь карта спрашивает толкатель, с какого момента он знает, что есть у сервера (`CardBuffer.unknown`, его отдаёт `CameraPusher.unknown_before` через `tie`; в регистраторе — `stream_unknown`). Порядок вытеснения не меняется, но то, что вытесненный сегмент держал до этой границы, считается как отпущенное вслепую:
+
+```python
+                if unknown:
+                    self.evicted_unknown_ms += max(0, old.last - old.first)
+                elif before is not None:
+                    self.evicted_unknown_ms += max(0, min(old.last, before) - old.first)
+```
+
+`evicted_unknown_s` теперь в пульсе регистратора камеры всегда, когда он не ноль, а не только при недоподключённом толкателе, и на `/metrics` — `rec_stream_evicted_unknown_seconds_total`. Тест: `test_camera_card.py::test_what_a_full_card_lets_go_of_from_before_the_pusher_knew_is_counted_as_let_go_of_unknowing`; прогон ревью без записки теперь считает ушедшее (`М12 test_lesson16_card.py::test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_wired_as_a_camera_wires_it`).
+
+**Записка — одной камеры.** Тот же minor: карта, переставленная из другой камеры, отдавала её записку и её кадры этой. Теперь `delivery()` пишет в записку `serial`, а `remember()` записку с чужим серийным номером не берёт и запоминает `foreign_before` — начало своего процесса:
+
+```python
+        if writer is not None and str(writer) != self.serial:
+            if self.foreign_before is None:
+                self.foreign_before = self.since
+```
+
+Диапазон карты раньше этой границы не отдаётся как кадры этой камеры (`CameraPusher._read_card`: целиком раньше — отказ словами, частично — обрезается до неё), а при полной карте это время уходит со счётом «вслепую». Записка без `serial` (из сборки до этого захода) читается как своя. Тест — без записки, с рваной и с чужой: `М12 test_lesson16_card.py::test_a_card_with_no_note_a_torn_note_or_another_cameras_note_counts_what_it_lets_go_of_and_offers_no_strange_footage`.
+
+**Переименование не на диске, пока не сброшен каталог.** Записку писали целиком, сбрасывали файл и переименовывали — а каталог не сбрасывали, и на FAT после пропажи питания могло остаться старое имя или ни одного. Теперь после переименования сбрасывается и каталог (`_fsync_dir` — платформенный `durable_dir`); через `write_note` идут обе записки, `delivered.json` и `line.json`:
+
+```python
+            os.replace(path + ".new", path)
+            _fsync_dir(self.path)
+```
+
+Так же `CardBuffer.relabel` сбрасывает каталоги переименованных сегментов — до того, как записка линии скажет, что линия сдвинулась. Тест: `test_camera_card.py::test_a_note_on_the_card_and_a_relabelled_segment_are_durable_once_written_their_directories_forced_after_the_rename`. Открыто: создание нового файла сегмента каталог не сбрасывает.
+
 **Камера никогда не ждёт карту.** Кольцо отдаёт кадр в очередь под своим замком, а на карту пишут из очереди. Очередь ограничена дважды: байтами на всю карту (`QUEUE_BYTES`, `_room`) и кадрами на запись (`QUEUE_LEN` = 512, число продукта):
 
 ```python
