@@ -40,6 +40,7 @@ In the tests every "dial" is a function the caller owns; nobody below is ever ca
 from __future__ import annotations
 
 import json
+import logging
 import threading
 
 from w2cplatform.rows import PARSE_ERRORS
@@ -49,6 +50,8 @@ from .tokens import kid_of
 from .uplink import REPORTED, UPLINK, base
 
 from .agent import UPSTREAM_PATH       # in a recording cluster: where its streams go up, or come down from (star)
+
+log = logging.getLogger("chain")
 
 
 # -- the domain's side: the book of a recording cluster's upstream ----------------------------------------
@@ -149,6 +152,7 @@ class Forwarder:
         self.unsent: dict[str, list] = {}
         self.dropped: dict[str, int] = {}
         self.pulled: dict[str, tuple] = {}
+        self.holes: dict[str, int] = {}                          # pulls whose centre had restarted since the last (`_pull`)
         self._read_last: dict[tuple[str, str], dict] = {}        # (book, entry) -> the entry as read last (`_entries`)
         self._lock = threading.RLock()
         self.woken = threading.Event()                           # set by the local ingest: something changed here
@@ -403,10 +407,11 @@ class Forwarder:
 
     def stats(self) -> dict[str, dict]:
         """Per camera: its state, and what was dropped past what the forwarder holds — kept to push again
-        (`dropped`), and waiting between two pushes (`queue_dropped`)."""
+        (`dropped`), and waiting between two pushes (`queue_dropped`); and how many times a pull found its centre restarted
+        since the last — a batch may have gone with it (`holes`)."""
         return {ref: {"state": self.state.get(ref, ""), "dropped": self.dropped.get(ref, 0),
-                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0)}
-                for ref in sorted(set(self.state) | set(self.queues))}
+                      "queue_dropped": getattr(self.queues.get(ref), "dropped", 0), "holes": self.holes.get(ref, 0)}
+                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled))}
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):
@@ -414,8 +419,19 @@ class Forwarder:
         # calling in; the centre wants it from the camera — and says which batch it last GOT, by the batch's mark
         # `(boot, n)`: a pull whose answer was lost on the way down is answered with that batch again, first, and a
         # mark from before the centre restarted is never taken for one of after (the eighth review, blocker 2)
-        frames = ing.pull(e["token"], ref, self.up, have=self.pulled.get(ref, ()))
-        self.pulled[ref] = getattr(frames, "have", ())
+        had = self.pulled.get(ref, ())
+        frames = ing.pull(e["token"], ref, self.up, have=had)
+        self.pulled[ref] = mark = getattr(frames, "have", ())
+        # A BATCH LOST WITH THE SIDE THAT SENT IT IS COUNTED (the ninth review, a minor; the product's sibling E). The
+        # centre keeps the batch it handed over until the relay says it has it — in memory: an answer lost on the way
+        # down just before the centre restarted took its batch with it (frame [3] at the centre, [6] at a relay in the
+        # middle), and nothing counted it. The relay cannot know whether there was such a batch; it knows the centre
+        # restarted — the mark's `boot` changed — and says that much: a POSSIBLE hole, counted (`holes`) and logged, for
+        # the recorder's backfill to look at.
+        if had and mark and tuple(had)[0] != tuple(mark)[0]:
+            self.holes[ref] = self.holes.get(ref, 0) + 1
+            log.warning("%s: the centre's ingest restarted since the last batch of %s this relay got: a batch it had "
+                        "handed over and whose answer was lost may be gone with it", self.name, ref)
         self.local.inject(ref, frames)
         return f"pulled {len(frames)} frame(s) down"
 

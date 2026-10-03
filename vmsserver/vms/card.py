@@ -80,6 +80,7 @@ from __future__ import annotations
 
 import collections
 import contextlib
+import dataclasses
 import logging
 import os
 import threading
@@ -139,6 +140,7 @@ RING_BYTES, QUEUE_BYTES, PIECE_BYTES = memory_split()
 QUEUE_LEN = 512                          # …and never more FRAMES than this waiting, per recording (the product's number)
 SPILL_LEN = QUEUE_LEN * 4                # what a kept ring hands over past its ceiling: groups of pictures, in bursts
 MEASURE_SPAN = 5.0                       # the ring's bitrate is measured over at least this much of it
+RING_AHEAD = 10.0                        # a frame later than the one before AND the camera's clock by more: no capture time (`_timed`)
 CARD_BUDGET = 1 << 30                    # the card's budget when the declaration names none
 SEGMENT_BYTES = 16 << 20                 # a segment closes at the first key frame past this…
 SEGMENT_SPAN = 300.0                     # …or past five minutes of footage
@@ -208,6 +210,57 @@ class CamRing:
         # camera, `camfeed.Source` in the product). The worker says both in its heartbeat; here, `status`.
         self.connected = False
         self.last_frame_at: float | None = None
+        # The ring's own line of time (`_timed`): what it adds to the camera's capture times since its clock stepped
+        # back (ms), the frame it took last (begin, end — on that line), and what it had to put right.
+        self._shift = 0
+        self._prev: tuple[int, int] | None = None
+        self.clock_back = self.clock_back_ms = self.ahead = 0
+
+    # ONE LINE OF TIME FOR EVERY READER OF THE CAMERA'S FRAMES (the ninth review, blocker). A frame carries the time it
+    # was captured, on the camera's clock — and that clock steps: NTP after a boot with a fast RTC, a hand that sets it.
+    # Every reader of the ring stands on a frame's time: the pusher's `sent` and cursor, the card's writer's `last`, the
+    # card's own "a stream only goes forward". The clock stepped back thirty seconds, the frames after it were "not
+    # newer" than where each reader stood, and each passed them over: thirty seconds on the card nowhere and at the
+    # recorder nowhere, and nothing counted them (reproduced: −5 s lost 5.0 s, −30 s lost 30.0).
+    #
+    # So the ring keeps a line that only goes forward, and puts every frame on it HERE, once, before anybody reads it.
+    # A frame not later than the one before is the clock having stepped back: from it on, the ring adds the step to the
+    # camera's times — the frame lands right after the one before, the frames after it follow, nothing is lost — and
+    # the step is counted (`clock_back`, `clock_back_ms`) and logged. The camera's pusher states the camera's clock on
+    # the same line (`skew`), so the ingest's offset — the cluster's clock minus the camera's — moves nothing: the
+    # frames land on the cluster's clock where they were captured. The line holds until the process restarts.
+    #
+    # A frame LATER than both the frame before it and the camera's own clock by more than `RING_AHEAD` has no capture
+    # time at all (the ninth review's sibling: one frame of t = 1e300 at the ingest silenced the camera for good): on
+    # the line it would leave every frame after it "not newer". It is kept — it is the camera's own frame, and the
+    # group after it needs it — right after the frame before, and counted (`ahead`); the line does not move for it. A
+    # clock that steps FORWARD is not this: the frames follow the clock, and the line has a gap, as a pause has.
+    def _timed(self, s: Sample) -> Sample:
+        b, e = s.begin + self._shift, s.end + self._shift
+        prev = self._prev
+        if prev is not None and b <= prev[0]:
+            step = (prev[1] if prev[1] > prev[0] else prev[0] + 1) - b
+            self._shift += step
+            b, e = b + step, e + step
+            self.clock_back += 1
+            self.clock_back_ms += step
+            if step >= 1000:
+                log.warning("the camera's clock stepped back %.1f s: its frames go on right after the last one, on the "
+                            "ring's own line, and nothing of them is lost", step / 1000.0)
+        elif b > max(prev[1] if prev is not None else 0, archive_ms(self.clock()) + self._shift) + RING_AHEAD * 1000:
+            to = prev[1] if prev is not None else archive_ms(self.clock()) + self._shift
+            self.ahead += 1
+            if self.ahead == 1 or self.ahead % 1000 == 0:
+                log.warning("a frame came stamped %.0f s later than the camera's clock (%d such so far): kept, at the time "
+                            "of the frame before it", (b - to) / 1000.0, self.ahead)
+            b, e = to, to + max(0, e - b)
+        self._prev = (b, e)
+        return s if (b, e) == (s.begin, s.end) else dataclasses.replace(s, begin=b, end=e)
+
+    def skew(self) -> float:
+        """What the ring's line adds to the camera's clock, in seconds — the steps back it has absorbed. Whoever states
+        the camera's time beside the ring's frames (the pusher, to the ingest) states it on this line."""
+        return self._shift / 1000.0
 
     # An empty ring takes only a key frame: nothing before it can be decoded. Room is made by letting go of the oldest
     # WHOLE group of pictures — a group cut in the middle is a group nobody can play — and a kept ring hands what it
@@ -217,6 +270,7 @@ class CamRing:
         with self._lock:
             self.added += 1
             self.last_frame_at = self.clock()
+            s = self._timed(s)
             if self._frames or s.key:
                 size = len(s.body)
                 if size > self.max_bytes:
@@ -366,6 +420,10 @@ class CamRing:
             out = {"frames_connected": self.connected, "ring_samples": len(self._frames), "ring_bytes": self.bytes,
                    "ring_span_s": round(span, 3), "ring_window_s": self.window, "ring_max_bytes": self.max_bytes,
                    "ring_reach_s": round(reach, 1)}
+            if self.clock_back:                          # the camera's clock stepped back, and the ring took it up (`_timed`)
+                out.update(clock_back=self.clock_back, clock_back_s=round(self.clock_back_ms / 1000.0, 3))
+            if self.ahead:
+                out["frames_ahead"] = self.ahead
             if self.last_frame_at is not None:
                 out["last_frame_age_s"] = round(now - self.last_frame_at, 3)
             return out
@@ -434,6 +492,7 @@ class CardBuffer:
         self._f = None                                       # the file `_write` writes into: the appending stream's
         self.err: OSError | None = None                      # the last write error: the card is failing
         self.appended = 0                                    # samples written since it opened: a card that works
+        self.evicted_owed = self.evicted_owed_ms = 0         # what the budget let go of that the server had not got (`owed`)
         os.makedirs(self.path, exist_ok=True)
         self._scan()
 
@@ -626,16 +685,54 @@ class CardBuffer:
     # The budget: the oldest closed segments go while the card is over it. An open one never does. Under `_io`; a
     # segment leaves the list before its file goes, so a reader lists only what is still there (or finds it gone, and
     # takes it for that: `_range_of`).
+    #
+    # …BUT WHAT THE SERVER HAS NOT GOT GOES LAST (the ninth review, major). A stream that lags opens the card, and the
+    # card writes the whole stream — what the uplink then carried as well as what the pusher skipped — and its budget
+    # let go of the oldest first: 400 s at 0.75 of an 8 Mbit/s stream, 345 MiB written, a budget of 200, and 61 of the
+    # 121 seconds the stream skipped were gone before the night's backfill — on no copy, and no counter moved. The
+    # camera's pusher says what it skipped and backfill has not yet taken (`owed()`: unix seconds on the card's own line,
+    # `CameraPusher.owed_spans`), and the card lets go of the oldest segment that holds none of it; only when every
+    # closed segment holds some, of the oldest — and what of the owed it held is counted (`evicted_owed`,
+    # `evicted_owed_ms`), logged, and said by the recorder as footage lost (`CardRecorder.stream_pass`).
+    owed = None                                              # () -> [(t0, t1)], set by whoever runs the card and the pusher
+
+    def _owed_ms(self) -> list[tuple[int, int]]:
+        if self.owed is None:
+            return []
+        try:
+            return [(archive_ms(a), archive_ms(b) if b != float("inf") else 1 << 62) for a, b in self.owed()]
+        except Exception as e:                               # noqa: BLE001 — the pusher's trouble is not the card's write
+            log.warning("card: what the stream skipped could not be read (%s): the budget goes oldest first", e)
+            return []
+
+    @staticmethod
+    def _holds(seg: _Segment, owed: list[tuple[int, int]]) -> int:
+        """How much of `owed` the segment holds, in ms."""
+        return sum(max(0, min(seg.last, b) - max(seg.first, a)) for a, b in owed)
+
     def _retain(self) -> None:
+        with self._lock:
+            if self.bytes <= self.budget:
+                return
+        owed = self._owed_ms()                               # (outside the card's lock: it is the pusher's list)
         while True:
             with self._lock:
                 if self.bytes <= self.budget:
                     return
                 writing = {id(held[0]) for held in self.open.values()}
-                old = next((seg for seg in self.segs if id(seg) not in writing), None)
-                if old is None:
+                closed = [seg for seg in self.segs if id(seg) not in writing]
+                if not closed:
                     return
+                old = next((seg for seg in closed if not self._holds(seg, owed)), closed[0])
+                lost = self._holds(old, owed)
                 self._drop_locked(old)
+                if lost:
+                    self.evicted_owed += 1
+                    self.evicted_owed_ms += lost
+            if lost:
+                log.warning("card: full, and every segment on it holds footage the server has not got: %.1f s of it let "
+                            "go of before backfill took it (a larger card, a lower bitrate or a faster uplink)",
+                            lost / 1000.0)
             try:
                 os.remove(old.path)
             except FileNotFoundError:
@@ -1209,6 +1306,9 @@ class CardRecorder(RecWorker):
         self.failing_said: float | None = None               # when `card.failing` was last raised; None: the card is well
         self.uplink_said: float | None = None                # when `camera.uplink.short` was last raised; None: no episode
         self.uplink_seen = 0.0                               # …and when the stream was last seen lagging
+        self.lost_said: float | None = None                  # when `camera.footage.lost` was last raised; None: no episode
+        self.lost_seen, self.lost_grew = 0.0, 0.0            # …the seconds it had counted, and when they last grew
+        self._evicted_before = 0                             # ms the cards closed before this one let go of unsent
         self._slow_said = False                              # a stall too short for the alarm, logged (`failing_pass`)
 
     # THE PRE-RECORD IS WHAT THE RING HOLDS, NOT ITS WINDOW (the review's sixth pass: "30 or 60?"). Sixty seconds is the
@@ -1321,15 +1421,67 @@ class CardRecorder(RecWorker):
     # lagged for `WELL_FOR` — a lagging stream cut to the live edge stops lagging for a minute or two and lags
     # again, and every such turn was not a new alarm.
     stream_said = None                                   # () -> dict, the pusher's `said()`; set by whoever runs both
+    # () -> [(t0, t1)]: what the card holds that the server has not got (the pusher's `owed_spans`), set by whoever runs
+    # both — the card's budget lets go of it last (`CardBuffer.owed`; the ninth review).
+    stream_owed = None
+
+    def _owed(self) -> list:
+        return list(self.stream_owed()) if self.stream_owed is not None else []
+
+    def evicted_s(self) -> float:
+        """Seconds the card's budget let go of before the server had them — every card this recorder opened."""
+        card = self.card
+        return round((self._evicted_before + (card.evicted_owed_ms if card is not None else 0)) / 1000.0, 1)
 
     def _stream(self) -> dict | None:
         if self.stream_said is None:
             return None
         try:
             said = self.stream_said()
-            return dict(said) if isinstance(said, dict) else None
+            said = dict(said) if isinstance(said, dict) else None
         except Exception as e:                           # noqa: BLE001 — the pusher's trouble is not the heartbeat's end
             return {"error": f"{type(e).__name__}: {e}"}
+        if said is not None and self.evicted_s():
+            said["evicted_s"] = self.evicted_s()         # (the console's `rec_stream_skipped_seconds_total{why="evicted"}`)
+        return said
+
+    # FOOTAGE ON NO COPY IS AN ALARM (the ninth review, a minor: "what was cut is not seen outside in full" — `failed_s`,
+    # the seconds the stream could not carry and the card did not give, was a field and a metric, and no alarm). Two
+    # things put footage on no copy, and both are counted where they happen: the card could not give what the stream
+    # needed (`failed_s`: a hole on the card, a card that would not read, a card that holds less than memory lacks), and
+    # the card's budget let go of what the server had not got (`evicted_s`, `CardBuffer.owed`). When their sum grows, it
+    # is the alarm `camera.footage.lost` — once an episode: when it begins, once a day while it lasts, and over when
+    # nothing more was lost for `WELL_FOR`.
+    def footage_pass(self, now: float | None = None) -> float:
+        from w2cplatform.events import ALARM, EventLog
+        now = self.wall() if now is None else now
+        said = self._stream() or {}
+        try:
+            failed, evicted = float(said.get("failed_s") or 0.0), float(said.get("evicted_s") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+        lost = failed + evicted
+        if lost <= self.lost_seen + 0.05:
+            if self.lost_said is not None and now - self.lost_grew >= self.WELL_FOR:
+                self.lost_said = None                    # nothing more lost for long enough: the episode is over
+            return 0.0
+        grew, self.lost_seen, self.lost_grew = lost - self.lost_seen, lost, now
+        if self.lost_said is not None and now - self.lost_said < self.PREBUFFER_AGAIN:
+            return grew
+        told = 0
+        for row in self.rows:
+            uid = str(row["id"])
+            if uid in self.epochs:
+                EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+                    now, "camera.footage.lost", cls=ALARM, cam=row.get("cam"), lost_s=round(grew, 1), failed_s=failed,
+                    evicted_s=evicted, why=said.get("failed_why", ""))
+                told += 1
+        if told:
+            self.lost_said = now
+            log.warning("%s: %.1f s of the camera's footage reached neither the server nor stayed on the card (%s) — "
+                        "they are on no copy: a larger card, a lower bitrate or a faster uplink", self.name, grew,
+                        said.get("failed_why") or "the card's budget let go of them before the server had them")
+        return grew
 
     def stream_pass(self, now: float | None = None) -> bool:
         """Whether the camera's uplink does not carry its stream — and the alarm, once an episode."""
@@ -1363,6 +1515,7 @@ class CardRecorder(RecWorker):
         self.prebuffer_pass(now)
         self.failing_pass(now)
         self.stream_pass(now)
+        self.footage_pass(now)
         return done
 
     # The source is the camera's own ring — not a fan-out found in somebody's heartbeat: nothing to re-subscribe to.
@@ -1427,6 +1580,7 @@ class CardRecorder(RecWorker):
             self.card_tries += 1
             try:
                 self.card = CardBuffer(vol.url, budget=vol.quota_bytes)
+                self.card.owed = self._owed                  # what the server has not got goes last (the ninth review)
                 self.actuator.card = self.card
                 self.card_fault, self.card_error, self.card_since = "would not open", "", self.wall()
                 # Its recordings waited for a card, not for a backoff: the ring holds the seconds since the card went
@@ -1480,6 +1634,7 @@ class CardRecorder(RecWorker):
 
     def _close_store(self, quiet: bool = False, wait: float | None = None) -> None:
         if self.card is not None:
+            self._evicted_before += self.card.evicted_owed_ms
             try:
                 self.card.close()
             except OSError as e:
@@ -1490,12 +1645,20 @@ class CardRecorder(RecWorker):
 
     # What the card holds of a recording — read every `COVERAGE_EVERY`, not every heartbeat: the segments are a list in
     # memory, but a camera's heartbeat goes out every two seconds and the card changes in minutes.
+    #
+    # ON THE CAMERA'S CLOCK, NOT THE RING'S LINE (the ninth review's blocker, its sibling here). The card is written on the
+    # ring's line of time (`CamRing._timed`), which runs ahead of the camera's clock by every step back it took up; the
+    # server plans its backfill by laying what the card holds beside its own coverage, on the cluster's clock. Said on
+    # the line, a step back of J would put every span J late, and each gap's first J seconds would never be asked for.
+    # So the spans are said on the camera's clock — the line less its `skew`. (The ranges themselves need nothing: the
+    # ingest moves them by the offset of the camera's clock as the pusher states it, on the same line.)
     def our_coverage(self, unit) -> list[tuple[float, float]]:
         if self.card is None:
             return []
         at, spans = self._coverage.get(str(unit), (float("-inf"), []))
         if self.clock() - at >= self.COVERAGE_EVERY:
-            spans = stitch(self.card.coverage(str(unit)), self.stitch)
+            skew = self.ring.skew()
+            spans = [(a - skew, b - skew) for a, b in stitch(self.card.coverage(str(unit)), self.stitch)]
             self._coverage[str(unit)] = (self.clock(), spans)
         return spans
 
@@ -1554,6 +1717,8 @@ class CardRecorder(RecWorker):
         if self.card is not None:
             segs, size, budget = self.card.stats()
             card.update(segments=segs, bytes=size, budget=budget)
+        if self.evicted_s():
+            card["evicted_s"] = self.evicted_s()             # let go of before the server had it (`CardBuffer.owed`)
         if error:
             card["error"] = error
         if getattr(self.actuator, "failures", 0):

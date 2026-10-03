@@ -251,6 +251,10 @@ def test_have_is_the_recorders_word_on_the_cameras_clock_whichever_ingest_it_rea
     assert work["have"] == 890.0
     wall.advance(60)                                                   # the heartbeat went stale: nobody can say
     assert "have" not in ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall() - 100)
+    # A `written_through` from the future is no word either (the ninth review's sibling): it would drop every frame.
+    south.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", wall(), [{"id": SERIAL, "cam": f"ref:{SERIAL}",
+                                                                       "written_through": 1e300}], {}).to_bytes())
+    assert "have" not in ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall() - 100)
 
 
 def _token(ingest, pusher):
@@ -508,3 +512,55 @@ def test_a_torn_book_entry_snapshot_shard_or_heartbeat_field_is_that_ones_troubl
         {"id": "y", "cam": f"ref:{SERIAL}", "written_through": 990.0}], {}).to_bytes())
     ingest.written = written_from_heartbeats(south.objects, wall)
     assert ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall())["have"] == 990.0   # the field that is a number
+
+
+# -- the ninth review ----------------------------------------------------------------------------------------------------
+def test_a_model_camera_whose_clock_steps_back_pushes_every_frame_and_says_the_step():
+    """The ninth review's blocker on the pusher that keeps its own frames (the course's model camera, no ring): a frame
+    not newer than the one before it was "stale" there, and not taken — a clock that stepped back thirty seconds lost
+    the thirty seconds after it, counted in a field nobody read. Now the pusher's frames are on one line of time as the
+    camera's ring keeps it: every frame reaches the recorder once, on the cluster's clock where it was captured, the
+    step is said in the pusher's word (`clock_back_s`), and the ingest's offset does not move."""
+    wall = Clock(0.0)
+    skew = [0.0]
+    camclock = lambda: wall() + skew[0]
+    south, ingest, pusher, rq, down = _world(wall, clock=camclock)
+    for i in range(1, 121):
+        if i == 61:
+            skew[0] -= 30.0                                               # the camera's clock steps back here
+        wall.advance(1)
+        pusher.pass_once([_frame(camclock())])
+    got = [f["t"] for f in rq.drain()]
+    assert got == [float(t) for t in range(1, 121)]                       # every frame, once, where it was captured
+    assert pusher.said()["clock_back_s"] == 30.0 and ingest.cams[SERIAL].clock_steps == 0
+
+
+def test_a_frame_with_an_absurd_time_is_refused_and_counted_and_the_frames_after_it_reach_the_recorder():
+    """The ninth review, major, run as its probe ran it: a camera with a valid token sends one frame stamped `t = 1e300`
+    (or `"1e400"`): it became the recorder's last frame, and 250 of 250 frames after it were dropped as repeats until the
+    recorder subscribed anew — seen only in `repeats`. A frame later than the ingest's clock by more than `FRAME_AHEAD`,
+    or whose time is no finite number, is refused now, counted (`ahead`, under `lost`), and never anybody's last frame;
+    a frame of an hour ahead too. The same at the other doors into the tees, which the review did not name: what this
+    cluster's forwarder injects, and what a peer ingest hands on."""
+    from domain.ingest import FRAME_AHEAD, Ingest, PeerLink
+    wall = Clock(1000.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    token = _token(ingest, pusher)
+    bad = [{"t": 1e300, "key": True}, {"t": "1e400", "key": True}, {"t": "ten", "key": True}, {"t": float("nan")},
+           {"t": wall() + FRAME_AHEAD + 3600, "key": True}]
+    for f in bad:
+        ingest.push(token, SERIAL, [f, _frame(wall())], camera_now=wall())
+        wall.advance(1)
+    for _ in range(250):
+        ingest.push(token, SERIAL, [_frame(wall())], camera_now=wall())
+        wall.advance(1)
+    got = [f["t"] for f in rq.drain()]
+    assert len(got) == len(bad) + 250 and got == sorted(got)               # every good frame, none of the bad
+    assert ingest.lost()[SERIAL]["ahead"] == len(bad) and "repeats" not in ingest.lost()[SERIAL]
+    ingest.inject(SERIAL, [{"t": 1e300, "key": True}, _frame(wall())])     # this cluster's forwarder…
+    peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+    pq = peer.subscribe(SERIAL, "recorder:p", maxsize=1000)
+    wall.advance(1)
+    PeerLink(peer, SERIAL).send([{"t": 1e300, "key": True}, _frame(wall())])   # …and a peer ingest's stream
+    assert [f["t"] for f in rq.drain()] == [wall() - 1] and [f["t"] for f in pq.drain()] == [wall()]
+    assert ingest.lost()[SERIAL]["ahead"] == len(bad) + 1 and peer.lost()[SERIAL]["ahead"] == 1

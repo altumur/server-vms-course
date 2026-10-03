@@ -604,3 +604,162 @@ def test_below_the_streams_bitrate_what_the_stream_skips_is_on_the_card_and_back
         shutil.rmtree(card.path, ignore_errors=True)
     assert holes and not rids
     assert [m for m in missed if m not in landed] == []                 # all of it, off the card
+
+
+# -- the ninth review -----------------------------------------------------------------------------------------------------
+def test_a_camera_clock_that_steps_back_loses_no_frame_on_the_way_to_the_recorder_nor_on_the_card_and_is_counted():
+    """The ninth review, blocker, run as its probe ran it: a camera pushing in real time, its card writing all along,
+    and its clock steps — NTP after a boot with a fast RTC — sixty seconds in. The pusher's cursor and the card writer's
+    `last` were on the camera's clock: the frames of the next J seconds were "not newer" than where each stood, and
+    both passed them over — −5 s lost 5.0 s, −30 s lost 30.0, at the recorder and on the card, and nothing counted
+    them. Now the camera's ring keeps one line of time that only goes forward (`CamRing._timed`): every frame captured
+    reaches the recorder once, on the cluster's clock where it was captured, every frame is on the card once, and the
+    step back is counted and said. A step forward loses nothing either, and the ingest says the camera's clock moved."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    from vms.worker import FAKE_PPS, FAKE_SPS
+    from w2cplatform.obsd import archive_ms, video
+    for step in (-30.0, -5.0, +30.0):
+        wall = Clock(100_000.0)
+        fed, north, south, signer, ingest, cam, *_ = _site(wall)
+        skew = [0.0]
+        camclock = lambda: wall() + skew[0]                             # the camera's clock: the cluster's, then stepped
+        card = CardBuffer(tempfile.mkdtemp(prefix="card-"))
+        try:
+            ring = CamRing(clock=camclock)
+            act = CardActuator(ring, card, threaded=False)
+            act("start", {"id": "1-card", "epoch": 1})                  # the card writes every frame
+            pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=camclock, ring=ring)
+            ingest.want(SERIAL, "recorder:r")
+            ingest.subscribe(SERIAL, "recorder:r")
+            got = []
+
+            class Writer:                                               # the recorder: which frame, and when on its clock
+                def push(self, f):
+                    got.append((int.from_bytes(f["sample"].body[-8:], "big"), f["t"]))
+            ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+            start, n = wall(), 0
+            while wall() - start < 120:
+                while start + n / 10 <= wall():                         # ten frames a second, stamped by the camera
+                    t, key = camclock() - (wall() - start - n / 10), n % 20 == 0
+                    body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + \
+                        b"\x80" * 200 + n.to_bytes(8, "big")
+                    ring.add(video(archive_ms(t), archive_ms(t + 0.1), body, key, 1280, 720))
+                    n += 1
+                act.drain(); pusher.pass_once([])
+                wall.advance(0.5)
+                if abs(wall() - start - 60.0) < 0.26:
+                    skew[0] += step                                     # the camera's clock steps here
+            act.drain()
+            on_card = [int.from_bytes(s.body[-8:], "big") for s in card.range("1-card", 0, 1e12)]
+        finally:
+            shutil.rmtree(card.path, ignore_errors=True)
+        sent = [i for i, _ in got]
+        assert sent == list(range(len(sent))) and len(sent) >= n - 10, (step, len(sent), n)   # every frame, once, in order
+        assert all(abs(t - (start + i / 10)) < 0.002 for i, t in got), step                 # …where it was captured
+        assert on_card == list(range(n)), step                                               # every frame on the card
+        said = pusher.said()
+        if step < 0:
+            assert ring.clock_back == 1 and abs(ring.clock_back_ms / 1000 + step) < 0.01, step  # counted…
+            assert abs(said["clock_back_s"] + step) < 0.01 and ring.status()["clock_back_s"] == -step   # …and said
+        else:
+            assert ring.clock_back == 0 and "clock_back_s" not in said
+        assert ingest.cams[SERIAL].clock_steps == (1 if step > 0 else 0)   # a step back moves no offset; forward, it is said
+
+
+def test_a_lagging_stream_keeps_on_the_card_what_it_skipped_until_backfill_has_it_and_backfill_waits_for_the_uplink():
+    """The ninth review, major, run as its probe ran it: the uplink carries 0.75 of an 8 Mbit/s stream for 400 s and the
+    night's backfill has not come. A lagging stream opens the card, the card writes the whole stream, and its budget let
+    go of the oldest first: 345 MiB written into 200, and 61 of the 121 seconds the stream skipped were gone before
+    anybody asked for them — on no copy, counted nowhere. Now the card asks the pusher what the server has not got
+    (`owed_spans`) and lets go of that last: every skipped second is still on the card at 400 s, nothing is counted as
+    let go of, and backfill lands it all once the uplink is back. And no range's piece goes while the stream lags (the
+    ninth review, a minor: backfill took the uplink of a stream that was falling behind) — the ranges asked at once wait
+    until the stream is at its live edge again."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    from vms.worker import FAKE_PPS, FAKE_SPS
+    from w2cplatform.obsd import archive_ms, unix_s, video
+    wall = Clock(100_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    start, size = wall(), 100_000                                       # ten frames a second of 100 kB: 8 Mbit/s
+
+    def frame(i):
+        t, key = start + i / 10, i % 20 == 0
+        body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * size
+        return video(archive_ms(t), archive_ms(t + 0.1), body, key, 1280, 720)
+
+    class Writer:
+        def __init__(self):
+            self.ms = []
+
+        def push(self, f):
+            if not self.ms or archive_ms(f["t"]) > self.ms[-1]:
+                self.ms.append(archive_ms(f["t"]))
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"), budget=200 << 20)
+    try:
+        ring = CamRing(clock=wall)
+        act = CardActuator(ring, card, threaded=False)
+        row = {"id": "1-card", "cam": "1", "when": "offline"}
+        act("start", {"id": "1-card", "epoch": 1, "hold": True})
+        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=card.pieces, recording="1-card",
+                              ring=ring)
+        card.owed = pusher.owed_spans                                   # (the camera's recorder does it: `stream_owed`)
+        gate = _gate(ring, act, pusher, wall, row)
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        w = ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        ingest.written = lambda ref: unix_s(w.ms[-1]) if w.ms else None
+        fast, upload, rate, written = ingest.push, ingest.upload, 0.75 * size * 10, [0]
+
+        def slow(token, ref, frames, camera_now=None):                  # a push takes as long as its bodies take
+            took = fast(token, ref, frames, camera_now=camera_now)
+            wall.advance(sum(len(f["sample"].body) for f in frames if "sample" in f) / rate)
+            return took
+        pieces_while_lagging = []
+
+        def watched(token, ref, rid, samples, **kw):                    # a range's piece: never while the stream lags
+            if samples and pusher.lag:
+                pieces_while_lagging.append(rid)
+            return upload(token, ref, rid, samples, **kw)
+        ingest.push, ingest.upload, n = slow, watched, 0
+        real_append = card.append
+
+        def counted(stream, s):
+            written[0] += len(s.body)
+            return real_append(stream, s)
+        card.append = counted
+
+        def second():
+            nonlocal n
+            while start + n / 10 <= wall():
+                ring.add(frame(n))
+                n += 1
+            act.drain()
+            pusher.pass_once([])
+            gate.gate_pass()
+            act.drain()
+            wall.advance(0.5)
+        while wall() - start < 400:
+            second()
+        newest = w.ms[-1]
+        missed = [m for m in sorted(set(archive_ms(start + i / 10) for i in range(n)) - set(w.ms)) if m < newest]
+        cover = [(archive_ms(a), archive_ms(b)) for a, b in card.coverage("1-card")]
+        assert written[0] > card.budget * 3 // 2 and pusher.continued["cut_s"] > 100   # the card wrote far past its budget…
+        assert [m for m in missed if not any(a <= m <= b for a, b in cover)] == []       # …and kept every skipped frame
+        assert card.evicted_owed == 0 and pusher.continued["failed_s"] == 0
+        holes = [(a, b) for a, b in zip(w.ms, w.ms[1:]) if b - a > 150]
+        rids = {ingest.request_range(SERIAL, unix_s(a) - 2.0, unix_s(b), recording="1-card") for a, b in holes}
+        ingest.push = fast                                              # the uplink is back
+        landed = set()
+        for _ in range(900):
+            if not rids:
+                break
+            second()
+            for rid in list(rids):
+                got = ingest.result(SERIAL, rid)
+                if got is not None:
+                    landed |= {s.begin for s in got}
+                    rids.discard(rid)
+    finally:
+        shutil.rmtree(card.path, ignore_errors=True)
+    assert holes and not rids and pieces_while_lagging == []
+    assert [m for m in missed if m not in landed] == [] and card.evicted_owed == 0     # all of it, off the card
