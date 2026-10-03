@@ -318,6 +318,10 @@ def worker_with_group(self, row: dict, pool: list[str]) -> str | None:
 
 **Цену надо назвать.** Воркер, держащий устройство, выбран не за свободное место, поэтому группа может его перерасти — и тогда следующий канал **ждёт**, хотя на соседнем воркере место есть. Это не то же самое, что `unplaceable`: взять его есть кому, и `/unplaceable` его не покажет. Помогает только место **на том** воркере — поднять ему `capacity` или увести группу целиком. Выглядит неудобно ровно до первого случая, когда альтернатива — четыре сессии к NVR.
 
+**Первая единица группы встаёт туда, где место есть на всю группу** (сверка продукта с одиннадцатым ревью). Цена выше платилась и там, где её можно было не платить: `place` и `redistribute` отдавали первую единицу `_pick` — а он выбирает ближний воркер, — и если там было два места на четыре канала, два вставали, а два ждали навсегда за полным воркером. Теперь пул для первой единицы сужается до воркеров, у которых свободно не меньше, чем единиц группы ждёт места (`_room_for_group`, `_group_waiting`; в `redistribute` — сколько её единиц на уходящем воркере); близость и дом выбираются уже среди них. Нет такого воркера — ставится, что влезает, как раньше: лучше записывать часть, чем ничего. Тест: `tests/test_group_by.py::test_a_released_workers_group_goes_whole_to_a_worker_with_room_and_a_rebalance_moves_groups_whole`.
+
+**Воркер группы ищется во всём пуле, а не среди прошедших фильтры** (одиннадцатое ревью, minor). `worker_with_group` спрашивали о пуле, который уже отсекли метки: канал, которому воркер его устройства не подходил — метка, данная одному этому каналу, строка сервера, не прочитанная в этот проход, — группы «не находил» и вставал один на другой воркер: две сессии к одному регистратору. Теперь `eligible` ищет воркер группы в пуле, каким его дали, и если тот фильтров не прошёл, у единицы воркера нет — она ждёт, а `/unplaceable` говорит, рядом с кем (`its device is held on w-1, which does not take it`). Тест: `tests/test_group_by.py::test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_not_placed_alone`.
+
 ### Выбор
 
 ```python
@@ -541,7 +545,7 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 
 Отчёт лежит в хранилище объектов (`<подсистема>/controller/pass`), как heartbeat: состояние наблюдения, а не конфигурация. Счётчик отказов тоже оттуда, а не из поля процесса, — перезапуск контроллера его не обнуляет, и второй экземпляр продолжает тот же счёт.
 
-В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки. `reach_moves` — сколько единиц проход увёз или снял с размещения, потому что их сервер их больше не видит (шаг 17, `ensure_reach`); консоль отдаёт его как `<подсистема>_units_moved_for_reach`, а `reach_moves_total` — то же с начала хранилища, счётчиком `<подсистема>_units_moved_for_reach_total`. Шагов в проходе теперь четыре, в порядке продукта: разместить, проверить досягаемость, перераспределить, вернуть домой.
+В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки. `reach_moves` — сколько единиц проход увёз или снял с размещения, потому что их сервер их больше не видит (шаг 17, `ensure_reach`); консоль отдаёт его как `<подсистема>_units_moved_for_reach`, а `reach_moves_total` — то же с начала хранилища, счётчиком `<подсистема>_units_moved_for_reach_total`. `reach_waiting` — единицы групп, которые `ensure_reach` оставил целыми на сервере, их больше не видящем (некуда везти всю группу, или она больше бюджета прохода), — `<подсистема>_units_waiting_for_reach`; `servers_labels_unread` — серверы, чья строка меток не прочиталась при последнем чтении, — `<подсистема>_servers_labels_unread` (одиннадцатое ревью: то и другое было строкой лога или страницы, и только). Шагов в проходе теперь четыре, в порядке продукта: разместить, проверить досягаемость, перераспределить, вернуть домой.
 
 **Битая строка уже размещённой единицы.** `units()` пропускал строку, которая не разбирается, но `unplace_deleted`, `unplace_retired` и `redistribute` читали строку единицы сами (`self.unit(uid)`) — и падали; новые камеры не размещались, единицы молчащих серверов не переезжали (третье ревью). Теперь они читают через `_parsed`, который отдаёт метку `GARBLED_ROW` и пишет в лог один раз: битая строка — не удалённая (размещение не снимается), единица остаётся, где стоит, а счёт — тот же `rows_garbled`. Тест: `test_placement_decides.py::test_a_placed_unit_whose_row_stops_parsing_holds_up_neither_placing_nor_moving`.
 
@@ -859,15 +863,28 @@ placement:
 ```python
     def ensure_reach(self, budget: int = REACH_BUDGET, workers: list[str] | None = None) -> list[tuple]:
         """Units whose worker no longer passes the constraint, moved to one that does — or unplaced, with the reason."""
-        self.last_reach_moves = 0
+        self.last_reach_moves = self.last_reach_waiting = 0
         rule = CONSTRAINTS[self.spec.constraint]
         if budget <= 0 or self.spec.constraint == "none" or self.server_labels() is None:
             return []
         unread = set(self._server_rows_unread)
         pool = self._pool(workers)
-        live, moves, idx, done = set(pool), [], None, set()
+        live, moves, idx, done, waits = set(pool), [], None, set(), set()
+
+        def wait(group, worker, words):                   # the group stays whole where it is: said once a spell, counted
+            key = (str(group[0]["id"]), worker)
+            waits.add(key)
+            self.last_reach_waiting += len(group)
+            if key not in self._reach_said:
+                self._reach_said.add(key)
+                log.warning("%s: %s and %d more of one %s stay on %s, which no longer reaches %s: %s — asked again every "
+                            "pass", self.sub.name, group[0]["id"], len(group) - 1, self.spec.group_by, worker,
+                            group[0]["id"], words)
+
+        whole = True                                      # every unit looked at: what waits no longer is unsaid below
         for row in self.units():
             if len(moves) >= budget:
+                whole = False
                 break
             uid = row["id"]
             if str(uid) in done:
@@ -885,26 +902,32 @@ placement:
             if why is None:
                 continue                                  # a label no server's row can say: it stays, counted
             group = self._reach_group(row, pl.worker)
-            if len(group) > 1 and moves and len(moves) + len(group) > budget:
-                break                                     # the group goes whole, next pass
             done |= {str(m["id"]) for m in group}
+            if len(group) > budget:
+                wait(group, pl.worker, f"its {len(group)} units are more than the {budget} moves a pass may make "
+                                       f"(REACH_BUDGET) — raise it, or move them by hand")
+                continue
+            if len(moves) + len(group) > budget:
+                whole = False
+                break                                     # the group goes whole, next pass
             idx = self.near_index() if idx is None else idx
             others = [w for w in pool if w != pl.worker]
             fits = None
             for m in group:
                 e = set(self.eligible(m, others))
                 fits = e if fits is None else fits & e
-            best, free, near = self._pick([w for w in others if w in fits], uid, idx)
-            if best is not None and free < len(group):
-                best = None                               # no worker takes the whole group
+            reach = [w for w in others if w in fits]
+            roomy = [w for w in reach if self.capacity_of(w) - self.load(w) >= len(group)]
+            best, free, near = self._pick(roomy, uid, idx)
             if best is None:
-                for m in group:
-                    if m is row or not rule(m, has):
-                        mwhy = why if m is row else (self._why_off(m, server, has) or why)
-                        if self.unplace_from(m["id"], pl.worker, f"{mwhy}; nothing live reaches it"):
-                            moves.append((m["id"], pl.worker, None))
-                            log.warning("%s: %s gave its place on %s back: %s; nothing live reaches it", self.sub.name,
-                                        m["id"], pl.worker, mwhy)
+                lack = "nothing live reaches it" if not reach else \
+                    f"no live worker that reaches it has room for {'it' if len(group) == 1 else f'its {len(group)} units'}"
+                if len(group) > 1:
+                    wait(group, pl.worker, lack)
+                    continue
+                if self.unplace_from(uid, pl.worker, f"{why}; {lack}"):
+                    moves.append((uid, pl.worker, None))
+                    log.warning("%s: %s gave its place on %s back: %s; %s", self.sub.name, uid, pl.worker, why, lack)
                 continue
             for m in group:
                 reason = (f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}" if m is row else
@@ -913,6 +936,8 @@ placement:
                     break                                 # somebody moved it first: the rest of the group waits for the next pass
                 moves.append((m["id"], pl.worker, best))
                 log.warning("%s: %s moved from %s to %s: %s", self.sub.name, m["id"], pl.worker, best, reason)
+        if whole:
+            self._reach_said &= waits
         self.last_reach_moves = len(moves)
         return moves
 
@@ -932,9 +957,13 @@ placement:
 
 Единица на **живом** воркере пула, чей сервер больше не проходит ограничение, едет на живого, который проходит, — тот же `eligible` и тот же `_pick`, что при размещении, и причина из двух частей: `srv-a no longer reaches vlan:cctv-a; most free capacity (9); on srv-b`. Единицы ушедшего, уходящего или осушаемого воркера — дело `redistribute`, не этого шага. **Повод** к переезду — только ограничение: `spread_by` и `admit` подсистемы решили место один раз, и их изменение никого не увозит. Но **цель** выбирается через `eligible`, а он их спрашивает: единица не уедет туда, куда её не пустило бы размещение (десятое ревью поймало прежнюю формулировку «сюда не относятся» — она говорила о поводе, а читалась как о цели).
 
-**Группа переезжает целиком или не в этот проход (десятое ревью).** Админ одной камеры четырёхканального регистратора поменял ей `labels` — и `ensure_reach` увёз этот канал на другой держатель: две сессии к одному устройству, навсегда, а не «на секунды», как обещал урок. Теперь единица с группой (`group_by`, у VMS — устройство) едет вместе со всеми единицами своей группы на этом воркере (`_reach_group`), на воркер, который берёт их всех, в одном проходе — даже сверх бюджета, если группа в проходе первая. Если такого воркера нет, место отдают только те единицы, которых сервер больше не видит, остальные остаются: снятый канал сессии не держит. Тест: `tests/test_server_labels.py::test_the_channels_of_one_device_move_together_or_not_at_all`.
+**Группа переезжает целиком или не в этот проход (десятое ревью).** Админ одной камеры четырёхканального регистратора поменял ей `labels` — и `ensure_reach` увёз этот канал на другой держатель: две сессии к одному устройству, навсегда, а не «на секунды», как обещал урок. Теперь единица с группой (`group_by`, у VMS — устройство) едет вместе со всеми единицами своей группы на этом воркере (`_reach_group`), на воркер, который берёт их всех, в одном проходе. Тест: `tests/test_server_labels.py::test_the_channels_of_one_device_move_together_or_not_at_all`.
 
-Когда не проходит **никто**, единица отдаёт место: строка размещения говорит «нигде» и почему (`srv-a no longer reaches vlan:cctv-a; nothing live reaches it`), назначение следует за ней, `/unplaceable` и `/where` показывают причину (шаг 11). Это `unplace_from` — то же правило, что у `move_from`: строка первой, по CAS, и только пока она ещё называет того воркера, с которого снимаем; назначение после. Следующий проход разместит единицу снова, как только кто-то живой её увидит.
+**Цель — любой воркер, у которого есть место на всю группу, а не один ближний** (одиннадцатое ревью, major, воспроизведено запуском). Цель выбирал `_pick` — один воркер, ближний первым. У четырёхканального регистратора ближний `srv-b` имел два места, а `srv-c` — пятьдесят, и оба видели метку. Проход снимал все четыре с ложной причиной «nothing live reaches it», а следующее размещение ставило два канала на `srv-b` и два — никуда, навсегда. Теперь цель выбирается среди воркеров, которые видят каждую единицу группы **и** имеют место на всю её (`roomy`); близость и дом — первыми уже среди них. Тест: `tests/test_server_labels.py::test_a_group_goes_whole_to_a_worker_with_room_for_it_when_the_near_one_has_too_little`.
+
+**Группа без цели остаётся целой, и группа не обходит бюджет** (одиннадцатое ревью: minor и замечание о бюджете; сверка продукта). Если везти всю группу некуда, раньше место отдавали те её единицы, которых сервер больше не видит, — и группа раскалывалась: отданный канал потом вставал не рядом с остальными. Теперь группа остаётся, где стоит, целиком; это строка в логе один раз за период и число в отчёте (`reach_waiting`, `<подсистема>_units_waiting_for_reach`), и каждый проход спрашивает снова — появится воркер, который возьмёт её всю, она уедет. Одиночная единица без цели по-прежнему отдаёт место, но с честной причиной: «nothing live reaches it» или «no live worker that reaches it has room for it». И группа едет только в пределах бюджета прохода: раньше первая в проходе группа шла сверх него — 32 канала при `REACH_BUDGET=10` давали 32 эпохи и шва за раз. Группа, которая в остаток бюджета не влезает, ждёт следующего прохода; группа больше всего бюджета ждёт так же, как группа без цели, и лог говорит её размер: поднять `REACH_BUDGET` или увезти её руками. Цена, названная прямо: регистратор больше бюджета сам с сервера, потерявшего его VLAN, не уедет. Тест: `tests/test_server_labels.py::test_a_group_is_moved_inside_the_budget_and_one_bigger_than_the_budget_waits_and_says_so`.
+
+Когда не проходит **никто**, одиночная единица отдаёт место: строка размещения говорит «нигде» и почему (`srv-a no longer reaches vlan:cctv-a; nothing live reaches it`), назначение следует за ней, `/unplaceable` и `/where` показывают причину (шаг 11). Это `unplace_from` — то же правило, что у `move_from`: строка первой, по CAS, и только пока она ещё называет того воркера, с которого снимаем; назначение после. Следующий проход разместит единицу снова, как только кто-то живой её увидит.
 
 **Не больше десяти за проход** (`REACH_BUDGET`). Каждое перемещение — новая эпоха и шов в записи; администратор, снявший с сервера VLAN, увозит его камеры за несколько проходов, а не все в одном. И **молчание хранилища не двигает ничего**: если строки серверов в этот проход не прочитаны, остаются последние прочитанные (шаг 1), а процесс, не прочитавший их ни разу, шаг пропускает. Дом и перераспределение спрашивают тот же `eligible`, поэтому увезённая камера не вернётся «домой» на сервер, который её не видит.
 
@@ -947,19 +976,34 @@ placement:
         dead_band = self.spec.dead_band if dead_band is None else dead_band
         workers = self._pool(workers)
         moves = []
-        for _ in range(budget):
+        while len(moves) < budget:
             if len(workers) < 2:
                 break
             loads = {w: self.load(w) / self.capacity_of(w) for w in workers}
             hi, lo = max(workers, key=loads.get), min(workers, key=loads.get)
             if loads[hi] - loads[lo] < dead_band:
                 break
-            cands = sorted(self.assignment(hi).units, key=_unit_key)
-            if not cands or self.load(lo) + 1 > self.capacity_of(lo):
+            # A unit goes with its group, inside the budget, onto a worker that takes every unit of it and has room for
+            # them all — else the next unit is looked at (the product's cross-check of the eleventh review: this moved
+            # `cands[0]` alone, the first channel of a recorder onto another worker, and asked no filter at all).
+            group = None
+            for unit in sorted(self.assignment(hi).units, key=_unit_key):
+                row = self._parsed(self.spec.parse_id(unit)) if self.spec.group_by else None
+                g = self._reach_group(row, hi) if row and row is not GARBLED_ROW else None
+                ids = [m["id"] for m in g] if g else [self.spec.parse_id(unit)]
+                if len(moves) + len(ids) > budget or self.load(lo) + len(ids) > self.capacity_of(lo):
+                    continue
+                if g and not all(lo in self.eligible(m, [w for w in workers if w != hi]) for m in g):
+                    continue
+                group = ids
                 break
-            uid = self.spec.parse_id(cands[0])
-            self.move(uid, lo, f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)")
-            moves.append((uid, hi, lo))
+            if group is None:
+                break
+            why = f"rebalance from {hi} (spread {(loads[hi] - loads[lo]) * 100:.0f}%)"
+            for i, uid in enumerate(group):
+                if not self.move_from(uid, hi, lo, why if i == 0 else f"with {group[0]}, one {self.spec.group_by}: {why}"):
+                    return moves                          # the picture changed under this pass: the next one looks again
+                moves.append((uid, hi, lo))
         return moves
 ```
 
@@ -970,6 +1014,8 @@ placement:
 **Мёртвая зона.** Пока разница загрузок меньше десяти процентов, ничего не двигается. Без неё перебалансировка гонялась бы за идеалом, перекладывая единицы туда-сюда ради процента.
 
 **Проверка вместимости.** Если у наименее загруженного нет места даже на одну, выход. Без неё можно было бы переложить туда, откуда придётся класть обратно.
+
+**Группа — целиком или никак** (сверка продукта с одиннадцатым ревью). Метод брал первую единицу самого загруженного воркера и вёз её одну, не спрашивая фильтров: первый канал регистратора уезжал от остальных — вторая сессия к устройству, да ещё, возможно, на сервер, который его VLAN не видит. Теперь кандидат — единица вместе с её группой на этом воркере (`_reach_group`): она едет, если вся группа влезает в остаток бюджета и в место у принимающего и если принимающий проходит `eligible` для каждой её единицы; иначе смотрится следующая единица. Тест: `tests/test_group_by.py::test_a_released_workers_group_goes_whole_to_a_worker_with_room_and_a_rebalance_moves_groups_whole`.
 
 И самое важное — **этого метода нет в проходе контроллера**. `ensure_placed` и `redistribute` вызываются каждые пять секунд; `rebalance` вызывается только когда попросили. Разница в том же, о чём говорил урок 11: система, которая двигает работу по своему усмотрению, теряет запись в моменты, которых оператор не ждал.
 
@@ -1021,11 +1067,13 @@ Docstring называет суть: **копия с возрастом, а не
 
 > **Одним объектом — пока.** Здесь снимок пишется в один ключ на весь кластер, и это единственное место в платформе, где данные растут вместе с кластером, а не вместе со своим писателем. У объектного хранилища есть потолок, и на проектных 600 камерах этот объект в него не влезает. Нарезка по воркеру — **урок 19**; до него форма остаётся такой, чтобы было видно, откуда взялась проблема.
 
-Отбор полей по списку — способ подсистемы сказать, чего наружу отдавать не надо. Камера, к примеру, не отдаёт свой источник целиком, если в нём мог оказаться адрес с учётными данными.
+Отбор полей по списку — способ подсистемы сказать, чего наружу отдавать не надо: секретное поле в список не пускает сама спецификация (урок 9). Источник камеры в снимке есть, и учётных данных в нём быть не может: логин и параметры с именами учётных данных отказываются при записи (урок 9, шаг 11), а строка, записанная до правила, уезжает со скрытыми значениями (`hide_in_url` в `_snapshot_shards`; одиннадцатое ревью, блокер).
 
 ## Шаг 21 — Измеренное переключение
 
 ```python
+    FAILOVER_CEILING = 30 * 86400.0
+
     def failover_seconds(self) -> dict[str, float]:
         """Per worker: the gap between the heartbeat before its current instance started and that instance's start —
         on one clock, or not at all."""
@@ -1051,6 +1099,9 @@ Docstring называет суть: **копия с возрастом, а не
             if gap is not None and gap < 0:
                 FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"{gap} s before this instance started: a clock stepped back"))
                 gap = None
+            elif gap is not None and gap > self.FAILOVER_CEILING:
+                FIELDS.garbled(f"{hk}#previous_hb", ValueError(f"a gap of {gap:.3g} s is no failover: past {self.FAILOVER_CEILING:.0f} s"))
+                gap = None
             if gap is None:
                 unmeasured += 1
                 continue
@@ -1070,6 +1121,8 @@ Docstring называет суть: **копия с возрастом, а не
 - **другой сервер**: то, что видел **этот читатель** по своим часам. `_hb_moved` запоминает для каждого воркера экземпляр, `ts` его heartbeat'а и когда читатель увидел, что heartbeat сдвинулся; когда под тем же именем появился другой экземпляр, `_failover_seen` получает `now` минус момент последнего сдвига. Точность — с какой частотой читатель смотрит: консоль считает это на каждом скрейпе `/metrics`.
 
 Ни того ни другого — другой сервер, а читатель не видел предшественника живым (консоль запущена после сбоя) — число не считается: никакого числа из двух часов. Отрицательный промежуток (одни часы шагнули назад) — тоже не число; он записывается как испорченное поле `previous_hb` (`FIELDS.garbled`). Оба случая считаются в `failovers_unmeasured` — сколько воркеров сейчас с переключением, которое не измерено; на `/metrics` это `<p>_failovers_unmeasured` (урок 15). Каждое число читается через `rows.number`: `previous_hb: -inf` делал `worst` бесконечным, и тревога горела бы вечно.
+
+**У промежутка есть потолок** (одиннадцатое ревью: остаток девятого, в десятом не тронутый). `rows.number` отсекает `nan` и бесконечность, а конечное абсурдное `previous_hb: -1e308` проходило — и `worst` становился 1e308 до конца жизни консоли: одно испорченное поле, и тревога горит вечно. Промежуток длиннее `FAILOVER_CEILING` (30 суток) не измеряется: единица, которую месяц никто не держал, — это воркер, которого вернули, а не переключение, на которое кто-то ставит тревогу, а `previous_hb`, дающее такой промежуток, гораздо чаще вовсе не время. Он считается вместе с прочими неизмеренными, поле — испорченным один раз. Тест: `test_lesson4_worker.py::test_a_previous_heartbeat_that_is_no_time_makes_no_failover_however_finite`.
 
 `if not prev` отбрасывает воркеров, у которых предшественника не было: первый запуск переключением не является.
 
