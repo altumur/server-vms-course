@@ -162,17 +162,47 @@ def register_constraint(name: str, fn) -> None:
 ## Шаг 6 — Близость и дом: два предпочтения, ни одного фильтра
 
 ```python
-    def holder_near(self, uid) -> tuple[str, str] | None:
+    def near_index(self, beats: dict | None = None) -> NearIndex:
+        """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
+        `console.heartbeats` returns them, when the caller has read them; else they are read here, once."""
+        by: dict[str, list[tuple[str, str, str]]] = {}
         if self.spec.near == "none":
-            return None
-        want = self.near_id(uid)
-        for w, hb in heartbeats(self.objects, self.spec.near + "/").items():
-            if self.wall() - hb.ts > 45.0:
+            return NearIndex(by)
+        if beats is None:
+            from .console import heartbeats                        # the read model's scan, without the age filter
+            beats = heartbeats(self.objects, self.spec.near + "/")
+        field, now = self.spec.near_of, self.wall()
+        for w, hb in beats.items():
+            if not is_live(self.spec.near, hb.ts, now, 45.0):
                 continue
             for st in hb.status:
-                if str(st.get("id")) == str(want) and st.get("phase") == "running":
-                    return w, hb.extra.get("server", "?")
-        return None
+                if st.get("phase") == "running":
+                    key = st.get(field) if field else st.get("id")
+                    by.setdefault(str(key), []).append((str(st.get("id")), w, hb.extra.get("server", "?")))
+        return NearIndex(by)
+
+    def holder_near(self, uid, near: NearIndex | None = None) -> tuple[str, str] | None:
+        if self.spec.near == "none":
+            return None
+        want = self.near_id(uid)                                   # `by`: which value of mine to look for
+        if not want:
+            return None
+        near = self.near_index() if near is None else near
+        found = near.by.get(want)                                  # (their unit id, worker, server)
+        if not found:
+            return None
+        if not self.spec.near_of or len(found) == 1:
+            return found[0][1], found[0][2]                        # their unit is mine, or one of theirs: nothing to rank
+        rank = NEAR_RANK.get(self.spec.name)
+
+        def ranked(f):
+            if rank is None:
+                return 0, f
+            if f[0] not in near.ranks:
+                near.ranks[f[0]] = rank(self, f[0], near.memo)
+            return near.ranks[f[0]], f
+        _, w, server = sorted(found, key=ranked)[0]
+        return w, server
 
     def near_id(self, uid) -> str:
         if self.spec.near_by == "id":
@@ -187,16 +217,18 @@ def register_constraint(name: str, fn) -> None:
 
 Вторая ручка — `near.of`: **где в чужом статусе** это значение искать. По умолчанию — их идентификатор, и это работало, пока запись называлась камерой (`id: cam`). Теперь имя записи выбирает оператор, и «запись с идентификатором 7» стало совпадением: у камеры 7 может быть только `7-cloud`. `near: {sub: rec, of: cam}` сравнивает не с их id, а с их полем `cam`, которое рекордер кладёт в свой статус (`status_extra`), — «тот, кто держит запись **о** камере 7». Чужие строки при этом никто не читает: только heartbeat.
 
-Если ответили несколько — у камеры два архива, значит две записи, — берётся наименьший их идентификатор. Не «любой»: один и тот же проход по тем же heartbeat'ам обязан давать один и тот же сервер, иначе единица ходит между ними.
+Если ответили несколько — у камеры два архива, значит две записи, — берётся наименьший их идентификатор. Не «любой»: один и тот же проход по тем же heartbeat'ам обязан давать один и тот же сервер, иначе единица ходит между ними. Подсистема может назвать свой порядок (`register_near_rank`): VMS ставит воркер камеры рядом с **резервной** записью (урок 26 М10B). Платформа сортирует по числу, которое вернул её ранг, а при равенстве — по идентификатору.
+
+**Один взгляд на heartbeat'ы, переданный в вызов.** Масштабный проход: `holder_near` перечитывал все heartbeat'ы подсистемы, за которой идёт, и перебирал все записи в них — на каждый вызов. А `ensure_home` спрашивает его о каждой единице, `_pick` — о каждой размещаемой. Тысяча камер рядом с записями двадцати регистраторов читала хранилище 25 500 раз за проход и тысячу раз перебирала статусы всех регистраторов; при регистраторе на пятьдесят камер цена росла как квадрат числа камер (750 чтений на сотне, 25 500 на тысяче; измерено счётчиком на `get` и `list`). Теперь взгляд берут один раз: `near_index` раскладывает живые `running`-записи по значению, которое ищет `near`, — их идентификатору или полю `near.of`, — сохраняя порядок, в котором heartbeat'ы прочитаны. Тот, кто спрашивает о многих единицах, передаёт этот взгляд в `holder_near`, `home_for` и `_pick` параметром `near`; heartbeat'ы, которые он уже прочитал, можно отдать в `near_index(beats)`. Единица, о которой спросили отдельно, берёт взгляд сама — одно чтение на один вопрос, как и было. Ранг тоже живёт столько, сколько взгляд: `NEAR_RANK`-функция получает `memo` и читает свои данные один раз (VMS — какие тома резервные). Каждую найденную единицу ранжируют один раз, а единственную найденную не ранжируют вовсе. Тысяча камер с одним взглядом — 1023 чтения: heartbeat'ы, тома и по строке на каждую запись, которую пришлось ранжировать. Ответы те же, что у вызова без взгляда: старый и новый код прогнаны на одном сценарии (живые, устаревшие и «из будущего» регистраторы, `pending`, две и три записи на камеру, без резервных томов и с ними, `near` VMS и детектора) — расхождений ноль. Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`. Что ещё открыто: проход контроллера (`ensure_home`, `ensure_placed`, `redistribute`) этот взгляд пока не передаёт — он строится один раз за проход там, где меняется сам проход.
 
 Строка читается только во второй форме — подсистема, разделяющая чужую нумерацию, не платит за те, которые её не разделяют. И заметьте, что `near_id` может вернуть пустую строку: поле не заполнено, следовать не за кем. Это не ошибка, а обычный ответ — близость всё равно предпочтение, и пустой пул из неё не получается.
 
 ### `home` — где единица живёт, и почему это не метка
 
 ```python
-    def home_for(self, row: dict) -> str:
+    def home_for(self, row: dict, near: NearIndex | None = None) -> str:
         if self.spec.home == "near":
-            near = self.holder_near(row["id"]) if self.spec.near != "none" else None
+            near = self.holder_near(row["id"], near) if self.spec.near != "none" else None
             return near[1] if near and near[1] != "?" else ""
         return str(row.get(self.spec.home, "") or "") if self.spec.home else ""
 ```
@@ -264,12 +296,12 @@ def worker_with_group(self, row: dict, pool: list[str]) -> str | None:
 ### Выбор
 
 ```python
-    def _pick(self, pool: list[str], uid) -> tuple[str | None, int, str]:
-        near = self.holder_near(uid)
+    def _pick(self, pool: list[str], uid, near: NearIndex | None = None) -> tuple[str | None, int, str]:
+        near = self.holder_near(uid, near)
         home = near[1] if self.spec.home == "near" and near else self.home_of(uid)
         follows = self.spec.home == "near"
         if home:
-            best, free = self._best([w for w in pool if self.server_of(w) == home])
+            best, free = self._best([w for w in pool if self.place_of(w) == home])
             if best is not None:
                 return best, free, (f", beside {near[0]} holding it" if follows else f", at home on {home}")
         if near is not None and not follows:
@@ -281,7 +313,7 @@ def worker_with_group(self, row: dict, pool: list[str]) -> str | None:
         note = ""
         if best is not None and near is not None and self.server_of(best) != near[1]:
             note = f", away from {near[0]} on {near[1]} (no room there)"
-        if best is not None and home and not follows and self.server_of(best) != home:
+        if best is not None and home and not follows and self.place_of(best) != home:
             note += f"; away from home {home}"
         return best, free, note
 ```
@@ -433,11 +465,23 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 ```python
     PASS_KEY = "controller/pass"
 
+    # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
+    # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
+    # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
+    # snapshot opens the pass around both (`vms/__main__._controller_loop`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
+        with one_pass(self):
+            return self._pass_once(home_budget)
+
+    def _pass_once(self, home_budget: int) -> dict:
         import json
         started, now = time.monotonic(), self.wall()
         prev = self.pass_report() or {}
-        rep = {"ts": now, "ok": True, "error": "", "failures": int(prev.get("failures", 0)),
+        try:
+            failures = int(prev.get("failures", 0))
+        except (ValueError, TypeError):
+            failures = 0                              # a count that is a word: counted from here
+        rep = {"ts": now, "ok": True, "error": "", "failures": failures,
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
         errors = []
@@ -457,6 +501,10 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
         rep["diverged"] = self.last_diverged
         try:
             rep["unplaced"] = len(self.unplaced())
+            rep["garbled"] = self.rows_garbled
+            for name, counts in (("slots_garbled", SLOTS_GARBLED), ("assignments_garbled", ASSIGNMENTS_GARBLED)):
+                if counts.get(self.sub.name):         # rows of the contract this process could not read (`contract.py`):
+                    rep[name] = counts[self.sub.name] # said when there are any, as a worker's heartbeat says them
             self.objects.put(f"{self.sub.name}/{self.PASS_KEY}", json.dumps(rep).encode())
         except Exception:                             # noqa: BLE001 — a report that cannot be written is an old report, which says so
             log.exception("%s: the pass could not report on itself", self.sub.name)
@@ -487,7 +535,9 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 
 Это же объясняет, почему `retire_when` — не `enabled`. Выключенную камеру читает воркер, а не размещение: она сохраняет назначение и строку в списке консоли. «Стоять видимой и ничего не делать» и «кончиться» — разные вещи, и спека называет, какое поле и какие значения означают второе.
 
-Стоимость: чтение всех строк плюс по чтению размещения на каждую. При пятидесяти камерах — сто с небольшим обращений к хранилищу раз в пять секунд. На коробке это чтение файлов, в М11 — HTTP; и это та цифра, при которой в М11 появится кэш на чтения консоли, но не контроллера.
+Стоимость: чтение всех строк плюс по чтению размещения на каждую. При пятидесяти камерах — сто с небольшим обращений к хранилищу раз в пять секунд. На коробке это чтение файлов, в М11 — HTTP.
+
+**Внутри прохода каждый ключ читается один раз** (заход по масштабу после восьмого ревью). Сто с небольшим было оценкой по логике, а не по коду. Каждый шаг прохода заново читал строки и размещения. Каждый вопрос «на каком сервере воркер» (`server_of`, `capacity_of`, `place_of`) заново читал все heartbeat'ы, а задавался он на каждую единицу и на каждого кандидата. Снимок спрашивал сервер каждой камеры, `ensure_home` про каждую камеру читал heartbeat'ы всех регистраторов (`holder_near`), а каждая ждущая камера перечитывала строки всех камер (`worker_with_group`). Сосчитано на хранилище в памяти, тысяча камер на двадцати воркерах, у каждой запись: 64 159 чтений за проход со снимком. Шестьсот камер, из которых пятьсот ждут места: 671 887 чтений и десять секунд процессора. Теперь `pass_once` идёт внутри `one_pass` (`w2cplatform/contract.py`). Ключ и листинг спрашиваются у хранилища один раз и помнятся до конца прохода — не дольше, так что правило урока 8 «каждый проход начинается с чтения» остаётся в силе. Запись идёт в хранилище как была и забывает то, чего коснулась: проход читает обратно своё написанное. CAS, проигравший другому экземпляру, тоже забывает ключ, и повтор в `write` читает хранилище, а не копию. Память прохода видна только потоку, который его открыл: двери консоли читают через тот же контроллер со своих потоков и видят хранилище. Heartbeat'ы читаются и разбираются раз за проход (`_per_pass`), и то, что сказал каждый воркер, — один словарь (`_said`). Строки, разложенные по устройству или по полю `spread_by`, — тоже раз за проход (`_rows_by`), и индекс того, за кем идёт подсистема (`near_index`), проход строит один раз и передаёт в `_pick` и `home_for`. Цикл процесса открывает один проход на размещение и снимок вместе, и снимок не читает ничего заново. Теперь те же тысяча камер стоят 2 079 чтений, а пятьсот ждущих из шестисот — 1 250 и 0,07 секунды: `2 × единицы + 3 × воркеры + серверы` и около десятка одиночных строк. Тесты: `test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once` держит потолок. `test_a_busy_pass_decides_exactly_what_the_pass_that_read_everything_again_decided` гоняет занятый проход — новые и удалённые камеры, отпущенный слот, камеру не дома — с памятью прохода и без неё на одном сценарии, и решения совпадают. `test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again` проверяет запись, CAS и чужой поток. `test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost` — ждущие единицы с `group_by` и `spread_by`: было 671 887 и 857 964 чтения за проход, теперь 1 250 и 2 027. Что осталось: два чтения на единицу за проход. Листинг хранилища отдаёт только пути, и узнать, какая строка изменилась, можно только прочитав её. Убрать их могут диффы по `ModifyIndex`, которого клиент пока не передаёт.
 
 ## Шаг 10 — Перемещение
 

@@ -121,7 +121,7 @@ def test_a_request_the_store_would_not_take_stays_for_the_next_pass():
 def test_the_console_runs_it_and_the_evaluator_may_file_it():
     """Written, tested and never called is the failure this project has had twice."""
     import vms.__main__ as m
-    loop = inspect.getsource(m._requests_loop)
+    loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     assert "detect_on_request(" in loop and "expire(det_ctl" in loop
     assert "_requests_loop" in inspect.getsource(m.console)
     assert 'requests_acl("vms", "rec", "det")' in inspect.getsource(m.autoworker)
@@ -139,7 +139,7 @@ def test_requests_are_looked_at_far_more_often_than_they_live():
     from vms.config import SPEC
     assert inspect.signature(m._requests_loop).parameters["every"].default <= 2.0
     assert inspect.signature(m._reap_loop).parameters["every"].default >= 30.0     # the reaper did not get faster for it
-    reaper = inspect.getsource(m._reap_loop)
+    reaper = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     assert "record_on_request(" not in reaper and "detect_on_request(" not in reaper   # moved, not copied
 
     box = Box(); det, job, rec = _site(box)
@@ -220,7 +220,7 @@ def test_a_job_finished_for_days_is_forgotten_and_a_running_one_never_is():
     assert forget_finished(job, box.wall()) == 1
     assert [r["id"] for r in job.units()] == ["live"]                       # still running: never, whatever its dates
     import vms.__main__ as m
-    assert "forget_finished(" in inspect.getsource(m._reap_loop)
+    assert "forget_finished(" in (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
 
 
 def test_a_scenario_that_asks_for_what_cannot_be_is_refused_where_it_is_written():

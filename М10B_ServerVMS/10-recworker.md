@@ -517,12 +517,22 @@ class RecWorker(VmsWorker):
         The source is the worker's shared-memory branch (`live_shm`, shm://…) when that worker is on
         THIS server — the same bytes with no RTSP hop, no fan-out process on the recording path — and
         its RTSP fan-out (`live_url`) otherwise."""
-        found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
+        # The store that does not answer says nothing — not "nobody holds it". …
+        try:
+            found = self._look().holder("vms", cam, self.wall(), phase="running", field="live_url")
+        except OSError as e:
+            self.store_errors += 1
+            last = self.last_source.get(str(cam))
+            log.warning("%s: the store did not answer for camera %s's holder (%s): %s", self.name, cam, e,
+                        f"its last source {last[1]} stands" if last else "and it was never read")
+            return last
         if found is None:
+            self.last_source.pop(str(cam), None)
             return None
         _, hb, st = found
         server = hb.extra.get("server", "?")
         if server == self.server and st.get("live_shm"):
+            self.last_source[str(cam)] = (server, st["live_shm"])
             return server, st["live_shm"]
         from .config import local_only
         if local_only(st["live_url"], server, self.server):
@@ -530,16 +540,19 @@ class RecWorker(VmsWorker):
             self.behind_loopback[str(cam)] = server
             return None
         self.behind_loopback.pop(str(cam), None)
+        self.last_source[str(cam)] = (server, st["live_url"])
         return server, st["live_url"]
 ```
 
-Пятнадцать строк, и в них — форма, к которой курс шёл с урока 4 М10A.
+Тридцать строк, и в них — форма, к которой курс шёл с урока 4 М10A.
 
-**Перебираются heartbeat'ы чужой подсистемы.** `holder_of(self.objects, "vms/", cam, …)` ищет среди объектов воркеров VMS того, кто держит камеру. Ни запроса контроллеру, ни вызова воркера, ни специального ключа «где камера»: регистратор читает то, что воркеры и так публикуют.
+**Перебираются heartbeat'ы чужой подсистемы.** `self._look().holder("vms", cam, …)` ищет среди объектов воркеров VMS того, кто держит камеру — по тем же правилам, что `holder_of` консоли: первый живой воркер по имени, чей статус называет камеру. Ни запроса контроллеру, ни вызова воркера, ни специального ключа «где камера»: регистратор читает то, что воркеры и так публикуют.
+
+**Читает их раз за проход, а не раз на запись.** `source` спрашивают о каждой работающей записи на каждом проходе (`resubscribe`, шаг 7) и о каждой строке в каждом heartbeat'е (`status_extra`, шаг 6). Пока каждый вопрос заново перечитывал все heartbeat'ы держателей (`holder_of`), регистратор тысячи камер при держателях по пятьдесят читал хранилище 22 001 раз за проход и 24 000 раз за heartbeat (масштабный проход, измерено счётчиком на `get` и `list`). Двадцать heartbeat'ов на каждую из тысячи записей — квадрат числа камер. Теперь проход один раз смотрит в хранилище (`Look`, декоратор `one_look` на `reconcile_once`, `status`, `resubscribe`, `backfill`, `requests`, `gate_pass`, `keep_pass`). Heartbeat'ы держателей читаются при первом вопросе и раскладываются по камере (`Look.units`), а `holder` берёт ответ из этого словаря. Тот же проход — 1022 чтения (это сами строки записей), heartbeat — 24. Тест: `test_recorder_reads.py::test_a_recorders_pass_reads_each_recording_once_not_once_per_recording`.
 
 Докстрока модуля это подчёркивает: *found the way a gateway finds it — never by calling a worker, never a second connection to the camera.* Шлюз в уроке 13 будет искать так же. **Один способ на всех подписчиков.**
 
-Условия на статус переданы `holder_of`:
+Условия на статус переданы `holder`:
 
 - `phase="running"` — **конвейер действительно работает**, а не «размещён» или «ждёт». Подписываться на камеру, которую держат номинально, бессмысленно;
 - `field="live_url"` — воркер опубликовал адрес.
@@ -552,9 +565,9 @@ class RecWorker(VmsWorker):
 
 `return None` — **никто не держит камеру**. Не ошибка: камеру могли только что создать, её воркер мог упасть, контроллер мог не успеть разместить. Обычное преходящее состояние.
 
-**Хранилище, которое молчит, — не «никто не держит».** `holder_of` читает объекты, и на кластере это то же хранилище, что строки: пока оно не отвечало, `source` поднимал `OSError`, проход регистратора кончался на первой строке, и запись, упавшая во время сбоя, не поднималась всё время сбоя (второе ревью, блокер 4). Теперь `OSError` считается (`store_errors`), а ответом служит источник, прочитанный **последним** (`last_source`): воркер камеры никуда не делся, делась книга. Камера, которую не читали ни разу, остаётся нестартуемой — врать ей нечем. Тест: `test_store_outage.py::test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last`.
+**Хранилище, которое молчит, — не «никто не держит».** Heartbeat'ы держателей — объекты, и на кластере это то же хранилище, что строки: пока оно не отвечало, `source` поднимал `OSError`, проход регистратора кончался на первой строке, и запись, упавшая во время сбоя, не поднималась всё время сбоя (второе ревью, блокер 4). Теперь `OSError` считается (`store_errors`), а ответом служит источник, прочитанный **последним** (`last_source`): воркер камеры никуда не делся, делась книга. Камера, которую не читали ни разу, остаётся нестартуемой — врать ей нечем. Тест: `test_store_outage.py::test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source_it_read_last`. Молчание проход тоже помнит: каждый вопрос получает ту же ошибку и считается, как раньше, а хранилище за проход спрашивают один раз, а не по разу на каждую из сотни записей (`test_recorder_reads.py::test_a_store_that_does_not_answer_is_asked_once_a_pass_and_every_recording_keeps_its_last_source`).
 
-Обратите внимание, чего нет: **кэша** в обычном смысле. `source` вызывается на каждом проходе и каждый раз перечитывает объекты; `last_source` отвечает только когда объекты не отвечают. Так переезд обнаруживается без всякого механизма уведомлений.
+Обратите внимание, чего нет: **кэша** дольше прохода. Взгляд прохода — не кэш: следующий проход перечитывает объекты заново, а проход, который затянулся, перечитывает их через `Look.FRESH` (10 секунд, период heartbeat'а). `last_source` отвечает только когда объекты не отвечают. Так переезд обнаруживается без всякого механизма уведомлений — на следующем проходе (`test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_again`).
 
 ## Шаг 6 — Отказ стартовать как состояние
 
@@ -589,6 +602,7 @@ class RecWorker(VmsWorker):
 Одна вещь добавлена ради экрана — **множество `waiting`**:
 
 ```python
+    @one_look
     def status(self) -> list[dict]:
         out = super().status()
         for st in out:
@@ -605,6 +619,7 @@ class RecWorker(VmsWorker):
 ## Шаг 7 — Переподписка
 
 ```python
+    @one_look
     def resubscribe(self, now: float | None = None) -> list[int]:
         now = self.now() if now is None else now
         moved = []
@@ -620,6 +635,7 @@ class RecWorker(VmsWorker):
                 log.info("%s: camera %s is held elsewhere now (%s): re-subscribing", self.name, cid, src[1])
         return moved
 
+    @one_look
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
         self.resubscribe(now)
         out = super().reconcile_once(now)
@@ -635,6 +651,8 @@ class RecWorker(VmsWorker):
 **Чей источник.** `reconciler.actual` держит id **записей**, а держателя ищут по **камере** — `cam` из строки записи. Первая версия передавала в `source` id записи: для записи `1`, названной по камере, это одно и то же, и тест проходил; запись `7-cloud` не переподписывалась никогда (найдено при разборе второго ревью). Перед остановкой — `_release_if_broken`: кольцо резервной записи — единственная копия обрыва (урок 26), и остановка в обход сверки не должна его терять.
 
 **Четыре части, и хранилище не роняет остальные.** `gate_pass` читает строки, `writer_pass` — том; то, что часть не смогла прочитать, она называет в логе и считает, а не уносит проход с собой.
+
+**Один взгляд на четыре части.** `@one_look` — проход смотрит в хранилище один раз (шаг 5): `resubscribe`, `enrich` при каждом старте и `gate_pass` внутри `reconcile_once` берут взгляд внешнего прохода, а не открывают свой. Новые heartbeat'ы и строки проход увидит на следующем проходе.
 
 Держатель камеры переехал. Старый адрес больше не отвечает, а новый регистратору никто не сообщил.
 
