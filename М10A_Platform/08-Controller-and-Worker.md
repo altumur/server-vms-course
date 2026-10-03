@@ -39,11 +39,28 @@ class Controller:
     """The only writer of <name>/*. Holds nothing: every method reads the
     store, decides, and writes by CAS. Two instances are harmless."""
 
+    # Keeps the `Subsystem`, the two stores and a wall clock (tests inject a fake).
     def __init__(self, sub: Subsystem, vars_: Variables, objects: ObjectStore, wall=time.time):
+        self._pass_local = threading.local()
         self.sub, self.vars, self.objects, self.wall = sub, vars_, objects, wall
+        check_schema(vars_)                       # a build older than the store does not run at all
 ```
 
-Конструктор из одной строки присваиваний, и в нём — четыре поля, ни одно из которых не состояние. Подсистема (имя), два хранилища, часы. Ни кэша, ни списка воркеров, ни соединений, ни фонового потока.
+Конструктор — строка присваиваний и проверка схемы, и в нём четыре поля, ни одно из которых не состояние. Подсистема (имя), два хранилища, часы. `check_schema` не даёт сборке старше хранилища даже начать работу (урок 17). Между проходами у контроллера нет ни кэша, ни списка воркеров, ни соединений, ни фонового потока.
+
+**Кэш есть, но живёт один проход и умирает с ним.** Проход контроллера задаёт на каждую единицу дюжину вопросов — её строка, её размещение, на каком сервере воркер, отвечает ли ресурс того сервера, — и каждый был чтением хранилища, заданным заново для следующей единицы: тысяча камер на двадцати воркерах стоила одному холостому проходу около 64 000 чтений. Внутри прохода ответ не может быть старше прохода, поэтому `with one_pass(ctl):` (или `ctl.one_pass()`) подставляет вместо хранилищ `_PassStore`: каждый `get` и `list` спрашивает настоящее хранилище один раз и держит ответ до конца прохода — не дольше. Поле `_pass_local` — это `threading.local()`: подмена видна только потоку, открывшему проход, а двери консоли из своих потоков видят само хранилище. Свойства `vars` и `objects` отдают либо чтения прохода, либо хранилище; присваивание задаёт хранилище:
+
+```python
+    @property
+    def vars(self):
+        r = self._reads()
+        return r[0] if r is not None else self.__dict__["_vars"]
+    ...
+    def one_pass(self):
+        return one_pass(self)
+```
+
+Запись идёт в хранилище как раньше и **забывает** то, чего коснулась, — ключ и каждый листинг, в который он мог попасть, — так что проход читает обратно написанное, а не прочитанное до записи. Проигравший CAS тоже забывает: `write` повторяет его по хранилищу, а не по копии, которая проиграла. Тесты: `test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once` и `test_read_budget.py::test_a_pass_reads_back_what_it_wrote_and_a_lost_cas_asks_the_store_again`.
 
 Из этого следует то, что написано в docstring: **два экземпляра безвредны.** Не «допустимы при условии», а безвредны — потому что нечему разойтись. Каждый метод начинается с чтения и заканчивается записью по CAS; два процесса, делающие один и тот же проход, придут к одному выводу, и второй проиграет гонку на записи, обнаружив, что работа уже сделана.
 
@@ -133,7 +150,7 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
 
 Разница видна, когда что-то ломается. Список пришлось бы пополнять при регистрации и чистить при уходе — то есть иметь протокол регистрации, обработку повторной регистрации, уборку записей о тех, кто ушёл не попрощавшись. Каждый из этих путей может разойтись с реальностью, и когда разойдётся, контроллер будет размещать работу на воркера, которого нет.
 
-Здесь расходиться нечему: воркер, который пишет о себе, — есть; который перестал — через сорок пять секунд перестаёт быть. Ключ при этом не удаляется, и это намеренно: последний heartbeat умершего воркера остаётся на диске и отвечает на вопрос «что с ним было перед смертью». В М10B из него берут ещё и `previous_hb` — время последнего сигнала предыдущего экземпляра, из которого вычисляется измеренное время переключения.
+Здесь расходиться нечему: воркер, который пишет о себе, — есть; который перестал — через сорок пять секунд перестаёт быть. Ключ при этом не удаляется, и это намеренно: последний heartbeat умершего воркера остаётся на диске и отвечает на вопрос «что с ним было перед смертью». В М10B из него берут ещё и `previous_hb` — время последнего сигнала предыдущего экземпляра, из которого вычисляется измеренное время переключения, — и `previous_server`, сервер, на котором тот экземпляр работал: вычитать `previous_hb` из своего `started` можно, только если оба времени — по одним часам (урок 11).
 
 `raw` может оказаться пустым (`if raw`) — между `list` и `get` объект мог исчезнуть. Пропускаем.
 
@@ -484,15 +501,22 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         extra.setdefault("build", BUILD)
         if self.stand_in_renewals:
             extra.setdefault("stand_in_renewals", self.stand_in_renewals)     # a step hung, and somebody held its units
-        if SLOTS_GARBLED.get(self.sub.name):
-            extra.setdefault("slots_garbled", SLOTS_GARBLED[self.sub.name])   # slot rows this process could not read (`read_slot`)
+        # Rows of this subsystem this process could not read, by table (`rows.Table`): `slots_garbled` (`read_slot`),
+        # `assignments_garbled` (its own assignment), `holds_garbled` (`read_hold`), and those of a subsystem's own
+        # tables — a recorder's `volumes_garbled`, `keeps_garbled`.
+        for name, n in garbled_counts(self.sub.name).items():
+            extra.setdefault(name, n)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
-        self.objects.put(self.sub.heartbeat_key(self.name),
-                         Heartbeat(self.name, self.wall(), status, extra).to_bytes())
+        with self._heartbeat_lock:                # …and what a stand-in says again for a hung step (`_stand_in_heartbeat`)
+            ts = self.wall()
+            self.objects.put(self.sub.heartbeat_key(self.name), Heartbeat(self.name, ts, status, extra).to_bytes())
+            self._last_heartbeat, self._heartbeat_at = (status, extra, ts), self.clock()
 ```
 
-Сумма конфликтов по всем арендам — то, что уходит в heartbeat и в метрику. И сама публикация: `**extra` принимает что угодно, потому что платформа это не разбирает (урок 4). Сама платформа кладёт в каждый heartbeat схему и сборку (урок 17), счётчик «подменщика» и число строк слотов, которые процесс не смог разобрать (`slots_garbled`, урок 7).
+Сумма конфликтов по всем арендам — то, что уходит в heartbeat и в метрику. И сама публикация: `**extra` принимает что угодно, потому что платформа это не разбирает (урок 4). Сама платформа кладёт в каждый heartbeat схему и сборку (урок 17), счётчик «подменщика» и число испорченных строк по таблицам. `SLOTS_GARBLED` теперь — это `SLOTS.counts`, счёт таблицы `rows.Table("slot", …)`, и heartbeat не перечисляет таблицы руками: `rows.garbled_counts(sub)` отдаёт `<таблица>s_garbled` для каждой таблицы, у которой в этом процессе есть испорченная строка подсистемы (`slots_garbled`, урок 7; `assignments_garbled`, `holds_garbled`, у регистратора — `volumes_garbled`, `keeps_garbled`).
+
+**Запись heartbeat'а — под `_heartbeat_lock`, и написанное запоминается.** `_last_heartbeat` — статус, поля и `ts` последнего heartbeat'а цикла, `_heartbeat_at` — когда он написан по монотонным часам. Из них подменщик за висящий шаг повторяет сказанное (`_stand_in_heartbeat`, выше); замок не даёт ему положить старый статус поверх свежего, который цикл пишет в ту же секунду. Тест: `test_stand_in.py::test_the_stand_in_says_no_heartbeat_over_a_fresh_one_nor_under_a_name_another_instance_took`.
 
 ```python
     def reconcile_once(self, now: float) -> list:

@@ -537,7 +537,7 @@ class Journal:
 ```python
         lines = [f"# TYPE {p}_workers_live gauge", f"{p}_workers_live {len(live)}",
                  f"# TYPE {p}_worker_headroom gauge",
-                 *[f'{p}_worker_headroom{{worker="{w}",server="{hb.extra.get("server", "?")}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
+                 *[f'{p}_worker_headroom{{worker="{label(w)}",server="{label(hb.extra.get("server", "?"))}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
                  f"{p}_headroom {sum(n(w, self.spec.headroom_from, int) for w in live)}",
 ```
 
@@ -551,7 +551,7 @@ class Journal:
                  # spare: it carries nothing and reports zero capacity, which this formula would read as
                  # fully loaded — and a target-value policy would then scale out for ever, one spare
                  # demanding the next. A spare is counted below instead, as what it is.
-                 *[f'{p}_worker_load{{worker="{w}"}} {1 - n(w, self.spec.headroom_from, int) / max(1, n(w, self.spec.capacity_from, int, 1)):.3f}'
+                 *[f'{p}_worker_load{{worker="{label(w)}"}} {1 - n(w, self.spec.headroom_from, int) / max(1, n(w, self.spec.capacity_from, int, 1)):.3f}'
                    for w in live if self.ctl.place_of(w) != ""],
                  f"# TYPE {p}_spare_workers gauge",            # running, holding no place, ready to take one
                  f'{p}_spare_workers {sum(1 for w in live if self.ctl.place_of(w) == "")}',
@@ -568,8 +568,9 @@ class Journal:
 
 ```python
                  f"# TYPE {p}_failover_seconds gauge",
-                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, *failover.values()])}',
+                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, getattr(self.ctl, "failover_worst", 0.0), *failover.values()])}',
                  *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
+                 f"# TYPE {p}_failovers_unmeasured gauge", f"{p}_failovers_unmeasured {getattr(self.ctl, 'failovers_unmeasured', 0)}",
                  f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
@@ -582,7 +583,7 @@ class Journal:
                  f"{p}_{self.spec.running_gauge} {sum(1 for hb in live.values() for s in hb.status if s.get('phase') == 'running')}"]
 ```
 
-`failover_seconds` **измеряется**, а не только называется (восьмое ревью, найдено координатором). Раньше `kind="worst"` был числом, с которым собрали консоль, — арифметикой урока 11; в кластере его не передают, и после любого failover там стоял `0.0`. Теперь последний failover каждого воркера меряется по тому, что написали его экземпляры (`SpecController.failover_seconds`: начало этого экземпляра минус последний heartbeat предыдущего), и называется по воркеру — `kind="last",worker=…`. А `kind="worst"` — наибольшее из измеренных и из числа, данного консоли (`worst_failover`: цифра учений, паспорт). Разница между измеренным и данным — самое полезное на этом графике.
+`failover_seconds` **измеряется**, а не только называется (восьмое ревью, найдено координатором). Раньше `kind="worst"` был числом, с которым собрали консоль, — арифметикой урока 11; в кластере его не передают, и после любого failover там стоял `0.0`. Теперь последний failover каждого воркера меряется (`SpecController.failover_seconds`, урок 11, шаг 21) и называется по воркеру — `kind="last",worker=…`. Меряется он на одних часах (девятое ревью): на том же сервере — начало этого экземпляра минус последний heartbeat предыдущего, по тому, что они написали (`previous_server` равен `server`); на другом сервере — то, что консоль сама видела по своим часам между последним сдвигом heartbeat'а старого экземпляра и появлением нового. А `kind="worst"` — наибольшее из числа, данного консоли (`worst_failover`: цифра учений, паспорт), из всего, что этот процесс измерил за время работы (`failover_worst`), и из последних: более короткий второй failover того же воркера худший не стирает. Разница между измеренным и данным — самое полезное на этом графике. Переключение, которое на одних часах не измерить (другой сервер, а консоль не видела предшественника живым; отрицательный промежуток), числом не становится, а считается: `<p>_failovers_unmeasured` — сколько воркеров сейчас с неизмеренным переключением. Тест: `test_lesson4_failover.py::test_a_failover_between_two_servers_is_measured_on_one_clock_or_not_at_all` (М11).
 
 **Значение каждой метки экранируется** (`label`: `\`, `"`, перевод строки; восьмое ревью, часть 4). Имя записи `7"x` ломало строку `/metrics`, и Prometheus отвергал весь скрейп. Новые имена с `"`, `|` и управляющими символами отказываются при создании (`doors.unnamable`), а уже записанные проходят через `label`.
 
@@ -605,8 +606,8 @@ class Journal:
 | `<p>_worker_<table>s_garbled{worker}` | то же по другим таблицам, которые знает процесс консоли (`rows.counts`): `holds_garbled` — место, которое никто не возьмёт; `assignments_garbled`; у регистратора — `volumes_garbled`, `keeps_garbled`. Строки, каждая один раз, пока снова не разберётся, — не чтения (седьмое ревью: `holds_garbled` был в heartbeat'е, а здесь не был) |
 | `<p>_resource_rows_garbled{server,table}`, `<p>_resource_space_garbled{server}` | строки, которые не разобрал ресурс сервера, по таблицам, и испорченная `platform/space` (тогда водяная отметка — по последней настройке или умолчаниям); раньше были только в heartbeat'е ресурса (восьмое ревью) |
 | `<p>_resource_restore_left{server}`, `<p>_resource_restore_failures_total{server}`, `<p>_resource_mirror_failures_total{server}`, `<p>_resource_mirror_too_big_total{server}` | что ресурс ещё не привёз при `restore` (он повторяет его в своём цикле, по пиру и ведру), сколько раз пир или ведро не отдались, сколько копий зеркала не легло и сколько вёдер больше `MIRROR_MAX` пропущено (восьмое ревью) |
-| `rec_volume_wait{worker}`, `auto_wants_folded{worker}`, `rec_stream_lagging`, `rec_stream_behind_seconds`, `rec_stream_skipped_seconds_total`, `rec_keep_missing_seconds{keep}` | числа подсистем (`metrics_extra`): регистратор, привязанный к тому, чей холд чужой, и ждущий (1); вычислитель, свернувший подписки длинного опроса по `(sub, kind)`, потому что троек больше `WANTS_MAX`; отставание и срез потока регистратора; недостача удержания (восьмое ревью) |
-| `vms_devices_slow{worker}`, `vms_commands_in_flight{worker}`, `vms_commands_reanswered_total{worker}` | чего ждёт такт держателя: устройства, чей последний вызов не ответил за `PERFORM_GRACE`; вызовы, ещё не вернувшиеся; ответы, сказанные повтором после перезапуска (М10B, урок 4; восьмое ревью) |
+| `rec_volume_wait{worker}`, `auto_wants_folded{worker}`, `rec_stream_lagging{worker}`, `rec_stream_behind_seconds{worker}`, `rec_stream_skipped_seconds_total{worker,why}`, `rec_keep_missing_seconds{keep}` | числа подсистем (`metrics_extra`): регистратор, привязанный к тому, чей холд чужой, и ждущий (1); вычислитель, свернувший подписки длинного опроса по `(sub, kind)`, потому что троек больше `WANTS_MAX`; несёт ли аплинк поток камерного регистратора и насколько тот отстал от живого края; секунды, которых поток не донёс, по причине — `cut` (срезано до живого края), `left` (оставлено дозаписи после обрыва), `failed` (карта не смогла их отдать) и `evicted` (бюджет карты отпустил их раньше, чем они дошли до сервера; девятое ревью, `test_camera_card.py::test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_unsent_is_on_metrics`); недостача удержания (восьмое ревью) |
+| `vms_devices_slow{worker}`, `vms_commands_in_flight{worker}`, `vms_device_identity_coincidences{worker}`, `vms_commands_reanswered_total{worker}` | чего ждёт такт держателя: устройства, чей последний вызов не ответил за `PERFORM_GRACE`; вызовы, ещё не вернувшиеся; сколько устройств держателя совпали серийным номером с другим — пишутся оба, совпадение сказано (девятое ревью, `test_console_gate.py::test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidence_is_said`); ответы, сказанные повтором после перезапуска (М10B, урок 4; восьмое ревью) |
 | `<p>_console_rows_garbled{table}` | строки подсистемы, которые не смогла разобрать сама консоль, по таблицам: заявки, которые она превращает в работу (`table="request"`, урок 25 М10B), удержания, которые показывает, поля heartbeat'ов, прочитанные выше как «не сказано» (`table="field"`) |
 
 Четыре строки таблицы от `fenced` до `<table>s_garbled` — из heartbeat'ов. Размещение их не читает: ограждённый воркер и так ничего не держит. Их читает человек, которому иначе не отличить «воркер пуст» от «воркер ограждён» — и не заметить, что ёмкость уходит в строки, которые не читаются.

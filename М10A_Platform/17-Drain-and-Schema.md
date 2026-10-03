@@ -102,6 +102,11 @@ def draining(vars_) -> str:
 
 ```python
     def would_strand(self, server: str, workers: list[str] | None = None) -> list[str]:
+        """Unit ids that nothing left could serve if `server` stopped now."""
+        with one_pass(self):
+            return self._would_strand(server, workers)
+
+    def _would_strand(self, server: str, workers: list[str] | None) -> list[str]:
         pool = [w for w in self._pool(workers) if self.server_of(w) != server]
         out = []
         for row in self.units():
@@ -114,7 +119,9 @@ def draining(vars_) -> str:
         return out
 ```
 
-Тем же `eligible`, который будет отвечать по-настоящему через минуту. Это важно: сухой прогон, считающий по своей формуле, рано или поздно разойдётся с настоящим размещением, и разойдётся молча.
+Тем же `eligible`, который будет отвечать по-настоящему через минуту. Это важно: сухой прогон, считающий по своей формуле, рано или поздно разойдётся с настоящим размещением, и разойдётся молча. Тест: `test_lesson11_edge.py::test_the_dry_run_answers_before_the_reboot_not_after`.
+
+**Сухой прогон — один проход по чтениям.** Для каждой единицы он спрашивает её размещение, сервер её воркера и `eligible` по пулу, а `eligible` — heartbeat'ы и запас каждого воркера; без кэша это было бы по чтению хранилища на каждый вопрос каждой единицы. Поэтому `would_strand` открывает `one_pass` (урок 8, шаг 1): внутри каждый ключ читается один раз, а между вызовами не помнится ничего. Сам расчёт — в `_would_strand`. `drain_state` консоли зовёт `would_strand` на каждый `GET /drain` и получает свежие чтения: проход кончается вместе с вызовом. А позванный изнутри уже открытого прохода, `one_pass` ничего нового не открывает — проход внутри прохода считается внешним.
 
 Альтернатива вопросу — прочитать `/unplaceable` **после** перезагрузки, когда камера уже не пишется. Разница между «спросил и не стал» и «сделал и увидел» здесь стоит ровно столько, сколько стоит запись.
 
