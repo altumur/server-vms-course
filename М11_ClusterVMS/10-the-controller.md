@@ -149,12 +149,27 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
 ```python
 # Each step of a controller's pass in a try of its own (the review's seventh pass, part 2): they shared one, so a step
 # that raised — one row it could not read — skipped every step after it, the snapshot the layer above reads included.
+# And said ONCE per spell (the eighth review's minor, closed in the ninth): the trace went into the log on every pass,
+# every five seconds for as long as the step kept failing — a refused write did it for days. The trace the first time,
+# "works again" when it does (`_failing`, by loop and step), as М12's `domain/steps.py` says it.
+_failing: set[tuple[str, str]] = set()
+
+
 def _steps(what: str, *steps) -> None:
-    for step in steps:
+    for i, step in enumerate(steps):
+        name = getattr(step, "__name__", "")
+        name = f"step {i + 1}" if name in ("", "<lambda>") else name
         try:
             step()
         except Exception:                         # noqa: BLE001
-            logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
+            if (what, name) not in _failing:
+                _failing.add((what, name))
+                logging.exception("%s: %s failed; the other steps of the pass go on, this one is tried on every pass "
+                                  "and said again when it works", what, name)
+        else:
+            if (what, name) in _failing:
+                _failing.discard((what, name))
+                logging.warning("%s: %s works again", what, name)
 
 
 # One pass of a placement controller, the same as the box's loop makes it (`vms/__main__._controller_loop`; the review's
@@ -167,9 +182,11 @@ def _placement_pass(what: str, ctl) -> None:
     _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
 ```
 
-**Шаг, который упал, не отменяет остальные.** Шаги стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал.
+**Шаг, который упал, не отменяет остальные.** Шаги стояли в одном `try`: строка, которую `ensure_placed` не смог прочитать, пропускала и перераспределение, и публикацию снимка, и консоль домена видела возраст снимка, который растёт, у контроллера, который жив (седьмое ревью, часть 2). Теперь `_steps` зовёт каждый шаг отдельно и пишет в лог, какой упал. **И пишет один раз** (восьмое ревью, minor, закрыт в девятом): трейс шли в лог на каждом проходе — каждые пять секунд, пока шаг падал, а отказанная запись падала днями, и первый трейс, тот, где написано почему, тонул. Теперь трейс — в первый раз, «works again» — когда шаг снова прошёл (`_failing`, по циклу и шагу), как в М12 (`domain/steps.py`). Так же внутри прохода: шаги `pass_once` и запись отчёта говорят трейс один раз на эпизод (`SpecController._failed`, `_works`). Тест: `vmsserver/tests/test_garbled_rows.py::test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fails_every_pass_is_said_once`.
 
 **Проход — тот же, что на коробке** (восьмое ревью ServerVMS, нашёл координатор). Цикл кластера звал `ensure_placed`, `redistribute` и `ensure_home(1)` по одному и не писал отчёта прохода, а `/metrics` берёт из этого отчёта (`<sub>/controller/pass`) `vms_units_unplaced`, `vms_reconcile_pass_seconds`, последний проход и последний успех. На кластере эти метрики навсегда показывали 0 и -1. Теперь `_placement_pass` зовёт `pass_once(1)` платформы (`SpecController.pass_once`): те же три шага, каждый в своём `try`, и отчёт, который он пишет, — как цикл контроллера на коробке (`vms/__main__._controller_loop`). Снимок — отдельным шагом. Так же устроен цикл контроллера записей (`reccontroller`: `_placement_pass("rec placement", ctl)`), и у записей теперь тоже публикуется снимок — `rec_snapshot_age_seconds` на кластере больше не -1.
+
+**Отчёт прохода — это запись, и политика должна её разрешать** (девятое ревью ServerVMS, major). Восьмое ревью подключило `pass_once` на кластере, но на кластере с ACL метрики так и остались -1 и 0: `pass_once` пишет `objects/vms/controller/pass`, а политика контроллера разрешала в объектах только `objects/vms/snapshot/*`. Каждые пять секунд — `Forbidden: vmscontroller may not write objects/vms/controller/pass`, `vms_units_unplaced` 0 при неразмещённой камере. Никакая проверка этого не видела: `test_policies.py` сверял файл политики со списками `acl_objects_*` — а их тоже пишет человек, и отчёта там не было. Теперь отчёт в списке (`Subsystem.acl_objects_controller`: `<sub>/snapshot/*` и `<sub>/controller/pass`, имя — `CONTROLLER_PASS`) и в обеих политиках (`objects/vms/controller/pass`, `objects/rec/controller/pass`). Главное — тест теперь сверяет политики с тем, что процессы **записали на самом деле**: стенд прогоняет все сцены, двери и проходы обоих контроллеров (`pass_once`, `publish_snapshot`), трасса пишет каждый PUT и DELETE под именем процесса, и каждая такая запись должна быть разрешена его политикой; отказ 403 в самом стенде — тоже провал (права стенда теперь берутся из кода, `CONTROLLER_GRANTS`, а не из списка рядом), кроме двух сцен, где отказ — и есть урок. Тест: `tests/test_policies.py::test_every_write_the_code_makes_is_granted`; против старой политики он падает ровно на `vmscontroller-policy.hcl: PUT objects/vms/controller/pass`. Обратное направление — «в политике нет записи, о которой код не просил» — по-прежнему сверяется со списками `acl_*` (`test_every_write_grant_is_one_the_code_asked_for`): из конечной трассы шаблон пути не выведешь.
 
 ## Шаг 6 — Консоль
 
