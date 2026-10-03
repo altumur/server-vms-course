@@ -818,3 +818,42 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
     pull(6); pull(7)
     assert [f["t"] for f in rq.drain()] == [6, 7]                       # 5 is gone with the centre —
     assert fwd.stats()["7"]["holes"] == 1                               # — and counted, once
+
+
+def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written_it():
+    """The product's DY, checked in the course: with a relay, the camera counted delivered whatever the relay's ingest
+    TOOK — and its card let go of it — though the centre above had not written it: frames the forwarder dropped, or that
+    the centre's recorder never wrote, were on no copy, and the card had let them go first. The forwarder leaves the
+    centre's `have` at the relay's ingest while it carries the camera up (`Ingest.up_have`), the relay's answer to the
+    camera says the lesser of its own and the centre's (`Ingest._have`), and the camera counts delivered nothing past it
+    (`CameraPusher.owed_spans`): the card holds what the relay took until the centre has written it. When the centre no
+    longer takes the camera, its word is gone with it."""
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    written = [None]
+    centre.written = lambda ref: written[0]
+    fwd.pass_once()
+    sent = []
+    for i in range(30):
+        f = {"t": wall() + 0.5, "key": True}                            # two frames a second
+        sent.append(f["t"])
+        pusher.pass_once([{"t": wall(), "key": True}, f])
+        fwd.pass_once()
+        rq.drain()
+        if i < 10:
+            written[0] = f["t"]                                         # the centre's recorder writes, then stalls
+        wall.advance(1.0)
+    pusher.pass_once([])
+    owed = pusher.owed_spans()
+    assert owed[-1][0] <= sent[9] + 1e-6 and owed[-1][1] == float("inf"), (owed, sent[9])   # the twenty after: owed
+    assert relay.up_have[SERIAL] == sent[9]
+    written[0] = sent[-1]                                               # the centre catches up
+    fwd.pass_once()
+    pusher.pass_once([])
+    assert pusher.owed_spans()[-1][0] >= sent[-1] - 1e-6, pusher.owed_spans()
+    centre.release(SERIAL, "recorder:centre")
+    centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
+    fwd.pass_once()
+    assert SERIAL not in relay.up_have

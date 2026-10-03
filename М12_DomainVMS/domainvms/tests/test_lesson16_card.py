@@ -956,3 +956,198 @@ def test_what_the_server_has_not_got_outlives_a_restart_of_the_cameras_process_w
             shutil.rmtree(card_dir, ignore_errors=True)
     assert out[True] == (0, 0, True), out                              # every owed frame kept; what went, the server had
     assert out[False][0] > 0 and out[False][1] == 0, out                # the review's: owed seconds gone, uncounted
+
+
+# -- the eleventh review -------------------------------------------------------------------------------------------------
+def _process(wall, path, camclock, steady, epoch, ingest_of, cam):
+    """One process of the camera: its ring, its card (`path`) written whole by the card's writer, and its pusher — what a
+    camera's process builds when it starts."""
+    from vms.card import CamRing, CardActuator, CardBuffer
+    ring = CamRing(clock=camclock, steady=steady)
+    card = CardBuffer(path)
+    act = CardActuator(ring, card, threaded=False)
+    act("start", {"id": "1-card", "epoch": epoch, "hold": False})
+    pusher = CameraPusher(SERIAL, cam.flash, ingest_of, card=card.pieces, recording="1-card", ring=ring)
+    return ring, card, act, pusher
+
+
+def test_backfill_after_a_step_and_a_restart_of_the_cameras_process_lands_the_hole_where_captured_at_any_ingest():
+    """The eleventh review, blocker 1, run as its probe `pr1_restart_line` ran it, with the product's cross-check beside
+    it: the camera's clock steps J at 10 s, the road is down 20–80 s (a hole on the card), the camera's PROCESS starts
+    again at 100 s — a new ring, a new line, a steady clock that starts again with it — and at 130 s the server asks the
+    card for its hole. The new process's line was the raw clock: the ingest's offset moved by J and the range read the
+    card J away — at J = +30 the frames of 50–80 s laid at 20–50, at J = −30 those of 0–20 s at 30–50. The line goes on
+    from the card's now (`CamLine.restore`): the hole's frames, each where it was captured, and the ingest's offset never
+    moves. The same when the camera comes back after the restart to ANOTHER ingest of the cluster — the hole asked at the
+    first: a new ingest measures the camera's offset afresh, and the line it measures is the same line."""
+    import os
+    from domain.ingest import Ingest
+    from domain.agent import ClusterTrust
+    from w2cplatform.obsd import unix_s
+    for jump in (30.0, -30.0):
+        for move in (False, True):
+            wall = Clock(100_000.0)
+            fed, north, south, signer, ingest, cam, *_ = _site(wall)
+            other = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: ClusterTrust(south.vars).keyset(), wall=wall)
+            ingest.peers, other.peers = (lambda: [other]), (lambda: [ingest])
+            skew, boot, down, at = [0.0], [wall()], [False], [ingest]
+            camclock, steady = (lambda: wall() + skew[0]), (lambda: wall() - boot[0])
+
+            def dial(url):
+                if down[0]:
+                    raise Unreachable("down")
+                return at[0]
+            path = tempfile.mkdtemp(prefix="card-")
+            try:
+                ring, card, act, pusher = _process(wall, path, camclock, steady, 1, dial, cam)
+                ingest.want(SERIAL, "recorder:r")
+                ingest.subscribe(SERIAL, "recorder:r")
+                live = {}
+
+                class Writer:
+                    def push(self, f):
+                        live.setdefault(_number(f["sample"]), f["t"])
+                ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+                start, n, rid, answer = wall(), 0, None, None
+                while wall() - start < 200:
+                    n = _sensor(ring, start, camclock, wall, n)
+                    act.drain()
+                    el = round(wall() - start, 1)
+                    down[0] = 20 <= el < 80
+                    pusher.pass_once([])
+                    if rid is not None and answer is None:
+                        answer = ingest.result(SERIAL, rid)
+                    wall.advance(0.5)
+                    el = round(wall() - start, 1)
+                    if el == 10.5:
+                        skew[0] += jump                                     # the camera's clock steps
+                    if el == 100.0:                                         # the camera's process starts again
+                        act.stop_all()
+                        card.close()
+                        boot[0] = wall()
+                        ring, card, act, pusher = _process(wall, path, camclock, steady, 2, dial, cam)
+                        at[0] = other if move else ingest                   # …and comes back to another ingest
+                    if el == 130.0:
+                        rid = ingest.request_range(SERIAL, start + 18.0, start + 50.5, recording="1-card")
+            finally:
+                import shutil
+                shutil.rmtree(path, ignore_errors=True)
+            case = (jump, move)
+            got = [_number(s) for s in answer or []]
+            assert got == list(range(180, 505)), (case, got[:2], got[-2:])            # the hole, from the key frame before
+            assert all(abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002 for s in answer), case   # where captured
+            assert all(abs(t - (start + i / 10)) < 0.002 for i, t in live.items()), case
+            assert ingest.cams[SERIAL].clock_steps == 0 and (not move or other.cams[SERIAL].clock_steps == 0), case
+            assert os.path.basename(path)                                         # (the card's own dir, gone)
+
+
+def test_a_camera_without_an_rtc_battery_has_its_first_boots_hole_backfilled_and_its_boots_apart_on_the_card():
+    """The eleventh review, blocker 2, a regression, run as its probe `pr6_rtcless` ran it (and the product's cross-check:
+    "500 of 1000 hole frames after a reboot from the first boot, 300 s off, uncounted"): a camera with no RTC battery
+    boots in 1970, NTP sets its clock ten seconds later, the road is down 120–180 s, and at 300 s it reboots — 1970 again,
+    NTP again ten seconds later. The line took the first NTP step up and stayed in 1970: the first boot's hole, asked at
+    360 s, came back empty — for good — and a hole after the reboot came back half from the first boot, 300 s off. The
+    line is re-anchored when the clock is set and what the card wrote before is relabelled (`CamLine._set`,
+    `CardBuffer.relabel`); a reboot unset again goes on after the card's newest until it is set: the first boot's hole
+    lands whole, each frame where it was captured, and a hole after the reboot holds the second boot's frames only."""
+    import shutil
+    from w2cplatform.obsd import unix_s
+    wall = Clock(1_780_000_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    boot, rtc, down = [wall()], [False], [False]
+    camclock = lambda: wall() if rtc[0] else wall() - boot[0]             # 1970 and its uptime until NTP
+    steady = lambda: wall() - boot[0]
+
+    def dial(url):
+        if down[0]:
+            raise Unreachable("down")
+        return ingest
+    path = tempfile.mkdtemp(prefix="card-")
+    try:
+        ring, card, act, pusher = _process(wall, path, camclock, steady, 1, dial, cam)
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        live = {}
+
+        class Writer:
+            def push(self, f):
+                live.setdefault(_number(f["sample"]), f["t"])
+        ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        start, n, rids, answers = wall(), 0, {}, {}
+        while wall() - start < 440:
+            n = _sensor(ring, start, camclock, wall, n)
+            act.drain()
+            el = round(wall() - start, 1)
+            down[0] = 120 <= el < 180 or 340 <= el < 400
+            pusher.pass_once([])
+            for k, rid in rids.items():
+                answers[k] = answers.get(k) or ingest.result(SERIAL, rid)
+            wall.advance(0.5)
+            el = round(wall() - start, 1)
+            if el in (10.0, 310.0):
+                rtc[0] = True                                               # NTP sets the clock
+            if el == 300.0:                                                 # the camera reboots: 1970 again
+                n = _sensor(ring, start, camclock, wall, n)                 # (what it captured until then, its own)
+                act.stop_all()
+                card.close()
+                boot[0], rtc[0] = wall(), False
+                ring, card, act, pusher = _process(wall, path, camclock, steady, 2, dial, cam)
+                after = n
+            if el == 360.0:
+                rids["first"] = ingest.request_range(SERIAL, start + 118.0, start + 150.5, recording="1-card")
+            if el == 420.0:
+                missing = [i for i in range(after, n) if i not in live]
+                rids["second"] = ingest.request_range(SERIAL, start + missing[0] / 10 - 2.0,
+                                                      start + missing[-1] / 10 + 0.5, recording="1-card")
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+    first = [_number(s) for s in answers.get("first") or []]
+    assert first == list(range(1180, 1505)), (first[:2], first[-2:])        # the first boot's hole, whole
+    for s in answers["first"] + answers["second"]:
+        assert abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002, _number(s)   # every frame where it was captured
+    second = [_number(s) for s in answers["second"]]
+    assert [i for i in second if i >= after], (after, second[:3])           # the second boot's own frames, none 300 s off
+    assert all(abs(t - (start + i / 10)) < 0.002 for i, t in live.items()), [(i, round(t - start - i / 10, 3)) for i, t in sorted(live.items()) if abs(t - (start + i / 10)) >= 0.002][:8]
+
+
+def test_a_range_being_answered_when_the_cameras_clock_is_set_fails_and_lands_where_captured_when_asked_again():
+    """The sibling of the eleventh review's blocker 2 that it did not name: the camera's clock is set while the camera is
+    answering a range piece by piece, off segments the card relabels under the read (`CardBuffer.relabel`). The pieces
+    after the set would land at the ingest moved by the set — the range asked on the old line, the answer put on the
+    cluster's clock by the new offset. A move of the line fails every range under way (`CameraPusher._follow`): the
+    server hears RANGE FAILED, asks again, and the range lands whole, every frame where it was captured."""
+    import shutil
+    from domain.ingest import RangeFailed
+    from w2cplatform.obsd import unix_s
+    wall = Clock(1_780_000_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    boot, rtc = wall(), [False]
+    camclock = lambda: wall() if rtc[0] else wall() - boot                # 1970 and its uptime until NTP
+    steady = lambda: wall() - boot
+    path = tempfile.mkdtemp(prefix="card-")
+    try:
+        ring, card, act, pusher = _process(wall, path, camclock, steady, 1, lambda url: ingest, cam)
+        start, n, rid, outcome, again = wall(), 0, None, None, None
+        while wall() - start < 120:
+            n = _sensor(ring, start, camclock, wall, n, size=40_000)
+            act.drain()
+            pusher.pass_once([])
+            if rid is not None and outcome is None:
+                try:
+                    outcome = ingest.result(SERIAL, rid)
+                except RangeFailed as e:
+                    outcome = e
+                    again = ingest.request_range(SERIAL, start + 4.0, start + 40.0, recording="1-card")
+            wall.advance(0.5)
+            el = round(wall() - start, 1)
+            if el == 58.0:
+                rid = ingest.request_range(SERIAL, start + 4.0, start + 40.0, recording="1-card")   # 14 MB: many pieces
+            if el == 60.0:
+                rtc[0] = True                                               # NTP sets the clock, mid-answer
+        answer = ingest.result(SERIAL, again) if again is not None else None
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+    assert isinstance(outcome, RangeFailed), type(outcome)                  # the answer under way: failed, not moved
+    got = [_number(s) for s in answer or []]
+    assert got == list(range(40, 400)), (got[:2], got[-2:])
+    assert all(abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002 for s in answer)

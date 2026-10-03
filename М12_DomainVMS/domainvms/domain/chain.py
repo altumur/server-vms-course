@@ -43,7 +43,7 @@ import json
 import logging
 import threading
 
-from w2cplatform.rows import PARSE_ERRORS
+from w2cplatform.rows import PARSE_ERRORS, finite
 
 from .federation import Unreachable
 from .tokens import kid_of
@@ -213,6 +213,18 @@ class Forwarder:
     def _push(self, ing, ref: str, e: dict, wait: float = 0.0) -> str:
         work = ing.poll(e["token"], ref, version=self.versions.get(ref) if wait else None, wait=wait)
         self.versions[ref], self.forwarding[ref] = work["version"], work["push"]
+        # WHAT THE CENTRE WROTE GOES DOWN TO THE CAMERA (the product's DY, checked in the course): what this relay's ingest
+        # took, the camera counted delivered and its card let go of — whether or not it ever reached the centre. The
+        # centre's `have` (how far its recorder wrote the camera) is left at this relay's ingest while it forwards the
+        # camera up (`Ingest.up_have`), and the camera's `have` is the lesser of the two (`Ingest._have`).
+        try:
+            up = None if not work["push"] or work.get("have") is None else finite(work["have"])
+        except PARSE_ERRORS:
+            up = None
+        if up is None:
+            self.local.up_have.pop(ref, None)
+        else:
+            self.local.up_have[ref] = up
         if work["push"]:
             self.local.want(ref, self.up)                       # the centre wants it: so do we, from the camera
             q = self.queues.setdefault(ref, self.local.subscribe(ref, self.up, maxsize=FORWARD_FRAMES))
