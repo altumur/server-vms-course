@@ -139,7 +139,7 @@ def test_a_blob_over_the_stores_ceiling_names_the_store():
     con.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
     st, body = con.put_blob("7-linecross", "mask", MASK)
     assert st == 413
-    assert "OBJECTS=s3+https://" in body["detail"] and "variables:// does not" in body["detail"]
+    assert "declares a ceiling" in body["detail"] and "OBJECTS=cluster://" in body["detail"]
     assert ctl.unit("7-linecross")["mask"] == ""                 # nothing was written, and the row is untouched
 
 

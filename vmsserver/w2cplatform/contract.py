@@ -1142,14 +1142,14 @@ class Controller:
         limit = self.hung_move_after if hung_after is None else hung_after
         if slot is not None and slot.until > now:
             return "alive", "", f"{worker} holds its name for another {int(slot.until - now) + 1} s"
-        dead = self._dead_on(worker) if slot is not None else None
+        hb = self._heard(worker)                      # read once: the shortened move asks where it ran, the rest below
+        dead = self._dead_on(worker, hb) if slot is not None else None
         if dead:
             return "move", dead, (f"{worker}'s process on {dead} is not running: moved when its slot ran out, its "
                                   f"server's resource saying so")
         if slot is not None and now <= slot.until + SLOT_LOST_AFTER:
             return "alive", "", (f"{worker} stopped renewing its name {int(now - slot.until)} s ago; what it started "
                                  f"may still be writing for {int(slot.until + SLOT_LOST_AFTER - now) + 1} s more")
-        hb = self._heard(worker)
         ts = None if hb is None else number(f"{self.sub.heartbeat_key(worker)}#ts", hb.ts, float, None)
         if ts is not None and now - ts <= SLOT_LOST_AFTER:
             return "alive", "", f"{worker} was heard from {max(0, int(now - ts))} s ago"
@@ -1186,8 +1186,7 @@ class Controller:
     # (`workers`), its lock let go (not in `running`) — somebody can: a dead process writes nothing, and its units
     # move the moment its slot runs out, not 45 s after. The server the worker last said it runs on, when all of that
     # is said; else None, and the slot is judged as before. A silent resource shortens nothing: then nobody can say.
-    def _dead_on(self, worker: str) -> str | None:
-        hb = self._heard(worker)
+    def _dead_on(self, worker: str, hb) -> str | None:
         server = hb.extra.get("server") if hb is not None else None
         if not isinstance(server, str) or not server or hb.extra.get("present") is not True:
             return None

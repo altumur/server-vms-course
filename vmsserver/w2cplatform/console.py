@@ -1840,9 +1840,11 @@ class SpecConsole:
             return 400, {"detail": str(e), "error": str(e)}
         except TooLarge as e:
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
-            # is the answer, because a blob is exactly the class of data an object store exists for.
-            return 413, {"detail": f"{e} — a blob is what an object store is for: OBJECTS=s3+https://… "
-                                   f"holds this, variables:// does not", "error": str(e)}
+            # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
+            # objects are files on each server (`OBJECTS=cluster://…`, `cluster/objectstore.py`) with no ceiling; a
+            # store that declares one (`?max_bytes=`) is what refused this.
+            return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
+                                   f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
         self.journal.say("unit.changed", of=self.spec.name, target=str(uid), user=user, fields=field,
                          revision=row.get("revision"), digest=d)
         return 200, {**mask_secrets([row])[0], field: d, "bytes": len(data)}
