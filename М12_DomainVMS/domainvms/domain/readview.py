@@ -162,7 +162,12 @@ class ReadView:
                                                          {k: hb[k] for k in DOORS if hb.get(k) is not None})
                 except PARSE_ERRORS as e:
                     MEMBER_OBJECTS.garbled(f"{name}/vms/heartbeats/{w}", e)
-            self.configured[name] = snap.get("cameras", [])
+            # What a member published is shown as a cluster's snapshot would carry it (vmsserver's eleventh review,
+            # blocker 4, defence in depth): a shard written by an older build, or a row stored before the rule, could carry
+            # a `*_secret` field or an address with `?pwd=…` — no secret field here, no credential in an address.
+            from w2cplatform.secrets import is_secret_field, mask_secrets
+            self.configured[name] = [{k: v for k, v in mask_secrets([r])[0].items() if not is_secret_field(k)}
+                                     if isinstance(r, dict) else r for r in snap.get("cameras", [])]
             self.configured_at[name] = float(snap.get("ts", 0) or 0)
             self.cluster_ok[name] = now
             self.cluster_down_since.pop(name, None)

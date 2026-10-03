@@ -377,6 +377,12 @@ def source_refusal(source: str) -> str | None:
 # matches it (`jobs.clear_requests`): the id itself when it is short and plain; else `#` and a digest of it — an id of
 # 200 characters, or one with a comma (the list's separator), a quote or a control character in it, costs 21 bytes
 # like any other (the review's eighth pass).
+# The longest a command's argument may be — `port`, `state`, `pulse_ms`, `n`: a number or a word (the product's
+# cross-check of the eleventh review: an argument had no size). The console refuses longer at its door
+# (`vms/console.py`, `file_request`), the holder refuses a row that holds one anyway (`VmsWorker.perform`).
+COMMAND_ARG_MAX = 32
+
+
 def said_id(rid: str) -> str:
     rid = str(rid)
     if len(rid) <= 40 and not rid.startswith("#") and rid.isprintable() and not any(c in rid for c in ',"\\'):

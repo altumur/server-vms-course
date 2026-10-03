@@ -67,6 +67,25 @@ def test_the_domain_reads_a_camera_the_way_it_reads_a_server_room():
     assert [(r.ref, r.worker_state, r.epoch) for r in mine] == [(SERIAL, "live", 1)]
 
 
+def test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_address():
+    """vmsserver's eleventh review, blocker 4, defence in depth: a member's shard written by an older build — before the
+    cluster hid credentials in its snapshot — carried `cred_secret` and `source: …?pwd=…`, and the domain's read view
+    kept and showed them as written. The view drops `*_secret` fields and hides credentials in addresses on read."""
+    import json
+    wall = Clock()
+    fed, room, devices, agents = _domain(wall, SERIAL)
+    d = devices[SERIAL]
+    row = {**d.row(), "worker": SERIAL, "server": SERIAL, "cred_secret": "Hunter2",
+           "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2"}
+    d.ram.put(f"vms/snapshot/{SERIAL}", json.dumps({"cluster": d.name, "worker": SERIAL, "ts": wall(),
+                                                    "cameras": [row]}).encode())     # as an older build wrote it
+    agents[SERIAL].sync()
+    view = ReadView(fed, wall=wall)
+    view.refresh()
+    shown = json.dumps(view.configured[f"cam-{SERIAL}"])
+    assert "Hunter2" not in shown and "cred_secret" not in shown and "usr=***&pwd=***" in shown, shown
+
+
 def test_the_epoch_grows_on_every_boot_and_the_archive_path_carries_it():
     """There is no second instance for the epoch to fence. It is still taken, by the camera, from its flash,
     on every boot — because the archive and the event buckets carry it, and footage from after a reboot

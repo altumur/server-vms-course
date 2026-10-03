@@ -766,6 +766,24 @@ def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other
     assert {"book_entry", "scenario"} <= set(GARBLED_SHOWN)
 
 
+def test_a_torn_entry_of_the_book_a_camera_carried_home_stops_no_ask_to_another_target():
+    """vmsserver's eleventh review, the camera's half of the `publish_asks` major: `Asker.book` read the book whole with
+    bare `json.loads`, and one torn `domain/asks` entry raised out of it — no ask to any target. Each entry is read
+    through `BOOKS`: a torn one is the entry read last of it (or none), counted once; the other targets are asked."""
+    from domain.ingest import ASKS_PATH, BOOKS, Asker
+    flash = FakeVariables()
+    road = json.dumps({"roads": [{"urls": RELAY_URLS, "token": "t"}]})
+    flash.put(ASKS_PATH, {"SN-a": road, "SN-b": road})
+    asker = Asker("SN7002", flash, lambda url: (_ for _ in ()).throw(Unreachable(url)), clock=Clock())
+    assert set(asker.book()) == {"SN-a", "SN-b"}
+    items, idx = flash.get(ASKS_PATH)
+    flash.put(ASKS_PATH, {**items, "SN-a": '{"roads": [{"urls": ', "SN-c": "[1]"}, cas=idx)
+    book = asker.book()
+    assert book["SN-a"] == json.loads(road)["roads"] and book["SN-b"] and "SN-c" not in book   # read last; none
+    assert {f"{ASKS_PATH}/SN7002/SN-a", f"{ASKS_PATH}/SN7002/SN-c"} <= BOOKS.bad
+    assert asker.ask("SN-b", {"preset": 3}, within=10) is None        # asked: no ingest answered, nothing raised
+
+
 def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address():
     """vmsserver's eleventh review, blocker 4, and the product's cross-check (the domain's snapshot): a camera that is its
     own cluster publishes its row as its snapshot, and an edit through its door takes any field — a `cred_secret`, or a

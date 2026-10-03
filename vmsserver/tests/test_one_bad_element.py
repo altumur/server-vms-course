@@ -225,6 +225,34 @@ def test_a_body_that_is_no_json_object_is_refused_on_keeps_volumes_and_server_la
         srv.shutdown()
 
 
+def _chunked(base: str, method: str, path: str, body: bytes) -> bytes:
+    """`body` sent in one chunk, with `Transfer-Encoding: chunked` and no `Content-Length`: the reply's first line."""
+    import socket
+    from urllib.parse import urlsplit
+    u = urlsplit(base)
+    with socket.create_connection((u.hostname, u.port), timeout=5) as s:
+        s.sendall(f"{method} {path} HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nIdempotency-Key: kc\r\n"
+                  f"Transfer-Encoding: chunked\r\n\r\n".encode() + b"%x\r\n%b\r\n0\r\n\r\n" % (len(body), body))
+        return s.recv(4096).split(b"\r\n", 1)[0]
+
+
+def test_a_body_sent_in_chunks_is_refused_in_words_and_not_read_as_an_empty_one():
+    """The product's cross-check of the eleventh review: no door here reads `Transfer-Encoding: chunked`, and with no
+    `Content-Length` such a body was read as none — `{}` to the route: a PUT that changed nothing and answered 200, a
+    POST that wrote defaults. `read_body` — every console's door, the domain's, the signing service's, the live
+    gateway's — answers 400 in words and reads nothing more."""
+    from tests.test_console_gate import _console
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _raw(base, "POST", "/cameras", json.dumps({"source": "driverpack://file/1.mp4"}).encode(), "k0") == 201
+        for method, path in (("PUT", "/cameras/1"), ("POST", "/cameras"), ("POST", "/requests")):
+            assert b" 400 " in _chunked(base, method, path, b'{"name": "x"}'), (method, path)
+        assert [r["id"] for r in ctl.units()] == [1] and ctl.unit(1)["revision"] == 1
+    finally:
+        srv.shutdown()
+
+
 # -- loops over many: the retain, the evaluator, the workers, the leases, the watch, the restore ----------------------
 
 def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_evaluator():
