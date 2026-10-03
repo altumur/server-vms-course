@@ -463,7 +463,7 @@ class SubsystemSpec:
         # A table's name becomes a key family and an ACL prefix, so it is a name and not a path, and it may
         # not be the unit rows under another spelling — two writers on one family with different rules.
         for t in spec.tables:
-            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers"):
+            if not t or "/" in t or t in (spec.rows, "policy", "slots", "holds", "epoch", "idem", "requests", "servers", "retire"):
                 raise ValueError(f"spec {spec.name}: `tables:` takes a fresh row family name, not {t!r}")
         leaks = [n for n in spec.snapshot if is_secret_field(n)]
         if leaks:
@@ -548,6 +548,7 @@ class SubsystemSpec:
                f"{self.name}/sweep",                                                          # what the blob sweep marked, and when
                f"{self.name}/requests/*",                                                     # bounded work an operator asked a worker for, outside its ordinary pass
                f"{self.name}/servers/*",                                                      # what a server reaches, as the administrator says it (feedback DQ)
+               f"{self.name}/retire/*",                                                       # "this slot's process will never come back": the controller retires it (`apply_retires`)
                DRAIN_KEY]                                                                     # "this machine is about to stop": the operator's, and the same row for every subsystem
         for d in self.derived:
             out.append(f"{self.name}/{d.row.split('/')[0]}/*")
@@ -558,9 +559,12 @@ class SubsystemSpec:
     # controller process's token (count = 1). Together the two ACLs split the old `<name>/*` so that the
     # console cannot place and the controller cannot edit; `test_the_console_over_http` proves
     # `con.place(1)` raises `Forbidden`.
+    #
+    # …and `<name>/retire/*`, the operator's requests to retire a slot: the controller reads them, deletes one it has
+    # done and writes into one it refused why (`Controller.apply_retires`). The console writes them and never a slot.
     def acl_controller(self) -> list[str]:
         """Placement: what the controller (count = 1) may write — never a unit's row."""
-        return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*"]
+        return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*", f"{self.name}/retire/*"]
 
     # Whether ids are numbers; convert a string id accordingly.
     @property
@@ -1715,10 +1719,13 @@ class SpecController(Controller):
     #   diverged           assignments this pass had to bring back to what the placement rows say
     #   garbled            rows that do not parse — units nobody serves until somebody mends the row
     #   reach_moves        units moved, or unplaced, because their server no longer reaches them (`ensure_reach`)
+    #   retired            slots retired this pass at the operator's request (`apply_retires`); `retire_refused` the
+    #                      requests it left standing, each with its reason written in the row
     #
     # The steps each in a `try` of their own (the review's second pass, M7): they shared one, so a
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass. Four since
-    # `ensure_reach` (feedback DQ), in the product's order: placed, reach, redistribute, home.
+    # `ensure_reach` (feedback DQ), in the product's order: placed, reach, redistribute, home. And before them the
+    # operator's requests to retire a slot (`apply_retires`), as the product's `Pass` has them first.
     PASS_KEY = CONTROLLER_PASS                        # granted by `acl_objects_controller` (the review's ninth pass)
 
     # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
@@ -1742,7 +1749,14 @@ class SpecController(Controller):
         self.last_diverged = 0
         errors = []
         self.last_reach_moves = 0
-        for step, run in (("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
+        retires = {"retired": [], "refused": {}}
+
+        # The operator's "gone for good" FIRST (`Controller.apply_retires`): a slot it releases is then read by
+        # `redistribute` below, which moves what it listed in this same pass.
+        def apply_retires():
+            retires.update(self.apply_retires())
+        for step, run in (("apply_retires", apply_retires),                       # the console's requests: a dead slot retired, both guards asked again
+                          ("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
                           ("ensure_reach", self.ensure_reach),                     # a unit its server no longer reaches: moved, or unplaced with why
                           ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
                           ("ensure_home", lambda: self.ensure_home(home_budget))): # a unit back to the server its row names, if it is back
@@ -1760,6 +1774,8 @@ class SpecController(Controller):
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
         rep["reach_moves"] = self.last_reach_moves     # units moved or unplaced because their server no longer reaches them
+        rep["retired"] = retires["retired"]            # slots retired this pass at the operator's request
+        rep["retire_refused"] = len(retires["refused"])   # requests left standing, each with its reason in the row
         # …and since the store was new, a counter (the review's tenth pass, minor): the gauge of the last pass showed a
         # third of the moves to a scrape every 15 s
         from .rows import number

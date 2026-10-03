@@ -37,6 +37,11 @@ namespace "default" {
     # One row per server and per subsystem, as `policy` is; the controllers read them under their `vms/*` and `rec/*`.
     path "vms/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
     path "rec/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
+    # A worker whose process will never come back (М10A Lesson 7, step 7): `POST /workers/<w>/retire` writes a REQUEST
+    # here, and the controller retires the slot on its next pass and deletes the request. Not `vms/slots/*`: a console
+    # that could write a slot would be a second controller. No `destroy`: the controller removes a request it has done.
+    path "vms/retire/*"    { capabilities = ["write", "read", "list"] }
+    path "rec/retire/*"    { capabilities = ["write", "read", "list"] }
     # The alarms' own days (М10A Lesson 12): a derived row like `vms/retention/<id>`, kept in step with the
     # camera's `alarms_retention_days` — and, unlike it, left alone when the camera is deleted.
     path "vms/alarms_retention/*" { capabilities = ["write", "read", "list"] }

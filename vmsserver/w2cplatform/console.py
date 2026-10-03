@@ -25,6 +25,9 @@ show them. So the console is one class, run from the same spec:
     DELETE /<rows>/<id>          the row is marked; the controller's pass takes its placement back
     POST /marks  (Idempotency-Key)    an operator's observation {unit|cam, note}: the CONSOLE's event, into
                                  console/<instance>/… on this server's resource — never a worker's bucket
+    POST /workers/<worker>/retire     {why, gen?} — "this worker's process will never come back": a request
+                                 (<sub>/retire/<worker>) the controller acts on at its next pass; 409 while the slot is
+                                 alive or the name has a newer generation, 404 for no such worker; admin on the cluster
 
 What a subsystem adds is registered, not subclassed: `extra(handler, method,
 path, query) -> reply | None` gets every request the routes above do not
@@ -109,8 +112,8 @@ from urllib.parse import parse_qs, urlsplit
 from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
-from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
-                       is_live, parse_heartbeat, schema_version)
+from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, NoSuchSlot,
+                       RetireRefused, SchemaTooNew, builds, is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, number
 from .eventdatabase import refence
@@ -1388,6 +1391,13 @@ class SpecConsole:
                 for row in s["workers"]:
                     if row["worker"] == w:
                         row["idle_by_policy"] = True
+        # Whether the operator may retire each worker, and whether that was asked (`retire_route`): what the page's
+        # *retire* link needs — the generation it sends back, the refusal in words, the request standing with what the
+        # controller said about it, and the places the worker holds (a retire leaves them held).
+        asked, held = ctl.retire_requests(), ctl.holds_by()
+        for s in out.values():
+            for row in s["workers"]:
+                self._retire_state(row, asked, held)
         for server in resources_seen(ctl.objects):
             out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
         # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
@@ -1411,6 +1421,18 @@ class SpecConsole:
                         f"resource on {server} silent" if not s["placeable"] else None)
             s["workers"].sort(key=lambda x: x["worker"])
         return {"policy": ctl.policy(), "servers": dict(sorted(out.items()))}
+
+    def _retire_state(self, row: dict, asked: dict, held: dict) -> None:
+        w = row["worker"]
+        try:
+            gen, kind, why = self.ctl.retire_refusal(w)
+        except NoSuchSlot:
+            return                                       # a name no process claimed (one given in the unit file): no slot to retire
+        row.update(gen=gen, released=kind == "released", retirable=not kind, retire_refusal=why or None,
+                   holds=held.get(w, []))
+        req = asked.get(w)
+        if req is not None:
+            row["retire"] = {k: str(req.get(k, "")) for k in ("gen", "by", "at", "why", "refused")}
 
     # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ): `/servers/<server>/labels`.
     #
@@ -1463,6 +1485,54 @@ class SpecConsole:
             log.warning("%s: the labels of server %r were not written: %s", self.spec.name, server[:80], e)
             return 503, {"detail": "the store did not take it: try again; the console's log says why",
                          "error": "store unavailable"}
+
+    # THE OPERATOR'S DOOR TO `retire`: `POST /workers/<worker>/retire {"why": "…", "gen": n}`.
+    #
+    # `Controller.retire` said "the operator's statement that a slot is gone for good", and no operator could make it:
+    # the controller has no port, and this console's token has no `slots/*` — a console that could write a slot would
+    # be a second controller. So the console writes a REQUEST (`<sub>/retire/<worker>`, `request_retire`) and the
+    # controller retires the slot on its next pass (`apply_retires`), as a drain is written here and read there.
+    #
+    # Refused in words before anything is written: a worker alive — its lease runs, or it was heard from within 45 s —
+    # (409, `alive`); the name taken by another process since the page showed it, when the page sends the `gen` it
+    # showed (409, `generation`); released already (409); no such worker (404). Names no unit: `admin` on the whole
+    # cluster (`needs`) — a retired worker's cameras all move. A journal line with the name, the generation and why.
+    # The answer says what will move and what stays held: a volume the worker held is not given back by a retire.
+    def retire_route(self, h, path: str) -> tuple:
+        ctl, user = self.ctl, h.headers.get("X-User", "operator")
+        worker = path[len("/workers/"):-len("/retire")]
+        try:
+            try:
+                body = h._body()
+            except ValueError as e:
+                raise Refused(f'the body is not JSON ({e}): {{"why": "the server burnt"}}')
+            if not isinstance(body, dict):
+                raise Refused('the body is an object: {"why": "the server burnt"}')
+            try:
+                server_name(worker)                      # a worker's name is a host-like word, as a server's is
+            except Refused:
+                raise Refused(f"{worker[:80]!r} is not a worker's name: letters, digits and . - _")
+            units = list(ctl.assignment(worker).units)
+            row = ctl.request_retire(worker, user, str(body.get("why") or ""), body.get("gen"))
+        except NoSuchSlot as e:
+            return 404, {"detail": str(e), "error": "no such worker"}
+        except RetireRefused as e:
+            return 409, {"detail": str(e), "error": e.kind}
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "refused"}
+        except Forbidden as e:                           # the console's token, not the caller: the store said no
+            return 403, {"detail": str(e), "error": str(e)}
+        except OSError as e:
+            log.warning("%s: the request to retire %r was not written: %s", self.spec.name, worker[:80], e)
+            return 503, {"detail": "the store did not take it: try again; the console's log says why",
+                         "error": "store unavailable"}
+        self.journal.say("worker.retire.requested", of=self.spec.name, worker=worker, gen=row["gen"], why=row["why"],
+                         user=user)
+        holds = ctl.holds_of(worker)
+        return 202, {"worker": worker, "gen": row["gen"], "state": "requested", "units": units, "holds": holds,
+                     "note": "the controller retires it on its next pass and moves what it lists to the workers that "
+                             "are here" + (f"; what it held stays held — {', '.join(holds)}: withdraw a volume that "
+                                           f"went with its server" if holds else "")}
 
     # EVERY NUMBER OF A HEARTBEAT OR OF THE PASS REPORT HERE IS READ THROUGH `n`, `rn` OR `r` (the review's seventh
     # pass, part 2): read bare — `int(headroom)`, `float(space.full)`, `float(ts)` — one word in one field raised, and
@@ -1842,7 +1912,7 @@ class SpecConsole:
     #           the VMS: asking for a live stream)
     #   edit    acting through the system without changing what it IS — a mark, a command to a device, a
     #           backfill, a keep
-    #   admin   everything else that writes: units, volumes, policy, drain
+    #   admin   everything else that writes: units, volumes, policy, drain, a request to retire a worker
     #
     # The unit is named when the path names one; a grant may be for one unit, for units with given labels, or
     # for the whole cluster, and a route that names no unit needs the last (to act) or any grant at all (to look).
@@ -2350,6 +2420,8 @@ class SpecConsole:
                 return
             return h._send(404, {"detail": "no such route", "error": "no such path"})
         if method == "POST":
+            if path.startswith("/workers/") and path.endswith("/retire") and path.count("/") == 3:
+                return h._send(*con.retire_route(h, path))   # no Idempotency-Key: asking twice writes the request again
             if path not in (rows_path, "/marks"):
                 if self._extra(h, "POST", path, q):
                     return
