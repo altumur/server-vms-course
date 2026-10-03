@@ -1025,6 +1025,145 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         stop.set(); thread.join(timeout=20)
 
 
+def _hanging_holder(box, n: int, **kw):
+    """`n` devices, one camera each, placed on `w-1`; every call into a device whose key is in `hung` waits on `gate`
+    (up to 30 s) while `hang` is set — `capabilities`, `channels`, `in_use`, `coverage`, `close`. Returns `(holder,
+    cameras, device keys, hung, gate, hang, asked)`; `asked` counts the calls made into each hung device, by question."""
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    keys = [f"acme/10.0.{i // 250}.{i % 250}" for i in range(n)]
+    cams = [con.create_camera({"name": f"d{i}", "source": f"driverpack://{k}/ch/1"})["id"] for i, k in enumerate(keys)]
+    box.objects.put(VMS.sub.heartbeat_key("w-1"), Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 250,
+                                                                                    "headroom": 250}).to_bytes())
+    box.objects.put("platform/resources/srv-a/heartbeat",
+                    json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    hung, gate, hang = set(keys[::2]), threading.Event(), threading.Event()
+    asked: dict = {}
+
+    class Hanging(FakeDevice):
+        def _call(self, q, real, *a):
+            if hang.is_set() and self.key in hung:
+                asked[(self.key, q)] = asked.get((self.key, q), 0) + 1
+                gate.wait(30)                                        # the driver went with the session still held
+            return real(*a)
+
+        def capabilities(self): return self._call("capabilities", super().capabilities)
+        def channels(self): return self._call("channels", super().channels)
+        def in_use(self): return self._call("in_use", super().in_use)
+        def coverage(self, cam): return self._call("coverage", super().coverage, cam)
+        def close(self): return self._call("close", super().close)
+
+    cam_of = dict(zip(keys, cams))
+    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+                       wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
+                       device_factory=lambda key: Hanging(key, channels=["1"], rays=1, relays=2,
+                                                          coverage={str(cam_of[key]): (0.0, 60.0)}), **kw)
+    return holder, cams, keys, hung, gate, hang, asked
+
+
+def test_a_hundred_devices_of_two_hundred_that_never_answer_cost_a_pass_and_a_heartbeat_a_fifth_of_a_second():
+    """The scaling pass after the eighth review. Every call into a device but a command was made bare on the loop's
+    thread — `capabilities` each pass, `channels`, `in_use` and each camera's `coverage` each heartbeat — and 100 of
+    200 devices answering in a tenth of a second were a pass of 10.5 s and a heartbeat of 31 s; hung, for ever. Now a
+    round of calls is waited for together, `DEVICE_GRACE` at most within `DEVICE_HOLD`: with 100 hung for good, a pass
+    and a heartbeat each take under `DEVICE_HOLD` plus the store's own time; a hung device is asked each question ONCE —
+    no second thread on a driver that has not returned — and the heartbeat names exactly the hung ones `slow`, and
+    keeps each camera's coverage as it was last said. Once they answer again, a round or two and nothing is slow."""
+    box = _real_box()
+    holder, cams, keys, hung, gate, hang, asked = _hanging_holder(box, 200)
+    try:
+        holder.reconcile_once()                                       # 200 cameras started: the store's time, not the devices'
+        holder.heartbeat_once()
+        hang.set()
+        for _ in range(3):
+            t = time.monotonic(); holder.reconcile_once(); took_pass = time.monotonic() - t
+            t = time.monotonic(); holder.heartbeat_once(); took_hb = time.monotonic() - t
+            assert took_pass < VmsWorker.DEVICE_HOLD + 0.3, f"a pass took {took_pass:.2f} s with 100 devices hung"
+            assert took_hb < VmsWorker.DEVICE_HOLD + 0.3, f"a heartbeat took {took_hb:.2f} s with 100 devices hung"
+        assert max(asked.values()) == 1, "a hung device was asked again before its call returned"
+        assert {k for k, _ in asked} == hung
+        hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+        slow = {d["device"] for d in hb.extra["devices"] if d.get("state") == "slow"}
+        assert slow == hung and hb.extra["devices_slow"] == len(hung)
+        named = next(d for d in hb.extra["devices"] if d["device"] in hung)
+        assert "channels" not in named and "playbacks" not in named        # not known is not said as 0
+        assert all(st.get("coverage") == {"from": 0.0, "to": 60.0, "fragments": 0} for st in hb.status), \
+            "a camera of a hung device lost the coverage its device said last"
+        assert all(holder.may_write(str(c)) for c in cams)
+    finally:
+        gate.set()
+    hang.clear()
+    for _ in range(4):                                                # the late answers, then a quick one each
+        holder.reconcile_once(); holder.heartbeat_once()
+    hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+    assert not any(d.get("state") for d in hb.extra["devices"]) and "devices_slow" not in hb.extra, hb.extra.get("devices_slow")
+
+
+def test_the_lease_steps_keep_their_rhythm_while_half_the_devices_never_answer():
+    """The real loop, 200 devices, 100 of them hung on every question: the lease step every second stays a second
+    apart (within a pass's and a heartbeat's `DEVICE_HOLD`), every lease holds."""
+    box = _real_box()
+    holder, cams, keys, hung, gate, hang, asked = _hanging_holder(box, 200, lease_ttl=6.0, lease_margin=3.0)
+    leased: list[float] = []
+    lease_pass = holder.lease_pass
+    holder.lease_pass = lambda: (leased.append(time.monotonic()), lease_pass())[1]
+    stop = threading.Event()
+    thread = threading.Thread(target=holder.run, kwargs={"poll": 1.0, "stop": stop, "beat": COMMANDS_BEAT}, daemon=True)
+    thread.start()
+    try:
+        _until(lambda: len(holder.epochs) == len(cams) and holder.passes >= 1, 60.0, "every camera started")
+        hang.set()
+        time.sleep(1.5)
+        mark = len(leased)
+        time.sleep(5.0)
+        gaps = [b - a for a, b in zip(leased[mark - 1:], leased[mark:])]
+        assert len(gaps) >= 3 and max(gaps) <= 1.0 + 2 * VmsWorker.DEVICE_HOLD + 0.5, f"lease steps {gaps}"
+        assert holder._slow and all(holder.may_write(str(c)) for c in cams)
+    finally:
+        gate.set()
+        stop.set(); thread.join(timeout=20)
+
+
+def test_a_device_that_refuses_to_open_or_never_opens_is_that_devices_and_the_pass_goes_on():
+    """A sibling of the hung calls. The session was opened bare in `refresh`: a factory that raised — a refused
+    connection is an `OSError` — went out of the pass as "the store did not answer", and the devices after it were not
+    opened, every pass; one that hung held the pass for ever. Now an open is a call of its own: the others are held in
+    the same pass, a refusal is said and tried again next pass, a hung open is not waited for and its device is held
+    from the pass it comes back in — not asked twice meanwhile."""
+    box = _real_box()
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    for k in ("acme/10.0.0.1", "acme/10.0.0.2", "acme/10.0.0.3"):
+        con.create_camera({"name": k, "source": f"driverpack://{k}/ch/1"})
+    box.objects.put(VMS.sub.heartbeat_key("w-1"), Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50,
+                                                                                    "headroom": 50}).to_bytes())
+    box.objects.put("platform/resources/srv-a/heartbeat",
+                    json.dumps({"server": "srv-a", "ts": box.wall(), "url": "http://srv-a", "units": {}}).encode())
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    gate, opened = threading.Event(), []
+
+    def factory(key):
+        opened.append(key)
+        if key.endswith(".1"):
+            raise ConnectionRefusedError("connection refused")
+        if key.endswith(".2"):
+            gate.wait(30)
+        return FakeDevice(key, channels=["1"])
+
+    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+                       wall=box.wall, server="srv-a", env={}, archive_root=box.archive, device_factory=factory)
+    try:
+        t = time.monotonic()
+        holder.reconcile_once()
+        assert time.monotonic() - t < 5.0
+        assert set(holder.devices) == {"acme/10.0.0.3"} and holder.store_errors == 0
+        assert len(holder.epochs) == 3                                # every camera started: a device is not its stream
+        holder.reconcile_once()
+        assert opened.count("acme/10.0.0.1") == 2 and opened.count("acme/10.0.0.2") == 1   # refused: again; hung: once
+    finally:
+        gate.set()
+    _until(lambda: (holder.reconcile_once(), "acme/10.0.0.2" in holder.devices)[1], 5.0, "the late open to be held")
+
+
 def test_an_evaluator_is_woken_by_the_units_it_watches_and_its_early_pass_reads_only_what_was_touched():
     """M8. The want named a kind and not a unit, so an `io.input` on camera 777 twenty times a second woke every
     evaluator with a scenario on ANY camera's contact, twenty early passes in six seconds, each over every scenario —

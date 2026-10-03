@@ -381,13 +381,21 @@ def refence(events: list, current_epochs: dict | None, epoch_policy: dict | None
 # every reader, every time. An answer that is not `{events: [...]}` is that resource not answering (`None`: the window
 # incomplete, said); a line the merge cannot order, dedupe or fence is passed by and counted (`PEER_EVENTS`), and the
 # rest of that resource's answer stands.
+#
+# …AND THE LINE IS KEPT AS IT WAS CHECKED, not as it came (the scaling pass after the eighth review, the `/events` sweep):
+# the values were checked to convert and the originals kept, so `"t": "1700000000"` passed — and the merge's sort, a
+# string beside numbers, raised `TypeError` out of `query`, no reply to anybody's timeline; a list for `unit`, `server`,
+# `id` or `bucket` did the same in the sets that dedupe and fence. Each is now the type the merge orders and keys by.
 def _event_line(e: dict) -> dict:
-    finite(e["t"]); str(e["server"]); str(e["kind"]); str(e["unit"]); str(e["subsystem"]); int(e["epoch"])
+    out = {**e, "t": finite(e["t"]), "server": str(e["server"]), "kind": str(e["kind"]), "unit": str(e["unit"]),
+           "subsystem": str(e["subsystem"]), "epoch": int(e["epoch"])}
     if "occurred" in e:
-        finite(e["occurred"])
-    if not e.get("id"):
-        e["bucket"]                                       # what a copy without a name is told apart by
-    return e
+        out["occurred"] = finite(e["occurred"])
+    if e.get("id"):
+        out["id"] = str(e["id"])
+    else:
+        out["bucket"] = str(e["bucket"])                  # what a copy without a name is told apart by
+    return out
 
 
 def _answer(server: str, rep) -> dict | None:
