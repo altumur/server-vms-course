@@ -923,6 +923,220 @@ def test_one_resource_answering_another_shape_costs_its_window_and_not_the_merge
     _forget_garbled()
 
 
+# -- the ninth pass: restore, a torn unit row, the peer client's framing ---------------------------------------------
+
+def _peer_heartbeat(box, peer: str, ts: float, held: int) -> None:
+    box.objects.put(f"platform/resources/{peer}/heartbeat", json.dumps(
+        {"server": peer, "ts": ts, "url": f"http://{peer}", "mirrors": {"srv-1": held}}).encode())
+
+
+def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_late_peer_is_asked():
+    """Reproduced (the review's ninth pass, major): the server up before its peers after a power cut — `restore` found no
+    live peer, left nothing known, and `restore_due` was never true: 0 of 20 buckets back, `restore_left` 0. And the store
+    away at the start: `restore` raised whole, the same. Now it is due, with its doubling pause, until one try ran through
+    with a live peer; while it has not, `left` is -1 (not known) and `done` false in the heartbeat and on `/metrics`. A
+    peer that comes up after the restore was done, with copies the first peer did not have, is asked when it is seen —
+    and the peer that gave everything is not asked again."""
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.resource import RESTORE_RETRY, RESTORE_RETRY_MAX, Resource
+    from tests.test_lesson4_worker import _box_with_cameras
+    box, ctl = _box_with_cameras(1)
+    paths = [f"vms/7/e1/{i:02d}.events.jsonl" for i in range(20)]
+    east, west = _Peer(paths[:10]), _Peer(paths[10:])
+    peers = {"http://srv-2": east, "http://srv-3": west}
+
+    class Peers:
+        def mirrored(self, url, server):
+            return peers[url].mirrored(url, server)
+
+        def get(self, url, server, path):
+            return peers[url].get(url, server, path)
+
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
+    for peer in ("srv-2", "srv-3"):                                     # the power cut: both said a heartbeat an hour ago
+        _peer_heartbeat(box, peer, box.wall() - 3600, 10)
+    res.heartbeat()
+    assert res.restore() == {"pulled": 0}
+    hb = res.heartbeat()
+    assert hb["restore"]["done"] is False and hb["restore"]["left"] == -1, hb["restore"]
+    assert 'vms_resource_restore_left{server="srv-1"} -1' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert not res.restore_due()
+    box.clock.advance(RESTORE_RETRY)
+    assert res.restore_due() and res.restore() == {"pulled": 0}         # still nobody: asked, and the pause doubles
+    box.clock.advance(RESTORE_RETRY)
+    assert not res.restore_due()
+    box.clock.advance(RESTORE_RETRY)
+    assert res.restore_due()
+    _peer_heartbeat(box, "srv-2", box.wall(), 10)                       # east is up; west still is not
+    assert res.restore()["pulled"] == 10
+    assert not res.restore_due() and "restore" not in res.heartbeat()   # done: nothing failed, nothing left
+    _peer_heartbeat(box, "srv-3", box.wall(), 10)                       # west comes up later, with the other ten
+    box.clock.advance(RESTORE_RETRY_MAX)
+    _peer_heartbeat(box, "srv-2", box.wall(), 10)
+    _peer_heartbeat(box, "srv-3", box.wall(), 10)
+    assert res.restore_due()
+    assert res.restore()["pulled"] == 10
+    assert all(east.asked.count(p) == 1 for p in paths[:10]) and len(east.asked) == 10   # east was not asked again
+    assert sum(1 for _ in __import__("os").scandir(f"{box.archive}/vms/7/e1")) == 20
+    box.clock.advance(RESTORE_RETRY_MAX)
+    _peer_heartbeat(box, "srv-2", box.wall(), 10)
+    _peer_heartbeat(box, "srv-3", box.wall(), 10)
+    assert not res.restore_due()                                         # both gave everything: nobody to ask
+
+    # The store away at the start, with a new disk: the restore raises whole — and is due again after its pause.
+    box2, _ = _box_with_cameras(1)
+
+    class Away:
+        def __init__(self, objects):
+            self.objects, self.away = objects, True
+
+        def list(self, prefix):
+            if self.away:
+                raise OSError("the store does not answer")
+            return self.objects.list(prefix)
+
+        def get(self, key):
+            return self.objects.get(key)
+
+        def put(self, key, data):
+            return self.objects.put(key, data)
+
+    store = Away(box2.objects)
+    res2 = Resource(box2.archive, "srv-1", "http://srv-1", box2.vars, store, wall=box2.wall, clock=box2.clock, peers=Peers())
+    east.asked.clear()
+    try:
+        res2.restore()
+        raise AssertionError("a store that does not answer was read as nobody to ask")
+    except OSError:
+        pass
+    assert not res2.restore_due()
+    box2.clock.advance(RESTORE_RETRY)
+    assert res2.restore_due()
+    store.away = False
+    _peer_heartbeat(box2, "srv-2", box2.wall(), 10)
+    assert res2.restore()["pulled"] == 10 and not res2.restore_due()
+    _forget_garbled()
+
+
+def test_one_server_alone_is_restored_once_and_not_asked_again_for_ever():
+    """The other side of the same rule: a server no other resource ever said a heartbeat beside has nobody to hold its
+    copies — its restore is done at the first try, not due every ten minutes for the life of the box."""
+    from w2cplatform.resource import RESTORE_RETRY_MAX, Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    res.heartbeat()
+    assert res.restore() == {"pulled": 0} and "restore" not in res.heartbeat()
+    box.clock.advance(RESTORE_RETRY_MAX)
+    assert not res.restore_due()
+
+
+def test_the_restores_pause_does_not_overflow_after_a_thousand_tries():
+    """The review's ninth pass, minor: `RESTORE_RETRY * 2 ** tries` is past a float at 1024 tries, and the
+    `OverflowError` came before the pause was set — from then on a restore every ten seconds with a trace. The exponent
+    is capped: the pause stays `RESTORE_RETRY_MAX`."""
+    from w2cplatform.resource import RESTORE_RETRY_MAX, Resource
+    box = Box()
+
+    class Dead:
+        def mirrored(self, url, server):
+            raise OSError("503")
+
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Dead())
+    _peer_heartbeat(box, "srv-2", box.wall(), 3)
+    res._restore_tries = 2000
+    assert res.restore()["peers_failed"] == ["srv-2"]
+    assert res.restore_said()["next_in"] == RESTORE_RETRY_MAX and not res.restore_due()
+    _forget_garbled()
+
+
+def test_one_torn_unit_row_stops_no_retain_and_its_unit_is_held_by_every_keep_that_reads():
+    """Reproduced (the review's ninth pass, major): a row that is not JSON in `det/units/55`, `auto/scenarios/s1` or
+    `rec/recordings/r9` raised out of `kept_buckets` — `removed=None` and every unit of the server kept, every pass, and
+    `rows_garbled` did not count it. Now each row is read alone: the others are swept by their days, the torn row is
+    counted once (`unit_rows_garbled`), and its unit is a unit of no one camera — held where a keep that reads holds,
+    and swept outside it."""
+    import os
+    from w2cplatform.events import EventLog, bucket_names_under
+    from vms.resource import UNIT_ROWS, vms_resource
+    box = Box()
+    res = vms_resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    old = box.wall() - 40 * 86400
+    for sub, unit in (("vms", "7"), ("vms", "8"), ("det", "55"), ("auto", "s1"), ("rec", "r9")):
+        EventLog(box.archive, sub, unit, 1).append(old, "motion")                     # inside the keep below
+        EventLog(box.archive, sub, unit, 1).append(old - 86400, "motion")             # a day before it: nobody's keep
+        box.vars.put(f"{sub}/retention/{unit}", {"days": "30"})
+    box.vars.put(keeps.key(f"7-{int(old) - 60}-{int(old) + 60}"), {"cam": "7", "from": old - 60, "to": old + 60})
+    for path in ("det/units/55", "auto/scenarios/s1", "rec/recordings/r9"):
+        box.vars.put(path, {"name": "x"})
+        with open(box.vars._file(path), "w") as f:
+            f.write('{"items": {"cam": "7", ')                                            # torn mid-write
+    for _ in range(2):
+        out = res.pass_()
+        assert "errors" not in out, out
+    assert bucket_names_under(box.archive, "vms", "8", 600) == []                      # swept by its days
+    assert len(bucket_names_under(box.archive, "vms", "7", 600)) == 1                  # the kept minutes, and only them
+    for sub, unit in (("det", "55"), ("auto", "s1"), ("rec", "r9")):
+        left = bucket_names_under(box.archive, sub, unit, 600)
+        assert len(left) == 1 and left[0].start <= old < left[0].end, (sub, unit, left)   # held as ANY, the rest swept
+    assert UNIT_ROWS.counts == {"det": 1, "auto": 1, "rec": 1}, UNIT_ROWS.counts      # once each, not once per read
+    assert res.heartbeat()["rows_garbled"]["unit_row"] == 3
+    os.remove(box.vars._file("det/units/55"))
+    _forget_garbled()
+
+
+def test_the_peer_client_takes_no_answer_without_a_frame_and_no_length_that_is_not_a_number():
+    """The review's ninth pass, minor: an answer with neither a length nor chunks ends where the connection ends — a
+    peer's door that died half way gave a shorter bucket, written for good; `Content-Length: ten` raised a bare
+    `ValueError` after the body was written. Both are an `IOError` now, and nothing is kept of them; a framed answer
+    that is whole is still a bucket. The sibling the review did not name: a peer's listing was read the same way — and
+    `restore` now takes a peer that gave all it listed for done."""
+    import io
+    import socket
+    import threading
+    from w2cplatform.events import Bucket
+    from w2cplatform.resource import PeerClient
+
+    answers = {"/events/.mirror/srv-1/vms/7/e1/close.events.jsonl": b"HTTP/1.0 200 OK\r\n\r\n{\"t\": 1}\n",
+               "/events/.mirror/srv-1/vms/7/e1/ten.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: ten\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
+               "/events/.mirror/srv-1/vms/7/e1/whole.events.jsonl": b"HTTP/1.1 200 OK\r\nContent-Length: 9\r\nConnection: close\r\n\r\n{\"t\": 1}\n",
+               "/mirrored/srv-1": b"HTTP/1.0 200 OK\r\n\r\n" + Bucket("vms", "7", 1, 0.0, 600.0, "vms/7/e1/a.events.jsonl", 1).line().encode() + b"\n"}
+    srv = socket.socket()
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(8)
+
+    def serve():
+        while True:
+            try:
+                c, _ = srv.accept()
+            except OSError:
+                return
+            with c:
+                path = c.recv(65536).split(b" ")[1].decode()
+                c.sendall(answers[path])
+
+    threading.Thread(target=serve, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.getsockname()[1]}"
+    try:
+        for name in ("close", "ten"):
+            dest = io.BytesIO()
+            try:
+                PeerClient().get_into(url, "srv-1", f"vms/7/e1/{name}.events.jsonl", dest)
+                raise AssertionError(f"{name}: an answer whose end cannot be told was taken for a bucket")
+            except IOError as e:
+                assert "neither chunks nor a length" in str(e), (name, e)
+            assert dest.getvalue() == b"", name                                        # not a byte of it written
+        dest = io.BytesIO()
+        assert PeerClient().get_into(url, "srv-1", "vms/7/e1/whole.events.jsonl", dest) == 9
+        assert dest.getvalue() == b'{"t": 1}\n'
+        try:                                         # …and a listing: one cut short is not a peer that holds less (`_whole`)
+            PeerClient().mirrored(url, "srv-1")
+            raise AssertionError("a listing whose end cannot be told was taken whole")
+        except IOError as e:
+            assert "neither chunks nor a length" in str(e), e
+    finally:
+        srv.close()
+
+
 def test_a_line_whose_values_only_convert_is_merged_as_converted_and_stops_no_timeline():
     """The `/events` sweep (the scaling pass after the eighth review): a line was checked to convert and kept as it came,
     so `"t": "1700000000"` beside numbers raised `TypeError` from the merge's sort — no reply to any timeline — and a list

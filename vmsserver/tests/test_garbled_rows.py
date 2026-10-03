@@ -360,3 +360,51 @@ def test_the_detector_passes_a_garbled_row_by_and_keeps_what_it_runs():
         assert fresh.status_by_unit["1-lpr"]["phase"] == "failed" and "row does not parse" in fresh.status_by_unit["1-lpr"]["why"]
     finally:
         srv.shutdown(); srv.server_close()
+
+
+def test_days_that_are_no_number_of_days_keep_the_units_buckets_and_nought_still_sweeps():
+    """The product team's sibling of the review's ninth pass: `days: "nan"` passed `float`, and `nan` days passed no
+    comparison — nothing swept and nothing said; `-1` swept every bucket of the unit, the current one too; `inf` is no
+    number any controller writes. Each is a row that does not read: the unit's buckets are kept, the row counted once
+    (`retentions_garbled`) and named in the heartbeat (`retention_garbled`). `days: 0` — a deleted unit's — still
+    sweeps."""
+    from w2cplatform.events import EventLog, bucket_names_under
+    from w2cplatform.resource import RETENTION, Resource
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    t = box.wall()
+    days = {"1": "ten", "2": "nan", "3": "inf", "4": "-1", "5": "0", "6": "-inf"}
+    for unit, d in days.items():
+        EventLog(box.archive, "vms", unit, 1).append(t - 3 * 86400, "stats", "observation")
+        box.vars.put(f"vms/retention/{unit}", {"days": d})
+    assert res.retain() == 1                                           # the `0`: nothing of the rest
+    assert res.retain() == 0                                           # and the next pass sweeps none of them either
+    for unit in ("1", "2", "3", "4", "6"):
+        assert len(bucket_names_under(box.archive, "vms", unit, 600)) == 1, unit
+    assert bucket_names_under(box.archive, "vms", "5", 600) == []
+    named = ["vms/1", "vms/2", "vms/3", "vms/4", "vms/6"]
+    assert res.retention_garbled == named
+    hb = res.heartbeat()
+    assert hb["retention_garbled"] == named and hb["rows_garbled"]["retention"] == 5, hb.get("rows_garbled")
+    assert RETENTION.counts == {"vms": 5}                              # twice read, once counted
+    box.vars.put("vms/retention/2", {"days": "1"})                     # mended: swept by its days, and no longer named
+    assert res.retain() == 1 and "vms/2" not in res.retention_garbled and RETENTION.counts == {"vms": 5}
+    _forget_garbled()
+
+
+def test_a_recordings_ceiling_that_is_no_number_of_days_hides_and_does_not_fall_back_to_thirty():
+    """The same sibling at the recorder's door: `retention_days` is how far back a recording is SHOWN — "nobody sees more
+    than a week" — and the door read it with `float`: a word raised out of the door and the backfill's plan, `nan` was a
+    ceiling nothing is under, `inf` showed everything, `-1` hid a day ahead. Not said is thirty days, as before; said and
+    not a number of days, nothing older than now is shown or fetched — never a default — counted once and named."""
+    from vms.archive import CEILINGS, visible_from
+    now = 1_757_500_000.0
+    assert visible_from(None, now) == now - 30 * 86400 and visible_from({"id": "1"}, now) == now - 30 * 86400
+    assert visible_from({"id": "1", "retention_days": "7"}, now) == now - 7 * 86400
+    assert visible_from({"id": "1", "retention_days": "0"}, now) == now                       # nought: what it says
+    for bad in ("ten", "nan", "inf", "-1", ["7"]):
+        assert visible_from({"id": "r9", "retention_days": bad}, now) == now, bad
+    assert CEILINGS.counts == {"rec": 1} and CEILINGS.named("rec/recordings/") == {"r9#retention_days"}
+    assert visible_from({"id": "r9", "retention_days": "7"}, now) == now - 7 * 86400          # mended
+    assert CEILINGS.named("rec/recordings/") == set()
+    _forget_garbled()

@@ -66,7 +66,8 @@ class ClusterAccess:
         subject, grants, now = str(payload.get("sub", "")), self._grants(), self.wall()
         if unit is None and capability == "view":
             return any(s == subject and now < until for (s, *_), until in grants.grants.items())
-        camera = int(unit) if unit is not None and str(unit).isdigit() else unit
+        from w2cplatform.doors import numeric                # not `isdigit` + `int`: `7²` raised (vmsserver's ninth review)
+        camera = unit if unit is None or numeric(unit) is None else numeric(unit)
         return any(grants.may(subject, c, camera, now, labels=labels) for c, r in RANK.items() if r >= RANK[capability])
 
 

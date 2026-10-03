@@ -77,7 +77,7 @@ from dataclasses import dataclass, field
 
 from urllib.parse import urlsplit
 
-from .doors import unnamable
+from .doors import numeric, unnamable
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
@@ -108,6 +108,10 @@ class Refused(Exception):
 
 # The counter of numeric ids, `<name>/next_id`, through the one reader of rows (`SpecController._next_id`).
 NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, and the row is written whole")
+# A unit stored under a name `create` refuses today (`doors.unnamable`, `unit`; the review's ninth pass): served as it
+# stands — but a name with `,` is in no assignment (`contract.Assignment.to_items`), so nobody runs it.
+UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma is assigned to nobody; create it again "
+                                "under a name without the character", "unit's name")
 
 
 # A stored placement decision: `unit` (int for numeric ids, str otherwise), `worker`, `reason` (a sentence
@@ -665,8 +669,12 @@ class NearIndex:
 GARBLED_ROW = object()     # what `SpecController._parsed` says of a row that does not parse: there, and unreadable
 
 
+#
+# By `doors.numeric`, never `isdigit` + `int` (the review's ninth pass): `"7²".isdigit()` is true and `int` raises — a
+# name the API took, and every list of its subsystem (`units`, `/where`, a drain's order) went unanswered with it.
 def _unit_key(u: str):
-    return (0, int(u)) if u.isdigit() else (1, u)
+    n = numeric(u)
+    return (0, n) if n is not None else (1, str(u))
 
 
 # The `rev` a placement row gets when it is written again. One that does not parse counts from nothing: the row is
@@ -820,7 +828,7 @@ class SpecController(Controller):
     def _largest_id(self) -> int:
         prefix = self.sub.config(self.spec.rows, "")
         ids = [k[len(prefix):] for k in self.vars.list(prefix)]
-        return max([int(i) for i in ids if i.isdigit()] + [0])
+        return max([n for i in ids if (n := numeric(i)) is not None] + [0])     # `doors.numeric`: not `isdigit` + `int`
 
     # Keep every derived row in step: on create/update write `{item: to_item(row[field])}` only if it
     # differs; on delete write `on_delete` if set and the row exists.
@@ -873,7 +881,9 @@ class SpecController(Controller):
             # `console.label`), a `|`-joined field of a heartbeat (`closed`, `hits`), a log line. Refused here, the rule
             # the domain keeps for a user's name (`domain/grants.py`, `name_refused`): no `"`, no `|`, no control
             # character or line or paragraph separator (Unicode Cc, Zl, Zp).
-            bad = unnamable(uid)
+            # …and a unit's name is in lists and sorted as a number (the ninth pass, sibling B of the product team): no
+            # `,` — an assignment is its units joined by one — and no digit but ASCII 0–9 (`doors.unnamable`, `unit`).
+            bad = unnamable(uid, unit=True)
             if bad:
                 raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
         if reserve is not None:
@@ -1029,20 +1039,30 @@ class SpecController(Controller):
     # hand, a build that wrote another layout — is ONE unit nobody serves, not the end of every caller's pass
     # (the review's second pass, M7): skipped, counted in `rows_garbled` (the pass report; `<sub>_rows_garbled`),
     # logged once per row until it parses again.
+    #
+    # Whatever a parse raises (`PARSE_ERRORS`: a row nested past what JSON reads, a number past a float, a row that is
+    # not a map), and the read of a file store's row that is not JSON at all (the review's ninth pass, beside `7²`). A
+    # row whose NAME a unit could not be created under today (`doors.unnamable`, `unit`: a `,`, a digit not ASCII) is
+    # served as it stands, and counted and named once (`UNIT_NAMES`): somebody is to create it again under another name.
     def units(self) -> list[dict]:
         out, garbled = [], 0
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
-            it, _ = self.vars.get(p)
-            if it and it.get("deleted") != "true":
-                try:
-                    out.append(self.spec.row(it))
-                except (ValueError, KeyError, TypeError) as e:
-                    garbled += 1
-                    if p not in self._garbled_rows:
-                        self._garbled_rows.add(p)
-                        log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+            try:
+                it, _ = self.vars.get(p)
+                if not it or it.get("deleted") == "true":
                     continue
-                self._garbled_rows.discard(p)
+                out.append(self.spec.row(it))
+            except PARSE_ERRORS as e:
+                garbled += 1
+                if p not in self._garbled_rows:
+                    self._garbled_rows.add(p)
+                    log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+                continue
+            self._garbled_rows.discard(p)
+            if (bad := unnamable(out[-1]["id"], unit=True)):
+                UNIT_NAMES.garbled(p, f"its name holds {', '.join(repr(c) for c in bad)}")
+            else:
+                UNIT_NAMES.parsed(p)
         self.rows_garbled = garbled
         return sorted(out, key=lambda r: _unit_key(str(r["id"])))
 
