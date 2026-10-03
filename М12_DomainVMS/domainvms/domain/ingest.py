@@ -1885,7 +1885,9 @@ def written_from_heartbeats(objects, wall=time.time, fresh: float = 45.0):
             for st in hb.status:
                 if str(st.get("cam")) == f"ref:{ref}" and st.get("written_through") is not None:
                     at = number(f"rec/heartbeats/{name}#{st.get('id')}.written_through", st["written_through"], float, None)
-                    if at is not None:
+                    # …and not one from the future (the ninth review's sibling of the frame from the future): the ingest
+                    # drops every frame not newer than `have`, and a `written_through` of 1e300 would drop them all.
+                    if at is not None and at <= now + FRAME_AHEAD:
                         best = max(best or float("-inf"), at)
         return best
     return written

@@ -251,6 +251,10 @@ def test_have_is_the_recorders_word_on_the_cameras_clock_whichever_ingest_it_rea
     assert work["have"] == 890.0
     wall.advance(60)                                                   # the heartbeat went stale: nobody can say
     assert "have" not in ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall() - 100)
+    # A `written_through` from the future is no word either (the ninth review's sibling): it would drop every frame.
+    south.objects.put(REC_SPEC.sub.heartbeat_key("r-1"), Heartbeat("r-1", wall(), [{"id": SERIAL, "cam": f"ref:{SERIAL}",
+                                                                       "written_through": 1e300}], {}).to_bytes())
+    assert "have" not in ingest.poll(_token(ingest, pusher), SERIAL, camera_now=wall() - 100)
 
 
 def _token(ingest, pusher):
