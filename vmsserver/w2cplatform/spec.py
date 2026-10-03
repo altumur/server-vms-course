@@ -61,12 +61,12 @@ and the worker is the subsystem.
 #   Extended only by `register_constraint`.
 #
 # ## Notes
-# - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached, so the
-#   process can be killed anywhere.
+# - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached between passes,
+#   so the process can be killed anywhere. Within one pass each key is read once (`contract.one_pass`).
 # - The order inside `place` — placement row, then assignment — is what makes two instances agree: the row
 #   is the lock.
-# - `capacity_of`/`labels_of`/`server_of` call `workers_seen(max_age=1e12)` each time, i.e. one object-store
-#   listing per call; correctness over speed, fine on one box.
+# - `capacity_of`/`labels_of`/`server_of` call `workers_seen(max_age=1e12)` each time: outside a pass one
+#   object-store listing per call, inside one (`pass_once`, the snapshot) the heartbeats read once for the pass.
 # ================================================================================================
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ from urllib.parse import urlsplit
 from .doors import unnamable
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -1089,8 +1089,8 @@ class SpecController(Controller):
         if not value:
             return None
         mine, found = str(row["id"]), []
-        for other in self.units():
-            if str(other["id"]) == mine or self.group_value(other) != value:
+        for other in self._rows_by("group", self.group_value).get(value, ()):
+            if str(other["id"]) == mine:
                 continue
             pl = self.placement(other["id"])
             if pl is not None and pl.worker in pool:
@@ -1102,6 +1102,17 @@ class SpecController(Controller):
     # a generic loader has no business parsing a scheme it has never heard of.
     def group_value(self, row: dict) -> str:
         return str(row.get(self.spec.group_by, "") or "")
+
+    # Every live row by one value of it — the group, the spread field — built once a pass (`_per_pass`). Asked for every
+    # unit waiting to be placed, it was every row read and parsed again for each: 500 cameras waiting of 600 cost a pass
+    # 670 000 reads and ten seconds (the scaling pass; `tests/test_read_budget.py`). Rows in `units()` order.
+    def _rows_by(self, name: str, value_of) -> dict[str, list[dict]]:
+        def read():
+            out: dict[str, list[dict]] = {}
+            for r in self.units():
+                out.setdefault(value_of(r), []).append(r)
+            return out
+        return self._per_pass(self.sub.config(self.spec.rows) + "/", read, name, rows=True)
 
     # The servers already carrying a unit that shares this row's `spread_by` value — where this one may
     # therefore NOT go. Empty when the subsystem does not ask to spread, which is every subsystem today.
@@ -1118,8 +1129,8 @@ class SpecController(Controller):
         if value in (None, ""):
             return set()
         mine, taken = str(row["id"]), set()
-        for other in self.units():
-            if str(other["id"]) == mine or str(other.get(field)) != str(value):
+        for other in self._rows_by(f"spread:{field}", lambda r: str(r.get(field))).get(str(value), ()):
+            if str(other["id"]) == mine:
                 continue
             pl = self.placement(other["id"])
             if pl is not None:
@@ -1177,8 +1188,8 @@ class SpecController(Controller):
     # process starts, a bench). Nomad's `meta.archive` constraint puts a worker where disks are declared;
     # this is the live fact: whether the resource there still answers.
     def resource_state(self, server: str, lost_after: float = 45.0) -> str:
-        from .resource import resources_seen                       # the platform's own reader of the resource heartbeats
-        hb = resources_seen(self.objects).get(server)
+        from .resource import RESOURCES, resources_seen            # the platform's own reader of the resource heartbeats
+        hb = self._per_pass(RESOURCES + "/", lambda: resources_seen(self.objects)).get(server)   # asked per worker, read once a pass
         if hb is None:
             return "unknown"
         return "live" if is_live("platform", float(hb["ts"]), self.wall(), lost_after) else "silent"
@@ -1243,6 +1254,10 @@ class SpecController(Controller):
     # after the reboot.
     def would_strand(self, server: str, workers: list[str] | None = None) -> list[str]:
         """Unit ids that nothing left could serve if `server` stopped now."""
+        with one_pass(self):
+            return self._would_strand(server, workers)
+
+    def _would_strand(self, server: str, workers: list[str] | None) -> list[str]:
         pool = [w for w in self._pool(workers) if self.server_of(w) != server]
         out = []
         for row in self.units():
@@ -1270,7 +1285,10 @@ class SpecController(Controller):
             return None
         from .console import heartbeats                            # the read model's scan, without the age filter
         found: list[tuple[str, str, str]] = []                     # (their unit id, worker, server)
-        for w, hb in heartbeats(self.objects, self.spec.near + "/").items():
+        # Asked per unit — `_pick`, and `ensure_home` for every unit that follows — and read once a pass (`_per_pass`):
+        # it was every heartbeat of the followed subsystem, for every unit (the scaling pass).
+        theirs = self._per_pass(f"{self.spec.near}/heartbeats/", lambda: heartbeats(self.objects, self.spec.near + "/"))
+        for w, hb in theirs.items():
             if not is_live(self.spec.near, hb.ts, self.wall(), 45.0):
                 continue
             for st in hb.status:
@@ -1417,7 +1435,15 @@ class SpecController(Controller):
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass.
     PASS_KEY = "controller/pass"
 
+    # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
+    # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
+    # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
+    # snapshot opens the pass around both (`vms/__main__._controller_loop`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
+        with one_pass(self):
+            return self._pass_once(home_budget)
+
+    def _pass_once(self, home_budget: int) -> dict:
         import json
         started, now = time.monotonic(), self.wall()
         prev = self.pass_report() or {}
@@ -1521,6 +1547,10 @@ class SpecController(Controller):
     # labels named and the live worker count.
     def unplaceable(self) -> list[dict]:
         """Units nothing live can serve — the console's honest answer, with the labels named."""
+        with one_pass(self):                          # `eligible` per unit asked the heartbeats per worker, again per unit
+            return self._unplaceable()
+
+    def _unplaceable(self) -> list[dict]:
         live = self._pool(None)
         return [{"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 for r in self.units()
@@ -1842,6 +1872,10 @@ class SpecController(Controller):
     # rather than a preference.
     def snapshot_shards(self) -> dict[str, dict]:
         """The snapshot as one object per worker, keyed by shard name."""
+        with one_pass(self):                          # `server_of` per unit read every heartbeat per unit (the scaling pass)
+            return self._snapshot_shards()
+
+    def _snapshot_shards(self) -> dict[str, dict]:
         keep = ["id"] + [f for f in self.spec.snapshot if f != "id"] + ["revision"]
         now, out = self.wall(), {}
         for r in self.units():
@@ -1888,6 +1922,10 @@ class SpecController(Controller):
 
     # Writes one object per worker under `<name>/snapshot/`.
     def publish_snapshot(self) -> None:
+        with one_pass(self):
+            self._publish_snapshot()
+
+    def _publish_snapshot(self) -> None:
         import json
         shards = self.snapshot_shards()
         prefix = self.sub.snapshot_prefix()

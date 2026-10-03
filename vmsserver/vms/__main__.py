@@ -218,19 +218,23 @@ def _controller_loop(ctl) -> None:
     workers it sees, move what a released slot left, bring one unit home if its server came back, publish the
     snapshot. Nothing else, ever."""
     while not stop.is_set():
-        ctl.pass_once(1)                              # place, move, bring ONE unit home — and report on itself; it does not raise
-        # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
-        # inside the block above, placement had already succeeded — and the log said "placement pass
-        # failed", naming the one thing that had not. The reverse hid the other half: a placement that
-        # threw skipped the publish, the layer above went quietly stale, and the word "snapshot" appeared
-        # nowhere. Two jobs, two failures, two sentences.
-        try:
-            ctl.publish_snapshot()
-        except Exception:                             # noqa: BLE001
-            # What the layer above loses by this: its copy stops ageing forward. The age itself is on
-            # `/metrics` as `<sub>_snapshot_age_seconds`, read from the store rather than kept in this
-            # process, so it survives a restart and any console can answer it.
-            logging.exception("publishing the snapshot failed — the layer above is now reading a stale copy")
+        # ONE pass around both (the scaling pass after the eighth review): the snapshot asks every unit's row, placement
+        # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
+        # (`contract.one_pass`; what the pass wrote is read back from the store).
+        with ctl.one_pass():
+            ctl.pass_once(1)                          # place, move, bring ONE unit home — and report on itself; it does not raise
+            # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
+            # inside the block above, placement had already succeeded — and the log said "placement pass
+            # failed", naming the one thing that had not. The reverse hid the other half: a placement that
+            # threw skipped the publish, the layer above went quietly stale, and the word "snapshot" appeared
+            # nowhere. Two jobs, two failures, two sentences.
+            try:
+                ctl.publish_snapshot()
+            except Exception:                         # noqa: BLE001
+                # What the layer above loses by this: its copy stops ageing forward. The age itself is on
+                # `/metrics` as `<sub>_snapshot_age_seconds`, read from the store rather than kept in this
+                # process, so it survives a restart and any console can answer it.
+                logging.exception("publishing the snapshot failed — the layer above is now reading a stale copy")
         stop.wait(5)
 
 
@@ -407,9 +411,21 @@ def _sweep_loop(controllers, every: float = 60.0) -> None:
 # cannot write the row (its ACL forbids configuration) and the controller must not (one row, one writer),
 # so the console — which already reads these heartbeats — is where the fact lands. See `vms/jobs.py`.
 def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, every: float = 30.0) -> None:
-    import time
-    from .jobs import ask_for_footage, clear_requests, forget_finished, keep_what_fired, reap, scan_what_arrived
     while not stop.is_set():
+        _reap_turn(controllers, requests, rec_ctl, det_ctl, survey_ctl)
+        stop.wait(every)
+
+
+# One turn of it, in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): `scan_what_arrived`
+# read every detector again for every span a recorder closed, `keep_what_fired` every recording for every hit, and
+# `reap` and `forget_finished` each every job — some 55 000 reads a turn at a thousand of each. Each key is read once a
+# turn now; what a step writes, the next reads back from the store.
+def _reap_turn(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=None, now=None) -> None:
+    import time
+    from w2cplatform.contract import one_pass
+    from .jobs import ask_for_footage, clear_requests, forget_finished, keep_what_fired, reap, scan_what_arrived
+    every_ctl = [c for c in (*controllers, *requests, rec_ctl, det_ctl, survey_ctl) if c is not None]
+    with one_pass(*every_ctl):
         for c in controllers:
             try:
                 moved = reap(c)
@@ -418,7 +434,7 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
             except Exception:                         # noqa: BLE001
                 logging.exception("the job reaper failed in %s — finished jobs will stay open", c.spec.name)
             try:
-                gone = forget_finished(c, time.time())    # finished for days: the row goes, the events stay
+                gone = forget_finished(c, time.time() if now is None else now)    # finished for days: the row goes, the events stay
                 if gone:
                     logging.info("%s: %d finished job(s) forgotten", c.spec.name, gone)
             except Exception:                         # noqa: BLE001
@@ -451,7 +467,6 @@ def _reap_loop(controllers, requests=(), rec_ctl=None, det_ctl=None, survey_ctl=
                     logging.info("%s: %d request(s) fetched and cleared", c.spec.name, gone)
             except Exception:                         # noqa: BLE001
                 logging.exception("clearing requests failed in %s — they will be asked for again", c.spec.name)
-        stop.wait(every)
 
 
 # The answered requests, cleared in a short cycle of their own (the review's seventh pass, M6): every `CLEAR_EVERY`, the
@@ -483,21 +498,36 @@ def _clear_loop(requests, every: float | None = None) -> None:
 # this one holds the token for it — a worker writes none, and the controller writes placement. Both ends of
 # each family here: the row that starts, and the row whose `until` has passed.
 def _requests_loop(rec_ctl=None, det_ctl=None, job_ctl=None, every: float = 2.0) -> None:
-    import time
-    from .jobs import detect_on_request, expire, expire_recordings, record_on_request
+    from .jobs import Remembered
+    mem = Remembered()
     while not stop.is_set():
+        _requests_turn(rec_ctl, det_ctl, job_ctl, mem)
+        stop.wait(every)
+
+
+# One turn of it: each key read once in it (`contract.one_pass`) — `detect_on_request` read every detector, every
+# recording and every job again for each request — and, between turns, only what saves a read (`jobs.Remembered`: the
+# backfills seen, the pauses after a store that failed a request, the ends to come). Some 3 000 reads a turn at a
+# thousand recordings, detectors and backfills, 33 000 with ten scenarios firing; a few dozen now
+# (`tests/test_read_budget.py`).
+def _requests_turn(rec_ctl=None, det_ctl=None, job_ctl=None, mem=None, now=None) -> None:
+    import time
+    from w2cplatform.contract import one_pass
+    from .jobs import detect_on_request, expire, expire_recordings, record_on_request
+    clock = (lambda: now) if now is not None else time.time
+    with one_pass(*[c for c in (rec_ctl, det_ctl, job_ctl) if c is not None]):
         # Each end in a try of its own (the review's seventh pass, M2): the requests and the expiry shared one, so a
         # request the first could not turn into work kept the second from ending anything — a recording asked for
         # ten minutes went on for as long as the request stood.
         if rec_ctl is not None:
             try:
-                started = record_on_request(rec_ctl, time.time())
+                started = record_on_request(rec_ctl, clock(), mem)
                 if started:
                     logging.info("%s: %d recording(s) started on request", rec_ctl.spec.name, started)
             except Exception:                         # noqa: BLE001
                 logging.exception("recordings on request failed — a scenario's minutes may not have started")
             try:
-                ended = expire_recordings(rec_ctl, time.time())
+                ended = expire_recordings(rec_ctl, clock(), mem)
                 if ended:
                     logging.info("%s: %d recording(s) on request ended", rec_ctl.spec.name, ended)
             except Exception:                         # noqa: BLE001
@@ -506,18 +536,17 @@ def _requests_loop(rec_ctl=None, det_ctl=None, job_ctl=None, every: float = 2.0)
             # The detectors' family, the same two ends: a request becomes a detector with an end, or a scan
             # job of `job_ctl`; a detector whose `until` passed is deleted.
             try:
-                made = detect_on_request(det_ctl, job_ctl, rec_ctl, time.time())
+                made = detect_on_request(det_ctl, job_ctl, rec_ctl, clock(), mem)
                 if made:
                     logging.info("%s: %d asked for by scenarios", det_ctl.spec.name, made)
             except Exception:                         # noqa: BLE001
                 logging.exception("detector requests failed — a scenario's detection may not have started")
             try:
-                ended = expire(det_ctl, time.time())
+                ended = expire(det_ctl, clock(), mem)
                 if ended:
                     logging.info("%s: %d detector(s) on request ended", det_ctl.spec.name, ended)
             except Exception:                         # noqa: BLE001
                 logging.exception("ending timed detectors failed — a finished one may still be running")
-        stop.wait(every)
 
 
 def console() -> None:

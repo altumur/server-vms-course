@@ -24,7 +24,7 @@ import logging
 import time
 
 from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
-from w2cplatform.spec import Refused, SpecController
+from w2cplatform.spec import GARBLED_ROW, Refused, SpecController
 
 TERMINAL = ("done", "failed")
 # What a job's row may say, and what the worker's phase is allowed to move it to. The console mirrors the
@@ -114,6 +114,60 @@ class DetJobController(SpecController):
         return super().update(uid, fields)
 
 
+# WHAT THE REQUEST LOOP REMEMBERS BETWEEN ITS TURNS (the scaling pass after the eighth review). The loop turns every two
+# seconds (`__main__._requests_loop`), and each turn read every row of `rec/requests/` — the backfills a person asked
+# for included, which are the recorder's and which it skips — and every recording and every detector, for their
+# `until`: some 3 000 reads every two seconds at a thousand of each, 33 000 with ten scenarios firing (each request read
+# the detectors and the recordings again). Inside a turn each key is read once now (`contract.one_pass`); across turns
+# this keeps only what saves a read, never what a row says:
+#
+#   seen         the request rows a turn found to be the recorder's: not read again while they stay listed. Every
+#                `REREAD` seconds the family is read whole, as every turn read it — a writer never files a scenario's
+#                `record` under a backfill's id (`<unit>-<from>-<to>`, `asks-…`; a scenario's is `<firing>-<i>`), and the
+#                whole read is what would notice if one did
+#   retry_at     a request the store did not answer for (not a refusal: a conflict, a store away, a row over the
+#                ceiling): tried again after a pause that doubles from two seconds to `RETRY_MAX`, not every turn — one
+#                that has no `valid_until` was tried every two seconds for ever
+#   deadlines    per subsystem, the rows that have an `until` and when: the rows are read whole every `REREAD` seconds,
+#                and between those reads only a row whose `until` has come is read again — and ended only if the row
+#                read then still says so. An `until` this console writes is noted at once; one another console
+#                SHORTENED is seen within `REREAD` (one it lengthened is seen before anything is ended: the row is read)
+class Remembered:
+    REREAD = 30.0
+    RETRY_MAX = 300.0
+
+    def __init__(self):
+        self.seen: set[str] = set()
+        self.retry_at: dict[str, tuple[float, float]] = {}      # key -> (when to try again, the pause that led there)
+        self.deadlines: dict[str, dict[str, float]] = {}        # subsystem -> {unit id: until}
+        self.read_at: dict[str, float] = {}                     # what was read whole -> when
+
+    def due(self, what: str, now: float) -> bool:
+        """Whether `what` is to be read whole this turn: first, and every `REREAD` seconds after."""
+        at = self.read_at.get(what)
+        return at is None or now - at >= self.REREAD or now < at
+
+    def read_whole(self, what: str, now: float) -> None:
+        self.read_at[what] = now
+
+    def waits(self, key: str, now: float) -> bool:
+        return key in self.retry_at and now < self.retry_at[key][0]
+
+    def failed(self, key: str, now: float) -> None:
+        pause = min(self.RETRY_MAX, 2 * self.retry_at[key][1]) if key in self.retry_at else CLEAR_EVERY
+        self.retry_at[key] = (now + pause, pause)
+
+    def listed(self, prefix: str, keys) -> None:
+        """What a family's listing holds now: what left it is forgotten."""
+        keys = set(keys)
+        self.seen = {k for k in self.seen if not k.startswith(prefix) or k in keys}
+        for k in [k for k in self.retry_at if k.startswith(prefix) and k not in keys]:
+            del self.retry_at[k]
+
+    def note(self, sub: str, uid: str, until: float) -> None:
+        self.deadlines.setdefault(sub, {})[str(uid)] = until
+
+
 # "Record this camera for ten minutes" — a request turned into a row, by the one token that may write
 # rows: the CONSOLE's. Run in the console process's loop, beside the reaper that clears requests.
 #
@@ -127,11 +181,23 @@ class DetJobController(SpecController):
 # recorded by hand and by a scenario has two recordings, two trees and two retentions, and neither
 # surprises the other. A second request while it runs EXTENDS it — ten more minutes from now — instead of
 # making `<cam>-auto-2`: the scenario meant "keep recording", not "record twice".
-def record_on_request(rec_ctl, now: float) -> int:
+def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int:
     started = 0
-    for key in sorted(rec_ctl.vars.list(rec_ctl.sub.requests_prefix())):
+    prefix = rec_ctl.sub.requests_prefix()
+    keys = sorted(rec_ctl.vars.list(prefix))
+    whole = mem is None or mem.due(prefix, now)
+    if mem is not None:
+        mem.listed(prefix, keys)
+        if whole:
+            mem.read_whole(prefix, now)
+            mem.seen = {k for k in mem.seen if not k.startswith(prefix)}
+    for key in keys:
+        if mem is not None and ((not whole and key in mem.seen) or mem.waits(key, now)):
+            continue                                        # the recorder's, seen already; or a pause after the store failed it
         it, _ = rec_ctl.vars.get(key)
         if not it or str(it.get("action", "")) != "record":
+            if it and mem is not None:
+                mem.seen.add(key)
             continue                                        # a backfill: the recorder's, not ours
         rid = key.rsplit("/", 1)[1]
         try:
@@ -162,14 +228,20 @@ def record_on_request(rec_ctl, now: float) -> int:
             elif number(f"{rec_ctl.sub.config(rec_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
                 rec_ctl.update(name, {"until": ends})       # keep recording, not record twice
                 started += 1
+            else:
+                ends = None                                 # nothing written: the row's own `until` stands
+            if mem is not None and ends is not None:
+                mem.note(rec_ctl.spec.name, name, ends)     # its end, known without reading the row back
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused for %s: %s", rec_ctl.spec.name, rid, name, e)
         except Exception as e:                              # noqa: BLE001
             # NOT an answer: the store conflicted, or did not answer at all. The request stays and the next
             # pass tries again — it carries `valid_until`, so it cannot wait for ever. It used to be deleted
             # here with the rest: the scenario fired, the recording was never made, and nothing said so
-            # (the product's `RecordOnRequest`, feedback BC).
+            # (the product's `RecordOnRequest`, feedback BC). Tried again after a pause that doubles (`Remembered`).
             log.warning("%s: %s could not start %s this pass: %s", rec_ctl.spec.name, rid, name, e)
+            if mem is not None:
+                mem.failed(key, now)
             continue
         rec_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
     return started
@@ -186,14 +258,30 @@ def record_on_request(rec_ctl, now: float) -> int:
 #
 # A row's `until` that is not a finite number is that row's (the seventh pass): skipped, counted (`rows.number`), and
 # the rows after it still end — it raised out of here, and with it every recording due to end stayed recording.
-def expire(ctl, now: float) -> int:
+#
+# With `mem` (the request loop's, every two seconds) the rows are read whole every `Remembered.REREAD` seconds, and
+# between those reads only a row whose remembered `until` has come — read again, and ended on what it says then.
+def expire(ctl, now: float, mem: Remembered | None = None) -> int:
     gone = 0
-    for row in ctl.units():
+    sub = ctl.spec.name
+    if mem is None or mem.due(f"{sub}#until", now):
+        rows = ctl.units()
+        if mem is not None:
+            mem.read_whole(f"{sub}#until", now)
+            mem.deadlines[sub] = {}
+    else:
+        due = sorted(u for u, until in mem.deadlines.get(sub, {}).items() if now > until)
+        rows = [r for r in (ctl._parsed(ctl.spec.parse_id(u)) for u in due) if r is not None and r is not GARBLED_ROW]
+        for u in due:
+            mem.deadlines[sub].pop(u, None)                 # read again just now: what it says goes back in below
+    for row in rows:
         until = number(f"{ctl.sub.config(ctl.spec.rows, str(row['id']))}#until", row.get("until") or 0)
         if until and now > until:
             ctl.delete(row["id"])
             gone += 1
             log.info("%s: %s reached its end", ctl.spec.name, row["id"])
+        elif until and mem is not None:
+            mem.note(sub, str(row["id"]), until)
     return gone
 
 
@@ -224,9 +312,15 @@ DETECT_KEY = "-auto"
 SCAN_BEFORE, SCAN_AFTER = 60.0, 60.0
 
 
-def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
+def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float, mem: Remembered | None = None) -> int:
     made = 0
-    for key in sorted(det_ctl.vars.list(det_ctl.sub.requests_prefix())):
+    prefix = det_ctl.sub.requests_prefix()
+    keys = sorted(det_ctl.vars.list(prefix))
+    if mem is not None:
+        mem.listed(prefix, keys)
+    for key in keys:
+        if mem is not None and mem.waits(key, now):
+            continue                                        # a pause after the store failed it (`Remembered`)
         it, _ = det_ctl.vars.get(key)
         rid = key.rsplit("/", 1)[1]
         if not it:
@@ -251,12 +345,14 @@ def detect_on_request(det_ctl, job_ctl, rec_ctl, now: float) -> int:
             if not cam or not kind or action not in ("detect", "scan"):
                 raise Refused(f"a request names a camera, a model and detect|scan: {dict(it)}")
             same = _settings(det_ctl, cam, kind, it)
-            made += _detect(det_ctl, cam, kind, it, same, now) if action == "detect" else \
+            made += _detect(det_ctl, cam, kind, it, same, now, mem) if action == "detect" else \
                 _scan(job_ctl, rec_ctl, cam, kind, it, same, now)
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused: %s", det_ctl.spec.name, rid, e)
         except Exception as e:                              # noqa: BLE001 — not an answer: stays, and is tried again
             log.warning("%s: %s could not be turned into work this pass: %s", det_ctl.spec.name, rid, e)
+            if mem is not None:
+                mem.failed(key, now)                        # …after a pause that doubles, not on every turn
             continue
         det_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
     return made
@@ -277,7 +373,7 @@ def _settings(det_ctl, cam: str, kind: str, it: dict) -> dict:
     return out
 
 
-def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:
+def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float, mem: Remembered | None = None) -> int:
     minutes = finite(it.get("minutes", 0) or 0)
     if minutes <= 0:
         raise Refused(f"detect asks for no minutes: {dict(it)}")
@@ -290,11 +386,13 @@ def _detect(det_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> i
     row = det_ctl.unit(name)
     if row is None:
         det_ctl.create({"name": name, "cam": cam, "kind": kind, "until": ends, **same})
-        return 1
-    if number(f"{det_ctl.sub.config(det_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
+    elif number(f"{det_ctl.sub.config(det_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
         det_ctl.update(name, {"until": ends})               # keep watching, not watch twice
-        return 1
-    return 0
+    else:
+        return 0
+    if mem is not None:
+        mem.note(det_ctl.spec.name, name, ends)             # its end, known without reading the row back
+    return 1
 
 
 def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: float) -> int:

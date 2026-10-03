@@ -114,11 +114,11 @@ def test_the_console_process_actually_runs_the_reaper():
     console = inspect.getsource(m.console)
     assert "_reap_loop" in console, "the console process does not start the reaper — no job will ever close"
     assert "job_ctl" in console and "detjob" in console
-    loop = inspect.getsource(m._reap_loop)
+    loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     for called in ("ask_for_footage", "clear_requests", "keep_what_fired", "reap", "forget_finished"):
         assert f"{called}(" in loop, f"{called} is written, tested and never called"
     assert "_requests_loop" in console, "the console process does not start the requests' loop — no scenario's request becomes a row"
-    loop = inspect.getsource(m._requests_loop)
+    loop = (inspect.getsource(m._requests_loop) + inspect.getsource(m._requests_turn))
     for called in ("record_on_request", "expire_recordings"):     # the two ends of a timed recording: their own, short loop
         assert f"{called}(" in loop, f"{called} is written, tested and never called"
 
@@ -242,7 +242,7 @@ def test_when_the_footage_arrives_the_job_goes_back_to_running():
 def test_the_console_process_asks_for_footage_too():
     import inspect
     import vms.__main__ as m
-    loop = inspect.getsource(m._reap_loop)
+    loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     assert "ask_for_footage(c, rec_ctl)" in loop, "a job stuck on the device would wait for ever"
     assert "rec_ctl" in inspect.getsource(m.console)
 
@@ -333,7 +333,7 @@ def test_another_cameras_detector_is_not_pointed_at_this_footage():
 def test_the_console_process_queues_those_scans():
     import inspect
     import vms.__main__ as m
-    loop = inspect.getsource(m._reap_loop)
+    loop = (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn))
     assert "scan_what_arrived(rec_ctl, det_ctl, c)" in loop, "backfilled footage would never be looked at"
     assert "det_ctl" in inspect.getsource(m.console)
 

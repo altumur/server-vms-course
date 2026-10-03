@@ -211,7 +211,7 @@ def test_the_console_loop_ends_timed_recordings_when_starting_them_fails():
     jobs.record_on_request = lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("the store went away"))
     ended = []
     real_expire = jobs.expire_recordings
-    jobs.expire_recordings = lambda ctl, now: ended.append(real_expire(ctl, box.wall()) or 1) or 1
+    jobs.expire_recordings = lambda ctl, now, *mem: ended.append(real_expire(ctl, box.wall()) or 1) or 1
     t = threading.Thread(target=main._requests_loop, kwargs={"rec_ctl": rec, "every": 0.01}, daemon=True)
     try:
         t.start()
