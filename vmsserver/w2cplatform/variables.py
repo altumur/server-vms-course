@@ -129,7 +129,11 @@ _SCHEMES: dict[str, object] = {}
 # lookup because it is what a box with no URL at all gets; `memory://` is the other one shipped here.
 # Anything else — `nomad://`, `k8s://` — is a module somebody else imports, and this table is not where it
 # goes: that is the difference between a backend the platform HAS and a backend it ALLOWS.
-_BUILTIN = {"memory": "w2cplatform.memvariables"}
+#
+# `raft://` is the third, and EXPERIMENTAL: the prototype of the replicated store that takes Nomad's place
+# (the owner's decision of 3 October: the cluster without an orchestrator). Its handle is plain HTTP to the
+# store daemon on this server; only the daemon needs the raft library (`raftvars.py`).
+_BUILTIN = {"memory": "w2cplatform.memvariables", "raft": "w2cplatform.raftvars"}
 
 
 def register_scheme(scheme: str, factory) -> None:
