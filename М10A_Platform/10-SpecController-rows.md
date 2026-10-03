@@ -105,7 +105,9 @@ class SpecController(Controller):
             # `console.label`), a `|`-joined field of a heartbeat (`closed`, `hits`), a log line. Refused here, the rule
             # the domain keeps for a user's name (`domain/grants.py`, `name_refused`): no `"`, no `|`, no control
             # character or line or paragraph separator (Unicode Cc, Zl, Zp).
-            bad = unnamable(uid)
+            # …and a unit's name is in lists and sorted as a number (the ninth pass, sibling B of the product team): no
+            # `,` — an assignment is its units joined by one — and no digit but ASCII 0–9 (`doors.unnamable`, `unit`).
+            bad = unnamable(uid, unit=True)
             if bad:
                 raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
         if reserve is not None:
@@ -151,6 +153,8 @@ class SpecController(Controller):
 Та же проверка стоит и слоем ниже, в `safe_path` (урок 2). Дублирование намеренное и разное по смыслу: здесь это **400 тому, кто это напечатал**, с внятным текстом; там — последний рубеж для любого, кто дошёл до хранилища другим путём.
 
 **Имя не может держать `"`, `|` и управляющие символы** (восьмое ревью, часть 4, и его вопрос к автору). Имя единицы попадает целиком и в другой текст: значением метки на `/metrics`, полем heartbeat'а, склеенным через `|` (`closed`, `hits`), строкой лога. Запись с именем `7"x` давала строку `rec_last_frame_age_seconds{unit="7"x"}`, которую формат Prometheus не читает, и Prometheus отвергал весь скрейп регистраторов — вместе со всеми их алертами. Теперь `create` отказывает такому имени словами: `doors.unnamable(uid)` возвращает найденные запретные символы — `"`, `|` и символы Unicode категорий Cc (управляющие, в том числе перевод строки), Zl и Zp (разделители строк и абзацев). Та же функция стоит на id команды в `POST /requests` консоли (`vms/console.py`) и на камере метки удержания (`keeps.refuse`). Это то же правило, что домен М12 держит для имени пользователя и субъекта гранта (`grants.refuse_name`, `name_refused`). Имена, записанные до правила, по-прежнему лежат в хранилище, поэтому `/metrics` ещё и экранирует каждое значение метки (`console.label`, урок 15). Тесты: `test_lesson11_edge.py::test_a_units_name_holds_no_quote_no_bar_and_no_control_character`, `test_row_reader.py::test_a_name_with_a_quote_or_a_newline_is_escaped_on_every_metrics_page`.
+
+**Имя единицы не может держать запятую и цифру, которая не ASCII** (девятое ревью: minor и находка команды продукта в своём коде). Назначение работника — это его единицы, склеенные через `,` (`contract.Assignment`), и так же склеены `closed` регистратора и диапазоны в heartbeat'ах. Запись с именем `1,9` читалась обратно как `1` и `9`: её регистратор брал `9` — чужую единицу или ничего — и никогда не запускал `1,9`, а её дозапись заводила скан по камере записи 9. Отдельно: `"7²".isdigit()` — истина, а `int("7²")` бросает исключение. `POST /rec/recordings {"name": "7²"}` отвечал 201, и после этого ни один `GET /rec/recordings` не получал ответа: список сортируется по `_unit_key`, а тот считал «одни цифры» числом. Теперь `doors.unnamable(uid, unit=True)` к прежним символам добавляет `,` и любую цифру, кроме ASCII 0–9 (верхние индексы, арабско-индийские, полноширинные — `isdigit` говорит «да» им всем). Id команды — не имя единицы, его правило прежнее: запятую в нём heartbeat говорит дайджестом (`config.said_id`). Для имён, записанных до правила, есть `doors.numeric(name)` — число, только если это ASCII-цифры и столько, сколько берёт `int` (пять тысяч девяток бросают). Через него теперь идут `_unit_key`, `_largest_id`, `slot_number`, индекс событий (`eventdatabase`), список записей тома (`Archive.units`), камера скана (`detjobworker._cam`) и права домена М12 (`access.may`). `units()` ловит всё, что бросает разбор (`PARSE_ERRORS`, и само чтение строки файлового хранилища, которая не JSON), а строку с именем, которое сегодня не создать, отдаёт как есть, но считает и называет один раз (`UNIT_NAMES`): её стоит создать заново под другим именем. Имя с запятой не пишется ни в одно назначение (`Assignment.to_items`, `assign_add`; таблица `UNLISTED`): такая единица не размещена, но и не разрезана на чужие имена. Тест: `test_console_gate.py::test_a_units_name_holds_no_comma_and_no_digit_but_ascii_and_a_stored_one_stops_no_list` — через API: пять имён отказаны, хранимые `7²` и `1,9` в списке, список отвечает, в назначение `1,9` не попадает.
 
 Остальные строки листинга разобраны в других уроках: `uid` и `reserve` — повтор запроса с ключом идемпотентности, который создаёт под тем же id (урок 15); `REFUSE` — собственное правило подсистемы о том, на что указывает строка (в М10B — `volumes.refuse_camera`); `_sealed` — запечатанный пароль устройства (урок 18). Проверка `cam` у надгробия — имя записи остаётся за своей камерой: удалённая запись камеры 1 не возвращается под тем же именем для камеры 2, иначе её архив открылся бы тому, кто смотрит камеру 2 (пятое ревью).
 
@@ -284,10 +288,11 @@ class SpecController(Controller):
 
 ```python
 def _unit_key(u: str):
-    return (0, int(u)) if u.isdigit() else (1, u)
+    n = numeric(u)
+    return (0, n) if n is not None else (1, str(u))
 ```
 
-Числовые идентификаторы сортируются как числа (`1, 2, 10`, а не `1, 10, 2`), остальные — как строки, и числовые идут первыми. Одна функция на курс, потому что смешанных подсистем не бывает, но обе ветви нужны: `vms` числовая, `det` именованная.
+Числовые идентификаторы сортируются как числа (`1, 2, 10`, а не `1, 10, 2`), остальные — как строки, и числовые идут первыми. Одна функция на курс, потому что смешанных подсистем не бывает, но обе ветви нужны: `vms` числовая, `det` именованная. Число здесь — то, что скажет `doors.numeric`: долгое время стояло `int(u) if u.isdigit()`, и имя `7²` («одни цифры» для `isdigit`) роняло каждый список своей подсистемы (девятое ревью; правило имени — выше, у `create`).
 
 ```python
     def placement(self, uid) -> Placement | None:
