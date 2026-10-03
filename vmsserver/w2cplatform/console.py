@@ -14,6 +14,7 @@ show them. So the console is one class, run from the same spec:
     GET  /domain                 the domain's view, if THIS cluster hosts the domain (М12 Lesson 3): members, completeness,
                                  units by cluster, with its age; 404 anywhere else — a cluster does not know the others
     GET/PUT /policy              the administrator's knobs — servers: shared | distinct — one row, <sub>/policy, the console's to write
+    GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
                                  <name>_epoch_conflicts · <name>_failover_seconds{kind="worst"} · <name>_resources_live ·
@@ -145,7 +146,7 @@ from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate,
 from .journal import Journal
 from .resource import resources_seen
 from .limits import TooLarge
-from .spec import GARBLED_ROW, Refused, SpecController
+from .spec import GARBLED_ROW, LABEL_WORD, Refused, SpecController, server_name
 
 # A unit's row the timeline's gate reads for its labels (`SpecConsole.dispatch`, `/events`): one that does not parse is
 # that unit's events withheld from a grant by label, and nobody else's timeline (the scaling pass after the eighth review).
@@ -1389,8 +1390,17 @@ class SpecConsole:
                         row["idle_by_policy"] = True
         for server in resources_seen(ctl.objects):
             out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+        # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
+        # is a row, and which of the two placement reads — both shown, so a node and an administrator who disagree are
+        # seen to. A server with a row and no worker is listed too: the row is still the administrator's word on it.
+        rows = ctl.server_labels() or {}
+        for server in rows:
+            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
         drains = ctl.draining()
         for server, s in out.items():
+            node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
+            s["labels_node"] = node
+            s["labels"], s["labels_source"] = (sorted(rows[server]), "console") if server in rows else (node, "node")
             s["draining"] = server == drains
             s["resource"] = ctl.resource_state(server, self.lost_after)
             s["requires_resource"] = ctl.spec.requires == "resource"
@@ -1399,6 +1409,49 @@ class SpecConsole:
                         f"resource on {server} silent" if not s["placeable"] else None)
             s["workers"].sort(key=lambda x: x["worker"])
         return {"policy": ctl.policy(), "servers": dict(sorted(out.items()))}
+
+    # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ): `/servers/<server>/labels`.
+    #
+    #   GET     ?labels=a,b — what it reaches now and from where, and which units would move if it reached `a,b`
+    #           (`would_move`; no `labels`: back to its node's) — the page asks before it writes, and warns
+    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing
+    #   DELETE  back to the node's (`LABELS`, `meta.labels` in `client.hcl`)
+    #
+    # A path that names no unit: `admin` on the whole cluster to write (`needs`) — a server's labels decide where every
+    # unit may go. Each write is a journal line with the name and the labels; the controller moves what it decides on
+    # its next pass (`ensure_reach`), and the reply says which units that will be.
+    def server_labels_route(self, h, method: str, path: str, q: dict) -> tuple:
+        ctl, user = self.ctl, h.headers.get("X-User", "operator")
+        server = path[len("/servers/"):-len("/labels")]
+        try:
+            server_name(server)
+            if method == "GET":
+                # `?labels=` (blank) reaches nothing; no `labels` at all is back to its node's — `q` drops a blank value
+                want = parse_qs(urlsplit(h.path).query, keep_blank_values=True).get("labels", [None])[0]
+                labels = None if want is None else [l for l in want.split(",") if l]
+                if labels is not None and any(not LABEL_WORD.fullmatch(l) for l in labels):
+                    raise Refused(f"a label is letters, digits and _ . : - (up to 64): {want!r}")
+                rows = ctl.server_labels() or {}
+                sees = self._visible(h)
+                moves = [u for u in ctl.would_move(server, labels)
+                         if sees is None or sees(str(u), self._labels(str(u), None))]
+                return 200, {"server": server, "labels": sorted(rows[server]) if server in rows else None,
+                             "labels_source": ctl.labels_source(server), "would_move": moves}
+            body = h._body() if method == "PUT" else {}
+            if method == "PUT":
+                labels = ctl.set_server_labels(server, body.get("labels") if isinstance(body, dict) else None)
+                self.journal.say("server.labels.set", of=self.spec.name, server=server, labels=",".join(labels), user=user)
+                return 200, {"server": server, "labels": labels, "labels_source": "console",
+                             "will_move": ctl.would_move(server, labels)}
+            if ctl.clear_server_labels(server):
+                self.journal.say("server.labels.cleared", of=self.spec.name, server=server, user=user)
+            return 200, {"server": server, "labels_source": "node", "will_move": ctl.would_move(server, None)}
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "refused"}
+        except Forbidden as e:                           # the console's token, not the caller: the store said no
+            return 403, {"detail": str(e), "error": str(e)}
+        except OSError as e:
+            return 503, {"detail": f"the store did not take it: {e}", "error": "store unavailable"}
 
     # EVERY NUMBER OF A HEARTBEAT OR OF THE PASS REPORT HERE IS READ THROUGH `n`, `rn` OR `r` (the review's seventh
     # pass, part 2): read bare — `int(headroom)`, `float(space.full)`, `float(ts)` — one word in one field raised, and
@@ -1513,6 +1566,8 @@ class SpecConsole:
                   f"# TYPE {p}_reconcile_failures counter", f"{p}_reconcile_failures {r('failures', int)}",
                   f"# TYPE {p}_units_unplaced gauge", f"{p}_units_unplaced {r('unplaced', int)}",
                   f"# TYPE {p}_units_diverged gauge", f"{p}_units_diverged {r('diverged', int)}",
+                  # units the last pass moved or unplaced because their server no longer reaches them (feedback DQ)
+                  f"# TYPE {p}_units_moved_for_reach gauge", f"{p}_units_moved_for_reach {r('reach_moves', int)}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.
@@ -2178,7 +2233,8 @@ class SpecConsole:
                 return h._send(200, {"rows": rows, "configured": configured})
             if path.startswith("/where/"):
                 uid = self._uid(path); pl = ctl.placement(uid)
-                return h._send(200 if pl else 404, {"worker": pl.worker if pl else None, "reason": pl.reason if pl else None,
+                return h._send(200 if pl else 404, {"worker": pl.worker if pl else None,
+                                                    "reason": pl.reason if pl else ctl.unplaced_reason(uid),   # nowhere, and why (DQ)
                                                     "directory": con.where(uid), "scans": con.scans})
             if path == "/resources":
                 now = con.wall()
@@ -2186,6 +2242,8 @@ class SpecConsole:
                                      for s, hb in resources_seen(ctl.objects).items()})
             if path == "/servers":
                 return h._send(200, con.servers())
+            if path.startswith("/servers/") and path.endswith("/labels"):
+                return h._send(*con.server_labels_route(h, "GET", path, q))
             if path == "/domain":
                 return h._send(*domain_view(ctl.objects, con.wall(), con.lost_after))
             if path == "/policy":
@@ -2282,6 +2340,8 @@ class SpecConsole:
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp); return h._send(*resp)
+        if method in ("PUT", "DELETE") and path.startswith("/servers/") and path.endswith("/labels"):
+            return h._send(*con.server_labels_route(h, method, path, q))
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
                 try:

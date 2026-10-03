@@ -180,6 +180,15 @@ def _doors(s) -> None:
                     f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
             with urllib.request.urlopen(url) as r:
                 r.read()
+        # What a server reaches, from the console (feedback DQ): the row written, removed and written again — so the
+        # controllers' passes below read one — for the camera's subsystem and the recorder's.
+        for path in ("/servers/srv-a/labels", "/rec/servers/srv-a/labels"):
+            for method in ("PUT", "DELETE", "PUT"):
+                req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", method=method,
+                                             data=b'{"labels": ["vlan:cctv-a"]}' if method == "PUT" else None,
+                                             headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req) as r:
+                    r.read()
     finally:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
