@@ -230,6 +230,33 @@ def test_a_slot_whose_row_does_not_parse_is_retired_through_the_door_too():
     _forget_garbled()
 
 
+def test_one_request_the_store_cannot_answer_for_does_not_stop_the_others():
+    """A pass walks every request. The store failing on one slot's row is that request's trouble: counted refused, not
+    written over, and the next request is still acted on."""
+    class Flaky:
+        def __init__(self, real):
+            self.real = real
+
+        def get(self, key):
+            if key == "vms/slots/w-1":
+                raise OSError("the store did not answer for this key")
+            return self.real.get(key)
+
+        def __getattr__(self, name):
+            return getattr(self.real, name)
+    box = Box()
+    ctl, ws = _site(box)
+    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    box.wall.advance(100)                                                          # both silent now
+    for w in ("w-1", "w-2"):
+        con.request_retire(w, "anna", "both servers burnt")
+    flaky = VmsController(Flaky(box.vars.as_writer("vmscontroller", SPEC.acl_controller())), box.objects, capacity=4,
+                          wall=box.wall)
+    out = flaky.apply_retires()
+    assert out["retired"] == ["w-2"] and "could not be checked" in out["refused"]["w-1"], out
+    assert box.vars.get("vms/retire/w-1")[0]["why"] == "both servers burnt"        # left as the console wrote it
+
+
 def test_the_console_writes_the_request_and_never_the_slot():
     """One writer per family: the console's token covers `<sub>/retire/*` and no slot; the controller's covers both —
     it reads the request, deletes it when done, and writes why into one it refused."""

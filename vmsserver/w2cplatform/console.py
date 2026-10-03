@@ -1452,6 +1452,8 @@ class SpecConsole:
             gen, kind, why = self.ctl.retire_refusal(w)
         except NoSuchSlot:
             return                                       # a name no process claimed (one given in the unit file): no slot to retire
+        except (ValueError, OSError):
+            return                                       # a name that is no key, a store that did not answer: that row says nothing of it
         row.update(gen=gen, released=kind == "released", retirable=not kind, retire_refusal=why or None,
                    holds=held.get(w, []))
         req = asked.get(w)
