@@ -9,12 +9,23 @@ Now a server may have a row, `<sub>/servers/<server> {labels}`, written by the c
 labels answer. And a pass step, `ensure_reach`, moves a placed unit whose server no longer passes the constraint — or
 unplaces it with the reason when nothing live does — at most ten a pass.
 """
+import json
+import urllib.error
+
 from w2cplatform.contract import Heartbeat
 from w2cplatform.spec import REACH_BUDGET, Refused
 from vms.config import SPEC
 from vms.controller import VmsController
 from tests.conftest import Box
 from tests.test_console_gate import Tokens, _audit, _call, _console
+
+
+def _resource(box, server: str) -> None:
+    """The server's resource heartbeat: every server of a cluster has one, and it makes the server known to every
+    subsystem (`servers_known`)."""
+    import json
+    box.objects.put(f"platform/resources/{server}/heartbeat",
+                    json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}", "units": {}}).encode())
 
 
 def _beat(box, worker: str, server: str, labels: str, capacity: int = 50) -> None:
@@ -191,6 +202,7 @@ def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
     not `view`. Looking — `GET /servers`, and what an edit would move — is any grant."""
     box = Box()
     _site(box, srv_a="vlan:a")
+    _resource(box, "srv-a")                                                        # known to the recorders too
     access = Tokens({"admin": [("admin", None, ())], "cam-admin": [("admin", "1", ())],
                      "guard": [("admin", None, ("vlan:a",))], "viewer": [("view", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
@@ -239,3 +251,216 @@ def test_a_server_name_that_is_no_name_is_refused():
         except Refused:
             continue
         raise AssertionError(bad)
+
+
+def _stale_node_site(box, n: int):
+    """srv-a's node still says `vlan:b` (a stale `client.hcl`), its row says `vlan:a` — the correction DQ is for; srv-b
+    reaches `vlan:a` by its node. `n` cameras needing `vlan:a`, all placed on srv-a."""
+    ctl = _site(box, srv_a="vlan:b", srv_b="vlan:a")
+    ctl.set_server_labels("srv-a", ["vlan:a"])
+    ctl.set_server_labels("srv-b", [])
+    cams = [_camera(ctl, k) for k in range(1, n + 1)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    assert all(ctl.where(c) == "w-1" for c in cams)
+    return ctl, cams
+
+
+def test_a_torn_server_row_after_a_controller_restart_moves_nothing_and_takes_no_new_labelled_unit():
+    """The review's tenth pass, major — a run: the row says `vlan:a` over a stale node's `vlan:b`. The row torn and the
+    controller restarted, there was no last read to keep, the node's `vlan:b` answered, and `ensure_reach` took 12
+    cameras of 12 off srv-a in two passes, "srv-a no longer reaches vlan:a" — untrue. A server whose row is there and
+    did not read is not known: nothing moves off it, and a unit that needs a label is not placed there. The same for a
+    row with no `labels` at all (the product team's sibling: it is not "reaches nothing"). `/servers` says so."""
+    from w2cplatform.spec import SERVER_LABELS
+    box = Box()
+    ctl, cams = _stale_node_site(box, 12)
+    for torn in ({"labels": "vlan:a,vlan b"}, {"note": "half a write"}):
+        box.vars.put("vms/servers/srv-a", torn)
+        fresh = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)     # the controller restarted
+        for _ in range(2):
+            assert fresh.pass_once()["reach_moves"] == 0
+        assert all(fresh.where(c) == "w-1" for c in cams) and "vms/servers/srv-a" in SERVER_LABELS.bad
+        assert fresh.labels_of("w-1") == set() and fresh.labels_unread("srv-a")
+    new = _camera(fresh, 99)
+    fresh.pass_once()
+    assert fresh.where(new) == "w-2"                                  # not onto the server nobody can say the reach of
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _call(base, "GET", "/servers")[1]["servers"]["srv-a"].get("labels_unread") is True
+    finally:
+        srv.shutdown()
+    box.vars.put("vms/servers/srv-a", {"labels": "vlan:a"})            # mended: read again, nothing to move
+    assert fresh.pass_once()["reach_moves"] == 0 and not fresh.labels_unread("srv-a")
+
+
+def test_a_listing_that_leaves_a_servers_row_out_moves_nothing():
+    """The same finding's second run: one listing without the row, for one pass, was "no row" — the node's labels,
+    5 cameras of 5 moved, and they did not come back. Each server's row is read by its key now (the servers of the
+    workers, the ones read before), so a listing that misses one costs nothing — in a controller that has read it
+    before and in one that has just started."""
+    box = Box()
+    ctl, cams = _stale_node_site(box, 5)
+    real = box.vars.list
+    box.vars.list = lambda prefix: [k for k in real(prefix) if k != "vms/servers/srv-a"]
+    try:
+        assert ctl.pass_once()["reach_moves"] == 0
+        fresh = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)
+        assert fresh.pass_once()["reach_moves"] == 0 and fresh.labels_of("w-1") == {"vlan:a"}
+    finally:
+        box.vars.list = real
+    assert all(ctl.where(c) == "w-1" for c in cams)
+
+
+def test_one_row_that_cannot_be_read_is_that_servers_alone():
+    """The product team's sibling: one row whose read fails stopped the reading of every server's labels (the whole read
+    was one `try`). That server is unread; the others are read, and srv-b's edit moves what it should."""
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a", srv_c="vlan:a")
+    ctl.set_server_labels("srv-c", [])
+    cam = _camera(ctl, 1)
+    ctl.set_server_labels("srv-a", [])
+    ctl.ensure_placed()
+    assert ctl.where(cam) == "w-2"
+    ctl.clear_server_labels("srv-a")
+    real = box.vars.get
+    box.vars.get = lambda key: (_ for _ in ()).throw(OSError("one key")) if key == "vms/servers/srv-c" else real(key)
+    try:
+        ctl.set_server_labels("srv-b", ["vlan:z"])
+        assert ctl.pass_once()["reach_moves"] == 1 and ctl.where(cam) == "w-1"
+        assert ctl.labels_unread("srv-c") and ctl.labels_of("w-3") == set()
+    finally:
+        box.vars.get = real
+
+
+def test_the_channels_of_one_device_move_together_or_not_at_all():
+    """The review's tenth pass, minor, and its question: an administrator of one camera of a four-channel recorder
+    changed its `labels`, and `ensure_reach` took that channel alone to another holder — two sessions to one recorder,
+    for good. The group moves whole, in one pass, to a worker that takes it all; with none, the channel its server no
+    longer reaches gives its place back and the others stay — no two holders ever hold the recorder."""
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a,vlan:c")
+    ctl.set_server_labels("srv-b", [])
+    nvr = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.50/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 5)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    assert {ctl.where(c) for c in nvr} == {"w-1"}
+    ctl.update(nvr[1], {"labels": "vlan:a,vlan:c"})
+    rep = ctl.pass_once()
+    assert rep["reach_moves"] == 4 and {ctl.where(c) for c in nvr} == {"w-2"}, [ctl.where(c) for c in nvr]
+    assert ctl.placement(nvr[0]).reason.startswith(f"with {nvr[1]}, one device: srv-a no longer reaches vlan:c")
+    ctl.update(nvr[2], {"labels": "vlan:d"})                             # nobody reaches vlan:d
+    assert ctl.pass_once()["reach_moves"] == 1
+    assert ctl.where(nvr[2]) is None and {ctl.where(c) for c in nvr if c != nvr[2]} == {"w-2"}
+    assert ctl.pass_once()["reach_moves"] == 0
+
+
+def test_one_alphabet_for_labels_and_a_stored_label_outside_it_does_not_move_its_camera():
+    """The review's tenth pass, major: a camera's labels were any words, a server's row only `LABEL_WORD`. Cameras with
+    `склад`, `zone 1`, `-x` were placed by the node's labels, and once the administrator gave the server a row they
+    were taken off it, and no server's row could ever take them. A label outside the one alphabet is refused when a
+    camera is created or given it (400 at the console); one stored before stays as it is — editable, and not moved for
+    a label no row can say, counted once (`UNIT_LABELS`)."""
+    from w2cplatform.spec import UNIT_LABELS
+    box = Box()
+    ctl = _site(box, srv_a="склад,vlan:a")
+    for bad in ("склад", "zone 1", "-x"):
+        try:
+            _camera(ctl, 1, bad)
+        except Refused as e:
+            assert "a label is letters" in str(e)
+        else:
+            raise AssertionError(bad)
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/9.mp4", "labels": ["склад"]})[0] == 400
+    finally:
+        srv.shutdown()
+    box.vars.put("vms/cameras/7", {"id": "7", "name": "old", "source": "driverpack://file/7.mp4", "labels": "склад",
+                                   "revision": "1"})                    # as an older build let it in
+    ctl.ensure_placed()
+    assert ctl.where(7) == "w-1"
+    ctl.set_server_labels("srv-a", ["vlan:a"])
+    assert ctl.pass_once()["reach_moves"] == 0 and ctl.where(7) == "w-1"
+    assert "vms/cameras/7#labels" in UNIT_LABELS.bad
+    assert ctl.update(7, {"name": "renamed", "labels": "склад"})["name"] == "renamed"   # its own label: an edit stands
+    try:
+        ctl.update(7, {"labels": "склад,zone 1"})
+    except Refused:
+        pass
+    else:
+        raise AssertionError("a new label outside the alphabet was taken")
+
+
+def test_the_labels_route_answers_a_bad_body_a_bad_label_and_an_unknown_server_with_words():
+    """The review's tenth pass, minors, and the product team's sibling: a body that is not JSON dropped the connection;
+    `[null]`, `[true]`, `[1]` were labels; `*`, `srv%2Fa`, a newline, a typo were rows nobody reads (200); a name of 300
+    characters answered 503 with the store's local path in it. Each is a 400 in words now, and a store that does not
+    take the write says so without its own words."""
+    import urllib.request
+    box = Box()
+    _site(box, srv_a="vlan:a")
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        req = urllib.request.Request(base + "/servers/srv-a/labels", data=b"{not json", method="PUT",
+                                     headers={"Content-Type": "application/json", "Idempotency-Key": "k-raw"})
+        try:
+            urllib.request.urlopen(req)
+            raise AssertionError("taken")
+        except urllib.error.HTTPError as e:
+            assert e.code == 400 and "not JSON" in json.loads(e.read())["detail"]
+        for labels in ([None], [True], [1], ["vlan:a", 2]):
+            assert _call(base, "PUT", "/servers/srv-a/labels", {"labels": labels})[0] == 400, labels
+        for name in ("*", "srv%252Fa", "srv%0Aa", "x" * 300, "srv-x"):
+            code, body = _call(base, "PUT", f"/servers/{name}/labels", {"labels": []})
+            assert code == 400 and box.archive not in json.dumps(body), (name[:20], code, body)
+        assert "no server srv-x is known here" in _call(base, "PUT", "/servers/srv-x/labels", {"labels": []})[1]["detail"]
+        assert not [k for k in box.vars.list("vms/servers/")]
+        real = con_ctl.vars.put                                       # the console's own view of the store
+
+        def refuses(key, *a, **k):
+            if key.startswith("vms/servers/"):
+                raise OSError(f"[Errno 28] No space left on device: '{box.archive}/store/{key}'")
+            return real(key, *a, **k)
+        con_ctl.vars.put = refuses
+        try:
+            code, body = _call(base, "PUT", "/servers/srv-a/labels", {"labels": ["vlan:a"]})
+            assert code == 503 and box.archive not in json.dumps(body), body
+        finally:
+            con_ctl.vars.put = real
+    finally:
+        srv.shutdown()
+
+
+def test_moves_for_reach_are_counted_since_the_store_was_new_and_said_in_the_log():
+    """The review's tenth pass, minor: `units_moved_for_reach` was the last pass's number — a scrape every 15 s saw a
+    third of the moves — and a move was a line nowhere. The pass report carries a counter (`reach_moves_total`,
+    `…_units_moved_for_reach_total` on `/metrics`) and each move is a warning in the controller's log."""
+    import logging
+    import urllib.request
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a")
+    ctl.set_server_labels("srv-b", [])
+    cams = [_camera(ctl, n) for n in range(1, 13)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    ctl.set_server_labels("srv-a", [])
+    said = []
+
+    class Catch(logging.Handler):
+        def emit(self, record):
+            said.append(record.getMessage())
+    catch = Catch(level=logging.WARNING)
+    logging.getLogger("w2cplatform.spec").addHandler(catch)
+    try:
+        assert [ctl.pass_once()["reach_moves"] for _ in range(3)] == [REACH_BUDGET, 2, 0]
+    finally:
+        logging.getLogger("w2cplatform.spec").removeHandler(catch)
+    assert ctl.pass_report()["reach_moves_total"] == 12 and len(cams) == 12
+    assert len([m for m in said if "moved from w-1 to w-2: srv-a no longer reaches vlan:a" in m]) == 12, said
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        with urllib.request.urlopen(base + "/metrics") as r:
+            assert "vms_units_moved_for_reach_total 12" in r.read().decode()
+    finally:
+        srv.shutdown()

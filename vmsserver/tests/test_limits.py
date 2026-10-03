@@ -68,7 +68,7 @@ def test_a_row_that_does_not_fit_is_a_413_to_the_person_who_typed_it():
     con = SpecConsole(ctl)
     st, body = con.create({"name": "gate", "source": "driverpack://file/gate.mp4"})
     assert st == 201
-    big = {"labels": ["x" * 500]}
+    big = {"labels": [f"x{i}" for i in range(120)]}           # each a label (the one alphabet: 64 at most), the row too big
     st, body = con.update(body["id"], big)
     assert st == 413, (st, body)
     assert "over this store's limit of 400" in body["detail"]

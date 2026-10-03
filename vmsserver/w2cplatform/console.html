@@ -940,6 +940,7 @@ async function loadResources() {
       el.innerHTML = h`<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
                      h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
                      h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
+                     (s.labels_unread ? h` · <span class="bad">its row here could not be read: nothing is moved off it until it is written again</span>` : '') +
                      (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>');
       el.querySelector('.lab-edit').onclick = e => { e.preventDefault(); editLabels(name, s.labels || []); };
       if (el.querySelector('.lab-node')) el.querySelector('.lab-node').onclick = e => { e.preventDefault(); editLabels(name, null); };
@@ -977,7 +978,10 @@ async function editLabels(name, have) {
   }
   const q = want === null ? '' : '?labels=' + encodeURIComponent(want.join(','));
   try {
-    const d = await (await fetch(`/servers/${encodeURIComponent(name)}/labels${q}`)).json();
+    // the answer read first: a refusal (a label that is not one, a server nobody knows) is said, nothing is written
+    const r = await fetch(`/servers/${encodeURIComponent(name)}/labels${q}`);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || d.error || `${r.status}`);
     const moves = d.would_move || [];
     if (moves.length && !confirm(`${moves.length} unit(s) on ${name} will move or wait unplaced: ${moves.join(', ')}. Go on?`)) return;
     if (want === null) await send('DELETE', `/servers/${encodeURIComponent(name)}/labels`);

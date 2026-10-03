@@ -161,4 +161,4 @@ PUT /v1/var/vms/workers/w-0?namespace=default&cas=1062
 {"Items": {"units": "3,5,7,9", "rev": "6"}}
 → 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1068}
 
-# … and 472 GET requests, omitted
+# … and 517 GET requests, omitted
