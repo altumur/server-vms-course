@@ -2176,9 +2176,29 @@ class Asker:
     def __init__(self, serial: str, flash, dial, clock=None):
         self.serial, self.flash, self.dial, self.clock = str(serial), flash, dial, clock or time.time
 
+    # ONE TORN ENTRY OF THE BOOK IS THAT TARGET'S (vmsserver's eleventh review, the half of the `publish_asks` major that
+    # sits on the camera): the book was read whole with bare `json.loads`, and one torn `domain/asks` entry the agent
+    # carried home raised out of `book()` — no ask to any target. Each entry is read through `BOOKS`: one that does not
+    # parse is the one read last of it (`_last`), or none, counted once; the other targets are asked as before.
     def book(self) -> dict[str, list[dict]]:
         items, _ = self.flash.get(ASKS_PATH)
-        return {ref: json.loads(raw)["roads"] for ref, raw in (items or {}).items()}
+        last = self.__dict__.setdefault("_last", {})
+
+        def roads(raw):
+            out = _an_object(json.loads(raw))["roads"]
+            if not isinstance(out, list):
+                raise TypeError("the roads are a list")
+            for r in out:
+                _a_road(r)
+            return out
+        book = {}
+        for ref, raw in (items or {}).items():
+            got = BOOKS.read(f"{ASKS_PATH}/{self.serial}/{ref}", lambda raw=raw: roads(raw))
+            if got is not None:
+                last[ref] = got
+            if ref in last:
+                book[ref] = last[ref]
+        return book
 
     def ask(self, target: str, action: dict, within: float) -> tuple[object, str] | None:
         """Returns (the ingest, the ask's id) — or None when no ingest answered. The outcome is read with

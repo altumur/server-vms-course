@@ -107,7 +107,7 @@ from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
 from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
-                     device_identities, device_row, identity_of, live_shm, live_url, said_id,
+                     device_identities, device_row, identity_of, live_shm, live_url, said_id, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
 
@@ -1836,7 +1836,7 @@ class VmsWorker(Worker):
     # …AND AN ARGUMENT IS A NUMBER OR A WORD (the product's cross-check of the eleventh review: an argument had no size).
     # `state` went to the driver as it stood in the row, as long as the row's ceiling let it be; one longer than
     # `ARG_MAX` is that command's refusal, its value not repeated.
-    ARG_MAX = 32
+    ARG_MAX = COMMAND_ARG_MAX
 
     def perform(self, dev, row: dict, it: dict) -> dict:
         action = str(it.get("action", ""))
