@@ -77,6 +77,7 @@ from dataclasses import dataclass, field
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
+from .doors import LIST_SEPARATOR, numeric
 from .rows import PARSE_ERRORS, Table, garbled_counts
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
 from .variables import Conflict, Variables, cas_pause
@@ -428,8 +429,17 @@ class Assignment:
     rev: int = 0
 
     # `{"units": "1,2,3", "rev": n}` — the Variables row form (strings only).
-    def to_items(self) -> dict:
-        return {"units": ",".join(self.units), "rev": self.rev}
+    #
+    # A NAME WITH THE SEPARATOR IN IT IS NOT WRITTEN INTO THE LIST (the review's ninth pass, the product team's sibling B).
+    # Joined, `1,9` read back as `1` and `9`: its worker started `9` — another unit, or nothing — and never `1,9`, and no
+    # reader can tell the two apart afterwards. `create` refuses such a name now (`doors.unnamable`, `unit`); a unit
+    # stored under one before is left out of every assignment — unplaced, not split — counted and named once
+    # (`UNLISTED`), and logged. So whatever reads `units` back reads only whole names.
+    def to_items(self, key: str = "") -> dict:
+        for u in self.units:
+            if LIST_SEPARATOR in str(u):
+                UNLISTED.garbled(f"{key or self.worker}#{u}", f"{LIST_SEPARATOR!r} in its name")
+        return {"units": LIST_SEPARATOR.join(u for u in self.units if LIST_SEPARATOR not in str(u)), "rev": self.rev}
 
     # The inverse; a missing row is an empty assignment with `rev 0`. Empty strings in the list are dropped.
     @classmethod
@@ -505,7 +515,8 @@ class Slot:
 # to pick the next unused number.
 def slot_number(name: str) -> int:
     tail = name.rsplit("-", 1)[-1]
-    return int(tail) if tail.isdigit() else 0
+    n = numeric(tail)                                   # not `isdigit` + `int`: `w-²` raised (the ninth pass's sibling)
+    return 0 if n is None else n
 
 
 # A slot row that does not parse — a hand edit, half a write — is ONE row's trouble, as a heartbeat's is
@@ -537,6 +548,9 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
 # — it is published, never compared across writes.
 ASSIGNMENTS = Table("assignment", "read for the units it names")
 ASSIGNMENTS_GARBLED, _garbled_assignments = ASSIGNMENTS.counts, ASSIGNMENTS.bad
+# A unit whose name holds the list's separator: written into no assignment (`Assignment.to_items`; the ninth pass).
+UNLISTED = Table("unlisted", "it is assigned to nobody — the list would split it; create it again under a name without "
+                             "a comma", "unit in an assignment")
 
 
 def read_assignment(key: str, worker: str, items) -> "Assignment":
@@ -558,6 +572,95 @@ def read_hold(key: str, place: str, items) -> "Slot | None":
     return HOLDS.read(key, lambda: Slot.from_items(place, items))
 
 
+# -- one pass, one read of each key (the scaling pass after the eighth review) ----------------------------------------
+# A controller's pass asks a dozen questions per unit — its row, its placement, which server a worker is on, whether
+# that server's resource answers, who is leaving — and every question was a read of the store, asked again for the
+# next unit. A thousand cameras on twenty workers cost one idle pass some 64 000 reads (`tests/test_read_budget.py`
+# counts them): the snapshot alone read every heartbeat again for every camera, and `ensure_home` every recorder's.
+# Within one pass an answer cannot be more than a pass old anyway; so inside `one_pass` the store is asked ONCE per key
+# and per listing, and the answer is kept until the pass ends — never longer: nothing survives between passes, and
+# the process can still be killed anywhere.
+#
+# Writes go to the store as they did, and a write FORGETS what it touched — the key, and every listing it could be in —
+# so the pass reads back what it wrote, not what it had read before. A write that fails forgets too: a CAS that lost
+# is retried by `Controller.write` against the store, not against the copy that lost.
+class _PassStore:
+    """One store's reads for one pass: each `get` and `list` asked once; a write forgets what it touched."""
+
+    def __init__(self, real):
+        self.real, self._got, self._listed, self._memo = real, {}, {}, {}
+
+    def get(self, key):
+        if key not in self._got:
+            self._got[key] = self.real.get(key)
+        got = self._got[key]
+        if isinstance(got, tuple) and got and isinstance(got[0], dict):
+            return dict(got[0]), got[1]               # Variables' items are a copy, as the store's own are
+        return got
+
+    def list(self, prefix, *a, **kw):
+        if a or kw:
+            return self.real.list(prefix, *a, **kw)
+        if prefix not in self._listed:
+            self._listed[prefix] = list(self.real.list(prefix))
+        return list(self._listed[prefix])
+
+    # What a pass derives from one prefix — every heartbeat under it parsed, the rows grouped by a field — kept like a
+    # read, and forgotten like one: by a write to anything under the prefix.
+    def memo(self, prefix: str, read, name: str = ""):
+        if (prefix, name) not in self._memo:
+            self._memo[(prefix, name)] = read()
+        return self._memo[(prefix, name)]
+
+    def _forget(self, key: str) -> None:
+        self._got.pop(key, None)
+        for p in [p for p in self._listed if key.startswith(p)]:
+            del self._listed[p]
+        for p in [p for p in self._memo if key.startswith(p[0])]:
+            del self._memo[p]
+
+    def _wrote(self, call, key, *a, **kw):
+        try:
+            return call(key, *a, **kw)
+        finally:
+            self._forget(key)
+
+    def put(self, key, *a, **kw):
+        return self._wrote(self.real.put, key, *a, **kw)
+
+    def delete(self, key, *a, **kw):
+        return self._wrote(self.real.delete, key, *a, **kw)
+
+    def put_durable(self, key, data):
+        return self._wrote(getattr(self.real, "put_durable", self.real.put), key, data)
+
+    def put_new(self, key, data):
+        return self._wrote(self.real.put_new, key, data)
+
+    def __getattr__(self, name):
+        return getattr(self.real, name)
+
+
+@contextmanager
+def one_pass(*ctls):
+    """Inside: each controller reads each key of its stores once, and sees what it writes. Controllers over the same store
+    share its reads (the console's loops write through one and read through another). Only on the calling thread — the
+    console's doors read through the same controller from theirs, and see the store. A pass inside a pass is the outer one."""
+    stores: dict[int, _PassStore] = {}
+    opened = []
+    for c in ctls:
+        if c._reads() is not None:
+            continue
+        v, o = c.__dict__["_vars"], c.__dict__["_objects"]
+        c._pass_local.reads = (stores.setdefault(id(v), _PassStore(v)), stores.setdefault(id(o), _PassStore(o)))
+        opened.append(c)
+    try:
+        yield
+    finally:
+        for c in opened:
+            c._pass_local.reads = None
+
+
 # The only writer of `<name>/*`. It holds nothing: every method reads the store, decides, and writes by CAS,
 # so two instances are harmless — this is the property `spec.SpecController` and the VMS controller inherit,
 # and the reason the controller is never on the recovery path.
@@ -567,8 +670,41 @@ class Controller:
 
     # Keeps the `Subsystem`, the two stores and a wall clock (tests inject a fake).
     def __init__(self, sub: Subsystem, vars_: Variables, objects: ObjectStore, wall=time.time):
+        self._pass_local = threading.local()
         self.sub, self.vars, self.objects, self.wall = sub, vars_, objects, wall
         check_schema(vars_)                       # a build older than the store does not run at all
+
+    # The stores — or, inside `one_pass` on this thread, the pass's reads of them. Assigning sets the store itself.
+    def _reads(self):
+        local = self.__dict__.get("_pass_local")
+        return getattr(local, "reads", None) if local is not None else None
+
+    @property
+    def vars(self):
+        r = self._reads()
+        return r[0] if r is not None else self.__dict__["_vars"]
+
+    @vars.setter
+    def vars(self, v):
+        self.__dict__["_vars"] = v
+
+    @property
+    def objects(self):
+        r = self._reads()
+        return r[1] if r is not None else self.__dict__["_objects"]
+
+    @objects.setter
+    def objects(self, o):
+        self.__dict__["_objects"] = o
+
+    def one_pass(self):
+        return one_pass(self)
+
+    # A prefix's heartbeats, parsed — once per pass inside one (`_PassStore.memo`), on every call outside. `rows`: what is
+    # derived from rows under the prefix rather than from objects (`SpecController._rows_by`).
+    def _per_pass(self, prefix: str, read, name: str = "", rows: bool = False):
+        store = self.vars if rows else self.objects
+        return store.memo(prefix, read, name) if isinstance(store, _PassStore) else read()
 
     # The one write primitive: read `(items, idx)`, call `mutate(dict(items or {}))`; if it returns `None`
     # nothing is written and the current items are returned; otherwise `put(cas=idx)`; on `Conflict` re-read
@@ -599,13 +735,24 @@ class Controller:
         the controller keeps — a fact it reads."""
         out = {}
         now = self.wall()
-        # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
-        for key in self.objects.list(self.sub.heartbeats_prefix()):
-            raw = self.objects.get(key)
-            hb = parse_heartbeat(key, raw) if raw else None
-            if hb is not None and is_live(self.sub.name, hb.ts, now, max_age):
+        for hb in self._heartbeats():
+            if is_live(self.sub.name, hb.ts, now, max_age):
                 out[hb.worker] = hb
         return out
+
+    # Every heartbeat under the prefix, parsed, whatever its age — read once per pass (`_per_pass`): `capacity_of`,
+    # `server_of`, `place_of` ask it per unit and per candidate, and each asking was a listing and a read of every one.
+    def _heartbeats(self) -> list[Heartbeat]:
+        def read():
+            out = []
+            # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
+            for key in self.objects.list(self.sub.heartbeats_prefix()):
+                raw = self.objects.get(key)
+                hb = parse_heartbeat(key, raw) if raw else None
+                if hb is not None:
+                    out.append(hb)
+            return out
+        return self._per_pass(self.sub.heartbeats_prefix(), read)
 
     # Reads one worker's row. One whose `rev` does not parse is read for the units it names (`read_assignment`).
     def assignment(self, worker: str) -> Assignment:
@@ -619,7 +766,7 @@ class Controller:
     def assign(self, worker: str, units: list[str]) -> Assignment:
         def mutate(items):
             rev = self._assignment(worker, items).rev + 1
-            return Assignment(worker, sorted(set(units), key=str), rev).to_items()
+            return Assignment(worker, sorted(set(units), key=str), rev).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Read-modify-write adding one unit; returns `None` from the mutator (no write) if already present. Two
@@ -631,7 +778,10 @@ class Controller:
             a = self._assignment(worker, items)
             if unit in a.units:
                 return None
-            return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items()
+            if LIST_SEPARATOR in str(unit):                 # never into the list (`Assignment.to_items`): no write either
+                UNLISTED.garbled(f"{self.sub.assignment(worker)}#{unit}", f"{LIST_SEPARATOR!r} in its name")
+                return None
+            return Assignment(worker, sorted(set(a.units) | {unit}, key=str), a.rev + 1).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # The mirror of `assign_add`.
@@ -640,7 +790,7 @@ class Controller:
             a = self._assignment(worker, items)
             if unit not in a.units:
                 return None
-            return Assignment(worker, [u for u in a.units if u != unit], a.rev + 1).to_items()
+            return Assignment(worker, [u for u in a.units if u != unit], a.rev + 1).to_items(self.sub.assignment(worker))
         return self._assignment(worker, self.write(self.sub.assignment(worker), mutate))
 
     # Every row under `<name>/workers/`.

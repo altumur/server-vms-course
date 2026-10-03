@@ -61,12 +61,12 @@ and the worker is the subsystem.
 #   Extended only by `register_constraint`.
 #
 # ## Notes
-# - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached, so the
-#   process can be killed anywhere.
+# - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached between passes,
+#   so the process can be killed anywhere. Within one pass each key is read once (`contract.one_pass`).
 # - The order inside `place` — placement row, then assignment — is what makes two instances agree: the row
 #   is the lock.
-# - `capacity_of`/`labels_of`/`server_of` call `workers_seen(max_age=1e12)` each time, i.e. one object-store
-#   listing per call; correctness over speed, fine on one box.
+# - `capacity_of`/`labels_of`/`server_of` call `workers_seen(max_age=1e12)` each time: outside a pass one
+#   object-store listing per call, inside one (`pass_once`, the snapshot) the heartbeats read once for the pass.
 # ================================================================================================
 from __future__ import annotations
 
@@ -77,10 +77,10 @@ from dataclasses import dataclass, field
 
 from urllib.parse import urlsplit
 
-from .doors import unnamable
+from .doors import numeric, unnamable
 from .secrets import is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, slot_number
+from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -108,6 +108,10 @@ class Refused(Exception):
 
 # The counter of numeric ids, `<name>/next_id`, through the one reader of rows (`SpecController._next_id`).
 NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, and the row is written whole")
+# A unit stored under a name `create` refuses today (`doors.unnamable`, `unit`; the review's ninth pass): served as it
+# stands — but a name with `,` is in no assignment (`contract.Assignment.to_items`), so nobody runs it.
+UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma is assigned to nobody; create it again "
+                                "under a name without the character", "unit's name")
 
 
 # A stored placement decision: `unit` (int for numeric ids, str otherwise), `worker`, `reason` (a sentence
@@ -665,8 +669,12 @@ class NearIndex:
 GARBLED_ROW = object()     # what `SpecController._parsed` says of a row that does not parse: there, and unreadable
 
 
+#
+# By `doors.numeric`, never `isdigit` + `int` (the review's ninth pass): `"7²".isdigit()` is true and `int` raises — a
+# name the API took, and every list of its subsystem (`units`, `/where`, a drain's order) went unanswered with it.
 def _unit_key(u: str):
-    return (0, int(u)) if u.isdigit() else (1, u)
+    n = numeric(u)
+    return (0, n) if n is not None else (1, str(u))
 
 
 # The `rev` a placement row gets when it is written again. One that does not parse counts from nothing: the row is
@@ -740,9 +748,14 @@ class SpecController(Controller):
     # `capacity_of` is asked of every candidate while ANY unit is placed, so one worker's field stopped every
     # placement. Such a field is read as "it has not said" (`_number`): the fallback, no headroom, no failover time.
     def capacity_of(self, worker: str) -> int:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         said = self._number(worker, hb, self.spec.capacity_from, int) if hb else None
         return self.capacity if said is None else said
+
+    # What a worker last said, any age — the four questions above and `place_of` ask it per candidate and per unit placed.
+    # Inside a pass it is one dict built once (`_per_pass`; the scaling pass), not a walk of every heartbeat per question.
+    def _said(self, worker: str):
+        return self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age").get(worker)
 
     # Through `rows.number` (the review's ninth pass, the sibling of `failover_seconds`): its own `(ValueError, TypeError)`
     # let `int(inf)` — `headroom: Infinity`, which JSON reads — raise `OverflowError` out of `headroom()`, and every
@@ -756,12 +769,12 @@ class SpecController(Controller):
 
     # The `labels` string of its heartbeat, split on commas.
     def labels_of(self, worker: str) -> set[str]:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         return set(l for l in hb.extra.get("labels", "").split(",") if l) if hb else set()
 
     # The heartbeat's `server`, `"?"` if unknown. Goes into placement reasons and the snapshot.
     def server_of(self, worker: str) -> str:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         return hb.extra.get("server", "?") if hb else "?"
 
     # The place this worker occupies, in the units the spec counts in: its server, or its volume when the
@@ -770,7 +783,7 @@ class SpecController(Controller):
     def place_of(self, worker: str) -> str:
         if self.spec.place_by == "server":
             return self.server_of(worker)
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         if hb is None:
             return "?"
         # Three cases, and the difference between the last two is the point.
@@ -817,7 +830,7 @@ class SpecController(Controller):
     def _largest_id(self) -> int:
         prefix = self.sub.config(self.spec.rows, "")
         ids = [k[len(prefix):] for k in self.vars.list(prefix)]
-        return max([int(i) for i in ids if i.isdigit()] + [0])
+        return max([n for i in ids if (n := numeric(i)) is not None] + [0])     # `doors.numeric`: not `isdigit` + `int`
 
     # Keep every derived row in step: on create/update write `{item: to_item(row[field])}` only if it
     # differs; on delete write `on_delete` if set and the row exists.
@@ -870,7 +883,9 @@ class SpecController(Controller):
             # `console.label`), a `|`-joined field of a heartbeat (`closed`, `hits`), a log line. Refused here, the rule
             # the domain keeps for a user's name (`domain/grants.py`, `name_refused`): no `"`, no `|`, no control
             # character or line or paragraph separator (Unicode Cc, Zl, Zp).
-            bad = unnamable(uid)
+            # …and a unit's name is in lists and sorted as a number (the ninth pass, sibling B of the product team): no
+            # `,` — an assignment is its units joined by one — and no digit but ASCII 0–9 (`doors.unnamable`, `unit`).
+            bad = unnamable(uid, unit=True)
             if bad:
                 raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
         if reserve is not None:
@@ -1026,20 +1041,30 @@ class SpecController(Controller):
     # hand, a build that wrote another layout — is ONE unit nobody serves, not the end of every caller's pass
     # (the review's second pass, M7): skipped, counted in `rows_garbled` (the pass report; `<sub>_rows_garbled`),
     # logged once per row until it parses again.
+    #
+    # Whatever a parse raises (`PARSE_ERRORS`: a row nested past what JSON reads, a number past a float, a row that is
+    # not a map), and the read of a file store's row that is not JSON at all (the review's ninth pass, beside `7²`). A
+    # row whose NAME a unit could not be created under today (`doors.unnamable`, `unit`: a `,`, a digit not ASCII) is
+    # served as it stands, and counted and named once (`UNIT_NAMES`): somebody is to create it again under another name.
     def units(self) -> list[dict]:
         out, garbled = [], 0
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
-            it, _ = self.vars.get(p)
-            if it and it.get("deleted") != "true":
-                try:
-                    out.append(self.spec.row(it))
-                except PARSE_ERRORS as e:             # a `json` field ten thousand deep too (the ninth review's sweep)
-                    garbled += 1
-                    if p not in self._garbled_rows:
-                        self._garbled_rows.add(p)
-                        log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+            try:
+                it, _ = self.vars.get(p)
+                if not it or it.get("deleted") == "true":
                     continue
-                self._garbled_rows.discard(p)
+                out.append(self.spec.row(it))
+            except PARSE_ERRORS as e:
+                garbled += 1
+                if p not in self._garbled_rows:
+                    self._garbled_rows.add(p)
+                    log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
+                continue
+            self._garbled_rows.discard(p)
+            if (bad := unnamable(out[-1]["id"], unit=True)):
+                UNIT_NAMES.garbled(p, f"its name holds {', '.join(repr(c) for c in bad)}")
+            else:
+                UNIT_NAMES.parsed(p)
         self.rows_garbled = garbled
         return sorted(out, key=lambda r: _unit_key(str(r["id"])))
 
@@ -1101,8 +1126,8 @@ class SpecController(Controller):
         if not value:
             return None
         mine, found = str(row["id"]), []
-        for other in self.units():
-            if str(other["id"]) == mine or self.group_value(other) != value:
+        for other in self._rows_by("group", self.group_value).get(value, ()):
+            if str(other["id"]) == mine:
                 continue
             pl = self.placement(other["id"])
             if pl is not None and pl.worker in pool:
@@ -1114,6 +1139,17 @@ class SpecController(Controller):
     # a generic loader has no business parsing a scheme it has never heard of.
     def group_value(self, row: dict) -> str:
         return str(row.get(self.spec.group_by, "") or "")
+
+    # Every live row by one value of it — the group, the spread field — built once a pass (`_per_pass`). Asked for every
+    # unit waiting to be placed, it was every row read and parsed again for each: 500 cameras waiting of 600 cost a pass
+    # 670 000 reads and ten seconds (the scaling pass; `tests/test_read_budget.py`). Rows in `units()` order.
+    def _rows_by(self, name: str, value_of) -> dict[str, list[dict]]:
+        def read():
+            out: dict[str, list[dict]] = {}
+            for r in self.units():
+                out.setdefault(value_of(r), []).append(r)
+            return out
+        return self._per_pass(self.sub.config(self.spec.rows) + "/", read, name, rows=True)
 
     # The servers already carrying a unit that shares this row's `spread_by` value — where this one may
     # therefore NOT go. Empty when the subsystem does not ask to spread, which is every subsystem today.
@@ -1130,8 +1166,8 @@ class SpecController(Controller):
         if value in (None, ""):
             return set()
         mine, taken = str(row["id"]), set()
-        for other in self.units():
-            if str(other["id"]) == mine or str(other.get(field)) != str(value):
+        for other in self._rows_by(f"spread:{field}", lambda r: str(r.get(field))).get(str(value), ()):
+            if str(other["id"]) == mine:
                 continue
             pl = self.placement(other["id"])
             if pl is not None:
@@ -1189,8 +1225,8 @@ class SpecController(Controller):
     # process starts, a bench). Nomad's `meta.archive` constraint puts a worker where disks are declared;
     # this is the live fact: whether the resource there still answers.
     def resource_state(self, server: str, lost_after: float = 45.0) -> str:
-        from .resource import resources_seen                       # the platform's own reader of the resource heartbeats
-        hb = resources_seen(self.objects).get(server)
+        from .resource import RESOURCES, resources_seen            # the platform's own reader of the resource heartbeats
+        hb = self._per_pass(RESOURCES + "/", lambda: resources_seen(self.objects)).get(server)   # asked per worker, read once a pass
         if hb is None:
             return "unknown"
         return "live" if is_live("platform", float(hb["ts"]), self.wall(), lost_after) else "silent"
@@ -1255,6 +1291,10 @@ class SpecController(Controller):
     # after the reboot.
     def would_strand(self, server: str, workers: list[str] | None = None) -> list[str]:
         """Unit ids that nothing left could serve if `server` stopped now."""
+        with one_pass(self):
+            return self._would_strand(server, workers)
+
+    def _would_strand(self, server: str, workers: list[str] | None) -> list[str]:
         pool = [w for w in self._pool(workers) if self.server_of(w) != server]
         out = []
         for row in self.units():
@@ -1282,12 +1322,19 @@ class SpecController(Controller):
     def near_index(self, beats: dict | None = None) -> NearIndex:
         """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
         `console.heartbeats` returns them, when the caller has read them; else they are read here, once."""
-        by: dict[str, list[tuple[str, str, str]]] = {}
         if self.spec.near == "none":
-            return NearIndex(by)
+            return NearIndex({})
         if beats is None:
+            # Inside a pass the look is the pass's (`_per_pass`): its heartbeats read once, the index built once — and a
+            # step that did not hand one in (`_pick` from `place`, `home_for`) gets the same one.
             from .console import heartbeats                        # the read model's scan, without the age filter
-            beats = heartbeats(self.objects, self.spec.near + "/")
+            prefix = f"{self.spec.near}/heartbeats/"
+            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"))
+            return self._per_pass(prefix, lambda: self._near_index(beats), "near_index")
+        return self._near_index(beats)
+
+    def _near_index(self, beats: dict) -> NearIndex:
+        by: dict[str, list[tuple[str, str, str]]] = {}
         field, now = self.spec.near_of, self.wall()
         for w, hb in beats.items():
             if not is_live(self.spec.near, hb.ts, now, 45.0):
@@ -1411,7 +1458,7 @@ class SpecController(Controller):
         if row is None or self.retired(row):
             return None                                 # finished work is not placed, and not "unplaceable" either
         pool = self.eligible(row, self._pool(workers))
-        best, free, near = self._pick(pool, uid)
+        best, free, near = self._pick(pool, uid, self.near_index())      # the pass's one look (`near_index`), not one per unit
         if best is None:
             return None                                 # "the system is full" — or nothing that can reach it; never "w-1 is full"
         reason = f"most free capacity ({free}) among {len(pool)} worker(s)"
@@ -1453,7 +1500,15 @@ class SpecController(Controller):
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass.
     PASS_KEY = CONTROLLER_PASS                        # granted by `acl_objects_controller` (the review's ninth pass)
 
+    # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
+    # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
+    # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
+    # snapshot opens the pass around both (`vms/__main__._controller_loop`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
+        with one_pass(self):
+            return self._pass_once(home_budget)
+
+    def _pass_once(self, home_budget: int) -> dict:
         import json
         started, now = time.monotonic(), self.wall()
         prev = self.pass_report() or {}
@@ -1575,6 +1630,10 @@ class SpecController(Controller):
     # labels named and the live worker count.
     def unplaceable(self) -> list[dict]:
         """Units nothing live can serve — the console's honest answer, with the labels named."""
+        with one_pass(self):                          # `eligible` per unit asked the heartbeats per worker, again per unit
+            return self._unplaceable()
+
+    def _unplaceable(self) -> list[dict]:
         live = self._pool(None)
         return [{"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 for r in self.units()
@@ -1654,6 +1713,7 @@ class SpecController(Controller):
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")
         for w, server in self.gone_servers().items():                  # the server is gone: its slot lapsed and its resource silent
             gone_for.setdefault(w, f"server {server} gone: slot {w} lapsed and its resource silent")
+        idx = None                                    # one look at what is followed, taken when a unit is moved
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
@@ -1669,7 +1729,8 @@ class SpecController(Controller):
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
                 pool = self.eligible(row, live) if row else live
-                best, free, near = self._pick(pool, uid)
+                idx = self.near_index() if idx is None else idx
+                best, free, near = self._pick(pool, uid, idx)
                 if best is None:
                     # THIS unit waits, listed where it was — and the next one is looked at: each has filters of
                     # its own, and a `break` here let one unit with a rare label, first in the list, hold every
@@ -1693,10 +1754,13 @@ class SpecController(Controller):
         if budget <= 0 or not self.spec.home:
             return []
         moves, pool = [], self._pool(workers)
+        idx = None                                    # one look for every unit that follows, taken at the first
         for row in self.units():
             if len(moves) >= budget:
                 break
-            uid, home = row["id"], self.home_for(row)
+            if idx is None and self.spec.home == "near":
+                idx = self.near_index()
+            uid, home = row["id"], self.home_for(row, idx)
             pl = self.placement(uid)
             if not home or pl is None or self.place_of(pl.worker) == home:
                 continue
@@ -1896,6 +1960,10 @@ class SpecController(Controller):
     # rather than a preference.
     def snapshot_shards(self) -> dict[str, dict]:
         """The snapshot as one object per worker, keyed by shard name."""
+        with one_pass(self):                          # `server_of` per unit read every heartbeat per unit (the scaling pass)
+            return self._snapshot_shards()
+
+    def _snapshot_shards(self) -> dict[str, dict]:
         keep = ["id"] + [f for f in self.spec.snapshot if f != "id"] + ["revision"]
         now, out = self.wall(), {}
         for r in self.units():
@@ -1957,6 +2025,10 @@ class SpecController(Controller):
 
     # Writes one object per worker under `<name>/snapshot/`.
     def publish_snapshot(self) -> None:
+        with one_pass(self):
+            self._publish_snapshot()
+
+    def _publish_snapshot(self) -> None:
         import json
         shards = self.snapshot_shards()
         prefix = self.sub.snapshot_prefix()
