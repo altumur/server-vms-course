@@ -137,6 +137,10 @@ class NoSlot(RuntimeError):
     """This instance gave its slot up and has not claimed another yet: it is nobody, and takes nothing."""
 
 
+class NoOffer(NoSlot):
+    """A spare found no offer of its label set to take (`Worker.claim_slot(spare_for=)`): it waits, holding nothing."""
+
+
 # Where a worker registers with its server's resource (`Worker.present`, `resource.workers_here`): a directory in
 # the resource's tree — a dot, so the tree's walks do not take it for a subsystem — one lock file per process.
 PRESENCE = ".workers"
@@ -152,6 +156,17 @@ SLOT_LOST_AFTER = 45.0
 
 # How long a hung worker keeps its units past its slot's `until` before they move anyway (`Controller.hung_move_after`).
 HUNG_MOVE_AFTER = 900.0
+
+# How long an offer a spare took counts as a worker on its way while that worker has not been heard
+# (`SpecController.offer_spares`): the product's 90 s — a start, its first pass and its first heartbeat, with room.
+OFFER_GRACE = 90.0
+
+
+def label_set(labels) -> str:
+    """A set of labels as one string, the way offers and `SPARE_FOR` say it: sorted, comma-joined, "" the empty set.
+    Takes the comma-joined string or any iterable of labels."""
+    items = labels.split(",") if isinstance(labels, str) else labels
+    return ",".join(sorted({str(l).strip() for l in items if str(l).strip()}))
 
 
 # The store's layout version — absent means "whatever this build is", which is a fresh install.
@@ -628,12 +643,22 @@ class Slot:
     released: bool = True
     gen: int = 0
     by: str = ""                     # a HOLD's row: the slot of the worker holding the place (`claim_hold`)
+    # AN OFFER (`SpecController.offer_spares`): a slot row nobody holds, written by the controller for a worker it is
+    # short of — `offer` the label set a spare must be for (`SPARE_FOR`; "" the empty set), None: not an offer.
+    # `offered_at` when it was written; `taken_at` when a spare took it (`Worker._claim_offer`). A taken offer keeps
+    # the three through its renewals: the controller counts it as a worker on its way until that worker is heard,
+    # for `OFFER_GRACE`.
+    offer: str | None = None
+    offered_at: float = 0.0
+    taken_at: float = 0.0
 
     # Row conversion; `released` is stored as `"true"`/`"false"`. A missing row is `Slot(name)` — released,
     # no holder.
     def to_items(self) -> dict:
         return {"holder": self.holder, "until": self.until, "released": "true" if self.released else "false", "gen": self.gen,
-                **({"by": self.by} if self.by else {})}
+                **({"by": self.by} if self.by else {}),
+                **({"offer": self.offer, "offered_at": self.offered_at, "taken_at": self.taken_at}
+                   if self.offer is not None else {})}
 
     @classmethod
     def from_items(cls, name: str, items: dict | None) -> "Slot":
@@ -643,16 +668,24 @@ class Slot:
         # `int(until - now)` in the words about it raised `OverflowError` past the `ValueError` its callers caught —
         # `/servers` answered nothing and the controller's pass stopped at its first step. Not finite: the row does not
         # parse, and is that slot's trouble alone.
+        offer = str(items["offer"]) if "offer" in items else None
         return cls(name, items.get("holder", ""), finite(items.get("until", 0)), items.get("released") == "true",
-                   int(items.get("gen", 0)), str(items.get("by", "")))
+                   int(items.get("gen", 0)), str(items.get("by", "")), offer,
+                   finite(items.get("offered_at", 0)) if offer is not None else 0.0,
+                   finite(items.get("taken_at", 0)) if offer is not None else 0.0)
+
+    # An offer nobody has taken yet: what only a spare of its label set may take.
+    def offered(self) -> bool:
+        return self.offer is not None and self.holder == "" and not self.released
 
     # Held, not released, and past `until`: the holder went silent — a crash.
     def lapsed(self, now: float) -> bool:
         return not self.released and self.holder != "" and now > self.until
 
-    # Released, or never held, or past `until`. (A lapsed slot is claimable; a released one is too.)
+    # Released, or never held, or past `until`. (A lapsed slot is claimable; a released one is too.) Never an offer
+    # nobody has taken: that is a spare's (`Worker._claim_offer`), and an ordinary process makes a slot of its own.
     def claimable(self, now: float) -> bool:
-        return self.released or self.holder == "" or now > self.until
+        return not self.offered() and (self.released or self.holder == "" or now > self.until)
 
 
 # The integer after the last `-` in a slot name (`w-3` → 3), 0 if not numeric. Used to order free slots and
@@ -1070,7 +1103,10 @@ class Controller:
     #
     #   alive    the slot's `until` is ahead (it renews), or passed less than `SLOT_LOST_AFTER` ago (the slot outlives
     #            the lease — 45 s against `ttl − margin` = 25 — and the store's lag is on top), or the worker was heard
-    #            from within `SLOT_LOST_AFTER` (a heartbeat dated ahead of this clock too). Nothing happens
+    #            from within `SLOT_LOST_AFTER` (a heartbeat dated ahead of this clock too). Nothing happens — except
+    #            that a slot past its `until` whose server's resource answers and says the process is dead moves at
+    #            once, without the margin and whatever its last heartbeat (`_dead_on`; the owner, 3 Oct: failover
+    #            shortened by the resource — a slot's 45 s, where it was 45 + 45)
     #
     # Then, the resource on the server the worker last said it ran on says two things in its heartbeat: which workers are
     # placed there (`workers` — registered with it, `Worker.present`) and whose processes are alive (`running` — still
@@ -1084,10 +1120,16 @@ class Controller:
     #   move        the process is dead (in `workers`, not in `running`), or the resource is silent too: the units move,
     #               the slot stays — the server's supervisor brings the process back under its name, with nothing to do
     #   release     the resource answers and does not list the worker at all: that server does not run it any more — the
-    #               slot is released (`release_unlisted`), and the units move
+    #               slot is released (`release_unlisted`), and the units move. A slot row that does not parse is not
+    #               released — `move`: the units go, the row stays as it is (the product's DZ)
     #   wait     a resource without those fields (an older build), a worker that never registered (`present` not in its
-    #            heartbeat), no resource on its server, or no server known: what it was before — a silent resource under
-    #            `servers: distinct` with a resource required moves (`_moves_off_silent`), anything else waits
+    #            heartbeat), no resource on its server, or no server known: what it was before — a silent resource
+    #            where the spec requires one moves (`_moves_off_silent`), anything else waits
+    #
+    # A SLOT ROW THAT DOES NOT PARSE (`slot` None; the product's DZ) is not a dead worker: no lease to read, so it is
+    # "not known", and moves only on two words — its worker's heartbeat silent past `SLOT_LOST_AFTER`, AND its server's
+    # resource saying there is no such process (placed and not running, or not listed) or silent itself. Neither the
+    # shortened move nor a release is made on it.
     #
     # Whatever the owner decides next changes this function, and every caller follows. What none of it covers: a worker
     # cut off from the store together with its whole server records on to its lease's end plus `UNCONFIRMED_MAX`
@@ -1100,10 +1142,14 @@ class Controller:
         limit = self.hung_move_after if hung_after is None else hung_after
         if slot is not None and slot.until > now:
             return "alive", "", f"{worker} holds its name for another {int(slot.until - now) + 1} s"
+        hb = self._heard(worker)                      # read once: the shortened move asks where it ran, the rest below
+        dead = self._dead_on(worker, hb) if slot is not None else None
+        if dead:
+            return "move", dead, (f"{worker}'s process on {dead} is not running: moved when its slot ran out, its "
+                                  f"server's resource saying so")
         if slot is not None and now <= slot.until + SLOT_LOST_AFTER:
             return "alive", "", (f"{worker} stopped renewing its name {int(now - slot.until)} s ago; what it started "
                                  f"may still be writing for {int(slot.until + SLOT_LOST_AFTER - now) + 1} s more")
-        hb = self._heard(worker)
         ts = None if hb is None else number(f"{self.sub.heartbeat_key(worker)}#ts", hb.ts, float, None)
         if ts is not None and now - ts <= SLOT_LOST_AFTER:
             return "alive", "", f"{worker} was heard from {max(0, int(now - ts))} s ago"
@@ -1129,7 +1175,25 @@ class Controller:
                                     f"up to {int(limit)} s; look at {server}")
         if worker in placed:
             return "move", server, f"{worker}'s process on {server} is not running"
+        if slot is None:                              # a row nobody can read is not written over as released (DZ)
+            return "move", server, (f"{server} does not run {worker} any more and its slot row does not parse: its "
+                                    f"units move, the row is left as it is")
         return "release", server, f"{server} does not run {worker} any more: its resource answers and lists it nowhere"
+
+    # FAILOVER SHORTENED BY THE RESOURCE (the owner's decision, 3 Oct). The margin past a slot's `until`
+    # (`SLOT_LOST_AFTER`) is there for a process that may still be writing: it stopped renewing, and nobody can say
+    # whether it lives. When its server's resource answers and says the process is NOT running — registered there
+    # (`workers`), its lock let go (not in `running`) — somebody can: a dead process writes nothing, and its units
+    # move the moment its slot runs out, not 45 s after. The server the worker last said it runs on, when all of that
+    # is said; else None, and the slot is judged as before. A silent resource shortens nothing: then nobody can say.
+    def _dead_on(self, worker: str, hb) -> str | None:
+        server = hb.extra.get("server") if hb is not None else None
+        if not isinstance(server, str) or not server or hb.extra.get("present") is not True:
+            return None
+        if self.resource_state(server, SLOT_LOST_AFTER) != "live":
+            return None
+        said = self.said_on(server)
+        return server if said is not None and worker in said[0] and worker not in said[1] else None
 
     # Since when a hung worker has been hung: its slot's `until` — or, for a row that does not parse, its last heartbeat.
     def hung_since(self, worker: str, slot: "Slot | None") -> float:
@@ -1148,8 +1212,9 @@ class Controller:
     # which every other process judges (`published_hung_limit`).
     hung_move_after = HUNG_MOVE_AFTER
 
-    # Before the resource said who runs where, a slot moved off by itself only when its server's resource was silent too
-    # and one worker per server carries units (`SpecController`). The base controller moves nothing on its own.
+    # Where the resource cannot say who runs where (an older build, a worker that never registered), whether a lapsed slot
+    # on a server whose resource is silent too moves — two silences from one server, a fact about the server. The base
+    # controller moves nothing on its own; `SpecController` moves when its spec requires a resource.
     def _moves_off_silent(self) -> bool:
         return False
 
@@ -1402,6 +1467,13 @@ class Worker:
         self.name = name                          # None until claim_slot(); a fixed name is a slot claimed by that name
         # The name this instance gave up to another (`keep_slot`) while it has not claimed another: fenced till then.
         self.seeking: str | None = None
+        # The label set this process is a SPARE for (`SPARE_FOR`, `claim_at_start`), or None: it takes an offer of that
+        # set and nothing else, then and every time it has to claim again.
+        self.spare_for: str | None = None
+        # Renewals — of the slot, a lease, a place — the store did not answer, since start: a lease step that added
+        # one is followed by another at the loop's next look, not a period later (`VmsWorker.run`, the raft
+        # prototype's finding).
+        self.unanswered = 0
         self.hold: str | None = None              # the PLACE this worker took, if its subsystem has places to take
         # One renewal or claim of the hold at a time, from whichever thread (`renew_hold`); and when this process
         # first saw each place's row as it is now — the clock a stale hold is judged by (`claim_hold`).
@@ -1429,9 +1501,9 @@ class Worker:
         self.long_poll: LongPoll | None = None
 
     # -- identity by claim ----------------------------------------------------------
-    # Become somebody. Lists the slot rows; with `prefer` (Nomad's `NOMAD_ALLOC_INDEX`, systemd's `%i`) the
+    # Become somebody. Lists the slot rows; with `prefer` (the unit's `WORKER_NAME`, `SLOT_INDEX`) the
     # candidate list is just that name and it is taken by CAS even from a holder that has not lapsed — the
-    # scheduler is the authority on which process is the current one, and the old holder finds out on its
+    # supervisor is the authority on which process is the current one, and the old holder finds out on its
     # next `renew_slot`. Without `prefer`, candidates are: lapsed slots first (oldest `until` first — their
     # assignment is waiting), then free (released or never held) slots by number, then a fresh `w-<max+1>`.
     # For each candidate, re-read, skip if not claimable (only in the no-`prefer` case), and `put` a new
@@ -1468,16 +1540,74 @@ class Worker:
             return False
         return now - seen[1] >= self.slot_ttl + self.HOLD_SKEW
 
-    def claim_slot(self, prefer: str | None = None, retries: int = 50) -> str:
+    def claim_slot(self, prefer: str | None = None, retries: int = 50, spare_for: str | None = None) -> str:
         """Become somebody. With `prefer` (whatever `runtime.slot` made of
         SLOT_INDEX or a <ROLE>_NAME) take that slot, by CAS, even from a holder
         that has not lapsed — the runtime is the authority on which process is
         the current one,
         and the old holder finds out on its next renewal. Without it, take a
         lapsed slot — its assignment is waiting — before an unused number. Holding is renewed by `renew_slot`; losing it fences the
-        instance. The controller never hands names out; a process takes one."""
+        instance. The controller never hands names out; a process takes one.
+        A SPARE (`spare_for`, or `self.spare_for` once said) takes only an offer of that label set, and `NoOffer` when
+        there is none: no name, however it was started (`_claim_offer`)."""
         with self._slot_lock:
+            if spare_for is not None:
+                self.spare_for = label_set(spare_for)
+            if self.spare_for is not None:
+                return self._claim_offer(retries)
             return self._claim_slot(prefer, retries)
+
+    # What a process does at its start: claim, as `claim_slot` — or, started as a spare (`SPARE_FOR` in `env`), take an
+    # offer of its set, and with none be nobody (`seeking`): no slot, no heartbeat, nothing assigned, nothing taken.
+    # Every lease step looks for an offer again (`_seek_slot`). Returns the name, or None while it waits.
+    def claim_at_start(self, prefer: str | None, env: dict) -> str | None:
+        from . import runtime
+        spare = runtime.spare_for(env)
+        if spare is None:
+            return self.claim_slot(prefer=prefer)
+        try:
+            return self.claim_slot(spare_for=spare)
+        except NoOffer as e:
+            self.seeking = ""                         # nobody: no name was ever this instance's
+            log.info("%s: %s; waiting, holding nothing", self.instance, e)
+            return None
+
+    # A spare with no offer taken yet — nobody, waiting (`claim_at_start`).
+    def waiting_for_offer(self) -> bool:
+        return self.spare_for is not None and self.slot is None and self.seeking is not None
+
+    # THE SPARE'S CLAIM: an offer of its set, nothing else (the product's c62e236). The offers are listed, the lowest
+    # number first, and the first still an untaken offer of `spare_for` when re-read is written as this instance's, by
+    # CAS on the revision read — `offer` and `offered_at` kept, `taken_at` now. Two spares that read one offer: one
+    # write lands, the other conflicts, looks again and finds none — `NoOffer`, and it waits.
+    def _claim_offer(self, retries: int) -> str:
+        if self.server and self.vars.get(DECOMMISSION + self.server)[0]:
+            raise ServerDecommissioned(f"server {self.server} is decommissioned: no slot for a process on it until the "
+                                       f"operator brings it back (DELETE /servers/{self.server}/decommission)")
+        prefix = self.sub.name + "/slots/"
+        for attempt in range(retries):
+            if attempt:
+                cas_pause(attempt - 1)
+            offers = []
+            for path in self.vars.list(prefix):
+                name = path[len(prefix):]
+                items, idx = stored(self.vars, path, SLOTS)
+                s = read_slot(path, name, items)
+                if s is not None and s.offered() and label_set(s.offer) == self.spare_for:
+                    offers.append((slot_number(name), name, s, idx))
+            if not offers:
+                break
+            for _, cand, cur, idx in sorted(offers, key=lambda o: (o[0], o[1])):
+                now = self.wall()
+                new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, "", cur.offer, cur.offered_at, now)
+                try:
+                    self.vars.put(prefix + cand, new.to_items(), cas=idx)
+                except Conflict:
+                    continue                                   # another spare took it between the read and the write
+                self.slot, self.name = new, cand
+                log.warning("%s: a spare for labels '%s' took offer %s", self.instance, self.spare_for, cand)
+                return cand
+        raise NoOffer(f"a spare for labels '{self.spare_for}', and no offer of them to take")
 
     def _claim_slot(self, prefer: str | None, retries: int) -> str:
         # A process on a decommissioned server is given no name (the product's rule): its slot would be released again on
@@ -1601,7 +1731,9 @@ class Worker:
         cur, idx = self._own_slot()
         if cur.holder != self.instance or cur.released:          # released: the controller freed it (`free_slot`); a late renewal does not take it back
             return False
-        new = Slot(self.name, self.instance, self.wall() + self.slot_ttl, False, cur.gen)
+        # …an offer's three fields kept: until its worker is heard, the controller counts it as one on its way
+        new = Slot(self.name, self.instance, self.wall() + self.slot_ttl, False, cur.gen, "", cur.offer, cur.offered_at,
+                   cur.taken_at)
         try:
             self.vars.put(self.sub.slot_key(self.name), new.to_items(), cas=idx)
         except Conflict:
@@ -1862,6 +1994,7 @@ class Worker:
         try:
             mine = self.renew_slot()
         except OSError as e:
+            self.unanswered += 1
             log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
             return []
         except SchemaTooNew:
@@ -1890,18 +2023,28 @@ class Worker:
         try:
             self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # nobody to be on a store past this build
             self.claim_slot()
+        except NoOffer:
+            return False                          # a spare with no offer of its set: it waits, as it said at its start
         except Exception as e:                    # noqa: BLE001
             log.warning("%s: gave slot %s up and no other could be claimed (%s): nobody, taking nothing; trying again "
                         "on the next step", self.instance, was, e)
             return False
         self.seeking = None
-        log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
+        if was:                                   # a spare that never had a name has said what it took (`_claim_offer`)
+            log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
         return True
 
     def renew_leases(self) -> list[str]:
         """Returns the units whose lease was lost — fenced or expired."""
         self._loop_renewed = self.clock()         # what the stand-in measures a hung step's danger from
-        return [u for u, l in self.leases.items() if not l.renew()]
+        lost = []
+        for u, lease in list(self.leases.items()):
+            errors = lease.store_errors
+            if not lease.renew():
+                lost.append(u)
+            if lease.store_errors > errors:
+                self.unanswered += 1              # the store did not answer this one (`unanswered`)
+        return lost
 
     # -- the stand-in ----------------------------------------------------------------
     # THE LOOP THAT WORKS IS THE LOOP THAT RENEWS (feedback DD; the fourth review's open item). A step hung on a call

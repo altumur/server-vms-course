@@ -115,7 +115,10 @@ def test_the_pass_reports_on_itself_and_the_console_exports_it():
     ctl.create_camera({"source": "driverpack://file/1.mp4"})
     rep = ctl.pass_once()
     assert (rep["ok"], rep["unplaced"], rep["diverged"], rep["failures"]) == (True, 1, 0, 0)    # no workers: it waits, counted
-    w = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4)
+    # …and offers the worker it is short of to a spare: the slot `w-1` (М11 rework, `offer_spares`) — so the worker the
+    # unit names `w-1` takes it as its own (`prefer`), where a nameless one would make `w-2` beside the offer
+    assert rep["workers_needed"] == {"": 1} and box.vars.get("vms/slots/w-1")[0]["offer"] == ""
+    w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4)
     w.heartbeat_once()
     assert ctl.pass_once()["unplaced"] == 0
     ctl.assign_remove("w-1", "1")                                      # somebody took the assignment away; the row still says w-1

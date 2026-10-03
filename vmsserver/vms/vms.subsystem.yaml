@@ -196,6 +196,10 @@ placement:
   # `_best`: among eligible workers the one with the largest `capacity − load`, strictly positive; ties to
   # the first in sorted order. The only tie-break the catalogue has.
   tie_break:  most-free-capacity
+  # What nothing live has room for is OFFERED to a spare: a slot row `vms/slots/w-<n>` with `offer: <label set>`, which
+  # only a process started with `SPARE_FOR` of that set takes (`SpecController.offer_spares`; `vms_workers_needed` on
+  # `/metrics`, read by `w2c-spares.sh vmsworker`). The controller starts nothing.
+  offers:     w
   # the camera has no home of its own: it goes where its RECORDING is. The anchor of the pair is the
   # recording, because it writes to a disk and a disk does not move; the fan-out can be read from anywhere
   # over RTSP, so the camera is the one that can follow. Both together mean the recorder reads shared

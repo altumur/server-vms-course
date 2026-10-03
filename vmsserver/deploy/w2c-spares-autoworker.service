@@ -1,0 +1,18 @@
+# /etc/systemd/system/w2c-spares-autoworker.service — the one-shot its timer fires: spare evaluators
+# (`w2c-spares.sh autoworker`), for the label sets this server covers, as many as `auto_workers_needed on /auto/metrics` says and
+# `MAX_EVALUATORS` allows. Each is `systemd-run --unit vms-autoworker-spare-<n> --setenv SPARE_FOR=<set>`: it takes an offer
+# of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
+# `w2c-spares.service`.
+[Unit]
+Description=w2c: start spare evaluators the console says are missing
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/w2c-spares.sh autoworker
+EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/vms/vms.env
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

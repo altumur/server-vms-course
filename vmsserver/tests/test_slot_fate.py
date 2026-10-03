@@ -154,8 +154,9 @@ def test_a_hung_worker_past_HUNG_MOVE_AFTER_has_its_cameras_moved_with_an_alarm(
 
 def test_a_dead_process_on_a_server_that_answers_has_its_cameras_moved_and_keeps_its_name():
     """Placed and not running: w-1's process ended (its lock let go), the resource still lists it among the server's
-    `workers`. Fate `move`: the cameras go to w-2 once the slot is past its margin; the slot stays, lapsed — the server's
-    supervisor brings the process back under its name with nothing to do. Before the margin: alive, nothing moves."""
+    `workers`. Fate `move`: the cameras go to w-2 once the slot has run out — without the margin since the owner's
+    decision of 3 Oct (the test below); the slot stays, lapsed — the server's supervisor brings the process back under
+    its name with nothing to do. While the slot holds: alive, nothing moves."""
     site = _Site()
     ctl = site.ctl
     site.ws["w-1"].absent()                                                  # the process ends
@@ -453,3 +454,71 @@ def test_the_resource_says_which_workers_are_placed_and_which_run():
                     b'{"server": "srv-x", "ts": Infinity, "url": "", "mirrors": {}}')
     assert ctl.resource_state("srv-x") == "unknown"                          # not live for ever
     a.absent(); again.absent()
+
+
+def test_a_dead_process_on_a_server_that_answers_moves_when_its_slot_runs_out_and_a_silent_server_waits_out_the_margin():
+    """FAILOVER SHORTENED BY THE RESOURCE (the owner's decision, 3 Oct). The margin past a slot's `until`
+    (`SLOT_LOST_AFTER`, 45 s) is for a process that may still write. When its server's resource answers and says the
+    process is dead — placed, its lock let go — nothing can write: the units move the moment the slot runs out, 45 s
+    after the last renewal, where they waited 90. A silent server says nothing of its processes: the margin stands —
+    the slot's 45 s and 45 more."""
+    site = _Site()
+    ctl = site.ctl
+    site.ws["w-1"].absent()                                                  # the process ends; srv-1's resource answers
+    site.tick(44)
+    assert site.fate() == "alive" and sorted(ctl.assignment("w-1").units) == site.on_w1   # it holds its name a second more
+    site.tick(2)                                                             # 46 s: the slot ran out
+    fate, server, why = ctl.slot_fate("w-1", ctl.slots()["w-1"])
+    assert (fate, server) == ("move", "srv-1") and "slot ran out" in why, why
+    ctl.pass_once()
+    assert ctl.assignment("w-1").units == [] and all(ctl.where(int(c)) == "w-2" for c in site.on_w1)
+    assert not ctl.slots()["w-1"].released                                   # the name stays, for its supervisor's restart
+
+    silent = _Site()
+    silent.up.discard("srv-1")                                               # the whole server: worker and resource
+    silent.tick(46)
+    assert silent.fate() == "alive"                                          # nobody can say the process is dead
+    silent.tick(43)                                                          # 89 s
+    assert silent.fate() == "alive"
+    silent.tick(2)                                                           # 91 s: the slot's 45 and the margin's 45
+    assert silent.fate() == "move"
+
+
+def test_a_slot_row_that_does_not_parse_moves_only_on_two_words_and_is_never_released():
+    """The product's DZ: a slot row nobody can read is not a dead worker. With the worker's heartbeat fresh — alive,
+    whatever its server's resource says: nothing moves. With the heartbeat silent AND the resource saying there is no
+    such process — placed and not running, or not listed at all — the units move; the row is left as it is, not
+    written over as released (`release_unlisted` releases nothing)."""
+    try:
+        site = _Site()
+        ctl, box = site.ctl, site.box
+        garbled = {"holder": "x", "until": "soon", "released": "false", "gen": "1"}
+        box.vars.put("vms/slots/w-1", garbled)
+        site.tick(100)
+        site.ws["w-1"].heartbeat_once()                                     # the worker speaks…
+        site.ws["w-1"].absent(); site.beat()                                # …and the resource says: placed, not running
+        assert ctl.said_on("srv-1") == ({"w-1"}, set())                     # one word, not two
+        assert ctl.slot_fate("w-1", None)[0] == "alive"
+        ctl.pass_once()
+        assert sorted(ctl.assignment("w-1").units) == site.on_w1
+
+        site.tick(50)                                                        # the heartbeat silent too: two words
+        assert ctl.slot_fate("w-1", None)[0] == "move"
+        rep = ctl.pass_once()
+        assert all(ctl.where(int(c)) == "w-2" for c in site.on_w1) and rep["slots_released"] == [], rep
+        assert box.vars.get("vms/slots/w-1")[0] == garbled                   # the row as it was
+
+        unlisted = _Site()
+        unlisted.ws["w-1"].absent()
+        d = os.path.join(unlisted.roots["srv-1"], ".workers")
+        for f in os.listdir(d):
+            os.remove(os.path.join(d, f))                                    # srv-1 does not run it at all
+        unlisted.box.vars.put("vms/slots/w-1", garbled)
+        unlisted.tick(100)
+        fate, _, why = unlisted.ctl.slot_fate("w-1", None)
+        assert fate == "move" and "does not parse" in why, why               # where a parsed row would be released
+        rep = unlisted.ctl.pass_once()
+        assert rep["slots_released"] == [] and unlisted.box.vars.get("vms/slots/w-1")[0] == garbled, rep
+        assert all(unlisted.ctl.where(int(c)) == "w-2" for c in unlisted.on_w1)
+    finally:
+        _forget_garbled()
