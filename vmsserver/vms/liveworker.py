@@ -38,6 +38,7 @@ from w2cplatform.spec import SpecController
 from w2cplatform.variables import Variables
 
 from .config import LIVE_SPEC
+from w2cplatform.rows import PARSE_ERRORS
 
 LIVE = LIVE_SPEC.sub
 log = logging.getLogger("vms.liveworker")
@@ -163,7 +164,7 @@ class LiveWorker(Worker):
             try:
                 rows[cam] = self.ctl.unit(cam)
                 self.row_parsed(cam)
-            except (ValueError, KeyError, TypeError) as e:    # its row does not parse (`row_garbled`): nobody can say
+            except PARSE_ERRORS as e:    # its row does not parse (`row_garbled`): nobody can say
                 self.row_garbled(cam, e)                      # its grace has run out, and the fan-out is kept
         orphans = self._orphans(now, wanted) if self.ctl is not None else []
         dropped, deleted = [], []

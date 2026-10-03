@@ -100,7 +100,7 @@ from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
 from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import finite
+from w2cplatform.rows import PARSE_ERRORS, finite
 from w2cplatform.variables import Variables
 
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
@@ -647,7 +647,7 @@ class VmsWorker(Worker):
                 try:
                     rows.append(self.parse_row(items))
                     self.row_parsed(unit)
-                except (ValueError, KeyError, TypeError) as e:
+                except PARSE_ERRORS as e:                # `Infinity` in an int field too (the tenth round's sweep)
                     # One row that does not parse is that unit's (`Worker.row_garbled`; the sixth pass, the follow-up),
                     # and it is not a unit taken away: what runs under the row read last keeps running, and a unit
                     # never read whole is not started. Raised out of here, it froze the whole worker at the rows of

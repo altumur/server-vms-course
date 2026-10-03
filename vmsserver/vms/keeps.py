@@ -79,7 +79,7 @@ def _names(raw) -> list:
         return list(raw)
     try:
         out = json.loads(raw or "[]")
-    except (TypeError, ValueError):
+    except PARSE_ERRORS:                             # nested past what JSON reads too: the list unread, the keep stands (the tenth round)
         return []
     return out if isinstance(out, list) else []
 

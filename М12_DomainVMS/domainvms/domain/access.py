@@ -70,6 +70,16 @@ class ClusterAccess:
         camera = unit if unit is None or numeric(unit) is None else numeric(unit)
         return any(grants.may(subject, c, camera, now, labels=labels) for c, r in RANK.items() if r >= RANK[capability])
 
+    # Whether the subject holds a grant given on labels, at `capability` or above (vmsserver's tenth review): a cluster's
+    # console names the units whose labels it could not read only to such a caller — what is withheld is what a grant
+    # by label might have covered, and a grant on one camera never covered another.
+    def by_labels(self, payload: dict, capability: str) -> bool:
+        if payload.get("via") == "break-glass":
+            return False                                     # it sees every unit: nothing is withheld from it
+        subject, now = str(payload.get("sub", "")), self.wall()
+        return any(s == subject and lab and now < until and RANK.get(c, -1) >= RANK[capability]
+                   for (s, c, _cam, lab), until in self._grants().grants.items())
+
 
 def cluster_access(cluster_vars, wall=time.time) -> ClusterAccess:
     return ClusterAccess(cluster_vars, wall)

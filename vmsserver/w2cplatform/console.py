@@ -109,10 +109,10 @@ from urllib.parse import parse_qs, urlsplit
 from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
-from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
+from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
                        is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
-from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, number
+from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
 from .events import ALARM, EventLog
 
@@ -214,8 +214,18 @@ def domain_view(objects, now: float, lost_after: float = 45.0) -> tuple[int, dic
     if not raw:
         return 404, {"error": "no domain view here: this cluster does not host the domain, and it does not know "
                               "the others — ask the domain holder's console"}
-    d = json.loads(raw)
-    age = max(0.0, now - float(d.get("ts", 0)))
+    # A view that does not read is not a 500 (the review's tenth round: `domain/view` torn, or a list, raised out of the
+    # route): the domain's view is not known here, said so — and a `ts` that is no finite time (`Infinity` made the view
+    # current for ever) is the same.
+    try:
+        d = json.loads(raw)
+        if not isinstance(d, dict):
+            raise TypeError(f"the view is a map, not {type(d).__name__}")
+        age = max(0.0, now - finite(d.get("ts", 0)))
+    except PARSE_ERRORS as e:
+        log.warning("%s does not parse (%s): the domain's view is not shown", DOMAIN_VIEW, e)
+        return 503, {"error": "the domain's view in this cluster's store cannot be read: what the domain knows is not "
+                              "shown until its next pass writes it again", "detail": f"{DOMAIN_VIEW}: {type(e).__name__}"}
     return 200, {**d, "age": round(age, 1), "silent": age > lost_after}
 
 
@@ -956,6 +966,20 @@ class SendMixin:
         return json.loads(self.rfile.read(n) or b"{}")
 
 
+# A REQUEST'S BODY IS A JSON OBJECT, OR A REFUSAL (the review's tenth round, the routes that failed whole). A body that
+# is not JSON, is nested past what JSON reads, or is a list went into the route as it was: `POST /<rows>` and `PUT
+# /<rows>/<id>` answered 500 "the write failed", `PUT /policy` and the VMS's `POST /requests` no reply at all.
+# `Refused` — 400 to whoever sent it, and nothing written.
+def object_body(h) -> dict:
+    try:
+        body = h._body()
+    except PARSE_ERRORS as e:
+        raise Refused(f"the body is not JSON that can be read ({type(e).__name__})") from None
+    if not isinstance(body, dict):
+        raise Refused(f"the body is a JSON object, not {type(body).__name__}")
+    return body
+
+
 def body_deadline(h, n: int) -> None:
     """Give a body of `n` bytes its deadline, whole: the handler's `timeout` and a second for every `BODY_RATE` bytes —
     and, read through a `DeadlineReader`, a floor on its pace past that grace (`pace`). Every door that reads a body
@@ -1308,7 +1332,7 @@ class SpecConsole:
                 for p in paths:
                     try:
                         out[(p.split("/")[0], p.rsplit("/", 1)[1])] = current_epoch(vars_, p)
-                    except (ValueError, KeyError, TypeError):
+                    except PARSE_ERRORS:                 # `epoch: Infinity` too (`int(inf)`; the tenth round's sweep)
                         log.warning("%s: epoch row %s does not parse: its events are not fenced", self.spec.name, p)
             except OSError as e:
                 log.warning("%s: the store did not answer the epochs (%s): the timeline is fenced by the last ones read", self.spec.name, e)
@@ -1325,7 +1349,7 @@ class SpecConsole:
         for sub, unit in pairs:
             try:
                 e = current_epoch(self.ctl.vars, f"{sub}/epoch/{unit}")
-            except (ValueError, KeyError, TypeError, OSError):
+            except (*PARSE_ERRORS, OSError):
                 continue                                 # no epoch row, a torn one, or no store: the events stand as their resource marked them
             if e:
                 out[(sub, unit)] = e
@@ -1736,7 +1760,10 @@ class SpecConsole:
             return 400, {"detail": "a mark names a unit", "error": "a mark names a unit"}
         fields = {"user": user, "note": str(body.get("note", ""))}
         if "cam" in body:
-            fields["cam"] = int(body["cam"])                          # the field the index joins on
+            try:
+                fields["cam"] = int(body["cam"])                      # the field the index joins on
+            except PARSE_ERRORS:                                      # a word, `Infinity`: 400, not "the write failed"
+                return 400, {"detail": f"a mark's `cam` is a unit's number, not {body['cam']!r:.40}", "error": "bad cam"}
         else:
             fields["unit"] = str(body["unit"])
         path = self.marks.append(self.wall(), "mark", **fields)
@@ -1836,6 +1863,19 @@ class SpecConsole:
             return lambda unit, labels: False
         return lambda unit, labels: access.may(payload, "view", unit, labels)
 
+    # Whether a gated caller holds a grant given on LABELS (`Access.by_labels`, when the access can say): what `/events`
+    # asks before it names the units whose labels it could not read. An access that cannot say is taken as no.
+    def _by_labels(self, h) -> bool:
+        try:
+            access = self.gate.access()
+            if access is None:
+                return False
+            payload = self.gate.payload(h.headers, access)
+        except Denied:
+            return False
+        ask = getattr(access, "by_labels", None)
+        return bool(ask(payload, "view")) if ask is not None else False
+
     # What a route needs: `(capability, unit, labels)`.
     #
     #   view    every GET, and whatever a subsystem says changes nothing though it is a POST (`VIEW_POSTS` —
@@ -1877,7 +1917,7 @@ class SpecConsole:
         h.rfile = io.BytesIO(raw)
         try:
             body = json.loads(raw or b"{}")
-        except ValueError:
+        except PARSE_ERRORS:                             # nested past what JSON reads too: no reply at all (the tenth round)
             return None
         if not isinstance(body, dict):
             return None
@@ -1980,6 +2020,8 @@ class SpecConsole:
     def _failed(self, key: str | None, e: Exception) -> tuple[int, dict]:
         if key:
             self.seen.release(key)
+        if isinstance(e, Refused):                       # a body that is no object (`object_body`): the sender's, 400
+            return 400, {"detail": str(e), "error": str(e)}
         if isinstance(e, OSError):
             return 503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}
         log.error("%s: a write failed: %s", self.spec.name, e)
@@ -2119,7 +2161,7 @@ class SpecConsole:
         if body and method != "DELETE":
             try:
                 sent = json.loads(h.rfile.getvalue() or b"{}") if isinstance(h.rfile, io.BytesIO) else {}
-            except ValueError:
+            except PARSE_ERRORS:
                 sent = {}
             new = {**(old or {}), **sent} if isinstance(sent, dict) else old
         cams = set()
@@ -2335,6 +2377,11 @@ class SpecConsole:
                                 withheld[unit] = withheld.get(unit, 0) + 1
                             return known[unit]
                         rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
+                        # …said only to a caller who holds a grant BY LABEL (the review's tenth pass, minor): what is
+                        # withheld is what such a grant might have covered. A grant on one unit never covered another
+                        # unit, and naming it — its id, how many events it had — told a guard of camera 2 about camera 3.
+                        if withheld and not self._by_labels(h):
+                            withheld = {}
                         if withheld:
                             rep["withheld"] = [{"unit": u, "events": n, "why": f"{unread[u]}: what labels it carries is "
                                                 f"not known, and a grant by label cannot be checked against it"}
@@ -2359,9 +2406,9 @@ class SpecConsole:
                 return
             try:
                 if path == "/marks":
-                    resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
+                    resp = con.mark(object_body(h), h.headers.get("X-User", "operator"))
                 else:
-                    resp = con.create(h._body(), key, h.headers.get("X-User", "operator"))
+                    resp = con.create(object_body(h), key, h.headers.get("X-User", "operator"))
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp); return h._send(*resp)
@@ -2370,7 +2417,7 @@ class SpecConsole:
         if method == "PUT":
             if path == "/policy":                                        # the administrator's knobs: one row, no idempotency needed (a PUT is)
                 try:
-                    body = h._body()
+                    body = object_body(h)
                     out = ctl.set_policy(body)
                 except (Refused, Forbidden) as e:
                     return h._send(400 if isinstance(e, Refused) else 403, {"detail": str(e), "error": str(e)})
@@ -2387,7 +2434,7 @@ class SpecConsole:
             if key is None and h.headers.get("Idempotency-Key"):
                 return                                                   # a prior reply, a refused key or 503: already sent
             try:
-                resp = con.update(self._uid(path), h._body(), h.headers.get("X-User", "operator"))
+                resp = con.update(self._uid(path), object_body(h), h.headers.get("X-User", "operator"))
             except Exception as e:                                       # noqa: BLE001
                 return h._send(*self._failed(key, e))
             self._remember(key, resp)
@@ -2472,9 +2519,20 @@ class Mount:
             return 404, {}
         running = builds(ctl.objects, now)
         live = {n: b for n, b in running.items() if b["live"]}
-        return 200, {"version": schema_version(ctl.vars), "understood": SCHEMA,
+        # One process or one row that does not read is not the route's end (the review's tenth round): `platform/schema`
+        # garbled is `version: null`, said; a live process whose schema is not known (`builds`) keeps `can_raise_to`
+        # where the store is — raising past a process nobody can read is the lock-out the guard is for.
+        try:
+            version = schema_version(ctl.vars)
+        except PARSE_ERRORS as e:
+            version = None
+            log.warning("%s does not parse (%s): /schema says so", SCHEMA_KEY, e)
+        known = [b["schema"] for b in live.values() if b["schema"] is not None]
+        can = min(known, default=SCHEMA) if len(known) == len(live) else (version or SCHEMA)
+        return 200, {"version": version, "understood": SCHEMA,
                      "builds": sorted({b["build"] for b in live.values()}),
-                     "can_raise_to": min([b["schema"] for b in live.values()], default=SCHEMA),
+                     "can_raise_to": can,
+                     **({"schema_unknown": sorted(n for n, b in live.items() if b["schema"] is None)} if len(known) < len(live) else {}),
                      "processes": dict(sorted(running.items()))}
 
     # `GET /drain` — is it safe to stop the machine yet; `POST /drain?server=srv-a` — say it is going to

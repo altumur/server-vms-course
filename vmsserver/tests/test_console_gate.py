@@ -46,6 +46,11 @@ class Tokens:
             return bool(mine)
         return any(rank[c] >= rank[capability] and ((set(lab) <= set(labels)) if lab else u in (unit, None)) for c, u, lab in mine)
 
+    def by_labels(self, payload, capability):
+        rank = {"view": 0, "edit": 1, "admin": 2}
+        return payload.get("via") != "break-glass" and any(lab and rank[c] >= rank[capability]
+                                                           for c, _, lab in self.grants.get(payload.get("sub"), ()))
+
 
 def _console(box, access=None):
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
@@ -292,6 +297,9 @@ def test_one_garbled_camera_row_costs_that_cameras_events_and_not_the_timeline()
         assert "does not parse" in rep["withheld"][0]["why"]
         assert cams("two") == [2] and cams("admin") == [1, 2, 3]                 # no label needed: shown as before
         assert "withheld" not in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="admin")[1]
+        # …and not to a grant on one unit (the review's tenth pass, minor): camera 3's id and its count were said to the
+        # guard of camera 2, whose grant never covered camera 3 whatever its labels
+        assert "withheld" not in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="two")[1]
         assert UNIT_LABELS.counts.get("vms") == 2                                # two rows, each once — not once a read
         metrics = urllib.request.urlopen(urllib.request.Request(base + "/metrics", headers={"Authorization": "Bearer admin"})).read().decode()
         assert 'vms_console_rows_garbled{table="unit"} 2' in metrics
@@ -1284,6 +1292,39 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
         assert box.vars.get("vms/requests/r-1")[0]["device"] == "acme/10.0.0.50"       # what the rights were asked on
         for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
             assert _call(base, "POST", "/requests", {"unit": "1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
+    finally:
+        srv.shutdown()
+
+
+def test_a_fragment_or_a_login_in_a_source_names_no_other_device_and_a_labels_change_asks_for_the_whole_device():
+    """The product team's additions to the tenth round, reproduced here first. `driverpack://acme/cam7#@10.0.0.50/ch/2`:
+    `urlsplit` stops at `#`, so the rights were asked of device `acme/cam7` — nobody's camera, `admin` on camera 3 was
+    enough — while a driver that reads past `#` dials the recorder: 200. `#` is refused in every url field, `?` in a
+    `driverpack://` source, and a login in the path as in the host (`…/acme/admin:pw@10.0.0.50/…` was taken, password
+    and all, into the snapshot). No refusal repeats a password. And a camera's `labels` moved every channel of its
+    recorder (the channels move together), with `admin` on that one camera: now the right is asked on each."""
+    from vms.config import shown_source, source_refusal
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "one": [("admin", "1", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        nvr = "driverpack://acme/10.0.0.50/ch/"
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        for spelt in ("driverpack://acme/cam7#@10.0.0.50/ch/9", "rtsp://cam7#@10.0.0.50/x",
+                      "driverpack://acme/cam7?@10.0.0.50/ch/9", "driverpack://acme/admin:hunter2@10.0.0.50/ch/9"):
+            for token in ("three", "admin"):
+                code, body = _call(base, "PUT", "/cameras/3", {"source": spelt}, token=token)
+                assert code in (400, 403), (spelt, token, code)
+                assert "hunter2" not in json.dumps(body), body
+        assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"
+        assert "hunter2" not in (source_refusal("driverpack://acme/u:hunter2@10.0.0.5:8²/ch/1") or "")
+        assert shown_source("rtsp://u:hunter2@cam/x") == "rtsp://…@cam/x"
+        # the labels of camera 1 move channel 2 too: `admin` on camera 1 is not enough, on the cluster it is
+        assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="one")[0] == 403
+        assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="admin")[0] == 200
+        assert _call(base, "PUT", "/cameras/3", {"labels": ["vlan:b"]}, token="three")[0] == 200   # alone on its device
     finally:
         srv.shutdown()
 

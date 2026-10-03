@@ -619,6 +619,18 @@ class SubsystemSpec:
             if f.type == "blob" and fields.get(name) and not is_digest(fields[name]):
                 raise Refused(f"{name} takes a digest, not the bytes ({len(str(fields[name]))} of them): "
                               f"PUT the bytes to /{self.rows}/<id>/{name} and the row gets the digest back")
+        # A VALUE OF A LIST HOLDS NO `,` (the review's ninth answer, left open; the tenth round). A list is stored as one
+        # string joined by `,` (`Field.to_item`), and every reader — this one, М11's, М12's, another build's — splits it
+        # there: `["zone 1,2"]` read back as two labels, a camera nobody's server reaches, an alarm kind nobody raises.
+        # Refused where it is written; the store's form stays what every reader already reads (the rows written before
+        # are already split, and read as they are). A string value is the joined form itself, and is taken as it is.
+        for name, f in self.fields.items():
+            v = fields.get(name)
+            if f.type == "list" and isinstance(v, (list, tuple)):
+                bad = [x for x in v if "," in str(x)]
+                if bad:
+                    raise Refused(f"{name}: a value of a list may not hold ',' — the list is kept joined by commas and "
+                                  f"{bad[0]!r} would read back as {len(str(bad[0]).split(','))} values")
         for name, f in self.fields.items():
             # A `json` field that is not JSON is a 400 to whoever typed it, not a 500 from the store on
             # the next read. The ceiling is the row's own (Lesson 19's limit) — this one keeps a single
@@ -629,7 +641,7 @@ class SubsystemSpec:
                 try:
                     text = raw if isinstance(raw, str) else _json.dumps(raw)
                     _json.loads(text)
-                except (TypeError, ValueError) as e:
+                except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     raise Refused(f"{name} is not JSON: {e}")
                 if len(text) > JSON_CEILING:
                     raise Refused(f"{name} is {len(text)} bytes of JSON; the ceiling is {JSON_CEILING}")
@@ -642,9 +654,18 @@ class SubsystemSpec:
                     u.port
                 except ValueError as e:
                     raise Refused(f"{name} is not an address: {e}")
-                if u.username or u.password or "@" in u.netloc:
+                # …a login in the PATH too: a scheme that names its host in the path (`driverpack://acme/user:pw@host`)
+                # carried a password past `netloc` into the snapshot (the product team's addition to the tenth round).
+                # A file's name is a name, `@` and all.
+                if u.username or u.password or "@" in u.netloc or ("@" in u.path and u.netloc.lower() != "file"):
                     raise Refused(f"{name} may not carry a login: put it in cred_username / cred_secret — "
                                   f"a url field is in the snapshot, and the snapshot leaves the cluster")
+                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/cam7#@nvr50/ch/1` is
+                # device `cam7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
+                # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
+                if "#" in str(fields[name]):
+                    raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
+                                  f"and maybe another to the driver")
 
     # A fresh row: each required field must be present and truthy (`"a vms unit needs a source"`), others
     # get their default; a string value containing `{id}` has it substituted (the VMS's `name: "cam{id}"`);
@@ -754,7 +775,7 @@ def _sweep_list(items) -> tuple[list, float]:
 def _next_rev(it) -> int:
     try:
         return int((it or {}).get("rev", 0)) + 1
-    except (ValueError, TypeError):
+    except PARSE_ERRORS:                              # `rev: 1e999` (a hand edit): `int(inf)` (the tenth round's sweep)
         return 1
 
 
@@ -1306,7 +1327,7 @@ class SpecController(Controller):
         try:
             at, rev = float(it["at"]), int(it["rev"])
             self._garbled_rows.discard(key)
-        except (ValueError, KeyError, TypeError):
+        except PARSE_ERRORS:                          # `rev: 1e999` too: `placement()` raised under every pass and route (the tenth round)
             at, rev = 0.0, 0
             if key not in self._garbled_rows:
                 self._garbled_rows.add(key)
@@ -1548,8 +1569,11 @@ class SpecController(Controller):
             # step that did not hand one in (`_pick` from `place`, `home_for`) gets the same one.
             from .console import heartbeats                        # the read model's scan, without the age filter
             prefix = f"{self.spec.near}/heartbeats/"
-            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"))
-            return self._per_pass(prefix, lambda: self._near_index(beats), "near_index")
+            # Memo names of their own (the review's tenth pass, minor): `""` was the list `Controller._heartbeats` keeps
+            # under the same prefix, and the index is by `near_of` — the VMS (`of: cam`) and a scan job (by id) both
+            # follow `rec`, and in one shared pass one got the other's index.
+            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"), "beats")
+            return self._per_pass(prefix, lambda: self._near_index(beats), f"near_index:{self.spec.near_of}")
         return self._near_index(beats)
 
     def _near_index(self, beats: dict) -> NearIndex:

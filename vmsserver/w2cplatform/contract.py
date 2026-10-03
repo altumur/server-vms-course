@@ -158,7 +158,7 @@ def schema_version(vars_) -> int:
 def check_schema(vars_, last: int | None = None) -> int:
     try:
         have = schema_version(vars_)
-    except (ValueError, TypeError) as e:
+    except PARSE_ERRORS as e:                     # `version: Infinity` too: `int(inf)` is an `OverflowError` (the tenth round's sweep)
         if last is None:
             raise SchemaTooNew(f"{SCHEMA_KEY} does not parse ({e}), and this process has never read it: it does not "
                                f"start on a layout it cannot name") from None
@@ -172,10 +172,21 @@ def check_schema(vars_, last: int | None = None) -> int:
 # Every process that heartbeats, with the schema it understands and the build it is. The keys are
 # `<subsystem>/heartbeats/<worker>` and `platform/resources/<server>/heartbeat`; nothing else matches, so
 # one scan answers "what is running in this cluster" across subsystems.
+#
+# A schema that does not read is NOT KNOWN, and not a heartbeat skipped (the review's tenth round, `/schema`): `1e999`
+# (`int(inf)`) skipped the process, and a process `/schema` does not list is not behind any version — the one raise
+# that locks a live process out. It is listed with `schema: null`, `can_raise_to` stays where the store is, and
+# `set_schema` refuses while it runs. A `build` that is not a string (a list: unhashable, and `/schema` sorts a set of
+# them) is `"?"`, as an absent one is.
 def builds(objects, now: float, lost_after: float = 45.0) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                    # a worker's or a resource's: the three fields this reads, checked
         d = dict(json.loads(raw))
-        return {"schema": int(d.get("schema", SCHEMA)), "build": d.get("build", "?"), "ts": float(d.get("ts", 0))}
+        try:
+            schema = int(d.get("schema", SCHEMA))
+        except PARSE_ERRORS:
+            schema = None
+        build = d.get("build", "?")
+        return {"schema": schema, "build": build if isinstance(build, str) else "?", "ts": float(d.get("ts", 0))}
 
     out = {}
     for key in objects.list(""):
@@ -199,6 +210,23 @@ GARBLED: dict[str, int] = {}                      # subsystem -> heartbeat objec
 _garbled_keys: set[str] = set()
 
 
+#
+# …AND WHAT IT IS CALLED BY IS A NAME (the review's tenth pass, major). `worker` and `server` went on as they stood: a
+# heartbeat saying `"server": ["srv-x"]` parsed, and every reader that keys or sorts by it raised — `/servers`,
+# `/unplaceable`, `/drain`, `/metrics` of the console, a resource's `restore` and mirror, and the controller's
+# `ensure_reach`, `redistribute`, `ensure_home` (a new unit not placed, a dead recorder's units not moved); a `5` among
+# strings raised in every `sorted`. A worker's or a resource's `worker` and `server` are non-empty strings, or the
+# heartbeat does not parse: that heartbeat's trouble, skipped and counted like any other.
+NAMES = ("worker", "server")
+
+
+def _named(hb) -> None:
+    said = {"worker": hb.worker, **hb.extra} if isinstance(hb, Heartbeat) else hb if isinstance(hb, dict) else {}
+    for field in NAMES:
+        if field in said and not (isinstance(said[field], str) and said[field]):
+            raise TypeError(f"`{field}` is a name, not {said[field]!r:.40}")
+
+
 def parse_heartbeat(key: str, raw: bytes, parse=None):
     """The object parsed, or None — skipped, counted, and logged once."""
     try:
@@ -208,6 +236,7 @@ def parse_heartbeat(key: str, raw: bytes, parse=None):
         # read model, the running gauge — each a loop over every worker.
         if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
             raise TypeError("a status entry is not an object")
+        _named(hb)
     except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
         sub = key.split("/", 1)[0]
         GARBLED[sub] = GARBLED.get(sub, 0) + 1
@@ -750,6 +779,10 @@ class Controller:
 
     # Every heartbeat under the prefix, parsed, whatever its age — read once per pass (`_per_pass`): `capacity_of`,
     # `server_of`, `place_of` ask it per unit and per candidate, and each asking was a listing and a read of every one.
+    #
+    # Its own name in the pass's memo (the review's tenth pass, minor): it was `(prefix, "")`, and `near_index` keeps the
+    # followed subsystem's heartbeats under the same `(prefix, "")` as a DICT — in one pass shared by a recorder's
+    # controller (`near: vms`) and the VMS's, the list read here was that dict, and `hb.ts` an `AttributeError`.
     def _heartbeats(self) -> list[Heartbeat]:
         def read():
             out = []
@@ -760,7 +793,7 @@ class Controller:
                 if hb is not None:
                     out.append(hb)
             return out
-        return self._per_pass(self.sub.heartbeats_prefix(), read)
+        return self._per_pass(self.sub.heartbeats_prefix(), read, "heartbeats")
 
     # Reads one worker's row. One whose `rev` does not parse is read for the units it names (`read_assignment`).
     def assignment(self, worker: str) -> Assignment:
@@ -864,12 +897,18 @@ class Controller:
     # machine you forgot to upgrade.
     def set_schema(self, version: int) -> dict:
         now = self.wall()
-        behind = {n: b for n, b in builds(self.objects, now).items() if b["live"] and b["schema"] < version}
+        behind = {n: b for n, b in builds(self.objects, now).items()
+                  if b["live"] and (b["schema"] is None or b["schema"] < version)}   # not known: behind any (`builds`)
         if behind:
+            known = [b["schema"] for b in behind.values() if b["schema"] is not None]
             raise SchemaTooNew(f"still running: {', '.join(sorted(behind))} — at schema "
-                               f"{min(b['schema'] for b in behind.values())}")
+                               f"{min(known) if known else 'not known'}")
         def mutate(items):
-            have = int((items or {}).get("version", SCHEMA))
+            try:
+                have = int((items or {}).get("version", SCHEMA))
+            except PARSE_ERRORS:                  # what it is now cannot be read: not raised past (the tenth round)
+                raise SchemaTooNew(f"{SCHEMA_KEY} does not parse: whether {version} is forward cannot be told — "
+                                   f"mend the row first") from None
             if version < have:
                 raise SchemaTooNew(f"schema does not go back: {have} -> {version}")
             return {"version": str(version), "at": str(now)}

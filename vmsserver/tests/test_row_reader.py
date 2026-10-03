@@ -640,15 +640,16 @@ def test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_c
             {"server": peer, "ts": box.wall(), "url": f"http://{peer}", "mirrors": {"srv-1": 20}}).encode())
     res.heartbeat()
     got = res.restore()
-    assert got["pulled"] == 19 and got["left"] == 1 and got["peers_failed"] == ["srv-0"], got
+    assert got["pulled"] == 19 and got["left"] == 2 and got["peers_failed"] == ["srv-0"], got   # the escape: left too (tenth)
     assert not os.path.exists(os.path.join(box.root, "escape.events.jsonl"))       # a path out of the tree: never written
     assert not res.restore_due()                                                     # its pause first
     hb = res.heartbeat()
-    assert hb["restore"]["left"] == 1 and hb["restore"]["peers_failed"] == ["srv-0"] and hb["restore"]["failed"] == 2
+    assert hb["restore"]["left"] == 2 and hb["restore"]["peers_failed"] == ["srv-0"] and hb["restore"]["failed"] == 2
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_resource_restore_left{server="srv-1"} 1' in text and 'vms_resource_restore_failures_total{server="srv-1"} 2' in text
+    assert 'vms_resource_restore_left{server="srv-1"} 2' in text and 'vms_resource_restore_failures_total{server="srv-1"} 2' in text
     good.bad.clear(); dead.dead = False
-    dead.paths = []                                                  # healed: it lists, and holds nothing more of srv-1
+    good.paths = paths                                               # …and it lists buckets only
+    dead.paths = []                                                # healed: it lists, and holds nothing more of srv-1
     box.clock.advance(RESTORE_RETRY)
     assert res.restore_due()
     again = res.restore()
