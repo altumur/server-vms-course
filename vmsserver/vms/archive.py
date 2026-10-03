@@ -39,6 +39,7 @@ from urllib.parse import urlsplit, unquote
 
 from w2cplatform.events import EventLog
 from w2cplatform.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
+from w2cplatform.rows import PARSE_ERRORS, Table, finite
 
 SUB = "rec"          # the recorder's subsystem: its streams in the volume, its event buckets on the resource
 EVENTS_SUB = "vms"   # the worker's tree: the camera's event buckets
@@ -169,9 +170,31 @@ def authoritative(spans: list[Span], t0: float, t1: float) -> list[tuple[Span, f
     return [(s, a, b) for s, a, b in out]
 
 
+# A CEILING THAT DOES NOT READ HIDES, IT DOES NOT FALL BACK (the product team's sibling of the review's ninth pass).
+# `float(...)` of the row: a word raised out of the door and out of the backfill's plan, `nan` made a ceiling no time is
+# under or over, `inf` showed everything, `-1` hid a day ahead. Only a finite number not below nought is days; not said
+# at all is thirty, as before. Anything else is not a default — "nobody sees more than a week" is the promise some
+# installations care about, and thirty days would break it: the door shows nothing older than now and the backfill
+# plans nothing (the footage stays in the ring, untouched), counted once until it is mended (`ceilings_garbled`) and
+# logged with the recording's name.
+CEILINGS = Table("ceiling", "nothing of that recording is shown, and nothing fetched for it, until it is mended",
+                 "recording's retention_days")
+
+
 def visible_from(row: dict | None, now: float) -> float:
     """`retention_days` is a ceiling on what the doors show — the ring decides what is still THERE."""
-    days = float((row or {}).get("retention_days") or 30)
+    raw = (row or {}).get("retention_days")
+    if not raw or str(raw).strip() in ("", "None"):
+        return now - 30 * 86400
+    key = f"rec/recordings/{(row or {}).get('id', '?')}#retention_days"
+    try:
+        days = finite(raw)
+        if days < 0:
+            raise ValueError(f"{raw!r} is not a number of days")
+    except PARSE_ERRORS as e:
+        CEILINGS.garbled(key, e)
+        return now
+    CEILINGS.parsed(key)
     return now - days * 86400
 
 
@@ -629,7 +652,8 @@ class Archive:
     def units(self) -> list[str]:
         with self.reading() as r:
             names = {p[0] for p in (parse_stream(s) for s in r.streams()) if p}
-        return sorted(names, key=lambda d: (0, int(d), "") if d.isdigit() else (1, 0, d))
+        from w2cplatform.doors import numeric                # not `isdigit` + `int`: a recording `7²` (the ninth pass)
+        return sorted(names, key=lambda d: (0, n, "") if (n := numeric(d)) is not None else (1, 0, d))
 
     def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:
         """What the index holds — of one recording, or of all — as spans, in time order. One question, one

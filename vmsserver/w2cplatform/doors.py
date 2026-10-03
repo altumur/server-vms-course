@@ -31,9 +31,34 @@ def safe_segment(name: str) -> bool:
 # whole into a label value on `/metrics` and into `|`-joined fields of heartbeats — and the control, line and paragraph
 # separator characters (Unicode Cc, Zl, Zp). The rule the domain keeps for a user's name (`domain/grants.py`). Returns
 # the characters found, sorted; empty when the name may stand.
-def unnamable(name: str) -> list[str]:
+#
+# A UNIT'S NAME, `unit=True`, is in lists and is sorted as a number (the review's ninth pass; the product team's sibling
+# B). A worker's assignment is its units joined by `,` (`contract.Assignment`), and so are a recorder's `closed` and a
+# heartbeat's ranges: a recording named `1,9` made its worker take `9` and never start `1,9`, and its fetched range
+# scanned recording 9's camera. And a name that is all digits sorts by its number (`spec._unit_key`): `"7²".isdigit()`
+# is true and `int("7²")` raises — every `GET` of that subsystem's list went unanswered. So a unit's name also may not
+# hold `,`, nor a digit that is not ASCII 0–9 (superscripts, Arabic-Indic, full width: `isdigit` says yes to all).
+# A request's id is not a unit's: a heartbeat says it by its digest when it holds a comma (`config.said_id`).
+LIST_SEPARATOR = ","
+
+
+def unnamable(name: str, unit: bool = False) -> list[str]:
     import unicodedata
-    return sorted({c for c in str(name) if c in '|"' or unicodedata.category(c) in ("Cc", "Zl", "Zp")})
+    return sorted({c for c in str(name) if c in '|"' or unicodedata.category(c) in ("Cc", "Zl", "Zp")
+                   or (unit and (c == LIST_SEPARATOR or (c.isdigit() and not "0" <= c <= "9")))})
+
+
+# A name as the number it is, or None: ASCII digits only, and only as many as `int` takes (`sys.int_max_str_digits` —
+# five thousand nines raise). What every sort and every reader that takes "all digits" for a number asks, so a stored
+# name the rule above refuses today (`7²`, `٣`) is read as a name, not as a `ValueError` (the review's ninth pass).
+def numeric(name) -> int | None:
+    s = str(name)
+    if not (s.isascii() and s.isdigit()):
+        return None
+    try:
+        return int(s)
+    except ValueError:
+        return None
 
 
 def safe_rel(rel: str) -> bool:
