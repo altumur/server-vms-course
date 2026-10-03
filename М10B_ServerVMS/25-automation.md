@@ -390,11 +390,23 @@ def requests_acl(*subs: str) -> list[str]:
 **«Десять минут» — у консоли.** Это запись в **конфигурацию**: у строки записи есть id, ретенция, дом и размещение. Воркер конфигурацию не пишет; контроллер пишет размещение; остаётся консоль — агент оператора, а сценарий, просящий десять минут, и есть оператор, просящий через то, что он написал.
 
 ```python
-def record_on_request(rec_ctl, now: float) -> int:
+def record_on_request(rec_ctl, now: float, mem: Remembered | None = None) -> int:
     started = 0
-    for key in sorted(rec_ctl.vars.list(rec_ctl.sub.requests_prefix())):
+    prefix = rec_ctl.sub.requests_prefix()
+    keys = sorted(rec_ctl.vars.list(prefix))
+    whole = mem is None or mem.due(prefix, now)
+    if mem is not None:
+        mem.listed(prefix, keys)
+        if whole:
+            mem.read_whole(prefix, now)
+            mem.seen = {k for k in mem.seen if not k.startswith(prefix)}
+    for key in keys:
+        if mem is not None and ((not whole and key in mem.seen) or mem.waits(key, now)):
+            continue                                        # the recorder's, seen already; or a pause after the store failed it
         it, _ = rec_ctl.vars.get(key)
         if not it or str(it.get("action", "")) != "record":
+            if it and mem is not None:
+                mem.seen.add(key)
             continue                                        # a backfill: the recorder's, not ours
         rid = key.rsplit("/", 1)[1]
         try:
@@ -425,22 +437,30 @@ def record_on_request(rec_ctl, now: float) -> int:
             elif number(f"{rec_ctl.sub.config(rec_ctl.spec.rows, name)}#until", row.get("until") or 0) < ends:
                 rec_ctl.update(name, {"until": ends})       # keep recording, not record twice
                 started += 1
+            else:
+                ends = None                                 # nothing written: the row's own `until` stands
+            if mem is not None and ends is not None:
+                mem.note(rec_ctl.spec.name, name, ends)     # its end, known without reading the row back
         except Refused as e:                                # a refusal is an answer, and it is ours to log
             log.warning("%s: %s refused for %s: %s", rec_ctl.spec.name, rid, name, e)
         except Exception as e:                              # noqa: BLE001
             # NOT an answer: the store conflicted, or did not answer at all. The request stays and the next
             # pass tries again — it carries `valid_until`, so it cannot wait for ever. It used to be deleted
             # here with the rest: the scenario fired, the recording was never made, and nothing said so
-            # (the product's `RecordOnRequest`, feedback BC).
+            # (the product's `RecordOnRequest`, feedback BC). Tried again after a pause that doubles (`Remembered`).
             log.warning("%s: %s could not start %s this pass: %s", rec_ctl.spec.name, rid, name, e)
+            if mem is not None:
+                mem.failed(key, now)
             continue
         rec_ctl.vars.delete(key)                            # performed or refused, it has nothing left to say
     return started
 ```
 
-Пять решений.
+Пять решений, и память цикла поверх них.
 
-**Отказ — ответ, сбой — нет.** Заявка удаляется, когда по ней что-то решено: запись создана, продлена или в ней отказано. Если проход споткнулся — хранилище ответило конфликтом или не ответило вовсе, — заявка остаётся до следующего прохода; ждать вечно она не может, у неё есть `valid_until`. Первая версия удаляла заявку в любом случае: сценарий сработал, записи нет, и сказать о том, что её просили, уже нечему (обратная связь, BC).
+**Отказ — ответ, сбой — нет.** Заявка удаляется, когда по ней что-то решено: запись создана, продлена или в ней отказано. Если проход споткнулся — хранилище ответило конфликтом или не ответило вовсе, — заявка остаётся до следующего прохода; ждать вечно она не может, у неё есть `valid_until`. Первая версия удаляла заявку в любом случае: сценарий сработал, записи нет, и сказать о том, что её просили, уже нечему (обратная связь, BC). Повтор идёт не каждые две секунды, а после паузы, которая удваивается от двух секунд до `Remembered.RETRY_MAX` (300 с): заявка без `valid_until` иначе пробовалась бы каждые две секунды вечно (`mem.failed`, `mem.waits`). Тест: `test_read_budget.py::test_a_request_the_store_failed_is_tried_again_after_a_doubling_pause_not_every_turn` — за 600 секунд хранилище, которое не берёт запись, спрошено от пяти до десяти раз, а не триста; когда оно снова берёт, запись заводится и заявка снимается.
+
+**Цикл помнит между оборотами только то, что экономит чтение.** Третий аргумент, `mem`, — объект `jobs.Remembered`, который цикл консоли держит между оборотами (`_requests_loop`, ниже). Раньше каждый оборот читал каждую строку `rec/requests/`, включая дозаписи, которые консоли не нужны, и каждую запись и детектор ради их `until`. На тысяче каждого это около 3 000 чтений раз в две секунды и 33 000 при десяти сработавших сценариях. В `Remembered` три вещи. `seen` — заявки, которые оборот признал чужими (дозаписи регистратора): пока они в списке, их не читают снова. `retry_at` — паузы после сбоя хранилища (выше). `deadlines` — у каких строк какой `until`: `record_on_request` сразу записывает туда конец, который сам поставил (`mem.note`), и `expire` между полными чтениями перечитывает только строки, чей конец наступил. Раз в `Remembered.REREAD` (30 с) семейство читается целиком, как раньше: так замечается, если в списке оказалось что-то новое под старым именем или другая консоль сократила чей-то `until`. Удлинённый `until` замечается раньше, чем что-то снимается: строку перечитывают перед удалением. Без `mem` (`mem=None`) функция читает всё, как читала. Тесты: `test_read_budget.py::test_the_request_loop_reads_a_thousand_backfills_once_and_not_every_two_seconds` — между полными чтениями оборот без заявок стоит не больше десяти чтений, а записанное совпадает с тем, что писал старый оборот; `test_read_budget.py::test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_anything_is_ended`.
 
 **Заявка, чьи числа не разбираются, — отказ, и только её.** `valid_until: "soon"` в одной строке `rec/requests/*` бросал из `record_on_request` раньше строк после неё: семьдесят пять минут никому не заводилась запись по заявке (седьмое ревью, M2, воспроизведено). Теперь `valid_until` (`_deadline`) и `minutes` читаются через `rows.finite`: слово, `nan` или `inf` — заявка, о которой никто не скажет, в силе ли она. Такая заявка отвергнута, как заявка, которая ничего не просит: посчитана один раз (таблица `REQUESTS`, на `/metrics` — `rec_console_rows_garbled{table="request"}`), названа в логе и удалена — заявка это просьба одной минуты, а не конфигурация, и оставленная стояла бы и отвергалась на каждом обороте цикла. `nan` — не «без срока»: с ним ложно каждое сравнение. Битая строка **самой записи** `<cam>-auto` против заявки не считается: `rec_ctl.unit(name)` теперь внутри `try`, её ошибка — не отказ, а сбой, и заявка ждёт следующего прохода (и своего `valid_until`); `until` уже идущей записи читается через `rows.number`. Тест: `test_row_reader.py::test_one_garbled_request_row_is_refused_alone_and_the_recordings_are_started_and_ended` — три битые заявки (`soon`, `nan`, `inf`) отвергнуты, четвёртая заведена, просроченная запись снята.
 
@@ -469,7 +489,7 @@ def record_on_request(rec_ctl, now: float) -> int:
 
 **Числа заявки детектору проверяются до работы, и битая заявка — отказ.** В `detect_on_request` было то же, что у записи: `valid_until` со словом останавливал всё семейство, а `minutes: "ten"` попадал в «не ответ — заявка остаётся» и пробовался каждые две секунды без конца (седьмое ревью). Теперь собственные числа заявки — `valid_until`, `minutes`, `at`, `before`, `after` — проверяются через `rows.finite` сразу после чтения; не разобралось — заявка посчитана в `REQUESTS`, удалена, проход идёт к следующей. Строка детектора или записи, которая не разбирается, — не слово **этой** заявки: `until` чужих детекторов в `_detect` читается через `rows.number`. Тест: `test_row_reader.py::test_a_detector_request_whose_numbers_are_words_is_refused_and_not_tried_for_ever`.
 
-**Начало и конец — в разных `try`.** Цикл заявок консоли (`_requests_loop` в `vms/__main__.py`, раз в две секунды) звал `record_on_request` и `expire_recordings` в одном `try`: что бы ни бросило первое, второе не шло, и запись, о которой просили на десять минут, писалась, пока стояла заявка (седьмое ревью, M2). Теперь у каждого конца свой `try` — и у записей, и у детекторов (`detect_on_request` и `expire`), — и `expire` читает `until` каждой строки через `rows.number`: битая строка пропущена и посчитана, строки после неё снимаются. Тест: `test_row_reader.py::test_the_console_loop_ends_timed_recordings_when_starting_them_fails`.
+**Начало и конец — в разных `try`.** Цикл заявок консоли — `_requests_loop` в `vms/__main__.py`, раз в две секунды. Он заводит один `Remembered` и на каждом обороте зовёт `_requests_turn`. Оборот идёт внутри `contract.one_pass`, поэтому каждый ключ за оборот читается один раз. Раньше этот цикл звал `record_on_request` и `expire_recordings` в одном `try`: что бы ни бросило первое, второе не шло, и запись, о которой просили на десять минут, писалась, пока стояла заявка (седьмое ревью, M2). Теперь у каждого конца свой `try` — и у записей, и у детекторов (`detect_on_request` и `expire`), — и `expire` читает `until` каждой строки через `rows.number`: битая строка пропущена и посчитана, строки после неё снимаются. Тест: `test_row_reader.py::test_the_console_loop_ends_timed_recordings_when_starting_them_fails`.
 
 ## Шаг 10 — Длинный опрос: подсказка, которую тянет получатель
 
