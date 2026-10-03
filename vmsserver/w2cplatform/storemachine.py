@@ -62,7 +62,7 @@ from .variables import DOMAIN_WRITER, KEY_BYTES, epoch_row, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 ADMIN = "admin"            # the root-only socket's role
-PEER = "configstore"          # another daemon, on the mutually authenticated `-api` door
+PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
 
 
 class Unavailable(Exception):
