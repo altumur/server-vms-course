@@ -267,7 +267,7 @@ def test_a_camera_nothing_records_here_has_nowhere_to_keep_it():
 def test_the_console_process_keeps_what_fired():
     import inspect
     import vms.__main__ as m
-    assert "keep_what_fired(survey_ctl, rec_ctl)" in inspect.getsource(m._reap_loop), \
+    assert "keep_what_fired(survey_ctl, rec_ctl)" in (inspect.getsource(m._reap_loop) + inspect.getsource(m._reap_turn)), \
         "everything a model liked would stay on the device"
     assert "survey_ctl" in inspect.getsource(m.console)
 
