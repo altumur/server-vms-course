@@ -176,8 +176,25 @@ FRAME_AHEAD = 60.0
 # the newest one the camera pushed takes the offset down by at most `OFFSET_SLEW` of its distance from that one — the
 # frames come half as far apart until the offset is there, never one behind another, never one lost. A move up leaves a
 # gap and loses nothing, and a move of more than `CLOCK_STEP` either way is a step of somebody's clock, taken at once.
+#
+# …AND A REQUEST'S TRAVEL IS NEVER A STEP, HOWEVER LONG (the product's DZ, checked in the course and measured: one push
+# that took 5.5 s on its way — a stalled uplink, a retransmission — was a move UP past `CLOCK_STEP`, taken at once; its
+# frames landed 5.5 s late, the next quick request took the offset back down at once, and the next 5.5 s of frames were
+# not newer than `have`: 54 of 1800 frames dropped with nothing counted, 2 `clock_steps`; 40 s on its way, 399). Travel
+# only ever RAISES what a request says, and the camera's clock is on its line, which steps do not move: a rise is this
+# cluster's own clock stepped forward, or a camera clock that runs slow — never the camera's step. So no rise is taken
+# at once now: every rise, of any size, waits until every request for `OFFSET_RISE`, at least `RISE_REQUESTS` of them,
+# said so — the least of them — and one request inside the hold withdraws it. A real step of this cluster's clock costs
+# the frames of half a minute placed by the old difference, in order, none lost, and then a gap. A move DOWN past
+# `CLOCK_STEP` is still taken at once — but only from an offset held firm (`_firm`: the requests of `OFFSET_RISE`, at
+# least `RISE_REQUESTS`, agreed with it) or with no frame placed by it yet: a first pass whose requests all travelled
+# eight seconds put its frames eight seconds late, and the jump down from there dropped the next eight; such a move is
+# slewed (`_slewed`), as a small one is. What stays: a delay of a second or more on EVERY request for longer than
+# `OFFSET_RISE` is, by the requests' times, this cluster's clock stepped forward a second — the offset moves up by the
+# least delay and comes back down by the frames (measured: 40 s of 1–3 s, frames up to 1.3 s late, none lost).
 OFFSET_HOLD = 0.25
 OFFSET_RISE = 30.0
+RISE_REQUESTS = 3
 CLOCK_STEP = 5.0
 OFFSET_SLEW = 0.5
 # A CAMERA'S OWN FRAME IS HELD TIGHTER (the tenth review, major). Held to `FRAME_AHEAD`, a frame of now+59 passed, became
@@ -291,6 +308,7 @@ class _Camera:
     # is `answers`, with when it landed; `failed` is why the camera could not read it. All three go when the range is
     # handed over (`result`), and after `ANSWER_KEPT` if nobody came (`_forget`).
     ranges: dict[str, tuple] = field(default_factory=dict)
+    told_by: dict[str, float] = field(default_factory=dict)      # …the offset each was first told the camera by (`upload`)
     parts: dict[str, tuple] = field(default_factory=dict)
     answers: dict[str, tuple] = field(default_factory=dict)
     failed: dict[str, tuple] = field(default_factory=dict)
@@ -298,8 +316,10 @@ class _Camera:
     pushed_at: float | None = None
     offset: float = 0.0                                          # the cluster's clock minus the camera's, held (`OFFSET_HOLD`)
     told: bool = False                                           # …and the camera has stated its clock at least once
-    rise: tuple | None = None                                    # …requests that put it higher: since when, and the least
+    rise: tuple | None = None                                    # …requests that put it higher: since when, the least, how many
+    agreed: tuple = (0.0, 0)                                     # …requests that agreed with it: since when, how many (`_firm`)
     target: float | None = None                                  # …a lower offset the open stream slews to (`_slewed`)
+    leap: bool = False                                           # …further down than `CLOCK_STEP`: a leap of the frames takes it
     newest: float | None = None                                  # the newest frame it pushed, on its own clock
     clock_steps: int = 0                                         # times the held offset moved
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
@@ -442,25 +462,37 @@ class Ingest:
 
     def _offset(self, ref: str, cam: _Camera, now: float, offset: float) -> None:
         """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down by the frames (a
-        target the stream slews to), up past `CLOCK_STEP` at once and otherwise when every request for `OFFSET_RISE` said
-        so (above, `OFFSET_HOLD`). While it slews, the offset held is where it goes (`target`)."""
+        target the stream slews to; past `CLOCK_STEP` from an offset held firm, at once), up only when every request for
+        `OFFSET_RISE`, `RISE_REQUESTS` at least, said so (above, `OFFSET_HOLD`; DZ). While it slews, the offset held is
+        where it goes (`target`)."""
         held = cam.target if cam.target is not None else cam.offset
         if not cam.told:
-            cam.offset, cam.told = offset, True
-        elif offset < held - CLOCK_STEP or offset > held + CLOCK_STEP:
-            self._moved(ref, cam, offset)
+            cam.offset, cam.told, cam.agreed = offset, True, (now, 1)
         elif offset < held - OFFSET_HOLD:
-            cam.clock_steps += 1
-            log.info("camera %s: its clock is %.3f s further ahead of this cluster's than its frames are put by: the stream "
-                     "takes the new difference over its next frames", ref, held - offset)
-            cam.target, cam.rise = offset, None
+            if offset < held - CLOCK_STEP and (self._firm(cam, now) or cam.newest is None):
+                self._moved(ref, cam, offset)
+            else:
+                cam.clock_steps += 1
+                log.info("camera %s: its clock is %.3f s further ahead of this cluster's than its frames are put by: the "
+                         "stream takes the new difference over its next frames", ref, held - offset)
+                cam.target, cam.rise, cam.leap = offset, None, offset < held - CLOCK_STEP
+            cam.agreed = (now, 1)
         elif offset > held + OFFSET_HOLD:
-            since, low = cam.rise or (now, offset)
-            cam.rise = (since, min(low, offset))
-            if now - since >= OFFSET_RISE:
+            since, low, n = cam.rise or (now, offset, 0)
+            cam.rise = (since, min(low, offset), n + 1)
+            if now - since >= OFFSET_RISE and n + 1 >= RISE_REQUESTS:
                 self._moved(ref, cam, cam.rise[1])
+                cam.agreed = (since, n + 1)                      # every request of the window agreed with it: firm
         else:
             cam.rise = None                                      # inside the hold: what was held stands
+            cam.agreed = (cam.agreed[0], cam.agreed[1] + 1)
+
+    @staticmethod
+    def _firm(cam: _Camera, now: float) -> bool:
+        """The offset held is the requests' word, not one request's travel: as many agreed with it, for as long, as a rise
+        needs (`RISE_REQUESTS`, `OFFSET_RISE`)."""
+        since, n = cam.agreed
+        return n >= RISE_REQUESTS and now - since >= OFFSET_RISE
 
     @staticmethod
     def _moved(ref: str, cam: _Camera, offset: float) -> None:
@@ -469,22 +501,28 @@ class Ingest:
                     "drifts with nobody setting it): its frames from here on are put on this clock by the new difference",
                     ref, (cam.target if cam.target is not None else cam.offset) - offset)
         if cam.offset - CLOCK_STEP <= offset < cam.offset:
-            cam.target, cam.rise = offset, None                  # below where the stream is put: slewed to, not jumped
+            cam.target, cam.rise, cam.leap = offset, None, False # below where the stream is put: slewed to, not jumped
         else:
-            cam.offset, cam.rise, cam.target, cam.newest = offset, None, None, None
+            cam.offset, cam.rise, cam.target, cam.newest, cam.leap = offset, None, None, None, False
 
     @staticmethod
     def _slewed(cam: _Camera, frames: list) -> list:
         """The camera's frames on this cluster's clock — each by the offset as it slews down to its target, a frame at a
-        time, no faster than `OFFSET_SLEW` of the frames' own distance (above)."""
+        time, no faster than `OFFSET_SLEW` of the frames' own distance (above). A target further down than `CLOCK_STEP`
+        (`leap`, from an offset not yet held firm) is taken at once by the first frame that, put by it, still lies after
+        the last frame put: the camera's clock was set and its frames leapt with it (a camera with no RTC set by NTP) —
+        otherwise the frames came on as before, the offset was a first pass's travel, and they slew to it."""
         out = []
         for f in frames:
             t = _t(f)
             if t is not None:
                 if cam.target is not None and cam.newest is not None and t > cam.newest:
-                    cam.offset = max(cam.target, cam.offset - OFFSET_SLEW * (t - cam.newest))
+                    if cam.leap and t + cam.target > cam.newest + cam.offset:
+                        cam.offset = cam.target                  # nothing lands behind the last frame: taken at once
+                    else:
+                        cam.offset = max(cam.target, cam.offset - OFFSET_SLEW * (t - cam.newest))
                     if cam.offset <= cam.target:
-                        cam.target = None
+                        cam.target, cam.leap = None, False
                 cam.newest = t if cam.newest is None else max(cam.newest, t)
             out += _shift([f], cam.offset)
         return out
@@ -530,13 +568,14 @@ class Ingest:
         self._check(token, ref, camera_now)
         now, cam = self.wall(), self._cam(ref)
         cam.polled_at = now
-        push, ranges, asks = False, {}, {}
+        push, ranges, asks, told = False, {}, {}, {}
         for ing in self._cluster():
             ing._forget(now)
             c = ing._cam(ref)
             c.wants = {w: u for w, u in c.wants.items() if u > now}       # a want that ran out wakes the poll (AF)
             push = push or bool(c.wants)
             ranges.update(c.ranges)
+            told.update({rid: c.told_by.setdefault(rid, cam.offset) for rid in list(c.ranges)})
             _forget_outcomes(c, now)
             for aid, a in list(c.asks.items()):
                 if a["deadline"] <= now:                                  # dies at its deadline, never kept
@@ -551,8 +590,9 @@ class Ingest:
             cam.said, cam.version = said, cam.version + 1
         # A range is told with the recording it is of, and with the size of a piece the recorder waits for
         # (`piece_wait`): the camera sends its answer in pieces no larger (the product's `PollRange`, and two fields more).
+        # It is told by the offset it was first told by (`told_by`), every time: the answer goes back by the same (`upload`).
         out = {"push": push, "version": cam.version,
-               "ranges": {rid: {"from": t0 - cam.offset, "to": t1 - cam.offset, "recording": rec, "piece": PIECE_BYTES}
+               "ranges": {rid: {"from": t0 - told[rid], "to": t1 - told[rid], "recording": rec, "piece": PIECE_BYTES}
                           for rid, (t0, t1, rec) in ranges.items()},
                "asks": {aid: {"action": a["action"], "by": a["by"], "deadline": a["deadline"] - cam.offset}
                         for aid, a in asks.items()}}
@@ -640,13 +680,21 @@ class Ingest:
         back as well as the upload itself, and the camera sends the piece again under the same number — `seq == n - 1`.
         It was failed as "out of its turn": one lost answer cost the whole range, and at 5 % of answers lost one range
         in ten landed. Now it is taken as what it is — nothing added, the range waits for piece `n` — and the camera
-        hears that the range is still wanted."""
+        hears that the range is still wanted.
+
+        BACK BY THE OFFSET IT WAS TOLD BY (DZ's second half, a sibling the probe found on this path: no poll in the middle
+        of an upload recreates anything here — 300 of 300 samples, the card read once, with polls between the pieces,
+        inside each upload and from three threads — but the held offset that moved between two pieces moved the pieces
+        after it: 10 of 300 samples landed past the range asked for and two seconds of it were missing). Each piece goes
+        back onto this cluster's clock by the offset the request was first told by (`told_by`), so the answer lands in the
+        range it answers, whatever the offset does meanwhile."""
         self._check(token, ref, camera_now)
-        shifted, now, wanted = _shift(samples, self._cam(ref).offset), self.wall(), False
+        now, wanted = self.wall(), False
         for ing in self._cluster():
             c = ing._cam(ref)
             if rid not in c.ranges:
                 continue
+            shifted = _shift(samples, c.told_by.get(rid, self._cam(ref).offset))
             n, have, _ = c.parts.pop(rid, (0, [], 0.0))
             if failed is None and more and seq == n - 1:
                 c.parts[rid] = (n, have, time.monotonic())             # a repeat: taken already, and the camera is alive
@@ -669,14 +717,15 @@ class Ingest:
         return wanted
 
     def _forget(self, now: float) -> None:
-        """What nobody came for goes: an answer or a failure `ANSWER_KEPT` old, and a piece of an answer whose
-        request is gone. Every poll and every request sweeps — as asks are swept (`_sweep`)."""
+        """What nobody came for goes: an answer or a failure `ANSWER_KEPT` old, and a piece of an answer — or the offset
+        it was told by — whose request is gone. Every poll and every request sweeps — as asks are swept (`_sweep`)."""
         for c in list(self.cams.values()):
             for kept in (c.answers, c.failed):
                 for rid in [k for k, v in list(kept.items()) if now - v[1] >= ANSWER_KEPT]:
                     kept.pop(rid, None)
-            for rid in [k for k in list(c.parts) if k not in c.ranges]:
-                c.parts.pop(rid, None)
+            for kept in (c.parts, c.told_by):
+                for rid in [k for k in list(kept) if k not in c.ranges]:
+                    kept.pop(rid, None)
 
     # -- asks between cameras ---------------------------------------------------------------------------------
     def ask(self, token: str, target: str, action: dict, deadline: float, camera_now: float | None = None) -> str:
@@ -854,7 +903,7 @@ class Ingest:
         finally:
             for ing in self._cluster():
                 c = ing._cam(ref)
-                for kept in (c.ranges, c.parts, c.answers, c.failed):
+                for kept in (c.ranges, c.told_by, c.parts, c.answers, c.failed):
                     kept.pop(rid, None)
 
     def pull(self, token: str, ref: str, who: str, have: tuple | None = None) -> list:

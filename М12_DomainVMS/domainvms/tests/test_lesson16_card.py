@@ -1205,3 +1205,75 @@ def test_a_range_being_answered_when_the_cameras_clock_is_set_fails_and_lands_wh
     got = [_number(s) for s in answer or []]
     assert got == list(range(40, 400)), (got[:2], got[-2:])
     assert all(abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002 for s in answer)
+
+
+def test_polls_in_the_middle_of_an_upload_recreate_nothing_and_the_answer_lands_where_asked_whatever_the_offset_does():
+    """The product's DZ, its second half ("a poll recreated the parts of a range during the upload, and the range never
+    assembled"; the product's fix is a `coming` mark on the part), checked in the course: a poll here only READS the
+    ranges — the parts of an answer are the upload's alone — and a range of thirty pieces assembles whole, the card read
+    once and no piece sent twice, with three polls between every two passes, a poll before and after every upload, and
+    three threads polling the whole time. Nothing of it stays behind. The sibling the probe found on this path: the
+    camera's held offset that moves while a range is answered — this cluster's clock stepped forward two seconds, taken
+    after `OFFSET_RISE` — moved every piece after it: 10 of 300 samples past the range asked for, two seconds of it
+    missing. A range goes back by the offset it was first told by (`_Camera.told_by`): it lands where it was asked."""
+    import shutil
+    import threading
+    wall = Clock(100_000.0)
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    card, reads = real_card(wall() - 100, wall() - 40, step=0.2, size=100_000), []    # thirty megabytes: thirty pieces
+
+    def read(recording, t0, t1, max_bytes):
+        reads.append((t0, t1))
+        return card.pieces(recording, t0, t1, max_bytes)
+    try:
+        pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall, card=read)
+        pusher.pass_once([])
+        token, upload, seqs = pusher.entry()["ingest"]["token"], ingest.upload, []
+
+        def poll():
+            return ingest.poll(token, SERIAL, camera_now=wall(), version=pusher.versions.get("primary"))
+
+        def polled(*a, **kw):                                              # a poll beside every upload, both sides
+            seqs.append(kw.get("seq"))
+            poll()
+            try:
+                return upload(*a, **kw)
+            finally:
+                poll()
+        ingest.upload = polled
+        stop = threading.Event()
+        threads = [threading.Thread(target=lambda: [poll() for _ in iter(stop.is_set, True)]) for _ in range(3)]
+        for th in threads:
+            th.start()
+        try:
+            t0, t1 = wall() - 100, wall() - 40
+            rid, uploaded, passes = ingest.request_range(SERIAL, t0, t1, recording="1-card"), [], 0
+            while not uploaded and passes < 100:
+                for _ in range(3):
+                    poll()
+                uploaded, passes = pusher.pass_once([])["uploaded"], passes + 1
+        finally:
+            stop.set()
+            for th in threads:
+                th.join()
+        got = [round(t - t0, 1) for t in _times(ingest.result(SERIAL, rid))]
+        assert got == [round(i * 0.2, 1) for i in range(300)], len(got)   # whole, in order, where asked
+        assert len(reads) == 1 and sorted(seqs) == sorted(set(seqs)) and passes >= 15     # read once, no piece twice
+        c = ingest.cams[SERIAL]
+        assert not (c.ranges or c.parts or c.answers or c.failed or getattr(c, "told_by", None))
+
+        skew = [0.0]                                                       # this cluster's clock steps two seconds forward
+        ingest.wall = lambda: wall() + skew[0]
+        ingest.upload, reads[:] = upload, []
+        t0, t1 = wall() - 100, wall() - 40
+        rid, uploaded, passes, moved = ingest.request_range(SERIAL, t0, t1, recording="1-card"), [], 0, None
+        skew[0] = 2.0
+        while not uploaded and passes < 100:
+            uploaded, passes = pusher.pass_once([])["uploaded"], passes + 1
+            moved = moved or (c.clock_steps and passes)
+            wall.advance(2.5)
+        assert c.clock_steps == 1 and abs(c.offset - 2.0) < 0.01 and moved < passes - 1, (moved, passes)   # mid-answer
+        got = [round(t - t0, 1) for t in _times(ingest.result(SERIAL, rid))]
+        assert got == [round(i * 0.2, 1) for i in range(300)], ([t for t in got if not 0 <= t < 60][:3], len(got))
+    finally:
+        shutil.rmtree(card.path, ignore_errors=True)
