@@ -627,3 +627,13 @@ def test_an_ask_whose_deadline_has_passed_is_refused_and_one_askers_outcomes_are
     assert ing.ask_outcome("SN5", kept) == "expired"                      # not crowded out by 640 of GATE's
     outcomes = ing.cams["SN5"].outcomes
     assert sum(1 for v in outcomes.values() if v[2] == "GATE") == OUTCOMES_KEPT and len(outcomes) == OUTCOMES_KEPT + 1
+
+
+def test_a_preset_or_a_port_in_digits_that_are_not_ascii_is_a_misfit_and_not_a_value_error():
+    """The tenth pass's sweep of `isdigit` then `int` (М10B's `vms/auto.py` had it too): `"²".isdigit()` is true and
+    `int("²")` raised out of `misfit` — out of the domain's check of the scenario being written. By `doors.numeric`."""
+    from domain.scenario import misfit
+    for arg in ("²", "١", "７"):
+        assert misfit("cam", {"relays": 2}, {"action": "output", "arg": arg}) == f"cam has 2 relay(s), not port {arg}"
+        assert misfit("cam", {"ptz": True, "presets": 4}, {"action": "preset", "arg": arg}) == f"cam has 4 preset(s), not {arg}"
+    assert misfit("cam", {"relays": 2}, {"action": "output", "arg": "2"}) is None

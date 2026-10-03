@@ -37,6 +37,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
 
+from w2cplatform.doors import numeric
 from w2cplatform.events import EventLog
 from w2cplatform.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
 from w2cplatform.rows import PARSE_ERRORS, Table, finite
@@ -75,11 +76,12 @@ def stream_name(unit, epoch: int, backfill: bool = False) -> str:
 def parse_stream(name: str) -> tuple[str, int, str] | None:
     """`(unit, epoch, source)` — `live` or `backfill` — or None for a stream that is not a recording's."""
     parts = name.split("/")
-    if len(parts) not in (2, 3) or not parts[0] or not parts[1].startswith("e") or not parts[1][1:].isdigit():
+    # `doors.numeric`, not `isdigit` + `int` (the tenth pass's sweep): a stream `7/e²` in a listing raised out of its reader
+    if len(parts) not in (2, 3) or not parts[0] or not parts[1].startswith("e") or numeric(parts[1][1:]) is None:
         return None
     if len(parts) == 3 and parts[2] != "backfill":
         return None
-    return parts[0], int(parts[1][1:]), "backfill" if len(parts) == 3 else "live"
+    return parts[0], numeric(parts[1][1:]), "backfill" if len(parts) == 3 else "live"
 
 
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
@@ -652,7 +654,7 @@ class Archive:
     def units(self) -> list[str]:
         with self.reading() as r:
             names = {p[0] for p in (parse_stream(s) for s in r.streams()) if p}
-        from w2cplatform.doors import numeric                # not `isdigit` + `int`: a recording `7²` (the ninth pass)
+        # `doors.numeric`, not `isdigit` + `int`: a recording `7²` (the ninth pass)
         return sorted(names, key=lambda d: (0, n, "") if (n := numeric(d)) is not None else (1, 0, d))
 
     def spans(self, unit=None, t0: float | None = None, t1: float | None = None, reader=None) -> list[Span]:

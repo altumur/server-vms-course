@@ -118,13 +118,23 @@ NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, a
 # stands — but a name with `,` is in no assignment (`contract.Assignment.to_items`), so nobody runs it.
 UNIT_NAMES = Table("unit_name", "it is served as it stands, a name with a comma is assigned to nobody; create it again "
                                 "under a name without the character", "unit's name")
-# A server's labels from the console (`<sub>/servers/<server>`, feedback DQ): one that does not parse keeps what was last
-# read of that server, else its node's — and moves nothing for it (`SpecController.server_labels`).
-SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of it, else its node's; nothing moves for it",
-                      "server's labels")
+# A server's labels from the console (`<sub>/servers/<server>`, feedback DQ): one that does not parse — a word that is not
+# a label, no `labels` at all, a key the listing shows and a read does not find — keeps what was last read of that
+# server; never read, the server reaches no label until it is (the review's tenth pass) — and nothing moves off it
+# (`SpecController.server_labels`).
+SERVER_LABELS = Table("server_labels", "the server keeps the labels last read of it — if none were read, it takes no unit "
+                      "that needs a label — and nothing moves off it", "server's labels")
 # What a label may be: the camera's own alphabet (`vlan:cctv-a`, `site.b`), and nothing that is a separator in the row
-# (a comma) or in a path. The product's rule (`labelWord`).
+# (a comma) or in a path. The product's rule (`labelWord`). ONE alphabet (the review's tenth pass, major): a camera's
+# `labels` (any subsystem's under `labels-subset`, at creation and for a label new to a row), a server's row, the
+# node's `LABELS` (`runtime.labels` says the words outside it). A camera stored before with `склад` or `zone 1` is
+# read as it stands and is not moved for a label no server's row can say (`UNIT_LABELS`).
 LABEL_WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:\-]{0,63}")
+UNIT_LABELS = Table("unit_label", "the unit stays where it is: no server's row can say it reaches that label — write the "
+                    "label again in letters, digits and _ . : -", "unit's label")
+# A server's name: what a host's name may be (letters, digits, `.`, `-`, `_`; 253 at most) — `*`, `srv%2Fa`, a newline,
+# three hundred characters were rows nobody's server would ever read (the review's tenth pass, minor).
+SERVER_WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.\-]{0,252}")
 REACH_BUDGET = 10                 # moves `ensure_reach` makes in one pass: a server's labels edited moves its units over a few
 
 
@@ -138,11 +148,20 @@ def parse_labels(text) -> frozenset:
 
 
 def server_name(server: str) -> str:
-    """A server's name as a row's key: not a path, no character a list or a log would split on."""
+    """A server's name as a row's key: not a path, no character a list or a log would split on — a host's name."""
     server = str(server or "")
-    if not server or "/" in server or server in (".", "..") or unnamable(server, unit=True):
-        raise Refused(f"{server!r} is not a server's name")
+    if not SERVER_WORD.fullmatch(server) or server in (".", "..") or unnamable(server, unit=True):
+        shown = server if len(server) <= 80 else server[:80] + "…"
+        raise Refused(f"{shown!r} is not a server's name: letters, digits and . - _ (up to 253)")
     return server
+
+
+def label_refusal(labels, old=()) -> str | None:
+    """Why a unit's `labels` may not stand — a label new to the row outside `LABEL_WORD` — or None. One stored before is
+    left as it is (`old`): refusing it would make every other edit of that unit's row a 400."""
+    bad = [l for l in (labels or []) if str(l) not in set(map(str, old or ())) and not LABEL_WORD.fullmatch(str(l))]
+    return (f"a label is letters, digits and _ . : - (up to 64), starting with a letter or a digit, not {bad[0]!r}"
+            if bad else None)
 
 
 # A stored placement decision: `unit` (int for numeric ids, str otherwise), `worker`, `reason` (a sentence
@@ -615,7 +634,14 @@ class SubsystemSpec:
                 if len(text) > JSON_CEILING:
                     raise Refused(f"{name} is {len(text)} bytes of JSON; the ceiling is {JSON_CEILING}")
             if f.type == "url" and fields.get(name):
-                u = urlsplit(str(fields[name]))
+                # …and a url `urlsplit` cannot read, or whose port is no port, is a 400 with the words (the product
+                # team's sibling of the tenth pass): `rtsp://[10.0.0.5/x` raised `ValueError` out of here — a 500 — and
+                # `…:8²/…` was taken, to stand in every reader of the row.
+                try:
+                    u = urlsplit(str(fields[name]))
+                    u.port
+                except ValueError as e:
+                    raise Refused(f"{name} is not an address: {e}")
                 if u.username or u.password or "@" in u.netloc:
                     raise Refused(f"{name} may not carry a login: put it in cred_username / cred_secret — "
                                   f"a url field is in the snapshot, and the snapshot leaves the cluster")
@@ -757,6 +783,7 @@ class SpecController(Controller):
         self.failover_worst, self.failovers_unmeasured = 0.0, 0
         self._pass_failing: set[str] = set()             # the steps of `pass_once` whose last run raised: said once each
         self._server_rows_last: dict | None = None       # the servers' labels last read from the console's rows (`server_labels`)
+        self._server_rows_unread: set[str] = set()       # …and the servers whose row is there and did not read on that read
         self.last_reach_moves = 0                        # what the last `ensure_reach` moved or unplaced (the pass report)
         # The key that seals `*_secret` fields on the way into the store (`sealing.py`) — the console's process
         # has it (`SECRETS_KEY`); a process without it writes secrets in the clear, and says so once.
@@ -808,6 +835,8 @@ class SpecController(Controller):
         server = self.server_of(worker)
         if rows is not None and server in rows:
             return set(rows[server])
+        if server in self._server_rows_unread:
+            return set()                               # its row did not read, and never has: it reaches no label known
         return self.node_labels_of(worker)
 
     # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (`meta.labels` in a Nomad client's
@@ -830,44 +859,93 @@ class SpecController(Controller):
     #
     # A STORE THAT DOES NOT ANSWER MOVES NOTHING. The rows last read are kept (`_server_rows_last`): a hiccup must not
     # turn every server back to its node's labels for one pass and move the cameras the administrator placed by his.
-    # A process that has never read them says None — and `ensure_reach` then moves nothing. A row that does not parse
-    # (no `labels`, a word that is not a label) keeps what was last read of that server, else the node's; counted once.
+    # A process that has never read them says None — and `ensure_reach` then moves nothing.
+    #
+    # …AND A ROW THAT DID NOT READ IS NOT KNOWN, NOT "NO ROW" (the review's tenth pass, major; a run). A row that did not
+    # parse kept what was last read of that server, else its NODE's: after a restart of the controller there was no
+    # last read, the node's `client.hcl` was the stale `vlan:b` the row had been written to correct, and `ensure_reach`
+    # took 12 cameras of 12 off the server in two passes, "srv-a no longer reaches vlan:a". And a listing that left
+    # the row out for one pass was "no row": the node's labels again, 5 cameras of 5 moved, and they did not come back.
+    # Now each server's row is read BY ITS KEY — the listed ones, the servers this subsystem's workers run on, and the
+    # ones read before — so a listing that misses a row costs nothing; and a server whose row is there and did not read
+    # (garbled, no `labels`, a read that failed, a listed key the read does not find) is UNREAD this pass
+    # (`_server_rows_unread`): it keeps the labels last read of it, and with none it reaches no label (`labels_of`) —
+    # nothing that needs one is placed there — and `ensure_reach` moves nothing off it. One such row is that server's
+    # alone: the others are read.
     def server_labels(self) -> dict[str, frozenset] | None:
         """`{server: labels}` from the console's rows — None while this process has never read them."""
         prefix = self.sub.servers_prefix()
 
         def read():
+            last = self._server_rows_last or {}
             try:
-                rows = {}
-                for key in self.vars.list(prefix):
-                    it, _ = self.vars.get(key)
-                    if it is None:
-                        continue
-                    server = key[len(prefix):]
-                    got = SERVER_LABELS.read(key, lambda: parse_labels(it["labels"]))
-                    if got is not None:
-                        rows[server] = got
-                    elif self._server_rows_last is not None and server in self._server_rows_last:
-                        rows[server] = self._server_rows_last[server]
+                listed = {k[len(prefix):] for k in self.vars.list(prefix)}
             except Exception as e:                     # noqa: BLE001 — a store that does not answer: the rows last read
                 self._failed("server_labels", f"the servers' labels could not be read ({e}); the last read are kept")
                 return self._server_rows_last
+            rows, unread = {}, set()
+            for server in sorted(listed | self._worker_servers() | set(last)):
+                key = prefix + server
+                try:
+                    it, _ = self.vars.get(key)
+                except Exception as e:                 # noqa: BLE001 — that server's row, not every server's
+                    SERVER_LABELS.garbled(key, f"it could not be read: {e}")
+                    it = ()
+                if it is None and server not in listed:
+                    continue                           # no row: the node's labels answer
+                if it is None:
+                    SERVER_LABELS.garbled(key, "the listing names it and a read finds nothing")
+                # a row with no `labels` is garbled, not "reaches nothing" — that is `labels: ""`
+                got = SERVER_LABELS.read(key, lambda: parse_labels(it["labels"])) if isinstance(it, dict) else None
+                if got is not None:
+                    rows[server] = got
+                    continue
+                unread.add(server)
+                if server in last:
+                    rows[server] = last[server]
             self._works("server_labels")
-            self._server_rows_last = rows
+            self._server_rows_last, self._server_rows_unread = rows, unread
             return rows
         return self._per_pass(prefix, read, "server_labels", rows=True)
+
+    # The servers this subsystem's workers say they run on, whatever their age — each one's row is read by its key.
+    def _worker_servers(self) -> set[str]:
+        seen = self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age")
+        return {s for hb in seen.values() if isinstance(s := hb.extra.get("server"), str) and SERVER_WORD.fullmatch(s)}
+
+    # Whether a server's row is there and did not read on the last read (`server_labels`): what it reaches is not known.
+    def labels_unread(self, server: str) -> bool:
+        self.server_labels()
+        return server in self._server_rows_unread
 
     # Where a server's labels come from now: `console` (its row) or `node` (its workers' heartbeats).
     def labels_source(self, server: str) -> str:
         rows = self.server_labels()
         return "console" if rows is not None and server in rows else "node"
 
+    # The servers anybody has announced: this subsystem's workers (any age), the resources, the rows there are. A label
+    # row is written only for one of these (the review's tenth pass, minor: a typo was 200 and a row nobody reads).
+    def servers_known(self) -> set[str]:
+        from .resource import resources_seen
+        out = set(self._worker_servers()) | set(self.server_labels() or {}) | set(self._server_rows_unread)
+        try:
+            out |= {s for s in resources_seen(self.objects) if isinstance(s, str)}
+        except Exception:                              # noqa: BLE001 — the resources not listed: the workers' word
+            pass
+        return out
+
     # The console's two writes. The row is written whole — a set of labels, not an edit of one — and the controller
     # reads it on its next pass. Refused: a server that is no name, a label that is not one (`LABEL_WORD`).
+    #
+    # …and only strings (the review's tenth pass, minor: `[null]`, `[true]`, `[1]` were the labels `None`, `True`, `1`),
+    # and only for a server somebody has announced (`servers_known`): a typo wrote a row no server reads, and said 200.
     def set_server_labels(self, server: str, labels) -> list[str]:
         server = server_name(server)
-        if not isinstance(labels, (list, tuple)):
-            raise Refused('the labels are {"labels": ["vlan:cctv-a", …]}; [] for none')
+        if not isinstance(labels, (list, tuple)) or not all(isinstance(l, str) for l in labels):
+            raise Refused('the labels are {"labels": ["vlan:cctv-a", …]}, each a string; [] for none')
+        if server not in self.servers_known():
+            raise Refused(f"no server {server} is known here: no worker and no resource of it has reported, and it has "
+                          f"no row — check the name")
         out = sorted({str(l).strip() for l in labels})
         bad = [l for l in out if not LABEL_WORD.fullmatch(l)]
         if bad:
@@ -987,6 +1065,7 @@ class SpecController(Controller):
     # outside; the reserved id tells them apart (the review's second pass; the product's `CreateAs`, feedback CS).
     def create(self, fields: dict, uid=None, reserve=None) -> dict:
         self.spec.refuse(fields)
+        self._refuse_labels(fields, ())
         if uid is not None:
             old = self.unit(uid)
             if old is not None:
@@ -1043,6 +1122,16 @@ class SpecController(Controller):
         self._derived(r, uid)
         return r
 
+    # The labels a unit is placed by, in the one alphabet (`LABEL_WORD`; the review's tenth pass): a camera with `склад`
+    # was placed by the node's word and taken off its server as soon as an administrator gave that server a row, which
+    # cannot hold the word.
+    def _refuse_labels(self, fields: dict, old) -> None:
+        if self.spec.constraint != "labels-subset" or "labels" not in fields or "labels" not in self.spec.fields:
+            return
+        why = label_refusal(self.spec.fields["labels"].parse(fields["labels"]), old)
+        if why:
+            raise Refused(why)
+
     # `refuse`, then read-modify-write the row: `KeyError` if missing or marked deleted; parse each field
     # into the row; bump `revision` (the trigger from М9 Lesson 5, now in the controller — the worker
     # restarts what it runs on a new revision); write. Derived rows are refreshed only if one of their
@@ -1067,6 +1156,10 @@ class SpecController(Controller):
             was = dict(r)
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
+            if "labels" in fields and self.spec.constraint == "labels-subset":
+                why = label_refusal(r.get("labels"), was.get("labels") or ())
+                if why:
+                    raise Refused(why)
             if self.spec.name in REFUSE:             # the subsystem's own rule about what the row points at, old and new
                 REFUSE[self.spec.name](self, uid, was, r)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
@@ -1667,6 +1760,11 @@ class SpecController(Controller):
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
         rep["reach_moves"] = self.last_reach_moves     # units moved or unplaced because their server no longer reaches them
+        # …and since the store was new, a counter (the review's tenth pass, minor): the gauge of the last pass showed a
+        # third of the moves to a scrape every 15 s
+        from .rows import number
+        rep["reach_moves_total"] = number(f"{self.sub.name}/{self.PASS_KEY}#reach_moves_total",
+                                          prev.get("reach_moves_total", 0), int, 0) + self.last_reach_moves
         try:
             rep["unplaced"] = len(self.unplaced())
             rep["garbled"] = self.rows_garbled
@@ -1784,7 +1882,10 @@ class SpecController(Controller):
     # The one two-writer operation: remove the unit from every assignment that lists it other than `to`
     # (wherever it is listed, not only where the row says), rewrite the placement row, `assign_add` on `to`.
     # The destination takes the next epoch when it starts; the source's lease fences on renewal and it
-    # stops. Explicit, never automatic.
+    # stops. Called by an operator's hand (no door of the console calls it), or by the controller's own steps through
+    # `move_from` — a released slot's units (`redistribute`), a unit back home (`ensure_home`), one its server no
+    # longer reaches (`ensure_reach`) — each with its reason in the row; never by a rebalance nobody asked for (the
+    # review's tenth pass: "never automatic" was untrue since those steps).
     #
     # The order is the row, then the removals, then the addition (feedback BC): the row is the decision, and
     # `sync_assignments` finishes a move a crash cut short — from either side of it. `expect`: the worker the
@@ -1794,8 +1895,8 @@ class SpecController(Controller):
     # unit ended in two assignments — which a worker reads as "I am a zombie".
     def move(self, uid, to: str, reason: str, expect: str | None = None) -> Placement:
         """The one two-writer operation: the destination takes the next epoch when
-        it starts; the source's lease fences on renewal and it stops. Explicit,
-        never automatic."""
+        it starts; the source's lease fences on renewal and it stops. The operator's,
+        or a controller step's through `move_from`, with the reason in the row."""
         def mutate(it):
             if expect is not None and (it or {}).get("worker") != expect:
                 raise Moved(f"{uid} is on {(it or {}).get('worker') or 'nobody'}, not on {expect}: somebody moved it first")
@@ -1914,44 +2015,111 @@ class SpecController(Controller):
     # it gives its place back with the reason, and `/unplaceable` lists it. Without this a label decided only the NEXT
     # placement: a camera stayed on a server that had stopped reaching it, and nothing said so.
     #
-    # Only the constraint is asked again — `spread_by`, the group and the subsystem's `admit` decided the place once and
-    # are not this step's — and only of a unit on a LIVE worker of the pool: the units of a worker that is gone, leaving
-    # or draining are `redistribute`'s. At most `budget` a pass: every move is a new epoch and a seam in the recording,
-    # and an edit that strips a server of its VLAN moves its cameras over a few passes, not in one. A pass that has
-    # never read the servers' rows (`server_labels` is None: the store did not answer) moves nothing.
+    # Only the constraint is asked again — `spread_by` and the subsystem's `admit` decided the place once and are not
+    # this step's, though the target is chosen through `eligible`, which asks them — and only of a unit on a LIVE worker
+    # of the pool: the units of a worker that is gone, leaving or draining are `redistribute`'s. At most `budget` a pass:
+    # every move is a new epoch and a seam in the recording, and an edit that strips a server of its VLAN moves its
+    # cameras over a few passes, not in one. A pass that has never read the servers' rows (`server_labels` is None: the
+    # store did not answer) moves nothing; nor does one off a server whose row did not read this pass (the tenth pass).
+    #
+    # THE GROUP MOVES WHOLE, OR NOT THIS PASS (the review's tenth pass, minor): an administrator of one camera of a
+    # four-channel recorder changed its `labels`, and the channel went alone to another holder — two sessions to one
+    # recorder, for good. A unit with a group (`group_by`: the VMS's device) moves with every unit of its group on its
+    # worker, onto a worker that takes them all, in one pass — past the budget when the group is the pass's first move;
+    # with no such worker, the units whose server no longer reaches them give their place back and the rest stay: an
+    # unplaced channel holds no session.
+    #
+    # …and A LABEL NO ROW CAN SAY IS NOT A REASON TO MOVE (the same pass, major): a camera stored with `склад` before the
+    # one alphabet was placed by a node's word; a server's row cannot hold the word, so the camera stays where it is,
+    # counted once (`UNIT_LABELS`). Each move and each place given back is a line in the log with its reason; the pass
+    # report counts them (`reach_moves`, and `reach_moves_total` since the store was new).
     def ensure_reach(self, budget: int = REACH_BUDGET, workers: list[str] | None = None) -> list[tuple]:
         """Units whose worker no longer passes the constraint, moved to one that does — or unplaced, with the reason."""
         self.last_reach_moves = 0
         rule = CONSTRAINTS[self.spec.constraint]
         if budget <= 0 or self.spec.constraint == "none" or self.server_labels() is None:
             return []
+        unread = set(self._server_rows_unread)
         pool = self._pool(workers)
-        live, moves, idx = set(pool), [], None
+        live, moves, idx, done = set(pool), [], None, set()
         for row in self.units():
             if len(moves) >= budget:
                 break
             uid = row["id"]
+            if str(uid) in done:
+                continue
             pl = self.placement(uid)
             if pl is None or pl.worker not in live or self.retired(row):
                 continue
+            server = self.server_of(pl.worker)
+            if server in unread:
+                continue                                  # what its server reaches is not known this pass: it stays
             has = self.labels_of(pl.worker)
             if rule(row, has):
                 continue
-            server = self.server_of(pl.worker)
-            if self.spec.constraint == "labels-subset":
-                why = f"{server} no longer reaches {','.join(sorted(set(row.get('labels') or []) - has))}"
-            else:
-                why = f"{server} no longer meets {self.spec.constraint}"
+            why = self._why_off(row, server, has)
+            if why is None:
+                continue                                  # a label no server's row can say: it stays, counted
+            group = self._reach_group(row, pl.worker)
+            if len(group) > 1 and moves and len(moves) + len(group) > budget:
+                break                                     # the group goes whole, next pass
+            done |= {str(m["id"]) for m in group}
             idx = self.near_index() if idx is None else idx
-            best, free, near = self._pick(self.eligible(row, [w for w in pool if w != pl.worker]), uid, idx)
+            others = [w for w in pool if w != pl.worker]
+            fits = None
+            for m in group:
+                e = set(self.eligible(m, others))
+                fits = e if fits is None else fits & e
+            best, free, near = self._pick([w for w in others if w in fits], uid, idx)
+            if best is not None and free < len(group):
+                best = None                               # no worker takes the whole group
             if best is None:
-                if self.unplace_from(uid, pl.worker, f"{why}; nothing live reaches it"):
-                    moves.append((uid, pl.worker, None))
+                for m in group:
+                    if m is row or not rule(m, has):
+                        mwhy = why if m is row else (self._why_off(m, server, has) or why)
+                        if self.unplace_from(m["id"], pl.worker, f"{mwhy}; nothing live reaches it"):
+                            moves.append((m["id"], pl.worker, None))
+                            log.warning("%s: %s gave its place on %s back: %s; nothing live reaches it", self.sub.name,
+                                        m["id"], pl.worker, mwhy)
                 continue
-            if self.move_from(uid, pl.worker, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}"):
-                moves.append((uid, pl.worker, best))
+            for m in group:
+                reason = (f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}" if m is row else
+                          f"with {uid}, one {self.spec.group_by}: {why}; on {self.server_of(best)}")
+                if not self.move_from(m["id"], pl.worker, best, reason):
+                    break                                 # somebody moved it first: the rest of the group waits for the next pass
+                moves.append((m["id"], pl.worker, best))
+                log.warning("%s: %s moved from %s to %s: %s", self.sub.name, m["id"], pl.worker, best, reason)
         self.last_reach_moves = len(moves)
         return moves
+
+    # Why a unit is off its server — the labels it needs that the server does not reach — or None when one of them is a
+    # word no server's row can hold (`LABEL_WORD`): then it is not moved for it (counted once, `UNIT_LABELS`).
+    def _why_off(self, row: dict, server: str, has: set) -> str | None:
+        if self.spec.constraint != "labels-subset":
+            return f"{server} no longer meets {self.spec.constraint}"
+        lost = sorted(set(map(str, row.get("labels") or [])) - set(has))
+        key = f"{self._row_key(row['id'])}#labels"
+        bad = [l for l in lost if not LABEL_WORD.fullmatch(l)]
+        if bad:
+            UNIT_LABELS.garbled(key, f"{bad[0]!r} is not a label")
+            return None
+        UNIT_LABELS.parsed(key)
+        return f"{server} no longer reaches {','.join(lost)}"
+
+    # The units of `row`'s group placed on `worker` — `row` first — or `[row]` when the spec groups nothing or the row
+    # has no group.
+    def _reach_group(self, row: dict, worker: str) -> list[dict]:
+        value = self.group_value(row) if self.spec.group_by else ""
+        if not value:
+            return [row]
+        out = [row]
+        for other in self._rows_by("group", self.group_value).get(value, ()):
+            if str(other["id"]) == str(row["id"]) or self.retired(other):
+                continue
+            pl = self.placement(other["id"])
+            if pl is not None and pl.worker == worker:
+                out.append(other)
+        return out
 
     # A unit's place given back — the row says nowhere, and why — only while the row still names `frm`, in the same CAS
     # that writes it (`move`'s rule); then the assignment follows. The next pass places it again if anything live can.

@@ -1118,7 +1118,7 @@ def test_the_lease_steps_keep_their_rhythm_while_half_the_devices_never_answer()
         time.sleep(5.0)
         gaps = [b - a for a, b in zip(leased[mark - 1:], leased[mark:])]
         assert len(gaps) >= 3 and max(gaps) <= 1.0 + 2 * VmsWorker.DEVICE_HOLD + 0.5, f"lease steps {gaps}"
-        assert holder._slow and all(holder.may_write(str(c)) for c in cams)
+        assert holder._slow_asks and all(holder.may_write(str(c)) for c in cams)   # questions hung: not the commands' `_slow`
     finally:
         gate.set()
         stop.set(); thread.join(timeout=20)
@@ -1481,3 +1481,192 @@ def test_seventy_scenarios_on_seventy_cameras_fold_to_their_kind_and_the_long_po
     _until(lambda: len(calls) >= 3, 3.0, "the thread to ask again after an answer of another shape")
     lp.close()
     assert lp.errors >= 2
+
+
+def _nvr_holder(box, n: int, device, server: str = "srv-a"):
+    """One recorder of `n` channels, each a camera, placed on `w-1`, opened by `device(key)`. Returns `(holder, cams)`."""
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    cams = [con.create_camera({"name": f"ch{c}", "source": f"driverpack://acme/10.0.0.50/ch/{c}"})["id"]
+            for c in range(1, n + 1)]
+    box.objects.put(VMS.sub.heartbeat_key("w-1"), Heartbeat("w-1", box.wall(), [], {"server": server, "capacity": 250,
+                                                                                    "headroom": 250}).to_bytes())
+    box.objects.put(f"platform/resources/{server}/heartbeat",
+                    json.dumps({"server": server, "ts": box.wall(), "url": "http://x", "units": {}}).encode())
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    holder = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(), clock=box.clock,
+                       wall=box.wall, server=server, env={}, archive_root=box.archive, device_factory=device)
+    return holder, cams
+
+
+def test_a_recorder_of_thirty_two_channels_is_asked_one_question_at_a_time_and_is_not_called_slow():
+    """The review's tenth pass, major — a run: "one call at a time" was per question, and a recorder of 32 channels got
+    `channels`, `in_use` and 32 `coverage` calls at once every heartbeat; answering one request at a time, 10 ms each,
+    it was `slow` in five heartbeats of six and 20 of its cameras had no coverage. Its questions now go one after
+    another on the device's one line, `took` counted from when a question was begun: never two questions in it at once,
+    never `slow`, and from the second heartbeat on every camera has the coverage the device said."""
+    box = _real_box()
+    lock, inside, most = threading.Lock(), [0], [0]
+
+    class OneAtATime(FakeDevice):
+        def _one(self, real, *a):
+            with lock:
+                inside[0] += 1
+                most[0] = max(most[0], inside[0])
+            try:
+                time.sleep(0.01)                                     # the recorder answers one request at a time
+                return real(*a)
+            finally:
+                with lock:
+                    inside[0] -= 1
+
+        def channels(self): return self._one(super().channels)
+        def in_use(self): return self._one(super().in_use)
+        def coverage(self, cam): return self._one(super().coverage, cam)
+        def capabilities(self): return self._one(super().capabilities)
+
+    cov = {str(c): (0.0, 60.0) for c in range(1, 33)}
+    holder, cams = _nvr_holder(box, 32, lambda key: OneAtATime(key, channels=[str(c) for c in range(1, 33)],
+                                                               coverage=cov, relays=2))
+    holder.reconcile_once()
+    seen = []
+    for _ in range(6):
+        holder.heartbeat_once()
+        seen.append(Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1"))))
+        time.sleep(0.4)                                              # the line finishes between two heartbeats
+    assert most[0] == 1, f"{most[0]} questions in the recorder at once"
+    assert all("devices_slow" not in hb.extra for hb in seen), [hb.extra.get("devices_slow") for hb in seen]
+    assert all(not d.get("state") for hb in seen[1:] for d in hb.extra["devices"]), seen[-1].extra["devices"]
+    assert all(st.get("coverage") for st in seen[-1].status), [st["id"] for st in seen[-1].status if not st.get("coverage")]
+
+
+def test_a_slow_question_does_not_keep_a_relay_from_being_answered_in_its_look():
+    """The same finding's second half: the set of slow devices was one for questions and commands, so a device whose
+    index takes a second to list was "slow" for its relay too — the command's answer went to the next look. Now a slow
+    question names the device slow for questions (`_slow_asks`), and a command to it is waited for in its look."""
+    box = _real_box()
+    gate = threading.Event()
+
+    class SlowIndex(FakeDevice):
+        def coverage(self, cam):
+            gate.wait(1.0)
+            return super().coverage(cam)
+
+    holder, cams = _nvr_holder(box, 1, lambda key: SlowIndex(key, channels=["1"], coverage={"1": (0.0, 1.0)}, relays=2))
+    try:
+        holder.reconcile_once()
+        holder.heartbeat_once()                                       # the coverage hangs: slow for questions
+        dev = holder.devices["acme/10.0.0.50"]
+        assert id(dev) in holder._slow_asks and id(dev) not in holder._slow
+        box.vars.put("vms/requests/r-1", {"unit": str(cams[0]), "action": "output", "port": "1",
+                                          "valid_until": str(time.time() + 30)})
+        done = holder.requests()
+        assert [d.get("action") for d in done if d["request"] == "r-1"] == ["output"], done   # answered in this look
+    finally:
+        gate.set()
+
+
+def test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_that_refused_as_failed():
+    """The review's tenth pass, major — a run: a driver that did not come back from `device_factory` left its device out
+    of the heartbeat and `/devices`, `devices_slow` empty, the log silent, its camera `running/converged` and its relay
+    commands waiting to expire. Now it is `state: opening` with `since`, counted (`devices_opening`, and on `/metrics`),
+    said in the log once, and named in its camera's status; a device that refused to open is `state: failed`."""
+    box = _real_box()
+    gate = threading.Event()
+
+    def factory(key):
+        if key.endswith(".51"):
+            gate.wait(30)
+        if key.endswith(".52"):
+            raise ConnectionRefusedError("connection refused")
+        return FakeDevice(key, channels=["1"])
+
+    holder, cams = _nvr_holder(box, 1, factory)
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    hung = con.create_camera({"name": "hung", "source": "driverpack://acme/10.0.0.51/ch/1"})["id"]
+    con.create_camera({"name": "refused", "source": "driverpack://acme/10.0.0.52/ch/1"})
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    try:
+        begun = time.time()
+        holder.reconcile_once()
+        holder.heartbeat_once()
+        hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+        by = {d["device"]: d for d in hb.extra["devices"]}
+        assert by["acme/10.0.0.51"]["state"] == "opening" and begun - 1 <= by["acme/10.0.0.51"]["since"] <= time.time()
+        assert by["acme/10.0.0.52"]["state"] == "failed" and "connection refused" in by["acme/10.0.0.52"]["why"]
+        assert hb.extra["devices_opening"] == 1 and not by["acme/10.0.0.50"].get("state")
+        st = {s["id"]: s for s in hb.status}
+        assert st[hung].get("device_state") == "opening" and "device_state" not in st[cams[0]]
+        assert [d["device"] for d in holder.device_status()] == sorted(by)          # the door says the same
+        from vms.console import beat_lines
+        assert 'vms_devices_opening{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+    finally:
+        gate.set()
+    _until(lambda: (holder.reconcile_once(), "acme/10.0.0.51" in holder.devices)[1], 5.0, "the late open to be held")
+    holder.heartbeat_once()
+    assert "devices_opening" not in Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1"))).extra
+
+
+def test_the_door_asking_while_the_heartbeat_asks_does_not_call_a_device_slow():
+    """The review's tenth pass, minor: `/devices` and the heartbeat asked the same questions; the heartbeat found the
+    door's not back and wrote `state: slow` with no channels, while `devices_slow` said nothing was slow. A question on
+    its way, to a device that is not slow, is said by what the device said last."""
+    box = _real_box()
+    slow = threading.Event()
+
+    class Busy(FakeDevice):
+        def channels(self):
+            if slow.is_set():
+                time.sleep(0.15)                                       # inside `DEVICE_GRACE`: not slow, only busy
+            return super().channels()
+
+    holder, cams = _nvr_holder(box, 1, lambda key: Busy(key, channels=["1", "2"]))
+    holder.reconcile_once()
+    holder.heartbeat_once()                                           # what it says, said once
+    slow.set()
+    door = threading.Thread(target=holder.device_status)
+    door.start()
+    time.sleep(0.03)
+    holder.heartbeat_once()
+    door.join()
+    hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+    d = hb.extra["devices"][0]
+    assert "state" not in d and d["channels"] == 2 and d["unimported"] == ["2"], d
+    assert "devices_slow" not in hb.extra
+
+
+def test_another_serial_number_under_the_same_key_is_said_and_counted():
+    """The product team's sibling of the review's tenth pass: the recorder at an address was replaced, and the holder
+    took the new serial number into the row without a word. It is said in the log, counted (`identity_changes` in the
+    heartbeat, a counter on `/metrics`) — in a running holder and in one that has just started on the old row — and
+    the cameras are recorded from the device that answers."""
+    import logging
+    box = _real_box()
+    nvr = FakeDevice("acme/10.0.0.50", channels=["1"], relays=1, identity="SN-OLD")
+    holder, cams = _nvr_holder(box, 1, lambda key: nvr)
+    said = []
+
+    class Catch(logging.Handler):
+        def emit(self, record):
+            said.append(record.getMessage())
+    catch = Catch(level=logging.WARNING)
+    logging.getLogger("vmsworker").addHandler(catch)
+    try:
+        holder.reconcile_once()
+        assert holder.identity_changes == 0
+        nvr.identity = "SN-NEW"
+        holder.reconcile_once()
+        assert holder.identity_changes == 1 and box.vars.get("vms/devices/acme/10.0.0.50")[0]["identity"] == "SN-NEW"
+        assert any("now gives the serial number SN-NEW; it gave SN-OLD before" in m for m in said), said
+        holder.heartbeat_once()
+        hb = Heartbeat.from_bytes(box.objects.get(VMS.sub.heartbeat_key("w-1")))
+        assert hb.extra["identity_changes"] == 1
+        from vms.console import beat_lines
+        assert 'vms_device_identity_changes_total{worker="w-1"} 1' in beat_lines("vms", {"w-1": hb})
+        nvr.identity = "SN-THIRD"                                     # and a holder started on the row of the second
+        fresh = VmsWorker("w-1", box.vars.as_writer("vmsworker", WORKER_ACL), box.objects, FakeActuator(),
+                          clock=box.clock, wall=box.wall, server="srv-a", env={}, archive_root=box.archive,
+                          device_factory=lambda key: nvr)
+        fresh.reconcile_once()
+        assert fresh.identity_changes == 1
+    finally:
+        logging.getLogger("vmsworker").removeHandler(catch)

@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import time
 
+from w2cplatform.doors import numeric
 from w2cplatform.objects import ObjectStore
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Variables
@@ -149,7 +150,7 @@ class Catalog:
             if any(kind in d["events"] for d in said.values()):
                 if kind == "io.input" and unit and "port" in (t.get("match") or {}):
                     rays = said[unit]["rays"]
-                    if not str(t["match"]["port"]).isdigit() or not 1 <= int(t["match"]["port"]) <= rays:
+                    if not 1 <= (numeric(t["match"]["port"]) or 0) <= rays:     # `doors.numeric`: `²` raised (the tenth pass)
                         misfit.append(f"camera {unit} has {rays} input(s), not port {t['match']['port']}")
                 return
             if len(said) < len(descs):
@@ -206,13 +207,13 @@ class Catalog:
             port = str(a.get("port", ""))
             if not d["relays"]:
                 misfit.append(f"camera {unit} has no relays")
-            elif not port.isdigit() or not 1 <= int(port) <= d["relays"]:
+            elif not 1 <= (numeric(port) or 0) <= d["relays"]:
                 misfit.append(f"camera {unit} has {d['relays']} relay(s), not port {port}")
         elif name == "preset":
             n = str(a.get("n", ""))
             if not d["ptz"]:
                 misfit.append(f"camera {unit} has no telemetry: it cannot go to a preset")
-            elif d["presets"] and (not n.isdigit() or not 1 <= int(n) <= d["presets"]):
+            elif d["presets"] and not 1 <= (numeric(n) or 0) <= d["presets"]:
                 misfit.append(f"camera {unit} has {d['presets']} preset(s), not {n}")
 
     def check(self, fields: dict) -> tuple[list[str], list[str]]:
