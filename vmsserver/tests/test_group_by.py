@@ -404,6 +404,14 @@ def test_the_console_files_a_command_and_refuses_the_ones_it_cannot():
         st, b = route(_Body(json.dumps(bad).encode(), key="bad"), "POST", "/requests", {})
         assert st in (400, 404) and b["error"] == why
 
+    # an argument longer than a word: 400 at the door, the field named and not its value, no row written (the product's
+    # cross-check of the eleventh review; the holder refuses such a row too, `VmsWorker.perform`)
+    rows = len(box.vars.list(SPEC.sub.requests_prefix()))
+    st, b = route(_Body(json.dumps({"unit": door, "action": "output", "port": 1, "state": "x" * 5000}).encode(), key="long"),
+                  "POST", "/requests", {})
+    assert st == 400 and b["error"] == "too long" and "`state`" in b["detail"] and "xxxx" not in json.dumps(b)
+    assert len(box.vars.list(SPEC.sub.requests_prefix())) == rows
+
 
 def test_two_workers_on_one_box_open_their_own_doors():
     """The defect this exists for is not subtle once seen: a port in a TEMPLATE

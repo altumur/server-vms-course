@@ -1002,6 +1002,15 @@ def body_deadline(h, n: int) -> None:
 # `BODY_RATE` bytes (`Deadlined`) — and put back as memory, so whoever answers reads it as if nobody had. True: go on;
 # False: refused, and the reply sent.
 def read_body(h, limit: int) -> bool:
+    # A BODY SENT IN CHUNKS IS NOT AN EMPTY BODY (the product's cross-check of the eleventh review). No door here reads
+    # `Transfer-Encoding: chunked`, and with no `Content-Length` its body was read as none: `{}` to the route — a PUT
+    # that changed nothing and answered 200, a POST that wrote defaults — and the chunks left on the connection were
+    # read as the next request. 400 in words, and the connection closed: what follows the headers is not read.
+    if (h.headers.get("Transfer-Encoding") or "").strip():
+        h.close_connection = True
+        h._send(400, {"detail": "this door takes a body sent whole, with a Content-Length — not in chunks "
+                                "(Transfer-Encoding)", "error": "no length"})
+        return False
     raw = (h.headers.get("Content-Length") or "").strip()
     if not raw or raw == "0":
         return True

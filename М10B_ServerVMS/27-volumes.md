@@ -275,7 +275,17 @@ def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "@" in url.split("//", 1)[-1].split("/", 1)[0]:
         raise Refused("a volume's url names the archive, never the key to it: the credentials go in "
                       "`access_secret` — this string is printed on the page and published in heartbeats")
+    # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): `…/bucket?X-Amz-Credential=…` or
+    # `?secret=…` was taken, and printed and published the same. The rule and its list: `secrets.is_credential_param`.
+    from w2cplatform.secrets import credential_params
+    creds = credential_params(url)
+    if creds:
+        raise Refused(f"a volume's url names the archive, never the key to it ({', '.join(dict.fromkeys(creds))}): the "
+                      f"credentials go in `access_key` / `access_secret` — this string is printed on the page and "
+                      f"published in heartbeats")
 ```
+
+**И не в параметрах адреса** (одиннадцатое ревью, сосед пароля в `source` камеры). Проверка смотрела только на `@`, и `https://s3.example.com/vms?X-Amz-Credential=…` или `s3://…/vms?secret=…` проходили — и печатались на странице и в heartbeat'е так же. Теперь адрес тома, у которого есть параметр с именем учётных данных, отказывается по тому же правилу, что адрес камеры (`secrets.is_credential_param`, список — М10A, урок 9), и отказ называет параметр, не значение; параметр без секрета (`?region=eu-1`) проходит. Тест: `test_volumes.py::test_the_key_never_goes_into_the_address`.
 
 У ключа бакета две части, и строка тома держит их в двух полях. **Какой** это ключ — `access_key`, идентификатор ключа. Он не секрет, поэтому показывается, как логин камеры:
 
@@ -608,7 +618,7 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 - **Сетевой том, который не открылся, считают `wrong`.** Каждый обрыв сети перетасовывает все записи тома.
 - **Сломанный том отдают, даже когда больше некуда.** Коробка перестаёт писать совсем из-за диагностики.
 - **Отказавший посреди работы том берут назад на следующем проходе.** Регистратор мигает между «взял» и «отдал». Нужна пауза `REFUSED_FOR`.
-- **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста.
+- **Ключ в адресе тома.** Он на странице, в heartbeat'е и в строке. `refuse` не пропускает `@` в части хоста и параметры с именами учётных данных.
 - **Идентификатор ключа из адреса.** Адрес с `@` не пройдёт `refuse`, и s3-том дойдёт до демона без `access_key`. Идентификатор — своё поле строки.
 - **Закреплённый регистратор с неоткрывшимся томом сообщает полную ёмкость.** Контроллер ставит записи туда, где писать нельзя.
 - **`home` предпочтением для резервного тома.** Основная переезжает на него при перезагрузке своего сервера, и копий становится одна.
