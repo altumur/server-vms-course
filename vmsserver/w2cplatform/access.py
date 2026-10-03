@@ -66,6 +66,9 @@ class Denied(Exception):
 class Access(Protocol):
     def who(self, token: str) -> dict: ...                       # the token's payload (`sub`, …), or `Denied(401)`
     def may(self, payload: dict, capability: str, unit: str | None, labels: list) -> bool: ...
+    # Optional: whether the payload's subject holds a grant given on labels at `capability` or above — what `/events`
+    # asks before it names units whose labels it could not read (`SpecConsole._by_labels`). Absent: taken as no.
+    def by_labels(self, payload: dict, capability: str) -> bool: ...
 
 
 # `Authorization: Bearer …`, or the cookie a browser carries (`w2c_token`, set `HttpOnly` by whoever logged

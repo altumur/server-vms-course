@@ -26,6 +26,7 @@ from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 from w2cplatform.variables import Variables
 
 from .config import DET_SPEC
+from w2cplatform.rows import PARSE_ERRORS
 
 DET = DET_SPEC.sub
 log = logging.getLogger("vms.detworker")
@@ -92,7 +93,7 @@ class DetWorker(Worker):
             try:
                 row = self.unit_row(unit)
                 self.row_parsed(unit)
-            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this detector's trouble (`row_garbled`)
+            except PARSE_ERRORS as e:    # its row does not parse: this detector's trouble (`row_garbled`)
                 why = self.row_garbled(unit, e)
                 if unit not in self.running:                  # what runs under the row read last keeps running
                     self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": why}

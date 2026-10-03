@@ -43,6 +43,7 @@ import threading
 import time
 
 from .variables import Conflict, Variables, cas_pause
+from .rows import PARSE_ERRORS
 
 
 # Issues the next epoch for `key` by check-and-set: read `{epoch}` and its ModifyIndex (missing key means
@@ -135,7 +136,7 @@ class Lease:
                 if self.silent_since is None and self.may_write():
                     self.silent_since = t0     # silence, established while the lease was still good
                 return self.may_record()
-        except (ValueError, KeyError, TypeError):
+        except PARSE_ERRORS:                   # `epoch: Infinity` too — it raised out of `renew_leases`, every lease (the tenth round)
             # The store ANSWERED, with a row that is not an epoch. That is not silence to record through
             # (the review's second pass): somebody wrote over the counter, and whoever did may have given the
             # camera away too. Fenced, as a counter that moved; the instance takes a fresh slot and starts again.

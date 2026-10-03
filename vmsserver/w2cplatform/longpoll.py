@@ -68,7 +68,7 @@ import urllib.parse
 import urllib.request
 
 from .doors import safe_segment
-from .rows import answer
+from .rows import PARSE_ERRORS, answer
 from .events import EPOCH_DIR, alarm_tree, bucket_start, _stamp
 
 log = logging.getLogger(__name__)
@@ -431,7 +431,7 @@ class Watch:
         for line in data[:whole].splitlines():
             try:
                 kinds.add(str(json.loads(line).get("kind", "")))
-            except (ValueError, AttributeError):
+            except PARSE_ERRORS:
                 continue                             # a torn line: skipped, as every reader of a bucket skips it
         return kinds, old + whole
 

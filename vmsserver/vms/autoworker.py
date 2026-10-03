@@ -39,6 +39,7 @@ from w2cplatform.variables import Variables
 from .auto import Catalog, fires
 from .config import AUTO_SPEC
 from .scan import Frontier
+from w2cplatform.rows import PARSE_ERRORS
 
 log = logging.getLogger("autoworker")
 AUTO = AUTO_SPEC.sub
@@ -174,7 +175,7 @@ class AutoWorker(Worker):
             try:
                 rows[u] = self.scenario(u)
                 self.row_parsed(u)
-            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this scenario's trouble (`row_garbled`)
+            except PARSE_ERRORS as e:    # its row does not parse: this scenario's trouble (`row_garbled`) — `RecursionError` too (the tenth pass)
                 rows[u] = None
                 self.status_by_unit[u] = {"id": u, "phase": "failed", "why": self.row_garbled(u, e)}
         self._plan(rows, now, partial=only is not None)

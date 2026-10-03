@@ -146,7 +146,7 @@ class Look:
                     continue
                 try:
                     out.append(self.rec.parse_row(items))
-                except (ValueError, KeyError, TypeError) as e:
+                except PARSE_ERRORS as e:                # `Infinity` in an int field too (the tenth round's sweep)
                     self.rec.row_garbled(name, e)
             return out
         return self._once(("recordings", deleted), parse)

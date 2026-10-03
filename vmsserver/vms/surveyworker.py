@@ -40,6 +40,7 @@ from w2cplatform.variables import Variables
 from .config import SURVEY_SPEC
 from .detworker import FakeModel
 from .scan import SURVEY, Frontier, device_recordings, hit_spans
+from w2cplatform.rows import PARSE_ERRORS
 
 SURVEY_SUB = SURVEY_SPEC.sub
 log = logging.getLogger("vms.surveyworker")
@@ -108,7 +109,7 @@ class SurveyWorker(Worker):
             try:
                 row = self.watch_row(unit)
                 self.row_parsed(unit)
-            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this watch's trouble (`row_garbled`)
+            except PARSE_ERRORS as e:    # its row does not parse: this watch's trouble (`row_garbled`)
                 self.status_by_unit[unit] = {"id": unit, "phase": "failed", "why": self.row_garbled(unit, e)}
                 continue
             if row is None:

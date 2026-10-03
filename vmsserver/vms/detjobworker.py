@@ -39,6 +39,7 @@ from w2cplatform.variables import Variables
 from .config import DETJOB_SPEC
 from .detworker import FakeModel
 from .scan import ScanLog, covered, covered_by, device_recordings, plan, recording_read, remaining, written_through
+from w2cplatform.rows import PARSE_ERRORS
 
 DETJOB = DETJOB_SPEC.sub
 TERMINAL = ("done", "failed")
@@ -145,7 +146,7 @@ class DetJobWorker(Worker):
             try:
                 row = self.job_row(job)
                 self.row_parsed(job)
-            except (ValueError, KeyError, TypeError) as e:    # its row does not parse: this job's trouble (`row_garbled`)
+            except PARSE_ERRORS as e:    # its row does not parse: this job's trouble (`row_garbled`)
                 self.status_by_unit[job] = {"id": job, "phase": "failed", "why": self.row_garbled(job, e)}
                 continue
             if row is None:

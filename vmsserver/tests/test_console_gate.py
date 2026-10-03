@@ -46,6 +46,11 @@ class Tokens:
             return bool(mine)
         return any(rank[c] >= rank[capability] and ((set(lab) <= set(labels)) if lab else u in (unit, None)) for c, u, lab in mine)
 
+    def by_labels(self, payload, capability):
+        rank = {"view": 0, "edit": 1, "admin": 2}
+        return payload.get("via") != "break-glass" and any(lab and rank[c] >= rank[capability]
+                                                           for c, _, lab in self.grants.get(payload.get("sub"), ()))
+
 
 def _console(box, access=None):
     ctl = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
@@ -292,6 +297,9 @@ def test_one_garbled_camera_row_costs_that_cameras_events_and_not_the_timeline()
         assert "does not parse" in rep["withheld"][0]["why"]
         assert cams("two") == [2] and cams("admin") == [1, 2, 3]                 # no label needed: shown as before
         assert "withheld" not in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="admin")[1]
+        # …and not to a grant on one unit (the review's tenth pass, minor): camera 3's id and its count were said to the
+        # guard of camera 2, whose grant never covered camera 3 whatever its labels
+        assert "withheld" not in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="two")[1]
         assert UNIT_LABELS.counts.get("vms") == 2                                # two rows, each once — not once a read
         metrics = urllib.request.urlopen(urllib.request.Request(base + "/metrics", headers={"Authorization": "Bearer admin"})).read().decode()
         assert 'vms_console_rows_garbled{table="unit"} 2' in metrics

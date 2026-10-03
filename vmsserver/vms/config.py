@@ -127,7 +127,10 @@ def device_of(source: str) -> str:
     vendor's own addressing stays opaque, only the grouping is ours — and one
     spelling for one address (`_host`)."""
     from urllib.parse import urlsplit
-    u = urlsplit(str(source).strip())
+    try:
+        u = urlsplit(str(source).strip())
+    except ValueError:                                   # `rtsp://[::1/x`: "Invalid IPv6 URL" — raised out of every walk of the
+        return str(source)                               # cameras (`/drain`, `/unplaceable`, placement; the tenth round): as it is
     scheme = u.scheme.lower()
     if scheme != "driverpack":
         if not u.netloc:

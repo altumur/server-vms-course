@@ -279,7 +279,9 @@ def peers_of(server: str, live: list[str], copies: int) -> list[str]:
 def resources_seen(objects) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
         hb = dict(json.loads(raw))
-        hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it
+        hb["server"], float(hb["ts"])                          # what every reader of this dict asks of it — `server` a name
+        # (`parse_heartbeat` checks it: `["srv-x"]` was the key of `out` below, and `/metrics`, `restore` and the mirror
+        # raised on it — the review's tenth pass)
         # …and what the mirror asks of it (the review's seventh pass): `url` to send to and take back from, `mirrors` a
         # map — read bare, a heartbeat without them raised out of `mirror` for every peer, and out of `restore`, which
         # runs at the start with nothing around it.
@@ -362,6 +364,11 @@ def _whole(r, what: str, limit: int) -> bytes:
 PEER_LINES = Table("peer_line", "that bucket is not copied either way until the peer says it whole", "line of a peer's listing")
 
 
+class Listing(list):
+    """A peer's listing of the buckets it holds, and how many of its lines were not read (`skipped`)."""
+    skipped = 0
+
+
 # How one resource talks to another: HTTP. Tests substitute an in-process client with the same three methods
 # over directories.
 class PeerClient:
@@ -373,12 +380,17 @@ class PeerClient:
     # (`PEER_LINES`), and the rest of the listing stands — read bare, one line took every copy of the peer with it.
     # Read up to `LISTING_MAX` (a year of one server's buckets is some ten megabytes), and only a 200 is a listing —
     # whole (`_whole`; the ninth pass): a listing cut short is not a peer that holds less.
+    #
+    # …and how many it skipped is said with it (`Listing.skipped`; the review's tenth pass, minor): `restore` took a
+    # listing with lines left out for everything the peer had, and never asked that peer again.
     def mirrored(self, url: str, server: str) -> list[Bucket]:
         with urllib.request.urlopen(f"{url}/mirrored/{server}", timeout=self.timeout) as r:
             _ok(r, f"GET mirrored/{server}")
             lines = [l for l in _whole(r, f"GET mirrored/{server}", LISTING_MAX).decode(errors="replace").splitlines() if l.strip()]
         key = f"platform/mirrored/{server}@{url}#"
-        return [b for i, l in enumerate(lines) if (b := PEER_LINES.read(f"{key}{i}", lambda l=l: bucket_from_line(l))) is not None]
+        out = Listing(b for i, l in enumerate(lines) if (b := PEER_LINES.read(f"{key}{i}", lambda l=l: bucket_from_line(l))) is not None)
+        out.skipped = len(lines) - len(out)
+        return out
 
     # `PUT <url>/mirror/<server>/<path>` with the bucket's bytes; anything but 200/201/204 raises `IOError`.
     def put(self, url: str, server: str, path: str, data: bytes) -> None:
@@ -947,11 +959,17 @@ class Resource:
                             self.server, peer, e)
                 continue
             self._progressed()
+            # A line of the listing that was not read, and a path that is not a bucket's, are buckets the peer has and
+            # did not give: counted in `left` (the review's tenth pass, minor) — the peer is not "gave everything" and is
+            # asked again, and `restore_left` says what is still with it. A peer of another build is then asked every
+            # `RESTORE_RETRY_MAX`, and the number that does not fall is what says so.
             fails, left_before = 0, left
+            left += int(getattr(listed, "skipped", 0) or 0)
             for path in sorted(str(b.path) for b in listed):
                 self._progressed()
                 if not _bucket_path(path):
                     PEER_LINES.garbled(f"platform/restore/{peer}#{path}", "not a bucket's path")
+                    left += 1
                     continue                                 # never written: it could name a place outside the tree
                 dest = self.path_of(path)              # back onto the volume that held it, or the emptiest
                 if os.path.exists(dest):

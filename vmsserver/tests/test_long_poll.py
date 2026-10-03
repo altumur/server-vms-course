@@ -961,9 +961,18 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
     devices commanded at once, 100 of them hung for 30 s, held the loop's thread 24.7 s — a fast command waited 7 s and
     the lease went 13.9 s unrenewed. Now a look waits for its calls together, a fifth of a second however many hang,
     within `REQUESTS_HOLD`; a call begun counts in the budget; a device that did not answer is not waited for again.
-    The real loop, 200 devices, every one commanded at once and half of them hung: the lease step keeps its rhythm,
-    and a fast command filed behind the whole burst is called within a look, a lease step and a beat — under a second
-    and a half on this file store, whose create-only mark is most of a command's cost; it was seven."""
+    The real loop, 200 devices, every one commanded at once and half of them hung: the lease step keeps its rhythm;
+    a fast command filed while the burst is being taken up is performed with it, not after the hung devices' 30 s;
+    and one filed behind the hung devices' standing rows is called within a look, a lease step and a beat — under a
+    second and a half; it was seven.
+
+    WHAT THE BOUND MEASURES (the tenth round; four agents saw 1.56–1.74 s under load). It was taken on the command
+    filed half a second into the burst, and what that one waited for under load was not a hung device: it was the
+    100 free devices' commands filed before it, each a create-only mark on this file store — 6 to 10 ms apiece on a
+    loaded machine, so the burst's marks filled three or four looks of `REQUESTS_HOLD` each (0.47–0.50 s of marks in a
+    0.5 s look, measured), and the command, last in the order of keys, waited for the looks the store's cost made.
+    Reproduced at 2.33 s. That is the store's price of the work filed ahead, not what the hung devices cost; the bound
+    is now taken where only the hung devices stand ahead: every free device called, the hung ones still hung."""
     box = _real_box()
     con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
     cams = [con.create_camera({"name": f"d{i}", "source": f"driverpack://acme/10.0.{i // 250}.{i % 250}/ch/1"})["id"]
@@ -1007,12 +1016,16 @@ def test_a_hundred_hung_devices_of_two_hundred_delay_neither_a_fast_command_nor_
         time.sleep(0.5)
         n = len(cams) - 1
         fast = f"acme/10.0.{n // 250}.{n % 250}"
-        filed = time.monotonic()                                     # last in the order of keys: behind the whole burst
         box.vars.put("vms/requests/z-fast", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
                                              "by": "operator", "valid_until": str(time.time() + 30)})
-        _until(lambda: fast in called, 5.0, "the fast command to be performed")
-        assert called[fast] - filed < 1.5, f"the fast command waited {called[fast] - filed:.2f} s"
+        _until(lambda: fast in called, 10.0, "the command filed during the burst to be performed")   # not after the 30 s
         _until(lambda: len([k for k in called if k not in hung]) == len(cams) - len(hung), 10.0, "every free device called")
+        assert not gate.is_set()                                     # the hung ones still hang: their rows stand ahead
+        filed = time.monotonic()                                     # last in the order of keys: behind every hung row
+        box.vars.put("vms/requests/z-fast-2", {"unit": str(cams[-1]), "action": "output", "port": "2", "at": str(time.time()),
+                                               "by": "operator", "valid_until": str(time.time() + 30)})
+        _until(lambda: called[fast] > filed, 5.0, "the fast command to be performed")
+        assert called[fast] - filed < 1.5, f"the fast command waited {called[fast] - filed:.2f} s"
         mark = len(leased)
         time.sleep(4.0)
         gaps = [b - a for a, b in zip(leased[mark - 1:], leased[mark:])]

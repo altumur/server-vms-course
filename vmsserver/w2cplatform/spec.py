@@ -600,6 +600,18 @@ class SubsystemSpec:
             if f.type == "blob" and fields.get(name) and not is_digest(fields[name]):
                 raise Refused(f"{name} takes a digest, not the bytes ({len(str(fields[name]))} of them): "
                               f"PUT the bytes to /{self.rows}/<id>/{name} and the row gets the digest back")
+        # A VALUE OF A LIST HOLDS NO `,` (the review's ninth answer, left open; the tenth round). A list is stored as one
+        # string joined by `,` (`Field.to_item`), and every reader — this one, М11's, М12's, another build's — splits it
+        # there: `["zone 1,2"]` read back as two labels, a camera nobody's server reaches, an alarm kind nobody raises.
+        # Refused where it is written; the store's form stays what every reader already reads (the rows written before
+        # are already split, and read as they are). A string value is the joined form itself, and is taken as it is.
+        for name, f in self.fields.items():
+            v = fields.get(name)
+            if f.type == "list" and isinstance(v, (list, tuple)):
+                bad = [x for x in v if "," in str(x)]
+                if bad:
+                    raise Refused(f"{name}: a value of a list may not hold ',' — the list is kept joined by commas and "
+                                  f"{bad[0]!r} would read back as {len(str(bad[0]).split(','))} values")
         for name, f in self.fields.items():
             # A `json` field that is not JSON is a 400 to whoever typed it, not a 500 from the store on
             # the next read. The ceiling is the row's own (Lesson 19's limit) — this one keeps a single
@@ -610,7 +622,7 @@ class SubsystemSpec:
                 try:
                     text = raw if isinstance(raw, str) else _json.dumps(raw)
                     _json.loads(text)
-                except (TypeError, ValueError) as e:
+                except PARSE_ERRORS as e:                # nested past JSON's depth too: 400, not 500 (the tenth round)
                     raise Refused(f"{name} is not JSON: {e}")
                 if len(text) > JSON_CEILING:
                     raise Refused(f"{name} is {len(text)} bytes of JSON; the ceiling is {JSON_CEILING}")
@@ -1455,8 +1467,11 @@ class SpecController(Controller):
             # step that did not hand one in (`_pick` from `place`, `home_for`) gets the same one.
             from .console import heartbeats                        # the read model's scan, without the age filter
             prefix = f"{self.spec.near}/heartbeats/"
-            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"))
-            return self._per_pass(prefix, lambda: self._near_index(beats), "near_index")
+            # Memo names of their own (the review's tenth pass, minor): `""` was the list `Controller._heartbeats` keeps
+            # under the same prefix, and the index is by `near_of` — the VMS (`of: cam`) and a scan job (by id) both
+            # follow `rec`, and in one shared pass one got the other's index.
+            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"), "beats")
+            return self._per_pass(prefix, lambda: self._near_index(beats), f"near_index:{self.spec.near_of}")
         return self._near_index(beats)
 
     def _near_index(self, beats: dict) -> NearIndex:
