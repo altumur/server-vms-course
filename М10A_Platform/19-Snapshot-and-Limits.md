@@ -243,7 +243,8 @@ def device_of(source: str) -> str:
     """The thing DriverPack connects to. Cameras sharing it share one session:
     `driverpack://acme/10.0.0.50/ch/17` and `…/ch/18` are two channels of one NVR;
     a camera with an SD card is a device with one channel. Pure parsing — the
-    vendor's own addressing stays opaque, only the grouping is ours."""
+    vendor's own addressing stays opaque, only the grouping is ours — and one
+    spelling for one address (`_host`)."""
 ```
 
 Устройство существует только как **группировка** на воркере: одна сессия, общий лимит воспроизведений. Потолок — на строку (248 байт), а не на NVR. Платформа шардирует конфигурацию по единице с самого начала — тот же ход, что сделан со снимком в первой половине урока.

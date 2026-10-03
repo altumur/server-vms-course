@@ -131,14 +131,49 @@ ctl.write("thing/counter", bump)          # +1, атомарно, с повто�
         the controller keeps — a fact it reads."""
         out = {}
         now = self.wall()
-        for key in self.objects.list(self.sub.name + "/"):
-            if key.endswith("/heartbeat"):
-                raw = self.objects.get(key)
-                hb = parse_heartbeat(key, raw) if raw else None    # garbled: skipped, counted, said once
-                if hb is not None and is_live(self.sub.name, hb.ts, now, max_age):
-                    out[hb.worker] = hb
+        for hb in self._heartbeats():
+            if is_live(self.sub.name, hb.ts, now, max_age):
+                out[hb.worker] = hb
         return out
+
+    def _heartbeats(self) -> list[Heartbeat]:
+        def read():
+            out = []
+            # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
+            for key in self.objects.list(self.sub.heartbeats_prefix()):
+                raw = self.objects.get(key)
+                hb = parse_heartbeat(key, raw) if raw else None
+                if hb is not None:
+                    out.append(hb)
+            return out
+        return self._per_pass(self.sub.heartbeats_prefix(), read, "heartbeats")
 ```
+
+Читает пульсы `_heartbeats`, один раз за проход (`_per_pass` — память прохода из шага 1): у пульсов свой префикс, `<name>/heartbeats/`, и фильтр по концу ключа не нужен. Разбирает каждый `parse_heartbeat`:
+
+```python
+def parse_heartbeat(key: str, raw: bytes, parse=None):
+    """The object parsed, or None — skipped, counted, and logged once."""
+    try:
+        hb = (parse or Heartbeat.from_bytes)(raw)
+        # …and its status is a list of OBJECTS (the review's seventh pass, the walk over every reader): an entry that
+        # is a word parsed, and raised `AttributeError` in every reader that asks an entry `.get` — `holder_of`, the
+        # read model, the running gauge — each a loop over every worker.
+        if isinstance(hb, Heartbeat) and not all(isinstance(s, dict) for s in hb.status):
+            raise TypeError("a status entry is not an object")
+        _named(hb)
+    except PARSE_ERRORS:                          # `OverflowError` (`ts: 10**400`) and `RecursionError` too (the ninth review's sweep)
+        sub = key.split("/", 1)[0]
+        GARBLED[sub] = GARBLED.get(sub, 0) + 1
+        if key not in _garbled_keys:
+            _garbled_keys.add(key)
+            log.warning("%s: heartbeat does not parse; skipped", key)
+        return None
+    _garbled_keys.discard(key)
+    return hb
+```
+
+`_named` — проверка десятого ревью: `worker` и `server` пульса должны быть непустыми строками (таблица ниже).
 
 **Heartbeat, который не разбирается, — беда одного воркера, не прохода.** Объект обрывается на полуслове — питание, зомби, писавший в тот же файл до BD, — и `Heartbeat.from_bytes` поднимал `ValueError` посреди `workers_seen`: ни одного воркера контроллер не видел, пока кто-нибудь не удалит объект (ревью платформы, M6; второе ревью). `parse_heartbeat` пропускает такой объект, считает его (`contract.GARBLED[sub]` → `<sub>_heartbeats_garbled` в `/metrics`) и пишет в лог один раз на ключ, пока тот не станет читаться; то же у `builds`, у `heartbeats` консоли и у `resources_seen` ресурса. Тест: `test_placement_decides.py::test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_passs`.
 
