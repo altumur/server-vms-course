@@ -1957,7 +1957,10 @@ class RecWorker(VmsWorker):
             return self.depths
         self.depths = depths
         for row in self.rows:
-            unit, floor = str(row["id"]), float(row.get("min_depth_days") or 0)
+            # `rows.number`: `nan` or `inf` days passed the row's `float` and raised `archive.shallow` every day for a
+            # floor no depth meets (the ninth pass, sibling A's table) — read as not said, counted once and logged
+            unit = str(row["id"])
+            floor = number(f"rec/recordings/{unit}#min_depth_days", row.get("min_depth_days") or None, float, 0.0)
             if not floor or not closed or depths[unit] >= floor:
                 self.shallow.pop(unit, None)
                 continue

@@ -185,7 +185,10 @@
             return self.depths
         self.depths = depths
         for row in self.rows:
-            unit, floor = str(row["id"]), float(row.get("min_depth_days") or 0)
+            # `rows.number`: `nan` or `inf` days passed the row's `float` and raised `archive.shallow` every day for a
+            # floor no depth meets (the ninth pass, sibling A's table) — read as not said, counted once and logged
+            unit = str(row["id"])
+            floor = number(f"rec/recordings/{unit}#min_depth_days", row.get("min_depth_days") or None, float, 0.0)
             if not floor or not closed or depths[unit] >= floor:
                 self.shallow.pop(unit, None)
                 continue
@@ -205,6 +208,8 @@
 **Почему только держатель эпохи.** Условие `unit not in self.epochs` — то же правило, что у любых событий (М10A, урок 12): в бакет записи пишет тот, кто держит её эпоху. Иначе два регистратора, видящие один том, подняли бы две тревоги.
 
 Ответ на тревогу комментарий называет прямо: квота больше или меньше записей на томе. Система своё сделала — сказала.
+
+**Пол, который не число, — не повод тревожить каждый день** (девятое ревью: команда продукта нашла у себя, что слово или `nan` в сроке читались как число; в курсе проверены три читателя дней: сроки ресурса, потолок двери регистратора и этот пол). Поле типа `float` пропускает `"nan"` и `"inf"`: такой пол не встречает ни одна глубина, и `archive.shallow` поднималась бы раз в сутки по записи, которой ничего не обещали. Теперь пол идёт через `rows.number`: `nan`, `inf` или слово читаются как «не сказано» (0 — пола нет), строка считается один раз (`fields_garbled`) и попадает в лог с именем записи. У потолка правило обратное, и оно описано в уроке 8: потолок `retention_days`, который не читается, прячет всё старше «сейчас», а не падает на тридцать дней по умолчанию (`archive.visible_from`, таблица `CEILINGS`). Пол, прочитанный как «нет пола», ничего не удаляет и не показывает лишнего; потолок, прочитанный как тридцать дней, показал бы больше обещанного. Отдельного теста у пола нет — открыто. Тест потолка: `test_garbled_rows.py::test_a_recordings_ceiling_that_is_no_number_of_days_hides_and_does_not_fall_back_to_thirty`.
 
 Глубина уходит в статус записи (`depth_days`, `shallow`) и оттуда — в метрики консоли:
 
