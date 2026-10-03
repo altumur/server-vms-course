@@ -7,6 +7,7 @@ namespace "default" {
     path "rec/placement/*" { capabilities = ["write", "read", "list"] }
     path "rec/slots/*"     { capabilities = ["write", "read", "list"] }
     path "objects/rec/snapshot/*" { capabilities = ["write", "read", "list"] }   # its own snapshot shards: it never had this grant, and nobody noticed
+    path "objects/rec/controller/pass" { capabilities = ["write", "read"] }   # its pass report, where /metrics reads rec_units_unplaced (the ninth review: a 403 every pass)
     path "objects/*"       { capabilities = ["read", "list"] }
     # WHAT IT READS, NOT EVERYTHING (М10's eighth review): it had `path "*"`, which read `secrets/vms` too — the key
     # the console's policy says only three jobs read. The rows it places from, the other subsystem's rows its

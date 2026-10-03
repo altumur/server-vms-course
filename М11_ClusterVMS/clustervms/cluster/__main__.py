@@ -108,12 +108,27 @@ def reccontroller() -> None:
 
 # Each step of a controller's pass in a try of its own (the review's seventh pass, part 2): they shared one, so a step
 # that raised — one row it could not read — skipped every step after it, the snapshot the layer above reads included.
+# And said ONCE per spell (the eighth review's minor, closed in the ninth): the trace went into the log on every pass,
+# every five seconds for as long as the step kept failing — a refused write did it for days. The trace the first time,
+# "works again" when it does (`_failing`, by loop and step), as М12's `domain/steps.py` says it.
+_failing: set[tuple[str, str]] = set()
+
+
 def _steps(what: str, *steps) -> None:
-    for step in steps:
+    for i, step in enumerate(steps):
+        name = getattr(step, "__name__", "")
+        name = f"step {i + 1}" if name in ("", "<lambda>") else name
         try:
             step()
         except Exception:                         # noqa: BLE001
-            logging.exception("%s: %s failed; the other steps of the pass go on", what, getattr(step, "__name__", "a step"))
+            if (what, name) not in _failing:
+                _failing.add((what, name))
+                logging.exception("%s: %s failed; the other steps of the pass go on, this one is tried on every pass "
+                                  "and said again when it works", what, name)
+        else:
+            if (what, name) in _failing:
+                _failing.discard((what, name))
+                logging.warning("%s: %s works again", what, name)
 
 
 # One pass of a placement controller, the same as the box's loop makes it (`vms/__main__._controller_loop`; the review's

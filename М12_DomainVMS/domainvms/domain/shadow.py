@@ -112,7 +112,8 @@ class Shadow:
 def reports_from(fed) -> tuple[list[WorkerReport], dict[tuple[str, str], int], list[str]]:
     """Build the reports and the epoch map from every reachable cluster's
     heartbeats and vms/epoch/* — what the shadow job reads each pass."""
-    from .federation import Unreachable
+    from w2cplatform.rows import PARSE_ERRORS
+    from .federation import MEMBER_OBJECTS, Unreachable
     reports, epochs, down = [], {}, []
     for name, c in fed.clusters.items():
         try:
@@ -124,9 +125,17 @@ def reports_from(fed) -> tuple[list[WorkerReport], dict[tuple[str, str], int], l
                 for st in hb.get("status", []):
                     if st.get("phase") != "running":
                         continue
-                    refs[int(st["id"])] = ref_of(st)
-                    cams.append((ref_of(st), int(st.get("epoch", 0)), int(st.get("revision", 0)), int(st.get("observed_revision", 0))))
-                reports.append(WorkerReport(w, name, hb.get("server", "?"), cams, float(hb["ts"])))
+                    # one entry of one worker is that entry's (the ninth review's sweep): `id: "seven"` or `epoch: 1e400`
+                    # raised out of the report for every cluster of the domain, as an epoch row once did (below)
+                    try:
+                        cid, ref = int(st["id"]), ref_of(st)
+                        entry = (ref, int(st.get("epoch", 0)), int(st.get("revision", 0)), int(st.get("observed_revision", 0)))
+                    except PARSE_ERRORS as e:
+                        MEMBER_OBJECTS.garbled(f"{name}/vms/heartbeats/{w}#{st.get('id')}", e)
+                        continue
+                    refs[cid] = ref
+                    cams.append(entry)
+                reports.append(WorkerReport(w, name, hb.get("server", "?"), cams, float(hb.get("ts", 0))))
             for path in c.vars.list("vms/epoch/"):
                 items, _ = c.vars.get(path)
                 # One epoch row that does not parse is that camera's (the review's sixth pass, the class of М10B's
@@ -135,7 +144,7 @@ def reports_from(fed) -> tuple[list[WorkerReport], dict[tuple[str, str], int], l
                 try:
                     cid = int(path.rsplit("/", 1)[1])
                     epochs[(name, refs.get(cid, f"{name}/{cid}"))] = int(items["epoch"])
-                except (ValueError, KeyError, TypeError):
+                except PARSE_ERRORS:
                     log.warning("%s: epoch row %s does not parse: skipped in the shadow report", name, path)
         except Unreachable:
             down.append(name)

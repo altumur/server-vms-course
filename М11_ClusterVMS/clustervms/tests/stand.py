@@ -32,7 +32,10 @@ TRACES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.ab
 # checks the file against: the device rows a worker writes (`vms/devices/*`) and the marks before a command
 # (`objects/vms/commands/*`) were missing here, and the stand let a worker do less than the policy does.
 WORKER_GRANTS = WORKER_ACL + ["objects/" + p for p in WORKER_OBJECTS]
-RECORDER_GRANTS = REC_SPEC.sub.acl_worker() + ["objects/rec/heartbeats/*"]  # what recworker-policy.hcl grants
+# …and the others from the code's lists too, not from a hand list beside them (the review's ninth pass: the controller's
+# grant here was `objects/vms/snapshot/*` by hand, and its pass report was refused in the stand as on a cluster).
+RECORDER_GRANTS = REC_SPEC.sub.acl_worker() + ["objects/" + p for p in REC_SPEC.sub.acl_objects_worker()]
+CONTROLLER_GRANTS = SPEC.acl_controller() + ["objects/" + p for p in SPEC.sub.acl_objects_controller()]
 
 
 class Stand(Cluster):
@@ -73,7 +76,7 @@ class Stand(Cluster):
         return self.resources
 
     def controller(self, who: str = "vmscontroller") -> ClusterController:
-        v, o = self.as_process(who, "vmscontroller", SPEC.acl_controller() + ["objects/vms/snapshot/*"])
+        v, o = self.as_process(who, "vmscontroller", CONTROLLER_GRANTS)
         return ClusterController(v, o, wall=self.wall)
 
     def console(self, who: str = "console") -> ClusterController:
@@ -237,7 +240,7 @@ def who_may_write_what() -> str:
     tries = [
         ("vmsworker w-0", WORKER_GRANTS, [("vms/epoch/7", {"epoch": "1"}), ("vms/placement/7", {"worker": "w-0"})]),
         ("recworker r-0", RECORDER_GRANTS, [("rec/holds/disks-a", {"holder": "alloc-0002"}), ("rec/recordings/7", {"cam": "7"})]),
-        ("vmscontroller", SPEC.acl_controller() + ["objects/vms/snapshot/*"],
+        ("vmscontroller", CONTROLLER_GRANTS,
          [("vms/placement/7", {"worker": "w-0", "reason": "…"}), ("vms/cameras/7", {"name": "moved"})]),
         ("console", SPEC.acl_console(), [("vms/cameras/7", {"name": "north-gate"}), ("vms/workers/w-0", {"units": "7"})]),
         ("resource srv-a", ["objects/platform/resources/*"],
@@ -426,7 +429,8 @@ def pull_the_power() -> str:
     next epoch for every camera — asking nobody — and reports the failover it measured."""
     s = Stand()
     ctl, a = _recording(s)
-    s.wall.advance(45 + 3)
+    ctl.failover_seconds()            # a scrape while srv-a is alive: a failover to ANOTHER server is measured by the
+    s.wall.advance(45 + 3)            # reader's own clock, from what it saw (the review's ninth pass)
     mark = s.log.mark()
     b = s.worker(1, "srv-b", alloc="alloc-B")
     b.reconcile_once(); b.heartbeat_once()

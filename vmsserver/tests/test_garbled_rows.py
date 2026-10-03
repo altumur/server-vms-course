@@ -360,3 +360,72 @@ def test_the_detector_passes_a_garbled_row_by_and_keeps_what_it_runs():
         assert fresh.status_by_unit["1-lpr"]["phase"] == "failed" and "row does not parse" in fresh.status_by_unit["1-lpr"]["why"]
     finally:
         srv.shutdown(); srv.server_close()
+
+
+# -- the ninth review: numbers past any number, a clock ahead, a step that fails every pass --------------------------
+
+def test_a_heartbeat_with_a_number_past_any_number_or_nested_ten_thousand_deep_stops_no_placement():
+    """Two parse errors the readers' own lists left out (the ninth review's sweep). `headroom: Infinity` — JSON reads
+    it — made `int(inf)` raise `OverflowError` past `_number`'s `(ValueError, TypeError)`: `capacity_of` and
+    `headroom` are asked of every candidate, so no unit was placed. A heartbeat of `[` ten thousand deep raised
+    `RecursionError` past `parse_heartbeat`'s list, out of `workers_seen` — every reader of heartbeats. The field is
+    "not said", the heartbeat is skipped, both counted; the pass places."""
+    box, ctl = _box_with_cameras(3)
+    _worker(box, "w-1", "srv-a")
+    box.objects.put("vms/heartbeats/w-2", Heartbeat("w-2", box.wall(), [], {
+        "server": "srv-b", "capacity": 1e400, "headroom": float("inf"), "started": 10**400}).to_bytes())
+    box.objects.put("vms/heartbeats/w-3", b"[" * 10000)
+    box.objects.put("vms/heartbeats/w-4", json.dumps({"worker": "w-4", "ts": 10**400, "status": []}).encode())
+    assert ctl.capacity_of("w-2") == ctl.capacity and ctl.headroom() == 50
+    assert set(ctl.workers_seen()) == {"w-1", "w-2"}
+    rep = ctl.pass_once()
+    assert rep["ok"] and rep["unplaced"] == 0, rep
+    _forget_garbled()
+
+
+def test_a_snapshot_written_by_a_clock_running_ahead_is_not_fresh_and_its_lead_is_measured():
+    """A controller whose clock ran an hour ahead and then stopped wrote shards an hour ahead: `max(0, now − ts)` read
+    them as age 0 for that hour — the copy above "fresh" while nothing published it. A shard further ahead than the
+    heartbeats' tolerance has no age anybody can vouch for: the oldest there can be, counted once, and its lead goes
+    into `heartbeat_skew_seconds_max`."""
+    from w2cplatform.contract import SKEW_MAX
+    from w2cplatform.rows import FIELDS
+    box, ctl = _placed(2)
+    ctl.publish_snapshot()
+    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 3600, "cameras": []}).encode())
+    assert ctl.snapshot_age() == box.wall()
+    assert SKEW_MAX.get("vms", 0) >= 3600 and "vms/snapshot/w-1#ts" in FIELDS.bad
+    box.objects.put("vms/snapshot/w-1", json.dumps({"ts": box.wall() + 2, "cameras": []}).encode())   # within tolerance
+    assert ctl.snapshot_age() == 0 and "vms/snapshot/w-1#ts" not in FIELDS.bad
+    SKEW_MAX.pop("vms", None)
+    _forget_garbled()
+
+
+def test_a_pass_report_counting_past_any_number_stops_no_pass_and_a_step_that_fails_every_pass_is_said_once():
+    """`failures: 1e400` in the last report made `int(inf)` raise `OverflowError` before any step ran, and the report
+    is only written at the end of a pass: that subsystem's controller placed nothing, for ever. And a step that failed
+    on every pass put its trace in the log every five seconds (the eighth review's minor «трейс _steps»): the trace
+    once per spell now, "works again" when it does."""
+    import logging
+    box, ctl = _placed(2)
+    box.objects.put("vms/controller/pass", json.dumps({"failures": 1e400}).encode())
+    assert ctl.pass_once()["ok"]
+    records = []
+
+    class Keep(logging.Handler):
+        def emit(self, record):
+            records.append(record)
+    spec_log = logging.getLogger(type(ctl).pass_once.__module__)
+    keep = Keep(); spec_log.addHandler(keep)
+    real = ctl.redistribute
+    try:
+        ctl.redistribute = lambda: (_ for _ in ()).throw(RuntimeError("a store that says no"))
+        for _ in range(3):
+            assert not ctl.pass_once()["ok"]
+        ctl.redistribute = real
+        assert ctl.pass_once()["ok"]
+    finally:
+        spec_log.removeHandler(keep)
+    traced = [r for r in records if r.exc_info and "redistribute" in r.getMessage()]
+    again = [r for r in records if "redistribute works again" in r.getMessage()]
+    assert len(traced) == 1 and len(again) == 1, [r.getMessage() for r in records]

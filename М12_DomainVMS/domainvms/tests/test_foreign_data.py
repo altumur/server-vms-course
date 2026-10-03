@@ -456,3 +456,140 @@ def test_a_camera_whose_description_is_words_stops_no_book_and_reads_as_not_said
     from domain.scenario import misfit
     assert misfit("cam", {"ptz": True, "presets": "five"}, {"action": "preset", "arg": 3}) is None
     assert misfit("cam", {"relays": "two"}, {"action": "output", "arg": 1}) == "cam has no relays"
+
+
+# -- the ninth review: М12's own lists of exceptions, the books' reads, the grants' old names, a worker named by a list --
+
+def test_a_camera_id_of_1e400_in_a_members_copy_freezes_no_list_and_no_view_of_the_domain():
+    """`{"id": 1e400}` in one member's snapshot: `int(inf)` raised `OverflowError`, which the read view's own list of
+    exceptions left out — `rows()`, `list()`, `publish()` raised, `GET /api/cameras` was a 500 for everyone and the
+    domain's view was frozen at its last publish. The view reads with `PARSE_ERRORS`: that row is left out, counted,
+    and the rest of the domain is listed and published."""
+    wall = Clock(10_000.0)
+    fed, north, east, cam, *_ = _relay_domain(wall)
+    east.objects.put("vms/snapshot/w-9", json.dumps({"cluster": "east", "worker": "w-9", "ts": wall(),
+                                                     "cameras": [{"id": 1e400, "ref": "299"}]}).encode())
+    view = ReadView(fed, wall=wall); view.refresh()
+    listed = {r["ref"] for r in view.list()["rows"]}
+    assert {"101", "201"} <= listed and "299" not in listed
+    assert {"101", "201"} <= {u["ref"] for u in view.publish(north.objects)["units"]}
+    assert "east/vms/snapshot#inf" in MEMBER_OBJECTS.bad
+
+
+def test_one_heartbeat_whose_worker_is_a_list_is_that_heartbeats_and_not_the_whole_member_unreachable():
+    """`"worker": ["w-1"]` passed the check (`str(hb["worker"])`) and was the key itself — unhashable — so
+    `heartbeats()` raised, and the whole member read as unreachable for one heartbeat. A worker's name is a string:
+    that heartbeat is skipped, counted, and the member's other workers are read."""
+    from tests.conftest import heartbeat
+    wall = Clock(10_000.0)
+    fed, north, east, cam, *_ = _relay_domain(wall)
+    heartbeat(east, "w-0", [201], ts=wall(), server="srv-2")
+    east.objects.put("vms/heartbeats/w-1", json.dumps({"worker": ["w-1"], "ts": wall(), "status": []}).encode())
+    view = ReadView(fed, wall=wall); view.refresh()
+    assert "east" not in view.cluster_down_since and ("east", "w-0") in view.snapshots
+    assert "east/vms/heartbeats/w-1" in MEMBER_OBJECTS.bad
+
+
+def test_a_recorders_archive_url_that_is_a_list_stops_no_source_book_and_a_string_of_urls_takes_no_road_away():
+    """Two reads of another cluster's data in the books, not through the one reader: the backup's recorder publishing
+    `archive_url` as a list raised in `.rstrip` out of the whole `sources` step — no book written for any camera;
+    and an ingest announcing `urls` as a STRING passed `list(...)` as its letters, and the book of primaries handed
+    the camera a string for a road. Now the url is that heartbeat's trouble — no backup archive from it, counted —
+    and the string is an announcement that does not parse: the road the book already held stays."""
+    from domain.agent import PRIMARIES_PATH, SOURCES_PATH
+    from domain.ingest import INGEST
+    from w2cplatform.contract import Heartbeat, Subsystem
+    from tests.test_two_servers import A_URLS, SERIAL as SN, _office
+    wall = Clock()
+    o = _office(wall)
+    o.b.objects.put(Subsystem("rec").heartbeat_key("r-b"), Heartbeat("r-b", wall(), [
+        {"id": f"{SN}-copy", "cam": f"ref:{SN}", "enabled": True, "phase": "running",
+         "coverage": {"from": wall() - 60, "to": wall()}}], {"archive_url": ["http://srv-b:9100/"]}).to_bytes())
+    books = o.crossings.publish()
+    entry = json.loads(books["srv-a"][SN])
+    assert "backups" not in entry and json.loads(o.b.vars.get(f"{SOURCES_PATH}/srv-a")[0][SN]) == entry
+    assert any(k.endswith("#archive_url") for k in MEMBER_OBJECTS.bad)
+    o.a.objects.put(INGEST, json.dumps({"cluster": "srv-a", "urls": "srt://srv-a:9000", "ts": wall()}).encode())
+    o.crossings.publish_primaries()
+    said = json.loads(o.b.vars.get(f"{PRIMARIES_PATH}/{o.cam.name}")[0][SN])
+    assert said["ingest"]["urls"] == A_URLS                               # the road it had, not a string
+
+
+def test_a_camera_that_says_who_takes_its_stream_as_a_string_is_not_read_as_its_letters():
+    """The sibling of the string of urls: `taken_by: "srv-b"` passed `list(...)` as letters, every letter is somebody
+    else, and the standby `srv-b` read the camera as taken by another and never pulled. A list of names, or nothing
+    known (None: change nothing)."""
+    from domain.crossing import camera_taken
+
+    class Door:
+        def __init__(self, said):
+            self.said = said
+
+        def get(self, key):
+            return json.dumps({"taken_by": self.said}).encode()
+    assert camera_taken(Door("srv-b"), "SN1", "srv-b") is None
+    assert camera_taken(Door(["srv-b"]), "SN1", "srv-b") is False and camera_taken(Door(["srv-a"]), "SN1", "srv-b") is True
+
+
+def test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_still_refused():
+    """A grant to `say"hi`, written before `"` was refused, read as a grant and was carried into every rewrite of its row,
+    which raised: revoking `mallory` (deleting the user) was refused, and the command that mends the grants failed the
+    same way. A rewrite leaves such a grant out — counted, with why and what to do — and writes the rest; a NEW grant
+    under such a name is still refused, and an admin left out is no admin."""
+    from domain.grants import GRANTS, LastAdmin
+    wall = Clock()
+    north, _ = make_cluster("north", domain=True)
+    ids = IdentityStore(Signer("acme", north.vars, now=wall), north.vars, north.objects, now=wall)
+    ids.create_local("mallory", "pw", [])
+    north.vars.put(DOMAIN_GRANTS, {"root|admin|": "0.0", 'say"hi|view|': "0.0", "mallory|view|": "0.0"})
+    ids.delete("mallory")                                                # the revocation goes through
+    assert sorted(north.vars.get(DOMAIN_GRANTS)[0]) == ["root|admin|"]
+    assert f'{DOMAIN_GRANTS}#say"hi|view|' in GRANTS.bad
+    have = grants_from_items(north.vars.get(DOMAIN_GRANTS)[0], DOMAIN_GRANTS)
+    set_domain_grants(north.vars, have + [Grant("anna", "view", None, 0.0)], wall())   # the mending command
+    assert sorted(north.vars.get(DOMAIN_GRANTS)[0]) == ["anna|view|", "root|admin|"]
+    try:
+        set_domain_grants(north.vars, have + [Grant('new"one', "view", None, 0.0)], wall()); raise AssertionError("must refuse")
+    except BadName:
+        pass
+    north.vars.put(DOMAIN_GRANTS, {'old"admin|admin|': "0.0", "anna|view|": "0.0"})
+    try:
+        set_domain_grants(north.vars, grants_from_items(north.vars.get(DOMAIN_GRANTS)[0]), wall()); raise AssertionError
+    except LastAdmin:
+        pass
+    north.vars.put("domain/grants/south", {'say"hi|view|7': "1.0"})     # a cluster's row, published again
+    DomainPublisher(north.vars).publish_grants("south", [Grant('say"hi', "view", 7, 1.0), Grant("anna", "view", 7, 2.0)])
+    assert north.vars.get("domain/grants/south")[0] == {"anna|view|7": "2.0"}
+
+
+def test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and_not_a_500():
+    """Before the signature, everything in a token is a stranger's: a header that is a list (`.get`), a `kid` that is
+    a list (unhashable in `kid in keys`), JSON nested ten thousand deep, a signature that is not base64, a token that
+    is not a string — each raised past the door's `TokenError` and answered 500. Each is "not a token" now."""
+    from domain.tokens import TokenError, _b64, kid_of, verify
+    signer = Signer("acme", FakeVariables(), now=lambda: 1000.0)
+    ks = signer.tokens.keyset()
+    good = signer.tokens.issue("anna", 60, now=1000.0)
+    h, p, s = good.split(".")
+    for bad in (_b64(b"[1]") + "." + p + "." + s, _b64(b'{"kid": ["x"]}') + "." + p + "." + s,
+                _b64(b"[" * 10000) + "." + p + "." + s, h + "." + p + ".%%é", 7):
+        try:
+            verify(bad, ks, now=1000.0); raise AssertionError(f"{bad!r:.40} must be refused")
+        except TokenError:
+            pass
+    assert kid_of(_b64(b"[" * 10000) + ".x.y") is None and verify(good, ks, now=1000.0)["sub"] == "anna"
+
+
+def test_one_status_entry_that_is_not_numbers_stops_no_shadow_report():
+    """The shadow report read every running entry of every heartbeat bare: `id: "seven"` raised out of the report for
+    every cluster of the domain. That entry is left out, counted; the others are reported."""
+    from domain.shadow import reports_from
+    from tests.conftest import heartbeat
+    wall = Clock(10_000.0)
+    fed, north, east, cam, *_ = _relay_domain(wall)
+    heartbeat(north, "w-0", [101], ts=wall())
+    east.objects.put("vms/heartbeats/w-0", json.dumps({"worker": "w-0", "ts": wall(), "server": "srv-2", "status": [
+        {"id": "seven", "phase": "running"}, {"id": 201, "phase": "running", "ref": "201", "epoch": 1}]}).encode())
+    reports, _, _ = reports_from(fed)
+    by = {(r.cluster, r.worker): r for r in reports}
+    assert [c[0] for c in by[("east", "w-0")].cameras] == ["201"] and "east/vms/heartbeats/w-0#seven" in MEMBER_OBJECTS.bad

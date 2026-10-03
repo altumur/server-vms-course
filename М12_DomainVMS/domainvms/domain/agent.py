@@ -82,8 +82,8 @@ class DomainPublisher:
         domain holder's Variables; the cluster's agent copies them home."""
         from .grants import grants_to_items
         path = f"{GRANTS_PATH}/{cluster}"
-        _, idx = self.vars.get(path)
-        self.vars.put(path, grants_to_items(grants), cas=idx)
+        have, idx = self.vars.get(path)
+        self.vars.put(path, grants_to_items(grants, was=have, where=path), cas=idx)   # an old name there blocks nothing (the ninth review)
 
 
 class DomainAgent:
@@ -429,7 +429,7 @@ def local_networks() -> list[str]:
         nets = {str(ipaddress.ip_interface(f"{a['local']}/{a['prefixlen']}").network)
                 for i in json.loads(out or "[]") if not str(i.get("ifname", "")).startswith(skip)
                 for a in i.get("addr_info", []) if int(a.get("prefixlen", 32)) < 31}
-    except (OSError, ValueError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError, *PARSE_ERRORS):
         nets = set()
     return sorted(f"net:{n}" for n in nets)
 

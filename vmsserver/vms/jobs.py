@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 import time
 
-from w2cplatform.rows import PARSE_ERRORS, Table, finite, number
+from w2cplatform.rows import FIELDS, PARSE_ERRORS, Table, finite, number
 from w2cplatform.spec import Refused, SpecController
 
 TERMINAL = ("done", "failed")
@@ -498,6 +498,28 @@ def ask_for_footage(job_ctl, rec_ctl) -> int:
     return asked
 
 
+# THE SPANS A HEARTBEAT LISTS — `<name>|<from>|<to>,…` — AND THE ONE COUNT FOR THEM (the eighth review's minor, not fixed
+# until the ninth): each end was read through `rows.number` under a key that held the span's TEXT, so a recorder whose
+# `closed` kept a word in it counted a new garbled "row" every time the list moved — 8640 a day from one heartbeat
+# field. The field is the row: one key per heartbeat and field (`<heartbeat>#closed`), garbled once while any of its
+# spans does not read, parsed again when none is left. A span that does not read is passed by; the others are work.
+def _spans(key: str, said) -> list[tuple[str, float, float]]:
+    out, bad = [], None
+    for span in str(said or "").split(","):
+        parts = span.split("|")
+        if len(parts) != 3:
+            continue
+        try:
+            out.append((parts[0], finite(parts[1]), finite(parts[2])))
+        except PARSE_ERRORS as e:
+            bad = bad or e
+    if bad is not None:
+        FIELDS.garbled(key, bad)
+    else:
+        FIELDS.parsed(key)
+    return out
+
+
 # What the recorder just fetched from a device is a hole in the DETECTIONS too: nothing was watching the
 # camera while nothing was recording it. This closes the second hole with the first.
 #
@@ -513,14 +535,7 @@ def scan_what_arrived(rec_ctl, det_ctl, job_ctl) -> int:
     from w2cplatform.console import heartbeats
     made = 0
     for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.name + "/").items():
-        for span in str(hb.extra.get("closed", "")).split(","):
-            parts = span.split("|")
-            if len(parts) != 3:
-                continue
-            unit = parts[0]
-            t0, t1 = (number(_hb_key(rec_ctl, w, f"closed.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
-            if t0 is None or t1 is None:
-                continue                                    # that span's trouble, counted once: the others are scanned
+        for unit, t0, t1 in _spans(_hb_key(rec_ctl, w, "closed"), hb.extra.get("closed", "")):
             try:
                 rec = rec_ctl.unit(unit)
             except PARSE_ERRORS:
@@ -559,13 +574,8 @@ def keep_what_fired(survey_ctl, rec_ctl) -> int:
     from w2cplatform.console import heartbeats
     asked = 0
     for w, hb in heartbeats(survey_ctl.objects, survey_ctl.spec.name + "/").items():
-        for span in str(hb.extra.get("hits", "")).split(","):
-            parts = span.split("|")
-            if len(parts) != 3:
-                continue
-            cam = parts[0]
-            t0, t1 = (number(_hb_key(survey_ctl, w, f"hits.{span}.{end}"), x, float, None) for end, x in zip(("from", "to"), parts[1:]))
-            if t0 is None or t1 is None or t1 <= t0:
+        for cam, t0, t1 in _spans(_hb_key(survey_ctl, w, "hits"), hb.extra.get("hits", "")):
+            if t1 <= t0:
                 continue
             unit = next((str(r["id"]) for r in rec_ctl.units() if str(r.get("cam", r["id"])) == cam), None)
             if unit is None:

@@ -544,6 +544,9 @@ class VmsWorker(Worker):
         self.passes = 0
         # the previous instance of this slot, if it left a heartbeat: what failover is measured from
         self.previous_hb, self.previous_instance = 0.0, ""
+        # …and the server it ran on: `started − previous_hb` is one clock only when that is this server (the review's
+        # ninth pass; the controller's `failover_seconds` subtracts nothing else)
+        self.previous_server = ""
         # A heartbeat that does not parse is one object's trouble (the review's second pass, M6) — here too: read
         # bare, it raised out of the constructor, and the process went into a restart loop over the very object its
         # first heartbeat would have replaced. Unparsed, there is no failover to measure; that is all it costs.
@@ -553,6 +556,7 @@ class VmsWorker(Worker):
             old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)
             if old is not None and old.extra.get("instance") != self.instance:
                 self.previous_hb, self.previous_instance = old.ts, old.extra.get("instance", "")
+                self.previous_server = str(old.extra.get("server", ""))
 
     # -- the store, as the reconciler sees it ------------------------------------
     # The reconciler's store: `self.rows`.
@@ -1788,6 +1792,7 @@ class VmsWorker(Worker):
                        **({"was_fenced": self.was_fenced} if self.was_fenced else {}),
                        capacity=self.capacity, headroom=self.headroom(), started=self._started_wall,
                        previous_hb=self.previous_hb, previous_instance=self.previous_instance,
+                       previous_server=self.previous_server,
                        devices=self.device_status(),
                        # `archive`: the resource tree its events go to — Nomad's meta.archive, through $ARCHIVE. A
                        # recorder says its own volume there instead (`RecWorker.heartbeat_extra`).

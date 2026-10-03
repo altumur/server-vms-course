@@ -148,10 +148,18 @@ class Cluster:
         was the price of a key layout that put every worker's name at the top."""
         out = {}
         for key in self.objects.list(HEARTBEATS):
-            hb = published(self.name, key, self.objects.get(key), lambda hb: (str(hb["worker"]), a_heartbeat(hb)))
+            hb = published(self.name, key, self.objects.get(key), lambda hb: (_a_name(hb["worker"]), a_heartbeat(hb)))
             if hb is not None:
                 out[hb["worker"]] = hb
         return out
+
+
+def _a_name(v) -> None:
+    """A worker's name is a string (the review's ninth pass, minor): the check was `str(hb["worker"])`, which a list
+    passes, and the key was the list itself — unhashable, raised out of `heartbeats()`, and the whole member read as
+    unreachable for one heartbeat. Now that heartbeat is the one skipped, counted."""
+    if not isinstance(v, str) or not v:
+        raise TypeError(f"a worker's name is a non-empty string, not {type(v).__name__}")
 
 
 def _a_shard(shard: dict) -> None:
@@ -248,7 +256,7 @@ class DomainDirectory:
         for cl, snap in scan.items():
             out[cl] = {}
             for row in snap.get("cameras", []):
-                out[cl].setdefault(row.get("worker") or "(unplaced)", []).append(row.get("ref") or f"{cl}/{row.get('id')}")
+                out[cl].setdefault(str(row.get("worker") or "(unplaced)"), []).append(row.get("ref") or f"{cl}/{row.get('id')}")
         return out, down
 
     def ages(self) -> dict[str, float]:

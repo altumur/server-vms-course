@@ -66,7 +66,7 @@ def verify(doc: dict, keys: KeySet | None, now: float) -> dict:
         raise NotTaken(f"signed by key {doc.get('kid')!r}, which this member does not trust")
     try:
         Ed25519PublicKey.from_public_bytes(keys.keys[doc["kid"]]).verify(_unb64(doc["sig"]), _canonical(doc))
-    except (InvalidSignature, KeyError, ValueError):
+    except (InvalidSignature, *PARSE_ERRORS):         # a `sig` that is not a string too (the ninth review's sweep)
         raise NotTaken("the signature does not verify")
     return doc
 

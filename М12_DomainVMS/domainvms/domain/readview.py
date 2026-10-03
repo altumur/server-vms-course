@@ -246,7 +246,8 @@ class ReadView:
             for row in rows:
                 try:
                     cam = int(row["id"])
-                except (KeyError, TypeError, ValueError):
+                except PARSE_ERRORS as e:                  # its own list here left out `OverflowError`: `{"id": 1e400}`
+                    MEMBER_OBJECTS.garbled(f"{cl}/vms/snapshot#{row.get('id')}", e)   # froze every list (the ninth review)
                     continue
                 ref = row.get("ref") or ""
                 if ident(cl, ref, cam) in seen:

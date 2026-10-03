@@ -103,15 +103,34 @@ def refuse_name(name, what: str = "name", also: str = "") -> None:
         raise BadName(why)
 
 
-def grants_to_items(grants: list[Grant]) -> dict:
+def _item(g: Grant) -> str:
+    return f"{g.subject}|{g.capability}|" + ("labels:" + ",".join(sorted(g.labels)) if g.labels else
+                                             "" if g.camera is None else str(g.camera))
+
+
+# …AND A NAME STORED BEFORE THE RULE DOES NOT BLOCK THE ROW (the review's ninth pass, minor). A grant to `say"hi`, written
+# before `"` was refused, reads as a grant — `|` is what breaks the reader, `"` does not — and every rewrite of its row
+# carried it back here and raised: revoking `mallory` was refused, deleting a user too, and the command that mends the
+# grants failed the same way. `was` is the row being replaced: a grant whose item is ALREADY there under a name the rule
+# refuses now is left out of the new row — counted once (`grant`, by `<row>#<item>`), logged with why and what to do —
+# and the rest is written. A NEW grant under such a name is still refused (`BadName`): the rule is for what is made.
+def grants_to_items(grants: list[Grant], was: dict | None = None, where: str = "domain/grants") -> dict:
     """domain/grants/<cluster> as a Variable: one item per grant, the value its expiry. A subject or a label the reader
-    could not take back apart is refused here (`BadName`), before anything is written."""
+    could not take back apart is refused here (`BadName`), before anything is written — unless the grant is already in
+    `was`, the row this replaces: then it is left out, counted."""
+    out = {}
     for g in grants:
-        refuse_name(g.subject, "user's name")
-        for label in g.labels:
-            refuse_name(label, "label", also=",")
-    return {f"{g.subject}|{g.capability}|" + ("labels:" + ",".join(sorted(g.labels)) if g.labels else
-                                              "" if g.camera is None else str(g.camera)): str(g.valid_until) for g in grants}
+        why = name_refused(g.subject, "user's name") or next(
+            (w for w in (name_refused(label, "label", also=",") for label in g.labels) if w), None)
+        if why is None:
+            out[_item(g)] = str(g.valid_until)
+        elif isinstance(was, dict) and _item(g) in was:
+            GRANTS.garbled(f"{where}#{_item(g)}", BadName(f"{why} — stored before the rule; left out of the row as it "
+                                                          f"is written again: create the user under an allowed name "
+                                                          f"and grant again"))
+        else:
+            raise BadName(why)
+    return out
 
 
 # …and a row that holds one anyway — written before the rule, by hand, by an older build — is read ITEM BY ITEM: an item
@@ -175,11 +194,11 @@ class LastAdmin(ValueError):
 def set_domain_grants(vars_, grants: list[Grant], now: float, journal=None, by: str | None = None) -> None:
     """The domain's grants, whole. With a `journal`, the change is a line (feedback CL): who, which rows came and
     which went — the history a row that holds only its last editor loses."""
-    if not any(g.capability == "admin" and g.camera is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
-               for g in grants):
-        raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
     items, idx = vars_.get(DOMAIN_GRANTS)
-    new = grants_to_items(grants)
+    new = grants_to_items(grants, was=items, where=DOMAIN_GRANTS)      # a name stored before the rule: left out, counted
+    if not any(g.capability == "admin" and g.camera is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
+               and _item(g) in new for g in grants):                    # …and an admin left out is no admin
+        raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
     vars_.put(DOMAIN_GRANTS, new, cas=idx)
     if journal is not None:
         was = items or {}

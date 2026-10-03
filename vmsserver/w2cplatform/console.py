@@ -111,7 +111,7 @@ from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat, SchemaTooNew, builds,
                        is_live, parse_heartbeat, schema_version)
 from .epoch import current_epoch
-from .rows import counts as garbled_by_table, number
+from .rows import PARSE_ERRORS, counts as garbled_by_table, number
 from .eventdatabase import refence
 from .events import ALARM, EventLog
 
@@ -1433,9 +1433,12 @@ class SpecConsole:
                  # is measured from what its instances wrote (`SpecController.failover_seconds`: the start of this
                  # instance less the last heartbeat of the one before), said per worker as `last`, and `worst` is the
                  # largest of those and of the number the console was given (a drill's datasheet figure).
+                 # `worst` is the largest this process measured, not the largest of the last ones; a failover measured
+                 # on no one clock is not a number here but a count (`SpecController.failover_seconds`, the ninth review).
                  f"# TYPE {p}_failover_seconds gauge",
-                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, *failover.values()])}',
+                 f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, getattr(self.ctl, "failover_worst", 0.0), *failover.values()])}',
                  *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
+                 f"# TYPE {p}_failovers_unmeasured gauge", f"{p}_failovers_unmeasured {getattr(self.ctl, 'failovers_unmeasured', 0)}",
                  f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
@@ -1818,7 +1821,7 @@ class SpecConsole:
             return cap, None, []
         try:
             row = self.ctl.unit(self.spec.parse_id(uid))
-        except (ValueError, KeyError):
+        except PARSE_ERRORS:                             # a `json` field ten thousand deep too: the PUT that mends it is not dropped (the ninth review's sweep)
             row = None
         if not in_path and row is not None and "cam" in row:
             row = None                                   # a body names the unit the action is ABOUT, not one of this console's rows
@@ -2008,7 +2011,7 @@ class SpecConsole:
         pid = path_id(path)
         try:
             return (self.ctl.unit(self.spec.parse_id(pid)) if pid else None), True
-        except (ValueError, KeyError):
+        except PARSE_ERRORS:
             return None, True
 
     def is_its_units(self, method: str, path: str) -> bool:
@@ -2082,7 +2085,7 @@ class SpecConsole:
             return h._send(404, {"detail": f"{field} is not a blob field", "error": "no such blob field"})
         try:
             known = self.ctl.unit(self._uid(path)) is not None
-        except (ValueError, KeyError):
+        except PARSE_ERRORS:
             known = False
         if not known:
             h.close_connection = True
