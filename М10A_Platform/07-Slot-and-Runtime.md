@@ -291,6 +291,58 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
 
 И дверь для человека. Оператор знает то, чего система знать не может: «этот сервер сгорел, процесс не вернётся». `retire` ставит `released` снаружи, и дальше работает обычное перераспределение. Уже отпущенный слот возвращает `None` из мутатора — то есть записи не будет (урок 8 объясняет этот приём).
 
+**Через дверь теперь можно пройти: консоль пишет просьбу, контроллер её исполняет.** До сих пор это была дверь без ручки. У контроллера нет порта, а у консоли нет прав на `slots/*` — и давать их нельзя: консоль, которая пишет слоты, — второй контроллер с браузером впереди. Урок звал `retire` словом оператора, а оператору было некуда его сказать (решение владельца курса — перенести сюда то, как это сделано в продукте). Теперь дверь — строка, как `platform/drain` из урока 17: консоль по кнопке *retire* в списке серверов пишет `<sub>/retire/<worker> {gen, by, at, why}` (`POST /workers/<w>/retire`, нужен `admin` на весь кластер, строка в журнале), а контроллер на следующем проходе снимает слот. Писатель у каждого семейства по-прежнему один: просьбу пишет консоль, слот — контроллер.
+
+**Два условия, и оба проверяют дважды — консоль до записи и контроллер перед действием.** Первое: слот не жив. Аренда вышла (`until` в прошлом), и воркера не слышно `RETIRE_LOST_AFTER` = 45 с. Снять живого значит заставить его перестать продлеваться (`_renew_slot` откажет на `released`) и зря перевезти всё, что он держит. Второе: просьба называет **поколение** слота. Процесс, который займёт имя после неё, получит новое (`_claim_slot` пишет `gen + 1`), и просьба, оставшаяся от сгоревшего сервера, его уже не снимет — даже когда он упадёт сам. Половина контроллера — первый шаг прохода:
+
+```python
+    def apply_retires(self) -> dict:
+        retired, refused = [], {}
+        prefix = self.sub.retire_prefix()
+        for path in sorted(self.vars.list(prefix)):
+            worker = path[len(prefix):]
+            items, idx = self.vars.get(path)
+            if not items:
+                continue
+            asked = str(items.get("gen", ""))
+            try:
+                have, kind, _ = self.retire_refusal(worker)
+            except NoSuchSlot:
+                have, kind = "", "unknown"
+            if kind == "released":
+                self._drop_retire(path, idx)
+                continue
+            why = {"unknown": f"there is no slot called {worker}",
+                   "alive": (f"{worker} is alive — its lease runs, or it was heard from within {int(RETIRE_LOST_AFTER)} s: "
+                             f"a live worker is not retired; the request waits")}.get(kind, "")
+            if not kind and asked != have:
+                why = (f"the request names generation {asked or '?'}; {worker} is at {have or '?'} now — another process "
+                       f"took the name since, and this request is not about it")
+            if not why and not self._retire_gen(worker, have):
+                why = f"{worker} renewed its name while the controller looked: a live worker is not retired"
+            if why:
+                refused[worker] = why
+                if items.get("refused") != why:
+                    try:
+                        self.vars.put(path, {**items, "refused": why}, cas=idx)
+                    except Conflict:
+                        pass                          # the console asked again meanwhile: the next pass reads that
+                continue
+            log.warning("%s: slot %s retired at the operator's request (by %s: %s)", self.sub.name, worker,
+                        items.get("by", "?"), items.get("why", "") or "no reason given")
+            retired.append(worker)
+            self._drop_retire(path, idx)
+        return {"retired": retired, "refused": refused}
+```
+
+Исполненная просьба удаляется. Отказанная остаётся, и в неё вписана причина (`refused`, пишется только когда меняется — не на каждом проходе), так что консоль показывает, почему ничего не произошло. Просьба о живом слоте ждёт: если то же поколение потом действительно умрёт, слово оператора сбудется. Просьба, чьё поколение ушло вперёд, не применится уже никогда. Сам слот снимается через CAS, который ещё раз сверяет поколение и аренду с той строкой, поверх которой пишет (`_retire_gen`): процесс, продливший имя между проверкой и записью, не снимется. Проход (`SpecController._pass_once`) делает это первым шагом, до `ensure_placed` и `redistribute`, и `redistribute` в том же проходе увозит единицы отпущенного слота (`slot w-1 released`). Отчёт прохода считает снятые (`retired`) и отказанные (`retire_refused`).
+
+**`retire` закрывает имя, а не перевозит камеры и не отпускает места.** Отпущенный слот выпадает из пула (`SpecController._pool`): если под этим именем снова появится пульс, ему ничего не дадут. А места (`<sub>/holds/<place>`, том регистратора) остаются занятыми. Локальный диск держат сквозь молчание нарочно, и если сгорел сервер, сгорел и диск. Поэтому ответ консоли называет занятые места (`holds_of`) — администратору стоит отозвать объявление тома.
+
+Тесты (`tests/test_retire_door.py`): `test_a_dead_worker_is_retired_from_the_console_on_the_next_pass_and_its_name_gets_no_cameras` — живой получает 409, неизвестное имя 404; молчащий снимается на следующем проходе, его камеры уезжают к живому воркеру, пульс под тем же именем ничего не получает, проснувшийся старый процесс не может продлить имя. `test_a_live_slot_is_refused_by_the_controller_when_the_console_was_bypassed` — просьба, записанная в обход консоли, и воркер, услышанный после просьбы, не снимаются. `test_a_request_whose_generation_is_older_than_the_slots_is_refused` — просьба о первом поколении не снимает второе. `test_retiring_a_worker_needs_admin_on_the_whole_cluster`, `test_a_retire_request_survives_a_controller_restart`, `test_a_retired_recorder_keeps_the_volume_it_held_and_the_answer_names_it`, `test_a_slot_whose_row_does_not_parse_is_retired_through_the_door_too`.
+
+**Чем курс пока отличается от продукта.** Продукт просьбу не удаляет никогда: несовпавшая остаётся историей, контроллер в неё не пишет. Курс удаляет исполненную и вписывает причину в отказанную — значит, у семейства `retire/*` два писателя, консоль и контроллер, и оба права названы в политиках М11. И ещё: процесс, который **заново займёт** снятое имя на том же сервере, заберёт локальный диск этого имени сразу (`hold_follows_name`, М10B, урок 27). Курс это не закрывает: диск — кандидат только своего сервера, и раз процесс там жив, жив и диск.
+
 Стоит заметить, что курс **всё-таки** научится действовать по молчанию — но не по одному. В М10B появится `gone_servers`: слот просрочен, **и** просрочен дольше, чем ещё один `lost_after` (шанс планировщику), **и** ресурс на том же сервере тоже молчит. Два молчания из разных процессов одной машины — это уже факт о машине, а не о процессе. Одно молчание — нет.
 
 ## Шаг 8 — Тест: весь цикл
