@@ -12,19 +12,19 @@ GET /v1/var/vms/slots/w-1?namespace=default
     "released": "false",
     "gen": "2"
   },
-  "ModifyIndex": 1022
+  "ModifyIndex": 1025
 }
 
 # vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1023}
+→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1026}
 
 # vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/epoch/2?namespace=default
-→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1024}
+→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1027}
 
 # vmsworker (allocation 1 on srv-a)
 GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1025}
+→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1028}
 
 # a.conflicts() = 3, a.recording_allowed = False

@@ -68,7 +68,7 @@ class Stand(Cluster):
         from cluster.resource import cluster_resource
         self.resources = {}
         for name, srv in self.servers.items():
-            v, o = self.as_process(f"resource ({name})", f"resource-{name}", ["objects/platform/resources/*"])
+            v, o = self.as_process(f"resource ({name})", f"resource-{name}", ["objects/platform/resources/*", "platform/doors/*"])
             r = cluster_resource(srv.resource, name, f"http://{name}:8090", v, o, wall=self.wall, peers=peers)
             r.space_probe = lambda path: (4 * 10**12, 3 * 10**12)     # a 4 TB disk, 1 TB used — the same on every run
             r.heartbeat()

@@ -1,20 +1,20 @@
 # console
 PUT /v1/var/platform/decommission/srv-c?namespace=default
 {"Items": {"by": "anna", "at": "1757500100.0", "why": "srv-c burnt"}}
-→ 200 {"Path": "platform/decommission/srv-c", "ModifyIndex": 1019}
+→ 200 {"Path": "platform/decommission/srv-c", "ModifyIndex": 1022}
 
 # vmscontroller
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1009
+PUT /v1/var/vms/slots/w-2?namespace=default&cas=1012
 {"Items": {"holder": "alloc-0002", "until": "1757500045.0", "released": "true", "gen": "1"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1020}
+→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1023}
 
 # vmscontroller
 PUT /v1/var/vms/decommissioned/srv-c?namespace=default
 {"Items": {"asked_at": "1757500100.0", "at": "1757500100.0", "slots": "w-2", "units": "2", "holds": ""}}
-→ 200 {"Path": "vms/decommissioned/srv-c", "ModifyIndex": 1021}
+→ 200 {"Path": "vms/decommissioned/srv-c", "ModifyIndex": 1024}
 
 # vmscontroller
-PUT /v1/var/vms/placement/2?namespace=default&cas=1014
+PUT /v1/var/vms/placement/2?namespace=default&cas=1017
 {
   "Items": {
     "worker": "w-1",
@@ -23,16 +23,16 @@ PUT /v1/var/vms/placement/2?namespace=default&cas=1014
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1022}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1025}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1015
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1018
 {"Items": {"units": "", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1023}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1026}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1013
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1016
 {"Items": {"units": "1,2", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1024}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1027}
 
 # … and 137 GET requests, omitted

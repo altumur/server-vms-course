@@ -27,7 +27,7 @@ PUT /v1/var/objects/vms/snapshot/w-0?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-0", "ModifyIndex": 1022}
+→ 200 {"Path": "objects/vms/snapshot/w-0", "ModifyIndex": 1025}
 
 # vmscontroller
 PUT /v1/var/objects/vms/snapshot/w-1?namespace=default
@@ -58,7 +58,7 @@ PUT /v1/var/objects/vms/snapshot/w-1?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-1", "ModifyIndex": 1023}
+→ 200 {"Path": "objects/vms/snapshot/w-1", "ModifyIndex": 1026}
 
 # vmscontroller
 PUT /v1/var/objects/vms/snapshot/w-2?namespace=default
@@ -89,4 +89,4 @@ PUT /v1/var/objects/vms/snapshot/w-2?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/snapshot/w-2", "ModifyIndex": 1024}
+→ 200 {"Path": "objects/vms/snapshot/w-2", "ModifyIndex": 1027}

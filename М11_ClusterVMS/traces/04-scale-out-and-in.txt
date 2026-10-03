@@ -1,7 +1,7 @@
 # vmsworker (allocation 2 on srv-c)
 PUT /v1/var/vms/slots/w-2?namespace=default&cas=0
 {"Items": {"holder": "alloc-0003", "until": "1757500045.0", "released": "false", "gen": "1"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1052}
+→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1055}
 
 # vmsworker (allocation 2 on srv-c)
 PUT /v1/var/objects/vms/heartbeats/w-2?namespace=default
@@ -36,7 +36,7 @@ PUT /v1/var/objects/vms/heartbeats/w-2?namespace=default
     }
   }
 }
-→ 200 {"Path": "objects/vms/heartbeats/w-2", "ModifyIndex": 1053}
+→ 200 {"Path": "objects/vms/heartbeats/w-2", "ModifyIndex": 1056}
 
 # vmscontroller
 PUT /v1/var/vms/placement/9?namespace=default&cas=0
@@ -48,25 +48,25 @@ PUT /v1/var/vms/placement/9?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1054}
+→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1057}
 
 # vmscontroller
 PUT /v1/var/vms/workers/w-2?namespace=default&cas=0
 {"Items": {"units": "9", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1055}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1058}
 
 # vmsworker (allocation 2 on srv-c)
 PUT /v1/var/vms/epoch/9?namespace=default&cas=0
 {"Items": {"epoch": "1"}}
-→ 200 {"Path": "vms/epoch/9", "ModifyIndex": 1056}
+→ 200 {"Path": "vms/epoch/9", "ModifyIndex": 1059}
 
 # vmsworker (allocation 2 on srv-c)
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1052
+PUT /v1/var/vms/slots/w-2?namespace=default&cas=1055
 {"Items": {"holder": "alloc-0003", "until": "1757500000.0", "released": "true", "gen": "1"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1057}
+→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1060}
 
 # console
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1005
+PUT /v1/var/vms/cameras/1?namespace=default&cas=1008
 {
   "Items": {
     "id": "1",
@@ -85,15 +85,15 @@ PUT /v1/var/vms/cameras/1?namespace=default&cas=1005
     "deleted": "true"
   }
 }
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1058}
+→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1061}
 
 # console
 PUT /v1/var/vms/retention/1?namespace=default&cas=0
 {"Items": {"days": "0"}}
-→ 200 {"Path": "vms/retention/1", "ModifyIndex": 1059}
+→ 200 {"Path": "vms/retention/1", "ModifyIndex": 1062}
 
 # console
-PUT /v1/var/vms/cameras/2?namespace=default&cas=1007
+PUT /v1/var/vms/cameras/2?namespace=default&cas=1010
 {
   "Items": {
     "id": "2",
@@ -112,35 +112,35 @@ PUT /v1/var/vms/cameras/2?namespace=default&cas=1007
     "deleted": "true"
   }
 }
-→ 200 {"Path": "vms/cameras/2", "ModifyIndex": 1060}
+→ 200 {"Path": "vms/cameras/2", "ModifyIndex": 1063}
 
 # console
 PUT /v1/var/vms/retention/2?namespace=default&cas=0
 {"Items": {"days": "0"}}
-→ 200 {"Path": "vms/retention/2", "ModifyIndex": 1061}
+→ 200 {"Path": "vms/retention/2", "ModifyIndex": 1064}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-0?namespace=default&cas=1037
+PUT /v1/var/vms/workers/w-0?namespace=default&cas=1040
 {"Items": {"units": "3,5,7", "rev": "5"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1062}
+→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1065}
 
 # vmscontroller
-PUT /v1/var/vms/placement/1?namespace=default&cas=1024
+PUT /v1/var/vms/placement/1?namespace=default&cas=1027
 {"Items": {"worker": "", "reason": "deleted", "at": "1757500000.0", "rev": "2"}}
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1063}
+→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1066}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1039
+PUT /v1/var/vms/workers/w-1?namespace=default&cas=1042
 {"Items": {"units": "4,6,8", "rev": "5"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1064}
+→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1067}
 
 # vmscontroller
-PUT /v1/var/vms/placement/2?namespace=default&cas=1026
+PUT /v1/var/vms/placement/2?namespace=default&cas=1029
 {"Items": {"worker": "", "reason": "deleted", "at": "1757500000.0", "rev": "2"}}
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1065}
+→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1068}
 
 # vmscontroller
-PUT /v1/var/vms/placement/9?namespace=default&cas=1054
+PUT /v1/var/vms/placement/9?namespace=default&cas=1057
 {
   "Items": {
     "worker": "w-0",
@@ -149,16 +149,16 @@ PUT /v1/var/vms/placement/9?namespace=default&cas=1054
     "rev": "2"
   }
 }
-→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1066}
+→ 200 {"Path": "vms/placement/9", "ModifyIndex": 1069}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1055
+PUT /v1/var/vms/workers/w-2?namespace=default&cas=1058
 {"Items": {"units": "", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1067}
+→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1070}
 
 # vmscontroller
-PUT /v1/var/vms/workers/w-0?namespace=default&cas=1062
+PUT /v1/var/vms/workers/w-0?namespace=default&cas=1065
 {"Items": {"units": "3,5,7,9", "rev": "6"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1068}
+→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1071}
 
 # … and 557 GET requests, omitted

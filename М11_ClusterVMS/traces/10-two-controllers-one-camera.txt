@@ -8,12 +8,12 @@ PUT /v1/var/vms/placement/1?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1012}
+→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1015}
 
 # vmscontroller B
 PUT /v1/var/vms/workers/w-0?namespace=default&cas=0
 {"Items": {"units": "1", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1013}
+→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1016}
 
 # vmscontroller A
 PUT /v1/var/vms/placement/1?namespace=default&cas=0
@@ -25,7 +25,7 @@ PUT /v1/var/vms/placement/1?namespace=default&cas=0
     "rev": "1"
   }
 }
-→ 409 {"ModifyIndex": 1012}
+→ 409 {"ModifyIndex": 1015}
 
 # … and 245 GET requests, omitted
 # where(1) = w-0; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'

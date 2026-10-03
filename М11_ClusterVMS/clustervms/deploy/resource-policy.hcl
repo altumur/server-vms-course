@@ -7,6 +7,9 @@ namespace "default" {
   variables {
     path "objects/platform/resources/*" { capabilities = ["write", "read", "list"] }
     path "platform/mirror"              { capabilities = ["read"] }
+    # Where each resource answers for its server's objects (`platform/doors/<server>`): its own row written at start,
+    # the others read when somebody asks for the cluster's objects (`/v1/objects?scope=cluster`).
+    path "platform/doors/*"             { capabilities = ["write", "read", "list"] }
     # The watermark's settings (М10A Lesson 14). The pass has read this row since there was a watermark, and
     # the grant was missing: nothing noticed while the watermark was off unless a row said otherwise. It is on
     # by default now, and a resource that may not read its settings must not be left guessing them.
