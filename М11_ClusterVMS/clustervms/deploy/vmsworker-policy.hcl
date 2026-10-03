@@ -18,6 +18,7 @@ namespace "default" {
     path "objects/vms/*" { capabilities = ["read", "list"] }            # the snapshot and the blobs: read, never written by a worker
     path "vms/*"        { capabilities = ["read", "list"] }
     path "platform/schema"      { capabilities = ["read"] }   # the store's schema, checked first (`check_schema`; М10's eighth review)
+    path "platform/decommission/*" { capabilities = ["read"] }   # a process on a decommissioned server is given no slot (`Worker._claim_slot`; М10A Lesson 7, step 7)
     # WHAT THE GATE READS (М10's eighth review: no policy let anybody read `domain/*`, and the stand enforces no read
     # ACL — on a real Nomad the gate was a 403 and failed shut). On every request at the playback door
     # (`playback_refusal`) the key set, and while there is none the row that says this cluster is a member all the

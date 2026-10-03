@@ -6,7 +6,7 @@ namespace "default" {
     path "rec/workers/*"   { capabilities = ["write", "read", "list"] }
     path "rec/placement/*" { capabilities = ["write", "read", "list"] }
     path "rec/slots/*"     { capabilities = ["write", "read", "list"] }
-    path "rec/retire/*"    { capabilities = ["write", "read", "list", "destroy"] }   # the operator's "never coming back", as the vmscontroller's
+    path "rec/decommissioned/*" { capabilities = ["write", "read", "list", "destroy"] }   # its mark that a server's decommission was carried out, gone with the request
     path "objects/rec/snapshot/*" { capabilities = ["write", "read", "list"] }   # its own snapshot shards: it never had this grant, and nobody noticed
     path "objects/rec/controller/pass" { capabilities = ["write", "read"] }   # its pass report, where /metrics reads rec_units_unplaced (the ninth review: a 403 every pass)
     path "objects/*"       { capabilities = ["read", "list"] }

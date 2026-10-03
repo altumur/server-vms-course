@@ -141,8 +141,7 @@ def test_scale_in_releases_a_slot_and_the_controller_redistributes():
     for w in ws[:2]:
         w.heartbeat_once()
     assert ctl.headroom() == 8 - 6                                     # 2 workers × 4, six cameras: what the autoscaler reads
-    ctl.retire("w-1")                                                  # the operator's word that a slot is gone for good
-    assert ctl.released_slots() == ["w-1"]
+    assert not ctl.free_slot("w-1") and ctl.released_slots() == []      # a slot that renews is freed by nobody
 
 
 def test_the_console_over_http():

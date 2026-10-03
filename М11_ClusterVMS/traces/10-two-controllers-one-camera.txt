@@ -27,5 +27,5 @@ PUT /v1/var/vms/placement/1?namespace=default&cas=0
 }
 → 409 {"ModifyIndex": 1012}
 
-# … and 239 GET requests, omitted
+# … and 241 GET requests, omitted
 # where(1) = w-0; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'

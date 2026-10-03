@@ -525,6 +525,7 @@ class VmsWorker(Worker):
         self.sealed_errors: dict[str, str] = {}               # camera -> why its password could not be opened
         self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
+        self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
         self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
@@ -601,7 +602,6 @@ class VmsWorker(Worker):
         self._performing: dict[int, dict] = {}           # device -> the one command in flight into it
         self.store_errors = 0                            # passes and renewals the store did not answer
         self.pass_failures = 0                           # parts of the loop that raised, since the process started
-        self.server = runtime.server(env, server)
         self.labels = labels_from_environment(env)
         self.alloc = runtime.instance(env) or ""          # published as `alloc` for the readers that already know that name
         self.started_at = clock()

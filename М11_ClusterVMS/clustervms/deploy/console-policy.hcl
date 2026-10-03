@@ -37,11 +37,6 @@ namespace "default" {
     # One row per server and per subsystem, as `policy` is; the controllers read them under their `vms/*` and `rec/*`.
     path "vms/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
     path "rec/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
-    # A worker whose process will never come back (М10A Lesson 7, step 7): `POST /workers/<w>/retire` writes a REQUEST
-    # here, and the controller retires the slot on its next pass and deletes the request. Not `vms/slots/*`: a console
-    # that could write a slot would be a second controller. No `destroy`: the controller removes a request it has done.
-    path "vms/retire/*"    { capabilities = ["write", "read", "list"] }
-    path "rec/retire/*"    { capabilities = ["write", "read", "list"] }
     # The alarms' own days (М10A Lesson 12): a derived row like `vms/retention/<id>`, kept in step with the
     # camera's `alarms_retention_days` — and, unlike it, left alone when the camera is deleted.
     path "vms/alarms_retention/*" { capabilities = ["write", "read", "list"] }
@@ -57,6 +52,10 @@ namespace "default" {
     # the operator meant to take out gently would have gone out as a silence instead. Nothing noticed
     # until the policies were checked against the code.
     path "platform/drain"  { capabilities = ["write", "read"] }
+    # …and a machine gone for good (М10A Lesson 7, step 7): `POST /servers/<s>/decommission` writes one row per server,
+    # refused while its resource answers; `DELETE` brings the machine back — hence `destroy`. Every controller reads it
+    # under `platform/*` and frees the slots on that server itself: the console never writes a slot.
+    path "platform/decommission/*" { capabilities = ["write", "read", "list", "destroy"] }
     path "platform/*"      { capabilities = ["read", "list"] }
     # WHAT THE GATE READS (М10's eighth review: no policy let anybody read `domain/*`, and the stand enforces no read
     # ACL — on a real Nomad the gate was a 403 and failed shut). On every request the key set, and while there is none

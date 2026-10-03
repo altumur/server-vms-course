@@ -22,5 +22,6 @@ namespace "default" {
     # the volume (the review's fourth pass, blocker 3). The third job with it, after the console and the worker.
     path "secrets/vms"          { capabilities = ["read"] }
     path "platform/schema"      { capabilities = ["read"] }   # the store's schema, checked first (`check_schema`; М10's eighth review)
+    path "platform/decommission/*" { capabilities = ["read"] }   # a process on a decommissioned server is given no slot (`Worker._claim_slot`; М10A Lesson 7, step 7)
   }
 }

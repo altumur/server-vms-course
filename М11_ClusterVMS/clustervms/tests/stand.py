@@ -211,10 +211,11 @@ def a_crash_releases_nothing() -> str:
     return s.log.render(since=mark)
 
 
-def retire_from_the_console() -> str:
+def decommission_a_server() -> str:
     """Lesson 4 (М10A Lesson 7, step 7): srv-c burnt under w-2, and the operator knows it will not come back. The
-    console writes a REQUEST — never the slot — and the controller's pass asks both guards again, retires the slot,
-    deletes the request and moves w-2's camera to the worker that is here. Only the writes; the reads are counted."""
+    operator operates SERVERS: the console writes one row, `platform/decommission/srv-c` — refused while srv-c's
+    resource answers, so it is written once the resource is silent — and the controller's pass frees w-2's slot itself
+    and moves its camera to the worker that is here. Only the writes; the reads are counted."""
     s = Stand()
     s.resources_up()
     con, ctl = s.console(), s.controller()
@@ -224,14 +225,15 @@ def retire_from_the_console() -> str:
     for w in ws:
         w.heartbeat_once()
     ctl.ensure_placed()
-    s.wall.advance(60)                                                 # srv-c burnt: w-2 says nothing again
+    s.wall.advance(100)                                                # srv-c burnt: w-2 and its resource say nothing again
     ws[0].refresh(); ws[0].heartbeat_once()                            # w-1 renews and says so, as every pass
-    for r in s.resources.values():
-        r.heartbeat()
+    for name, r in s.resources.items():
+        if name != "srv-c":
+            r.heartbeat()
     mark = s.log.mark()
-    con.request_retire("w-2", "anna", "srv-c burnt")                   # POST /workers/w-2/retire, from the page
-    ctl.apply_retires()                                                # the controller's next pass: first this…
-    ctl.redistribute()                                                 # …then what a released slot listed moves
+    con.decommission("srv-c", "anna", "srv-c burnt")                   # POST /servers/srv-c/decommission, from the page
+    ctl.apply_decommissions()                                          # the controller's next pass: first this…
+    ctl.redistribute()                                                 # …then what a freed slot listed moves
     reads = sum(1 for c in s.log.calls[mark:] if c.method == "GET")
     return s.log.render(since=mark, methods=("PUT", "DELETE")) + f"\n# … and {reads} GET requests, omitted\n"
 
@@ -599,7 +601,7 @@ SCENES = {"01-worker-starts": worker_starts,
           "04-two-allocations-one-index": two_allocations_one_index,
           "04-scale-out-and-in": scale_out_and_in,
           "04-a-crash-releases-nothing": a_crash_releases_nothing,
-          "04-retire-from-the-console": retire_from_the_console,
+          "04-decommission-a-server": decommission_a_server,
           "04-what-the-autoscaler-reads": what_the_autoscaler_reads,
           "05-who-may-write-what": who_may_write_what,
           "06-an-edit-during-the-failover": an_edit_during_the_failover,

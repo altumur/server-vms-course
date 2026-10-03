@@ -25,9 +25,9 @@ show them. So the console is one class, run from the same spec:
     DELETE /<rows>/<id>          the row is marked; the controller's pass takes its placement back
     POST /marks  (Idempotency-Key)    an operator's observation {unit|cam, note}: the CONSOLE's event, into
                                  console/<instance>/… on this server's resource — never a worker's bucket
-    POST /workers/<worker>/retire     {why, gen?} — "this worker's process will never come back": a request
-                                 (<sub>/retire/<worker>) the controller acts on at its next pass; 409 while the slot is
-                                 alive or the name has a newer generation, 404 for no such worker; admin on the cluster
+    POST/DELETE /servers/<server>/decommission  {why} — on the Mount, as /drain: "this machine is gone for good"
+                                 (platform/decommission/<server>): 409 while the server answers; the controllers release
+                                 its slots and move their units; DELETE withdraws it, or brings the machine back
 
 What a subsystem adds is registered, not subclassed: `extra(handler, method,
 path, query) -> reply | None` gets every request the routes above do not
@@ -113,7 +113,7 @@ from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
-                       NoSuchSlot, RetireRefused, SchemaTooNew, builds, is_live, parse_heartbeat, schema_version)
+                       DecommissionRefused, SchemaTooNew, builds, is_live, parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
@@ -1397,7 +1397,14 @@ class SpecConsole:
         return {"draining": server, "subsystem": ctl.spec.name, "workers": sorted(here),
                 "units": units, "would_strand": strand, "safe": units == 0}
 
+    # One look at the store for the whole answer (`contract.one_pass`, on this door's thread): each server's
+    # `decommission_refusal` and each worker's `slot_fate` ask the heartbeats and the resources, and outside a pass every
+    # asking was a listing of them all.
     def servers(self) -> dict:
+        with self.ctl.one_pass():
+            return self._servers()
+
+    def _servers(self) -> dict:
         ctl, now = self.ctl, self.wall()
         out: dict[str, dict] = {}
         for w, hb in heartbeats(ctl.objects, ctl.sub.name + "/").items():
@@ -1415,13 +1422,13 @@ class SpecConsole:
                 for row in s["workers"]:
                     if row["worker"] == w:
                         row["idle_by_policy"] = True
-        # Whether the operator may retire each worker, and whether that was asked (`retire_route`): what the page's
-        # *retire* link needs — the generation it sends back, the refusal in words, the request standing with what the
-        # controller said about it, and the places the worker holds (a retire leaves them held).
-        asked, held = ctl.retire_requests(), ctl.holds_by()
+        # A worker that stopped renewing, as the controller judges it (`Controller.slot_fate` — the one rule): `hung`, and
+        # since when, is a FAULT the page names — its process runs on a server that answers, and nothing is moved off it;
+        # its slot's `until`, null for a row that does not parse (`slot_garbled`); the places each holds.
+        held = ctl.holds_by()
         for s in out.values():
             for row in s["workers"]:
-                self._retire_state(row, asked, held)
+                self._judged(row, held)
         for server in resources_seen(ctl.objects):
             out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
         # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
@@ -1430,7 +1437,10 @@ class SpecConsole:
         rows = ctl.server_labels() or {}
         for server in rows:
             out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
-        drains = ctl.draining()
+        drains, asked, marks = ctl.draining(), ctl.decommission_requests(), ctl.decommission_marks()
+        for server in {*asked, *marks}:
+            out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
+        res, held = ctl._resources(), ctl.holds_by()
         for server, s in out.items():
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
             s["labels_node"] = node
@@ -1439,26 +1449,49 @@ class SpecConsole:
                 s["labels_unread"] = True
             s["draining"] = server == drains
             s["resource"] = ctl.resource_state(server, self.lost_after)
+            s["resource_heard_at"] = float(res[server]["ts"]) if server in res else None
+            # The operator's decommission (`platform/decommission/<server>`) and what this subsystem's controller did
+            # about it (`<sub>/decommissioned/<server>`); whether it may be asked now, and why not — the sign that the
+            # server answers — or the warning that its resource was never heard; and the places its workers held, which
+            # a decommission does not give back (`lost`). The product's fields.
+            s["decommission"] = {k: str(asked[server].get(k, "")) for k in ("by", "at", "why")} if server in asked else None
+            s["decommissioned"] = ({k: str(marks[server].get(k, "")) for k in ("asked_at", "at", "slots", "units", "holds")}
+                                   if server in marks else None)
+            try:
+                refusal, warning = ctl.decommission_refusal(server)
+            except (*PARSE_ERRORS, OSError) as e:        # a row that does not read: that server's answer, not the page's end
+                refusal, warning = f"could not be told: {e}", None
+            s["decommission_refusal"], s["decommission_warning"] = refusal, warning
+            s["decommissionable"] = refusal is None and server not in asked
+            s["lost"] = ([{"place": p, "worker": row["worker"]} for row in s["workers"] for p in held.get(row["worker"], [])]
+                         if server in asked else [])
             s["requires_resource"] = ctl.spec.requires == "resource"
-            s["placeable"] = not (s["requires_resource"] and s["resource"] == "silent") and not s["draining"]
-            s["why"] = (f"server {server} draining" if s["draining"] else
+            s["placeable"] = (not (s["requires_resource"] and s["resource"] == "silent") and not s["draining"]
+                              and server not in asked)
+            s["why"] = (f"server {server} decommissioned" if server in asked else
+                        f"server {server} draining" if s["draining"] else
                         f"resource on {server} silent" if not s["placeable"] else None)
             s["workers"].sort(key=lambda x: x["worker"])
         return {"policy": ctl.policy(), "servers": dict(sorted(out.items()))}
 
-    def _retire_state(self, row: dict, asked: dict, held: dict) -> None:
-        w = row["worker"]
+    def _judged(self, row: dict, held: dict) -> None:
+        w, ctl = row["worker"], self.ctl
+        row.update(holds=held.get(w, []), hung=False, hung_since=None, slot_garbled=False, slot_until=None)
         try:
-            gen, kind, why = self.ctl.retire_refusal(w)
-        except NoSuchSlot:
-            return                                       # a name no process claimed (one given in the unit file): no slot to retire
-        except (ValueError, OSError):
+            key = ctl.sub.slot_key(w)
+            items, _ = ctl.vars.get(key)
+            if not items:
+                return                                   # a name no process claimed (one given in the unit file): no slot to judge
+            slot = read_slot(key, w, items)
+            row["slot_garbled"], row["slot_until"] = slot is None, (slot.until if slot is not None else None)
+            if slot is not None and slot.released:
+                row["released"] = True
+                return
+            fate, _, why = ctl.slot_fate(w, slot)
+            if fate == "hung":
+                row.update(hung=True, hung_since=ctl.hung_since(w, slot), hung_why=why)
+        except (*PARSE_ERRORS, OSError):
             return                                       # a name that is no key, a store that did not answer: that row says nothing of it
-        row.update(gen=gen, released=kind == "released", retirable=not kind, retire_refusal=why or None,
-                   holds=held.get(w, []))
-        req = asked.get(w)
-        if req is not None:
-            row["retire"] = {k: str(req.get(k, "")) for k in ("gen", "by", "at", "why", "refused")}
 
     # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ): `/servers/<server>/labels`.
     #
@@ -1511,54 +1544,6 @@ class SpecConsole:
             log.warning("%s: the labels of server %r were not written: %s", self.spec.name, server[:80], e)
             return 503, {"detail": "the store did not take it: try again; the console's log says why",
                          "error": "store unavailable"}
-
-    # THE OPERATOR'S DOOR TO `retire`: `POST /workers/<worker>/retire {"why": "…", "gen": n}`.
-    #
-    # `Controller.retire` said "the operator's statement that a slot is gone for good", and no operator could make it:
-    # the controller has no port, and this console's token has no `slots/*` — a console that could write a slot would
-    # be a second controller. So the console writes a REQUEST (`<sub>/retire/<worker>`, `request_retire`) and the
-    # controller retires the slot on its next pass (`apply_retires`), as a drain is written here and read there.
-    #
-    # Refused in words before anything is written: a worker alive — its lease runs, or it was heard from within 45 s —
-    # (409, `alive`); the name taken by another process since the page showed it, when the page sends the `gen` it
-    # showed (409, `generation`); released already (409); no such worker (404). Names no unit: `admin` on the whole
-    # cluster (`needs`) — a retired worker's cameras all move. A journal line with the name, the generation and why.
-    # The answer says what will move and what stays held: a volume the worker held is not given back by a retire.
-    def retire_route(self, h, path: str) -> tuple:
-        ctl, user = self.ctl, h.headers.get("X-User", "operator")
-        worker = path[len("/workers/"):-len("/retire")]
-        try:
-            try:
-                body = h._body()
-            except ValueError as e:
-                raise Refused(f'the body is not JSON ({e}): {{"why": "the server burnt"}}')
-            if not isinstance(body, dict):
-                raise Refused('the body is an object: {"why": "the server burnt"}')
-            try:
-                server_name(worker)                      # a worker's name is a host-like word, as a server's is
-            except Refused:
-                raise Refused(f"{worker[:80]!r} is not a worker's name: letters, digits and . - _")
-            units = list(ctl.assignment(worker).units)
-            row = ctl.request_retire(worker, user, str(body.get("why") or ""), body.get("gen"))
-        except NoSuchSlot as e:
-            return 404, {"detail": str(e), "error": "no such worker"}
-        except RetireRefused as e:
-            return 409, {"detail": str(e), "error": e.kind}
-        except Refused as e:
-            return 400, {"detail": str(e), "error": "refused"}
-        except Forbidden as e:                           # the console's token, not the caller: the store said no
-            return 403, {"detail": str(e), "error": str(e)}
-        except OSError as e:
-            log.warning("%s: the request to retire %r was not written: %s", self.spec.name, worker[:80], e)
-            return 503, {"detail": "the store did not take it: try again; the console's log says why",
-                         "error": "store unavailable"}
-        self.journal.say("worker.retire.requested", of=self.spec.name, worker=worker, gen=row["gen"], why=row["why"],
-                         user=user)
-        holds = ctl.holds_of(worker)
-        return 202, {"worker": worker, "gen": row["gen"], "state": "requested", "units": units, "holds": holds,
-                     "note": "the controller retires it on its next pass and moves what it lists to the workers that "
-                             "are here" + (f"; what it held stays held — {', '.join(holds)}: withdraw a volume that "
-                                           f"went with its server" if holds else "")}
 
     # EVERY NUMBER OF A HEARTBEAT OR OF THE PASS REPORT HERE IS READ THROUGH `n`, `rn` OR `r` (the review's seventh
     # pass, part 2): read bare — `int(headroom)`, `float(space.full)`, `float(ts)` — one word in one field raised, and
@@ -1679,6 +1664,17 @@ class SpecConsole:
                   # falls on it
                   f"# TYPE {p}_units_moved_for_reach_total counter",
                   f"{p}_units_moved_for_reach_total {r('reach_moves_total', int)}",
+                  # The controller's releases and the operator's decommissions (the owner's decision on the review's
+                  # eleventh pass; the product's names): decommissions carried out, slots released (a worker its server
+                  # lists nowhere, every slot of a decommissioned server), requests whose server still answers, and
+                  # workers whose process runs and that neither renew nor speak — a fault, `worker.hung`
+                  f"# TYPE {p}_servers_decommissioned_total counter",
+                  f"{p}_servers_decommissioned_total {r('servers_decommissioned_total', int)}",
+                  f"# TYPE {p}_slots_released_total counter", f"{p}_slots_released_total {r('slots_released_total', int)}",
+                  f"# TYPE {p}_decommission_requests_standing gauge",
+                  f"{p}_decommission_requests_standing {r('decommission_requests_standing', int)}",
+                  f"# TYPE {p}_workers_hung gauge",
+                  f"{p}_workers_hung {len(rep.get('workers_hung')) if isinstance(rep.get('workers_hung'), list) else 0}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.
@@ -1954,7 +1950,7 @@ class SpecConsole:
     #           the VMS: asking for a live stream)
     #   edit    acting through the system without changing what it IS — a mark, a command to a device, a
     #           backfill, a keep
-    #   admin   everything else that writes: units, volumes, policy, drain, a request to retire a worker
+    #   admin   everything else that writes: units, volumes, policy, drain, a server decommissioned
     #
     # The unit is named when the path names one; a grant may be for one unit, for units with given labels, or
     # for the whole cluster, and a route that names no unit needs the last (to act) or any grant at all (to look).
@@ -2469,8 +2465,6 @@ class SpecConsole:
                 return
             return h._send(404, {"detail": "no such route", "error": "no such path"})
         if method == "POST":
-            if path.startswith("/workers/") and path.endswith("/retire") and path.count("/") == 3:
-                return h._send(*con.retire_route(h, path))   # no Idempotency-Key: asking twice writes the request again
             if path not in (rows_path, "/marks"):
                 if self._extra(h, "POST", path, q):
                     return
@@ -2644,6 +2638,72 @@ class Mount:
                      "would_strand": {p["subsystem"]: p["would_strand"] for p in parts if p.get("would_strand")},
                      "subsystems": {p["subsystem"]: p for p in parts}}
 
+    # THE OPERATOR'S DOOR TO A SERVER'S END: `POST /servers/<server>/decommission {"why": "…"}`, `DELETE` to withdraw it or
+    # to bring the machine back. On the Mount, as `/drain`: a machine carries every subsystem, and whether it still answers
+    # is asked of each (the product's door).
+    #
+    # The operator operates SERVERS, not workers (the owner's decision, 3 Oct, on the review's eleventh pass). There was
+    # a door to retire a worker, and it asked the operator whether a silent process is dead or hung — which they cannot
+    # know, and which made two holders of the same cameras. What they do know is a machine: they took it out and switched
+    # it off. So the door is about the machine, and the platform checks what it can: the server answers by any of three
+    # signs (`Controller.decommission_refusal` — its resource heard, a worker of it heard, a slot of it renewed) — 409, the
+    # sign in words, nothing written. A server whose resource was never heard passes, with a warning. Written otherwise
+    # (`platform/decommission/<server>`, the console's alone): each controller carries it out on its next pass
+    # (`apply_decommissions`) — every slot of the server released, its units moved, a mark of what was done — and nothing
+    # is placed on that server, nor a slot given to a process on it, until `DELETE`. A drain says the machine comes back;
+    # this, that it does not. `admin` on the whole cluster; a server nobody here has heard of: 404; a body that is not a
+    # JSON object: 400. A journal line each way (`server.decommission_requested`, `server.decommission_withdrawn`).
+    def decommission_route(self, h, method: str, path: str, user: str = "operator") -> tuple:
+        consoles = [self.root, *self.mounts.values()]
+        ctl = self.root.ctl
+        server = path[len("/servers/"):-len("/decommission")]
+        try:
+            server_name(server)
+            if method == "DELETE":
+                was = ctl.withdraw_decommission(server)
+                if was is not None:
+                    self.root.journal.say("server.decommission_withdrawn", server=server, user=user)
+                return 200, {"server": server, "decommission": None, "withdrawn": was is not None,
+                             "note": "its workers are placed on, and given slots, again from the controllers' next pass"
+                                     if was is not None else f"{server} was not decommissioned"}
+            body = object_body(h)
+            known = {s for c in consoles for s in c.ctl.servers_known()} | set(ctl.decommission_requests())
+            if server not in known:
+                return 404, {"detail": f"no server called {server} is known here", "error": "no such server"}
+            refusal = warning = None
+            for c in consoles:
+                r, w = c.ctl.decommission_refusal(server)
+                refusal, warning = refusal or r, warning or w
+            if refusal:
+                log.warning("server %s was not decommissioned (asked by %s): %s", server, user, refusal)
+                return 409, {"detail": refusal, "error": "server answers"}
+            row = ctl.decommission(server, user, str(body.get("why") or ""))
+        except Refused as e:
+            return 400, {"detail": str(e), "error": "refused"}
+        except DecommissionRefused as e:                 # it began to answer between the look and the write
+            return 409, {"detail": str(e), "error": "server answers"}
+        except Forbidden as e:                           # the console's token, not the caller: the store said no
+            return 403, {"detail": str(e), "error": str(e)}
+        except OSError as e:
+            log.warning("server %r was not decommissioned: %s", server[:80], e)
+            return 503, {"detail": "the store did not take it: try again; the console's log says why",
+                         "error": "store unavailable"}
+        self.root.journal.say("server.decommission_requested", server=server, user=user, why=row["why"])
+        parts = {}
+        for c in consoles:
+            here = c.ctl.workers_on(server)
+            held = c.ctl.holds_by()
+            parts[c.spec.name] = {"workers": here,
+                                  "units": sorted({str(u) for w in here for u in c.ctl.assignment(w).units}),
+                                  "holds": sorted({p for w in here for p in held.get(w, [])})}
+        holds = sorted({p for part in parts.values() for p in part["holds"]})
+        return 202, {"server": server, "state": "requested", "subsystems": parts,
+                     **({"warning": warning} if warning else {}),
+                     "note": "each controller releases its slots on this server on its next pass and moves their units "
+                             "to the servers that are here" +
+                             (f"; what they held stays held — {', '.join(holds)}: withdraw a volume that went with its "
+                              f"server" if holds else "")}
+
     # THE MOUNT'S OWN ROUTES ASK THE GATE TOO (the review's third pass, blocker 2). `/drain`, `/schema` and `/mounts`
     # were answered here, before `dispatch` and its gate: `POST /drain?server=srv-1` with no token took every
     # recording off a server, and the irreversible `PUT /schema` was as open. There are no exceptions for rights:
@@ -2680,6 +2740,12 @@ class Mount:
                 # A connection of the reserve is for the door in and for monitoring, whichever subsystem's (`Bounds`).
                 if self.busy_unless(RESERVE_ROUTES, mnt.resolve(u.path)[1]):
                     return
+                if method in ("POST", "DELETE") and u.path.startswith("/servers/") and \
+                        u.path.endswith("/decommission") and u.path.count("/") == 3:
+                    user = mnt.admit(self, method)               # `admin`: every unit of a server moves
+                    if user is None:
+                        return
+                    return self._send(*mnt.decommission_route(self, method, u.path, user))
                 if u.path in mnt.MOUNT_ROUTES:
                     user = mnt.admit(self, method)
                     if user is None:
