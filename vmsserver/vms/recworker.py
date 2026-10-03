@@ -31,6 +31,7 @@ source, not a camera — and a sink: the volume's one writer on this host.
 """
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import random
@@ -38,7 +39,7 @@ import socket
 import threading
 import time
 
-from w2cplatform.console import framed, heartbeats, holder_of
+from w2cplatform.console import framed, heartbeats
 from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
@@ -84,6 +85,141 @@ DOMAIN_SEEN = "domain/seen"
 
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
+
+
+# ONE LOOK A PASS (the scaling pass). A question about ONE recording — who else records its camera, which backup holds
+# it, who holds the camera, is the primary written — was answered by walking EVERYTHING: every recording's row (a list
+# and a read each), every recorder's heartbeat, every VMS worker's. Asked once per recording, a pass cost the square of
+# the recordings: measured at a thousand recordings and five hundred backups, one backfill pass read the store
+# 3 032 003 times (112 s), one pass of the backups' gate 755 500 times (30 s), and the heartbeat of the recorder of the
+# thousand 24 000 times — every holder's heartbeat, once per recording. Now a pass reads each of them ONCE, on first
+# use, and answers every recording's question from maps — by camera, by recording, by holder: 1531, 1508 and 24 reads
+# (`tests/test_recorder_reads.py`). What it read is the pass's: the next pass reads again, so nothing answered here is
+# older than the pass that asks.
+#
+# A store that did not answer is the pass's too: each question raises what the one read raised — and is counted where
+# it always was (`source` answers with `last_source`, the gate's part is skipped and counted) — and an outage is asked
+# once, not once per recording.
+class Look:
+    """What one pass of a recorder read of the cluster, each part once: the recordings' rows, a subsystem's heartbeats,
+    the standby volumes' names — and the maps a question about one recording is answered from."""
+
+    # …and no older than a heartbeat's period, however long the pass: a backfill that spent minutes on one range asks the
+    # next recording's sources of heartbeats read again, not of the ones read before the copy began.
+    FRESH = 10.0
+
+    def __init__(self, rec: "RecWorker"):
+        self.rec, self._got, self._at = rec, {}, None
+
+    def _once(self, part, read):
+        now = getattr(self.rec, "clock", time.monotonic)()
+        if self._at is None or now - self._at >= self.FRESH:
+            self._got, self._at = {}, now
+        if part not in self._got:
+            try:
+                self._got[part] = read()
+            except OSError as e:
+                self._got[part] = e
+        got = self._got[part]
+        if isinstance(got, OSError):
+            raise got.with_traceback(None)
+        return got
+
+    # Every recording's row as stored, `[(name, items)]` — one list and one read each; parsed per use below.
+    def _rows(self) -> list[tuple[str, dict]]:
+        def read():
+            out = []
+            for key in self.rec.vars.list(self.rec.SUB.config(self.rec.ROWS, "")):
+                items, _ = self.rec.vars.get(key)
+                if items:
+                    out.append((key.rsplit("/", 1)[1], items))
+            return out
+        return self._once("rows", read)
+
+    # The rows parsed — and one that does not parse passed by (`Worker.row_garbled`; the sixth pass, the follow-up). The
+    # deleted ones only when asked: a tombstone still says whose name it was and where its footage lives.
+    def recordings(self, deleted: bool = False) -> list[dict]:
+        def parse():
+            out = []
+            for name, items in self._rows():
+                if not deleted and items.get("deleted") == "true":
+                    continue
+                try:
+                    out.append(self.rec.parse_row(items))
+                except (ValueError, KeyError, TypeError) as e:
+                    self.rec.row_garbled(name, e)
+            return out
+        return self._once(("recordings", deleted), parse)
+
+    def by_cam(self) -> dict[str, list[dict]]:
+        """The recordings that stand, by camera: who else records the camera this recording is of."""
+        def index():
+            out: dict[str, list[dict]] = {}
+            for r in self.recordings():
+                out.setdefault(str(r["cam"]), []).append(r)
+            return out
+        return self._once("by_cam", index)
+
+    def homes(self) -> dict[str, str]:
+        """Each recording's volume, deleted ones too: the kind of a backup a heartbeat still names."""
+        return self._once("homes", lambda: {str(r["id"]): str(r.get("home") or "") for r in self.recordings(deleted=True)})
+
+    def backups(self) -> set[str]:
+        return self._once("backups", lambda: volumes.backups(self.rec.vars))
+
+    # The book of primaries the camera's agent carries home, and when it last reached the domain (`carried_primary`).
+    def primaries(self) -> dict | None:
+        return self._once("primaries", lambda: self.rec.vars.get(PRIMARIES)[0])
+
+    def domain_seen(self) -> bytes | None:
+        return self._once("domain_seen", lambda: self.rec.objects.get(DOMAIN_SEEN))
+
+    def edges(self) -> set[str]:
+        return self._once("edges", lambda: volumes.edges(self.rec.vars))
+
+    def units(self, sub: str) -> dict[str, list[tuple[str, int, object, dict]]]:
+        """Every status entry of a subsystem's heartbeats, by the unit it names: `[(worker, its place in that heartbeat,
+        heartbeat, entry)]`, workers in name order — the order `holder_of` and the walks below went in. Whatever their
+        age: liveness is the asker's, at its own `now`."""
+        def index():
+            out: dict[str, list] = {}
+            for w, hb in sorted(heartbeats(self.rec.objects, sub + "/").items()):
+                for i, st in enumerate(hb.status):
+                    out.setdefault(str(st.get("id")), []).append((w, i, hb, st))
+            return out
+        return self._once(("units", sub), index)
+
+    # `w2cplatform.console.holder_of` over the heartbeats read once: the first live worker, in name order, whose entry
+    # for `unit` is in `phase` and has `field`.
+    def holder(self, sub: str, unit, now: float, lost_after: float = 45.0, phase: str | None = None,
+               field: str | None = None):
+        for w, _, hb, st in self.units(sub).get(str(unit), ()):
+            if not is_live(sub, hb.ts, now, lost_after):
+                continue
+            if phase is not None and st.get("phase") != phase:
+                continue
+            if field is not None and not st.get(field):
+                continue
+            return w, hb, st
+        return None
+
+
+# The passes that take one look: everything they ask is answered from it — and a pass inside a pass (`gate_pass` in
+# `reconcile_once`) takes the outer one's.
+def one_look(fn):
+    import functools
+
+    @functools.wraps(fn)
+    def run(self, *a, **kw):
+        with self.looking():
+            return fn(self, *a, **kw)
+    return run
+
+
+# The look the pass of `rec` is taking on this thread — or, outside a pass, one of its own. `rec` needs only its two
+# stores: М12's two-server tests run `carried_primary` over an object that has nothing else.
+def look_of(rec) -> Look:
+    return RecWorker._LOOKS.__dict__.get("by", {}).get(id(rec)) or Look(rec)
 
 
 # What a recording's pipeline writes into: the volume's writer, under this recording's name and epoch. A
@@ -429,7 +565,7 @@ class RecWorker(VmsWorker):
         # fell over during the outage restarts it on the source it read last (the review's second pass, blocker 4:
         # the camera's worker is still there; what is away is the book). A camera never read stays unstartable.
         try:
-            found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
+            found = self._look().holder("vms", cam, self.wall(), phase="running", field="live_url")
         except OSError as e:
             self.store_errors += 1
             last = self.last_source.get(str(cam))
@@ -554,12 +690,13 @@ class RecWorker(VmsWorker):
         # A BACKUP recording says what it holds, the way Lesson 15's holder says what a card holds: a
         # summary, cheap to carry in every heartbeat. The primary plans from it, and what it copies is what the
         # backup's door hands over (Lesson 26).
-        if volumes.is_backup(cam, self.vars):
+        if volumes.is_backup(cam, names=self._look().backups()):
             ours = self.our_coverage(cam["id"])
             if ours:
                 out["coverage"] = {"from": ours[0][0], "to": ours[-1][1], "fragments": len(ours)}
         return out
 
+    @one_look
     def status(self) -> list[dict]:
         out = super().status()
         for st in out:
@@ -609,18 +746,20 @@ class RecWorker(VmsWorker):
     # missing would lose exactly the seconds before that — the grace, the pass, the pipeline's own start —
     # which are the seconds the failure happened in.
     def _offline_backup(self, row: dict) -> bool:
-        return str(row.get("when") or "") == "offline" and volumes.is_backup(row, self.vars)
+        return str(row.get("when") or "") == "offline" and volumes.is_backup(row, names=self._look().backups())
 
     # One pass of the gate, after the reconciler's. A held backup whose primary now needs cover is RELEASED:
     # the ring is written first, then live. A released one whose primary has been back for `HOLD_AFTER` is
     # put on hold again — a restart under the same epoch, so its open sequence is finished, and the ring
     # starts filling afresh.
+    @one_look
     def gate_pass(self, now: float | None = None) -> list[tuple[str, str]]:
         now = self.wall() if now is None else now
         done = []
+        running = {str(u) for u in self.reconciler.actual}       # once, not once per row (the scaling pass)
         for row in self.rows:
             uid = str(row["id"])
-            if not self._offline_backup(row) or uid not in {str(u) for u in self.reconciler.actual}:
+            if not self._offline_backup(row) or uid not in running:
                 continue
             need = self.primary_needs_cover(row, now)
             if need:
@@ -697,32 +836,29 @@ class RecWorker(VmsWorker):
         carried = self.carried_primary(row, now)
         if carried is not None:
             return carried
-        names = volumes.backups(self.vars)
-        # Running in a LIVE heartbeat (`is_live`: a clock from the future does not keep a dead recorder alive — the
-        # review's second pass, M9), and — the third pass — running in one that went stale not long ago: a recorder
-        # that VANISHED. Its recordings were written until its last heartbeat, so that is when "not written" began,
-        # and the grace for a start does not apply; past the grace, the rule below covers it anyway.
-        running, vanished = set(), {}
-        for hb in heartbeats(self.objects, self.SUB.name + "/").values():
-            live = is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER)
-            if not live and not (now - hb.ts <= self.LOST_AFTER + self.START_GRACE):
-                continue
-            for st in hb.status:
-                if st.get("phase") == "running":
-                    if live:
-                        running.add(str(st.get("id")))
-                    else:
-                        vanished[str(st.get("id"))] = max(hb.ts, vanished.get(str(st.get("id")), hb.ts))
+        look = self._look()
+        names = look.backups()
+        units = look.units(self.SUB.name)
         need = False
-        for other in self._recordings():
-            if str(other["id"]) == str(row["id"]) or str(other["cam"]) != str(row["cam"]) or volumes.is_backup(other, names=names):
+        # The camera's other recordings from the pass's map by camera, and what the recorders say of each from its map
+        # by recording (the scaling pass): every row and every recorder's heartbeat were read again for each backup.
+        for other in look.by_cam().get(str(row["cam"]), ()):
+            if str(other["id"]) == str(row["id"]) or volumes.is_backup(other, names=names):
                 continue
+            # Running in a LIVE heartbeat (`is_live`: a clock from the future does not keep a dead recorder alive — the
+            # review's second pass, M9), and — the third pass — running in one that went stale not long ago: a recorder
+            # that VANISHED. Its recordings were written until its last heartbeat, so that is when "not written" began,
+            # and the grace for a start does not apply; past the grace, the rule below covers it anyway.
+            said = [hb.ts for _, _, hb, st in units.get(str(other["id"]), ()) if st.get("phase") == "running"]
+            running = any(is_live(self.SUB.name, ts, now, self.LOST_AFTER) for ts in said)
+            gone = [ts for ts in said if not is_live(self.SUB.name, ts, now, self.LOST_AFTER)
+                    and now - ts <= self.LOST_AFTER + self.START_GRACE]
             until = float(other.get("until") or 0)
             should = bool(other.get("enabled")) and (until == 0 or until > now)
-            if not should or str(other["id"]) in running:
+            if not should or running:
                 self._not_written_since.pop(str(other["id"]), None)
                 continue
-            since = self._not_written_since.setdefault(str(other["id"]), min(now, vanished.get(str(other["id"]), now)))
+            since = self._not_written_since.setdefault(str(other["id"]), min(now, max(gone) if gone else now))
             need = need or now - since >= self.START_GRACE
         return need
 
@@ -742,7 +878,8 @@ class RecWorker(VmsWorker):
     # nobody can vouch for, and then the backup records: it cannot know, and not knowing is a failure.
     def carried_primary(self, row: dict, now: float) -> bool | None:
         """None: the camera's primary is not in another cluster — decide as always. Else: whether to cover."""
-        items, _ = self.vars.get(PRIMARIES)
+        look = look_of(self)                                     # a recorder, or only its two stores (М12's gate)
+        items = look.primaries()                                 # once a pass, not once a backup (the scaling pass)
         if not items:
             return None
         if str(row.get("cam", "")).startswith("ref:"):
@@ -759,7 +896,7 @@ class RecWorker(VmsWorker):
         # after this backup, every stop, the gate and the writer's pass were skipped.
         try:
             e = json.loads(items[ref])
-            raw = self.objects.get(DOMAIN_SEEN)
+            raw = look.domain_seen()
             seen = float(json.loads(raw).get("ts", 0)) if raw else 0.0
             if not isinstance(e, dict):
                 raise TypeError("a book's entry is not an object")
@@ -784,6 +921,7 @@ class RecWorker(VmsWorker):
     # The camera's worker moved: the source is another server's fan-out now — or, if it moved HERE, the
     # shared-memory branch. The pipeline reading the old source is stopped and counted lost, so the
     # reconciler starts it again on the new one, under a new rec epoch (a start is a new writer).
+    @one_look
     def resubscribe(self, now: float | None = None) -> list[int]:
         now = self.now() if now is None else now
         moved = []
@@ -804,6 +942,7 @@ class RecWorker(VmsWorker):
     # One pass, four parts, and the store away stops none of the others: a pipeline that fell over is restarted
     # on its last source, the offline backups are judged by the rows read last, the writer is watched. What a
     # part could not read it reports; it does not take the pass with it (the review's second pass, blocker 4).
+    @one_look
     def reconcile_once(self, now: float | None = None) -> list[tuple[str, int]]:
         self.resubscribe(now)
         out = super().reconcile_once(now)
@@ -1955,10 +2094,21 @@ class RecWorker(VmsWorker):
     #
     # And never what a clean fetch from THIS source already found nowhere, nor what the engine refused of it
     # `REFUSED_TIMES` times (`_refused`) — forgotten once older than anything planned, so neither list grows for ever.
+    # This recorder's row of `unit`, from a map of the rows read last — made again when they are read again. The backfill
+    # asked it per recording by walking the rows: the square of them, in Python, every pass (the scaling pass).
+    def _row_of(self, unit) -> dict | None:
+        rows, by_id = self.__dict__.get("_rows_by_id", (None, {}))
+        if rows is not self.rows:
+            by_id = {}
+            for r in self.rows:
+                by_id.setdefault(str(r["id"]), r)            # the first, as the walk found it
+            self._rows_by_id = (self.rows, by_id)
+        return by_id.get(str(unit))
+
     def gaps(self, unit, coverage: dict, now: float, planned: bool = True, source: str = "device") -> list[tuple[float, float]]:
         from .archive import visible_from
         ours = self.our_coverage(unit)
-        row = next((r for r in self.rows if str(r["id"]) == str(unit)), None)
+        row = self._row_of(unit)
         # What a source says it holds, through `rows.number` (the review's seventh pass): a word there raised out of the
         # backfill of every recording after this one. Not said, nothing to fetch from it.
         c = coverage if isinstance(coverage, dict) else {}
@@ -2000,7 +2150,7 @@ class RecWorker(VmsWorker):
     # `(cam, playback_url, coverage)` for a recording whose camera is held by a worker that serves the
     # device's own archive — found the way everything is found here: in the holder's heartbeat.
     def device_source(self, cam) -> tuple[str, dict] | None:
-        found = holder_of(self.objects, "vms/", cam, self.wall(), field="playback_url")
+        found = self._look().holder("vms", cam, self.wall(), field="playback_url")
         if found is None or not found[2].get("coverage"):
             return None                       # no phase: a channel held only for its archive answers too
         from .config import local_only
@@ -2045,50 +2195,62 @@ class RecWorker(VmsWorker):
         delay = min(self.SOURCE_BACKOFF * 2 ** n, self.SOURCE_BACKOFF_MAX) * (0.5 + random.random() * 0.5)
         self._source_asks[key] = (n, self.clock() + delay)
 
+    # The look this thread's pass is taking, per recorder (`Look`, `one_look`); outside a pass every question takes a
+    # look of its own — one read of each part, as one question always cost.
+    _LOOKS = threading.local()
+
+    @contextlib.contextmanager
+    def looking(self):
+        looks = self._LOOKS.__dict__.setdefault("by", {})
+        if id(self) in looks:
+            yield looks[id(self)]
+            return
+        looks[id(self)] = look = Look(self)
+        try:
+            yield look
+        finally:
+            looks.pop(id(self), None)
+
+    def _look(self) -> Look:
+        return look_of(self)
+
     # Every recording's row, parsed — and one that does not parse passed by (`Worker.row_garbled`; the sixth pass, the
     # follow-up). The recorder walks ALL of them to answer a question about one — who else records this camera,
     # which backup holds it, what a keep names — and parsed each bare: one garbled row, and no backup's pipeline
-    # started, no range was fetched and no keep was copied, for any recording.
-    def _recordings(self, deleted: bool = False):
-        for key in self.vars.list(self.SUB.config(self.ROWS, "")):
-            items, _ = self.vars.get(key)
-            if not items or (not deleted and items.get("deleted") == "true"):
-                continue
-            try:
-                yield self.parse_row(items)
-            except (ValueError, KeyError, TypeError) as e:
-                self.row_garbled(key.rsplit("/", 1)[1], e)
+    # started, no range was fetched and no keep was copied, for any recording. Read once a pass (`Look`).
+    def _recordings(self, deleted: bool = False) -> list[dict]:
+        return self._look().recordings(deleted)
 
+    # Found in this pass's look (the scaling pass): the camera's other recordings from the map by camera, their
+    # recorders' entries from the map by recording — a thousand recordings asked this once each, and each asking read
+    # every row twice and every recorder's heartbeat.
     def backup_sources(self, row: dict, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
-        names = volumes.backups(self.vars)
+        look = self._look()
+        names = look.backups()
         if not names or volumes.is_backup(row, names=names):
             return []
-        recs = set()
-        for other in self._recordings():
-            if str(other["id"]) != str(row["id"]) and str(other["cam"]) == str(row["cam"]) and volumes.is_backup(other, names=names):
-                recs.add(str(other["id"]))
-        out, edge_homes, homes = [], volumes.edges(self.vars), {}
-        for other in self._recordings(deleted=True):
-            homes[str(other["id"])] = str(other.get("home") or "")
+        recs = {str(o["id"]) for o in look.by_cam().get(str(row["cam"]), ())
+                if str(o["id"]) != str(row["id"]) and volumes.is_backup(o, names=names)}
+        out, edge_homes, homes = [], look.edges(), look.homes()
         from .config import local_only
-        for name, hb in sorted(heartbeats(self.objects, self.SUB.name + "/").items()):
+        units = look.units(self.SUB.name)
+        for name, _, hb, st in sorted((e for rid in recs for e in units.get(rid, ())), key=lambda e: e[:2]):
             if not is_live(self.SUB.name, hb.ts, now, self.LOST_AFTER):
                 continue                      # silent, or a clock from the future (M9 of the review): not a source
+            if not st.get("coverage"):
+                continue
             url = hb.extra.get("archive_url", "")
             if url and local_only(url, hb.extra.get("server", "?"), self.server):
                 url = ""                      # that recorder's archive door is on its own loopback: not reachable from here
-            for st in hb.status:
-                if str(st.get("id")) not in recs or not st.get("coverage"):
-                    continue
-                kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
-                if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
-                    continue                  # no door to a backup, nobody to ask the camera: not a source from here
-                if self._source_waits(f"{kind}:{st['id']}"):
-                    continue                  # it failed a range just now: not asked again yet (`_source_answered`)
-                out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
-                            "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
-                            "coverage": st["coverage"]})
+            kind = "edge" if homes.get(str(st["id"])) in edge_homes else "backup"
+            if (kind == "backup" and not url) or (kind == "edge" and self.card_range is None):
+                continue                      # no door to a backup, nobody to ask the camera: not a source from here
+            if self._source_waits(f"{kind}:{st['id']}"):
+                continue                      # it failed a range just now: not asked again yet (`_source_answered`)
+            out.append({"key": f"{kind}:{st['id']}", "kind": kind, "recording": str(st["id"]), "cam": str(row["cam"]),
+                        "recorder": name, "url": url.rstrip("/") if kind == "backup" else "",
+                        "coverage": st["coverage"]})
         return out
 
     # Where one recording's gaps can come from, in order: the device's own archive (Lesson 16), then every
@@ -2234,6 +2396,7 @@ class RecWorker(VmsWorker):
     # The request is not cleared here. A worker's token writes its slot and its epochs, never configuration
     # (М10A Lesson 10), so the recorder REPORTS what it fetched in its heartbeat and the console's reaper
     # removes the row — the same division as a scan that finishes (М10B Lesson 21).
+    @one_look
     def requests(self, budget: int = 2, now: float | None = None) -> list[dict]:
         now = self.wall() if now is None else now
         if self.archive_busy():
@@ -2303,7 +2466,7 @@ class RecWorker(VmsWorker):
                 self.fetched.append(rid)
                 done.append({"unit": unit, "cam": cam, "from": float(it["from"]), "to": t1, "groups": 0, "request": rid})
                 continue
-            srcs = self.sources_of({"id": unit, "cam": cam, "home": next((r.get("home") for r in self.rows if str(r["id"]) == unit), "")})
+            srcs = self.sources_of({"id": unit, "cam": cam, "home": (self._row_of(unit) or {}).get("home", "")})
             if not srcs:
                 continue                                     # nobody holds the device and no backup answers; ask again next pass
             upto = min(t1, t0 + self.RANGE_CAP)
@@ -2363,12 +2526,13 @@ class RecWorker(VmsWorker):
         self._backfiller.start()
         self._backfiller.join(timeout=self.BACKFILL_WAIT)
 
+    @one_look
     def backfill(self, budget: int = 1, now: float | None = None, force: bool = False) -> list[dict]:
         now = self.wall() if now is None else now
         if not (force or self.in_window(now)) or self.archive_busy():
             return []
         done: list[dict] = []
-        names = volumes.backups(self.vars)
+        names = self._look().backups()
         for row in self.rows:
             if len(done) >= budget:
                 break
@@ -2608,6 +2772,7 @@ class RecWorker(VmsWorker):
         self._keeper.start()
         self._keeper.join(timeout=self.BACKFILL_WAIT)
 
+    @one_look
     def keep_pass(self, now: float | None = None) -> dict:
         import hashlib
         from w2cplatform.events import ALARM, EventLog

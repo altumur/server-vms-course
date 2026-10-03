@@ -258,6 +258,48 @@ def test_the_gate_asks_who_and_the_grant_says_what():
         srv.shutdown()
 
 
+def test_one_garbled_camera_row_costs_that_cameras_events_and_not_the_timeline():
+    """The gate of `/events` read each unit's labels with `ctl.unit` bare (the scaling pass after the eighth review): one
+    row that does not parse was a 400 for the whole timeline of everybody the gate checks — a row with no `id`, no reply
+    at all. Now the row is that unit's: a grant by label is not shown its events (what labels it carries is not known),
+    and the answer says so by unit (`withheld`); the unit's own grant and the whole cluster's see them; the row is counted
+    once, on `/metrics`."""
+    from w2cplatform.console import UNIT_LABELS
+    from w2cplatform.rows import forget
+    forget()
+    box = Box()
+    access = Tokens({"guard": [("view", None, ("ground",))], "two": [("view", "2", ())], "admin": [("admin", None, ())]})
+    ctl, rec, m, srv, base = _console(box, access)
+    try:
+        for n in (1, 2, 3):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{n}.mp4", "labels": ["ground"]}, token="admin")[0] == 201
+            assert _call(base, "POST", "/marks", {"cam": n, "note": f"bag {n}"}, token="admin")[0] == 201
+        cams = lambda token: sorted({e.get("cam") for e in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}",
+                                                                 token=token)[1]["events"] if e.get("cam") is not None})
+        assert cams("guard") == [1, 2, 3]
+        items, _ = box.vars.get("vms/cameras/2")
+        box.vars.put("vms/cameras/2", {**items, "revision": "two"})              # a word where a number goes
+        items3, _ = box.vars.get("vms/cameras/3")
+        box.vars.put("vms/cameras/3", {k: v for k, v in items3.items() if k != "id"})   # no `id`: a KeyError
+        reads, real_get = [], ctl.vars.get
+        ctl.vars.get = lambda *a, **k: (reads.append(a[0]), real_get(*a, **k))[1]
+        status, rep = _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="guard")
+        ctl.vars.get = real_get
+        assert status == 200, rep
+        assert len(reads) <= 3, reads                                            # a row per camera in the answer, no more
+        assert sorted({e.get("cam") for e in rep["events"] if e.get("cam") is not None}) == [1]
+        assert [(w["unit"], w["events"]) for w in rep["withheld"]] == [("2", 1), ("3", 1)], rep["withheld"]
+        assert "does not parse" in rep["withheld"][0]["why"]
+        assert cams("two") == [2] and cams("admin") == [1, 2, 3]                 # no label needed: shown as before
+        assert "withheld" not in _call(base, "GET", f"/events?from=0&to={box.wall() + 1}", token="admin")[1]
+        assert UNIT_LABELS.counts.get("vms") == 2                                # two rows, each once — not once a read
+        metrics = urllib.request.urlopen(urllib.request.Request(base + "/metrics", headers={"Authorization": "Bearer admin"})).read().decode()
+        assert 'vms_console_rows_garbled{table="unit"} 2' in metrics
+    finally:
+        srv.shutdown()
+        forget()
+
+
 def test_what_a_route_needs_and_where_a_token_is_read_from():
     box = Box()
     ctl, rec, m, srv, base = _console(box)

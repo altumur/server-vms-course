@@ -797,6 +797,11 @@ class Worker:
         self.stand_in_renewals = 0                # renewals the stand-in made for a hung step, since start: in the heartbeat
         self._loop_renewed = clock()              # when the loop last renewed its leases (`renew_leases`)
         self._stood_in_since: float | None = None # what `STAND_IN_FOR` is counted from, while steps are being stood in for
+        # The loop's last heartbeat as it wrote it — `(status, extra, ts)` — and when any heartbeat last went (the clock):
+        # what the stand-in re-dates for a hung step (`_stand_in_heartbeat`). One write at a time, from either thread.
+        self._last_heartbeat: tuple | None = None
+        self._heartbeat_at: float | None = None
+        self._heartbeat_lock = threading.Lock()
         # The long poll (`longpoll.py`): the wait this worker's loop sleeps in, and the requests it holds at the
         # resources. Neither exists until the process asks for them (`poll_events`) — a worker made without them
         # waits `stop.wait(poll)`, exactly as before.
@@ -1318,6 +1323,7 @@ class Worker:
         if not self.may_stand_in():
             return False
         if mark["last"] is not None and now - mark["last"] < max(1.0, (self.lease_ttl - self.lease_margin) / 3):
+            self._stand_in_heartbeat(mark, age)       # between two renewals: the heartbeat, if it is due
             return False                              # as often as the loop renews, not every look
         if not self._slot_lock.acquire(blocking=False):
             return False                              # the loop is renewing it this moment
@@ -1345,6 +1351,44 @@ class Worker:
             mark["said"] = True
             log.warning("%s: step %s has run %.0f s; standing in for it — leases and slot renewed, for up to %g s",
                         self.name, mark["name"], age, self.STAND_IN_FOR)
+        self._stand_in_heartbeat(mark, age)
+        return True
+
+    # …AND THE HEARTBEAT (the scaling pass after the eighth review). The stand-in renewed the leases and the slot and wrote
+    # no heartbeat: 45 s into a hung step the controller and the recorders judged the holder dead — the recorders lost the
+    # fan-out they record from, the controller moved its units — while the stand-in held its leases for five minutes. So
+    # while it stands in, it writes one whenever the last is `STAND_IN_HEARTBEAT` old, and only after it has confirmed the
+    # slot is this instance's in this step (`mark["last"]`).
+    #
+    # WHAT IT MAY SAY. Nothing it has not seen: it does not ask the subsystem for a status — that is the loop's state,
+    # mid-step on the loop's thread, and computing it here would be a second writer of it — and it does not send an empty
+    # one, which would tell every reader the units have no holder, the very failure this is for. It says the LOOP'S LAST
+    # heartbeat again, as the loop wrote it, with a new `ts` and `stood_in`: the step that hangs, for how long, and
+    # `as_of` — the `ts` of the heartbeat whose status this is. A reader that needs only "alive, and where the fan-out
+    # is" has it; one that wants to know how fresh the status is reads `as_of`. A pipeline that died under the hung step
+    # is in that status as running until the loop comes back — for at most `STAND_IN_FOR`, after which the stand-in
+    # stops, the heartbeat goes stale too, and the units honestly go.
+    STAND_IN_HEARTBEAT = 10.0     # the loop's heartbeat rhythm (`VmsWorker.run`)
+
+    def _stand_in_heartbeat(self, mark: dict, age: float) -> bool:
+        if self._last_heartbeat is None or self.seeking is not None or not self._heartbeat_lock.acquire(blocking=False):
+            return False                              # nothing to say again, nobody to say it as, or the loop is writing
+        try:
+            if self._heartbeat_at is not None and self.clock() - self._heartbeat_at < self.STAND_IN_HEARTBEAT:
+                return False
+            status, extra, ts = self._last_heartbeat
+            said = {**extra, "stand_in_renewals": self.stand_in_renewals,
+                    "stood_in": {"step": mark["name"], "for": round(age, 1), "as_of": ts}}
+            self.objects.put(self.sub.heartbeat_key(self.name), Heartbeat(self.name, self.wall(), status, said).to_bytes())
+            self._heartbeat_at = self.clock()
+        except OSError:
+            return False                              # the store is what hangs: the leases judge that themselves
+        finally:
+            self._heartbeat_lock.release()
+        if not mark.get("heartbeat_said"):
+            mark["heartbeat_said"] = True
+            log.warning("%s: step %s has run %.0f s; its last heartbeat (of %.0f s ago) said again for it", self.name,
+                        mark["name"], age, self.wall() - ts)
         return True
 
     # The place, by CAS and only while the row names this instance; never let go of here — losing it is the loop's
@@ -1452,8 +1496,10 @@ class Worker:
             extra.setdefault(name, n)
         if self.seeking is not None:
             return                                # the name is another instance's, and so is what is said under it (`keep_slot`)
-        self.objects.put(self.sub.heartbeat_key(self.name),
-                         Heartbeat(self.name, self.wall(), status, extra).to_bytes())
+        with self._heartbeat_lock:                # …and what a stand-in says again for a hung step (`_stand_in_heartbeat`)
+            ts = self.wall()
+            self.objects.put(self.sub.heartbeat_key(self.name), Heartbeat(self.name, ts, status, extra).to_bytes())
+            self._last_heartbeat, self._heartbeat_at = (status, extra, ts), self.clock()
 
     # A UNIT'S OWN ROW THAT DOES NOT PARSE (the sixth pass, the follow-up). The controller has passed such a row by
     # since the second pass (`SpecController.units`); the workers read the rows of the units they were assigned in
