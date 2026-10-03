@@ -1992,10 +1992,11 @@ class RecWorker(VmsWorker):
     # was frozen — gives the writer up instead (`_close_store`).
     def lease_pass(self) -> list[str]:
         lost = super().lease_pass()
-        if self.recording_allowed:                   # a fenced instance decides nothing about volumes
+        if self.recording_allowed and not self.waiting_for_offer():   # a fenced instance, or one nobody yet, decides nothing about volumes
             try:
                 self.volume_pass()
             except OSError as e:
+                self.unanswered += 1                 # the hold's renewal too: the loop looks again at its next turn
                 self.store_errors += 1
                 quiet = self.clock() - self._hold_confirmed
                 if self.hold is not None and self.hold in self._shared and quiet >= self.slot_ttl - self.lease_margin:

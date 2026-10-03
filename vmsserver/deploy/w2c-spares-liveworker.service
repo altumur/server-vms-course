@@ -1,0 +1,18 @@
+# /etc/systemd/system/w2c-spares-liveworker.service — the one-shot its timer fires: spare live gateways
+# (`w2c-spares.sh liveworker`), for the label sets this server covers, as many as `live_workers_needed on /live/metrics` says and
+# `MAX_GATEWAYS` allows. Each is `systemd-run --unit vms-liveworker-spare-<n> --setenv SPARE_FOR=<set>`: it takes an offer
+# of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
+# `w2c-spares.service`.
+[Unit]
+Description=w2c: start spare live gateways the console says are missing
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/w2c-spares.sh liveworker
+EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/vms/vms.env
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

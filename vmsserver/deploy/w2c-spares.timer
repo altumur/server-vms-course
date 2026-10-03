@@ -1,0 +1,16 @@
+# /etc/systemd/system/w2c-spares.timer — ask the console, every minute, whether an archive is waiting
+# for a recorder (`w2c-spares.service`). The other roles have a timer each (`w2c-spares-<role>.timer`).
+#
+# One minute, because the thing being watched is an operator declaring an archive, or a server going
+# away, and the controller's own pass and the spare's start are seconds. `AccuracySec` keeps systemd from
+# waking the box for it.
+[Unit]
+Description=Start a recorder for every declared archive nobody holds
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

@@ -47,16 +47,16 @@ and the worker is the subsystem.
 #   decided and stored by the controller with a reason; revision, epoch and phase are not the operator's.
 # - `SpecController.POLICY_DEFAULTS` / `POLICY_CHOICES` — the administrator's knobs, one row `<name>/policy`
 #   written by the console (`acl_console` includes it) and read by the controller on every pass: `servers`
-#   is `shared` (default: every worker carries units, two on one server included — a box is that; a dead
-#   server's slot is the scheduler's to reschedule onto a neighbour) or `distinct` (one worker per server
-#   carries units, `idle_by_policy` names the rest; a server whose worker and resource are both silent is
-#   gone, `gone_servers`, and its units move). The jobspec says `spread`, so both are possible without
-#   touching Nomad.
+#   is `shared` (default: every worker carries units, two on one server included — a box is that) or
+#   `distinct` (one worker per server carries units, `idle_by_policy` names the rest). Under either, a server
+#   whose worker and resource are both silent is gone (`gone_servers`) and its units move: there is no scheduler
+#   to bring the worker back on a neighbour — the units go to the workers that are there, and a shortage is
+#   offered to a spare (`offer_spares`).
 # - `CONSTRAINTS` — the catalogue: `"none"` (always eligible) and `"labels-subset"` (`_labels_subset`).
 #   `requires: resource` is not a constraint on the unit but on the worker's server: `resource_state` reads
 #   `platform/resources/<server>/heartbeat` — `live`, `silent`, or `unknown` (never seen) — and `_pool`
 #   drops workers whose resource is silent; `redistribute` moves their units off with the reason
-#   `resource on <server> silent`. Nomad's `meta.archive` puts a worker where disks are declared; this is
+#   `resource on <server> silent`. A server's units put a worker where disks are declared; this is
 #   whether the resource there still answers. `unknown` passes: silent is a fact, unknown is not one.
 #   Extended only by `register_constraint`.
 #
@@ -76,6 +76,7 @@ and the worker is the subsystem.
 from __future__ import annotations
 
 import logging
+import math
 import os
 import re
 import threading
@@ -87,7 +88,9 @@ from urllib.parse import urlsplit
 from .doors import numeric, unnamable
 from .secrets import credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
-from .contract import ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, one_pass, slot_number
+from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, OFFER_GRACE, SLOTS,
+                       SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, label_set, one_pass, read_slot, slot_number,
+                       stored)
 from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
@@ -361,6 +364,11 @@ class SubsystemSpec:
     # drained on its own, and two copies on two disks of one server survive nothing the operator was buying
     # insurance against.
     place_by: str = "server"
+    # `offers: <prefix>` — this subsystem's controller offers a slot to a SPARE for every worker it is short of
+    # (`SpecController.offer_spares`), named `<prefix>-<n>` like the slots its workers make (`w`, `g`, `a`), and its
+    # console publishes `<name>_workers_needed` and the rest. "" (the default): no offers, no numbers — a recorder is
+    # placed by volume and counted by `rec_recorders_needed`; nobody starts spares for the others.
+    offers: str = ""
     # `retire_when: {field: state, in: [done, failed]}` — a unit whose row says one of those values is
     # FINISHED, and finished work is not placed. The first subsystem to need it is `detjob`, whose unit
     # ends; everything before it ran until an operator said stop.
@@ -454,6 +462,7 @@ class SubsystemSpec:
                    spread_by=str(pl.get("spread_by", "") or ""),
                    group_by=str(pl.get("group_by", "") or ""),
                    place_by=str(pl.get("place_by", "server") or "server"),
+                   offers=str(pl.get("offers", "") or ""),
                    home=str(pl.get("home", "") or ""),
                    retire_field=str((pl.get("retire_when") or {}).get("field", "") or ""),
                    retire_values=tuple(str(v) for v in ((pl.get("retire_when") or {}).get("in") or [])),
@@ -464,6 +473,8 @@ class SubsystemSpec:
                    running_gauge=str((d.get("console", {}) or {}).get("running", "units_running")),
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}))
+        if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
+            raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         # A secret in the snapshot is a secret leaving the cluster: `vms/snapshot/*` is what М12's directory
         # reads. Refused at LOAD time, not watched for at review time — and only when it is named, because
         # the default ("every field") is a convenience and not a decision.
@@ -901,8 +912,8 @@ class SpecController(Controller):
             return set()                               # its row did not read, and never has: it reaches no label known
         return self.node_labels_of(worker)
 
-    # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (`meta.labels` in a Nomad client's
-    # `client.hcl`), read by the worker when it starts: the first value of a new box and the fallback of every other.
+    # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (`/etc/vms/vms.env`,
+    # or a unit's), read by the worker when it starts: the first value of a new box and the fallback of every other.
     def node_labels_of(self, worker: str) -> set[str]:
         hb = self._said(worker)
         return set(l for l in str(hb.extra.get("labels", "")).split(",") if l) if hb else set()
@@ -1478,11 +1489,12 @@ class SpecController(Controller):
 
     # -- the administrator's knobs: one row, `<name>/policy`, written by the console ---------------
     # `servers`: `shared` (default) — every worker is a place to put units, two on one server included (a
-    # box IS several workers on one server); a dead server's slot is Nomad's to reschedule onto a neighbour
-    # (Lesson 4's power pull), and the controller waits for it. `distinct` — one worker per server carries
-    # units; a second worker Nomad put on the same server idles by policy, and a server whose worker and
-    # resource both fall silent is gone (`gone_servers`) — its units move. The jobspec says `spread`, so
-    # both are possible without touching Nomad; the administrator chooses on the console.
+    # box IS several workers on one server). `distinct` — one worker per server carries units; a second worker
+    # started on the same server idles by policy. Under either, a server whose worker and resource both fall
+    # silent is gone (`gone_servers`) and its units move to the workers that are there: under an orchestrator
+    # `shared` waited for the scheduler to bring the worker back on a neighbour, and without one nothing would
+    # (М11, the rework without an orchestrator) — what the living have no room for is offered to a spare
+    # (`offer_spares`). The administrator chooses on the console.
     POLICY_CHOICES = {"servers": ("distinct", "shared")}
 
     @property
@@ -1522,8 +1534,8 @@ class SpecController(Controller):
         return idle
 
     # -- what the worker's server must have: a resource, when the spec says so ---------------------
-    # The state of the resource on a server (`Controller.resource_state`: `live`, `silent`, `unknown`). Nomad's
-    # `meta.archive` constraint puts a worker where disks are declared; this is the live fact: whether the resource
+    # The state of the resource on a server (`Controller.resource_state`: `live`, `silent`, `unknown`). The
+    # server's units put a worker where disks are declared; this is the live fact: whether the resource
     # there still answers.
 
     # Workers whose server's resource is silent, when the spec requires one: not placed on, and (in
@@ -1542,22 +1554,23 @@ class SpecController(Controller):
         return [w for w in workers if self.resource_state(self.server_of(w)) == "silent"]
 
     # A server that is gone, not a process that crashed: the slot has lapsed and stayed lapsed for another
-    # `lost_after` — Nomad's chance to reschedule it onto a spare server, in which case the replacement
-    # claims the name and inherits the assignment (Lesson 4) — AND the resource on the slot's last known
-    # server is silent. One silence is a crash and is left alone; two independent silences from the same
-    # server are a fact about the server. Only when the spec requires a resource.
+    # `lost_after` — the server's supervisor's chance to bring the process back under its name — AND the resource on
+    # the slot's last known server is silent. One silence is a crash and is left alone; two independent silences from
+    # the same server are a fact about the server. Only when the spec requires a resource, under any policy.
     #
     # That is still the rule where the server's resource cannot say who runs on it (`_moves_off_silent`). Where it can,
-    # the one rule decides (`Controller.slot_fate`; the owner's decision on the review's eleventh pass): a dead process,
-    # a silent server, a hung one past `hung_move_after` — `move`, `hung_moved`. The name stays from when it meant only the
-    # first.
+    # the one rule decides (`Controller.slot_fate`; the owner's decisions on the review's eleventh pass and on the
+    # rework): a dead process at its slot's end, a silent server, a hung one past `hung_move_after` — `move`,
+    # `hung_moved`. The name stays from when it meant only the second.
     def gone_servers(self, lost_after: float = 45.0) -> dict[str, str]:
         """Slots that stopped renewing whose units move now (`slot_fate`: move, hung_moved): {slot: server}."""
         return {w: server for w, (fate, server, _) in self.fates().items()
                 if fate in ("move", "hung_moved") and self.assignment(w).units}
 
+    # Under `shared` too: it waited for an orchestrator to reschedule the worker onto a neighbour, and there is none —
+    # a gone server's units waited for ever (the rework without an orchestrator).
     def _moves_off_silent(self) -> bool:
-        return self.spec.requires == "resource" and self.policy()["servers"] == "distinct"   # shared: Nomad's to reschedule onto a neighbour
+        return self.spec.requires == "resource"
 
     # The given list, or the workers seen heartbeating in the last 45 s; minus those whose resource is
     # silent when the spec requires one; sorted.
@@ -1835,6 +1848,10 @@ class SpecController(Controller):
     #                      decommissions carried out; `decommission_requests_standing` those whose server still
     #                      answers; `workers_hung` workers whose process runs on a server that answers and that neither
     #                      renew nor speak (`slot_fate`) — the product's names
+    #   units_short, workers_needed, spare_offers, spares_starting
+    #                      per label set, where the spec says `offers` (`offer_spares`): what nothing live has room
+    #                      for, the workers that makes, the offers standing for them, the offers a spare took whose
+    #                      worker is not heard yet
     #
     # The steps each in a `try` of their own (the review's second pass, M7): they shared one, so a
     # `redistribute` that raised on one released slot kept `ensure_home` from ever running, every pass. Four since
@@ -1875,12 +1892,18 @@ class SpecController(Controller):
 
         def release_unlisted():
             slots.update(self.release_unlisted())
+        spares = {}
+
+        def offer_spares():                           # the numbers and the offers LAST: after every move this pass made
+            if self.spec.offers:
+                spares.update(self.offer_spares())
         for step, run in (("apply_decommissions", apply_decommissions),           # a server gone for good, once it is silent
                           ("release_unlisted", release_unlisted),                 # a slot its server's resource lists nowhere
                           ("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
                           ("ensure_reach", self.ensure_reach),                     # a unit its server no longer reaches: moved, or unplaced with why
                           ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
-                          ("ensure_home", lambda: self.ensure_home(home_budget))): # a unit back to the server its row names, if it is back
+                          ("ensure_home", lambda: self.ensure_home(home_budget)),  # a unit back to the server its row names, if it is back
+                          ("offer_spares", offer_spares)):                         # what nothing live has room for: numbers, and offers to spares
             try:
                 run()
             except Exception as e:                    # noqa: BLE001
@@ -1912,6 +1935,9 @@ class SpecController(Controller):
         # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
         rep["reach_waiting"] = self.last_reach_waiting
         rep["servers_labels_unread"] = len(self._server_rows_unread)
+        # The spares' numbers, per label set (`offer_spares`; the product's names): what the console publishes as
+        # `<name>_workers_needed`, `_units_short`, `_spare_offers` while this report is fresh
+        rep.update(spares)
         try:
             rep["unplaced"] = len(self.unplaced())
             rep["garbled"] = self.rows_garbled
@@ -2085,28 +2111,7 @@ class SpecController(Controller):
         self.unplace_deleted()
         moves = []
         seen = sorted(workers if workers is not None else self.workers_seen())
-        # a released slot — and, when the spec requires a resource, a live worker whose server's resource
-        # went silent: it heartbeats, but it has nowhere to write; its units go to workers that do
-        gone_for = {g: f"slot {g} released" for g in self.released_slots()}
-        for w in self.without_resource(seen):
-            if self.assignment(w).units:
-                gone_for.setdefault(w, f"resource on {self.server_of(w)} silent")
-        # …and a live worker that holds NO PLACE where the subsystem places by one (feedback BN): a recorder
-        # that lost its volume — two restarted, the other took it — is alive, keeps its slot and cannot write
-        # a byte, and the recordings assigned to it used to stay there, recorded by nobody, for as long as it
-        # lived. It says so itself (`place` empty in its heartbeat); its units go to a worker that has a place.
-        for w in self.placeless(seen):
-            if self.assignment(w).units:
-                gone_for.setdefault(w, f"{w} holds no {self.spec.place_by} now")
-        for w in self.on_draining(seen):                               # an operator said this machine is about to stop
-            if self.assignment(w).units:
-                gone_for.setdefault(w, f"server {self.server_of(w)} draining")
-        for w in self.on_decommissioned(seen):                         # …or that it is gone for good, and something on it speaks
-            if self.assignment(w).units:
-                gone_for.setdefault(w, f"server {self.server_of(w)} decommissioned")
-        for w, (fate, server, why) in self.fates().items():           # a slot that stopped renewing, and its units move (`slot_fate`)
-            if fate in ("move", "hung_moved") and self.assignment(w).units:
-                gone_for.setdefault(w, why)
+        gone_for = self.leaving(seen)
         idx = None                                    # one look at what is followed, taken when a unit is moved
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
@@ -2135,6 +2140,117 @@ class SpecController(Controller):
                 if self.move_from(uid, gone, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}"):
                     moves.append((uid, gone, best))
         return moves
+
+    # The workers whose units must go, and why — `redistribute` moves them, `offer_spares` counts what is left on them
+    # as short: `{worker: why}`, `seen` the workers seen heartbeating.
+    def leaving(self, seen: list[str]) -> dict[str, str]:
+        # a released slot — and, when the spec requires a resource, a live worker whose server's resource
+        # went silent: it heartbeats, but it has nowhere to write; its units go to workers that do
+        gone_for = {g: f"slot {g} released" for g in self.released_slots()}
+        for w in self.without_resource(seen):
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"resource on {self.server_of(w)} silent")
+        # …and a live worker that holds NO PLACE where the subsystem places by one (feedback BN): a recorder
+        # that lost its volume — two restarted, the other took it — is alive, keeps its slot and cannot write
+        # a byte, and the recordings assigned to it used to stay there, recorded by nobody, for as long as it
+        # lived. It says so itself (`place` empty in its heartbeat); its units go to a worker that has a place.
+        for w in self.placeless(seen):
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"{w} holds no {self.spec.place_by} now")
+        for w in self.on_draining(seen):                               # an operator said this machine is about to stop
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"server {self.server_of(w)} draining")
+        for w in self.on_decommissioned(seen):                         # …or that it is gone for good, and something on it speaks
+            if self.assignment(w).units:
+                gone_for.setdefault(w, f"server {self.server_of(w)} decommissioned")
+        for w, (fate, server, why) in self.fates().items():           # a slot that stopped renewing, and its units move (`slot_fate`)
+            if fate in ("move", "hung_moved") and self.assignment(w).units:
+                gone_for.setdefault(w, why)
+        return gone_for
+
+    # -- spares: the numbers, and the offers (the М11 rework; the product's c62e236) ------------------------------------
+    # THE CONTROLLER NEVER STARTS A PROCESS. Under an orchestrator the scheduler brought a dead server's worker back on a
+    # neighbour; without one the host does it — `w2c-spares.sh`, run by root from a timer the operator installed on
+    # purpose — and the controller publishes what is missing, and where. Last in the pass (`_pass_once`): after the
+    # decommissions, the moves off dead slots and `redistribute` have put every unit they could on the room there is,
+    # so a server's death raises no spare while the living have room.
+    #
+    #   waiting       per label set (a unit's `labels` under `labels-subset`; "" for every unit otherwise): units with no
+    #                 placement, and units still on a worker that is leaving (`leaving`: a released slot, a silent
+    #                 resource, a drained or decommissioned server, a dead slot whose fate is `move`). Not a hung
+    #                 worker's, not a slot's before its fate says move — those are waited for, not short
+    #   free          the room (`capacity − load`) of the workers in the pool whose labels cover the set
+    #   units_short   waiting − free, at least 0. A set no live worker covers has no free room: short by itself
+    #   needed        ceil(units_short / CAPACITY), less the offers of the set a spare took and whose worker has not
+    #                 been heard yet — for `OFFER_GRACE` (90 s) from the take it is a worker on its way
+    #
+    # ONE OFFER PER WORKER NEEDED. A nameless process MAKES a slot, `w-(N+1)` — so "the extra spares find no slot and
+    # wait" needs a slot only a spare may take: `<sub>/slots/<prefix>-<N>` `{holder:"", until:"0", released:"false",
+    # gen:"0", offer:"<set>", offered_at:<ts>}`, created with `cas=0` under the next free number. An offer not needed
+    # any more is deleted by CAS — one a spare took a moment ago is not the controller's to delete. A spare
+    # (`SPARE_FOR=<set>`) takes only an offer of its set (`Worker._claim_offer`); an ordinary process never takes one
+    # (`Slot.claimable`). Only where the spec says `offers: <prefix>`.
+    def offer_spares(self) -> dict:
+        """`{"units_short", "workers_needed", "spare_offers", "spares_starting"}`, each `{label set: n}` — the empty set
+        always there."""
+        now = self.wall()
+        pool = self._pool(None)
+        leaving = self.leaving(sorted(self.workers_seen()))
+        key = (lambda row: label_set(row.get("labels") or [])) if self.spec.constraint == "labels-subset" else (lambda row: "")
+        waiting: dict[str, int] = {"": 0}
+        for row in self.units():
+            if self.retired(row):
+                continue
+            pl = self.placement(row["id"])
+            short = pl is None or pl.worker in leaving
+            waiting[key(row)] = waiting.get(key(row), 0) + short       # every set a unit asks for, 0 too: a row a scrape sees fall
+        prefix = self.sub.name + "/slots/"
+        names, offers, starting, heard = [], {}, {}, set(self.workers_seen())
+        for path in self.vars.list(prefix):
+            name = path[len(prefix):]
+            names.append(name)
+            items, idx = stored(self.vars, path, SLOTS)
+            s = read_slot(path, name, items)
+            if s is None or s.offer is None:
+                continue
+            if s.offered():
+                offers.setdefault(label_set(s.offer), []).append((name, idx))
+            elif s.holder and not s.released and name not in heard and now - s.taken_at < OFFER_GRACE:
+                starting[label_set(s.offer)] = starting.get(label_set(s.offer), 0) + 1
+        rule = CONSTRAINTS[self.spec.constraint]
+        out = {"units_short": {}, "workers_needed": {}, "spare_offers": {}, "spares_starting": {}}
+        per = max(1, int(self.capacity))
+        for labels in sorted(set(waiting) | set(offers) | set(starting)):
+            asks = {"labels": [l for l in labels.split(",") if l]}
+            free = sum(max(0, self.capacity_of(w) - self.load(w)) for w in pool if rule(asks, self.labels_of(w)))
+            short = max(0, waiting.get(labels, 0) - free)
+            needed = max(0, math.ceil(short / per) - starting.get(labels, 0))
+            have = sorted(offers.get(labels, []), key=lambda o: (slot_number(o[0]), o[0]))
+            for name, idx in have[needed:][::-1]:            # the newest first; one a spare took meanwhile is its own
+                try:
+                    self.vars.delete(prefix + name, cas=idx)
+                    have.remove((name, idx))
+                except Conflict:
+                    pass
+            for _ in range(needed - len(have)):
+                if self._offer(names, labels, now):
+                    have.append(("", 0))
+            out["units_short"][labels], out["workers_needed"][labels] = short, needed
+            out["spare_offers"][labels], out["spares_starting"][labels] = len(have), starting.get(labels, 0)
+        return out
+
+    # One offer for `labels`, created under the next number nobody has (`cas=0`); one made under us: the next number.
+    def _offer(self, names: list, labels: str, now: float) -> bool:
+        for _ in range(10):
+            name = f"{self.spec.offers}-{max([slot_number(n) for n in names] + [0]) + 1}"
+            names.append(name)
+            try:
+                self.vars.put(self.sub.slot_key(name), {"holder": "", "until": "0", "released": "false", "gen": "0",
+                                                        "offer": labels, "offered_at": str(now)}, cas=0)
+                return True
+            except Conflict:
+                continue
+        return False
 
     # Units placed away from the home their row names, moved back — at most `budget` a pass, because every
     # move is a new epoch and a seam in the recording. It is the other half of `home`: the preference in

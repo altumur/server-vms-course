@@ -526,7 +526,8 @@ class VmsWorker(Worker):
         self.epoch_errors: dict[str, str] = {}                # camera -> why its epoch could not be taken (a garbled row)
         self.row_errors: dict[str, str] = {}                  # camera -> why its own row is not followed (it does not parse)
         self.server = runtime.server(env, server)             # before the claim: a process on a decommissioned server gets no slot
-        self.claim_slot(prefer=name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX))
+        # …or, started as a spare (`SPARE_FOR`), an offer of its set — none: nobody, waiting (`Worker.claim_at_start`)
+        self.claim_at_start(name if name is not None else slot_from_environment(env, self.NAME_ENV, self.SLOT_PREFIX), env)
         self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)                                 # the tee's shared-memory branch, for subscribers on this server
         # THIS instance's two doors. Defaults are what they always were, so a box with one worker is
@@ -1119,9 +1120,13 @@ class VmsWorker(Worker):
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one camera stops and gives its epoch up."""
+        if self.recording_allowed and self.waiting_for_offer():
+            self._seek_slot()                         # a spare with no offer yet: nobody, holding nothing — not a fence
+            return []
         try:
             mine = self.renew_slot()
         except OSError as e:
+            self.unanswered += 1
             self.store_errors += 1
             log.warning("%s: the store did not answer for the slot (%s); still %s", self.name, e, self.name)
             mine = True
@@ -2556,7 +2561,7 @@ class VmsWorker(Worker):
         stand_in = self.start_stand_in()
         with self.guarded("heartbeat"):
             self.heartbeat_once()
-        last_lease, last_hb = 0.0, self.clock()
+        last_lease, last_hb, again = 0.0, self.clock(), False
         while not stop.is_set():
             # The WORK, and whatever it raises stays in here. Two tries, not one: what is LOCAL — draining the
             # pipelines' buses, the devices' events — does not wait for the pass over the store to succeed
@@ -2588,11 +2593,19 @@ class VmsWorker(Worker):
             # recorder's lease step, and the heartbeat after it never went — every recorder of the cluster dead to the
             # controller at 45 s, the holds of network volumes unconfirmed, the engine's fence refusing every frame. A
             # lease step that raised is retried on the next turn (`last_lease` stays); the heartbeat goes regardless.
+            #
+            # THE NEXT STEP FROM THE START OF THIS ONE, AND AT ONCE AFTER ONE THE STORE DID NOT ANSWER (the raft
+            # prototype's finding, `_notes-ru/raft-prototype.md`). `last_lease` was taken after the step: a step that
+            # waited out a store electing a leader for 9.6 s pushed the next one 9.6 s later, and a renewal that failed
+            # waited a whole period more — `2T + P` without a confirmation, past the 25 s window at a pause of ten
+            # seconds (29.7 s measured). From the step's start, and the next look after a step with a renewal unanswered
+            # (`Worker.unanswered`): `T + P + poll`, inside the window up to a pause of ~13 s. `tests/test_lease_step.py`.
             try:
-                if self.clock() - last_lease >= lease_every:
+                if again or self.clock() - last_lease >= lease_every:
+                    unanswered, started = self.unanswered, self.clock()
                     with self.guarded("lease"):
                         self.lease_pass()
-                    last_lease = self.clock()
+                    last_lease, again = started, self.unanswered > unanswered
             except Exception:                              # noqa: BLE001
                 self.pass_failures += 1
                 log.exception("%s: the lease step failed; will retry, and the heartbeat goes all the same", self.name)

@@ -243,3 +243,125 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
     assert "declared for srv-1: /data/disk-2 (disk-2)" in out.stdout and "/data/theirs" not in out.stdout
     out, calls = _install_obsd()                                               # no store to read: said, not passed over
     assert "no volume declared for srv-1" in out.stdout
+
+
+def _spares(*args, pages=None, env=None, active=(), linux=True):
+    """`w2c-spares.sh` RUN, every command it talks to a shim: `curl` answers from `pages` (`{path: text}`, a missing
+    path is a console that does not answer), `systemd-run` writes its line down and the unit is active from then on,
+    `systemctl is-active` says so for `active` and what was started. `(the finished process, the lines)`. `linux`
+    False: no `systemd-run` anywhere on PATH, `uname` says Darwin — the macOS path, `SPARES_RUN` a shim that writes down
+    its verb and `SPARE_FOR` and stays up."""
+    import shutil
+    import subprocess
+    import tempfile
+    bin_ = tempfile.mkdtemp(prefix="w2c-spares-")
+    log = os.path.join(bin_, "calls")
+    open(log, "w").close()
+    for path, text in (pages or {}).items():
+        with open(os.path.join(bin_, "page" + path.replace("/", "_")), "w") as f:
+            f.write(text)
+    for unit in active:
+        open(os.path.join(bin_, "active-" + unit), "w").close()
+    says = {"curl": f'for a; do url=$a; done; f="{bin_}/page$(printf %s "${{url#http://console}}" | tr / _)"; '
+                    f'[ -f "$f" ] && cat "$f" || exit 22',
+            "systemd-run": f'echo "systemd-run $*" >> "{log}"; : > "{bin_}/active-$2"',
+            "systemctl": f'case "$1" in is-active) [ -f "{bin_}/active-$3" ] ;; *) echo "systemctl $*" >> "{log}" ;; esac',
+            "getent": "exit 2",
+            "uname": "echo Darwin",
+            "run": f'echo "run $1 SPARE_FOR=${{SPARE_FOR-unset}}" >> "{log}"; exec sleep 30'}
+    names = ("curl", "systemd-run", "systemctl", "getent") if linux else ("curl", "uname", "run")
+    for name in names:
+        with open(os.path.join(bin_, name), "w") as f:
+            f.write(f"#!/bin/sh\n{says[name]}\n")
+        os.chmod(os.path.join(bin_, name), 0o755)
+    path = bin_ + os.pathsep + os.environ.get("PATH", "")
+    if not linux:                                    # only the shims and the plain tools: no systemd-run to be found
+        for tool in ("sed", "grep", "tr", "cat", "mkdir", "env", "nohup", "sleep", "hostname"):
+            os.symlink(shutil.which(tool), os.path.join(bin_, tool))
+        path = bin_
+    full = {"PATH": path, "CONSOLE": "http://console", "SERVER_NAME": "srv-a", "SPARES_DIR": os.path.join(bin_, "spares"),
+            "SPARES_RUN": os.path.join(bin_, "run") if not linux else "/opt/vms/bin/vms-run.sh", **(env or {})}
+    out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "w2c-spares.sh"), *args], env=full, capture_output=True,
+                         text=True, timeout=30)
+    if not linux:
+        import time
+        time.sleep(0.5)                              # the spares, started in the background, write their line
+    calls = [line.strip() for line in open(log)]
+    for pid in (os.listdir(full["SPARES_DIR"]) if os.path.isdir(full["SPARES_DIR"]) else ()):
+        if pid.endswith(".pid"):
+            subprocess.run(["kill", open(os.path.join(full["SPARES_DIR"], pid)).read().strip()], capture_output=True)
+    return out, calls
+
+
+NEEDED = """# TYPE vms_workers_needed gauge
+vms_workers_needed{labels=""} 1
+vms_workers_needed{labels="vlan:dmz"} 2
+vms_workers_needed{labels="vlan:x"} 1
+# TYPE vms_server_labels gauge
+vms_server_labels{server="srv-a",labels="vlan:dmz",source="console"} 1
+vms_server_labels{server="srv-b",labels="vlan:x",source="console"} 1
+"""
+
+
+def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing():
+    """The product's P5, the course's `w2c-spares.sh vmsworker`, run with its commands shimmed. The console wants one
+    camera worker on no label, two on `vlan:dmz`, one on `vlan:x`; srv-a reaches `vlan:dmz` by the console's row
+    (`vms_server_labels … source="console"`). Under `MAX_WORKERS=2`: a spare for the empty set and one for `vlan:dmz`,
+    each `systemd-run --unit vms-vmsworker-spare-<n> --setenv SPARE_FOR=<set>`; none for `vlan:x`, which srv-a does not
+    reach; the second `vlan:dmz` not, the ceiling. Run again: the two run, the ceiling is reached, nothing more. Never a
+    stop, never a kill."""
+    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"})
+    assert out.returncode == 0, out.stderr
+    started = [c for c in calls if c.startswith("systemd-run")]
+    assert started == [
+        "systemd-run --unit vms-vmsworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR= "
+        "/opt/vms/bin/vms-run.sh worker",
+        "systemd-run --unit vms-vmsworker-spare-2 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR=vlan:dmz "
+        "/opt/vms/bin/vms-run.sh worker"], calls
+    assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
+    assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
+    out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"},
+                         active=("vms-vmsworker-spare-1", "vms-vmsworker-spare-2"))
+    assert out.returncode == 0 and not [c for c in calls if c.startswith("systemd-run")], calls
+
+
+def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console():
+    """No `vms_server_labels` row with `source="console"` for this server: the host's `$LABELS`. A console that does
+    not answer, and one whose controller's pass is stale (the page carries no `vms_workers_needed`): nothing started,
+    and the script ends 0 — the console being away is not a reason to start anything. Roles from `SPARES_ROLES`; a
+    recorder by `rec_recorders_needed` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
+    no_row = NEEDED.replace('server="srv-a"', 'server="srv-c"')
+    out, calls = _spares("vmsworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
+    assert [c.split()[2] + " " + c.split()[5] for c in calls if c.startswith("systemd-run")] == \
+        ["vms-vmsworker-spare-1 SPARE_FOR=", "vms-vmsworker-spare-2 SPARE_FOR=vlan:x"], calls
+    out, calls = _spares("vmsworker", pages={})
+    assert out.returncode == 0 and calls == [] and "no answer" in out.stderr, out.stderr
+    out, calls = _spares("vmsworker", pages={"/metrics": "vms_units_unplaced 3\n"})
+    assert out.returncode == 0 and calls == [] and "nothing started" in out.stdout, out.stdout
+    out, calls = _spares(pages={"/rec/metrics": "rec_recorders_needed 1\n", "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
+                         env={"SPARES_ROLES": "recworker,liveworker"})
+    assert [c for c in calls if c.startswith("systemd-run")] == [
+        "systemd-run --unit vms-recworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env /opt/vms/bin/vms-run.sh recorder",
+        "systemd-run --unit vms-liveworker-spare-1 --property=EnvironmentFile=-/etc/vms/vms.env --setenv SPARE_FOR= "
+        "/opt/vms/bin/vms-run.sh gateway"], calls
+
+
+def test_the_spares_script_on_macos_starts_a_spare_with_nohup_and_counts_it_by_its_pid():
+    """No `systemd-run`, and `uname` says Darwin: `nohup env SPARE_FOR=<set> $SPARES_RUN <verb>`, the pid in
+    `$SPARES_DIR/vms-<role>-spare-<n>.pid` — what the next run counts against the ceiling."""
+    out, calls = _spares("autoworker", pages={"/auto/metrics": 'auto_workers_needed{labels=""} 1\n'}, linux=False)
+    assert out.returncode == 0, out.stderr
+    assert calls == ["run autoworker SPARE_FOR="], calls + [out.stdout, out.stderr]
+    assert "started vms-autoworker-spare-1" in out.stdout
+
+
+def test_every_spares_unit_runs_the_script_for_its_role():
+    """`w2c-spares.{service,timer}` for recorders, `w2c-spares-<role>.{service,timer}` for the camera workers, the
+    gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
+    each timer every minute."""
+    for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
+        name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
+        svc = unit(name + ".service")["Service"]
+        assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
+        assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
+    assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)

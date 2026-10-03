@@ -1,0 +1,13 @@
+# /etc/systemd/system/w2c-spares-autoworker.timer — ask the console, every minute, whether evaluators are missing on
+# label sets this server covers (`w2c-spares-autoworker.service`). A minute, as `w2c-spares.timer`: a spare that takes
+# an offer heartbeats within seconds, and the controller counts a taken offer as issued for 90 s meanwhile.
+[Unit]
+Description=Start spare evaluators the console says are missing
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

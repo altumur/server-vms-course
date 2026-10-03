@@ -85,8 +85,7 @@ def test_a_server_gone_with_nowhere_to_reschedule_the_controller_moves_the_camer
     server, and the controller moves w-1's cameras to the worker that is here.
     One silence — a crashed process, its resource still answering — moves
     nothing: that process returns under the same name. Under `shared` (the
-    default) the controller does not act at all: Lesson 4's power pull — Nomad's
-    replacement on srv-b takes the slot and the assignment."""
+    default) the same: there is no orchestrator to bring w-1 back on srv-b."""
     from cluster.resource import cluster_resource
     c, ctl, a, act_a = _recording()
     assert ctl.policy() == {"servers": "shared"}                                              # the default: a box is several workers on one server
@@ -113,12 +112,13 @@ def test_a_server_gone_with_nowhere_to_reschedule_the_controller_moves_the_camer
     assert ctl.resource_state("srv-a") == "live" and ctl.where(1) == "w-2"                   # adding a place to record moves nothing
     # the fenced instance's footage is intact under e1; B's under e2 — the timeline says whose is whose
     assert act_a.epochs == {1: 1, 2: 1, 3: 1}
-    # under `shared`, the same two silences move nothing: the slot is Nomad's to reschedule, and its replacement inherits
+    # under `shared` the same two silences move the cameras too: it waited for an orchestrator to reschedule w-1 onto a
+    # neighbour, and without one nothing would (the rework without an orchestrator, `SpecController._moves_off_silent`)
     ctl.set_policy({"servers": "shared"})
     ctl.create_camera({"source": "driverpack://file/9.mp4"}); assert ctl.ensure_placed()[-1].worker == "w-1"   # w-1, back on srv-a, has the most room
     c.wall.advance(2 * LOST_AFTER + 3); b.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()   # srv-a dies again, w-1 with it
-    assert ctl.slots()["w-1"].lapsed(c.wall()) and ctl.gone_servers() == {} and ctl.redistribute() == []
-    assert ctl.where(4) == "w-1"                                                               # waits for Nomad's replacement to claim w-1
+    assert ctl.slots()["w-1"].lapsed(c.wall()) and ctl.gone_servers() == {"w-1": "srv-a"}
+    assert [(m[1], m[2]) for m in ctl.redistribute()] == [("w-1", "w-2")] and ctl.where(4) == "w-2"
 
 
 def test_the_old_instance_wakes_up_and_the_archive_is_intact():

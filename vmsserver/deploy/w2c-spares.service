@@ -1,0 +1,25 @@
+# /etc/systemd/system/w2c-spares.service — the one-shot the timer fires: spare RECORDERS (`w2c-spares.sh recworker`).
+# The other roles have a pair each (`w2c-spares-vmsworker`, `-liveworker`, `-autoworker`): one per role, so a spare
+# is started with its own role's rights and groups, and a role can be switched on alone.
+#
+# Deliberately NOT a container. It talks to systemd on this host, and the two ways to let a container do
+# that are a privileged container or the D-Bus socket bind-mounted into it — both of which hand root on
+# the box to something that also speaks HTTP to the world. This is a page of shell run by root, once
+# a minute, with no listening socket; that is the smaller thing to audit.
+[Unit]
+Description=w2c: start a recorder for every declared archive nobody holds
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/w2c-spares.sh recworker
+# CONSOLE, MAX_RECORDERS, SERVER_NAME, SPARES_RUN — the same files the units read, so the box has one place to
+# configure. `-` because a box that has not written one yet is a box with the defaults, not a failure.
+EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/vms/vms.env
+# It starts units, so it cannot be locked down to nothing — but it has no reason to write anywhere, and
+# `ProtectSystem=strict` makes the difference visible in the unit rather than in a review comment.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

@@ -18,6 +18,7 @@ placement:
   headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
   tie_break:  most-free-capacity
+  offers:     g                                 # a gateway short on a label set is offered to a spare (`live_workers_needed`)
   rebalance:  {dead_band: 0.10}
 snapshot: [cam, labels]
 console:

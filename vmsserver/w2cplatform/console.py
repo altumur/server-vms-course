@@ -113,7 +113,8 @@ from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
-                       DecommissionRefused, SchemaTooNew, builds, is_live, parse_heartbeat, read_slot, schema_version)
+                       DecommissionRefused, SchemaTooNew, builds, is_live, label_set, parse_heartbeat, read_slot,
+                       schema_version)
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
@@ -1732,9 +1733,43 @@ class SpecConsole:
                       f"{p}_blobs_total {len(self.ctl.objects.list(self.ctl.sub.blobs_prefix()))}",
                       f"# TYPE {p}_blobs_marked gauge",
                       f"{p}_blobs_marked {len(marked)}"]
+        if self.spec.offers:
+            lines += self.spares_lines(rep, now, hbs)
         if self.metrics_extra is not None:
             lines += list(self.metrics_extra())                # the subsystem's own numbers, in its own words
         return "\n".join(lines) + "\n"
+
+    # WHAT A HOST'S SPARES SCRIPT READS (the М11 rework; the product's names): `<p>_workers_needed{labels}` — the empty
+    # set's row always — `<p>_units_short{labels}`, `<p>_spare_offers{labels}` from the controller's pass report
+    # (`SpecController.offer_spares`), and `<p>_server_labels{server,labels,source}`: what each server reaches, the
+    # console's row (`source="console"`) or its workers' word (`"node"`). On `/metrics`, which asks no token — and ONLY
+    # while the pass is at most `SPARES_FRESH` old: a script reading the number of a controller that stopped would start
+    # processes for a shortage that may be long gone. A stale pass: none of the four, and `w2c-spares.sh` starts nothing.
+    SPARES_FRESH = 60.0
+
+    def spares_lines(self, rep: dict, now: float, hbs: dict) -> list[str]:
+        p, rk = self.spec.name, f"{self.spec.name}/controller/pass"
+        ts = number(f"{rk}#ts", rep.get("ts"), float, None)
+        if ts is None or now - ts > self.SPARES_FRESH:
+            return []
+        lines = []
+        for field, metric in (("workers_needed", "workers_needed"), ("units_short", "units_short"),
+                              ("spare_offers", "spare_offers")):
+            said = rep.get(field) if isinstance(rep.get(field), dict) else {}
+            sets = {"": 0, **{str(k): v for k, v in said.items()}} if field == "workers_needed" else said
+            lines += [f"# TYPE {p}_{metric} gauge",
+                      *[f'{p}_{metric}{{labels="{label(s)}"}} {number(f"{rk}#{field}.{s}", v, int, 0)}'
+                        for s, v in sorted(sets.items(), key=lambda x: str(x[0]))]]
+        rows = self.ctl.server_labels() or {}
+        node: dict[str, set] = {}
+        for w, hb in hbs.items():
+            if isinstance(hb.extra.get("server"), str):
+                node.setdefault(hb.extra["server"], set()).update(l for l in str(hb.extra.get("labels", "")).split(",") if l)
+        lines.append(f"# TYPE {p}_server_labels gauge")
+        for server in sorted(self.ctl.servers_known()):
+            said, source = (rows[server], "console") if server in rows else (node.get(server, ()), "node")
+            lines.append(f'{p}_server_labels{{server="{label(server)}",labels="{label(label_set(said))}",source="{source}"}} 1')
+        return lines
 
     # -- writes ---------------------------------------------------------------------------------
     # `ctl.create(body)` → 201 with the row plus `worker: None` (placed by the controller's next pass, never

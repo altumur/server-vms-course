@@ -1,0 +1,18 @@
+# /etc/systemd/system/w2c-spares-vmsworker.service — the one-shot its timer fires: spare camera workers
+# (`w2c-spares.sh vmsworker`), for the label sets this server covers, as many as `vms_workers_needed on /metrics` says and
+# `MAX_WORKERS` allows. Each is `systemd-run --unit vms-vmsworker-spare-<n> --setenv SPARE_FOR=<set>`: it takes an offer
+# of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
+# `w2c-spares.service`.
+[Unit]
+Description=w2c: start spare camera workers the console says are missing
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/w2c-spares.sh vmsworker
+EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/vms/vms.env
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

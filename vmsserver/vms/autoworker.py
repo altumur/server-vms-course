@@ -106,7 +106,7 @@ class AutoWorker(Worker):
                  archive_root: str | None = None, env: dict | None = None, catalog: Catalog | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(AUTO, None, vars_, objects, clock=clock, wall=wall)
-        self.claim_slot(prefer=name if name is not None else runtime.slot(env, "AUTO_NAME", "a"))
+        self.claim_at_start(name if name is not None else runtime.slot(env, "AUTO_NAME", "a"), env)   # a spare: an offer
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)
@@ -626,6 +626,7 @@ class AutoWorker(Worker):
         stop = stop or threading.Event()
         lease_every = max(1.0, (self.lease_ttl - self.lease_margin) / 3)
         last_lease = last_hb = self.clock()
+        again = False                               # the last lease step had a renewal the store did not answer
         last_full = -math.inf                       # when the last ordinary pass — over every scenario — began
         woken = False                               # whether this pass began early, at a resource's answer (`Worker.wait_next`)
         touched: set | None = None                  # …and what the answers said changed: the scenarios it evaluates
@@ -646,10 +647,12 @@ class AutoWorker(Worker):
             if self.wake is not None:                 # the next early pass no sooner than the load allows (`Wake.pace`)
                 self.wake.pace(self.clock() - began, self._refused)
             try:                                      # in a try of its own: a pass that raises still holds its scenarios
-                if self.clock() - last_lease >= lease_every:
+                # from the step's START, and at the next look after one the store did not answer (`VmsWorker.run`)
+                if again or self.clock() - last_lease >= lease_every:
+                    unanswered, started = self.unanswered, self.clock()
                     with self.guarded("lease"):
                         self.lease_pass()
-                    last_lease = self.clock()
+                    last_lease, again = started, self.unanswered > unanswered
             except Exception:                         # noqa: BLE001
                 log.exception("%s: the lease step failed; the heartbeat goes all the same", self.name)
             # …and the heartbeat in one of ITS own (the review's seventh pass, part 2): they shared a `try`, so a lease
