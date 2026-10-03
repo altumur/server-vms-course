@@ -729,6 +729,73 @@ def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_fo
     assert fwd.asks_book() == {"a|b": json.loads(road)}                   # torn now: the one read last
 
 
+def test_a_torn_entry_of_the_upstream_book_or_of_the_book_of_asks_stops_no_other_scenarios_asks():
+    """vmsserver's eleventh review, a major — a run: `publish_asks` read the entries of the upstream book and of the book
+    of asks bare, and `upstream/east[SN7001] = "{"` — the entry the test above tears — raised out of it for every
+    scenario: no camera's right to ask was issued again. Each entry is read through `BOOKS` now: a torn entry of the
+    book of asks is issued anew, a torn upstream entry is "not pushed up" — counted, and every scenario is served. A
+    scenario that is not an object is skipped and counted (`SCENARIOS`), and both show on the console's `/healthz`."""
+    from domain.agent import UPSTREAM_PATH
+    from domain.ingest import ASKS_PATH, BOOKS, publish_asks
+    from domain.scenario import SCENARIOS, pairs
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, domain_pass = _chain(wall)
+    gate = DeviceCluster("SN7002", FakeVariables(), wall=wall, pushes=True)
+    gate.boot()
+    crossings = domain_pass.crossings
+    crossings.view.fed.add(member_copy(gate.name, north.objects, wall=wall))
+    DomainAgent(gate.name, north.vars, gate.flash, now=wall, domain_objects=north.objects,
+                published=gate.local_objects()).sync()
+    crossings.view.refresh()
+    scenarios = [{"trigger": "SN7002", "target": SERIAL, "actions": [{"preset": 3}]}]
+    home = crossings.view.last_known("SN7002")[0]
+    assert json.loads(publish_asks(crossings, scenarios)[home][SERIAL])["roads"]
+    items, idx = north.vars.get(f"{UPSTREAM_PATH}/east")
+    north.vars.put(f"{UPSTREAM_PATH}/east", {**(items or {}), SERIAL: "{"}, cas=idx)      # the upstream entry, torn
+    items, idx = north.vars.get(f"{ASKS_PATH}/{home}")
+    north.vars.put(f"{ASKS_PATH}/{home}", {**items, SERIAL: '{"roads": [{"cluster": "east", "until": "'}, cas=idx)
+    books = publish_asks(crossings, scenarios)
+    roads = json.loads(books[home][SERIAL])["roads"]
+    assert roads and all(r["token"] for r in roads)                     # issued anew
+    assert {f"{UPSTREAM_PATH}/east/{SERIAL}", f"{ASKS_PATH}/{home}/{SERIAL}"} <= BOOKS.bad
+    settings = {"scenarios": [7, {"when": [], "then": {}},
+                              {"when": {"camera": "SN7002", "kind": "motion"}, "then": {"camera": SERIAL, "preset": 3}}]}
+    assert [(p["trigger"], p["target"]) for p in pairs(settings)] == [("SN7002", SERIAL)]
+    assert {"settings/scenarios/0", "settings/scenarios/1"} <= SCENARIOS.bad
+    from domain.console import GARBLED_SHOWN
+    assert {"book_entry", "scenario"} <= set(GARBLED_SHOWN)
+
+
+def test_a_torn_entry_of_the_book_a_camera_carried_home_stops_no_ask_to_another_target():
+    """vmsserver's eleventh review, the camera's half of the `publish_asks` major: `Asker.book` read the book whole with
+    bare `json.loads`, and one torn `domain/asks` entry raised out of it — no ask to any target. Each entry is read
+    through `BOOKS`: a torn one is the entry read last of it (or none), counted once; the other targets are asked."""
+    from domain.ingest import ASKS_PATH, BOOKS, Asker
+    flash = FakeVariables()
+    road = json.dumps({"roads": [{"urls": RELAY_URLS, "token": "t"}]})
+    flash.put(ASKS_PATH, {"SN-a": road, "SN-b": road})
+    asker = Asker("SN7002", flash, lambda url: (_ for _ in ()).throw(Unreachable(url)), clock=Clock())
+    assert set(asker.book()) == {"SN-a", "SN-b"}
+    items, idx = flash.get(ASKS_PATH)
+    flash.put(ASKS_PATH, {**items, "SN-a": '{"roads": [{"urls": ', "SN-c": "[1]"}, cas=idx)
+    book = asker.book()
+    assert book["SN-a"] == json.loads(road)["roads"] and book["SN-b"] and "SN-c" not in book   # read last; none
+    assert {f"{ASKS_PATH}/SN7002/SN-a", f"{ASKS_PATH}/SN7002/SN-c"} <= BOOKS.bad
+    assert asker.ask("SN-b", {"preset": 3}, within=10) is None        # asked: no ingest answered, nothing raised
+
+
+def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address():
+    """vmsserver's eleventh review, blocker 4, and the product's cross-check (the domain's snapshot): a camera that is its
+    own cluster publishes its row as its snapshot, and an edit through its door takes any field — a `cred_secret`, or a
+    `source` with `?pwd=…`, went into the domain's directory as written. The snapshot carries no secret field and no
+    credential in an address (`secrets.mask_secrets`), as a cluster's shards do."""
+    cam = DeviceCluster(SERIAL, FakeVariables(), wall=Clock())
+    cam.boot()
+    cam._update(1, {"source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2", "cred_secret": "Hunter2"}, None)
+    snap = cam.ram.get(f"vms/snapshot/{SERIAL}")
+    assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=***&pwd=***")
+
+
 # -- the ninth review ----------------------------------------------------------------------------------------------------
 def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_counted_as_a_possible_hole():
     """The ninth review, a minor (and the product's sibling E): the centre keeps the batch it handed over until the relay
@@ -769,3 +836,42 @@ def test_a_batch_whose_answer_was_lost_just_before_the_centre_restarted_is_count
     pull(6); pull(7)
     assert [f["t"] for f in rq.drain()] == [6, 7]                       # 5 is gone with the centre —
     assert fwd.stats()["7"]["holes"] == 1                               # — and counted, once
+
+
+def test_the_cameras_card_holds_what_its_relay_took_until_the_centre_has_written_it():
+    """The product's DY, checked in the course: with a relay, the camera counted delivered whatever the relay's ingest
+    TOOK — and its card let go of it — though the centre above had not written it: frames the forwarder dropped, or that
+    the centre's recorder never wrote, were on no copy, and the card had let them go first. The forwarder leaves the
+    centre's `have` at the relay's ingest while it carries the camera up (`Ingest.up_have`), the relay's answer to the
+    camera says the lesser of its own and the centre's (`Ingest._have`), and the camera counts delivered nothing past it
+    (`CameraPusher.owed_spans`): the card holds what the relay took until the centre has written it. When the centre no
+    longer takes the camera, its word is gone with it."""
+    wall = Clock()
+    north, east, centre, relay, pusher, fwd, dialled, _ = _chain(wall)
+    centre.want(SERIAL, "recorder:centre")
+    rq = centre.subscribe(SERIAL, "recorder:centre", maxsize=1000)
+    written = [None]
+    centre.written = lambda ref: written[0]
+    fwd.pass_once()
+    sent = []
+    for i in range(30):
+        f = {"t": wall() + 0.5, "key": True}                            # two frames a second
+        sent.append(f["t"])
+        pusher.pass_once([{"t": wall(), "key": True}, f])
+        fwd.pass_once()
+        rq.drain()
+        if i < 10:
+            written[0] = f["t"]                                         # the centre's recorder writes, then stalls
+        wall.advance(1.0)
+    pusher.pass_once([])
+    owed = pusher.owed_spans()
+    assert owed[-1][0] <= sent[9] + 1e-6 and owed[-1][1] == float("inf"), (owed, sent[9])   # the twenty after: owed
+    assert relay.up_have[SERIAL] == sent[9]
+    written[0] = sent[-1]                                               # the centre catches up
+    fwd.pass_once()
+    pusher.pass_once([])
+    assert pusher.owed_spans()[-1][0] >= sent[-1] - 1e-6, pusher.owed_spans()
+    centre.release(SERIAL, "recorder:centre")
+    centre.cams[SERIAL].wants.clear()                                   # the centre takes the camera no longer
+    fwd.pass_once()
+    assert SERIAL not in relay.up_have

@@ -49,9 +49,10 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
     the fact), its workers with load/capacity, and *not placeable: …* in red when the controller would not
     place there now; what the server reaches (`labels`, and whether they were set here or are the node's), with
     *edit* — `PUT /servers/<name>/labels` after naming the cameras that will move (`GET …/labels?labels=`) — and
-    *back to the node's* (`DELETE`); *retire* beside a worker that is silent and no longer holds its name
-    (`POST /workers/<name>/retire`, with the generation shown), and what the controller said about a request
-    standing; then what this process fronts, from `/mounts`.
+    *back to the node's* (`DELETE`); a worker that is silent and whose process still runs there in red (*hung*: the
+    controller frees nothing under it); *decommission* — the machine is gone for good (`POST
+    /servers/<name>/decommission`, refused in words while the server answers) — and *bring back* (`DELETE`); then
+    what this process fronts, from `/mounts`.
 - `main`
   - `#title` — the selected unit's label, or "Pick one".
   - `#meta` — phase · worker · server · epoch · placement reason · the holder's `why` and `warning` · "last known
@@ -105,7 +106,8 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
   when `spec.media`; registered by the subsystem.
 - `GET /events?from&to&cam=<id>` — the resources' event databases, merged by the console, tolerated when absent;
   `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
-- `POST /workers/<name>/retire {why, gen}` — a worker whose process will never come back; the controller acts on it.
+- `POST /servers/<name>/decommission {why}` — a machine gone for good (on the Mount, as `/drain`): 409 while the server
+  answers, the sign named; the controllers release its slots and move their units. `DELETE` — withdrawn, or it is back.
 
 ## Notes
 - The page never sends `worker`, `epoch`, `revision`, `phase` or `id` — the inputs are generated only from
@@ -938,17 +940,23 @@ async function loadResources() {
     renderPolicy(d.policy || {});
     for (const [name, s] of Object.entries(sv)) {
       const el = document.createElement('div'); el.className = 'srv';
-      const ws = raw(s.workers.map((w, i) => h`${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}${w.released ? ' (released)' : ''}` +
-                     (w.retire ? h` · <span class="bad">${w.retire.refused ? 'retire refused: ' + w.retire.refused : 'retire requested'}</span>` : '') +
-                     (w.retirable ? h` <a href="#" class="retire" data-i="${i}">retire</a>` : '')).join(', ') || 'no workers');
+      const ws = raw(s.workers.map(w => h`${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}${w.released ? ' (released)' : ''}` +
+                     (w.hung ? h` · <span class="bad">hung: ${w.hung_why || 'its process runs, and it neither renews nor speaks'}</span>` : '') +
+                     (w.slot_garbled ? h` · <span class="bad">its slot row does not parse</span>` : '')).join(', ') || 'no workers');
+      const off = s.decommission, done = s.decommissioned;
       const lab = (s.labels || []).join(', ') || 'nothing', node = (s.labels_node || []).join(', ') || 'nothing';
       el.innerHTML = h`<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
                      h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
                      h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
                      (s.labels_unread ? h` · <span class="bad">its row here could not be read: nothing is moved off it until it is written again</span>` : '') +
-                     (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>');
+                     (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>') +
+                     (off ? h`<small class="bad">decommissioned by ${off.by || '?'}${off.why ? ': ' + off.why : ''}${done ? '' : ' — waiting: ' + (s.decommission_refusal || 'the next pass')} · <a href="#" class="recom">bring back</a></small>` +
+                            ((s.lost || []).length ? h`<small class="bad">still held: ${s.lost.map(l => l.place + ' (' + l.worker + ')').join(', ')} — withdraw a volume that went with the server</small>` : '')
+                          : s.decommissionable ? h`<small><a href="#" class="decom">decommission</a>${s.decommission_warning ? ' · ' + s.decommission_warning : ''}</small>`
+                          : h`<small>decommission: not now — ${s.decommission_refusal || ''}</small>`);
       el.querySelector('.lab-edit').onclick = e => { e.preventDefault(); editLabels(name, s.labels || []); };
-      el.querySelectorAll('.retire').forEach(a => { a.onclick = e => { e.preventDefault(); retireWorker(s.workers[+a.dataset.i]); }; });
+      if (el.querySelector('.decom')) el.querySelector('.decom').onclick = e => { e.preventDefault(); decommission(name, true); };
+      if (el.querySelector('.recom')) el.querySelector('.recom').onclick = e => { e.preventDefault(); decommission(name, false); };
       if (el.querySelector('.lab-node')) el.querySelector('.lab-node').onclick = e => { e.preventDefault(); editLabels(name, null); };
       box.appendChild(el);
     }
@@ -995,16 +1003,21 @@ async function editLabels(name, have) {
   } catch (err) { alert('refused: ' + err.message); }
   loadResources();
 }
-// -- a worker that will never come back, from here ---------------------------------------------------------
-// `POST /workers/<name>/retire {why, gen}` — offered only where `/servers` says `retirable` (silent, its name no longer
-// held). The console writes a request; the controller retires the slot on its next pass and moves what it listed. The
-// generation the page showed goes back with it: a process that took the name since is not retired by this click.
-async function retireWorker(w) {
-  const why = prompt(`Retire ${w.worker}? Say so only if its process will never come back (its server is gone): its units move to the workers that are here. Why:`, '');
-  if (why === null) return;
+// -- a machine that will never come back, from here --------------------------------------------------------
+// `POST /servers/<name>/decommission {why}` — the operator operates servers, not workers: they took the machine out and
+// switched it off, and the console checks what it can — while its resource answers, 409 in words, nothing written.
+// The controller frees its workers' slots on its next pass and moves their units; `DELETE` brings the machine back.
+async function decommission(name, gone) {
   try {
-    const d = await send('POST', `/workers/${encodeURIComponent(w.worker)}/retire`, { why, gen: w.gen });
-    if ((d.holds || []).length) alert(d.note);
+    if (!gone) {
+      if (!confirm(`Bring ${name} back? Its workers are placed on again.`)) return;
+      await send('DELETE', `/servers/${encodeURIComponent(name)}/decommission`);
+    } else {
+      const why = prompt(`Decommission ${name}? Only once it is out of service and switched off: what ran on it moves to the servers that are here, and nothing is placed on it until it is brought back. Why:`, '');
+      if (why === null) return;
+      const d = await send('POST', `/servers/${encodeURIComponent(name)}/decommission`, { why });
+      if ((d.holds || []).length) alert(d.note);
+    }
   } catch (err) { alert('refused: ' + err.message); }
   loadResources();
 }

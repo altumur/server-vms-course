@@ -193,6 +193,34 @@ def test_a_body_that_is_no_json_object_is_refused_on_every_write_route():
         srv.shutdown()
 
 
+def _chunked(base: str, method: str, path: str, body: bytes) -> bytes:
+    """`body` sent in one chunk, with `Transfer-Encoding: chunked` and no `Content-Length`: the reply's first line."""
+    import socket
+    from urllib.parse import urlsplit
+    u = urlsplit(base)
+    with socket.create_connection((u.hostname, u.port), timeout=5) as s:
+        s.sendall(f"{method} {path} HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nIdempotency-Key: kc\r\n"
+                  f"Transfer-Encoding: chunked\r\n\r\n".encode() + b"%x\r\n%b\r\n0\r\n\r\n" % (len(body), body))
+        return s.recv(4096).split(b"\r\n", 1)[0]
+
+
+def test_a_body_sent_in_chunks_is_refused_in_words_and_not_read_as_an_empty_one():
+    """The product's cross-check of the eleventh review: no door here reads `Transfer-Encoding: chunked`, and with no
+    `Content-Length` such a body was read as none — `{}` to the route: a PUT that changed nothing and answered 200, a
+    POST that wrote defaults. `read_body` — every console's door, the domain's, the signing service's, the live
+    gateway's — answers 400 in words and reads nothing more."""
+    from tests.test_console_gate import _console
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        assert _raw(base, "POST", "/cameras", json.dumps({"source": "driverpack://file/1.mp4"}).encode(), "k0") == 201
+        for method, path in (("PUT", "/cameras/1"), ("POST", "/cameras"), ("POST", "/requests")):
+            assert b" 400 " in _chunked(base, method, path, b'{"name": "x"}'), (method, path)
+        assert [r["id"] for r in ctl.units()] == [1] and ctl.unit(1)["revision"] == 1
+    finally:
+        srv.shutdown()
+
+
 # -- loops over many: the retain, the evaluator, the workers, the leases, the watch, the restore ----------------------
 
 def test_a_scenario_nested_past_jsons_depth_stops_neither_the_retain_nor_the_evaluator():
@@ -280,6 +308,25 @@ def test_a_bucket_line_nested_past_jsons_depth_does_not_stop_the_watch():
         f.write(DEEP + "\n" + json.dumps({"t": 1, "kind": "motion"}) + "\n")
     kinds, upto = Watch._kinds(p, 0, os.path.getsize(p))
     assert kinds == {"motion"} and upto == os.path.getsize(p)
+
+
+def test_a_bucket_line_nested_past_jsons_depth_or_with_no_time_is_that_lines_for_every_reader_of_a_bucket():
+    """The eleventh review's sweep of `mark_of` (`except ValueError` before `json.loads`): the two readers of a bucket's
+    lines beside the watch — `read_bucket` (the resource's `/buckets`, repair, the recorder's look back) and the event
+    database's line cache (`/events`) — let `RecursionError` out of the whole bucket, and the cache a line with no `t`
+    or a word in it too; `read_bucket` handed a line that is a number to readers that take objects. Each is that line's,
+    counted as torn, and the lines beside it are read."""
+    import tempfile
+    import w2cplatform.events as ev
+    from w2cplatform.eventdatabase import EventIndex
+    good = json.dumps({"t": 1000.0, "kind": "motion", "cam": 1})
+    p = os.path.join(tempfile.mkdtemp(), "x.events.jsonl")
+    with open(p, "wb") as f:
+        f.write((DEEP + "\n7\n" + '{"t": "noon", "kind": "motion"}\n' + good + "\n").encode() + b"\xff\xfe\n")
+    torn = ev.torn
+    assert [e["kind"] for e in ev.read_bucket(p) if e.get("t") == 1000.0] == ["motion"] and ev.torn - torn == 3
+    db = EventIndex(tempfile.mkdtemp())
+    assert [ln[1] for ln in db._lines(p)] == ["motion"] and db.torn == 4
 
 
 def test_a_frontier_or_a_waiting_file_that_does_not_read_is_not_there():

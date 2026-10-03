@@ -764,6 +764,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         src = str((ctl.camera(unit) or {}).get("source") or "")
         if src:
             row["device"] = device_of(src)
+        # An argument is a number or a word, at the door as at the holder (`config.COMMAND_ARG_MAX`; the product's cross-check
+        # of the eleventh review): a 400 that names the field, before a row is written — never the value.
+        from .config import COMMAND_ARG_MAX
+        for f in ("port", "state", "pulse_ms", "n"):
+            if body.get(f) is not None and len(str(body[f])) > COMMAND_ARG_MAX:
+                return 400, {"detail": f"`{f}` is {len(str(body[f]))} characters long: a command's argument is a number "
+                                       f"or a word of at most {COMMAND_ARG_MAX}", "error": "too long"}
         for f in ("port", "state", "pulse_ms", "n"):
             if body.get(f) is not None:
                 row[f] = str(body[f])

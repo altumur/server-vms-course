@@ -190,19 +190,21 @@ def _doors(s) -> None:
                                              headers={"Content-Type": "application/json"})
                 with urllib.request.urlopen(req) as r:
                     r.read()
-        # A worker whose process will never come back (М10A Lesson 7, step 7): its server goes silent, the console writes
-        # the request — `vms/retire/<w>`, and asks the recorder's console about a name it has no slot for — and the
-        # vmscontroller's pass below reads it, retires the slot and deletes the request.
+        # A machine gone for good (М10A Lesson 7, step 7): its server goes silent, the console writes
+        # `platform/decommission/srv-a` — and deletes it and writes it again, so `DELETE` is exercised too — and the
+        # controllers' passes below read it, release the slot on that server and write their marks
+        # (`<sub>/decommissioned/srv-a`).
         s.wall.advance(100)
-        for path, want in ((f"/workers/{w.name}/retire", 202), ("/rec/workers/r-9/retire", 404)):
-            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", method="POST",
-                                         data=b'{"why": "the server burnt"}', headers={"Content-Type": "application/json"})
+        for method, want in (("POST", 202), ("DELETE", 200), ("POST", 202)):
+            req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/servers/srv-a/decommission",
+                                         method=method, data=b'{"why": "the server burnt"}' if method == "POST" else None,
+                                         headers={"Content-Type": "application/json"})
             try:
                 with urllib.request.urlopen(req) as r:
                     got = r.status
             except urllib.error.HTTPError as e:
                 got = e.code
-            assert got == want, (path, got)
+            assert got == want, (method, got)
     finally:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
@@ -214,7 +216,7 @@ def _doors(s) -> None:
     # — the write no policy granted, and no scene made (the review's ninth pass) — and then the snapshot.
     for c in (ctl, rc):
         c.pass_once(1); c.publish_snapshot()
-    assert ctl.slots()[w.name].released and not ctl.retire_requests()      # the request was read, acted on and deleted
+    assert ctl.slots()[w.name].released and ctl.decommission_marks()       # the row was read, the slot released, the mark written
 
 
 # The scenes whose point is a write the store refuses: their 403 is the lesson, not the code writing outside its grant.

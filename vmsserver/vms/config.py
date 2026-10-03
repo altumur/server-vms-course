@@ -142,7 +142,10 @@ def device_of(source: str) -> str:
     if scheme != "driverpack":
         if not u.netloc:
             return str(source)                           # not an address: a path, a name — as it is
-        return f"{scheme}://{_host(u.netloc, scheme)}{u.path}" + (f"?{u.query}" if u.query else "")
+        # …nor are credentials in its parameters (the eleventh review, blocker 4): the key is in the heartbeat, `/devices`
+        # and the log, and a row stored before the refusal named its password there.
+        from w2cplatform.secrets import hide_in_url
+        return hide_in_url(f"{scheme}://{_host(u.netloc, scheme)}{u.path}" + (f"?{u.query}" if u.query else ""))
     parts = [p for p in u.path.split("/") if p]
     vendor = u.netloc.strip().lower().rstrip(".")
     if vendor == "file":
@@ -334,12 +337,15 @@ def channel_key(source: str) -> str:
 #
 # …AND NO PASSWORD IN ITS WORDS (the product team's addition to the tenth round): the refusal repeated the source as
 # typed, `driverpack://acme/u:hunter2@10.0.0.5:8²/…` and all, into the reply and the journal's detail. What is said is
-# the source with whatever stands before an `@` hidden (`shown_source`). And a `?` in a `driverpack://` source is
-# refused like a `#` (`SubsystemSpec.refuse`): `urlsplit` ends the path there, and `acme/cam7?@nvr50/ch/1` is device
-# `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
+# the source with whatever stands before an `@` hidden (`shown_source`) — and, since the eleventh review (blocker 4), the
+# value of every credential parameter (`secrets.hide_in_url`: `?usr=…&pwd=…`). And a `?` in a `driverpack://` source
+# is refused here as `SubsystemSpec.refuse` refuses a `#`: `urlsplit` ends the path there, and `acme/cam7?@nvr50/ch/1`
+# is device `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
 def shown_source(source: str) -> str:
-    """The source as a refusal or a log may say it: what stands before an `@` hidden."""
-    return re.sub(r"[^/@]*@", "…@", str(source))
+    """The source as a refusal or a log may say it: what stands before an `@` hidden, and every credential parameter."""
+    from w2cplatform.secrets import hide_in_url
+    s = re.sub(r"[^/@]*@", "…@", str(source))
+    return hide_in_url(s) if "://" in s else s
 
 
 def source_refusal(source: str) -> str | None:
@@ -371,6 +377,12 @@ def source_refusal(source: str) -> str | None:
 # matches it (`jobs.clear_requests`): the id itself when it is short and plain; else `#` and a digest of it — an id of
 # 200 characters, or one with a comma (the list's separator), a quote or a control character in it, costs 21 bytes
 # like any other (the review's eighth pass).
+# The longest a command's argument may be — `port`, `state`, `pulse_ms`, `n`: a number or a word (the product's
+# cross-check of the eleventh review: an argument had no size). The console refuses longer at its door
+# (`vms/console.py`, `file_request`), the holder refuses a row that holds one anyway (`VmsWorker.perform`).
+COMMAND_ARG_MAX = 32
+
+
 def said_id(rid: str) -> str:
     rid = str(rid)
     if len(rid) <= 40 and not rid.startswith("#") and rid.isprintable() and not any(c in rid for c in ',"\\'):

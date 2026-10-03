@@ -91,19 +91,18 @@ def test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone():
     assert w.may_write("2") and w.leases["2"].last_renewal == box.clock() and not w.may_write("1")
 
 
-# -- the slot, under the operator's word -----------------------------------------------------------------------
+# -- the slot, freed by the controller ---------------------------------------------------------------------------
 
-def test_retiring_a_slot_whose_row_is_garbled_writes_it_released():
-    """`retire` is how an operator says a slot is gone for good — and a row that does not parse is exactly the slot
-    somebody wants to be rid of. It raised (`ValueError` to the console). Now the operator's word is written over
-    the row, whole: released, held by nobody."""
+def test_freeing_a_slot_whose_row_is_garbled_writes_it_released():
+    """`free_slot` is how the controller lets go of a name nothing runs under (`Controller.slot_fate`) — and a row that
+    does not parse is exactly the slot somebody wants to be rid of. It raised (`ValueError`, when it was the operator's
+    `retire`). The row is written over, whole: released, held by nobody; freeing it again does nothing."""
     box, ctl = _placed(2)
     box.vars.put("vms/slots/w-9", {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"})
-    s = ctl.retire("w-9")
-    assert s.released and s.holder == ""
+    assert ctl.free_slot("w-9")
     row = Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0])
-    assert row.released and row.claimable(box.wall()) and "w-9" in ctl.slots()
-    assert ctl.retire("w-9").released                                                       # and again: nothing to do
+    assert row.released and row.holder == "" and row.claimable(box.wall()) and "w-9" in ctl.slots()
+    assert not ctl.free_slot("w-9") and Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0]).released   # and again: nothing to do
     _forget_garbled()
 
 

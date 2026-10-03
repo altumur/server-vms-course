@@ -146,6 +146,7 @@ def worker() -> None:
     try:
         # `beat`: between two passes it looks at its request rows every quarter of a second (`COMMANDS_BEAT`; 0 —
         # only on the pass). A command is the second half of the road from an event to a device (`VmsWorker.between`).
+        _present(w)
         w.run(stop=stop, beat=commands_beat(os.environ))
     finally:
         srv.shutdown()
@@ -188,6 +189,7 @@ def recorder() -> None:
         # No beat between its passes: what a recorder serves from `rec/requests` is a backfill — minutes off a card,
         # on its backfill thread — and a quarter of a second saved on that is nothing. A scenario's `record` is not
         # its to serve at all: the console turns it into a recording (`_requests_loop`).
+        _present(r)
         r.run(stop=stop)
     finally:
         srv.shutdown()
@@ -213,10 +215,22 @@ def reccontroller() -> None:
 #   loop continues; `stop.wait(5)`
 #   between passes. No port, no state: the process can be restarted at any moment, and two of them agree by
 #   CAS.
+# A worker registers with its server's resource before it runs (`Worker.present`): a lock in the resource's tree for as
+# long as the process lives. A silent worker whose process the resource names running is HUNG, and keeps its units for
+# `HUNG_MOVE_AFTER`; one that is not running is dead, and its units move (`Controller.slot_fate`; the owner, 3 Oct).
+def _present(w) -> None:
+    w.present(os.environ.get("ARCHIVE", "/data/archive"))
+
+
 def _controller_loop(ctl) -> None:
     """One controller process per subsystem, the same loop: unplace what was deleted, place what is new onto the
     workers it sees, move what a released slot left, bring one unit home if its server came back, publish the
     snapshot. Nothing else, ever."""
+    if os.environ.get("ARCHIVE"):                     # a slot it frees, and why, in this server's journal (`journal.py`)
+        from w2cplatform.journal import Journal
+        ctl.journal = Journal(os.environ["ARCHIVE"], "controller", ctl.wall)
+    if os.environ.get("HUNG_MOVE_AFTER"):             # how long a hung worker keeps its units (`Controller.hung_move_after`)
+        ctl.hung_move_after = float(os.environ["HUNG_MOVE_AFTER"])
     while not stop.is_set():
         # ONE pass around both (the scaling pass after the eighth review): the snapshot asks every unit's row, placement
         # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
@@ -271,6 +285,7 @@ def detworker() -> None:
     d = DetWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")), capacity=int(os.environ.get("CAPACITY", "8")),
                   archive_root=os.environ.get("ARCHIVE", "/data/archive"))
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
+    _present(d)
     d.run(stop=stop)
 
 
@@ -301,6 +316,7 @@ def autoworker() -> None:
     # one of its scenarios watches is written there — the pass begins then, not at the end of its two seconds.
     # `LONG_POLL=0`: nothing is held.
     a.watch_events()
+    _present(a)
     a.run(stop=stop)
 
 
@@ -325,6 +341,7 @@ def detjobworker() -> None:
                      capacity=int(os.environ.get("SCAN_CAPACITY", "2")),
                      archive_root=os.environ.get("ARCHIVE", "/data/archive"))
     logging.info("scan worker %s (instance %s) claimed its slot; models: %s", j.name, j.instance, ",".join(j.models))
+    _present(j)
     j.run(stop=stop)
 
 
@@ -348,6 +365,7 @@ def surveyworker() -> None:
                      capacity=int(os.environ.get("SURVEY_CAPACITY", "2")),
                      archive_root=os.environ.get("ARCHIVE", "/data/archive"))
     logging.info("survey %s (instance %s) claimed its slot; models: %s", s.name, s.instance, ",".join(s.models))
+    _present(s)
     s.run(stop=stop)
 
 
@@ -374,6 +392,7 @@ def gateway() -> None:
                      capacity=int(os.environ.get("CAPACITY", "100")), peer_factory=peer)
     srv = gw.serve(host, port)
     logging.info("gateway %s (instance %s) on %s", gw.name, gw.instance, srv.server_address)
+    _present(gw)
     gw.run(stop=stop)
     srv.shutdown()
 

@@ -3,6 +3,10 @@ GET /v1/var/platform/schema?namespace=default
 → 404
 
 # recworker (allocation 0 on srv-a)
+GET /v1/var/platform/decommission/srv-a?namespace=default
+→ 404
+
+# recworker (allocation 0 on srv-a)
 GET /v1/vars?prefix=rec/slots/&namespace=default
 → 200 []
 

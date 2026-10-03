@@ -327,17 +327,28 @@ def test_one_row_that_cannot_be_read_is_that_servers_alone():
     box.vars.get = lambda key: (_ for _ in ()).throw(OSError("one key")) if key == "vms/servers/srv-c" else real(key)
     try:
         ctl.set_server_labels("srv-b", ["vlan:z"])
-        assert ctl.pass_once()["reach_moves"] == 1 and ctl.where(cam) == "w-1"
+        rep = ctl.pass_once()
+        assert rep["reach_moves"] == 1 and ctl.where(cam) == "w-1"
         assert ctl.labels_unread("srv-c") and ctl.labels_of("w-3") == set()
+        assert rep["servers_labels_unread"] == 1          # …said where a number is read, not only on the page (the eleventh)
     finally:
         box.vars.get = real
+    import urllib.request
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        with urllib.request.urlopen(base + "/metrics") as r:
+            page = r.read().decode()
+        assert "vms_servers_labels_unread 1" in page and "vms_units_waiting_for_reach 0" in page
+    finally:
+        srv.shutdown()
 
 
 def test_the_channels_of_one_device_move_together_or_not_at_all():
     """The review's tenth pass, minor, and its question: an administrator of one camera of a four-channel recorder
     changed its `labels`, and `ensure_reach` took that channel alone to another holder — two sessions to one recorder,
-    for good. The group moves whole, in one pass, to a worker that takes it all; with none, the channel its server no
-    longer reaches gives its place back and the others stay — no two holders ever hold the recorder."""
+    for good. The group moves whole, in one pass, to a worker that takes it all. With none, the eleventh review's
+    rule: the group stays where it is, whole — giving the channel's place back split the recorder too, once it was
+    placed again beside nobody — said once, counted (`reach_waiting`), and moved as soon as a worker takes it."""
     box = Box()
     ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a,vlan:c")
     ctl.set_server_labels("srv-b", [])
@@ -350,9 +361,63 @@ def test_the_channels_of_one_device_move_together_or_not_at_all():
     assert rep["reach_moves"] == 4 and {ctl.where(c) for c in nvr} == {"w-2"}, [ctl.where(c) for c in nvr]
     assert ctl.placement(nvr[0]).reason.startswith(f"with {nvr[1]}, one device: srv-a no longer reaches vlan:c")
     ctl.update(nvr[2], {"labels": "vlan:d"})                             # nobody reaches vlan:d
-    assert ctl.pass_once()["reach_moves"] == 1
-    assert ctl.where(nvr[2]) is None and {ctl.where(c) for c in nvr if c != nvr[2]} == {"w-2"}
-    assert ctl.pass_once()["reach_moves"] == 0
+    rep = ctl.pass_once()
+    assert (rep["reach_moves"], rep["reach_waiting"]) == (0, 4) and {ctl.where(c) for c in nvr} == {"w-2"}
+    _beat(box, "w-3", "srv-c", "vlan:a,vlan:c,vlan:d")                  # a server that reaches all four comes
+    rep = ctl.pass_once()
+    assert (rep["reach_moves"], rep["reach_waiting"]) == (4, 0) and {ctl.where(c) for c in nvr} == {"w-3"}
+
+
+def test_a_group_goes_whole_to_a_worker_with_room_for_it_when_the_near_one_has_too_little():
+    """The eleventh review, a major — a run: a four-channel recorder, srv-b (two places, its recorder beside it) and
+    srv-c (fifty) both reach the label. `ensure_reach` asked `_pick` for ONE worker — the near one — found it too small
+    and gave all four places back "nothing live reaches it"; the next placement put two on srv-b and two nowhere, for
+    good. Now the group goes whole to a worker that reaches it and has room for all of it, inside the pass's budget;
+    and the first placement of a group (`place`) does the same — the product's cross-check found that path too."""
+    from vms.config import REC_SPEC
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a")
+    nvr = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.50/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 5)]
+    ctl.ensure_placed()
+    assert {ctl.where(c) for c in nvr} == {"w-1"}
+    _beat(box, "w-2", "srv-b", "vlan:a", capacity=2)
+    _beat(box, "w-3", "srv-c", "vlan:a", capacity=50)
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"),                  # the recorder of channel 1 runs on srv-b: near
+                    Heartbeat("r-1", box.wall(), [{"id": f"{nvr[0]}-rec", "cam": str(nvr[0]), "phase": "running"}],
+                              {"server": "srv-b"}).to_bytes())
+    ctl.set_server_labels("srv-a", [])
+    rep = ctl.pass_once()
+    assert rep["reach_moves"] == 4 and {ctl.where(c) for c in nvr} == {"w-3"}, [ctl.where(c) for c in nvr]
+    assert "nothing live reaches it" not in json.dumps([ctl.placement(c).reason for c in nvr])
+    # …and four new channels of another recorder, followed by a recorder on srv-b: placed whole on srv-c, not 2 + 0
+    more = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.60/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 5)]
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"),
+                    Heartbeat("r-1", box.wall(), [{"id": f"{more[0]}-rec", "cam": str(more[0]), "phase": "running"}],
+                              {"server": "srv-b"}).to_bytes())
+    ctl.ensure_placed()
+    assert {ctl.where(c) for c in more} == {"w-3"}, [ctl.where(c) for c in more]
+
+
+def test_a_group_is_moved_inside_the_budget_and_one_bigger_than_the_budget_waits_and_says_so():
+    """The eleventh review's remark, made a rule by the product's cross-check: a group moved past `REACH_BUDGET` when it
+    was the pass's first move — 32 channels with a budget of 10 were 32 epochs and seams in one pass. A group now fits
+    in what is left of the pass's budget or waits for the next pass; one bigger than the budget stays whole where it
+    is, counted (`reach_waiting`), and the log says to raise the budget or move it by hand."""
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a")
+    ctl.set_server_labels("srv-b", [])
+    big = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.50/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 13)]
+    small = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.70/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 4)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    assert {ctl.where(c) for c in big + small} == {"w-1"}
+    ctl.set_server_labels("srv-a", [])
+    moves = ctl.ensure_reach(budget=REACH_BUDGET)
+    assert REACH_BUDGET < len(big) and len(moves) <= REACH_BUDGET
+    assert {ctl.where(c) for c in big} == {"w-1"} and ctl.last_reach_waiting == len(big)
+    assert {ctl.where(c) for c in small} == {"w-2"}
+    moves = ctl.ensure_reach(budget=2)                                  # three channels, two moves: not this pass
+    assert moves == [] and {ctl.where(c) for c in big} == {"w-1"}
 
 
 def test_one_alphabet_for_labels_and_a_stored_label_outside_it_does_not_move_its_camera():

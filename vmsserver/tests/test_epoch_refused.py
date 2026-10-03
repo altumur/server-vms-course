@@ -7,6 +7,8 @@ hand, and three passes in a row raised — camera 5 never started, camera 1, tak
 job did not move and the heartbeat did not say why. Now each of them refuses THAT unit, says why in its status
 (the gateway in its heartbeat's `refused`) and in the log, and serves the rest.
 """
+import json
+
 from w2cplatform.contract import Heartbeat
 from vms.config import LIVE_SPEC
 from vms.worker import FakeActuator, VmsWorker
@@ -164,6 +166,38 @@ def test_a_command_whose_deadline_does_not_parse_is_refused_alone():
         w.pump_once()
     assert w.devices["acme/10.0.0.92"].did == [("output", 1, "pulse", 0)] and w.devices["acme/10.0.0.91"].did == []
     assert w.fetched == ["a-1", "b-2"] and (w.commands["performed"], w.commands["refused"]) == (1, 1)
+
+
+def test_a_command_whose_mark_is_nested_past_jsons_depth_is_that_commands_and_the_others_are_performed():
+    """The eleventh review, a major — a run: `mark_of` caught `ValueError` and the mark `[[[[…` raised `RecursionError`
+    out of `requests()` at every look: commands a, b, c and six more in six minutes, `performed=0`, and those past their
+    deadline not closed. A mark that does not parse is still a mark — another instance may have begun it, so it is not
+    performed again — and it is that command's: the next is performed in the same look."""
+    box = Box()
+    con, (one, two), w = _two_doors(box)
+    box.objects.put("vms/commands/a-1", b"[" * 100_000)
+    _ask(box, con, "a-1", one)
+    _ask(box, con, "b-2", two)
+    for _ in range(2):
+        w.pump_once()
+    assert w.devices["acme/10.0.0.92"].did == [("output", 1, "pulse", 0)], "the command behind the deep mark never reached its device"
+    assert w.devices["acme/10.0.0.91"].did == [] and set(w.fetched) == {"a-1", "b-2"}
+
+
+def test_a_command_argument_longer_than_a_word_is_that_commands_refusal_and_never_reaches_the_driver():
+    """The product's cross-check of the eleventh review: a command's argument had no size — `state` went to the driver
+    as the row held it, as long as the row's ceiling let it be. One longer than `ARG_MAX` is that command's refusal,
+    its value not repeated in the answer; the next command is performed."""
+    box = Box()
+    con, (one, two), w = _two_doors(box)
+    _ask(box, con, "a-1", one, state="x" * 5000)
+    _ask(box, con, "b-2", two)
+    for _ in range(2):
+        w.pump_once()
+    assert w.devices["acme/10.0.0.91"].did == [] and w.devices["acme/10.0.0.92"].did == [("output", 1, "pulse", 0)]
+    assert (w.commands["performed"], w.commands["refused"]) == (1, 1)
+    st = {s["id"]: s for s in w.status()}
+    assert "x" * 100 not in json.dumps(st)
 
 
 def test_the_recorder_refuses_one_request_whose_range_does_not_parse_and_serves_the_next():

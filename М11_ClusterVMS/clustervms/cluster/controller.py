@@ -7,7 +7,7 @@ reads. So it lives in the platform's SpecController, the VMS's spec names
 it, and this module keeps only the name М11's lessons used.
 
 Still no Nomad client: it never places a process, never sets `count`,
-never retires a slot from a silence.
+never frees a slot from a silence alone (`Controller.slot_fate`).
 """
 from __future__ import annotations
 

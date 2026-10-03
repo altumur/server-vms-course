@@ -48,11 +48,15 @@
         hb = {"worker": self.serial, "ts": now, "server": self.serial, ..., "status": [status],
               "live_url": f"rtsp://{self.address}/live", "playback_url": f"http://{self.address}/playback",
               "coverage": self.coverage}
+        from w2cplatform.secrets import is_secret_field, mask_secrets
+        shown = {k: v for k, v in mask_secrets([row])[0].items() if not is_secret_field(k)}
         snap = {"cluster": self.name, "worker": self.serial, "ts": now,
-                "cameras": [{**row, "worker": self.serial, "server": self.serial}]}
+                "cameras": [{**shown, "worker": self.serial, "server": self.serial}]}
         self.ram.put(f"vms/heartbeats/{self.serial}", json.dumps(hb).encode())
         self.ram.put(f"vms/snapshot/{self.serial}", json.dumps(snap).encode())
 ```
+
+**Срез камеры — без секретов и без пароля в адресе** (одиннадцатое ревью vmsserver, блокер, и сверка продукта: пароль доходил до снимка домена). Срез серверного кластера берёт поля по списку `snapshot`, куда спецификация секрет не пускает. Камера публикует свою строку целиком, а правка через её дверь (`_update`) берёт любое поле. `cred_secret` или `source` с `?pwd=…` уходили в каталог домена как были. Теперь срез камеры несёт строку без полей `*_secret` и с учётными данными в адресах, спрятанными (`mask_secrets`: значение параметра `pwd`, `password`, `token`… и всё, что стоит перед `@`). Читатель домена делает то же со срезом любого члена (`ReadView.refresh`), на случай среза, который записала старая сборка. Тесты: `test_lesson17_chain.py::test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address`, `test_lesson10_cluster_of_one.py::test_a_shard_from_an_older_build_shows_no_secret_and_no_password_in_an_address`.
 
 Воркер — это камера, и сервер — тоже она. Это не трюк: heartbeat называет сервер, чтобы представление для чтения могло группировать молчание по доменам отказа (урок 3), а домен отказа камеры — сама камера.
 

@@ -54,7 +54,9 @@ except ImportError:                               # pragma: no cover - the cours
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-EVENTS = re.compile(r"^(\d{8}T\d{6}Z)\.events\.jsonl$")
+from .rows import PARSE_ERRORS
+
+EVENTS =re.compile(r"^(\d{8}T\d{6}Z)\.events\.jsonl$")
 EPOCH_DIR = re.compile(r"^e(\d+)$")
 
 
@@ -355,13 +357,16 @@ def read_bucket(path: str) -> list[dict]:
     global torn
     out = []
     try:
-        with open(path) as f:
+        with open(path, errors="replace") as f:       # a byte that is no UTF-8 is that line's, not the bucket's
             for line in f:
                 if not line.strip():
                     continue
-                try:
-                    out.append(json.loads(line))
-                except ValueError:                    # a half-written last line: the writer died mid-append
+                try:                                  # a half-written last line: the writer died mid-append — and one
+                    e = json.loads(line)              # nested past JSON's depth, or not an object, is that line's too
+                    if not isinstance(e, dict):       # (the eleventh review's sweep of `mark_of`)
+                        raise TypeError("not an object")
+                    out.append(e)
+                except PARSE_ERRORS:
                     torn += 1
     except FileNotFoundError:
         return []

@@ -95,11 +95,11 @@ class LiveWorker(Worker):
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
         self.gate = Gate(self.vars, self.wall, glass=False)   # who may be given a stream here (`handler`): a token, never the console's emergency session
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
+        self.server = runtime.server(env, server)   # before the claim: a process on a decommissioned server gets no slot
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, "GATEWAY_NAME", "g"))
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units
         self.url = url or env.get("GATEWAY_URL", "")
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "100"))
-        self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)
         self.peer_factory = peer_factory or FakePeer
         self.upstreams: dict[str, Upstream] = {}

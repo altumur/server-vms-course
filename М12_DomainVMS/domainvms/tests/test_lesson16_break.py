@@ -679,3 +679,70 @@ def test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door():
         pushed.append(wall())
         doors[0][1]([_frame(wall())])
     assert [f["t"] for f in rq.drain()] == pushed
+
+
+# -- the eleventh review -------------------------------------------------------------------------------------------------
+def test_a_sparse_stream_reaches_the_recorder_whole_and_at_once_at_every_door():
+    """The eleventh review, major, a regression of the tenth's far-ahead hold, its probe `pr5_sparse`: one frame every 11,
+    15 or 60 s — a time-lapse, a snapshot camera, frames on an event — was "far past the stream" every time, held, and
+    failed by the frame after it, as far again: 1 of 40 reached the recorder (`ahead` 38) at the camera's door, the
+    forwarder's and a peer's. Only a frame later than the ingest's own clock is held now (`_InOrder`): forty frames 11 to
+    60 s apart reach the recorder, every one, each the moment it arrives — and the stray frame from the future the hold
+    is there for is still held and dropped (`test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door`)."""
+    import random
+    from domain.ingest import Ingest, PeerLink
+    rnd = random.Random(11)
+    for door in ("push", "inject", "relay"):
+        wall = Clock(1000.0)
+        south, ingest, pusher, rq, down = _world(wall)
+        token = _token(ingest, pusher)
+        peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+        pq, link = peer.subscribe(SERIAL, "recorder:p", maxsize=1000), PeerLink(peer, SERIAL)
+        send, q = {"push": (lambda fs: ingest.push(token, SERIAL, fs, camera_now=wall()), rq),
+                   "inject": (lambda fs: ingest.inject(SERIAL, fs), rq), "relay": (link.send, pq)}[door]
+        at_once = 0
+        for i in range(40):
+            wall.advance(rnd.uniform(11.0, 60.0))
+            send([{"t": wall(), "key": True}])
+            at_once += [f["t"] for f in q.drain()] == [wall()]
+        assert at_once == 40, (door, at_once)                            # every frame, the moment it came
+        assert not (ingest if door != "relay" else peer).lost(), door
+
+
+def test_a_camera_clock_that_runs_fast_or_a_first_request_that_travelled_long_loses_no_frame_when_the_offset_comes_down():
+    """The eleventh review, major ("a move of the offset down at once sends the frames after it to `repeats`"), with the
+    product's cross-check beside it ("an open stream keeps the offset it opened with"): a camera clock 0.5 % fast moves
+    its offset down 5 ms a second, past `OFFSET_HOLD` every fifty seconds — taken at once, the next frames landed a
+    quarter of a second earlier than the last ones written, and every subscriber dropped them as not newer (4 frames in
+    the probe); a first request that travelled two seconds (TLS, a cold uplink) put the offset two seconds high, and the
+    next quick request took two seconds of frames to `repeats`. A move down is a target the open stream slews to now
+    (`OFFSET_SLEW`, `_slewed`): two minutes of the fast clock and the slow first request each put every frame at the
+    recorder once, in order, never further from where it was captured than the hold and the slew allow — and the open
+    stream takes every correction: the drift stays within the hold, it does not grow with the stream."""
+    import random
+    from domain.ingest import OFFSET_HOLD
+    for case in ("fast clock", "slow first request"):
+        wall = Clock(1000.0)
+        south, ingest, pusher, rq, down = _world(wall)
+        token, w, rnd, n = _token(ingest, pusher), _Writer(ingest), random.Random(17), [0]
+        rate = 0.005 if case == "fast clock" else 0.0
+        cam = lambda t: t + rate * (t - 1000.0)                           # the camera's clock, on the true one
+        true, captured = 1000.0, {}
+        for k in range(1200):                                            # two minutes, a request a tenth of a second
+            frames = []
+            for j in range(5):
+                n[0] += 1
+                t = true - 0.08 + j * 0.02
+                captured[n[0]] = t
+                frames.append({"t": cam(t), "key": n[0] % 25 == 1, "n": n[0]})
+            travel = 2.0 if (case == "slow first request" and k == 0) else rnd.uniform(0.0, 0.05)
+            wall.t = true + travel
+            ingest.push(token, SERIAL, frames, camera_now=cam(true))
+            true += 0.1
+        got = [f["n"] for f in w.passes[0]]
+        assert got == list(range(1, 6001)) and w.repeats == 0, (case, len(got), w.repeats)   # every frame, once, in order
+        errors = [f["t"] - captured[f["n"]] for f in w.passes[0]]
+        late = 2.0 if case == "slow first request" else OFFSET_HOLD + 0.05
+        assert max(abs(e) for e in errors) <= late + 0.01, (case, max(errors), min(errors))
+        assert max(abs(e) for e in errors[-500:]) <= OFFSET_HOLD + 0.05, case          # …and it does not grow
+        assert ingest.cams[SERIAL].clock_steps >= 1, case
