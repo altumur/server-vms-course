@@ -269,3 +269,48 @@ def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
                 pass
     finally:
         srv.shutdown()
+
+
+def test_the_signers_door_in_answers_a_garbage_body_400_and_a_garbage_token_401():
+    """The sweep of the same minor at the signer's own door (`signer_service`, `POST /login`, `POST /revoke`): a body
+    that is not an object, a name that is not a string, a token that does not verify were 500 — `/revoke` let the
+    token's own error out, which nobody caught. The signer is run as its process is, on a store of files."""
+    import os
+    import signal
+    import socket
+    import subprocess
+    import sys
+    import time
+    root = tempfile.mkdtemp(prefix="signer-")
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    env = {**os.environ, "DOMAIN_ID": "acme", "CONFIG_URL": f"file://{root}/vars", "OBJECT_STORE_URL": f"file://{root}/objects",
+           "SIGNER_HOST": "127.0.0.1", "SIGNER_PORT": str(port)}
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    proc = subprocess.Popen([sys.executable, "-m", "domain.signer_service"], cwd=here, env=env,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def post(path: str, raw: bytes) -> int:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=raw, method="POST",
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            return e.code
+    try:
+        for _ in range(100):
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=1):
+                    break
+            except OSError:
+                time.sleep(0.1)
+        assert post("/login", b'{"user": "nobody", "password": "x"}') == 401   # the door works: no such user
+        for bad in (b"[1]", b"{not json", b'{"user": ["a"], "password": "x"}', b'{"password": "x"}'):
+            assert post("/login", bad) == 400, bad
+        for bad in (b'{"token": "a.b.c"}', b'{"token": ["a"]}', b"{}", b'{"token": "' + b"x" * 200 + b'"}'):
+            assert post("/revoke", bad) == 401, bad
+    finally:
+        proc.send_signal(signal.SIGTERM)
+        proc.wait(10)
