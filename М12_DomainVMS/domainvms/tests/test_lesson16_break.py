@@ -21,7 +21,7 @@ def _frame(t):
     return {"t": float(t), "key": int(t) % 2 == 0}                     # a keyframe every two seconds
 
 
-def _world(wall, card=None, clock=None):
+def _world(wall, card=None, clock=None, **kw):
     fed, north, south, signer, ingest, cam, cam_agent, room_agent, crossings, _, domain_pass = _site(wall)
     down = set()
 
@@ -30,7 +30,7 @@ def _world(wall, card=None, clock=None):
             raise Unreachable(f"{url} did not answer")
         return ingest
     nothing = lambda recording, t0, t1, max_bytes: iter(())            # a card that holds nothing of the range
-    pusher = CameraPusher(SERIAL, cam.flash, dial, card=card or nothing, clock=clock or wall)
+    pusher = CameraPusher(SERIAL, cam.flash, dial, card=card or nothing, clock=clock or wall, **kw)
     ingest.want(SERIAL, "recorder:r")
     rq = ingest.subscribe(SERIAL, "recorder:r", maxsize=1000)
     return south, ingest, pusher, rq, down
@@ -564,3 +564,118 @@ def test_a_frame_with_an_absurd_time_is_refused_and_counted_and_the_frames_after
     PeerLink(peer, SERIAL).send([{"t": 1e300, "key": True}, _frame(wall())])   # …and a peer ingest's stream
     assert [f["t"] for f in rq.drain()] == [wall() - 1] and [f["t"] for f in pq.drain()] == [wall()]
     assert ingest.lost()[SERIAL]["ahead"] == len(bad) + 1 and peer.lost()[SERIAL]["ahead"] == 1
+
+
+# -- the tenth review -----------------------------------------------------------------------------------------------------
+def _forward_step(steady: bool):
+    """The tenth review's probe `pl2_steps`: ten frames a second for 90 s; the road goes at 30 s, the camera's clock steps
+    forward thirty seconds at 60.2 and the road is back at 60.4. `steady`: the camera has its steady clock (a camera's
+    `time.monotonic`; here the cluster's, which is the true one)."""
+    wall, skew = Clock(0.0), [0.0]
+    camclock = lambda: wall() + skew[0]
+    south, ingest, pusher, rq, down = _world(wall, clock=camclock, steady=wall if steady else None, hold_seconds=40.0)
+    w = _Writer(ingest)
+    for n in range(1, 901):
+        wall.t = n / 10
+        if n == 300:
+            down.update(URLS)
+        if n == 602:
+            skew[0] += 30.0                                               # the camera's clock steps forward here
+        if n == 604:
+            down.clear()
+        pusher.pass_once([{"t": camclock(), "key": n % 20 == 0, "n": n}])
+    return ingest, pusher, w
+
+
+def test_a_camera_clock_that_steps_forward_in_a_break_loses_no_second_of_it_and_puts_no_frame_at_a_wrong_time():
+    """The tenth review, blocker, run as its probe ran it. The camera's line of time took up a step BACK; a step forward
+    it left to the frames ("it looks like a pause"), and the camera stated its clock thirty seconds later: the ingest's
+    offset moved by thirty, and the recorder's `have`, moved onto the camera's clock by the new offset, stood thirty
+    seconds past what the recorder had — the camera went on from there, and 30.2 s of the break were on no copy, with
+    `left_s` nought and nothing counted. Now the camera tells a step from a pause by its steady clock (`CamLine`) and
+    takes the step forward up on its line as it takes one back: every frame of the 90 s reaches the recorder once, on
+    the cluster's clock where it was captured, the step is said (`clock_forward_s`), and the ingest's offset does not
+    move. Without a steady clock the step is the old gap — and the review's loss."""
+    ingest, pusher, w = _forward_step(steady=True)
+    got = [(f["n"], f["t"]) for f in w.passes[0]]
+    assert [n for n, _ in got] == list(range(1, 901)) and w.repeats == 0           # every frame, once, in order
+    assert all(abs(t - n / 10) < 1e-6 for n, t in got)                              # …where it was captured
+    assert pusher.said()["clock_forward_s"] == 30.0 and pusher.continued["left_s"] == 0.0
+    assert ingest.cams[SERIAL].clock_steps == 0
+    ingest, pusher, w = _forward_step(steady=False)                                 # no steady clock: the review's run
+    assert 900 - len(w.passes[0]) >= 300 and ingest.cams[SERIAL].clock_steps == 1
+
+
+def test_the_cameras_offset_is_held_through_the_travel_of_its_requests_and_moves_only_when_its_clock_does():
+    """Feedback DU — the product's, found on a real engine — checked in the course by the ninth review's answer: the
+    ingest measured the camera's offset anew on every request, a request's travel in it, so the first frame of a request
+    landed a few milliseconds before the last one written (the engine refuses it) or after it (a hole). It is held now:
+    two hundred requests whose travel is 0–200 ms put a thousand frames on the cluster's clock 20 ms apart, every one, none
+    twice; one request a second on its way moves nothing. A camera clock found AHEAD by more than `OFFSET_HOLD` moves the
+    offset at once (no request arrives before it was sent); one found BEHIND moves it only when every request for
+    `OFFSET_RISE` says so. Each move is counted (`clock_steps`)."""
+    import random
+    from domain.ingest import OFFSET_RISE
+    wall = Clock(1000.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    token, w, rnd, n, true = _token(ingest, pusher), _Writer(ingest), random.Random(16), [0], [1000.0]
+
+    def request(travel, camera=0.0):                                     # five frames of the last tenth of a second
+        true[0] += 0.1
+        frames = []
+        for k in range(5):
+            n[0] += 1
+            frames.append({"t": true[0] - 0.08 + k * 0.02 + camera, "key": n[0] % 25 == 1, "n": n[0]})
+        wall.t = true[0] + travel                                        # the ingest's clock as the request arrives
+        ingest.push(token, SERIAL, frames, camera_now=true[0] + camera)
+    for _ in range(200):
+        request(rnd.uniform(0.0, 0.2))
+    t = w.written
+    assert len(t) == 1000 and w.repeats == 0 and ingest.cams[SERIAL].clock_steps == 0
+    assert all(abs((b - a) - 0.02) < 1e-6 for a, b in zip(t, t[1:]))     # one offset: nothing early, no hole
+    request(1.0)                                                         # a request a second on its way
+    request(0.1)
+    assert ingest.cams[SERIAL].clock_steps == 0 and len(w.written) == 1010
+    assert all(abs((b - a) - 0.02) < 1e-6 for a, b in zip(w.written[-11:], w.written[-10:]))
+    request(0.1, camera=3.0)                                             # its clock is found three seconds ahead
+    assert ingest.cams[SERIAL].clock_steps == 1
+    for _ in range(int(OFFSET_RISE / 0.1) - 5):
+        request(0.1, camera=2.5)                                         # …and then half a second behind that
+    assert ingest.cams[SERIAL].clock_steps == 1                          # not yet: it could be the requests' travel
+    for _ in range(10):
+        request(0.1, camera=2.5)
+    assert ingest.cams[SERIAL].clock_steps == 2                          # every request for `OFFSET_RISE` said so
+
+
+def test_one_frame_far_past_the_stream_silences_no_recorder_at_any_door():
+    """The tenth review, major, run as its probe ran it: a frame stamped inside the bound of its door but far past the
+    stream — now+59 inside `FRAME_AHEAD`, now+9 — became the subscriber's last frame, and the frames after it were
+    dropped as repeats: 1 of 251 reached the recorder, 26 of 251 — at the camera's door, the forwarder's and a peer's.
+    A camera's own frame is held to its own clock now (`CAMERA_AHEAD`), and in the tee a frame further past the stream
+    than `STREAM_JUMP` is the stream's only when the frame after it follows it: 251 of 251 at every door, the stray
+    frame counted (`ahead`). A stream that truly jumps — a push begun again after a pause — loses nothing."""
+    from domain.ingest import Ingest, PeerLink
+    wall = Clock(1000.0)
+    south, ingest, pusher, rq, down = _world(wall)
+    token = _token(ingest, pusher)
+    peer = Ingest("south", ["srt://srv-2.south:9000"], keys=lambda: {}, wall=wall)
+    pq, link = peer.subscribe(SERIAL, "recorder:p", maxsize=1000), PeerLink(peer, SERIAL)
+    doors = [("push", lambda fs: ingest.push(token, SERIAL, fs, camera_now=wall()), rq, ingest),
+             ("inject", lambda fs: ingest.inject(SERIAL, fs), rq, ingest), ("relay", link.send, pq, peer)]
+    for ahead in (59.0, 9.0):
+        for door, send, q, at in doors:
+            before, got, good = at.lost().get(SERIAL, {}).get("ahead", 0), [], []
+            for i in range(251):
+                wall.advance(0.2)
+                good.append(wall())
+                send([_frame(wall())] + ([{"t": wall() + ahead, "key": True}] if i == 1 else []))
+                got += [f["t"] for f in q.drain()]
+            assert got == good, (door, ahead, len(got))                  # every frame of the stream, none of the stray
+            assert at.lost()[SERIAL]["ahead"] == before + 1, (door, ahead)
+    wall.advance(20.0)                                                   # the camera pushes again after a pause
+    pushed = []
+    for _ in range(5):
+        wall.advance(0.2)
+        pushed.append(wall())
+        doors[0][1]([_frame(wall())])
+    assert [f["t"] for f in rq.drain()] == pushed
