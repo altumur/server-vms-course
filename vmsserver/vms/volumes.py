@@ -482,8 +482,14 @@ def admit_recording(ctl, row: dict, worker: str) -> bool:
 # worker with it, and the backup loses its stream at exactly the moment it exists for. Beside the backup,
 # the worker survives the primary's server, the backup keeps recording, and the primary backfills its move
 # from the backup.
-def rank_near_recording(ctl, recording_id: str) -> int:
-    names = backups(ctl.vars)
+#
+# Which volumes are backups is read once per look at the recorders' heartbeats (`memo`, `spec.NearIndex`), not once per
+# recording ranked (the scaling pass); each recording's own row is read once, when it is ranked.
+def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int:
+    memo = {} if memo is None else memo
+    if "backups" not in memo:
+        memo["backups"] = backups(ctl.vars)
+    names = memo["backups"]
     if not names:
         return 0
     items, _ = ctl.vars.get(f"{SUB}/recordings/{recording_id}")
