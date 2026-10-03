@@ -1930,7 +1930,17 @@ class SpecConsole:
         if access is None:
             return h._send(200, {"gated": False, "user": h.headers.get("X-User", "operator"), "login": None})
         secure = (h.headers.get("X-Forwarded-Proto", "") == "https")
-        body = h._body() if method == "POST" else {}
+        # The door in is anybody's, so its body is whatever anybody sends (the review's ninth pass, minor: a body that
+        # is a list, a token that is not a string, brackets past the parser's depth were 500): an object holding a
+        # string token, or an emergency entry — else 400, and nothing is asked of the gate.
+        from .rows import PARSE_ERRORS
+        try:
+            body = h._body() if method == "POST" else {}
+        except (*PARSE_ERRORS, OSError):
+            body = None
+        if not isinstance(body, dict) or not isinstance(body.get("token", ""), (str, type(None))):
+            return h._send(400, {"detail": "the door in takes {\"token\": \"…\"} or {\"glass\": {\"who\", \"why\", "
+                                           "\"password\"}}", "error": "not a session request"})
         if method == "POST" and isinstance(body.get("glass"), dict):
             # The emergency entry (`Gate.open_glass`): who, why and the one local password. What comes back is
             # a session in this process's memory, carried by a cookie of its own.

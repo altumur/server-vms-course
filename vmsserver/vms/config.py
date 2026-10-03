@@ -142,11 +142,22 @@ def device_of(source: str) -> str:
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
 # is (`identity` in its row, `vms/devices/<device>`: a serial number, a MAC; the driver's word). A DNS name and the
-# address it resolves to are two keys and one identity. `one_device(vars_)(key)` is a token: equal tokens, one device;
-# the vendor is part of it, so two vendors' serial numbers do not meet. A spelling no holder has opened yet has no
-# identity, and is its key alone until a holder opens it — which a camera moved onto it makes happen within the
-# holder's next pass; and a holder that finds it is a second name of a device known already refuses it there
-# (`VmsWorker.describe_devices`; М10B Lesson 15).
+# address it resolves to are two keys and one identity. `one_device(vars_)(key)` is a token: equal tokens, one device
+# for the rights asked of it. A spelling no holder has opened yet has no identity, and is its key alone until a holder
+# opens it (М10B Lesson 15).
+#
+# A HOLDER'S WORD IS NOT A REFUSAL, AND NOT KNOWING IS A GRANT ON THE CLUSTER (the owner's decisions on the review's
+# ninth pass). An identity is the driver's word, and firmware clones say the same serial number: the holder that finds
+# its device's identity under another key says so and goes on (`VmsWorker.describe_devices`), it refuses nothing. So
+# the bypass the eighth pass closed at the holder is closed here, where rights are asked: a camera moved onto a device
+# no holder has learned the identity of — a DNS name, a spelling nothing reads as one (`010.000.000.050`, full-width
+# digits), any key in the course's build, which has no device factory — needs a grant on the whole cluster
+# (`vms/console.py`, `source_cams`), until a holder opens the device and says what it is. The identity groups devices
+# for rights only, where two devices taken for one ask for MORE: a camera is still one channel of ONE key
+# (`volumes.refuse_camera`), so two clones' cameras are two cameras.
+#
+# …and across vendors: the token is the identity alone (the review's ninth pass, (д)) — one recorder under two drivers
+# is one recorder, and two vendors' equal strings only ask for more.
 def device_identities(vars_) -> dict[str, str]:
     prefix = SPEC.sub.config(DEVICES, "")
     out = {}
@@ -158,9 +169,31 @@ def device_identities(vars_) -> dict[str, str]:
     return out
 
 
-def one_device(vars_):
-    ids = device_identities(vars_)
-    return lambda key: ("id", key.split("/", 1)[0], ids[key]) if key in ids else ("at", key)
+# READ BY KEY, ONCE (the review's ninth pass, minor; a count): `one_device` read every device row there is on every
+# command, every move and every scenario edit — rows are never removed, and 1000 of them were 1009 reads for one press
+# of a relay (in М11, a thousand HTTP calls to Nomad). It reads the row of a device it is asked about, the first time it
+# is asked, and nothing else: one instance per request, so what it says is the store's at that request.
+class Devices:
+    def __init__(self, vars_):
+        self.vars, self.ids = vars_, {}
+
+    def identity(self, key: str) -> str:
+        if key not in self.ids:
+            items, _ = self.vars.get(SPEC.sub.config(DEVICES, key))
+            self.ids[key] = str((items or {}).get("identity") or "").strip() if isinstance(items, dict) else ""
+        return self.ids[key]
+
+    def known(self, key: str) -> bool:
+        """Whether a holder has opened the device under this key and learned what it is."""
+        return bool(self.identity(key))
+
+    def __call__(self, key: str) -> tuple:
+        ident = self.identity(key)
+        return ("id", ident) if ident else ("at", key)
+
+
+def one_device(vars_) -> Devices:
+    return Devices(vars_)
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------

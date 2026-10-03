@@ -92,7 +92,7 @@ class LiveWorker(Worker):
                  peer_factory=None, env: dict | None = None):
         env = dict(os.environ if env is None else env)
         super().__init__(LIVE, None, vars_, objects, clock=clock, wall=wall)
-        self.gate = Gate(self.vars, self.wall)      # who may be given a stream here (`handler`)
+        self.gate = Gate(self.vars, self.wall, glass=False)   # who may be given a stream here (`handler`): a token, never the console's emergency session
         self._said_loopback: set = set()            # cameras whose fan-out we were told is on another server's loopback
         self.claim_slot(prefer=name if name is not None else runtime.slot(env, "GATEWAY_NAME", "g"))
         self.ctl = ctl                                              # the live SpecController with the gateway's token: deletes its own idle units

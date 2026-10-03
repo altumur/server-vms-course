@@ -554,7 +554,7 @@ class Ingest:
         shift = 0.0 if camera_now is None else now - _finite_clock(camera_now)
         try:
             deadline = finite(deadline)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):    # 10**400 too (the review's ninth pass)
             raise Refused(f"an ask's deadline is a number of seconds, not {deadline!r}") from None
         if deadline + shift > now + ASK_DEADLINE_MAX:
             raise Refused(f"an ask's deadline is at most {ASK_DEADLINE_MAX:.0f} s ahead; this one is "
@@ -1795,7 +1795,7 @@ def _finite_clock(camera_now) -> float:
     (the product found `X-Camera-Clock: NaN` did): refused."""
     try:
         return finite(camera_now)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise Refused(f"the camera's clock is a number of seconds, not {camera_now!r}") from None
 
 

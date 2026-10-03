@@ -13,7 +13,7 @@ from cluster.objectstore import FsObjectStore
 from cluster.variables import FakeVariables
 from domain.agent import GRANTS_PATH, KEYS_PATH, REVOKED_PATH
 from domain.grants import Grant, grants_from_items, grants_to_items
-from domain.tokens import RevocationList, TokenIssuer
+from domain.tokens import RevocationList, TokenError, TokenIssuer, verify
 from vms.console import make_console
 from vms.controller import VmsController
 
@@ -221,5 +221,51 @@ def test_the_emergency_account_opens_a_session_here_with_the_domain_away_and_eve
         code, body, cookie = raw("POST", "/session", {"glass": {"who": "carol", "why": "still down", "password": "glass-for-south"}})
         me = {"Cookie": cookie.split(";")[0]}
         assert raw("DELETE", "/session", headers=me)[0] == 200 and raw("GET", "/cameras", headers=me)[0] == 401     # closed: gone from memory
+    finally:
+        srv.shutdown()
+
+
+def test_a_token_of_any_shape_but_ours_is_401_before_and_after_its_signature():
+    """The review's ninth pass, minor — a run: a token whose header is a list, whose `kid` is a list, or whose part is
+    brackets nested past the parser's depth raised out of `tokens.verify` before the signature was looked at — an
+    `AttributeError`, a `TypeError`, a `RecursionError` — and the console answered 500 (no answer at all) instead of
+    401. And a token whose signature holds and whose `exp` is a word, `NaN` or 10**400, or whose `jti` is a list: no
+    signer of ours writes one, and it is refused too. Each is 401 at a cluster's console and at `POST /session`."""
+    from domain.tokens import _b64
+    clk = Clock(1_757_500_000.0)
+    signer = TokenIssuer("acme")
+    vars_, ctl, srv, base = _cluster(clk)
+    vars_.put(KEYS_PATH, signer.keyset().to_items())
+    vars_.put(GRANTS_PATH, grants_to_items([Grant("root", "admin", None, clk() + 86400)]))
+    good = json.dumps({"alg": "EdDSA", "kid": signer.kid}).encode()
+
+    def signed(payload: str) -> str:
+        head = _b64(good) + "." + _b64(payload.encode())
+        return head + "." + _b64(signer.key.sign(head.encode()))
+    now = clk()
+    garbage = [
+        _b64(b"[1, 2]") + "." + _b64(b"{}") + ".x",                                      # a header that is a list
+        _b64(json.dumps({"kid": ["a"]}).encode()) + "." + _b64(b"{}") + ".x",             # a `kid` that is a list
+        _b64(good) + "." + _b64(b"[1]") + ".x",                                           # a payload that is a list
+        ["a", "list"],                                                                   # not even a string (a body's token)
+        signed(json.dumps({"sub": "root", "iat": now, "exp": "ten", "jti": "j1"})),
+        signed('{"sub": "root", "iat": %s, "exp": NaN, "jti": "j2"}' % now),
+        signed('{"sub": "root", "iat": %s, "exp": 1%s, "jti": "j3"}' % (now, "0" * 400)),
+        signed(json.dumps({"sub": "root", "iat": now, "exp": now + 900, "jti": ["j4"]})),
+    ]
+    try:
+        assert _call(base, "GET", "/cameras", signer.issue("root", 900, now=now))[0] == 200   # ours: admitted
+        for tok in garbage:
+            if isinstance(tok, str):
+                code, body = _call(base, "GET", "/cameras", tok)
+                assert code == 401, (tok[:40], code, body)
+            code, body = _call(base, "POST", "/session", body={"token": tok})
+            assert code in (400, 401) and (code == 401 or not isinstance(tok, str)), (tok[:40], code, body)
+        for tok in garbage + [_b64(good) + "." + _b64(b"[" * 1_000_000 + b"]" * 1_000_000) + ".x"]:   # past the depth: offline
+            try:
+                verify(tok, signer.keyset(), now=now)
+                raise AssertionError(f"{tok[:40]!r} verified")
+            except TokenError:
+                pass
     finally:
         srv.shutdown()
