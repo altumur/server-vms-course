@@ -1673,7 +1673,7 @@ class SpecController(Controller):
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")
         for w, server in self.gone_servers().items():                  # the server is gone: its slot lapsed and its resource silent
             gone_for.setdefault(w, f"server {server} gone: slot {w} lapsed and its resource silent")
-        idx = self.near_index()                       # one look at what is followed, for every unit moved
+        idx = None                                    # one look at what is followed, taken when a unit is moved
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
@@ -1689,6 +1689,7 @@ class SpecController(Controller):
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
                 pool = self.eligible(row, live) if row else live
+                idx = self.near_index() if idx is None else idx
                 best, free, near = self._pick(pool, uid, idx)
                 if best is None:
                     # THIS unit waits, listed where it was — and the next one is looked at: each has filters of
@@ -1713,10 +1714,12 @@ class SpecController(Controller):
         if budget <= 0 or not self.spec.home:
             return []
         moves, pool = [], self._pool(workers)
-        idx = self.near_index() if self.spec.home == "near" else None     # one look for every unit that follows
+        idx = None                                    # one look for every unit that follows, taken at the first
         for row in self.units():
             if len(moves) >= budget:
                 break
+            if idx is None and self.spec.home == "near":
+                idx = self.near_index()
             uid, home = row["id"], self.home_for(row, idx)
             pl = self.placement(uid)
             if not home or pl is None or self.place_of(pl.worker) == home:
