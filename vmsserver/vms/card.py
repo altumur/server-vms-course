@@ -90,6 +90,7 @@ import threading
 import time
 
 from w2cplatform.obsd import SMPL, Sample, archive_ms, unix_s
+from w2cplatform.rows import number
 
 from . import volumes
 from .archive import stitch
@@ -1629,10 +1630,12 @@ class CardRecorder(RecWorker):
         from w2cplatform.events import ALARM, EventLog
         now = self.wall() if now is None else now
         said = self._stream() or {}
-        try:
-            failed, evicted = float(said.get("failed_s") or 0.0), float(said.get("evicted_s") or 0.0)
-        except (TypeError, ValueError):
-            return 0.0
+        # The pusher's numbers through `rows.number` (the review's tenth pass): `float` took `nan` for seconds, and
+        # `lost_seen` became `nan` for good — `lost <= nan` is never true, so every pass after it was footage lost
+        # again; and 400 digits raised `OverflowError` past `(TypeError, ValueError)`, out of `gate_pass` before
+        # `note_pass`. A word in one of them is read as nothing lost, counted once a spell (`fields_garbled`).
+        failed = number(f"{REC.name}/{self.name}/stream#failed_s", said.get("failed_s") or None, default=0.0)
+        evicted = number(f"{REC.name}/{self.name}/stream#evicted_s", said.get("evicted_s") or None, default=0.0)
         lost = failed + evicted
         if lost <= self.lost_seen + 0.05:
             if self.lost_said is not None and now - self.lost_grew >= self.WELL_FOR:

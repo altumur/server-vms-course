@@ -44,7 +44,7 @@ from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import FIELDS, PARSE_ERRORS, number
+from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
 
 from . import volumes
@@ -2442,8 +2442,10 @@ class RecWorker(VmsWorker):
             # …and a range that does not parse is THIS request's refusal (the review's sixth pass, the class of the
             # holder's commands): read bare, it raised out of `requests` on every pass, and no request behind it — any
             # recording's — was fetched. Answered, so the console clears the row.
+            # …`finite`, not `float` (the review's tenth pass): `from` of 400 digits, a JSON integer a hand edit leaves,
+            # raised `OverflowError` past this `except`, and the same pass stopped again.
             try:
-                t0, t1 = float(it["from"]), float(it["to"])
+                t0, t1 = finite(it["from"]), finite(it["to"])
             except (KeyError, TypeError, ValueError):
                 log.error("%s: request %s refused: from=%r to=%r is not a range", self.name, rid, it.get("from"), it.get("to"))
                 self.fetched.append(rid)
@@ -3036,7 +3038,7 @@ class RecWorker(VmsWorker):
     # volume's own `<recording>/e0` is the truth of what is there: a recorder starts from it for every recording of
     # every keep, and from an event that says MORE — the ring took some while nobody was looking — it raises the alarm.
     def _keeps_held_before(self, declared, recordings_of, inside) -> dict:
-        from w2cplatform.events import alarm_tree, buckets_under, read_bucket, when
+        from w2cplatform.events import alarm_tree, buckets_under, read_bucket
         ids = {k.id for k in declared}
         held: dict = {}
         for k in declared:
@@ -3049,16 +3051,25 @@ class RecWorker(VmsWorker):
                 try:
                     for b in buckets_under(self.archive_root, sub, unit, 600):
                         lines += [e for e in read_bucket(os.path.join(self.archive_root, b.path))
-                                  if e.get("keep") in ids and e.get("volume") == self.volume]
+                                  if isinstance(e, dict) and e.get("keep") in ids and e.get("volume") == self.volume]
                 except OSError:
                     continue
         said: dict = {}
-        for e in sorted(lines, key=when):
+        # A line whose moment or `seconds` is not a number — a word, `nan`, 400 digits from a hand edit of the bucket —
+        # is that line's, read as not said and counted (the review's tenth pass): read bare, it raised out of the keeps'
+        # pass, and no keep of this volume was looked at that pass.
+        dated = []
+        for e in lines:
+            try:
+                dated.append((finite(e.get("occurred", e["t"])), finite(e["seconds"]) if "seconds" in e else 0.0, e))
+            except PARSE_ERRORS as err:
+                FIELDS.garbled(f"{REC.name}/{e.get('recording', '')}#{e.get('kind')}", err)
+        for _, seconds, e in sorted(dated, key=lambda d: d[0]):
             key = (str(e["keep"]), str(e.get("recording", "")))
             if e.get("kind") == "archive.keep.copied" and "seconds" in e:
-                said[key] = float(e["seconds"])
+                said[key] = seconds
             elif e.get("kind") == "archive.keep.lost" and key in said:
-                said[key] = max(0.0, said[key] - float(e.get("seconds", 0)))
+                said[key] = max(0.0, said[key] - seconds)
         for key, v in said.items():
             held[key] = max(held.get(key, 0.0), v)
         return held
