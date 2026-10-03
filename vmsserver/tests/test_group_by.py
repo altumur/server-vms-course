@@ -133,6 +133,56 @@ def test_a_group_that_outgrows_its_worker_is_unplaceable_and_says_which_device()
     assert ctl.where(c) == "w-1"
 
 
+def test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_not_placed_alone():
+    """The eleventh review, a minor: the group's worker was looked for among the workers the filters LEFT, so a channel
+    the device's worker did not pass — a label given to that channel, the server's row unread this pass — found no
+    group and was placed alone on another worker: two sessions to one recorder. The group's worker is looked for in the
+    whole pool now; such a channel waits, and `/unplaceable` says beside whom."""
+    box = Box(); ctl, con = _ctl(box)
+    _worker(box, "w-1", "srv-a", labels="vlan:a"); _worker(box, "w-2", "srv-b", labels="vlan:a,vlan:c")
+    a = con.create_camera({"name": "ch1", "source": NVR + "1", "labels": "vlan:a"})["id"]
+    b = con.create_camera({"name": "ch2", "source": NVR + "2", "labels": "vlan:a"})["id"]
+    ctl.ensure_placed()
+    ctl.move(a, "w-1", "the operator put this recorder here"); ctl.move(b, "w-1", "…and its second channel")
+    c = con.create_camera({"name": "ch3", "source": NVR + "3", "labels": "vlan:a,vlan:c"})["id"]
+    ctl.ensure_placed()
+    assert ctl.placement(c) is None, f"placed alone on {ctl.where(c)}: two sessions to one recorder"
+    why = {u["id"]: u.get("why", "") for u in ctl.unplaceable()}
+    assert "its device is held on w-1" in why[c], why
+
+
+def test_a_released_workers_group_goes_whole_to_a_worker_with_room_and_a_rebalance_moves_groups_whole():
+    """The product's cross-check of the eleventh review: placement and redistribution, not only `ensure_reach`, must
+    keep a device's channels together. `redistribute` moved a draining server's channels one by one onto `_pick`'s
+    worker — the near one, with room for two of three, and the third then waited behind its full worker for good; and
+    `rebalance` moved its first candidate alone — a channel away from its recorder's other channels. The first of a
+    group now goes where the whole group has room, and a rebalance moves a group whole, inside its budget, or another
+    unit."""
+    from vms.config import REC_SPEC
+    box = Box(); ctl, con = _ctl(box)
+    _worker(box, "w-1", "srv-a")
+    nvr = [_cam(con, f"ch{c}", NVR + str(c))["id"] for c in (1, 2, 3)]
+    ctl.ensure_placed()
+    _worker(box, "w-2", "srv-b", capacity=2); _worker(box, "w-3", "srv-c", capacity=50)
+    box.objects.put(REC_SPEC.sub.heartbeat_key("r-1"),                  # channel 1's recorder runs on srv-b: near
+                    Heartbeat("r-1", box.wall(), [{"id": "rec-1", "cam": str(nvr[0]), "phase": "running"}],
+                              {"server": "srv-b"}).to_bytes())
+    VmsController(box.vars, box.objects, wall=box.wall).drain("srv-a")      # the operator's statement
+    ctl.redistribute()
+    assert [ctl.where(c) for c in nvr] == ["w-3"] * 3
+
+    box2 = Box(); ctl2, con2 = _ctl(box2)
+    _worker(box2, "w-1", "srv-a", capacity=10)
+    group = [_cam(con2, f"ch{c}", NVR + str(c))["id"] for c in (1, 2, 3)]
+    single = [_cam(con2, f"cam{c}", f"driverpack://acme/10.0.0.{80 + c}/ch/1")["id"] for c in (1, 2, 3)]
+    ctl2.ensure_placed()
+    _worker(box2, "w-2", "srv-b", capacity=10)
+    moves = ctl2.rebalance(2, dead_band=0.1)
+    assert [m[0] for m in moves] == single[:2] and {ctl2.where(c) for c in group} == {"w-1"}, moves
+    moves = ctl2.rebalance(3, dead_band=0.0)                             # room in the budget for the whole group now
+    assert {ctl2.where(c) for c in group} == {"w-2"} and len(moves) == 3, moves
+
+
 def test_a_spec_that_asks_for_both_on_one_field_is_refused_at_load():
     """`group_by: cam` with `spread_by: cam` says "one worker" and "different
     servers" about the same pair of units. A spec that contradicts itself must

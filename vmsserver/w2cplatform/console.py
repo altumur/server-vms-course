@@ -1675,6 +1675,10 @@ class SpecConsole:
                   f"{p}_decommission_requests_standing {r('decommission_requests_standing', int)}",
                   f"# TYPE {p}_workers_hung gauge",
                   f"{p}_workers_hung {len(rep.get('workers_hung')) if isinstance(rep.get('workers_hung'), list) else 0}",
+                  # units of groups left whole on a server that no longer reaches them, and servers whose labels row did
+                  # not read on the pass's last read (the eleventh review: each was a log line or a page only)
+                  f"# TYPE {p}_units_waiting_for_reach gauge", f"{p}_units_waiting_for_reach {r('reach_waiting', int)}",
+                  f"# TYPE {p}_servers_labels_unread gauge", f"{p}_servers_labels_unread {r('servers_labels_unread', int)}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.

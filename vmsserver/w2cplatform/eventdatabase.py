@@ -199,13 +199,15 @@ class EventIndex:
         for raw in data[:cut].splitlines():
             if not raw.strip():
                 continue
+            # A torn line in the middle: the writer died mid-append. And a line nested past JSON's depth, or one with no
+            # time, raised out of the read of the whole bucket: that line's too, counted (the eleventh review's sweep of
+            # `mark_of`).
             try:
                 e = json.loads(raw)
-            except ValueError:                           # a torn line in the middle: the writer died mid-append
+                lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)), e.get("cam"),
+                              {k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")}))
+            except PARSE_ERRORS:
                 self.torn += 1
-                continue
-            lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)), e.get("cam"),
-                          {k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")}))
         read = _Read(st.st_size, st.st_mtime_ns, start + cut, tuple(lines), ident, head)
         with self._lock:
             old = self._cache.pop(path, None)

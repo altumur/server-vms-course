@@ -1370,3 +1370,148 @@ def test_a_card_recorder_whose_stream_is_said_and_whose_owed_is_not_says_so_and_
     rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole
     rec.heartbeat_once()
     assert "owed" not in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
+
+
+# -- the eleventh review -------------------------------------------------------------------------------------------------
+def _shot(n: int, t: float):
+    """The camera's frame number `n`, captured at `t` on its own clock: ten a second, a key frame every two seconds, its
+    number in its body."""
+    from vms.worker import FAKE_PPS, FAKE_SPS
+    from w2cplatform.obsd import video
+    key = n % 20 == 0
+    body = (FAKE_SPS + FAKE_PPS + b"\x00\x00\x00\x01\x65" if key else b"\x00\x00\x00\x01\x41") + b"\x80" * 100 + \
+        n.to_bytes(8, "big")
+    return video(archive_ms(t), archive_ms(t + 0.1), body, key, 1280, 720)
+
+
+class _Process:
+    """One process of the camera over the card in `path`: its ring on the camera's clock and steady clock (`boot`: the
+    boot's id, or None), the card, the card's writer writing every frame. `film` — the sensor from frame `n` until the
+    true time `until`, the true clock moving with it (`at(seconds since start)` before each frame)."""
+
+    def __init__(self, path, camclock, steady, boot=None, epoch=1):
+        self.ring = CamRing(window=600.0, clock=camclock, steady=steady)
+        self.ring.line.boot = (lambda: boot) if boot else None
+        self.card = CardBuffer(path, segment_span=10.0)
+        self.act = CardActuator(self.ring, self.card, threaded=False)
+        self.act("start", {"id": "1-card", "epoch": epoch})
+
+    def film(self, n, start, until, true, camclock, at=None):
+        while start + n / 10 < until - 1e-6:
+            true[0] = start + n / 10
+            if at is not None:
+                at(true[0] - start)
+            self.ring.add(_shot(n, camclock()))
+            n += 1
+            if n % 5 == 0:
+                self.act.drain()
+        self.act.drain()
+        return n
+
+    def close(self):
+        self.act.stop_all()
+        self.card.close()
+
+
+def _on_card(path):
+    """Every frame a card holds, read as a camera's next process reads it: `{number: its time}`, and its stretches."""
+    card = CardBuffer(path)
+    got = {int.from_bytes(s.body[-8:], "big"): unix_s(s.begin) for s in card.range("1-card", 0, 4e9)}
+    return got, [(round(a, 1), round(b, 1)) for a, b in card.coverage("1-card")]
+
+
+def test_the_cameras_line_outlives_its_process_on_the_card_and_what_its_clock_did_meanwhile_is_a_step_counted():
+    """The eleventh review, blocker 1 (its probe `pr1_restart_line`): the camera's line of time took up a step of J, the
+    card was written on it — and a process started again began a line of its own, equal to the raw clock: the ingest's
+    offset moved by J, and backfill's ranges read the card J away from the hole. The line is kept on the card now
+    (`line.json`, `CardActuator.note_line`) and the next process goes on from it (`CamLine.restore`): every frame of
+    both processes lies on the card where it was captured, the two stretches apart, and the step the first took is not
+    taken again. In the same boot the line goes on by the steady clock, so a clock that stepped while no process ran is
+    a step, counted; in a new boot it goes on by the conversion the card kept, and a clock behind what the card holds
+    puts the frames right after its newest — counted as a step back."""
+    import shutil
+    for jump, meanwhile, boots in ((30.0, 0.0, ("b1", "b1")), (-30.0, 0.0, ("b1", "b1")), (30.0, 20.0, ("b1", "b1")),
+                                   (-30.0, -20.0, ("b1", "b1")), (30.0, 0.0, ("b1", "b2")), (30.0, -100.0, ("b1", "b2"))):
+        path = tempfile.mkdtemp(prefix="card-")
+        true, skew = [100_000.0], [0.0]
+        start = true[0]
+        camclock, steady = (lambda: true[0] + skew[0]), (lambda: true[0] - start)
+
+        def step_at(at):
+            if abs(at - 10.0) < 0.05:
+                skew[0] += jump                                           # NTP steps the camera's clock
+        try:
+            p = _Process(path, camclock, steady, boot=boots[0])
+            p.film(0, start, start + 30, true, camclock, step_at)
+            assert abs(p.ring.skew() + jump) < 0.002
+            p.close()
+            skew[0] += meanwhile                                          # …and again, with no process to see it
+            new_boot = boots[1] != boots[0]
+            true[0] = start + 40
+            q = _Process(path, camclock, (lambda: true[0] - start - 40) if new_boot else steady, boot=boots[1], epoch=2)
+            q.film(400, start, start + 60, true, camclock)
+            line = q.ring.line
+            q.close()
+            got, stretches = _on_card(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        case = (jump, meanwhile, boots)
+        assert sorted(got) == list(range(300)) + list(range(400, 600)), case            # every frame, once
+        assert stretches[-1][0] >= max(b for _, b in stretches[:-1]), (case, stretches)  # the two processes apart
+        if new_boot and meanwhile < 0:                                  # a new boot, its clock behind the card's newest:
+            assert got[299] < got[400] < got[299] + 0.01, case           # …right after it,
+            assert line.back == 1 and line.back_by >= 69_000, case      # …a step back, counted
+            continue
+        assert all(abs(t - (start + n / 10)) < 0.002 for n, t in got.items()), case     # where it was captured
+        if meanwhile:
+            assert (line.forward, line.back) == ((1, 0) if meanwhile > 0 else (0, 1)), case
+            assert abs((line.forward_by or line.back_by) - abs(meanwhile) * 1000) < 2, case
+        else:
+            assert line.forward == line.back == 0, case                 # the first process's step: not taken again
+
+
+def test_a_camera_without_an_rtc_battery_relabels_what_it_recorded_before_its_clock_was_set_and_its_boots_never_overlap():
+    """The eleventh review, blocker 2, a regression (its probe `pr6_rtcless`): a camera with no RTC battery boots in 1970,
+    and NTP sets its clock ten seconds later — a step of fifty-six years, which the line took up: the line stayed in 1970
+    for the life of the process, a reboot began it in 1970 again, the two boots overlapped on the card and the first
+    boot's hole was never asked for where the card held it. A clock SET (a step of more than a year out of a clock before
+    2017) re-anchors the line now (`CamLine._set`): what was placed before it is relabelled — the ring, the writer, the
+    segments on the card (`<begin>@<delta>.smpl`, `CardBuffer.relabel`, read so by the next process) — and every frame of
+    the boot is on the card where it was captured. A reboot whose clock is unset again goes on right after the card's
+    newest until NTP sets it, and is re-anchored through the conversion the card kept: the second boot lands where it
+    was captured too, apart from the first. A clock never set keeps the boots apart all the same, right after the card's
+    newest."""
+    import shutil
+    for ntp_again in (True, False):
+        path = tempfile.mkdtemp(prefix="card-")
+        true, boot_at, rtc = [1_780_000_000.0], [1_780_000_000.0], [False]
+        start = true[0]
+        camclock = lambda: true[0] if rtc[0] else true[0] - boot_at[0]     # 1970 and its uptime until NTP
+        steady = lambda: true[0] - boot_at[0]
+
+        def ntp_at(at):
+            if abs(at - (boot_at[0] - start) - 10.0) < 0.05:
+                rtc[0] = True
+        try:
+            p = _Process(path, camclock, steady, boot="b1")
+            p.film(0, start, start + 300, true, camclock, ntp_at)
+            p.close()
+            first, _ = _on_card(path)
+            assert sorted(first) == list(range(3000)) and all(abs(t - (start + i / 10)) < 0.002 for i, t in first.items())
+            assert p.ring.line.sets == 1 and p.ring.status()["clock_set"] == 1
+            true[0] = boot_at[0] = start + 320                          # rebooted twenty seconds later: 1970 again
+            rtc[0] = False
+            q = _Process(path, camclock, steady, boot="b2", epoch=2)
+            q.film(3200, start, start + 400, true, camclock, ntp_at if ntp_again else None)
+            line = q.ring.line
+            q.close()
+            got, stretches = _on_card(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        assert sorted(got) == list(range(3000)) + list(range(3200, 4000)), ntp_again
+        assert all(got[i] == first[i] for i in range(3000)), ntp_again      # the first boot read back as it was
+        assert line.unset == 1 and stretches[-1][0] >= start + 300, (ntp_again, stretches)   # apart from the first boot
+        if ntp_again:
+            assert line.sets == 1 and all(abs(got[i] - (start + i / 10)) < 0.002 for i in range(3200, 4000)), ntp_again
+        else:                                                           # never set: right after the card's newest
+            assert line.sets == 0 and got[2999] < got[3200] < got[2999] + 0.01, got[3200] - got[2999]

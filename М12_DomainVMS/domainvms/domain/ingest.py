@@ -160,15 +160,25 @@ FRAME_AHEAD = 60.0
 # frame written (the engine refuses it: INCONSISTENT_SEQUENCE_TIMESTAMP — the product lost lead-in frames 131–149 on a
 # real obsd) or twelve after it (a hole). The camera keeps its clock on a line that steps do not move (`vms.card.CamLine`),
 # so the offset does not move either, but for a request's travel: it is held, and moves only when a request says it is off
-# by more than `OFFSET_HOLD` — the product's `OffsetHold`. DOWN at once (the camera's clock further ahead: no request
-# arrives before it was sent, so that is never travel); UP — the camera's clock further behind — only when it is more than
-# `CLOCK_STEP` (no request travels that long) or every request for `OFFSET_RISE` said so: one request that took a second on
-# a cellular uplink is not the camera's clock. Every move is counted (`clock_steps`) and logged: with the camera's line
-# kept, it is the camera's process started again (its line with it), this cluster's own clock stepped, or a clock that
-# drifts with nobody setting it.
+# by more than `OFFSET_HOLD` — the product's `OffsetHold`. DOWN whenever a request says so (the camera's clock further
+# ahead: no request arrives before it was sent, so that is never travel); UP — the camera's clock further behind — only
+# when it is more than `CLOCK_STEP` (no request travels that long) or every request for `OFFSET_RISE` said so: one request
+# that took a second on a cellular uplink is not the camera's clock. Every move is counted (`clock_steps`) and logged:
+# with the camera's line kept (on its card too), it is this cluster's own clock stepped, a first request that travelled
+# long, or a clock that drifts with nobody setting it.
+#
+# …AND A MOVE DOWN IS TAKEN BY THE FRAMES, NOT AT ONCE (the eleventh review, major: "a move down at once sends the next
+# frames to `repeats`"). Taken at once, the frames after it landed up to the move earlier than the frames before it, and
+# every subscriber dropped them as not newer than its last: a camera clock 0.5 % fast lost 4 frames at every move — one
+# every 50 s — and a first request that travelled T seconds (TLS, a cold uplink) lost T seconds of frames when a quick one
+# followed. Now a move down of up to `CLOCK_STEP` is a TARGET the open stream slews to (`_slewed`): each frame newer than
+# the newest one the camera pushed takes the offset down by at most `OFFSET_SLEW` of its distance from that one — the
+# frames come half as far apart until the offset is there, never one behind another, never one lost. A move up leaves a
+# gap and loses nothing, and a move of more than `CLOCK_STEP` either way is a step of somebody's clock, taken at once.
 OFFSET_HOLD = 0.25
 OFFSET_RISE = 30.0
 CLOCK_STEP = 5.0
+OFFSET_SLEW = 0.5
 # A CAMERA'S OWN FRAME IS HELD TIGHTER (the tenth review, major). Held to `FRAME_AHEAD`, a frame of now+59 passed, became
 # the recorder's last frame (`_InOrder`), and the next 59 s of the camera's frames were dropped as repeats. A camera's
 # frame lies on its line of time no later than its clock by `RING_AHEAD` (`vms.card.CamLine` keeps one further ahead
@@ -288,6 +298,8 @@ class _Camera:
     offset: float = 0.0                                          # the cluster's clock minus the camera's, held (`OFFSET_HOLD`)
     told: bool = False                                           # …and the camera has stated its clock at least once
     rise: tuple | None = None                                    # …requests that put it higher: since when, and the least
+    target: float | None = None                                  # …a lower offset the open stream slews to (`_slewed`)
+    newest: float | None = None                                  # the newest frame it pushed, on its own clock
     clock_steps: int = 0                                         # times the held offset moved
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
     outcomes: dict[str, tuple] = field(default_factory=dict)     # what became of each, when, and whose ask: (outcome, at, by)
@@ -311,6 +323,9 @@ class Ingest:
         # `written(ref) -> float | None`: how far this cluster's recorder WROTE the camera, on the cluster's clock
         # (`written_from_heartbeats`) — the `have` every poll answer carries (feedback CB).
         self.written = written
+        # …and how far the cluster ABOVE wrote it, as its ingest told this cluster's forwarder (`Forwarder`; the product's
+        # DY): with a relay, the camera's `have` is the lesser of the two (`_have`), and its card holds until both have it.
+        self.up_have: dict[str, float] = {}
         # A recorder that lets go of a camera — or dies — wakes nobody: nothing here changes. So a held poll that
         # has a word to say about coverage looks again at least this often (feedback AP: the product does 5 s).
         self.recheck = 5.0
@@ -425,13 +440,20 @@ class Ingest:
         return p
 
     def _offset(self, ref: str, cam: _Camera, now: float, offset: float) -> None:
-        """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down at once, up past
-        `CLOCK_STEP` at once and otherwise when every request for `OFFSET_RISE` said so (above, `OFFSET_HOLD`)."""
+        """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down by the frames (a
+        target the stream slews to), up past `CLOCK_STEP` at once and otherwise when every request for `OFFSET_RISE` said
+        so (above, `OFFSET_HOLD`). While it slews, the offset held is where it goes (`target`)."""
+        held = cam.target if cam.target is not None else cam.offset
         if not cam.told:
             cam.offset, cam.told = offset, True
-        elif offset < cam.offset - OFFSET_HOLD or offset > cam.offset + CLOCK_STEP:
+        elif offset < held - CLOCK_STEP or offset > held + CLOCK_STEP:
             self._moved(ref, cam, offset)
-        elif offset > cam.offset + OFFSET_HOLD:
+        elif offset < held - OFFSET_HOLD:
+            cam.clock_steps += 1
+            log.info("camera %s: its clock is %.3f s further ahead of this cluster's than its frames are put by: the stream "
+                     "takes the new difference over its next frames", ref, held - offset)
+            cam.target, cam.rise = offset, None
+        elif offset > held + OFFSET_HOLD:
             since, low = cam.rise or (now, offset)
             cam.rise = (since, min(low, offset))
             if now - since >= OFFSET_RISE:
@@ -442,10 +464,29 @@ class Ingest:
     @staticmethod
     def _moved(ref: str, cam: _Camera, offset: float) -> None:
         cam.clock_steps += 1
-        log.warning("camera %s: its clock moved %.3f s against this cluster's (its process started again, this cluster's "
-                    "clock stepped, or its clock drifts with nobody setting it): its frames from here on are put on this "
-                    "clock by the new difference", ref, cam.offset - offset)
-        cam.offset, cam.rise = offset, None
+        log.warning("camera %s: its clock moved %.3f s against this cluster's (this cluster's clock stepped, or its clock "
+                    "drifts with nobody setting it): its frames from here on are put on this clock by the new difference",
+                    ref, (cam.target if cam.target is not None else cam.offset) - offset)
+        if cam.offset - CLOCK_STEP <= offset < cam.offset:
+            cam.target, cam.rise = offset, None                  # below where the stream is put: slewed to, not jumped
+        else:
+            cam.offset, cam.rise, cam.target, cam.newest = offset, None, None, None
+
+    @staticmethod
+    def _slewed(cam: _Camera, frames: list) -> list:
+        """The camera's frames on this cluster's clock — each by the offset as it slews down to its target, a frame at a
+        time, no faster than `OFFSET_SLEW` of the frames' own distance (above)."""
+        out = []
+        for f in frames:
+            t = _t(f)
+            if t is not None:
+                if cam.target is not None and cam.newest is not None and t > cam.newest:
+                    cam.offset = max(cam.target, cam.offset - OFFSET_SLEW * (t - cam.newest))
+                    if cam.offset <= cam.target:
+                        cam.target = None
+                cam.newest = t if cam.newest is None else max(cam.newest, t)
+            out += _shift([f], cam.offset)
+        return out
 
     def _keys(self):
         """`keys()` — and a key set in this cluster's store that does not parse is a refusal with the reason, as no key
@@ -516,7 +557,7 @@ class Ingest:
                         for aid, a in asks.items()}}
         if uncovered is not None:
             out["uncovered"] = uncovered
-        have = self.written(ref) if self.written is not None else None
+        have = self._have(ref)
         if have is not None:
             # Not part of `said`: it moves with every frame written, and a poll held for news must not wake for it.
             out["have"] = float(have) - cam.offset
@@ -526,14 +567,22 @@ class Ingest:
 
     def push(self, token: str, ref: str, frames: list, camera_now: float | None = None) -> int:
         self._check(token, ref, camera_now)
-        frames = self._timely(ref, _shift(self._timely(ref, frames, future=False), self._cam(ref).offset), CAMERA_AHEAD)
-        have = self.written(ref) if self.written is not None else None
+        frames = self._timely(ref, self._slewed(self._cam(ref), self._timely(ref, frames, future=False)), CAMERA_AHEAD)
+        have = self._have(ref)
         if have is not None:
             # What the recorder already wrote does not go to it twice (CB). `have` is conservative — a heartbeat
             # old — so this takes the bulk, and the tee the rest: no subscriber is given a frame not newer than the
             # last it was given (`_InOrder`; the eighth review).
             frames = [f for f in frames if not (isinstance(f, dict) and "t" in f and float(f["t"]) <= have)]
         return self._take(ref, frames)
+
+    # WHAT THE CAMERA MAY TAKE FOR DELIVERED (the product's DY, checked in the course): how far this cluster's recorder
+    # wrote it — and, where this cluster's forwarder carries the camera up to a centre that records it, no further than
+    # the centre wrote it (`up_have`). The camera's card lets go only of what lies before it (`CameraPusher.owed_spans`).
+    def _have(self, ref) -> float | None:
+        have = self.written(ref) if self.written is not None else None
+        up = self.up_have.get(str(ref))
+        return have if up is None else up if have is None else min(have, up)
 
     def _timely(self, ref: str, frames: list, ahead: float | None = FRAME_AHEAD, future: bool = True) -> list:
         """The frames whose time is a finite number and — `future` — not later than this ingest's clock by more than
@@ -555,9 +604,13 @@ class Ingest:
             out.append(f)
         return out
 
+    def _tee(self, ref, kind: str) -> "_InOrder":
+        """The camera's tee of `kind` here ("live": recorders, "edge": viewers), on this ingest's clock."""
+        tee = self.tees.get((str(ref), kind))
+        return tee if tee is not None else self.tees.setdefault((str(ref), kind), _InOrder(ref, self.wall))
+
     def _take(self, ref: str, frames: list) -> int:
-        live = self.tees.setdefault((str(ref), "live"), _InOrder(ref))
-        edge = self.tees.setdefault((str(ref), "edge"), _InOrder(ref))
+        live, edge = self._tee(ref, "live"), self._tee(ref, "edge")
         for f in frames:
             live.push(f)                                         # recorders: everything, the ring first
             if not _is_ring(f):
@@ -858,7 +911,7 @@ class Ingest:
             cam.wants[who] = min(cam.wants[who], self.wall() + self.linger)   # a viewer who clicks back is not a restart
 
     def subscribe(self, ref: str, who: str, kind: str = "live", maxsize: int = 30, edge: bool = False) -> LeakyQueue:
-        return self.tees.setdefault((str(ref), "edge" if edge else kind), _InOrder(ref)).subscribe(who, maxsize)
+        return self._tee(ref, "edge" if edge else kind).subscribe(who, maxsize)
 
     def taken(self, ref: str) -> bool:
         """A recorder of this cluster takes the stream — subscribed to it, at any ingest of the cluster. A recorder
@@ -892,8 +945,7 @@ class Ingest:
         """Frames taken from a peer: to this ingest's subscribers, without counting as a camera pushing HERE — and held
         to the bound of this ingest's clock, as every frame here is (`_timely`)."""
         frames = self._timely(ref, frames)
-        live = self.tees.setdefault((str(ref), "live"), _InOrder(ref))
-        edge = self.tees.setdefault((str(ref), "edge"), _InOrder(ref))
+        live, edge = self._tee(ref, "live"), self._tee(ref, "edge")
         for f in frames:
             live.push(f)
             if not _is_ring(f):
@@ -942,13 +994,20 @@ class _InOrder(LiveTee):
     ONE FRAME DOES NOT MOVE THE STREAM AHEAD (the tenth review, major). A frame inside the bound of the door it came by
     but far past the stream — one of now+59 at a peer's door, of now+9 at the camera's — became the subscriber's last
     frame, and every frame of the next 59 s (or 9) was dropped as a repeat. So a frame further past the subscriber's last
-    than `STREAM_JUMP` is HELD: the frame after it says whether the stream went there (it lies within `RING_AHEAD` past
-    the held one: both are handed on) or not (the held frame was nobody's stream — dropped, counted in `ahead`). A
-    stream that truly jumps — a break continued from where it reaches, a push begun again after a pause — costs its
-    first frame one frame's wait."""
+    than `STREAM_JUMP` AND later than this ingest's clock by as much is HELD: the frame after it says whether the stream
+    went there (it lies within `RING_AHEAD` past the held one: both are handed on) or not (the held frame was nobody's
+    stream — dropped, counted in `ahead`).
 
-    def __init__(self, camera):
+    …ONLY A FRAME FROM THE FUTURE (the eleventh review, major, a regression: "a sparse stream is dropped nearly whole").
+    Held for being far past the subscriber's last alone, a frame every 11, 15 or 60 s — a time-lapse, a snapshot camera,
+    frames on an event — was held every time, and the frame after it, as far past it again, failed it: 1 of 40 reached the
+    recorder (`ahead` 38) at every door. The frame that can silence a stream is one later than NOW — whatever the stream
+    does, its next frame is not later than now — so that is the one held; a sparse stream, a break continued from where it
+    reaches, a push begun again after a pause are all in the past, and pass at once. `wall`: this ingest's clock."""
+
+    def __init__(self, camera, wall=None):
         super().__init__(camera)
+        self.wall = wall or time.time
         self.last: dict[str, float] = {}
         self.held: dict[str, tuple] = {}                 # per subscriber: a frame far past its last, waiting for the next
         self.repeats = self.ahead = 0
@@ -974,8 +1033,8 @@ class _InOrder(LiveTee):
                         last = self.last[who] = held[0]
                     else:                                        # it did not: the held frame was nobody's stream
                         self.ahead += 1
-                if last is not None and t > last + STREAM_JUMP:
-                    self.held[who] = (t, frame)                  # far past the stream: does the next frame follow it?
+                if last is not None and t > last + STREAM_JUMP and t > self.wall() + STREAM_JUMP:
+                    self.held[who] = (t, frame)                  # far past the stream, and ahead of now: does the next follow?
                     continue
                 self.last[who] = t
             q.push(frame)
@@ -1047,7 +1106,7 @@ class _Tees:
         class _Handle:
             @staticmethod
             def unsubscribe(who):
-                ingest.tees.setdefault((str(camera), "edge"), _InOrder(camera)).unsubscribe(who)
+                ingest._tee(camera, "edge").unsubscribe(who)
                 ingest.release(camera, who)
         return _Handle()
 
@@ -1160,7 +1219,11 @@ class _RingFrames:
     def steps(self) -> dict:
         r = self.ring
         return {"clock_back_s": round(r.clock_back_ms / 1000.0, 3), "clock_forward_s": round(r.clock_forward_ms / 1000.0, 3),
-                "ahead": r.ahead}
+                "ahead": r.ahead, "clock_set": r.line.sets, "clock_unset": r.line.unset}
+
+    def moves(self) -> list[tuple]:
+        """The moves of the ring's line (`CamRing.moves`), in unix seconds: `(lo, hi, delta)`."""
+        return [(unix_s(lo), unix_s(hi), d / 1000.0) for lo, hi, d in self.ring.moves()]
 
 
 class _OwnFrames:
@@ -1180,6 +1243,14 @@ class _OwnFrames:
         self.frames: list[dict] = []
         self.bytes = 0
         self.line = CamLine(clock, steady, unit=1, at=float)
+        self.line.on_move.append(self._relabel)
+
+    def _relabel(self, lo, hi, d) -> None:
+        """The line re-anchored (its clock set, `vms.card.CamLine`): the frames held on it move with it."""
+        self.frames = [dict(f, t=_t(f) + d) if lo <= _t(f) <= hi else f for f in self.frames]
+
+    def moves(self) -> list[tuple]:
+        return list(self.line.moves)
 
     def skew(self) -> float:
         return self.line.skew()
@@ -1189,7 +1260,8 @@ class _OwnFrames:
 
     def steps(self) -> dict:
         ln = self.line
-        return {"clock_back_s": round(ln.back_by, 3), "clock_forward_s": round(ln.forward_by, 3), "ahead": ln.ahead}
+        return {"clock_back_s": round(ln.back_by, 3), "clock_forward_s": round(ln.forward_by, 3), "ahead": ln.ahead,
+                "clock_set": ln.sets}
 
     def _timed(self, f: dict) -> dict:
         t = _t(f)
@@ -1246,6 +1318,12 @@ class _OwnFrames:
 
 
 _END = object()                                                        # a range's reader has nothing more
+
+
+def _refused_read(why: str):
+    """A range's reader that fails at its next piece — the range is answered RANGE FAILED, and asked again."""
+    raise OSError(why)
+    yield                                                              # noqa: unreachable — makes this a generator
 _BEFORE = 0.001                        # a cursor just before a frame: the stream goes on from it, held or not, a keyframe first
 _CARD_BACK = 10.0                      # a read of the card that goes on mid-group starts this far back: a keyframe is in it
 # How late the card's gate acts on what the pusher says (`uncovered`): a pass of the gate and a key frame — the
@@ -1325,6 +1403,34 @@ class CameraPusher:
         # on, all but what was delivered) and lets go of that last (`CardBuffer.owed`).
         self.delivered: list[list[float]] = []
         self.since = self.clock()
+        # …and what TOOK is not what was WRITTEN (the product's DY, checked here): an ingest takes a push before its recorder
+        # writes it — and a relay's ingest before the centre above it has it. So what the pusher counts delivered is capped
+        # by the `have` of the road's last answer (the recorder's word — the lesser of the relay's and the centre's,
+        # `Ingest._have`): the card holds what lies past it. An ingest that says no `have` leaves what it took delivered.
+        self.have: float | None = None
+        self._moved = len(self.frames.moves())                         # the line's moves this pusher has followed (`_follow`)
+
+    # THE LINE MOVES, AND THE PUSHER'S PLACE WITH IT (the eleventh review, blockers 1 and 2): the camera's line goes on from
+    # the card's when the card is attached (`vms.card.CamLine.restore`), and is re-anchored when an unset clock is set
+    # (`CamLine._set`) — the ring's frames moved there, under its lock. Every time the pusher holds on the line — where the
+    # stream stands, a break, what the server has — moves by the same amount, at the start of a pass (and before the card's
+    # note is taken back): a cursor left on the old line would send the moved frames again, or skip them.
+    def _follow(self) -> None:
+        moves = self.frames.moves()
+        for lo, hi, d in moves[self._moved:]:
+            def mv(v, lo=lo, hi=hi, d=d):
+                return v + d if v is not None and lo <= v <= hi else v
+            self.sent, self.live_from, self.broken_at, self.seen, self.since = (
+                mv(self.sent), mv(self.live_from), mv(self.broken_at), mv(self.seen), mv(self.since))
+            if self.cursor is not None:
+                self.cursor = (mv(self.cursor[0]), self.cursor[1])
+            if self._sent_end is not None and lo <= unix_s(self._sent_end[0]) <= hi:
+                self._sent_end = (self._sent_end[0] + int(round(d * 1000)), self._sent_end[1])
+            self.delivered = [[mv(a), mv(b)] for a, b in self.delivered]
+            self._card = None                                          # a read of the card under way: begun again
+            for u in self.uploading.values():                          # …and a range being answered: failed, asked again
+                u["piece"], u["pieces"] = None, _refused_read("the camera's line of time moved while the range was read")
+        self._moved = len(moves)
 
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
@@ -1468,12 +1574,15 @@ class CameraPusher:
     def owed_spans(self) -> list[tuple[float, float]]:
         """What the card holds that the server has not got, as far as this pusher knows — from `since` on, everything
         but what was delivered: what the stream skipped, what it has not sent yet, a break. On the frames' line, which
-        is the card's. The card lets go of it last (`CardBuffer.owed`)."""
+        is the card's — and none of it past the road's last `have` (above). The card lets go of it last (`CardBuffer.owed`)."""
         out, at = [], self.since
+        cap = self.have if self.have is not None else float("inf")
         for a, b in self.delivered:
+            if a >= cap:
+                break
             if a > at:
                 out.append((at, a))
-            at = max(at, b)
+            at = max(at, min(b, cap))
         return out + [(at, float("inf"))]
 
     # WHAT THE SERVER HAS OUTLIVES THE CAMERA'S PROCESS (the tenth review, major). `since` was where this process began,
@@ -1486,11 +1595,13 @@ class CameraPusher:
     # this process's start everything is owed — kept longer than it might be, never let go of unknowing.
     def delivery(self) -> dict:
         """What this pusher knows the server has, for the card's note: from `since` on, the stretches delivered."""
+        self._follow()
         return {"since": self.since, "delivered": [list(d) for d in self.delivered]}
 
     def remember(self, note) -> bool:
         """The card's note from the camera's process before this one (`delivery` as it wrote it): its `since` and the
         stretches it lists before this process began. A note that does not read is no note — logged."""
+        self._follow()
         try:
             since = finite(note["since"])
             spans = [(finite(a), finite(b)) for a, b in note.get("delivered") or []]
@@ -1651,6 +1762,10 @@ class CameraPusher:
     # changes nothing that was not confirmed.
     def _serve(self, ing, token: str, work: dict, loose: list, key: str) -> tuple[int, list, list, bool]:
         pushed, uploaded, performed = 0, [], []
+        try:
+            self.have = None if work.get("have") is None else finite(work["have"])
+        except PARSE_ERRORS:
+            self.have = None
         ok = self._resend(ing, token, work)
         if ok and work["push"]:
             pushed, ok = self._push(ing, token, work, loose, key)
@@ -1832,6 +1947,7 @@ class CameraPusher:
         took."""
         loose = [f for f in frames_now if _t(f) is None]                # frames with no time: this pass's, or nobody's
         self.frames.add([f for f in frames_now if _t(f) is not None])
+        self._follow()
         try:
             return self._pass(loose, wait)
         finally:
@@ -2147,6 +2263,29 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         return {"cluster": cluster, "urls": urls, "until": now + lifetime, "acts": acts, **({"up": up} if up else {}),
                 "token": crossings.issuer.issue(sub, lifetime, now=now, **claims)}
 
+    # ONE ENTRY OF A BOOK THAT DOES NOT PARSE IS THAT ENTRY'S (vmsserver's eleventh review, a major; a run): the entries
+    # of the book of asks and of the upstream book were read bare, and `upstream/east[SN7001] = "{"` — the very entry the
+    # chain's test tears — raised out of the whole of this, for every scenario: no token re-issued anywhere. Each entry
+    # is read through `BOOKS` now (counted once, logged once, under `<book>/<entry>`): a torn entry of the book of asks
+    # is issued anew — the old road is not there to keep — and a torn entry of the upstream book is "not pushed up".
+    def roads_of(key: str, raw) -> dict:
+        def parse():
+            out = {}
+            for r in _an_object(json.loads(raw))["roads"]:
+                _a_road(r)
+                finite(r["until"])
+                out[str(r["cluster"])] = r
+            return out
+        return BOOKS.read(key, parse, {}) if raw else {}
+
+    def upstream_of(key: str, raw) -> dict:
+        def parse():
+            v = _an_object(json.loads(raw))
+            if v.get("mode") == "push":
+                _urls(v)                                     # a road up is its addresses
+            return v
+        return BOOKS.read(key, parse, {}) if raw else {}
+
     for sc in scenarios:
         a, b = str(sc["trigger"]), str(sc["target"])
         acts = sorted((json.loads(json.dumps(x)) for x in sc.get("actions", [])), key=lambda x: json.dumps(x, sort_keys=True))
@@ -2156,15 +2295,15 @@ def publish_asks(crossings, scenarios: list[dict], lifetime: float = 86400.0) ->
         home = known_a[0]
         via = crossings.via_of(home)                         # Lesson 17: this camera reaches only that relay
         have, _ = crossings.vars.get(f"{ASKS_PATH}/{home}")
-        old = {r["cluster"]: r for r in json.loads((have or {}).get(b, '{"roads": []}'))["roads"]}
+        old = roads_of(f"{ASKS_PATH}/{home}/{b}", (have or {}).get(b))
         up, _ = crossings.vars.get(f"{UPSTREAM_PATH}/{on}")
-        above = json.loads((up or {}).get(b, "{}"))
+        above = upstream_of(f"{UPSTREAM_PATH}/{on}/{b}", (up or {}).get(b))
         if via and on != via:
             # The target is in another relay. The only road this camera has is its own relay, marked UP; the
             # relay gets a token of its own for exactly this pair, to take it to the top — which must have a
             # road down to the target: it polls the top, or its relay forwards it there.
             ohave, _ = crossings.vars.get(f"{ASKS_PATH}/{via}")
-            oold = {r["cluster"]: r for r in json.loads((ohave or {}).get(f"{b}|{a}", '{"roads": []}'))["roads"]}
+            oold = roads_of(f"{ASKS_PATH}/{via}/{b}|{a}", (ohave or {}).get(f"{b}|{a}"))
             mine, theirs = urls_of(via, old.get(via)), urls_of(top, oold.get(top))
             if not (on == top or above.get("mode") == "push") or mine is None or theirs is None:
                 continue
