@@ -495,8 +495,16 @@ def test_the_key_never_goes_into_the_address():
     except Refused as e:
         assert "never the key to it" in str(e)
 
-    for ok in ("/data/archive/cold", "file:///data/archive/cold", "s3://s3.example.com/vms/site-7"):
+    for ok in ("/data/archive/cold", "file:///data/archive/cold", "s3://s3.example.com/vms/site-7",
+               "https://s3.example.com/vms?region=eu-1"):
         volumes.refuse({"name": "v", "kind": "network", "url": ok, "quota_bytes": 1})
+    # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): refused, the value not repeated
+    for bad in ("https://s3.example.com/vms?X-Amz-Credential=AKIAEXAMPLE", "s3://s3.example.com/vms?secret=wJalrXUtnFEMI"):
+        try:
+            volumes.refuse({"name": "v", "kind": "network", "url": bad, "quota_bytes": 1})
+            raise AssertionError(f"a url with credentials in its parameters was accepted: {bad}")
+        except Refused as e:
+            assert "never the key to it" in str(e) and "AKIAEXAMPLE" not in str(e) and "wJalr" not in str(e), str(e)
 
 
 def test_a_recorder_that_holds_an_archive_is_not_a_spare():
