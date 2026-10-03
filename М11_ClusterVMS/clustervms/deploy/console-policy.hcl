@@ -32,6 +32,11 @@ namespace "default" {
     # …and what an operator said to keep (М10B Lesson 18): a camera, an interval, a note. Set and lifted from
     # the console; the resource that holds the footage only reads it.
     path "rec/keeps/*"     { capabilities = ["write", "read", "list", "destroy"] }
+    # What a server reaches, as the administrator says it (М10A Lesson 11, feedback DQ): `PUT /servers/<server>/labels`
+    # writes the row, `DELETE` removes it and the node's `meta.labels` (client.hcl) answers again — hence `destroy`.
+    # One row per server and per subsystem, as `policy` is; the controllers read them under their `vms/*` and `rec/*`.
+    path "vms/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
+    path "rec/servers/*"   { capabilities = ["write", "read", "list", "destroy"] }
     # The alarms' own days (М10A Lesson 12): a derived row like `vms/retention/<id>`, kept in step with the
     # camera's `alarms_retention_days` — and, unlike it, left alone when the camera is deleted.
     path "vms/alarms_retention/*" { capabilities = ["write", "read", "list"] }

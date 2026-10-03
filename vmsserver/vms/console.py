@@ -130,8 +130,10 @@ class LiveFront:
             # …by ONE gateway (the review's third pass, Н-M8 and its minor): placement puts a stream on a gateway whose
             # labels cover ALL of the stream's, and the check took the union over every gateway — `public` on g-1 and
             # `eu` on g-2 passed for `public,eu`, and the row was one nothing could place, as before.
-            sets = [{l for l in str(hb.extra.get("labels", "")).split(",") if l}
-                    for hb in holders(self.live.objects, "live/", self.ctl.wall()).values()]
+            # …and what a gateway carries is what PLACEMENT reads (feedback DQ): its server's row from the console when
+            # there is one (`live/servers/<server>`), its heartbeat's otherwise — `labels_of`, not the heartbeat alone.
+            with self.live.one_pass():                   # each gateway asked: the heartbeats and the rows read once
+                sets = [set(self.live.labels_of(w)) for w in holders(self.live.objects, "live/", self.ctl.wall())]
             if labels and not any(set(labels) <= s for s in sets):
                 carried = set().union(*sets) if sets else set()
                 unknown = sorted(set(labels) - carried)

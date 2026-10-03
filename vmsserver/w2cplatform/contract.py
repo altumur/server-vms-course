@@ -326,6 +326,14 @@ class Subsystem:
     def requests_prefix(self) -> str:
         return f"{self.name}/{REQUESTS}/"
 
+    # `<name>/servers/<server>` — what a SERVER reaches, as the administrator says it from the console (`{labels}`;
+    # feedback DQ). Where there is none, the labels its workers report (the node's `LABELS`) answer, as they always did.
+    def server_key(self, server: str) -> str:
+        return f"{self.name}/servers/{server}"
+
+    def servers_prefix(self) -> str:
+        return f"{self.name}/servers/"
+
     # `<name>/blobs/` — what the sweep lists to find every blob.
     def blobs_prefix(self) -> str:
         return f"{self.name}/{BLOBS}/"

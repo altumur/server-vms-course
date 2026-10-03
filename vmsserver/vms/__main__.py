@@ -222,7 +222,7 @@ def _controller_loop(ctl) -> None:
         # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
         # (`contract.one_pass`; what the pass wrote is read back from the store).
         with ctl.one_pass():
-            ctl.pass_once(1)                          # place, move, bring ONE unit home — and report on itself; it does not raise
+            ctl.pass_once(1)                          # place, move (what a server no longer reaches too), bring ONE unit home — and report; it does not raise
             # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
             # inside the block above, placement had already succeeded — and the log said "placement pass
             # failed", naming the one thing that had not. The reverse hid the other half: a placement that

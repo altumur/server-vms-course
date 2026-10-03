@@ -758,6 +758,30 @@ served 3/4 · 0 spare        объявлено четыре, обслужива
 
 `/data/archive` в контейнере консоли смонтирован на запись, и причина названа в шапке: отметки оператора — собственные бакеты консоли на ресурсе. Видео там нет: собственный том сервера лежит рядом, в `/data/volume` ([урок 10](10-recworker.md)), и консоли он не смонтирован вовсе.
 
+## Шаг 10 — Что видит сервер: метки из консоли
+
+**Метка сервера правится там, где правятся камеры (обратная связь продукта, DQ).** Камера говорит, из какого VLAN её видно (`labels` в её строке); сервер — какие VLAN он достаёт. Вторую половину знал только узел: `LABELS`, на кластере `meta.labels` из `client.hcl`, прочитанные воркером при старте. Камера, чей сервер VLAN потерял, оставалась на нём, и никто её не записывал. Теперь это маршрут консоли — платформенный, у каждой смонтированной подсистемы свой (`/servers/…` у VMS, `/rec/servers/…` у регистратора):
+
+```python
+    # WHAT A SERVER REACHES, FROM THE CONSOLE (feedback DQ): `/servers/<server>/labels`.
+    #
+    #   GET     ?labels=a,b — what it reaches now and from where, and which units would move if it reached `a,b`
+    #           (`would_move`; no `labels`: back to its node's) — the page asks before it writes, and warns
+    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing
+    #   DELETE  back to the node's (`LABELS`, `meta.labels` in `client.hcl`)
+    #
+    # A path that names no unit: `admin` on the whole cluster to write (`needs`) — a server's labels decide where every
+    # unit may go. Each write is a journal line with the name and the labels; the controller moves what it decides on
+    # its next pass (`ensure_reach`), and the reply says which units that will be.
+    def server_labels_route(self, h, method: str, path: str, q: dict) -> tuple:
+```
+
+**Права — `admin` на весь кластер.** Путь не называет камеры, поэтому ворота спрашивают грант на кластер: метки одного сервера решают, куда может встать любая камера. Админ одной камеры, грант по метке и `view` получают 403; посмотреть — `GET /servers` и что увезёт правка — может любой грант (`tests/test_server_labels.py::test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels`).
+
+**Строка, журнал, и ничего сверх.** `PUT` пишет `vms/servers/<сервер> {labels}` целиком (метка — буквы, цифры и `_ . : -`, до 64 знаков; иначе 400), `DELETE` строку удаляет; каждая запись — строка журнала `server.labels.set` или `server.labels.cleared` с автором. Перемещает камеры не консоль, а контроллер на своём следующем проходе (М10A, урок 11, `ensure_reach`, десять за проход); ответ `PUT` называет, какие камеры это будут (`will_move`).
+
+**`GET /servers` говорит обе правды.** У каждого сервера теперь `labels` (по чему размещают), `labels_node` (что говорят его воркеры) и `labels_source` — `console` или `node`. Страница показывает это строкой «reaches …» в блоке сервера, с *edit* и *back to the node's*; перед записью она спрашивает `GET …/labels?labels=…` и называет в подтверждении камеры, которые переедут или встанут неразмещёнными. Тест: `tests/test_server_labels.py::test_the_page_is_told_which_cameras_an_edit_will_move`. Та же правда нужна была ещё в одном месте — проверке `?labels=` зрителя живого видео: она читала метки шлюза из heartbeat'а, теперь спрашивает `labels_of`, как размещение (`tests/test_lesson8_live.py::test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own`).
+
 ## Результат
 
 ```bash

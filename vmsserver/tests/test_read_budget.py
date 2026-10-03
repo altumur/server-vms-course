@@ -495,3 +495,41 @@ def test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost():
     v.zero(), o.zero()
     _loop_pass(ctl)
     assert v.n + o.n <= 2 * 1000 + 100, v.n + o.n
+
+
+def test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan_moves_ten_a_pass():
+    """Feedback DQ: placement reads a server's labels from the console's rows (`<sub>/servers/<server>`), once a pass —
+    `labels_of` is asked per candidate worker and per unit placed, and a read per question would be the 64 000 of the
+    scaling pass again. A thousand cameras needing `vlan:a`, four servers whose rows say they reach it: the idle pass
+    stays under the ceiling it had and changes nothing. Then srv-0 stops reaching `vlan:a` (its row says nothing): its
+    250 cameras are off their VLAN, `ensure_reach` moves ten, and the pass reads what the idle one did plus what ten
+    moves cost — not a read of every row per camera off its VLAN."""
+    n = 1000
+    vars_, objects = cluster(n)
+    for i in range(1, n + 1):
+        key = f"vms/cameras/{i}"
+        vars_.put(key, {**vars_.get(key)[0], "labels": "vlan:a"})
+    for s in range(4):
+        vars_.put(f"vms/servers/srv-{s}", {"labels": "vlan:a"})
+    before = rows(vars_)
+    v, o = Reads(vars_), Reads(objects)
+    ctl = _vms(v, o)
+    v.zero(), o.zero()
+    with ctl.one_pass():
+        rep = ctl.pass_once(1)
+    idle = v.n + o.n
+    assert rep["ok"] and rep["reach_moves"] == 0, rep
+    assert idle <= 2 * n + 150, idle
+    assert rows(vars_) == before
+
+    vars_.put("vms/servers/srv-0", {"labels": ""})
+    v.zero(), o.zero()
+    with ctl.one_pass():
+        rep = ctl.pass_once(1)
+    busy = v.n + o.n
+    assert rep["ok"] and rep["reach_moves"] == 10, rep
+    print(f"reads: the idle pass {idle}, a pass moving ten off srv-0 {busy}")
+    assert busy <= idle + 10 * 15, (idle, busy)
+    moved = [k for k, it in rows(vars_).items()
+             if k.startswith("vms/placement/") and "srv-0 no longer reaches vlan:a" in it.get("reason", "")]
+    assert len(moved) == 10

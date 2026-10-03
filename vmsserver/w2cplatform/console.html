@@ -47,7 +47,9 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
   - `#servers` — one line per server from `/servers`: the archive its workers record into (on a cluster
     Nomad's `meta.archive`, the label the scheduler placed by), its resource (`live`, `silent`, `unknown` —
     the fact), its workers with load/capacity, and *not placeable: …* in red when the controller would not
-    place there now; then what this process fronts, from `/mounts`.
+    place there now; what the server reaches (`labels`, and whether they were set here or are the node's), with
+    *edit* — `PUT /servers/<name>/labels` after naming the cameras that will move (`GET …/labels?labels=`) — and
+    *back to the node's* (`DELETE`); then what this process fronts, from `/mounts`.
 - `main`
   - `#title` — the selected unit's label, or "Pick one".
   - `#meta` — phase · worker · server · epoch · placement reason · the holder's `why` and `warning` · "last known
@@ -934,8 +936,13 @@ async function loadResources() {
     for (const [name, s] of Object.entries(sv)) {
       const el = document.createElement('div'); el.className = 'srv';
       const ws = s.workers.map(w => `${w.worker} ${w.load}/${w.capacity}${w.state === 'stale' ? ' (stale)' : ''}${w.idle_by_policy ? ' (idle by policy)' : ''}`).join(', ') || 'no workers';
+      const lab = (s.labels || []).join(', ') || 'nothing', node = (s.labels_node || []).join(', ') || 'nothing';
       el.innerHTML = h`<strong>${name}</strong> <small>archive ${s.archive || '—'} · resource <span class="${s.resource === 'silent' ? 'bad' : ''}">${s.resource}</span></small>` +
-                     h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`);
+                     h`<small>${ws}</small>` + (s.placeable ? '' : h`<small class="bad">not placeable: ${s.why}</small>`) +
+                     h`<small>reaches ${lab} (${s.labels_source === 'console' ? 'set here; the node says ' + node : 'the node\'s'}) <a href="#" class="lab-edit">edit</a>` +
+                     (s.labels_source === 'console' ? h` · <a href="#" class="lab-node">back to the node's</a>` : '') + raw('</small>');
+      el.querySelector('.lab-edit').onclick = e => { e.preventDefault(); editLabels(name, s.labels || []); };
+      if (el.querySelector('.lab-node')) el.querySelector('.lab-node').onclick = e => { e.preventDefault(); editLabels(name, null); };
       box.appendChild(el);
     }
     if (!Object.keys(sv).length) box.textContent = 'no servers yet';
@@ -956,6 +963,27 @@ async function loadResources() {
     }
   } catch (_) {}
   try { const m = await (await fetch('/mounts')).json(); const names = Object.keys(m.mounts || {}); $('#mounts').textContent = names.length ? `fronts ${m.root} at / and ${names.map(n => n + ' at /' + n + '/').join(', ')}` : ''; } catch (_) {}
+}
+// -- what a server reaches, from here (feedback DQ) ----------------------------------------------------
+// `PUT /servers/<name>/labels {labels}` — the administrator's word over the node's `meta.labels`; `DELETE` — back to
+// the node's (`have` null). First `GET …/labels?labels=…`: the units that would move, named in the confirmation —
+// the controller moves them on its next pass, ten a pass, or lists them unplaceable when no server reaches them.
+async function editLabels(name, have) {
+  let want = null;
+  if (have !== null) {
+    const typed = prompt(`What ${name} reaches — labels, comma-separated (empty: nothing):`, have.join(','));
+    if (typed === null) return;
+    want = typed.split(',').map(x => x.trim()).filter(Boolean);
+  }
+  const q = want === null ? '' : '?labels=' + encodeURIComponent(want.join(','));
+  try {
+    const d = await (await fetch(`/servers/${encodeURIComponent(name)}/labels${q}`)).json();
+    const moves = d.would_move || [];
+    if (moves.length && !confirm(`${moves.length} unit(s) on ${name} will move or wait unplaced: ${moves.join(', ')}. Go on?`)) return;
+    if (want === null) await send('DELETE', `/servers/${encodeURIComponent(name)}/labels`);
+    else await send('PUT', `/servers/${encodeURIComponent(name)}/labels`, { labels: want });
+  } catch (err) { alert('refused: ' + err.message); }
+  loadResources();
 }
 window.addEventListener('beforeunload', stopLive);
 $('#last24').onclick = () => { window_ = [Date.now() / 1000 - 86400, Date.now() / 1000]; if (current) loadTimeline(); };

@@ -235,6 +235,26 @@ def test_labels_are_taken_only_when_one_gateway_carries_all_of_them():
         srv.shutdown(); srv.server_close()
 
 
+def test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own():
+    """Feedback DQ, the sibling of placement: what a gateway carries may be set from the console (`live/servers/<server>`)
+    over its heartbeat's `LABELS`. The check of a viewer's `?labels=` read the heartbeat alone — it would have refused a
+    label the administrator gave the server and taken one he took away, making a row nothing places. It asks
+    `labels_of`, what placement asks."""
+    box, ctl, live_ctl, w, srv, base = _box()
+    try:
+        _gateway(box, "g-1", labels="rack-7")                                            # its node says rack-7, on srv-1
+        SpecController(LIVE_SPEC, box.vars.as_writer("console", LIVE_SPEC.acl_console()), box.objects,
+                       wall=box.wall).set_server_labels("srv-1", ["public"])             # the administrator: srv-1 reaches public
+        code, body, _ = _whep(base, 1, path="/whep/1?labels=rack-7")
+        assert code == 400 and "rack-7" in json.loads(body)["error"], body
+        assert live_ctl.unit("1") is None
+        assert _whep(base, 1, path="/whep/1?labels=public")[0] == 503 and live_ctl.unit("1")["labels"] == ["public"]
+        live_ctl.ensure_placed()
+        assert live_ctl.where("1") == "g-1"                                              # …and placement agrees
+    finally:
+        srv.shutdown(); srv.server_close()
+
+
 def test_a_session_is_hung_up_through_another_console_or_after_a_restart():
     """The review's fourth pass, minor: who opened a live session lived in one console's memory — through another
     replica, or after a restart, the hang-up was 404 and the session lived until the gateway's sweep. A session this

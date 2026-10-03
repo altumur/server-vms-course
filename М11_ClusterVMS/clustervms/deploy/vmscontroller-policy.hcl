@@ -12,7 +12,8 @@ namespace "default" {
     path "objects/*"            { capabilities = ["read", "list"] }
     # WHAT IT READS, NOT EVERYTHING (М10's eighth review): it had `path "*"`, which read `secrets/vms` too — the key
     # the console's policy says only three jobs read. The rows it places from, the other subsystem's rows its
-    # placement asks about, the heartbeats and snapshots, the platform's rows (`drain`, `schema`); never `secrets/*`,
+    # placement asks about — a server's labels from the console (`vms/servers/*`, feedback DQ) among them — the
+    # heartbeats and snapshots, the platform's rows (`drain`, `schema`); never `secrets/*`,
     # never `domain/*`. `tests/test_policies.py` checks every read the code makes against this list.
     path "vms/*"                { capabilities = ["read", "list"] }
     path "rec/*"                { capabilities = ["read", "list"] }   # a recording's epoch: where a camera's backup records

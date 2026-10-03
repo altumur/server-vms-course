@@ -78,6 +78,25 @@
 
 Метки приходят строкой через запятую (`"vlan:cctv-a,gpu"`) — heartbeat плоский, вложенности в нём нет (урок 4).
 
+**Что видит сервер, говорит администратор, а не только узел (обратная связь продукта, DQ).** Метки воркера были словом узла и только его: переменная `LABELS`, на кластере — `meta.labels` из `client.hcl` (М11, урок 2), прочитанная воркером при старте. Чтобы сказать «этот сервер больше не в `vlan:cctv-a`», надо было править файл на машине и перезапускать — ради факта, который оператор узнаёт в консоли, рядом с камерами с теми же метками. Теперь у сервера может быть строка `<подсистема>/servers/<сервер> {labels}`, её пишет консоль (`PUT`/`DELETE /servers/<сервер>/labels`, урок 15 и М10B, урок 12), и размещение читает её поверх слова узла:
+
+```python
+    def labels_of(self, worker: str) -> set[str]:
+        rows = self.server_labels()
+        server = self.server_of(worker)
+        if rows is not None and server in rows:
+            return set(rows[server])
+        return self.node_labels_of(worker)
+
+    def node_labels_of(self, worker: str) -> set[str]:
+        hb = self._said(worker)
+        return set(l for l in str(hb.extra.get("labels", "")).split(",") if l) if hb else set()
+```
+
+Строка, если она есть, **и есть** метки сервера — даже пустая: «эта машина не видит ничего». Строки нет — отвечает узел, как раньше; для нового сервера это первое значение, для остальных запасное. Строка — одна на сервер и на подсистему, как `<подсистема>/policy` (шаг 12): VMS читает `vms/servers/*`, регистратор — `rec/servers/*`.
+
+`server_labels` читает строки **один раз за проход** (`_per_pass`, как heartbeat'ы), а не на каждый вопрос «что видит этот воркер» — а он задаётся на каждого кандидата и на каждую единицу. И у него одно намеренное исключение из правила «между проходами ничего не хранится»: **последние прочитанные строки хранятся** (`_server_rows_last`). Хранилище, которое не ответило, не должно на один проход вернуть всем серверам метки узлов — тогда `ensure_reach` (шаг 17) увёз бы камеры, которые администратор поставил по своим меткам. Процесс, который строк ещё ни разу не прочёл, говорит `None`, и тогда не двигается ничего. Строка, которая не разбирается (нет `labels`, слово, не похожее на метку), оставляет серверу последнее прочитанное о нём, а если его нет — метки узла; считается один раз (`SERVER_LABELS`). Тесты: `tests/test_server_labels.py::test_labels_from_the_console_override_the_nodes_and_deleting_returns_to_the_nodes`, `::test_a_store_that_does_not_answer_moves_nothing`, `::test_a_servers_row_that_does_not_parse_keeps_what_was_last_read_of_it`.
+
 ```python
     def headroom(self) -> int:
         return sum(int(hb.extra.get(self.spec.headroom_from, 0)) for hb in self.workers_seen().values())
@@ -485,7 +504,9 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
                "last_success": prev.get("last_success")}
         self.last_diverged = 0
         errors = []
+        self.last_reach_moves = 0
         for step, run in (("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
+                          ("ensure_reach", self.ensure_reach),                     # a unit its server no longer reaches: moved, or unplaced with why
                           ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
                           ("ensure_home", lambda: self.ensure_home(home_budget))): # a unit back to the server its row names, if it is back
             try:
@@ -499,6 +520,7 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
             rep["last_success"] = now
         rep["seconds"] = round(time.monotonic() - started, 3)
         rep["diverged"] = self.last_diverged
+        rep["reach_moves"] = self.last_reach_moves     # units moved or unplaced because their server no longer reaches them
         try:
             rep["unplaced"] = len(self.unplaced())
             rep["garbled"] = self.rows_garbled
@@ -513,7 +535,7 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 
 Отчёт лежит в хранилище объектов (`<подсистема>/controller/pass`), как heartbeat: состояние наблюдения, а не конфигурация. Счётчик отказов тоже оттуда, а не из поля процесса, — перезапуск контроллера его не обнуляет, и второй экземпляр продолжает тот же счёт.
 
-В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки.
+В отчёте **два времени**, и нужны оба. `ts` — когда проход шёл в последний раз; `last_success` — когда он в последний раз прошёл без исключения. Растёт возраст прохода — контроллер стоит. Возраст прохода свежий, а возраст успеха растёт — контроллер работает и падает. `unplaced` — единицы, которые должны где-то быть и нигде не стоят, по какой бы причине; какие из них встать **не могут**, говорит `/unplaceable` (шаг 11). `diverged` — сколько назначений сверка этого прохода привела к строкам размещения: ноль в покое, и не ноль после оборванного прохода или чужой руки. `reach_moves` — сколько единиц проход увёз или снял с размещения, потому что их сервер их больше не видит (шаг 17, `ensure_reach`); консоль отдаёт его как `<подсистема>_units_moved_for_reach`. Шагов в проходе теперь четыре, в порядке продукта: разместить, проверить досягаемость, перераспределить, вернуть домой.
 
 **Битая строка уже размещённой единицы.** `units()` пропускал строку, которая не разбирается, но `unplace_deleted`, `unplace_retired` и `redistribute` читали строку единицы сами (`self.unit(uid)`) — и падали; новые камеры не размещались, единицы молчащих серверов не переезжали (третье ревью). Теперь они читают через `_parsed`, который отдаёт метку `GARBLED_ROW` и пишет в лог один раз: битая строка — не удалённая (размещение не снимается), единица остаётся, где стоит, а счёт — тот же `rows_garbled`. Тест: `test_placement_decides.py::test_a_placed_unit_whose_row_stops_parsing_holds_up_neither_placing_nor_moving`.
 
@@ -577,14 +599,20 @@ most free capacity (7) among 3 worker(s) reaching vlan:cctv-a; on srv-b, whose r
 ## Шаг 11 — Ответы оператору
 
 ```python
-    def unplaceable(self) -> list[dict]:
-        """Units nothing live can serve — the console's honest answer, with the labels named."""
+    def _unplaceable(self) -> list[dict]:
         live = self._pool(None)
-        return [{"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
-                for r in self.units() if self.placement(r["id"]) is None and not self.eligible(r, live)]
+        out = []
+        for r in self.units():
+            if self.placement(r["id"]) is None and not self.retired(r) and not self.eligible(r, live):
+                u = {"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
+                why = self.unplaced_reason(r["id"])
+                if why and why != "deleted":           # what took its place away — a server that stopped reaching it
+                    u["why"] = why
+                out.append(u)
+        return out
 ```
 
-Единицы, которые не размещены и которых **не может взять никто из живых**. Отдельный вопрос, отдельный ответ — и в нём названы метки, из-за которых это вышло, и число живых воркеров.
+Единицы, которые не размещены и которых **не может взять никто из живых**. Отдельный вопрос, отдельный ответ — и в нём названы метки, из-за которых это вышло, и число живых воркеров. А если место у единицы **отняли** — её сервер перестал видеть её VLAN, и никто живой его не видит (шаг 17, `ensure_reach`), — ещё и `why`: причина из её строки размещения, `srv-a no longer reaches vlan:a; nothing live reaches it`. Ту же причину отдаёт `/where/<id>`.
 
 Разница между «неразмещаемой» и «просто ждущей» существенна для оператора. Камера, ждущая, потому что система заполнена, дождётся следующего воркера. Камера с меткой `vlan:cctv-c`, которую не видит ни один сервер, не дождётся никогда — и об этом надо сказать, а не оставлять её в списке ожидающих.
 
@@ -814,6 +842,54 @@ placement:
 
 Строка размещения при этом **не обнуляется**. Единица числится там, где её последний раз разместили, — и если воркер вернётся (просрочка, а не уход), он её подберёт, ничего не потеряв.
 
+### Сервер, который перестал видеть VLAN: `ensure_reach`
+
+**Метка решала только следующее размещение (обратная связь продукта, DQ).** Камера с `vlan:cctv-a` встала на `srv-a`; потом `srv-a` перестал видеть этот VLAN — переткнули кабель, администратор сказал это в консоли. Перераспределение её не трогало: воркер жив, слот не отпущен, ресурс отвечает. Камера оставалась на сервере, который до неё не дотягивается, никто её не записывал, и ничто об этом не говорило. Теперь у прохода есть шаг, который спрашивает ограничение заново у уже размещённых:
+
+```python
+    def ensure_reach(self, budget: int = REACH_BUDGET, workers: list[str] | None = None) -> list[tuple]:
+        """Units whose worker no longer passes the constraint, moved to one that does — or unplaced, with the reason."""
+        self.last_reach_moves = 0
+        rule = CONSTRAINTS[self.spec.constraint]
+        if budget <= 0 or self.spec.constraint == "none" or self.server_labels() is None:
+            return []
+        pool = self._pool(workers)
+        live, moves, idx = set(pool), [], None
+        for row in self.units():
+            if len(moves) >= budget:
+                break
+            uid = row["id"]
+            pl = self.placement(uid)
+            if pl is None or pl.worker not in live or self.retired(row):
+                continue
+            has = self.labels_of(pl.worker)
+            if rule(row, has):
+                continue
+            server = self.server_of(pl.worker)
+            if self.spec.constraint == "labels-subset":
+                why = f"{server} no longer reaches {','.join(sorted(set(row.get('labels') or []) - has))}"
+            else:
+                why = f"{server} no longer meets {self.spec.constraint}"
+            idx = self.near_index() if idx is None else idx
+            best, free, near = self._pick(self.eligible(row, [w for w in pool if w != pl.worker]), uid, idx)
+            if best is None:
+                if self.unplace_from(uid, pl.worker, f"{why}; nothing live reaches it"):
+                    moves.append((uid, pl.worker, None))
+                continue
+            if self.move_from(uid, pl.worker, best, f"{why}; most free capacity ({free}); on {self.server_of(best)}{near}"):
+                moves.append((uid, pl.worker, best))
+        self.last_reach_moves = len(moves)
+        return moves
+```
+
+Единица на **живом** воркере пула, чей сервер больше не проходит ограничение, едет на живого, который проходит, — тот же `eligible` и тот же `_pick`, что при размещении, и причина из двух частей: `srv-a no longer reaches vlan:cctv-a; most free capacity (9); on srv-b`. Единицы ушедшего, уходящего или осушаемого воркера — дело `redistribute`, не этого шага. Спрашивается только ограничение: `spread_by`, группа и `admit` подсистемы решили место один раз и сюда не относятся.
+
+Когда не проходит **никто**, единица отдаёт место: строка размещения говорит «нигде» и почему (`srv-a no longer reaches vlan:cctv-a; nothing live reaches it`), назначение следует за ней, `/unplaceable` и `/where` показывают причину (шаг 11). Это `unplace_from` — то же правило, что у `move_from`: строка первой, по CAS, и только пока она ещё называет того воркера, с которого снимаем; назначение после. Следующий проход разместит единицу снова, как только кто-то живой её увидит.
+
+**Не больше десяти за проход** (`REACH_BUDGET`). Каждое перемещение — новая эпоха и шов в записи; администратор, снявший с сервера VLAN, увозит его камеры за несколько проходов, а не все в одном. И **молчание хранилища не двигает ничего**: если строки серверов в этот проход не прочитаны, остаются последние прочитанные (шаг 1), а процесс, не прочитавший их ни разу, шаг пропускает. Дом и перераспределение спрашивают тот же `eligible`, поэтому увезённая камера не вернётся «домой» на сервер, который её не видит.
+
+Тесты: `tests/test_server_labels.py::test_a_camera_on_a_server_that_lost_its_label_moves_to_one_that_has_it_within_one_pass`, `::test_a_camera_no_live_server_reaches_is_unplaced_with_the_reason`, `::test_at_most_ten_units_move_in_one_pass`; чтения — `tests/test_read_budget.py::test_the_servers_labels_are_read_once_a_pass_and_a_server_that_lost_its_vlan_moves_ten_a_pass` (на тысяче камер: холостой проход 2083 чтения против 2078 до этого шага — список строк и четыре строки; проход, увозящий десять, — 2121). Что остаётся открытым: устройство с шестнадцатью каналами, потерявшее метку, переезжает по десять каналов за проход, и между проходами его каналы на двух воркерах — две сессии к коробке на эти секунды.
+
 ## Шаг 18 — Перебалансировка по просьбе
 
 ```python
@@ -1006,6 +1082,7 @@ w.reconcile_once(0)                              # воркер прочитал
 | Единица дома не появляется, хотя дом вернулся | Забыт `ensure_home` в проходе контроллера: `_pick` работает только при размещении. |
 | Две подсистемы каждый проход меняются серверами | Обе сказали `home: near`. У пары нет якоря; настоящий дом должна назвать та, что приколочена к железу. |
 | Единица не едет домой, хотя дом жив | Дом закрыт фильтром — метками или `spread_by`. Так и задумано: `ensure_home` выбирает из `eligible`. |
+| Камера стоит на сервере, который её VLAN больше не видит | Метки сервера в строке консоли (`<подсистема>/servers/<сервер>`) не поменяли — `client.hcl` правили, а строка поверх него осталась; `GET /servers` говорит `labels_source: console`. Или `ensure_reach` не прочёл строк ни разу: хранилище молчит, и это тоже «ничего не двигать». |
 | Две записи одной единицы дольше полуминуты | Аренда длиннее, чем должна: наложение ограничено `TTL − margin`. |
 | На свежей коробке ничего не размещается | `unknown` считается за `silent`. Ресурс ещё не стартовал — это не повод отказывать. |
 | Работа уехала и через минуту вернулась | Сработало `gone_servers` без отсрочки в один `lost_after`. Планировщику надо дать шанс. |
@@ -1027,6 +1104,7 @@ w.reconcile_once(0)                              # воркер прочитал
 - Метки единицы должны быть подмножеством меток воркера, а не наоборот.
 - Ничья разрывается детерминированно — чтобы два контроллера чаще приходили к одному выводу и реже конфликтовали.
 - Близость и дом упорядочивают пул, ограничение его сужает. Предпочтение не может оставить единицу без места — потому дом и не выражается меткой.
+- Что видит сервер, говорит строка консоли поверх слова узла; метка, которую сервер потерял, увозит его единицы — `ensure_reach`, десять за проход, а молчание хранилища не двигает ничего.
 - Из пары подсистем следовать может ровно одна: иначе у пары нет якоря и обе меняются местами каждый проход. Следует та, что способна двигаться.
 - `_pick` решает, куда поставить; `ensure_home` — куда вернуть. Без второго аффинность остаётся разовым советом при рождении единицы.
 - Уже размещённая единица не пересматривается: добавление воркера ничего не двигает. Движение — только по просьбе или потому, что двигать некуда.
