@@ -168,7 +168,7 @@ def refuse(fields: dict) -> None:
     for f in ("quota_bytes", "shrink_confirmed"):
         try:
             int(fields.get(f, 0) or 0)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OverflowError):   # `1e999` in a body: `int(inf)` (the tenth round)
             raise Refused(f"`{f}` is a whole number of bytes, not {fields.get(f)!r}") from None
     if int(fields.get("quota_bytes", 0) or 0) <= 0:
         raise Refused("a volume needs `quota_bytes` — its size in bytes: the ring the engine formats it as "

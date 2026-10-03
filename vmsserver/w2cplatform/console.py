@@ -1763,7 +1763,7 @@ class SpecConsole:
             try:
                 fields["cam"] = int(body["cam"])                      # the field the index joins on
             except PARSE_ERRORS:                                      # a word, `Infinity`: 400, not "the write failed"
-                return 400, {"detail": f"a mark's `cam` is a camera's number, not {body['cam']!r:.40}", "error": "bad cam"}
+                return 400, {"detail": f"a mark's `cam` is a unit's number, not {body['cam']!r:.40}", "error": "bad cam"}
         else:
             fields["unit"] = str(body["unit"])
         path = self.marks.append(self.wall(), "mark", **fields)

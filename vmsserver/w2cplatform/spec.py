@@ -766,7 +766,7 @@ def _sweep_list(items) -> tuple[list, float]:
 def _next_rev(it) -> int:
     try:
         return int((it or {}).get("rev", 0)) + 1
-    except (ValueError, TypeError):
+    except PARSE_ERRORS:                              # `rev: 1e999` (a hand edit): `int(inf)` (the tenth round's sweep)
         return 1
 
 
@@ -1318,7 +1318,7 @@ class SpecController(Controller):
         try:
             at, rev = float(it["at"]), int(it["rev"])
             self._garbled_rows.discard(key)
-        except (ValueError, KeyError, TypeError):
+        except PARSE_ERRORS:                          # `rev: 1e999` too: `placement()` raised under every pass and route (the tenth round)
             at, rev = 0.0, 0
             if key not in self._garbled_rows:
                 self._garbled_rows.add(key)

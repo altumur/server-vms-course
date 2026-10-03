@@ -253,6 +253,22 @@ def test_infinity_in_a_rows_integer_stops_no_workers_pass_and_no_lease():
     _forget_garbled()
 
 
+def test_a_placement_row_counting_past_any_number_still_says_where_its_unit_is():
+    """`rev: 1e999` in a placement row (a hand edit) was `int(inf)` past `_placement`'s `(ValueError, KeyError, TypeError)`:
+    `placement()` raised under every step of the pass and every route that asks where a unit is. Read as a row whose
+    `rev` does not parse — its worker stands, `rev 0` — and the next write of it counts from one."""
+    from tests.test_lesson4_worker import _box_with_cameras
+    box, ctl = _box_with_cameras(2)
+    box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
+    ctl.pass_once()
+    _hand_edit(box, "vms/placement/1", "rev")
+    pl = ctl.placement(1)
+    assert pl.worker == "w-1" and pl.rev == 0
+    ctl.pass_once()
+    assert ctl.placement(2).worker == "w-1"
+    _forget_garbled()
+
+
 def test_a_bucket_line_nested_past_jsons_depth_does_not_stop_the_watch():
     """`json.loads` of one line nested a hundred thousand deep raised `RecursionError` past the watch's
     `(ValueError, AttributeError)`: the look raised, the sizes were not moved, and every look after it read the same

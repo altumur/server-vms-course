@@ -169,7 +169,7 @@ class DetWorker(Worker):
         for unit, t, kind, fields in self.suppressor.flush(now):
             try:                                            # a row garbled under a running detector: its summary waits (the seventh pass)
                 row = self.unit_row(unit) if unit in self.epochs and unit in self.status_by_unit else None
-            except (ValueError, KeyError, TypeError):
+            except PARSE_ERRORS:                            # `1e999` in an int field too (the tenth round's sweep)
                 continue
             if row is not None and self.may_write(unit):
                 self._write(unit, row, [(t, kind, fields)])
