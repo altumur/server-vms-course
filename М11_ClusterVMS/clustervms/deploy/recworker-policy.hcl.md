@@ -8,3 +8,4 @@
 - No `platform/space` any more: the watermark guarded a disk the recorder's files could fill, and a volume is a ring formatted at its quota — a backfill waits for a volume that is taking nothing (`archive_busy`), never for a disk.
 - `path "secrets/vms" { capabilities = ["read"] }` — the cluster's key, read by the job's template: the recorder opens a network volume's sealed `access_secret` with it (М10B Lesson 10; the review's fourth pass, blocker 3). Three jobs read it — console, worker, recorder — and no other.
 - `path "platform/schema" { capabilities = ["read"] }` — the store's schema, checked first (`check_schema`; М10's eighth review): every job's start reads it, and this policy did not grant it.
+- `path "platform/decommission/*" { capabilities = ["read"] }` — a recorder on a decommissioned server is given no slot (`Worker._claim_slot`, a named refusal; М10A Lesson 7, step 7).
