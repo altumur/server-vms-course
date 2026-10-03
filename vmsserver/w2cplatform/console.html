@@ -380,7 +380,7 @@ async function select(id) {
   let why = '';
   try { const w = await (await fetch(`/where/${encodeURIComponent(id)}`)).json(); why = w.reason || ''; } catch (_) {}
   $('#meta').textContent = [c.phase, c.worker && `on ${c.worker}`, c.server, c.epoch ? `epoch ${c.epoch}` : null, why,
-                            c.why, c.warning,   // the holder's word on this camera: why it is not running, what to check
+                            c.why, c.warning,   // the holder's word on this unit: why it is not running, what to check
                             c.worker_state === 'stale' ? 'last known state' : null].filter(Boolean).join(' · ');
   for (const li of $('#units').children) li.classList.toggle('on', li.dataset.id === String(id));
   fillEdit(c);
