@@ -51,7 +51,7 @@ def device_recordings(url: str, t0: float, t1: float, timeout: float = 10.0) -> 
         if e.code == 501:
             return None                                  # this driver cannot list; the summary is all there is
         raise
-    except (*PARSE_ERRORS, RecursionError):
+    except PARSE_ERRORS:
         return None                                      # an answer that does not parse lists nothing: the summary stands
     # Each span alone (the review's eighth pass): one that does not parse is that span's — counted, and the others
     # stand; `float(sp["from"])` bare took the whole listing, and with it the job's or the survey's step.
@@ -192,7 +192,7 @@ def recording_read(objects, unit, t0: float, t1: float, now: float, vars_=None, 
         try:
             with urllib.request.urlopen(f"{url.rstrip('/')}/timeline/{unit}?from={t0}&to={t1}", timeout=timeout) as r:
                 spans, whole = door_spans(f"rec/doors/{w}#{unit}", _json.loads(answer(r)))
-        except (OSError, *PARSE_ERRORS, RecursionError):
+        except (OSError, *PARSE_ERRORS):
             silent.append(w)
             continue
         answered = True
@@ -282,8 +282,8 @@ class ScanLog:
         try:
             with open(self._waiting_path()) as f:
                 d = json.load(f)
-            return {"since": float(d["since"]), **({"partial": list(d["partial"])} if d.get("partial") else {})}
-        except (FileNotFoundError, ValueError, KeyError, TypeError):
+            return {"since": finite(d["since"]), **({"partial": list(d["partial"])} if d.get("partial") else {})}
+        except (FileNotFoundError, *PARSE_ERRORS):       # `since` past a float, a file nested past JSON's depth (the tenth round)
             return None
 
     def wait(self, now: float, partial: list | None = None) -> dict:
@@ -351,8 +351,10 @@ class Frontier:
     def read(self) -> float | None:
         try:
             with open(self.path) as f:
-                return float(json.load(f)["watched_through"])
-        except (FileNotFoundError, ValueError, KeyError):
+                return finite(json.load(f)["watched_through"])
+        # …or a file that does not read as a frontier — a list (`TypeError`), a number past a float, nested past JSON's
+        # depth (the review's tenth round): it raised out of the survey's and the evaluator's pass, every pass.
+        except (FileNotFoundError, *PARSE_ERRORS):
             return None                                  # never started, or the file was lost: the row decides where to begin
 
     # Written after the events of that stretch, and atomically: a crash between the work and the number

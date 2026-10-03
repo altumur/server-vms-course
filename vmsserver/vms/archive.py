@@ -253,6 +253,8 @@ def classify(e: Exception) -> ArchiveError:
         return ArchiveError("wrong" if e.name in WRONG else "away", str(e), e.name)
     if isinstance(e, ValueError):
         return ArchiveError("wrong", str(e))
+    if isinstance(e, PARSE_ERRORS):                # …and an answer with a field missing, `Infinity` for a handle, a map that is a
+        return ArchiveError("wrong", f"the engine answered what this build cannot read: {type(e).__name__}: {e}")   # list
     return ArchiveError("away", str(e))
 
 
@@ -377,7 +379,7 @@ class Archive:
                 self.writer = self._mount_rw(vol)
                 self.reattached = self.writer.reattached
                 self._configure()
-        except (ObsdError, ValueError) as e:
+        except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         return self
 
@@ -639,7 +641,7 @@ class Archive:
     def reading(self):
         try:
             r = self._open_volume().mount_ro()
-        except (ObsdError, ValueError) as e:
+        except (ObsdError, *PARSE_ERRORS) as e:     # an answer of the engine this build cannot read: `wrong`, said (the tenth round)
             raise self._classified(e) from None
         try:
             yield r

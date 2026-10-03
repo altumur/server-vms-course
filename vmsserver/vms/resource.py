@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from w2cplatform.eventdatabase import EventIndex
 from w2cplatform.resource import Resource
-from w2cplatform.rows import Table
+from w2cplatform.rows import PARSE_ERRORS, Table
 
 
 def vms_resource(root: str, server: str, url: str, vars_, objects, wall=None, peers=None,
@@ -123,7 +123,7 @@ def cameras_of_units(vars_, unread: set | None = None) -> dict[tuple[str, str], 
                 c = cams_of("vms", str(a.get("cam") or a.get("unit") or ""))
                 named = ANY if c is ANY or named is ANY else named | c
             out[("auto", unit)] = named if named else ANY
-        except (ValueError, TypeError, AttributeError):
+        except PARSE_ERRORS:                          # `when` nested past what JSON reads too (`RecursionError`): one scenario's, not the retain's (the review's tenth pass)
             out[("auto", unit)] = ANY
     return out
 

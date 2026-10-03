@@ -46,6 +46,7 @@ import time
 
 from w2cplatform.doors import numeric
 from w2cplatform.objects import ObjectStore
+from w2cplatform.rows import PARSE_ERRORS
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Variables
 
@@ -232,10 +233,15 @@ class Catalog:
         """Everything a form needs, in one answer: what automation may ask for (`ACTIONS`), and per unit what
         it raises and what it can do. A unit whose device never described itself says `can: null` — the
         page offers it with a free field, which is the honest thing to offer for "unknown"."""
+        # ONE CAMERA'S SOURCE IS THAT CAMERA'S (the review's tenth round): a source that does not parse, a device row that
+        # does not read, raised out of the whole catalogue — the form had no camera at all to offer. That camera is
+        # offered with `can: null`, as one whose device never said, and `unread` says why.
         cams = {}
         for u, c in sorted(self.cameras().items(), key=lambda kv: (len(kv[0]), kv[0])):
-            d = self.device(c)
-            cams[u] = {"name": c.get("name", u), "can": d}
+            try:
+                cams[u] = {"name": str(c.get("name", u)), "can": self.device(c)}
+            except PARSE_ERRORS as e:
+                cams[u] = {"name": str(c.get("name", u)), "can": None, "unread": f"its device cannot be read ({type(e).__name__})"}
         dets = {n: {"cam": str(d.get("cam", "")), "raises": [str(d.get("kind", ""))]}
                 for n, d in sorted(self.detectors().items())}
         return {"actions": {f"{s}.{n}": {"need": list(v["need"]), "may": list(v["may"])} for (s, n), v in sorted(ACTIONS.items())},

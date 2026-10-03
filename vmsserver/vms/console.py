@@ -22,6 +22,7 @@ import http.client
 import json
 import logging
 import math
+import struct
 import threading
 import time
 import urllib.error
@@ -214,12 +215,36 @@ class LiveFront:
 # subtraction the recorder fetches by (Lesson 16): one rule, two uses, so the picture and the work cannot
 # disagree. A span like this is the one that will disappear — our archive keeps thirty days, a card keeps
 # three — which is why the page offers to pin it.
-def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
-    found = holder_of(objects, "vms/", cam, now, field="coverage")
+#
+# THE COVERAGE A HOLDER ANNOUNCES IS READ ONCE, HERE (the review's tenth round): `float(cov["from"])` bare in three routes,
+# and one holder's word where a number goes was the camera's whole `/timeline` (no reply), its `/segment` and a
+# backfill's floor. `(from, to)`, or None — not said, or said in a form that does not read: counted once as that
+# holder's field (`rows.FIELDS`), and the routes go on as for a holder that announces nothing.
+# What a frame that will not become MP4 raises (`export`): a word of the codec, a size past a `>I`/`>H` field
+# (`struct.error`), an empty unit (`IndexError`) — the frame's trouble: before the first byte a 415, after it a cut
+# file said `broken`. It was `ValueError` alone, and `struct.error` went past the journal's line (the tenth round).
+FRAME_ERRORS = (ValueError, struct.error, IndexError, OverflowError)
+
+
+def coverage_of(found) -> tuple[float, float] | None:
     if found is None:
+        return None
+    cov = found[2].get("coverage")
+    if not cov:
+        return None
+    key = f"vms/{HEARTBEATS}/{found[0]}#coverage"
+    try:
+        return finite(cov["from"]), finite(cov["to"])
+    except PARSE_ERRORS as e:
+        FIELDS.garbled(key, e)
+        return None
+
+
+def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
+    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage"))
+    if cov is None:
         return []
-    cov = found[2]["coverage"]
-    want = (max(float(cov["from"]), t0), min(float(cov["to"]), t1))
+    want = (max(cov[0], t0), min(cov[1], t1))
     if want[1] <= want[0]:
         return []
     have = [(s["start"], s["end"]) for s in ours]
@@ -247,7 +272,7 @@ def recordings_of(rec_ctl, cam) -> list[str]:
 def own_name_is_hers(rec_ctl, cam) -> bool:
     try:
         items, _ = rec_ctl.vars.get(rec_ctl._row_key(rec_ctl.spec.parse_id(str(cam))))
-    except (OSError, ValueError, KeyError):
+    except (OSError, *PARSE_ERRORS):                 # a row nested past JSON's depth too (the tenth round)
         return False
     return not items or str(items.get("cam", cam)) == str(cam)
 
@@ -290,7 +315,7 @@ def _rec_epoch(ctl, unit) -> int | None:
         return current_epoch(ctl.vars, f"rec/epoch/{unit}") or None
     except OSError:
         return None                                # the store did not answer: the doors' own word stands
-    except (ValueError, KeyError, TypeError) as e:
+    except PARSE_ERRORS as e:                         # `epoch: Infinity` too (the tenth round)
         log.warning("rec/epoch/%s does not parse (%s): its spans are fenced by their doors' word alone", unit, e)
         return None
 
@@ -471,13 +496,22 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 return 400, {"detail": "Idempotency-Key header is required: a command retried is the same command",
                              "error": "Idempotency-Key required"}
             raw = handler.rfile.read(int(handler.headers.get("Content-Length", 0)))
+            # A body that is no JSON object is the sender's 400 before any key is claimed (the review's tenth round: not
+            # JSON, nested past its depth, a list — the handler fell over and the caller had no reply at all).
+            try:
+                body = json.loads(raw or b"{}")
+                if not isinstance(body, dict):
+                    raise TypeError(f"a command is a JSON object, not {type(body).__name__}")
+            except PARSE_ERRORS as e:
+                return 400, {"detail": f"a command is {{unit, action, …}} as a JSON object ({type(e).__name__})",
+                             "error": "bad body"}
             # …and the row lives only until its holder has answered it: the controller clears it, and a retry ninety
             # seconds later found no row and filed the command again (the review's third pass, minor). So the key is
             # ALSO kept where the console keeps every key (`IdempotencyKeys`, `<sub>/idem/`, for a day) — the same
             # claim, the same reply to the same caller with the same body, whichever console the retry reaches.
             seen = getattr(extra, "seen", None)
             if seen is None:
-                return file_request(handler, json.loads(raw or b"{}"), key)
+                return file_request(handler, body, key)
             try:
                 prior = seen.claim(key, handler.headers.get("X-User", "operator"), raw)
             except Refused as e:
@@ -487,7 +521,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             if prior is not None:
                 return prior
             try:
-                reply = file_request(handler, json.loads(raw or b"{}"), key)
+                reply = file_request(handler, body, key)
             except Exception:
                 seen.release(key)
                 raise
@@ -513,7 +547,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 if any(isinstance(body.get(k), bool) for k in ("from", "to")):
                     raise TypeError("true and false are not seconds")   # `float(False)` is 0.0: 1970, not an answer
                 cam, t0, t1 = str(body.get("cam", "")), float(body.get("from", 0)), float(body.get("to", 0))
-            except (ValueError, TypeError, AttributeError):
+            except PARSE_ERRORS:                             # a body nested past JSON's depth too: 400, not no reply (the tenth round)
                 return 400, {"detail": "a backfill is {cam, from, to}: a camera and two unix seconds", "error": "bad range"}
             if not cam or not (math.isfinite(t0) and math.isfinite(t1)) or t1 <= t0:
                 return 400, {"detail": "a backfill wants a camera and a range of finite unix seconds", "error": "bad range"}
@@ -549,16 +583,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             from .archive import visible_from
             try:
                 floor, why = visible_from(rec_ctl.unit(unit), now), "the recording shows"
-            except (ValueError, KeyError, TypeError):
+            except PARSE_ERRORS:
                 floor, why = now - BACKFILL_MAX * 30, "a recording shows"
-            found = holder_of(ctl.objects, "vms/", cam, now, field="coverage") if ctl is not None else None
-            cov = found[2].get("coverage") if found is not None else None
-            if isinstance(cov, dict):
-                try:
-                    if float(cov["from"]) > floor:
-                        floor, why = float(cov["from"]), "the device holds"
-                except (KeyError, TypeError, ValueError):
-                    pass
+            cov = coverage_of(holder_of(ctl.objects, "vms/", cam, now, field="coverage") if ctl is not None else None)
+            if cov is not None and cov[0] > floor:
+                floor, why = cov[0], "the device holds"
             if t1 <= floor:
                 return 400, {"detail": f"this range ends before anything {why} (from {floor:.0f}): no recorder could "
                                        f"fetch it", "error": "range too old"}
@@ -583,7 +612,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 it, idx = rec_ctl.vars.get(ledger)
                 try:
                     held = [(str(r), float(at)) for r, at in json.loads((it or {}).get("asks", "[]"))]
-                except (ValueError, TypeError):
+                except PARSE_ERRORS:
                     held = []
                 held = [(r, at) for r, at in held if now - at <= BACKFILL_TTL
                         and (now - at < ASK_SETTLE or rec_ctl.vars.get(rec_ctl.spec.sub.request_key(r))[0])]
@@ -766,13 +795,13 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # down. The interval is cut to the coverage the holder announces (`coverage`, the summary in its heartbeat)
         # and then held to `SEGMENT_MAX`, as an export is to `EXPORT_MAX`: a longer one is 400, before anything is
         # signed. A holder that announces no coverage (an older build) is held to the ceiling alone.
-        cov = found[2].get("coverage") or None
+        cov = coverage_of(found)                          # a word in it: held to the ceiling alone, as an older build
         lo, hi = float(t0), float(t1)
-        if isinstance(cov, dict) and "from" in cov and "to" in cov:
-            lo, hi = max(lo, float(cov["from"])), min(hi, float(cov["to"]))
+        if cov is not None:
+            lo, hi = max(lo, cov[0]), min(hi, cov[1])
             if hi <= lo:
                 return 404, {"detail": f"the device holds nothing of camera {cam} in that interval (it holds "
-                                       f"{float(cov['from']):.0f}..{float(cov['to']):.0f})", "error": "nothing there"}
+                                       f"{cov[0]:.0f}..{cov[1]:.0f})", "error": "nothing there"}
         if hi - lo > SEGMENT_MAX:
             return 400, {"detail": f"a piece of the device's footage is at most {SEGMENT_MAX:.0f} s; this one is "
                                    f"{hi - lo:.0f} s of what the device holds — ask for less", "error": "range too long"}
@@ -804,7 +833,10 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
     # (`unserved_volumes`): unavailable, not lost. Each span says whose it is and how to play it (`media`: the
     # export of that recording; the page adds the minutes).
     def timeline(cid: str, q: dict):
-        t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
+        try:                                             # a word, `nan`: 400 — it was no reply at all (the tenth round)
+            t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 1e12))
+        except ValueError:
+            return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
         ours, unreachable = [], []
         doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
         for unit in recordings_of(rec_ctl, cid):
@@ -906,8 +938,8 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         import heapq
         import struct
         from . import fmp4
-        try:
-            t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
+        try:                                             # `nan` passed both checks below as `float` (the tenth round)
+            t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 0))
         except ValueError:
             return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
         if t1 <= t0 or t1 - t0 > EXPORT_MAX:
@@ -1024,7 +1056,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                         sps, pps = fmp4.param_sets(smp.body)
                         width, height = struct.unpack("<II", smp.sub[:8]) if len(smp.sub) >= 8 else (0, 0)
                         writer = fmp4.Writer(Out(), sps, pps, width, height)
-                    except ValueError as e:
+                    except FRAME_ERRORS as e:            # a header past what MP4 holds: `struct.error` (the tenth round)
                         return 415, {"detail": str(e), "error": "not playable"}
                     if chunked:
                         handler.protocol_version = "HTTP/1.1"
@@ -1053,7 +1085,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                     handler.wfile.write(b"0\r\n\r\n")
                 else:
                     whole.append(b"0\r\n\r\n")
-        except (OSError, ValueError) as e:              # the caller went away, or a frame would not convert
+        except (OSError, *FRAME_ERRORS) as e:           # the caller went away, or a frame would not convert
             if not sent["head"]:
                 raise
             broken = str(e)
@@ -1649,6 +1681,17 @@ def source_cams(ctl, scenarios=None):
         if str(old.get("ref") or "") != str(new.get("ref") or ""):
             out.add("*")
         a, b = str(old.get("source") or ""), str(new.get("source") or "")
+        # …AND ITS LABELS, WHEN ITS DEVICE CARRIES OTHER CAMERAS (the product team's addition to the tenth round; the
+        # review's DQ minor). The channels of one device move together (`ensure_reach`, `group_by`): a camera's new
+        # labels move every camera of its device to another holder. So a labels change asks the right on each of them,
+        # as moving `source` onto a shared device does; a camera alone on its device asks nothing more.
+        def labels(row) -> set:
+            v = row.get("labels") or []
+            return {str(x) for x in (v if isinstance(v, (list, tuple)) else str(v).split(",")) if str(x)}
+        if "labels" in new and labels(old) != labels(new) and a:
+            same = one_device(ctl.vars, ctl.objects, ctl.wall)
+            dev = same(device_of(a))
+            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
         if a == b:
             return out                                   # the source as it was: nothing moved, nothing to look up
         if volumes.source_key(a) != volumes.source_key(b):
