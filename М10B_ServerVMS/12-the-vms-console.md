@@ -214,12 +214,25 @@ def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict
 К нашим спанам консоль добавляет то, что записало само устройство, — там, где у нас ничего нет:
 
 ```python
-def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
-    found = holder_of(objects, "vms/", cam, now, field="coverage")
+def coverage_of(found) -> tuple[float, float] | None:
     if found is None:
+        return None
+    cov = found[2].get("coverage")
+    if not cov:
+        return None
+    key = f"vms/{HEARTBEATS}/{found[0]}#coverage"
+    try:
+        return finite(cov["from"]), finite(cov["to"])
+    except PARSE_ERRORS as e:
+        FIELDS.garbled(key, e)
+        return None
+
+
+def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
+    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage"))
+    if cov is None:
         return []
-    cov = found[2]["coverage"]
-    want = (max(float(cov["from"]), t0), min(float(cov["to"]), t1))
+    want = (max(cov[0], t0), min(cov[1], t1))
     if want[1] <= want[0]:
         return []
     have = [(s["start"], s["end"]) for s in ours]
@@ -228,6 +241,8 @@ def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: floa
 ```
 
 `subtract` — та же функция, по которой регистратор решает, что дозаписывать (урок 16). Одно правило в двух местах, поэтому картинка и работа не могут разойтись. Такой спан исчезнет первым: наш архив держит недели, карта камеры — дни.
+
+**Покрытие держателя читается в одном месте — `coverage_of`.** Раньше `float(cov["from"])` стоял голым в трёх маршрутах: здесь, в `/segment` и в нижней границе `POST /backfill`. Слово в покрытии одного держателя — и таймлайн камеры уходил без ответа, а кусок с её устройства тоже (ответ на девятое ревью, «следующим заходом»; воспроизведено запуском). Теперь покрытие, которое не читается, — то же, что держатель, который покрытия не объявляет: спанов устройства нет, кусок держится одним потолком `SEGMENT_MAX`. Поле посчитано один раз (`vms/heartbeats/<держатель>#coverage` в таблице `field`). Слово в самом запросе — `/timeline/7?from=yesterday`, `nan` в `/export` — теперь 400; раньше `float` бросал мимо всего, и ответа не было. Тест: `test_one_bad_element.py::test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_or_the_segment`.
 
 Сыграть такой спан консоль не может: у неё нет кадров устройства. Маршрут `/segment` теперь отвечает только про устройство — адрес двери воспроизведения у воркера, который держит камеру сейчас:
 
@@ -248,13 +263,13 @@ def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: floa
         if found is None:
             return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
         url, key = found[2]["playback_url"], found[1].extra.get("playback_key") or None
-        cov = found[2].get("coverage") or None
+        cov = coverage_of(found)                          # a word in it: held to the ceiling alone, as an older build
         lo, hi = float(t0), float(t1)
-        if isinstance(cov, dict) and "from" in cov and "to" in cov:
-            lo, hi = max(lo, float(cov["from"])), min(hi, float(cov["to"]))
+        if cov is not None:
+            lo, hi = max(lo, cov[0]), min(hi, cov[1])
             if hi <= lo:
                 return 404, {"detail": f"the device holds nothing of camera {cam} in that interval (it holds "
-                                       f"{float(cov['from']):.0f}..{float(cov['to']):.0f})", "error": "nothing there"}
+                                       f"{cov[0]:.0f}..{cov[1]:.0f})", "error": "nothing there"}
         if hi - lo > SEGMENT_MAX:
             return 400, {"detail": f"a piece of the device's footage is at most {SEGMENT_MAX:.0f} s; this one is "
                                    f"{hi - lo:.0f} s of what the device holds — ask for less", "error": "range too long"}
@@ -335,7 +350,9 @@ const PIECE = 600;
 
 **И не больше двух сразу.** Экспорт часа камеры на 8 Мбит/с — около 3,6 ГБ кадров в памяти плюс MP4; два-три таких запроса от любого, у кого есть `view`, роняли консоль, а с ней — цикл заявок (третье ревью). Теперь экспорты идут через семафор (`EXPORTS_AT_ONCE`, по умолчанию 2), лишний получает 503 с `Retry-After: 5`. И каждый — потоком: экспорт читает каждый отрезок у двери кусками по минуте (`EXPORT_PIECE`, по ключевым кадрам, как дозапись), сводит записи камеры по времени (`heapq.merge`, около куска на запись в памяти) и пишет MP4 фрагмент за фрагментом (`fmp4.Writer`). Заголовки уходят на первом ключевом кадре — 404 «нечего отдать» и 415 «не играется» по-прежнему отвечаются до первого байта; `Content-Length` нет, конец файла — последний кусок chunked для HTTP/1.1 (выше) и конец соединения для HTTP/1.0; дверь, отказавшая посреди, называется в журнале (`archive.read`, поле `unreachable`), а sha256 считается по мере отдачи. Тест: `test_an_export_is_read_a_minute_at_a_time_and_written_as_it_is_made` — файл тот же байт в байт, что собранный целиком. Тест: `test_slot_and_read.py::test_exports_held_in_memory_at_once_are_bounded_and_the_next_one_is_told_when_to_come_back`.
 
-**Интервал, и ограниченный.** `EXPORT_MAX = 3600.0`: страница просит минуты, человек — до часа. Экспорт собирался в памяти целиком, и запрос «с 1970 года» без потолка был бы способом уронить консоль; теперь он идёт потоком (выше), а потолок остался — час видео это и час чтения у двери. Концы в неправильном порядке и интервал длиннее часа — 400.
+**Интервал, и ограниченный.** `EXPORT_MAX = 3600.0`: страница просит минуты, человек — до часа. Экспорт собирался в памяти целиком, и запрос «с 1970 года» без потолка был бы способом уронить консоль; теперь он идёт потоком (выше), а потолок остался — час видео это и час чтения у двери. Концы в неправильном порядке и интервал длиннее часа — 400. И `nan` — тоже 400 (`finite`): как `float` он проходил обе проверки, потому что любое сравнение с ним ложно (десятое ревью, обход).
+
+**Кадр, который не становится MP4, — беда этого кадра.** `FRAME_ERRORS = (ValueError, struct.error, IndexError, OverflowError)`: размер, не влезающий в поле `>I` или `>H` (`struct.error`), пустой NAL (`IndexError`). До первого байта это 415 «не играется», после — файл, оборванный на виду, со строкой `broken` в журнале. Раньше ловился один `ValueError`, а `struct.error` уходил мимо строки журнала (ответ на девятое ревью, «узкие наборы исключений»).
 
 ```python
     def _export(handler, cid: str, q: dict, whole: list | None = None):
@@ -343,8 +360,8 @@ const PIECE = 600;
         import heapq
         import struct
         from . import fmp4
-        try:
-            t0, t1 = float(q.get("from", 0)), float(q.get("to", 0))
+        try:                                             # `nan` passed both checks below as `float` (the tenth round)
+            t0, t1 = finite(q.get("from", 0)), finite(q.get("to", 0))
         except ValueError:
             return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
         if t1 <= t0 or t1 - t0 > EXPORT_MAX:
@@ -657,6 +674,8 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
 ```
 
 Таймлайн, экспорт и вещание называют камеру в пути, и право на них — право на эту камеру. Запрос на дозапись действует, поэтому нужен `edit`. `POST /whep/` ничего не меняет и проходит по праву `view`. Смена `source` камеры касается каждой камеры устройства, которое строка покидает, и устройства, на которое приходит, а смена `ref` — всего кластера (`source_cams`; М10A, урок 15, шаг 12а).
+
+**Тело, которое не объект JSON, — 400 тому, кто его прислал.** `POST /requests` и `POST /backfill` разбирали тело как есть: не JSON, список или вложенность глубже, чем читает JSON, ронял обработчик, и вызывающий не получал ответа вовсе (ответ на девятое ревью, «следующим заходом»; воспроизведено запуском). Теперь тело проверяется до того, как берётся ключ идемпотентности: 400, ничего не записано, ключ не потрачен. То же у платформенных маршрутов (`object_body`, М10A, урок 15). Тест: `test_one_bad_element.py::test_a_body_that_is_no_json_object_is_refused_on_every_write_route`.
 
 **Команда устройству — это право на каждую камеру устройства.** `POST /requests` проверял `edit` на одну камеру, названную в `unit`, а держатель выполняет команду на **устройстве**: `perform` зовёт `dev.output(port, …)` и `dev.preset(n)`, канала нет ни там, ни там. Охранник с `edit` на камеру 1 шестнадцатиканального видеорегистратора послал `output` на порты 1–4 и `preset 5` — 202, и устройство выполнило всё, в том числе замок зоны камеры 2 (седьмое ревью, major, воспроизведено запуском). Привязаны ли выходы и пресеты к каналам где-нибудь в описании драйвера — нет: `capabilities()` говорит `rays`, `relays`, `ptz`, `presets` — числа, и это числа устройства (`config.describe`, строка `vms/devices/<устройство>`). Поэтому реле и пресет — каждой камеры устройства: ворота спрашивают `edit` на каждую, как смена `source` спрашивает `admin` на каждую (`source_cams`). Спрашивает платформа: у `SpecConsole` есть `body_cams(path, body)` — камеры, до которых действие из тела достаёт сверх названной, — и `dispatch` после чтения тела спрашивает право маршрута на каждую (`admit_body_cams`); VMS ставит туда `command_cams`. Камера, которая у своего устройства одна (камера с картой, файл), не спрашивает ничего сверх прежнего. Сценарий, который командует устройством (`vms.output`, `vms.preset`), — тот же охват через автоматику: `scenario_cams` добавляет все камеры устройства, и правка сценария требует `admin` на каждую.
 
