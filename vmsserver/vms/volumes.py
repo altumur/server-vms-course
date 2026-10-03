@@ -577,6 +577,11 @@ def refuse_camera(ctl, uid, old: dict | None, new: dict) -> None:
     new_ref = bool(ref) and (old is None or str(old.get("ref") or "") != ref)
     if not new_src and not new_ref:
         return
+    if moved:
+        from .config import source_refusal               # a port or channel nobody can read (the review's tenth pass)
+        why = source_refusal(src)
+        if why:
+            raise Refused(why)
     mine = source_key(src)
     for row in ctl.units():
         if str(row["id"]) == str(uid):

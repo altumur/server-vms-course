@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 
+from w2cplatform.doors import numeric
 from w2cplatform.rows import PARSE_ERRORS, finite
 
 from .federation import Unreachable
@@ -54,14 +55,14 @@ def misfit(who: str, can: dict, action: dict) -> str | None:
         n = _count(can, "presets")
         if not can.get("ptz"):
             return f"{who} has no telemetry: it cannot go to a preset"
-        if n and (not arg.isdigit() or not 1 <= int(arg) <= n):
+        if n and not 1 <= (numeric(arg) or 0) <= n:     # `doors.numeric`: `"²".isdigit()` and `int` raised (the tenth pass)
             return f"{who} has {n} preset(s), not {arg}"
         return None
     if name == "output":
         r = _count(can, "relays")
         if not r:
             return f"{who} has no relays"
-        if not arg.isdigit() or not 1 <= int(arg) <= r:
+        if not 1 <= (numeric(arg) or 0) <= r:
             return f"{who} has {r} relay(s), not port {arg}"
         return None
     return f"{who} cannot be asked {name!r}: one camera asks another for {' or '.join(ACTIONS)}"

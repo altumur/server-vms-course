@@ -473,8 +473,19 @@ def slot_from_environment(env: dict, name_env: str = "WORKER_NAME", prefix: str 
 
 
 # `LABELS` split on commas, empties dropped — what this server can reach, as the runtime said it.
+#
+# …in the one alphabet of labels (`spec.LABEL_WORD`; the review's tenth pass): a word outside it is said at start — no
+# camera can be given it any more, and no server's row can hold it — and kept, so a camera stored with it before still
+# has a server.
 def labels_from_environment(env: dict) -> list[str]:
-    return runtime.labels(env)
+    from w2cplatform.spec import LABEL_WORD
+    out = runtime.labels(env)
+    bad = [l for l in out if not LABEL_WORD.fullmatch(l)]
+    if bad:
+        log.warning("LABELS holds %s, which is not a label (letters, digits and _ . : -, starting with a letter or a "
+                    "digit): no camera can be given it any more and the console cannot write it for a server; write it "
+                    "in those characters", ", ".join(repr(l) for l in bad))
+    return out
 
 
 # `name` is a slot. Given (systemd's `%i`, Nomad's alloc index) it is claimed by that name — taken outright,
@@ -553,12 +564,17 @@ class VmsWorker(Worker):
         self._marks_looked: set[str] = set()             # requests whose mark was read at their first sight (`_confirm`)
         self._appeared: dict[str, float] = {}            # request -> the wall time of the last listing that did not have it
         self._listed: tuple[float, set] | None = None    # (when, which requests) of the previous listing
-        self._slow: set[int] = set()                     # devices whose last call did not answer inside `PERFORM_GRACE`
+        self._slow: set[int] = set()                     # devices whose last COMMAND did not answer inside `PERFORM_GRACE`
+        self._slow_asks: set[int] = set()                # devices whose question did not answer inside `DEVICE_GRACE` (`_ask_devices`)
         self._dev_calls: dict[tuple, dict] = {}          # (question, device) -> its one call not collected yet (`_ask_devices`)
         self._dev_lock = threading.Lock()                # …asked from the loop's thread and from the playback door's
         self._dev_pending: dict[int, int] = {}           # device -> its calls through `_ask_devices` not returned yet
+        self._dev_queues: dict = {}                      # device (or ("open", key)) -> its questions not begun yet, in order
+        self._dev_runners: set = set()                   # …and the lines a thread is working through now: one per device
         self._dev_said: set = set()                      # devices said slow, (question, device) said failing: once a spell
+        self._open_failed: dict[str, str] = {}           # device key -> why it did not open, until it opens
         self._said_coverage: dict[tuple, object] = {}    # ("coverage", device, camera) -> what the device said last
+        self._said_status: dict[tuple, object] = {}      # ("channels" | "in_use", device) -> what the device said last
         self._heard: dict | None = None                  # the heartbeat's one round of answers, while it is being written
         self.reanswered = 0                              # requests answered before by this slot, said again (`_answered_before`)
         self._beat_failed = False                        # the look at the requests between passes is failing: said once (`beat_once`)
@@ -574,6 +590,7 @@ class VmsWorker(Worker):
         self.described: dict[str, dict] = {}              # device -> the description this worker last wrote
         self.identities: dict[str, str] = {}              # device -> what it said it is (`identity`), as last written
         self.coincidences: dict[str, tuple] = {}          # device -> (another key whose row says its identity, the identity): said
+        self.identity_changes = 0                         # a key whose device said another identity than before (`describe_devices`)
         self.assignment_rev = 0
         self.reconciler = Reconciler(self, self._actuate)
         self.recording_allowed = True
@@ -677,6 +694,9 @@ class VmsWorker(Worker):
             for k in [k for k, c in self._dev_calls.items() if k[0] != "open" and k[1] not in held and c["returned"].is_set()]:
                 del self._dev_calls[k]
         self._said_coverage = {k: v for k, v in self._said_coverage.items() if k[1] in held}
+        self._said_status = {k: v for k, v in self._said_status.items() if k[1] in held}
+        self._slow_asks &= held
+        self._open_failed = {k: v for k, v in self._open_failed.items() if k in want and k not in self.devices}
         for key, (other, ident) in list(self.coincidences.items()):
             if not self._still_known_as(other, ident):   # the other row went, or says another device now: said no more
                 self.coincidences.pop(key, None)
@@ -690,14 +710,24 @@ class VmsWorker(Worker):
     # were a pass of 10.5 s and a heartbeat of 31 s, measured; at the product's five seconds a call, a heartbeat of
     # 1500 s. Every such call now goes through here, with the commands' rules:
     #
-    #   its own thread      the loop waits for the calls of one round TOGETHER, `DEVICE_GRACE` at most — one fifth of a
+    #   off the loop        the loop waits for the calls of one round TOGETHER, `DEVICE_GRACE` at most — one fifth of a
     #                       second however many hang — and never past `until`, the pass's or the heartbeat's
     #                       `DEVICE_HOLD`
     #   one at a time       a question to a device whose last call has not returned is not asked again: no second
     #                       thread piles onto a hung driver. Its answer, whenever it comes, is the next round's
-    #   a slow device       one whose call outlasted a whole `DEVICE_GRACE` is in `_slow` — the same set the commands
-    #                       use: asked, not waited for, until a call into it answers at once
+    #   a slow device       one whose call outlasted a whole `DEVICE_GRACE` is in `_slow_asks`: asked, not waited for,
+    #                       until a call into it answers at once
     #   an error            the device's word, not the pass's end: not known this round, said once a spell
+    #
+    # ONE LINE PER DEVICE, NOT ONE THREAD PER QUESTION (the review's tenth pass, major; a run). "One at a time" was per
+    # question: a recorder of 32 channels got `channels`, `in_use` and 32 `coverage` calls at once every heartbeat — 34
+    # requests at once into a box that answers one at a time, and at 10 ms an answer it was `slow` in five heartbeats
+    # of six, 20 of its cameras without coverage. Now the questions of a round to one device are asked in order on the
+    # device's one line (`_dev_run`), and `took` is counted from when a question was BEGUN: one queued behind the
+    # device's others is not slow, and its answer is collected by the next round. Two calls at most are in a device at
+    # once — this line's question and a command (`requests`, one at a time of its own) — and a question that is slow
+    # no longer names the device slow for the commands: `_slow_asks` here, `_slow` there (a relay is waited for in its
+    # look again, whatever the device's index takes to list).
     #
     # `asks` is `[(key, device, call)]`, the key `(question, id(device), …)` (an open: `("open", device key)`). Returns
     # `{key: answer}` for the calls that answered; a key that is absent is NOT KNOWN — and every caller reads it so:
@@ -717,29 +747,17 @@ class VmsWorker(Worker):
                     self._collect(key, call, out)
                     continue
                 if call is not None:
-                    continue                             # still not back: not asked twice
-                call = self._dev_calls[key] = {"dev": dev, "returned": threading.Event(), "t0": time.monotonic()}
+                    continue                             # still not back, or not begun: not asked twice
+                call = self._dev_calls[key] = {"dev": dev, "fn": fn, "returned": threading.Event(), "since": self.wall()}
+                line = ("open", key[1]) if dev is None else id(dev)
                 if dev is not None:
                     self._dev_pending[id(dev)] = self._dev_pending.get(id(dev), 0) + 1
-
-            def run(call=call, fn=fn):
-                t0 = time.monotonic()
-                try:
-                    call["out"] = fn()
-                except Exception as e:                   # noqa: BLE001 — the device's word, whatever it is
-                    call["error"] = str(e) or type(e).__name__
-                call["took"] = time.monotonic() - t0
-                with self._dev_lock:
-                    if call["dev"] is not None:
-                        n = self._dev_pending.get(id(call["dev"]), 1) - 1
-                        if n > 0:
-                            self._dev_pending[id(call["dev"])] = n
-                        else:
-                            self._dev_pending.pop(id(call["dev"]), None)
-                    call["returned"].set()
-
-            threading.Thread(target=run, name=f"{self.name}-device", daemon=True).start()
-            if dev is None or id(dev) not in self._slow:
+                self._dev_queues.setdefault(line, []).append(call)
+                begin = line not in self._dev_runners
+                self._dev_runners.add(line)
+            if begin:
+                threading.Thread(target=self._dev_run, args=(line,), name=f"{self.name}-device", daemon=True).start()
+            if dev is None or id(dev) not in self._slow_asks:
                 waiting.append((key, call))
         deadline = min(time.monotonic() + self.DEVICE_GRACE, until)
         for key, call in waiting:
@@ -751,33 +769,72 @@ class VmsWorker(Worker):
                         del self._dev_calls[key]
                         self._collect(key, call, out)
                     continue
+                begun = call.get("t0")
+            if begun is None or time.monotonic() - begun < self.DEVICE_GRACE:
+                continue                                 # behind the device's other questions, or begun just now: next round's
             dev = call["dev"]
-            if dev is not None and time.monotonic() - call["t0"] >= self.DEVICE_GRACE:
-                self._slow.add(id(dev))
-                if id(dev) not in self._dev_said:
-                    self._dev_said.add(id(dev))
-                    log.warning("%s: device %s did not answer `%s` within %.1f s: not waited for until it answers at "
-                                "once, and the heartbeat says it is slow", self.name, self._device_name(dev), key[0],
+            if dev is None:                              # an open that has not come back: `opening` in the heartbeat
+                if ("opening", key[1]) not in self._dev_said:
+                    self._dev_said.add(("opening", key[1]))
+                    log.warning("%s: device %s has not opened within %.1f s: its cameras are not commanded and its archive "
+                                "is not served until it does; the heartbeat says it is opening", self.name, key[1],
                                 self.DEVICE_GRACE)
+                continue
+            self._slow_asks.add(id(dev))
+            if id(dev) not in self._dev_said:
+                self._dev_said.add(id(dev))
+                log.warning("%s: device %s did not answer `%s` within %.1f s: not waited for until it answers at "
+                            "once, and the heartbeat says it is slow", self.name, self._device_name(dev), key[0],
+                            self.DEVICE_GRACE)
         return out
 
+    # A device's line: its questions, one after another, on one thread — which ends when the line is empty and is
+    # started again by the next question (`_ask_devices`).
+    def _dev_run(self, line) -> None:
+        while True:
+            with self._dev_lock:
+                queue = self._dev_queues.get(line)
+                if not queue:
+                    self._dev_queues.pop(line, None)
+                    self._dev_runners.discard(line)
+                    return
+                call = queue.pop(0)
+                call["t0"] = time.monotonic()
+            try:
+                call["out"] = call["fn"]()
+            except Exception as e:                       # noqa: BLE001 — the device's word, whatever it is
+                call["error"] = str(e) or type(e).__name__
+            call["took"] = time.monotonic() - call["t0"]
+            with self._dev_lock:
+                if call["dev"] is not None:
+                    n = self._dev_pending.get(id(call["dev"]), 1) - 1
+                    if n > 0:
+                        self._dev_pending[id(call["dev"])] = n
+                    else:
+                        self._dev_pending.pop(id(call["dev"]), None)
+                call["returned"].set()
+
     # One call that came back: its answer into `out`, or its error said (once a spell). A quick answer clears the device's
-    # name from `_slow`, as a quick command does (`_performed`) — unless another call into it has not returned: a device
-    # hung on a command and quick to describe itself is still a device a call is hanging in.
+    # name from `_slow_asks` — unless another question to it has not returned. The commands' `_slow` is theirs
+    # (`_performed`): a quick description does not say a relay answers, and a slow index does not say it does not.
     def _collect(self, key: tuple, call: dict, out: dict) -> None:
         dev = call["dev"]
         if dev is not None and call.get("took", 0.0) <= self.DEVICE_GRACE and not self._dev_pending.get(id(dev)):
-            ahead = self._performing.get(id(dev))
-            if ahead is None or ahead["returned"].is_set():
-                self._slow.discard(id(dev))
-                self._dev_said.discard(id(dev))
+            self._slow_asks.discard(id(dev))
+            self._dev_said.discard(id(dev))
+        if dev is None:
+            self._dev_said.discard(("opening", key[1]))
         said = (key[0], key[1])
         if "error" in call:
+            if key[0] == "open":
+                self._open_failed[key[1]] = call["error"]
             if said not in self._dev_said:
                 self._dev_said.add(said)
                 log.warning("%s: device %s refused `%s` (%s): not known until it answers", self.name,
                             self._device_name(dev) if dev is not None else key[1], key[0], call["error"])
             return
+        if key[0] == "open":
+            self._open_failed.pop(key[1], None)
         self._dev_said.discard(said)
         out[key] = call.get("out")
 
@@ -838,6 +895,9 @@ class VmsWorker(Worker):
             items, _ = self.vars.get(path)
             if not ident and isinstance(items, dict):
                 ident = str(items.get("identity") or "").strip()   # …nor the one its row keeps, when this holder has just started
+            was = idents.get(key, "") or (str(items.get("identity") or "").strip() if isinstance(items, dict) else "")
+            if said and was and said != was:
+                self._changed(key, was, said)
             if ident and idents.get(key, "") != ident:  # learned now: does another key's row say the same?
                 if known is None:
                     known = device_identities(self.vars)
@@ -854,6 +914,17 @@ class VmsWorker(Worker):
                 known[key] = ident
             self.described[key], idents[key] = desc, ident
         return wrote
+
+    # ANOTHER DEVICE UNDER THE SAME KEY (the product team's sibling of the review's tenth pass): the recorder at an address
+    # was replaced, or a name was pointed elsewhere, and the holder went on as if nothing happened — the row took the new
+    # serial number without a word, and the cameras recorded another box's channels. Said in the log, counted
+    # (`identity_changes` in the heartbeat, `vms_device_identity_changes_total` on `/metrics`); not refused — the device
+    # that answers is the one the address names, and only a person knows whether that is what was meant.
+    def _changed(self, key: str, was: str, now: str) -> None:
+        self.identity_changes += 1
+        log.warning("%s: device %s now gives the serial number %s; it gave %s before. Another device answers at this "
+                    "address now — replaced, or the name points elsewhere. Its cameras are recorded from the device that "
+                    "answers; if that is not the one meant, point them at the right address", self.name, key, now, was)
 
     def _coincide(self, key: str, other: str, ident: str) -> None:
         if self.coincidences.get(key) == (other, ident):
@@ -1690,8 +1761,8 @@ class VmsWorker(Worker):
             rid, row, it = call["rid"], call["row"], call["it"]
             if call["returned"].is_set():
                 del self._performing[key]
-                if call.get("took", 0.0) <= self.PERFORM_GRACE and not self._dev_pending.get(key):
-                    self._slow.discard(key)              # it answered at once, nothing else hangs in it (`_collect`)
+                if call.get("took", 0.0) <= self.PERFORM_GRACE:
+                    self._slow.discard(key)              # it answered at once: the questions' slowness is theirs (`_collect`)
                 if call["answered"]:
                     continue                             # it came back after we had said it did not answer
                 if "error" in call:
@@ -1766,6 +1837,10 @@ class VmsWorker(Worker):
                 out[-1]["warning"] = (f"its device gives the same serial number as {other}: either one device under two "
                                       f"names, or two devices with one serial number. It is recorded. If it is one device, "
                                       f"point all its cameras at one of the two names and remove the other's device row")
+        opening = self._opening()
+        for cam, st in zip(self.rows, out):                # its device has not opened yet (the review's tenth pass)
+            if cam.get("source") and device_of(cam["source"]) in opening:
+                st["device_state"] = "opening"
         for cam, st in zip(self.rows, out):                # `held`: the device is on the line, no stream is built
             if cam.get("live", "always") == "on-demand" and st["phase"] != "running":
                 st["phase"] = "held" if self.device_of_row(cam) is not None else "pending"
@@ -1780,6 +1855,17 @@ class VmsWorker(Worker):
     # (`heartbeat_once`), or on their own for the playback door's `/devices`. A device that did not answer them is
     # NAMED, not waited for: `state: slow` — its last call did not answer within `DEVICE_GRACE`, or has not returned —
     # or `state: failed` with the device's words, and what was not answered is left out rather than said as 0.
+    #
+    # …and what it said LAST stands in for a question still on the device's line (the review's tenth pass, minor): the
+    # door and the heartbeat ask the same questions, one of them found the other's not back and wrote `state: slow` with
+    # no channels, while `devices_slow` said nothing was. A device is `slow` when it is (`_slow`, `_slow_asks`); a
+    # question still on its way to a device that is not, with nothing said before, is `asking`.
+    #
+    # …AND A DEVICE THAT HAS NOT OPENED IS LISTED (the same pass, major; a run): a driver that did not come back from
+    # `device_factory` left its device out of the heartbeat and out of `/devices`, `devices_slow` empty, the log silent,
+    # its cameras `running`, and their relay commands waiting to expire. Now `state: opening` with `since` (the wall
+    # time the open was begun), counted (`devices_opening`), said in the log once it outlasts `DEVICE_GRACE`, and named
+    # in its cameras' status (`device_state`); one that refused to open is `state: failed` with its words.
     def device_status(self) -> list[dict]:
         known: dict[str, set] = {}
         for r in self.rows:
@@ -1787,26 +1873,50 @@ class VmsWorker(Worker):
                 known.setdefault(device_of(r["source"]), set()).add(str(channel_of(r["source"]) or r["id"]))
         devices = sorted(self.devices.items())
         heard = self._heard if self._heard is not None else self._ask_devices(self._status_asks(devices))
+        slow = self._slow | self._slow_asks
         out = []
         for key, dev in devices:
             have = known.get(key, set())
             st: dict = {"device": key}
+            said = {}
+            for q in ("channels", "in_use"):
+                k = (q, id(dev))
+                if not hasattr(dev, q):
+                    continue
+                if k in heard:
+                    said[q] = self._said_status[k] = heard[k]
+                elif id(dev) not in slow and k not in self._dev_said and k in self._said_status:
+                    said[q] = self._said_status[k]       # on the device's line now: what it said last
             if not hasattr(dev, "channels"):
                 st.update(channels=0, known=sorted(have), unimported=[])
-            elif ("channels", id(dev)) in heard:
-                chans = [str(c) for c in heard[("channels", id(dev))] or []]
+            elif "channels" in said:
+                chans = [str(c) for c in said["channels"] or []]
                 st.update(channels=len(chans), known=sorted(have), unimported=[c for c in chans if c not in have])
             else:
                 st["known"] = sorted(have)
-            if ("in_use", id(dev)) in heard:
-                st["playbacks"] = heard[("in_use", id(dev))]
+            if "in_use" in said:
+                st["playbacks"] = said["in_use"]
             st["max_playbacks"] = getattr(dev, "max_playbacks", None)
-            if "channels" not in st or "playbacks" not in st:
-                failed = [q for q in ("channels", "in_use") if (q, id(dev)) in self._dev_said]
-                st["state"] = "failed" if failed and id(dev) not in self._slow else "slow"
+            missing = [q for q in ("channels", "in_use") if hasattr(dev, q) and q not in said]
+            if missing:
+                failed = [q for q in missing if (q, id(dev)) in self._dev_said]
+                st["state"] = "slow" if id(dev) in slow else ("failed" if failed else "asking")
             out.append({**st, **({"can": self.described[key]} if key in self.described else {}),
                         **({"same_serial_as": self.coincidences[key][0]} if key in self.coincidences else {})})
-        return out
+        opening = self._opening()
+        for key in sorted(set(known) - set(self.devices)):
+            if key in opening:
+                out.append({"device": key, "state": "opening", "since": opening[key], "known": sorted(known[key])})
+            elif key in self._open_failed:
+                out.append({"device": key, "state": "failed", "why": f"it did not open: {self._open_failed[key]}",
+                            "known": sorted(known[key])})
+        return sorted(out, key=lambda d: d["device"])
+
+    # The devices this holder wants and whose open has not come back: `{key: the wall time the open was begun}`.
+    def _opening(self) -> dict[str, float]:
+        with self._dev_lock:
+            return {k[1]: c["since"] for k, c in self._dev_calls.items()
+                    if k[0] == "open" and k[1] not in self.devices and not c["returned"].is_set()}
 
     def _status_asks(self, devices) -> list:
         return [((q, id(d)), d, getattr(d, q)) for _, d in devices for q in ("channels", "in_use") if hasattr(d, q)]
@@ -2095,7 +2205,11 @@ class VmsWorker(Worker):
                 # What the beat waits on, said (the review's eighth pass, minor): devices whose last call did not answer
                 # inside `PERFORM_GRACE` (`_slow`) and calls into devices not back yet — on `/metrics` as `vms_devices_slow`
                 # and `vms_commands_in_flight` (`vms/console.py`, `beat_lines`).
-                **({"devices_slow": len(self._slow)} if self._slow else {}),
+                **({"devices_slow": len(self._slow | self._slow_asks)} if self._slow or self._slow_asks else {}),
+                # Devices whose open has not come back (`device_status`; the tenth pass): `state: opening` each.
+                **({"devices_opening": len(opening)} if (opening := self._opening()) else {}),
+                # Keys whose device said another identity than before (`_changed`): counted since the process started.
+                **({"identity_changes": self.identity_changes} if self.identity_changes else {}),
                 # Devices whose identity another key's row says too (`describe_devices`; the ninth pass): said, not refused.
                 **({"identity_coincidences": len(self.coincidences)} if self.coincidences else {}),
                 **({"commands_in_flight": len(self._performing)} if self._performing else {}),

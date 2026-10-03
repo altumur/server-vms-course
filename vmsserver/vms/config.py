@@ -56,7 +56,9 @@ from __future__ import annotations
 
 import os
 import re
+import time
 
+from w2cplatform.doors import numeric
 from w2cplatform.spec import PLATFORM_FIELDS, SubsystemSpec
 
 SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vms.subsystem.yaml"))
@@ -115,8 +117,13 @@ def _host(raw: str, scheme: str) -> str:
     if ip is not None:
         ip = getattr(ip, "ipv4_mapped", None) or ip
         host = str(ip) if ip.version == 4 else f"[{ip}]"
-    if port.isdigit():
-        port = "" if int(port) == DEFAULT_PORTS.get(scheme) else str(int(port))
+    # By `doors.numeric`, not `isdigit` + `int` (the review's tenth pass, major): `"8²".isdigit()` is true and `int`
+    # raises — one camera row whose port held a superscript stopped its holder's every pass and every heartbeat, and the
+    # console's every camera creation (`refuse_camera` reads every row). A port that is no number stays as typed: a key
+    # of its own, which no holder will open — that camera's trouble, and a grant on the cluster to point one at it.
+    n = numeric(port)
+    if n is not None:
+        port = "" if n == DEFAULT_PORTS.get(scheme) else str(n)
     return host + (f":{port}" if port else "")
 
 
@@ -129,8 +136,8 @@ def device_of(source: str) -> str:
     from urllib.parse import urlsplit
     try:
         u = urlsplit(str(source).strip())
-    except ValueError:                                   # `rtsp://[::1/x`: "Invalid IPv6 URL" — raised out of every walk of the
-        return str(source)                               # cameras (`/drain`, `/unplaceable`, placement; the tenth round): as it is
+    except ValueError:                                   # `rtsp://[10.0.0.5/…`: "Invalid IPv6 URL" (the tenth pass's sweep)
+        return str(source)                               # not an address anybody can say the device of: as it is
     scheme = u.scheme.lower()
     if scheme != "driverpack":
         if not u.netloc:
@@ -176,9 +183,21 @@ def device_identities(vars_) -> dict[str, str]:
 # command, every move and every scenario edit — rows are never removed, and 1000 of them were 1009 reads for one press
 # of a relay (in М11, a thousand HTTP calls to Nomad). It reads the row of a device it is asked about, the first time it
 # is asked, and nothing else: one instance per request, so what it says is the store's at that request.
+#
+# KNOWN IS NOW, NOT ONCE (the review's tenth pass, major; a run). A row says what the device under that key WAS when a
+# holder last held it, and rows are never removed: `nvr50.local`, a recorder replaced since, its cameras deleted, kept
+# its row `SN-OLD`; the name led to the new recorder, which the configuration holds by its address — and `admin` on
+# camera 3 pointed it at `nvr50.local/ch/2` (200: "known"), the holder opened the new recorder, and camera 3 showed and
+# recorded a channel of a recorder that was not hers. So a key is known while a holder that is alive HOLDS that device
+# and has heard it describe itself in this process (`can` in its heartbeat's `devices`, `VmsWorker.device_status`):
+# what that holder hears, it writes into the row in the same pass (`describe_devices`). A row nobody holds now is
+# the past — a grant on the cluster again, as for a key nobody has opened. The heartbeats are read once a request, at
+# the first `known` (`objects`; without them nothing is known).
 class Devices:
-    def __init__(self, vars_):
+    def __init__(self, vars_, objects=None, now=None):
         self.vars, self.ids = vars_, {}
+        self.objects, self.now = objects, now
+        self._held: set[str] | None = None
 
     def identity(self, key: str) -> str:
         if key not in self.ids:
@@ -186,17 +205,31 @@ class Devices:
             self.ids[key] = str((items or {}).get("identity") or "").strip() if isinstance(items, dict) else ""
         return self.ids[key]
 
+    def held(self) -> set[str]:
+        """The devices live holders hold and have heard describe themselves, by their heartbeats."""
+        if self._held is None:
+            self._held = set()
+            if self.objects is not None:
+                from w2cplatform.console import holders
+                now = self.now() if callable(self.now) else (time.time() if self.now is None else self.now)
+                for hb in holders(self.objects, SPEC.sub.name + "/", now).values():
+                    devs = hb.extra.get("devices")
+                    for d in devs if isinstance(devs, list) else ():
+                        if isinstance(d, dict) and isinstance(d.get("device"), str) and d.get("can"):
+                            self._held.add(d["device"])
+        return self._held
+
     def known(self, key: str) -> bool:
-        """Whether a holder has opened the device under this key and learned what it is."""
-        return bool(self.identity(key))
+        """Whether a live holder holds the device under this key now and has learned what it is."""
+        return bool(self.identity(key)) and key in self.held()
 
     def __call__(self, key: str) -> tuple:
         ident = self.identity(key)
         return ("id", ident) if ident else ("at", key)
 
 
-def one_device(vars_) -> Devices:
-    return Devices(vars_)
+def one_device(vars_, objects=None, now=None) -> Devices:
+    return Devices(vars_, objects, now)
 
 
 # -- the device row: what the holder found the device to be -----------------------------------------------
@@ -268,20 +301,56 @@ def parse_device_row(items: dict | None) -> dict | None:
 def channel_of(source: str) -> str | None:
     """`driverpack://<vendor>/<host>/ch/<n>` -> "<n>"; None when the device has one channel."""
     from urllib.parse import urlsplit
-    u = urlsplit(source)
+    try:
+        u = urlsplit(source)
+    except ValueError:                                   # not a URL at all (`[` with no `]`): no channel to name
+        return None
     parts = [p for p in u.path.split("/") if p]
     return parts[2] if u.netloc != "file" and len(parts) >= 3 and parts[1] == "ch" else None
 
 
 # …and the channel as two sources are COMPARED by (the eighth pass's sibling of `device_of`): `…/ch/02` and `…/ch/2`,
-# `…/CH/2` are one channel. Not what the driver is handed — that is the row's `source`, as typed.
+# `…/CH/2` are one channel. Not what the driver is handed — that is the row's `source`, as typed. By `doors.numeric`
+# (the review's tenth pass): `…/ch/①` is a channel named `①`, not a `ValueError` out of every reader of every row.
 def channel_key(source: str) -> str:
     from urllib.parse import urlsplit
-    u = urlsplit(str(source).strip())
+    try:
+        u = urlsplit(str(source).strip())
+    except ValueError:
+        return ""
     parts = [p for p in u.path.split("/") if p]
     if u.netloc.lower() == "file" or len(parts) < 3 or parts[1].lower() != "ch":
         return ""
-    return str(int(parts[2])) if parts[2].isdigit() else parts[2]
+    n = numeric(parts[2])
+    return str(n) if n is not None else parts[2]
+
+
+# WHAT A NEW SOURCE MAY NOT BE (the review's tenth pass, major; the product team's sibling): a camera created or moved
+# with a `source` nobody can read the device or the channel of — a port or a channel written in digits that are not
+# ASCII 0–9 (`8²`, `①`, full width: `isdigit` says yes to all), a port past 65535, a host in a `[` with no `]` — was
+# 200, and the row then stood in every reader. Refused at the door now, in words (`volumes.refuse_camera`, asked only
+# when the source is new to the row); one stored before is read as a key of its own by every parser above, and is
+# that camera's trouble alone. None: the source may stand.
+def source_refusal(source: str) -> str | None:
+    from urllib.parse import urlsplit
+    src = str(source or "").strip()
+    try:
+        u = urlsplit(src)
+    except ValueError as e:
+        return f"{src!r} is not an address: {e}"
+    host = u.netloc
+    if u.scheme.lower() == "driverpack":
+        parts = [p for p in u.path.split("/") if p]
+        if u.netloc.lower() == "file":
+            return None                                  # a file's name, as typed: `gstvms.uri` asks the rest
+        host = parts[0] if parts else ""
+        if len(parts) >= 3 and parts[1].lower() == "ch" and any(c.isdigit() and not "0" <= c <= "9" for c in parts[2]):
+            return f"the channel in {src!r} is written in digits that are not 0–9: write it in plain digits"
+    host = host.rsplit("@", 1)[-1]
+    port = host[host.rfind("]") + 2:] if host.startswith("[") and "]:" in host else (host.split(":")[1] if host.count(":") == 1 else "")
+    if port and (numeric(port) is None or not 0 < numeric(port) <= 65535):
+        return f"the port in {src!r} is not a port: a number from 1 to 65535, in plain digits"
+    return None
 
 
 # How a holder says a request it answered, in its heartbeat's `fetched` (`VmsWorker.fetched_said`), and how the console

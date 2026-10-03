@@ -1334,11 +1334,21 @@ def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it()
         srv.shutdown()
 
 
-def _opened(box, *keys) -> None:
-    """Device rows as their holders write them once they have opened the devices and learned what each is (`identity`)."""
+def _opened(box, *keys, holder: str = "w-held") -> None:
+    """Device rows as their holders write them once they have opened the devices and learned what each is (`identity`)
+    — and the heartbeat of the live holder that holds them now and has heard them describe themselves (`can`): a row is
+    known only while a holder says so (`config.Devices.known`; the review's tenth pass). The holder has no room, so
+    nothing is placed on it."""
+    from w2cplatform.contract import Heartbeat
     for key in keys:
         box.vars.put(f"vms/devices/{key}", {"events": "command", "rays": "0", "relays": "1", "ptz": "false",
                                             "presets": "0", "identity": f"SN-{key}"})
+    key_ = SPEC.sub.heartbeat_key(holder)
+    raw = box.objects.get(key_)
+    had = [d for d in (Heartbeat.from_bytes(raw).extra.get("devices") or []) if d["device"] not in keys] if raw else []
+    box.objects.put(key_, Heartbeat(holder, box.wall(), [], {
+        "server": "srv-held", "capacity": 0, "headroom": 0,
+        "devices": had + [{"device": k, "can": {"events": ["command"], "relays": 1}} for k in keys]}).to_bytes())
 
 
 def test_a_camera_is_moved_onto_a_device_nobody_has_opened_only_by_a_grant_on_the_cluster():
@@ -1680,3 +1690,90 @@ def test_a_units_name_holds_no_comma_and_no_digit_but_ascii_and_a_stored_one_sto
     assert on.assign_remove("r-1", "7²").units == ["1-9"]
     assert UNLISTED.counts == {"rec": 1}, UNLISTED.counts                            # the one unit, said once
     _forget_garbled()
+
+
+def test_a_device_row_nobody_holds_now_is_not_known_and_a_move_onto_it_asks_the_cluster():
+    """The review's tenth pass, major — a run: the old recorder `nvr50.local` (row `SN-OLD`, its cameras deleted) was
+    replaced, the name led to the new one, which the configuration holds by its address; `admin` on camera 3 pointed it
+    at `nvr50.local/ch/2` — 200 by the stale row — and camera 3 showed and recorded a channel of a recorder not hers. A
+    row is known only while a live holder holds its device and has heard it describe itself (`Devices.known`): a stale
+    row is the cluster's grant again; held, the move asks for its cameras as before; the holder silent past its
+    heartbeat's life, the cluster's again."""
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ()), ("admin", "4", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://acme/10.0.0.42/ch/{ch}"}, token="admin")[0] == 201
+        for f in ("3", "4"):
+            assert _call(base, "POST", "/cameras", {"source": f"driverpack://file/{f}.mp4"}, token="admin")[0] == 201
+        box.vars.put("vms/devices/acme/nvr50.local", {"events": "command", "relays": "1", "identity": "SN-OLD"})   # the past
+        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")
+        assert code == 403, (code, body)
+        _opened(box, "acme/nvr50.local")                              # a live holder holds it now and heard it
+        assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://acme/nvr50.local/ch/2"}, token="three")[0] == 200
+        box.wall.advance(120)                                         # …and then it fell silent
+        assert _call(base, "PUT", "/cameras/4", {"source": "driverpack://acme/nvr50.local/ch/5"}, token="three")[0] == 403
+    finally:
+        srv.shutdown()
+
+
+def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder_nor_the_console():
+    """The review's tenth pass, major: `isdigit` then `int` on `²`, `①` in a source's port or channel. A camera row stored
+    with `…:8²/ch/1` before the canonical key made its holder raise in `reconcile_once` and `heartbeat_once` on every
+    pass — no status, no commands for any of its cameras — and the console could create no camera at all (500: one
+    channel, one camera reads every row). By `doors.numeric` now: such a source is a key of its own, that camera's
+    trouble. And a new one is refused at the door, in words (400), with the siblings the sweep found: `rtsp://[…`
+    (`urlsplit` raised), a port past 65535 or of five thousand digits; a source no device can be read from is the
+    cluster's grant to point a camera at, never the open path."""
+    from vms.config import channel_key, device_of, source_refusal
+    from vms.worker import FakeActuator, VmsWorker
+    for raw in ("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.5/ch/①", "rtsp://[10.0.0.5/x",
+                "rtsp://h:8²/x", "driverpack://acme/h:" + "9" * 5000 + "/ch/1"):
+        device_of(raw), channel_key(raw)                              # no `ValueError` out of any reader
+        assert source_refusal(raw), raw
+    assert channel_key("driverpack://acme/h/ch/" + "9" * 5000) == "9" * 5000   # past what `int` takes: a name
+    assert device_of("driverpack://acme/10.0.0.5:8²/ch/1") == "acme/10.0.0.5:8²"
+    assert channel_key("driverpack://acme/10.0.0.5/ch/①") == "①" and channel_key("driverpack://acme/h/ch/007") == "7"
+    assert source_refusal("driverpack://acme/10.0.0.5:8080/ch/2") is None and source_refusal("rtsp://[::1]:554/x") is None
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        for i, bad in enumerate(("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.6/ch/①")):
+            box.vars.put(f"vms/cameras/{10 + i}", {"id": str(10 + i), "name": f"old{i}", "source": bad, "revision": "1"})
+        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                      archive_root=box.archive)
+        placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        w.heartbeat_once(); placer.ensure_placed()
+        w.reconcile_once(); w.heartbeat_once()                        # neither raises
+        hb = json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))
+        assert {str(s["id"]) for s in hb["status"]} >= {"1", "2", "10", "11"}, hb["status"]
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 201
+        for bad in ("driverpack://acme/10.0.0.7:8²/ch/1", "driverpack://acme/10.0.0.7/ch/①", "rtsp://[10.0.0.7/x",
+                    "rtsp://10.0.0.7:99999/x"):
+            code, body = _call(base, "POST", "/cameras", {"source": bad}, token="admin")
+            assert code == 400 and ("port" in body["detail"] or "channel" in body["detail"] or "address" in body["detail"]), (bad, code, body)
+            assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="three")[0] == 403       # the cluster's grant
+            assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="admin")[0] == 400       # …and then refused
+    finally:
+        srv.shutdown()
+
+
+def test_a_relay_port_written_in_a_digit_that_is_not_ascii_is_a_misfit_and_not_a_500():
+    """The tenth pass's sweep of `isdigit` then `int` (`vms/auto.py`, the scenario's catalogue check, and М12's
+    `domain/scenario.py`): `"²".isdigit()` is true and `int` raised out of the check — a 500 to whoever wrote the
+    scenario. By `doors.numeric` now: a port that is no number is a misfit like port 9 of a device with two relays."""
+    box = Box()
+    mounts, srv, base = _console_with_jobs(box, Tokens({"admin": [("admin", None, ())]}))
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
+        _opened(box, "acme/10.0.0.50")                                # its device said: one relay
+        for port in ("²", "١", "2"):
+            code, body = _call(base, "POST", "/auto/scenarios", {"name": "s", "when": [{"sub": "vms", "kind": "motion"}],
+                               "then": [{"sub": "vms", "action": "output", "unit": "1", "port": port}]}, token="admin")
+            assert code == 400 and "relay" in body.get("detail", ""), (port[:5], code, body)
+    finally:
+        srv.shutdown()

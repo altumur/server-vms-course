@@ -1425,6 +1425,8 @@ class SpecConsole:
             node = sorted({l for row in s["workers"] for l in str(row["labels"]).split(",") if l})
             s["labels_node"] = node
             s["labels"], s["labels_source"] = (sorted(rows[server]), "console") if server in rows else (node, "node")
+            if ctl.labels_unread(server):                # its row is there and did not read: nothing moves off it (the tenth pass)
+                s["labels_unread"] = True
             s["draining"] = server == drains
             s["resource"] = ctl.resource_state(server, self.lost_after)
             s["requires_resource"] = ctl.spec.requires == "resource"
@@ -1438,7 +1440,9 @@ class SpecConsole:
     #
     #   GET     ?labels=a,b — what it reaches now and from where, and which units would move if it reached `a,b`
     #           (`would_move`; no `labels`: back to its node's) — the page asks before it writes, and warns
-    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing
+    #   PUT     {"labels": ["vlan:cctv-a", …]} — the administrator's labels; [] reaches nothing. A server nobody has
+    #           announced (`servers_known`), a name that is not a host's, a body that is not JSON, a label that is not a
+    #           string: 400, in words (the review's tenth pass)
     #   DELETE  back to the node's (`LABELS`, `meta.labels` in `client.hcl`)
     #
     # A path that names no unit: `admin` on the whole cluster to write (`needs`) — a server's labels decide where every
@@ -1461,7 +1465,10 @@ class SpecConsole:
                          if sees is None or sees(str(u), self._labels(str(u), None))]
                 return 200, {"server": server, "labels": sorted(rows[server]) if server in rows else None,
                              "labels_source": ctl.labels_source(server), "would_move": moves}
-            body = h._body() if method == "PUT" else {}
+            try:
+                body = h._body() if method == "PUT" else {}
+            except ValueError as e:                      # not JSON: an answer, not a connection dropped (the tenth pass)
+                raise Refused(f'the body is not JSON ({e}): {{"labels": ["vlan:cctv-a", …]}}')
             if method == "PUT":
                 labels = ctl.set_server_labels(server, body.get("labels") if isinstance(body, dict) else None)
                 self.journal.say("server.labels.set", of=self.spec.name, server=server, labels=",".join(labels), user=user)
@@ -1475,7 +1482,11 @@ class SpecConsole:
         except Forbidden as e:                           # the console's token, not the caller: the store said no
             return 403, {"detail": str(e), "error": str(e)}
         except OSError as e:
-            return 503, {"detail": f"the store did not take it: {e}", "error": "store unavailable"}
+            # Not the store's own words to the caller (the review's tenth pass, minor): a name of 300 characters answered
+            # with the local path of the store's file. They go to this console's log.
+            log.warning("%s: the labels of server %r were not written: %s", self.spec.name, server[:80], e)
+            return 503, {"detail": "the store did not take it: try again; the console's log says why",
+                         "error": "store unavailable"}
 
     # EVERY NUMBER OF A HEARTBEAT OR OF THE PASS REPORT HERE IS READ THROUGH `n`, `rn` OR `r` (the review's seventh
     # pass, part 2): read bare — `int(headroom)`, `float(space.full)`, `float(ts)` — one word in one field raised, and
@@ -1592,6 +1603,10 @@ class SpecConsole:
                   f"# TYPE {p}_units_diverged gauge", f"{p}_units_diverged {r('diverged', int)}",
                   # units the last pass moved or unplaced because their server no longer reaches them (feedback DQ)
                   f"# TYPE {p}_units_moved_for_reach gauge", f"{p}_units_moved_for_reach {r('reach_moves', int)}",
+                  # …and as a counter (the review's tenth pass): the last pass's number is seen only by a scrape that
+                  # falls on it
+                  f"# TYPE {p}_units_moved_for_reach_total counter",
+                  f"{p}_units_moved_for_reach_total {r('reach_moves_total', int)}",
                   f"# TYPE {p}_rows_garbled gauge", f"{p}_rows_garbled {r('garbled', int)}",     # rows that do not parse: units nobody serves (the review's second pass, M7)
                   # What a worker says about itself and placement does not read — a person can, now: fenced
                   # (alive, holding nothing), and how often the store did not answer it.

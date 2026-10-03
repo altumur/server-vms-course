@@ -1386,6 +1386,8 @@ def beat_lines(sub: str, hbs: dict) -> list[str]:
     for metric, field, kind in (("vms_devices_slow", "devices_slow", "gauge"),
                                 ("vms_commands_in_flight", "commands_in_flight", "gauge"),
                                 ("vms_device_identity_coincidences", "identity_coincidences", "gauge"),   # the ninth pass
+                                ("vms_devices_opening", "devices_opening", "gauge"),                       # the tenth pass
+                                ("vms_device_identity_changes_total", "identity_changes", "counter"),      # …and its sibling
                                 ("vms_commands_reanswered_total", "commands_reanswered", "counter")):
         out.append(f"# TYPE {metric} {kind}")
         out += [f'{metric}{{worker="{label(w)}"}} {_n(sub, w, field, hb.extra.get(field) or 0, int)}' for w, hb in sorted(hbs.items())]
@@ -1666,6 +1668,11 @@ def recording_cams(vars_):
 # has opened it, the move asks for every camera of that device, as before. Whether the source moved is asked by the KEY
 # (`source_key` without identities): two clones with one serial number are two devices (the same decision), and a
 # camera moved from one to the other has moved.
+#
+# …AND KNOWN IS HELD NOW (the review's tenth pass, major; a run): a device row stays when its device goes, and a stale
+# `nvr50.local` row of a replaced recorder made the name "known" — `admin` on camera 3 moved it onto the new recorder
+# the name led to. Known is a row whose device a live holder holds and has heard describe itself now (`Devices.known`);
+# a key that does not parse into a device at all (`device_of` gives the text back) has no row and is the cluster's too.
 def source_cams(ctl, scenarios=None):
     from .config import device_of, one_device
 
@@ -1677,7 +1684,7 @@ def source_cams(ctl, scenarios=None):
         if a == b:
             return out                                   # the source as it was: nothing moved, nothing to look up
         if volumes.source_key(a) != volumes.source_key(b):
-            same = one_device(ctl.vars)
+            same = one_device(ctl.vars, ctl.objects, ctl.wall)       # known: held by a live holder now (the tenth pass)
             devices = {same(device_of(s)) for s in (a, b) if s}
             out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) in devices}
             if device_of(a) != device_of(b):

@@ -1012,7 +1012,7 @@ def test_the_pushers_word_on_the_stream_is_in_the_heartbeat_on_metrics_and_one_a
     box, rec, ring, act, rec_ctl = _camera()
     said = {"state": "pushing", "road": "primary", "behind_s": 31.5, "lagging": True, "cut_s": 61.0, "left_s": 4.0,
             "failed_s": 0.0, "failed": 0}
-    rec.stream_said = lambda: dict(said)
+    rec.stream_said, rec.stream_owed = lambda: dict(said), lambda: []   # (wired whole, as М12 `tie` wires it)
     rec.heartbeat_once()
     assert heartbeats(box.objects, "rec/")["r-1"].extra["stream"] == said
     lines = _recorders(rec_ctl)
@@ -1311,3 +1311,62 @@ def test_what_the_card_holds_is_said_on_the_cameras_clock_after_its_clock_steppe
     assert ring.skew() == 30.0 and act.stats("1-card")["samples_written"] == 80
     box.clock.advance(rec.COVERAGE_EVERY)
     assert _status(rec)["coverage"] == {"from": t - 90, "to": t - 50, "fragments": 1}   # the camera's clock, one stretch
+
+
+# -- the tenth review ----------------------------------------------------------------------------------------------------
+def test_the_ring_takes_up_a_clock_that_steps_forward_and_leaves_a_pause_the_gap_it_is():
+    """The tenth review, blocker: a step forward of the camera's clock was left to the frames — "the line has a gap, as
+    a pause has" — and the camera stated its clock on the far side of it, so the ingest's offset moved and everything
+    moved by it that was captured before (the recorder's `have`, a range of the card). The camera's steady clock tells
+    the two apart now (`CamLine`): the camera's clock moved thirty seconds further than the steady one — a step, taken
+    up on the line, its frames right after the last, counted (`clock_forward`, `clock_forward_s`), the ring's `skew`
+    minus thirty and its `now` the true time; thirty seconds with no frames and both clocks moving alike — a pause, and
+    the line keeps its gap. Without a steady clock the step is a gap, as before."""
+    import dataclasses
+    for steady in (True, False):
+        true, skew = [1000.0], [0.0]
+        camclock = lambda: true[0] + skew[0]
+        ring = CamRing(window=600.0, clock=camclock, steady=(lambda: true[0]) if steady else None)
+        seen = []
+        ring.subscribe(seen.append)
+
+        def film(t0, t1):                                                 # captured in [t0, t1), on the camera's clock
+            for s in _frames(t0, t1):
+                true[0] = unix_s(s.begin) + 0.02                          # …and handed to the ring 20 ms later
+                by = int(round(skew[0] * 1000))
+                ring.add(dataclasses.replace(s, begin=s.begin + by, end=s.end + by))
+        film(1000, 1010)
+        skew[0] += 30.0                                                   # NTP steps the camera's clock forward
+        film(1010, 1020)
+        film(1050, 1060)                                                  # a pause of thirty seconds
+        begins = [unix_s(s.begin) for s in seen]
+        if not steady:
+            assert ring.clock_forward == 0 and begins[20] == 1040.0       # the old gap: thirty seconds late
+            continue
+        assert begins == [1000 + i / 2 for i in range(40)] + [1050 + i / 2 for i in range(20)]
+        assert ring.clock_forward == 1 and ring.clock_forward_ms == 30_000 and ring.clock_back == 0
+        assert ring.skew() == -30.0 and abs(ring.now() - true[0]) < 0.001
+        st = ring.status()
+        assert st["clock_forward"] == 1 and st["clock_forward_s"] == 30.0
+
+
+def test_a_card_recorder_whose_stream_is_said_and_whose_owed_is_not_says_so_and_counts_what_its_card_let_go_of():
+    """The tenth review, major: with the pusher's hooks left unset the card went oldest first and said nothing — and a
+    firmware that set `stream_said` and not `stream_owed` had a camera that pushed, a card that did not know what the
+    server had, and no word of it. The camera's process ties both in one call (М12 `tie`); a recorder left half wired by
+    hand says `owed: unknown` in its heartbeat's stream, logs it once, and counts what its card let go of with nobody to
+    say whether the server had it (`evicted_unknown_s`)."""
+    from w2cplatform.console import heartbeats
+    box, rec, ring, act, rec_ctl = _camera(when=None, budget=20_000)
+    rec.card.segment_span = 10.0
+    rec.stream_said = lambda: {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0,
+                               "failed": 0}
+    t = box.wall()
+    _film(ring, t, t + 100, act=act)                                      # far past the card's budget
+    rec.heartbeat_once()
+    stream = heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
+    assert stream["owed"] == "unknown" and stream["evicted_unknown_s"] >= 50.0
+    assert rec.card.evicted_owed == 0                                     # nothing it could know to be owed
+    rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole
+    rec.heartbeat_once()
+    assert "owed" not in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]

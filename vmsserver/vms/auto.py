@@ -151,7 +151,7 @@ class Catalog:
             if any(kind in d["events"] for d in said.values()):
                 if kind == "io.input" and unit and "port" in (t.get("match") or {}):
                     rays = said[unit]["rays"]
-                    if not 1 <= (numeric(t["match"]["port"]) or 0) <= rays:      # `²`: `isdigit` and `int` raises (the tenth round)
+                    if not 1 <= (numeric(t["match"]["port"]) or 0) <= rays:     # `doors.numeric`: `²` raised (the tenth pass)
                         misfit.append(f"camera {unit} has {rays} input(s), not port {t['match']['port']}")
                 return
             if len(said) < len(descs):
