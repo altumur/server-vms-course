@@ -66,14 +66,18 @@ or `network` volume like a server's — and is not built here.
 #
 # ## Public API
 # - `memory_split(budget)` — `(ring, queue, piece)`; `MEMORY_BUDGET`, `RING_BYTES`, `QUEUE_BYTES`, `PIECE_BYTES`.
-# - `CamLine(clock, steady)` — the camera's line of time: `place(begin, end)`, `now()`, `skew()`.
+# - `CamLine(clock, steady, boot=…)` — the camera's line of time: `place(begin, end)`, `now()`, `skew()`; `note()` and
+#   `restore(note, newest)` — kept on the card, taken back by the next process; `moves` — what of it was relabelled.
 # - `CamRing(window, max_bytes, clock, steady)` — `add(sample)`, `subscribe(fn)`, `set_keep(keep, spill, who)`,
-#   `after(t_ms)`, `piece(t_ms, max_bytes)`, `reach()`, `now()`, `skew()`, `status(now)`.
-# - `CardBuffer.read_note(name)`, `write_note(name, data)` — a small file beside the segments (what the server has).
+#   `after(t_ms)`, `piece(t_ms, max_bytes)`, `reach()`, `now()`, `skew()`, `status(now)`; `on_move(fn)`, `moves()`,
+#   `note()`, `restore(note, newest)` — its line's.
+# - `CardBuffer.read_note(name)`, `write_note(name, data)` — a small file beside the segments (what the server has,
+#   `delivered.json`; the camera's line, `LINE_NOTE`).
 # - `CardBuffer(path, budget)` — `append(stream, sample)`, `finish(stream)`, `coverage(recording)`, `pieces(recording,
-#   t0, t1, max_bytes)`, `range(recording, t0, t1)`, `stats()`, `err`, `close()`. Raises `CardError` (an `OSError`):
-#   `NeedKey`, `Backwards`, `NoRecording`, a read cut short.
-# - `CardActuator(ring, card)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`, `stats(cid)`.
+#   t0, t1, max_bytes)`, `range(recording, t0, t1)`, `newest()`, `relabel(lo, hi, delta)`, `stats()`, `err`, `close()`.
+#   Raises `CardError` (an `OSError`): `NeedKey`, `Backwards`, `NoRecording`, a read cut short.
+# - `CardActuator(ring, card)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`, `stats(cid)`;
+#   `card` — attached, it restores the ring's line from the card; `note_line()` — the line kept on the card.
 # - `CardRecorder(name, vars_, objects, ring, ...)` — a `RecWorker` whose volume is the card; `answer_range`.
 # - `declare_card(vars_, server, path, budget, cam=…)` — the card as the camera's own cluster declares it (`kind: edge`,
 #   `cam`: whose card it is — only that camera's recordings are homed on it).
@@ -90,7 +94,7 @@ import threading
 import time
 
 from w2cplatform.obsd import SMPL, Sample, archive_ms, unix_s
-from w2cplatform.rows import number
+from w2cplatform.rows import PARSE_ERRORS, finite, number
 
 from . import volumes
 from .archive import stitch
@@ -229,17 +233,61 @@ def _group_end(frames, start: int = 0) -> int:
 # would leave every frame after it "not newer". It is kept — it is the camera's own frame, and the group after it needs
 # it — right after the frame before, and counted (`ahead`); the line does not move for it, and the clock did not step.
 #
-# What stays open: the line lives as long as the camera's process — one started again begins a line of its own (the
-# ingest sees the difference as the camera's clock having moved: `Ingest._check`); and a camera that SUSPENDS stops a
-# monotonic clock that does not count the suspension — such a camera's steady clock is its boot clock (`CLOCK_BOOTTIME`).
+# THE LINE OUTLIVES THE CAMERA'S PROCESS (the eleventh review, blocker 1). It lived in memory: a step of J was taken up,
+# the card was written on the line — and a process started again began a line of its own, equal to the raw clock. The
+# ingest saw its offset move by J, and backfill's ranges, moved by the new offset, read the card J away from the hole
+# (probe `pr1_restart_line`: J = +30 — the frames of 50–80 s laid at 20–50; J = −30 — those of 0–20 s at 30–50). So the
+# line is kept on the card, a note beside the segments (`LINE_NOTE`), written by the card's writer whenever the line
+# moves — before the first frame on the moved line — and every `NOTE_EVERY` (`CardActuator.note_line`): where the line
+# stood (`line`), on which camera clock (`raw`) and steady clock (`steady`), in which boot (`boot`). The next process takes
+# it back before its frames go anywhere (`restore`, when the card is attached). In the same boot — the steady clock is one
+# for every process of a boot — the line goes on from where it stood by the steady clock, whatever the camera's clock did
+# meanwhile; a clock that disagrees with it stepped while no process watched, and that step is counted as any other. In a
+# new boot nothing measures the time between: the line goes on by the camera's clock through the conversion the note
+# kept (`line − raw`), and never back over what the card holds — a clock behind it stepped back, counted, and the frames
+# go on right after the card's newest.
+#
+# A CLOCK NOT YET SET DOES NOT ANCHOR THE LINE (the eleventh review, blocker 2, a regression of the tenth's step forward).
+# A camera without an RTC battery boots in 1970, and NTP sets its clock seconds later — a step forward of fifty-six years,
+# which the line took up like any other: the line stayed in 1970 for the life of the process, a reboot began it in 1970
+# again, the two boots overlapped on the card, and the first boot's hole was never asked for where the card held it
+# (probe `pr6_rtcless`: 0 frames of 305; of a hole after the reboot, 5 of 10 frames the first boot's, 300 s off). A step
+# forward of more than `CLOCK_UNSET` out of a clock before `CLOCK_FLOOR` is the clock being SET, not stepping: the line is
+# RE-ANCHORED on the set clock — through the conversion the card's note kept (`anchor`), or none — and everything placed
+# while the clock was unset (from `since`) is relabelled by the same amount: the ring's frames, the card's writer's queue
+# and place and the segments it wrote (`CardBuffer.relabel`), the pusher's place (`CameraPusher._follow`). A reboot whose
+# clock is unset again (behind the card's newest by more than `CLOCK_UNSET`) goes on right after the card's newest until
+# the clock is set — so two boots never overlap on the card, and with a conversion the card kept the second lands where
+# it was captured. A clock set BEHIND what the line holds cannot be followed back: the line stays where it is (`sets`).
+# A camera whose clock is never set goes on from boot to boot right after the card's newest — boots apart on the card,
+# the time a reboot took unknown to it; the ingest sees that as its offset moving, and counts it (`clock_steps`).
+#
+# A CAMERA DOES NOT SLEEP (the owner's decision on the eleventh review): the steady clock is the monotonic one, and a sleep
+# would look like the camera's clock stepping forward by its length — taken up on the line and counted (`forward`).
+CLOCK_UNSET = 365 * 86400.0              # a step forward of more than a year…
+CLOCK_FLOOR = 1.5e9                      # …out of a clock that read before mid-2017: the clock was SET (`CamLine`)
+LINE_NOTE = "line.json"                  # the line, kept on the card beside the segments (`CardActuator.note_line`)
+
+
+def boot_id() -> str | None:
+    """This boot's id where the system says it (Linux), or None: then two boots are told apart by the steady clock alone
+    — one that went back began again."""
+    try:
+        with open("/proc/sys/kernel/random/boot_id") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
 class CamLine:
     """The camera's line of time. `place(begin, end)` — where a frame captured then (on the camera's clock) lies on it;
     `now()` — the camera's clock on it. `unit`: what one second is in the frames' times (ms on the ring — the archive's
     `at` — or seconds in the model pusher's own memory). `steady`: the camera's steady clock, in seconds; None — steps
-    forward are not told from pauses (a clock of a test's own that gives no steady one), steps back by the frames only."""
+    forward are not told from pauses (a clock of a test's own that gives no steady one), steps back by the frames only.
+    `boot`: () -> this boot's id, or None. `note()` and `restore(note, newest)` — the line kept on the card, and taken back."""
 
-    def __init__(self, clock, steady=None, unit: int = 1000, at=archive_ms):
-        self.clock, self.steady, self.unit, self.at = clock, steady, unit, at
+    def __init__(self, clock, steady=None, unit: int = 1000, at=archive_ms, boot=None):
+        self.clock, self.steady, self.unit, self.at, self.boot = clock, steady, unit, at, boot
         self.shift = 0                   # what the line adds to the camera's capture times
         self.due = 0                     # …and what it is to add, from the first frame captured on the stepped clock
         self.prev: tuple | None = None   # (begin, end) of the frame placed last, on the line
@@ -248,18 +296,117 @@ class CamLine:
         self.back = self.back_by = 0     # steps back taken up, and by how much (units)
         self.forward = self.forward_by = 0
         self.ahead = 0                   # frames with no capture time, kept right after the frame before
+        self.floor = at(CLOCK_FLOOR)
+        self.origin = None               # the line where this process began: all it placed is past it
+        self.since = None                # …where the camera's clock was found unset: relabelled when it is set
+        self.anchor = 0                  # the conversion (line − clock) the line takes when the clock is set
+        self.sets = self.unset = 0       # clocks set, and found unset again by a reboot
+        self.moves: list[tuple] = []     # (lo, hi, delta): what of the line was relabelled, for whoever holds its times
+        self.on_move: list = []          # fn(lo, hi, delta), called where the move is made (the ring's lock)
+        self.version = 0                 # moves with every change of the conversion: the card's note is written again
+        self.tied = False                # the line is the card's: restored from its note, or written into it
+        self._quiet = False              # the step due is a clock being set: not a step of the clock to count
 
     def look(self):
         """The camera's clock, in units — and a step it took since the last look, against the steady clock, made due."""
         raw = self.at(self.clock())
+        if self.origin is None:
+            self.origin = raw + self.shift
+            if raw < self.floor:
+                self.since = self.origin             # a clock not set yet (or a test's own: nothing happens unless it is set)
         if self.steady is not None:
             st = self.steady()
             if self._seen is not None:
                 jump = (raw - self._seen[0]) - (st - self._seen[1]) * self.unit
-                if abs(jump) > CLOCK_JUMP * self.unit:
+                if jump > CLOCK_UNSET * self.unit and self._seen[0] < self.floor:
+                    self._set(raw, jump)
+                elif abs(jump) > CLOCK_JUMP * self.unit:
                     self.due -= jump
+                    self.version += 1
             self._seen = (raw, st)
         return raw
+
+    def _boot(self):
+        try:
+            return self.boot() if self.boot is not None else None
+        except Exception:                            # noqa: BLE001 — no id: told apart by the steady clock
+            return None
+
+    def _move(self, lo, hi, delta) -> tuple:
+        """Everything on the line in `[lo, hi]` moves by `delta` — this line's own place, and every holder of its times
+        (`on_move`, and later `moves`)."""
+        self.shift += delta
+        if self.prev is not None and lo <= self.prev[0] <= hi:
+            self.prev = (self.prev[0] + delta, self.prev[1] + delta)
+        if self.origin is not None and lo <= self.origin <= hi:
+            self.origin += delta
+        mv = (lo, hi, delta)
+        self.moves.append(mv)
+        self.version += 1
+        for fn in list(self.on_move):
+            fn(*mv)
+        return mv
+
+    def _set(self, raw, jump) -> None:
+        """The camera's clock was SET: the line re-anchored on it, and what was placed since it was unset relabelled."""
+        before = raw - jump + self.shift + self.due              # the line now, had the clock not moved
+        delta = raw + self.anchor - before
+        lo = self.since if self.since is not None else self.origin
+        self.sets += 1
+        self.due -= jump                                         # the frames captured on the set clock: on the anchor…
+        self._quiet, self.since = True, None
+        self.version += 1
+        if delta * 1000 >= self.unit:                            # (later: nothing placed can overtake what was)
+            self._move(lo, before, delta)                        # …and those before it, relabelled to meet them
+            log.warning("the camera's clock was set: its line goes on the set clock, and the %.0f s placed before it are "
+                        "relabelled by %.3f s — on the card too", (before - lo) / self.unit, delta / self.unit)
+        elif delta < -CLOCK_JUMP * self.unit:
+            log.warning("the camera's clock was set %.1f s behind what its line holds: the line goes on where it is, ahead "
+                        "of the set clock by that much", -delta / self.unit)
+
+    def note(self) -> dict:
+        """The line as the card keeps it (`LINE_NOTE`)."""
+        raw = self.look()
+        return {"line": raw + self.shift + self.due, "raw": raw, "unit": self.unit, "boot": self._boot(),
+                "steady": self.steady() if self.steady is not None else None, "since": self.since, "anchor": self.anchor}
+
+    def restore(self, note: dict | None, newest=None) -> tuple | None:
+        """The line of the camera's process before this one (`note`, as `note()` wrote it on the card; None: none, or
+        none that reads) and the card's newest frame (`newest`, units; None: it holds none): the line goes on from there
+        (above). Returns the move it made of what this process had placed already, or None."""
+        raw = self.look()
+        now = raw + self.shift + self.due
+        st = self.steady() if self.steady is not None else None
+        target, step, floor, since, anchor = now, 0, newest, self.since, self.anchor
+        if note is not None:
+            n_line, n_raw = note["line"], note["raw"]
+            n_st, n_boot, boot = note.get("steady"), note.get("boot"), self._boot()
+            if st is not None and n_st is not None and st >= n_st and (boot is None or n_boot is None or boot == n_boot):
+                target = n_line + (st - n_st) * self.unit                # the same boot: by the steady clock
+                step = (raw - n_raw) - (st - n_st) * self.unit           # …what the clock did while no process watched
+                since, anchor = note.get("since"), note.get("anchor") or 0
+            else:                                                        # a new boot: by the conversion it kept
+                target = raw + (n_line - n_raw)
+                floor = n_line if newest is None else max(newest, n_line)
+                anchor = (n_line - n_raw) if n_raw >= self.floor else (note.get("anchor") or 0)
+                since = None
+        if floor is not None and target <= floor:
+            if floor - target > CLOCK_UNSET * self.unit and raw < self.floor:
+                self.unset += 1                                          # the clock unset again: after the card's newest,
+                log.warning("the camera's clock is not set (the card's newest is %.0f days later than it): its frames go on "
+                            "right after the card's newest until it is set", (floor - target) / self.unit / 86400)
+                target = since = floor + self.gap                        # until it is set
+            else:
+                step = min(step, target - floor - self.gap)              # behind what the card holds: stepped back
+                target = floor + self.gap
+        if abs(step) > CLOCK_JUMP * self.unit:
+            self._said(-step, target)
+        delta, mv = target - now, None
+        if abs(delta) * 100 >= self.unit:
+            mv = self._move(self.origin if self.origin is not None else now, now, delta)
+        self.since, self.anchor, self.tied = since, anchor, True
+        self.version += 1
+        return mv
 
     def now(self):
         """The camera's clock on the line, in units: what the camera states beside its frames."""
@@ -297,13 +444,18 @@ class CamLine:
         if self.due and self._carries(b, now):                       # the first frame of the stepped clock
             d, self.due = self.due, 0
             self.shift += d
+            self.version += 1
             b, e = b + d, e + d
-            self._said(d, b)
+            if self._quiet:
+                self._quiet = False                                  # a clock set (`_set`): counted there, not a step
+            else:
+                self._said(d, b)
             if prev is not None and b <= prev[0]:                    # the clock's measure and the frame's differ by the
                 b, e = self._after(prev), self._after(prev) + max(0, e - b)   # frame's travel: right after the one before
         elif prev is not None and b <= prev[0]:                      # back, by the frames' own order
             step = self._after(prev) - b
             self.shift += step
+            self.version += 1
             b, e = b + step, e + step
             if self.due > 0:
                 self.due = 0                                         # the step the clock was seen to take: this one
@@ -344,7 +496,11 @@ class CamRing:
         # The ring's own line of time (`CamLine`), in archive ms: every frame is put on it here, once. Its steady clock
         # tells a step forward from a pause: the camera's monotonic clock with the camera's real one; a test that gives
         # a clock of its own gives the steady one beside it, or none.
-        self.line = CamLine(clock, steady if steady is not None else (time.monotonic if clock is time.time else None))
+        # (A real camera's boot is told by its id with the real clocks; a test's clocks are told apart by themselves.)
+        real = steady is None and clock is time.time
+        self.line = CamLine(clock, time.monotonic if real else steady, boot=boot_id if real else None)
+        self.line.on_move.append(self._relabel)
+        self._movers: dict[int, object] = {}                 # fn(lo, hi, delta) of whoever holds the line's times
 
     # The line itself is `CamLine`'s (above); the ring is where every frame is put on it — under the ring's lock, before
     # any subscriber or reader sees it.
@@ -352,6 +508,43 @@ class CamRing:
         b, e = self.line.place(s.begin, s.end)
         b, e = int(round(b)), int(round(e))
         return s if (b, e) == (s.begin, s.end) else dataclasses.replace(s, begin=b, end=e)
+
+    # THE LINE RE-ANCHORED (`CamLine.restore`, `_set`; the eleventh review): under the ring's lock, where the move is made,
+    # the frames it holds in `[lo, hi]` move with it, and whoever holds the line's times is told (`on_move`: the card's
+    # writer — it must not wait). The pusher reads `moves()` on its next pass.
+    def _relabel(self, lo, hi, delta) -> None:
+        d = int(round(delta))
+        self._frames = [dataclasses.replace(f, begin=f.begin + d, end=f.end + d) if lo <= f.begin <= hi else f
+                        for f in self._frames]
+        for fn in list(self._movers.values()):
+            fn(lo, hi, d)
+
+    def on_move(self, fn):
+        """`fn(lo, hi, delta)` (archive ms) whenever the line moves what it placed; returns the call that stops it."""
+        with self._lock:
+            sid, self._next = self._next, self._next + 1
+            self._movers[sid] = fn
+
+        def cancel():
+            with self._lock:
+                self._movers.pop(sid, None)
+        return cancel
+
+    def moves(self) -> list[tuple]:
+        """Every move of the line so far: `(lo, hi, delta)` in archive ms."""
+        with self._lock:
+            return list(self.line.moves)
+
+    def note(self) -> dict:
+        """The ring's line, as the card keeps it (`CamLine.note`)."""
+        with self._lock:
+            return self.line.note()
+
+    def restore(self, note: dict | None, newest: int | None) -> tuple | None:
+        """The line of the camera's process before this one, off the card (`CamLine.restore`): what the ring holds
+        already moves with it."""
+        with self._lock:
+            return self.line.restore(note, newest)
 
     def skew(self) -> float:
         """What the ring's line adds to the camera's clock, in seconds — the steps it has taken up, back and forward.
@@ -534,6 +727,8 @@ class CamRing:
                 out.update(clock_forward=self.clock_forward, clock_forward_s=round(self.clock_forward_ms / 1000.0, 3))
             if self.ahead:
                 out["frames_ahead"] = self.ahead
+            if self.line.sets or self.line.unset:        # the clock set, found unset by a reboot (the eleventh review)
+                out.update(clock_set=self.line.sets, clock_unset=self.line.unset)
             if self.last_frame_at is not None:
                 out["last_frame_age_s"] = round(now - self.last_frame_at, 3)
             return out
@@ -543,16 +738,21 @@ class CamRing:
 #
 #     <path>/<recording>/e<epoch>/<begin>.smpl     sample records back to back, as they travel (`Sample.encode`);
 #                                                  <begin> is the first sample's archive time, in ms
+#     …/<begin>@<delta>.smpl                       a segment RELABELLED (`relabel`): every record in it is `delta` ms
+#                                                  later than it says — the camera's line was re-anchored after it was
+#                                                  written (`CamLine`, a clock set); a record appended to it says its
+#                                                  time less `delta`, so the one number holds for the whole file
 #
 # A segment opens on a key frame and is only ever appended to. One that a power loss cut is read up to its last whole
 # record and cut there when the card opens; nothing else needs repair, because nothing else is written.
 class _Segment:
-    __slots__ = ("stream", "path", "first", "last", "last_begin", "bytes")
+    __slots__ = ("stream", "path", "first", "last", "last_begin", "bytes", "delta")
 
     def __init__(self, stream: str, path: str):
         self.stream, self.path = stream, path
         self.first = self.last = self.last_begin = 0         # archive ms: the first sample's begin, the last's end
         self.bytes = 0
+        self.delta = 0                                       # what its records' times lack (`CardBuffer.relabel`)
 
 
 def _read_record(f):
@@ -651,6 +851,11 @@ class CardBuffer:
     @staticmethod
     def _read_segment(stream: str, path: str) -> _Segment | None:
         seg, whole = _Segment(stream, path), 0
+        _, _, delta = os.path.basename(path)[:-len(".smpl")].partition("@")
+        try:
+            seg.delta = int(delta) if delta else 0
+        except ValueError:
+            seg.delta = 0
         with open(path, "r+b") as f:
             while True:
                 smp, n = _read_record(f)
@@ -663,6 +868,7 @@ class CardBuffer:
                 return None
             f.truncate(whole)
         seg.bytes = whole
+        seg.first, seg.last, seg.last_begin = seg.first + seg.delta, seg.last + seg.delta, seg.last_begin + seg.delta
         return seg
 
     # One sample of `stream`. A new segment opens on a key frame — when none is open for the stream, or when the open
@@ -689,7 +895,8 @@ class CardBuffer:
                 except OSError as e:
                     self.err = e
                     raise
-            data, held = s.encode(), self.open[stream]
+            data = (dataclasses.replace(s, begin=s.begin - cur.delta, end=s.end - cur.delta) if cur.delta else s).encode()
+            held = self.open[stream]
             due = self.clock() - held[2] >= self.sync_every
             self._busy_bytes = len(data) + (held[3] if due else 0)      # what this I/O moves (`stall_limit`)
             try:
@@ -905,6 +1112,31 @@ class CardBuffer:
             return [(unix_s(s.first), unix_s(s.last)) for s in self.segs
                     if s.stream.startswith(f"{recording}/") and s.bytes > 0]
 
+    def newest(self) -> int | None:
+        """Where the newest sample the card holds BEGAN (archive ms), any recording's; None when it holds none."""
+        with self._lock:
+            return max((s.last_begin for s in self.segs if s.bytes > 0), default=None)
+
+    # THE CARD RELABELLED (the eleventh review, blocker 2): the camera's line was re-anchored — its clock, unset when these
+    # were written, was set (`CamLine._set`) — and what the card wrote on the old line moves with it. Not rewritten: each
+    # segment wholly in `[lo, hi]` is renamed to say what its records lack (`<begin>@<delta>.smpl`) — one rename, so a power
+    # loss leaves it relabelled or not — and every reader adds it. An open segment stays open: what is appended to it says
+    # its time less the same `delta`.
+    def relabel(self, lo: int, hi: int, delta: int) -> int:
+        """Every segment whose samples all began in `[lo, hi]` (archive ms), relabelled by `delta` ms. Returns how many."""
+        n = 0
+        with self._io():
+            with self._lock:
+                segs = [s for s in self.segs if s.bytes > 0 and lo <= s.first and s.last_begin <= hi]
+            for seg in segs:
+                new = os.path.join(os.path.dirname(seg.path), f"{seg.first - seg.delta}@{seg.delta + delta}.smpl")
+                os.replace(seg.path, new)
+                with self._lock:
+                    seg.path, seg.delta = new, seg.delta + delta
+                    seg.first, seg.last, seg.last_begin = seg.first + delta, seg.last + delta, seg.last_begin + delta
+                n += 1
+        return n
+
     def recordings(self) -> list[str]:
         """The names of the recordings the card holds anything of."""
         with self._lock:
@@ -940,7 +1172,7 @@ class CardBuffer:
         if str(recording) not in held:
             raise NoRecording(f"no recording {recording} on this card (it holds {', '.join(held) or 'none'})")
         with self._lock:
-            parts = [(s.path, s.bytes) for s in self.segs
+            parts = [(s.path, s.bytes, s.delta) for s in self.segs
                      if s.stream.startswith(f"{recording}/") and s.bytes > 0 and s.first < hi and s.last > lo]
         return self._pieces_of(parts, lo, hi, max(1, int(max_bytes)))
 
@@ -949,8 +1181,8 @@ class CardBuffer:
     # memory for every read left open. The piece is yielded out of a box, and the suspended reader holds one frame.
     def _pieces_of(self, parts: list, lo: int, hi: int, max_bytes: int):
         box, size = [[]], 0
-        for path, written in parts:
-            for smp in self._range_of(path, written, lo, hi):
+        for path, written, delta in parts:
+            for smp in self._range_of(path, written, lo, hi, delta):
                 if box[0] and size + len(smp.body) > max_bytes:
                     box.append([])
                     size = 0
@@ -966,7 +1198,7 @@ class CardBuffer:
         return [smp for piece in self.pieces(recording, t0, t1) for smp in piece]
 
     @staticmethod
-    def _range_of(path: str, size: int, lo: int, hi: int):
+    def _range_of(path: str, size: int, lo: int, hi: int, delta: int = 0):
         try:
             f = open(path, "rb")
         except FileNotFoundError:
@@ -983,6 +1215,8 @@ class CardBuffer:
                 if smp is None or read + n > size:
                     raise CardError(f"reading {path}: {read} of {size} bytes — the segment is shorter than written")
                 read += n
+                if delta:
+                    smp = dataclasses.replace(smp, begin=smp.begin + delta, end=smp.end + delta)
                 if smp.begin >= hi:
                     break
                 if smp.begin < lo or (not started and not smp.key):
@@ -1020,6 +1254,7 @@ class _Rec:
         self.written = self.dropped = self.lost_ms = 0
         self.last_error = ""
         self.failed = False                              # the card refused a write: dead, restarted after a backoff
+        self.moved: list[tuple] = []                     # the line's moves since it started (`CardActuator._moved`)
         self.lock = threading.Lock()
         self.wake = threading.Condition(self.lock)
         self.stopped = False
@@ -1031,9 +1266,11 @@ class CardActuator:
     """Writes the card's recordings from the camera's ring. `threaded`: a writer thread per recording (a camera);
     off, the tests write with `drain()` when they choose — the card that has not caught up yet is a test, too."""
 
+    NOTE_EVERY = 30.0                    # the line's note is written at least this often (`note_line`)
+
     def __init__(self, ring: CamRing, card: CardBuffer | None = None, threaded: bool = True,
                  queue_bytes: int = QUEUE_BYTES, piece_bytes: int = PIECE_BYTES):
-        self.ring, self.card, self.threaded = ring, card, threaded
+        self.ring, self.threaded, self._card = ring, threaded, None
         self.recs: dict[str, _Rec] = {}
         self._lock = threading.Lock()
         self.calls: list[tuple[str, str]] = []
@@ -1044,6 +1281,99 @@ class CardActuator:
         self.failures = 0                                # writes the card refused, since this process started
         # What a recording's writer knew when it stopped — `(last, written, dropped, lost_ms)` — for the one started after it.
         self.carried: dict[str, tuple[int, int, int, int]] = {}
+        # The camera's line on the card (`CamLine`; the eleventh review): the note of it, when last written and at which
+        # version of the line, and the moves of the line the card has yet to be relabelled by.
+        self._nlock = threading.Lock()
+        self._noted: tuple = (None, float("-inf"))
+        self._note_error = ""
+        self._card_due: list[tuple] = []
+        ring.on_move(self._moved)
+        self.card = card
+
+    # THE CARD IS WHERE THE CAMERA'S LINE IS KEPT (the eleventh review, blockers 1 and 2; `CamLine`). The card is attached
+    # here — at the start, or by the recorder when it opens (`CardRecorder.volume_pass`) — and the ring's line goes on
+    # from the line the card's note kept, before the card is written: in one boot by the steady clock, in the next through
+    # the conversion the note kept, and never back over the card's newest frame. A card attached again in the same process
+    # (it failed, and was opened again) is on this line already.
+    @property
+    def card(self) -> CardBuffer | None:
+        return self._card
+
+    @card.setter
+    def card(self, card: CardBuffer | None) -> None:
+        self._card = card
+        if card is not None and not self.ring.line.tied:
+            self._restore_line(card)
+
+    def _restore_line(self, card: CardBuffer) -> None:
+        note = None
+        try:
+            raw = card.read_note(LINE_NOTE)
+            if raw:
+                d = json.loads(raw)
+                if not isinstance(d, dict) or finite(d["unit"]) != self.ring.line.unit:
+                    raise ValueError("not a line of this camera's units")
+                opt = lambda k: None if d.get(k) is None else finite(d[k])
+                note = {"line": finite(d["line"]), "raw": finite(d["raw"]), "steady": opt("steady"),
+                        "since": opt("since"), "anchor": opt("anchor") or 0,
+                        "boot": d.get("boot") if isinstance(d.get("boot"), str) else None}
+        except (CardError, *PARSE_ERRORS) as e:
+            log.warning("card: its note of the camera's line of time does not read (%s): the line goes on after what the "
+                        "card holds", e)
+        mv = self.ring.restore(note, card.newest())
+        self._card_due.clear()                           # nothing of this process's line is on this card yet
+        if mv is not None:
+            log.info("card: the camera's line goes on from the card's (%s): moved %.3f s", "its note" if note else
+                     "its newest frame", mv[2] / 1000.0)
+        self.note_line(force=True)
+
+    # Under the ring's lock, where the line moved (`CamRing._relabel`): what the writers hold on the line moves with it —
+    # what waits in their queues, where each stands, what a stopped one left — and the card itself is relabelled by the
+    # next writer that gets to it, before it writes (`note_line`). It must not wait: no I/O here.
+    def _moved(self, lo, hi, d: int) -> None:
+        def mv(s):
+            return dataclasses.replace(s, begin=s.begin + d, end=s.end + d) if s is not _CUT and lo <= s.begin <= hi else s
+        with self._lock:
+            recs = list(self.recs.values())
+            self.carried = {cid: ((c[0] + d) if lo <= c[0] <= hi else c[0], *c[1:]) for cid, c in self.carried.items()}
+        for r in recs:
+            with r.lock:
+                r.live, r.spill = collections.deque(map(mv, r.live)), collections.deque(map(mv, r.spill))
+                if r.last and lo <= r.last <= hi:
+                    r.last += d
+                r.moved.append((lo, hi, d))
+        self._card_due.append((lo, hi, d))
+
+    # THE LINE'S NOTE ON THE CARD (`LINE_NOTE`): written before the first frame on a line that moved goes to the card — a
+    # step taken up, the clock set, the line restored — and every `NOTE_EVERY` besides, so the note is never far from the
+    # line the card's frames are on; and the card relabelled first by what the line moved. Through the card's I/O: a card
+    # that does not answer is not waited for, and the note is tried again at the next frame.
+    def note_line(self, force: bool = False) -> bool:
+        card = self._card
+        if card is None:
+            return False
+        with self._nlock:
+            while self._card_due:
+                lo, hi, d = self._card_due[0]
+                try:
+                    n = card.relabel(int(lo // 1), -int(-hi // 1), d)
+                except OSError as e:
+                    log.warning("card: relabelling what it wrote before the camera's clock was set: %s — tried again", e)
+                    return False
+                self._card_due.pop(0)
+                log.info("card: %d segment(s) relabelled by %.0f s: the camera's clock was set", n, d / 1000.0)
+            v, now = self.ring.line.version, card.clock()
+            if not force and v == self._noted[0] and now - self._noted[1] < self.NOTE_EVERY:
+                return False
+            try:
+                card.write_note(LINE_NOTE, json.dumps(self.ring.note()).encode())
+            except OSError as e:
+                if str(e) != self._note_error:
+                    log.warning("card: the camera's line of time could not be kept on the card (%s): tried again", e)
+                self._note_error = str(e)
+                return False
+            self._noted, self._note_error, self.ring.line.tied = (v, now), "", True
+            return True
 
     # A recording that records only without its primary starts ON HOLD; any other writes from its first key frame.
     # `release` takes it off hold; going back on hold is a restart under the same epoch (the gate's `_actuate`).
@@ -1157,6 +1487,7 @@ class CardActuator:
 
     def drain(self, cid=None) -> None:
         """Write what is queued — every recording's, or one's. A camera's writer threads do this on their own."""
+        self.note_line()
         with self._lock:
             recs = list(self.recs.values()) if cid is None else [r for k, r in self.recs.items() if k == str(cid)]
         for r in recs:
@@ -1169,6 +1500,7 @@ class CardActuator:
             with r.lock:
                 if r.failed or r.stopped or self.card is None:
                     return                               # refused a write, or stopping: what is left is `_stop`'s to write
+                seen = len(r.moved)
                 if r.spill:
                     s = self._took(r.spill)
                 elif r.release_due:
@@ -1180,7 +1512,7 @@ class CardActuator:
             if s is None:
                 self._catch_up(r)
             else:
-                self._write(r, s)
+                self._write(r, s, seen)
 
     # THE RING, A PIECE AT A TIME (the review's sixth pass). One piece of at most `PIECE_BYTES` is taken and written,
     # then the next — never the whole ring as one list, which the writer held while the ring went on behind it. What
@@ -1201,12 +1533,16 @@ class CardActuator:
         def done():
             with r.lock:
                 r.release_due = False
+        with r.lock:
+            seen = len(r.moved)
         at = r.last
         piece, whole = self.ring.piece(at, self.piece_bytes, upto=upto, caught_up=done)
         with r.lock:
+            if len(r.moved) > seen:
+                return True                              # the line moved under the piece: taken again, moved (`_moved`)
             spilled = [self._took(r.spill) for _ in range(len(r.spill))]
         for s in spilled:
-            self._write(r, s)
+            self._write(r, s, seen)
         if not whole and r.last == at:
             if piece and at and not r.fresh:
                 r.lost_ms += piece[0].begin - at
@@ -1226,7 +1562,16 @@ class CardActuator:
     # One sample onto the card, in order, from a key frame. A write the card refuses marks the recording dead for
     # `pump` — counted, and nothing more is offered to a card that is failing; a delta frame the card cannot open a
     # segment with waits for the next key frame.
-    def _write(self, r: _Rec, s) -> None:
+    #
+    # A frame taken from the queue before the line moved and written after (`seen`: the moves it had been through) is
+    # moved here, as the queue's were (`_moved`); one of a piece of the ring is passed over by `last`, and the ring gives
+    # it again, moved. The card's note of the line is written before the frame, when the line moved (`note_line`).
+    def _write(self, r: _Rec, s, seen: int | None = None) -> None:
+        if seen is not None and s is not _CUT and len(r.moved) > seen:
+            with r.lock:
+                for lo, hi, d in r.moved[seen:]:
+                    if lo <= s.begin <= hi:
+                        s = dataclasses.replace(s, begin=s.begin + d, end=s.end + d)
         if s is _CUT:
             r.need_key = True
             if self.card is not None:
@@ -1242,6 +1587,7 @@ class CardActuator:
             if r.resumed or r.release_due:
                 r.dropped += 1                           # …the rest of the group it was stopped in: not on the card
             return
+        self.note_line()
         try:
             self.card.append(r.stream, s)
         except NeedKey:
@@ -1356,9 +1702,13 @@ class CardActuator:
         if r.thread is not None:                         # a writer stuck in a card that does not answer is not waited for
             r.thread.join(timeout=0.0 if self.card is not None and self.card.stalled() else 5.0)
         self._flush(r)
-        upto = self.ring.newest()
-        while (r.keep or not r.hold) and not r.failed and self._catch_up(r, upto):
-            pass
+        upto, seen = self.ring.newest(), len(r.moved)
+        while (r.keep or not r.hold) and not r.failed:
+            for lo, hi, d in r.moved[seen:]:             # (the line moved meanwhile: its newest frame with it)
+                upto = upto + d if lo <= upto <= hi else upto
+            seen = len(r.moved)
+            if not self._catch_up(r, upto):
+                break
         if r.keep:
             self._unkeep(r)
         self._flush(r)                                   # what a kept ring spilled while this was going on
@@ -1375,13 +1725,14 @@ class CardActuator:
     # Everything queued, written — the spill, then live — and its bytes given back to the queue's budget, written or not.
     def _flush(self, r: _Rec) -> None:
         with r.lock:
-            queued = [self._took(q) for q in (r.spill, r.live) for _ in range(len(q))]
+            queued, seen = [self._took(q) for q in (r.spill, r.live) for _ in range(len(q))], len(r.moved)
         for s in queued:
-            self._write(r, s)
+            self._write(r, s, seen)
 
     def pump(self) -> tuple[list, list]:
         """(dead, posted): a recording the card refused a write of is dead, and stopped here; the recorder starts it
         again after its backoff (`VmsWorker.pump_once`), from the last frame the card took."""
+        self.note_line()
         with self._lock:
             dead = [(cid, r.last_error) for cid, r in self.recs.items() if r.failed]
         for cid, why in dead:
