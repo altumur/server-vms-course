@@ -162,17 +162,47 @@ def register_constraint(name: str, fn) -> None:
 ## Шаг 6 — Близость и дом: два предпочтения, ни одного фильтра
 
 ```python
-    def holder_near(self, uid) -> tuple[str, str] | None:
+    def near_index(self, beats: dict | None = None) -> NearIndex:
+        """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
+        `console.heartbeats` returns them, when the caller has read them; else they are read here, once."""
+        by: dict[str, list[tuple[str, str, str]]] = {}
         if self.spec.near == "none":
-            return None
-        want = self.near_id(uid)
-        for w, hb in heartbeats(self.objects, self.spec.near + "/").items():
-            if self.wall() - hb.ts > 45.0:
+            return NearIndex(by)
+        if beats is None:
+            from .console import heartbeats                        # the read model's scan, without the age filter
+            beats = heartbeats(self.objects, self.spec.near + "/")
+        field, now = self.spec.near_of, self.wall()
+        for w, hb in beats.items():
+            if not is_live(self.spec.near, hb.ts, now, 45.0):
                 continue
             for st in hb.status:
-                if str(st.get("id")) == str(want) and st.get("phase") == "running":
-                    return w, hb.extra.get("server", "?")
-        return None
+                if st.get("phase") == "running":
+                    key = st.get(field) if field else st.get("id")
+                    by.setdefault(str(key), []).append((str(st.get("id")), w, hb.extra.get("server", "?")))
+        return NearIndex(by)
+
+    def holder_near(self, uid, near: NearIndex | None = None) -> tuple[str, str] | None:
+        if self.spec.near == "none":
+            return None
+        want = self.near_id(uid)                                   # `by`: which value of mine to look for
+        if not want:
+            return None
+        near = self.near_index() if near is None else near
+        found = near.by.get(want)                                  # (their unit id, worker, server)
+        if not found:
+            return None
+        if not self.spec.near_of or len(found) == 1:
+            return found[0][1], found[0][2]                        # their unit is mine, or one of theirs: nothing to rank
+        rank = NEAR_RANK.get(self.spec.name)
+
+        def ranked(f):
+            if rank is None:
+                return 0, f
+            if f[0] not in near.ranks:
+                near.ranks[f[0]] = rank(self, f[0], near.memo)
+            return near.ranks[f[0]], f
+        _, w, server = sorted(found, key=ranked)[0]
+        return w, server
 
     def near_id(self, uid) -> str:
         if self.spec.near_by == "id":
@@ -187,16 +217,18 @@ def register_constraint(name: str, fn) -> None:
 
 Вторая ручка — `near.of`: **где в чужом статусе** это значение искать. По умолчанию — их идентификатор, и это работало, пока запись называлась камерой (`id: cam`). Теперь имя записи выбирает оператор, и «запись с идентификатором 7» стало совпадением: у камеры 7 может быть только `7-cloud`. `near: {sub: rec, of: cam}` сравнивает не с их id, а с их полем `cam`, которое рекордер кладёт в свой статус (`status_extra`), — «тот, кто держит запись **о** камере 7». Чужие строки при этом никто не читает: только heartbeat.
 
-Если ответили несколько — у камеры два архива, значит две записи, — берётся наименьший их идентификатор. Не «любой»: один и тот же проход по тем же heartbeat'ам обязан давать один и тот же сервер, иначе единица ходит между ними.
+Если ответили несколько — у камеры два архива, значит две записи, — берётся наименьший их идентификатор. Не «любой»: один и тот же проход по тем же heartbeat'ам обязан давать один и тот же сервер, иначе единица ходит между ними. Подсистема может назвать свой порядок (`register_near_rank`): VMS ставит воркер камеры рядом с **резервной** записью (урок 26 М10B). Платформа сортирует по числу, которое вернул её ранг, а при равенстве — по идентификатору.
+
+**Один взгляд на heartbeat'ы, переданный в вызов.** Масштабный проход: `holder_near` перечитывал все heartbeat'ы подсистемы, за которой идёт, и перебирал все записи в них — на каждый вызов. А `ensure_home` спрашивает его о каждой единице, `_pick` — о каждой размещаемой. Тысяча камер рядом с записями двадцати регистраторов читала хранилище 25 500 раз за проход и тысячу раз перебирала статусы всех регистраторов; при регистраторе на пятьдесят камер цена росла как квадрат числа камер (750 чтений на сотне, 25 500 на тысяче; измерено счётчиком на `get` и `list`). Теперь взгляд берут один раз: `near_index` раскладывает живые `running`-записи по значению, которое ищет `near`, — их идентификатору или полю `near.of`, — сохраняя порядок, в котором heartbeat'ы прочитаны. Тот, кто спрашивает о многих единицах, передаёт этот взгляд в `holder_near`, `home_for` и `_pick` параметром `near`; heartbeat'ы, которые он уже прочитал, можно отдать в `near_index(beats)`. Единица, о которой спросили отдельно, берёт взгляд сама — одно чтение на один вопрос, как и было. Ранг тоже живёт столько, сколько взгляд: `NEAR_RANK`-функция получает `memo` и читает свои данные один раз (VMS — какие тома резервные). Каждую найденную единицу ранжируют один раз, а единственную найденную не ранжируют вовсе. Тысяча камер с одним взглядом — 1023 чтения: heartbeat'ы, тома и по строке на каждую запись, которую пришлось ранжировать. Ответы те же, что у вызова без взгляда: старый и новый код прогнаны на одном сценарии (живые, устаревшие и «из будущего» регистраторы, `pending`, две и три записи на камеру, без резервных томов и с ними, `near` VMS и детектора) — расхождений ноль. Тест: `test_recorder_reads.py::test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders`. Что ещё открыто: проход контроллера (`ensure_home`, `ensure_placed`, `redistribute`) этот взгляд пока не передаёт — он строится один раз за проход там, где меняется сам проход.
 
 Строка читается только во второй форме — подсистема, разделяющая чужую нумерацию, не платит за те, которые её не разделяют. И заметьте, что `near_id` может вернуть пустую строку: поле не заполнено, следовать не за кем. Это не ошибка, а обычный ответ — близость всё равно предпочтение, и пустой пул из неё не получается.
 
 ### `home` — где единица живёт, и почему это не метка
 
 ```python
-    def home_for(self, row: dict) -> str:
+    def home_for(self, row: dict, near: NearIndex | None = None) -> str:
         if self.spec.home == "near":
-            near = self.holder_near(row["id"]) if self.spec.near != "none" else None
+            near = self.holder_near(row["id"], near) if self.spec.near != "none" else None
             return near[1] if near and near[1] != "?" else ""
         return str(row.get(self.spec.home, "") or "") if self.spec.home else ""
 ```
@@ -264,12 +296,12 @@ def worker_with_group(self, row: dict, pool: list[str]) -> str | None:
 ### Выбор
 
 ```python
-    def _pick(self, pool: list[str], uid) -> tuple[str | None, int, str]:
-        near = self.holder_near(uid)
+    def _pick(self, pool: list[str], uid, near: NearIndex | None = None) -> tuple[str | None, int, str]:
+        near = self.holder_near(uid, near)
         home = near[1] if self.spec.home == "near" and near else self.home_of(uid)
         follows = self.spec.home == "near"
         if home:
-            best, free = self._best([w for w in pool if self.server_of(w) == home])
+            best, free = self._best([w for w in pool if self.place_of(w) == home])
             if best is not None:
                 return best, free, (f", beside {near[0]} holding it" if follows else f", at home on {home}")
         if near is not None and not follows:
@@ -281,7 +313,7 @@ def worker_with_group(self, row: dict, pool: list[str]) -> str | None:
         note = ""
         if best is not None and near is not None and self.server_of(best) != near[1]:
             note = f", away from {near[0]} on {near[1]} (no room there)"
-        if best is not None and home and not follows and self.server_of(best) != home:
+        if best is not None and home and not follows and self.place_of(best) != home:
             note += f"; away from home {home}"
         return best, free, note
 ```

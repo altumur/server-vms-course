@@ -921,3 +921,24 @@ def test_one_resource_answering_another_shape_costs_its_window_and_not_the_merge
     assert [e["id"] for e in got["events"]] == ["b-1", "c-1"] and got["incomplete"] == {"srv-a": "did not answer"}, got
     assert PEER_EVENTS.counts.get("platform") == 1
     _forget_garbled()
+
+
+def test_a_line_whose_values_only_convert_is_merged_as_converted_and_stops_no_timeline():
+    """The `/events` sweep (the scaling pass after the eighth review): a line was checked to convert and kept as it came,
+    so `"t": "1700000000"` beside numbers raised `TypeError` from the merge's sort — no reply to any timeline — and a list
+    for `unit` or `id` raised in the sets that fence and dedupe. The line is merged as the types it was checked to be."""
+    from w2cplatform.eventdatabase import MergedIndex
+    box = Box()
+    t = box.wall()
+    for s in ("srv-a", "srv-b"):
+        box.objects.put(f"platform/resources/{s}/heartbeat", json.dumps({"server": s, "ts": t, "url": f"http://{s}"}).encode())
+    ours = {"t": t - 5, "server": "srv-a", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "id": "a-1"}
+    odd = {"t": str(t - 9), "server": "srv-b", "kind": "motion", "unit": ["7"], "subsystem": "vms", "epoch": "2",
+           "id": ["b", 1]}
+    copy = {"t": str(t - 7), "server": "srv-c", "kind": "motion", "unit": "7", "subsystem": "vms", "epoch": 1, "bucket": [1]}
+    answers = {"http://srv-a": {"events": [ours]}, "http://srv-b": {"events": [odd, copy]}}
+    got = MergedIndex(box.objects, fetch=lambda url, params: answers[url], wall=box.wall).query(
+        t - 60, t, current_epochs={("vms", "7"): 1})
+    assert [e["t"] for e in got["events"]] == [t - 9, t - 7, t - 5], got
+    assert got["events"][0]["epoch"] == 2 and got["events"][0]["id"] == "['b', 1]" and not got["events"][0]["fenced"]
+    _forget_garbled()

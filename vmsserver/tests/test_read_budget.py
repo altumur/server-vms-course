@@ -454,3 +454,44 @@ def test_an_end_is_kept_on_time_and_one_moved_by_another_console_is_read_before_
     assert rec.unit("3-auto") is None and rec.unit("4-auto") is not None
     assert jobs.expire(rec, NOW + Remembered.REREAD + 1, mem) == 1   # the whole read: 5 is ended
     assert rec.unit("5") is None
+
+
+def _waiting(vars_, objects, sub: str, k: int) -> None:
+    """The first k units lose their placement and every worker of `sub` is full: they wait, and every pass tries them."""
+    for i in range(1, k + 1):
+        vars_.delete(f"{sub}/placement/{i}")
+    for w in vars_.list(f"{sub}/workers/"):
+        it = vars_.get(w)[0]
+        vars_.put(w, {**it, "units": ",".join(u for u in it["units"].split(",") if u and int(u) > k)})
+    for key in objects.list(f"{sub}/heartbeats/"):
+        hb = json.loads(objects.get(key))
+        hb["capacity"] = 1
+        objects.put(key, json.dumps(hb).encode())
+
+
+def test_units_waiting_for_room_cost_a_pass_what_placed_ones_cost():
+    """A unit with no room tries every pass, and its filters asked about every other unit: `group_by` (the cameras of one
+    device, `worker_with_group`) and `spread_by` (two copies apart, `servers_taken`) each read every row and its placement
+    again per waiting unit, and what each candidate worker said was a walk of every heartbeat per question. Before: 500
+    cameras waiting of 600 — 671 887 reads and ten seconds a pass; 200 recordings of 1000 waiting under a `spread_by` —
+    857 964 reads and six seconds. Now the rows by group, the placements and what each worker said are the pass's: a
+    waiting unit costs what a placed one does."""
+    import dataclasses
+    from vms.config import REC_SPEC
+    from w2cplatform.spec import SpecController
+    vars_, objects = cluster(600, 12, 3, recording=False)
+    _waiting(vars_, objects, "vms", 500)
+    v, o = Reads(vars_), Reads(objects)
+    ctl = _vms(v, o)
+    v.zero(), o.zero()
+    _loop_pass(ctl)
+    assert v.n + o.n <= 2 * 600 + 100, v.n + o.n
+    assert ctl.pass_report()["unplaced"] == 500
+
+    vars_, objects = cluster(1000, 20, 4)
+    _waiting(vars_, objects, "rec", 200)
+    v, o = Reads(vars_), Reads(objects)
+    ctl = SpecController(dataclasses.replace(REC_SPEC, spread_by="cam"), v, o, wall=wall)
+    v.zero(), o.zero()
+    _loop_pass(ctl)
+    assert v.n + o.n <= 2 * 1000 + 100, v.n + o.n

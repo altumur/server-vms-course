@@ -624,10 +624,12 @@ def register_constraint(name: str, fn) -> None:
 # `eligible`, beside the labels and `spread_by`, so it beats `home` and `near` the way they do. The VMS
 # registers one for `rec`: a backup volume holds only the recordings homed on it, and they go nowhere else.
 #
-# `near_rank(ctl, their_id) -> sortable` — when `near` finds SEVERAL units of the followed subsystem (two
+# `near_rank(ctl, their_id, memo) -> sortable` — when `near` finds SEVERAL units of the followed subsystem (two
 # recordings of one camera), which one to stand beside. Smallest first; ties by their id, so two passes
 # agree. The VMS registers one for `vms`: beside the BACKUP recording, which is the one that must survive
-# the primary's server.
+# the primary's server. `memo` is a dict that lives as long as one look at the heartbeats (`NearIndex`): what the
+# rank reads to answer — the VMS's, which volumes are backups — it reads once there, not once per unit placed (the
+# scaling pass). Each of their ids is ranked once per look.
 #
 # `refuse(ctl, uid, old, new)` — may this row be WRITTEN: raises `Refused`. Called by `create` and `update` with the
 # row as it was (None for a create) and as it will be, before anything is stored — for a rule about what a field
@@ -649,6 +651,14 @@ def register_refuse(spec_name: str, fn) -> None:
 
 def register_near_rank(spec_name: str, fn) -> None:
     NEAR_RANK[spec_name] = fn
+
+
+# ONE LOOK AT THE FOLLOWED SUBSYSTEM (the scaling pass): `SpecController.near_index`. Its live workers' `running` entries,
+# by the value `near` matches — their unit id, or the field `near.of` names — in the order the heartbeats were read:
+# `[(their unit id, worker, server)]`. And what ranking them has read (`memo`, `ranks`), for as long as the look lives.
+class NearIndex:
+    def __init__(self, by: dict[str, list[tuple[str, str, str]]]):
+        self.by, self.memo, self.ranks = by, {}, {}
 
 
 # Sort key: numeric ids before others, numbers by value.
@@ -724,9 +734,14 @@ class SpecController(Controller):
     # `capacity_of` is asked of every candidate while ANY unit is placed, so one worker's field stopped every
     # placement. Such a field is read as "it has not said" (`_number`): the fallback, no headroom, no failover time.
     def capacity_of(self, worker: str) -> int:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         said = self._number(worker, hb, self.spec.capacity_from, int) if hb else None
         return self.capacity if said is None else said
+
+    # What a worker last said, any age — the four questions above and `place_of` ask it per candidate and per unit placed.
+    # Inside a pass it is one dict built once (`_per_pass`; the scaling pass), not a walk of every heartbeat per question.
+    def _said(self, worker: str):
+        return self._per_pass(self.sub.heartbeats_prefix(), lambda: self.workers_seen(max_age=1e12), "any_age").get(worker)
 
     def _number(self, worker: str, hb, field: str, kind=float):
         """A numeric field of a worker's heartbeat, or None if it is absent or not a number (logged once)."""
@@ -744,12 +759,12 @@ class SpecController(Controller):
 
     # The `labels` string of its heartbeat, split on commas.
     def labels_of(self, worker: str) -> set[str]:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         return set(l for l in hb.extra.get("labels", "").split(",") if l) if hb else set()
 
     # The heartbeat's `server`, `"?"` if unknown. Goes into placement reasons and the snapshot.
     def server_of(self, worker: str) -> str:
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         return hb.extra.get("server", "?") if hb else "?"
 
     # The place this worker occupies, in the units the spec counts in: its server, or its volume when the
@@ -758,7 +773,7 @@ class SpecController(Controller):
     def place_of(self, worker: str) -> str:
         if self.spec.place_by == "server":
             return self.server_of(worker)
-        hb = self.workers_seen(max_age=1e12).get(worker)
+        hb = self._said(worker)
         if hb is None:
             return "?"
         # Three cases, and the difference between the last two is the point.
@@ -1276,32 +1291,60 @@ class SpecController(Controller):
     # id: how a camera finds the recorder running a recording OF it without knowing what the operator named
     # that recording. Ties (two recordings of one camera) go to the smallest of their ids, so two passes
     # over the same heartbeats reach the same server.
-    def holder_near(self, uid) -> tuple[str, str] | None:
+    #
+    # FROM ONE LOOK, HANDED IN (the scaling pass). Each call read every heartbeat of the followed subsystem and walked
+    # every entry in them — and `ensure_home` asks for every unit, `_pick` for every unit it places: a thousand cameras
+    # beside the recordings of twenty recorders read the store 25 500 times, and walked every recorder's status a
+    # thousand times. A caller asking for many units takes one look first — `near_index`, from the heartbeats it has
+    # read already, if it has — and hands it in as `near`; a unit asked about alone takes a look of its own.
+    def near_index(self, beats: dict | None = None) -> NearIndex:
+        """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
+        `console.heartbeats` returns them, when the caller has read them; else they are read here, once."""
+        if self.spec.near == "none":
+            return NearIndex({})
+        if beats is None:
+            # Inside a pass the look is the pass's (`_per_pass`): its heartbeats read once, the index built once — and a
+            # step that did not hand one in (`_pick` from `place`, `home_for`) gets the same one.
+            from .console import heartbeats                        # the read model's scan, without the age filter
+            prefix = f"{self.spec.near}/heartbeats/"
+            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"))
+            return self._per_pass(prefix, lambda: self._near_index(beats), "near_index")
+        return self._near_index(beats)
+
+    def _near_index(self, beats: dict) -> NearIndex:
+        by: dict[str, list[tuple[str, str, str]]] = {}
+        field, now = self.spec.near_of, self.wall()
+        for w, hb in beats.items():
+            if not is_live(self.spec.near, hb.ts, now, 45.0):
+                continue
+            for st in hb.status:
+                if st.get("phase") == "running":
+                    key = st.get(field) if field else st.get("id")
+                    by.setdefault(str(key), []).append((str(st.get("id")), w, hb.extra.get("server", "?")))
+        return NearIndex(by)
+
+    def holder_near(self, uid, near: NearIndex | None = None) -> tuple[str, str] | None:
         if self.spec.near == "none":
             return None
-        field = self.spec.near_of
         want = self.near_id(uid)                                   # `by`: which value of mine to look for
         if not want:
             return None
-        from .console import heartbeats                            # the read model's scan, without the age filter
-        found: list[tuple[str, str, str]] = []                     # (their unit id, worker, server)
-        # Asked per unit — `_pick`, and `ensure_home` for every unit that follows — and read once a pass (`_per_pass`):
-        # it was every heartbeat of the followed subsystem, for every unit (the scaling pass).
-        theirs = self._per_pass(f"{self.spec.near}/heartbeats/", lambda: heartbeats(self.objects, self.spec.near + "/"))
-        for w, hb in theirs.items():
-            if not is_live(self.spec.near, hb.ts, self.wall(), 45.0):
-                continue
-            for st in hb.status:
-                key = st.get(field) if field else st.get("id")
-                if str(key) == want and st.get("phase") == "running":
-                    if not field:
-                        return w, hb.extra.get("server", "?")
-                    found.append((str(st.get("id")), w, hb.extra.get("server", "?")))
-        if found:
-            rank = NEAR_RANK.get(self.spec.name)
-            _, w, server = sorted(found, key=lambda f: ((rank(self, f[0]) if rank else 0), f))[0]
-            return w, server
-        return None
+        near = self.near_index() if near is None else near
+        found = near.by.get(want)                                  # (their unit id, worker, server)
+        if not found:
+            return None
+        if not self.spec.near_of or len(found) == 1:
+            return found[0][1], found[0][2]                        # their unit is mine, or one of theirs: nothing to rank
+        rank = NEAR_RANK.get(self.spec.name)
+
+        def ranked(f):
+            if rank is None:
+                return 0, f
+            if f[0] not in near.ranks:
+                near.ranks[f[0]] = rank(self, f[0], near.memo)
+            return near.ranks[f[0]], f
+        _, w, server = sorted(found, key=ranked)[0]
+        return w, server
 
     # Whose unit of the followed subsystem this one wants to be beside: its own id by default, or the
     # string in the field `near.by` names. The row is read for the second form only — a subsystem whose
@@ -1323,9 +1366,9 @@ class SpecController(Controller):
     # each follow the other have no anchor: every pass moves each towards where the other was, and they
     # swap places instead of meeting. The anchor is the one with a real home — for the VMS, the recording,
     # because it writes to a disk and a disk does not move.
-    def home_for(self, row: dict) -> str:
+    def home_for(self, row: dict, near: NearIndex | None = None) -> str:
         if self.spec.home == "near":
-            near = self.holder_near(row["id"]) if self.spec.near != "none" else None
+            near = self.holder_near(row["id"], near) if self.spec.near != "none" else None
             return near[1] if near and near[1] != "?" else ""
         return str(row.get(self.spec.home, "") or "") if self.spec.home else ""
 
@@ -1343,8 +1386,8 @@ class SpecController(Controller):
     #
     # Home before near, because they disagree exactly when a server is down: `near` would pin a recorder to
     # whichever server picked up the camera, and nothing would ever come back.
-    def _pick(self, pool: list[str], uid) -> tuple[str | None, int, str]:
-        near = self.holder_near(uid)
+    def _pick(self, pool: list[str], uid, near: NearIndex | None = None) -> tuple[str | None, int, str]:
+        near = self.holder_near(uid, near)
         home = near[1] if self.spec.home == "near" and near else self.home_of(uid)
         follows = self.spec.home == "near"
         if home:
@@ -1393,7 +1436,7 @@ class SpecController(Controller):
         if row is None or self.retired(row):
             return None                                 # finished work is not placed, and not "unplaceable" either
         pool = self.eligible(row, self._pool(workers))
-        best, free, near = self._pick(pool, uid)
+        best, free, near = self._pick(pool, uid, self.near_index())      # the pass's one look (`near_index`), not one per unit
         if best is None:
             return None                                 # "the system is full" — or nothing that can reach it; never "w-1 is full"
         reason = f"most free capacity ({free}) among {len(pool)} worker(s)"
@@ -1630,6 +1673,7 @@ class SpecController(Controller):
                 gone_for.setdefault(w, f"server {self.server_of(w)} draining")
         for w, server in self.gone_servers().items():                  # the server is gone: its slot lapsed and its resource silent
             gone_for.setdefault(w, f"server {server} gone: slot {w} lapsed and its resource silent")
+        idx = self.near_index()                       # one look at what is followed, for every unit moved
         for gone, why in gone_for.items():
             live = [w for w in self._pool(workers) if w != gone]
             for unit in sorted(self.assignment(gone).units, key=_unit_key):
@@ -1645,7 +1689,7 @@ class SpecController(Controller):
                 if row is GARBLED_ROW:
                     continue                            # its filters cannot be read: it waits where it is, the others move
                 pool = self.eligible(row, live) if row else live
-                best, free, near = self._pick(pool, uid)
+                best, free, near = self._pick(pool, uid, idx)
                 if best is None:
                     # THIS unit waits, listed where it was — and the next one is looked at: each has filters of
                     # its own, and a `break` here let one unit with a rare label, first in the list, hold every
@@ -1669,10 +1713,11 @@ class SpecController(Controller):
         if budget <= 0 or not self.spec.home:
             return []
         moves, pool = [], self._pool(workers)
+        idx = self.near_index() if self.spec.home == "near" else None     # one look for every unit that follows
         for row in self.units():
             if len(moves) >= budget:
                 break
-            uid, home = row["id"], self.home_for(row)
+            uid, home = row["id"], self.home_for(row, idx)
             pl = self.placement(uid)
             if not home or pl is None or self.place_of(pl.worker) == home:
                 continue
