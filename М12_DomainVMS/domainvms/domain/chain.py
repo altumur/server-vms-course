@@ -417,13 +417,24 @@ class Forwarder:
         self.dropped[ref] = self.dropped.get(ref, 0) + len(frames) - len(kept)
         return kept
 
+    # …left where a monitor reads it (the eleventh review, a minor: `dropped` and `holes` were said nowhere): an object in
+    # this relay's own store, beside its ingest's (`rec/forwarded/<name>`), which the domain's console says on its
+    # `/metrics` (`ingest.stream_metrics`). The process that runs the forwarder leaves it as its ingest leaves its own.
+    def publish(self, objects) -> dict:
+        from .ingest import FORWARDED
+        st = self.stats()
+        key = f"{FORWARDED}/" + "".join(ch if ch.isalnum() or ch in "._-" else "_" for ch in self.name)
+        objects.put(key, json.dumps({"cluster": self.local.cluster, "forwarder": self.name, "ts": self.local.wall(),
+                                     "cameras": st}).encode())
+        return st
+
     def stats(self) -> dict[str, dict]:
         """Per camera: its state, and what was dropped past what the forwarder holds — kept to push again
         (`dropped`), and waiting between two pushes (`queue_dropped`); and how many times a pull found its centre restarted
         since the last — a batch may have gone with it (`holes`)."""
         return {ref: {"state": self.state.get(ref, ""), "dropped": self.dropped.get(ref, 0),
                       "queue_dropped": getattr(self.queues.get(ref), "dropped", 0), "holes": self.holes.get(ref, 0)}
-                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled))}
+                for ref in sorted(set(self.state) | set(self.queues) | set(self.pulled) | set(self.dropped) | set(self.holes))}
 
     def _pull(self, ing, ref: str, e: dict) -> str:
         if not self.needs(ref) and not self.local.wanted(ref):

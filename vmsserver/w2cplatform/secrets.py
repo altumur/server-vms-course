@@ -111,10 +111,14 @@ def credential_params(url: str) -> list[str]:
 # an `@` — a userinfo, or one in a path that names its host there — and the value of every credential parameter. Only a
 # string with `://` in it is an address; anything else comes back as it was.
 _PARAM = re.compile(r"([?&;])([^=&;#?/]*)=([^&;#]*)")
+# A run up to an `@`, tried only where a run can begin — the start, or after a `/` or an `@` (the eleventh review's
+# sweep): unanchored, `[^/@]*@` was tried from every position of a run with no `@` in it, and a source of 100 000
+# characters held a console's thread for minutes. The same matches; one scan of the string.
+USERINFO = re.compile(r"(?<![^/@])[^/@]*@")
 
 
 def hide_in_url(value):
     if not isinstance(value, str) or "://" not in value:
         return value
-    s = re.sub(r"[^/@]*@", "…@", value)
+    s = USERINFO.sub("…@", value)
     return _PARAM.sub(lambda m: f"{m[1]}{m[2]}={SECRET_MASK}" if m[3] and is_credential_param(m[2]) else m[0], s)

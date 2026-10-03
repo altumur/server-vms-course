@@ -92,7 +92,7 @@ from .events import Suppress
 from .limits import TooLarge
 from .objects import ObjectStore
 from .rows import PARSE_ERRORS, Table, finite
-from .variables import Conflict, Variables
+from .variables import Conflict, Garbled, Variables
 
 PLATFORM_FIELDS = ("worker", "placement", "epoch", "revision", "observed_revision", "phase", "id")   # never the operator's
 # The most a single `json` field may be. Not the row's ceiling (Lesson 19) — this one keeps ONE field
@@ -1254,7 +1254,7 @@ class SpecController(Controller):
         gone = []
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self._placed_id(p)
-            it, _ = self.vars.get(p)
+            it = self._placement_items(p)
             if uid is None or not it or not it.get("worker") or self._parsed(uid) is not None:
                 continue                                  # a row that does not parse EXISTS: it is not unplaced as deleted
             self.assign_remove(it["worker"], str(uid))
@@ -1292,7 +1292,7 @@ class SpecController(Controller):
         done = []
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self._placed_id(p)
-            it, _ = self.vars.get(p)
+            it = self._placement_items(p)
             row = self._parsed(uid) if uid is not None else GARBLED_ROW
             if not it or not it.get("worker") or row is GARBLED_ROW or not self.retired(row):
                 continue                                  # whether a row that does not parse is over, nobody can say
@@ -1361,10 +1361,24 @@ class SpecController(Controller):
     # what does not parse beside it is 0, and the row is said once.
     def placement(self, uid) -> Placement | None:
         key = self.sub.config("placement", str(uid))
-        it, _ = self.vars.get(key)
+        it = self._placement_items(key)
         if not it or not it.get("worker"):
             return None
         return self._placement(uid, it)
+
+    # A placement row the store holds and cannot read (`Garbled`; the eleventh review, a minor): read bare, it took every
+    # route and pass that asks where a unit is down whole. Read as placed nowhere — said once — and the controller's next
+    # write of it replaces it whole (`Controller.write`): a unit whose decision nobody can read is placed again.
+    def _placement_items(self, key: str) -> dict | None:
+        try:
+            it, _ = self.vars.get(key)
+        except Garbled as e:
+            if key not in self._garbled_rows:
+                self._garbled_rows.add(key)
+                log.warning("%s: %s; read as placed nowhere — it is placed again, and the row written whole",
+                            self.sub.name, e)
+            return None
+        return it
 
     def _placement(self, uid, it: dict) -> Placement:
         key = self.sub.config("placement", str(uid))
@@ -1893,6 +1907,7 @@ class SpecController(Controller):
         rep["servers_decommissioned_total"] = total("servers_decommissioned_total", len(decom["decommissioned"]))
         rep["decommission_requests_standing"] = len(decom["standing"])   # asked, and the server still answers
         rep["workers_hung"] = sorted(slots["hung"])                 # its process runs, and it neither renews nor speaks
+        rep["hung_move_after"] = self.hung_move_after                # …and how long it keeps its units: a spare judges by it
         # The units of groups `ensure_reach` left whole where they are, and the servers whose row did not read on the last
         # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
         rep["reach_waiting"] = self.last_reach_waiting
@@ -1974,7 +1989,7 @@ class SpecController(Controller):
         assignments = self.assignments()
         for p in self.vars.list(self.sub.config("placement") + "/"):
             unit = p.rsplit("/", 1)[1]
-            it, _ = self.vars.get(p)
+            it = self._placement_items(p)
             if not it or not it.get("worker"):
                 continue
             want = it["worker"]
@@ -2312,7 +2327,7 @@ class SpecController(Controller):
 
     # Why a unit is nowhere, when its placement row says so — a reach lost, a unit finished, deleted — else None.
     def unplaced_reason(self, uid) -> str | None:
-        it, _ = self.vars.get(self.sub.config("placement", str(uid)))
+        it = self._placement_items(self.sub.config("placement", str(uid)))
         return str(it.get("reason") or "") or None if it and not it.get("worker") else None
 
     # Up to `budget` moves: each step takes the most and least loaded workers by `load/capacity`, stops if

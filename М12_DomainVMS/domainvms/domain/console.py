@@ -16,6 +16,9 @@ the domain holder runs the same one pointed at every cluster.
     GET  /api/topology                          the domain's topology: centre, star relays, who reaches it via whom
     PUT  /api/topology                          {base_rev, centre?, star?, via?} — CAS, checked; an admin of the
                                                 domain holder only (`domain/topology.py`)
+    GET  /metrics                               what every member's ingests and forwarders did not hand on: frames lost
+                                                by why, the camera clock's steps, a forwarder's drops and holes
+                                                (`ingest.stream_metrics`); a `view` on the domain when `viewer` is given
     GET  /healthz
 
 Each pass also leaves what it saw as `domain/view` in the domain holder's object store, which that cluster's
@@ -140,6 +143,14 @@ class Console:
                 self.end_headers()
                 self.wfile.write(raw)
 
+            def _text(self, status: int, text: str):
+                raw = text.encode()
+                self.send_response(status)
+                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+
             def _token(self):
                 auth = self.headers.get("Authorization", "")
                 return auth[7:] if auth.startswith("Bearer ") else None
@@ -163,10 +174,13 @@ class Console:
                 try:
                     if u.path == "/healthz":
                         return self._send(200, console.health())
-                    if console.viewer is not None and u.path.startswith("/api/"):
+                    if console.viewer is not None and (u.path.startswith("/api/") or u.path == "/metrics"):
                         subject = console.api._subject(self._token())
                         if subject is not None and not console.viewer(subject):
                             return self._send(403, {"detail": f"{subject} may not look at the domain: no `view` on it"})
+                    if u.path == "/metrics":
+                        from .ingest import stream_metrics
+                        return self._text(200, "\n".join(stream_metrics(console.view.fed)) + "\n")
                     if u.path == "/api/cameras":
                         return self._send(200, console.view.list(q.get("q", ""), int(q.get("page", 1)),
                                                                  int(q.get("size", 50)), q.get("cluster")))

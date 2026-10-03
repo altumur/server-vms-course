@@ -1239,6 +1239,49 @@ def test_a_full_card_lets_go_last_of_what_the_server_has_not_got_and_counts_what
     assert card.coverage("1-card")[0][0] >= 1050.0 and card.evicted_owed >= 2 and card.evicted_owed_ms >= 20_000
 
 
+def test_what_a_full_card_lets_go_of_from_before_the_pusher_knew_is_counted_as_let_go_of_unknowing():
+    """The eleventh review, a minor: the pusher knows what the server has from its `since` on (where its process began,
+    or the card's note began), and what the card held from before that went oldest first and was counted nowhere — a
+    card with no note let go of what the server may never have had, silently. The card asks where that knowledge
+    begins (`unknown`): the order does not change, and what a segment it lets go of held before it is counted
+    (`evicted_unknown_ms`) — only that part; nothing owed, nothing counted past it."""
+    card = CardBuffer(tempfile.mkdtemp(prefix="card-"), budget=20_000, segment_span=10.0)
+    card.owed, card.unknown = (lambda: []), (lambda: 1035.0)               # all it knows of, the server has
+    for s in _frames(1000, 1100):
+        card.append("1-card/e1", s)
+    assert card.coverage("1-card")[0][0] == 1070.0 and card.evicted_owed == 0
+    assert card.evicted_unknown_ms == 35_000                              # 1000–1035, not the 1035–1040 the pusher knew
+    card.unknown = lambda: None                                           # nothing in doubt: nothing more counted
+    for s in _frames(1100, 1130):
+        card.append("1-card/e1", s)
+    assert card.evicted_unknown_ms == 35_000
+
+
+def test_a_note_on_the_card_and_a_relabelled_segment_are_durable_once_written_their_directories_forced_after_the_rename():
+    """The eleventh review, a minor: a note was written whole and put in place by a rename, and the directory was never
+    forced — on FAT a power cut after the rename could leave the old note, or none (`delivered.json`, and the line's
+    `line.json`). The directory is forced after the rename (`_fsync_dir`), with the note already under its name; and a
+    segment relabelled when the camera's clock was set, the same — before the line's note says the line moved."""
+    import vms.card as vc
+    d = tempfile.mkdtemp(prefix="card-")
+    card, forced = CardBuffer(d, segment_span=10.0), []
+    real = vc._fsync_dir
+    vc._fsync_dir = lambda p: (forced.append((p, sorted(os.listdir(p)))), real(p))
+    try:
+        card.write_note("delivered.json", b"{}")
+        card.write_note("line.json", b"{}")
+        assert forced == [(d, ["delivered.json"]), (d, ["delivered.json", "line.json"])]
+        for s in _frames(1000, 1030):
+            card.append("1-card/e1", s)
+        card.finish("1-card/e1")
+        del forced[:]
+        assert card.relabel(archive_ms(1000), archive_ms(1030), 5000) == 3
+        seg_dir = os.path.join(d, "1-card", "e1")
+        assert forced and forced[0][0] == seg_dir and all("@" in f for f in forced[0][1])
+    finally:
+        vc._fsync_dir = real
+
+
 def test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_unsent_is_on_metrics():
     """The ninth review, a minor ("what was cut is not seen outside in full"): `failed_s` — the seconds the stream could
     not carry and the card did not give — was a field and a metric and no alarm, and what a card's budget let go of
@@ -1370,6 +1413,35 @@ def test_a_card_recorder_whose_stream_is_said_and_whose_owed_is_not_says_so_and_
     rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole
     rec.heartbeat_once()
     assert "owed" not in heartbeats(box.objects, "rec/")["r-1"].extra["stream"]
+
+
+def test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_only_in_its_heartbeat():
+    """The eleventh review, a minor: `owed: unknown` and `evicted_unknown_s` were in the camera recorder's heartbeat and
+    nowhere on `/metrics`, and so were the camera's own clock steps its line took up and the frames it dropped as far
+    past its clock (`clock_back_s`, `clock_forward_s`, `clock_set`, `ahead` — the pusher's `said`). On `/metrics` now:
+    `rec_stream_owed_unknown`, `rec_stream_evicted_unknown_seconds_total`, `rec_camera_clock_stepped_seconds_total{way}`,
+    `rec_camera_clock_set_total`, `rec_camera_frames_ahead_total`; a word in one of them is nought there, counted."""
+    from vms.console import _recorders
+    box, rec, ring, act, rec_ctl = _camera(when=None, budget=20_000)
+    rec.card.segment_span = 10.0
+    said = {"state": "pushing", "lagging": False, "cut_s": 0.0, "left_s": 0.0, "failed_s": 0.0, "failed": 0,
+            "clock_back_s": 30.0, "clock_forward_s": 2.5, "clock_set": 1, "ahead": 4}
+    rec.stream_said = lambda: dict(said)
+    t = box.wall()
+    _film(ring, t, t + 100, act=act)
+    rec.heartbeat_once()
+    lines = _recorders(rec_ctl)
+    unknown = [ln for ln in lines if ln.startswith('rec_stream_evicted_unknown_seconds_total{worker="r-1"}')]
+    assert 'rec_stream_owed_unknown{worker="r-1"} 1' in lines
+    assert unknown and float(unknown[0].split()[-1]) >= 50.0
+    assert 'rec_camera_clock_stepped_seconds_total{worker="r-1",way="back"} 30.0' in lines
+    assert 'rec_camera_clock_stepped_seconds_total{worker="r-1",way="forward"} 2.5' in lines
+    assert 'rec_camera_clock_set_total{worker="r-1"} 1' in lines and 'rec_camera_frames_ahead_total{worker="r-1"} 4' in lines
+    rec.stream_owed = lambda: [(t + 90, float("inf"))]                    # wired whole
+    said["ahead"] = "four"
+    rec.heartbeat_once()
+    lines = _recorders(rec_ctl)
+    assert 'rec_stream_owed_unknown{worker="r-1"} 0' in lines and 'rec_camera_frames_ahead_total{worker="r-1"} 0' in lines
 
 
 # -- the eleventh review -------------------------------------------------------------------------------------------------

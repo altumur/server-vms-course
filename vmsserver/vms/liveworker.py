@@ -361,7 +361,10 @@ class LiveWorker(Worker):
                 # whatever that said, in the memory of the process every viewer's stream goes through.
                 if not read_body(self, self.MAX_OFFER):
                     return
-                sdp = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode()
+                try:
+                    sdp = self.rfile.read(int(self.headers.get("Content-Length", 0))).decode()
+                except UnicodeDecodeError:               # no text: 400, not a dropped connection (the eleventh review's sweep)
+                    return self._send(400, {"error": "an offer is an SDP, as text (UTF-8)"})
                 try:
                     sid, answer = gw.offer(cam, sdp)
                 except KeyError:

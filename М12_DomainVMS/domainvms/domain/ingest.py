@@ -114,6 +114,7 @@ log = logging.getLogger("ingest")
 
 INGEST = "rec/ingest"                  # the recording cluster's announcement: {"cluster", "urls", "ts"}
 POLLED = "rec/polled"                  # `/<ingest>`: when each camera last polled here, as ages: {"cluster", "ingest", "ts", "cameras"}
+FORWARDED = "rec/forwarded"            # `/<forwarder>`: what a relay's forwarder dropped, per camera (`chain.Forwarder.publish`)
 LINGER = 10.0                          # how long a stream nobody wants any more keeps being asked for
 # Asks (step 8). An outcome is kept this long for the asker to read — the product's automation remembers
 # what it fired for as long (autoworker REMEMBER) — and then forgotten: an ingest's memory is not a log.
@@ -1336,6 +1337,60 @@ DELIVERED_SEAM = 0.25                  # two pieces this close are one stretch: 
 UPLINK_FREE = 2.0
 
 
+# WHAT THE INGESTS AND THE FORWARDERS DID NOT HAND ON, ON `/metrics` (the eleventh review, a minor). An ingest's `lost` —
+# a subscriber's queue that overflowed, a peer cut, repeats, frames far past the stream — and its `clock_steps` were in
+# the object it leaves in its cluster's store (`publish_polled`) and nowhere a monitor reads; a relay's forwarder's
+# `dropped` and `holes` were nowhere at all. Both leave an object now (`publish_polled`, `chain.Forwarder.publish`), and
+# the domain's console, which reads every member's store already (`alarms.DomainAlarms.alive_at`), says them on its
+# `/metrics` — one place for the whole domain, every line labelled with its cluster. Each object goes through the
+# members' one reader (`published`): one that does not parse is counted and logged there, and the rest are said; a
+# member that does not answer is left out of this scrape. Counters since that process began: a restart starts them
+# again, as a Prometheus counter's reset.
+def stream_metrics(fed) -> list[str]:
+    from w2cplatform.console import label
+    from w2cplatform.rows import number
+    from .federation import published
+    lost, steps, dropped, holes = [], [], [], []
+    for name, c in list(fed.clusters.items()):
+        try:
+            polled = [(k, c.objects.get(k)) for k in c.objects.list(POLLED + "/")]
+            forwarded = [(k, c.objects.get(k)) for k in c.objects.list(FORWARDED + "/")]
+        except Unreachable:
+            continue
+        for key, raw in polled:
+            d = published(name, key, raw, lambda d: (dict(d.get("lost") or {}), dict(d.get("clock_steps") or {})))
+            if d is None:
+                continue
+            at = f'cluster="{label(name)}",ingest="{label(d.get("ingest", key.rsplit("/", 1)[-1]))}"'
+            for ref, e in sorted(dict(d.get("lost") or {}).items()):
+                e = e if isinstance(e, dict) else {}
+
+                def n(field, v, ref=ref):
+                    return number(f"{name}/{key}#lost.{ref}.{field}", v, int)
+
+                def total(field):                        # `dropped` by subscriber, `peers` by peer: summed
+                    by = e.get(field)
+                    return sum(n(field, v) for v in by.values()) if isinstance(by, dict) else n(field, by)
+                by = {"dropped": total("dropped"), "peers": total("peers"), "repeats": n("repeats", e.get("repeats")),
+                      "ahead": n("ahead", e.get("ahead"))}
+                lost += [f'ingest_frames_lost_total{{{at},camera="{label(ref)}",why="{why}"}} {v}' for why, v in by.items()]
+            steps += [f'ingest_clock_steps_total{{{at},camera="{label(ref)}"}} {number(f"{name}/{key}#clock_steps.{ref}", v, int)}'
+                      for ref, v in sorted(dict(d.get("clock_steps") or {}).items())]
+        for key, raw in forwarded:
+            d = published(name, key, raw, lambda d: dict(d.get("cameras") or {}))
+            if d is None:
+                continue
+            at = f'cluster="{label(name)}",forwarder="{label(d.get("forwarder", key.rsplit("/", 1)[-1]))}"'
+            for ref, e in sorted(dict(d.get("cameras") or {}).items()):
+                e = e if isinstance(e, dict) else {}
+                n = lambda field: number(f"{name}/{key}#cameras.{ref}.{field}", e.get(field), int)   # noqa: E731
+                dropped += [f'forwarder_frames_dropped_total{{{at},camera="{label(ref)}",where="held"}} {n("dropped")}',
+                            f'forwarder_frames_dropped_total{{{at},camera="{label(ref)}",where="queue"}} {n("queue_dropped")}']
+                holes.append(f'forwarder_holes_total{{{at},camera="{label(ref)}"}} {n("holes")}')
+    return (["# TYPE ingest_frames_lost_total counter"] + lost + ["# TYPE ingest_clock_steps_total counter"] + steps
+            + ["# TYPE forwarder_frames_dropped_total counter"] + dropped + ["# TYPE forwarder_holes_total counter"] + holes)
+
+
 class CameraPusher:
     def __init__(self, serial: str, flash, dial, card=None, clock=None, ring_seconds: float = 0.0, perform=None,
                  hold_seconds: float = 30.0, recording: str | None = None, ring=None, steady=None):
@@ -1403,6 +1458,9 @@ class CameraPusher:
         # on, all but what was delivered) and lets go of that last (`CardBuffer.owed`).
         self.delivered: list[list[float]] = []
         self.since = self.clock()
+        # A card another camera wrote (its note names another serial): what it holds from before this process is not this
+        # camera's footage — not offered as a range of it (`_read_card`). None: nothing on the card is in doubt.
+        self.foreign_before: float | None = None
         # …and what TOOK is not what was WRITTEN (the product's DY, checked here): an ingest takes a push before its recorder
         # writes it — and a relay's ingest before the centre above it has it. So what the pusher counts delivered is capped
         # by the `have` of the road's last answer (the recorder's word — the lesser of the relay's and the centre's,
@@ -1420,8 +1478,9 @@ class CameraPusher:
         for lo, hi, d in moves[self._moved:]:
             def mv(v, lo=lo, hi=hi, d=d):
                 return v + d if v is not None and lo <= v <= hi else v
-            self.sent, self.live_from, self.broken_at, self.seen, self.since = (
-                mv(self.sent), mv(self.live_from), mv(self.broken_at), mv(self.seen), mv(self.since))
+            self.sent, self.live_from, self.broken_at, self.seen, self.since, self.foreign_before = (
+                mv(self.sent), mv(self.live_from), mv(self.broken_at), mv(self.seen), mv(self.since),
+                mv(self.foreign_before))
             if self.cursor is not None:
                 self.cursor = (mv(self.cursor[0]), self.cursor[1])
             if self._sent_end is not None and lo <= unix_s(self._sent_end[0]) <= hi:
@@ -1593,21 +1652,46 @@ class CameraPusher:
     # `CardRecorder.NOTE_EVERY`), and the pusher of the next process takes it back when the card opens (`remember`):
     # `since` goes back to the note's, the stretches it lists join this process's own. Between the note's last word and
     # this process's start everything is owed — kept longer than it might be, never let go of unknowing.
+    #
+    # NO NOTE IS NOT "NOTHING OWED", AND A NOTE IS ONE CAMERA'S (the eleventh review, a minor). With no note — none, torn,
+    # or lost to a rename a power cut undid — what the card held from before `since` was let go of first and uncounted;
+    # and a card moved from another camera handed its note, and its footage, to this one. What lies before `since` is
+    # unknown now (`unknown_before`, the card's `CardBuffer.unknown`): let go of in the same order, and counted
+    # (`evicted_unknown_s` in the recorder's heartbeat). The note names the camera that wrote it (`serial`): another
+    # camera's note is not taken, and what the card holds from before this process is not offered as this camera's
+    # (`foreign_before`, `_read_card`). A note without a serial is read as one this camera wrote.
     def delivery(self) -> dict:
         """What this pusher knows the server has, for the card's note: from `since` on, the stretches delivered."""
         self._follow()
-        return {"since": self.since, "delivered": [list(d) for d in self.delivered]}
+        return {"serial": self.serial, "since": self.since, "delivered": [list(d) for d in self.delivered]}
+
+    def unknown_before(self) -> float:
+        """Where what this pusher knows of the server begins: the card's frames before it, nobody can say whether the
+        server has (`CardBuffer.unknown`)."""
+        self._follow()
+        return self.since
 
     def remember(self, note) -> bool:
         """The card's note from the camera's process before this one (`delivery` as it wrote it): its `since` and the
-        stretches it lists before this process began. A note that does not read is no note — logged."""
+        stretches it lists before this process began. A note that does not read is no note — logged; another camera's
+        is not this camera's — logged, and the card's older footage is not offered as this camera's."""
         self._follow()
         try:
+            if not isinstance(note, dict):
+                raise TypeError("not an object")
+            writer = note.get("serial")
             since = finite(note["since"])
             spans = [(finite(a), finite(b)) for a, b in note.get("delivered") or []]
         except PARSE_ERRORS as e:
             log.warning("camera %s: the card's note of what the server has does not read (%s): what the card holds from "
-                        "before this process is owed from where this process began", self.serial, e)
+                        "before this process is counted as let go of unknowing when the card is full", self.serial, e)
+            return False
+        if writer is not None and str(writer) != self.serial:
+            if self.foreign_before is None:
+                self.foreign_before = self.since
+            log.warning("camera %s: its card was written by another camera (%s): what it holds from before this process is "
+                        "not offered as this camera's footage, and is counted as let go of unknowing when the card is full",
+                        self.serial, str(writer)[:64])
             return False
         if since >= self.since:
             return False
@@ -1742,6 +1826,11 @@ class CameraPusher:
     def _read_card(self, recording, t0: float, t1: float, max_bytes: int = PIECE_BYTES):
         if self.card is None:
             raise OSError("this camera has no card")
+        if self.foreign_before is not None and t0 < self.foreign_before:
+            if t1 <= self.foreign_before:
+                raise OSError("the card was written by another camera before this one began: its footage of that time "
+                              "is not this camera's")
+            t0 = self.foreign_before                                   # only what this camera wrote on it
         return self.card(recording, t0, t1, max_bytes)
 
     def _poll(self, road: dict, key: str, wait: float):
@@ -2137,6 +2226,7 @@ def tie(pusher: CameraPusher, recorder) -> CameraPusher:
     """`pusher` and `recorder` (the camera's `CardRecorder`), told of each other: every hook, in one call."""
     recorder.stream_says, recorder.resumes = edge_gate(pusher), edge_resumes(pusher)
     recorder.stream_said, recorder.stream_owed = pusher.said, pusher.owed_spans
+    recorder.stream_unknown = pusher.unknown_before                    # …and before what it knows (the eleventh review)
     recorder.stream_delivery, recorder.stream_remember = pusher.delivery, pusher.remember
     if pusher.card is None:
         pusher.card = recorder.answer_range

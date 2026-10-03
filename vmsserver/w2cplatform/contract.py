@@ -84,7 +84,7 @@ from .events import ALARM
 from .journal import Journal
 from .rows import PARSE_ERRORS, Table, finite, garbled_counts, number
 from .longpoll import LongPoll, Wake, enabled as long_poll_enabled
-from .variables import Conflict, Variables, cas_pause
+from .variables import TORN, Conflict, Garbled, Variables, cas_pause
 
 log = logging.getLogger(__name__)
 
@@ -318,9 +318,9 @@ class ServerDecommissioned(RuntimeError):
 def decommissioned(vars_) -> dict[str, dict]:
     out = {}
     for path in vars_.list(DECOMMISSION):
-        items, _ = vars_.get(path)
-        if items:
-            out[path[len(DECOMMISSION):]] = dict(items)
+        items, _ = stored(vars_, path, DECOMMISSIONS)
+        if items:                                       # one the store cannot read is a decommission still: the operator's
+            out[path[len(DECOMMISSION):]] = {"unread": str(items.error)} if isinstance(items, Unread) else dict(items)
     return out
 
 
@@ -331,8 +331,42 @@ class DrainRefused(Exception):
 # The server being drained, or "". Read on every placement pass by every subsystem, so it is one small
 # row and not a directory: the answer must cost one `get`.
 def draining(vars_) -> str:
-    items, _ = vars_.get(DRAIN_KEY)
-    return (items or {}).get("server", "")
+    return DRAINS.read(DRAIN_KEY, lambda: str((vars_.get(DRAIN_KEY)[0] or {}).get("server", "")), "")
+
+
+# A ROW THE STORE CANNOT READ, WHERE A ROUTE OR A PASS READS IT (the eleventh review, a minor). `Variables.get` raises
+# `Garbled` for a row it holds and cannot read — the course's file store: a torn file, items that are not a map of
+# strings — and read bare, one such row took `/servers`, `/unplaceable`, `/drain` and `/where` down whole, and every
+# controller pass with them: the drain, a slot, a hold, a worker's assignment, a placement, a decommission. Those are
+# read through `stored` (or inside their table's read, as the drain): the row's error in its items' place (`Unread`),
+# which each of them reads as that row not parsing — counted in its table, logged once — and the rest go on. A write
+# replaces such a row whole (`Controller.write`, under `TORN`). A row read bare anywhere else still raises: a
+# `ValueError`, that row's (`rows.PARSE_ERRORS`).
+class Unread:
+    """The items of a row the store holds and cannot read: its error. True, as a row that is there."""
+
+    def __init__(self, error: Exception):
+        self.error = error
+
+
+def stored(vars_, key: str, table: Table) -> tuple:
+    """`vars_.get(key)` — or `(Unread, TORN)` for a row the store cannot read: counted in `table`, logged once."""
+    try:
+        return vars_.get(key)
+    except Garbled as e:
+        table.garbled(key, e)
+        return Unread(e), TORN
+
+
+def _items(items):
+    """The items to parse — or, for a row the store could not read, its error raised where the row is parsed."""
+    if isinstance(items, Unread):
+        raise items.error
+    return items
+
+
+DRAINS = Table("drain", "read as no server draining, until it is written again (POST or DELETE /drain)")
+DECOMMISSIONS = Table("decommission", "read as a decommission still, until it is written again or withdrawn")
 
 
 # A name, and the key layout derived from it. Every path the platform touches for a subsystem is produced
@@ -487,6 +521,26 @@ class Subsystem:
         return [f"{self.name}/{BLOBS}/*"]
 
 
+# THE CONTROLLER'S LIMIT, AS IT SAID IT (the product's alignment of the owner's decision on hung workers). A spare asks
+# whether a lapsed slot's worker is hung before it takes the name (`Worker._hung`), and the console says so on `/servers`
+# (`Mount._judged`) — each through `Controller.slot_fate`, with `HUNG_MOVE_AFTER` as compiled in, while the controller
+# read its own from its environment: told an hour, it held a hung worker's cameras back and a spare took the name — and
+# the cameras — at fifteen minutes, a second writer; told a minute, it moved them and the spare still waited. The
+# controller says its limit in its pass report (`<sub>/controller/pass`, `hung_move_after` — the one object it writes
+# beside the shards, `acl_objects_controller`; anyone of the subsystem reads it), and the others judge by that: one limit,
+# one rule, one verdict. No report yet, or a word in it: the default, as the controller's own.
+def published_hung_limit(objects, sub: "Subsystem") -> float:
+    """How long a hung worker keeps its units, as the controller of `sub` said it in its last pass report."""
+    key = f"{sub.name}/{CONTROLLER_PASS}"
+    try:
+        raw = objects.get(key)
+        rep = json.loads(raw) if raw else {}
+    except (*PARSE_ERRORS, OSError):
+        rep = {}
+    said = rep.get("hung_move_after") if isinstance(rep, dict) else None
+    return number(f"{key}#hung_move_after", said, float, HUNG_MOVE_AFTER)
+
+
 # What one worker should run: the row at `<name>/workers/<worker>`.
 # - `worker` — the slot name.
 # - `units` — the subsystem's unit ids as strings; the platform does not know what they are.
@@ -624,7 +678,7 @@ SLOTS_GARBLED, _garbled_slots = SLOTS.counts, SLOTS.bad     # subsystem -> slot 
 
 def read_slot(key: str, name: str, items) -> "Slot | None":
     """The row parsed, or None — skipped, counted, and logged once."""
-    return SLOTS.read(key, lambda: Slot.from_items(name, items))
+    return SLOTS.read(key, lambda: Slot.from_items(name, _items(items)))
 
 
 # An assignment row is the same (the sixth pass, the follow-up) — and it has one number in it, `rev`. Read bare, a
@@ -645,6 +699,8 @@ UNLISTED = Table("unlisted", "it is assigned to nobody — the list would split 
 
 def read_assignment(key: str, worker: str, items) -> "Assignment":
     """The row parsed — or, when its `rev` does not parse, its units with `rev 0`: counted, and logged once."""
+    if isinstance(items, Unread):                       # a row the store cannot read names no unit anyone can tell
+        return ASSIGNMENTS.read(key, lambda: _items(items), Assignment(worker, []))
     return ASSIGNMENTS.read(key, lambda: Assignment.from_items(worker, items),
                             Assignment(worker, [u for u in str((items or {}).get("units", "")).split(",") if u]))
 
@@ -659,7 +715,7 @@ HOLDS_GARBLED = HOLDS.counts                      # subsystem -> hold rows that 
 
 def read_hold(key: str, place: str, items) -> "Slot | None":
     """A place's row parsed, or None — skipped, counted, and logged once."""
-    return HOLDS.read(key, lambda: Slot.from_items(place, items))
+    return HOLDS.read(key, lambda: Slot.from_items(place, _items(items)))
 
 
 # -- one pass, one read of each key (the scaling pass after the eighth review) ----------------------------------------
@@ -804,7 +860,10 @@ class Controller:
         """Read-modify-write by CAS: `mutate(items or {}) -> new items`.
         A conflict means another instance wrote; re-read and go again."""
         for attempt in range(retries):
-            items, idx = self.vars.get(path)
+            try:
+                items, idx = self.vars.get(path)
+            except Garbled as e:                     # a row the store cannot read is written whole: from nothing, under TORN
+                items, idx = None, e.index
             new = mutate(dict(items or {}))
             if new is None:
                 return dict(items or {})
@@ -850,7 +909,7 @@ class Controller:
 
     # Reads one worker's row. One whose `rev` does not parse is read for the units it names (`read_assignment`).
     def assignment(self, worker: str) -> Assignment:
-        items, _ = self.vars.get(self.sub.assignment(worker))
+        items, _ = stored(self.vars, self.sub.assignment(worker), ASSIGNMENTS)
         return self._assignment(worker, items)
 
     def _assignment(self, worker: str, items) -> Assignment:
@@ -901,7 +960,7 @@ class Controller:
         out = {}
         for path in self.vars.list(self.sub.name + "/slots/"):
             name = path.rsplit("/", 1)[1]
-            items, _ = self.vars.get(path)
+            items, _ = stored(self.vars, path, SLOTS)
             slot = read_slot(path, name, items)   # one that does not parse is not the end of the pass (`read_slot`)
             if slot is not None:
                 out[name] = slot
@@ -1033,10 +1092,12 @@ class Controller:
     # Whatever the owner decides next changes this function, and every caller follows. What none of it covers: a worker
     # cut off from the store together with its whole server records on to its lease's end plus `UNCONFIRMED_MAX`
     # (М11: 90 s) — data under a stale epoch, the duplicate feedback BK chose over a hole.
-    def slot_fate(self, worker: str, slot: "Slot | None") -> tuple[str, str, str]:
+    def slot_fate(self, worker: str, slot: "Slot | None", hung_after: float | None = None) -> tuple[str, str, str]:
         """`(fate, server, why)`: fate "alive", "hung", "hung_moved", "move", "release" or "wait" (see above); `slot`
-        None: a row that does not parse — no lease to read, the heartbeat and the server decide."""
+        None: a row that does not parse — no lease to read, the heartbeat and the server decide. `hung_after`: the
+        controller's limit as it published it, for whoever judges in another process (`published_hung_limit`)."""
         now = self.wall()
+        limit = self.hung_move_after if hung_after is None else hung_after
         if slot is not None and slot.until > now:
             return "alive", "", f"{worker} holds its name for another {int(slot.until - now) + 1} s"
         if slot is not None and now <= slot.until + SLOT_LOST_AFTER:
@@ -1060,12 +1121,12 @@ class Controller:
             return "move", server, f"server {server} gone: slot {worker} lapsed and its resource silent"
         if worker in running:
             since = self.hung_since(worker, slot)
-            if now - since > self.hung_move_after:
+            if now - since > limit:
                 return "hung_moved", server, (f"{worker} has been hung on {server} for {int(now - since)} s, longer than "
-                                              f"{int(self.hung_move_after)} s: its units move anyway")
+                                              f"{int(limit)} s: its units move anyway")
             return "hung", server, (f"{worker} neither renews its name nor heartbeats, but its process runs on {server}: "
                                     f"hung, or cut off from the store — its units stay, so they get no second writer, for "
-                                    f"up to {int(self.hung_move_after)} s; look at {server}")
+                                    f"up to {int(limit)} s; look at {server}")
         if worker in placed:
             return "move", server, f"{worker}'s process on {server} is not running"
         return "release", server, f"{server} does not run {worker} any more: its resource answers and lists it nowhere"
@@ -1083,7 +1144,8 @@ class Controller:
     # answering and restart it (systemd's `WatchdogSec`, launchd's `KeepAlive`), or for the person paged by `worker.hung`
     # to look, before its cameras get a second writer; and short enough that a process hung for good leaves no hole for
     # ever. Its stand-in has already held the slot `STAND_IN_FOR` (five minutes) when the hang was in one step.
-    # `HUNG_MOVE_AFTER` in the controller's environment (`vms/__main__._controller_loop`).
+    # `HUNG_MOVE_AFTER` in the controller's environment (`vms/__main__._controller_loop`) — and said in its pass report, by
+    # which every other process judges (`published_hung_limit`).
     hung_move_after = HUNG_MOVE_AFTER
 
     # Before the resource said who runs where, a slot moved off by itself only when its server's resource was silent too
@@ -1131,7 +1193,7 @@ class Controller:
             prefix = self.sub.name + "/slots/"
             for path in sorted(self.vars.list(prefix)):
                 worker = path[len(prefix):]
-                s = read_slot(path, worker, self.vars.get(path)[0])
+                s = read_slot(path, worker, stored(self.vars, path, SLOTS)[0])
                 if s is not None and (s.released or not s.holder):
                     continue
                 fate, server, why = self.slot_fate(worker, s)
@@ -1160,9 +1222,9 @@ class Controller:
         def read():
             prefix, out = self.sub.decommissioned_key(""), {}
             for path in self.vars.list(prefix):
-                items, _ = self.vars.get(path)
+                items, _ = stored(self.vars, path, DECOMMISSIONS)
                 if items:
-                    out[path[len(prefix):]] = dict(items)
+                    out[path[len(prefix):]] = {"unread": str(items.error)} if isinstance(items, Unread) else dict(items)
             return out
         return self._per_pass(self.sub.decommissioned_key(""), read, "marks", rows=True)
 
@@ -1184,7 +1246,7 @@ class Controller:
                     f"server out of service and switch it off first"), None
         for w in self.workers_on(server):
             key = self.sub.slot_key(w)
-            items = self.vars.get(key)[0]
+            items = stored(self.vars, key, SLOTS)[0]
             slot = read_slot(key, w, items)
             if not items or (slot is not None and (slot.released or not slot.holder)):
                 continue                              # no slot, or one let go: nothing of it can write
@@ -1205,11 +1267,11 @@ class Controller:
 
     def withdraw_decommission(self, server: str) -> dict | None:
         """The operator's undo — a request withdrawn, or a server brought back. The row as it was, or None."""
-        items, idx = self.vars.get(DECOMMISSION + server)
+        items, idx = stored(self.vars, DECOMMISSION + server, DECOMMISSIONS)
         if not items:
             return None
-        self.vars.delete(DECOMMISSION + server, cas=idx)
-        return dict(items)
+        self.vars.delete(DECOMMISSION + server, cas=idx)    # one the store cannot read, too: under TORN
+        return {"unread": str(items.error)} if isinstance(items, Unread) else dict(items)
 
     # The controller's lines in the journal (`journal.py`): a decommission carried out, a slot it released and why, a
     # hung worker. The log only, unless the process is given a resource tree (`vms/__main__._controller_loop`: `ARCHIVE`).
@@ -1306,7 +1368,7 @@ class Controller:
     def holds_by(self) -> dict[str, list[str]]:
         prefix, out = self.sub.name + "/holds/", {}
         for path in self.vars.list(prefix):
-            h = read_hold(path, path[len(prefix):], self.vars.get(path)[0])
+            h = read_hold(path, path[len(prefix):], stored(self.vars, path, HOLDS)[0])
             if h is not None and not h.released and h.holder and h.by:
                 out.setdefault(h.by, []).append(path[len(prefix):])
         return {w: sorted(p) for w, p in out.items()}
@@ -1382,9 +1444,18 @@ class Worker:
 
     # Whether the controller would call this lapsed slot's worker hung (`Controller.slot_fate`): asked through a
     # controller's eyes over this worker's stores — the rule stays in one place. Its stores' errors are not "hung".
+    #
+    # …AND BY THE CONTROLLER'S LIMIT, NOT THIS PROCESS'S DEFAULT (the product's alignment of the owner's decision on hung
+    # workers): the eyes were a controller built here, with `HUNG_MOVE_AFTER` as compiled in, while the controller read
+    # its own from its environment. A controller told an hour let a spare take a hung worker's name — and its cameras — at
+    # fifteen minutes: a second writer while the controller still held the units back; one told a minute left the spare
+    # waiting fourteen minutes after the units had moved. The controller says its limit in its pass report
+    # (`<sub>/controller/pass`, `hung_move_after`; the object it alone writes, `acl_objects_controller`), and the spare
+    # judges by that (`hung_limit`) — one limit, one rule, one verdict. No report yet, or a word in it: the default.
     def _hung(self, name: str, slot: "Slot") -> bool:
         try:
-            return Controller(self.sub, self.vars, self.objects, wall=self.wall).slot_fate(name, slot)[0] == "hung"
+            ctl = Controller(self.sub, self.vars, self.objects, wall=self.wall)
+            return ctl.slot_fate(name, slot, hung_after=published_hung_limit(self.objects, self.sub))[0] == "hung"
         except (*PARSE_ERRORS, OSError, SchemaTooNew):
             return False
 
@@ -1715,7 +1786,7 @@ class Worker:
         if self.seeking is not None:
             return Assignment(self.name, [])      # the row under that name is the other instance's now (`keep_slot`)
         key = self.sub.assignment(self.name)
-        items, _ = self.vars.get(key)
+        items, _ = stored(self.vars, key, ASSIGNMENTS)  # one the store cannot read: no unit, counted (the eleventh review)
         return read_assignment(key, self.name, items)
 
     # Called when the worker starts a unit: `next_epoch` on `<name>/epoch/<unit>`, record it in `epochs`,

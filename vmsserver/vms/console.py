@@ -30,7 +30,7 @@ import urllib.request
 
 from w2cplatform.access import token_of
 from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, label,  # noqa: F401
-                                 path_id, send_file)   # (PAGE, send_file re-exported for М11)
+                                 object_body, path_id, send_file)   # (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.eventdatabase import MergedIndex
@@ -435,7 +435,10 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             addr = (getattr(handler, "client_address", None) or ("",))[0]
             if method == "POST" and not path.startswith("/whep/session/"):
                 cam = path_id(path)
-                sdp = handler.rfile.read(int(handler.headers.get("Content-Length", 0))).decode()
+                try:
+                    sdp = handler.rfile.read(int(handler.headers.get("Content-Length", 0))).decode()
+                except UnicodeDecodeError:                # an offer that is no text: the sender's 400, not a dropped connection
+                    return 400, {"detail": "an offer is an SDP, as text (UTF-8)", "error": "bad offer"}
                 r = live.offer(cam, sdp, [l for l in q.get("labels", "").split(",") if l], token_of(handler.headers))
                 if r[0] == 201:
                     loc = dict(r[2]).get("Location", "")
@@ -1303,6 +1306,25 @@ def _recorders(rec_ctl: SpecController) -> list[str]:
     out.append("# TYPE rec_stream_skipped_seconds_total counter")
     out += [f'rec_stream_skipped_seconds_total{{worker="{label(w)}",why="{why}"}} {_n(sub, w, f"stream.{why}_s", s.get(f"{why}_s"))}'
             for w, s in streams.items() for why in ("cut", "left", "failed", "evicted")]
+    # …and what the heartbeat said and `/metrics` did not (the eleventh review, a minor): a recorder left half wired —
+    # its card cannot tell what the server has (`owed: unknown`) — and the seconds a card let go of with nobody to say
+    # whether the server had them (`evicted_unknown_s`: half wired, or from before the pusher knew — no note on the card);
+    # and the camera's clock as its line took it up (`CamLine`): the seconds it stepped back and forward, the times it
+    # was set, and its frames far past its clock, dropped (`ahead`).
+    out.append("# TYPE rec_stream_owed_unknown gauge")
+    out += [f'rec_stream_owed_unknown{{worker="{label(w)}"}} {1 if s.get("owed") == "unknown" else 0}' for w, s in streams.items()]
+    out.append("# TYPE rec_stream_evicted_unknown_seconds_total counter")
+    out += [f'rec_stream_evicted_unknown_seconds_total{{worker="{label(w)}"}} {_n(sub, w, "stream.evicted_unknown_s", s.get("evicted_unknown_s"))}'
+            for w, s in streams.items()]
+    out.append("# TYPE rec_camera_clock_stepped_seconds_total counter")
+    out += [f'rec_camera_clock_stepped_seconds_total{{worker="{label(w)}",way="{way}"}} {_n(sub, w, f"stream.clock_{way}_s", s.get(f"clock_{way}_s"))}'
+            for w, s in streams.items() for way in ("back", "forward")]
+    out.append("# TYPE rec_camera_clock_set_total counter")
+    out += [f'rec_camera_clock_set_total{{worker="{label(w)}"}} {_n(sub, w, "stream.clock_set", s.get("clock_set"), int)}'
+            for w, s in streams.items()]
+    out.append("# TYPE rec_camera_frames_ahead_total counter")
+    out += [f'rec_camera_frames_ahead_total{{worker="{label(w)}"}} {_n(sub, w, "stream.ahead", s.get("ahead"), int)}'
+            for w, s in streams.items()]
     return out
 
 
@@ -1496,8 +1518,10 @@ def rec_routes(rec_ctl: SpecController):
                                                      "to": k.until if k.until != float("inf") else None} if k.garbled else {})}
                                    for k in shown]}
         if method == "POST" and path in ("/keeps", "/keeps/"):
-            body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
             try:
+                # Through `object_body` (the eleventh review, a minor): read bare, a body that was not JSON, or nested
+                # past what JSON reads, dropped the connection with no answer — beside the routes the tenth round closed.
+                body = object_body(handler)
                 keeps.refuse(body)
                 # A keep is copied into the incidents volume piece by piece, and nothing bounded what it named: a keep
                 # of thirty-one years asked for the whole archive (the review's fourth pass, Т-B6's remainder).
@@ -1553,9 +1577,9 @@ def rec_routes(rec_ctl: SpecController):
                          # already records into, sized to its partition. A proposal, not a row.
                          "suggested": volumes.suggest(rec_ctl.vars, rec_ctl.objects, rec_ctl.spec.sub, now)}
         if method == "POST" and path in ("/volumes", "/volumes/"):
-            body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
-            was = next((v for v in volumes.declared(rec_ctl.vars) if v.name == str(body.get("name", ""))), None)
             try:
+                body = object_body(handler)                  # not JSON, nested past its depth, a list: 400 (the eleventh review)
+                was = next((v for v in volumes.declared(rec_ctl.vars) if v.name == str(body.get("name", ""))), None)
                 vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
