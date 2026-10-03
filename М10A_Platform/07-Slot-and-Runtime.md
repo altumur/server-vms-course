@@ -309,6 +309,9 @@ def read_slot(key: str, name: str, items) -> "Slot | None":
                 have, kind, _ = self.retire_refusal(worker)
             except NoSuchSlot:
                 have, kind = "", "unknown"
+            except (ValueError, OSError) as e:        # one request the store cannot answer for is that request's: the rest go on
+                refused[worker] = f"could not be checked: {e}"
+                continue
             if kind == "released":
                 self._drop_retire(path, idx)
                 continue
