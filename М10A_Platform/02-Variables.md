@@ -174,6 +174,8 @@ class FileVariables:
 ```python
     def _file(self, path: str) -> str:
         name = safe_path(path).replace("%", "%25").replace("/", "%2F")
+        if len(name.encode()) > KEY_BYTES:
+            raise KeyTooLong(path, len(name.encode()))
         return os.path.join(self.dir, name + ".json")
 ```
 
@@ -183,7 +185,9 @@ class FileVariables:
 
 Дерево выглядит естественнее: `vars/vms/cameras/7.json`. Но тогда `list("vms/")` — это рекурсивный обход, а создание ключа — это `makedirs` под блокировкой; и появляется случай, которого не хочется: ключ `vms/cameras` и ключ `vms/cameras/7` одновременно, то есть файл и каталог с одним именем. Плоский каталог убирает всё это разом: ключ — это строка, `list` — один `listdir` с фильтром по префиксу, а коллизия имён невозможна, потому что кодирование обратимо.
 
-Цена — уродливые имена в `/tmp` и предел на длину имени файла (255 байт), в который ключи курса не упираются: самый длинный — `platform/resources/<сервер>/heartbeat`.
+Цена — уродливые имена в `/tmp` и предел на длину имени файла (255 байт).
+
+**Ключ здесь — имя файла, а у имени файла есть предел.** Сначала казалось, что ключи курса в него не упираются: самый длинный — `platform/resources/<сервер>/heartbeat`. Одиннадцатое ревью, minor, нашло, что упираются: запись с именем в 100 000 символов становилась именем файла, которое диск отвергал, — `OSError: File name too long`. Консоль отвечала «хранилище не ответило» (503), с локальным путём хранилища в ответе, а сохранение (keep) для такой камеры рвало соединение. Теперь предел назван: `KEY_BYTES = 255 - len(".json.tmp")`, 246 байт ключа, как он записан на диске. `/` и `%` занимают по три байта, буква не из ASCII — от двух до четырёх. Длиннее — запись получает отказ словами: `KeyTooLong`, то есть собственный предел хранилища, как его говорит `TooLarge` (урок 19). Консоль отвечает на него 413 на любом маршруте (`Mount._answered`): сохранение, том, метки сервера, ключ идемпотентности. Чтение такого ключа — «строки нет», `(None, 0)`: записать под ним не могли. Удаление ничего не находит. Тест: `test_garbled_rows.py::test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_words_and_is_no_row_at_a_read`.
 
 ## Шаг 5 — Блокировка
 
@@ -266,16 +270,30 @@ def _lock_exclusive(f, wait: float | None = None) -> None:
 ```python
     def get(self, path: str) -> tuple[dict | None, int]:
         try:
-            with open(self._file(path)) as f:
-                d = json.load(f)
-        except FileNotFoundError:
+            with open(self._file(path), "rb") as f:
+                raw = f.read()
+        except (FileNotFoundError, KeyTooLong):          # a key too long to be a file: nothing could be written there
             return None, 0
-        return dict(d["items"]), int(d["index"])
+        try:
+            d = json.loads(raw)
+            items, idx = d["items"], d["index"]
+            if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
+                raise TypeError("its items are not a map")
+            if isinstance(idx, bool) or not isinstance(idx, int):
+                raise TypeError("its index is not a whole number")
+            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what Nomad would hold
+            # had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
+            items = {k: v if isinstance(v, str) else json.dumps(v) for k, v in items.items()}
+        except (ValueError, TypeError, KeyError, RecursionError) as e:
+            raise Garbled(path, f"{type(e).__name__}: {e}") from None
+        return items, idx
 ```
 
 Возвращается пара: содержимое и версия. Отсутствующий ключ — это `(None, 0)`, а не исключение: почти все вызывающие пишут `items, idx = vars.get(path)` и дальше `if items is None`, и версия `0` при этом сразу годится как `cas` для создания.
 
-Чтение **без блокировки**, и это безопасно по единственной причине: запись переименовывает готовый файл на место. Читатель открывает либо старый inode, либо новый; файла, записанного наполовину, не существует в природе. Отсюда же — `dict(d["items"])`: возвращается свежий словарь, чтобы вызывающий мог его менять, не трогая ничего общего.
+Чтение **без блокировки**, и это безопасно по единственной причине: запись переименовывает готовый файл на место. Читатель открывает либо старый inode, либо новый; файла, записанного наполовину, сама запись не оставляет. Возвращается свежий словарь, чтобы вызывающий мог его менять, не трогая ничего общего.
+
+**Строка, которую хранилище держит и не может прочитать, — ошибка разбора этой строки.** Одиннадцатое ревью, minor. Сама запись половины файла не оставит, а ручная правка или диск, соврав о записи, оставить могут: файл обрывается, `items` в нём не словарь, значения не строки. Nomad так никогда не отвечает: у него каждая переменная — словарь строк. А `get` бросал то, что бросили `json` или `dict`, или отдавал нестроки дальше. Маршруты, которые читали строку слива (drain), слота, размещения или назначения воркера напрямую, падали целиком: `/servers`, `/unplaceable`, `/drain`, `/where` не отвечали вовсе. Теперь оборванный файл, `items` не словарём и индекс не целым числом — одна ошибка, `Garbled` (это `ValueError`, с именем строки). Каждый читатель строк читает её как «строка не разбирается» (`rows.PARSE_ERRORS`, `rows.Table`, урок 8). Значение, которое не строка, отдаётся своим JSON-текстом — так его держал бы Nomad. Тогда это ошибка поля, как ошибка значения Nomad, а остальное в строке говорит, что говорило. Версия нечитаемой строки — `TORN`. Запись, которая хочет её заменить, так и говорит: `put(cas=TORN)`; этим пользуется `Controller.write` (урок 8). Запись, которая видела что-то другое, получает `Conflict`. Тест: `test_garbled_rows.py::test_a_row_file_the_store_cannot_read_is_one_parse_error_of_that_row_and_the_routes_go_on`.
 
 ## Шаг 8 — Запись
 
@@ -284,7 +302,7 @@ def _lock_exclusive(f, wait: float | None = None) -> None:
 ```python
     def put(self, path: str, items: dict, cas: int | None = None) -> int:
         with self._locked():
-            _, current = self.get(path)
+            current = self._current(path)
             if cas is not None and cas != current:
                 raise Conflict(f"{path}: cas={cas} but ModifyIndex={current}")
             idx = self._next_index()
@@ -301,7 +319,7 @@ def _lock_exclusive(f, wait: float | None = None) -> None:
 
 **`with self._locked()`** — всё, что дальше, происходит по одному на машину. Без этого между чтением текущего индекса и записью мог бы вклиниться другой процесс, и оба увидели бы один индекс, оба прошли бы проверку, и одно изменение потерялось бы. Блокировка превращает «прочитать и записать» в одну операцию — то, что в raft даёт консенсус.
 
-**`_, current = self.get(path)`** — текущая версия. Содержимое не нужно, нужен только индекс.
+**`current = self._current(path)`** — текущая версия: индекс строки, `0`, если её нет, и `TORN`, если она не читается (шаг 7). Содержимое не нужно, нужен только индекс.
 
 **`if cas is not None and cas != current`** — сама проверка. `cas=None` значит «пиши поверх, мне всё равно»: так пишут heartbeat-подобные вещи, у которых один писатель по построению. `cas=<число>` — «я видел эту версию».
 
