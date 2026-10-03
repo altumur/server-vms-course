@@ -182,10 +182,14 @@ FRAME_AHEAD = 60.0
 # frames landed 5.5 s late, the next quick request took the offset back down at once, and the next 5.5 s of frames were
 # not newer than `have`: 54 of 1800 frames dropped with nothing counted, 2 `clock_steps`; 40 s on its way, 399). Travel
 # only ever RAISES what a request says, and the camera's clock is on its line, which steps do not move: a rise is this
-# cluster's own clock stepped forward, or a camera clock that runs slow — never the camera's step. So no rise is taken
-# at once now: every rise, of any size, waits until every request for `OFFSET_RISE`, at least `RISE_REQUESTS` of them,
-# said so — the least of them — and one request inside the hold withdraws it. A real step of this cluster's clock costs
-# the frames of half a minute placed by the old difference, in order, none lost, and then a gap. A move DOWN past
+# cluster's own clock stepped forward, a camera clock that runs slow, or a camera with no RTC that rebooted with its
+# clock unset (its line goes on right after the card's newest frame) — never the camera's step. So a rise up to
+# `CLOCK_STEP` waits until every request for `OFFSET_RISE`, at least `RISE_REQUESTS` of them, said so — the least of
+# them — and one request inside the hold withdraws it. A rise past `CLOCK_STEP` is taken at once but PROVISIONALLY (the
+# product's rule; `provisional`): `RISE_REQUESTS` requests agreeing make it a step, firm and counted — a reboot of ten or
+# sixty seconds puts its frames where they were captured, as before this pass — and the next request back on the old
+# clock withdraws it by the frames, slewed (`_slewed`), uncounted: a push of 5.5–40 s puts its frames at most its travel
+# late, for about twice its travel, and loses none (measured, the table in lesson 16). A move DOWN past
 # `CLOCK_STEP` is still taken at once — but only from an offset held firm (`_firm`: the requests of `OFFSET_RISE`, at
 # least `RISE_REQUESTS`, agreed with it) or with no frame placed by it yet: a first pass whose requests all travelled
 # eight seconds put its frames eight seconds late, and the jump down from there dropped the next eight; such a move is
@@ -320,6 +324,7 @@ class _Camera:
     agreed: tuple = (0.0, 0)                                     # …requests that agreed with it: since when, how many (`_firm`)
     target: float | None = None                                  # …a lower offset the open stream slews to (`_slewed`)
     leap: bool = False                                           # …further down than `CLOCK_STEP`: a leap of the frames takes it
+    provisional: float | None = None                             # …a rise past `CLOCK_STEP` taken at once: the offset before it
     newest: float | None = None                                  # the newest frame it pushed, on its own clock
     clock_steps: int = 0                                         # times the held offset moved
     asks: dict[str, dict] = field(default_factory=dict)          # asks for this camera: {id: {action, deadline, by}}
@@ -462,12 +467,24 @@ class Ingest:
 
     def _offset(self, ref: str, cam: _Camera, now: float, offset: float) -> None:
         """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down by the frames (a
-        target the stream slews to; past `CLOCK_STEP` from an offset held firm, at once), up only when every request for
-        `OFFSET_RISE`, `RISE_REQUESTS` at least, said so (above, `OFFSET_HOLD`; DZ). While it slews, the offset held is
-        where it goes (`target`)."""
+        target the stream slews to; past `CLOCK_STEP` from an offset held firm, at once), up when every request for
+        `OFFSET_RISE`, `RISE_REQUESTS` at least, said so — past `CLOCK_STEP` at once, provisionally, until the requests
+        after it confirm or withdraw it (above, `OFFSET_HOLD`; DZ). While it slews, the offset held is where it goes
+        (`target`)."""
         held = cam.target if cam.target is not None else cam.offset
         if not cam.told:
             cam.offset, cam.told, cam.agreed = offset, True, (now, 1)
+        elif offset < held - OFFSET_HOLD and cam.provisional is not None:
+            # Back on the old clock: the rise was a request's travel. Withdrawn — to the offset held before it, not this
+            # request's own word (its travel in it would put the next frame a few milliseconds before the last) — by the
+            # frames, slewed, nothing lost, or at once when no frame was put by it; neither is a step of anybody's clock,
+            # and neither is counted.
+            log.info("camera %s: a request travelled %.1f s; the offset it raised goes back", ref, held - offset)
+            if cam.newest is None:
+                cam.offset, cam.target, cam.leap = cam.provisional, None, False
+            else:
+                cam.target, cam.leap = cam.provisional, False
+            cam.provisional, cam.rise, cam.agreed = None, None, (now, 1)
         elif offset < held - OFFSET_HOLD:
             if offset < held - CLOCK_STEP and (self._firm(cam, now) or cam.newest is None):
                 self._moved(ref, cam, offset)
@@ -476,6 +493,15 @@ class Ingest:
                 log.info("camera %s: its clock is %.3f s further ahead of this cluster's than its frames are put by: the "
                          "stream takes the new difference over its next frames", ref, held - offset)
                 cam.target, cam.rise, cam.leap = offset, None, offset < held - CLOCK_STEP
+            cam.agreed = (now, 1)
+        elif offset > held + CLOCK_STEP:
+            # A rise past `CLOCK_STEP`: taken at once, PROVISIONALLY (DZ, the product's rule): a camera that rebooted with
+            # its clock unset goes on after the card's newest frame, its offset up by the reboot's length, and its frames
+            # land where they were captured only by the new one. The requests after it say which it was: back on the old
+            # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then.
+            if cam.provisional is None:
+                cam.provisional = held
+            cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
             cam.agreed = (now, 1)
         elif offset > held + OFFSET_HOLD:
             since, low, n = cam.rise or (now, offset, 0)
@@ -486,6 +512,13 @@ class Ingest:
         else:
             cam.rise = None                                      # inside the hold: what was held stands
             cam.agreed = (cam.agreed[0], cam.agreed[1] + 1)
+            if cam.provisional is not None and cam.agreed[1] >= RISE_REQUESTS:
+                cam.clock_steps += 1                             # the requests after it agree: a step, not a request's travel
+                log.warning("camera %s: its clock moved %.3f s against this cluster's (it rebooted with its clock unset, or "
+                            "this cluster's clock stepped): its frames are put on this clock by the new difference",
+                            ref, cam.provisional - cam.offset)
+                cam.provisional = None
+                cam.agreed = (float("-inf"), cam.agreed[1])     # firm: a step of a clock — the next one back is taken at once
 
     @staticmethod
     def _firm(cam: _Camera, now: float) -> bool:
@@ -504,15 +537,23 @@ class Ingest:
             cam.target, cam.rise, cam.leap = offset, None, False # below where the stream is put: slewed to, not jumped
         else:
             cam.offset, cam.rise, cam.target, cam.newest, cam.leap = offset, None, None, None, False
+        cam.provisional = None
 
     @staticmethod
-    def _slewed(cam: _Camera, frames: list) -> list:
+    def _slewed(cam: _Camera, frames: list, now: float) -> list:
         """The camera's frames on this cluster's clock — each by the offset as it slews down to its target, a frame at a
         time, no faster than `OFFSET_SLEW` of the frames' own distance (above). A target further down than `CLOCK_STEP`
         (`leap`, from an offset not yet held firm) is taken at once by the first frame that, put by it, still lies after
         the last frame put: the camera's clock was set and its frames leapt with it (a camera with no RTC set by NTP) —
-        otherwise the frames came on as before, the offset was a first pass's travel, and they slew to it."""
-        out = []
+        otherwise the frames came on as before, the offset was a first pass's travel, and they slew to it.
+
+        …AND NOT INTO THE FUTURE (DZ: a withdrawn rise). A push that took forty seconds put its frames forty seconds late;
+        the frames the camera captured meanwhile come after them, and slewed at half their distance they lay up to twenty
+        seconds ahead of this ingest's clock — past `CAMERA_AHEAD`, refused at the door (773 of 2000). While the offset
+        slews, a batch that would reach past `CAMERA_AHEAD` (`now`) is pressed evenly between the last frame put and that
+        bound: closer together for a while, every one in order, none refused."""
+        out, offs, slewing = [], [], cam.target is not None and cam.newest is not None
+        last = cam.newest + cam.offset if slewing else None              # where the last frame was put
         for f in frames:
             t = _t(f)
             if t is not None:
@@ -524,7 +565,17 @@ class Ingest:
                     if cam.offset <= cam.target:
                         cam.target, cam.leap = None, False
                 cam.newest = t if cam.newest is None else max(cam.newest, t)
-            out += _shift([f], cam.offset)
+            offs.append(cam.offset)
+        put = [(i, _t(f) + o) for i, (f, o) in enumerate(zip(frames, offs)) if _t(f) is not None]
+        bound = now + CAMERA_AHEAD - OFFSET_HOLD
+        if slewing and put and put[-1][1] > bound > last:
+            k = (bound - last) / (put[-1][1] - last)
+            for i, p in put:
+                if p > last:
+                    offs[i] = last + (p - last) * k - _t(frames[i])
+            cam.offset = offs[put[-1][0]]
+        for f, o in zip(frames, offs):
+            out += _shift([f], o)
         return out
 
     def _keys(self):
@@ -608,7 +659,7 @@ class Ingest:
 
     def push(self, token: str, ref: str, frames: list, camera_now: float | None = None) -> int:
         self._check(token, ref, camera_now)
-        frames = self._timely(ref, self._slewed(self._cam(ref), self._timely(ref, frames, future=False)), CAMERA_AHEAD)
+        frames = self._timely(ref, self._slewed(self._cam(ref), self._timely(ref, frames, future=False), self.wall()), CAMERA_AHEAD)
         have = self._have(ref)
         if have is not None:
             # What the recorder already wrote does not go to it twice (CB). `have` is conservative — a heartbeat

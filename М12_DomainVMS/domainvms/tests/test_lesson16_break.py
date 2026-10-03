@@ -812,10 +812,12 @@ def test_a_request_that_travelled_long_is_not_a_step_of_the_cameras_clock_and_lo
     a rise waits for every request of half a minute. But ONE request that took longer than `CLOCK_STEP` on its way was a
     move up taken at once: its frames landed that much late, the next quick request took the offset back down at once, and
     the frames of the seconds after it were not newer than `have` — dropped, counted nowhere (a push of 5.5 s: 54 of 1800
-    frames, 2 `clock_steps`; of 40 s: 399). No rise is taken at once now (`RISE_REQUESTS`, `OFFSET_RISE`): a poll or a push
-    of 5.5 to 40 s on its way, the camera on its line or stating its raw clock, moves no offset and puts every frame once
-    where it was captured. And a first pass whose requests all travelled eight seconds — its frames put eight seconds late
-    — is slewed back (`_firm`), not jumped: none lost."""
+    frames, 2 `clock_steps`; of 40 s: 399). A rise past `CLOCK_STEP` is taken PROVISIONALLY now (`provisional`, the
+    product's rule): the next requests on the old clock withdraw it by the frames, slewed, never a jump. A poll or a push of
+    5.5 to 40 s on its way, the camera on its line or stating its raw clock: no step counted, every frame once and in order;
+    a slow poll put no frame by it — every frame where captured; a slow push's frames are at most its travel late, and for
+    about twice its travel (40 s: the frames of the stall pressed below `CAMERA_AHEAD`, none refused). And a first pass
+    whose requests all travelled eight seconds — its frames put eight seconds late — is slewed back (`_firm`): none lost."""
     import random
 
     def once(d, kind):
@@ -843,7 +845,13 @@ def test_a_request_that_travelled_long_is_not_a_step_of_the_cameras_clock_and_lo
             assert got == sorted(set(got)) and w.repeats == 0, (line, kind, d)
             # (a stall of 40 s outruns the pusher's memory: what it cut is said in `cut_s` — the card's and backfill's)
             assert (line and d == 40.0) or got == list(range(1, max(got) + 1)), (line, kind, d, max(got) - len(got))
-            assert max(abs(f["t"] - captured[f["n"]]) for f in w.passes[0]) < 0.06, (line, kind, d)
+            late = [(captured[f["n"]], f["t"] - captured[f["n"]]) for f in w.passes[0] if abs(f["t"] - captured[f["n"]]) >= 0.06]
+            if kind == "poll":
+                assert not late, (line, d, late[:3])
+            else:
+                assert all(0 < e <= d + 0.06 for _, e in late), (line, d, min(e for _, e in late))   # late, never early
+                assert late[-1][0] - late[0][0] <= 2 * d + 1.0, (line, d, late[-1][0] - late[0][0])
+            assert not ingest.lost().get(SERIAL, {}).get("ahead"), (line, kind, d)
         ingest, w, captured = _travelled(burst(60.0, 85.0), line)          # 25 s of 1–3 s, both ways
         assert ingest.cams[SERIAL].clock_steps == 0 and w.repeats == 0, line
         assert max(abs(f["t"] - captured[f["n"]]) for f in w.passes[0]) < 0.06, line

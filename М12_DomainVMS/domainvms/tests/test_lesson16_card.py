@@ -1277,3 +1277,61 @@ def test_polls_in_the_middle_of_an_upload_recreate_nothing_and_the_answer_lands_
         assert got == [round(i * 0.2, 1) for i in range(300)], ([t for t in got if not 0 <= t < 60][:3], len(got))
     finally:
         shutil.rmtree(card.path, ignore_errors=True)
+
+
+def test_a_camera_without_an_rtc_that_reboots_for_seconds_has_its_frames_before_ntp_where_captured():
+    """The product's DZ, its rule for a large rise, and the reason for it the course measured: a camera with no RTC battery
+    that reboots for R seconds goes on with its line right after the card's newest frame (`CamLine`), so the requests after
+    the boot say its offset is R higher. While a rise waited for `OFFSET_RISE` (the first DZ pass), every frame between the
+    boot and NTP lay R early at the recorder — 86 to 100 of them for R = 3, 10, 60 s; before that pass a rise past
+    `CLOCK_STEP` was taken at once and they lay where captured, but a single slow request then lost its travel's worth of
+    frames. A rise past `CLOCK_STEP` is taken at once PROVISIONALLY now (`provisional`): the requests after the boot agree
+    with it, it is a step — and the frames of R = 10 and 60 s lie where they were captured, before NTP, after it, and for a
+    camera whose clock nobody sets; R = 3 s, inside `CLOCK_STEP`, still waits for `OFFSET_RISE`, its frames 3 s early."""
+    import shutil
+    wall0 = 1_780_000_000.0
+    for R, ntp in ((10.0, 10.0), (60.0, 10.0), (60.0, None), (3.0, 10.0)):
+        wall = Clock(wall0)
+        fed, north, south, signer, ingest, cam, *_ = _site(wall)
+        boot, rtc = [wall()], [False]
+        camclock = lambda: wall() if rtc[0] else wall() - boot[0]         # 1970 and its uptime until NTP
+        steady = lambda: wall() - boot[0]
+        path, live = tempfile.mkdtemp(prefix="card-"), {}
+
+        class Writer:
+            def push(self, f):
+                live.setdefault(_number(f["sample"]), f["t"])
+        try:
+            ring, card, act, pusher = _process(wall, path, camclock, steady, 1, lambda url: ingest, cam)
+            ingest.want(SERIAL, "recorder:r")
+            ingest.subscribe(SERIAL, "recorder:r")
+            ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+            start, n, booted, set_at = wall(), 0, None, None
+            while wall() - start < 160 + R:
+                n = _sensor(ring, start, camclock, wall, n)
+                act.drain()
+                pusher.pass_once([])
+                wall.advance(0.5)
+                if round(wall() - start, 1) == 10.0:
+                    rtc[0] = True                                           # the first boot's NTP
+                if round(wall() - start, 1) == 100.0:                       # off for R seconds, back in 1970
+                    n = _sensor(ring, start, camclock, wall, n)
+                    act.stop_all()
+                    card.close()
+                    wall.advance(R)
+                    n = booted = int(round((wall() - start) * 10))
+                    boot[0], rtc[0] = wall(), False
+                    ring, card, act, pusher = _process(wall, path, camclock, steady, 2, lambda url: ingest, cam)
+                if booted is not None and ntp is not None and set_at is None and wall() - boot[0] >= ntp:
+                    n = set_at = _sensor(ring, start, camclock, wall, n)
+                    rtc[0] = True                                           # NTP sets the clock
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        before_ntp = {i: t - (start + i / 10) for i, t in live.items() if booted <= i < (set_at or n)}
+        after_ntp = {i: t - (start + i / 10) for i, t in live.items() if set_at is not None and i >= set_at}
+        assert len(before_ntp) >= 90, (R, ntp, len(before_ntp))
+        if R > 5.0:
+            assert all(abs(e) < 0.002 for e in before_ntp.values()), (R, ntp, min(before_ntp.values()))
+        else:
+            assert sum(1 for e in before_ntp.values() if abs(e + R) < 0.002) >= 80, R    # inside the hold: R early
+        assert all(abs(e) < 0.002 for e in after_ntp.values()), (R, ntp)

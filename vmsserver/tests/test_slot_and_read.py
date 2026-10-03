@@ -294,13 +294,28 @@ def test_every_download_cut_off_after_real_footage_is_a_line_of_its_own():
     da = door(box, st, "r-a", "srv-a")
     port = srv.server_address[1]
 
+    # The cut download's line is in the journal BEFORE its slots are given back — its barrier (`durably`) runs between —
+    # so a player that asks again the moment it sees the line can meet its own slot still held, and is answered 503
+    # "retry" (`EXPORTS_PER_USER`). Under the whole suite's disk load the barrier is slow enough for it: this helper read
+    # the 503 as if it were the file, and spun on the closed socket. A player retries; so does this one, and a download
+    # that ends before `n` bytes for any other reason fails here, never spins.
     def cut_after(n: int) -> None:
-        s = socket.create_connection(("127.0.0.1", port))
-        s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: hana\r\n\r\n".encode())
-        got = 0
-        while got < n:
-            got += len(s.recv(65536))
-        s.close()                                                     # the player went away
+        for _ in range(200):
+            s = socket.create_connection(("127.0.0.1", port))
+            s.sendall(f"GET /export/7?rec=7&from={t}&to={t + 300} HTTP/1.1\r\nHost: x\r\nX-User: hana\r\n\r\n".encode())
+            got, head = 0, b""
+            while got < n:
+                b = s.recv(65536)
+                if not b or (not head and b.split(b"\r\n", 1)[0].endswith(b" 503 Service Unavailable")):
+                    head = head or b
+                    break
+                head, got = head or b, got + len(b)
+            s.close()                                                 # the player went away
+            if got >= n:
+                return
+            assert b" 503 " in head.split(b"\r\n", 1)[0], (got, head[:80])   # ended early, and not for a busy slot
+            time.sleep(0.05)
+        raise AssertionError("the slot of the download before never came free")
     def lines(n: int) -> list:
         for _ in range(200):
             mine = [e for e in _journal(box) if e.get("user") == "hana"]
