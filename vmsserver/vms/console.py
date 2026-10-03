@@ -1681,6 +1681,17 @@ def source_cams(ctl, scenarios=None):
         if str(old.get("ref") or "") != str(new.get("ref") or ""):
             out.add("*")
         a, b = str(old.get("source") or ""), str(new.get("source") or "")
+        # …AND ITS LABELS, WHEN ITS DEVICE CARRIES OTHER CAMERAS (the product team's addition to the tenth round; the
+        # review's DQ minor). The channels of one device move together (`ensure_reach`, `group_by`): a camera's new
+        # labels move every camera of its device to another holder. So a labels change asks the right on each of them,
+        # as moving `source` onto a shared device does; a camera alone on its device asks nothing more.
+        def labels(row) -> set:
+            v = row.get("labels") or []
+            return {str(x) for x in (v if isinstance(v, (list, tuple)) else str(v).split(",")) if str(x)}
+        if "labels" in new and labels(old) != labels(new) and a:
+            same = one_device(ctl.vars, ctl.objects, ctl.wall)
+            dev = same(device_of(a))
+            out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
         if a == b:
             return out                                   # the source as it was: nothing moved, nothing to look up
         if volumes.source_key(a) != volumes.source_key(b):

@@ -331,25 +331,39 @@ def channel_key(source: str) -> str:
 # 200, and the row then stood in every reader. Refused at the door now, in words (`volumes.refuse_camera`, asked only
 # when the source is new to the row); one stored before is read as a key of its own by every parser above, and is
 # that camera's trouble alone. None: the source may stand.
+#
+# …AND NO PASSWORD IN ITS WORDS (the product team's addition to the tenth round): the refusal repeated the source as
+# typed, `driverpack://acme/u:hunter2@10.0.0.5:8²/…` and all, into the reply and the journal's detail. What is said is
+# the source with whatever stands before an `@` hidden (`shown_source`). And a `?` in a `driverpack://` source is
+# refused like a `#` (`SubsystemSpec.refuse`): `urlsplit` ends the path there, and `acme/cam7?@nvr50/ch/1` is device
+# `cam7` to the rights and maybe `nvr50` to a driver that reads the whole string.
+def shown_source(source: str) -> str:
+    """The source as a refusal or a log may say it: what stands before an `@` hidden."""
+    return re.sub(r"[^/@]*@", "…@", str(source))
+
+
 def source_refusal(source: str) -> str | None:
     from urllib.parse import urlsplit
     src = str(source or "").strip()
+    said = repr(shown_source(src))
     try:
         u = urlsplit(src)
     except ValueError as e:
-        return f"{src!r} is not an address: {e}"
+        return f"{said} is not an address: {e}"
     host = u.netloc
     if u.scheme.lower() == "driverpack":
         parts = [p for p in u.path.split("/") if p]
         if u.netloc.lower() == "file":
             return None                                  # a file's name, as typed: `gstvms.uri` asks the rest
+        if "?" in src:
+            return f"{said} holds '?': a device's address is vendor/host/ch/n, and what follows a '?' could name another host"
         host = parts[0] if parts else ""
         if len(parts) >= 3 and parts[1].lower() == "ch" and any(c.isdigit() and not "0" <= c <= "9" for c in parts[2]):
-            return f"the channel in {src!r} is written in digits that are not 0–9: write it in plain digits"
+            return f"the channel in {said} is written in digits that are not 0–9: write it in plain digits"
     host = host.rsplit("@", 1)[-1]
     port = host[host.rfind("]") + 2:] if host.startswith("[") and "]:" in host else (host.split(":")[1] if host.count(":") == 1 else "")
     if port and (numeric(port) is None or not 0 < numeric(port) <= 65535):
-        return f"the port in {src!r} is not a port: a number from 1 to 65535, in plain digits"
+        return f"the port in {said} is not a port: a number from 1 to 65535, in plain digits"
     return None
 
 

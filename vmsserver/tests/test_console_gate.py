@@ -1296,6 +1296,39 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
         srv.shutdown()
 
 
+def test_a_fragment_or_a_login_in_a_source_names_no_other_device_and_a_labels_change_asks_for_the_whole_device():
+    """The product team's additions to the tenth round, reproduced here first. `driverpack://acme/cam7#@10.0.0.50/ch/2`:
+    `urlsplit` stops at `#`, so the rights were asked of device `acme/cam7` — nobody's camera, `admin` on camera 3 was
+    enough — while a driver that reads past `#` dials the recorder: 200. `#` is refused in every url field, `?` in a
+    `driverpack://` source, and a login in the path as in the host (`…/acme/admin:pw@10.0.0.50/…` was taken, password
+    and all, into the snapshot). No refusal repeats a password. And a camera's `labels` moved every channel of its
+    recorder (the channels move together), with `admin` on that one camera: now the right is asked on each."""
+    from vms.config import shown_source, source_refusal
+    box = Box()
+    access = Tokens({"three": [("admin", "3", ())], "one": [("admin", "1", ())], "admin": [("admin", None, ())]})
+    mounts, srv, base = _console_with_jobs(box, access)
+    try:
+        nvr = "driverpack://acme/10.0.0.50/ch/"
+        for ch in (1, 2):
+            assert _call(base, "POST", "/cameras", {"source": f"{nvr}{ch}"}, token="admin")[0] == 201
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://file/3.mp4"}, token="admin")[0] == 201
+        for spelt in ("driverpack://acme/cam7#@10.0.0.50/ch/9", "rtsp://cam7#@10.0.0.50/x",
+                      "driverpack://acme/cam7?@10.0.0.50/ch/9", "driverpack://acme/admin:hunter2@10.0.0.50/ch/9"):
+            for token in ("three", "admin"):
+                code, body = _call(base, "PUT", "/cameras/3", {"source": spelt}, token=token)
+                assert code in (400, 403), (spelt, token, code)
+                assert "hunter2" not in json.dumps(body), body
+        assert box.vars.get("vms/cameras/3")[0]["source"] == "driverpack://file/3.mp4"
+        assert "hunter2" not in (source_refusal("driverpack://acme/u:hunter2@10.0.0.5:8²/ch/1") or "")
+        assert shown_source("rtsp://u:hunter2@cam/x") == "rtsp://…@cam/x"
+        # the labels of camera 1 move channel 2 too: `admin` on camera 1 is not enough, on the cluster it is
+        assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="one")[0] == 403
+        assert _call(base, "PUT", "/cameras/1", {"labels": ["vlan:b"]}, token="admin")[0] == 200
+        assert _call(base, "PUT", "/cameras/3", {"labels": ["vlan:b"]}, token="three")[0] == 200   # alone on its device
+    finally:
+        srv.shutdown()
+
+
 def test_a_dns_name_and_its_address_are_one_device_once_a_holder_has_opened_it():
     """The same finding, the part syntax cannot say: `nvr50.local` and `10.0.0.50` are two keys and one recorder. The
     holder learns what the device IS when it opens it (`identity` — a serial number, a MAC; `FakeDevice(identity=)`)

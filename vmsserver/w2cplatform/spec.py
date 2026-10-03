@@ -654,9 +654,18 @@ class SubsystemSpec:
                     u.port
                 except ValueError as e:
                     raise Refused(f"{name} is not an address: {e}")
-                if u.username or u.password or "@" in u.netloc:
+                # …a login in the PATH too: a scheme that names its host in the path (`driverpack://acme/user:pw@host`)
+                # carried a password past `netloc` into the snapshot (the product team's addition to the tenth round).
+                # A file's name is a name, `@` and all.
+                if u.username or u.password or "@" in u.netloc or ("@" in u.path and u.netloc.lower() != "file"):
                     raise Refused(f"{name} may not carry a login: put it in cred_username / cred_secret — "
                                   f"a url field is in the snapshot, and the snapshot leaves the cluster")
+                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/cam7#@nvr50/ch/1` is
+                # device `cam7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
+                # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
+                if "#" in str(fields[name]):
+                    raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
+                                  f"and maybe another to the driver")
 
     # A fresh row: each required field must be present and truthy (`"a vms unit needs a source"`), others
     # get their default; a string value containing `{id}` has it substituted (the VMS's `name: "cam{id}"`);
