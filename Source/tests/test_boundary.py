@@ -71,7 +71,7 @@ PLATFORM_TESTS = (
     "tests/test_pass_failures.py", "tests/test_placement_decides.py", "tests/test_retire.py", "tests/test_sealing.py",
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
-    "tests/test_units_about.py", "tests/testdata/testsub.subsystem.yaml",
+    "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/testdata/testsub.subsystem.yaml",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -85,7 +85,7 @@ SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md
 #   whole   also a word written as one whose parts are not it: `XMeye`, `H264`, `h264parse`
 #
 # The list is the product's (the architect's, 2026-10-04) plus four of the course's own: `driverpack` (the devices'
-# library), `gstreamer`, `obsd` (the archive's engine, whose client still lies in the platform — step 4) and `webrtc`.
+# library), `gstreamer`, `obsd` (the archive's engine, whose client lay in the platform until step 4) and `webrtc`.
 PRODUCT_WORDS = [
     ("vms", dict(forms=("vms",))),
     ("cam", dict(forms=("cam", "cams"))),
@@ -485,7 +485,7 @@ def _piece_controller():
     from w2cplatform.spec import Refused, SpecController, SubsystemSpec
     root, vars_, objects, clock, wall = _testsub_box()
     spec = SubsystemSpec.load(TESTSUB)
-    assert spec.name == "testsub" and spec.rows == "counters" and spec.capacity_fallback == 4
+    assert spec.name == "testsub" and spec.rows == "counters" and spec.capacity_default == 4
     ctl = SpecController(spec, vars_.as_writer("testsubcontroller", spec.acl_controller()), objects, wall=wall)
     con = SpecController(spec, vars_.as_writer("console", spec.acl_console()), objects, wall=wall)   # rows are the console's
     ws = [_counter_worker(spec.sub, vars_, objects, clock, wall, f"I{i}", f"srv-{i}") for i in (1, 2)]

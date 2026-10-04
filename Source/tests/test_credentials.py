@@ -35,7 +35,7 @@ def test_a_spec_may_not_put_a_secret_in_the_snapshot():
     """`vms/snapshot/*` is what leaves the cluster for М12's directory. So this is refused at LOAD time,
     which is a different thing from being watched for at review time: a subsystem written a year from now
     cannot make the mistake, and nobody has to remember the rule to be protected by it."""
-    base = {"name": "x", "unit": {"fields": {"host": {"type": "string"}, "api_secret": {"type": "string"}}}}
+    base = {"name": "x", "unit": {"fields": {"host": {"type": "string"}, "api_secret": {"type": "string"}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}}
     try:
         SubsystemSpec.from_dict({**base, "snapshot": ["host", "api_secret"]})
         raise AssertionError("a secret was accepted into the snapshot")
@@ -718,3 +718,31 @@ def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_
     fill = page[page.index("function fillEdit(c)"):]
     fill = fill[:fill.index("\n}\n")]
     assert re.search(r"endsWith\('_secret'\)\) \{ el\.value = '';", fill)
+
+
+def test_the_vms_says_how_its_cameras_spell_a_login_and_the_platform_reads_it_from_the_spec():
+    """The boundary's step 4: the name lists, the XMeye chain, a password's name segment, DriverPack's host in the path
+    and go2rtc's `?src=` were `secrets.py`'s own; they are the `secret_in` of `source` in `vms.subsystem.yaml` now, with
+    `schemes` and `credentials`. Without those rules the platform refuses only an `@` and a port that is no number — the
+    forms below stand; with them every one is refused, hidden, and the refusal names `cred_username`/`cred_secret`."""
+    from w2cplatform.secrets import NO_RULES, address_refusal, hide_in_url
+    source = SPEC.fields["source"]
+    assert source.credentials == {"login": "cred_username", "secret": "cred_secret"} and "driverpack" in source.schemes
+    spelt = ["http://10.0.0.5/cgi-bin/snapshot.cgi?usr=admin&pwd=Hunter2",
+             "rtsp://10.0.0.9:554/channel=1_user=admin_password=Hunter2_stream=0.sdp",
+             "http://10.0.0.5/user/admin/password/Hunter2/snap.jpg",
+             "driverpack://acme/admin:Hunter2/ch/1", "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
+             "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"]
+    for src in spelt:
+        assert address_refusal(src, NO_RULES) is None, src                  # the platform's own reading: no list
+        assert address_refusal(src, source.rules) and not _leaks(hide_in_url(src, source.rules)), src
+        try:
+            SPEC.refuse({"source": src})
+            raise AssertionError(f"taken: {src}")
+        except Refused as e:
+            assert "cred_username" in str(e) and "cred_secret" in str(e) and not _leaks(str(e)), str(e)
+    try:
+        SPEC.refuse({"source": "gopher://10.0.0.5/live"})
+        raise AssertionError("a scheme no camera is reached by was taken")
+    except Refused as e:
+        assert "gopher" in str(e) and "driverpack" in str(e)

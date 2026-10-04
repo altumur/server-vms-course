@@ -7,7 +7,7 @@ owner before anybody else may have the volume."""
 import os
 import time
 
-from w2cplatform.obsd import EPOCH_OFFSET_MS, ObsdError, archive_ms, unix_s, video
+from vms.obsd import EPOCH_OFFSET_MS, ObsdError, archive_ms, unix_s, video
 from tests.conftest import OBSD_GRACE_S, OBSD_LINGER_MS, obsd_session, obsd_volume
 
 T0 = archive_ms(1_757_500_000)
@@ -196,7 +196,7 @@ def test_a_write_that_went_out_before_the_connection_broke_is_not_sent_twice():
     `PUT_MEDIA` and its kin are not resent — the caller hears `Unavailable` and decides — while a request that
     never went out (the break came on connecting) is simply tried once more."""
     import socket
-    from w2cplatform.obsd import NOT_RESENT, Session, Unavailable
+    from vms.obsd import NOT_RESENT, Session, Unavailable
     from tests.conftest import ObsdDaemon
     s = Session(ObsdDaemon.get().socket, client="t")
     s.call("STATS")                                               # connected
@@ -251,7 +251,7 @@ def test_the_writer_the_readers_and_the_pass_each_have_a_connection_of_their_own
     connection of their own now; and a connection held by a request that does not come back answers the next
     caller `Unavailable` after a timeout instead of queueing it for ever."""
     import time as _time
-    from w2cplatform.obsd import Session, Unavailable
+    from vms.obsd import Session, Unavailable
     from tests.conftest import ObsdDaemon
     s = Session(ObsdDaemon.get().socket, client="t", timeout=0.5)
     vol, _ = obsd_volume(s)
@@ -277,7 +277,7 @@ def test_a_session_past_its_linger_answers_session_lost_and_its_handles_are_gone
     """Blocker 4, from the client's side. Every connection of a session gone longer than the linger, or the daemon
     restarted: a HELLO under the same token makes a NEW, empty session, and nothing in its reply says so. The
     old handles answer `UNKNOWN_HANDLE` — which the client raises as `SessionLost`, the engine lost: remount."""
-    from w2cplatform.obsd import SessionLost, Unavailable
+    from vms.obsd import SessionLost, Unavailable
     s = obsd_session("lingered")
     vol, _ = obsd_volume(s)
     w = vol.mount_rw("rec:lingered")
@@ -298,7 +298,7 @@ def test_abandoning_a_session_under_calls_in_flight_answers_them_unavailable_at_
     connection in use is shut down now, its caller answered `Unavailable` at once; and the door says 503."""
     import random
     import threading
-    from w2cplatform.obsd import Session, Unavailable
+    from vms.obsd import Session, Unavailable
     from vms.archive import Archive
     from vms.recworker import archive_routes
     from tests.conftest import ObsdDaemon

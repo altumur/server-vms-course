@@ -12,4 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3-cryptog
 WORKDIR /app
 COPY domain domain
 ENV ACCESS_IMPL=domain.access:cluster_access
+# The specs of the subsystems the domain relays edits of: how an address carries a login is theirs to say
+# (`w2cplatform/catalog.py`), and the domain's door refuses by them.
+ENV SPEC_DIR=/app/vms
 CMD ["python3", "-m", "domain.agent"]

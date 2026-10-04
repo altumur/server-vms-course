@@ -124,7 +124,7 @@ def test_each_role_has_its_own_socket_and_the_admin_socket_is_the_owners():
         assert names == ["admin.sock", "console.sock", "vmsworker.sock"]
         mode = lambda f: stat.S_IMODE(os.stat(os.path.join(dm.dir, f)).st_mode)    # noqa: E731
         assert mode("admin.sock") == 0o600 and mode("vmsworker.sock") == 0o660
-        assert configstore.socket_group("vmsworker") == "vms-vmsworker"
+        assert configstore.socket_group("vmsworker") == "w2c-vmsworker"            # the file names no group for it here
         assert configstore.socket_group("resource") == "w2c-resource"
         w = open_vars(url(dm.dir, "vmsworker"))
         with pytest.raises(Forbidden):

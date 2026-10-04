@@ -133,7 +133,7 @@ def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
 def test_the_archives_engine_is_the_hosts_own_daemon():
     """One obsd per host, not a container of the image: it keeps one writer per volume, and that means something
     only if every recorder on the box asks the same one. Its socket is where the recorder already looks."""
-    from w2cplatform.obsd import default_socket
+    from vms.obsd import default_socket
     u = unit("obsd.service")
     assert u["Service"]["ExecStart"] == "/usr/local/bin/obsd --socket /run/vms-obsd/obsd.sock"
     assert u["Service"]["RuntimeDirectory"] == "vms-obsd" and u["Service"]["RuntimeDirectoryPreserve"] == "yes"
@@ -155,7 +155,7 @@ def test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems():
     `python3 -m vms recorder` is `vms`, `tests/run.py` is `run`; a caller that names itself is said as it named."""
     import sys
     from unittest import mock
-    from w2cplatform.obsd import Session, process_name
+    from vms.obsd import Session, process_name
     with mock.patch.object(sys, "argv", ["/usr/lib/python3/site-packages/vms/__main__.py", "recorder"]):
         assert process_name() == "vms"
     with mock.patch.object(sys, "argv", ["/srv/w2c/tests/run.py"]):

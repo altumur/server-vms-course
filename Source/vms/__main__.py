@@ -44,7 +44,7 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 #   formats its server's own volume at `ARCHIVE_VOLUME`, by default `config.OWN_VOLUME` (`/data/vms/obsd/volume`:
 #   the archive engine is the VMS's, and so are its volumes).
 #   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
-# - `OBSD_SOCKET` — the host's ObjectStorage daemon (`w2cplatform/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
+# - `OBSD_SOCKET` — the host's ObjectStorage daemon (`vms/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
 #   recorder waits for one answer from it — shorter than a lease.
 # - `WORKER_NAME` — the slot to claim (systemd's `%i`); unset: `NOMAD_ALLOC_INDEX` → `w-<index>`; neither:
 #   `None`, which makes `VmsWorker` claim the first free slot, a lapsed one first.

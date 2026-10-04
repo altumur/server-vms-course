@@ -968,7 +968,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         # timelines are asked first, the rule is run over all of them, and each stretch is read from the door that
         # holds its owner. A door that does not answer is named in the reply's headers: a piece with a hole the
         # caller can see.
-        from w2cplatform.obsd import Sample, unix_s
+        from vms.obsd import Sample, unix_s
         from .archive import Span, authoritative
         # `rec` picks ONE of this camera's recordings — never another camera's: the gate checked `view` on the
         # camera in the path, and a recording named in the query must be hers (the review's second pass, blocker 1).

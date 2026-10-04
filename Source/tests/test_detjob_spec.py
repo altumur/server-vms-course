@@ -10,7 +10,7 @@ def test_the_scan_has_its_own_budget():
     Separate subsystems means separate heartbeats, so separate capacity numbers
     from the same worker process."""
     assert DETJOB_SPEC.sub.heartbeat_key("d-1") != DET_SPEC.sub.heartbeat_key("d-1")
-    assert DETJOB_SPEC.capacity_fallback != DET_SPEC.capacity_fallback
+    assert DETJOB_SPEC.capacity_default != DET_SPEC.capacity_default
     assert set(DETJOB_SPEC.sub.acl_controller()).isdisjoint(DET_SPEC.sub.acl_controller())
 
 

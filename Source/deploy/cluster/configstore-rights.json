@@ -15,7 +15,8 @@
     "domain/revoked",
     "domain/break_glass",
     "domain/grants/*",
-    "objects/vms/commands/*"
+    "objects/vms/commands/*",
+    "objects/rec/used/*"
    ],
    "write": [
     "vms/cameras/*",
@@ -136,17 +137,20 @@
     "rec/*",
     "vms/*",
     "platform/decommission/*",
-    "domain/primaries"
+    "domain/primaries",
+    "objects/rec/used/*"
    ],
    "write": [
     "rec/epoch/*",
     "rec/slots/*",
-    "rec/holds/*"
+    "rec/holds/*",
+    "objects/rec/used/*"
    ],
    "delete": [
     "rec/epoch/*",
     "rec/slots/*",
-    "rec/holds/*"
+    "rec/holds/*",
+    "objects/rec/used/*"
    ]
   },
   "resource": {

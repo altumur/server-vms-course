@@ -680,7 +680,7 @@ def test_the_door_cuts_a_span_at_the_ceiling_and_shows_what_a_keep_holds_behind_
 def test_a_read_starts_on_the_key_frame_before_the_moment_asked_for():
     """The moment asked for is inside a group of pictures that opened earlier. Without that key frame nothing of
     the moment decodes, so the read brings the lead-in, and whoever asked clips it (`Scan.accepts`)."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     st = store()
     t = Box().wall()
     footage(st, "7", 1, t - 100, t, step=1)                            # a key frame every two seconds

@@ -257,7 +257,7 @@ class GstRecActuator(RecEnding, GstActuator):
     # refused makes the sink skip to the next key frame — the engine opens a sequence on nothing else.
     def _before_play(self, p, cam: dict) -> None:
         import time as _time
-        from w2cplatform.obsd import ObsdError, archive_ms, video
+        from vms.obsd import ObsdError, archive_ms, video
         sink = p.get_by_name("sink")
         if sink is not None and cam.get("sink") is not None:
             self.offered_bytes.setdefault(cam["id"], 0)
@@ -322,7 +322,7 @@ class GstRecActuator(RecEnding, GstActuator):
     # recorder lands them (`RecWorker._land`), dropping any group live recording reached first. (Not run against
     # GStreamer here.)
     def record_range(self, cam, source: str, t0: float, t1: float) -> list:
-        from w2cplatform.obsd import archive_ms, video
+        from vms.obsd import archive_ms, video
         out = []
         p = Gst.parse_launch(REC_RANGE_DESC.format(source=source))
         sink = p.get_by_name("sink")

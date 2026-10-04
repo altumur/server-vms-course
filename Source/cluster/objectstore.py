@@ -13,11 +13,12 @@ resource with `scope=cluster`. A listing is the union of every server's,
 cached for a second. No ceiling: `max_bytes = 0` — the 64 KiB of a Nomad
 Variable went with the Variables.
 
-Two kinds of object are not files. A key that must be created ONCE across
-the cluster — a worker's mark before a device command (`*/commands/*`,
-`put_new`) — is a row `objects/<key>` in the replicated store, through
-`VariablesObjectStore`: a directory's `link` is create-only on one server,
-and two holders of a device sit on two. And a blob is copied by the resource
+Two kinds of object are not files. A key a subsystem's spec names a ROW
+(`objects: {rows: […]}`, `catalog.object_rows`) — one that must be created ONCE
+across the cluster (a worker's mark before it acts, `put_new`), or read where
+the place it names is gone — is a row `objects/<key>` in the replicated store,
+through `VariablesObjectStore`: a directory's `link` is create-only on one
+server, and two holders of one thing sit on two. And a blob is copied by the resource
 to the next live peers on the events mirror's ring (`Resource.mirror_blobs`),
 and deleted by the sweep on every server that answers.
 
@@ -149,8 +150,8 @@ class VariablesObjectStore:
     platform's (`vms/commands/r-7`); the store is whatever Variables the caller
     holds, with the rights that come with its door.
 
-    Its job on the cluster is NARROWED to the keys that must be created once
-    across every server — `ClusterObjectStore` sends those here (`CREATE_ONLY`)
+    Its job on the cluster is NARROWED to the keys the specs name rows
+    (`objects.rows`) — `ClusterObjectStore` sends those here (`row_patterns`)
     and everything else to files. The class itself still holds any key: a test,
     or the module's stand, may run every object through one store."""
 
@@ -196,11 +197,16 @@ class VariablesObjectStore:
 
 # -- the cluster's objects: files on every server -------------------------------------------------------------------
 
-# The keys that are created ONCE across the cluster, by glob over segments (`*` is one segment; a last `*` is the rest):
-# a worker's mark before a device command. A directory's `link` is create-only on ONE server, and two holders of a
-# device are on two (the platform review's third pass, on a cluster). The camera's clock chunks (`ingest/clock/*` in
-# the product) belong here the day the course has them: one more line, nothing else changes.
-CREATE_ONLY = ("*/commands/*",)
+# The keys that are ROWS of the store and not files, by glob over segments (`*` is one segment; a last `*` is the rest):
+# each loaded spec's `objects.rows` under its name (`catalog.object_rows`; the boundary's step 4 — this was a constant
+# here, `*/commands/*`, one subsystem's family in the platform's code). A directory's `link` is create-only on ONE
+# server, and two holders of one thing are on two (the platform review's third pass, on a cluster); and a mark of a
+# place read when the place is gone must not be a file on the server that went with it.
+def row_patterns() -> tuple[str, ...]:
+    from w2cplatform.catalog import object_rows
+    return object_rows()
+
+
 LIST_FRESH = 1.0                 # seconds a listing of every server is used again before it is asked again
 DOOR_TIMEOUT = 10.0              # what the resource on this server has to answer: its own reads of peers take ≤ 5 s
 
@@ -214,16 +220,16 @@ def _match(pattern: list[str], key: list[str]) -> bool:
     return len(key) == len(pattern)
 
 
-def is_create_only(key: str) -> bool:
-    """A key `CREATE_ONLY` names: a row in the replicated store, never a file."""
-    return any(_match(p.split("/"), key.split("/")) for p in CREATE_ONLY)
+def is_row(key: str) -> bool:
+    """A key a loaded spec names in `objects.rows`: a row in the replicated store, never a file."""
+    return any(_match(p.split("/"), key.split("/")) for p in row_patterns())
 
 
-# Whether some key under `prefix` could be create-only — so a listing of it asks the store too. `vms/` could
-# (`vms/commands/…`), `vms/heartbeats/` could not.
-def _may_hold_create_only(prefix: str) -> bool:
+# Whether some key under `prefix` could be a row — so a listing of it asks the store too. `<sub>/` could
+# (`<sub>/commands/…`), `<sub>/heartbeats/` could not.
+def _may_hold_rows(prefix: str) -> bool:
     *whole, part = prefix.split("/")
-    for pattern in (p.split("/") for p in CREATE_ONLY):
+    for pattern in (p.split("/") for p in row_patterns()):
         ok = True
         for i, seg in enumerate(whole):
             if i >= len(pattern):
@@ -311,7 +317,7 @@ class ClusterObjectStore:
     # reader takes when the key is on several servers (a controller that moved, a worker's name taken up elsewhere) is
     # the one written last. A create-only key is a row whatever writes it.
     def put(self, key: str, data: bytes) -> None:
-        if is_create_only(key):
+        if is_row(key):
             self.rows.put(key, data)
         else:
             self._file(self.local.put, key, data)
@@ -319,7 +325,7 @@ class ClusterObjectStore:
 
     # The same, through the medium before the name (a blob a row is about to name: `SpecController.put_blob`).
     def put_durable(self, key: str, data: bytes) -> None:
-        if is_create_only(key):
+        if is_row(key):
             self.rows.put(key, data)
         else:
             self._file(self.local.put_durable, key, data)
@@ -331,12 +337,13 @@ class ClusterObjectStore:
         os.utime(self.local._p(key), (t, t))
 
     # Create-only across the cluster: a row written with `cas=0` (`VariablesObjectStore.put_new`) — `True` when THIS
-    # call made it. Only for a key `CREATE_ONLY` names: create-only on files is create-only on one server, and a key
+    # call made it. Only for a key a spec names a row (`objects.rows`): create-only on files is create-only on one server, and a key
     # asked for here and read from files elsewhere would be two objects under one name.
     def put_new(self, key: str, data: bytes) -> bool:
-        if not is_create_only(key):
-            raise ValueError(f"{key}: a create-only object is one of {', '.join(CREATE_ONLY)} — add its pattern to "
-                             f"CREATE_ONLY, so every reader looks for it in the store")
+        if not is_row(key):
+            raise ValueError(f"{key}: a create-only object is a row of the store, one of "
+                             f"{', '.join(row_patterns()) or 'none: no spec loaded here names one'} — its subsystem's "
+                             f"spec names it in `objects.rows`, so every reader looks for it in the store")
         made = self.rows.put_new(key, data)
         self._seen(key, True)
         return made
@@ -347,7 +354,7 @@ class ClusterObjectStore:
     def get(self, key: str) -> bytes | None:
         from w2cplatform.blobs import BlobMismatch, verify
         from w2cplatform.resource import is_blob_key
-        if is_create_only(key):
+        if is_row(key):
             return self.rows.get(key)
         if is_blob_key(key):
             data = self.local.get(key)
@@ -383,9 +390,9 @@ class ClusterObjectStore:
             raise ObjectsUnavailable(f"the resource on this server answered a listing that is not one ({e})") from None
         self._said_missing(said.get("missing"))
         keys |= self._remembered(prefix, said["objects"], said.get("missing") or [])
-        if _may_hold_create_only(prefix) and (self._vars is not None or self._rows is not None
+        if _may_hold_rows(prefix) and (self._vars is not None or self._rows is not None
                                               or os.environ.get("PLATFORM_STORE")):
-            keys |= {k for k in self.rows.list(prefix) if is_create_only(k)}
+            keys |= {k for k in self.rows.list(prefix) if is_row(k)}
         self._listed[prefix] = (self.clock(), keys)
         return sorted(keys)
 
@@ -395,7 +402,7 @@ class ClusterObjectStore:
     def delete(self, key: str) -> bool:
         from w2cplatform.resource import is_blob_key
         self._seen(key, False)
-        if is_create_only(key):
+        if is_row(key):
             self.rows.delete(key)
             return True
         if is_blob_key(key):

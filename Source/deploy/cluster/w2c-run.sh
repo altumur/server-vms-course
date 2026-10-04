@@ -92,6 +92,8 @@ if [ -n "${SPARE_FILE:-}" ]; then
 fi
 
 export PYTHONPATH="$W2C_HOME/Source${PYTHONPATH:+:$PYTHONPATH}"
+# The specs the installed tree carries (`w2cplatform/catalog.py`): what the platform knows of the subsystems.
+export SPEC_DIR="${SPEC_DIR:-$W2C_HOME/Source/vms}"
 PYTHON="${PYTHON:-python3}"
 
 program="${1:?w2c-run.sh configstore | worker | recorder | controller | reccontroller | console | resource | rights | spares}"

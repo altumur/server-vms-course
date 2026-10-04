@@ -152,6 +152,7 @@ def test_a_named_unit_deleted_comes_back_under_its_name():
     spec = SubsystemSpec.from_dict({
         "name": "thing",
         "unit": {"rows": "u", "id": "name", "fields": {"name": {"type": "string"}}},
+        "placement": {"capacity": {"from": "capacity", "default": 4}},
     })
     ctl = SpecController(spec, box.vars, box.objects, wall=box.wall)
 

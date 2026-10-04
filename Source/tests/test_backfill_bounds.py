@@ -225,7 +225,7 @@ class Corrupt(FakeActuator):
 
     def record_range(self, cam, source, t0, t1):
         import dataclasses
-        from w2cplatform.obsd import FLAG_NEED_KEY_FRAME, unix_s
+        from vms.obsd import FLAG_NEED_KEY_FRAME, unix_s
         out = super().record_range(cam, source, t0, t1)
         if not (t0 < BAD[1] and BAD[0] < t1) or self.times == 0:
             return out

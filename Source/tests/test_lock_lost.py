@@ -20,7 +20,7 @@ def test_a_writer_whose_lock_another_writer_took_is_stopped_by_the_engine_and_gi
     writer finds the lock B's before its next block and stops — `WRITER_STOPPED`, "volume lock lost". That is the place
     lost, not the engine: the archive says `lock_lost`, sends nothing more, and gives the writer up with
     `WRITER_ABANDON`; B's volume stays clean and keeps what B wrote."""
-    from w2cplatform.obsd import ObsdError, Session
+    from vms.obsd import ObsdError, Session
     from vms.archive import Archive, Fenced
     from vms.worker import fake_samples
     da, db = ObsdDaemon.fresh(), ObsdDaemon.fresh()
@@ -71,7 +71,7 @@ def test_a_daemon_that_knows_the_operation_says_so_once_and_one_that_does_not_is
     """The probe the recorder's one guard rests on (`Session.abandons`): `WRITER_ABANDON` for a handle that is
     nobody's. This daemon answers that it does not know the handle — and that is not the session lost; a daemon without
     the operation answers `UNKNOWN_OP`. Asked once per daemon."""
-    from w2cplatform.obsd import CODE, ObsdError, Session
+    from vms.obsd import CODE, ObsdError, Session
     s = Session(ObsdDaemon.get().socket, client="probe")
     asked, real = [], s.call
 
@@ -99,7 +99,7 @@ def test_a_recorder_takes_no_network_volume_on_an_obsd_that_cannot_give_one_up()
     recorder whose daemon can takes it. Its own disk is not affected."""
     from vms import volumes
     from vms.config import REC_SPEC
-    from w2cplatform.obsd import Session
+    from vms.obsd import Session
     box = Box()
     net = tempfile.mkdtemp(prefix="net-")
     volumes.write(box.vars, {"name": "net", "kind": "network", "url": net, "quota_bytes": 64 << 20})

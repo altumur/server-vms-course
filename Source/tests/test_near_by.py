@@ -56,7 +56,7 @@ def test_the_short_form_would_follow_nothing_here():
     short = SubsystemSpec.from_dict({**{"name": "det2", "unit": {"rows": "units", "id": "name", "fields": {
         "name": {"type": "string", "required": True}, "cam": {"type": "string", "required": True},
         "kind": {"type": "string", "required": True}}},
-        "placement": {"capacity": {"from": "capacity", "fallback": 8}, "near": "rec"}}})
+        "placement": {"capacity": {"from": "capacity", "default": 8}, "near": "rec"}}})
     assert short.near == "rec" and short.near_by == "id"
 
     ctl = SpecController(short, box.vars, box.objects, wall=box.wall)
@@ -66,7 +66,7 @@ def test_the_short_form_would_follow_nothing_here():
     assert ctl.holder_near("7-linecross") is None                # the recorder is right there, and is not found
 
     full = SubsystemSpec.from_dict({**{"name": "det3", "unit": short_unit()},
-                                    "placement": {"capacity": {"from": "capacity", "fallback": 8},
+                                    "placement": {"capacity": {"from": "capacity", "default": 8},
                                                   "near": {"sub": "rec", "by": "cam"}}})
     ctl2 = SpecController(full, box.vars, box.objects, wall=box.wall)
     ctl2.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})
@@ -136,7 +136,7 @@ def test_the_affinity_survives_the_name_the_operator_chose():
 
     # and matching their id, as the spec did while `id: cam` held, would find nothing at all
     short = SubsystemSpec.from_dict({"name": "det4", "unit": short_unit(),
-                                     "placement": {"capacity": {"from": "capacity", "fallback": 8},
+                                     "placement": {"capacity": {"from": "capacity", "default": 8},
                                                    "near": {"sub": "rec", "by": "cam"}}})
     other = SpecController(short, box.vars, box.objects, wall=box.wall)
     other.create({"name": "7-linecross", "cam": "7", "kind": "linecross"})

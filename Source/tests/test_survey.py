@@ -176,7 +176,7 @@ def test_nobody_holding_the_camera_is_a_wait_not_a_silence():
 def test_the_survey_carries_its_own_budget():
     from vms.config import DET_SPEC
     assert SURVEY_SPEC.sub.heartbeat_key("x") != DET_SPEC.sub.heartbeat_key("x")
-    assert SURVEY_SPEC.capacity_fallback != DET_SPEC.capacity_fallback
+    assert SURVEY_SPEC.capacity_default != DET_SPEC.capacity_default
     assert SURVEY_SPEC.retire_field == ""                             # it does not end
     assert SURVEY_SPEC.near == "vms" and SURVEY_SPEC.near_by == "cam"
     assert SURVEY_SPEC.home == ""

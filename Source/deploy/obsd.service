@@ -1,6 +1,6 @@
 # /etc/systemd/system/obsd.service — ObjectStorage, the archive's engine, as the box's own daemon.
 # Not a container and not one of the VMS's processes: the engine the recorders write their footage
-# through, over a unix socket in /run/vms-obsd (`w2cplatform/obsd.py`). One per host — it keeps one writer per
+# through, over a unix socket in /run/vms-obsd (`vms/obsd.py`). One per host — it keeps one writer per
 # volume, and that rule means something only if every recorder on the box asks the same daemon.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)

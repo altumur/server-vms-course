@@ -228,9 +228,9 @@ def test_a_denial_wins_over_every_grant_wherever_it_stands():
 
 
 def test_each_role_says_its_sockets_group_and_the_daemon_takes_it():
-    """The product's format: each role carries its socket's `group` — `vms-<role>` for a subsystem's, `w2c-<role>` for
-    the platform's. The daemon owns the socket by it (`configstore.socket_group`), and a role without one falls back
-    to the same rule; what `/v1/rights` shows is the file's own form, the group with it."""
+    """The product's format: each role carries its socket's `group`, whatever the file says it is. The daemon owns the
+    socket by it (`configstore.socket_group`), and a role without one is `w2c-<role>` — the daemon names no subsystem
+    (the boundary's step 4); what `/v1/rights` shows is the file's own form, the group with it."""
     from w2cplatform.configstore import socket_group
     doc = {"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []},
                      "resource": {"group": "w2c-resource", "read": ["platform/*"]},
@@ -239,7 +239,7 @@ def test_each_role_says_its_sockets_group_and_the_daemon_takes_it():
     r = Rights.parse(doc)
     assert r.groups == {"vmsworker": "vms-vmsworker", "resource": "w2c-resource", "domainagent": "w2c-domainagent"}
     assert socket_group("vmsworker", r) == "vms-vmsworker" and socket_group("domainagent", r) == "w2c-domainagent"
-    assert socket_group("console", r) == "vms-console" and socket_group("resource") == "w2c-resource"
+    assert socket_group("console", r) == "w2c-console" and socket_group("resource") == "w2c-resource"
     assert r.doc()["roles"]["vmsworker"] == {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []}
     assert "group" not in r.doc()["roles"]["console"]
     assert Rights.parse(r.doc()).groups == r.groups                       # the form shown is a file the daemon takes

@@ -6,6 +6,9 @@
 # the resource, on the camera's timeline like any other subsystem's. Same
 # controller class, same console class, same ACL shape as the VMS.
 name: det
+# The slot a worker of this subsystem makes, `d-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: d, name_env: DET_NAME}
 about: {sub: vms, field: cam}   # a model runs on a camera's stream: its events, grants and labels are the camera's
 unit:
   rows: units                        # det/units/<name>
@@ -38,7 +41,7 @@ unit:
     # (`jobs.expire`); the controller unplaces it, the worker stops the model.
     until:     {type: float,  default: 0}          # unix seconds; 0 — never
 placement:
-  capacity:   {from: capacity, fallback: 8}        # streams per worker — its own number, from its heartbeat
+  capacity:   {from: capacity, default: 8}        # streams per worker — its own number, from its heartbeat
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                          # a detector writes its events into the resource on its own server

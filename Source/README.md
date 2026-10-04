@@ -13,8 +13,6 @@ Source/
     contract.py                Lesson 1  Subsystem, Assignment, Heartbeat, Slot; the Controller and Worker bases; identity by claim
     events.py                  Lesson 3  the event log: buckets per unit per epoch on the resource, for any subsystem — generic
     resource.py                Lesson 3  the resource as a platform job: heartbeat, buckets over HTTP, retention by each subsystem's row, the mirror to a peer, restore
-    obsd.py                    М10B L6  the client of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
-                               archive time; a silence is `Unavailable` after a timeout and is not asked twice
     eventdatabase.py           Lesson 10  EventIndex — a resource's own buckets, read where they lie, with a bounded cache; MergedIndex — what a console has instead: every live resource's /events, merged
     longpoll.py                М10B L25  a hint the reader pulls: Watch — the requests a resource holds until a watched line is appended (GET /events/wait);
                                LongPoll — one held request per resource; Wake — a loop's early pass, never sooner than a quarter of a second
@@ -22,10 +20,15 @@ Source/
     console.py                 Lesson 7  the console as data: SpecConsole over the same spec — the page, /spec, /<rows>, /where, /metrics with the subsystem's prefix, /marks, the writes with the spec's refusals; a subsystem registers extra routes;
                                Mount — one process fronting several subsystems, the root at / and the others under their names (/live/…, /det/…)
     secrets.py                 Lesson 23  the `*_secret` rule: mask_secrets on the way out of the console, and a spec that
-                               names a secret in its snapshot does not load
+                               names a secret in its snapshot does not load; an address read as RFC 3986 writes one, and how a
+                               subsystem's addresses carry a login besides that from its url field's `secret_in`
+    catalog.py                 the specs this process loaded (or `SPEC_DIR` names): which objects are rows, how an address
+                               carries a login — what the platform used to know by name (the boundary's step 4)
     console.html               Lesson 7  the one page for every subsystem: reads /spec, builds the list and the forms from the fields; timeline and player only when the spec says media
   vms/                         the VMS — the first subsystem
     reconciler.py              Lesson 4  М9 Lesson 6's loop, copied unchanged: the contract
+    obsd.py                    М10B L6  the client (the VMS's: the platform knows no archive engine) of ObjectStorage's daemon: frames over a unix socket, Session/Volume/Writer/Reader, SMPL samples,
+                               archive time; a silence is `Unavailable` after a timeout and is not asked twice
     archive.py                 М10B L7  the course's vocabulary over obsd: streams <recording>/e<epoch> (…/backfill, e0 for a keep's copy), Span,
                                authoritative (the highest epoch owns each stretch), visible_from (retention as a ceiling), ArchiveError (wrong / away / busy),
                                Archive — one volume: open (format at quota), put, finish, seal, a fresh reader per question, spans, samples

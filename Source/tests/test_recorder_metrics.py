@@ -39,7 +39,7 @@ def test_a_recording_the_engine_refuses_is_counted_by_itself_and_its_last_frame_
     now tallies what the engine answered for ITS samples: the status carries `samples_refused`, `/metrics` the
     counter `rec_samples_refused_total{unit,status}`, and `last_frame_at` is the writer's last TAKE, so the refused
     recording's age grows while frames keep being offered."""
-    from w2cplatform.obsd import CODE, ObsdError
+    from vms.obsd import CODE, ObsdError
     from vms.recworker import RecSink
     from vms.worker import fake_samples
     from tests.conftest import recorder

@@ -77,7 +77,7 @@ def _card_from(start: float, seconds: float = 600.0):
 
 def _times(samples) -> list:
     """When each sample record of an answer began, in unix seconds."""
-    from w2cplatform.obsd import unix_s
+    from vms.obsd import unix_s
     return [unix_s(s.begin) for s in samples]
 
 

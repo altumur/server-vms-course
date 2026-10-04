@@ -259,7 +259,7 @@ def test_a_suppression_rule_is_refused_at_load_when_it_would_drop_more_than_it_s
     and both failures are invisible, because what they produce is a log that looks
     calm."""
     from w2cplatform.spec import SubsystemSpec
-    base = {"name": "panel", "unit": {"rows": "panels", "fields": {"host": {"type": "string"}}}}
+    base = {"name": "panel", "unit": {"rows": "panels", "fields": {"host": {"type": "string"}}}, "placement": {"capacity": {"from": "capacity", "default": 4}}}
 
     spec = SubsystemSpec.from_dict({**base, "events": {"suppress": {"io.input": {"window": 30}}}})
     assert spec.suppress["io.input"].window == 30 and spec.suppress["io.input"].by is None   # every field: the safe default

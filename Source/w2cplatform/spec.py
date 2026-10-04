@@ -86,7 +86,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import NOT_AN_ADDRESS, address_refusal, hide_in_url, is_secret_field
+from .secrets import NOT_AN_ADDRESS, SecretRules, address_refusal, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, MOVED_FATES,
                        OFFER_GRACE, SLOTS, SLOT_LOST_AFTER, SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live,
@@ -258,6 +258,13 @@ class Field:
     # elsewhere would take its history with it (the review's fourth pass, when the rule was written into this
     # controller under one subsystem's field name; the boundary's step 2 made it the spec's word).
     fixed: bool = False
+    # A `url` field's own words (the boundary's step 4, the keys agreed with the product): `schemes` — what it may be
+    # reached by (none said: any); `credentials` — `{login: <field>, secret: <a *_secret field>}`, where a login and a
+    # password go instead, named by every refusal; `rules` — its `secret_in` read (`secrets.SecretRules`): how its
+    # addresses carry a login besides what RFC 3986 says. None for a field that is no url.
+    schemes: tuple = ()
+    credentials: dict = field(default_factory=dict)
+    rules: object = None
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -344,8 +351,78 @@ def suppress_rules(events: dict) -> dict[str, Suppress]:
     return out
 
 
+# `fields.<name>` of `type: url` — `schemes`, `credentials`, `secret_in` (the boundary's step 4) — read into the field;
+# on a field of any other type they are refused, and so is a `credentials` naming no field of the row, a login that is a
+# secret or a secret that is not one.
+def _url_words(fields: dict, name: str, f: dict) -> None:
+    fld = fields[name]
+    said = [k for k in ("schemes", "credentials", "secret_in") if k in f]
+    if fld.type != "url":
+        if said:
+            raise ValueError(f"field {name}: {', '.join(said)} belong to a url field, and {name} is {fld.type}")
+        return
+    schemes = f.get("schemes") or []
+    if not isinstance(schemes, list) or not all(isinstance(x, str) and re.fullmatch(r"[a-z][a-z0-9+.\-]*", x)
+                                                for x in schemes):
+        raise ValueError(f"field {name}: `schemes` is a list of schemes (`https`, `ftp`), not {schemes!r}")
+    cred = f.get("credentials") or {}
+    if not isinstance(cred, dict) or set(cred) - {"login", "secret"}:
+        raise ValueError(f"field {name}: `credentials` is {{login: <field>, secret: <a *_secret field>}}, not {cred!r}")
+    login, secret = cred.get("login"), cred.get("secret")
+    if login is not None and (login not in fields or is_secret_field(login) or fields[login].type != "string"):
+        raise ValueError(f"field {name}: credentials.login names no string field of the row that is no secret: {login!r}")
+    if secret is not None and (secret not in fields or not is_secret_field(secret)):
+        raise ValueError(f"field {name}: credentials.secret names no `*_secret` field of the row: {secret!r}")
+    fld.schemes = tuple(schemes)
+    fld.credentials = {k: v for k, v in (("login", login), ("secret", secret)) if v}
+    fld.rules = SecretRules.parse(f["secret_in"], f"field {name}") if "secret_in" in f else SecretRules()
+
+
+# `placement.capacity: {from, default}` — `(from, default)`. The default is REQUIRED (the product's decision): the
+# number a worker that has said nothing yet is counted at is the subsystem's to say — fifty of one kind of unit is a
+# small worker and of another an impossible one — and a spec without it does not load.
+def _capacity(name, cap) -> tuple[str, int]:
+    if not isinstance(cap, dict) or set(cap) - {"from", "default"} or "default" not in cap:
+        raise ValueError(f"spec {name}: placement.capacity is {{from: <heartbeat field>, default: <units a worker that "
+                         f"said nothing is counted at>}} — the default is the subsystem's to say, not {cap!r}")
+    d = cap["default"]
+    if isinstance(d, bool) or not isinstance(d, int) or d < 0:
+        raise ValueError(f"spec {name}: placement.capacity.default is a whole number of units, not {d!r}")
+    return str(cap.get("from", "capacity") or "capacity"), d
+
+
+# `slot: {prefix, name_env}` — `(prefix, name_env)`; left out, `w` and `WORKER_NAME`.
+def _slot(name, slot) -> tuple[str, str]:
+    if slot is None:
+        return "w", "WORKER_NAME"
+    if not isinstance(slot, dict) or set(slot) - {"prefix", "name_env"}:
+        raise ValueError(f"spec {name}: `slot:` is {{prefix: <letters>, name_env: <VARIABLE>}}, not {slot!r}")
+    prefix, env = str(slot.get("prefix", "w")), str(slot.get("name_env", "WORKER_NAME"))
+    if not re.fullmatch(r"[a-z]{1,8}", prefix):
+        raise ValueError(f"spec {name}: slot.prefix names a slot `<prefix>-<n>` — a few small letters, not {prefix!r}")
+    if not re.fullmatch(r"[A-Z][A-Z0-9_]*", env):
+        raise ValueError(f"spec {name}: slot.name_env is an environment variable's name, not {env!r}")
+    return prefix, env
+
+
+# `objects: {rows: […]}` — the patterns, each a key under the subsystem's name: names separated by `/`, a segment `*`.
+def _object_rows(name, objects) -> tuple:
+    if objects is None:
+        return ()
+    if not isinstance(objects, dict) or set(objects) - {"rows"} or not isinstance(objects.get("rows", []), list):
+        raise ValueError(f"spec {name}: `objects:` is {{rows: [<key pattern>, …]}}, not {objects!r}")
+    out = []
+    for p in objects.get("rows") or []:
+        segs = str(p).split("/")
+        if not p or any(not x or x == ".." or ("*" in x and x != "*") for x in segs):
+            raise ValueError(f"spec {name}: objects.rows takes key patterns under the subsystem's name — names "
+                             f"separated by '/', a whole segment '*' — not {p!r}")
+        out.append(str(p))
+    return tuple(out)
+
+
 # The parsed YAML. Fields: `name`; `rows` (`"units"`; the VMS says `cameras`); `id` (`"numeric"` or a field
-# name); `fields`; `derived`; `capacity_from` / `capacity_fallback` (heartbeat key for a worker's capacity,
+# name); `fields`; `derived`; `capacity_from` / `capacity_default` (heartbeat key for a worker's capacity,
 # and the number for a worker that said nothing); `headroom_from`; `constraint`; `tie_break` (only
 # `most-free-capacity` exists); `dead_band`; `snapshot` (field names); `running_gauge` (`units_running` by
 # default; `cameras_running` for the VMS).
@@ -357,7 +434,7 @@ class SubsystemSpec:
     fields: dict[str, Field] = field(default_factory=dict)
     derived: list[Derived] = field(default_factory=list)
     capacity_from: str = "capacity"
-    capacity_fallback: int = 50
+    capacity_default: int = 50    # `placement.capacity.default`: a worker that has said nothing yet (the spec must say it)
     headroom_from: str = "headroom"
     constraint: str = "none"
     requires: str = "none"        # "resource": a worker is eligible only while its server's resource is not silent
@@ -489,6 +566,16 @@ class SubsystemSpec:
     # taken as it is. Whoever writes the row needs on that unit what the route needs — on both, when a write moves
     # the row from one to another.
     unit_of: dict = field(default_factory=dict)
+    # `objects: {rows: [commands/*]}` — the objects of this subsystem (`<name>/…`, glob by segment, a last `*` the rest)
+    # that are rows of the store and not files: what must be created once across every server (a worker's mark before
+    # it acts) or read where the place it names is gone. The cluster's object store asks the loaded specs for them
+    # (`catalog.object_rows`; it was a constant of the platform's, naming one subsystem's family).
+    object_rows: tuple = ()
+    # `slot: {prefix: w, name_env: WORKER_NAME}` — what a slot this subsystem's worker has to MAKE is called
+    # (`<prefix>-<n>`), and the environment variable naming the slot it is started under beside `WORKER_NAME`
+    # (`runtime.slot`). It was each worker's class saying it.
+    slot_prefix: str = "w"
+    slot_name_env: str = "WORKER_NAME"
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
     # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
@@ -502,6 +589,8 @@ class SubsystemSpec:
         for n, f in (unit.get("fields") or {}).items():
             if "fixed" in f and not isinstance(f["fixed"], bool):
                 raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
+        for n, f in (unit.get("fields") or {}).items():
+            _url_words(fields, n, f)
         for f in fields.values():
             if f.bound_to and not is_secret_field(f.name):
                 raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
@@ -535,9 +624,10 @@ class SubsystemSpec:
             raise ValueError(f"spec {d['name']}: `snapshot:` with nothing after it says neither — write "
                              f"`snapshot: []` for no fields, or leave the key out for every field")
         declared = d.get("snapshot")
-        cap = pl.get("capacity", {}) or {}
+        cap = pl.get("capacity")
+        slot = _slot(d.get("name"), d.get("slot"))
         spec = cls(name=d["name"], rows=unit.get("rows", "units"), id=str(unit.get("id", "numeric")), fields=fields,
-                   derived=derived, capacity_from=cap.get("from", "capacity"), capacity_fallback=int(cap.get("fallback", 50)),
+                   derived=derived,
                    headroom_from=(pl.get("headroom", {}) or {}).get("from", "headroom"),
                    constraint=pl.get("constraint", "none"), requires=str(pl.get("requires", "none")), servers=str(pl.get("servers", "shared")), tie_break=pl.get("tie_break", "most-free-capacity"),
                    near=str((pl.get("near") or {}).get("sub", "none") if isinstance(pl.get("near"), dict) else pl.get("near", "none")),
@@ -556,10 +646,15 @@ class SubsystemSpec:
                    tables=tuple(str(t) for t in (d.get("tables") or [])),
                    running_gauge=str((d.get("console", {}) or {}).get("running", "units_running")),
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
-                   suppress=suppress_rules(d.get("events", {}) or {}))
+                   suppress=suppress_rules(d.get("events", {}) or {}),
+                   object_rows=_object_rows(d.get("name"), d.get("objects")),
+                   slot_prefix=slot[0], slot_name_env=slot[1])
         spec._about_and_rights(d)
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
+        if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
+            raise ValueError(f"spec {spec.name}: placement.offers {spec.offers!r} is the prefix of the slots offered, "
+                             f"and its slots are {spec.slot_prefix!r} (`slot.prefix`) — an offer nobody's name fits")
         # A secret in the snapshot is a secret leaving the cluster: `vms/snapshot/*` is what М12's directory
         # reads. Refused at LOAD time, not watched for at review time — and only when it is named, because
         # the default ("every field") is a convenience and not a decision.
@@ -625,6 +720,8 @@ class SubsystemSpec:
             raise ValueError(f"spec {spec.name}: home: near needs a near to follow")
         if spec.home and spec.home != "near" and spec.home not in fields:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
+        # …and, the last thing asked, the capacity of a worker that said nothing: the spec's to say (`_capacity`).
+        spec.capacity_from, spec.capacity_default = _capacity(spec.name, cap)
         return spec
 
     # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
@@ -716,8 +813,11 @@ class SubsystemSpec:
     @classmethod
     def load(cls, path: str) -> "SubsystemSpec":
         import yaml
+        from . import catalog
         with open(path) as f:
-            return cls.from_dict(yaml.safe_load(f))
+            spec = cls.from_dict(yaml.safe_load(f))
+        catalog.register(spec)                  # a spec this process loaded is one it knows (`catalog.py`)
+        return spec
 
     # `Subsystem(name)` — the key layout from `contract.py`.
     @property
@@ -857,11 +957,22 @@ class SubsystemSpec:
                 # page and the snapshot. What the copy had learnt before, a review at a time: a login in the path of a
                 # scheme that names its host there (the tenth round), a credential pair (the eleventh review, blocker 4).
                 # The words name the parameter, never its value.
-                why = address_refusal(str(fields[name]))
+                # By THIS field's rules (`secret_in`, the boundary's step 4): how its addresses carry a login is its
+                # spec's to say; the words name the fields its spec gives a login and a password (`credentials`).
+                why = address_refusal(str(fields[name]), f.rules)
                 if why:
-                    raise Refused(f"{name} may not be stored as typed: {why}. Put the login in cred_username and the "
-                                  f"password or token in cred_secret — a url field is in the snapshot, and the snapshot "
-                                  f"leaves the cluster")
+                    cred = f.credentials
+                    instead = (f"Put the login in {cred['login']} and the password or token in {cred['secret']}"
+                               if "login" in cred and "secret" in cred else
+                               f"Put the password or token in {cred['secret']}" if "secret" in cred else
+                               "A login and a password go in fields of their own")
+                    raise Refused(f"{name} may not be stored as typed: {why}. {instead} — a url field is in the "
+                                  f"snapshot, and the snapshot leaves the cluster")
+                # …and reached by what the spec says it is reached by (`schemes`); said in words, the scheme is no secret.
+                scheme = u.scheme.lower()
+                if f.schemes and scheme not in f.schemes:
+                    raise Refused(f"{name} is reached by {', '.join(f.schemes)}, not by "
+                                  f"{repr(scheme) if scheme else 'an address with no scheme'}")
                 # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
                 # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
@@ -1035,7 +1146,7 @@ class SpecController(Controller):
     are harmless; never on the recovery path. The VMS is one spec; live and
     det are others — same code."""
 
-    # `capacity` is only the fallback for a worker whose heartbeat says nothing (defaults to the spec's).
+    # `capacity` is only the number for a worker whose heartbeat says nothing (the spec's `capacity.default` when not given).
     # `cluster` is the name the snapshot carries (`$CLUSTER`, else `room-a` — М11's default, its env example's and
     # М12's; it was `cluster-a` here, the thirteenth review's «Вопросы» 4); one box is a cluster of
     # one.
@@ -1043,7 +1154,7 @@ class SpecController(Controller):
                  wall=time.time, cluster: str | None = None):
         super().__init__(spec.sub, vars_, objects, wall)
         self.spec = spec
-        self.capacity = capacity if capacity is not None else spec.capacity_fallback   # the FALLBACK for a worker whose heartbeat says nothing
+        self.capacity = capacity if capacity is not None else spec.capacity_default   # the FALLBACK for a worker whose heartbeat says nothing
         self.cluster = cluster or os.environ.get("CLUSTER", "room-a")                  # the name the snapshot carries; one box is a cluster of one
         self.rows_garbled = 0                                                            # rows the last `units()` could not parse (the review's second pass, M7)
         self._garbled_rows: set[str] = set()

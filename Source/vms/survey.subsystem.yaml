@@ -16,6 +16,9 @@
 #
 # It is not `detjob` either: its work does not end. There is no `retire_when` here.
 name: survey
+# The slot a worker of this subsystem makes, `s-<n>`, and the variable naming the one it is started under
+# beside `WORKER_NAME` (`runtime.slot`; the boundary's step 4: it was each worker's class saying it).
+slot: {prefix: s, name_env: SURVEY_NAME}
 about: {sub: vms, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
 unit:
   rows: watches                      # survey/watches/<name>
@@ -41,7 +44,7 @@ unit:
     enabled: {type: bool,   default: true}
     labels:  {type: list,   default: ["gpu"]}
 placement:
-  capacity:   {from: capacity, fallback: 2}      # watches per worker — its own number, in its own heartbeat
+  capacity:   {from: capacity, default: 2}      # watches per worker — its own number, in its own heartbeat
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                           # it writes its events into the resource on its own server
