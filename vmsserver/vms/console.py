@@ -1597,7 +1597,8 @@ def rec_routes(rec_ctl: SpecController):
                 vol = volumes.write(rec_ctl.vars, body, sealer=rec_ctl.sealer)
             except Refused as e:
                 return 400, {"detail": str(e), "error": "refused"}
-            out = {"volume": {k: v for k, v in {**vol.to_items(), "name": vol.name}.items() if not k.endswith("_secret")}}
+            from w2cplatform.secrets import hide_in_url            # the url as `/volumes` says it (the twelfth review)
+            out = {"volume": {k: hide_in_url(v) for k, v in {**vol.to_items(), "name": vol.name}.items() if not k.endswith("_secret")}}
             # "Give this archive less": REQUESTED, not done (the review's fourth pass, major). The recorder shrinks a ring
             # only when the row also says `shrink_confirmed` equal to the new size — shrinking erases its oldest minutes —
             # and the journal said `shrunk` the moment the row was written: the page showed 4 TB, the journal "shrunk",

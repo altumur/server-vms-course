@@ -375,8 +375,8 @@ def _uplink(ingest, wall, rate: float):
     """An uplink of `rate` bytes a second: a push takes as long as its bodies take, and the camera's clock goes on."""
     real = ingest.push
 
-    def push(token, ref, frames, camera_now=None):
-        took = real(token, ref, frames, camera_now=camera_now)        # (the clocks are compared as the push begins)
+    def push(token, ref, frames, camera_now=None, **kw):
+        took = real(token, ref, frames, camera_now=camera_now, **kw)  # (the clocks are compared as the push begins)
         wall.advance(sum(len(f.get("body") or b"") for f in frames) / rate)
         return took
     ingest.push = push
@@ -859,3 +859,25 @@ def test_a_request_that_travelled_long_is_not_a_step_of_the_cameras_clock_and_lo
         got = [f["n"] for f in w.passes[0]]
         assert got == list(range(1, max(got) + 1)) and w.repeats == 0, (line, max(got) - len(got))
         assert ingest.cams[SERIAL].clock_steps == 1, line                  # the first pass's travel, slewed back
+
+
+# -- the twelfth review ----------------------------------------------------------------------------------------------
+def test_a_plateau_of_travel_under_the_clock_step_for_longer_than_the_rise_wait_moves_no_offset():
+    """The sibling of the twelfth review's blocker 13 below `CLOCK_STEP`: two seconds on every request for a minute — longer
+    than `OFFSET_RISE` — was, by the requests' times, this cluster's clock stepped forward: the offset moved up by the
+    least delay, the frames of the plateau's second half lay two seconds late, and a step was counted (the course named it
+    as what stays). The camera says its round trip with every request now, and a rise its round trip explains counts for
+    nothing (`Ingest._offset`): the camera on its line, no step, every frame once and where it was captured. A camera that
+    states no round trip (its raw clock, its own requests) is held as before."""
+    import random
+    rnd = random.Random(12)
+
+    def plateau(name, t):
+        return (2.0, 0.0) if 60.0 <= t < 120.0 else (rnd.uniform(0.0, 0.05), 0.0)
+    ingest, w, captured = _travelled(plateau, True)
+    got = [f["n"] for f in w.passes[0]]
+    assert got == list(range(1, max(got) + 1)) and w.repeats == 0
+    assert ingest.cams[SERIAL].clock_steps == 0
+    assert max(abs(f["t"] - captured[f["n"]]) for f in w.passes[0]) < 0.06
+    ingest, w, captured = _travelled(plateau, False)                   # no round trip said: by the requests' times
+    assert ingest.cams[SERIAL].clock_steps >= 1

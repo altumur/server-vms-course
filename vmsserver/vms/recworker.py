@@ -44,6 +44,7 @@ from w2cplatform.console import framed, heartbeats
 from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
 from w2cplatform.sealing import Sealed, open_row
+from w2cplatform.secrets import hide_in_url
 from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
@@ -1088,7 +1089,7 @@ class RecWorker(VmsWorker):
                 "volume": self.volume,
                 # The box's own volume — where this recorder writes when nothing is declared. What the console
                 # offers to declare, with the partition's size, the first time anybody looks (`volumes.suggest`).
-                "archive": self.default_url,
+                "archive": hide_in_url(self.default_url),    # as a page says it (the twelfth review, major 15)
                 # …and its size: what the console offers to declare it at. The size it HAS once it was opened — read
                 # from the volume — and only before that the share of the disk it would be formatted at (the review's
                 # third pass: recomputed at every start, the number grew and shrank with the disk's free space, and an
@@ -1475,7 +1476,7 @@ class RecWorker(VmsWorker):
             return                                        # opened at another address: this one is new, formatted
         since = mark.get("at") if isinstance(mark, dict) else None
         raise ArchiveError("wrong", (
-            f"{vol.name} was in use at {vol.url} and is not there now — a disk not mounted, a directory removed or "
+            f"{vol.name} was in use at {hide_in_url(vol.url)} and is not there now — a disk not mounted, a directory removed or "
             f"renamed. Nothing is formatted in its place: an empty volume there would hide the footage it had. Mount it "
             f"back and it is written again as it was; its recordings go to another volume meanwhile. If the volume is "
             f"meant to start empty, declare it under another name or address"
@@ -1726,7 +1727,7 @@ class RecWorker(VmsWorker):
             log.info("%s: %s answers again after %.0f s", self.name, vol.name, self.wall() - self.archive_away_since)
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
         self._mark_used(vol)
-        log.info("%s: writing into %s (%s)%s%s", self.name, vol.name, vol.url, " — formatted" if store.formatted else "",
+        log.info("%s: writing into %s (%s)%s%s", self.name, vol.name, hide_in_url(vol.url), " — formatted" if store.formatted else "",
                  " — the writer a previous process left, picked up again" if store.reattached else "")
         return None
 
