@@ -98,6 +98,33 @@ def test_a_server_gone_is_named_and_the_others_are_read():
         c.srv["srv-a"].shutdown(); c.srv["srv-b"].shutdown()
 
 
+def test_a_reader_that_heard_a_server_answers_with_what_it_said_last_while_it_is_missing():
+    """Found by the module's stand (the power pull, the dead server's doors down): a server's objects are files on it,
+    and with it gone its worker's last heartbeat and its resource's left every listing — a controller could not tell
+    which server the worker ran on, nor that its resource was silent rather than unknown, and the dead server's units
+    never moved. A reader keeps what it last listed and read of each server: while that server is MISSING its keys
+    are in the listing and `get` answers their last bytes, ageing by their own `ts`. A reader that never heard it says
+    nothing of it; a server that answers again answers for itself, and a key it answers without is let go."""
+    c = Three()
+    try:
+        for name in c.store:
+            c.store[name].put(f"vms/heartbeats/w-{name}-1", f'{{"ts": "{name}"}}'.encode())
+        reader, late = c.store["srv-a"], ClusterObjectStore(os.path.join(c.root, "late"), c.store["srv-a"].resource,
+                                                            c.vars, wall=c.wall, list_fresh=0)
+        reader.list_fresh = 0
+        assert reader.list("vms/heartbeats/") == [f"vms/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
+        assert reader.get("vms/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
+        c.srv["srv-c"].shutdown(); c.srv["srv-c"].server_close()
+        assert reader.list("vms/heartbeats/") == [f"vms/heartbeats/w-{n}-1" for n in ("srv-a", "srv-b", "srv-c")]
+        assert reader.missing == ["srv-c"] and reader.get("vms/heartbeats/w-srv-c-1") == b'{"ts": "srv-c"}'
+        assert late.list("vms/heartbeats/") == ["vms/heartbeats/w-srv-a-1", "vms/heartbeats/w-srv-b-1"]   # never heard it
+        assert late.get("vms/heartbeats/w-srv-c-1") is None
+        c.store["srv-b"].local.delete("vms/heartbeats/w-srv-b-1")                  # an answering server, without the key
+        assert reader.list("vms/heartbeats/") == ["vms/heartbeats/w-srv-a-1", "vms/heartbeats/w-srv-c-1"]
+    finally:
+        c.srv["srv-a"].shutdown(); c.srv["srv-b"].shutdown()
+
+
 def test_a_blob_is_mirrored_and_a_corrupted_copy_is_refused_and_read_elsewhere():
     """The console on srv-a puts a mask; srv-a's resource pass copies it to the next live peer on the ring (srv-b),
     asked first what it holds — once. A copy that rotted on srv-a is refused on the read and the blob is taken from

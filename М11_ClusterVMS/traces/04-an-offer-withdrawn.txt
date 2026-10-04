@@ -1,0 +1,60 @@
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/3", "cas": 1009, "items": {
+  "id": "3",
+  "revision": "1",
+  "name": "cam-3",
+  "source": "driverpack://file/3.mp4",
+  "enabled": "true",
+  "priority": "100",
+  "labels": "",
+  "folders": "",
+  "ref": "",
+  "cred_username": "",
+  "cred_secret": "",
+  "live": "always",
+  "kind": "video",
+  "deleted": "true"
+}}
+→ 200 {"index": 1049}
+
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/retention/3", "cas": "", "items": {"days": "0"}}
+→ 200 {"index": 1050}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1035, "items": {
+  "units": "1,5,7",
+  "rev": "5"
+}}
+→ 200 {"index": 1051}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/3", "cas": 1026, "items": {
+  "worker": "",
+  "reason": "deleted",
+  "at": "1757500000.0",
+  "rev": "2"
+}}
+→ 200 {"index": 1052}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/9", "cas": "", "items": {
+  "worker": "w-srv-a-1",
+  "reason": "most free capacity (1) among 2 worker(s); on srv-a, whose resource is live",
+  "at": "1757500000.0",
+  "rev": "1"
+}}
+→ 200 {"index": 1053}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1051, "items": {
+  "units": "1,5,7,9",
+  "rev": "6"
+}}
+→ 200 {"index": 1054}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
+→ 200 {"index": 1055}
+
+# … and 42 GET requests, omitted

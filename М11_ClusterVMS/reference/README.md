@@ -1,3 +1,5 @@
+> **Historical (the М11 rework, 3 October 2026).** This directory is the record of the FIRST ClusterVMS design — a cluster run by Nomad, its Variables as the store, its ACL policies as the rights. The module no longer works that way: every server runs the same systemd units, the store is the platform's `configstore` (raft over the servers, a socket per role, rights from a file generated from the spec), and the objects are files on each server read across through the resources — `../clustervms/README.md`. A short rewritten Nomad appendix for a site that runs an orchestrator anyway is `../clustervms/deploy/nomad/`. The files below are kept as they were and are not run by any suite.
+
 # М11 reference — what runs without a cluster
 
 | File | Lesson | Runs |

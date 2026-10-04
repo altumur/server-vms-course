@@ -1,0 +1,19 @@
+GET /metrics
+# TYPE vms_workers_live gauge
+vms_workers_live 2
+# TYPE vms_worker_load gauge
+vms_worker_load{worker="w-srv-a-1"} 1.000
+vms_worker_load{worker="w-srv-b-1"} 1.000
+# TYPE vms_workers_needed gauge
+vms_workers_needed{labels=""} 0
+vms_workers_needed{labels="vlan:cctv-b"} 1
+# TYPE vms_units_short gauge
+vms_units_short{labels=""} 0
+vms_units_short{labels="vlan:cctv-b"} 1
+# TYPE vms_spare_offers gauge
+vms_spare_offers{labels=""} 0
+vms_spare_offers{labels="vlan:cctv-b"} 1
+# TYPE vms_server_labels gauge
+vms_server_labels{server="srv-a",labels="vlan:cctv-a",source="node"} 1
+vms_server_labels{server="srv-b",labels="vlan:cctv-a,vlan:cctv-b",source="node"} 1
+vms_server_labels{server="srv-c",labels="",source="node"} 1

@@ -1,156 +1,68 @@
-# console
-GET /v1/var/vms/cameras/1?namespace=default
-→ 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
-    "id": "1",
-    "revision": "1",
-    "name": "before",
-    "source": "driverpack://file/1.mp4",
-    "enabled": "true",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  },
-  "ModifyIndex": 1008
-}
+# console on srv-b → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+  "id": "1",
+  "revision": "2",
+  "name": "edited during the failover",
+  "source": "driverpack://file/1.mp4",
+  "enabled": "true",
+  "priority": "100",
+  "labels": "vlan:cctv-a",
+  "folders": "",
+  "ref": "",
+  "cred_username": "",
+  "cred_secret": "",
+  "live": "always",
+  "kind": "video"
+}}
+→ 200 {"index": 1011}
 
-# console
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1008
-{
-  "Items": {
-    "id": "1",
-    "revision": "2",
-    "name": "edited during the failover",
-    "source": "driverpack://file/1.mp4",
-    "enabled": "true",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  }
-}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1014}
+# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1007, "items": {
+  "holder": "srv-b:4102",
+  "until": "1757500095.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1012}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/platform/schema?namespace=default
-→ 404
+# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1012, "items": {
+  "holder": "srv-b:4102",
+  "until": "1757500125.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1013}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/platform/decommission/srv-b?namespace=default
-→ 404
+# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-b-1", "cas": 1013, "items": {
+  "holder": "srv-b:4102",
+  "until": "1757500158.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1014}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-1", "ModifyIndex": 1009}]
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": 1008, "items": {
+  "worker": "w-srv-b-1",
+  "reason": "server srv-a gone: slot w-srv-a-1 lapsed and its resource silent; most free capacity (50); on srv-b",
+  "at": "1757500113.0",
+  "rev": "2"
+}}
+→ 200 {"index": 1015}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/vms/slots/w-1?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-1",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1009, "items": {"units": "", "rev": "2"}}
+→ 200 {"index": 1016}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/vms/slots/w-1?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-1",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+→ 200 {"index": 1017}
 
-# vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/slots/w-1?namespace=default&cas=1009
-{"Items": {"holder": "alloc-0077", "until": "1757500065.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-1", "ModifyIndex": 1015}
+# vmsworker w-srv-b-1 on srv-b → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
+→ 200 {"index": 1018}
 
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/objects/vms/heartbeats/w-1?namespace=default
-→ 200 {
-  "Path": "objects/vms/heartbeats/w-1",
-  "Items": {
-    "data": {
-      "worker": "w-1",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-a",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-a",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "/data/archive",
-      "fetched": "",
-      "schema": 1,
-      "build": "dev"
-    }
-  },
-  "ModifyIndex": 1010
-}
-
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/vms/workers/w-1?namespace=default
-→ 200 {"Path": "vms/workers/w-1", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1012}
-
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/vms/cameras/1?namespace=default
-→ 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
-    "id": "1",
-    "revision": "2",
-    "name": "edited during the failover",
-    "source": "driverpack://file/1.mp4",
-    "enabled": "true",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  },
-  "ModifyIndex": 1014
-}
-
-# vmsworker (allocation 1 on srv-b)
-GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "1"}, "ModifyIndex": 1013}
-
-# vmsworker (allocation 1 on srv-b)
-PUT /v1/var/vms/epoch/1?namespace=default&cas=1013
-{"Items": {"epoch": "2"}}
-→ 200 {"Path": "vms/epoch/1", "ModifyIndex": 1016}
+# … and 30 GET requests, omitted
+# w-srv-b-1 runs camera 1 as 'edited during the failover'

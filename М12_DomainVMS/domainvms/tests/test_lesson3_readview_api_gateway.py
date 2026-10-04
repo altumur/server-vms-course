@@ -372,7 +372,7 @@ def test_what_the_doors_open_in_code_the_jobs_turn_on_and_a_monitor_is_an_addres
         assert '"/run/vms-console:/run/vms-console"' in job and 'variable "monitors"' in job
     tmpfiles = open(os.path.join(here, "..", "..", "vmsserver", "deploy", "vms.tmpfiles")).read()
     assert "d /run/vms-console 0700 root root" in tmpfiles
-    cluster = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "console.nomad.hcl")).read()
+    cluster = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "nomad", "console.nomad.hcl")).read()
     assert "10.0.0.0/8" not in cluster.split("CONSOLE_MONITORS =", 1)[1].split("\n", 1)[0]
     assert 'CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"' in cluster
 

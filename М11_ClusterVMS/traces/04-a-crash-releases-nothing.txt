@@ -1,25 +1,23 @@
-# vmscontroller
-GET /v1/vars?prefix=vms/placement/&namespace=default
-→ 200 [{"Path": "vms/placement/1", "ModifyIndex": 1011}]
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/placement/
+→ 200 {"keys": {"vms/placement/1": 1007}}
 
-# vmscontroller
-GET /v1/var/vms/placement/1?namespace=default
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=vms/placement/1
 → 200 {
-  "Path": "vms/placement/1",
-  "Items": {
-    "worker": "w-2",
+  "items": {
+    "worker": "w-srv-c-1",
     "reason": "most free capacity (50) among 1 worker(s); on srv-c, whose resource is live",
     "at": "1757500000.0",
     "rev": "1"
   },
-  "ModifyIndex": 1011
+  "index": 1007
 }
 
-# vmscontroller
-GET /v1/var/vms/cameras/1?namespace=default
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=vms/cameras/1
 → 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
+  "items": {
     "id": "1",
     "revision": "1",
     "name": "cam-1",
@@ -34,251 +32,70 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1008
+  "index": 1005
 }
 
-# vmscontroller
-GET /v1/vars?prefix=objects/vms/heartbeats/&namespace=default
-→ 200 [{"Path": "objects/vms/heartbeats/w-2", "ModifyIndex": 1010}]
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
 
-# vmscontroller
-GET /v1/var/objects/vms/heartbeats/w-2?namespace=default
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=vms/slots/w-srv-c-1
+→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/drain
+→ 200 {"items": null, "index": ""}
+
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=platform/decommission/
+→ 200 {"keys": {}}
+
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
+
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=vms/slots/w-srv-c-1
+→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/decommission/srv-c
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {"vms/slots/w-srv-c-1": 1006}}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-c-1
+→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-c-1
+→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
+  "holder": "srv-c:4102",
+  "until": "1757500047.0",
+  "released": "false",
+  "gen": "2"
+}}
+→ 200 {"index": 1010}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/workers/w-srv-c-1
+→ 200 {"items": {"units": "1", "rev": "1"}, "index": 1008}
+
+# vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/cameras/1
 → 200 {
-  "Path": "objects/vms/heartbeats/w-2",
-  "Items": {
-    "data": {
-      "worker": "w-2",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-c",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-b",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "/data/archive",
-      "fetched": "",
-      "schema": 1,
-      "build": "dev"
-    }
-  },
-  "ModifyIndex": 1010
-}
-
-# vmscontroller
-GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-2", "ModifyIndex": 1009}]
-
-# vmscontroller
-GET /v1/var/vms/slots/w-2?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-2",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
-
-# vmscontroller
-GET /v1/var/platform/drain?namespace=default
-→ 404
-
-# vmscontroller
-GET /v1/vars?prefix=platform/decommission/&namespace=default
-→ 200 []
-
-# vmscontroller
-GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-2", "ModifyIndex": 1009}]
-
-# vmscontroller
-GET /v1/var/vms/slots/w-2?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-2",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
-
-# vmscontroller
-GET /v1/var/objects/vms/heartbeats/w-2?namespace=default
-→ 200 {
-  "Path": "objects/vms/heartbeats/w-2",
-  "Items": {
-    "data": {
-      "worker": "w-2",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-c",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-b",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "/data/archive",
-      "fetched": "",
-      "schema": 1,
-      "build": "dev"
-    }
-  },
-  "ModifyIndex": 1010
-}
-
-# vmscontroller
-GET /v1/var/objects/vms/heartbeats/w-2?namespace=default
-→ 200 {
-  "Path": "objects/vms/heartbeats/w-2",
-  "Items": {
-    "data": {
-      "worker": "w-2",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-c",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-b",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "/data/archive",
-      "fetched": "",
-      "schema": 1,
-      "build": "dev"
-    }
-  },
-  "ModifyIndex": 1010
-}
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/platform/schema?namespace=default
-→ 404
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/platform/decommission/srv-a?namespace=default
-→ 404
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/vars?prefix=vms/slots/&namespace=default
-→ 200 [{"Path": "vms/slots/w-2", "ModifyIndex": 1009}]
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/vms/slots/w-2?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-2",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/vms/slots/w-2?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-2",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1009
-}
-
-# vmsworker (allocation 2 on srv-a)
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1009
-{"Items": {"holder": "alloc-0099", "until": "1757500105.0", "released": "false", "gen": "2"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1014}
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/objects/vms/heartbeats/w-2?namespace=default
-→ 200 {
-  "Path": "objects/vms/heartbeats/w-2",
-  "Items": {
-    "data": {
-      "worker": "w-2",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-c",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-b",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "/data/archive",
-      "fetched": "",
-      "schema": 1,
-      "build": "dev"
-    }
-  },
-  "ModifyIndex": 1010
-}
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/vms/workers/w-2?namespace=default
-→ 200 {"Path": "vms/workers/w-2", "Items": {"units": "1", "rev": "1"}, "ModifyIndex": 1012}
-
-# vmsworker (allocation 2 on srv-a)
-GET /v1/var/vms/cameras/1?namespace=default
-→ 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
+  "items": {
     "id": "1",
     "revision": "1",
     "name": "cam-1",
@@ -293,5 +110,5 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1008
+  "index": 1005
 }

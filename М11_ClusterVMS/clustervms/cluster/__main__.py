@@ -1,24 +1,30 @@
-"""python3 -m cluster worker | controller | recorder | reccontroller | console | resource — the jobs
-(each resource keeps the event index over its own tree; the recorder is the only writer of footage, through
-the host's obsd — the `obsd` system job, which is not a Python process).
+"""python3 -m cluster worker | controller | recorder | reccontroller | console | resource | rights — the processes of
+a server, each started by its own unit (`deploy/systemd/`, `deploy/launchd/`); each resource keeps the event index
+over its own tree; the recorder is the only writer of footage, through the host's obsd (`vms-obsd.service`, which
+is not a Python process). `rights` prints the configstore's rights file generated from the spec (`cluster/rights.py`).
 
-    CONFIG_URL                         the store, as a URL: nomad://host:port here, k8s://ns/prefix at a k8s site,
-                                       file:///path on a bench. Defaults from NOMAD_ADDR; NOMAD_TOKEN is the task's
-                                       own workload identity and is read by the nomad backend alone
-    OBJECTS=variables://objects        the object store — heartbeats and the snapshot — as Variables (the default);
-                                       s3+http://… when a cluster is large enough to want MinIO; file:///path on a bench
-    SLOT_INDEX, SERVER_NAME, LABELS    worker, recorder: the slot to claim (w-<i>, r-<i>), the server, what it can reach —
-                                       neutral names (`w2cplatform/runtime.py`); the jobspec maps NOMAD_ALLOC_INDEX,
-                                       node.unique.name and meta.labels into them, a k8s manifest the ordinal and a fieldRef
+    PLATFORM_STORE                     the store, as a URL: this server's configstore daemon by the role's own socket,
+                                       `configstore:///run/configstore/<role>.sock` (the default, by the verb's role);
+                                       `CONFIG_URL` is the older name (product P7); `file:///path` on a bench
+    OBJECTS                            the object store: `cluster:///data/platform/objects?resource=http://127.0.0.1:8090`
+                                       (the default) — this server's objects as files, every server's through the
+                                       resource on this one, the create-only keys as rows in the process's own store;
+                                       `s3+http://…` on a rented cluster (М12 Lesson 8); `file:///path` on a bench
+    WORKER_NAME                        worker, recorder: the name to claim, from the unit (`w-%l-1`, `r-%l-1`: one per
+                                       server and role, product P4); `SLOT_INDEX` the older way (`w-<i>`)
+    SPARE_FOR                          worker, recorder: a SPARE for this label set, started by `w2c-spares.sh` — it takes
+                                       only an offer of the set (`Worker.claim_slot(spare_for=)`), else waits holding nothing
+    SERVER_NAME, LABELS                the server, what it can reach (`/etc/w2c/w2c.env`) — neutral names
+                                       (`w2cplatform/runtime.py`); a unit or an orchestrator fills them alike
     ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
                                        recorder's own volume goes beside it (`/data/volume`) when nothing is declared
-    OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (/run/obsd/obsd.sock, set by the job; also the default)
-    ARCHIVE_URL                        recorder: what its heartbeat says the door is — the node's IP, so the console and
+    OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (its default: where the obsd unit listens)
+    ARCHIVE_URL                        recorder: what its heartbeat says the door is — the server's IP, so the console and
                                        a primary backfilling from a backup reach it with no DNS between servers
     ARCHIVE_HOST, ARCHIVE_PORT         recorder: what its archive door binds. The host defaults to the address
                                        ARCHIVE_URL names, else loopback — never every interface: the door has no
-                                       authentication, so it opens exactly where the job said it is reachable
-    RESOURCE_URL                       resource: how the console reaches this server's events
+                                       authentication, so it opens exactly where the unit said it is reachable
+    RESOURCE_URL                       resource: how the console and the other resources reach this server's
     CAPACITY                           worker: cameras it can carry on this server
     COMMANDS_BEAT                      worker: how often it looks at its request rows between passes, seconds (0.25);
                                        0 — only on the pass. Each look is one list of `vms/requests/` in the store
@@ -35,19 +41,27 @@ from urllib.parse import urlsplit
 
 import cluster  # noqa: F401  — puts М10's vmsserver on sys.path
 from w2cplatform import runtime
-from w2cplatform.variables import open_vars
-
-# The store seam. `nomad://` is registered by `cluster/variables.py`; the default keeps the
-# cluster working with no new environment, and a k8s site changes this one variable.
-CONFIG_URL = os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", "")
+from w2cplatform.variables import open_vars, store_url
 
 from cluster.objectstore import open_store
-from cluster.variables import NomadVariables
+
+# Each verb is one role of the configstore's rights file: the socket its unit's group opens, and what it may do there.
+ROLES = {"worker": "vmsworker", "recorder": "recworker", "controller": "vmscontroller", "reccontroller": "reccontroller",
+         "console": "console", "resource": "resource"}
+OBJECTS = "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
 stop = threading.Event()
-objects = open_store(os.environ.get("OBJECTS", "variables://objects"))
 archive = os.environ.get("ARCHIVE", "/data/archive")
+
+
+# The process's two stores, opened when it runs and never at import (a test imports this module): the store by its
+# role's socket, and the objects — whose create-only keys are rows in THAT store, through the same socket and its
+# rights, not a second handle opened from the environment.
+def stores(role: str, env=None):
+    env = os.environ if env is None else env
+    vars_ = open_vars(store_url(env, f"configstore:///run/configstore/{role}.sock"))
+    return vars_, open_store(env.get("OBJECTS") or OBJECTS, vars_=vars_)
 
 
 def worker() -> None:
@@ -56,20 +70,20 @@ def worker() -> None:
     from cluster.worker import ClusterWorker
     try:
         from gstvms.actuator import GstActuator
-        # Bound to loopback unless the job opens it (`RTSP_HOST`, М10B Lesson 4) — and in a cluster the job
+        # Bound to loopback unless the unit opens it (`RTSP_HOST`, М10B Lesson 4) — and in a cluster the unit
         # does: a recorder on another server has to reach it. There is no authentication at this door; what
-        # the job opens, the cluster's network has to keep closed.
+        # the unit opens, the cluster's network has to keep closed.
         act = GstActuator(rtsp_address=os.environ.get("RTSP_HOST", "127.0.0.1"))
     except ImportError:
         logging.warning("no GStreamer: the fake actuator holds nothing"); act = None
-    w = ClusterWorker(open_vars(CONFIG_URL), objects, act)
+    w = ClusterWorker(*stores("vmsworker"), act)
     w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # a door announces what it bound
-    logging.info("worker %s on %s (alloc %s) claimed its slot; labels %s", w.name, w.server, w.alloc, w.labels)
+    logging.info("worker %s on %s (instance %s) claimed its slot; labels %s", w.name, w.server, w.instance, w.labels)
     # `beat`: between two passes the worker looks at its request rows every quarter of a second (`COMMANDS_BEAT`;
-    # 0 — only on the pass), as on a box (М10B Lesson 25). Here each look is a list of `vms/requests/` in Nomad's
-    # Variables: an ordinary read, answered by the leader — not a blocking query, and not a stale one.
+    # 0 — only on the pass), as on a box (М10B Lesson 25). Here each look is a list of `vms/requests/` through this
+    # server's configstore: a read through the log, answered by the leader — never a stale one.
     from vms.worker import commands_beat
-    w.run(stop=stop, beat=commands_beat(os.environ))   # SIGTERM from Nomad → release_slot(): scale-in, not a crash
+    w.run(stop=stop, beat=commands_beat(os.environ))   # SIGTERM from systemd → release_slot(): a stop, not a crash
 
 
 def recorder() -> None:
@@ -81,14 +95,14 @@ def recorder() -> None:
         act = GstRecActuator()
     except ImportError:
         logging.warning("no GStreamer: the fake actuator records nothing"); act = None
-    r = ClusterRecorder(open_vars(CONFIG_URL), objects, act, archive_root=archive)
-    # The door binds where the job says it is reachable (`ARCHIVE_URL`), else loopback — `0.0.0.0` was the
+    r = ClusterRecorder(*stores("recworker"), act, archive_root=archive)
+    # The door binds where the unit says it is reachable (`ARCHIVE_URL`), else loopback — `0.0.0.0` was the
     # default, and a door with no authentication on every interface is what the review's second pass found.
     announced = urlsplit(os.environ.get("ARCHIVE_URL", "")).hostname
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST") or announced or "127.0.0.1", int(os.environ.get("ARCHIVE_PORT", "8084")))
-    r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the job says how to reach it: an address, no DNS between servers
-    logging.info("recorder %s on %s (alloc %s) claimed its slot; labels %s; archive door %s",
-                 r.name, r.server, r.alloc, r.labels, r.archive_url)
+    r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the unit says how to reach it: an address, no DNS between servers
+    logging.info("recorder %s on %s (instance %s) claimed its slot; labels %s; archive door %s",
+                 r.name, r.server, r.instance, r.labels, r.archive_url)
     try:
         r.run(stop=stop)
     finally:
@@ -96,11 +110,11 @@ def recorder() -> None:
 
 
 def reccontroller() -> None:
-    """count = 1, the only writer of rec placement: which recorder writes which camera's footage, where the
-    resource answers, one recorder per server by default (rec/policy)."""
+    """the only writer of rec placement — a unit on every server, safe at two: which recorder writes which camera's
+    footage, where the resource answers, one recorder per server by default (rec/policy)."""
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
-    ctl = SpecController(REC_SPEC, open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")))
+    ctl = SpecController(REC_SPEC, *stores("reccontroller"), capacity=int(os.environ.get("CAPACITY", "50")))
     while not stop.is_set():
         _placement_pass("rec placement", ctl)
         stop.wait(5)
@@ -140,16 +154,17 @@ def _steps(what: str, *steps) -> None:
 #
 # Both in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): the snapshot asks every unit's
 # row, placement and server, and the placement pass has just read them — a thousand cameras cost the two together some
-# 64 000 reads of Nomad's leader every five seconds, 2 000-odd now (`vmsserver/tests/test_read_budget.py`).
+# 64 000 reads of the store's leader every five seconds, 2 000-odd now (`vmsserver/tests/test_read_budget.py`).
 def _placement_pass(what: str, ctl) -> None:
     with ctl.one_pass():
         _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
 
 
 def controller() -> None:
-    """count = 1, the only writer of placement. No HTTP: nothing asks it anything."""
+    """the only writer of placement — a unit on every server, safe at two (every write a CAS, lesson 10). No HTTP:
+    nothing asks it anything."""
     from cluster.controller import ClusterController
-    ctl = ClusterController(open_vars(CONFIG_URL), objects, capacity=int(os.environ.get("CAPACITY", "50")),
+    ctl = ClusterController(*stores("vmscontroller"), capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER", "cluster-a"))
     while not stop.is_set():
         _placement_pass("placement", ctl)
@@ -157,14 +172,14 @@ def controller() -> None:
 
 
 def console() -> None:
-    """one per server, a system job: the page and the API. Its token writes the
+    """one per server: the page and the API. Its socket writes the
     operator's rows and nothing else; a create is placed by the controller's next
     pass. No event index of its own: /events asks the live resources and merges."""
     from cluster.console import serve
     from cluster.controller import ClusterController
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
-    vars_ = open_vars(CONFIG_URL)
+    vars_, objects = stores("console")
     ctl = ClusterController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER", "cluster-a"))
     srv = serve(ctl, os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8080")),
@@ -175,12 +190,13 @@ def console() -> None:
 
 
 def resource() -> None:
-    """М10's resource process as a job: the platform's Resource with the VMS registered on it, and the event index over its own tree."""
+    """М10's resource process, the platform's unit on every server: the Resource with the VMS registered on it, the event
+    index over its own tree, and the door to this server's objects (`/v1/objects`)."""
     from cluster.resource import cluster_resource
     from w2cplatform.resource import serve
     server = runtime.server(os.environ)
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
-    res = cluster_resource(archive, server, url, open_vars(CONFIG_URL), objects)
+    res = cluster_resource(archive, server, url, *stores("resource"))
     srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")))
     try:                                          # a store away at the start does not end the process (the eighth review)
         res.heartbeat()
@@ -192,7 +208,7 @@ def resource() -> None:
         logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
     last_policy = 0.0
     while not stop.is_set():
-        # Two jobs, two tries, as М10's resource loop has them (`vms/__main__.py`; the review's seventh pass, part 2):
+        # Two tasks, two tries, as М10's resource loop has them (`vms/__main__.py`; the review's seventh pass, part 2):
         # they shared one here, so a heartbeat that raised skipped the pass, and a pass that raised was tried again
         # every ten seconds instead of every ten minutes.
         try:
@@ -218,6 +234,9 @@ if __name__ == "__main__":
     # Only when run, as М10's entry point does (`vms/__main__.py`; the review's sixth pass): installed at import, the
     # handler takes the signals of whatever process imports this module — a test run — and a signal sent to stop
     # that run is swallowed.
+    if sys.argv[1:2] == ["rights"]:
+        from cluster.rights import main as rights
+        sys.exit(rights(sys.argv[2:]))
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "controller": controller, "recorder": recorder, "reccontroller": reccontroller,

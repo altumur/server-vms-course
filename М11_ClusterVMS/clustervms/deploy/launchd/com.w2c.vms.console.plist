@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- /Library/LaunchDaemons/com.w2c.vms.console.plist — the VMS console: the page and the API (М11, a macOS server; the
+     systemd unit's twin, deploy/systemd/). `install.sh` puts @HOST@ (this host's short name) in place: launchd has
+     no %l. /etc/w2c/w2c.env and /etc/vms/vms.env are read by w2c-run.sh under what this file says. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.w2c.vms.console</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/opt/w2c/bin/w2c-run.sh</string>
+		<string>console</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PLATFORM_STORE</key>
+		<string>configstore:///var/run/configstore/console.sock</string>
+		<key>CONSOLE_PORT</key>
+		<string>8080</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>2</integer>
+	<key>StandardErrorPath</key>
+	<string>/var/log/w2c/com.w2c.vms.console.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/log/w2c/com.w2c.vms.console.log</string>
+</dict>
+</plist>

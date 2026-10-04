@@ -1,59 +1,65 @@
-# recworker (allocation 0 on srv-a)
-GET /v1/var/platform/schema?namespace=default
-→ 404
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/platform/decommission/srv-a?namespace=default
-→ 404
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/decommission/srv-a
+→ 200 {"items": null, "index": ""}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/vars?prefix=rec/slots/&namespace=default
-→ 200 []
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/slots/
+→ 200 {"keys": {}}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/rec/slots/r-0?namespace=default
-→ 404
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/slots/r-srv-a-1
+→ 200 {"items": null, "index": ""}
 
-# recworker (allocation 0 on srv-a)
-PUT /v1/var/rec/slots/r-0?namespace=default&cas=0
-{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1"}}
-→ 200 {"Path": "rec/slots/r-0", "ModifyIndex": 1002}
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": "", "items": {
+  "holder": "srv-a:4101",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1005}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/objects/rec/heartbeats/r-0?namespace=default
-→ 404
+# resource on srv-a → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {"keys": {"platform/doors/srv-a": 1001, "platform/doors/srv-b": 1002, "platform/doors/srv-c": 1003}}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/platform/schema?namespace=default
-→ 404
+# resource on srv-a → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-b
+→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0"}, "index": 1002}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/rec/slots/r-0?namespace=default
+# resource on srv-a → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-c
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0"}, "index": 1003}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/slots/r-srv-a-1
+→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1005}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/slots/r-srv-a-1", "cas": 1005, "items": {
+  "holder": "srv-a:4101",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1006}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/list?prefix=rec/volumes/
+→ 200 {"keys": {"rec/volumes/disks-a": 1004}}
+
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/volumes/disks-a
 → 200 {
-  "Path": "rec/slots/r-0",
-  "Items": {
-    "holder": "alloc-0001",
-    "until": "1757500045.0",
-    "released": "false",
-    "gen": "1"
-  },
-  "ModifyIndex": 1002
-}
-
-# recworker (allocation 0 on srv-a)
-PUT /v1/var/rec/slots/r-0?namespace=default&cas=1002
-{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1"}}
-→ 200 {"Path": "rec/slots/r-0", "ModifyIndex": 1003}
-
-# recworker (allocation 0 on srv-a)
-GET /v1/vars?prefix=rec/volumes/&namespace=default
-→ 200 [{"Path": "rec/volumes/disks-a", "ModifyIndex": 1001}]
-
-# recworker (allocation 0 on srv-a)
-GET /v1/var/rec/volumes/disks-a?namespace=default
-→ 200 {
-  "Path": "rec/volumes/disks-a",
-  "Items": {
+  "items": {
     "kind": "local",
     "url": "/data/srv-a/archive",
     "server": "srv-a",
@@ -62,84 +68,42 @@ GET /v1/var/rec/volumes/disks-a?namespace=default
     "access_key": "",
     "enabled": "true"
   },
-  "ModifyIndex": 1001
+  "index": 1004
 }
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/rec/holds/disks-a?namespace=default
-→ 404
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/holds/disks-a
+→ 200 {"items": null, "index": ""}
 
-# recworker (allocation 0 on srv-a)
-PUT /v1/var/rec/holds/disks-a?namespace=default&cas=0
-{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1", "by": "r-0"}}
-→ 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1004}
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": "", "items": {
+  "holder": "srv-a:4101",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1",
+  "by": "r-srv-a-1"
+}}
+→ 200 {"index": 1007}
 
-# recworker (allocation 0 on srv-a)
-GET /v1/var/rec/holds/disks-a?namespace=default
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+GET /v1/get?key=rec/holds/disks-a
 → 200 {
-  "Path": "rec/holds/disks-a",
-  "Items": {
-    "holder": "alloc-0001",
+  "items": {
+    "holder": "srv-a:4101",
     "until": "1757500045.0",
     "released": "false",
     "gen": "1",
-    "by": "r-0"
+    "by": "r-srv-a-1"
   },
-  "ModifyIndex": 1004
+  "index": 1007
 }
 
-# recworker (allocation 0 on srv-a)
-PUT /v1/var/rec/holds/disks-a?namespace=default&cas=1004
-{"Items": {"holder": "alloc-0001", "until": "1757500045.0", "released": "false", "gen": "1", "by": "r-0"}}
-→ 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1005}
-
-# recworker (allocation 0 on srv-a)
-PUT /v1/var/objects/rec/heartbeats/r-0?namespace=default
-{
-  "Items": {
-    "data": {
-      "worker": "r-0",
-      "ts": 1757500000.0,
-      "status": [],
-      "server": "srv-a",
-      "instance": "alloc-0001",
-      "alloc": "alloc-0001",
-      "labels": "vlan:cctv-a",
-      "assignment_rev": 0,
-      "fenced": false,
-      "conflicts": 0,
-      "passes": 0,
-      "store_errors": 0,
-      "pass_failures": 0,
-      "unconfirmed": 0,
-      "capacity": 50,
-      "headroom": 50,
-      "started": 1757500000.0,
-      "previous_hb": 0.0,
-      "previous_instance": "",
-      "previous_server": "",
-      "devices": [],
-      "archive": "file:///data/srv-a/volume",
-      "fetched": "",
-      "volume": "disks-a",
-      "archive_quota": 67108864,
-      "volume_quota": 4000000000000,
-      "volume_error": "",
-      "archive_error": "",
-      "archive_away_since": 0.0,
-      "archive_failure": "",
-      "writer": {
-        "state": "ok"
-      },
-      "refused": {},
-      "closed": "",
-      "nowhere_seconds": 0,
-      "backfill": {
-        "refused_seconds": 0
-      },
-      "schema": 1,
-      "build": "dev"
-    }
-  }
-}
-→ 200 {"Path": "objects/rec/heartbeats/r-0", "ModifyIndex": 1006}
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": 1007, "items": {
+  "holder": "srv-a:4101",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1",
+  "by": "r-srv-a-1"
+}}
+→ 200 {"index": 1008}

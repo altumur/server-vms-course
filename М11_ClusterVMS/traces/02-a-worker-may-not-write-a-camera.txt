@@ -1,4 +1,3 @@
-# vmsworker (allocation 0 on srv-a)
-PUT /v1/var/vms/cameras/1?namespace=default
-{"Items": {"name": "mine now"}}
-→ 403 "Permission denied"
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": null, "items": {"name": "mine now"}}
+→ 403 {"kind": "forbidden", "error": "vmsworker may not write vms/cameras/1"}

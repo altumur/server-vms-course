@@ -1,30 +1,34 @@
-# vmsworker (allocation 1 on srv-a)
-GET /v1/var/platform/schema?namespace=default
-→ 404
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
 
-# vmsworker (allocation 1 on srv-a)
-GET /v1/var/vms/slots/w-1?namespace=default
-→ 200 {
-  "Path": "vms/slots/w-1",
-  "Items": {
-    "holder": "alloc-B",
-    "until": "1757500093.0",
-    "released": "false",
-    "gen": "2"
-  },
-  "ModifyIndex": 1025
-}
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-a-1
+→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1010}
 
-# vmsworker (allocation 1 on srv-a)
-GET /v1/var/vms/epoch/1?namespace=default
-→ 200 {"Path": "vms/epoch/1", "Items": {"epoch": "2"}, "ModifyIndex": 1026}
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items": {
+  "holder": "srv-a:4101",
+  "until": "1757500138.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1036}
 
-# vmsworker (allocation 1 on srv-a)
-GET /v1/var/vms/epoch/2?namespace=default
-→ 200 {"Path": "vms/epoch/2", "Items": {"epoch": "2"}, "ModifyIndex": 1027}
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/epoch/1
+→ 200 {"items": {"epoch": "2"}, "index": 1033}
 
-# vmsworker (allocation 1 on srv-a)
-GET /v1/var/vms/epoch/3?namespace=default
-→ 200 {"Path": "vms/epoch/3", "Items": {"epoch": "2"}, "ModifyIndex": 1028}
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/epoch/2
+→ 200 {"items": {"epoch": "2"}, "index": 1034}
 
-# a.conflicts() = 3, a.recording_allowed = False
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/epoch/3
+→ 200 {"items": {"epoch": "2"}, "index": 1035}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/workers/w-srv-a-1
+→ 200 {"items": {"units": "", "rev": "6"}, "index": 1031}
+
+# a.lease_pass() lost ['1', '2', '3']; running []; its assignment now []; its name is still its own: w-srv-a-1

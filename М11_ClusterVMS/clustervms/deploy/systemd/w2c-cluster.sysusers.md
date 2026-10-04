@@ -1,0 +1,3 @@
+# w2c-cluster.sysusers — the users and groups of a cluster server
+
+**Role in the module.** Lesson 5. `w2c` runs the platform (configstore, the resource), `vms` the subsystem's processes. A group per role of the store's rights file — the role's `group` there: `w2c-resource`, `vms-console`, `vms-vmscontroller`, `vms-reccontroller`, `vms-vmsworker`, `vms-recworker` — which a unit joins (`SupplementaryGroups=`) and so opens its own role's socket and no other. The daemon chowns every socket to its group, so `w2c` is a member of each, and of `vms` (the shared objects and events). `vms-obsd` is М10's (`obsd.sysusers`, gid 2101).

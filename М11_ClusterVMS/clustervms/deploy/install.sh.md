@@ -1,0 +1,14 @@
+# install.sh — make a machine a server of the cluster
+
+**Role in the module.** Lesson 3. One script, as root, on every server, from a checkout of the course: `deploy/install.sh [--spares]`. It replaces what Nomad did as the installer of processes (`nomad job run …`): the code, the users, the store's rights and the units, the same on every server. What it does, in order:
+
+1. **The code**: `vmsserver/` and `clustervms/` copied to `/opt/w2c/` as whole trees swapped in (`.new` → place, the previous kept as `.old`); `w2c-run.sh` to `/opt/w2c/bin/` (rm, then copy — never over a running script).
+2. **The rights, checked**: `w2c-run.sh rights --check deploy/configstore-rights.json` — a file that is not what the spec generates now is refused, not installed.
+3. **Configuration on the data partition** (the owner's decision): `/etc/w2c → /data/platform/etc` (w2c.env, `configstore-rights.json`, `tls/`, `secrets/platform.key`) and `/etc/vms → /data/vms/etc` (vms.env), as symlinks (`link_etc`). A real directory already at `/etc/…` is MOVED into `/data` first — nothing deleted; a file already there is kept, the moved one beside it as `<name>.from-etc`. A link that points elsewhere is left and said. Units and code say `/etc/w2c/…` and `/etc/vms/…`, never the target.
+4. The rights file installed; the two env files from `systemd/*.env.example` when absent (never overwritten); warnings when this server has no TLS bundle (`w2c-ca.sh issue <server> configstore`, made on the operator's machine) or no `platform.key`.
+5. **Linux**: `w2c-cluster.sysusers` and `.tmpfiles`; М10's `install-obsd.sh`, which installs and enables М10's obsd unit, and `vms-obsd.service` as an ALIAS of it (a symlink — the recorder's `After=vms-obsd.service` is that one unit, never a second daemon on the same socket); the seven units into `/etc/systemd/system`, enabled and started, `configstore` first. `--spares`: `w2c-spares.sh` into `/usr/local/bin` and М10's `w2c-spares*.{service,timer}`, the recorders' and the camera workers' timers enabled.
+6. **macOS**: every `launchd/com.w2c.*.plist` into `/Library/LaunchDaemons` with `@HOST@` replaced by this host's short name (launchd has no `%l`), booted out and bootstrapped; `com.w2c.spares.plist` and `w2c-spares.sh` only with `--spares`.
+
+## Notes
+- It makes no certificates and starts no group: the first server's `w2c.env` has no `CONFIGSTORE_JOIN` (`-bootstrap`, a group of one), every other's names a member — lesson 2. A box's rows come over once with `configstore import --from file:///data/platform/config` (WP1).
+- `tests/test_units.py::test_install_installs_the_units_there_are`: the units it lists are the units there are.

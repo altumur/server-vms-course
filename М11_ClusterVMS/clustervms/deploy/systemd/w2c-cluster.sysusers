@@ -1,0 +1,22 @@
+# /usr/lib/sysusers.d/w2c-cluster.conf — the users and groups of a cluster server.
+# w2c runs the platform (configstore, the resource), vms the subsystem's processes. Each role of the store's rights
+# file has a group of the same name as its socket's (`vms-<role>`, the platform's `w2c-<role>`): a unit joins its
+# own (`SupplementaryGroups=`) and opens no other socket. The daemon chowns every socket to its group, so w2c is a
+# member of each. vms-obsd (М10's `obsd.sysusers`, gid 2101) is the group the archive's engine lets in.
+g w2c               -
+g vms               -
+u w2c               -     "w2c platform (configstore, resource)" /data/platform -
+u vms               -     "VMS subsystem processes"               /data/archive -
+g w2c-resource      -
+g vms-console       -
+g vms-vmscontroller -
+g vms-reccontroller -
+g vms-vmsworker     -
+g vms-recworker     -
+m w2c w2c-resource
+m w2c vms-console
+m w2c vms-vmscontroller
+m w2c vms-reccontroller
+m w2c vms-vmsworker
+m w2c vms-recworker
+m w2c vms

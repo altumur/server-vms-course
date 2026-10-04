@@ -1,0 +1,3 @@
+# configstore.nomad.hcl — the appendix: the store's member on every node, as a Nomad system job
+
+**Role in the module.** The appendix «форма поставки» (the owner's decision: a short rewritten appendix; М12 Lesson 8 — a rented cluster is where an orchestrator is justified). `type = "system"`: one allocation per node, pinned there — what `configstore.service` is on a server of this module. `raw_exec` runs the host's own `w2c-run.sh configstore`: the same installation (`install.sh`), the same rights file and TLS, the same flags. Nomad is a supervisor here and nothing more: its Variables are not the store, and there are no Variables ACL policies — the rights are the daemon's.

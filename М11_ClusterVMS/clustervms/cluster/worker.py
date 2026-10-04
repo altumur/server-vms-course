@@ -1,14 +1,14 @@
-"""The worker as an allocation — and it is М10's `VmsWorker`, unchanged.
-What a runtime hands a process (SLOT_INDEX, SERVER_NAME, LABELS,
-INSTANCE_ID, CAPACITY — a Nomad jobspec maps NOMAD_ALLOC_INDEX and
-node.unique.name into those neutral names, a Kubernetes manifest the
-StatefulSet ordinal and a fieldRef) the worker reads from its environment on
-a box exactly as in an allocation; this module keeps the name М11's lessons
-used and the `env=` calling convention. Nothing here names an orchestrator:
-see `w2cplatform/runtime.py`.
+"""The worker as a unit on every server — and it is М10's `VmsWorker`, unchanged.
+What a runtime hands a process (WORKER_NAME from the unit, `w-%l-1`; SPARE_FOR
+for a spare `w2c-spares.sh` started; SERVER_NAME, LABELS, INSTANCE_ID,
+CAPACITY — or, where a site runs an orchestrator, SLOT_INDEX from its own
+index) the worker reads from its environment on a box exactly as on a cluster
+server; this module keeps the name М11's lessons used and the `env=` calling
+convention. Nothing here names a supervisor: see `w2cplatform/runtime.py`.
 
 Nothing here is new behaviour. A worker on a cluster is a worker on a box
-whose stores happen to be raft.
+whose store happens to be replicated (`configstore://`) and whose objects are
+read across the servers (`cluster://`).
 """
 from __future__ import annotations
 

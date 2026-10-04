@@ -1361,7 +1361,7 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     """The review's eighth pass, minor — a run: the host in an instance's name was `socket.gethostname()`, and two boxes
     named alike (`localhost`, `fedora`, two clones of a VM) were one host: the second instance took the first's network
     volume at once and mounted it six seconds later — no wait to spare, only the engine's fence. The host part is the
-    box's id when the runtime says it (`BOX_ID`: systemd's `%m` in the unit, Nomad's `${node.unique.id}` in the job);
+    box's id when the runtime says it (`BOX_ID`: systemd's `%m` in the unit, Nomad's `${node.unique.id}` in М11's appendix job);
     an allocation's id gets a host only from it; and the hostname is what is left when nothing is said."""
     import os
     import socket
@@ -1381,8 +1381,9 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     assert again.hold_follows_name("net", a.instance)                              # this box: at once, as before
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     assert "Environment=BOX_ID=%m" in open(os.path.join(here, "deploy", "recworker@.container")).read()
-    m11 = os.path.join(os.path.dirname(here), "М11_ClusterVMS", "clustervms", "deploy", "recworker.nomad.hcl")
-    assert 'BOX_ID      = "${node.unique.id}"' in open(m11).read()
+    m11 = os.path.join(os.path.dirname(here), "М11_ClusterVMS", "clustervms", "deploy")
+    assert "Environment=BOX_ID=%m" in open(os.path.join(m11, "systemd", "vms-recworker.service")).read()   # a cluster's server
+    assert 'BOX_ID          = "${node.unique.id}"' in open(os.path.join(m11, "nomad", "recworker.nomad.hcl")).read()   # the appendix's job
 
 
 def test_a_network_volume_busy_under_this_recorders_hold_for_ten_minutes_is_let_go_with_an_alarm():

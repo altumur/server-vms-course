@@ -1,0 +1,15 @@
+# /usr/lib/tmpfiles.d/w2c-cluster.conf — the directories of a cluster server.
+# Mutable configuration is on the data partition and /etc points there (`install.sh` lays the links): the
+# platform's /data/platform/etc (= /etc/w2c: w2c.env, the rights file, tls/, secrets/), the subsystem's /data/vms/etc
+# (= /etc/vms: vms.env). The platform's state: the store's journal, the platform's alone; the objects and the events
+# tree written by both users — a worker its heartbeat and its events, the resource a peer's copy of a blob and its
+# sweep — so group vms, setgid, and every unit writes with `UMask=0002`. /run/vms: the worker's tee for subscribers
+# on this server.
+d /data/platform              0755 w2c w2c -
+d /data/platform/etc          0755 root root -
+d /data/platform/etc/secrets  0750 root w2c -
+d /data/platform/configstore  0700 w2c w2c -
+d /data/platform/objects      2775 w2c vms -
+d /data/vms/etc               0755 root root -
+d /data/archive               2775 vms vms -
+d /run/vms                    0755 vms vms -

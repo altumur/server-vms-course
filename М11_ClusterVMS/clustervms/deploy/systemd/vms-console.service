@@ -1,0 +1,34 @@
+# /etc/systemd/system/vms-console.service — the page and the API, on every server: any server's :8080 is the
+# console, nothing in front of it. Stateless: every instance reads the same store and the same objects, and a retried
+# POST is answered the same by whichever gets it (the Idempotency-Key is a row, vms/idem/*).
+[Unit]
+Description=VMS console — the page and the API
+After=network-online.target configstore.service w2c-resource.service
+Wants=network-online.target configstore.service
+
+[Service]
+User=vms
+Group=vms
+SupplementaryGroups=vms-console
+Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
+Environment=CONSOLE_PORT=8080
+# Who is "on the box" is whoever came through this socket (`w2cplatform/access.py`, `is_local`).
+Environment=CONSOLE_UNIX=/run/vms-console/console.sock
+RuntimeDirectory=vms-console
+RuntimeDirectoryMode=0700
+# The cluster's key (`w2cplatform/sealing.py`): the console seals, the holder and the recorder open — three units
+# load it, and only their own process sees it (systemd's credentials directory, `%d`).
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
+# override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
+UMask=0002
+ExecStart=/opt/w2c/bin/w2c-run.sh console
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+MemoryMax=256M
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

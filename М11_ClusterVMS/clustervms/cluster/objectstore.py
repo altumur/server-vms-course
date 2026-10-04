@@ -246,7 +246,7 @@ def _store_from_env():
     url = store_url(os.environ) if store_url is not None else (os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL"))
     if not url:
         raise ValueError("a create-only object is a row in the store, and no store was named: "
-                         "PLATFORM_STORE=store:///run/vmsstore/<role>.sock")
+                         "PLATFORM_STORE=configstore:///run/configstore/<role>.sock")
     return v.open_vars(url)
 
 
@@ -265,6 +265,8 @@ class ClusterObjectStore:
         self._vars, self._rows = vars_, None
         self._listed: dict[str, tuple[float, set[str]]] = {}   # prefix -> (by `clock`, keys) — `list`
         self.missing: list[str] = []    # the servers the last answer of the resource named as not answering
+        self._where: dict[str, str] = {}                         # key -> the server whose copy was listed last
+        self._heard: dict[str, tuple[str, bytes]] = {}           # key -> (server, the bytes read from it last)
 
     # The rows of the create-only keys, opened on first use: from the handle the process gave, else from its environment.
     @property
@@ -349,8 +351,17 @@ class ClusterObjectStore:
                 except BlobMismatch as e:
                     log.error("objects: this server's copy of %s is not the blob (%s): read from another server", key, e)
         status, body, headers = self._door("GET", "/v1/objects/" + urllib.parse.quote(key), {"scope": "cluster"})
-        self._said_missing([s for s in headers.get("X-Missing", "").split(",") if s])
-        return None if status == 404 else body
+        missing = [s for s in headers.get("X-Missing", "").split(",") if s]
+        self._said_missing(missing)
+        if status != 404:
+            if not is_blob_key(key):
+                self._heard[key] = (str(headers.get("X-Server", "")), body)
+            return body
+        last = self._heard.get(key)
+        if last is not None and last[0] in missing:
+            return last[1]                  # its server does not answer: what it said last (`_remembered`)
+        self._heard.pop(key, None)
+        return None
 
     # Every server's keys under `prefix` (the resource's `scope=cluster`), with the create-only rows when the prefix
     # could hold any — asked again after `list_fresh` seconds; what this process wrote or deleted meanwhile is in it.
@@ -365,6 +376,7 @@ class ClusterObjectStore:
         except (ValueError, TypeError, KeyError) as e:
             raise ObjectsUnavailable(f"the resource on this server answered a listing that is not one ({e})") from None
         self._said_missing(said.get("missing"))
+        keys |= self._remembered(prefix, said["objects"], said.get("missing") or [])
         if _may_hold_create_only(prefix) and (self._vars is not None or self._rows is not None
                                               or os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL")):
             keys |= {k for k in self.rows.list(prefix) if is_create_only(k)}
@@ -386,6 +398,26 @@ class ClusterObjectStore:
             self._said_missing(said.get("missing"))
             return any((said.get("deleted") or {}).values())
         return self.local.delete(key)
+
+    # A SERVER THAT DOES NOT ANSWER IS NOT A SERVER THAT NEVER WAS (found by the module's stand, the power pull with the
+    # dead server's doors down). Its objects are files on it, and with it gone they left every listing: the last
+    # heartbeat of its worker and of its resource with them — and a controller that cannot read a worker's heartbeat
+    # cannot tell which server it ran on, so it waited for ever (`Controller.slot_fate`: "never said which server"), and
+    # a resource it cannot read is "unknown", which is not "silent": the dead server's units never moved. So a reader
+    # keeps what it last listed and read of each server, and while the resource here names that server missing, the
+    # keys it last listed are in the listing and their last bytes are what `get` answers — ageing by their own `ts`,
+    # which is how the controller sees the two silences. A reader started after the server went never heard it, and
+    # says nothing of it (the operator's decommission is for that). A server that answers again answers for itself.
+    def _remembered(self, prefix: str, listed: dict, missing: list[str]) -> set[str]:
+        for key, entry in listed.items():
+            server = entry.get("server") if isinstance(entry, dict) else None
+            if isinstance(server, str):
+                self._where[key] = server
+        gone = set(missing)
+        for key in [k for k, s in self._where.items() if k.startswith(prefix) and k not in listed and s not in gone]:
+            self._where.pop(key, None)                    # its server answered without it: deleted, or moved
+            self._heard.pop(key, None)
+        return {k for k, s in self._where.items() if k.startswith(prefix) and s in gone}
 
     def _seen(self, key: str, present: bool) -> None:
         for prefix, (_, keys) in self._listed.items():
@@ -413,7 +445,4 @@ def open_store(url: str, vars_=None) -> ObjectStore:
         return HttpObjectStore(url)
     if url.startswith("file://"):
         return FsObjectStore(url[len("file://"):])
-    if url.startswith("variables://"):
-        from .variables import NomadVariables
-        return VariablesObjectStore(NomadVariables(), url[len("variables://"):] or "objects")
     return FsObjectStore(url)

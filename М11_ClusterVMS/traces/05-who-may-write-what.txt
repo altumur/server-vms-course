@@ -1,49 +1,45 @@
-# vmsworker w-0
-PUT /v1/var/vms/epoch/7?namespace=default
-{"Items": {"epoch": "1"}}
-→ 200 {"Path": "vms/epoch/7", "ModifyIndex": 1001}
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/epoch/7", "cas": null, "items": {"epoch": "1"}}
+→ 200 {"index": 1004}
 
-# vmsworker w-0
-PUT /v1/var/vms/placement/7?namespace=default
-{"Items": {"worker": "w-0"}}
-→ 403 "Permission denied"
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {"worker": "w-srv-a-1"}}
+→ 403 {"kind": "forbidden", "error": "vmsworker may not write vms/placement/7"}
 
-# recworker r-0
-PUT /v1/var/rec/holds/disks-a?namespace=default
-{"Items": {"holder": "alloc-0002"}}
-→ 200 {"Path": "rec/holds/disks-a", "ModifyIndex": 1002}
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/holds/disks-a", "cas": null, "items": {"holder": "srv-a:4102"}}
+→ 200 {"index": 1005}
 
-# recworker r-0
-PUT /v1/var/rec/recordings/7?namespace=default
-{"Items": {"cam": "7"}}
-→ 403 "Permission denied"
+# recworker r-srv-a-1 on srv-a → /run/configstore/recworker.sock
+POST /v1/write {"op": "put", "key": "rec/recordings/7", "cas": null, "items": {"cam": "7"}}
+→ 403 {"kind": "forbidden", "error": "recworker may not write rec/recordings/7"}
 
-# vmscontroller
-PUT /v1/var/vms/placement/7?namespace=default
-{"Items": {"worker": "w-0", "reason": "…"}}
-→ 200 {"Path": "vms/placement/7", "ModifyIndex": 1003}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/7", "cas": null, "items": {
+  "worker": "w-srv-a-1",
+  "reason": "…"
+}}
+→ 200 {"index": 1006}
 
-# vmscontroller
-PUT /v1/var/vms/cameras/7?namespace=default
-{"Items": {"name": "moved"}}
-→ 403 "Permission denied"
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "moved"}}
+→ 403 {"kind": "forbidden", "error": "vmscontroller may not write vms/cameras/7"}
 
-# console
-PUT /v1/var/vms/cameras/7?namespace=default
-{"Items": {"name": "north-gate"}}
-→ 200 {"Path": "vms/cameras/7", "ModifyIndex": 1004}
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "north-gate"}}
+→ 200 {"index": 1007}
 
-# console
-PUT /v1/var/vms/workers/w-0?namespace=default
-{"Items": {"units": "7"}}
-→ 403 "Permission denied"
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": null, "items": {"units": "7"}}
+→ 403 {"kind": "forbidden", "error": "console may not write vms/workers/w-srv-a-1"}
 
-# resource srv-a
-PUT /v1/var/objects/platform/resources/srv-a/heartbeat?namespace=default
-{"Items": {"data": {}}}
-→ 200 {"Path": "objects/platform/resources/srv-a/heartbeat", "ModifyIndex": 1005}
+# resource on srv-a → /run/configstore/resource.sock
+POST /v1/write {"op": "put", "key": "platform/doors/srv-a", "cas": null, "items": {
+  "url": "http://srv-a:8090",
+  "since": "0"
+}}
+→ 200 {"index": 1008}
 
-# resource srv-a
-PUT /v1/var/objects/vms/heartbeats/w-0?namespace=default
-{"Items": {"data": {}}}
-→ 403 "Permission denied"
+# resource on srv-a → /run/configstore/resource.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/7", "cas": null, "items": {"name": "mine"}}
+→ 403 {"kind": "forbidden", "error": "resource may not write vms/cameras/7"}

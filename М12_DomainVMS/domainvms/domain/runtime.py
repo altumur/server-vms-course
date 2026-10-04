@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 
-import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme with the platform
+import cluster as _cluster  # noqa: F401  — puts М10's vmsserver on sys.path
 from cluster.objectstore import open_store
 from w2cplatform.variables import open_vars
 

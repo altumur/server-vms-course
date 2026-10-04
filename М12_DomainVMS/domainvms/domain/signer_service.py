@@ -1,6 +1,6 @@
 """python3 -m domain.signer_service — the domain signer as a process.
 
-Holds the keys (from domain/signer in the domain holder's raft), publishes
+Holds the keys (from domain/signer in the domain holder's store), publishes
 the key set and the revocation list for the agents, publishes the identity
 set object-first on a floor, and answers logins with tokens. The CA half
 (issue, renew, rotate) is driven by the registrar and by renewal requests
@@ -27,23 +27,24 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from cluster.objectstore import open_store
-from cluster.variables import NomadVariables
 
 from .agent import KEYS_PATH, DomainPublisher
 from .identity import AuthError, IdentityStore
 from .signer import DomainRoot, Signer
 from .tokens import RevocationList, TokenError, verify
-import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
+import cluster as _cluster  # noqa: F401  — puts М10's vmsserver on sys.path
 from w2cplatform.console import Deadlined, open_doors, read_body
 from w2cplatform.rows import PARSE_ERRORS
-from w2cplatform.variables import open_vars
+from w2cplatform.variables import open_vars, store_url
 
 log = logging.getLogger("domain.signer")
 
 
 def main() -> None:
     domain = os.environ.get("DOMAIN_ID", "domain")
-    vars_ = open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", ""))
+    # The domain holder's store: its configstore by the domain's own socket (`PLATFORM_STORE`, else the older
+    # `CONFIG_URL`); the role `domain` is one of the two that may delete `domain/*` rows (`storemachine.DOMAIN_ROLES`).
+    vars_ = open_vars(store_url(os.environ, "configstore:///run/configstore/domain.sock"))
     objects = open_store(os.environ.get("OBJECT_STORE_URL", "file:///data/domain"))
     pub = DomainPublisher(vars_)
     # Lesson 15, step 9: a domain whose root stays off the holder. The installer points RECOVERY_FILE at the root

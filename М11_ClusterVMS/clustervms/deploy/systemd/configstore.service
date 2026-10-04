@@ -1,0 +1,28 @@
+# /etc/systemd/system/configstore.service — this server's member of the cluster's config store.
+# One per server, before every other unit: the replicated rows (raft over the servers, `w2cplatform/configstore.py`),
+# a unix socket per role under /run/configstore for the processes of this server, the mutually authenticated -api
+# door for the other servers' daemons. Its flags come from /etc/w2c/w2c.env through `w2c-run.sh configstore`.
+[Unit]
+Description=w2c configstore — this server's member of the cluster's replicated config store
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=w2c
+Group=w2c
+# The sockets: /run/configstore/<role>.sock, 0660, each owned by its role's group (the rights file's `group`); the
+# daemon chowns them, so its user is a member of every one of those groups (`w2c-cluster.sysusers`).
+RuntimeDirectory=configstore
+RuntimeDirectoryMode=0755
+ExecStart=/opt/w2c/bin/w2c-run.sh configstore
+Restart=always
+RestartSec=2
+TimeoutStopSec=20
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/configstore
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -35,13 +35,17 @@ the group, and what a test stand applies in one process — the same code, so th
 # Raft dissertation, § 6.3. The memory is the last `OP_MEMORY` ids, in log order, so every member forgets the same.
 #
 # ## The rights file — who may do what, by the socket the caller came through
-# `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11):
-#     {"roles": {"vmsworker": {"read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"], "delete": []}, …}}
-# A trailing `*` is a prefix, anything else one key. The daemon opens a socket per role, so a role is WHICH socket
-# a process could open (its unit's group), and `Rights.allows` is asked before anything is forwarded or applied.
-# `admin` is the root-only socket and may do everything but two things nobody does (`variables.refuse_delete`):
-# delete an epoch row, or delete `domain/*` unless it is the domain's agent. `list` answers only the keys the role
-# may read; `get` of a key it may not read is 403.
+# `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11), in the product's
+# format (its configstore round 2):
+#     {"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"],
+#                              "delete": []}, …}}
+# A trailing `*` is a prefix, anything else one key; a pattern that starts with `!` DENIES, and the denials are asked
+# before the grants (`"read": ["domain/*", "!domain/break_glass"]`). The daemon opens a socket per role, owned by the
+# role's `group` (`configstore.socket_group`; a role without one: `vms-<role>`, `w2c-<role>` for the platform's), so
+# a role is WHICH socket a process could open (its unit's `SupplementaryGroups=`), and `Rights.allows` is asked
+# before anything is forwarded or applied. `admin` is the root-only socket and may do everything but two things
+# nobody does: delete an epoch row, or delete `domain/*` — which only the domain's own roles do (`DOMAIN_ROLES`:
+# `domain`, `domainagent`). `list` answers only the keys the role may read; `get` of a key it may not read is 403.
 #
 # ## The API — the product's, rendered here so the stand and the daemon say the same
 #   GET  /v1/get?key=K          → {items, index}           index "" = absent
@@ -58,11 +62,14 @@ import json
 import re
 import urllib.parse
 
-from .variables import DOMAIN_WRITER, KEY_BYTES, epoch_row, safe_path
+from .variables import KEY_BYTES, epoch_row, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
+# The roles that may delete `domain/*` (the product's names): the domain's own processes on its store, and its agent in
+# a member cluster's (М12, `domain/agent.py`). Nobody else — `admin` included.
+DOMAIN_ROLES = frozenset({"domain", "domainagent"})
 
 
 class Unavailable(Exception):
@@ -177,29 +184,49 @@ class StoreMachine:
 # -- rights -------------------------------------------------------------------------------------------
 ACTIONS = ("read", "write", "delete")
 _ROLE = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")          # a socket's file name: `<role>.sock`
+_GROUP = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")        # a group's name, as `groupadd` takes it
+
+
+def _hit(pattern: str, key: str) -> bool:
+    return key == pattern or (pattern.endswith("*") and key.startswith(pattern[:-1]))
+
+
+# A pattern: a key, or a prefix with one trailing `*`; with a leading `!` it denies what it names.
+def _pattern(p) -> bool:
+    if not isinstance(p, str):
+        return False
+    body = p[1:] if p.startswith("!") else p
+    return bool(body) and "!" not in body and "*" not in body[:-1]
 
 
 class Rights:
-    """The rights file, read and checked. `allows(role, action, key)` is the one question."""
+    """The rights file, read and checked. `allows(role, action, key)` is the one question; `groups` says whose each
+    role's socket is (the role's `group`, where the file says one)."""
 
-    def __init__(self, roles: dict[str, dict[str, list[str]]] | None = None):
+    def __init__(self, roles: dict[str, dict] | None = None):
         self.roles = {r: {a: list(g.get(a, [])) for a in ACTIONS} for r, g in (roles or {}).items()}
+        self.groups = {r: str(g["group"]) for r, g in (roles or {}).items() if g.get("group")}
 
     @classmethod
     def parse(cls, doc) -> "Rights":
         """The file's JSON, refused whole when any part of it is not what the format says — a rights file that is
         half read grants what nobody wrote."""
         if not isinstance(doc, dict) or set(doc) - {"roles", "comment"} or not isinstance(doc.get("roles"), dict):
-            raise ValueError('a rights file is {"roles": {"<role>": {"read": [...], "write": [...], "delete": [...]}}}')
+            raise ValueError('a rights file is {"roles": {"<role>": {"group": "...", "read": [...], "write": [...], '
+                             '"delete": [...]}}}')
         roles = {}
         for role, grants in doc["roles"].items():
             if not isinstance(role, str) or not _ROLE.match(role) or role == ADMIN:
                 raise ValueError(f"not a role name: {role!r} (lower case, digits, - and _; {ADMIN!r} is the store's own)")
-            if not isinstance(grants, dict) or set(grants) - set(ACTIONS):
-                raise ValueError(f"{role}: grants are read, write and delete, each a list of keys or prefixes")
-            for action, pats in grants.items():
-                if not isinstance(pats, list) or not all(isinstance(p, str) and p and "*" not in p[:-1] for p in pats):
-                    raise ValueError(f"{role}.{action}: a list of keys, a trailing * for a prefix")
+            if not isinstance(grants, dict) or set(grants) - set(ACTIONS) - {"group"}:
+                raise ValueError(f"{role}: a role says its socket's group, and read, write and delete, each a list of "
+                                 f"keys or prefixes")
+            if "group" in grants and (not isinstance(grants["group"], str) or not _GROUP.match(grants["group"])):
+                raise ValueError(f"{role}.group: a group's name, as groupadd takes it")
+            for action in ACTIONS:
+                pats = grants.get(action, [])
+                if not isinstance(pats, list) or not all(_pattern(p) for p in pats):
+                    raise ValueError(f"{role}.{action}: a list of keys, a trailing * for a prefix, a leading ! to deny")
             roles[role] = grants
         return cls(roles)
 
@@ -208,13 +235,20 @@ class Rights:
         with open(path, encoding="utf-8") as f:
             return cls.parse(json.load(f))
 
+    def doc(self) -> dict:
+        """What is held, in the file's own form — what `/v1/rights` and `configstore rights` show."""
+        return {"roles": {r: {**({"group": self.groups[r]} if r in self.groups else {}), **g}
+                          for r, g in self.roles.items()}}
+
     def allows(self, role: str, action: str, key: str) -> bool:
-        if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and role != DOMAIN_WRITER)):
+        if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and role not in DOMAIN_ROLES)):
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
         if role in (ADMIN, PEER):
             return True
         pats = self.roles.get(role, {}).get(action, [])
-        return any(key == p or (p.endswith("*") and key.startswith(p[:-1])) for p in pats)
+        if any(_hit(p[1:], key) for p in pats if p.startswith("!")):
+            return False                          # a denial wins over every grant, wherever it stands in the list
+        return any(_hit(p, key) for p in pats if not p.startswith("!"))
 
 
 # -- the API ------------------------------------------------------------------------------------------
