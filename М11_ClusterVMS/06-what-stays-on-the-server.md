@@ -147,14 +147,14 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
     "vms/heartbeats/w-srv-a-1": {
       "written": 1757500000.0,
       "server": "srv-a",
-      "size": 494
+      "size": 572
     }
   }
 }
 
 # vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
-→ 200 {"bytes": 494, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+→ 200 {"bytes": 572, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 ```
 
 Откуда ресурс `srv-b` знает, где остальные. Не из heartbeat'ов — они сами объекты за этими дверями. Каждый ресурс при старте пишет **строку** `platform/doors/<сервер> {url, since}` в хранилище, и остальные читают их не чаще раза в десять секунд (`DOORS_FRESH`). Поэтому в трассах уроков чтение чужих объектов видно как ресурс, читающий `platform/doors/*`, а версии в сценах начинаются с 1004: первые три записи стенда — двери трёх ресурсов, и в трассу сцены они не попадают.
@@ -204,7 +204,9 @@ GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
 
 **Молчащий ресурс своего сервера — ошибка, а не пустота.** Если не отвечает ресурс **этого** сервера, прочитать объекты кластера отсюда нельзя вовсе, и `ClusterObjectStore` поднимает `ObjectsUnavailable` — это `OSError`, который каждый вызывающий уже читает как «хранилище не ответило». Пустой список здесь был бы ложью: контроллер, принявший молчащую дверь за пустой кластер, объявил бы мёртвыми всех воркеров остальных серверов. Тест: `test_a_server_gone_is_named_and_the_others_are_read`.
 
-Один писатель на ключ здесь держится устройством, а не правами: каталог `/data/platform/objects` общий для процессов этого сервера (2775 `w2c:vms`, `deploy/systemd/w2c-cluster.tmpfiles`), и права на строки, о которых урок 5, его не касаются. Как объекты получают свои права — М10A, урок [20](../М10A_Platform/20-ObjectACL-and-Sweep.md); на кластере без оркестратора это открытый вопрос.
+**Не слышно — ещё не значит, что не держит.** Память читателя стареет: через 45 секунд heartbeat молчащего сервера — молчание. Это правильно для контроллера, который решает судьбу слота, и неправильно для регистратора, который ищет, откуда брать живой поток камеры. Регистратор находил источник в heartbeat держателя (`live_url`), и когда закрывалась только **дверь** сервера держателя — порт 8090, ресурс перезапускается, — на 50-й секунде `source(1)` отвечал «никто», и запись вставала, хотя воркер держал камеру и его раздача отдавала кадры (двенадцатое ревью, major 10). Теперь heartbeat — подсказка, а кто держит камеру, говорит **хранилище**: размещение камеры называет того воркера, от которого источник прочитан последним, и его слот держится и не истёк — источник остаётся, и регистратор говорит об этом один раз (`RecWorker._held_by_the_book`). Сказано иначе — камера размещена у другого, слот отпущен или истёк, держатель слышен и не называет камеру своей — источник отпускается. Чего нельзя прочитать (хранилище не ответило, строка оборвана) — не «нет»: источник остаётся, как и тогда, когда не читаются сами heartbeat'ы. Тест: `test_lesson4_failover.py::test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_and_lets_it_go_when_the_store_says_so`. Детектор и шлюз ищут источник так же (`holder_of`), но в М11 их юнитов нет, а на коробке heartbeat'ы — свои файлы без двери.
+
+Один писатель на ключ здесь держится устройством, а не правами: каталог `/data/platform/objects` общий для процессов этого сервера (2770 `w2c:w2c-store`, `deploy/systemd/w2c-cluster.tmpfiles`), и права на строки, о которых урок 5, его не касаются. Как объекты получают свои права — М10A, урок [20](../М10A_Platform/20-ObjectACL-and-Sweep.md); на кластере без оркестратора это открытый вопрос.
 
 ## Шаг 4 — Почему локальный том не ездит за воркером
 
@@ -240,17 +242,21 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 ```python
         # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
         # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
-        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
-        # `/data/volume` next to `/data/archive`: inside, the resource's walks would take the ring for a
-        # subsystem, count its blocks as the tree's usage and mirror nothing of it (`ARCHIVE_VOLUME` to put it
-        # elsewhere).
+        # volume` behaving exactly like `place_by: server`. It is the VMS's, where the VMS keeps its engine's volumes
+        # (`config.OWN_VOLUME`, `/data/vms/obsd/volume`; WP-E) — never inside the resource's tree, whose walks would
+        # take the ring for a subsystem, count its blocks as the tree's usage and mirror nothing of it
+        # (`ARCHIVE_VOLUME` to put it elsewhere). A caller that names its tree (a bench, a test: `archive_root`) gets
+        # it beside that tree, as before: one directory of its own, never the box's.
         self.pinned = bool(env.get("VOLUME"))
         self.pin = str(env.get("VOLUME") or "")      # …its name, which `volume` is not while the hold is another's
         self.volume_wait = ""                        # pinned, and waiting for the hold: why (`_wait_for_pin`)
         self.default_volume = str(self.server or "default")
+        from .config import OWN_VOLUME
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
+        self.default_url = env.get("ARCHIVE_VOLUME") or (f"file://{beside}" if archive_root else OWN_VOLUME)
 ```
+
+**Свой том — там, где VMS держит тома движка, а не рядом с архивом событий.** Раньше умолчание было `/data/volume` рядом с `/data/archive`. Теперь архив событий — каталог платформы, `/data/platform/events` (WP-E), и том рядом с ним лёг бы в каталог платформы. Точка входа регистратора говорит это явно, как на коробке: `ARCHIVE_VOLUME`, если задан, иначе `config.OWN_VOLUME` — `/data/vms/obsd/volume` (`cluster/__main__.recorder`). Стенд модуля называет своё дерево сам (`archive_root`) и получает том рядом с ним, поэтому в трассе ниже `file:///data/srv-a/volume`. Тест умолчаний — `test_deploy_units.py::test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_its_volume_where_the_vms_keeps_volumes`.
 
 Тома, которого ещё нет, демон форматирует при первом открытии — размером с квоту, и квота становится размером кольца. Для собственного тома квота — `ARCHIVE_QUOTA_BYTES` или четыре пятых свободного места на диске, с запасом в два гигабайта и не выше нижней отметки ватерлинии, когда кольцо заполнится (М10B, урок 27).
 
