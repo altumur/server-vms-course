@@ -397,7 +397,7 @@ def test_a_backup_restores_into_a_fresh_group_above_its_highest_version():
 
 
 def test_the_operator_commands_speak_to_the_admin_socket():
-    """`python3 -m w2cplatform.configstore status | rights [file]` — the product's `vmsctl configstore …`."""
+    """`python3 -m w2cplatform.configstore status | rights [file]` — the product's own `configstore …` command."""
     with Daemon() as dm:
         out = io.StringIO()
         with redirect_stdout(out):
