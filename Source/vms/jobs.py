@@ -290,7 +290,7 @@ def expire(ctl, now: float, mem: Remembered | None = None) -> int:
         rows = []
         for u in due:
             try:
-                r = ctl._parsed(ctl.spec.parse_id(u))
+                r = ctl.parsed_unit(ctl.spec.parse_id(u))
             except PARSE_ERRORS:
                 continue                                    # a name that is no id of this subsystem: nothing to end
             if r is not None and r is not GARBLED_ROW:

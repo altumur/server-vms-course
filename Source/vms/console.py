@@ -273,7 +273,7 @@ def recordings_of(rec_ctl, cam) -> list[str]:
 # fourth pass, major). A store that does not answer is not "nobody's": the name is not taken.
 def own_name_is_hers(rec_ctl, cam) -> bool:
     try:
-        items, _ = rec_ctl.vars.get(rec_ctl._row_key(rec_ctl.spec.parse_id(str(cam))))
+        items, _ = rec_ctl.vars.get(rec_ctl.row_key(rec_ctl.spec.parse_id(str(cam))))
     except (OSError, *PARSE_ERRORS):                 # a row nested past JSON's depth too (the tenth round)
         return False
     return not items or str(items.get("cam", cam)) == str(cam)

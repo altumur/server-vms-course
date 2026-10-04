@@ -71,7 +71,7 @@ PLATFORM_TESTS = (
     "tests/test_pass_failures.py", "tests/test_placement_decides.py", "tests/test_retire.py", "tests/test_sealing.py",
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
-    "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/testdata/testsub.subsystem.yaml",
+    "tests/test_units_about.py", "tests/test_spec_keys.py", "tests/test_host.py", "tests/testdata/testsub.subsystem.yaml",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -588,13 +588,41 @@ def _piece_resource():
 
 
 def _piece_host():
-    """A platform entry point that loads a directory of specs (`SPEC_DIR`, §2.3) and runs the platform's processes
-    for whatever it finds there — until it exists, the platform runs only as a library under a subsystem's
-    `__main__`."""
+    """The platform's entry point (`python3 -m w2cplatform`, `host.py`, step 5) loads a directory of specs (`SPEC_DIR`,
+    §2.3) and runs the platform's processes for whatever it finds there: told nothing it refuses to start, and
+    `controller testsub` — the loop a unit runs, one pass of it — places testsub's counters on the workers that
+    heartbeat, from the spec alone."""
+    import time
     path = os.path.join(ROOT, PLATFORM_TREE, "__main__.py")
     if not os.path.exists(path) or "SPEC_DIR" not in open(path, encoding="utf-8").read():
         print("BOUNDARY-RUN no-spec-dir")
         raise SystemExit(3)
+    from w2cplatform import host
+    from w2cplatform.contract import Subsystem
+    from w2cplatform.spec import SpecController, SubsystemSpec
+    root = tempfile.mkdtemp(prefix="testsub-host-")
+    env = {"SPEC_DIR": os.path.dirname(TESTSUB), "PLATFORM_DIR": root}
+    assert host.main(["controller", "testsub"], {"PLATFORM_DIR": root}) == 2          # no SPEC_DIR: nothing runs
+    vars_, objects = host.box_stores(env)
+    ws = [_counter_worker(Subsystem("testsub"), vars_, objects, time.monotonic, time.time, f"I{i}", f"srv-{i}")
+          for i in (1, 2)]
+    for w in ws:
+        w.reconcile_once()
+    spec = SubsystemSpec.load(TESTSUB)
+    con = SpecController(spec, vars_.as_writer("console", spec.acl_console()), objects)
+    for name in ("c1", "c2", "c3"):
+        con.create({"name": name})
+    host.stop.clear()
+    host.stop.wait = lambda timeout=None: host.stop.set() or True                     # one pass, then the loop ends
+    assert host.main(["controller", "testsub"], env) == 0
+    held = {u: w.name for w in ws for u in w.reconcile_once()}
+    assert sorted(held) == ["c1", "c2", "c3"] and len(set(held.values())) == 2, held
+    assert json_loads(objects.get("testsub/controller/pass")) is not None              # the report `/metrics` reads
+
+
+def json_loads(raw):
+    import json
+    return json.loads(raw) if raw else None
 
 
 def run_piece(name: str) -> str | None:

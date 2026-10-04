@@ -176,7 +176,7 @@ def _doors(s) -> None:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
     rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
-    # The pass as the loops run it (`cluster/__main__._placement_pass`): its report, then the snapshot.
+    # The pass as the loops run it (`w2cplatform.host.placement_pass`): its report, then the snapshot.
     for c in (ctl, rc):
         c.pass_once(1); c.publish_snapshot()
     assert ctl.slots()[w.name].released and ctl.decommission_marks()       # the row was read, the slot released, the mark written

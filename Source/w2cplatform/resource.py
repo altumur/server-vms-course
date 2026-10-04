@@ -433,6 +433,20 @@ def workers_here(root: str | None, now: float | None = None) -> tuple[dict[str, 
     return said.get("workers", {}), said.get("running", {})
 
 
+# The key of a server's resource heartbeat, and what its tree measures as that heartbeat says it — what a subsystem reads
+# of a resource, through these and not by the layout of the store (the boundary's step 5: a subsystem spelt
+# `platform/resources/<server>/heartbeat#space.total` itself). `space_total(seen, server)`: bytes, 0 when not said —
+# a number that does not parse is read as not said (`rows.number`), never as an error out of the caller's page.
+def heartbeat_key(server: str) -> str:
+    return f"{RESOURCES}/{server}/heartbeat"
+
+
+def space_total(seen: dict, server: str) -> int:
+    from .rows import number
+    space = (seen.get(server) or {}).get("space")
+    return number(f"{heartbeat_key(server)}#space.total", (space if isinstance(space, dict) else {}).get("total"), int, 0)
+
+
 def resources_seen(objects) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                             # one that does not parse is skipped and counted (the review's second pass, M6)
         hb = dict(json.loads(raw))

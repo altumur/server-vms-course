@@ -133,7 +133,7 @@ def test_a_garbled_placement_row_still_says_where_its_unit_is_and_stops_no_pass(
 
 def test_a_garbled_pass_report_does_not_stop_the_controllers_loop():
     """`pass_once` begins by reading its last report, to carry the count of failures on — and "it does not raise" is
-    what the loop that calls it relies on (`_controller_loop`). A report object that is half a write raised out of
+    what the loop that calls it relies on (`host.controller_loop`). A report object that is half a write raised out of
     the pass before its first step and out of the loop: the controller process ended, was started again, and ended
     again on the same object — which only a pass that finishes writes over."""
     box, ctl = _placed(2)
@@ -257,7 +257,7 @@ def test_one_bucket_the_resource_cannot_remove_stops_no_other_and_is_counted():
 
 # -- a unit's own row, as each worker reads it ------------------------------------------------------------------
 #
-# The controller has skipped a row that does not parse since the second pass (`units()`, `_parsed`). The workers
+# The controller has skipped a row that does not parse since the second pass (`units()`, `parsed_unit`). The workers
 # had not: each reads the rows of the units it was assigned in one loop, bare, and a row garbled AFTER it was placed
 # raised out of the pass — nothing after it started, nothing taken away stopped, every pass.
 

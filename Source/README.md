@@ -24,6 +24,9 @@ Source/
                                subsystem's addresses carry a login besides that from its url field's `secret_in`
     catalog.py                 the specs this process loaded (or `SPEC_DIR` names): which objects are rows, how an address
                                carries a login — what the platform used to know by name (the boundary's step 4)
+    host.py, __main__.py       the platform's own processes for any subsystem (the boundary's step 5): `python3 -m w2cplatform
+                               controller <sub> | resource` from `SPEC_DIR`, and the loops every controller, console and resource
+                               runs — `controller_loop`, `placement_pass`, `step` (said once a spell), `sweep_loop`, `run_resource`
     console.html               Lesson 7  the one page for every subsystem: reads /spec, builds the list and the forms from the fields; timeline and player only when the spec says media
   vms/                         the VMS — the first subsystem
     reconciler.py              Lesson 4  М9 Lesson 6's loop, copied unchanged: the contract
@@ -58,7 +61,10 @@ Source/
     resource.py                Lesson 10  the resource process: the platform's Resource with an EventIndex attached and the keeps for bucket retention — events only;
                                the same function М11 runs as the resource job
     config.py                  the schema's Python view over the spec: row() and items()
-    __main__.py                python3 -m vms worker | controller | recorder | reccontroller | console | resource | gateway | livecontroller | detworker | detcontroller
+    __main__.py                python3 -m vms worker | recorder | gateway | detworker | detjobworker | surveyworker | autoworker — the
+                               VMS's workers — and controller | console | resource: the platform's loops over the VMS's own controller,
+                               console and resource, until their hooks are declarations (the boundary's step 6). The other
+                               subsystems' controllers are `python3 -m w2cplatform controller <sub>`
   gstvms/                      Track 2 — needs GStreamer
     uri.py                     Lesson 2  driverpack://file/<name> resolved and refused — pure, no GStreamer
     webrtc.py                  Lesson 8  the gateway's media path (Track 2): rtspsrc ! depay ! parse ! pay ! tee per camera, queue ! webrtcbin per viewer, WHEP without trickle
@@ -85,6 +91,7 @@ PLATFORM_DIR=/data/platform python3 -m vms controller  # the console on :8080
 WORKER_NAME=w-1 python3 -m vms worker                  # with GStreamer: holds cameras, rtsp://<box>:8554/<cam>; without: the fake actuator
 RECORDER_NAME=r-1 python3 -m vms recorder              # subscribes to the fan-out, writes into its volume through the host's obsd
 python3 -m vms worker                                  # no name: claims the first free slot — a lapsed one first
+SPEC_DIR=vms python3 -m w2cplatform controller rec     # the recordings' controller: the platform's, from rec.subsystem.yaml
 ```
 
 ## The Go implementation — the product's

@@ -1080,7 +1080,7 @@ class NearIndex:
 
 
 # Sort key: numeric ids before others, numbers by value.
-GARBLED_ROW = object()     # what `SpecController._parsed` says of a row that does not parse: there, and unreadable
+GARBLED_ROW = object()     # what `SpecController.parsed_unit` says of a row that does not parse: there, and unreadable
 
 
 #
@@ -1181,10 +1181,11 @@ class SpecController(Controller):
     # The row as it goes into the store: `*_secret` values sealed, when this process holds the key.
     def _sealed(self, items: dict, uid) -> dict:
         from .sealing import seal_items
-        return seal_items(self.sealer, items, self._row_key(uid))
+        return seal_items(self.sealer, items, self.row_key(uid))
 
-    # `<name>/<rows>/<id>`.
-    def _row_key(self, uid) -> str:
+    # `<name>/<rows>/<id>` — the key of a unit's row: what a subsystem reads a row by (exported for that, the boundary's
+    # step 5: a subsystem's console called the private name).
+    def row_key(self, uid) -> str:
         return self.sub.config(self.spec.rows, str(uid))
 
     # -- what the workers say --------------------------------------------------------
@@ -1486,7 +1487,7 @@ class SpecController(Controller):
         if self.spec.name in REFUSE:                                   # the subsystem's own rule about what the row points at
             REFUSE[self.spec.name](self, uid, None, self.spec.new_row(uid, fields))
         if not self.spec.numeric:
-            old, idx = self.vars.get(self._row_key(uid))
+            old, idx = self.vars.get(self.row_key(uid))
             if old and old.get("deleted") != "true":
                 raise Refused(f"{self.spec.name} unit {uid} exists")
             # A NAME STAYS ITS UNIT'S (the review's fifth pass, major). A unit's name is also the name of what it left
@@ -1502,12 +1503,12 @@ class SpecController(Controller):
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
-                self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
+                self.vars.put(self.row_key(uid), self._sealed(self.spec.items(r), uid), cas=idx)
                 wrote(self.spec.name, uid)                          # for this process's readers that remember (`take_written`)
                 self._derived(r, uid)
                 return r
         r = self.spec.new_row(uid, fields)
-        self.vars.put(self._row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
+        self.vars.put(self.row_key(uid), self._sealed(self.spec.items(r), uid), cas=0)
         wrote(self.spec.name, uid)
         self._derived(r, uid)
         return r
@@ -1561,7 +1562,7 @@ class SpecController(Controller):
                 REFUSE[self.spec.name](self, uid, was, r)
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
             return self._sealed(self.spec.items(r), uid)
-        r = self.spec.row(self.write(self._row_key(uid), mutate))
+        r = self.spec.row(self.write(self.row_key(uid), mutate))
         wrote(self.spec.name, uid)                       # for this process's readers that remember (`take_written`)
         if any(f in fields for d in self.spec.derived for f in d.items.values()):
             self._derived(r, uid)
@@ -1575,7 +1576,7 @@ class SpecController(Controller):
         """The operator's half: the row is marked. Its placement is the controller's
         half, taken back on the next pass (`unplace_deleted`) — the console's writer
         (`acl_console`) cannot touch an assignment, and does not need to."""
-        self.write(self._row_key(uid), lambda it: {**it, "deleted": "true"} if it else None)
+        self.write(self.row_key(uid), lambda it: {**it, "deleted": "true"} if it else None)
         self._derived(None, uid, deleted=True)
 
     # The controller's half of a delete: for every `placement/<id>` row with a worker whose unit no longer
@@ -1589,7 +1590,7 @@ class SpecController(Controller):
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self._placed_id(p)
             it = self._placement_items(p)
-            if uid is None or not it or not it.get("worker") or self._parsed(uid) is not None:
+            if uid is None or not it or not it.get("worker") or self.parsed_unit(uid) is not None:
                 continue                                  # a row that does not parse EXISTS: it is not unplaced as deleted
             self.assign_remove(it["worker"], str(uid))
             self.write(p, lambda it: {"worker": "", "reason": "deleted", "at": self.wall(), "rev": _next_rev(it)})
@@ -1627,7 +1628,7 @@ class SpecController(Controller):
         for p in self.vars.list(self.sub.config("placement") + "/"):
             uid = self._placed_id(p)
             it = self._placement_items(p)
-            row = self._parsed(uid) if uid is not None else GARBLED_ROW
+            row = self.parsed_unit(uid) if uid is not None else GARBLED_ROW
             if not it or not it.get("worker") or row is GARBLED_ROW or not self.retired(row):
                 continue                                  # whether a row that does not parse is over, nobody can say
             state = str(row.get(self.spec.retire_field, ""))
@@ -1638,18 +1639,19 @@ class SpecController(Controller):
 
     # The row, or `None` if absent or deleted.
     def unit(self, uid) -> dict | None:
-        it, _ = self.vars.get(self._row_key(uid))
+        it, _ = self.vars.get(self.row_key(uid))
         return self.spec.row(it) if it and it.get("deleted") != "true" else None
 
     # The same for the controller's loops over units ALREADY PLACED (the review's third pass): a row that does not
     # parse is `GARBLED_ROW` — logged once, counted by `units()` in `rows_garbled` like every other — instead of an
     # exception out of `unplace_deleted`, which ran first in `ensure_placed` and `redistribute`: one hand-edited
     # field on a placed camera, and no new camera was placed and no unit of a silent server moved, every pass.
-    def _parsed(self, uid):
+    # Exported (the boundary's step 5): a subsystem's loop that reads a unit it remembers asks this, not the private name.
+    def parsed_unit(self, uid):
         try:
             return self.unit(uid)
         except PARSE_ERRORS as e:                     # a `json` field ten thousand deep too (the ninth review's sweep)
-            p = self._row_key(uid)
+            p = self.row_key(uid)
             if p not in self._garbled_rows:
                 self._garbled_rows.add(p)
                 log.warning("%s: row %s does not parse (%s); skipped", self.sub.name, p, e)
@@ -1949,7 +1951,7 @@ class SpecController(Controller):
     # (`UNIT_JUDGED`), not the end of the walk: a field that read and then raised in a comparison or in an `admit` took
     # `/unplaceable` and `/drain` down for every unit (the review's tenth pass).
     def _eligible_or_none(self, row: dict, pool: list[str], walk: str) -> list[str]:
-        key = f"{self._row_key(row['id'])}#{walk}"
+        key = f"{self.row_key(row['id'])}#{walk}"
         return UNIT_JUDGED.read(key, lambda: self.eligible(row, pool), [])
 
     # `near: <sub>`: the worker of that subsystem whose heartbeat status lists this unit's id in phase
@@ -2200,7 +2202,7 @@ class SpecController(Controller):
     # …and each key read ONCE in it (`contract.one_pass`; the scaling pass after the eighth review): its three steps and
     # the report re-read the rows, the placements and the heartbeats per step and per unit — some 41 000 reads at a
     # thousand cameras on twenty workers, 2 000-odd now (`tests/test_read_budget.py`). The loop that also publishes the
-    # snapshot opens the pass around both (`vms/__main__._controller_loop`), and the snapshot reads nothing again.
+    # snapshot opens the pass around both (`host.placement_pass`), and the snapshot reads nothing again.
     def pass_once(self, home_budget: int = 1) -> dict:
         with one_pass(self):
             return self._pass_once(home_budget)
@@ -2419,12 +2421,12 @@ class SpecController(Controller):
             if self.placement(r["id"]) is None and not self.retired(r) and not self._eligible_or_none(r, live, "unplaceable"):
                 u = {"id": r["id"], "labels": r.get("labels", []), "workers_live": len(live)}
                 why = self.unplaced_reason(r["id"])
-                beside = self._row_key(r["id"]) + "#unplaceable" not in UNIT_JUDGED.bad and self.worker_with_group(r, live)
+                beside = self.row_key(r["id"]) + "#unplaceable" not in UNIT_JUDGED.bad and self.worker_with_group(r, live)
                 if why and why != "deleted":           # what took its place away — a server that stopped reaching it
                     u["why"] = why
                 elif beside:                           # its group is held where it may not go (`eligible`)
                     u["why"] = f"its {self.spec.group_by} is held on {beside}, which does not take it: one {self.spec.group_by}, one worker"
-                elif self._row_key(r["id"]) + "#unplaceable" in UNIT_JUDGED.bad:
+                elif self.row_key(r["id"]) + "#unplaceable" in UNIT_JUDGED.bad:
                     u["why"] = "its row could not be checked against any server: see the log"
                 out.append(u)
         return out
@@ -2505,7 +2507,7 @@ class SpecController(Controller):
                     # review's seventh pass, the walk over every row read).
                     ASSIGNMENTS.garbled(f"{self.sub.assignment(gone)}#{unit}", e)
                     continue
-                row = self._parsed(uid)
+                row = self.parsed_unit(uid)
                 if row is GARBLED_ROW:
                     self.last_leaving_waiting += 1
                     continue                            # its filters cannot be read: it waits where it is, the others move
@@ -3020,7 +3022,7 @@ class SpecController(Controller):
         if self.spec.constraint != "labels-subset":
             return f"{server} no longer meets {self.spec.constraint}"
         lost = sorted(set(map(str, row.get("labels") or [])) - set(has))
-        key = f"{self._row_key(row['id'])}#labels"
+        key = f"{self.row_key(row['id'])}#labels"
         bad = [l for l in lost if not LABEL_WORD.fullmatch(l)]
         if bad:
             UNIT_LABELS.garbled(key, f"{bad[0]!r} is not a label")
@@ -3084,7 +3086,7 @@ class SpecController(Controller):
             # `cands[0]` alone, the first channel of a recorder onto another worker, and asked no filter at all).
             group = None
             for unit in sorted(self.assignment(hi).units, key=_unit_key):
-                row = self._parsed(self.spec.parse_id(unit)) if self.spec.group_by else None
+                row = self.parsed_unit(self.spec.parse_id(unit)) if self.spec.group_by else None
                 g = self._reach_group(row, hi) if row and row is not GARBLED_ROW else None
                 ids = [m["id"] for m in g] if g else [self.spec.parse_id(unit)]
                 if len(moves) + len(ids) > budget or self.load(lo) + len(ids) > self.capacity_of(lo):

@@ -2736,7 +2736,7 @@ class SpecConsole:
                             except ValueError:
                                 return []
                             try:
-                                row = UNIT_LABELS.read(c.ctl._row_key(uid), lambda: c.ctl.unit(uid), GARBLED_ROW)
+                                row = UNIT_LABELS.read(c.ctl.row_key(uid), lambda: c.ctl.unit(uid), GARBLED_ROW)
                             except OSError as err:
                                 unread[ref] = f"the store did not answer for its row ({err})"
                                 return []

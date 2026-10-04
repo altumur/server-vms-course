@@ -3,6 +3,11 @@ a server, each started by its own unit (`deploy/cluster/systemd/`, `deploy/clust
 over its own tree; the recorder is the only writer of footage, through the host's obsd (`vms-obsd.service`, which
 is not a Python process). `rights` prints the configstore's rights file generated from the spec (`cluster/rights.py`).
 
+The loops are the platform's (`w2cplatform/host.py`, the boundary's step 5): `host.controller_loop` for both
+controllers, `host.step` for a console's turns, `host.run_resource` for the resource — what the box runs, over this
+cluster's stores (the configstore by the role's socket, the objects `cluster://`). The recordings' controller is the
+platform's from the spec alone (`SPEC_DIR`, which `w2c-run.sh` sets to the installed tree's specs).
+
     PLATFORM_STORE                     the store, as a URL: this server's configstore daemon by the role's own socket,
                                        `configstore:///run/configstore/<role>.sock` (the default, by the verb's role);
                                        `file:///path` on a bench
@@ -44,7 +49,8 @@ import threading
 import time
 from urllib.parse import urlsplit
 
-from w2cplatform import runtime
+from w2cplatform import catalog, host, runtime
+from w2cplatform.host import stop
 from w2cplatform.variables import open_vars, store_url
 
 from cluster.objectstore import open_store
@@ -55,7 +61,6 @@ ROLES = {"worker": "vmsworker", "recorder": "recworker", "controller": "vmscontr
 OBJECTS = "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
-stop = threading.Event()
 # The platform's events archive on this server — the resource's tree, `/data/platform/events` (WP-E, the box's layout) —
 # by the platform's own reader of it, as the box's entry point reads it (`vms/__main__.py`).
 archive = runtime.events_root(os.environ)
@@ -154,53 +159,11 @@ def recorder() -> None:
 
 def reccontroller() -> None:
     """the only writer of rec placement — a unit on every server, safe at two: which recorder writes which camera's
-    footage, where the resource answers, one recorder per server by default (rec/policy)."""
+    footage, where the resource answers, one recorder per server by default (rec/policy). The platform's controller
+    from the spec the catalogue holds, in the platform's loop."""
     from w2cplatform.spec import SpecController
-    from vms.config import REC_SPEC
-    ctl = SpecController(REC_SPEC, *stores("reccontroller"), capacity=int(os.environ.get("CAPACITY", "50")))
-    while not stop.is_set():
-        _placement_pass("rec placement", ctl)
-        stop.wait(5)
-
-
-# Each step of a controller's pass in a try of its own (the review's seventh pass, part 2): they shared one, so a step
-# that raised — one row it could not read — skipped every step after it, the snapshot the layer above reads included.
-# And said ONCE per spell (the eighth review's minor, closed in the ninth): the trace went into the log on every pass,
-# every five seconds for as long as the step kept failing — a refused write did it for days. The trace the first time,
-# "works again" when it does (`_failing`, by loop and step), as М12's `domain/steps.py` says it.
-_failing: set[tuple[str, str]] = set()
-
-
-def _steps(what: str, *steps) -> None:
-    for i, step in enumerate(steps):
-        name = getattr(step, "__name__", "")
-        name = f"step {i + 1}" if name in ("", "<lambda>") else name
-        try:
-            step()
-        except Exception:                         # noqa: BLE001
-            if (what, name) not in _failing:
-                _failing.add((what, name))
-                logging.exception("%s: %s failed; the other steps of the pass go on, this one is tried on every pass "
-                                  "and said again when it works", what, name)
-        else:
-            if (what, name) in _failing:
-                _failing.discard((what, name))
-                logging.warning("%s: %s works again", what, name)
-
-
-# One pass of a placement controller, the same as the box's loop makes it (`vms/__main__._controller_loop`; the review's
-# eighth pass, found by the coordinator): `pass_once` — place, move, bring ONE unit home, each step in a try of its own —
-# and the report it writes (`<sub>/controller/pass`), which is where `/metrics` reads `<sub>_units_unplaced`,
-# `<sub>_reconcile_pass_seconds`, the last pass and the last success. The cluster's loops called the three steps one by
-# one and wrote no report: on a cluster those metrics said 0 and -1 for ever. Then the snapshot, in its own step — the
-# recordings' too, as on a box (`rec_snapshot_age_seconds` was -1 here).
-#
-# Both in ONE pass of reads (`contract.one_pass`; the scaling pass after the eighth review): the snapshot asks every unit's
-# row, placement and server, and the placement pass has just read them — a thousand cameras cost the two together some
-# 64 000 reads of the store's leader every five seconds, 2 000-odd now (`Source/tests/test_read_budget.py`).
-def _placement_pass(what: str, ctl) -> None:
-    with ctl.one_pass():
-        _steps(what, lambda: ctl.pass_once(1), ctl.publish_snapshot)
+    ctl = SpecController(catalog.spec("rec"), *stores("reccontroller"), capacity=int(os.environ.get("CAPACITY", "50")))
+    host.controller_loop(ctl, journal=False)       # its unit writes nothing of the events tree: the log, as before
 
 
 def controller() -> None:
@@ -209,9 +172,7 @@ def controller() -> None:
     from cluster.controller import ClusterController
     ctl = ClusterController(*stores("vmscontroller"), capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER") or CLUSTER)
-    while not stop.is_set():
-        _placement_pass("placement", ctl)
-        stop.wait(5)
+    host.controller_loop(ctl, journal=False)      # each step in a try of its own, said once a spell (`host.step`)
 
 
 def console() -> None:
@@ -221,11 +182,10 @@ def console() -> None:
     from cluster.console import serve
     from cluster.controller import ClusterController
     from w2cplatform.spec import SpecController
-    from vms.config import REC_SPEC
     vars_, objects = stores("console")
     ctl = ClusterController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")),
                             cluster=os.environ.get("CLUSTER") or CLUSTER)
-    rec_ctl = SpecController(REC_SPEC, vars_, objects)
+    rec_ctl = SpecController(catalog.spec("rec"), vars_, objects)
     srv = serve(ctl, os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 archive_root=archive if os.path.isdir(archive) else None,     # marks go into this server's resource, if it has one
                 rec_ctl=rec_ctl)                                               # the recorder at /rec/…: the page's Record toggle
@@ -245,10 +205,11 @@ def console() -> None:
 def console_turn(ctl, rec_ctl, mem, now: float | None = None, reap: bool = False) -> None:
     from vms.__main__ import _reap_turn, _requests_turn
     from vms.jobs import clear_requests
-    _steps("console", lambda: _requests_turn(rec_ctl, None, None, mem, now=now),
-           *[(lambda c=c: clear_requests(c, sweep=False)) for c in (rec_ctl, ctl)])
+    host.step(ctl, "console", "requests", lambda: _requests_turn(rec_ctl, None, None, mem, now=now))
+    for c in (rec_ctl, ctl):
+        host.step(ctl, "console", f"clearing {c.spec.name}'s requests", lambda c=c: clear_requests(c, sweep=False))
     if reap:
-        _steps("console reaper", lambda: _reap_turn([], [rec_ctl, ctl], rec_ctl, now=now))
+        host.step(ctl, "console reaper", "reap", lambda: _reap_turn([], [rec_ctl, ctl], rec_ctl, now=now))
 
 
 def _console_loop(ctl, rec_ctl, every: float = 2.0, reap_every: float = 30.0) -> None:
@@ -270,38 +231,7 @@ def resource() -> None:
     server = runtime.server(os.environ)
     url = os.environ.get("RESOURCE_URL", f"http://{server}:8090")
     res = cluster_resource(archive, server, url, *stores("resource"))
-    srv = serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090")))
-    try:                                          # a store away at the start does not end the process (the eighth review)
-        res.heartbeat()
-    except Exception:                             # noqa: BLE001
-        logging.exception("resource heartbeat failed")
-    res.start_beat(stop)                          # the beat on its own thread: a hung pass does not silence the server (13th)
-    try:                                          # back with an empty disk? pull my buckets from my peers first — and a
-        logging.info("restore: %s", res.restore())   # restore that raises does not end the process (the seventh review)
-    except Exception:                             # noqa: BLE001
-        logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
-    last_policy = 0.0
-    while not stop.is_set():
-        # Two tasks, two tries, as М10's resource loop has them (`vms/__main__.py`; the review's seventh pass, part 2):
-        # they shared one here, so a heartbeat that raised skipped the pass, and a pass that raised was tried again
-        # every ten seconds instead of every ten minutes.
-        try:
-            res.heartbeat()
-        except Exception:                         # noqa: BLE001
-            logging.exception("resource heartbeat failed")
-        try:
-            if time.time() - last_policy >= 600:
-                last_policy = time.time()         # a pass that raised is tried in ten minutes, not in ten seconds
-                logging.info("policy: %s", res.pass_())
-        except Exception:                         # noqa: BLE001
-            logging.exception("resource pass failed")
-        try:                                      # what the restore left with peers, asked for again (the eighth review)
-            if res.restore_due():
-                logging.info("restore again: %s", res.restore())
-        except Exception:                         # noqa: BLE001
-            logging.exception("restore failed again; asked again later")
-        stop.wait(10)
-    srv.shutdown()
+    host.run_resource(res, serve(res, "0.0.0.0", int(os.environ.get("RESOURCE_PORT", "8090"))))   # the platform's loop
 
 
 if __name__ == "__main__":

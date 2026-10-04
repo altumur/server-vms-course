@@ -292,10 +292,11 @@ def test_the_console_process_actually_runs_the_sweep():
     class is not hypothetical here."""
     import inspect
     from vms import __main__ as entry
+    from w2cplatform import host
     src = inspect.getsource(entry.console)
-    assert "_sweep_loop" in src, "the console process does not start the blob sweep"
+    assert "host.sweep_loop" in src, "the console process does not start the blob sweep"
     # and every subsystem the console fronts is handed to it: the recorder has blobs too
     assert "det_ctl" in src and "rec_ctl" in src, "the sweep was started for some subsystems, not all"
-    loop = inspect.getsource(entry._sweep_loop)
+    loop = inspect.getsource(host.sweep_loop) + inspect.getsource(host.sweep_turn) + inspect.getsource(host.step)
     assert "sweep_blobs()" in loop and "except Exception" in loop, \
         "the sweep runs without its own failure handling — Lesson 28, made twice"

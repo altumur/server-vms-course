@@ -23,6 +23,7 @@ from vms import volumes  # noqa: E402
 from vms.config import SPEC  # noqa: E402
 from tests.cluster.conftest import Cluster, Server  # noqa: E402
 from tests.cluster.trace import Call, TraceLog  # noqa: E402
+from w2cplatform import host  # noqa: E402  (a controller's pass as the units run it: `host.placement_pass`)
 
 TRACES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "traces")
 ADDRESSES = {"srv-a": "10.0.0.1", "srv-b": "10.0.0.2", "srv-c": "10.0.0.3", "srv-d": "10.0.0.4"}
@@ -169,7 +170,7 @@ def _full(s, capacity=4, cameras=8):
     ws = [s.worker("srv-a", capacity=capacity), s.worker("srv-b", capacity=capacity)]
     for w in ws:
         w.heartbeat_once()
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     for w in ws:
         w.reconcile_once(); w.heartbeat_once()
     return con, ctl, ws
@@ -185,14 +186,14 @@ def a_spare_takes_an_offer() -> str:
     con, ctl, ws = _full(s)
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
     mark = s.log.mark()
-    ctl.pass_once(1)                                                   # full: the ninth waits — and an offer is written
+    host.placement_pass(ctl)                                                   # full: the ninth waits — and an offer is written
     spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemctl start vms-vmsworker-spare@1`, `SPARE_FOR=` in its file
     spare.heartbeat_once()
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     spare.reconcile_once()
     spare.release_slot()                                               # `systemctl stop vms-vmsworker-spare@1`: SIGTERM
     con.delete_camera(1); con.delete_camera(2)                         # room to move into
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
 
 
@@ -205,7 +206,7 @@ def a_crash_releases_nothing() -> str:
     con, ctl = s.console(), s.controller()
     con.create_camera({"name": "cam-1", "source": "driverpack://file/1.mp4"})
     w = s.worker("srv-c"); w.heartbeat_once()
-    ctl.pass_once(1); w.reconcile_once()
+    host.placement_pass(ctl); w.reconcile_once()
     s.wall.advance(2)                                                  # it died; nobody said so; systemd waits RestartSec
     mark = s.log.mark()
     ctl.redistribute()                                                 # nothing released: nothing to move
@@ -248,7 +249,7 @@ def what_the_spares_script_reads() -> str:
     s = Stand()
     con, ctl, ws = _full(s)
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4", "labels": ["vlan:cctv-b"]})
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     text = metrics_text(s.console(), 0.0)
     series = ("vms_workers_live", "vms_worker_load", "vms_workers_needed", "vms_units_short", "vms_spare_offers",
               "vms_server_labels")
@@ -264,10 +265,10 @@ def an_offer_withdrawn() -> str:
     s = Stand()
     con, ctl, ws = _full(s)
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
-    ctl.pass_once(1)                                                   # the offer
+    host.placement_pass(ctl)                                                   # the offer
     mark = s.log.mark()
     con.delete_camera(3)                                               # room again on w-srv-a-1
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
 
 
@@ -332,14 +333,14 @@ def an_edit_during_the_failover() -> str:
     a, b = s.worker("srv-a"), s.worker("srv-b")
     for w in (a, b):
         w.heartbeat_once()
-    ctl.pass_once(1); a.reconcile_once(); ctl.workers_seen()
+    host.placement_pass(ctl); a.reconcile_once(); ctl.workers_seen()
     s.alive = [b]
     mark = s.log.mark()
     s.servers["srv-a"].down = True
     s.wall.advance(20)
     con.update_camera(1, {"name": "edited during the failover"})       # while nobody runs it
     _two_silences(s)
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     b.reconcile_once()
     return (s.log.render(since=mark, writes=True)
             + f"\n# … and {s.reads(mark)} GET requests, omitted\n# w-srv-b-1 runs camera 1 as {b.rows[0]['name']!r}\n")
@@ -495,7 +496,7 @@ def _recording(s, n=3):
     for i in range(n):
         con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4", "labels": ["vlan:cctv-a"]})
     a = s.worker("srv-a")
-    a.heartbeat_once(); ctl.pass_once(1); a.reconcile_once(); a.heartbeat_once()
+    a.heartbeat_once(); host.placement_pass(ctl); a.reconcile_once(); a.heartbeat_once()
     b = s.worker("srv-b"); b.heartbeat_once()
     ctl.workers_seen(); ctl.failover_seconds()
     s.alive = [b]
@@ -511,7 +512,7 @@ def pull_the_power() -> str:
     ctl, a, b = _recording(s)
     mark = s.log.mark()
     _two_silences(s)
-    ctl.pass_once(1)
+    host.placement_pass(ctl)
     b.reconcile_once(); b.heartbeat_once()
     return (s.log.render(since=mark, writes=True)
             + f"\n# … and {s.reads(mark)} GET requests, omitted"
@@ -553,7 +554,7 @@ def the_old_instance_wakes_up() -> str:
     s = Stand()
     ctl, a, b = _recording(s)
     _two_silences(s)
-    ctl.pass_once(1); b.reconcile_once(); b.heartbeat_once()
+    host.placement_pass(ctl); b.reconcile_once(); b.heartbeat_once()
     s.servers["srv-a"].down = False
     mark = s.log.mark()
     lost = a.lease_pass()                                              # kill -CONT, or the network back

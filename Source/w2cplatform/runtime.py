@@ -56,7 +56,12 @@ def platform_dir(env: dict) -> str:
 # platform's), else `events/` under the platform's root. Every writer of buckets and the resource ask this one
 # function, so the box's tree cannot be in two places by two defaults.
 def events_root(env: dict, given: str | None = None) -> str:
-    return given or env.get(ARCHIVE) or os.path.join(platform_dir(env), "events")
+    return given or events_said(env) or os.path.join(platform_dir(env), "events")
+
+
+# The events tree as the environment says it, or None: a process that writes a journal only where it was told to.
+def events_said(env: dict) -> str | None:
+    return env.get(ARCHIVE) or None
 
 
 # The slot to prefer: the role's own name (its spec's `slot.name_env`), else the unit's `WORKER_NAME`, else

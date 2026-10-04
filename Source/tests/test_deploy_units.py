@@ -37,22 +37,33 @@ def _list(v):
 
 
 def test_the_units_run_the_entrypoints_the_package_has():
+    """The VMS's verbs (`python3 -m vms`: its workers, and the three processes that still run a hook of its own) and the
+    platform's (`python3 -m w2cplatform controller <sub>`: every other subsystem's controller, from the spec the image
+    carries in `SPEC_DIR` — the boundary's step 5). Each unit runs one, and each verb is a unit's."""
     from vms import __main__ as m  # noqa: F401  (imports the module without running it: no __name__ == "__main__")
+    from w2cplatform import host
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
-    assert entrypoints == {"worker", "controller", "recorder", "reccontroller", "console", "resource", "gateway",
-                           "livecontroller", "detworker", "detcontroller", "detjobworker", "detjobcontroller",
-                           "surveyworker", "surveycontroller", "autoworker", "autocontroller"}
+    assert entrypoints == {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker",
+                           "controller", "console", "resource"}
+    platform = {"reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
+                "detjobcontroller.container": "detjob", "surveycontroller.container": "survey",
+                "autocontroller.container": "auto"}
+    image = open(os.path.join(DEPLOY, "Containerfile")).read()
+    assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
+    assert "controller <sub>" in host.USAGE
     for name, entry in [("vmsworker@.container", "worker"), ("vmscontroller.container", "controller"),
                         ("console.container", "console"), ("w2c-resource.container", "resource"),
-                        ("recworker@.container", "recorder"), ("reccontroller.container", "reccontroller"),
-                        ("liveworker@.container", "gateway"), ("livecontroller.container", "livecontroller"),
-                        ("detworker@.container", "detworker"), ("detcontroller.container", "detcontroller"),
-                        ("detjobworker@.container", "detjobworker"), ("detjobcontroller.container", "detjobcontroller"),
-                        ("surveyworker@.container", "surveyworker"), ("surveycontroller.container", "surveycontroller"),
-                        ("autoworker@.container", "autoworker"), ("autocontroller.container", "autocontroller")]:
+                        ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
+                        ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),
+                        ("surveyworker@.container", "surveyworker"), ("autoworker@.container", "autoworker"),
+                        *platform.items()]:
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
-        assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
+        if name in platform:
+            assert u["Container"]["Exec"] == f"python3 -m w2cplatform controller {entry}"
+            assert os.path.exists(os.path.join(HERE, "vms", f"{entry}.subsystem.yaml"))   # what `SPEC_DIR` gives it
+        else:
+            assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
         # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
         assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
