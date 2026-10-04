@@ -87,9 +87,13 @@ from __future__ import annotations
 import collections
 import contextlib
 import dataclasses
+import functools
 import json
 import logging
 import os
+import re
+import subprocess
+import sys
 import threading
 import time
 
@@ -270,14 +274,36 @@ CLOCK_FLOOR = 1.5e9                      # …out of a clock that read before mi
 LINE_NOTE = "line.json"                  # the line, kept on the card beside the segments (`CardActuator.note_line`)
 
 
+# A BOOT IS TOLD BY ITS ID, NEVER BY THE STEADY CLOCK ALONE (the twelfth review, major 21, its probe `pz5_noboot`).
+# With no id — macOS said none — "the same boot" was decided by the steady clock: a camera off for 300 s whose new
+# process started at an uptime later than the note's took the note's line for its own and went on from it by the steady
+# clock — the line 250–330 s behind the camera's clock, the hole before the reboot answered with nothing. So the id is
+# read where the system keeps one (Linux: `boot_id`; macOS: the boot session's uuid, else the boot time), once per
+# process, and a note or a process with no id is a NEW boot (`CamLine.restore`): the line goes on through the
+# conversion the note kept, which a reboot does not break — what that branch cannot see is a step the clock took while
+# no process watched.
+@functools.lru_cache(maxsize=1)
 def boot_id() -> str | None:
-    """This boot's id where the system says it (Linux), or None: then two boots are told apart by the steady clock alone
-    — one that went back began again."""
+    """This boot's id where the system says it — Linux's `boot_id`; macOS's boot session uuid, or its boot time — or None."""
     try:
         with open("/proc/sys/kernel/random/boot_id") as f:
             return f.read().strip() or None
     except OSError:
+        pass
+    if sys.platform != "darwin":
         return None
+    for key in ("kern.bootsessionuuid", "kern.boottime"):
+        try:
+            out = subprocess.run(["/usr/sbin/sysctl", "-n", key], capture_output=True, text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            continue
+        out = out.strip()
+        if key == "kern.boottime":                       # "{ sec = 1759500000, usec = 123 } Fri Oct …"
+            m = re.search(r"sec = (\d+), usec = (\d+)", out)
+            out = f"boottime-{m.group(1)}.{m.group(2)}" if m else ""
+        if out:
+            return out
+    return None
 
 
 class CamLine:
@@ -301,6 +327,7 @@ class CamLine:
         self.origin = None               # the line where this process began: all it placed is past it
         self.since = None                # …where the camera's clock was found unset: relabelled when it is set
         self.anchor = 0                  # the conversion (line − clock) the line takes when the clock is set
+        self.adrift = None               # …where a reboot with the clock unset put the line by a guess (`restore`), until set
         self.sets = self.unset = 0       # clocks set, and found unset again by a reboot
         self.moves: list[tuple] = []     # (lo, hi, delta): what of the line was relabelled, for whoever holds its times
         self.on_move: list = []          # fn(lo, hi, delta), called where the move is made (the ring's lock)
@@ -355,7 +382,7 @@ class CamLine:
         lo = self.since if self.since is not None else self.origin
         self.sets += 1
         self.due -= jump                                         # the frames captured on the set clock: on the anchor…
-        self._quiet, self.since = True, None
+        self._quiet, self.since, self.adrift = True, None, None
         self.version += 1
         if delta * 1000 >= self.unit:                            # (later: nothing placed can overtake what was)
             self._move(lo, before, delta)                        # …and those before it, relabelled to meet them
@@ -369,7 +396,8 @@ class CamLine:
         """The line as the card keeps it (`LINE_NOTE`)."""
         raw = self.look()
         return {"line": raw + self.shift + self.due, "raw": raw, "unit": self.unit, "boot": self._boot(),
-                "steady": self.steady() if self.steady is not None else None, "since": self.since, "anchor": self.anchor}
+                "steady": self.steady() if self.steady is not None else None, "since": self.since, "anchor": self.anchor,
+                "adrift": self.adrift}
 
     def restore(self, note: dict | None, newest=None) -> tuple | None:
         """The line of the camera's process before this one (`note`, as `note()` wrote it on the card; None: none, or
@@ -378,25 +406,25 @@ class CamLine:
         raw = self.look()
         now = raw + self.shift + self.due
         st = self.steady() if self.steady is not None else None
-        target, step, floor, since, anchor = now, 0, newest, self.since, self.anchor
+        target, step, floor, since, anchor, adrift = now, 0, newest, self.since, self.anchor, self.adrift
         if note is not None:
             n_line, n_raw = note["line"], note["raw"]
             n_st, n_boot, boot = note.get("steady"), note.get("boot"), self._boot()
-            if st is not None and n_st is not None and st >= n_st and (boot is None or n_boot is None or boot == n_boot):
+            if st is not None and n_st is not None and st >= n_st and boot is not None and boot == n_boot:
                 target = n_line + (st - n_st) * self.unit                # the same boot: by the steady clock
                 step = (raw - n_raw) - (st - n_st) * self.unit           # …what the clock did while no process watched
-                since, anchor = note.get("since"), note.get("anchor") or 0
-            else:                                                        # a new boot: by the conversion it kept
+                since, anchor, adrift = note.get("since"), note.get("anchor") or 0, note.get("adrift")
+            else:                                                        # a new boot — or no id to say: by the conversion
                 target = raw + (n_line - n_raw)
                 floor = n_line if newest is None else max(newest, n_line)
                 anchor = (n_line - n_raw) if n_raw >= self.floor else (note.get("anchor") or 0)
-                since = None
+                since = adrift = None
         if floor is not None and target <= floor:
             if floor - target > CLOCK_UNSET * self.unit and raw < self.floor:
                 self.unset += 1                                          # the clock unset again: after the card's newest,
                 log.warning("the camera's clock is not set (the card's newest is %.0f days later than it): its frames go on "
                             "right after the card's newest until it is set", (floor - target) / self.unit / 86400)
-                target = since = floor + self.gap                        # until it is set
+                target = since = adrift = floor + self.gap               # until it is set — by a guess (`adrift`)
             else:
                 step = min(step, target - floor - self.gap)              # behind what the card holds: stepped back
                 target = floor + self.gap
@@ -405,7 +433,7 @@ class CamLine:
         delta, mv = target - now, None
         if abs(delta) * 100 >= self.unit:
             mv = self._move(self.origin if self.origin is not None else now, now, delta)
-        self.since, self.anchor, self.tied = since, anchor, True
+        self.since, self.anchor, self.adrift, self.tied = since, anchor, adrift, True
         self.version += 1
         return mv
 
@@ -546,6 +574,12 @@ class CamRing:
         already moves with it."""
         with self._lock:
             return self.line.restore(note, newest)
+
+    def adrift(self) -> int | None:
+        """Where the ring's line went on by a guess — a reboot with the clock unset put it right after the card's newest —
+        until the clock is set (`CamLine.adrift`), archive ms; None: the line is on the camera's clock."""
+        with self._lock:
+            return None if self.line.adrift is None else int(self.line.adrift)
 
     def skew(self) -> float:
         """What the ring's line adds to the camera's clock, in seconds — the steps it has taken up, back and forward.
@@ -1324,6 +1358,14 @@ class CardActuator:
         self._noted: tuple = (None, float("-inf"))
         self._note_error = ""
         self._card_due: list[tuple] = []
+        # WHOSE LINE IT IS (the twelfth review, a minor: "with no `delivered.json` there is no guard against another
+        # camera's card: no serial in `line.json`"). `serial`: this camera's, set by whoever knows it (М12's `tie`), and
+        # written into the line's note; a note of another serial is not continued, and the serial a card's note named
+        # when the card was attached (`card_serial`) tells the pusher the card's older footage is not this camera's
+        # (`CardRecorder.remember_card`). The segments themselves carry no serial: a card written before this pass, or by
+        # a process that did not know its serial, has none to say.
+        self.serial: str | None = None
+        self.card_serial: str | None = None
         ring.on_move(self._moved)
         self.card = card
 
@@ -1352,8 +1394,14 @@ class CardActuator:
                     raise ValueError("not a line of this camera's units")
                 opt = lambda k: None if d.get(k) is None else finite(d[k])
                 note = {"line": finite(d["line"]), "raw": finite(d["raw"]), "steady": opt("steady"),
-                        "since": opt("since"), "anchor": opt("anchor") or 0,
+                        "since": opt("since"), "anchor": opt("anchor") or 0, "adrift": opt("adrift"),
                         "boot": d.get("boot") if isinstance(d.get("boot"), str) else None}
+                writer = d.get("serial")
+                self.card_serial = str(writer)[:64] if isinstance(writer, str) and writer else None
+                if self.card_serial is not None and self.serial is not None and self.card_serial != self.serial:
+                    log.warning("card: its note of the camera's line of time was written by another camera (%s): the line "
+                                "goes on after what the card holds, not from that camera's", self.card_serial)
+                    note = None
         except (CardError, *PARSE_ERRORS) as e:
             log.warning("card: its note of the camera's line of time does not read (%s): the line goes on after what the "
                         "card holds", e)
@@ -1403,7 +1451,10 @@ class CardActuator:
             if not force and v == self._noted[0] and now - self._noted[1] < self.NOTE_EVERY:
                 return False
             try:
-                card.write_note(LINE_NOTE, json.dumps(self.ring.note()).encode())
+                note = self.ring.note()
+                if self.serial is not None:
+                    note["serial"] = self.serial                 # whose line it is (the twelfth review, a minor)
+                card.write_note(LINE_NOTE, json.dumps(note).encode())
             except OSError as e:
                 if str(e) != self._note_error:
                     log.warning("card: the camera's line of time could not be kept on the card (%s): tried again", e)
@@ -2114,6 +2165,8 @@ class CardRecorder(RecWorker):
             raw = card.read_note(self.NOTE)
             if raw:
                 told(json.loads(raw))
+            elif getattr(self.actuator, "card_serial", None):
+                told({"serial": self.actuator.card_serial})  # no note of what the server has: whose card it is, still
         except Exception as e:                           # noqa: BLE001 — a torn note is one the card did not keep
             log.warning("%s: the card's note of what the server has does not read (%s): what the card holds from before "
                         "this process is counted as let go of unknowing when the card is full", self.name, e)

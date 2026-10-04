@@ -76,6 +76,7 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
+from . import runtime
 from .blobs import BLOBS, is_digest
 from .epoch import Lease, next_epoch
 from .objects import ObjectStore
@@ -113,6 +114,8 @@ UNPLACED = "unplaced"
 HEARTBEATS = "heartbeats"
 REQUESTS = "requests"      # `<name>/requests/<id>`: bounded work an operator asked for, written by the console
 CONTROLLER_PASS = "controller/pass"   # `<name>/controller/pass`: the controller's report on its last pass (`SpecController.pass_once`)
+CONTENDERS = "contenders"  # `<name>/contenders/<slot>/<box>`: a process that wants a name another instance holds (`Worker._contend`)
+USED = "used"              # `<name>/used/<place>`: a place this subsystem's workers have opened, and where (`Subsystem.used_key`)
 
 
 # `<subsystem>/heartbeats/<worker>`, or the resource's `platform/resources/<server>/heartbeat`, which has
@@ -139,6 +142,97 @@ class NoSlot(RuntimeError):
 
 class NoOffer(NoSlot):
     """A spare found no offer of its label set to take (`Worker.claim_slot(spare_for=)`): it waits, holding nothing."""
+
+
+# -- one name, two processes (the owner's decision of 4 Oct; the product's r24-names, `names.go`) ---------------------
+#
+# A process started under a name — its unit's `WORKER_NAME`, a `<ROLE>_NAME`, `SLOT_INDEX` (`Worker.given`) — IS that
+# name, and is left without it two ways:
+#
+#   on its own box   the unit started it again while it still lived, and the new process took the name at its start
+#                    (the restart after kill -9: the unit is the authority on which process is the current one). The old
+#                    one used to rejoin under whatever was free (`w-2`) — a second worker on the server that its unit
+#                    knew nothing about. Now it is NOBODY (`Worker._seek_slot`): it holds nothing, says
+#                    `worker.name_taken` once an episode, and on each lease step asks for its own name again — taken
+#                    only when free or lapsed, never from a live holder (two live processes of one name on one box
+#                    would take it from each other for ever), never another number. Got back: `worker.name_back`.
+#   on another box   a live process holds it — two machines installed with one hostname compute one `w-%l-1`. It is not
+#                    taken (`NameOnAnotherBox`): the process refuses with words, exits, and its unit restarts it.
+#
+# Either way it leaves its mark, `<sub>/contenders/<name>/<box>` (`Worker._contend`): who wants the name, from which box,
+# who holds it, since when — written over at each refusal and on each pass of a nobody, never accumulated; a mark not
+# written for `CONTENDER_FRESH` is a claimant that stopped asking. `/servers` shows the fresh ones on the holder's row
+# (`name_conflict`), the controller says a claimant of ANOTHER box once an episode — `worker.name_conflict`, an alarm
+# (`Controller.say_name_conflicts`) — and `<p>_name_conflicts` counts the names with any fresh mark. A process that took
+# whatever was free rejoins as before.
+CONTENDER_FRESH = 300.0        # how long a mark is read after it was last written
+CONTEND_EVERY = 10.0           # how often a nobody writes its mark again: its pulse, while the heartbeat is the holder's
+REFUSED, NAMELESS = "refused", "nameless"    # a claimant that exits and is restarted; one that runs holding nothing
+
+
+class NameOnAnotherBox(RuntimeError):
+    """The name this process was started under is held by a live process of ANOTHER box (`Worker._may_take_by_name`).
+    Its text is the whole message the process exits with."""
+
+    def __init__(self, slot: str, holder: str, box: str, hostname: str, here: str, name_env: str = ""):
+        self.slot, self.holder, self.box, self.hostname, self.here = slot, holder, box, hostname, here
+        names = "WORKER_NAME" + (f" (or {name_env})" if name_env and name_env != "WORKER_NAME" else "")
+        super().__init__(
+            f"{slot} is held by a live process on another machine (box {box}, instance {holder}): two machines are "
+            f"given one name, usually because they share the hostname {hostname!r} (the units name their processes "
+            f"from it, w-%l-1). Give this machine another hostname, or set {names} in its unit to a name no other "
+            f"machine uses. This machine (box {here}) leaves the name alone: taking it would stop the other machine's "
+            f"live process")
+
+
+class _NameTaken(Exception):
+    """The name asked for again is held by a live instance — or a lapsed one whose process runs, hung — and is not taken
+    from it (`Worker._claim_slot(steal=False)`)."""
+
+    def __init__(self, slot: str, holder: str, until: float):
+        super().__init__(f"slot {slot} is held by {holder or '?'}: a live holder keeps its name")
+        self.slot, self.holder, self.until = slot, holder, until
+
+
+def _read_contender(objects, key: str) -> dict | None:
+    try:
+        row = json.loads(objects.get(key) or b"null")
+    except (*PARSE_ERRORS, OSError):
+        return None
+    if not isinstance(row, dict) or not str(row.get("name") or ""):
+        return None
+    try:
+        row["at"], row["since"] = finite(row.get("at")), finite(row.get("since"))
+    except PARSE_ERRORS:
+        return None
+    return row
+
+
+def contenders(objects, sub: "Subsystem", now: float) -> dict[str, list[dict]]:
+    """The fresh marks of a subsystem, by name, ordered by box: the processes that want a name another instance holds
+    and asked within `CONTENDER_FRESH` of now. A mark that does not read is skipped; a store that does not answer, none."""
+    out: dict[str, list[dict]] = {}
+    try:
+        keys = objects.list(sub.contenders_prefix())
+    except OSError:
+        return out
+    for key in keys:
+        row = _read_contender(objects, key)
+        if row is not None and now - row["at"] <= CONTENDER_FRESH:
+            out.setdefault(str(row["name"]), []).append(row)
+    for rows in out.values():
+        rows.sort(key=lambda r: str(r.get("box", "")))
+    return out
+
+
+def name_conflict(holder: str, rows: list[dict], now: float) -> dict:
+    """What `/servers` says of a name contended for: who holds it, and who else wants it, from where, since when."""
+    from . import runtime
+    return {"holder": holder, "holder_box": runtime.box_of(holder) or "",
+            "contenders": [{"state": r.get("state"), "box": r.get("box"), "hostname": r.get("hostname"),
+                            "server": r.get("server"), "instance": r.get("instance"), "holder_seen": r.get("holder"),
+                            "since": r["since"], "for_s": round(max(0.0, now - r["since"])), "at": r["at"]}
+                           for r in rows]}
 
 
 # Where a worker registers with its server's resource (`Worker.present`, `resource.workers_here`): a directory in
@@ -504,6 +598,22 @@ class Subsystem:
     def hold_key(self, place: str) -> str:
         return f"{self.name}/holds/{place}"
 
+    # `<name>/contenders/<slot>/<box>` — a process that wants a name another instance holds, and from which box (the
+    # owner's decision of 4 Oct, the product's r24-names; `Worker._contend`): what `/servers` shows as `name_conflict`
+    # and the controller says as `worker.name_conflict`. An OBJECT, like a heartbeat: the claimant's own word, written
+    # over at each refusal and each pass of a nobody, never a decision anybody else waits on.
+    def contender_key(self, slot: str, box: str) -> str:
+        return f"{self.name}/{CONTENDERS}/{slot}/{str(box).replace('/', '-')}"
+
+    def contenders_prefix(self) -> str:
+        return f"{self.name}/{CONTENDERS}/"
+
+    # `<name>/used/<place>` — a place this subsystem's workers have OPENED, and at which address `{url, at, by,
+    # instance, server}`: what "already in use" means when the place is not there any more (`RecWorker._may_format`;
+    # the owner's decision of 4 Oct). An object, written once per address by whoever opened it first.
+    def used_key(self, place: str) -> str:
+        return f"{self.name}/{USED}/{place}"
+
     # `[<name>/epoch/*, <name>/slots/*, <name>/holds/*]` — a worker writes only epochs, its slot and the
     # place it took; never configuration. The place is the worker's to take precisely because taking it
     # is a claim about this process, not a decision about the system.
@@ -520,8 +630,9 @@ class Subsystem:
     #
     # Each is one directory with one writer, which is what the key layout was rearranged to allow:
     def acl_objects_worker(self) -> list[str]:
-        """The workers write their own heartbeats and nothing else."""
-        return [f"{self.name}/{HEARTBEATS}/*"]
+        """The workers write their own heartbeats, their claims to a name another instance holds, and the places
+        they opened."""
+        return [f"{self.name}/{HEARTBEATS}/*", f"{self.name}/{CONTENDERS}/*", f"{self.name}/{USED}/*"]
 
     # …and the report on its pass (the review's ninth pass, major): `pass_once` writes `<name>/controller/pass`, the one
     # object `/metrics` reads `<name>_units_unplaced` and the last pass from, and this list — and the policy checked
@@ -1425,6 +1536,35 @@ class Controller:
         gone.clear(); gone.update(moved)
         return new
 
+    # TWO BOXES GIVEN ONE NAME, SAID (the owner's decision of 4 Oct; the product's `sayNameConflicts`). Once an episode —
+    # a claimant's box and the time its episode began — that a process of ANOTHER box wants a name this subsystem's
+    # instance holds: `worker.name_conflict`, an alarm, and the log. A nobody of the holder's own box has said it in its
+    # own journal (`worker.name_taken`). Returns the number of names with any fresh mark — the pass report's
+    # `name_conflicts`, `<p>_name_conflicts` on `/metrics`.
+    def say_name_conflicts(self) -> int:
+        now = self.wall()
+        marks = contenders(self.objects, self.sub, now)
+        said, before = {}, self.__dict__.setdefault("_names_said", {})
+        for name in sorted(marks):
+            for m in marks[name]:
+                box, holder_box = str(m.get("box") or ""), str(m.get("holder_box") or "")
+                if m.get("state") != REFUSED and (not holder_box or box == holder_box):
+                    continue                              # a nobody of the holder's own box: its own journal said it
+                k = f"{name}/{box}"
+                said[k] = m["since"]
+                if before.get(k) == m["since"]:
+                    continue
+                log.error("%s: %s is held by %s (box %s), and a process of box %s (%s, server %s) asks for it too, for "
+                          "%.0f s: two machines are given one name", self.sub.name, name, m.get("holder") or "?",
+                          holder_box or "not said", box, m.get("hostname") or "?", m.get("server") or "?",
+                          now - m["since"])
+                self.journal.say("worker.name_conflict", ALARM, of=self.sub.name, worker=name, holder=m.get("holder"),
+                                 holder_box=holder_box, contender=m.get("instance"), contender_box=box,
+                                 contender_hostname=m.get("hostname"), contender_server=m.get("server"),
+                                 since=m["since"])
+        before.clear(); before.update(said)
+        return len(marks)
+
     # The places a worker's process holds (`<name>/holds/<place>`, `by` its slot): what freeing its slot leaves held —
     # a local disk is held through a silence on purpose, and one that went with its server is the administrator's to withdraw.
     def holds_of(self, worker: str) -> list[str]:
@@ -1461,12 +1601,22 @@ class Worker:
         self.unconfirmed_max: float | None = 0.0
         self.epochs: dict[str, int] = {}          # unit -> epoch this worker holds
         self.leases: dict[str, Lease] = {}
-        self.instance = instance or f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"   # the process; a name is a slot
+        # The process; a name is a slot. Its box in it (`runtime.box`: `BOX_ID`, the machine's id, the hostname) — what
+        # a live holder's name may be taken by at a start is read from (`_may_take_by_name`).
+        self.instance = instance or f"{runtime.box(os.environ)}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
         self.slot_ttl = slot_ttl
         self.slot: Slot | None = None
         self.name = name                          # None until claim_slot(); a fixed name is a slot claimed by that name
         # The name this instance gave up to another (`keep_slot`) while it has not claimed another: fenced till then.
         self.seeking: str | None = None
+        # The name this process was STARTED under (`claim_slot(prefer=…)`: its unit's `WORKER_NAME`, a `<ROLE>_NAME`,
+        # `SLOT_INDEX`), or None — it took whatever was free. Given, it is that name and no other: fenced off it, it asks
+        # for it again and takes nothing else (`_seek_slot`; the owner's decision of 4 Oct).
+        self.given: str | None = None
+        # The episode this process spends without its given name — `{name, holder, holder_box, since}` — or None while
+        # it is somebody (`_name_taken_by`), and when it last wrote its mark (`_contend`, by the clock).
+        self.nameless: dict | None = None
+        self._contend_at = -1e18
         # The label set this process is a SPARE for (`SPARE_FOR`, `claim_at_start`), or None: it takes an offer of that
         # set and nothing else, then and every time it has to claim again.
         self.spare_for: str | None = None
@@ -1504,7 +1654,8 @@ class Worker:
     # Become somebody. Lists the slot rows; with `prefer` (the unit's `WORKER_NAME`, `SLOT_INDEX`) the
     # candidate list is just that name and it is taken by CAS even from a holder that has not lapsed — the
     # supervisor is the authority on which process is the current one, and the old holder finds out on its
-    # next `renew_slot`. Without `prefer`, candidates are: lapsed slots first (oldest `until` first — their
+    # next `renew_slot` — at a START only, and only from a holder of this box (`_may_take_by_name`); fenced off it,
+    # a process so named asks for that name alone, free or lapsed (`_seek_slot`). Without `prefer`, candidates are: lapsed slots first (oldest `until` first — their
     # assignment is waiting), then free (released or never held) slots by number, then a fresh `w-<max+1>`.
     # For each candidate, re-read, skip if not claimable (only in the no-`prefer` case), and `put` a new
     # `Slot(cand, instance, now + slot_ttl, released=False, gen+1)` with `cas=idx`; a `Conflict` means
@@ -1544,8 +1695,10 @@ class Worker:
         """Become somebody. With `prefer` (whatever `runtime.slot` made of
         SLOT_INDEX or a <ROLE>_NAME) take that slot, by CAS, even from a holder
         that has not lapsed — the runtime is the authority on which process is
-        the current one,
-        and the old holder finds out on its next renewal. Without it, take a
+        the current one — unless that holder runs on another box (`NameOnAnotherBox`),
+        and the old holder finds out on its next renewal; that name is then this
+        process's for good (`given`: fenced off it, it asks for it again and for
+        nothing else, `_seek_slot`). Without it, take a
         lapsed slot — its assignment is waiting — before an unused number. Holding is renewed by `renew_slot`; losing it fences the
         instance. The controller never hands names out; a process takes one.
         A SPARE (`spare_for`, or `self.spare_for` once said) takes only an offer of that label set, and `NoOffer` when
@@ -1555,6 +1708,8 @@ class Worker:
                 self.spare_for = label_set(spare_for)
             if self.spare_for is not None:
                 return self._claim_offer(retries)
+            if prefer is not None:
+                self.given = prefer                   # named by its unit: that name and no other (`_seek_slot`)
             return self._claim_slot(prefer, retries)
 
     # What a process does at its start: claim, as `claim_slot` — or, started as a spare (`SPARE_FOR` in `env`), take an
@@ -1609,7 +1764,10 @@ class Worker:
                 return cand
         raise NoOffer(f"a spare for labels '{self.spare_for}', and no offer of them to take")
 
-    def _claim_slot(self, prefer: str | None, retries: int) -> str:
+    # `steal`: whether `prefer` is taken from a live holder. At a process's start, yes — the unit says which process is
+    # the current one — unless that holder runs on ANOTHER box (`_may_take_by_name`). When a process named by its unit
+    # and fenced off its name asks for it again (`_seek_slot`), no: a live holder keeps it, and the answer is `_NameTaken`.
+    def _claim_slot(self, prefer: str | None, retries: int, steal: bool = True) -> str:
         # A process on a decommissioned server is given no name (the product's rule): its slot would be released again on
         # the next pass, and whatever it took would move. Said by name, until the operator brings the server back.
         if self.server and self.vars.get(DECOMMISSION + self.server)[0]:
@@ -1653,6 +1811,8 @@ class Worker:
                 if cur is None:
                     if prefer is None and not (items and self._garbled_stale(cand, idx)):
                         continue                               # garbled, and not watched standing still for a term
+                    if not steal and items and not self._garbled_stale(cand, idx):
+                        raise _NameTaken(cand, "", 0.0)        # whose it is cannot be read: asked again, taken once it stands still
                     # The runtime named this slot, or nobody has touched its garbled row for a term: taken, written whole
                     # again — under the generation the row still says, if it says one, so a generation is not handed out
                     # twice through a torn row.
@@ -1660,6 +1820,14 @@ class Worker:
                 if prefer is None and not cur.claimable(now):
                     continue                                   # a preferred slot is taken regardless: the scheduler
                                                                # said this index is mine; the old holder fences on renewal
+                if prefer is not None and cur.holder != self.instance:
+                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._hung(cand, cur)):
+                        raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
+                    if steal and not cur.claimable(now):
+                        refused = self._may_take_by_name(cand, cur.holder)
+                        if refused is not None:
+                            self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
+                            raise refused
                 new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1)
                 try:
                     self.vars.put(prefix + cand, new.to_items(), cas=idx)
@@ -1667,8 +1835,106 @@ class Worker:
                     continue                                   # somebody took it between the read and the write
                 self._slot_seen.pop(cand, None)
                 self.slot, self.name = new, cand
+                if prefer is not None:
+                    self._uncontend(cand)                      # this box asks for the name no more: it has it
                 return cand
         raise RuntimeError(f"{self.instance}: could not claim a slot in {retries} tries")
+
+    # MAY A LIVE HOLDER'S NAME BE TAKEN AT A START (the owner's decision of 4 Oct; the product's `mayTakeByName`). Taking
+    # a named slot from a live holder is how a unit restarted after kill -9 gets its name back without waiting out the
+    # previous instance's slot. But the unit that says so is THIS box's, and the units name their processes from the
+    # short hostname (`w-%l-1`): two machines with one hostname computed one name, and each restart of one took the
+    # other's — fenced it — and the other's restart took it back, a ping-pong only the two boxes' own logs saw. So the
+    # take stands only where its reason does: the holder ran on this box; or the holder's name says no box, or this
+    # instance's does not (an `INSTANCE_ID`, an allocation's id: a scheduler names them and moves an index between nodes
+    # — there the scheduler stays the authority). A live holder on another box is left alone: the refusal, in words.
+    def _may_take_by_name(self, slot: str, holder: str) -> "NameOnAnotherBox | None":
+        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
+        if here is None or there is None or here == there:
+            return None
+        return NameOnAnotherBox(slot, holder, there, socket.gethostname(), here, getattr(self, "NAME_ENV", ""))
+
+    # The box this instance runs on, as its name says it — this machine's when its name says none.
+    def _box(self) -> str:
+        return runtime.box_of(self.instance) or runtime.box(os.environ)
+
+    # This process's mark on a name another instance holds (`<sub>/contenders/<name>/<box>`): written over, never added
+    # to. The episode's start is kept from a fresh mark of the same state — a refused process is a new process at each
+    # restart, and its episode is its first refusal. A store that does not take it: this box's log says it, as before.
+    def _contend(self, name: str, holder: str, state: str) -> None:
+        if self.objects is None:
+            return
+        now, key = self.wall(), self.sub.contender_key(name, self._box())
+        since = now
+        if state == NAMELESS and self.nameless is not None:
+            since = self.nameless["since"]
+        else:
+            prev = _read_contender(self.objects, key)
+            if prev is not None and prev.get("state") == state and now - prev["at"] <= CONTENDER_FRESH:
+                since = prev["since"]
+        row = {"name": name, "state": state, "box": self._box(), "hostname": socket.gethostname(),
+               "server": self.server or "", "instance": self.instance, "holder": holder,
+               "holder_box": runtime.box_of(holder) or "", "since": since, "at": now}
+        try:
+            self.objects.put(key, json.dumps(row).encode())
+        except Exception as e:                            # noqa: BLE001 — the claim is said; a mark nobody took is a log line
+            log.warning("%s: its claim to %s/%s was not written down (%s): only this log says it", self.instance,
+                        self.sub.name, name, e)
+
+    # …removed once this box holds the name.
+    def _uncontend(self, name: str) -> None:
+        if self.objects is None:
+            return
+        try:
+            key = self.sub.contender_key(name, self._box())
+            if self.objects.get(key):
+                self.objects.delete(key)
+        except Exception as e:                            # noqa: BLE001
+            log.warning("%s: its old claim to %s/%s stays (%s): read as stale in %g s", self.instance, self.sub.name,
+                        name, e, CONTENDER_FRESH)
+
+    # The worker's own lines in the journal (`journal.py`): `worker.name_taken`, `worker.name_back`. Into its server's
+    # resource tree when it has one (`archive_root`), else the log only — as the controller's.
+    @property
+    def journal(self) -> Journal:
+        j = self.__dict__.get("_journal")
+        if j is None:
+            j = self.__dict__["_journal"] = Journal(getattr(self, "archive_root", None), f"{self.sub.name}worker", self.wall)
+        return j
+
+    @journal.setter
+    def journal(self, j: Journal) -> None:
+        self.__dict__["_journal"] = j
+
+    # NOBODY, WAITING FOR ITS OWN NAME: said once an episode — who holds the name, on which box — and the mark written
+    # as its pulse while its heartbeat is the holder's.
+    def _name_taken_by(self, e: "_NameTaken") -> None:
+        now = self.wall()
+        holder_box = runtime.box_of(e.holder) or ""
+        if self.nameless is None:
+            self.nameless = {"name": e.slot, "holder": e.holder, "holder_box": holder_box, "since": now}
+            log.error("%s: its name %s/%s is held by %s (box %s) — another process started under the same name took it. "
+                      "This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no "
+                      "other", self.instance, self.sub.name, e.slot, e.holder or "?", holder_box or "not said")
+            self.journal.say("worker.name_taken", ALARM, of=self.sub.name, worker=e.slot, holder=e.holder,
+                             holder_box=holder_box, holder_until=e.until, instance=self.instance, box=self._box(),
+                             server=self.server or "", since=now)
+            self._contend_at = -1e18
+        self.nameless.update(holder=e.holder, holder_box=holder_box)
+        if self.clock() - self._contend_at >= CONTEND_EVERY:
+            self._contend(e.slot, e.holder, NAMELESS)
+            self._contend_at = self.clock()
+
+    # …and its name its own again.
+    def _name_back(self) -> None:
+        if self.nameless is None:
+            return
+        n, now = self.nameless, self.wall()
+        self.nameless = None
+        log.warning("%s: its name %s/%s is its own again, after %.0f s of being nobody", self.instance, self.sub.name,
+                    n["name"], now - n["since"])
+        self.journal.say("worker.name_back", of=self.sub.name, worker=n["name"], instance=self.instance, box=self._box(),
+                         server=self.server or "", since=n["since"], nameless_s=round(now - n["since"]))
 
     # Still me? Read the slot; if `holder` is another instance, return False — the instance is fenced as a
     # whole (the VMS worker stops recording on this). Otherwise extend `until` by CAS; a `Conflict` is also
@@ -2018,18 +2284,32 @@ class Worker:
     # One try at a free slot for an instance that gave its own up. True when it is somebody again. Whatever the claim
     # raised — the store did not answer, every candidate was taken under it, a token refused — the instance stays
     # nobody and tries again: `VmsWorker.rejoin` comes through here too (the review's sixth pass).
+    #
+    # …AND A PROCESS NAMED BY ITS UNIT ASKS FOR THAT NAME ONLY (the owner's decision of 4 Oct; the product's `RejoinSlot`).
+    # It took whatever was free (`claim_slot()`), and a unit-named process fenced off its name became `w-2`: a second
+    # worker on its server, given units by the controller, under no unit — and its unit's own process held the name
+    # beside it. Now it takes its given name when that is free or lapsed (`steal=False`), and while another instance
+    # holds it live it is nobody (`_name_taken_by`) — said once, its mark written, asked again every step.
     def _seek_slot(self) -> bool:
         was = self.seeking
         try:
             self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # nobody to be on a store past this build
-            self.claim_slot()
+            if self.given is not None and self.spare_for is None:
+                with self._slot_lock:
+                    self._claim_slot(self.given, 50, steal=False)
+            else:
+                self.claim_slot()
         except NoOffer:
             return False                          # a spare with no offer of its set: it waits, as it said at its start
+        except _NameTaken as e:
+            self._name_taken_by(e)
+            return False
         except Exception as e:                    # noqa: BLE001
             log.warning("%s: gave slot %s up and no other could be claimed (%s): nobody, taking nothing; trying again "
                         "on the next step", self.instance, was, e)
             return False
         self.seeking = None
+        self._name_back()
         if was:                                   # a spare that never had a name has said what it took (`_claim_offer`)
             log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
         return True

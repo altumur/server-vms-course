@@ -173,6 +173,9 @@ def test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go():
     old = _recorder(box, "r-1", "srv-a", instance="box-a:10:aaaaaa")
     assert old.volume_pass() == "s3-main"
     box.wall.advance(5); box.clock.advance(5)
+    # A live holder of another box keeps its name now (`NameOnAnotherBox`, the owner's decision of 4 Oct): the other
+    # box's instance gets it once the old one's slot has lapsed by the wall — frozen, renewing nothing.
+    box.wall.advance(old.slot_ttl + 1)
     again = _recorder(box, "r-1", "srv-b", instance="box-b:11:bbbbbb")   # the same slot, started on another box
     assert again.volume_pass() == "" and again.hold is None            # not at once: the old one may be writing
     assert old.store is not None and old._may_write_volume(old.store.row)
@@ -183,7 +186,7 @@ def test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go():
     assert again.volume_pass() == "s3-main" and again.hold == "s3-main"
 
     again.leave_volume("test: let go on purpose")                      # its writer closed, then the hold released
-    third = _recorder(box, "r-1", "srv-c")
+    third = _recorder(box, "r-3", "srv-c")
     assert third.volume_pass() == "s3-main"                            # a released hold: at once, whoever asks
 
 
@@ -973,3 +976,56 @@ def test_a_renewal_that_lost_to_one_of_ours_keeps_the_hold():
     finally:
         r.vars.put = real_put
     assert r.volume_pass() == "net" and r.store is not None
+
+
+def test_a_volume_whose_directory_is_gone_is_not_made_again_empty_and_its_recordings_go_elsewhere():
+    """The owner's decision of 4 Oct (the product's r24-names). A disk not mounted after a reboot leaves its mount point
+    empty or gone, the engine answers "no volume there" — and the recorder FORMATTED a new, empty one in its place, on
+    whatever disk the path now falls on, and recorded into it as if nothing had happened: weeks of footage invisible,
+    the root disk filling. A volume ALREADY IN USE is one this subsystem has opened at that address before: the mark
+    `rec/used/<volume>` `{url, at, by, instance, server}`, written at its first open. Missing now, it is not formatted:
+    `volume.missing`, an alarm once an episode per recorder, the volume handed back with words, and the recordings go to
+    another volume. Mounted back, it opens as it was. A volume never opened at this address — new, or declared again at
+    another path — is formatted as before."""
+    import time
+    from w2cplatform.eventdatabase import EventIndex
+    from tests.conftest import OBSD_LINGER_MS
+    box = Box()
+    url = _disk(box, "disk-a")
+    _disk(box, "disk-b")
+    r = _recorder(box, "r-1", "srv-a")
+    assert r.volume_pass() == "disk-a" and r.store.formatted
+    mark = json.loads(box.objects.get(REC_SPEC.sub.used_key("disk-a")))
+    assert mark["url"] == url and mark["by"] == "r-1" and mark["server"] == "srv-a", mark
+    t = box.wall()
+    footage(r.store, "7", 1, t - 60, t)
+    r.session.vanish()                                                   # the box goes down
+    time.sleep(OBSD_LINGER_MS / 1000 + 0.3)
+    os.rename(url, url + ".unmounted")                                   # …and comes up without the disk
+
+    box.wall.advance(5)
+    again = _recorder(box, "r-1", "srv-a")                               # its unit starts it again
+    assert again.volume_pass() == "disk-b", "a missing volume was formatted again in its place"
+    assert not os.path.exists(url)                                       # nothing made where the disk was
+    spare = _recorder(box, "r-2", "srv-a")                               # a free recorder of this box asks for it too
+    for _ in range(3):
+        box.clock.advance(5); box.wall.advance(5)
+        assert again.volume_pass() == "disk-b"
+        assert spare.volume_pass() in ("", "disk-a") and spare.store is None and spare.capacity == 0
+        assert not os.path.exists(url)
+    alarms = [e for e in EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="rec")["events"]
+              if e["kind"] == "volume.missing"]
+    assert len(alarms) == 2, alarms                                      # once each recorder that met it, not every pass
+    assert all(a["class"] == "alarm" and a["volume"] == "disk-a" and a["url"] == url for a in alarms), alarms
+    why = spare.volume_error
+    assert "disk-a" in why and "not mounted" in why and "VOLUME_MISSING" not in why, why
+
+    os.rename(url + ".unmounted", url)                                   # mounted back
+    box.clock.advance(5); box.wall.advance(5)
+    assert spare.volume_pass() == "disk-a" and spare.store is not None and not spare.store.formatted   # as it was
+    assert spare.capacity == spare.full_capacity and spare.volume_error == ""
+    assert spare.our_coverage("7") == [(t - 60, t)]
+
+    _disk(box, "disk-a", url=url + "-new")                               # declared again at another address: a new volume
+    assert spare.volume_pass() == "disk-a" and spare.store.formatted and spare.store.url == url + "-new"
+    assert json.loads(box.objects.get(REC_SPEC.sub.used_key("disk-a")))["url"] == url + "-new"

@@ -868,9 +868,13 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
     try:
         t = box.wall()
         assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        # A live holder of another box keeps its name now (`NameOnAnotherBox`, the owner's decision of 4 Oct): B gets it
+        # once A's slot has lapsed by the wall — A frozen, renewing nothing. Its monotonic clock, and its write window,
+        # have not moved.
+        box.wall.advance(a.slot_ttl + 1)
         a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1),
                       env={"ARCHIVE_LOCK_REFRESH_S": "2"}, instance="box-b:7:a2a2a2")   # the same slot, ANOTHER host:
-        # it takes the NAME at once
+        # it takes the lapsed NAME
         os.kill(da.proc.pid, signal.SIGSTOP)
         try:
             a2.lease_pass()
@@ -883,19 +887,17 @@ def test_a_second_instance_of_the_same_slot_on_another_box_does_not_take_a_netwo
         finally:
             os.kill(da.proc.pid, signal.SIGCONT)
         assert a.actuator.feed("1", t - 30, t) == {"OK": 30}           # A wakes inside its window — and is the only writer
-        a.lease_pass()                                                 # its name is the other instance's: fenced
-        assert not a.recording_allowed
-        assert a.rejoin() == "r-3"                                     # …and it comes back as somebody,
-        a.lease_pass()
-        assert a.hold == "net" and a.store is not None                 # the volume still its own: it never stopped renewing for long
         a2.lease_pass()
-        assert a2.hold is None
+        assert a2.hold is None                                         # the hold it renewed a moment ago is still A's
 
         a.store.seal()
         a.leave_volume("test: an orderly hand-over")                   # the writer closed, the hold released
         a2.lease_pass()
         assert a2.hold == "net" and a2.store is not None and a2.store.writer is not None   # at once
         assert a2.our_coverage("1") == [(t - 60, t)]                   # one writer wrote it, and all of it is there
+        a.lease_pass()                                                 # its name is the other instance's: fenced
+        assert not a.recording_allowed
+        assert a.rejoin() is None and a.seeking == "r-1"               # …and nobody: no other number (the owner's 4 Oct)
     finally:
         da.stop(); db.stop()
 
@@ -1298,8 +1300,9 @@ def test_a_second_instance_pinned_to_the_same_network_volume_on_another_box_wait
     try:
         t = box.wall()
         assert a.actuator.feed("1", t - 60, t - 30) == {"OK": 30}
+        box.wall.advance(a.slot_ttl + 1)                               # A frozen: its slot lapses by the wall, and only then
         a2 = recorder(box, "r-1", "srv-2", obsd=Session(db.socket, client="rec-r-1", timeout=1), instance="box-b:7:a2a2a2",
-                      env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})
+                      env={"ARCHIVE_LOCK_REFRESH_S": "2", "VOLUME": "net"})   # does another box get its name (4 Oct)
         os.kill(da.proc.pid, signal.SIGSTOP)
         try:
             a2.lease_pass()
@@ -1351,8 +1354,16 @@ def test_a_network_volumes_hold_follows_the_name_on_its_holders_host_and_waits_o
     again.store.seal()
     assert again.our_coverage("1") == [(t - 60, t)]                    # nothing the old one wrote was lost
 
+    from w2cplatform.contract import NameOnAnotherBox
+    try:                                                               # the same name on another host: while its holder
+        recorder(box, "r-1", "srv-2", obsd=Session(ObsdDaemon.get().socket, client="rec-r-1-b"),   # lives, not even the
+                 instance="box-c:5:cccccc")                            # name (the owner's decision of 4 Oct)…
+        raise AssertionError("a live holder's name was taken from another box")
+    except NameOnAnotherBox:
+        pass
+    box.wall.advance(again.slot_ttl + 1)                               # …and once it lapses, the name — but the hold waits
     elsewhere = recorder(box, "r-1", "srv-2", obsd=Session(ObsdDaemon.get().socket, client="rec-r-1-b"),
-                         instance="box-c:5:cccccc")                    # the same name on another host: it waits
+                         instance="box-c:5:cccccc")
     elsewhere.lease_pass()
     assert elsewhere.hold is None and elsewhere.store is None
 
@@ -1367,12 +1378,17 @@ def test_the_host_a_hold_follows_the_name_on_is_the_box_not_its_hostname():
     import socket
     from vms.recworker import box_instance, host_of
     assert host_of(box_instance({"BOX_ID": "4f1c0ad2e9"})) == "4f1c0ad2e9"
-    assert host_of(box_instance({})) == socket.gethostname()                       # nothing said: as before
+    from w2cplatform import runtime
+    assert host_of(box_instance({})) == runtime.box({})              # nothing said: the machine's id, else the hostname
+    assert runtime.box({}) in (socket.gethostname(), *(open(p).read().strip() for p in runtime.MACHINE_ID_FILES
+                                                       if os.path.exists(p)))
     assert box_instance({"INSTANCE_ID": "alloc-1"}) == "alloc-1" and host_of("alloc-1") is None   # no host: it waits
     assert box_instance({"INSTANCE_ID": "alloc-1", "BOX_ID": "node-7"}) == f"node-7:{os.getpid()}:alloc-1"
     box = Box()
     a = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
+    box.wall.advance(a.slot_ttl + 1)                 # each takes the name lapsed: a live holder of another box keeps it (4 Oct)
     twin = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-b"})              # the same hostname, another box
+    box.wall.advance(a.slot_ttl + 1)
     again = recorder(box, "r-1", "srv-1", env={"BOX_ID": "machine-a"})
     for r in (twin, again):
         r._shared = {"net"}

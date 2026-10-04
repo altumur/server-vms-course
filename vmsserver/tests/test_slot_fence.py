@@ -22,6 +22,11 @@ def _taken(box, w):
     return was
 
 
+def _let_go(box, w, was):
+    """The other instance stops in order: its slot released, the name free for the process it was taken from."""
+    box.vars.put(w.sub.slot_key(was), Slot(was, "somebody-else", box.wall(), True, 9).to_items())
+
+
 class _Blink:
     """The store does not answer for a slot listing (the claim's first read) while `down`."""
     def __init__(self, vars_):
@@ -84,9 +89,12 @@ def test_a_worker_whose_slot_was_taken_and_whose_claim_failed_takes_nothing_and_
             hb = box.objects.get(w.sub.heartbeat_key(was))
             assert b"somebody-else" in hb, f"{kind}: its heartbeat went out over the other instance's"
             assert _keep(w, lambda: None) == [] and w.renew_slot() is False, kind   # tried again, still nobody
-        # the store answers again: the next lease step claims a free slot, and the instance is somebody
+        # the store answers again — and the other instance holds the name live: still nobody, and no other number taken
+        # (its name is the one it was started under: the owner's decision of 4 Oct, `test_names.py`)
+        assert _keep(w, lambda: None) == [] and w.renew_slot() is False and w.slot is None, kind
+        _let_go(box, w, was)                                           # the other instance stops in order
         assert _keep(w, lambda: None) == [], kind
-        assert w.name != was and w.renew_slot() is True and w.may_stand_in() is True, kind
+        assert w.name == was and w.renew_slot() is True and w.may_stand_in() is True, kind
         w.take_epoch("v")
         assert "v" in w.epochs and w.may_write("v"), kind
 
@@ -192,12 +200,14 @@ def test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_
         assert w.rejoin() is None and not w.recording_allowed, kind
         _nobody(box, w, was, kind)
         w._claim_slot = real
-        name = w.rejoin()                                                   # the store answers: somebody again
-        assert name and name != was and w.name == name and w.recording_allowed and w.seeking is None, kind
-        assert w.renew_slot() is True and w.assignment().units == [], kind
+        assert w.rejoin() is None and not w.recording_allowed, kind         # the store answers, the other holds it live:
+        _nobody(box, w, was, kind)                                          # its own name only (the owner's decision of 4 Oct)
+        _let_go(box, w, was)                                                # the other instance stops in order
+        name = w.rejoin()                                                   # somebody again — under its own name
+        assert name == was and w.name == name and w.recording_allowed and w.seeking is None, kind
+        assert w.renew_slot() is True and w.assignment().units == ["1", "2"], kind   # the name's assignment with it
         w.heartbeat_once()
-        assert box.objects.get(w.sub.heartbeat_key(name)) is not None, kind
-        assert b"somebody-else" in box.objects.get(w.sub.heartbeat_key(was)), kind
+        assert w.instance.encode() in box.objects.get(w.sub.heartbeat_key(name)), kind
 
 
 def test_a_holder_fenced_for_the_schema_stops_speaking_when_another_instance_takes_its_name():
@@ -277,6 +287,8 @@ def test_one_garbled_slot_row_does_not_leave_a_seeker_nobody_and_is_counted():
         # object than the one these classes were made from.
         garbled = type(w).heartbeat.__globals__["SLOTS_GARBLED"]
         before = garbled.get(sub, 0)
+        w.given = None                     # a process that took whatever was free: it walks the slots (one started under
+                                           # a name asks for that name alone, `test_names.py`)
         box.vars.put(w.sub.slot_key(f"{prefix}-7"), GARBLED_SLOT)
         was = _taken(box, w)
         if kind == "VmsWorker":
