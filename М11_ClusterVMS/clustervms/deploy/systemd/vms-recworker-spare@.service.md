@@ -4,3 +4,4 @@
 
 ## Notes
 - `tests/test_units.py::test_a_spare_is_its_roles_unit_line_for_line_but_the_name`.
+- No set and no file of its own: a recorder needs no offer. `Type=simple`, `NotifyAccess=main`, `WatchdogSec=360`, as the role's unit.

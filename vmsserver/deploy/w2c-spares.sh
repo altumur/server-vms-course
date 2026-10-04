@@ -9,15 +9,22 @@
 #   liveworker   live_workers_needed{labels}    on /live/metrics        MAX_GATEWAYS   (4)
 #   autoworker   auto_workers_needed{labels}    on /auto/metrics        MAX_EVALUATORS (4)
 #
-# It runs on the HOST, under root, from `w2c-spares[-<role>].timer` — and that placement is the whole point of the
-# file. Starting a process means talking to systemd (launchd) as root; a console that could do it would be a console
-# holding root on its own machine, and "the platform does not start processes" would be a sentence with an exception
-# in it. So the controller publishes NUMBERS and OFFERS (`SpecController.offer_spares`) and this script, which the
-# operator installed deliberately, does the starting.
+# It runs on the HOST, from `w2c-spares[-<role>].timer` — and that placement is the whole point of the file. Starting a
+# process means talking to systemd (launchd); a console that could do it would be a console holding the power to
+# start processes on its own machine, and "the platform does not start processes" would be a sentence with an
+# exception in it. So the controller publishes NUMBERS and OFFERS (`SpecController.offer_spares`) and this script,
+# which the operator installed deliberately, does the starting.
+#
+# NOT AS ROOT on Linux (the product's cross-check, 4 Oct): as `w2c-spares`, a user in no group but its own, whom
+# polkit lets do one thing — `systemctl start` of an instance of a spare template (М11's `w2c-spares.rules`: the verb
+# `start`, the units `vms-vmsworker-spare@<n>`, `vms-recworker-spare@<n>`) — and nothing else: no stop, no other
+# unit, no `reset-failed`. What it writes for a spare is read by the spare's runner one line deep (`w2c-run.sh`: `SPARE_FOR=`,
+# checked against the labels' alphabet), so the file it may write sets no other variable in a process holding the
+# role's key. On macOS it is root still: `launchctl bootstrap system` has no polkit to narrow it.
 #
 # The rules it follows:
 #
-#   1. It reads numbers, never a command. Running a string that arrived over HTTP as root is remote code execution
+#   1. It reads numbers, never a command. Running a string that arrived over HTTP on the host is remote code execution
 #      with extra steps, however friendly the source.
 #   2. A console that does not answer, or whose controller's pass is older than a minute (the numbers are not on its
 #      page then), is a reason to start NOTHING.
@@ -40,8 +47,9 @@
 # TEMPLATE that is the role's regular unit line for line but the name (`vms-<role>-spare@.service`, installed with
 # the units: the same user, groups, socket, key, umask and watchdog — `tests/test_units.py` holds the two together),
 # so whatever the role's unit is given, a spare is given; and the set it is for goes in a file of one line the
-# template reads (`EnvironmentFile=$SPARES_ENV/<unit>.env`), the only thing this script says to it. No template for
-# the role: nothing started, and said — never a process with less than its unit has.
+# template names (`SPARE_FILE=$SPARES_ENV/<unit>.env`, of which its runner takes `SPARE_FOR=` alone), the only thing
+# this script says to it. No template for the role: nothing started, and said — never a process with less than its
+# unit has.
 #
 #   Linux   SPARE_FOR=<set> into $SPARES_ENV/vms-<role>-spare@<n>.service.env; systemctl start vms-<role>-spare@<n>
 #   macOS   the role's own plist ($LAUNCHD_DIR/com.w2c.vms.<role>.plist) copied as com.w2c.vms.<role>.spare-<n> — no
@@ -57,7 +65,7 @@ SERVER="${SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"
 # spare itself is a process of a VMS subsystem, and keeps the subsystem's names: the unit `vms-<role>-spare@<n>`
 # (macOS: `com.w2c.vms.<role>.spare-<n>`), the group `vms-<role>` of its role's store socket.
 SPARES_DIR="${SPARES_DIR:-/var/run/w2c-spares}"
-SPARES_ENV="${SPARES_ENV:-/run/w2c-spares}"         # Linux: each spare's set, read by its template (its timers' RuntimeDirectory)
+SPARES_ENV="${SPARES_ENV:-/run/w2c-spares}"         # Linux: each spare's set, read by its runner (its timers' RuntimeDirectory)
 LAUNCHD_DIR="${LAUNCHD_DIR:-/Library/LaunchDaemons}" # macOS: where `install.sh` put the roles' plists
 NAME=vms
 roles=$(printf '%s' "${*:-${SPARES_ROLES:-recworker}}" | tr ',' ' ')
@@ -97,7 +105,8 @@ start() {                                           # sh has no locals: the argu
             mkdir -p "$SPARES_ENV"
             printf 'SPARE_FOR=%s\n' "$3" >"$SPARES_ENV/$NAME-$1-spare@$2.service.env"
         fi
-        systemctl reset-failed "$NAME-$1-spare@$2" >/dev/null 2>&1 || true      # a spare that ended leaves its name behind
+        # `start` alone — the one verb polkit gives this user. A spare that ended is started again by it; one whose
+        # restarts ran past systemd's limit is refused, and the next number is tried.
         systemctl start "$NAME-$1-spare@$2"
     else
         # The role's plist, as launchd runs the role: its user, its environment, its log beside. Not its name — a spare
@@ -186,6 +195,8 @@ for role in $roles; do
                     echo "$ME: started $NAME-$role-spare@$n${spare:+ for labels '$set'}"
                     needed=$((needed - 1))
                     room=$((room - 1))
+                else                                # refused (polkit, systemd's start limit) or failed at once: said
+                    echo "$ME: $NAME-$role-spare@$n did not start — the next number is tried" >&2
                 fi
             fi
             n=$((n + 1))

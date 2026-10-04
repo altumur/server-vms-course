@@ -567,11 +567,12 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
 ROLES_WITH_TEMPLATES = ("vmsworker", "recworker", "liveworker", "autoworker")
 
 
-def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_WITH_TEMPLATES):
+def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_WITH_TEMPLATES, refused=()):
     """`w2c-spares.sh` RUN, every command it talks to a shim: `curl` answers from `pages` (`{path: text}`, a missing
     path is a console that does not answer); on Linux `systemctl cat` finds the spare templates of `templates`,
-    `systemctl start` writes its line down and the unit is active from then on, `systemctl is-active` says so for
-    `active` and what was started. `linux` False: no `systemctl` anywhere on PATH, `uname` says Darwin — the macOS path:
+    `systemctl start` writes its line down and the unit is active from then on — but a unit of `refused` is refused,
+    as polkit or systemd's start limit refuses one — `systemctl is-active` says so for `active` and what was started;
+    any other verb is written down too (polkit gives the spares' user `start` alone). `linux` False: no `systemctl` anywhere on PATH, `uname` says Darwin — the macOS path:
     the roles' plists of `templates` in `$LAUNCHD_DIR` (as `install.sh` lays them), the real `plutil`, a `launchctl`
     that writes its line down and has the label loaded from then on. Every shim writes before it returns: nothing runs
     in the background, so the lines are there when the script ends. `(the finished process — its `dir` the shims' —,
@@ -588,6 +589,8 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
             f.write(text)
     for unit in active:
         open(os.path.join(bin_, "active-" + unit), "w").close()
+    for unit in refused:
+        open(os.path.join(bin_, "refused-" + unit), "w").close()
     launchd = os.path.join(bin_, "launchd")
     os.makedirs(launchd)
     for role in templates:
@@ -602,8 +605,9 @@ def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_
     says = {"curl": f'for a; do url=$a; done; f="{bin_}/page$(printf %s "${{url#http://console}}" | tr / _)"; '
                     f'[ -f "$f" ] && cat "$f" || exit 22',
             "systemctl": f'case "$1" in is-active) [ -f "{bin_}/active-$3" ] ;; cat) [ -f "{bin_}/template-$2" ] ;; '
-                         f'start) echo "systemctl start $2" >> "{log}"; : > "{bin_}/active-$2" ;; '
-                         f'reset-failed) ;; *) echo "systemctl $*" >> "{log}" ;; esac',
+                         f'start) [ -f "{bin_}/refused-$2" ] && {{ echo "systemctl start $2 (refused)" >> "{log}"; exit 1; }}; '
+                         f'echo "systemctl start $2" >> "{log}"; : > "{bin_}/active-$2" ;; '
+                         f'*) echo "systemctl $*" >> "{log}" ;; esac',
             "uname": "echo Darwin",
             "launchctl": f'case "$1" in print) [ -f "{bin_}/active-${{2#system/}}" ] ;; bootout) ;; '
                          f'bootstrap) echo "launchctl bootstrap $2 $3" >> "{log}"; : > "{bin_}/active-$(basename "$3" .plist)" ;; '
@@ -658,9 +662,22 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
     assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-vmsworker-spare@2") == "SPARE_FOR=vlan:dmz\n"
     assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
     assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
+    assert all(c.startswith("systemctl start ") for c in calls), calls      # the one verb polkit gives its user
     out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"},
                          active=("vms-vmsworker-spare@1", "vms-vmsworker-spare@2"))
     assert out.returncode == 0 and not [c for c in calls if c.startswith("systemctl start")], calls
+
+
+def test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried():
+    """The script runs as `w2c-spares` now, whom polkit lets `start` a spare template's instance and nothing else (the
+    product's cross-check, 4 Oct) — so no `reset-failed` before a start either: an instance past systemd's start limit,
+    or one polkit refuses, fails its `start`. That is said, and the next number is tried, within the ceiling."""
+    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, env={"MAX_WORKERS": "2"},
+                         refused=("vms-vmsworker-spare@1",))
+    assert out.returncode == 0, out.stderr
+    assert calls == ["systemctl start vms-vmsworker-spare@1 (refused)", "systemctl start vms-vmsworker-spare@2"], calls
+    assert "vms-vmsworker-spare@1 did not start — the next number is tried" in out.stderr, out.stderr
+    assert "started vms-vmsworker-spare@2" in out.stdout
 
 
 def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console():
@@ -728,11 +745,16 @@ def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_
 def test_every_spares_unit_runs_the_script_for_its_role():
     """`w2c-spares.{service,timer}` for recorders, `w2c-spares-<role>.{service,timer}` for the camera workers, the
     gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
-    each timer every minute — and the one directory it writes, where each spare's set is for its template to read."""
+    each timer every minute — and the one directory it writes, where each spare's set is for its runner to read;
+    each as the spares' own user, never root."""
     for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
         name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
         svc = unit(name + ".service")["Service"]
         assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
         assert svc["RuntimeDirectory"] == "w2c-spares" and svc["RuntimeDirectoryPreserve"] == "yes", svc
+        # not root (the product's cross-check, 4 Oct): its own user in no group but its own; its directory readable by
+        # the spares, who take one line of their file (М11's `w2c-run.sh`, `w2c-spares.rules`, `w2c-cluster.sysusers`)
+        assert svc["User"] == svc["Group"] == "w2c-spares" and "SupplementaryGroups" not in svc, svc
+        assert svc["RuntimeDirectoryMode"] == "0755", svc
         assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
     assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)

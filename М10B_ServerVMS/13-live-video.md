@@ -419,6 +419,17 @@ class GstPeer:
 
 Перезапустили шлюз — сессии оборвались, браузеры переподключились, шлюз прочитал назначение и подписался заново. Ничего не потеряно, кроме нескольких секунд картинки. **Состояние шлюза целиком выводится из хранилища и из того, кто к нему подключён.**
 
+**Кое-что шлюз всё-таки пишет — свой журнал, и туда же, куда все.** У каждого воркера платформы есть журнал (`Worker.journal`): строки `worker.name_taken` — тревога, что процесс никто, потому что его имя держит другой экземпляр, — и `worker.name_back`. Журнал идёт в архив событий сервера, если воркер знает, где тот лежит (`archive_root`), иначе — только в лог процесса. У шлюза `archive_root` не было, и его тревога о чужом имени оставалась в логе, хотя контейнер шлюза архив монтирует ради регистрации у ресурса. Сверка с продуктом (4 октября) нашла это у шлюза продукта; у нас было так же — тест падал на шлюзе первым. Теперь:
+
+```python
+        # Its server's events archive — where its journal goes (`Worker.journal`: `worker.name_taken`, an alarm). It had
+        # none, and those lines went to its log alone while every other worker's reached the archive (the product's
+        # cross-check, 4 Oct: its gateway had the same gap). A gateway writes no events of its own beside them.
+        self.archive_root = runtime.events_root(env, archive_root)
+```
+
+и `__main__.gateway` передаёт `archive_root=runtime.events_root(os.environ)`, как остальные точки входа. Тест обходит все виды воркеров — держателя, шлюз, вычислитель, детектор, задание детектора, обзор — и у каждого находит обе строки журнала в архиве: тревогу — в дереве тревог, вторую — в семействе `audit` (`test_names.py::test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive`). Регистратора в обходе нет: он подкласс держателя и передаёт `archive_root` его конструктору.
+
 ## Результат
 
 ```python

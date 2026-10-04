@@ -399,7 +399,8 @@ def gateway() -> None:
     except ImportError:
         logging.warning("no GStreamer webrtcbin: the fake peer answers SDP and carries no media")
     gw = LiveWorker(None, vars_, objects, ctl=SpecController(LIVE_SPEC, vars_, objects), url=os.environ.get("GATEWAY_URL", f"http://{host}:{port}"),
-                     capacity=int(os.environ.get("CAPACITY", "100")), peer_factory=peer)
+                     capacity=int(os.environ.get("CAPACITY", "100")), peer_factory=peer,
+                     archive_root=runtime.events_root(os.environ))
     srv = gw.serve(host, port)
     logging.info("gateway %s (instance %s) on %s", gw.name, gw.instance, srv.server_address)
     _present(gw)
