@@ -2,7 +2,7 @@
 genre: записки
 kind: разбор кода
 subject: М11_ClusterVMS
-source-commit: 6fd86b5
+source-commit: 970e5a7
 date: 2026-10-04
 status: draft
 ---
@@ -13,7 +13,7 @@ status: draft
 > Это разбор: я читал код и восстанавливал по нему, как всё устроено, максимально простыми словами.
 > **Источник истины — код.** Где записки расходятся с кодом, прав код.
 > Проект описывает себя сам: [`README.md`](../../README.md) и указатели модулей.
-> Состояние: коммит `6fd86b5`, 4 октября 2026.
+> Состояние: коммит `970e5a7`, 4 октября 2026.
 
 [← карта разбора](README.md) · назад: [03-creating-a-camera.md](03-creating-a-camera.md) · вперёд: [05-workers-and-epochs.md](05-workers-and-epochs.md)
 
@@ -32,7 +32,7 @@ status: draft
 
 ```
 GET /v1/objects/vms/controller/pass?scope=cluster
-→ 200 {"bytes": 543, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+→ 200 {"bytes": 775, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 ```
 
 Его записал пустой проход по кластеру без камер (раздел [2.5](02-before-first-camera.md)).
@@ -51,15 +51,15 @@ GET /v1/list?prefix=vms/slots/
 → 200 {"keys": {"vms/slots/w-srv-a-1": 1004, "vms/slots/w-srv-b-1": 1005, "vms/slots/w-srv-c-1": 1006}}
 
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1004}
+→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1", "server": "srv-a"}, "index": 1004}
 
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
-→ 200 {"bytes": 484, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+→ 200 {"bytes": 570, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 
 … то же для w-srv-b-1 (heartbeat с "X-Server": "srv-b") и w-srv-c-1 ("X-Server": "srv-c")
 ```
 
-`X-Server` — сервер, на диске которого лежит файл. Heartbeat `w-srv-b-1` лежит на `srv-b`, и ресурс `srv-a` сходил за ним к ресурсу `srv-b` (урок 6 М11). Все три слота заняты, не отпущены и продлены до `until`. Отпускать нечего, переносить не с кого.
+`X-Server` — сервер, на диске которого лежит файл. Heartbeat `w-srv-b-1` лежит на `srv-b`, и ресурс `srv-a` сходил за ним к ресурсу `srv-b` (урок 6 М11). Все три слота заняты, не отпущены и продлены до `until`; в каждом сказано, на каком сервере держатель (`server`). Отпускать нечего, переносить не с кого. Размеры heartbeat'ов здесь стендовые — 570 байт; в юните они 509 (раздел [2.3](02-before-first-camera.md)).
 
 **Размещения и назначения.** Шаги `unplace_deleted`, `unplace_retired` и сверка `sync_assignments` спрашивают один и тот же листинг `vms/placement/`. В проходе он прочитан один раз:
 
@@ -115,12 +115,12 @@ GET /v1/get?key=vms/placement/1
 # кто вообще живой — heartbeat'ы не старше 45 секунд (сами объекты уже прочитаны выше, при слотах)
 GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
 → 200 {"server": "srv-a", "objects": {
-    "vms/heartbeats/w-srv-a-1": {"written": 1757500000.0, "server": "srv-a", "size": 484},
-    "vms/heartbeats/w-srv-b-1": {"written": 1757500000.0, "server": "srv-b", "size": 484},
-    "vms/heartbeats/w-srv-c-1": {"written": 1757500000.0, "server": "srv-c", "size": 484}}}
+    "vms/heartbeats/w-srv-a-1": {"written": 1757500000.0, "server": "srv-a", "size": 570},
+    "vms/heartbeats/w-srv-b-1": {"written": 1757500000.0, "server": "srv-b", "size": 570},
+    "vms/heartbeats/w-srv-c-1": {"written": 1757500000.0, "server": "srv-c", "size": 570}}}
 
 # у чьего сервера жив ресурс — спецификация VMS требует resource
-GET /v1/objects?prefix=platform/resources/&scope=cluster    → три heartbeat'а ресурсов, по 571 байт
+GET /v1/objects?prefix=platform/resources/&scope=cluster    → три heartbeat'а ресурсов, по 649 байт
 GET /v1/objects/platform/resources/srv-a/heartbeat?scope=cluster
 GET /v1/objects/platform/resources/srv-b/heartbeat?scope=cluster
 GET /v1/objects/platform/resources/srv-c/heartbeat?scope=cluster
@@ -399,12 +399,13 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-srv-c-1", "cas": "", "items":
 
 ## 4.5. Конец прохода: остальные шаги и публикация снапшота
 
-После размещения в `pass_once` идут ещё четыре шага, каждый в своём `try`, и в нашем сценарии ни один ничего не меняет:
+После размещения в `pass_once` идут ещё пять шагов, каждый в своём `try`, и в нашем сценарии ни один ничего не меняет:
 
 - **`ensure_reach`** — камеры, которые их сервер больше не видит (врезка в разделе 4.1). Все метки совпадают, переносить нечего.
 - **`redistribute`** — камеры с воркеров, которых больше нет в пуле: слот отпущен, ресурс на сервере замолчал, сервер выводят или списали. Таких нет.
 - **`ensure_home`** — не больше одной камеры за проход обратно туда, где ей место. Для VMS «место» — сервер, где лежит её запись (`home: near`). Записей нет, значит дома нет.
 - **`offer_spares`** — недостача по набору меток и предложения запасным (раздел [8.8](08-failures.md)). Всем трём камерам хватило места: `units_short` и `workers_needed` по нулям, предложений нет.
+- **`name_conflicts`** — заявки на чужие имена (`vms/contenders/`, раздел [2.2](02-before-first-camera.md)). Их нет.
 
 Всё, что им нужно, уже в памяти прохода. Заново проход спрашивает только то, что сам записал:
 
@@ -414,6 +415,12 @@ GET /v1/get?key=vms/placement/2        → w-srv-b-1, "index": 1015
 GET /v1/get?key=vms/placement/3        → w-srv-c-1, "index": 1017
 GET /v1/list?prefix=vms/placement/     → {"vms/placement/1": 1013, "vms/placement/2": 1015, "vms/placement/3": 1017}
 GET /v1/get?key=vms/workers/w-srv-c-1  → {"units": "3", "rev": "1"}, "index": 1018
+```
+
+Один объектный запрос в конце новый — шаг `name_conflicts`; хранилище он не читает:
+
+```
+GET /v1/objects?prefix=vms/contenders/&scope=cluster   → {"server": "srv-a", "objects": {}}
 ```
 
 **Отчёт прохода.** Проход записывает о себе объект `vms/controller/pass`. Объект — это файл на сервере писателя, поэтому контроллер `srv-a` пишет его на свой диск, а не в хранилище:
@@ -427,9 +434,10 @@ PUT vms/controller/pass      (файл на srv-a)
 ```
 {"ts": 1757500000.0, "ok": true, "error": "", "failures": 0, "last_success": 1757500000.0,
  "diverged": 0, "reach_moves": 0, "slots_released": [], "servers_decommissioned": [],
- "workers_hung": [], "hung_move_after": 900.0, "servers_labels_unread": 0,
+ "workers_hung": [], "hung_move_after": 900.0, "workers_unjudged": [], "units_unjudged": 0,
+ "name_conflicts": 0, "reach_budget": 10, "units_left_on_leaving": 0, "servers_labels_unread": 0,
  "units_short": {"": 0, "vlan:cctv": 0}, "workers_needed": {"": 0, "vlan:cctv": 0},
- "spare_offers": {"": 0, "vlan:cctv": 0}, "unplaced": 0, "garbled": 0, …}
+ "spare_offers": {"": 0, "vlan:cctv": 0}, "spares_withheld": {}, "unplaced": 0, "garbled": 0, …}
 ```
 
 **Публикация снапшота** (`publish_snapshot`) — копия для доменного слоя, по объекту на воркера. Строки, камеры, размещения и серверы воркеров уже в памяти прохода, поэтому снапшот не читает из хранилища ничего. Один запрос он всё-таки делает — какие шарды уже есть:
@@ -477,7 +485,7 @@ PUT vms/snapshot/unplaced    {"cluster": "cluster-a", "worker": null, "ts": …,
 }
 ```
 
-Шарды `w-srv-b-1` (401 байт, камера 2 «Парковка», `"server": "srv-b"`) и `w-srv-c-1` (383 байта, камера 3 «Склад», `"server": "srv-c"`) устроены так же. `cluster-a` — имя кластера из `$CLUSTER`, на стенде оно не задано, и это умолчание.
+Шарды `w-srv-b-1` (401 байт, камера 2 «Парковка», `"server": "srv-b"`) и `w-srv-c-1` (383 байта, камера 3 «Склад», `"server": "srv-c"`) устроены так же. `cluster-a` — имя кластера из `$CLUSTER`; на стенде оно не задано, и это умолчание `SpecController`. Юнит контроллера без `CLUSTER` назвал бы кластер `room-a` (раздел [2.5](02-before-first-camera.md)).
 
 Пароля в снапшоте нет, и это решение, а не случайность: снапшот покидает кластер, а `cred_secret` в список полей снапшота (`snapshot:` в спецификации) не входит. Нет в нём и `cred_username`, и папок оператора (`folders`): доменному слою они не нужны. Из адреса источника учётные данные тоже вырезаются (`hide_in_url`). Метки, наоборот, уходят списком — это уже не строка ввода, а данные для того, кто будет решать, куда камеру можно переселить.
 
@@ -493,7 +501,7 @@ PUT vms/snapshot/unplaced    {"cluster": "cluster-a", "worker": null, "ts": …,
 |---|---|
 | чтений хранилища | **31** (8 листингов и 23 чтения по ключу) |
 | записей в хранилище | **6** — три `vms/placement/<id>` и три `vms/workers/<w>` |
-| запросов объектов к ресурсу `srv-a` | **11** |
+| запросов объектов к ресурсу `srv-a` | **12** |
 | файлов, записанных на `srv-a` | **5** — отчёт прохода и четыре шарда снапшота |
 
 Откуда 31 чтение:
@@ -510,7 +518,7 @@ PUT vms/snapshot/unplaced    {"cluster": "cluster-a", "worker": null, "ts": …,
 | назначения трёх воркеров, и ещё два — перечитанные после своих записей | 5 |
 | в конце прохода: листинг и три строки размещения, назначение `w-srv-c-1` | 5 |
 
-И 11 объектных запросов: отчёт прошлого прохода, три heartbeat'а воркеров, листинг heartbeat'ов, листинг ресурсов и три их heartbeat'а, листинг `rec/heartbeats/` и листинг `vms/snapshot/`. Heartbeat'ы воркеров в листинге не перечитываются: каждый объект тоже спрашивается один раз за проход.
+И 12 объектных запросов: отчёт прошлого прохода, три heartbeat'а воркеров, листинг heartbeat'ов, листинг ресурсов и три их heartbeat'а, листинг `rec/heartbeats/`, листинг заявок `vms/contenders/` и листинг `vms/snapshot/`. Heartbeat'ы воркеров в листинге не перечитываются: каждый объект тоже спрашивается один раз за проход.
 
 **Каждый ключ читается один раз за проход.** Проход идёт внутри `one_pass` (`w2cplatform/contract.py`): каждый ключ, листинг и объект спрашиваются один раз и помнятся до конца прохода, не дольше. Запись забывает то, чего коснулась, поэтому проход читает обратно своё же написанное, а проигранный CAS спрашивает хранилище заново. Снапшот публикуется в том же проходе и заново ничего не читает. До `one_pass` тот же код на тысяче камер делал 64 159 чтений за проход: каждый шаг заново читал строки и размещения, а снапшот и `ensure_home` перечитывали все heartbeat'ы на каждую камеру (урок 10 М11, шаг 6).
 
@@ -518,7 +526,7 @@ PUT vms/snapshot/unplaced    {"cluster": "cluster-a", "worker": null, "ts": …,
 
 ```
 чтений хранилища за установившийся проход = 2·N + 2·W + S + 9
-запросов объектов                          = W + S + 5
+запросов объектов                          = W + S + 6
 ```
 
 Два чтения на камеру — её строка и её строка размещения. По два на воркера — слот и назначение. По одному на сервер — строка `vms/servers/<srv>`. Ещё девять — семь листингов (`platform/decommission/`, `vms/decommissioned/`, `vms/slots/`, `vms/placement/`, `vms/workers/`, `vms/cameras/`, `vms/servers/`), политика и `platform/drain`. Для нашего стенда, N = 3, W = 3, S = 3, это 24 чтения; новый процесс контроллера читает ещё `platform/schema`, и стенд намерил 25. На 30 камерах — 79, на 100 — 219: около двух чтений на камеру. Если в кластере есть запись на R рекордерах, к объектам добавляются их heartbeat'ы. Объектных запросов на стенде больше, чем будет в работе: стенд не кэширует объектные листинги (`list_fresh=0`), а в работе ресурс помнит листинг секунду (`LIST_FRESH=1.0`). Таблицы по размерам кластера — в [части 10](10-limits-and-scale.md), раздел 10.2. Потолок числа держит тест `vmsserver/tests/test_read_budget.py::test_an_idle_controller_pass_over_a_thousand_cameras_reads_each_row_once`: тысяча камер — не больше `2·N + 150` чтений на проход. Проход повторяется через пять секунд после окончания предыдущего.
