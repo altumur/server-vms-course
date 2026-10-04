@@ -694,6 +694,15 @@ class Bounded:
     def refused(self) -> int:
         return self.bounds.refused
 
+    # The kernel's queue of connections not yet accepted holds as many as the door serves, every lane counted (asked
+    # by `listen` in the server's `__init__`, so `bounds` is set first): `socketserver`'s own is 5, and a burst past it
+    # was refused by the kernel (a unix socket, on macOS) or its SYN dropped (TCP, a second's retry) — never counted,
+    # never answered 503 (the store's role sockets showed it: `configstore._Bounded`).
+    @property
+    def request_queue_size(self) -> int:
+        b = self.bounds
+        return b.limit + b.reserve + b.monitor + b.box
+
     def peer_of(self, request, client_address) -> tuple[str, bool]:
         """`(address, on the box)` of a connection. A test names its own."""
         addr = str(client_address[0]) if client_address else UNIX_PEER

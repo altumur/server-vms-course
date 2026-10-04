@@ -377,6 +377,49 @@ def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkey
     assert threading.active_count() <= before + 1, (before, threading.active_count())
 
 
+def _queued(family, where, n: int) -> int:
+    """How many of `n` connections at once the kernel takes for a door that has not accepted one yet."""
+    held, taken = [], 0
+    try:
+        for _ in range(n):
+            s = socket.socket(family, socket.SOCK_STREAM)
+            s.settimeout(0.5)
+            held.append(s)
+            try:
+                s.connect(where)
+            except OSError:                          # refused (a unix socket), or its SYN dropped (TCP)
+                break
+            taken += 1
+        return taken
+    finally:
+        for s in held:
+            s.close()
+
+
+def test_a_door_queues_as_many_connections_as_it_serves_before_it_accepts_one():
+    """The flake of the test above, found: a role socket was opened with `socketserver`'s queue of 5, and a unix socket
+    whose queue is full refuses `connect` — six idle callers at once, before the accepting thread woke, and the sixth
+    was `ConnectionRefusedError`: neither served nor answered `busy`. The kernel's queue is the door's bound — a role
+    socket's `ROLE_CONNECTIONS`, the `-api` door's `API_CONNECTIONS` (a TCP door drops the SYN instead: a second's
+    wait) — so a burst as large as the bound waits to be counted, whatever the accepting thread is doing."""
+    d = short_dir()
+    try:
+        path = os.path.join(d, "vmsworker.sock")
+        srv = configstore._unix_server(path, socketserver.BaseRequestHandler, 0o600, None)   # never accepts
+        try:
+            assert _queued(socket.AF_UNIX, path, configstore.ROLE_CONNECTIONS) == configstore.ROLE_CONNECTIONS
+        finally:
+            srv.server_close()
+        api = configstore._TlsServer(("127.0.0.1", 0), socketserver.BaseRequestHandler,
+                                     tls.server_context(os.path.join(TLS, "srv-a")))
+        try:
+            assert _queued(socket.AF_INET, api.server_address, configstore.API_CONNECTIONS) == configstore.API_CONNECTIONS
+        finally:
+            api.server_close()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at_every_door():
     """The reviewer's probe: `Content-Length: -1` was `read(-1)` — a read to the end of a connection the caller keeps
     open, the door's thread held. A length that is not a non-negative number is 400, one past `MAX_BODY` 413, neither

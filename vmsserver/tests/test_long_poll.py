@@ -498,14 +498,20 @@ def test_a_resource_with_no_room_or_no_such_route_costs_a_pause_and_never_a_pass
 
 # -- the holder: a look every beat, and the row still decides -----------------------------------------------------
 def _looping(beat: float = COMMANDS_BEAT, poll: float = 2.0, **kw):
-    """A holder alone, its loop in a thread."""
+    """A holder alone, its loop in a thread, returned after its first turn — the pass AND the lease step behind it.
+    Returned after the pass alone, a test that fences the lease raced that first lease step: when the step came
+    after the fence, the camera was let go — another case, with a test of its own
+    (`test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_…`)."""
     box = _real_box()
     holder, cid, dev, called = _holder(box, **kw)
+    leased: list[float] = []
+    lease_pass = holder.lease_pass
+    holder.lease_pass = lambda: (lease_pass(), leased.append(time.monotonic()))[0]
     stop = threading.Event()
     thread = threading.Thread(target=holder.run, kwargs={"poll": poll, "stop": stop, "beat": beat}, daemon=True)
     thread.start()
-    _until(lambda: str(cid) in holder.epochs and holder.passes >= 1 and holder.device_of_row(holder.rows[0]) is not None,
-           what="the holder's first pass")
+    _until(lambda: str(cid) in holder.epochs and holder.passes >= 1 and holder.device_of_row(holder.rows[0]) is not None
+           and leased, what="the holder's first turn")
 
     def close() -> None:
         stop.set(); thread.join(timeout=10)
@@ -603,6 +609,34 @@ def test_a_fenced_holder_on_a_beat_does_not_act():
         assert one.box.vars.get("vms/requests/r1")[0] is not None    # the row stands, for the holder that may
     finally:
         one.close()
+
+
+def test_a_camera_the_lease_step_let_go_is_not_taken_back_on_a_beat_only_by_the_pass_that_reads_the_assignment():
+    """Found by `test_a_fenced_holder_on_a_beat_does_not_act` failing beside the М12 suite, one run in forty: the lease
+    step finds a newer epoch — the camera's new holder took it — and lets the camera go; the next beat, on the rows of
+    the last pass, found it held without a lease, took the next epoch by CAS and performed the command — the new holder
+    fenced by one that had not read its assignment since. Between passes such a camera is left to whoever holds it:
+    its epoch stays theirs and the row stands. The pass that reads the assignment again decides, as it always did — a
+    camera still assigned here is taken again (`reconcile_once`), and the command performed then."""
+    from w2cplatform.epoch import current_epoch, next_epoch
+    box = Box()
+    holder, cid, dev, _called = _holder(box)
+    holder.reconcile_once()
+    unit, key = str(cid), VMS.sub.epoch_key(str(cid))
+    assert holder.may_write(unit)
+    theirs, _ = next_epoch(box.vars, key)                            # the camera's new holder took the next epoch
+    assert unit in holder.lease_pass() and unit not in holder.leases   # …and this one let the camera go
+    now = box.wall()
+    box.vars.put("vms/requests/r1", {"unit": unit, "action": "output", "port": "2", "at": str(now),
+                                     "by": "operator", "valid_until": str(now + 30)})
+    for _ in range(8):
+        holder.beat_once()                                           # two seconds of beats
+    assert dev.did == [] and current_epoch(box.vars, key) == theirs, (dev.did, current_epoch(box.vars, key), theirs)
+    assert holder.commands["performed"] == 0 and box.vars.get("vms/requests/r1")[0] is not None
+    holder.reconcile_once()                                          # the pass: the assignment still names it here
+    holder.pump_once()
+    assert current_epoch(box.vars, key) == theirs + 1 and holder.may_write(unit)
+    assert dev.did == [("output", 2, "pulse", 0)]
 
 
 def test_a_store_that_does_not_answer_on_a_beat_is_waited_out_and_said_once():
