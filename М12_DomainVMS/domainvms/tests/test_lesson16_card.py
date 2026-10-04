@@ -867,7 +867,7 @@ def _camera_process(wall, vars_, objects, root, flash, dial):
     from vms.config import REC_SPEC
     from w2cplatform.spec import SpecController
     ring = CamRing(clock=wall, steady=wall)
-    act = CardActuator(ring, threaded=False)
+    act = CardActuator(ring, threaded=False, serial=SERIAL)            # whose line: said before the card opens (13th review)
     rec = CardRecorder("r-cam", vars_, objects, ring, act, clock=wall, wall=wall, server="cam-1",
                        archive_root=os.path.join(root, "archive"), env={})
     rec.lease_pass(); rec.heartbeat_once()
@@ -1438,6 +1438,7 @@ def _road(scenario: str, travel: float, dur: float = 20.0) -> dict:
     upto = st["n"] - 30 if scenario != "stop" else 600
     return {"never": [i for i in range(upto) if i not in got], "repeats": tee.repeats, "clock_steps": c.clock_steps,
             "late": max(abs(t - captured[i]) for i, t in got.items()), "told": told,
+            "late_n": sum(1 for i, t in got.items() if abs(t - captured[i]) > 0.5),
             "landed": [(_number(s), unix_s(s.begin) - captured[_number(s)]) for s in landed or []]}
 
 
@@ -1664,3 +1665,196 @@ def test_a_range_told_before_the_cameras_clock_was_set_and_begun_after_it_fails_
     assert isinstance(outcome, RangeFailed) and "moved after the range was told" in str(outcome), outcome
     assert [_number(s) for s in answer or []] == list(range(40, 200)), [_number(s) for s in answer or []][-3:]
     assert all(abs(unix_s(s.begin) - (start + _number(s) / 10)) < 0.002 for s in answer)
+
+
+# -- the thirteenth review -------------------------------------------------------------------------------------------
+def _two_reboots(ntp_after: float | None, down2: bool):
+    """The thirteenth review's probe `pq1_two_reboots`, with a recorder's backfill beside it: a camera with no RTC battery,
+    NTP 10 s into its first boot, the road down 120–180 s (a hole on its card); off at 300 s for 30 s, boot 2 runs 60 s
+    with its clock never set (the road down all of it if `down2`: its frames on the card alone); off at 390 s for 30 s,
+    boot 3 unset, NTP `ntp_after` s after it (None: never). Five seconds into boot 3 the recorder asks the first boot's
+    hole and boot 2's own seconds; a range answered RANGE FAILED is asked again ten seconds later. Returns the answers,
+    the refusals, what reached the recorder live and where, and the last pusher."""
+    wall = Clock(1_780_000_000.0)
+    fed, north, south, signer, ingest, cam, *_ = _site(wall)
+    boot, rtc, down, on = [wall()], [False], [False], [True]
+    camclock = lambda: wall() if rtc[0] else wall() - boot[0]             # 1970 and its uptime until NTP
+    steady = lambda: wall() - boot[0]
+
+    def dial(url):
+        if down[0]:
+            raise Unreachable("down")
+        return ingest
+    path, live = tempfile.mkdtemp(prefix="card-"), {}
+
+    class Writer:
+        def push(self, f):
+            live.setdefault(_number(f["sample"]), f["t"])
+    try:
+        ring, card, act, pusher = _process(wall, path, camclock, steady, 1, dial, cam)
+        ingest.want(SERIAL, "recorder:r")
+        ingest.subscribe(SERIAL, "recorder:r")
+        ingest.tees[(SERIAL, "live")].subscribers["recorder:r"] = Writer()
+        start, n, rids, spans, answers, refused, retry = wall(), 0, {}, {}, {}, {}, {}
+        while wall() - start < 420 + 120:
+            el = round(wall() - start, 1)
+            if on[0]:
+                n = _sensor(ring, start, camclock, wall, n)
+                act.drain()
+                down[0] = 120 <= el < 180 or (down2 and 330 <= el < 390)
+                pusher.pass_once([])
+            for k, rid in list(rids.items()):
+                try:
+                    got = ingest.result(SERIAL, rid)
+                except RangeFailed:
+                    refused[k] = refused.get(k, 0) + 1
+                    del rids[k]
+                    retry[k] = el + 10.0
+                    continue
+                if got is not None:
+                    answers[k] = got
+                    del rids[k]
+            for k in [k for k, at in retry.items() if el >= at]:
+                del retry[k]
+                rids[k] = ingest.request_range(SERIAL, *spans[k], recording="1-card")
+            wall.advance(0.5)
+            el = round(wall() - start, 1)
+            if el == 10.0:
+                rtc[0] = True                                               # the first boot's NTP
+            if el in (300.0, 390.0):                                        # off for 30 s
+                n = _sensor(ring, start, camclock, wall, n)
+                act.stop_all()
+                card.close()
+                on[0] = False
+            if el in (330.0, 420.0):                                        # …and back, its clock unset
+                boot[0], rtc[0], on[0] = wall(), False, True
+                n = int(round(el * 10))
+                ring, card, act, pusher = _process(wall, path, camclock, steady, 2 if el < 400 else 3, dial, cam)
+            if ntp_after is not None and el == 420.0 + ntp_after:
+                n = _sensor(ring, start, camclock, wall, n)
+                rtc[0] = True                                               # NTP sets the clock in boot 3
+            if el == 425.0:
+                spans = {"hole": (start + 118.0, start + 150.5), "boot2": (start + 330.0, start + 390.0)}
+                rids = {k: ingest.request_range(SERIAL, *sp, recording="1-card") for k, sp in spans.items()}
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+    return start, answers, refused, live, pusher
+
+
+def test_a_camera_without_an_rtc_that_reboots_twice_before_ntp_answers_no_range_with_another_moments_frames():
+    """The thirteenth review, blocker 7, its probe `pq1_two_reboots`: a second boot with the clock unset was told unset
+    through the first unset boot's guess — a step back of its length — and lost `adrift`. Asked between boot 3 and NTP,
+    the first boot's hole came back as the frames of 60–90 s (+60.2 s), and boot 2's own seconds as 600 frames 30.1 and
+    60.2 s off; after NTP boot 2's frames lay 30.1 s early for good. Every unset boot is adrift now and the set clock
+    places only the boot it is set in (`vms.card.CamLine`): before NTP both ranges are refused (RANGE FAILED, asked again);
+    after it the hole lands whole, every frame where it was captured, and boot 2 — its clock never set, its road down —
+    gives no frame at all: its frames have no capture time and are left out (`CameraPusher.unplaced_left`), never
+    another moment's. With boot 2's road up, its frames reached the recorder live where they were captured. A camera
+    whose clock is never set refuses both, every time."""
+    from w2cplatform.obsd import unix_s
+    for ntp, down2 in ((40.0, True), (40.0, False), (None, True)):
+        start, answers, refused, live, pusher = _two_reboots(ntp, down2)
+        case = (ntp, down2)
+        for k, frames in answers.items():
+            off = [(_number(s), round(unix_s(s.begin) - (start + _number(s) / 10), 3)) for s in frames]
+            assert all(abs(e) < 0.002 for _, e in off), (case, k, [o for o in off if abs(o[1]) >= 0.002][:3])
+        assert refused.get("hole") and refused.get("boot2"), (case, refused)          # asked before NTP: refused
+        if ntp is None:
+            assert answers == {}, (case, list(answers))
+            continue
+        assert [_number(s) for s in answers["hole"]] == list(range(1180, 1505)), case
+        # (boot 2's frames lie where a guess put them, 300–360 s: the range reaches 330–360 of them, all left out)
+        assert answers["boot2"] == [] and pusher.unplaced_left >= 290, (case, len(answers["boot2"]), pusher.unplaced_left)
+        if not down2:                                                    # its road up: live, where captured
+            two = {i: t for i, t in live.items() if 3300 <= i < 3900}
+            assert len(two) >= 590 and all(abs(t - (start + i / 10)) < 0.002 for i, t in two.items()), (case, len(two))
+
+
+def test_a_step_of_this_clusters_clock_inside_the_cameras_round_trip_is_taken_and_counted():
+    """The thirteenth review, major 10, its probe `pq4_cluster_step_rtt`: this cluster's clock steps forward while the
+    camera's road takes a steady 0.6 s there and back. A rise its round trip brought under `CLOCK_STEP` (5.5 − 0.6) was
+    neither a provisional rise nor a small one, and no request ever said otherwise: every frame after it 5.5 s early,
+    nothing counted; so a rise of 0.6 under `OFFSET_HOLD` + rtt, and a provisional rise the requests agreed with only "as
+    their round trip explains". What the road explains now is what its round trip GREW BY since the least the camera
+    said (`Ingest._offset`, `rtt_least`): a steady road explains nothing. Each zone is taken and counted — the step of
+    5.5 provisionally and confirmed by the next requests, the small one after `OFFSET_RISE`, the provisional rise whose
+    road grew under it after `OFFSET_RISE` (not at once: that one is a small rise) — and a plateau, whose round trip grew
+    by all of the rise, is still nothing."""
+    from domain.ingest import CLOCK_STEP, OFFSET_RISE
+
+    def world():
+        wall = Clock(100_000.0)
+        *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+        return wall, ingest, pusher.entry()["ingest"]["token"]
+
+    def polls(wall, ingest, token, seconds, behind, rtt, every=5.0):
+        """The camera polls every `every` s for `seconds`: its clock `behind` the cluster's (its road's travel in it)."""
+        out = []
+        for _ in range(int(seconds / every)):
+            ingest.poll(token, SERIAL, camera_now=wall() - behind, rtt=rtt)
+            c = ingest.cams[SERIAL]
+            out.append((round(c.offset, 2), c.provisional is not None))
+            wall.advance(every)
+        return out
+
+    # (CLOCK_STEP, CLOCK_STEP + rtt]: the step of 5.5 on a road of 0.6 — provisional at once, confirmed by the next two
+    wall, ingest, token = world()
+    polls(wall, ingest, token, 60, 0.6, 0.6)
+    seen = polls(wall, ingest, token, 60, 6.1, 0.6)
+    c = ingest.cams[SERIAL]
+    assert 5.5 - 0.6 <= CLOCK_STEP < 5.5 and seen[0] == (6.1, True) and seen[2] == (6.1, False), seen[:3]
+    assert abs(c.offset - 6.1) < 0.01 and c.provisional is None and c.clock_steps == 1, (c.offset, c.clock_steps)
+    # (OFFSET_HOLD, OFFSET_HOLD + rtt]: a step of 0.6 on the same road — a small rise, taken after `OFFSET_RISE`
+    wall, ingest, token = world()
+    polls(wall, ingest, token, 60, 0.6, 0.6)
+    seen = polls(wall, ingest, token, 60, 1.2, 0.6)
+    c = ingest.cams[SERIAL]
+    assert seen[0] == (0.6, False) and seen[-1] == (1.2, False) and c.clock_steps == 1, seen
+    assert sum(1 for o, _ in seen if o < 1.0) * 5.0 >= OFFSET_RISE, seen               # …not before `OFFSET_RISE`
+    # a provisional rise whose road grew under it (5.5 − 0.55): confirmed as a small rise is, after `OFFSET_RISE`
+    wall, ingest, token = world()
+    polls(wall, ingest, token, 60, 0.05, 0.05)
+    seen = polls(wall, ingest, token, 5, 5.55, 0.05) + polls(wall, ingest, token, 60, 5.55, 0.6)
+    c = ingest.cams[SERIAL]
+    assert seen[0] == (5.55, True) and seen[3][1] and not seen[-1][1] and c.clock_steps == 1, seen
+    assert sum(1 for _, p in seen if p) * 5.0 >= OFFSET_RISE, seen
+    # a plateau: the round trip grew by all of the rise — withdrawn at the next request, nothing counted
+    wall, ingest, token = world()
+    polls(wall, ingest, token, 60, 0.05, 0.05)
+    seen = polls(wall, ingest, token, 5, 8.05, 0.05) + polls(wall, ingest, token, 60, 8.05, 8.05)
+    c = ingest.cams[SERIAL]
+    assert seen[0] == (8.05, True) and not seen[1][1] and c.clock_steps == 0 and c.provisional is None, seen
+    assert (c.target if c.target is not None else c.offset) < 0.1, (c.offset, c.target)
+
+
+def test_a_provisional_rise_a_plateau_of_travel_agrees_with_is_withdrawn_and_the_plateau_lies_where_captured():
+    """The thirteenth review, a minor on the twelfth answer ("the first frames of a plateau land late" — understated): a
+    provisional rise was held until the plateau ended, every request of it agreeing "as its round trip explains", and
+    every frame of the plateau went to the recorder as late as the plateau's travel — 314 frames of 8 s for 20 s, 654 of
+    6 s for a minute. A request agreeing with the rise only as far as its round trip grew withdraws it now
+    (`Ingest._withdraw`, by the frames): the plateau lies where captured, no frame lost or repeated, no step counted."""
+    for travel, dur in ((8.0, 20.0), (6.0, 60.0)):
+        r = _road("plateau", travel, dur)
+        assert not r["never"] and r["repeats"] == 0 and r["clock_steps"] == 0, (travel, dur, len(r["never"]))
+        assert r["late_n"] <= 10, (travel, dur, r["late_n"])                # at most one request's frames
+
+
+def test_the_ranges_a_camera_could_not_read_are_remembered_to_a_bound_and_all_of_them_counted():
+    """The thirteenth review, a minor: `failed_ranges` kept every range the camera answered RANGE FAILED — about 144 a day
+    for one hole while a camera's clock stays unset (asked again every ten minutes), for as long as the process lives. The
+    last `FAILED_KEPT` are kept, with why, and every one is counted (`ranges_failed`)."""
+    from domain.ingest import FAILED_KEPT
+    wall = Clock()
+    *_, ingest, cam, cam_agent, room_agent, crossings, pusher, domain_pass = _site(wall)
+    pusher = CameraPusher(SERIAL, cam.flash, lambda url: ingest, clock=wall)          # no card: every range fails
+    for i in range(FAILED_KEPT + 20):
+        rid = ingest.request_range(SERIAL, wall() - 600 + i, wall() - 590 + i)
+        pusher.pass_once([])
+        try:
+            ingest.result(SERIAL, rid)
+            raise AssertionError("a camera with no card answered")
+        except RangeFailed:
+            pass
+        wall.advance(1.0)
+    assert len(pusher.failed_ranges) == FAILED_KEPT and pusher.ranges_failed == FAILED_KEPT + 20
+    assert pusher.failed_ranges[-1][2] == "this camera has no card"
