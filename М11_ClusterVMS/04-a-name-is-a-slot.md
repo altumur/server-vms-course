@@ -299,10 +299,10 @@ vms_server_labels{server="srv-c",labels="",source="node"} 1
 
 Запасной (`SPARE_FOR=<набор>`) берёт **только** предложение своего набора, по CAS; нет предложения — ждёт, ничего не держа: ни имени, ни heartbeat, ни камер. Обычный процесс предложений не берёт никогда. Два настоящих запасных на недостачу в один воркер — ровно один берёт слот, второй ждёт (`test_two_spares_racing_for_one_offer_exactly_one_takes_it_and_the_other_waits_holding_nothing`).
 
-Запускает запасные скрипт [`vmsserver/deploy/w2c-spares.sh`](../vmsserver/deploy/w2c-spares.sh) — на хосте, от root, по таймеру `w2c-spares[-<роль>].timer` раз в минуту (`install.sh --spares`). Это размещение и есть смысл файла: запустить процесс — значит говорить с `systemd` от root, и консоль, которая умела бы это, была бы консолью с правами root на собственной машине. Правила скрипта — в его шапке:
+Запускает запасные скрипт [`vmsserver/deploy/w2c-spares.sh`](../vmsserver/deploy/w2c-spares.sh) — на хосте, по таймеру `w2c-spares[-<роль>].timer` раз в минуту (`install.sh --spares`). Это размещение и есть смысл файла: запустить процесс — значит говорить с `systemd`, и консоль, которая умела бы это, была бы консолью с правом запускать процессы на собственной машине. Правила скрипта — в его шапке:
 
 ```
-#   1. It reads numbers, never a command. Running a string that arrived over HTTP as root is remote code execution
+#   1. It reads numbers, never a command. Running a string that arrived over HTTP on the host is remote code execution
 #      with extra steps, however friendly the source.
 #   2. A console that does not answer, or whose controller's pass is older than a minute (the numbers are not on its
 #      page then), is a reason to start NOTHING.
@@ -319,7 +319,51 @@ vms_server_labels{server="srv-c",labels="",source="node"} 1
 
 Роли — в `SPARES_ROLES` или аргументами, у каждой свой потолок: `recworker` (`MAX_RECORDERS`), `vmsworker` (`MAX_WORKERS`), `liveworker` (`MAX_GATEWAYS`), `autoworker` (`MAX_EVALUATORS`). Тесты скрипта — `test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_its_ceiling_and_stops_nothing` и `test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console`.
 
-**Запасной — юнит своей роли, а не процесс root'а.** Раньше скрипт запускал запасного как `systemd-run … w2c-run.sh worker`: от root, без ключа кластера, с раздачей на петле. Камера умершего сервера с запечатанным паролем не стартовала на том самом процессе, который ради неё подняли (`open_row` бросал `Sealed`), регистратор других серверов не доставал до раздачи, а файлы в архиве событий получали хозяина root (двенадцатое ревью, блокер 6). Решение владельца: запасной запускается с теми же учётными данными, ключами, окружением, пользователем и группами, что юнит роли. Выбран **шаблон юнита**, а не `systemd-run` со списком свойств: шаблон — тот же файл рядом с юнитом роли, `systemctl cat` показывает его оператору, `%d` (каталог учётных данных) в нём раскрывается, а тест держит его строка в строку с юнитом роли (`test_units.py::test_a_spare_is_its_roles_unit_line_for_line_but_the_name`) — строку, добавленную роли и забытую у запасного, тест не пропустит. Список свойств в скрипте был бы вторым описанием роли, которое расходится молча. Шаблон отличается от юнита роли только тем, что нужно запасному: у него нет `WORKER_NAME`; набор меток он читает из файла в одну строку (`EnvironmentFile=/run/w2c-spares/%n.env`, без `-`: нет набора — нет и старта, иначе получился бы воркер, берущий любое свободное имя); раздача у воркера и дверь у регистратора — на порту, который даст ОС, потому что 8554 и 8084 у штатных процессов этого сервера. Скрипт пишет файл и делает `systemctl start vms-<роль>-spare@<n>`; шаблона нет — не запускает ничего и говорит почему (`test_deploy_units.py::test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one`). На macOS шаблон — plist самой роли: скрипт копирует его как `com.w2c.vms.<роль>.spare-<n>`, без имени, с `SPARE_FOR` и своими портами, и делает `launchctl bootstrap` (`test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_counts_it_by_its_label`). Сам скрипт остаётся root: он запускает юниты.
+**Запасной — юнит своей роли, а не процесс root'а.** Раньше скрипт запускал запасного как `systemd-run … w2c-run.sh worker`: от root, без ключа кластера, с раздачей на петле. Камера умершего сервера с запечатанным паролем не стартовала на том самом процессе, который ради неё подняли (`open_row` бросал `Sealed`), регистратор других серверов не доставал до раздачи, а файлы в архиве событий получали хозяина root (двенадцатое ревью, блокер 6). Решение владельца: запасной запускается с теми же учётными данными, ключами, окружением, пользователем и группами, что юнит роли. Выбран **шаблон юнита**, а не `systemd-run` со списком свойств: шаблон — тот же файл рядом с юнитом роли, `systemctl cat` показывает его оператору, `%d` (каталог учётных данных) в нём раскрывается, а тест держит его строка в строку с юнитом роли (`test_units.py::test_a_spare_is_its_roles_unit_line_for_line_but_the_name`) — строку, добавленную роли и забытую у запасного, тест не пропустит. Список свойств в скрипте был бы вторым описанием роли, которое расходится молча. Шаблон отличается от юнита роли только тем, что нужно запасному: у него нет `WORKER_NAME`; набор меток он берёт из файла, который называет (`Environment=SPARE_FILE=/run/w2c-spares/%n.env`; нет набора — нет и старта, иначе получился бы воркер, берущий любое свободное имя); раздача у воркера и дверь у регистратора — на порту, который даст ОС, потому что 8554 и 8084 у штатных процессов этого сервера. Скрипт пишет файл и делает `systemctl start vms-<роль>-spare@<n>`; шаблона нет — не запускает ничего и говорит почему (`test_deploy_units.py::test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one`). На macOS шаблон — plist самой роли: скрипт копирует его как `com.w2c.vms.<роль>.spare-<n>`, без имени, с `SPARE_FOR` и своими портами, и делает `launchctl bootstrap` (`test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_counts_it_by_its_label`).
+
+**Скрипт запасных — не root, а из файла запасного берётся одна строка.** Сверка с продуктом (4 октября) нашла у нас две дыры, которые продукт закрыл у себя. Первая: скрипт работал от root, а root может запустить что угодно и с чем угодно внутри. Вторая тоньше. Шаблон читал файл запасного через `EnvironmentFile=`, и кто мог писать в `/run/w2c-spares/<юнит>.env`, тот задавал **любую** переменную процессу, который держит ключ кластера и группы роли: `LD_PRELOAD`, `PYTHONPATH`, `SECRETS_KEY`. Теперь скрипт работает от своего пользователя `w2c-spares` — ни в одной группе, кроме своей (`w2c-cluster.sysusers`): ни сокета хранилища, ни ключа, ни архива. В юнитах его таймеров — `User=w2c-spares`, `Group=w2c-spares`, а каталог `/run/w2c-spares` принадлежит ему с правами 0755, чтобы запасной (пользователь `vms`) мог прочесть свой файл. Что этому пользователю можно просить у `systemd`, говорит правило polkit, которое ставит `install.sh --spares` ([`deploy/systemd/w2c-spares.rules`](clustervms/deploy/systemd/w2c-spares.rules)):
+
+```js
+polkit.addRule(function (action, subject) {
+    if (subject.user !== "w2c-spares") {
+        return polkit.Result.NOT_HANDLED;
+    }
+    if (action.id === "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("verb") === "start" &&
+        /^vms-(vmsworker|recworker)-spare@[1-9][0-9]*\.service$/.test(action.lookup("unit") || "")) {
+        return polkit.Result.YES;
+    }
+    return polkit.Result.NO;
+});
+```
+
+Глагол `start`, только экземпляры двух шаблонов из `SPARE_UNITS` в `install.sh` — и всё. Остановить, перезапустить, сбросить `failed`, записать файл юнита этот пользователь не может; на всё прочее правило отвечает «нет» сразу, а не отдаёт вопрос паролю администратора, за которым никого нет. Поэтому скрипт больше не делает `systemctl reset-failed` перед стартом: экземпляр, который `systemd` не запускает (лимит стартов, отказ polkit), скрипт называет и пробует следующий номер (`test_deploy_units.py::test_a_spare_systemd_refuses_to_start_is_said_and_the_next_number_is_tried`). Тест правила — `test_units.py::test_the_spares_script_runs_as_its_own_user_whom_polkit_lets_start_a_spare_template_and_nothing_else`: он сверяет шаблоны правила со списком `install.sh` и прогоняет само правило через `node` — `start` экземпляра запасного да, его `stop`, `restart`, `reset-failed` нет, `start` штатного воркера, чужого шаблона или шаблона без номера нет, другой пользователь — не забота этого правила.
+
+Файл запасного читает теперь не `systemd`, а скрипт запуска [`deploy/w2c-run.sh`](clustervms/deploy/w2c-run.sh), и берёт из него одну строку — `SPARE_FOR=`, проверенную по алфавиту меток (`spec.LABEL_WORD`, слова через запятую; пусто — пустой набор):
+
+```sh
+if [ -n "${SPARE_FILE:-}" ]; then
+    said=no
+    if [ -r "$SPARE_FILE" ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+            case "$line" in SPARE_FOR=*) spare=${line#SPARE_FOR=}; said=yes; break ;; esac
+        done <"$SPARE_FILE"
+    fi
+    if [ "$said" != yes ]; then
+        echo "w2c-run.sh: no SPARE_FOR= line in $SPARE_FILE — a spare whose set is not said does not start" >&2
+        exit 2
+    fi
+    if ! label_set "$spare"; then
+        echo "w2c-run.sh: SPARE_FOR in $SPARE_FILE is not a label set (letters, digits, _.:- in words joined by commas) — not started" >&2
+        exit 2
+    fi
+    export SPARE_FOR="$spare"
+fi
+```
+
+Остальные строки файла не значат ничего: `LD_PRELOAD` в нём не доходит до процесса, а `PYTHONPATH` остаётся тем, что ставит скрипт. Набор вне алфавита, файл без такой строки или отсутствующий файл — запасной не стартует, ничего не запущено. И ни `SPARE_FOR`, ни `SPARE_FILE` не задаются строкой общих файлов (урок 3, шаг 3). Тест — `test_units.py::test_a_spares_runner_takes_only_its_set_from_its_file_and_refuses_one_outside_the_alphabet`.
+
+Что остаётся открытым. Пользователь `w2c-spares` по-прежнему может поднять запасного с любым набором из алфавита — это и есть его работа, а предел ему ставит потолок роли (`MAX_WORKERS`, `MAX_RECORDERS`). На сервере без polkit `systemctl start` от этого пользователя отказан, и скрипт говорит, что запасной не стартовал. На macOS скрипт остаётся root: `launchctl bootstrap system` сузить нечем, polkit там нет.
 
 **Он никого не гасит.** Запасной стоит несколько мегабайт и делает так, что **следующая** недостача обслужится за проход, а не за выезд. Решить, что процессов на коробке слишком много, — дело человека, намеренно.
 
@@ -529,6 +573,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
 - **Процесс, который держит ничего и пишет `worker.name_taken`.** Старый процесс после двух процессов с одним именем на одной коробке: ждёт своё имя и другого не берёт. Если он не нужен — остановите его `SIGTERM`; если нужен он, а не новый, — остановите новый, и старый возьмёт имя сам.
 - **Плановая остановка оставила слот `released: false`.** `TimeoutStopSec` слишком короткий, или процесс не обрабатывает `SIGTERM`. 20 секунд, и выход обязан идти через `release_slot()`.
 - **Запасной, запущенный руками без `SPARE_FOR`.** Это не запасной, а обычный процесс: он заведёт новый слот вместо предложения, и камер станет хватать двоим.
+- **Файл запасного «дополнить» переменными.** Из него берётся только `SPARE_FOR=`; всё остальное процесс не увидит. Настройки роли — в её юните и в двух общих файлах.
 - **Скрипт запасных, который гасит «лишние».** Гонка с недостачей следующего прохода; остановка — решение человека.
 - **Счёт по процессору.** Ночью кластер «пустой», хотя все места заняты. Считается загрузка: назначено ÷ ёмкость.
 - **Контроллер переносит камеры при первом молчании воркера.** Двойной переезд или два писателя; повод — отпущенный слот, мёртвый процесс по слову ресурса или молчащий сервер.
