@@ -60,6 +60,7 @@ from __future__ import annotations
 import collections
 import http.client
 import json
+import random
 import threading
 import time
 import urllib.parse
@@ -71,6 +72,7 @@ from .variables import (KEY_BYTES, STORE_SCHEME, Conflict, Forbidden, KeyTooLong
                         register_scheme, safe_path)
 
 REFUSED_WAIT = 5.0         # D: how long a refused connection to this server's daemon is tried again
+REFUSED_STEP = 0.1         # …about this often, give or take half
 UNKNOWN_KEPT = 64          # writes of unknown outcome whose ids a handle keeps for their repeat
 
 
@@ -203,7 +205,9 @@ class ConfigstoreVariables:
             except _NotConnected as e:
                 if time.monotonic() - start >= min(REFUSED_WAIT, self.timeout):
                     raise StoreUnavailable(f"the store's daemon is not there: {e}") from None
-                time.sleep(0.1)
+                # …each caller at its own moment: every process of the server lost the daemon at once, and in step
+                # they reached its new socket at once (the product's cross-check, its pusher's 2 s exactly).
+                time.sleep(REFUSED_STEP * random.uniform(0.5, 1.5))
             except (OSError, http.client.HTTPException) as e:
                 kind = StoreAmbiguous if write else StoreUnavailable
                 raise kind(f"the store did not answer: {type(e).__name__}: {e}") from None

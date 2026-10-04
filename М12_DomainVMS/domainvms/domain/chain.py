@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 import threading
 
 from w2cplatform.rows import PARSE_ERRORS, finite
@@ -52,6 +53,14 @@ from .uplink import REPORTED, UPLINK, base
 from .agent import UPSTREAM_PATH       # in a recording cluster: where its streams go up, or come down from (star)
 
 log = logging.getLogger("chain")
+
+
+# A CENTRE THAT DID NOT ANSWER IS ASKED AGAIN AT EACH CAMERA'S OWN MOMENT (the product's cross-check, after the twelfth
+# review: its camera pusher tried again after exactly 2 s). Every camera of a relay loses the centre at the same moment —
+# its held polls break together — and a fixed wait brought them all back at the same millisecond, again and again. The
+# wait is `period` give or take half, drawn afresh every time, as the long poll's `BACKOFF` is.
+def retry_wait(period: float) -> float:
+    return period * random.uniform(0.5, 1.5)
 
 
 # -- the domain's side: the book of a recording cluster's upstream ----------------------------------------
@@ -356,7 +365,7 @@ class Forwarder:
                 e = self.book().get(ref)
                 ing = self._centre(e) if e else None
                 if ing is None or e["mode"] != "push":
-                    stop.wait(period)
+                    stop.wait(retry_wait(period))                 # no centre answered (or nothing to push): not in step
                     continue
                 try:
                     streaming = self.forwarding.get(ref, False)
@@ -364,7 +373,7 @@ class Forwarder:
                     if streaming:
                         stop.wait(stream_every)
                 except Unreachable:
-                    stop.wait(period)
+                    stop.wait(retry_wait(period))
 
         def asks():
             while not stop.is_set():
@@ -390,7 +399,7 @@ class Forwarder:
                 try:
                     x["centre"].outcome_wait(x["target"], x["aid"], wait=period)
                 except Unreachable:
-                    stop.wait(period)
+                    stop.wait(retry_wait(period))                 # every relay's held wait broke at once: not in step
                 self.woken.set()                                         # settle it: `lift` does
 
         started = [threading.Thread(target=asks, daemon=True, name=f"fwd-asks-{self.name}"),

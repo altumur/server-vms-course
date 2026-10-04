@@ -144,6 +144,15 @@ class NoOffer(NoSlot):
     """A spare found no offer of its label set to take (`Worker.claim_slot(spare_for=)`): it waits, holding nothing."""
 
 
+class NotReadThisPass(RuntimeError):
+    """The unit is not in the assignment this worker read last, or that read did not answer: no new epoch for it."""
+
+
+# `Worker.assigned_now` before the first read: a worker driven by hand (the platform's lessons take an epoch on a unit
+# they name) has no list to be held to. Every subsystem's pass reads its assignment before it takes anything.
+NEVER_READ = object()
+
+
 # -- one name, two processes (the owner's decision of 4 Oct; the product's r24-names, `names.go`) ---------------------
 #
 # A process started under a name — its unit's `WORKER_NAME`, a `<ROLE>_NAME`, `SLOT_INDEX` (`Worker.given`) — IS that
@@ -1819,6 +1828,9 @@ class Worker:
         # waits `stop.wait(poll)`, exactly as before.
         self.wake: Wake | None = None
         self.long_poll: LongPoll | None = None
+        # The units of the assignment as the last read of it answered, or None when that read did not answer
+        # (`assignment`, `take_epoch`); `NEVER_READ` until it is first read.
+        self.assigned_now: frozenset[str] | None | object = NEVER_READ
 
     # -- identity by claim ----------------------------------------------------------
     # Become somebody. Lists the slot rows; with `prefer` (the unit's `WORKER_NAME`, `SLOT_INDEX`) the
@@ -2171,6 +2183,7 @@ class Worker:
             if self.seeking is None:
                 self.seeking = self.name
             self.slot = None
+            self.assigned_now = None              # what it read was the list of the name given up (`take_epoch`)
             return self.seeking
 
     def _renew_slot(self) -> bool:
@@ -2367,12 +2380,20 @@ class Worker:
 
     # Reads my row. One whose `rev` does not parse is read for the units it names (`read_assignment`): the pass is
     # a pass, and what the row decides is carried out.
+    #
+    # What it answered is kept (`assigned_now`) for `take_epoch`; a read that did not answer clears it.
     def assignment(self) -> Assignment:
         if self.seeking is not None:
             return Assignment(self.name, [])      # the row under that name is the other instance's now (`keep_slot`)
         key = self.sub.assignment(self.name)
-        items, _ = stored(self.vars, key, ASSIGNMENTS)  # one the store cannot read: no unit, counted (the eleventh review)
-        return read_assignment(key, self.name, items)
+        try:
+            items, _ = stored(self.vars, key, ASSIGNMENTS)  # one the store cannot read: no unit, counted (the eleventh review)
+        except OSError:
+            self.assigned_now = None
+            raise
+        a = read_assignment(key, self.name, items)
+        self.assigned_now = frozenset(str(u) for u in a.units)
+        return a
 
     # Called when the worker starts a unit: `next_epoch` on `<name>/epoch/<unit>`, record it in `epochs`,
     # and open a `Lease` on it. A second worker starting the same unit gets the next number, and the first
@@ -2391,6 +2412,17 @@ class Worker:
         if self.step_abandoned():
             raise NoSlot(f"{self.name}: this step outlived its stand-in ({self.STAND_IN_FOR:g} s) and its units may be "
                          f"another's now: no epoch for {unit} until the loop has looked again")
+        # …NOR ON AN ASSIGNMENT NOT READ NOW (the product's cross-check, after the twelfth review). The read of the
+        # assignment failed — one 503 — and the pass went on with the list read before; a unit moved away meanwhile
+        # was still on it, its lease had just been fenced, the reconciler started it again, and the epoch CAS, which
+        # the store DID answer, fenced the worker the unit had moved to. A new epoch is taken only for a unit of the
+        # assignment whose read answered last; what is not known to be this worker's is not taken from anybody. A
+        # worker that holds the unit's epoch already goes on under it (`VmsWorker._actuate`, feedback BK).
+        if self.assigned_now is not NEVER_READ and (self.assigned_now is None or str(unit) not in self.assigned_now):
+            raise NotReadThisPass(
+                f"{self.name}: {unit} is not in the assignment read last" if self.assigned_now is not None else
+                f"{self.name}: its assignment did not answer, and {unit} may be another's now: no new epoch for it "
+                f"until the assignment is read again")
         epoch, _ = next_epoch(self.vars, self.sub.epoch_key(unit))
         self.epochs[unit] = epoch
         self.leases[unit] = Lease(self.vars, self.sub.epoch_key(unit), epoch, self.lease_ttl, self.lease_margin, self.clock,
