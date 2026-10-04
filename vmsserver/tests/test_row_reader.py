@@ -519,8 +519,8 @@ def test_a_devices_counts_and_a_holders_coverage_that_are_words_are_that_devices
     real = dj.holder_of, sv.holder_of
     dj.holder_of = sv.holder_of = lambda *a, **kw: found
     try:
-        assert dj.DetJobWorker.device_has(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7", 0, 50) is False
-        assert sv.SurveyWorker.device(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7") is None
+        assert dj.DetJobWorker.device_has(type("W", (), {"objects": None, "eyes": None, "wall": lambda self: 0.0})(), "7", 0, 50) is False
+        assert sv.SurveyWorker.device(type("W", (), {"objects": None, "eyes": None, "wall": lambda self: 0.0})(), "7") is None
     finally:
         dj.holder_of, sv.holder_of = real
     _forget_garbled()

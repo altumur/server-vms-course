@@ -796,6 +796,9 @@ class Resource:
         # peer that did not answer, a bucket a peer did not take or give, one too big for the door — counted since start,
         # and the restore's buckets still with peers, with when it is tried again (`restore_due`).
         self.mirror_failed = self.mirror_too_big = self.restore_failed = 0
+        # Buckets past their days `retain` could not remove, since start (`_removed`): one that will not go does not stop
+        # the rest; and whether the last pass met one, for "said once a spell".
+        self.retain_failed, self._retain_failing, self._retain_failed_pass = 0, False, False
         self.mirror_peers_failed: list[str] = []   # the peers the last `mirror` could not copy to, or not all
         self._too_big: set[str] = set()            # buckets no peer takes (over `MIRROR_MAX`, or refused 413): not sent again
         self.restore_left: int | None = None       # buckets known to be with peers and not back; None: no restore yet
@@ -1003,6 +1006,8 @@ class Resource:
               **({"restore": self.restore_said()} if self.restore_left or self.restore_failed or not self._restore_ok else {}),
               # The units whose days the last `retain` could not read, by name: kept, not swept (sibling A of the ninth pass)
               **({"retention_garbled": self.retention_garbled} if self.retention_garbled else {}),
+              # …and the buckets past their days it could not remove, since start (`_removed`; the thirteenth pass)
+              **({"retain_failed": self.retain_failed} if self.retain_failed else {}),
               **({"mirror": {"failed": self.mirror_failed, "too_big": self.mirror_too_big,
                              "peers_failed": self.mirror_peers_failed}}
                  if self.mirror_failed or self.mirror_too_big else {}),
@@ -1468,6 +1473,7 @@ class Resource:
         # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
         kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
         self._progressed()
+        self._retain_failed_pass = False
         swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
@@ -1482,7 +1488,9 @@ class Resource:
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
-                            os.remove(os.path.join(path, b.path)); removed.append(b.path)
+                            if not self._removed(os.path.join(path, b.path)):
+                                continue                                # that bucket's, said and counted: the rest go on
+                            removed.append(b.path)
                             self._progressed()
                             n, a, z = swept.get((sub, unit), (0, b.start, b.end))
                             swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
@@ -1509,12 +1517,37 @@ class Resource:
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):
-                                os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
+                                if self._removed(os.path.join(base, b.path)):
+                                    self.mirror_removed += 1
                                 self._progressed()
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
         self.retention_garbled = sorted(set(garbled))
+        if self._retain_failing and not self._retain_failed_pass:
+            self._retain_failing = False
+            log.warning("%s: every bucket past its days is removed again", self.server)
         return len(removed)
+
+    # ONE BUCKET THIS RESOURCE CANNOT REMOVE IS THAT BUCKET'S (the review's thirteenth pass, major 13's other half). The
+    # unlink ran bare: a directory a writer made 2755 under another group (no umask under Nomad), one EACCES, and the
+    # `PermissionError` ended `retain` whole — no bucket of any unit swept after it, every pass, and the disk grew without
+    # bound. A bucket that will not go is counted (`retain_failed`, in the heartbeat and on `/metrics`), logged once a
+    # spell, and the walk goes on; one already gone is gone.
+    def _removed(self, path: str) -> bool:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            return True
+        except OSError as e:
+            self.retain_failed += 1
+            if not self._retain_failing:
+                self._retain_failing = True
+                log.error("%s: a bucket past its days could not be removed (%s): it stays, the others are swept — "
+                          "counted (retain_failed), said once until a pass removes everything it should",
+                          self.server, e.strerror or e)
+            self._retain_failed_pass = True
+            return False
+        return True
 
     # One unit's days, or `inf` — kept, not swept — when its row does not parse (`retain`).
     # Whatever a parse raises (`PARSE_ERRORS`: a row that is a JSON list has no `.get`), not only a word; a store that

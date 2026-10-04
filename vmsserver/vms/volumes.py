@@ -134,6 +134,11 @@ def refuse(fields: dict) -> None:
     unknown = [k for k in fields if k not in FIELDS and k != "name"]
     if unknown:
         raise Refused(f"a volume has no field {unknown[0]!r}")
+    # …and its key is not the mask every reply shows it as (the thirteenth round; `SubsystemSpec.refuse`'s rule): a page
+    # that sent `***` back stored it as the archive's secret, and the recorder could not open the volume
+    from w2cplatform.spec import is_mask
+    if is_mask(fields.get("access_secret")):
+        raise Refused("access_secret: a secret was sent as its mask; leave the field out to keep it")
     kind = str(fields.get("kind", "local"))
     if kind not in KINDS:
         raise Refused(f"a volume is {' or '.join(KINDS)}, not {kind!r}")
@@ -207,7 +212,8 @@ def write(vars_, fields: dict, sealer=None) -> Volume:
     from w2cplatform.sealing import seal_items
     refuse(fields)
     name = str(fields["name"])
-    _, idx = vars_.get(key(name))
+    old, idx = vars_.get(key(name))
+    fields = _kept_key(fields, old)
     vol = Volume.from_items(name, {k: v for k, v in fields.items() if k != "name"})
     # The other order of `refuse_recording`: a card declared — or declared again as another camera's — under a name
     # recordings are homed on already. They are that camera's, or the declaration is refused.
@@ -223,6 +229,31 @@ def write(vars_, fields: dict, sealer=None) -> Volume:
 
 def delete(vars_, name: str) -> None:
     vars_.delete(key(name))
+
+
+# The key is the key to ONE address (`bound_to`, as a unit's field says it — `cred_secret: {bound_to: [source]}` — and
+# as the product's volume says it): `access_secret` to the `url`.
+BOUND_TO = {"access_secret": ("url",)}
+
+
+def _kept_key(fields: dict, old: dict | None) -> dict:
+    """A write over a declared volume (the thirteenth round; the product's rule). The key not sent — left out, empty or
+    null — is the key kept: the page does not show it, and a page that saved the form without it wiped the archive's
+    key. Unless the address changed: the old key would go to whatever host the new url names — refused, in words. A
+    card has no key (`refuse`): one declared as a card drops it."""
+    from w2cplatform.spec import unbound_secret
+    sent = fields.get("access_secret")
+    if sent is not None and sent != "":
+        return fields
+    out = {k: v for k, v in fields.items() if k != "access_secret"}
+    if not old or str(out.get("kind", "local")) == "edge":
+        return out
+    why = unbound_secret("access_secret", BOUND_TO["access_secret"], old, out)
+    if why:
+        raise Refused(why)
+    if old.get("access_secret"):
+        out["access_secret"] = old["access_secret"]            # as stored: sealed, to this row, and `seal_items` leaves it
+    return out
 
 
 # A VOLUME ROW THAT DOES NOT PARSE IS THAT VOLUME'S TROUBLE (the review's seventh pass, part 2, blocker 1). `quota_bytes:

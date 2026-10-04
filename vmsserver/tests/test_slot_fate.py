@@ -986,13 +986,20 @@ def test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved()
     try:
         for t in range(50, 501, 50):
             site.tick(50)                                                    # w-1 hung: renews nothing, its lock held
-            time.sleep(0.15)                                                 # …and the beat goes out with the new time
+            deadline = time.monotonic() + 10                                 # …and the beat goes out with the new time:
+            while time.monotonic() < deadline and \
+                    float(resources_seen(box.objects).get("srv-1", {}).get("ts", 0)) < box.wall():
+                time.sleep(0.01)                                             # waited for, not slept for (a loaded run)
             fates[t] = (site.fate(), ctl.resource_state("srv-1"))
         stuck = resources_seen(box.objects)["srv-1"].get("pass_stuck")
     finally:
         release.set(); passing.join(5)
     assert all(f == ("hung", "live") for t, f in fates.items() if t >= 100), fates
     assert stuck and stuck > res.PULSE_LIMIT * res.lost_after
+    from w2cplatform.console import SpecConsole
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()                    # …and on `/metrics`
+    assert 'w2c_resource_pass_stuck_seconds{server="srv-1"} ' in text and \
+        'w2c_resource_pass_stuck_seconds{server="srv-1"} 0' not in text
     ctl.pass_once()
     assert sorted(ctl.assignment("w-1").units) == site.on_w1                 # nothing moved: no second writer
 
@@ -1019,10 +1026,10 @@ def test_a_volume_or_a_tree_that_does_not_answer_does_not_hold_the_resources_hea
         t0 = time.monotonic()
         hb = res.heartbeat()
         assert time.monotonic() - t0 < 2 and "volume:default" in hb["volumes_stuck"], hb
-        before = threading.active_count()
         for _ in range(3):
             assert "volume:default" in res.heartbeat()["volumes_stuck"]
-        assert threading.active_count() == before                            # one thread in the hung volume, not one a beat
+        probing = [t for t in threading.enumerate() if t.name == "srv-1-volume:default"]
+        assert len(probing) == 1, probing                                    # one thread in the hung volume, not one a beat
         real = res_mod.presence_here
         res_mod.presence_here = lambda root, now=None: (release.wait(30), real(root, now))[1]
         try:
@@ -1036,3 +1043,25 @@ def test_a_volume_or_a_tree_that_does_not_answer_does_not_hold_the_resources_hea
     time.sleep(0.1)
     res.space_probe = lambda path: (1000, 500)
     assert "volumes_stuck" not in res.heartbeat()                            # answers again: said no more
+
+
+def test_a_worker_that_could_not_register_keeps_its_name_while_its_fate_is_wait():
+    """The review's thirteenth pass, blocker 2 (`n9_unregistered_hung_name`): `present()` failed (EACCES, ENOSPC on the
+    events tree), the worker went on working, its fate was `wait` — the controller held its cameras — and `wait` gave the
+    name: a spare took `w-1` with its assignment at +100 and +300 s, two writers. `wait` keeps the name now, as `unsure`
+    does, until the controller's limit; only then is it given (`names_given`)."""
+    site = _Site(register=False)
+    box, ctl = site.box, site.ctl
+    for dt in (100, 200):                                                    # +100 s, +300 s
+        site.tick(dt)
+        assert site.fate() == "wait"
+        ctl.pass_once()
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                          server="srv-2")
+        assert spare.name != "w-1" and _two_writers(site, spare) == [], dt
+        spare.release_slot()
+    assert sorted(ctl.assignment("w-1").units) == site.on_w1                 # its cameras held, as `wait` holds them
+    site.tick(HUNG_MOVE_AFTER)
+    assert "w-1" in ctl.pass_once()["names_given"]
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+    assert spare.name == "w-1"                                               # past the limit: given

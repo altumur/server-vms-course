@@ -31,13 +31,13 @@ def _recording(n=3, b=True):
 def _silence(c, dead: str, seconds: float, alive=()):
     """`dead` says nothing for `seconds`: the others renew, heartbeat, and their resources too, every ten seconds."""
     for _ in range(int(seconds // 10)):
-        c.wall.advance(10)
+        c.wall.advance(10); c.clock.advance(10)          # both clocks: readers judge by their own (13th)
         for name, srv in c.servers.items():
             if name != dead:
                 srv.res.heartbeat()
         for w in alive:
             w.lease_pass(); w.heartbeat_once()
-    c.wall.advance(seconds % 10)
+    c.wall.advance(seconds % 10); c.clock.advance(seconds % 10)
 
 
 def test_the_power_pull():
@@ -231,7 +231,7 @@ def test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_a
         assert [s[0] for s in first.values()] == ["srv-a", "srv-a"], first
         c.servers["srv-a"].down = True                          # its door: the worker renews and heartbeats on
         for _ in range(6):
-            c.wall.advance(10)
+            c.wall.advance(10); c.clock.advance(10)
             a.lease_pass(); a.heartbeat_once(); b.lease_pass(); b.heartbeat_once()
         assert {i: r.source(i) for i in (1, 2)} == first        # 60 s into the door's outage: the store's word
         assert r._by_the_book == {"1", "2"}
@@ -240,7 +240,7 @@ def test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_a
         b.reconcile_once(); b.heartbeat_once()
         assert r.source(2)[0] == "srv-b" and r.source(1) == first[1]   # heard on its new holder; 1 still stands
         for _ in range(5):                                      # and now w-srv-a-1 is gone too: nobody renews its name
-            c.wall.advance(10)
+            c.wall.advance(10); c.clock.advance(10)
             b.lease_pass(); b.heartbeat_once()
         assert r.source(1) is None                              # its slot ran out: the store says nobody holds it
     finally:
@@ -358,6 +358,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     b.heartbeat_once()
     assert [(m[1], m[2]) for m in rec.redistribute()] == [("r-srv-a-1", "r-srv-b-1")]
     assert rec.placement("1").reason.startswith("server srv-a gone: slot r-srv-a-1 lapsed and its resource silent; ")
+    # r-srv-b-1 first looks at camera 1's holders now: w-srv-a-1's last heartbeat is new to it, as w-srv-b-1's is — the
+    # holder under the higher epoch is the one it reads (`newest`; the thirteenth review)
     assert r2.reconcile_once() == [("start", "1")] and r2.actuator.started["1"]["source"] == live_shm(1) and r2.actuator.started["1"]["epoch"] == 2
     r2.heartbeat_once()
     assert rec.workers_seen()["r-srv-b-1"].status[0]["via"] == "shm" and rec.where("1") == "r-srv-b-1"

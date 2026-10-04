@@ -366,7 +366,11 @@ def test_a_console_whose_claim_was_taken_over_while_it_stood_still_writes_nothin
     seconds, B took the claim and created camera 1, A woke and created camera 2 under the same key. `reserve`, `store`
     and `release` are CAS on the revision the console holds: A, waking before its reserve, loses it — 409, no row; A,
     waking after its reserve, finds B created under the id it reserved — 409, the same camera. Either way one camera,
-    and the key answers with B's reply."""
+    and the key answers with B's reply.
+
+    Its waits are the test's own events, not seconds (seen failing once under a loaded full run): A's claim is waited
+    for until it is there — it was two seconds, and past them B claimed the key itself — and A stands still until B has
+    taken over, however long that takes — it was ten seconds, and past them A went on and created camera 2."""
     from vms.config import SPEC
     box = Box()
     a = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
@@ -378,20 +382,20 @@ def test_a_console_whose_claim_was_taken_over_while_it_stood_still_writes_nothin
             key, go, out = f"k-{stall[0]}", threading.Event(), {}
             if stall == "before the reserve":
                 create = a.create
-                a.create = lambda body, **kw: (go.wait(10), create(body, **kw))[1]
+                a.create = lambda body, **kw: (go.wait(120), create(body, **kw))[1]
             else:
                 reserve = ma.root.seen.reserve
-                ma.root.seen.reserve = lambda k, uid: (reserve(k, uid), go.wait(10))[0]
+                ma.root.seen.reserve = lambda k, uid: (reserve(k, uid), go.wait(120))[0]
             t = threading.Thread(target=lambda: out.setdefault("a", _post(pa, key))); t.start()
-            for _ in range(200):                                                 # A holds the claim and stands still
-                if box.vars.get(f"vms/idem/{key}")[0]:
-                    break
+            deadline = time.monotonic() + 60
+            while not box.vars.get(f"vms/idem/{key}")[0] and time.monotonic() < deadline:   # A holds the claim and stands still
                 time.sleep(0.01)
+            assert box.vars.get(f"vms/idem/{key}")[0], "A's claim never appeared"
             assert _post(pb, key)[0] == 409                                      # B sees it in flight…
             box.clock.advance(31)
             code, body = _post(pb, key)                                          # …and thirty seconds later takes it over
             assert code == 201
-            go.set(); t.join(10)
+            go.set(); t.join(120)
             assert out["a"][0] == 409 and out["a"][1]["error"] == "taken over", (stall, out)
             assert _post(pa, key) == (code, body)                                # the key answers with B's reply
             if stall == "before the reserve":

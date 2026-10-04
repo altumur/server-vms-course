@@ -517,7 +517,13 @@ def _end_command(ctl, key: str, it: dict, idx, now: float) -> bool:
     if now - until < COMMAND_REAP_AFTER:
         return False                                        # its holder's to end, if it has one
     rid = key.rsplit("/", 1)[1]
-    mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
+    try:
+        mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
+    except Exception as e:                                  # noqa: BLE001 — the thirteenth pass: one mark unread ended the walk
+        # Whether its holder began it cannot be read: not known is not "never begun" — the row stands for the next turn,
+        # and the rows after it are looked at (it raised out of the sweep, and no command after it was ended)
+        log.warning("%s: whether command %s was begun cannot be read (%s): left for the next turn", ctl.spec.name, rid, e)
+        return False
     try:
         said = json.loads(mark) if mark else None
     except PARSE_ERRORS:

@@ -192,10 +192,11 @@ class Look:
     def heard(self, sub: str) -> dict:
         return self._once(("heard", sub), lambda: heartbeats(self.rec.objects, sub + "/"))
 
-    # `w2cplatform.console.holder_of` over the heartbeats read once: the first live worker, in name order, whose entry
-    # for `unit` is in `phase` and has `field`.
+    # `w2cplatform.console.holder_of` over the heartbeats read once: of the live workers whose entry for `unit` is in
+    # `phase` and has `field`, the one under the highest epoch, in name order among equals (`newest`).
     def holder(self, sub: str, unit, now: float, lost_after: float = 45.0, phase: str | None = None,
                field: str | None = None):
+        found = []
         for w, _, hb, st in self.units(sub).get(str(unit), ()):
             if not self.rec.eyes.fresh(f"{sub}/heartbeats/{w}", hb.token, lost_after, hb.ts, sub):
                 continue                                  # by what this recorder saw change, not the holder's clock (13th)
@@ -203,8 +204,9 @@ class Look:
                 continue
             if field is not None and not st.get(field):
                 continue
-            return w, hb, st
-        return None
+            found.append((w, hb, st))
+        from w2cplatform.console import newest
+        return newest(found)                              # the highest epoch: a dead holder first seen late is older
 
 
 # The passes that take one look: everything they ask is answered from it — and a pass inside a pass (`gate_pass` in

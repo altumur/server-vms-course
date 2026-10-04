@@ -57,4 +57,4 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": 1051, "items
 POST /v1/write {"op": "delete", "key": "vms/slots/w-2", "cas": 1048}
 → 200 {"index": 1055}
 
-# … and 42 GET requests, omitted
+# … and 45 GET requests, omitted

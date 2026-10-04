@@ -1600,8 +1600,9 @@ class Controller:
             return "unknown"
         return "silent"
 
-    # When the resource on `server` last said in the store that it is there (`at` on its door row), or None. Read only
-    # where its heartbeat is not fresh — once a pass for each such server.
+    # When the resource on `server` last said in the store that it is there (`at` on its door row), or None. Read with
+    # every look at the server, fresh heartbeat or not — once a pass for each: a silence is timed from the row's last
+    # change (`resource_state`; the thirteenth pass).
     def _said_alive(self, server: str) -> float | None:
         from .resource import DOORS
         key = f"{DOORS}/{server}"

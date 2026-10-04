@@ -286,10 +286,10 @@ def test_a_primary_whose_server_dies_is_covered_from_before_it_died():
     box.wall.advance(100)
     w.heartbeat_once(); primary.heartbeat_once(); backup.reconcile_once()
     died = box.wall()                                                  # its last heartbeat said `running`; then nothing
-    box.wall.advance(backup.LOST_AFTER - 5)
+    box.wall.advance(backup.LOST_AFTER - 5); box.clock.advance(backup.LOST_AFTER - 5)   # both clocks: the backup judges by its own (13th)
     w.heartbeat_once(); backup.reconcile_once()
     assert backup.holding["1-copy"] is True                            # its heartbeat still counts: written, as far as anyone knows
-    box.wall.advance(6)
+    box.wall.advance(6); box.clock.advance(6)
     w.heartbeat_once(); backup.reconcile_once()                        # stale: vanished — covered at once, no grace on top
     [(uid, start, end)] = backup.actuator.released
     assert uid == "1-copy" and end == died + backup.LOST_AFTER + 1

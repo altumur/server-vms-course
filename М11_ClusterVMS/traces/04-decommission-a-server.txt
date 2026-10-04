@@ -11,7 +11,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
   "holder": "srv-c:4102",
   "until": "1757500045.0",
   "released": "true",
-  "gen": "1"
+  "gen": "1",
+  "server": "srv-c"
 }}
 → 200 {"index": 1017}
 
@@ -45,4 +46,4 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1011, "items
 }}
 → 200 {"index": 1021}
 
-# … and 54 GET requests, omitted
+# … and 57 GET requests, omitted

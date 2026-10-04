@@ -132,8 +132,10 @@ def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_
     one nobody performed — and the console's rights did not grant that read: `Forbidden: console may not read
     objects/vms/commands/x1` on every turn, the command stood, `vms_requests_expired_total` did not move, and the
     exception left the rows after it unlooked at. Through the console's own socket, under the committed rights: a
-    command past its deadline that its holder began (a mark, no outcome) and one nobody held are both ended and
-    counted; one its holder answered (a mark with an outcome) is cleared and not counted."""
+    command past its deadline that nobody held is ended and counted; one its holder answered (a mark with an outcome) is
+    cleared and not counted; one its holder began (a mark, no outcome) stays its holder's while that holder holds its
+    name, and once it went is ended as not known (`jobs.unknown`; the thirteenth review, minor — the console reads the
+    slot row for that, under its rights too)."""
     import json
     from vms import jobs
     c = Cluster(); c.resources_up()
@@ -143,7 +145,11 @@ def test_the_consoles_reaper_ends_a_command_nobody_performed_under_the_clusters_
         con.vars.put(f"vms/requests/{rid}", {"action": "output", "unit": "1", "valid_until": late, "at": late - 30}, cas=0)
     assert w._mark("x1", "1", late - 20) and w._mark("x3", "1", late - 20)            # the holder's marks, by its socket
     w.objects.put("vms/commands/x3", json.dumps({"instance": w.instance, "outcome": "performed"}).encode())
-    before = jobs.expired.get("vms", 0)
+    before, unknown = jobs.expired.get("vms", 0), jobs.unknown.get("vms", 0)
+    jobs.clear_requests(con)
+    assert con.vars.list("vms/requests/") == ["vms/requests/x1"], con.vars.list("vms/requests/")
+    assert jobs.expired.get("vms", 0) - before == 1
+    w.release_slot()                                                                   # the holder went
     jobs.clear_requests(con)
     assert con.vars.list("vms/requests/") == [], con.vars.list("vms/requests/")
-    assert jobs.expired.get("vms", 0) - before == 2
+    assert jobs.expired.get("vms", 0) - before == 1 and jobs.unknown.get("vms", 0) - unknown == 1

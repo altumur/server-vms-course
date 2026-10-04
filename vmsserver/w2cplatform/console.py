@@ -285,6 +285,7 @@ def holders(objects, prefix: str, now: float, lost_after: float = 45.0, eyes=Non
 # a recorder subscribes to a fan-out only in `running`, while a playback door answers in `held` too.
 def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
               phase: str | None = None, field: str | None = None, eyes=None):
+    found = []
     for w, hb in sorted(holders(objects, prefix, now, lost_after, eyes).items()):
         for st in hb.status:
             if str(st.get("id")) != str(unit):
@@ -293,8 +294,26 @@ def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
                 continue
             if field is not None and not st.get(field):
                 continue
-            return w, hb, st
-    return None
+            found.append((w, hb, st))
+    return newest(found)
+
+
+def _epoch(st) -> int:
+    try:
+        return int(st.get("epoch") or 0)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def newest(found: list):
+    """Of the workers that say they hold one unit, the one under the highest epoch — the writer the fence admits; in
+    name order among equals. A judge that first looks after a server died sees the dead holder's last heartbeat as new
+    for a while (it judges by what it saw change, the thirteenth review); its epoch is the older one."""
+    best = None
+    for f in found:
+        if best is None or _epoch(f[2]) > _epoch(best[2]):
+            best = f
+    return best
 
 
 # AN ERROR IN WORDS, WITHOUT A PATH (the review's thirteenth pass, minor; the product's cross-check (c)): a 500's and a
@@ -1879,6 +1898,15 @@ class SpecConsole:
                   *[f'{p}_resource_restore_failures_total{{server="{label(s)}"}} {rn(s, "restore.failed", said(hb, "restore").get("failed"), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_failures_total counter",
                   *[f'{p}_resource_mirror_failures_total{{server="{label(s)}"}} {rn(s, "mirror.failed", said(hb, "mirror").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  # …a pass that has not moved past the pulse's limit, and the volumes a look did not answer in time
+                  # (the review's thirteenth pass, blocker 5): the resource beats on — these say what it cannot do
+                  f"# TYPE {p}_resource_pass_stuck_seconds gauge",
+                  *[f'{p}_resource_pass_stuck_seconds{{server="{label(s)}"}} {rn(s, "pass_stuck", hb.get("pass_stuck", 0), float)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_volumes_stuck gauge",
+                  *[f'{p}_resource_volumes_stuck{{server="{label(s)}"}} {len(hb["volumes_stuck"]) if isinstance(hb.get("volumes_stuck"), dict) else 0}' for s, hb in sorted(res.items())],
+                  # …and the buckets past their days `retain` could not remove (the review's thirteenth pass, major 13)
+                  f"# TYPE {p}_resource_retain_failures_total counter",
+                  *[f'{p}_resource_retain_failures_total{{server="{label(s)}"}} {rn(s, "retain_failed", hb.get("retain_failed", 0), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_too_big_total counter",
                   *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
         return lines

@@ -2134,6 +2134,10 @@ def test_one_cameras_hung_read_closes_the_door_to_that_camera_not_to_its_nvr_and
         st = next(d for d in holder.device_status() if d["device"] == key)
         assert st["reads_stuck"] == [str(cams[0])] and st["state"] == "slow", st
         assert holder.heartbeat_extra()["door_reads_stuck"] == 1
+        from vms.console import beat_lines                                     # …and on `/metrics` (the thirteenth pass)
+        from w2cplatform.console import heartbeats
+        holder.heartbeat_once()
+        assert f'vms_door_reads_stuck{{worker="{holder.name}"}} 1' in beat_lines("vms", heartbeats(holder.objects, "vms/"))
         hang.add(str(cams[2]))                                                 # a second camera of it hangs too
         try:
             holder.playback(cams[2], 0, 2)

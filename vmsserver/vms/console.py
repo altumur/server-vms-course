@@ -1433,7 +1433,8 @@ def beat_lines(sub: str, hbs: dict) -> list[str]:
                                 ("vms_devices_opening", "devices_opening", "gauge"),                       # the tenth pass
                                 ("vms_device_identity_changes_total", "identity_changes", "counter"),      # …and its sibling
                                 ("vms_device_events_refused_total", "events_refused", "counter"),          # a line not writable
-                                ("vms_commands_reanswered_total", "commands_reanswered", "counter")):
+                                ("vms_commands_reanswered_total", "commands_reanswered", "counter"),
+                                ("vms_door_reads_stuck", "door_reads_stuck", "gauge")):       # the thirteenth pass, major 18
         out.append(f"# TYPE {metric} {kind}")
         out += [f'{metric}{{worker="{label(w)}"}} {_n(sub, w, field, hb.extra.get(field) or 0, int)}' for w, hb in sorted(hbs.items())]
     return out

@@ -129,7 +129,9 @@ unit:
     # 64 KiB ceiling — a field nobody consumes is paid for by every camera. "Not a secret" is a reason not
     # to hide it, never a reason to publish it.
     cred_username:         {type: string}                     # the device login
-    cred_secret:           {type: string}                     # the device password: never in the snapshot, masked on the way out
+    # `bound_to`: the address the password is FOR. An edit that changes `source` and sends no new password is refused —
+    # the old one would go to whatever host the new address names; one that sends it empty keeps the stored one.
+    cred_secret:           {type: string, bound_to: [source]} # the device password: never in the snapshot, masked on the way out
     # `always` (the default) or `on-demand`. A channel of an NVR kept only for its archive needs no live
     # pipeline: the worker still HOLDS the device — its session, its playback, its coverage — and reports the
     # camera as `held`. Thirty-two channels imported for their footage would otherwise be thirty-two streams

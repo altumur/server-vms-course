@@ -116,6 +116,31 @@ class Refused(Exception):
     pass
 
 
+# WHAT A SECRET LOOKS LIKE ON A PAGE, AND WHAT IT IS GIVEN FOR (the thirteenth round; the product's rule, one YAML key in
+# both). A reply shows a secret as `***` (`secrets.mask_secrets`); a page or a client of its own shows `•••`, `●●●` or
+# `＊＊＊`. Sent back, any of them is a password nobody typed: refused at the door (`is_mask`) — three or more of one of
+# those characters and nothing else. And a secret is the key to an ADDRESS (`bound_to`: a camera's `cred_secret` to its
+# `source`, a volume's `access_secret` to its `url`): the address changed on an edit and no new secret came — the old
+# one would go to whatever host the new address names; refused, in words (`unbound_secret`).
+MASK_CHARS = "*•●＊"
+
+
+def is_mask(v) -> bool:
+    """`v` is a secret's mask as a page shows it — `***`, `•••`, `●●●`, `＊＊＊` or more of one of them."""
+    s = v.strip() if isinstance(v, str) else ""
+    return len(s) >= 3 and len(set(s)) == 1 and s[0] in MASK_CHARS
+
+
+def unbound_secret(secret: str, bound: tuple, before: dict, after: dict) -> str | None:
+    """Why an edit that sent no new `secret` may not keep the stored one — a field it is `bound` to changed — or None.
+    Nothing stored: nothing to carry, nothing refused. The words never repeat an address."""
+    moved = [b for b in bound if str(before.get(b) or "") != str(after.get(b) or "")]
+    if moved and before.get(secret):
+        return (f"{secret} was given for the {' and '.join(moved)} this row had; that changed and no new {secret} came. "
+                f"A secret is not carried to another address — send the one for the new address")
+    return None
+
+
 # The counter of numeric ids, `<name>/next_id`, through the one reader of rows (`SpecController._next_id`).
 NEXT_IDS = Table("next_id", "the next id is one past the largest one there is, and the row is written whole")
 # A unit stored under a name `create` refuses today (`doors.unnamable`, `unit`; the review's ninth pass): served as it
@@ -226,6 +251,7 @@ class Field:
     inherit: object = None        # the fallback of an inheriting field; see `inherits`
     inherits: bool = False
     merge: str = "override"       # override | union — for an inheriting field
+    bound_to: tuple = ()          # a `*_secret` field: the fields it is the key to (`unbound_secret`)
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -274,6 +300,16 @@ class Field:
             import json as _json
             return _json.dumps(v, separators=(",", ":"), ensure_ascii=False) if not isinstance(v, str) else v
         return str(v)
+
+
+# `bound_to:` as written — a name or a list of names — as a tuple of names; anything else refused at load.
+def _bound_to(name: str, v) -> tuple:
+    if v is None:
+        return ()
+    names = [v] if isinstance(v, str) else v
+    if not isinstance(names, (list, tuple)) or not names or not all(isinstance(x, str) and x for x in names):
+        raise ValueError(f"field {name}: `bound_to` is a field name or a list of them, not {v!r}")
+    return tuple(names)
 
 
 # A second row the platform keeps beside the unit: `row` (a path template under the prefix with `{id}`, e.g.
@@ -441,9 +477,15 @@ class SubsystemSpec:
     def from_dict(cls, d: dict) -> "SubsystemSpec":
         unit, pl = d.get("unit", {}), d.get("placement", {})
         fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
-                           f.get("inherit"), "inherit" in f, f.get("merge", "override"))
+                           f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")))
                   for n, f in (unit.get("fields") or {}).items()}
         for f in fields.values():
+            if f.bound_to and not is_secret_field(f.name):
+                raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
+                                 f"{f.name} is no `*_secret`")
+            stray = [b for b in f.bound_to if b not in fields or b == f.name or is_secret_field(b)]
+            if stray:
+                raise ValueError(f"field {f.name}: `bound_to` names no field of this unit that is an address: {stray}")
             if f.inherits and f.default is not None:
                 raise ValueError(f"field {f.name}: `default` and `inherit` — a field is either filled in when the row "
                                  f"is created or left for somebody above to set, not both")
@@ -646,6 +688,13 @@ class SubsystemSpec:
         pasted = [k for k, v in fields.items() if is_secret_field(k) and is_sealed(v)]
         if pasted:
             raise Refused(f"{pasted}: a secret is given in the clear and sealed by this console; a sealed value is not taken")
+        # …nor its MASK (the review's thirteenth round; the product's guard): every reply shows a secret as `***`
+        # (`secrets.mask_secrets`), and a page that sent back what it was shown stored `***` as the camera's password
+        # — the camera stopped, and nothing said why. What the mask stands for is not known here: refused, in words —
+        # `***` and the masks other pages draw (`is_mask`).
+        masked = [k for k, v in fields.items() if is_secret_field(k) and is_mask(v)]
+        if masked:
+            raise Refused(f"{masked}: a secret was sent as its mask; leave the field out to keep it")
         # A `url` field may not carry a userinfo. `rtsp://root:hunter2@10.0.0.5/…` is how a password
         # reaches a row that is in the SNAPSHOT — out of the cluster, into М12's directory, and onto the
         # screen of every console, past a mask that only looks at `*_secret`. The credential fields are
@@ -1268,6 +1317,10 @@ class SpecController(Controller):
     # same value is no change — the page sends the whole form.
     def update(self, uid, fields: dict) -> dict:
         self.spec.refuse(fields)
+        # A secret sent EMPTY or null on an edit keeps the stored one (the thirteenth round; the product's rule): a page
+        # whose field was typed in and cleared sends `""`, and that wiped the camera's password. Left out, it is kept —
+        # unless the address it is the key to changed (`bound_to`), and then the edit is refused below.
+        fields = {k: v for k, v in fields.items() if not (is_secret_field(k) and (v is None or v == ""))}
         def mutate(it):
             if not it or it.get("deleted") == "true":
                 raise KeyError(uid)
@@ -1278,6 +1331,10 @@ class SpecController(Controller):
             was = dict(r)
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
+            for k, f in self.spec.fields.items():
+                why = unbound_secret(k, f.bound_to, was, r) if f.bound_to and k not in fields else None
+                if why:
+                    raise Refused(why)
             if "labels" in fields and self.spec.constraint == "labels-subset":
                 why = label_refusal(r.get("labels"), was.get("labels") or ())
                 if why:
@@ -2322,12 +2379,16 @@ class SpecController(Controller):
     #   waiting       per label set (a unit's `labels` under `labels-subset`; "" for every unit otherwise): units with no
     #                 placement, and units still on a worker that is leaving (`leaving`: a released slot, a silent
     #                 resource, a drained or decommissioned server, a dead slot whose fate is `move`). Not a hung
-    #                 worker's, not a slot's before its fate says move — those are waited for, not short
-    #   free          the room (`capacity − load`) of the workers in the pool whose labels cover the set
-    #   units_short   waiting − free, at least 0. A set no live worker covers has no free room: short by itself
-    #   needed        ceil(units_short / per), at most the servers a spare of the set could carry units on, less the
-    #                 offers of the set a spare took and whose worker has not been heard yet — for `OFFER_GRACE` (90 s)
-    #                 from the take it is a worker on its way
+    #                 worker's, not a slot's before its fate says move — those are waited for, not short. In PIECES:
+    #                 a unit alone is a piece of one; the waiting units of one `group_by` together are one piece, under
+    #                 the labels of all of them (the review's thirteenth pass, major 16)
+    #   free          the room (`capacity − load`) of each worker in the pool whose labels cover the set
+    #   units_short   what of the waiting does not fit that room, a piece whole onto one worker or not at all (`_pack`).
+    #                 A set no live worker covers has no free room: short by itself
+    #   needed        the workers of `per` places it takes to carry the short pieces whole (`_bins`), at most the
+    #                 servers a spare of the set could carry units on, less the offers of the set a spare took and whose
+    #                 worker has not been heard yet — for `OFFER_GRACE` (90 s) from the take, as this controller saw it,
+    #                 it is a worker on its way. A piece larger than `per` no spare takes: withheld, the reason said
     #
     # …AND ONLY WHAT A SPARE COULD TAKE (the twelfth round's «Вопросы», found rebuilding three-cameras by runs). Three
     # things the count did not ask:
