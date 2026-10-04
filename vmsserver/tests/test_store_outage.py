@@ -101,7 +101,7 @@ def test_only_a_slot_row_naming_another_holder_fences_and_a_fence_is_not_for_eve
     its unit takes its own name back only (`test_names.py`)."""
     box, ctl, store, act, a = _worker(1)
     a.given = None                                                    # not named by its unit: any free slot will do
-    box.wall.advance(46)                                              # a long pause: the slot lapsed
+    box.wall.advance(91)                                              # a long pause: the slot lapsed, the margin out
     b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     assert b.name == "w-1"
     assert a.lease_pass() == ["1"] and not a.recording_allowed and "slot w-1" in a.fenced_reason

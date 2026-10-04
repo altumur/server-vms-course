@@ -169,15 +169,23 @@ def test_the_zombie_on_one_box():
 def test_a_replacement_without_a_name_inherits_the_lapsed_slot():
     """Nomad started `count = 2` workers and nobody told them their names.
     One dies; its replacement claims whatever is free — the lapsed slot first —
-    and records the dead one's cameras from the assignment, asking nobody."""
+    and records the dead one's cameras from the assignment, asking nobody. Not
+    within the margin past the slot's end (`SLOT_LOST_AFTER`): the controller
+    would not move those cameras yet, and the name goes with them (the review's
+    twelfth pass, blocker 2) — a process started then makes a slot of its own."""
     box, ctl = _box_with_cameras(4)
     a = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     assert (a.name, b.name) == ("w-1", "w-2")
     ctl.assign("w-1", ["1", "2"]); ctl.assign("w-2", ["3", "4"])
     a.reconcile_once(); b.reconcile_once()
-    box.wall.advance(46)                                      # A is dead: its slot lapsed, its cameras are listed on w-1
+    box.wall.advance(46)                                      # A is silent: its slot lapsed, its cameras are listed on w-1
     b.lease_pass()                                            # B is alive and renews
+    early = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+    assert early.name == "w-3"                                # within the margin what A started may still write: not w-1
+    early.release_slot()
+    box.wall.advance(45)                                      # the slot's 45 s and the margin's 45 past them: A is dead
+    b.lease_pass()
     act = FakeActuator()
     c = VmsWorker(None, box.vars, box.objects, act, clock=box.clock, wall=box.wall)     # the replacement alloc
     assert c.name == "w-1"                                    # not w-3: the lapsed slot, and with it the assignment

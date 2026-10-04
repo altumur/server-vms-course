@@ -529,3 +529,113 @@ def test_moves_for_reach_are_counted_since_the_store_was_new_and_said_in_the_log
             assert "vms_units_moved_for_reach_total 12" in r.read().decode()
     finally:
         srv.shutdown()
+
+
+# -- the twelfth pass: a channel group moves whole, everywhere ------------------------------------------------------
+
+NVR = "driverpack://acme/10.0.0.50/ch/"
+
+
+def _drained(labels, extra):
+    """An NVR's channels (`labels` each) placed on w-1 at srv-a; the workers `extra` = [(server, labels, capacity)]
+    arrive; srv-a is drained."""
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a")
+    ids = [ctl.create_camera({"source": f"{NVR}{c}", "labels": l})["id"] for c, l in enumerate(labels, 1)]
+    ctl.pass_once()
+    assert {ctl.where(i) for i in ids} == {"w-1"}
+    for k, (srv, lab, cap) in enumerate(extra, 2):
+        _beat(box, f"w-{k}", srv, lab, capacity=cap)
+    ctl.drain("srv-a")
+    return box, ctl, ids
+
+
+def test_a_leaving_worker_hands_a_channel_group_on_whole_or_keeps_it_whole_and_says_so():
+    """The review's twelfth pass, blocker 7 (`g1_failover_split`, `g3_released`): `redistribute` — drain, a released
+    slot, a decommission, a dead one — moved the first channel where IT fitted, pinned the next to that worker, and left
+    what did not fit or reach there on the leaving worker: channel 1 on w-3 and channel 2 on the drained w-1 (A); two of
+    four on w-2, two left behind (B); every counter 0. Now the group goes to a worker that takes every channel and has
+    room for all — or stays whole, counted (`units_left_on_leaving`, on `/metrics`) and said once."""
+    box, ctl, ids = _drained(["", "vlan:a"], [("srv-b", "vlan:a", 5), ("srv-c", "", 50)])
+    rep = ctl.pass_once()
+    assert {ctl.where(i) for i in ids} == {"w-2"} and rep["units_left_on_leaving"] == 0, rep    # A: together, on srv-b
+
+    box, ctl, ids = _drained(["vlan:a"] * 4, [("srv-b", "vlan:a", 2), ("srv-c", "vlan:a", 2)])
+    for _ in range(2):
+        rep = ctl.pass_once()
+        assert {ctl.where(i) for i in ids} == {"w-1"} and rep["units_left_on_leaving"] == 4, rep   # B: nobody takes four
+    con_ctl, rec, m, srv, base = _console(box)
+    try:
+        import urllib.request
+        with urllib.request.urlopen(base + "/metrics") as r:
+            assert "vms_units_left_on_leaving 4\n" in r.read().decode()
+    finally:
+        srv.shutdown()
+    _beat(box, "w-4", "srv-d", "vlan:a", capacity=10)                       # one that takes them all arrives
+    rep = ctl.pass_once()
+    assert {ctl.where(i) for i in ids} == {"w-4"} and rep["units_left_on_leaving"] == 0, rep
+
+
+def test_a_new_group_is_placed_where_every_channel_may_go():
+    """Major 6 (`g1_failover_split` D): the first channel's own labels chose the worker and the others were pinned to it —
+    channel 1 (no label) on srv-a, channel 2 (`vlan:a`, which srv-a lacks) never placed, "its device is held on w-1". Now
+    the first placement looks at every waiting channel of the group: both go to srv-b, which takes both."""
+    box = Box()
+    ctl = _site(box, srv_a="", srv_b="vlan:a")
+    _beat(box, "w-2", "srv-b", "vlan:a", capacity=10)
+    ids = [ctl.create_camera({"source": f"{NVR}{c}", "labels": l})["id"] for c, l in ((1, ""), (2, "vlan:a"))]
+    rep = ctl.pass_once()
+    assert {ctl.where(i) for i in ids} == {"w-2"} and rep["unplaced"] == 0, rep
+
+
+def test_the_reach_budget_is_a_setting_and_a_group_left_for_it_is_an_alarm():
+    """Major 7 (the owner's decision of 4 Oct): a group bigger than `REACH_BUDGET` never moved, and the log said to raise
+    a constant or move it by hand, with no door to. Now `REACH_BUDGET` in the controller's environment is the budget; a
+    group left for it is an alarm (`units.over_budget`, once an episode); a word in it is the default, said."""
+    import os
+    from w2cplatform.events import ALARM
+    from w2cplatform.spec import reach_budget
+
+    class Said:
+        def __init__(self):
+            self.lines = []
+
+        def say(self, kind, cls="observation", **f):
+            self.lines.append((kind, cls))
+    assert reach_budget({}) == REACH_BUDGET and reach_budget({"REACH_BUDGET": "40"}) == 40
+    assert reach_budget({"REACH_BUDGET": "lots"}) == REACH_BUDGET and reach_budget({"REACH_BUDGET": "0"}) == REACH_BUDGET
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a")
+    ctl.journal = said = Said()
+    ctl.set_server_labels("srv-b", [])
+    big = [ctl.create_camera({"source": f"driverpack://acme/10.0.0.50/ch/{c}", "labels": "vlan:a"})["id"] for c in range(1, 13)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    ctl.set_server_labels("srv-a", [])
+    for _ in range(2):
+        rep = ctl.pass_once()
+        assert {ctl.where(c) for c in big} == {"w-1"} and rep["reach_waiting"] == len(big), rep
+    assert said.lines.count(("units.over_budget", ALARM)) == 1               # once an episode
+    os.environ["REACH_BUDGET"] = "16"
+    try:
+        raised = VmsController(box.vars, box.objects, capacity=50, wall=box.wall)
+    finally:
+        del os.environ["REACH_BUDGET"]
+    rep = raised.pass_once()
+    assert {raised.where(c) for c in big} == {"w-2"} and rep["reach_budget"] == 16, rep
+
+
+def test_units_waiting_for_reach_are_counted_over_the_whole_pass():
+    """The review's twelfth pass, minor: the walk stopped at the budget and what it had not reached was not counted —
+    25 cameras off their reach, ten moved, and `units_waiting_for_reach` 0. Now the walk counts on past the budget."""
+    box = Box()
+    ctl = _site(box, srv_a="vlan:a", srv_b="vlan:a")
+    ctl.set_server_labels("srv-b", [])
+    cams = [_camera(ctl, n) for n in range(1, 26)]
+    ctl.ensure_placed()
+    ctl.clear_server_labels("srv-b")
+    ctl.set_server_labels("srv-a", [])
+    rep = ctl.pass_once()
+    assert (rep["reach_moves"], rep["reach_waiting"]) == (REACH_BUDGET, 25 - REACH_BUDGET), rep
+    assert [(r["reach_moves"], r["reach_waiting"]) for r in (ctl.pass_once(), ctl.pass_once())] == [(10, 5), (5, 0)]
+    assert all(ctl.where(c) == "w-2" for c in cams)

@@ -3,7 +3,7 @@
 Three passes of the review found the same thing in a new place each time: a row read bare — a word where a number
 goes, after a hand edit or half a write — raised out of a loop over MANY rows, and one unit's trouble stopped
 everybody's pass. The epoch rows went first, then the slot rows. This module is the rest of what the platform's
-controller and worker read, one test per kind of row: the assignment, the slot under `retire`, the placement, the
+controller and worker read, one test per kind of row: the assignment, the slot `free_slot` releases, the placement, the
 controller's own report, the numbers inside a heartbeat, the published snapshot, the retention row — and a unit's
 own row as each worker reads it. The rule is the same everywhere: what the row still says is used, the row is
 counted and logged once, the pass goes on, and nothing is read as "no" that only failed to parse.
@@ -95,8 +95,9 @@ def test_a_lease_whose_epoch_row_stops_parsing_is_lost_alone():
 
 def test_freeing_a_slot_whose_row_is_garbled_writes_it_released():
     """`free_slot` is how the controller lets go of a name nothing runs under (`Controller.slot_fate`) — and a row that
-    does not parse is exactly the slot somebody wants to be rid of. It raised (`ValueError`, when it was the operator's
-    `retire`). The row is written over, whole: released, held by nobody; freeing it again does nothing."""
+    does not parse is exactly the slot somebody wants to be rid of. It raised (`ValueError`; then under the operator's worker
+    `retire`, a door since removed). The row is written over, whole: released, held by nobody; freeing it again does
+    nothing."""
     box, ctl = _placed(2)
     box.vars.put("vms/slots/w-9", {"holder": "somebody", "until": "soon", "released": "false", "gen": "1"})
     assert ctl.free_slot("w-9")
@@ -621,3 +622,55 @@ def test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_word
         assert status == 201 and time.monotonic() - t < 5.0
     finally:
         srv.shutdown()
+
+
+# -- the twelfth pass: rows the store itself cannot read (a torn FILE, `Garbled` from the store) ------------------------
+
+def _tear(box, key):
+    f = box.vars._file(key)
+    text = open(f).read()
+    open(f, "w").write(text[: len(text) // 2])
+
+
+def test_one_torn_camera_row_does_not_freeze_its_holders_reconcile():
+    """The review's twelfth pass, major 18 (`probe_worker_torn_camera`): the holder read each camera row bare, outside the
+    guard of the parse — one torn file was `Garbled` out of `refresh`, every pass: a deleted camera 4 was recorded on,
+    a new camera 5 never started, `reconcile` raised 4 of 4. Now the read is inside the guard: that camera is that
+    camera's trouble (`row_garbled`), what it ran under the row read last keeps running, the others follow."""
+    from vms.controller import VmsController
+    from vms.config import SPEC
+    try:
+        box, ctl = _box_with_cameras(3)
+        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+        ctl.assign("w-1", ["1", "2", "3"])
+        w.reconcile_once()
+        assert w.actuator.running == {1, 2, 3}
+        _tear(box, "vms/cameras/2")
+        con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        con.delete("3")
+        con.create_camera({"source": "driverpack://file/4.mp4"})
+        ctl.assign("w-1", ["1", "2", "4"])
+        w.reconcile_once()
+        assert w.actuator.running == {1, 2, 4} and "does not parse" in w.row_errors["2"], w.row_errors
+    finally:
+        _forget_garbled()
+
+
+def test_one_torn_slot_row_does_not_stop_a_process_of_the_subsystem_from_starting():
+    """Major 19 (`probe_claim_torn_slot`): `_claim_slot` read every slot row bare — one torn `vms/slots/w-1` file and no
+    process of the subsystem started, by name or without, 6 of 6. Now each row goes through `stored`: a process named
+    by its unit takes its name, a nameless one makes its own, and the torn row waits as a garbled row does — and the
+    holder of a torn row renews it whole."""
+    try:
+        box, ctl = _box_with_cameras(2)
+        owner = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+        VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+        _tear(box, "vms/slots/w-1")
+        again = VmsWorker("w-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+        assert again.name == "w-2"
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
+        assert spare.name == "w-3"
+        assert owner.renew_slot()                                             # its own torn row: written whole again
+        assert Slot.from_items("w-1", box.vars.get("vms/slots/w-1")[0]).holder == owner.instance
+    finally:
+        _forget_garbled()

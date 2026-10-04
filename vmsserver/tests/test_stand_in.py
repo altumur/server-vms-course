@@ -14,7 +14,7 @@ import threading
 import time
 
 from vms.worker import FakeActuator, VmsWorker
-from w2cplatform.contract import Heartbeat, Slot, Subsystem, Worker
+from w2cplatform.contract import SLOT_LOST_AFTER, Heartbeat, Slot, Subsystem, Worker
 from w2cplatform.epoch import Lease, next_epoch
 from tests.conftest import Box
 
@@ -89,6 +89,7 @@ def test_a_step_stuck_past_STAND_IN_FOR_lets_its_units_go():
         assert w.stand_in_renewals == held, "the stand-in went on renewing past STAND_IN_FOR"
         assert not w.may_write("1"), "a step hung past STAND_IN_FOR still holds its camera"
         assert _slot_row(box, w).lapsed(box.wall()), "a step hung past STAND_IN_FOR still holds its slot"
+        _tick(box, SLOT_LOST_AFTER)                                 # …and the margin past the lapse (the twelfth pass)
         spare = _holder(box, name=None, instance="spare:1")         # a nameless process takes a lapsed slot first
         assert spare.name == "w-1"
     assert w.lease_pass() == ["1"]
@@ -553,3 +554,24 @@ def test_every_workers_stand_in_says_its_last_heartbeat_again_for_a_pass_that_ha
         hb = seen.get("hb")
         assert hb is not None and hb.extra.get("stood_in", {}).get("step") == "pass", f"{type(w).__name__}: {hb and hb.extra}"
         assert box.wall() - hb.ts <= w.STAND_IN_HEARTBEAT, type(w).__name__
+
+
+def test_a_step_that_comes_back_after_its_units_went_takes_no_epoch_from_their_new_holder():
+    """The product's cross-check of the review's twelfth pass: a loop stuck in a step past `STAND_IN_FOR` let its units
+    go, and when the step came back it went on with the list it had read before it hung — the next camera started, its
+    epoch taken by CAS over the worker the camera had moved to meanwhile, which then fenced. Now a step the stand-in gave
+    up takes no epoch (`Worker.step_abandoned`); the next lease step and pass look again at what is its own."""
+    box = Box()
+    w = _holder(box)
+    w.take_epoch("1")
+    w.renew_leases()
+    with w.guarded("pass"):
+        while not w.step_abandoned():
+            _tick(box, 5)
+            w.stand_in_once()
+        other = _holder(box, name="w-2", instance="srv-2:1")              # camera 2 moved to w-2 meanwhile
+        theirs = other.take_epoch("2")
+        assert not w._actuate("start", {"id": 2, "source": "driverpack://file/2.mp4"})   # the step goes on with its list…
+        assert "outlived its stand-in" in w.epoch_errors["2"]
+        assert other.may_write("2") and other.epochs["2"] == theirs           # …and w-2 keeps camera 2, unfenced
+    assert not w.step_abandoned()                                             # the next step is a step like any other

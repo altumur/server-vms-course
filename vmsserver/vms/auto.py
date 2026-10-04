@@ -46,7 +46,7 @@ import time
 
 from w2cplatform.doors import numeric
 from w2cplatform.objects import ObjectStore
-from w2cplatform.rows import PARSE_ERRORS
+from w2cplatform.rows import PARSE_ERRORS, Table
 from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Variables
 
@@ -97,13 +97,40 @@ def _dicts(v, what: str) -> list[dict]:
 # `kind` and nothing else, and its name is `<cam>-<kind>` — the trigger `{sub: det, unit: "7"}` this lesson
 # first printed would never have fired, and nothing said so. Any other subsystem's events are not checked,
 # and the scenario is told that rather than passed as if they were.
+#
+# ONE ROW AT A TIME (the review's twelfth pass, major 20; and the product's cross-check: one unreadable row withdrew every
+# scenario). The rows were read bare: one torn camera file raised out of `GET /auto/catalog` (the connection dropped),
+# out of every `POST /auto/scenarios` (500), and out of the evaluator's check of EVERY scenario it holds, each pass.
+# Each row is read through `_row` now: one the store cannot read, or that is not a map, is left out — counted once in
+# `CATALOG` — and named (`unread`): a scenario that names it is not refused for it, it is "not checked" and says so;
+# the catalogue offers the camera with `can: null` and the reason.
+CATALOG = Table("catalog", "left out of the automation catalogue until it reads again", "row")
+
+
 class Catalog:
     def __init__(self, vars_: Variables):
         self.vars = vars_
+        self.unread: dict[str, str] = {}             # key -> why, for the rows the last reads could not read
+
+    def _row(self, key: str) -> dict | None:
+        try:
+            it, _ = self.vars.get(key)
+            if it is not None and not isinstance(it, dict):
+                raise TypeError(f"not a map but {type(it).__name__}")
+        except PARSE_ERRORS as e:                    # `Garbled` from the store is a `ValueError` too
+            CATALOG.garbled(key, e)
+            self.unread[key] = f"its row cannot be read ({type(e).__name__})"
+            return None
+        CATALOG.parsed(key)
+        self.unread.pop(key, None)
+        return it if it and it.get("deleted") != "true" else None
 
     def camera(self, unit) -> dict | None:
-        it, _ = self.vars.get(VMS_SPEC.sub.config(VMS_SPEC.rows, str(unit)))
-        return it if it and it.get("deleted") != "true" else None
+        return self._row(VMS_SPEC.sub.config(VMS_SPEC.rows, str(unit)))
+
+    # Whether this camera's row is there and cannot be read — after `camera` said None.
+    def camera_unread(self, unit) -> str:
+        return self.unread.get(VMS_SPEC.sub.config(VMS_SPEC.rows, str(unit)), "")
 
     def device(self, cam: dict) -> dict | None:
         if not cam.get("source"):
@@ -111,30 +138,36 @@ class Catalog:
         it, _ = self.vars.get(VMS_SPEC.sub.config(DEVICES, device_of(str(cam["source"]))))
         return parse_device_row(it)
 
-    def detectors(self) -> dict[str, dict]:
+    # …and asked from a check: a device row or a source that does not read is that camera's "not said yet".
+    def _device_or_none(self, cam: dict) -> dict | None:
+        try:
+            return self.device(cam)
+        except PARSE_ERRORS:
+            return None
+
+    def _rows(self, prefix: str) -> dict[str, dict]:
         out = {}
-        for key in self.vars.list(DET_SPEC.sub.config(DET_SPEC.rows, "")):
-            it, _ = self.vars.get(key)
-            if it and it.get("deleted") != "true":
+        for key in self.vars.list(prefix):
+            it = self._row(key)
+            if it is not None:
                 out[key.rsplit("/", 1)[1]] = it
         return out
+
+    def detectors(self) -> dict[str, dict]:
+        return self._rows(DET_SPEC.sub.config(DET_SPEC.rows, ""))
 
     def recordings_of(self, cam: str, rec: str = "") -> list[str]:
         from .config import REC_SPEC
-        out = []
-        for key in self.vars.list(REC_SPEC.sub.config(REC_SPEC.rows, "")):
-            it, _ = self.vars.get(key)
-            if it and it.get("deleted") != "true" and str(it.get("cam", key.rsplit("/", 1)[1])) == cam:
-                out.append(key.rsplit("/", 1)[1])
+        out = [k for k, it in self._rows(REC_SPEC.sub.config(REC_SPEC.rows, "")).items() if str(it.get("cam", k)) == cam]
         return [r for r in out if not rec or r == rec]
 
     def cameras(self) -> dict[str, dict]:
-        out = {}
-        for key in self.vars.list(VMS_SPEC.sub.config(VMS_SPEC.rows, "")):
-            it, _ = self.vars.get(key)
-            if it and it.get("deleted") != "true":
-                out[key.rsplit("/", 1)[1]] = it
-        return out
+        return self._rows(VMS_SPEC.sub.config(VMS_SPEC.rows, ""))
+
+    # The cameras whose rows are there and cannot be read, by id — what `cameras()` left out.
+    def cameras_unread(self) -> dict[str, str]:
+        prefix = VMS_SPEC.sub.config(VMS_SPEC.rows, "")
+        return {k[len(prefix):]: why for k, why in self.unread.items() if k.startswith(prefix)}
 
     # -- one trigger ------------------------------------------------------------------------------
     def _trigger(self, t: dict, misfit: list, unsure: list) -> None:
@@ -142,11 +175,17 @@ class Catalog:
         if sub == VMS_SPEC.name:
             cams = {unit: self.camera(unit)} if unit else self.cameras()
             if unit and cams[unit] is None:
-                misfit.append(f"there is no camera {unit}")
+                if self.camera_unread(unit):
+                    unsure.append(f"camera {unit}: {self.camera_unread(unit)} — {kind!r} is not checked")
+                else:
+                    misfit.append(f"there is no camera {unit}")
                 return
             if kind in HOLDER_EVENTS:
                 return                                   # every held unit raises these: nothing to ask a device
-            descs = {u: self.device(c) for u, c in cams.items()}
+            if not unit and self.cameras_unread():
+                unsure.append(f"camera(s) {', '.join(sorted(self.cameras_unread()))} cannot be read: what they raise "
+                              f"is not checked")
+            descs = {u: self._device_or_none(c) for u, c in cams.items()}
             said = {u: d for u, d in descs.items() if d is not None}
             if any(kind in d["events"] for d in said.values()):
                 if kind == "io.input" and unit and "port" in (t.get("match") or {}):
@@ -182,12 +221,18 @@ class Catalog:
         sub, name = str(a.get("sub", "")), str(a.get("action", ""))
         if (sub, name) == ("rec", "record"):
             if self.camera(a.get("cam")) is None:
-                misfit.append(f"there is no camera {a.get('cam')} to record")
+                if self.camera_unread(a.get("cam")):
+                    unsure.append(f"camera {a.get('cam')}: {self.camera_unread(a.get('cam'))} — rec.record is not checked")
+                else:
+                    misfit.append(f"there is no camera {a.get('cam')} to record")
             return
         if sub == DET_SPEC.name:
             cam = str(a.get("cam", ""))
             if self.camera(cam) is None:
-                misfit.append(f"there is no camera {cam} to {name}")
+                if self.camera_unread(cam):
+                    unsure.append(f"camera {cam}: {self.camera_unread(cam)} — det.{name} is not checked")
+                else:
+                    misfit.append(f"there is no camera {cam} to {name}")
             elif name == "scan" and not self.recordings_of(cam, str(a.get("rec") or "")):
                 misfit.append(f"nothing records camera {cam}: a scan reads the archive" if not a.get("rec") else
                               f"there is no recording {a.get('rec')} of camera {cam}")
@@ -197,9 +242,12 @@ class Catalog:
         unit = str(a.get("unit", ""))
         cam = self.camera(unit)
         if cam is None:
-            misfit.append(f"there is no camera {unit}")
+            if self.camera_unread(unit):
+                unsure.append(f"camera {unit}: {self.camera_unread(unit)} — vms.{name} is not checked")
+            else:
+                misfit.append(f"there is no camera {unit}")
             return
-        d = self.device(cam)
+        d = self._device_or_none(cam)
         if d is None:
             unsure.append(f"camera {unit} has not said what it can do — its device has not been held yet; "
                           f"vms.{name} is not checked")
@@ -242,6 +290,8 @@ class Catalog:
                 cams[u] = {"name": str(c.get("name", u)), "can": self.device(c)}
             except PARSE_ERRORS as e:
                 cams[u] = {"name": str(c.get("name", u)), "can": None, "unread": f"its device cannot be read ({type(e).__name__})"}
+        for u, why in self.cameras_unread().items():  # a row that does not read: offered, with why (major 20)
+            cams[u] = {"name": u, "can": None, "unread": why}
         dets = {n: {"cam": str(d.get("cam", "")), "raises": [str(d.get("kind", ""))]}
                 for n, d in sorted(self.detectors().items())}
         return {"actions": {f"{s}.{n}": {"need": list(v["need"]), "may": list(v["may"])} for (s, n), v in sorted(ACTIONS.items())},

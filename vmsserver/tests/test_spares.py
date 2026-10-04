@@ -48,6 +48,12 @@ def _cameras(box, n, labels=None):
         con.create_camera({"source": f"driverpack://file/{i}.mp4", **({"labels": labels} if labels else {})})
 
 
+def _resource(box, server: str) -> None:
+    """A server's resource heartbeat: the server is there, and a spare may run on it."""
+    box.objects.put(f"platform/resources/{server}/heartbeat",
+                    json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}", "units": {}}).encode())
+
+
 def _offers(box) -> dict:
     out = {}
     for p in box.vars.list("vms/slots/"):
@@ -151,8 +157,10 @@ def test_an_ordinary_process_never_takes_an_offer():
 def test_offers_are_per_label_set_and_a_spare_takes_only_its_own():
     """Cameras on `vlan:dmz` and no worker reaching it: a shortage of that set by itself, whatever room the others
     have; the empty set needs nobody. A spare for the empty set does not take the `vlan:dmz` offer; one for
-    `vlan:dmz` does, and the cameras go to it — its server reaches the VLAN."""
+    `vlan:dmz` does, and the cameras go to it — its server reaches the VLAN. (srv-c is there before it, its labels
+    said by nobody yet: a server a spare of the set may run on — `test_no_offer_where_no_server_could_carry_a_spare`.)"""
     box = Box()
+    _resource(box, "srv-c")
     _worker(box, capacity=4)
     _cameras(box, 2)
     _cameras(box, 2, labels=["vlan:dmz"])
@@ -269,3 +277,70 @@ def test_the_name_comes_from_the_unit_and_a_spare_has_none():
     spare = _worker(box, server="srv-b", env={"WORKER_NAME": "w-srv-b-1", "SPARE_FOR": ""})
     assert spare.name is None and box.vars.get("vms/slots/w-srv-b-1")[0] is None
     assert math.ceil(3 / 2) == 2
+
+
+# -- the twelfth round's «Вопросы»: offers only where a spare could carry units ----------------------------------------
+
+class _Said:
+    def __init__(self):
+        self.lines = []
+
+    def say(self, kind, cls="observation", **fields):
+        self.lines.append((kind, cls))
+
+
+def test_no_offer_where_no_server_could_carry_a_spare():
+    """«Вопросы» 4 (found rebuilding three-cameras, by runs): offers were written for a label set no server reaches — they
+    hung, never taken, and the number said a worker was needed for ever. Now, where every server known says what it
+    reaches and none reaches the set, no offer is written: the shortage stays counted, `spares_withheld` says why (on
+    `/metrics` too), and the alarm `spares.no_server` goes once. A server that comes to reach it gets the offer."""
+    from w2cplatform.events import ALARM
+    box = Box()
+    _resource(box, "srv-a")
+    _worker(box, capacity=4)
+    _cameras(box, 2, labels=["vlan:dmz"])
+    ctl = _ctl(box)
+    ctl.journal = said = _Said()
+    _con(box).set_server_labels("srv-a", ["vlan:lan"])
+    for _ in range(2):
+        rep = ctl.pass_once()
+        assert rep["units_short"]["vlan:dmz"] == 2 and rep["workers_needed"]["vlan:dmz"] == 0, rep
+        assert "reaches vlan:dmz" in rep["spares_withheld"]["vlan:dmz"] and _offers(box) == {}, rep
+    assert said.lines.count(("spares.no_server", ALARM)) == 1
+    _resource(box, "srv-d")
+    _con(box).set_server_labels("srv-d", ["vlan:dmz"])
+    rep = ctl.pass_once()
+    assert rep["workers_needed"]["vlan:dmz"] == 1 and "vlan:dmz" not in rep["spares_withheld"], rep
+    assert [o["offer"] for o in _offers(box).values()] == ["vlan:dmz"]
+
+
+def test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle():
+    """«Вопросы» 2: under `servers: distinct` a spare started on a server that already has its worker idles by policy;
+    the camera stayed unplaced, `workers_needed` stayed 1, and the next pass offered again — spares raised on every
+    server, each idle. Now only a server with no worker of the subsystem counts as room for a spare: with none, nothing
+    is offered and the reason is said; a third server arriving gets exactly one offer."""
+    box = Box()
+    for server in ("srv-a", "srv-b"):
+        _resource(box, server)
+        _worker(box, server=server, capacity=2)
+    _cameras(box, 5)
+    ctl = _ctl(box)
+    _con(box).set_policy({"servers": "distinct"})
+    assert ctl.policy()["servers"] == "distinct"
+    rep = ctl.pass_once()
+    assert rep["units_short"] == {"": 1} and rep["workers_needed"] == {"": 0} and _offers(box) == {}, rep
+    assert "distinct" in rep["spares_withheld"][""], rep
+    _resource(box, "srv-c")
+    rep = ctl.pass_once()
+    assert rep["workers_needed"] == {"": 1} and len(_offers(box)) == 1 and rep["spares_withheld"] == {}, rep
+
+
+def test_the_shortage_is_counted_by_what_the_workers_announce_not_the_controllers_fallback():
+    """«Вопросы» 3: workers were counted by the controller's own `CAPACITY` (2 here) while every worker of the role says
+    4 — two offers for four cameras where one spare carries them. Now the count is by the smallest capacity the live
+    workers of the set announce (a spare is started like them, and says the same); the fallback only with none live."""
+    box = Box()
+    _worker(box, capacity=4)
+    _cameras(box, 8)
+    rep = _ctl(box, capacity=2).pass_once()
+    assert rep["units_short"] == {"": 4} and rep["workers_needed"] == {"": 1}, rep

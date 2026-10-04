@@ -1231,3 +1231,44 @@ def test_a_resource_says_busy_rather_than_queueing_without_end():
         assert urllib.request.urlopen(res.url + "/events?from=0&to=1").status == 200   # a slot free: answered
     finally:
         rsrv.shutdown(); rsrv.server_close()
+
+
+def test_the_timeline_fences_a_subsystem_its_scan_did_not_list_and_says_one_it_may_not_read():
+    """The twelfth round's «Вопросы» 6 (found by runs): the whole timeline is fenced by a scan of the empty prefix, and a
+    store that answers only what the console may read (М11's rights) leaves out `live/`, `det/` — their zombies' lines
+    stood "current". Now the units of a subsystem the scan did not see are read by name for the answer; one whose rows
+    the console may not read at all is said in the reply (`epochs_unread`), its lines as their resource marked them."""
+    from vms.archive import event_log
+    from w2cplatform.events import EventLog
+    box = Box(); t = box.wall() - 60
+    event_log(box.archive, 7, 1).append(t + 1, "motion"); box.vars.put("vms/epoch/7", {"epoch": "1"})
+    EventLog(box.archive, "det", "7-motion", 1, 600).append(t + 2, "motion")
+    box.vars.put("det/epoch/7-motion", {"epoch": "2"})                        # det's holder changed: epoch 1 is a zombie's
+    con = _console_over(box, EventIndex(box.archive, "srv-1", wall=box.wall))
+
+    class Rights:
+        """The console's store under rights that leave `det/` out of a listing — and, `deny`, out of reads too."""
+        def __init__(self, inner, deny=False): self.inner, self.deny = inner, deny
+        def list(self, prefix): return [k for k in self.inner.list(prefix) if not k.startswith("det/")]
+        def get(self, path):
+            if self.deny and path.startswith("det/"):
+                raise LookupError("refused by the store's rights")
+            return self.inner.get(path)
+        def __getattr__(self, name): return getattr(self.inner, name)
+
+    class H:
+        headers: dict = {}
+        def _send(self, status, body, raw=False): self.reply = (status, body)
+
+    def ask():
+        h = H(); con.dispatch(h, "GET", "/events", {"from": str(t), "to": str(t + 60)}); return h.reply
+
+    lines = lambda rep: {(e["subsystem"], e["unit"]): e["fenced"] for e in rep[1]["events"]}
+    real = con.ctl.vars
+    con.ctl.vars = Rights(real)
+    rep = ask()
+    assert lines(rep) == {("vms", "7"): False, ("det", "7-motion"): True} and "epochs_unread" not in rep[1], rep
+    con.ctl.vars = Rights(real, deny=True)
+    con._epochs = (-1e18, {})
+    rep = ask()
+    assert lines(rep)[("det", "7-motion")] is False and rep[1]["epochs_unread"] == ["det"], rep
