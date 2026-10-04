@@ -359,13 +359,14 @@ def host_of(instance: str) -> str | None:
 ```python
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
-# process that mounts the volume: М10A Lesson 18).
+# process that mounts the volume: М10A Lesson 18). Its refusals say the url as a page does (`hide_in_url`): a row stored
+# before `volumes.refuse` took a key with `/` in it went into `volume_error`, the heartbeat and the log (the twelfth review).
 def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
 ```
 
 Идентификатор ключа бакета (`access_key`) — тоже поле строки, а не часть адреса. Он не секрет и показывается, как логин камеры; сам ключ остаётся в `access_secret` ([урок 27](27-volumes.md), `test_a_bucket_names_its_key_in_a_field_and_its_secret_sealed_never_in_the_address`).
 
-Всё, что том показывает, показывает его **имя**. `volumes.refuse` отказывает адресу с `@` в части authority: это единственное место, где систему ещё можно об этом предупредить (`test_the_key_never_goes_into_the_address`).
+Всё, что том показывает, показывает его **имя**. `volumes.refuse` отказывает адресу, который несёт ключ, — `@` где угодно после `://`, порт, который не число, пара с именем учётных данных в запросе или в пути (`secrets.address_refusal`; двенадцатое ревью, блокер: раньше `@` искали только до первого `/`, и секрет AWS с `/` проходил). Это единственное место, где систему ещё можно об этом предупредить; а строка, записанная до правила, видна регистратору и странице только скрытой (`hide_in_url`: поле `archive` в heartbeat'е, строка «writing into» в логе, слова ошибок `volume_params`) — [урок 27](27-volumes.md), `test_the_key_never_goes_into_the_address`, `test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_row_is_said_nowhere`.
 
 ### Квота — размер кольца
 

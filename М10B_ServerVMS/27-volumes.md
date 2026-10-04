@@ -252,40 +252,48 @@ def servable(vols: list[Volume], server: str) -> list[str]:
 ```python
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
-# process that mounts the volume: М10A Lesson 18).
+# process that mounts the volume: М10A Lesson 18). Its refusals say the url as a page does (`hide_in_url`): a row stored
+# before `volumes.refuse` took a key with `/` in it went into `volume_error`, the heartbeat and the log (the twelfth review).
 def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "://" not in url:
         return {"schema": "file", "path": url}           # a local volume's row names its directory
-    u = urlsplit(url)
+    said = hide_in_url(url)
+    try:
+        u = urlsplit(url)
+        port = u.port
+    except ValueError:                                   # `urlsplit`'s words quote the port: a key, in an old row
+        raise ValueError(f"{said}: {NOT_AN_ADDRESS}") from None
     if u.scheme == "file":
         return {"schema": "file", "path": unquote(u.path)}
     if u.scheme.startswith("s3"):
-        ...
-        return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(u.port)} if u.port else {}),
+        parts = [p for p in u.path.split("/") if p]
+        if len(parts) < 2:
+            raise ValueError(f"{said}: an s3 volume is s3://<host>/<region>/<bucket>[/<path>]")
+        return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(port)} if port else {}),
                 "region": parts[0], "bucket": parts[1], "path": "/".join(parts[2:]),
                 "access_key": access_key, "secret_key": secret}   # the key's id from the row's `access_key`, never the url
-    raise ValueError(f"{url}: not an archive this course opens (file://, s3://)")
+    raise ValueError(f"{said}: not an archive this course opens (file://, s3://)")
 ```
 
-Три формы адреса: голый путь, `file://` и `s3://<host>/<region>/<bucket>[/<path>]`. Всё остальное — `ValueError`, а `classify` читает его как `wrong`: адрес, который курс не умеет открыть, сам не починится.
+Три формы адреса: голый путь, `file://` и `s3://<host>/<region>/<bucket>[/<path>]`. Всё остальное — `ValueError`, а `classify` читает его как `wrong`: адрес, который курс не умеет открыть, сам не починится. **Слова этих отказов говорят адрес так, как его говорит страница** (`hide_in_url`; двенадцатое ревью, major, воспроизведено запуском): строка тома, записанная до правила ниже, — `s3://AKIA:…/x@h/…` — давала `Port could not be cast to integer value as '…'` с секретом внутри, и это шло в `volume_error`, в heartbeat регистратора и в его лог. Теперь там `s3://AKIA:***/…@h/…` и слова `NOT_AN_ADDRESS`, без значения.
 
-**Ключ никогда не идёт в адрес.** `url` печатается на странице, уходит в heartbeat регистратора полем `archive` и лежит в строке. Ключ внутри него оказался бы в трёх публичных местах сразу, и правило суффикса `_secret` не помогло бы: поле, которое оно охраняет, — не то, что несёт ключ. Поэтому `refuse` отказывает адресу с `@` в части хоста:
+**Ключ никогда не идёт в адрес.** `url` печатается на странице, уходит в heartbeat регистратора полем `archive` и лежит в строке. Ключ внутри него оказался бы в трёх публичных местах сразу, и правило суффикса `_secret` не помогло бы: поле, которое оно охраняет, — не то, что несёт ключ. Поэтому `refuse` отказывает адресу, который несёт ключ, — по общему правилу адресов `secrets.address_refusal`:
 
 ```python
-    if "@" in url.split("//", 1)[-1].split("/", 1)[0]:
-        raise Refused("a volume's url names the archive, never the key to it: the credentials go in "
-                      "`access_secret` — this string is printed on the page and published in heartbeats")
-    # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): `…/bucket?X-Amz-Credential=…` or
-    # `?secret=…` was taken, and printed and published the same. The rule and its list: `secrets.is_credential_param`.
-    from w2cplatform.secrets import credential_params
-    creds = credential_params(url)
-    if creds:
-        raise Refused(f"a volume's url names the archive, never the key to it ({', '.join(dict.fromkeys(creds))}): the "
-                      f"credentials go in `access_key` / `access_secret` — this string is printed on the page and "
-                      f"published in heartbeats")
+    from w2cplatform.secrets import address_refusal
+    why = address_refusal(url)
+    if why:
+        raise Refused(f"a volume's url names the archive, never the key to it ({why}): the credentials go in "
+                      f"`access_key` / `access_secret` — this string is printed on the page and published in heartbeats")
 ```
 
-**И не в параметрах адреса** (одиннадцатое ревью, сосед пароля в `source` камеры). Проверка смотрела только на `@`, и `https://s3.example.com/vms?X-Amz-Credential=…` или `s3://…/vms?secret=…` проходили — и печатались на странице и в heartbeat'е так же. Теперь адрес тома, у которого есть параметр с именем учётных данных, отказывается по тому же правилу, что адрес камеры (`secrets.is_credential_param`, список — М10A, урок 9), и отказ называет параметр, не значение; параметр без секрета (`?region=eu-1`) проходит. Тест: `test_volumes.py::test_the_key_never_goes_into_the_address`.
+**Каким бы ни был секрет** (двенадцатое ревью, блокер, воспроизведено запуском). Раньше `@` искали только до первого `/`, а секретные ключи AWS часто содержат `/`: `s3://AKIA:…/x@h/bucket` принимался и был виден на `/volumes`; сверка продукта нашла у себя то же — 7 написаний из 7. Теперь адрес тома (строка с `://`) отказывается, если в нём есть:
+
+- `@` где угодно после `://` — логин, даже когда `/`, `?` или `#` в секрете увели `@` в путь, запрос или фрагмент;
+- хост или порт, которые `urlsplit` не может прочесть — `KEY:SECRET` вовсе без хоста, или секрет с `?`/`#`, который обрезал хост;
+- пара с именем учётных данных в запросе или в пути (`?X-Amz-Credential=…`, `?secret=…`, `/access_key=…_secret_key=…`; правило и список — М10A, урок 9). Это **и не в параметрах адреса** одиннадцатого ревью: проверка смотрела только на `@`, и `https://s3.example.com/vms?X-Amz-Credential=…` проходил.
+
+Отказ называет, что не так, и никогда не повторяет адрес; параметр без секрета (`?region=eu-1`) проходит, а у локального каталога нет `://`, и его имя — просто имя. **Строка тома, записанная до правила, не видна нигде**: `served` (`GET /volumes`) отдаёт `url` через `hide_in_url`, регистратор — поле `archive` в heartbeat'е и строку «writing into» в логе, карта — свои строки лога и `card.error`. Тесты: `test_volumes.py::test_the_key_never_goes_into_the_address` и `test_volumes.py::test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_row_is_said_nowhere` — 17 написаний ключа (`/`, `+`, `=`, `?`, `#`, без хоста, секрет с цифр, подписанные и именные формы в запросе и пути): было отказано 12 из 17, старых строк скрыто 0 из 17; теперь 17 из 17 и 17 из 17.
 
 У ключа бакета две части, и строка тома держит их в двух полях. **Какой** это ключ — `access_key`, идентификатор ключа. Он не секрет, поэтому показывается, как логин камеры:
 

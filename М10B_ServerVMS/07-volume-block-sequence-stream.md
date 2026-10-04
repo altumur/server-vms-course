@@ -168,13 +168,15 @@ class Span:
 ```python
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
-# process that mounts the volume: М10A Lesson 18).
-def volume_params(url: str, secret: str = "") -> dict:
+# process that mounts the volume: М10A Lesson 18). Its refusals say the url as a page does (`hide_in_url`): a row stored
+# before `volumes.refuse` took a key with `/` in it went into `volume_error`, the heartbeat and the log (the twelfth review).
+def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "://" not in url:
         return {"schema": "file", "path": url}           # a local volume's row names its directory
+    said = hide_in_url(url)
 ```
 
-Адрес тома печатают на странице, пишут в лог, публикуют в heartbeat. Ключ в адресе оказался бы во всех трёх местах. Поэтому регистратор передаёт демону параметры, а ключ добавляет отдельно: `secret_key` открывает только процесс, который монтирует том. Демон, со своей стороны, узнаёт том по `schema://host/path` и никогда не по учётным данным (урок 6, шаг 12).
+Адрес тома печатают на странице, пишут в лог, публикуют в heartbeat. Ключ в адресе оказался бы во всех трёх местах. Поэтому регистратор передаёт демону параметры, а ключ добавляет отдельно: `secret_key` открывает только процесс, который монтирует том. Идентификатор ключа (`access_key`) — тоже поле строки, а не часть адреса. И даже отказ этой функции говорит адрес так, как его говорит страница (`said`, двенадцатое ревью): строка, записанная до правила `volumes.refuse`, не попадает с ключом ни в `volume_error`, ни в лог. Демон, со своей стороны, узнаёт том по `schema://host/path` и никогда не по учётным данным (урок 6, шаг 12).
 
 `file://` и голый путь — локальный том, `s3://<host>/<region>/<bucket>[/<path>]` — бакет. Всё остальное — `ValueError`, а значит `wrong` (шаг 6). Виды томов и кто какой держит — [урок 27](27-volumes.md).
 
