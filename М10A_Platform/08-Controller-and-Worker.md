@@ -334,12 +334,14 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 
 ```python
     def release_unlisted(self) -> dict:
-        released, hung, moved, unjudged, units = {}, {}, [], {}, 0
+        released, hung, moved, unjudged, units, doubted = {}, {}, [], {}, 0, {}
         for worker, (fate, server, why) in self.fates().items():
             if fate == "hung":
                 hung[worker] = why
             elif fate == "hung_moved":
                 moved.append(worker)
+            elif fate == "unsure_moved":
+                doubted[worker] = why
             elif fate == "release" and self.free_slot(worker):
                 released[worker] = why
                 log.warning("%s: slot %s released: %s", self.sub.name, worker, why)
@@ -348,10 +350,26 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
                 unjudged[worker], units = why, units + n
         self._said_unjudged(unjudged)
         return {"released": released, "hung": hung, "hung_moved": self._said_hung(hung, moved), "unjudged": unjudged,
-                "units_unjudged": units}
+                "units_unjudged": units, "unsure_moved": self._said_unsure_moved(doubted)}
 ```
 
 Раньше ветки `wait`/`unsure` не было. Камеры сервера, о котором ресурс ничего не сказал, ждали в `wait` без единого знака — сказано это было только строчкой урока. Теперь такой слот с единицами попадает в `unjudged` со своим `why`. `_said_unjudged` говорит тревогу `worker.unjudged` один раз за эпизод, а «can be judged again» — в лог. Отчёт прохода несёт `workers_unjudged` и `units_unjudged`, консоль — `<p>_workers_unjudged` и `<p>_units_unjudged` на `/metrics`. Тут же второе новое число: перенос зависшего воркера по пределу был тревогой в журнале, но не числом, — теперь отчёт считает его с тех пор, как хранилище новое (`workers_hung_moved_total`, на `/metrics` — `<p>_workers_hung_moved_total`), по одному на эпизод (двенадцатое ревью, minor). Тесты: `tests/test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_cameras` (вторая половина: тревога одна на два прохода), `tests/test_slot_fate.py::test_the_decommission_door_reads_its_body_as_every_door_and_a_refusal_is_journalled` (счётчик).
+
+**`unsure` после предела зависания — уже не «судить нельзя», а перенос** (решение владельца о «середине» для `hung`, применённое к `unsure`; урок 7, шаг 7). Раньше слот в `unsure` оставался в `unjudged` вечно: тревога была, камеры не писал никто. Теперь через `hung_move_after` после конца слота `slot_fate` отвечает `unsure_moved`. Такой слот в `unjudged` не попадает, его камеры уносит `redistribute`, а тревогу говорит отдельная функция, один раз за эпизод, как `_said_hung` для `hung_moved`:
+
+```python
+    def _said_unsure_moved(self, moved: dict) -> list:
+        gone = self.__dict__.setdefault("_unsure_moved", set())
+        new = sorted(set(moved) - gone)
+        for w in new:
+            log.error("%s: %s", self.sub.name, moved[w])
+            self.journal.say("worker.unsure_moved", ALARM, of=self.sub.name, worker=w, after=self.hung_move_after,
+                             why=moved[w])
+        gone.clear(); gone.update(moved)
+        return new
+```
+
+Что она вернула — воркеры, перенесённые в этом эпизоде впервые, — отчёт прохода считает в `workers_unsure_moved_total`, а консоль отдаёт как `<p>_workers_unsure_moved_total`. Тест: `tests/test_slot_fate.py::test_an_unsure_worker_keeps_its_cameras_and_name_until_HUNG_MOVE_AFTER_then_they_move_with_an_alarm`.
 
 **Состояние ресурса — четыре слова, а не три.** `Controller.resource_state(server)` отвечал `live`, `silent` или `unknown` по heartbeat'у ресурса. Теперь, где heartbeat не свежий, он спрашивает второе мнение — строку двери ресурса в хранилище, `at` на `platform/doors/<server>`, которую ресурс переписывает каждые `ALIVE_EVERY` (15 с). Строка свежая — `unreachable`: ресурс есть, не виден только его heartbeat, и ничего не переносится. Строка тоже старая — `silent`. Heartbeat, который лежит и не разбирается, — тоже `silent`, а не `unknown`. Раньше дверь, закрытая для контроллера, читалась как молчащий сервер, а контроллер, запущенный после смерти сервера, не видел его молчания вовсе (двенадцатое ревью, блокер 5, major 9 и minor; подробности — урок 7, шаг 7). Тесты: `tests/test_slot_fate.py::test_a_resource_whose_door_cannot_be_reached_is_not_a_silent_server`, `tests/test_slot_fate.py::test_a_resource_heartbeat_that_does_not_parse_is_a_silent_server_not_an_unknown_one`.
 
