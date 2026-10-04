@@ -1847,7 +1847,8 @@ class SpecController(Controller):
     #                      `slots_released_total` since the store was new; `servers_decommissioned` and its `_total` the
     #                      decommissions carried out; `decommission_requests_standing` those whose server still
     #                      answers; `workers_hung` workers whose process runs on a server that answers and that neither
-    #                      renew nor speak (`slot_fate`) — the product's names
+    #                      renew nor speak (`slot_fate`) — the product's names; `name_conflicts` the names a live instance
+    #                      holds and another process asks for (`say_name_conflicts`)
     #   units_short, workers_needed, spare_offers, spares_starting
     #                      per label set, where the spec says `offers` (`offer_spares`): what nothing live has room
     #                      for, the workers that makes, the offers standing for them, the offers a spare took whose
@@ -1897,13 +1898,18 @@ class SpecController(Controller):
         def offer_spares():                           # the numbers and the offers LAST: after every move this pass made
             if self.spec.offers:
                 spares.update(self.offer_spares())
+        names = {"name_conflicts": 0}
+
+        def name_conflicts():                         # two processes that want one name, said (`say_name_conflicts`)
+            names["name_conflicts"] = self.say_name_conflicts()
         for step, run in (("apply_decommissions", apply_decommissions),           # a server gone for good, once it is silent
                           ("release_unlisted", release_unlisted),                 # a slot its server's resource lists nowhere
                           ("ensure_placed", self.ensure_placed),                   # deleted rows unplaced; new units onto the workers it sees
                           ("ensure_reach", self.ensure_reach),                     # a unit its server no longer reaches: moved, or unplaced with why
                           ("redistribute", self.redistribute),                     # units of a RELEASED slot (scale-in) onto the rest
                           ("ensure_home", lambda: self.ensure_home(home_budget)),  # a unit back to the server its row names, if it is back
-                          ("offer_spares", offer_spares)):                         # what nothing live has room for: numbers, and offers to spares
+                          ("offer_spares", offer_spares),                          # what nothing live has room for: numbers, and offers to spares
+                          ("name_conflicts", name_conflicts)):                     # a name two processes want: said once an episode
             try:
                 run()
             except Exception as e:                    # noqa: BLE001
@@ -1931,6 +1937,9 @@ class SpecController(Controller):
         rep["decommission_requests_standing"] = len(decom["standing"])   # asked, and the server still answers
         rep["workers_hung"] = sorted(slots["hung"])                 # its process runs, and it neither renews nor speaks
         rep["hung_move_after"] = self.hung_move_after                # …and how long it keeps its units: a spare judges by it
+        # Names a live instance holds and another process asks for — of another box, or left nobody on its own (the
+        # owner's decision of 4 Oct; the product's name): `<name>_name_conflicts` on the console's `/metrics`
+        rep["name_conflicts"] = names["name_conflicts"]
         # The units of groups `ensure_reach` left whole where they are, and the servers whose row did not read on the last
         # read — each was a line in the log or on a page only, for days (the eleventh review, a major and a minor)
         rep["reach_waiting"] = self.last_reach_waiting

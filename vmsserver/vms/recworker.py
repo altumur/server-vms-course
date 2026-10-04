@@ -32,13 +32,14 @@ source, not a camera — and a sink: the volume's one writer on this host.
 from __future__ import annotations
 
 import contextlib
+import json
 import logging
 import os
 import random
-import socket
 import threading
 import time
 
+from w2cplatform import runtime
 from w2cplatform.console import framed, heartbeats
 from w2cplatform.contract import Subsystem, is_live, read_hold
 from w2cplatform.obsd import ObsdError, Sample, Session, Unavailable
@@ -56,10 +57,9 @@ from .writerwatch import WriterWatch
 
 # The host in an instance's name, `host:pid:rnd` (`Worker.instance`'s default) — None for an instance named otherwise:
 # an allocation's id says nothing about where it runs. What a network volume's hold follows the name by
-# (`RecWorker.hold_follows_name`).
-def host_of(instance: str) -> str | None:
-    parts = str(instance or "").rsplit(":", 2)
-    return parts[0] if len(parts) == 3 and parts[0] and parts[1].isdigit() else None
+# (`RecWorker.hold_follows_name`). The runtime's now (`runtime.box_of`): a slot taken by name at a start asks the same
+# question (`Worker._may_take_by_name`, the owner's decision of 4 Oct).
+host_of = runtime.box_of
 
 
 # …AND THE HOST IS THE BOX, NOT ITS NAME (the review's eighth pass, minor). It was `socket.gethostname()`: two boxes named
@@ -67,15 +67,12 @@ def host_of(instance: str) -> str | None:
 # network volume at once, its writer still mounted on the other box; the engine stopped the first (patch 07), with no
 # wait to spare. The host part is `BOX_ID` when the runtime says it: systemd's machine id (`%m`, in the unit — a
 # container's own hostname is not the box's: Quadlet's `Network=host` shares the network, not the UTS namespace),
-# Nomad's node id (`${node.unique.id}`, in the job). Not said: the hostname, as before. And an allocation's id, which
+# Nomad's node id (`${node.unique.id}`, in the job). Not said: this machine's id, else the hostname (`runtime.box`; the
+# owner's decision of 4 Oct — the hostname alone was the very thing two clones share). And an allocation's id, which
 # says no host, gets one only from `BOX_ID`: `<box>:<pid>:<alloc>` — still unique to the incarnation; without it the
-# allocation's id alone, and the instance waits (the safe side).
-def box_instance(env: dict, given: str | None = None) -> str:
-    import uuid
-    box, given = str(env.get("BOX_ID") or "").strip(), given or env.get("INSTANCE_ID") or ""
-    if given:
-        return f"{box}:{os.getpid()}:{given}" if box else given
-    return f"{box or socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:6]}"
+# allocation's id alone, and the instance waits (the safe side). Every worker names itself so now
+# (`runtime.instance_on_box`).
+box_instance = runtime.instance_on_box
 
 
 # What the domain's agent carries into THIS cluster about primaries recorded elsewhere (М12 Lesson 13), and
@@ -85,6 +82,7 @@ DOMAIN_SEEN = "domain/seen"
 
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
+VOLUME_MISSING = "VOLUME_MISSING"       # a volume in use at its address before, and not there now (`RecWorker._may_format`)
 
 
 # ONE LOOK A PASS (the scaling pass). A question about ONE recording — who else records its camera, which backup holds
@@ -468,6 +466,7 @@ class RecWorker(VmsWorker):
         self.shallow: dict = {}                     # recording -> when its `archive.shallow` alarm was last raised
         self._depth_at = -1e18
         self._shared: set = set()                   # the declared volumes any box may serve, as last read
+        self._missing_said: dict[str, str] = {}     # volume -> the address `volume.missing` was said for, this episode
         self._hold_confirmed = self.clock()          # when the store last said the hold is ours (`renew_hold`, `claim_hold`)
         # Volumes any box may serve that THIS recorder does not take, and why: its host's engine cannot give a volume
         # up (`_engine_refuses`). In the heartbeat with `refused`, and on the volumes page (`volumes.served`).
@@ -1393,6 +1392,62 @@ class RecWorker(VmsWorker):
                                      f"may take: this obsd cannot give a volume up when another server takes it. Update "
                                      f"obsd on {self.server}; volumes on its own disks are not affected", "ENGINE_TOO_OLD")
 
+    # A VOLUME THAT WAS THERE IS FOUND, NOT MADE (the owner's decision of 4 Oct, the product's r24-names). A disk not
+    # mounted after a reboot leaves its mount point empty or gone, the engine answers "no volume there" — and the volume
+    # was FORMATTED again, empty, on whatever disk the path now falls on: recorded into as if nothing had happened, weeks
+    # of footage out of sight, the root disk filling. So a volume this subsystem has opened at this address before —
+    # the mark `rec/used/<volume>` (`Subsystem.used_key`), `{url, at, by, instance, server}`, written at its first open
+    # (`_mark_used`) — is not formatted when it is missing: `wrong`, `VOLUME_MISSING`, handed back like a volume that
+    # refuses writes — its recordings go to another volume — and said once an episode (`volume.missing`, an alarm).
+    # Mounted back, it opens as it was. A volume never opened at this address — new, or declared again at another path —
+    # is formatted as before. The mark is an object, beside the heartbeats: the place's record, not a decision anybody
+    # waits on; a store that does not answer says nothing either way, and the volume is not formatted until it does.
+    def _may_format(self, vol) -> None:
+        try:
+            raw = self.objects.get(self.sub.used_key(vol.name))
+        except OSError as e:
+            raise ArchiveError("away", f"{vol.name} is not there, and whether it was in use cannot be read now ({e}): "
+                                       f"not formatted until it can", "UNAVAILABLE") from None
+        if not raw:
+            return                                        # never opened: a new volume, formatted
+        try:
+            mark = json.loads(raw)
+        except PARSE_ERRORS:
+            mark = None                                   # a mark that does not read: in use, by the safe side
+        if isinstance(mark, dict) and str(mark.get("url", "")) != vol.url:
+            return                                        # opened at another address: this one is new, formatted
+        since = mark.get("at") if isinstance(mark, dict) else None
+        raise ArchiveError("wrong", (
+            f"{vol.name} was in use at {vol.url} and is not there now — a disk not mounted, a directory removed or "
+            f"renamed. Nothing is formatted in its place: an empty volume there would hide the footage it had. Mount it "
+            f"back and it is written again as it was; its recordings go to another volume meanwhile. If the volume is "
+            f"meant to start empty, declare it under another name or address"
+            + (f" (in use since {time.strftime('%Y-%m-%d %H:%M', time.localtime(float(since)))})"
+               if isinstance(since, (int, float)) else "")), VOLUME_MISSING)
+
+    def _mark_used(self, vol) -> None:
+        key = self.sub.used_key(vol.name)
+        try:
+            raw = self.objects.get(key)
+            if raw and str((json.loads(raw) or {}).get("url", "")) == vol.url:
+                return
+            self.objects.put(key, json.dumps({"url": vol.url, "at": self.wall(), "by": self.name or "",
+                                              "instance": self.instance, "server": self.server or ""}).encode())
+        except (OSError, *PARSE_ERRORS, AttributeError) as e:
+            log.warning("%s: %s opened, and that it is in use was not written down (%s): asked again at the next open",
+                        self.name, vol.name, e)
+        self._missing_said.pop(vol.name, None)        # found: the next time it is missing is another episode
+
+    def _say_missing(self, vol, e: ArchiveError) -> None:
+        from w2cplatform.events import ALARM, EventLog
+        if self._missing_said.get(vol.name) == vol.url:
+            return
+        self._missing_said[vol.name] = vol.url
+        log.error("%s: %s", self.name, e.detail)
+        EventLog(self.archive_root, REC.name, vol.name, 0).append(self.wall(), "volume.missing", cls=ALARM, volume=vol.name,
+                                                                  url=vol.url, recorder=self.name or "", server=self.server or "",
+                                                                  detail=e.detail)
+
     # The box's own volume, which nobody declared: no size of its own (`quota_bytes` 0) — `default_quota` formats it
     # if it is new, and a volume that exists keeps the size it has. Declared with a quota, it would be resized at
     # every start to whatever share of the disk was free that morning.
@@ -1565,6 +1620,7 @@ class RecWorker(VmsWorker):
                         confirm=lambda: self._confirm_hold(vol), share=self._share_of_space,
                         fence=lambda: self._may_write_volume(vol),
                         on_unclean=lambda result, detail: self._unclean(vol, result, detail),
+                        may_format=lambda: self._may_format(vol),
                         **{k: v for k, v in (("block", self.block), ("read", self.read), ("lock_refresh", self.lock_refresh))
                            if v})
         store.row = vol                                  # what `_close_store` asks whether its writer may be closed by
@@ -1578,6 +1634,9 @@ class RecWorker(VmsWorker):
                 self._leave_session(f"{vol.name} is ALREADY_LOCKED by a writer of our own owner {store.owner} for "
                                     f"{self.OWN_LOCK_FOR:g} s: an orphan of this session")
             if e.name == "HOLD_LOST":
+                return e
+            if e.name == VOLUME_MISSING:
+                self._say_missing(vol, e)
                 return e
             # A DISK on this box that cannot be formatted or mounted — a file where the directory should be, a
             # path nobody may create — is not a link that comes back in a minute. The engine says it as an I/O or
@@ -1609,6 +1668,7 @@ class RecWorker(VmsWorker):
         if self.archive_error:
             log.info("%s: %s answers again after %.0f s", self.name, vol.name, self.wall() - self.archive_away_since)
         self.archive_error, self.archive_failure, self.archive_away_since = "", "", 0.0
+        self._mark_used(vol)
         log.info("%s: writing into %s (%s)%s%s", self.name, vol.name, vol.url, " — formatted" if store.formatted else "",
                  " — the writer a previous process left, picked up again" if store.reattached else "")
         return None

@@ -12,6 +12,7 @@
                   it publishes
     LABELS        what this server can reach, comma-separated
     INSTANCE_ID   this incarnation — what failover is measured from
+    BOX_ID        which machine (systemd's `%m`): two machines with one hostname are two boxes (`box`)
 
 Not one of these names an orchestrator, and that is the whole point of the
 module. A systemd unit sets `WORKER_NAME=w-%l-1` (Quadlet on one box `%i`), and
@@ -62,7 +63,51 @@ def spare_for(env: dict) -> str | None:
     return str(env[SPARE_FOR]) if SPARE_FOR in env else None
 
 
-# This incarnation. `None` lets the worker fall back to the base class's `hostname:pid:6hex`,
+# This incarnation. `None` lets the worker fall back to the base class's `box:pid:6hex` (`instance_on_box`),
 # which is enough to tell one instance from the next on a box.
 def instance(env: dict) -> str | None:
     return env.get(INSTANCE_ID) or None
+
+
+# THE BOX, NOT ITS HOSTNAME (the review's eighth pass for a recorder's volume; the owner's decision of 4 Oct for every
+# name). What "this instance runs on this machine" is read from — whether a hold follows the name at once
+# (`RecWorker.hold_follows_name`), whether a live holder's name may be taken at a start (`Worker._may_take_by_name`).
+# Two machines installed from one image, two `localhost`s, have one hostname and compute one `w-%l-1`: by the hostname
+# they were one box and took each other's name for ever. `BOX_ID` when the runtime says it (systemd's `%m` in a unit,
+# Nomad's `${node.unique.id}`), else this machine's id (`/etc/machine-id`, the product's `BoxID`), else the hostname —
+# a machine with neither, as before.
+BOX_ID = "BOX_ID"
+MACHINE_ID_FILES = ("/etc/machine-id", "/var/lib/dbus/machine-id")
+
+
+def box(env: dict) -> str:
+    said = str(env.get(BOX_ID) or "").strip()
+    if said:
+        return said
+    for path in MACHINE_ID_FILES:
+        try:
+            with open(path, encoding="ascii") as f:
+                mid = f.read().strip()
+        except (OSError, UnicodeDecodeError):
+            continue
+        if mid:
+            return mid
+    return socket.gethostname()
+
+
+# The box an instance name says it ran on — `box:pid:rnd`, as `instance_on_box` makes it — or None for a name that says
+# none: an `INSTANCE_ID` or an allocation's id is a scheduler's, and nothing is guessed from it.
+def box_of(instance: str) -> str | None:
+    parts = str(instance or "").rsplit(":", 2)
+    return parts[0] if len(parts) == 3 and parts[0] and parts[1].isdigit() else None
+
+
+# This incarnation's name, with the box in it: `INSTANCE_ID` as given — prefixed `<box>:<pid>:` when `BOX_ID` is said,
+# so an allocation's id gets a box only from the runtime — else `<box>:<pid>:<6 hex>`.
+def instance_on_box(env: dict, given: str | None = None) -> str:
+    import os
+    import uuid
+    said, given = str(env.get(BOX_ID) or "").strip(), given or env.get(INSTANCE_ID) or ""
+    if given:
+        return f"{said}:{os.getpid()}:{given}" if said else given
+    return f"{box(env)}:{os.getpid()}:{uuid.uuid4().hex[:6]}"

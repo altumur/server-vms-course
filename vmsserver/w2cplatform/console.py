@@ -114,8 +114,8 @@ from .doors import MAX_LIMIT, byte_range
 
 from .secrets import mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
-                       DecommissionRefused, SchemaTooNew, builds, is_live, label_set, parse_heartbeat, read_slot,
-                       schema_version)
+                       DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
+                       parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
 from .eventdatabase import refence
@@ -1445,9 +1445,14 @@ class SpecConsole:
         # since when, is a FAULT the page names — its process runs on a server that answers, and nothing is moved off it;
         # its slot's `until`, null for a row that does not parse (`slot_garbled`); the places each holds.
         held = ctl.holds_by()
+        # …and whether another process wants its name (the owner's decision of 4 Oct; the product's field): who holds it,
+        # and who else asks, from which box, since when — `name_conflict`, null when nobody does.
+        contended = contenders(ctl.objects, ctl.sub, now)
         for s in out.values():
             for row in s["workers"]:
                 self._judged(row, held)
+                cs, holder = contended.get(row["worker"]), row.pop("_holder", "")
+                row["name_conflict"] = name_conflict(holder or cs[0].get("holder") or "", cs, now) if cs else None
         for server in resources_seen(ctl.objects):
             out.setdefault(server, {"archive": None, "resource": "unknown", "workers": []})
         # What the server reaches (feedback DQ): the node's word (its workers' heartbeats), the administrator's when there
@@ -1504,6 +1509,7 @@ class SpecConsole:
                 return                                   # a name no process claimed (one given in the unit file): no slot to judge
             slot = read_slot(key, w, items)
             row["slot_garbled"], row["slot_until"] = slot is None, (slot.until if slot is not None else None)
+            row["_holder"] = slot.holder if slot is not None else ""      # whose the name is, for `name_conflict`
             if slot is not None and slot.released:
                 row["released"] = True
                 return
@@ -1653,6 +1659,9 @@ class SpecConsole:
                   f"{p}_decommission_requests_standing {r('decommission_requests_standing', int)}",
                   f"# TYPE {p}_workers_hung gauge",
                   f"{p}_workers_hung {len(rep.get('workers_hung')) if isinstance(rep.get('workers_hung'), list) else 0}",
+                  # names a live instance holds and another process asks for — of another box, or left nobody on its own
+                  # (the owner's decision of 4 Oct; the product's name): `worker.name_conflict`, `/servers`' `name_conflict`
+                  f"# TYPE {p}_name_conflicts gauge", f"{p}_name_conflicts {r('name_conflicts', int)}",
                   # units of groups left whole on a server that no longer reaches them, and servers whose labels row did
                   # not read on the pass's last read (the eleventh review: each was a log line or a page only)
                   f"# TYPE {p}_units_waiting_for_reach gauge", f"{p}_units_waiting_for_reach {r('reach_waiting', int)}",

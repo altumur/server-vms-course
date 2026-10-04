@@ -430,7 +430,7 @@ def test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given
     """Found beside the stand-in: the detector, scan, survey and gateway loops claimed their slot once and never
     renewed it, so the row lapsed after `slot_ttl` in ordinary work and anybody could take a live worker's name.
     Their lease step keeps the slot row now (`Worker.keep_slot`); a row that names another instance is a name given up —
-    the units let go, their epochs released, a free slot claimed."""
+    the units let go, their epochs released — and, named by its unit, nothing else claimed: it waits for its own."""
     from tests.test_pass_failures import _workers
     box = Box()
     for w in _workers(box):
@@ -454,7 +454,9 @@ def test_every_loop_keeps_its_slot_row_and_a_name_another_instance_took_is_given
         was = w.name
         box.vars.put(w.sub.slot_key(was), Slot(was, "somebody-else", box.wall() + 45, False, 9).to_items())
         lost = w.keep_slot(lambda: None)
-        assert lost == ["u"] and "u" not in w.epochs and w.name != was, type(w).__name__
+        # …and no other name taken: it was started under this one, and waits for it (the owner's decision of 4 Oct)
+        assert lost == ["u"] and "u" not in w.epochs and w.slot is None and w.seeking == was, type(w).__name__
+        assert sorted(p.rsplit("/", 1)[1] for p in box.vars.list(w.sub.name + "/slots/")) == [was], type(w).__name__
 
 
 # -- the stand-in's heartbeat (the scaling pass after the eighth review) ---------------------------------------------

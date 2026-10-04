@@ -518,7 +518,7 @@ class VmsWorker(Worker):
                  archive_root: str | None = None, bucket_seconds: int = 600, env: dict | None = None,
                  device_factory=None):
         env = dict(os.environ if env is None else env)
-        instance = instance or runtime.instance(env)
+        instance = instance or runtime.instance_on_box(env)   # the box in it: whose a name is (`Worker._may_take_by_name`)
         super().__init__(self.SUB, None, vars_, objects, lease_ttl, lease_margin, clock, wall, instance, slot_ttl)
         self.unconfirmed_max = unconfirmed_max(env)           # a holder writes DATA: it records through a silent store
         self.sealer = Sealer.from_env(env)                    # opens a device's password for the pipeline, and nothing else does
