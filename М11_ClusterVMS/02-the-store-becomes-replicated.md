@@ -558,6 +558,22 @@ MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character 
 
 Тесты — `test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once` (сокет роли и `admin.sock`), `test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at_every_door` (и дверь `-api`), `test_the_api_door_serves_so_many_of_one_address_and_lets_a_stalled_handshake_go`. Порт raft — дверь библиотеки: сколько соединений она держит и сколько ждёт незнакомца, решает `pysyncobj`. Курс закрывает его секретом; в продукте — TLS и транспорт `hashicorp/raft` со своими сроками.
 
+**Очередь сокета у ядра — тоже предел двери.** Тест выше падал примерно в трёх запусках из семи, и падал не на пределе, а раньше него: шестое из шести простаивающих соединений получало `ConnectionRefusedError` на `connect`, хотя дверь ещё ничего не приняла. Дело было в `socketserver`: двери открывались с его очередью по умолчанию, `request_queue_size = 5`, — столько соединений ядро держит, пока поток приёма их не забрал. На macOS unix-сокет с полной очередью отвечает на `connect` отказом сразу (проверено запуском: ядро взяло ровно пять); у TCP полная очередь роняет SYN, и клиент ждёт повтора секунду. Шестой вызывающий, пришедший раньше, чем проснулся поток приёма, дверью не считался и `busy` не получал. Теперь очередь равна пределу двери: сокет роли и `admin.sock` — `ROLE_CONNECTIONS`, дверь `-api` — `API_CONNECTIONS`. `listen` вызывается внутри `__init__` сервера, поэтому предел ставится до него (`w2cplatform/configstore.py`):
+
+```python
+    @property
+    def request_queue_size(self) -> int:
+        return self.limit
+```
+
+```python
+        def __init__(self, path, handler):
+            self.bound(ROLE_CONNECTIONS)             # before `listen`: the queue is as long as the bound
+            super().__init__(path, handler)
+```
+
+Всплеск больше предела по-прежнему получает отказ ядра — это тоже «не сделано», и обработчик хранилища читает его как `StoreUnavailable`. Того же рода были двери консоли и двери между процессами (`console.Bounded`, М10A, урок 15). Тест: `test_configstorevars.py::test_a_door_queues_as_many_connections_as_it_serves_before_it_accepts_one`. Дверь, которая не принимает ни одного соединения, должна взять в очередь `ROLE_CONNECTIONS` подключений к сокету роли и `API_CONNECTIONS` к двери `-api`. На старой очереди тест падает на шестом подключении. Исходный тест после исправления прошёл 30 запусков из 30, до него — 25 из 30.
+
 Скажем прямо, чего у демона курса нет. **В `hashicorp/raft` продукта на порту raft стоит TLS**, тот же сертификат кластера; в `pysyncobj` TLS нет — только общий пароль. **И у продукта есть `configstore recover`** — группа, пересобранная из журнала одного выжившего, когда большинство потеряно навсегда (`RecoverCluster`, процедура в `deploy/STORE-RECOVERY.md` продукта); у демона курса `recover` нет, и потеря двух серверов из трёх — это восстановление из резервной копии (`configstore restore`). К этому же списку: журнал `pysyncobj` не делает `fsync` перед подтверждением записи (переживает убитый процесс, но не отключение питания большинства), в ней нет пред-голосования и аренды лидера. Для курса библиотеки хватает — контракт зелёный, запись через ведомого ~1 мс, ни одной аренды за окном с таймингами по умолчанию, — а этот список и есть то, что продукт берёт у `hashicorp/raft` с `raft-boltdb`.
 
 ## Шаг 12 — Ничего больше не изменилось
