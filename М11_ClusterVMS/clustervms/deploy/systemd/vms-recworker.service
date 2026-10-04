@@ -1,0 +1,38 @@
+# /etc/systemd/system/vms-recworker.service — the recorder: subscribes to the worker's fan-out and writes into the
+# volume it holds — this server's own, or a declared one — through the host's obsd (`vms-obsd.service`, М10's unit,
+# installed under that name by `install.sh`), and serves that volume at its archive door. One per server, its name
+# from the unit: `r-%l-1`. `tests/test_recorder_job.py` holds it against the obsd unit: the socket, the group.
+[Unit]
+Description=VMS recorder — the recordings of its assignment, into this server's volume
+After=network-online.target configstore.service w2c-resource.service vms-obsd.service
+Wants=network-online.target configstore.service vms-obsd.service
+
+[Service]
+User=vms
+Group=vms
+# Its role's store socket, and the group the archive's engine lets in (the peer's gid, checked by the daemon).
+SupplementaryGroups=vms-recworker vms-obsd
+Environment=PLATFORM_STORE=configstore:///run/configstore/recworker.sock
+Environment=WORKER_NAME=r-%l-1
+Environment=OBSD_SOCKET=/run/vms-obsd/obsd.sock
+# WHICH BOX: the machine id — the same across restarts, not the hostname, which two boxes may share (М10's eighth
+# review): a network volume's hold follows this recorder's name at once to its next process on the SAME box.
+Environment=BOX_ID=%m
+Environment=UNCONFIRMED_MAX=90
+Environment=ARCHIVE_PORT=8084
+# A network volume's `access_secret` is sealed to its row by the console; the recorder, which mounts the volume,
+# opens it with the cluster's key.
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+# /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
+# override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
+UMask=0002
+ExecStart=/opt/w2c/bin/w2c-run.sh recorder
+Restart=always
+RestartSec=2
+# SIGTERM: the pipelines stop, the writer closes after its flush (up to 30 s), then the hold goes.
+TimeoutStopSec=40
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target

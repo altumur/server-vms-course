@@ -1,7 +1,7 @@
 """Where is camera 7 — answered from the cluster in one scan.
 
-`vms/workers/*` is the assignment, written by the controller into one raft
-and read by every worker from the same raft; scanning it is the cluster
+`vms/workers/*` is the assignment, written by the controller into one store
+and read by every worker from the same store; scanning it is the cluster
 directory, and it is *consistent* because it is one store. М12 aggregates
 several of these and cannot be — which is why the question is answered here.
 """

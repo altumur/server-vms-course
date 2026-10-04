@@ -1,5 +1,5 @@
 # knob off: srv-a pass -> mirrored 0
-# the knob: PUT /v1/var/platform/mirror {"Items": {"enabled": "true", "copies": "1"}}
+# the knob: POST /v1/write {"op": "put", "key": "platform/mirror", "items": {"enabled": "true", "copies": "1"}}
 srv-a pass -> mirrored 1 to ['srv-b']
 srv-b pass -> mirrored 1 to ['srv-c']
 srv-c pass -> mirrored 1 to ['srv-a']

@@ -1,58 +1,24 @@
-# variables.py — Nomad Variables over HTTP with the task's own token, and the in-memory fake with the semantics Nomad promises
+# variables.py — the store's contract by this package's name, and the in-memory fake
 
-**Role in the module.** Lesson 1. М10's `w2cplatform.variables.Variables` contract (see `../../../vmsserver/w2cplatform/variables.py.md`: `get` returns items and a `ModifyIndex`, `put(..., cas=)` succeeds only when the index still matches, `Conflict` otherwise, `Forbidden` when the token may not write the path) implemented by raft. `NomadVariables` speaks the `/v1/var` API with the workload-identity token Nomad injects as `NOMAD_TOKEN` (`identity { env = true }` in every jobspec). `FakeVariables` is the same contract in memory with the documented semantics — a raft-assigned `ModifyIndex`, `?cas=<index>`, 409 on mismatch, 403 under an ACL — so the 29 tests run in milliseconds without Nomad. Both raise the *platform's* `Conflict`/`Forbidden` (the import comment: one class, so a CAS retry in `w2cplatform.epoch.next_epoch` catches ours too). Used by every job in `__main__`, by `objectstore.VariablesObjectStore`, and by `tests/conftest.py`.
+**Role in the module.** Lesson 1. On a cluster without an orchestrator the store is `configstore://` — this server's daemon, a member of a raft group over the servers, reached through the unix socket of the process's role (`../../../vmsserver/w2cplatform/configstorevars.py` the handle, `configstore.py` the daemon, `storemachine.py` what they agree on). Nothing here speaks to it: a process opens `PLATFORM_STORE` with `open_vars` (`__main__.stores`), and the platform knows the scheme. This module spoke Nomad's Variables API before (`NomadVariables`, the `nomad://` scheme, `NOMAD_MAX_VARIABLE_BYTES`); they went with the orchestrator. What stays is what other code imports from here — М12 does so some 27 times: `Variables` (the Protocol), `Conflict`, `Forbidden`, and `FakeVariables`.
 
 ## Module-level names
-- `Conflict`, `Forbidden` — re-exported from `w2cplatform.variables`; `cluster.variables.Conflict is w2cplatform.variables.Conflict`.
+- `Conflict`, `Forbidden` — re-exported from `w2cplatform.variables`; `cluster.variables.Conflict is w2cplatform.variables.Conflict`, so a CAS retry in `w2cplatform.epoch.next_epoch` catches ours too.
 
 ## `class Variables(Protocol)`
-The contract restated: `get(path) -> (items | None, ModifyIndex)`, `put(path, items, cas=None) -> ModifyIndex`, `list(prefix) -> [paths]`, `delete(path, cas=None)`.
-
-## `class NomadVariables`
-One namespace, one token, one agent address. Stateless beyond that; safe to construct once per process.
-
-### `__init__(self, addr=None, token=None, namespace="default", timeout=5.0)`
-`addr` from `NOMAD_ADDR` (default `http://127.0.0.1:4646` — the local agent, which every jobspec reaches with `network_mode = "host"`); `token` from `NOMAD_TOKEN` (empty string if unset — then every write is a 403 once ACLs are on, `server.hcl`); `namespace` is `default`, the one the policies name.
-
-### `_req(self, method, url, body=None) -> (status, json | None)`
-One HTTP call with `X-Nomad-Token` and JSON body. Maps Nomad's replies to the contract: `409` → `Conflict` (with the first 200 bytes of the body), `403` → `Forbidden(url)`, `404` → `(404, None)`; other HTTP errors propagate.
-
-### `get(self, path) -> (dict | None, int)`
-`GET /v1/var/<path>?namespace=`; a 404 or empty body is `(None, 0)` — `0` is the CAS value for "create only if absent". Otherwise `(Items, ModifyIndex)`.
-
-### `put(self, path, items, cas=None) -> int`
-`PUT /v1/var/<path>?namespace=[&cas=<n>]` with `{"Items": {k: str(v)}}` — Nomad items are strings, so values are stringified here (the fake does the same, which is why the tests compare against `{"epoch": "1"}`). Returns the new `ModifyIndex`.
-
-### `list(self, prefix) -> list[str]`
-`GET /v1/vars?prefix=&namespace=` → the `Path` of every match (an empty list on 404 or no body). A token needs `list` on the prefix; the policies grant it where the class needs it (assignments, slots, heartbeats).
-
-### `delete(self, path, cas=None)`
-`DELETE /v1/var/<path>?namespace=[&cas=]`; 409/403 map as above.
+The contract restated: `get(path) -> (items | None, version)`, `put(path, items, cas=None) -> version`, `list(prefix) -> [paths]`, `delete(path, cas=None)`.
 
 ## `class FakeVariables`
-One raft log for the whole cluster, in memory, with a lock. An optional ACL: a writer id may only `put`/`delete` under the prefixes it was granted.
+One log for the whole cluster, in memory, with a lock — what `storemachine.StoreMachine` does, without the rights file and the API. The module's own stand runs the machine itself behind per-role doors (`tests/conftest.py`); this fake is for the tests that need a store and nothing about its doors (`tests/test_cluster_objects.py`, `test_lesson1_stores.py::test_every_writer_sees_one_log`, all of М12).
 
 ### `__init__(self)`
-`_raft_index` starts at 1000 (so a fake index is never confused with a count), `_items: {path: (items, index)}`, `acl: {writer: [prefixes]}`, `writer = None`.
+`_log = [1000]` (a list, so the views `as_writer` makes share ONE counter: two views handing out the same version once let a stale CAS match a write it never saw), `_items: {path: (items, version)}`, `acl: {writer: [prefixes]}`, `writer = None`.
 
 ### `as_writer(self, writer, allowed=None) -> FakeVariables`
-The same raft seen through one identity — what a task's workload-identity token is under a policy. Returns a shallow copy sharing `_lock`, `_items`, `_raft_index`'s container and `acl` (via `__dict__.copy()`) with `writer` set; when `allowed` is given it registers those prefixes for that writer in the shared `acl`. `conftest.Cluster.worker` uses `as_writer("vmsworker", ["vms/epoch/*", "vms/slots/*"])`; the controller tests use `["vms/*"]`; the console test uses `SPEC.acl_console()`.
+The same log seen through one identity — what a role's socket is under the rights file. A shallow copy sharing the lock, the items, the log and the ACL, with `writer` set; `allowed` registers that writer's prefixes.
 
 ### `_acl(self, path)`
-If this handle has a writer and any ACL exists: the path must equal a granted entry or match a `prefix*` glob, else `Forbidden("<writer> may not write <path>")`. A handle with `writer=None` (the bare cluster object) bypasses the ACL — the tests' "management token".
+With a writer and any ACL: the path must equal a granted entry or match a `prefix*`, else `Forbidden`. A handle with `writer=None` bypasses it — the tests' own hand.
 
-### `get(self, path)`
-`(copy of items, index)` or `(None, 0)`.
-
-### `put(self, path, items, cas=None)`
-ACL check, then under the lock: if `cas` is given and differs from the current index (0 for a missing path) → `Conflict`; otherwise bump the raft index, store stringified items, return the index. This is exactly the promise `next_epoch`'s CAS loop relies on; `test_the_epoch_issuer_under_four_threads_on_the_raft_fake` issues 200 epochs from four threads with no duplicate.
-
-### `list(self, prefix)`
-Sorted paths starting with `prefix`.
-
-### `delete(self, path, cas=None)`
-ACL check, CAS check, remove, bump the index.
-
-## Notes
-- `_raft_index` is an `int`, so `as_writer`'s copied `__dict__` gives each handle its *own* counter after the first increment (`self._raft_index += 1` rebinds on the copy). Handles share `_items` and `_lock`, so CAS still works — a stale index still mismatches — but two handles can hand out the same `ModifyIndex` value for different writes. The tests never compare indexes across handles.
-- `test_cas_is_the_same_promise_as_the_files_made` and `test_one_writer_per_prefix_is_an_acl_policy` are the fake's specification; `verify-bench.sh` items 4 and 5 are the same two assertions against real Nomad.
+### `get(path)`, `put(path, items, cas=None)`, `list(prefix)`, `delete(path, cas=None)`
+`safe_path` first, as the real store (the fake may not be laxer). `get` copies; absent is `(None, 0)`. `put` checks the ACL, then under the lock a `cas` that differs from the current version (0 for absent) is `Conflict`; else the log grows by one, the items are stored as strings and the version returned. `delete` refuses an epoch row (`refuse_delete`, the platform's rule), checks the ACL and the `cas`, and burns a version, as every command does.

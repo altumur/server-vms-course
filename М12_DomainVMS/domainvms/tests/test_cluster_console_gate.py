@@ -100,13 +100,14 @@ def test_a_labelled_grant_travels_as_a_row_and_never_means_every_camera():
 def test_a_cluster_in_a_domain_runs_its_console_from_an_image_that_can_check_a_token():
     """The gate loads `domain.access`; М11's image has neither that module nor the library it verifies with. A
     console left on that image in a domain answers 503 to everything — shut, and useless. So the domain has an
-    image of its own, and the cluster's console job takes its image as a variable."""
+    image of its own; and the cluster's console job — М11's appendix for a site that runs Nomad (М11's own servers
+    run a systemd unit) — takes its installation as a variable."""
     import os
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     image = open(os.path.join(here, "deploy", "Containerfile")).read()
     assert "FROM localhost/clustervms:latest" in image and "COPY domain domain" in image and "python3-cryptography" in image
-    job = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "console.nomad.hcl")).read()
-    assert 'variable "image"' in job and "image        = var.image" in job and 'default = "localhost/clustervms:latest"' in job
+    job = open(os.path.join(here, "..", "..", "М11_ClusterVMS", "clustervms", "deploy", "nomad", "console.nomad.hcl")).read()
+    assert 'variable "w2c_home"' in job and 'command = "${var.w2c_home}/bin/w2c-run.sh"' in job and 'default = "/opt/w2c"' in job
     import importlib
     from w2cplatform.access import Gate
     assert importlib.import_module("domain.access").cluster_access                 # what `ACCESS_IMPL` names is there to be loaded

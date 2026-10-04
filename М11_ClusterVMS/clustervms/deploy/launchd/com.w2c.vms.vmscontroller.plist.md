@@ -1,0 +1,3 @@
+# com.w2c.vms.vmscontroller.plist — the cameras' placement, on a macOS server
+
+**Role in the module.** Lesson 3. The twin of `deploy/systemd/vms-vmscontroller.service`: `/opt/w2c/bin/w2c-run.sh` with the same verb, `KeepAlive` and a 2 s `ThrottleInterval` for systemd's `Restart=always`/`RestartSec=2`, the store's socket under `/var/run/configstore`. launchd has no `%l` and no groups per job: `install.sh` puts this host's short name in place of `@HOST@`, and a macOS bench runs the jobs as root from `/Library/LaunchDaemons` — a developer's server, not a production one. Logs in `/var/log/w2c/com.w2c.vms.vmscontroller.log`. `tests/test_units.py::test_every_plist_is_its_units_twin`.

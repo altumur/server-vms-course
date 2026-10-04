@@ -1,110 +1,81 @@
 #!/usr/bin/env bash
-# М11 — the checks that need a real cluster, in one run. PASS/FAIL per item.
+# М11 — the checks that need a real cluster, in one run, on one of its servers (as root). PASS/FAIL per item.
 #
-#   deploy/verify-bench.sh          # with NOMAD_ADDR / NOMAD_TOKEN (management) set
+#   deploy/verify-bench.sh
 #
-# 1. Nomad >= 1.8.0 (the disconnect block)
-# 2. three servers, one leader; the Podman driver healthy on every client; meta.archive set somewhere
-# 3. the six jobspecs validate (worker, controller, recorder, reccontroller, console, resource) and the autoscaler's
-# 4. the ACL: a token carrying ONLY vmsworker-policy writes vms/epoch/* and vms/slots/*, and is
-#    refused on vms/cameras/* — one writer per key, enforced rather than promised
-# 5. the same from INSIDE a vmsworker allocation with the task's own workload-identity token
-# 6. scale out and in: `nomad job scale vmsworker N+1` → a new slot claimed; `… N` → the slot released
+# 1. the store: this server's daemon answers on admin.sock, the group has three members and one leader
+# 2. the units of a server are active here (configstore, w2c-resource, vms-console, the controllers, the workers)
+# 3. every role's socket is 0660 and owned by its role's group (the rights file's `group`)
+# 4. the rights the daemon holds are the installed file, and the file is what the spec generates
+# 5. rights by the socket: the worker's socket writes its slot and is refused a camera row and placement (403);
+#    the console's writes a camera row and is refused placement — one writer per key, the daemon's word
+# 6. the -api door is mutual TLS: a client with no certificate is refused at the handshake
+# 7. the objects: the resource here lists every server's worker heartbeat (`/v1/objects?scope=cluster`)
+# 8. the mirror is resource to resource: a peer takes a copy and lists it; nothing went through a store
 set -u
-HERE="$(cd "$(dirname "$0")" && pwd)"
+SOCKETS="${CONFIGSTORE_SOCKETS:-/run/configstore}"
+RUN=/opt/w2c/bin/w2c-run.sh
 pass=0; fail=0
 ok()   { echo "  PASS  $*"; pass=$((pass+1)); }
 bad()  { echo "  FAIL  $*"; fail=$((fail+1)); }
+api()  { curl -s --unix-socket "$SOCKETS/$1.sock" -o /dev/null -w "%{http_code}" -H 'Content-Type: application/json' \
+              -X "$2" "http://configstore$3" ${4:+--data "$4"}; }
+put()  { api "$1" POST /v1/write "{\"op\": \"put\", \"key\": \"$2\", \"items\": {\"probe\": \"verify-bench\"}, \"cas\": null}"; }
+drop() { api admin POST /v1/write "{\"op\": \"delete\", \"key\": \"$1\", \"cas\": null}" >/dev/null; }
+py()   { PYTHONPATH=/opt/w2c/clustervms:/opt/w2c/vmsserver python3 "$@"; }
 
 # 1
-ver="$(nomad version | head -1 | sed -E 's/.*v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')"
-if [ "$(printf '%s\n1.8.0\n' "$ver" | sort -V | head -1)" = "1.8.0" ]; then ok "nomad $ver >= 1.8.0"; else bad "nomad $ver < 1.8.0 — the disconnect block does not exist"; fi
+status="$(py -m w2cplatform.configstore status 2>/dev/null)"
+if [ -n "$status" ]; then
+  members="$(printf '%s' "$status" | python3 -c 'import sys,json;print(len(json.load(sys.stdin)["members"]))')"
+  leader="$(printf '%s' "$status" | python3 -c 'import sys,json;s=json.load(sys.stdin);print(s.get("leader_id") or s.get("leader") or "")')"
+  [ "$members" -ge 3 ] && [ -n "$leader" ] && ok "configstore: $members members, leader $leader" || bad "configstore: $members members, leader '${leader}'"
+else
+  bad "configstore: admin.sock does not answer (systemctl status configstore)"
+fi
 
 # 2
-leaders="$(nomad server members 2>/dev/null | awk 'NR>1 && $5=="true"' | wc -l)"
-servers="$(nomad server members 2>/dev/null | awk 'NR>1' | wc -l)"
-[ "$servers" -ge 3 ] && [ "$leaders" -eq 1 ] && ok "$servers servers, 1 leader" || bad "$servers servers, $leaders leaders"
-archives=0
-for id in $(nomad node status -quiet 2>/dev/null); do
-  if nomad node status -verbose "$id" 2>/dev/null | grep -qE '^podman +true'; then ok "podman driver healthy on $id"; else bad "podman driver NOT healthy on $id"; fi
-  nomad node status -verbose "$id" 2>/dev/null | grep -qE '^archive ' && archives=$((archives+1))
+for u in configstore w2c-resource vms-console vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker vms-obsd; do
+  systemctl is-active --quiet "$u.service" && ok "$u active" || bad "$u not active"
 done
-[ "$archives" -ge 1 ] && ok "$archives server(s) declare meta.archive (the resource has somewhere to be)" || bad "no server declares meta.archive"
 
 # 3
-for j in vmsworker vmscontroller recworker reccontroller console resource autoscaler; do
-  nomad job validate "$HERE/$j.nomad.hcl" >/dev/null 2>&1 && ok "$j.nomad.hcl validates" || bad "$j.nomad.hcl: $(nomad job validate "$HERE/$j.nomad.hcl" 2>&1 | tail -1)"
+for role in $(python3 -c 'import json;print(" ".join(json.load(open("/etc/w2c/configstore-rights.json"))["roles"]))'); do
+  want="$(python3 -c "import json;print(json.load(open('/etc/w2c/configstore-rights.json'))['roles']['$role'].get('group',''))")"
+  got="$(stat -c '%a %G' "$SOCKETS/$role.sock" 2>/dev/null)"
+  [ "$got" = "660 $want" ] && ok "$role.sock: 660, group $want" || bad "$role.sock: '$got', want '660 $want'"
 done
 
-# 4 — policy semantics with a token that carries ONLY the worker's policy
-nomad acl policy apply -description vmsworker vmsworker "$HERE/vmsworker-policy.hcl" >/dev/null 2>&1
-nomad acl policy apply -description vmscontroller vmscontroller "$HERE/vmscontroller-policy.hcl" >/dev/null 2>&1
-nomad acl policy apply -description recworker recworker "$HERE/recworker-policy.hcl" >/dev/null 2>&1
-nomad acl policy apply -description reccontroller reccontroller "$HERE/reccontroller-policy.hcl" >/dev/null 2>&1
-nomad acl policy apply -description resource resource "$HERE/resource-policy.hcl" >/dev/null 2>&1
-nomad acl policy apply -description console console "$HERE/console-policy.hcl" >/dev/null 2>&1
-tok="$(nomad acl token create -type client -policy vmsworker -ttl 10m -json 2>/dev/null | python3 -c 'import sys,json;print(json.load(sys.stdin)["SecretID"])')"
-if [ -n "$tok" ]; then
-  NOMAD_TOKEN="$tok" nomad var put -force vms/epoch/verify epoch=1 >/dev/null 2>&1 && ok "worker token writes vms/epoch/*" || bad "worker token cannot write its epochs"
-  NOMAD_TOKEN="$tok" nomad var put -force vms/slots/w-verify holder=probe >/dev/null 2>&1 && ok "worker token writes vms/slots/*" || bad "worker token cannot claim a slot"
-  NOMAD_TOKEN="$tok" nomad var put -force objects/vms/w-verify/heartbeat data='{}' >/dev/null 2>&1 && ok "worker token writes its heartbeat object" || bad "worker token cannot write objects/vms/*"
-  nomad var purge objects/vms/w-verify/heartbeat >/dev/null 2>&1
-  if NOMAD_TOKEN="$tok" nomad var put -force vms/cameras/verify name=tampered >/dev/null 2>&1; then bad "worker token wrote vms/cameras/* — one writer per key is NOT enforced"; else ok "worker token refused on vms/cameras/* (403)"; fi
-  nomad var purge vms/epoch/verify >/dev/null 2>&1; nomad var purge vms/slots/w-verify >/dev/null 2>&1
+# 4
+held="$(curl -s --unix-socket "$SOCKETS/admin.sock" http://configstore/v1/rights | python3 -c 'import sys,json;print(json.dumps(json.load(sys.stdin)["roles"], sort_keys=True))')"
+file="$(python3 -c 'import json;print(json.dumps(json.load(open("/etc/w2c/configstore-rights.json"))["roles"], sort_keys=True))')"
+[ -n "$held" ] && [ "$held" = "$file" ] && ok "the daemon holds the installed rights file" || bad "the daemon's rights differ from /etc/w2c/configstore-rights.json (restart configstore after installing it)"
+"$RUN" rights --check /etc/w2c/configstore-rights.json >/dev/null && ok "the rights file is what the spec generates" || bad "the rights file is not what the spec generates now"
+
+# 5
+[ "$(put vmsworker vms/slots/w-verify)" = 200 ] && ok "vmsworker.sock writes vms/slots/*" || bad "vmsworker.sock cannot claim a slot"
+[ "$(put vmsworker vms/cameras/verify)" = 403 ] && ok "vmsworker.sock refused on vms/cameras/* (403)" || bad "vmsworker.sock wrote a camera row — one writer per key is NOT enforced"
+[ "$(put vmsworker vms/placement/verify)" = 403 ] && ok "vmsworker.sock refused on vms/placement/* (403)" || bad "vmsworker.sock wrote placement"
+[ "$(put console vms/cameras/verify)" = 200 ] && ok "console.sock writes vms/cameras/*" || bad "console.sock cannot write a camera row"
+[ "$(put console vms/placement/verify)" = 403 ] && ok "console.sock refused on vms/placement/* (403) — a console that can place is a second controller" || bad "console.sock wrote placement"
+[ "$(put vmscontroller vms/placement/verify)" = 200 ] && ok "vmscontroller.sock writes vms/placement/*" || bad "vmscontroller.sock cannot place"
+drop vms/slots/w-verify; drop vms/cameras/verify; drop vms/placement/verify
+
+# 6
+api_addr="$(python3 -c 'import sys;[print(l.split("=",1)[1].strip()) for l in open("/etc/w2c/w2c.env") if l.startswith("CONFIGSTORE_API=")]')"
+if [ -n "$api_addr" ]; then
+  if curl -sk --max-time 5 "https://$api_addr/v1/status" >/dev/null 2>&1; then bad "the -api door at $api_addr answered a client with no certificate"; else ok "the -api door at $api_addr refuses a client with no certificate"; fi
 else
-  bad "could not create a client token with policy vmsworker (ACLs bootstrapped? NOMAD_TOKEN set?)"
-fi
-# 4b — the console's token: the operator's rows, never placement
-ctok="$(nomad acl token create -type client -policy console -ttl 10m -json 2>/dev/null | python3 -c 'import sys,json;print(json.load(sys.stdin)["SecretID"])')"
-if [ -n "$ctok" ]; then
-  NOMAD_TOKEN="$ctok" nomad var put -force vms/cameras/verify name=probe >/dev/null 2>&1 && ok "console token writes vms/cameras/*" || bad "console token cannot write a camera row"
-  NOMAD_TOKEN="$ctok" nomad var put -force vms/idem/verify state=done >/dev/null 2>&1 && ok "console token writes vms/idem/* (a retry answered by any instance)" || bad "console token cannot write vms/idem/*"
-  if NOMAD_TOKEN="$ctok" nomad var put -force vms/placement/verify worker=w-0 >/dev/null 2>&1; then bad "console token wrote vms/placement/* — a console that can place is a second controller"; else ok "console token refused on vms/placement/* (403)"; fi
-  if NOMAD_TOKEN="$ctok" nomad var put -force vms/workers/w-verify units=1 >/dev/null 2>&1; then bad "console token wrote vms/workers/*"; else ok "console token refused on vms/workers/* (403)"; fi
-  nomad var purge vms/cameras/verify >/dev/null 2>&1
+  bad "no CONFIGSTORE_API in /etc/w2c/w2c.env"
 fi
 
-# 5 — the binding to the JOB's workload identity, which is what the product relies on
-nomad acl policy apply -namespace default -job vmsworker vmsworker "$HERE/vmsworker-policy.hcl" >/dev/null 2>&1 && ok "policy bound to job vmsworker" || bad "policy binding to job failed"
-nomad acl policy apply -namespace default -job vmscontroller vmscontroller "$HERE/vmscontroller-policy.hcl" >/dev/null 2>&1 && ok "policy bound to job vmscontroller" || bad "policy binding to vmscontroller failed"
-nomad acl policy apply -namespace default -job recworker recworker "$HERE/recworker-policy.hcl" >/dev/null 2>&1 && ok "policy bound to job recworker" || bad "policy binding to recworker failed"
-nomad acl policy apply -namespace default -job reccontroller reccontroller "$HERE/reccontroller-policy.hcl" >/dev/null 2>&1 && ok "policy bound to job reccontroller" || bad "policy binding to reccontroller failed"
-nomad acl policy apply -namespace default -job console console "$HERE/console-policy.hcl" >/dev/null 2>&1 && ok "policy bound to job console" || bad "policy binding to console failed"
-alloc="$(nomad job allocs -json vmsworker 2>/dev/null | python3 -c 'import sys,json;a=[x for x in json.load(sys.stdin) if x["ClientStatus"]=="running"];print(a[0]["ID"] if a else "")')"
-if [ -n "$alloc" ]; then
-  inside='H="X-Nomad-Token: $NOMAD_TOKEN"; A="${NOMAD_ADDR:-http://127.0.0.1:4646}";
-    own=$(curl -s -o /dev/null -w "%{http_code}" -X PUT -H "$H" -d "{\"Items\":{\"epoch\":\"1\"}}" "$A/v1/var/vms/epoch/verify");
-    oth=$(curl -s -o /dev/null -w "%{http_code}" -X PUT -H "$H" -d "{\"Items\":{\"name\":\"x\"}}" "$A/v1/var/vms/cameras/verify");
-    echo "own=$own other=$oth"'
-  res="$(nomad alloc exec -task vmsworker "$alloc" sh -c "$inside" 2>/dev/null)"
-  case "$res" in
-    own=200*other=403*) ok "workload identity: $res — one writer per key holds";;
-    *) bad "workload identity: $res (want own=200 other=403)";;
-  esac
-  nomad var purge vms/epoch/verify >/dev/null 2>&1
-else
-  bad "no running allocation of vmsworker to test the workload-identity token inside (run the job first)"
-fi
+# 7
+listed="$(curl -s 'http://127.0.0.1:8090/v1/objects?prefix=vms/heartbeats/&scope=cluster' | python3 -c 'import sys,json;d=json.load(sys.stdin);print(" ".join(sorted({o["server"] for o in d["objects"].values()})), "missing:", ",".join(d.get("missing", [])) or "none")' 2>/dev/null)"
+[ -n "$listed" ] && ok "objects: heartbeats from $listed" || bad "objects: the resource here does not list the cluster's heartbeats"
 
-# 5a — the mirror is resource to resource: a peer accepts a PUT and lists it; nothing went through a store
-res="$(nomad service info -json resource 2>/dev/null | python3 -c 'import sys,json;a=json.load(sys.stdin);print(f"{a[0][\"Address\"]}:{a[0][\"Port\"]}" if a else "")' 2>/dev/null)"
-if [ -n "$res" ]; then
-  curl -s -o /dev/null -w "%{http_code}" -X PUT --data-binary '{"t":0,"kind":"probe"}' "http://$res/mirror/srv-verify/vms/0/e1/19700101T000000Z.events.jsonl" | grep -q 204 \
-    && curl -s "http://$res/mirrored/srv-verify" | grep -q '"path"' && ok "mirror: a peer took a copy and lists it" || bad "mirror: PUT/GET on the resource failed"
-else
-  bad "no resource service registered to test the mirror against"
-fi
-
-# 6 — scale out, then in: the slot claimed, then released; the controller asked for neither
-n="$(nomad job status -json vmsworker 2>/dev/null | python3 -c 'import sys,json;print(json.load(sys.stdin)[0]["TaskGroups"][0]["Count"])' 2>/dev/null)"
-if [ -n "$n" ]; then
-  nomad job scale vmsworker $((n+1)) >/dev/null 2>&1; sleep 20
-  if nomad var get "vms/slots/w-$n" 2>/dev/null | grep -q 'released *= *false'; then ok "scale out: slot w-$n claimed by the new allocation"; else bad "scale out: slot w-$n not claimed"; fi
-  nomad job scale vmsworker "$n" >/dev/null 2>&1; sleep 30
-  if nomad var get "vms/slots/w-$n" 2>/dev/null | grep -q 'released *= *true'; then ok "scale in: slot w-$n released (SIGTERM inside kill_timeout)"; else bad "scale in: slot w-$n not released — kill_timeout too short, or the stop was not orderly"; fi
-else
-  bad "vmsworker is not running; skipped the scale drill"
-fi
+# 8
+curl -s -o /dev/null -w "%{http_code}" -X PUT --data-binary '{"t":0,"kind":"probe"}' "http://127.0.0.1:8090/mirror/srv-verify/vms/0/e1/19700101T000000Z.events.jsonl" | grep -q 204 \
+  && curl -s "http://127.0.0.1:8090/mirrored/srv-verify" | grep -q '"path"' && ok "mirror: the resource took a copy and lists it" || bad "mirror: PUT/GET on the resource failed"
 
 echo; echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

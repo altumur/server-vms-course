@@ -1,177 +1,120 @@
-"""The policies and the code say the same thing, and a test says so.
+"""The rights file and the code say the same thing, and a test says so.
 
-Variables have had an ACL since М10A Lesson 1, and it is derived from the spec:
-`acl_controller()`, `acl_console()`, `acl_worker()`. The OBJECT STORE never had
-one. On one box that is invisible — `FsObjectStore` has no writer and no prefixes
-— and on a cluster the ACL is real, enforced by the scheduler, but written by
-hand in `deploy/*-policy.hcl`.
+The store's rights are a file the daemon reads — `deploy/configstore-rights.json`, installed as
+`/etc/w2c/configstore-rights.json` — and the daemon asks it before anything is forwarded or applied, by the socket the
+caller came through. The file is GENERATED from the spec (`python3 -m cluster rights`, `cluster/rights.py`): the
+writes from `acl_console`, `acl_controller`, `acl_worker`, `WORKER_ACL` and the create-only object rows, the reads
+from a list with the code that makes each read.
 
-Nothing checked that the hand-written file still matched the code, and inside two
-commits it stopped matching three times:
-
-  * the controller's grant named `objects/vms/snapshot` exactly, and the snapshot
-    became one object per worker — every shard a 403, every five seconds, logged
-    as "placement pass failed";
-  * the console got a `blob` route and no grant to write `objects/vms/blobs/*`,
-    so the route could not work on a cluster at all;
-  * the rec controller never had a grant for its own snapshot, from the day it
-    was written.
-
-None of the three is subtle. All three were invisible because the suite runs
-against a store with no ACL, and the file with the ACL is not code.
-
-So: the grants are derived from the spec (`acl_objects_*`), and this checks each
-policy against them in BOTH directions — everything the code writes is allowed,
-and nothing else is.
+The history this file comes from: on Nomad the policies were written by hand in `*-policy.hcl`, and inside two
+commits they stopped matching the code three times — the controller's grant named `objects/vms/snapshot` exactly when
+the snapshot had become one object per worker; the console got a `blob` route and no grant for it; the rec controller
+never had a grant for its own snapshot. All three were invisible, because the suite ran against a store with no
+rights at all. The stand now runs every process through its own role's door with THIS file's rights, so a missing
+grant is a 403 in the stand; and this checks the file against the code both ways — every write the code makes (the
+stand's, every scene, and the doors the scenes do not knock on) is granted, and nothing is granted that the code's
+lists do not ask for — and every read the code makes is granted.
 """
+import json
 import os
-import re
 
+from cluster.objectstore import is_create_only
+from cluster.rights import render, roles
 from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS
-from w2cplatform.blobs import digest
+from w2cplatform.resource import DOORS
+from w2cplatform.storemachine import Rights
+from tests.conftest import RIGHTS
 
-DEPLOY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "deploy")
-OBJECTS = "objects/"                       # VariablesObjectStore's prefix: an object IS a Variable here
-
-_RULE = re.compile(r'path\s+"([^"]+)"\s*\{\s*capabilities\s*=\s*\[([^\]]*)\]', re.S)
-
-
-def rules(policy: str) -> list[tuple[str, set[str]]]:
-    """`[(path pattern, capabilities)]` in file order, which is the order Nomad reads them."""
-    src = open(os.path.join(DEPLOY, policy), encoding="utf-8").read()
-    return [(p, {c.strip().strip('"') for c in caps.split(",") if c.strip()}) for p, caps in _RULE.findall(src)]
+OBJECTS = "objects/"
+SOCKETS = "/run/configstore/"
 
 
-def matches(pattern: str, key: str) -> bool:
-    """Nomad's glob: `*` stands for any run of characters, and a pattern with no
-    `*` is an EXACT path. That second half is the whole of the first bug — a
-    pattern naming `objects/vms/snapshot` does not match `objects/vms/snapshot/w-1`."""
-    return re.fullmatch(re.escape(pattern).replace(r"\*", ".*"), key) is not None
+def rights() -> Rights:
+    return Rights.load(RIGHTS)
 
 
-def may_write(policy: str, key: str) -> bool:
-    return any("write" in caps for pat, caps in rules(policy) if matches(pat, key))
+def doc() -> dict:
+    with open(RIGHTS, encoding="utf-8") as f:
+        return json.load(f)
 
 
-def write_patterns(policy: str) -> set[str]:
-    return {pat for pat, caps in rules(policy) if "write" in caps}
+def test_the_committed_file_is_what_the_spec_generates():
+    """`deploy/configstore-rights.json` is `python3 -m cluster rights` now — a hand edit, or a spec changed without
+    regenerating it, fails here (and `install.sh` refuses to install it)."""
+    with open(RIGHTS, encoding="utf-8") as f:
+        assert f.read() == render(), "regenerate it: python3 -m cluster rights > deploy/configstore-rights.json"
+    assert Rights.parse(doc()).roles == {r: {a: g[a] for a in ("read", "write", "delete")} for r, g in roles().items()}
 
 
-def _keys(prefixes: list[str], sample: str) -> list[str]:
-    """A concrete key under each granted prefix — a pattern is checked by what it
-    has to match, not by comparing two strings that look alike."""
-    return [OBJECTS + (p[:-1] + sample if p.endswith("*") else p) for p in prefixes]   # an exact path is itself
+def test_each_role_says_its_sockets_group_in_the_products_format():
+    """The product's format (its configstore round 2): each role carries its socket's `group` — a VMS subsystem's
+    `vms-<role>`, the platform's `w2c-<role>` — which is what a unit joins (`SupplementaryGroups=`)."""
+    r = rights()
+    for role in doc()["roles"]:
+        platform = role in ("resource", "domainagent", "member")
+        assert r.groups[role] == ("w2c-" if platform else "vms-") + role, role
+    assert {"console", "vmscontroller", "reccontroller", "vmsworker", "recworker", "resource"} <= set(r.roles)
 
 
-def test_every_object_the_code_writes_is_granted():
-    """Direction one, from the code's own lists: a concrete key under each prefix the spec says a process writes."""
-    cases = [
-        ("vmsworker-policy.hcl", _keys(WORKER_OBJECTS, "w-1")),          # its heartbeat, and the mark it leaves before a command
-        ("recworker-policy.hcl", _keys(REC_SPEC.sub.acl_objects_worker(), "r-1")),
-        ("vmscontroller-policy.hcl", _keys(SPEC.sub.acl_objects_controller(), "w-1")
-                                     + _keys(SPEC.sub.acl_objects_controller(), "unplaced")),
-        ("reccontroller-policy.hcl", _keys(REC_SPEC.sub.acl_objects_controller(), "r-1")),
-        ("console-policy.hcl", _keys(SPEC.sub.acl_objects_console(), digest(b"a mask"))
-                               + _keys(REC_SPEC.sub.acl_objects_console(), digest(b"a mask"))),
-    ]
-    for policy, keys in cases:
-        for key in keys:
-            assert may_write(policy, key), f"{policy} does not let it write {key}"
-
-
-def test_every_row_the_code_writes_is_granted_too():
-    """The same direction for Variables, which the first version of this file left
-    out — and left out is how `<sub>/sweep` got added to `acl_console()` with no
-    line in the policy: the console would have been refused its own bookkeeping the
-    first time the blob sweep ran on a cluster. The gap was the same shape as the
-    three this file was written for."""
-    cases = [
-        ("vmsworker-policy.hcl", WORKER_ACL, ["w-1"]),                  # the platform's grant + what a device is
-        ("recworker-policy.hcl", REC_SPEC.sub.acl_worker(), ["r-1"]),
-        ("vmscontroller-policy.hcl", SPEC.acl_controller(), ["7"]),
-        ("reccontroller-policy.hcl", REC_SPEC.acl_controller(), ["7"]),
-        ("console-policy.hcl", SPEC.acl_console() + REC_SPEC.acl_console(), ["7"]),
-    ]
-    for policy, prefixes, samples in cases:
-        for pre in prefixes:
-            for key in ([pre.rstrip("*") + s for s in samples] if pre.endswith("*") else [pre]):
-                assert may_write(policy, key), f"{policy} does not let it write {key}"
-
-
-def test_nothing_writes_an_object_it_has_no_business_writing():
-    """Direction two, and the one that costs something to keep true: a grant wider
-    than the code needs is how a worker ends up able to write М12's directory."""
-    denied = [
-        # a worker writes its own heartbeat and nothing else in the subsystem
-        ("vmsworker-policy.hcl", OBJECTS + "vms/snapshot/w-1"),
-        ("vmsworker-policy.hcl", OBJECTS + "vms/blobs/" + digest(b"a mask")),
-        ("recworker-policy.hcl", OBJECTS + "rec/snapshot/r-1"),
-        # the controller publishes the snapshot and touches neither of the others
-        ("vmscontroller-policy.hcl", OBJECTS + "vms/heartbeats/w-1"),
-        ("vmscontroller-policy.hcl", OBJECTS + "vms/blobs/" + digest(b"a mask")),
-        # the console owns the rows and the blobs, never a heartbeat or a shard
-        ("console-policy.hcl", OBJECTS + "vms/heartbeats/w-1"),
-        ("console-policy.hcl", OBJECTS + "vms/snapshot/w-1"),
-        # and the resource stays inside its own prefix
-        ("resource-policy.hcl", OBJECTS + "vms/heartbeats/w-1"),
-        ("resource-policy.hcl", OBJECTS + "vms/snapshot/w-1"),
-    ]
-    for policy, key in denied:
-        assert not may_write(policy, key), f"{policy} lets it write {key}"
-
-
-def test_every_write_grant_is_one_the_code_asked_for():
-    """The strongest half: no rule in the file that nothing in the code explains.
-    This is what `objects/vms/*` would fail — the grant the worker had until now,
-    whose comment said "its heartbeat" while the pattern said the whole subsystem."""
-    expected = {
-        "vmsworker-policy.hcl": set(WORKER_ACL) | {OBJECTS + p for p in WORKER_OBJECTS},
-        "recworker-policy.hcl": set(REC_SPEC.sub.acl_worker()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_worker()},
-        "vmscontroller-policy.hcl": set(SPEC.acl_controller()) | {OBJECTS + p for p in SPEC.sub.acl_objects_controller()},
-        "reccontroller-policy.hcl": set(REC_SPEC.acl_controller()) | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_controller()},
-        "console-policy.hcl": set(SPEC.acl_console()) | set(REC_SPEC.acl_console())
-                              | {OBJECTS + p for p in SPEC.sub.acl_objects_console()}
-                              | {OBJECTS + p for p in REC_SPEC.sub.acl_objects_console()},
+def _expected_writes() -> dict[str, set[str]]:
+    rows = lambda objs: {OBJECTS + p for p in objs if is_create_only(p)}            # noqa: E731
+    return {
+        "console": set(SPEC.acl_console()) | set(REC_SPEC.acl_console()),
+        "vmscontroller": set(SPEC.acl_controller()),
+        "reccontroller": set(REC_SPEC.acl_controller()),
+        "vmsworker": set(WORKER_ACL) | rows(WORKER_OBJECTS),
+        "recworker": set(REC_SPEC.sub.acl_worker()) | rows(REC_SPEC.sub.acl_objects_worker()),
+        "resource": {DOORS + "/*"},
+        "domainagent": {"domain/*", "relay/*"},
+        "member": set(),
     }
-    for policy, allowed in expected.items():
-        unexplained = write_patterns(policy) - allowed
-        assert not unexplained, f"{policy} grants write to {sorted(unexplained)}, which no acl_* in the spec asks for"
 
 
-# -- READS (М10's eighth review, the sweep of the three-cameras notes) -----------------------------------------------
-# The file checked writes only, and the stand enforces no read ACL: the console's gate reads `domain/keys` and the rows
-# that mark a member on every request, the holder's playback door the same, and every process `platform/schema` when
-# it starts — and no policy but the console's let anybody read `platform/*`, and none `domain/*`. On a real Nomad each
-# of those is a 403: the gate fails shut, the schema check fails. So the reads are checked against the code too, the way
-# the writes are: every read the processes MAKE — the module's stand, every scene, under each process's own name, and
-# the doors the scenes do not knock on — is granted by that process's policy; and the cluster's key is read by the
-# three jobs that open a device's password and by nobody else.
-def may(policy: str, cap: str, key: str) -> bool:
-    return any(cap in caps for pat, caps in rules(policy) if matches(pat, key))
+def test_every_write_grant_is_one_the_code_asked_for_and_every_one_it_asked_for_is_there():
+    """Both directions against the code's own lists. What `objects/vms/*` would fail — the grant the worker once had,
+    whose comment said "its heartbeat" while the pattern said the whole subsystem. And an object that is a FILE now
+    (a heartbeat, a shard, a pass report, a blob) is no row, so no grant names it: only the create-only keys are."""
+    got = {role: set(g["write"]) for role, g in doc()["roles"].items()}
+    assert got == _expected_writes()
+    for role, g in doc()["roles"].items():
+        assert set(g["delete"]) == set(g["write"]), role                         # a role deletes what it writes
+        assert all(not p.startswith(OBJECTS) or is_create_only(p[len(OBJECTS):]) for p in g["write"]), role
 
 
-ROLES = {"console": "console-policy.hcl", "vmsworker": "vmsworker-policy.hcl", "recworker": "recworker-policy.hcl",
-         "resource": "resource-policy.hcl", "vmscontroller": "vmscontroller-policy.hcl",
-         "reccontroller": "reccontroller-policy.hcl"}
+def test_nothing_writes_what_it_has_no_business_writing():
+    """Direction two by name, the cases each of which once happened: a worker writes its claims and nothing of the
+    configuration; the controller places and edits nothing; the console edits and places nothing; the resource
+    stays inside its doors; nobody writes an object that is a file."""
+    r = rights()
+    denied = [("vmsworker", "vms/cameras/7"), ("vmsworker", "vms/placement/7"), ("vmsworker", "vms/workers/w-srv-a-1"),
+              ("recworker", "rec/recordings/7"), ("recworker", "vms/epoch/7"),
+              ("vmscontroller", "vms/cameras/7"), ("vmscontroller", "vms/epoch/7"), ("vmscontroller", "rec/placement/7"),
+              ("console", "vms/placement/7"), ("console", "vms/workers/w-srv-a-1"), ("console", "vms/slots/w-srv-a-1"),
+              ("resource", "vms/cameras/7"), ("resource", "platform/schema"),
+              ("domainagent", "vms/cameras/7")]
+    for role in r.roles:
+        denied += [(role, OBJECTS + k) for k in ("vms/heartbeats/w-1", "vms/snapshot/w-1", "vms/controller/pass",
+                                                 "platform/resources/srv-a/heartbeat")]
+    for role, key in denied:
+        assert not r.allows(role, "write", key), f"{role} may write {key}"
+    for role in r.roles:
+        assert not r.allows(role, "delete", "vms/epoch/7") and (role == "domainagent") == r.allows(role, "delete", "domain/keys")
 
 
+# -- what the processes DO: every scene of the stand, and the doors the scenes do not knock on ------------------------
 def _doors(s) -> None:
-    """What the scenes do not do: a request at the console's door and at the holder's playback door (each asks its
-    gate), and the recorder controller's passes."""
+    """A request at the console's door and at the holder's playback door (each asks its gate), what a server reaches
+    written from the page, a decommission, and the recorder controller's passes — none of which a scene makes."""
     import urllib.error
     import urllib.request
     from cluster.console import serve
-    from cluster.worker import ClusterWorker
-    from vms.worker import FakeActuator, FakeDevice
+    from vms.worker import FakeDevice
     from w2cplatform.spec import SpecController
     s.resources_up()
-    from cluster.controller import ClusterController
-    v, o = s.as_process("console (gate)", "console", SPEC.acl_console() + REC_SPEC.acl_console())
-    con, ctl = ClusterController(v, o, wall=s.wall), s.controller()
+    con, ctl = s.console("srv-a", "console on srv-a (gate)"), s.controller()
     con.create_camera({"source": "driverpack://acme/10.0.0.50/ch/1"})
     dev = FakeDevice("acme/10.0.0.50", channels=["1"], coverage={"1": (0.0, 100.0)})
-    v, o = s.as_process("vmsworker (allocation 0 on srv-a)", "vmsworker-0", WORKER_ACL + [OBJECTS + p for p in WORKER_OBJECTS])
-    w = ClusterWorker(v, o, FakeActuator(), env=s.env(0, "srv-a"), clock=s.clock, wall=s.wall, device_factory=lambda k: dev)
+    w = s.worker("srv-a", device_factory=lambda k: dev)
     w.heartbeat_once(); ctl.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
     door = w.serve_playback("127.0.0.1", 0)
     rec_con = SpecController(REC_SPEC, con.vars, con.objects, wall=s.wall)
@@ -181,7 +124,7 @@ def _doors(s) -> None:
                     f"http://127.0.0.1:{srv.server_address[1]}/cameras"):
             with urllib.request.urlopen(url) as r:
                 r.read()
-        # What a server reaches, from the console (feedback DQ): the row written, removed and written again — so the
+        # What a server reaches, from the console (feedback DQ): written, removed and written again — so the
         # controllers' passes below read one — for the camera's subsystem and the recorder's.
         for path in ("/servers/srv-a/labels", "/rec/servers/srv-a/labels"):
             for method in ("PUT", "DELETE", "PUT"):
@@ -190,10 +133,9 @@ def _doors(s) -> None:
                                              headers={"Content-Type": "application/json"})
                 with urllib.request.urlopen(req) as r:
                     r.read()
-        # A machine gone for good (М10A Lesson 7, step 7): its server goes silent, the console writes
-        # `platform/decommission/srv-a` — and deletes it and writes it again, so `DELETE` is exercised too — and the
-        # controllers' passes below read it, release the slot on that server and write their marks
-        # (`<sub>/decommissioned/srv-a`).
+        # A machine gone for good (М10A Lesson 7, step 7): srv-a goes silent, the console writes
+        # `platform/decommission/srv-a` — deletes it and writes it again, so a delete is made too — and the
+        # controllers' passes below read it, release the slot on that server and write their marks.
         s.wall.advance(100)
         for method, want in (("POST", 202), ("DELETE", 200), ("POST", 202)):
             req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/servers/srv-a/decommission",
@@ -208,12 +150,10 @@ def _doors(s) -> None:
     finally:
         door.shutdown(); srv.shutdown()
     rec_con.create({"name": "1", "cam": "1"})
-    v, o = s.as_process("reccontroller", "reccontroller",
-                        REC_SPEC.acl_controller() + [OBJECTS + p for p in REC_SPEC.sub.acl_objects_controller()])
-    rc = SpecController(REC_SPEC, v, o, wall=s.wall)
+    v = s.door("reccontroller", "reccontroller on srv-b")
+    rc = SpecController(REC_SPEC, v, s.objects_on("srv-b", v, "reccontroller on srv-b"), wall=s.wall)
     rc.ensure_placed(); rc.redistribute(); rc.ensure_home(1); rc.unplace_deleted()
-    # The pass as the loops run it (`cluster/__main__._placement_pass`): it writes its report (`<sub>/controller/pass`)
-    # — the write no policy granted, and no scene made (the review's ninth pass) — and then the snapshot.
+    # The pass as the loops run it (`cluster/__main__._placement_pass`): its report, then the snapshot.
     for c in (ctl, rc):
         c.pass_once(1); c.publish_snapshot()
     assert ctl.slots()[w.name].released and ctl.decommission_marks()       # the row was read, the slot released, the mark written
@@ -221,12 +161,15 @@ def _doors(s) -> None:
 
 # The scenes whose point is a write the store refuses: their 403 is the lesson, not the code writing outside its grant.
 REFUSED_ON_PURPOSE = ("a_worker_may_not_write_a_camera", "who_may_write_what")
+_CALLS: list = []
 
 
 def code_calls() -> tuple[dict[str, set[tuple[str, str]]], dict[str, set[tuple[str, str, int]]]]:
-    """`({policy: {("read" | "list", path)}}, {policy: {("PUT" | "DELETE", path, status)}})`: every read and every write
-    of the store each process made — the module's stand, every scene, under each process's own name, and `_doors`."""
-    from urllib.parse import unquote
+    """`({role: {("read" | "list", key)}}, {role: {("write" | "delete", key, status)}})`: every read and every write of
+    the store each role made — every scene, and `_doors` — by the socket it came through."""
+    if _CALLS:
+        return _CALLS[0]
+    from urllib.parse import parse_qsl, urlsplit
     import tests.stand as stand
     made, real = [], stand.Stand.__init__
     current = {"scene": ""}
@@ -247,84 +190,80 @@ def code_calls() -> tuple[dict[str, set[tuple[str, str]]], dict[str, set[tuple[s
     writes: dict[str, set] = {}
     for scene, s in made:
         for c in s.log.calls:
-            role = c.who.split()[0]
-            if c.who == "console" or role not in ROLES:
-                continue                                 # `console` alone is the scene's own hand, not a process
-            if c.method == "GET":
-                if c.url.startswith("/v1/vars?prefix="):
-                    op, path = "list", unquote(c.url[len("/v1/vars?prefix="):].split("&", 1)[0])
-                else:
-                    op, path = "read", unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
-                reads.setdefault(ROLES[role], set()).add((op, path))
-            elif scene not in REFUSED_ON_PURPOSE:
-                path = unquote(c.url[len("/v1/var/"):].split("?", 1)[0])
-                writes.setdefault(ROLES[role], set()).add((c.method, path, c.status))
+            if c.kind != "store" or not c.door.startswith(SOCKETS):
+                continue
+            role = c.door[len(SOCKETS):-len(".sock")]
+            if c.write:
+                if scene not in REFUSED_ON_PURPOSE:
+                    action = "write" if c.op == "put" else "delete"
+                    writes.setdefault(role, set()).add((action, c.body["key"], c.status))
+            else:
+                q = dict(parse_qsl(urlsplit(c.target).query))
+                reads.setdefault(role, set()).add(("read", q["key"]) if c.op == "get" else ("list", q.get("prefix", "")))
+    _CALLS.append((reads, writes))
     return reads, writes
 
 
-def code_reads() -> dict[str, set[tuple[str, str]]]:
-    """`{policy: {("read" | "list", path)}}`: every read of the store each process made."""
-    return code_calls()[0]
-
-
 def test_every_write_the_code_makes_is_granted():
-    """THE WRITES AS THE PROCESSES MAKE THEM (the review's ninth pass, major). The checks above compared the policy files
-    with the spec's `acl_*` lists — which are written by hand too: the controller's pass wrote its report to
-    `objects/<sub>/controller/pass`, no list named it, the policy did not grant it, and every check here agreed. On a
-    cluster with an ACL that was `Forbidden` every five seconds and `<sub>_units_unplaced` 0 for ever. So: every PUT and
-    DELETE a process made in the stand — every scene, and the passes and doors the scenes do not run — is allowed by
-    that process's policy; and the stand refused none of them (a 403 there is the stand's grants and the code
-    disagreeing, the same drift one level down), except in the scenes whose point is the refusal."""
+    """THE WRITES AS THE PROCESSES MAKE THEM (the review's ninth pass, major). The checks above compare the file with
+    the spec's lists — which are written by hand too: the controller's pass wrote its report, no list named it, and
+    every check agreed while the cluster said 403 every five seconds. So every write and delete a process made in the
+    stand — every scene, and the passes and doors the scenes do not run — is allowed by that role's rights; and the
+    stand refused none of them, except in the scenes whose point is the refusal."""
     _, writes = code_calls()
-    assert {"vmsworker-policy.hcl", "recworker-policy.hcl", "vmscontroller-policy.hcl", "reccontroller-policy.hcl",
-            "console-policy.hcl", "resource-policy.hcl"} <= set(writes), sorted(writes)
+    assert {"vmsworker", "recworker", "vmscontroller", "reccontroller", "console", "resource"} <= set(writes), sorted(writes)
+    r = rights()
     refused, outside = [], []
-    for policy, made in sorted(writes.items()):
-        for method, path, status in sorted(made):
+    for role, made in sorted(writes.items()):
+        for action, key, status in sorted(made):
             if status == 403:
-                refused.append(f"{policy}: {method} {path}")
-            if not may(policy, "write", path):
-                outside.append(f"{policy}: {method} {path}")
-    assert not outside, "the code writes what its policy does not grant:\n" + "\n".join(outside)
+                refused.append(f"{role}: {action} {key}")
+            if not r.allows(role, action, key):
+                outside.append(f"{role}: {action} {key}")
+    assert not outside, "the code writes what its rights do not grant:\n" + "\n".join(outside)
     assert not refused, "the stand refused a write the code made:\n" + "\n".join(refused)
 
 
 def test_every_row_the_code_reads_is_granted():
-    """Direction one, for reads: every GET and every listing a process made in the stand is allowed by its policy."""
-    reads = code_reads()
-    assert set(reads) == set(ROLES.values()), sorted(set(ROLES.values()) - set(reads))   # every process was run
-    for policy, made in sorted(reads.items()):
-        for op, path in sorted(made):
-            key = path + "x" if op == "list" else path   # a listing is of a prefix: what lies under it
-            assert may(policy, op, key), f"{policy} does not let it {op} {path}"
+    """Every get and every listing a process made in the stand is allowed by its role's rights — a get the file does
+    not grant is a 403 from the daemon, a listing answers only what the role may read (and so would be silently
+    short): both are checked here, by the key and by what lies under the prefix."""
+    reads, _ = code_calls()
+    assert {"vmsworker", "recworker", "vmscontroller", "reccontroller", "console", "resource"} <= set(reads), sorted(reads)
+    r = rights()
+    for role, made in sorted(reads.items()):
+        for op, key in sorted(made):
+            probe = key + "x" if op == "list" else key            # a listing is of a prefix: what lies under it
+            assert r.allows(role, "read", probe), f"{role} may not {op} {key}"
 
 
 def test_the_gate_and_the_schema_are_readable_by_every_process_that_asks_them():
     """The same from the code's constants, for what the stand reaches only in part: the gate asks for the key set and
     every row that marks a member (`TRUST_KEYS`, `DOMAIN_MARKS`) at the console and at the holder's door; a domain's
-    image reads the grants by cluster (`domain/grants/<cluster>`); every process checks `platform/schema` first."""
+    image reads the grants by cluster (`domain/grants/<cluster>`); every process checks `platform/schema` first —
+    `Worker.__init__` → `check_schema` (WP1's note: every worker role)."""
     from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
     from w2cplatform.contract import SCHEMA_KEY
+    r = rights()
     for key in (TRUST_KEYS, *DOMAIN_MARKS, "domain/grants/acme"):
-        assert may("console-policy.hcl", "read", key), f"console-policy.hcl does not let it read {key}"
+        assert r.allows("console", "read", key), f"console may not read {key}"
     for key in (TRUST_KEYS, MEMBER_MARK):                # the holder's door verifies no token (`Gate.gated`)
-        assert may("vmsworker-policy.hcl", "read", key), f"vmsworker-policy.hcl does not let it read {key}"
-    for policy in set(ROLES.values()):
-        assert may(policy, "read", SCHEMA_KEY), f"{policy} does not let it read {SCHEMA_KEY}"
+        assert r.allows("vmsworker", "read", key), f"vmsworker may not read {key}"
+    for role in r.roles:
+        assert r.allows(role, "read", SCHEMA_KEY), f"{role} may not read {SCHEMA_KEY}"
 
 
 def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
-    """М10's ninth review, minor: the holder's policy granted every row that marks a member — the grants and
-    `domain/break_glass`, the emergency password's hash, among them — while its playback door verifies no token and asks
-    only whether the cluster is in a domain (`Gate.gated`: the key set, and `domain/member` while there is none). Not
-    wider than the code: the policy's `domain/*` is exactly those two rows, and what the door read in the stand is in
-    them."""
+    """М10's ninth review, minor: the holder's grant once covered every row that marks a member — the grants and
+    `domain/break_glass`, the emergency password's hash, among them — while its playback door verifies no token and
+    asks only whether the cluster is in a domain (`Gate.gated`: the key set, and `domain/member` while there is none).
+    Not wider than the code: of `domain/*` the worker reads exactly those two rows."""
     import tempfile
     from vms.worker import FakeActuator, VmsWorker
     from w2cplatform.access import MEMBER_MARK, TRUST_KEYS
     from w2cplatform.objects import FsObjectStore
     from w2cplatform.variables import FileVariables
-    granted = {pat for pat, caps in rules("vmsworker-policy.hcl") if pat.startswith("domain") and caps & {"read", "list"}}
+    granted = {p for p in doc()["roles"]["vmsworker"]["read"] if p.startswith("domain")}
     assert granted == {TRUST_KEYS, MEMBER_MARK}, sorted(granted)
     root = tempfile.mkdtemp()
     vars_, read = FileVariables(f"{root}/vars"), []
@@ -338,18 +277,24 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
     assert made == {TRUST_KEYS, MEMBER_MARK}, sorted(made)
 
 
-def test_the_clusters_key_is_read_by_the_three_jobs_that_open_a_password_and_nobody_else():
-    """`secrets/vms` — the console seals, the holder and the recorder open (`w2cplatform/sealing.py`). The controllers
-    had `path "*"` read, which reads it too, against the console's own comment; they read what they read now."""
-    for policy in ROLES.values():
-        opens = policy in ("console-policy.hcl", "vmsworker-policy.hcl", "recworker-policy.hcl")
-        assert may(policy, "read", "secrets/vms") == opens, policy
-        assert all(pat != "*" for pat, _ in rules(policy)), f"{policy} still reads everything"
+def test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_password_and_no_row():
+    """The console seals, the holder and the recorder open (`w2cplatform/sealing.py`). On Nomad the key was a Variable
+    that three policies read and a template rendered; here it is a file on every server, and the three units — and no
+    other — load it as a systemd credential, readable by their own process only (`%d/platform.key`). No role of the
+    store reads any `secrets/` row: there is none."""
+    r = rights()
+    for role in r.roles:
+        assert not r.allows(role, "read", "secrets/vms"), role
+    deploy = os.path.join(os.path.dirname(RIGHTS), "systemd")
+    loaders = {f for f in os.listdir(deploy) if f.endswith(".service")
+               and "LoadCredential=platform.key:/etc/w2c/secrets/platform.key" in open(os.path.join(deploy, f)).read()}
+    assert loaders == {"vms-console.service", "vms-vmsworker.service", "vms-recworker.service"}
 
 
-def test_the_exact_path_that_broke_it_stays_broken_as_a_pattern():
-    """Kept as a named case because it cost nothing to write and would have cost a
-    production morning: Nomad's path is a glob, and a glob without a `*` is exact."""
-    assert matches("objects/vms/snapshot/*", "objects/vms/snapshot/w-1")
-    assert not matches("objects/vms/snapshot", "objects/vms/snapshot/w-1")
-    assert matches("objects/vms/*", "objects/vms/snapshot/w-1")          # why the old worker grant was too wide
+def test_a_key_is_exact_and_a_prefix_says_so():
+    """Kept as a named case because it cost a production morning on Nomad: a pattern without a trailing `*` is ONE
+    key. The daemon's patterns say the same (`storemachine.Rights`), and a denial (`!`) wins over a grant."""
+    r = Rights.parse({"roles": {"c": {"write": ["objects/vms/snapshot/*", "vms/policy", "vms/*", "!vms/epoch/*"]}}})
+    assert r.allows("c", "write", "objects/vms/snapshot/w-1") and not r.allows("c", "write", "objects/vms/snapshot")
+    assert r.allows("c", "write", "vms/policy") and r.allows("c", "write", "vms/cameras/1")
+    assert not r.allows("c", "write", "vms/epoch/1")

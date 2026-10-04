@@ -1,0 +1,36 @@
+# vmsworker w-srv-a-1 on srv-a → its own files on srv-a
+PUT vms/heartbeats/w-srv-a-1
+
+# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+→ 200 {
+  "server": "srv-b",
+  "objects": {
+    "vms/heartbeats/w-srv-a-1": {
+      "written": 1757500000.0,
+      "server": "srv-a",
+      "size": 486
+    }
+  }
+}
+
+# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+→ 200 {"bytes": 486, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "objects/vms/commands/r-17", "cas": "", "items": {
+  "data": "{\"instance\": \"srv-a:4101\"}"
+}}
+→ 200 {"index": 1005}
+
+# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
+→ 200 {"server": "srv-b", "objects": {}, "missing": ["srv-a"]}
+
+# vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
+GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
+→ 404 {"X-Missing": "srv-a"}
+
+# workers_seen() on srv-b = ['w-srv-a-1']; the mark made: True
+# srv-a down: the resource on srv-b names it missing (['srv-a']); workers_seen() = ['w-srv-a-1'], by what srv-b's reader heard last

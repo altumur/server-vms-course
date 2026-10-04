@@ -45,7 +45,7 @@ def cluster_routes(ctl: ClusterController, rec_ctl: SpecController | None = None
 # 2's timeline and its footage for any grant at all; a recording's grant was matched on its own placement labels; what
 # left through this console was in no journal; and the recorder's mount had neither the archives (`/rec/volumes`,
 # `/rec/keeps`) nor the numbers the recorder's scaling check asks for (`rec_recorders_needed`,
-# `recworker.nomad.hcl`). One function wires a console of the VMS, whoever builds it: `vms.console.wire_vms`.
+# `w2c-spares.sh`, for recorders). One function wires a console of the VMS, whoever builds it: `vms.console.wire_vms`.
 def make_console(ctl: ClusterController, worst_failover: float = 0.0, index=None, archive_root: str | None = None,
                  rec_ctl: SpecController | None = None) -> Mount:
     """The VMS at `/` and, when the console fronts it, the recorder at `/rec/…` (the page's Record toggle:

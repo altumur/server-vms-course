@@ -244,7 +244,7 @@ if __name__ == "__main__":
     import os
     import sys
 
-    import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
+    import cluster as _cluster  # noqa: F401  — puts М10's vmsserver on sys.path
     from w2cplatform.variables import open_vars
     if len(sys.argv) not in (3, 4) or sys.argv[1] != DOMAIN_SCOPE:
         sys.exit("usage: python3 -m domain.grants domain <subject> [view|edit|admin]")

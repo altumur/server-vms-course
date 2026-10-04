@@ -1,0 +1,98 @@
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/decommission/srv-a
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {"vms/slots/w-srv-a-1": 1008}}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-a-1
+→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1008}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-a-1
+→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1008}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items": {
+  "holder": "srv-a:4102",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "2"
+}}
+→ 200 {"index": 1012}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-a-1
+→ 200 {"items": {"holder": "srv-a:4102", "until": "1757500045.0", "released": "false", "gen": "2"}, "index": 1012}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/workers/w-srv-a-1
+→ 200 {"items": {"units": "1,2", "rev": "1"}, "index": 1009}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/cameras/1
+→ 200 {
+  "items": {
+    "id": "1",
+    "revision": "1",
+    "name": "cam-1",
+    "source": "driverpack://file/1.mp4",
+    "enabled": "true",
+    "priority": "100",
+    "labels": "",
+    "folders": "",
+    "ref": "",
+    "cred_username": "",
+    "cred_secret": "",
+    "live": "always",
+    "kind": "video"
+  },
+  "index": 1005
+}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/cameras/2
+→ 200 {
+  "items": {
+    "id": "2",
+    "revision": "1",
+    "name": "cam-2",
+    "source": "driverpack://file/2.mp4",
+    "enabled": "true",
+    "priority": "100",
+    "labels": "",
+    "folders": "",
+    "ref": "",
+    "cred_username": "",
+    "cred_secret": "",
+    "live": "always",
+    "kind": "video"
+  },
+  "index": 1007
+}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/epoch/1
+→ 200 {"items": {"epoch": "1"}, "index": 1010}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
+→ 200 {"index": 1013}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/epoch/2
+→ 200 {"items": {"epoch": "1"}, "index": 1011}
+
+# vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/epoch/2", "cas": 1011, "items": {"epoch": "2"}}
+→ 200 {"index": 1014}

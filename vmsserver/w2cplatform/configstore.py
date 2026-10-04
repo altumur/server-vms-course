@@ -32,12 +32,13 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # a group of fifteen voters that changes every time a worker restarts is not a group.
 #
 # ## Doors
-# - `<sockets>/<role>.sock` — one per role of the rights file, 0660, group `socket_group(role)` when that group
-#   exists: a unit with that `SupplementaryGroups=` and `PLATFORM_STORE=configstore:///run/configstore/<role>.sock`
-#   can open its own role's socket and no other. The socket IS the caller's identity; the daemon asks the rights
-#   file (`storemachine.Rights`) BEFORE anything is forwarded or applied — a 403 never costs a log entry.
+# - `<sockets>/<role>.sock` — one per role of the rights file, 0660, group `socket_group(role)` (the role's `group` in
+#   the file) when that group exists: a unit with that `SupplementaryGroups=` and
+#   `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` can open its own role's socket and no other. The
+#   socket IS the caller's identity; the daemon asks the rights file (`storemachine.Rights`) BEFORE anything is
+#   forwarded or applied — a 403 never costs a log entry.
 # - `<sockets>/admin.sock` — 0600, root's: everything but what nobody does (an epoch deleted, `domain/*` deleted
-#   by anyone but the agent). The operator's commands (`status`, `join`, `leave`, `rights`, `backup`, `restore`,
+#   by anyone but the domain's own roles, `storemachine.DOMAIN_ROLES`). The operator's commands (`status`, `join`, `leave`, `rights`, `backup`, `restore`,
 #   `import` — the product's `configstore` command has the same verbs) and the contract suite use it.
 # - `-api host:port` — the other daemons' door: `/v1/join`, `/v1/leave`, `/v1/status`, and the data routes for
 #   a peer. Mutual TLS, mandatory (`tls.py`): a client certificate of the installation's CA with the role
@@ -123,9 +124,12 @@ FORWARDED = "X-Configstore-Forwarded"               # the product's mark on a re
 PLATFORM_ROLES = frozenset({"resource"})            # the platform's own processes among the store's callers
 
 
-# A role socket's group: `w2c-<role>` for the platform's own processes, `vms-<role>` for the subsystems' (the
-# product's boundary: vms is a subsystem, not the platform).
-def socket_group(role: str) -> str:
+# A role socket's group: what the rights file says for the role (`group`, the product's format), else `w2c-<role>` for
+# the platform's own processes and `vms-<role>` for the subsystems' (the product's boundary: vms is a subsystem, not
+# the platform).
+def socket_group(role: str, rights: Rights | None = None) -> str:
+    if rights is not None and role in rights.groups:
+        return rights.groups[role]
     return ("w2c-" if role in PLATFORM_ROLES else "vms-") + role
 
 
@@ -460,7 +464,8 @@ class StoreDaemon:
             self._listen(_unix_server(os.path.join(sockets, "admin.sock"), _door(self, lambda h: ADMIN), 0o600, None))
             for role in sorted(self.rights.roles):
                 door = _door(self, lambda h, role=role: role)
-                self._listen(_unix_server(os.path.join(sockets, f"{role}.sock"), door, 0o660, socket_group(role)))
+                self._listen(_unix_server(os.path.join(sockets, f"{role}.sock"), door, 0o660,
+                                          socket_group(role, self.rights)))
         if api is not None:
             if not tls_dir:
                 raise ValueError("the -api door is mutual TLS only: -tls <dir> (deploy/w2c-ca.sh)")
@@ -483,7 +488,7 @@ class StoreDaemon:
         if method == "GET" and path == "/v1/rights":
             if role != ADMIN:
                 return 403, {"kind": "forbidden", "error": f"{role} may not read the rights"}
-            return 200, {"roles": self.rights.roles}
+            return 200, self.rights.doc()
         if method == "POST" and path in ("/v1/join", "/v1/leave"):
             if role not in (ADMIN, PEER):
                 return 403, {"kind": "forbidden", "error": f"{role} may not change the group"}
@@ -708,7 +713,7 @@ def _command(argv: list[str]) -> int:
                         help="a backup's file" if verb == "restore" else "file:///data/platform/config")
     a = ap.parse_args(argv[1:])
     if verb == "rights" and a.file:
-        out = {"roles": Rights.load(a.file).roles}
+        out = Rights.load(a.file).doc()
     else:
         h = open_vars(a.socket)
         if verb == "status":

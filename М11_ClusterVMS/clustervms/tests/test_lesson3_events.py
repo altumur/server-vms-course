@@ -6,30 +6,12 @@ none; unavailable — by name — when the resource is, never lost; a detector's
 event about camera 7 found by a field, not by living in camera 7's bucket."""
 import os
 from w2cplatform.eventdatabase import EventIndex, MergedIndex
-from cluster.resource import cluster_resource, peers_of, resources_seen
+from cluster.resource import peers_of, resources_seen
 from vms.archive import event_log
 from w2cplatform.events import EventLog, buckets_under, subsystems_under
-from tests.conftest import Cluster
+from tests.conftest import Cluster, host
 
 B = 600
-
-
-class DirReader:
-    """The resources' peer client, against directories instead of HTTP (PeerClient's three calls)."""
-    def __init__(self, c): self.c = c
-    def _srv(self, url):
-        s = self.c.servers[url.rsplit("/", 1)[1]]
-        if getattr(s, "down", False): raise ConnectionError(s.name)
-        return s
-    def mirrored(self, url, server):
-        from w2cplatform.resource import mirrored_buckets
-        return mirrored_buckets(self._srv(url).archive, server, B)
-    def put(self, url, server, path, data):
-        dest = os.path.join(self._srv(url).archive, ".mirror", server, path)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        with open(dest, "wb") as f: f.write(data)
-    def get(self, url, server, path):
-        with open(os.path.join(self._srv(url).archive, ".mirror", server, path), "rb") as f: return f.read()
 
 
 def _observe(c, server, sub, unit, epoch, t, kind, **fields):
@@ -37,10 +19,9 @@ def _observe(c, server, sub, unit, epoch, t, kind, **fields):
     return EventLog(c.servers[server].archive, sub, unit, epoch, B).append(t, kind, **fields)
 
 
-def _resources(c, peers=None):
-    rs = {s: cluster_resource(srv.resource, s, f"http://{s}", c.vars, c.objects, wall=c.wall, peers=peers) for s, srv in c.servers.items()}
-    for r in rs.values(): r.heartbeat()
-    return rs
+def _resources(c):
+    """Each server's resource unit, heartbeating — the stand's own, its peers the other servers (`StandPeers`)."""
+    return c.resources_up()
 
 
 def _index(c, rs, server):
@@ -51,8 +32,8 @@ def _index(c, rs, server):
 def _merged(c, rs):
     """The console's side: no index — `GET <resource>/events` on every live resource, here a call instead of HTTP."""
     def fetch(url, p):
-        s = url.rsplit("/", 1)[1]
-        if getattr(c.servers[s], "down", False):
+        s = host(url)
+        if c.servers[s].down:
             raise ConnectionError(s)
         return rs[s].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None, p.get("kind"),
                                  p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
@@ -124,8 +105,7 @@ def test_the_resource_policy_retains_each_subsystems_buckets_by_its_own_row():
     p2 = _observe(c, "srv-a", "vms", "1", 1, now - 3600, "motion")             # recent
     p3 = _observe(c, "srv-a", "det", "d-1", 1, now - 400 * 86400, "person")   # another subsystem: a year by default
     for p in (p1, p2, p3): os.utime(p, (now - 100, now - 100))
-    res = cluster_resource(srv.resource, "srv-a", "http://srv-a", c.vars, c.objects, wall=c.wall)
-    rep = res.pass_()
+    rep = srv.res.pass_()
     assert rep["removed"] == 2 and os.path.exists(p2) and not os.path.exists(p1) and not os.path.exists(p3)
     assert not any(k.startswith("rec.") for k in rep)                            # no footage here: nothing of the recorder's to pass over
     assert not os.path.exists(os.path.join(srv.archive, "rec"))                   # events are the worker's tree (vms/); footage is in a volume
@@ -141,14 +121,14 @@ def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
     import shutil
     assert peers_of("srv-a", ["srv-a", "srv-b", "srv-c"], 1) == ["srv-b"] and peers_of("srv-c", ["srv-a", "srv-b", "srv-c"], 1) == ["srv-a"]
     assert peers_of("srv-b", ["srv-a", "srv-b", "srv-c"], 2) == ["srv-c", "srv-a"] and peers_of("srv-a", ["srv-a"], 1) == []
-    c = Cluster(); t = c.wall() - 7200; rd = DirReader(c)
+    c = Cluster(); t = c.wall() - 7200
     _observe(c, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")
     _observe(c, "srv-a", "det", "d-12", 1, t + 30, "person", cam=7)
     _observe(c, "srv-a", "vms", "7", 3, t + 6800, "motion")                      # in the OPEN bucket: not closed, not mirrored
     _observe(c, "srv-b", "vms", "8", 1, t + 20, "motion")
-    pol = hbs = _resources(c, peers=rd)
+    pol = hbs = _resources(c)
     assert pol["srv-a"].pass_()["enabled"] is False and mirrored_buckets(c.servers["srv-b"].archive, "srv-a") == []   # knob off: nothing leaves
-    c.vars.put(MIRROR_KEY, {"enabled": "true", "copies": "1"})                                       # the knob: one Variable
+    c.vars.put(MIRROR_KEY, {"enabled": "true", "copies": "1"})                                       # the knob: one row
     r = pol["srv-a"].pass_(); assert (r["mirrored"], r["peers"]) == (2, ["srv-b"])                        # a -> b, closed buckets only
     r = pol["srv-b"].pass_(); assert (r["mirrored"], r["peers"]) == (1, ["srv-c"])                        # b -> c
     assert pol["srv-a"].pass_()["mirrored"] == 0                                                          # exactly once: the peer said what it holds

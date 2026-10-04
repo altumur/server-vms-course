@@ -1,4 +1,4 @@
-"""Lesson 5 — the controller as a job: placement under label constraints,
+"""Lesson 5 — the controller on every server: placement under label constraints,
 the directory in one scan, two controllers agreeing, the snapshot that
 leaves the cluster, and the console over real HTTP."""
 import json
@@ -9,9 +9,11 @@ from cluster.controller import ClusterController
 from cluster.directory import Directory
 from tests.conftest import Cluster
 
+A, B, C = "w-srv-a-1", "w-srv-b-1", "w-srv-c-1"      # one worker's unit on each server: `WORKER_NAME=w-%l-1`
+
 
 def _three_workers(c, ctl):
-    ws = {"w-0": c.worker(0, "srv-a"), "w-1": c.worker(1, "srv-b"), "w-2": c.worker(2, "srv-c")}
+    ws = {f"w-{s}-1": c.worker(s) for s in ("srv-a", "srv-b", "srv-c")}
     for w in ws.values(): w.heartbeat_once()
     return ws
 
@@ -24,20 +26,20 @@ def test_placement_under_label_constraints():
     ab = ctl.create_camera({"source": "driverpack://file/ab.mp4", "labels": ["vlan:cctv-a", "vlan:cctv-b"]})
     x = ctl.create_camera({"source": "driverpack://file/x.mp4", "labels": ["vlan:cctv-x"]})
     ctl.ensure_placed()
-    assert ctl.where(a["id"]) in ("w-0", "w-1") and ctl.where(b["id"]) in ("w-1", "w-2") and ctl.where(ab["id"]) == "w-1"
+    assert ctl.where(a["id"]) in (A, B) and ctl.where(b["id"]) in (B, C) and ctl.where(ab["id"]) == B
     assert "reaching vlan:cctv-a,vlan:cctv-b" in ctl.placement(ab["id"]).reason and "on srv-b" in ctl.placement(ab["id"]).reason
     assert ctl.where(x["id"]) is None and ctl.unplaceable() == [{"id": x["id"], "labels": ["vlan:cctv-x"], "workers_live": 3}]
 
 
 def test_adding_a_worker_moves_nothing_even_with_constraints():
     c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=2, wall=c.wall)
-    c.worker(0, "srv-a", capacity=2).heartbeat_once()
+    c.worker("srv-a", capacity=2).heartbeat_once()
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4", "labels": ["vlan:cctv-a"]})
     ctl.ensure_placed(); before = {i: ctl.where(i) for i in (1, 2, 3)}
-    assert before == {1: "w-0", 2: "w-0", 3: None}
-    c.worker(1, "srv-b", capacity=2).heartbeat_once(); ctl.ensure_placed()
-    assert {i: ctl.where(i) for i in (1, 2)} == {1: "w-0", 2: "w-0"} and ctl.where(3) == "w-1"
+    assert before == {1: A, 2: A, 3: None}
+    c.worker("srv-b", capacity=2).heartbeat_once(); ctl.ensure_placed()
+    assert {i: ctl.where(i) for i in (1, 2)} == {1: A, 2: A} and ctl.where(3) == B
 
 
 def test_where_is_camera_7_in_one_scan():
@@ -51,7 +53,7 @@ def test_where_is_camera_7_in_one_scan():
     for i in range(1, 10):
         assert d.where(i) == ctl.where(i)
     assert d.scans == 1                                                    # nine answers, one scan
-    assert sorted(sum((d.holdings(w) for w in ("w-0", "w-1", "w-2")), [])) == list(range(1, 10))
+    assert sorted(sum((d.holdings(w) for w in (A, B, C)), [])) == list(range(1, 10))
 
 
 def test_the_directory_reads_past_an_assignment_row_whose_rev_does_not_parse():
@@ -84,9 +86,9 @@ def test_two_controllers_agree_under_constraints():
     [t.start() for t in ts]; [t.join() for t in ts]
     where = {i: a.where(i) for i in range(1, 41)}
     assert all(where.values())
-    units = sum((a.assignment(w).units for w in ("w-0", "w-1", "w-2")), [])
+    units = sum((a.assignment(w).units for w in (A, B, C)), [])
     assert sorted(int(u) for u in units) == list(range(1, 41))             # each camera in exactly one assignment
-    assert all(where[i] != "w-0" for i in range(2, 41, 2))                 # cctv-b cameras never on srv-a
+    assert all(where[i] != A for i in range(2, 41, 2))                     # cctv-b cameras never on srv-a
 
 
 def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
@@ -99,7 +101,7 @@ def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
     from w2cplatform.spec import SpecController
     from vms.config import REC_SPEC
     c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=2, wall=c.wall)
-    c.worker(0, "srv-a", capacity=2).heartbeat_once()
+    c.worker("srv-a", capacity=2).heartbeat_once()
     for i in range(3):
         ctl.create_camera({"source": f"driverpack://file/{i}.mp4"})
     text = SpecConsole(ctl, wall=c.wall).metrics_text()
@@ -118,16 +120,13 @@ def test_the_clusters_controller_loops_write_the_pass_report_its_metrics_read():
 
 
 def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
-    """Who guarantees a worker runs where the archive is: Nomad, by `meta.archive`
-    on the job — a label. This is the live fact behind the label: the spec says
-    `requires: resource`, so a worker whose server's resource has gone silent is
-    not placed on, its cameras are moved to servers whose resource answers, and
+    """Who guarantees a worker runs where the archive is: the units on a server — its resource and its worker are
+    installed together. This is the live fact behind that: the spec says `requires: resource`, so a worker whose
+    server's resource has gone silent is not placed on, its cameras are moved to servers whose resource answers, and
     the reason says so. A resource never seen is not a fact and passes."""
-    from cluster.resource import cluster_resource
     c = Cluster(); ctl = ClusterController(c.vars, c.objects, capacity=10, wall=c.wall)
     ws = _three_workers(c, ctl)
-    rs = {s: cluster_resource(srv.resource, s, f"http://{s}", c.vars, c.objects, wall=c.wall) for s, srv in c.servers.items()}
-    for r in rs.values(): r.heartbeat()
+    rs = c.resources_up()
     a = ctl.create_camera({"source": "driverpack://file/a.mp4", "labels": ["vlan:cctv-a"]})["id"]   # srv-a or srv-b
     b = ctl.create_camera({"source": "driverpack://file/b.mp4", "labels": ["vlan:cctv-a"]})["id"]
     for pl in ctl.ensure_placed():
@@ -136,24 +135,24 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     c.wall.advance(60)
     for w in ws.values(): w.heartbeat_once()
     rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    assert ctl.resource_state("srv-a") == "silent" and ctl.without_resource(["w-0", "w-1", "w-2"]) == ["w-0"]
-    on_a = [u for u in ctl.assignment("w-0").units]
+    assert ctl.resource_state("srv-a") == "silent" and ctl.without_resource([A, B, C]) == [A]
+    on_a = [u for u in ctl.assignment(A).units]
     moves = ctl.redistribute()
-    assert sorted(m[1] for m in moves) == ["w-0"] * len(on_a) and all(m[2] == "w-1" for m in moves)   # off srv-a, onto srv-b (cctv-a reaches it; srv-c cannot)
-    assert ctl.assignment("w-0").units == [] and ctl.placement(a).reason.startswith("resource on srv-a silent; ")
+    assert sorted(m[1] for m in moves) == [A] * len(on_a) and all(m[2] == B for m in moves)   # off srv-a, onto srv-b (cctv-a reaches it; srv-c cannot)
+    assert ctl.assignment(A).units == [] and ctl.placement(a).reason.startswith("resource on srv-a silent; ")
     assert ctl.placement(a).reason.endswith("; on srv-b")
     # the console shows the label beside the fact: what each server's workers record into, and whether its resource answers
     from cluster.console import make_console
     sv = make_console(ctl).root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
-    assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == ["w-1"]
-    assert sv["srv-a"]["archive"] == "/data/archive"                                                # the worker's $ARCHIVE — Nomad's meta.archive on a cluster
+    assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
+    assert sv["srv-a"]["archive"] == "/data/archive"                                                # the worker's $ARCHIVE, from /etc/vms/vms.env
     x = ctl.create_camera({"source": "driverpack://file/x.mp4", "labels": ["vlan:cctv-a"]})["id"]
-    assert ctl.place(x).worker == "w-1"                                                            # never w-0 while srv-a's resource is silent
+    assert ctl.place(x).worker == B                                                                # never w-srv-a-1 while srv-a's resource is silent
     assert ctl.unplaceable() == []                                                                 # srv-b reaches cctv-a too; nothing waits
     # the resource comes back: srv-a is a place to record again; nothing moves back (adding a worker moves nothing)
     rs["srv-a"].heartbeat()
-    assert ctl.resource_state("srv-a") == "live" and ctl.redistribute() == [] and ctl.assignment("w-1").units == sorted(map(str, [a, b, x]), key=int)
+    assert ctl.resource_state("srv-a") == "live" and ctl.redistribute() == [] and ctl.assignment(B).units == sorted(map(str, [a, b, x]), key=int)
     # the box has no resource heartbeat before its resource process starts: unknown is not silent
     assert ctl.resource_state("srv-z") == "unknown"
 
@@ -200,8 +199,8 @@ def test_the_console_over_http():
     # the SAME request again — the same body under the same key: one camera (a different body under it is 422, the key is one caller's for one body)
     assert call("POST", "/cameras", {"source": "driverpack://file/1.mp4", "labels": ["vlan:cctv-b"]}, {"Idempotency-Key": "k1"})[0] == 201 and len(ctl.cameras()) == 1
     assert call("POST", "/cameras", {"source": "driverpack://file/1.mp4"}, {"Idempotency-Key": "k1"})[0] == 422
-    assert call("PUT", "/cameras/1", {"worker": "w-0"})[0] == 400
-    placed = ctl.ensure_placed()[0].worker; assert placed in ("w-1", "w-2")   # the controller's pass, under the label
+    assert call("PUT", "/cameras/1", {"worker": A})[0] == 400
+    placed = ctl.ensure_placed()[0].worker; assert placed in (B, C)       # the controller's pass, under the label
     ws[placed].reconcile_once(); ws[placed].heartbeat_once()
     st, out = call("GET", "/where/1"); d = json.loads(out)
     assert st == 200 and d["worker"] == d["directory"] and "on srv-" in d["reason"]
@@ -218,7 +217,7 @@ def test_the_console_over_http():
     st, out = call("GET", "/mounts"); assert json.loads(out) == {"root": "vms", "mounts": {"rec": json.loads(call("GET", "/rec/spec")[1])}}
     st, out = call("POST", "/rec/recordings", {"name": "1", "cam": "1", "retention_days": 7}, {"Idempotency-Key": "r1"}); assert st == 201 and json.loads(out)["worker"] is None
     assert c.vars.get("rec/recordings/1")[0]["retention_days"] == "7" and json.loads(call("GET", "/rec/policy")[1])["servers"] == "distinct"   # the recorder's own knob
-    assert call("PUT", "/rec/recordings/1", {"worker": "r-0"})[0] == 400
+    assert call("PUT", "/rec/recordings/1", {"worker": "r-srv-a-1"})[0] == 400
     assert call("DELETE", "/rec/recordings/1")[0] in (200, 204)
     st, out = call("GET", "/unplaceable"); assert json.loads(out) == []
     # srv-a's resource job, over real HTTP: the platform's routes and the event index over ITS tree
@@ -226,7 +225,7 @@ def test_the_console_over_http():
     from cluster.resource import cluster_resource
     from tests.test_lesson3_resources import _recorder_with_footage
     t = c.wall()
-    rec_a = _recorder_with_footage(c, 7, "srv-a", "1", 1, ((t - 600, t),))                   # and srv-a's recorder, serving its volume
+    rec_a = _recorder_with_footage(c, "srv-a", "1", 1, ((t - 600, t),))                      # and srv-a's recorder, serving its volume
     res = cluster_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
     # an operator's mark: the console's own bucket on srv-a's resource; the console has no index — it asks srv-a's, by HTTP, and finds the `cam` field
@@ -304,7 +303,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("POST", "/backfill", "guard", {"cam": "2", "from": t - 120, "to": t - 60})[0] == 403
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
-        assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `recworker.nomad.hcl` scales on
+        assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `w2c-spares.sh` reads for recorders
         assert m.root.extra.journal is m.root.journal and m.mounts["rec"].cams_of is not None
     finally:
         srv.shutdown()

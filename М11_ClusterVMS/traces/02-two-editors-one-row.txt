@@ -1,8 +1,7 @@
-# console A
-GET /v1/var/vms/cameras/1?namespace=default
+# console on srv-a → /run/configstore/console.sock
+GET /v1/get?key=vms/cameras/1
 → 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
+  "items": {
     "id": "1",
     "revision": "1",
     "name": "north-gate",
@@ -17,14 +16,13 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1002
+  "index": 1005
 }
 
-# console B
-GET /v1/var/vms/cameras/1?namespace=default
+# console on srv-b → /run/configstore/console.sock
+GET /v1/get?key=vms/cameras/1
 → 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
+  "items": {
     "id": "1",
     "revision": "1",
     "name": "north-gate",
@@ -39,70 +37,62 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1002
+  "index": 1005
 }
 
-# console B
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1002
-{
-  "Items": {
-    "id": "1",
-    "revision": "2",
-    "name": "north-gate",
-    "source": "driverpack://acme/10.2.0.11",
-    "enabled": "true",
-    "events_retention_days": "30",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  }
-}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1003}
+# console on srv-b → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+  "id": "1",
+  "revision": "2",
+  "name": "north-gate",
+  "source": "driverpack://acme/10.2.0.11",
+  "enabled": "true",
+  "events_retention_days": "30",
+  "priority": "100",
+  "labels": "",
+  "folders": "",
+  "ref": "",
+  "cred_username": "",
+  "cred_secret": "",
+  "live": "always",
+  "kind": "video"
+}}
+→ 200 {"index": 1006}
 
-# console B
-GET /v1/var/vms/retention/1?namespace=default
-→ 404
+# console on srv-b → /run/configstore/console.sock
+GET /v1/get?key=vms/retention/1
+→ 200 {"items": null, "index": ""}
 
-# console B
-PUT /v1/var/vms/retention/1?namespace=default&cas=0
-{"Items": {"days": "30"}}
-→ 200 {"Path": "vms/retention/1", "ModifyIndex": 1004}
+# console on srv-b → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/retention/1", "cas": "", "items": {"days": "30"}}
+→ 200 {"index": 1007}
 
-# console B
-GET /v1/var/vms/alarms_retention/1?namespace=default
-→ 404
+# console on srv-b → /run/configstore/console.sock
+GET /v1/get?key=vms/alarms_retention/1
+→ 200 {"items": null, "index": ""}
 
-# console A
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1002
-{
-  "Items": {
-    "id": "1",
-    "revision": "1",
-    "name": "north-gate-2",
-    "source": "driverpack://acme/10.2.0.11",
-    "enabled": "true",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  }
-}
-→ 409 {"ModifyIndex": 1003}
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1005, "items": {
+  "id": "1",
+  "revision": "1",
+  "name": "north-gate-2",
+  "source": "driverpack://acme/10.2.0.11",
+  "enabled": "true",
+  "priority": "100",
+  "labels": "",
+  "folders": "",
+  "ref": "",
+  "cred_username": "",
+  "cred_secret": "",
+  "live": "always",
+  "kind": "video"
+}}
+→ 409 {"kind": "conflict", "error": "vms/cameras/1: cas=1005 but the version is 1006", "index": 1006}
 
-# console A
-GET /v1/var/vms/cameras/1?namespace=default
+# console on srv-a → /run/configstore/console.sock
+GET /v1/get?key=vms/cameras/1
 → 200 {
-  "Path": "vms/cameras/1",
-  "Items": {
+  "items": {
     "id": "1",
     "revision": "2",
     "name": "north-gate",
@@ -118,27 +108,24 @@ GET /v1/var/vms/cameras/1?namespace=default
     "live": "always",
     "kind": "video"
   },
-  "ModifyIndex": 1003
+  "index": 1006
 }
 
-# console A
-PUT /v1/var/vms/cameras/1?namespace=default&cas=1003
-{
-  "Items": {
-    "id": "1",
-    "revision": "2",
-    "name": "north-gate-2",
-    "source": "driverpack://acme/10.2.0.11",
-    "enabled": "true",
-    "events_retention_days": "30",
-    "priority": "100",
-    "labels": "",
-    "folders": "",
-    "ref": "",
-    "cred_username": "",
-    "cred_secret": "",
-    "live": "always",
-    "kind": "video"
-  }
-}
-→ 200 {"Path": "vms/cameras/1", "ModifyIndex": 1005}
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "vms/cameras/1", "cas": 1006, "items": {
+  "id": "1",
+  "revision": "2",
+  "name": "north-gate-2",
+  "source": "driverpack://acme/10.2.0.11",
+  "enabled": "true",
+  "events_retention_days": "30",
+  "priority": "100",
+  "labels": "",
+  "folders": "",
+  "ref": "",
+  "cred_username": "",
+  "cred_secret": "",
+  "live": "always",
+  "kind": "video"
+}}
+→ 200 {"index": 1009}

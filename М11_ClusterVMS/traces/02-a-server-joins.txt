@@ -1,0 +1,118 @@
+# configstore on srv-d → srv-a's daemon, srv-a@10.0.0.1:8300 (mutual TLS)
+POST /v1/join {"id": "srv-d", "raft": "10.0.0.4:8301", "api": "srv-d@10.0.0.4:8300"}
+→ 200 {
+  "members": [
+    {
+      "id": "srv-a",
+      "raft": "10.0.0.1:8301",
+      "api": "srv-a@10.0.0.1:8300"
+    },
+    {
+      "id": "srv-b",
+      "raft": "10.0.0.2:8301",
+      "api": "srv-b@10.0.0.2:8300"
+    },
+    {
+      "id": "srv-c",
+      "raft": "10.0.0.3:8301",
+      "api": "srv-c@10.0.0.3:8300"
+    },
+    {
+      "id": "srv-d",
+      "raft": "10.0.0.4:8301",
+      "api": "srv-d@10.0.0.4:8300"
+    }
+  ]
+}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-d
+→ 200 {"items": null, "index": ""}
+
+# resource on srv-d → /run/configstore/resource.sock
+POST /v1/write {"op": "put", "key": "platform/doors/srv-d", "cas": null, "items": {
+  "url": "http://srv-d:8090",
+  "since": "1757500000.0"
+}}
+→ 200 {"index": 1004}
+
+# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+GET /v1/get?key=platform/decommission/srv-d
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+GET /v1/list?prefix=vms/slots/
+→ 200 {"keys": {}}
+
+# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+GET /v1/get?key=vms/slots/w-srv-d-1
+→ 200 {"items": null, "index": ""}
+
+# vmsworker w-srv-d-1 on srv-d → /run/configstore/vmsworker.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-d-1", "cas": "", "items": {
+  "holder": "srv-d:4101",
+  "until": "1757500045.0",
+  "released": "false",
+  "gen": "1"
+}}
+→ 200 {"index": 1005}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {
+  "keys": {
+    "platform/doors/srv-a": 1001,
+    "platform/doors/srv-b": 1002,
+    "platform/doors/srv-c": 1003,
+    "platform/doors/srv-d": 1004
+  }
+}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-a
+→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0"}, "index": 1001}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-b
+→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0"}, "index": 1002}
+
+# resource on srv-d → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-c
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0"}, "index": 1003}
+
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/schema
+→ 200 {"items": null, "index": ""}
+
+# resource on srv-b → /run/configstore/resource.sock
+GET /v1/list?prefix=platform/doors/
+→ 200 {
+  "keys": {
+    "platform/doors/srv-a": 1001,
+    "platform/doors/srv-b": 1002,
+    "platform/doors/srv-c": 1003,
+    "platform/doors/srv-d": 1004
+  }
+}
+
+# resource on srv-b → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-a
+→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0"}, "index": 1001}
+
+# resource on srv-b → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-c
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0"}, "index": 1003}
+
+# resource on srv-b → /run/configstore/resource.sock
+GET /v1/get?key=platform/doors/srv-d
+→ 200 {"items": {"url": "http://srv-d:8090", "since": "1757500000.0"}, "index": 1004}
+
+# the controller on srv-b reads the heartbeats through srv-b's resource: ['w-srv-d-1']

@@ -67,15 +67,17 @@ def recommend(cameras: int, mbit_per_camera: float, uplink_mbit: float, retentio
 
 
 def _worker_jobspec() -> str:
-    """М11's worker job, as written: deploy/vmsworker.nomad.hcl."""
+    """М11's worker job as the appendix «форма поставки» writes it — deploy/nomad/vmsworker.nomad.hcl: a rented
+    cluster is where an orchestrator is justified, and М11's own servers run the same worker from a systemd unit."""
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    for cand in (os.path.join(here, "clustervms", "deploy", "vmsworker.nomad.hcl"),
-                 os.path.join(os.path.dirname(os.path.dirname(here)), "М11_ClusterVMS", "clustervms", "deploy", "vmsworker.nomad.hcl"),
-                 os.path.join(os.environ.get("CLUSTERVMS_PATH", ""), "deploy", "vmsworker.nomad.hcl")):
+    job = os.path.join("deploy", "nomad", "vmsworker.nomad.hcl")
+    for cand in (os.path.join(here, "clustervms", job),
+                 os.path.join(os.path.dirname(os.path.dirname(here)), "М11_ClusterVMS", "clustervms", job),
+                 os.path.join(os.environ.get("CLUSTERVMS_PATH", ""), job)):
         if os.path.exists(cand):
             with open(cand, encoding="utf-8") as f:
                 return f.read()
-    raise FileNotFoundError("clustervms/deploy/vmsworker.nomad.hcl")
+    raise FileNotFoundError("clustervms/deploy/nomad/vmsworker.nomad.hcl")
 
 
 def render_three_ways(job: str = "vmsworker") -> dict[str, str]:

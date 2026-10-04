@@ -1,0 +1,6 @@
+# vms-console.service — the VMS console: the page and the API, on every server
+
+**Role in the module.** Lesson 5. `w2c-run.sh console` as `vms`, joining `vms-console`: the operator's rows and nothing else (the rights file). `CONSOLE_UNIX` in `/run/vms-console` (`RuntimeDirectory`, 0700) — the box's own door. The cluster's key as a systemd credential (`LoadCredential=platform.key:/etc/w2c/secrets/platform.key`, `SECRETS_KEY=%d/platform.key`): only this process sees it; three units load it — the console seals, the holder and the recorder open (`tests/test_policies.py`). `MemoryMax=256M`, the budget the console's blob limits were measured against. Its settings beyond its own lines come from `/etc/w2c/w2c.env` and `/etc/vms/vms.env`, read by `w2c-run.sh` UNDER what the unit says (no `EnvironmentFile=`: systemd would let a file override `Environment=`). `Restart=always`, `RestartSec=2`: a crash is systemd's to restart under the same name, on this server.
+
+## Notes
+- `tests/test_units.py`: each unit names its role's socket (`PLATFORM_STORE=configstore:///run/configstore/<role>.sock`), joins the group the rights file gives that role, runs `w2c-run.sh <verb>`, comes after `configstore.service`, as `w2c` (the platform's) or `vms` (the subsystem's).

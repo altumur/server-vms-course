@@ -440,8 +440,8 @@ def main() -> None:
     import signal
     import threading
 
-    import cluster as _cluster  # noqa: F401  — registers the `nomad://` scheme
-    from w2cplatform.variables import open_vars
+    import cluster as _cluster  # noqa: F401  — puts М10's vmsserver on sys.path
+    from w2cplatform.variables import open_vars, store_url
 
     cluster = os.environ.get("CLUSTER", os.environ.get("NOMAD_REGION", "local"))
     # REPORT=1: this member is one the domain never reaches (`domain/uplink.py`) — every pass also leaves its
@@ -449,7 +449,7 @@ def main() -> None:
     # `OBJECTS_URL`. The same one connection, opened from here, carrying both ways.
     report = os.environ.get("REPORT") == "1"
     from cluster.objectstore import open_store
-    own_vars = open_vars(os.environ.get("CONFIG_URL") or "nomad://" + os.environ.get("NOMAD_ADDR", "127.0.0.1:4646").replace("http://", ""))
+    own_vars = open_vars(store_url(os.environ, "configstore:///run/configstore/domainagent.sock"))   # its cluster's store, by its role's socket
     # Lesson 17. RELAY_CONFIG_URL / RELAY_OBJECTS_URL: this member can reach only its relay — the relay is
     # its road to the domain both ways (`chain.Relay`). RELAY_MEMBERS: this is such a relay, relaying for them.
     if os.environ.get("RELAY_CONFIG_URL"):

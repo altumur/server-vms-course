@@ -20,7 +20,7 @@ from w2cplatform.variables import Conflict, Forbidden
 RIGHTS = {"roles": {
     "vmsworker": {"read": ["vms/*"], "write": ["vms/epoch/*", "vms/slots/*"], "delete": ["vms/slots/*"]},
     "console": {"read": ["vms/*", "rec/*"], "write": ["vms/cameras/*"], "delete": ["vms/cameras/*"]},
-    "agent": {"read": ["domain/*"], "write": ["domain/*"], "delete": ["domain/*"]},
+    "domainagent": {"read": ["domain/*"], "write": ["domain/*"], "delete": ["domain/*"]},
 }}
 
 
@@ -144,14 +144,49 @@ def test_rights_grant_by_role_action_and_prefix():
     assert r.allows(ADMIN, "write", "anything/at/all")
 
 
-def test_nobody_deletes_an_epoch_and_only_the_agent_deletes_domain_rows():
+def test_nobody_deletes_an_epoch_and_only_the_domains_roles_delete_domain_rows():
     """The two deletes `variables.refuse_delete` refuses on every backend, refused by the daemon too — for the
     root-only socket as well: an epoch deleted starts again from 1, a name somebody's footage already has."""
     r = Rights.parse({"roles": {**RIGHTS["roles"], "vmsworker": {"delete": ["vms/*"]}}})
     for role in (ADMIN, "vmsworker"):
         assert not r.allows(role, "delete", "vms/epoch/7"), role
     assert not r.allows(ADMIN, "delete", "domain/keys/1")
-    assert r.allows("agent", "delete", "domain/keys/1")
+    assert r.allows("domainagent", "delete", "domain/keys/1") and not r.allows("console", "delete", "domain/keys/1")
+
+
+def test_a_denial_wins_over_every_grant_wherever_it_stands():
+    """The product's format (its configstore round 2): a pattern with a leading `!` DENIES, asked before the grants —
+    a role may read the domain's rows but not the emergency password's hash, whichever order the file lists them in."""
+    for read in (["domain/*", "!domain/break_glass"], ["!domain/break_glass", "domain/*"]):
+        r = Rights.parse({"roles": {"console": {"read": read, "write": ["vms/*", "!vms/epoch/*"]}}})
+        assert r.allows("console", "read", "domain/keys") and not r.allows("console", "read", "domain/break_glass")
+        assert r.allows("console", "write", "vms/cameras/1") and not r.allows("console", "write", "vms/epoch/1")
+    r = Rights.parse({"roles": {"console": {"read": ["!vms/secret*"]}}})
+    assert not r.allows("console", "read", "vms/cameras/1"), "a denial alone grants nothing"
+    assert Rights.parse({"roles": {"console": {"read": ["!vms/*"]}}}).allows(ADMIN, "read", "vms/cameras/1")
+
+
+def test_each_role_says_its_sockets_group_and_the_daemon_takes_it():
+    """The product's format: each role carries its socket's `group` — `vms-<role>` for a subsystem's, `w2c-<role>` for
+    the platform's. The daemon owns the socket by it (`configstore.socket_group`), and a role without one falls back
+    to the same rule; what `/v1/rights` shows is the file's own form, the group with it."""
+    from w2cplatform.configstore import socket_group
+    doc = {"roles": {"vmsworker": {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []},
+                     "resource": {"group": "w2c-resource", "read": ["platform/*"]},
+                     "console": {"read": ["vms/*"]},
+                     "domainagent": {"group": "w2c-domainagent", "read": ["domain/*"]}}}
+    r = Rights.parse(doc)
+    assert r.groups == {"vmsworker": "vms-vmsworker", "resource": "w2c-resource", "domainagent": "w2c-domainagent"}
+    assert socket_group("vmsworker", r) == "vms-vmsworker" and socket_group("domainagent", r) == "w2c-domainagent"
+    assert socket_group("console", r) == "vms-console" and socket_group("resource") == "w2c-resource"
+    assert r.doc()["roles"]["vmsworker"] == {"group": "vms-vmsworker", "read": ["vms/*"], "write": [], "delete": []}
+    assert "group" not in r.doc()["roles"]["console"]
+    assert Rights.parse(r.doc()).groups == r.groups                       # the form shown is a file the daemon takes
+    for bad in ({"roles": {"vmsworker": {"group": "VMS Worker"}}}, {"roles": {"vmsworker": {"group": 2101}}},
+                {"roles": {"vmsworker": {"read": ["!"]}}}, {"roles": {"vmsworker": {"read": ["vms/!epoch"]}}},
+                {"roles": {"vmsworker": {"read": ["!!vms/*"]}}}):
+        with pytest.raises(ValueError):
+            Rights.parse(bad)
 
 
 def test_a_rights_file_that_is_not_the_format_is_refused_whole():

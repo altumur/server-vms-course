@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- /Library/LaunchDaemons/com.w2c.spares.plist — every minute, the spares this server can serve: `w2c-spares.sh`
+     reads the console's numbers and starts what is missing (`nohup`, its pid under /var/run/w2c-spares), never stops
+     one. The timers' twin (`w2c-spares[-<role>].timer`); installed by `install.sh --spares` only. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.w2c.spares</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/w2c-spares.sh</string>
+		<string>recworker</string>
+		<string>vmsworker</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>SPARES_RUN</key>
+		<string>/opt/w2c/bin/w2c-run.sh</string>
+	</dict>
+	<key>StartInterval</key>
+	<integer>60</integer>
+	<key>StandardErrorPath</key>
+	<string>/var/log/w2c/com.w2c.spares.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/log/w2c/com.w2c.spares.log</string>
+</dict>
+</plist>

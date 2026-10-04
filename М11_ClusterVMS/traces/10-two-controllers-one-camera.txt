@@ -1,31 +1,24 @@
-# vmscontroller B
-PUT /v1/var/vms/placement/1?namespace=default&cas=0
-{
-  "Items": {
-    "worker": "w-0",
-    "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
-    "at": "1757500000.0",
-    "rev": "1"
-  }
-}
-→ 200 {"Path": "vms/placement/1", "ModifyIndex": 1015}
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+  "worker": "w-srv-a-1",
+  "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
+  "at": "1757500000.0",
+  "rev": "1"
+}}
+→ 200 {"index": 1009}
 
-# vmscontroller B
-PUT /v1/var/vms/workers/w-0?namespace=default&cas=0
-{"Items": {"units": "1", "rev": "1"}}
-→ 200 {"Path": "vms/workers/w-0", "ModifyIndex": 1016}
+# vmscontroller on srv-b → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-a-1", "cas": "", "items": {"units": "1", "rev": "1"}}
+→ 200 {"index": 1010}
 
-# vmscontroller A
-PUT /v1/var/vms/placement/1?namespace=default&cas=0
-{
-  "Items": {
-    "worker": "w-0",
-    "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
-    "at": "1757500000.0",
-    "rev": "1"
-  }
-}
-→ 409 {"ModifyIndex": 1015}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
+  "worker": "w-srv-a-1",
+  "reason": "most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live",
+  "at": "1757500000.0",
+  "rev": "1"
+}}
+→ 409 {"kind": "conflict", "error": "vms/placement/1: cas='' but the version is 1009", "index": 1009}
 
-# … and 245 GET requests, omitted
-# where(1) = w-0; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'
+# … and 59 GET requests, omitted
+# where(1) = w-srv-a-1; placement reason: 'most free capacity (10) among 2 worker(s) reaching vlan:cctv-a; on srv-a, whose resource is live'

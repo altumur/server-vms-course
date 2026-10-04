@@ -1,12 +1,16 @@
-"""The module's stand, traced: three servers, the real controller, workers and console, and every call they
-make to the cluster's store written down in Nomad's own words (`tests/trace.py`).
+"""The module's stand, traced: three servers, the real controller, workers and console, and every call they make to
+the cluster's store written down in the product's own API (`tests/trace.py`).
 
-Each SCENE is one moment of the module's story, run from nothing, and returns its trace. The lessons quote
-these traces; the full ones live in `М11_ClusterVMS/traces/<scene>.txt`, and `test_stand.py` fails the day
-the code and a stored trace disagree — so an example in a lesson is a record of a run, never a guess.
+Each SCENE is one moment of the module's story, run from nothing, and returns its trace. The lessons quote these
+traces; the full ones live in `М11_ClusterVMS/traces/<scene>.txt`, and `test_stand.py` fails the day the code and a
+stored trace disagree — so an example in a lesson is a record of a run, never a guess.
 
     python3 tests/stand.py              # print every scene
     python3 tests/stand.py --write      # regenerate М11_ClusterVMS/traces/
+
+The stand is `tests/conftest.py`'s: one configstore state machine behind a door per role with the committed rights
+file, a resource and a directory of objects on each server, processes named by their units (`w-srv-a-1`). What the
+stand did to build itself — the three resources saying their doors — is not in a scene's trace.
 """
 from __future__ import annotations
 
@@ -16,80 +20,53 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import cluster  # noqa: E402,F401  — puts М10's vmsserver on sys.path
 
-from cluster.controller import ClusterController  # noqa: E402
-from cluster.objectstore import VariablesObjectStore  # noqa: E402
-from cluster.variables import FakeVariables  # noqa: E402
-from cluster.recworker import ClusterRecorder  # noqa: E402
-from cluster.worker import ClusterWorker  # noqa: E402
 from vms import volumes  # noqa: E402
-from vms.config import REC_SPEC, SPEC, WORKER_ACL, WORKER_OBJECTS  # noqa: E402
-from vms.worker import FakeActuator  # noqa: E402
-from tests.conftest import Cluster  # noqa: E402
-from tests.trace import TraceLog, TracedVariables  # noqa: E402
+from vms.config import SPEC  # noqa: E402
+from tests.conftest import Cluster, Server  # noqa: E402
+from tests.trace import Call, TraceLog  # noqa: E402
 
 TRACES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "traces")
-# What vmsworker-policy.hcl grants — the code's own list (`WORKER_ACL`, `WORKER_OBJECTS`), the one `test_policies.py`
-# checks the file against: the device rows a worker writes (`vms/devices/*`) and the marks before a command
-# (`objects/vms/commands/*`) were missing here, and the stand let a worker do less than the policy does.
-WORKER_GRANTS = WORKER_ACL + ["objects/" + p for p in WORKER_OBJECTS]
-# …and the others from the code's lists too, not from a hand list beside them (the review's ninth pass: the controller's
-# grant here was `objects/vms/snapshot/*` by hand, and its pass report was refused in the stand as on a cluster).
-RECORDER_GRANTS = REC_SPEC.sub.acl_worker() + ["objects/" + p for p in REC_SPEC.sub.acl_objects_worker()]
-CONTROLLER_GRANTS = SPEC.acl_controller() + ["objects/" + p for p in SPEC.sub.acl_objects_controller()]
+ADDRESSES = {"srv-a": "10.0.0.1", "srv-b": "10.0.0.2", "srv-c": "10.0.0.3", "srv-d": "10.0.0.4"}
 
 
 class Stand(Cluster):
-    """The conftest cluster, with every process's store traced under its own name and token."""
+    """The conftest cluster, with every process's store traced under its own name and socket."""
 
     def __init__(self):
-        super().__init__()
-        self.base = FakeVariables()
-        self.log = TraceLog(roots={self.root: "/data"})
-        self.vars = TracedVariables(self.base, self.log, "console")
-        self.objects = VariablesObjectStore(self.vars)
+        log = TraceLog()
+        super().__init__(log=log)
+        log.roots = {self.root: "/data"}
+        self.log = log
+        self.store.machine.members = {n: {"raft": f"{ADDRESSES[n]}:8301", "api": f"{n}@{ADDRESSES[n]}:8300"}
+                                      for n in self.servers}
+        self.log.calls.clear()                        # the stand's own building is not a scene's
 
-    def as_process(self, who: str, writer: str | None = None, grants: list[str] | None = None):
-        inner = self.base.as_writer(writer, grants) if writer else self.base
-        v = TracedVariables(inner, self.log, who)
-        return v, VariablesObjectStore(v)
+    def reads(self, since: int) -> int:
+        return sum(1 for c in self.log.calls[since:] if c.kind == "store" and not c.write)
 
-    def worker(self, index: int, server: str, capacity: int = 50, actuator=None, alloc=None) -> ClusterWorker:
-        v, o = self.as_process(f"vmsworker (allocation {index} on {server})", f"vmsworker-{index}", WORKER_GRANTS)
-        return ClusterWorker(v, o, actuator or FakeActuator(), env=self.env(index, server, alloc),
-                             clock=self.clock, wall=self.wall, capacity=capacity)
-
-    def recorder(self, index: int, server: str, capacity: int = 50, actuator=None, alloc=None) -> ClusterRecorder:
-        v, o = self.as_process(f"recworker (allocation {index} on {server})", f"recworker-{index}", RECORDER_GRANTS)
-        return ClusterRecorder(v, o, actuator or FakeActuator(), env=self.env(index, server, alloc),
-                               **self.rec_kw(server, index), clock=self.clock, wall=self.wall, capacity=capacity)
-
-    def resources_up(self, peers=None) -> dict:
-        """Each server's resource job, heartbeating — what makes a server a place footage can go (lesson 6)."""
-        from cluster.resource import cluster_resource
-        self.resources = {}
-        for name, srv in self.servers.items():
-            v, o = self.as_process(f"resource ({name})", f"resource-{name}", ["objects/platform/resources/*", "platform/doors/*"])
-            r = cluster_resource(srv.resource, name, f"http://{name}:8090", v, o, wall=self.wall, peers=peers)
-            r.space_probe = lambda path: (4 * 10**12, 3 * 10**12)     # a 4 TB disk, 1 TB used — the same on every run
-            r.heartbeat()
-            self.resources[name] = r
-        return self.resources
-
-    def controller(self, who: str = "vmscontroller") -> ClusterController:
-        v, o = self.as_process(who, "vmscontroller", CONTROLLER_GRANTS)
-        return ClusterController(v, o, wall=self.wall)
-
-    def console(self, who: str = "console") -> ClusterController:
-        v, o = self.as_process(who, "console", SPEC.acl_console())
-        return ClusterController(v, o, wall=self.wall)
+    def join(self, name: str, labels: str = "", via: str = "srv-a") -> Server:
+        """A new server: its configstore asks a member to be added to the group (`POST /v1/join` at that member's
+        mutually authenticated `-api` door, the daemon's `-join`), then its units start — the resource first."""
+        ip = ADDRESSES[name]
+        body = {"id": name, "raft": f"{ip}:8301", "api": f"{name}@{ip}:8300"}
+        self.store.machine.members[name] = {"raft": body["raft"], "api": body["api"]}
+        members = [{"id": n, **m} for n, m in sorted(self.store.machine.members.items())]
+        self.log.calls.append(Call(f"configstore on {name}", f"{via}'s daemon, {via}@{ADDRESSES[via]}:8300 (mutual TLS)",
+                                   "POST", "/v1/join", body, 200, {"members": members}, kind="join"))
+        srv = self.servers[name] = Server(self.root, name, labels)
+        self._resource(name)
+        for other in self.servers.values():
+            other.res._doors = None                   # the others read the doors again (every DOORS_FRESH seconds)
+        return srv
 
 
 # -- the scenes ------------------------------------------------------------------------------------
 
 def worker_starts() -> str:
-    """Lesson 1: a worker allocation starts on srv-a, claims its slot and says what it is."""
+    """Lesson 1: the worker's unit starts on srv-a. The process claims the name its unit gives it, `w-srv-a-1`, and
+    says what it is — its heartbeat a file on srv-a, not a row."""
     s = Stand()
-    s.worker(0, "srv-a", capacity=50).heartbeat_once()
+    s.worker("srv-a", capacity=50).heartbeat_once()
     return s.log.render()
 
 
@@ -101,11 +78,11 @@ def console_creates_a_camera() -> str:
 
 
 def two_editors_one_row() -> str:
-    """Lesson 2: two consoles edit camera 1 at once. The second write carries an index that is no longer
-    current, gets 409, reads again and writes on top of the first — nobody's edit is lost."""
+    """Lesson 2: two consoles edit camera 1 at once. The second write carries a version that is no longer current,
+    gets 409, reads again and writes on top of the first — nobody's edit is lost."""
     s = Stand()
-    s.console("console A").create_camera({"name": "north-gate", "source": "driverpack://acme/10.2.0.11"})
-    a, b = s.console("console A"), s.console("console B")
+    s.console("srv-a").create_camera({"name": "north-gate", "source": "driverpack://acme/10.2.0.11"})
+    a, b = s.console("srv-a"), s.console("srv-b")
     mark = s.log.mark()
     key = SPEC.sub.config("cameras", "1")
     first = {"done": False}
@@ -122,10 +99,10 @@ def two_editors_one_row() -> str:
 
 
 def a_worker_may_not_write_a_camera() -> str:
-    """Lesson 2: the worker's token writes its epochs, its slot, its hold and its heartbeat — and a camera
-    row is a 403 from the store, not a rule in the worker's code."""
+    """Lesson 2: the worker's socket writes its epochs, its slot, its hold — and a camera row is a 403 from the
+    store, the daemon's word by the socket it came through, not a rule in the worker's code."""
     s = Stand()
-    w = s.worker(0, "srv-a")
+    w = s.worker("srv-a")
     mark = s.log.mark()
     try:
         w.vars.put("vms/cameras/1", {"name": "mine now"})
@@ -134,99 +111,124 @@ def a_worker_may_not_write_a_camera() -> str:
     return s.log.render(since=mark)
 
 
-def a_recorder_starts() -> str:
-    """Lesson 3: a recorder allocation starts on srv-a, where the administrator declared the disks as a
-    volume. It claims a slot like any worker — and then takes the VOLUME, by CAS, under `rec/holds/`: the
-    one write a recorder makes that a VMS worker never does."""
+def a_server_joins() -> str:
+    """Lesson 2: srv-d joins the cluster. Its configstore asks srv-a's to be added to the group and is a member before
+    any process of srv-d starts; then its resource says where it answers, and its worker claims `w-srv-d-1`. Nothing
+    of the other servers' was written."""
     s = Stand()
-    volumes.write(s.base, {"name": "disks-a", "kind": "local", "server": "srv-a", "url": s.servers["srv-a"].archive, "quota_bytes": 4 * 10**12})
-    r = s.recorder(0, "srv-a")
+    mark = s.log.mark()
+    s.join("srv-d", "vlan:cctv-b")
+    w = s.worker("srv-d")
+    w.heartbeat_once()
+    seen = sorted(s.controller("srv-b").workers_seen())
+    return (s.log.render(since=mark, kinds=("join", "store"))
+            + f"\n# the controller on srv-b reads the heartbeats through srv-b's resource: {seen}\n")
+
+
+def a_recorder_starts() -> str:
+    """Lesson 3: the recorder's unit starts on srv-a, where the administrator declared the disks as a volume. It
+    claims its name like any worker — and then takes the VOLUME, by CAS, under `rec/holds/`: the one write a
+    recorder makes that a VMS worker never does."""
+    s = Stand()
+    volumes.write(s.vars, {"name": "disks-a", "kind": "local", "server": "srv-a", "url": s.servers["srv-a"].archive,
+                           "quota_bytes": 4 * 10**12})
+    s.log.calls.clear()
+    r = s.recorder("srv-a")
     r.lease_pass(); r.heartbeat_once()
-    return s.log.render()
+    out = s.log.render()
+    r.after_stop()
+    return out
 
 
-def two_allocations_one_index() -> str:
-    """Lesson 4: two allocations come up with one index — a reschedule whose old instance is still alive, or
-    Nomad's own duplicate-index bug. The second takes the slot outright; the first finds out when it renews,
-    and stops. One of them records, never both."""
+def two_processes_one_name() -> str:
+    """Lesson 4: two processes come up with one name — the unit restarted while the old process still lived (hung,
+    stopped, out of reach of the stop), or an operator who started a second copy by hand. The second takes the name
+    outright; the first finds out when it renews, and stops. One of them holds the cameras, never both."""
     s = Stand()
     s.resources_up()
     con, ctl = s.console(), s.controller()
     for i in (1, 2):
         con.create_camera({"name": f"cam-{i}", "source": f"driverpack://file/{i}.mp4"})
-    a = s.worker(0, "srv-a", alloc="alloc-A")
-    ctl.assign("w-0", ["1", "2"])
+    a = s.worker("srv-a")
+    ctl.assign(a.name, ["1", "2"])
     a.reconcile_once()
     mark = s.log.mark()
-    b = s.worker(0, "srv-b", alloc="alloc-B")                         # the same index, a second allocation
+    b = s.worker("srv-a")                                              # the same name, a second process
     a.lease_pass()                                                     # the old one renews — and learns
     b.reconcile_once()
     return s.log.render(since=mark)
 
 
-def scale_out_and_in() -> str:
-    """Lesson 4: the workers are full; a camera waits; a third worker appears and the camera lands on it.
-    Then the third is stopped in order: it releases its slot, and the controller moves its camera."""
-    s = Stand()
+def _full(s, capacity=4, cameras=8):
+    """Two workers of capacity 4 on srv-a and srv-b, carrying eight cameras between them."""
     s.resources_up()
-    con, ctl = s.console(), s.controller()
-    ctl.capacity = 4
-    for i in range(8):
+    con, ctl = s.console(), s.controller("srv-b", capacity=capacity)
+    for i in range(cameras):
         con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
-    ws = [s.worker(0, "srv-a", capacity=4), s.worker(1, "srv-b", capacity=4)]
+    ws = [s.worker("srv-a", capacity=capacity), s.worker("srv-b", capacity=capacity)]
     for w in ws:
         w.heartbeat_once()
-    ctl.ensure_placed()
+    ctl.pass_once(1)
     for w in ws:
         w.reconcile_once(); w.heartbeat_once()
+    return con, ctl, ws
+
+
+def a_spare_takes_an_offer() -> str:
+    """Lesson 4: the workers are full; a ninth camera waits. The controller's pass counts it short and writes an
+    OFFER — an empty slot row with the label set it is for; `w2c-spares.sh` on srv-c starts a spare for that set, the
+    spare takes the offer by CAS, and the camera lands on it. Then the spare is stopped in order: it releases its
+    slot, and the controller moves its camera. The controller started no process. Only the writes; the reads are
+    counted."""
+    s = Stand()
+    con, ctl, ws = _full(s)
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
     mark = s.log.mark()
-    ctl.ensure_placed()                                                # full: the ninth waits
-    w2 = s.worker(2, "srv-c", capacity=4); w2.heartbeat_once()         # `nomad job scale vmsworker 3`
-    ctl.ensure_placed()
-    w2.reconcile_once()
-    w2.release_slot()                                                  # `… 2`: SIGTERM inside kill_timeout
+    ctl.pass_once(1)                                                   # full: the ninth waits — and an offer is written
+    spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemd-run --unit vms-vmsworker-spare-1 --setenv SPARE_FOR=`
+    spare.heartbeat_once()
+    ctl.pass_once(1)
+    spare.reconcile_once()
+    spare.release_slot()                                               # `systemctl stop vms-vmsworker-spare-1`: SIGTERM
     con.delete_camera(1); con.delete_camera(2)                         # room to move into
-    ctl.redistribute()
-    # The controller re-reads every placement and camera row on every pass — thousands of GETs that say
-    # nothing new. The writes are the story; the reads are counted.
-    reads = sum(1 for c in s.log.calls[mark:] if c.method == "GET")
-    return s.log.render(since=mark, methods=("PUT", "DELETE")) + f"\n# … and {reads} GET requests, omitted\n"
+    ctl.pass_once(1)
+    return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
 
 
 def a_crash_releases_nothing() -> str:
-    """Lesson 4: w-2 dies without a word. Its slot lapses; the controller moves nothing; the replacement
-    Nomad starts claims w-2 and finds its assignment where it left it."""
+    """Lesson 4: w-srv-c-1 dies without a word. systemd starts its unit again two seconds later (`Restart=always`,
+    `RestartSec=2`); in between the controller's pass finds the name still held and moves nothing, and the new
+    process claims `w-srv-c-1` and finds its assignment where it left it."""
     s = Stand()
     s.resources_up()
     con, ctl = s.console(), s.controller()
     con.create_camera({"name": "cam-1", "source": "driverpack://file/1.mp4"})
-    w = s.worker(2, "srv-c"); w.heartbeat_once()
-    ctl.ensure_placed(); w.reconcile_once()
-    s.wall.advance(60)                                                 # it died; nobody said so
+    w = s.worker("srv-c"); w.heartbeat_once()
+    ctl.pass_once(1); w.reconcile_once()
+    s.wall.advance(2)                                                  # it died; nobody said so; systemd waits RestartSec
     mark = s.log.mark()
     ctl.redistribute()                                                 # nothing released: nothing to move
-    again = s.worker(2, "srv-a", alloc="alloc-0099")                   # the disconnect block brings index 2 back
+    again = s.worker("srv-c")                                          # the same unit, a new process
     again.refresh()
     return s.log.render(since=mark)
 
 
 def decommission_a_server() -> str:
-    """Lesson 4 (М10A Lesson 7, step 7): srv-c burnt under w-2, and the operator knows it will not come back. The
-    operator operates SERVERS: the console writes one row, `platform/decommission/srv-c` — refused while srv-c's
-    resource answers, so it is written once the resource is silent — and the controller's pass frees w-2's slot itself
-    and moves its camera to the worker that is here. Only the writes; the reads are counted."""
+    """Lesson 4 (М10A Lesson 7, step 7): srv-c burnt under w-srv-c-1, and the operator knows it will not come back.
+    The operator operates SERVERS: the console writes one row, `platform/decommission/srv-c` — refused while srv-c's
+    resource answers, so it is written once the resource is silent — and the controller's pass frees w-srv-c-1's slot
+    itself and moves its camera to the worker that is here. Only the writes; the reads are counted."""
     s = Stand()
     s.resources_up()
     con, ctl = s.console(), s.controller()
     con.create_camera({"name": "cam-1", "source": "driverpack://file/1.mp4"})
     con.create_camera({"name": "cam-2", "source": "driverpack://file/2.mp4"})
-    ws = [s.worker(1, "srv-b"), s.worker(2, "srv-c")]
+    ws = [s.worker("srv-b"), s.worker("srv-c")]
     for w in ws:
         w.heartbeat_once()
     ctl.ensure_placed()
-    s.wall.advance(100)                                                # srv-c burnt: w-2 and its resource say nothing again
-    ws[0].refresh(); ws[0].heartbeat_once()                            # w-1 renews and says so, as every pass
+    s.wall.advance(100)                                                # srv-c burnt: w-srv-c-1 and its resource say nothing again
+    ws[0].refresh(); ws[0].heartbeat_once()                            # w-srv-b-1 renews and says so, as every pass
     for name, r in s.resources.items():
         if name != "srv-c":
             r.heartbeat()
@@ -234,47 +236,59 @@ def decommission_a_server() -> str:
     con.decommission("srv-c", "anna", "srv-c burnt")                   # POST /servers/srv-c/decommission, from the page
     ctl.apply_decommissions()                                          # the controller's next pass: first this…
     ctl.redistribute()                                                 # …then what a freed slot listed moves
-    reads = sum(1 for c in s.log.calls[mark:] if c.method == "GET")
-    return s.log.render(since=mark, methods=("PUT", "DELETE")) + f"\n# … and {reads} GET requests, omitted\n"
+    return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
 
 
-def what_the_autoscaler_reads() -> str:
-    """Lesson 4: two workers of capacity 4 carry eight cameras between them. What the console's `/metrics`
-    says — the page Prometheus scrapes and the Autoscaler's `avg(vms_worker_load)` is computed from."""
+def what_the_spares_script_reads() -> str:
+    """Lesson 4: two workers of capacity 4 carry eight cameras, a ninth waits. What the console's `/metrics` says
+    without a token while the controller's pass is fresh — the four series `w2c-spares.sh` reads: how many workers
+    are needed for each label set, how many units are short, how many offers wait, and what each server reaches."""
     from cluster.console import metrics_text
     s = Stand()
-    s.resources_up()
-    con, ctl = s.console(), s.controller()
-    ctl.capacity = 4
-    for i in range(8):
-        con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
-    ws = [s.worker(0, "srv-a", capacity=4), s.worker(1, "srv-b", capacity=4)]
-    for w in ws:
-        w.heartbeat_once()
-    ctl.ensure_placed()
-    for w in ws:
-        w.reconcile_once(); w.heartbeat_once()
+    con, ctl, ws = _full(s)
+    con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4", "labels": ["vlan:cctv-b"]})
+    ctl.pass_once(1)
     text = metrics_text(s.console(), 0.0)
-    keep = [l for l in text.splitlines() if "worker_load" in l or "headroom" in l or "workers_live" in l or "spare" in l]
+    series = ("vms_workers_live", "vms_worker_load", "vms_workers_needed", "vms_units_short", "vms_spare_offers",
+              "vms_server_labels")
+    keep = [l for l in text.splitlines()
+            if l.replace("# TYPE ", "").split("{")[0].split(" ")[0] in series]
     return "GET /metrics\n" + "\n".join(keep) + "\n"
 
 
+def an_offer_withdrawn() -> str:
+    """Lesson 4: an offer waits for a spare, and the shortage goes before one comes — the operator deletes a camera.
+    The next pass finds the offer not needed and removes it by CAS: the version it read, so a spare that took it
+    meanwhile keeps it (its write moved the version, and the delete is a 409)."""
+    s = Stand()
+    con, ctl, ws = _full(s)
+    con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
+    ctl.pass_once(1)                                                   # the offer
+    mark = s.log.mark()
+    con.delete_camera(3)                                               # room again on w-srv-a-1
+    ctl.pass_once(1)
+    return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
+
+
 def who_may_write_what() -> str:
-    """Lesson 5: every process of the cluster tries one write that is its own and one that is not. The
-    grants are the ones the code derives from the spec (`acl_worker`, `acl_controller`, `acl_console`) —
-    the same the policy files in deploy/ are checked against."""
+    """Lesson 5: every process of the cluster tries one write that is its own and one that is not, through the socket
+    its unit can open. The rights are the committed rights file (`deploy/configstore-rights.json`), generated from the
+    spec (`acl_worker`, `acl_controller`, `acl_console`); the 403 is the daemon's."""
     s = Stand()
     tries = [
-        ("vmsworker w-0", WORKER_GRANTS, [("vms/epoch/7", {"epoch": "1"}), ("vms/placement/7", {"worker": "w-0"})]),
-        ("recworker r-0", RECORDER_GRANTS, [("rec/holds/disks-a", {"holder": "alloc-0002"}), ("rec/recordings/7", {"cam": "7"})]),
-        ("vmscontroller", CONTROLLER_GRANTS,
-         [("vms/placement/7", {"worker": "w-0", "reason": "…"}), ("vms/cameras/7", {"name": "moved"})]),
-        ("console", SPEC.acl_console(), [("vms/cameras/7", {"name": "north-gate"}), ("vms/workers/w-0", {"units": "7"})]),
-        ("resource srv-a", ["objects/platform/resources/*"],
-         [("objects/platform/resources/srv-a/heartbeat", {"data": "{}"}), ("objects/vms/heartbeats/w-0", {"data": "{}"})]),
+        ("vmsworker", "vmsworker w-srv-a-1 on srv-a", [("vms/epoch/7", {"epoch": "1"}),
+                                                       ("vms/placement/7", {"worker": "w-srv-a-1"})]),
+        ("recworker", "recworker r-srv-a-1 on srv-a", [("rec/holds/disks-a", {"holder": "srv-a:4102"}),
+                                                       ("rec/recordings/7", {"cam": "7"})]),
+        ("vmscontroller", "vmscontroller on srv-a", [("vms/placement/7", {"worker": "w-srv-a-1", "reason": "…"}),
+                                                     ("vms/cameras/7", {"name": "moved"})]),
+        ("console", "console on srv-a", [("vms/cameras/7", {"name": "north-gate"}),
+                                         ("vms/workers/w-srv-a-1", {"units": "7"})]),
+        ("resource", "resource on srv-a", [("platform/doors/srv-a", {"url": "http://srv-a:8090", "since": "0"}),
+                                           ("vms/cameras/7", {"name": "mine"})]),
     ]
-    for who, grants, writes in tries:
-        v, _ = s.as_process(who, who.split()[0] + "-" + who.split()[-1], grants)
+    for role, who, writes in tries:
+        v = s.door(role, who)
         for key, items in writes:
             try:
                 v.put(key, items)
@@ -287,38 +301,47 @@ def _host(url: str) -> str:
     return url.split("//", 1)[1].split("/", 1)[0].split(":", 1)[0]
 
 
-def _peers(s):
-    """The resources' peer client over directories instead of HTTP — the three calls `PeerClient` makes."""
-    from tests.test_lesson3_events import DirReader
-
-    class Peers(DirReader):
-        def _srv(self, url):
-            srv = self.c.servers[_host(url)]
-            if getattr(srv, "down", False):
-                raise ConnectionError(srv.name)
-            return srv
-    return Peers(s)
-
-
 def _json(obj) -> str:
     import json
     return json.dumps(obj, ensure_ascii=False, indent=2)
 
 
+def _two_silences(s, dead: str = "srv-a", down: bool = True) -> None:
+    """`dead` goes: its processes and its resource say nothing again — and, `down`, nothing on it answers, its files
+    with it. Then the slot's 45 s, the margin's 45 s past them, and three of the controller's pass: the others renew
+    and heartbeat on the way."""
+    s.servers[dead].down = down
+    for step in (30, 30, 33):
+        s.wall.advance(step)
+        for name, srv in s.servers.items():
+            if name != dead:
+                srv.res.heartbeat()
+        for w in getattr(s, "alive", []):
+            w.lease_pass(); w.heartbeat_once()
+
+
 def an_edit_during_the_failover() -> str:
-    """Lesson 6: srv-a dies under w-1; while nobody runs it, the operator renames the camera; the replacement
-    on srv-b starts it with the new name. Nothing was published for this to work — the edit is in raft."""
+    """Lesson 6: srv-a dies under w-srv-a-1; while nobody runs camera 1, the operator renames it; when the controller
+    moves it to w-srv-b-1, the camera starts there with the new name. Nothing was published for this to work — the
+    edit is in the store. Only the writes."""
     s = Stand()
     s.resources_up()
-    con, ctl = s.console(), s.controller()
-    con.create_camera({"name": "before", "source": "driverpack://file/1.mp4"})
-    a = s.worker(1, "srv-a"); a.heartbeat_once(); ctl.ensure_placed(); a.reconcile_once()
-    s.wall.advance(20)                                                 # srv-a is gone; w-1 is between instances
+    con, ctl = s.console("srv-b"), s.controller("srv-b")
+    con.create_camera({"name": "before", "source": "driverpack://file/1.mp4", "labels": ["vlan:cctv-a"]})
+    a, b = s.worker("srv-a"), s.worker("srv-b")
+    for w in (a, b):
+        w.heartbeat_once()
+    ctl.pass_once(1); a.reconcile_once(); ctl.workers_seen()
+    s.alive = [b]
     mark = s.log.mark()
-    con.update_camera(1, {"name": "edited during the failover"})
-    b = s.worker(1, "srv-b", alloc="alloc-0077")
+    s.servers["srv-a"].down = True
+    s.wall.advance(20)
+    con.update_camera(1, {"name": "edited during the failover"})       # while nobody runs it
+    _two_silences(s)
+    ctl.pass_once(1)
     b.reconcile_once()
-    return s.log.render(since=mark)
+    return (s.log.render(since=mark, writes=True)
+            + f"\n# … and {s.reads(mark)} GET requests, omitted\n# w-srv-b-1 runs camera 1 as {b.rows[0]['name']!r}\n")
 
 
 def a_timeline_across_two_volumes() -> str:
@@ -330,11 +353,10 @@ def a_timeline_across_two_volumes() -> str:
     from tests.conftest import footage
     s = Stand()
     t = s.wall()
-    s.base.put("rec/epoch/7", {"epoch": "4"})                          # the recording's writer is e4 now
+    s.vars.put("rec/epoch/7", {"epoch": "4"})                          # the recording's writer is e4 now
     recs = {}
-    for i, (server, epoch, spans) in enumerate((("srv-a", 3, ((t - 1200, t - 900), (t - 600, t - 450))),
-                                                ("srv-b", 4, ((t - 300, t),))), start=1):
-        r = s.recorder(i, server)
+    for server, epoch, spans in (("srv-a", 3, ((t - 1200, t - 900), (t - 600, t - 450))), ("srv-b", 4, ((t - 300, t),))):
+        r = s.recorder(server)
         r.lease_pass()
         for a, b in spans:
             footage(r.store, "7", epoch, a, b, step=10, seal=False)
@@ -346,6 +368,7 @@ def a_timeline_across_two_volumes() -> str:
         out.append(f"{r.name} on {server}: volume {hb['volume']!r}, archive {hb['archive']!r}, writer {hb['writer']}")
     routes = cluster_routes(s.controller())
     keep = ("start", "end", "epoch", "fenced", "recording", "recorder", "volume", "media")
+
     def ask():
         _, body = routes(None, "GET", "/timeline/7", {"from": t - 2000, "to": t})
         if isinstance(body, list):
@@ -361,7 +384,32 @@ def a_timeline_across_two_volumes() -> str:
     return s.log._clean("\n".join(out)) + "\n"
 
 
-def _events_site(peers=None):
+def objects_across_servers() -> str:
+    """Lesson 6: objects are files on each server. The worker on srv-a puts its heartbeat — a file on srv-a, no store
+    write; the controller on srv-b reads it through srv-b's resource, which asks the others (`scope=cluster`, the
+    freshest copy by `written`); a mark before a device command is created ONCE across the cluster, so it is a row
+    (`cas: ""`). Then srv-a goes down: the resource names it missing, and the reader answers with what it last heard."""
+    s = Stand()
+    s.log.objects = True
+    w = s.worker("srv-a")
+    ctl = s.controller("srv-b")
+    mark = s.log.mark()
+    w.heartbeat_once()
+    seen = ctl.workers_seen()
+    made = w.objects.put_new("vms/commands/r-17", b'{"instance": "srv-a:4101"}')
+    s.servers["srv-a"].down = True
+    later = ctl.workers_seen()
+    keep = ("objects", "file", "store")
+    calls = [c for c in s.log.calls[mark:] if c.who.startswith(("vmsworker", "vmscontroller")) and c.kind in keep
+             and (c.kind != "store" or "commands" in c.target or "commands" in str(c.body))]
+    s.log.calls[mark:] = calls
+    return (s.log.render(since=mark)
+            + f"\n# workers_seen() on srv-b = {sorted(seen)}; the mark made: {made}"
+            + f"\n# srv-a down: the resource on srv-b names it missing ({ctl.objects.missing}); "
+            + f"workers_seen() = {sorted(later)}, by what srv-b's reader heard last\n")
+
+
+def _events_site():
     from tests.test_lesson3_events import _observe
     s = Stand()
     t = s.wall() - 7200
@@ -378,10 +426,10 @@ def _merged(s):
 
     def fetch(url, p):
         name = _host(url)
-        if getattr(s.servers[name], "down", False):
+        if s.servers[name].down:
             raise ConnectionError(name)
         return s.resources[name].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None,
-                                                p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
+                                             p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
     m = MergedIndex(s.objects, fetch=fetch, wall=s.wall)
     m.SEEN_FOR = 0.0          # the stand moves only its wall: each query reads the resources afresh, as two queries a minute apart do
     return m
@@ -409,17 +457,17 @@ def events_merged() -> str:
 
 
 def the_events_mirror() -> str:
-    """Lesson 7: the storage knob's events row — one Variable. Each resource copies its CLOSED buckets to the
-    next live resource; srv-a goes silent and its events come from srv-b's copy, saying so; srv-a returns with
-    an empty disk and pulls its buckets home."""
-    import os
+    """Lesson 7: the storage knob's events row — one row in the store. Each resource copies its CLOSED buckets to the
+    next live resource; srv-a goes silent and its events come from srv-b's copy, saying so; srv-a returns with an
+    empty disk and pulls its buckets home."""
     import shutil
     from w2cplatform.resource import MIRROR_KEY
     s, t = _events_site()
-    rs = s.resources_up(peers=_peers(s))
+    rs = s.resources_up()
     out = [f"# knob off: srv-a pass -> mirrored {rs['srv-a'].pass_()['mirrored']}"]
     s.vars.put(MIRROR_KEY, {"enabled": "true", "copies": "1"})
-    out.append("# the knob: PUT /v1/var/platform/mirror {\"Items\": {\"enabled\": \"true\", \"copies\": \"1\"}}")
+    out.append('# the knob: POST /v1/write {"op": "put", "key": "platform/mirror", "items": {"enabled": "true", '
+               '"copies": "1"}}')
     for name in rs:
         r = rs[name].pass_()
         out.append(f"{name} pass -> mirrored {r['mirrored']} to {r['peers']}")
@@ -440,86 +488,98 @@ def the_events_mirror() -> str:
 
 
 def _recording(s, n=3):
-    """Lesson 8's starting point: w-1 on srv-a holds cameras 1..n under epoch 1, the servers' resources alive."""
+    """Lesson 8's starting point: w-srv-a-1 holds cameras 1..n under epoch 1, w-srv-b-1 is there with room, the
+    servers' resources alive, the controller on srv-b has heard everybody."""
     s.resources_up()
-    con, ctl = s.console(), s.controller()
+    con, ctl = s.console("srv-b"), s.controller("srv-b")
     for i in range(n):
-        con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
-    a = s.worker(1, "srv-a", alloc="alloc-A")
-    a.heartbeat_once(); ctl.ensure_placed(); a.reconcile_once(); a.heartbeat_once()
-    return ctl, a
+        con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4", "labels": ["vlan:cctv-a"]})
+    a = s.worker("srv-a")
+    a.heartbeat_once(); ctl.pass_once(1); a.reconcile_once(); a.heartbeat_once()
+    b = s.worker("srv-b"); b.heartbeat_once()
+    ctl.workers_seen(); ctl.failover_seconds()
+    s.alive = [b]
+    return ctl, a, b
 
 
 def pull_the_power() -> str:
-    """Lesson 8: srv-a dies at t=0. Nomad's `disconnect { lost_after = 45s }` starts the replacement on srv-b
-    at t=48 (+ a placement). It claims w-1, finds its predecessor's heartbeat, reads its assignment, takes the
-    next epoch for every camera — asking nobody — and reports the failover it measured."""
+    """Lesson 8: srv-a dies at t=0 — its processes, its resource, its disks. Nothing restarts anything elsewhere: the
+    controller on srv-b sees the two silences — the slot of w-srv-a-1 out by 45 s more, and srv-a's resource silent —
+    and moves the cameras by assignment to w-srv-b-1, which takes the next epoch for each and starts them. Only the
+    writes."""
     s = Stand()
-    ctl, a = _recording(s)
-    ctl.failover_seconds()            # a scrape while srv-a is alive: a failover to ANOTHER server is measured by the
-    s.wall.advance(45 + 3)            # reader's own clock, from what it saw (the review's ninth pass)
+    ctl, a, b = _recording(s)
     mark = s.log.mark()
-    b = s.worker(1, "srv-b", alloc="alloc-B")
+    _two_silences(s)
+    ctl.pass_once(1)
     b.reconcile_once(); b.heartbeat_once()
-    return s.log.render(since=mark) + f"\n# the controller reads the heartbeats: failover_seconds() = {ctl.failover_seconds()}\n"
+    return (s.log.render(since=mark, writes=True)
+            + f"\n# … and {s.reads(mark)} GET requests, omitted"
+            + f"\n# 93 s after the power went: w-srv-b-1 runs {sorted(b.actuator.running)} under epochs "
+            + f"{dict(sorted(b.actuator.epochs.items()))}; where(1..3) = {[ctl.where(i) for i in (1, 2, 3)]}\n")
 
 
-def a_server_gone_under_distinct() -> str:
-    """Lesson 8: the administrator chose `servers: distinct`. A crash (one silence: the slot) moves nothing; a
-    dead server (two silences: the slot, and the resource on its server) is a fact the controller acts on."""
+def one_silence_or_two() -> str:
+    """Lesson 8: a crash — w-srv-a-1 silent, srv-a's resource alive — moves nothing: the unit is systemd's to start
+    again, and its process comes back under the same name. A dead server — two silences: the slot, and the resource
+    on its server — is a fact the controller acts on."""
     s = Stand()
-    ctl, a = _recording(s)
-    s.console().set_policy({"servers": "distinct"})                    # the administrator, on the console: the controller may not
-    b = s.worker(2, "srv-b", alloc="alloc-C"); b.heartbeat_once()
+    ctl, a, b = _recording(s)
     rs = s.resources
-    s.wall.advance(2 * 45 + 3); b.heartbeat_once(); rs["srv-a"].heartbeat(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
+    s.wall.advance(2 * 45 + 3); b.lease_pass(); b.heartbeat_once()
+    for r in rs.values():
+        r.heartbeat()
     crash = s.log.mark()
     one = (ctl.gone_servers(), ctl.redistribute())
     after_crash = s.log.mark()
-    s.wall.advance(2 * 45 + 3); b.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
+    s.wall.advance(2 * 45 + 3); b.lease_pass(); b.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
     gone = ctl.gone_servers()
     mark = s.log.mark()
     ctl.redistribute()
     b.reconcile_once()
-    writes_in_crash = sum(1 for c in s.log.calls[crash:after_crash] if c.method == "PUT")
-    return (f"# a crash — w-1 silent, srv-a's resource alive: gone_servers() = {one[0]}, redistribute() = {one[1]}, "
-            f"PUT requests: {writes_in_crash}\n"
-            f"# the power pull — w-1 AND srv-a's resource silent: gone_servers() = {gone}\n\n"
-            + s.log.render(since=mark, methods=("PUT",)))
+    writes_in_crash = sum(1 for c in s.log.calls[crash:after_crash] if c.write)
+    return (f"# a crash — w-srv-a-1 silent, srv-a's resource alive: gone_servers() = {one[0]}, redistribute() = "
+            f"{one[1]}, writes: {writes_in_crash}\n"
+            f"# the power pull — w-srv-a-1 AND srv-a's resource silent: gone_servers() = {gone}\n\n"
+            + s.log.render(since=mark, writes=True))
 
 
 def the_old_instance_wakes_up() -> str:
-    """Lesson 9: srv-a was not dead — partitioned, or paused. It comes back with w-1 still holding three cameras
-    under epoch 1. Its next renewal finds the slot held by another; and every epoch says the same."""
+    """Lesson 9: srv-a was not dead — cut off from the others, or paused. The controller moved its cameras to w-srv-b-1
+    under epoch 2; srv-a comes back with w-srv-a-1 still holding three cameras under epoch 1. Its next lease pass finds
+    every epoch moved on; it stops them, and its assignment says they are not its any more."""
     s = Stand()
-    ctl, a = _recording(s)
-    s.wall.advance(45 + 3)
-    b = s.worker(1, "srv-b", alloc="alloc-B"); b.reconcile_once(); b.heartbeat_once()
+    ctl, a, b = _recording(s)
+    _two_silences(s)
+    ctl.pass_once(1); b.reconcile_once(); b.heartbeat_once()
+    s.servers["srv-a"].down = False
     mark = s.log.mark()
-    a.lease_pass()                                                     # kill -CONT
-    a.renew_leases()
+    lost = a.lease_pass()                                              # kill -CONT, or the network back
+    a.reconcile_once()
     a.heartbeat_once()
-    return s.log.render(since=mark) + f"\n# a.conflicts() = {a.conflicts()}, a.recording_allowed = {a.recording_allowed}\n"
+    return (s.log.render(since=mark)
+            + f"\n# a.lease_pass() lost {lost}; running {sorted(a.actuator.running)}; its assignment now "
+            + f"{a.assignment().units}; its name is still its own: {a.name}\n")
 
 
 def a_reassignment_is_not_a_zombie() -> str:
-    """Lesson 9: the controller moves camera 2 from w-1 to w-2. w-1 loses the lease on 2 exactly as a zombie
-    would — and one read of its assignment tells it this is a move: it lets 2 go and keeps 1 and 3."""
+    """Lesson 9: the controller moves camera 2 from w-srv-a-1 to w-srv-b-1. w-srv-a-1 loses the lease on 2 exactly as
+    a zombie would — and one read of its assignment tells it this is a move: it lets 2 go and keeps 1 and 3."""
     s = Stand()
-    ctl, a = _recording(s)
-    b = s.worker(2, "srv-b", alloc="alloc-C"); b.heartbeat_once()
+    ctl, a, b = _recording(s)
     mark = s.log.mark()
-    ctl.move(2, "w-2", "operator: srv-b sees that VLAN")
+    ctl.move(2, b.name, "operator: srv-b sees that VLAN")
     b.reconcile_once()
     lost = a.lease_pass()
     a.reconcile_once()
-    return s.log.render(since=mark) + f"\n# a.lease_pass() lost {lost}; a.recording_allowed = {a.recording_allowed}; running {sorted(a.actuator.running)}\n"
+    return (s.log.render(since=mark)
+            + f"\n# a.lease_pass() lost {lost}; a.recording_allowed = {a.recording_allowed}; running {sorted(a.actuator.running)}\n")
 
 
 def _labelled_workers(s):
     """Lesson 10's cluster: srv-a reaches vlan:cctv-a, srv-b both, srv-c vlan:cctv-b — one worker on each."""
     s.resources_up()
-    ws = {"w-0": s.worker(0, "srv-a", capacity=10), "w-1": s.worker(1, "srv-b", capacity=10), "w-2": s.worker(2, "srv-c", capacity=10)}
+    ws = {srv: s.worker(srv, capacity=10) for srv in ("srv-a", "srv-b", "srv-c")}
     for w in ws.values():
         w.heartbeat_once()
     return ws
@@ -536,18 +596,18 @@ def placement_under_labels() -> str:
         con.create_camera({"name": name, "source": f"driverpack://file/{name}.mp4", "labels": labels})
     mark = s.log.mark()
     ctl.ensure_placed()
-    return (s.log.render(since=mark, methods=("PUT",))
+    return (s.log.render(since=mark, writes=True)
             + f"\n# unplaceable() = {ctl.unplaceable()}\n")
 
 
 def two_controllers_one_camera() -> str:
-    """Lesson 10: `count = 1` is not exactly-one during a reschedule. Controller B places camera 1 between
-    controller A's read and A's write. A's CAS fails; A reads again, finds a worker already named, and
-    ADOPTS B's decision — it writes nothing more. One camera, one worker, whichever controller got there."""
+    """Lesson 10: a controller runs on every server, and two may place at once. Controller B places camera 1 between
+    controller A's read and A's write. A's CAS fails; A reads again, finds a worker already named, and ADOPTS B's
+    decision — it writes nothing more. One camera, one worker, whichever controller got there."""
     s = Stand()
     _labelled_workers(s)
     s.console().create_camera({"name": "gate", "source": "driverpack://file/gate.mp4", "labels": ["vlan:cctv-a"]})
-    a, b = s.controller("vmscontroller A"), s.controller("vmscontroller B")
+    a, b = s.controller("srv-a"), s.controller("srv-b")
     put = a.vars.put
     first = {"done": False}
 
@@ -559,13 +619,12 @@ def two_controllers_one_camera() -> str:
     a.vars.put = racing_put
     mark = s.log.mark()
     a.place(1)
-    reads = sum(1 for c in s.log.calls[mark:] if c.method == "GET")
-    return (s.log.render(since=mark, methods=("PUT",)) + f"\n# … and {reads} GET requests, omitted"
+    return (s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted"
             + f"\n# where(1) = {a.where(1)}; placement reason: {a.placement(1).reason!r}\n")
 
 
 def where_is_camera_7() -> str:
-    """Lesson 10: the cluster's directory is one scan of one raft. Nine cameras, nine answers, one scan."""
+    """Lesson 10: the cluster's directory is one scan of one store. Nine cameras, nine answers, one scan."""
     from cluster.directory import Directory
     s = Stand()
     _labelled_workers(s)
@@ -574,13 +633,14 @@ def where_is_camera_7() -> str:
         con.create_camera({"name": f"cam-{i + 1}", "source": f"driverpack://file/{i + 1}.mp4"})
     ctl.ensure_placed()
     mark = s.log.mark()
-    d = Directory(s.vars, ttl=5.0, clock=s.clock)
+    d = Directory(s.door("console", "console on srv-a"), ttl=5.0, clock=s.clock)
     answers = {i: d.where(i) for i in range(1, 10)}
     return s.log.render(since=mark) + f"\n# where(1..9) = {answers}; scans = {d.scans}\n"
 
 
 def the_snapshot() -> str:
-    """Lesson 10: the one thing that leaves the cluster — a copy of the rows, one object per worker, with an age."""
+    """Lesson 10: the one thing that leaves the cluster — a copy of the rows, one object per worker, with an age.
+    Objects are files: the shards are written on the controller's server, and the trace shows them as files."""
     s = Stand()
     _labelled_workers(s)
     con, ctl = s.console(), s.controller()
@@ -588,28 +648,34 @@ def the_snapshot() -> str:
     for name in ("gate", "yard", "dock"):
         con.create_camera({"name": name, "source": f"driverpack://file/{name}.mp4"})
     ctl.ensure_placed()
+    s.log.objects = True
     mark = s.log.mark()
     ctl.publish_snapshot()
-    return s.log.render(since=mark, methods=("PUT",))
+    shards = {k: len(ctl.objects.local.get(k) or b"") for k in ctl.objects.local.list("vms/snapshot/")}
+    return (s.log.render(since=mark, kinds=("file",))
+            + f"\n# on srv-a, /data/platform/objects: {shards}\n")
 
 
 SCENES = {"01-worker-starts": worker_starts,
           "02-console-creates-a-camera": console_creates_a_camera,
           "02-two-editors-one-row": two_editors_one_row,
           "02-a-worker-may-not-write-a-camera": a_worker_may_not_write_a_camera,
+          "02-a-server-joins": a_server_joins,
           "03-a-recorder-starts": a_recorder_starts,
-          "04-two-allocations-one-index": two_allocations_one_index,
-          "04-scale-out-and-in": scale_out_and_in,
+          "04-two-processes-one-name": two_processes_one_name,
+          "04-a-spare-takes-an-offer": a_spare_takes_an_offer,
           "04-a-crash-releases-nothing": a_crash_releases_nothing,
           "04-decommission-a-server": decommission_a_server,
-          "04-what-the-autoscaler-reads": what_the_autoscaler_reads,
+          "04-what-the-spares-script-reads": what_the_spares_script_reads,
+          "04-an-offer-withdrawn": an_offer_withdrawn,
           "05-who-may-write-what": who_may_write_what,
           "06-an-edit-during-the-failover": an_edit_during_the_failover,
           "06-a-timeline-across-two-volumes": a_timeline_across_two_volumes,
+          "06-objects-across-servers": objects_across_servers,
           "07-events-merged": events_merged,
           "07-the-events-mirror": the_events_mirror,
           "08-pull-the-power": pull_the_power,
-          "08-a-server-gone-under-distinct": a_server_gone_under_distinct,
+          "08-one-silence-or-two": one_silence_or_two,
           "09-the-old-instance-wakes-up": the_old_instance_wakes_up,
           "09-a-reassignment-is-not-a-zombie": a_reassignment_is_not_a_zombie,
           "10-placement-under-labels": placement_under_labels,
@@ -620,9 +686,12 @@ SCENES = {"01-worker-starts": worker_starts,
 
 def main() -> None:
     write = "--write" in sys.argv
+    only = [a for a in sys.argv[1:] if not a.startswith("--")]
     if write:
         os.makedirs(TRACES, exist_ok=True)
     for name, scene in SCENES.items():
+        if only and not any(o in name for o in only):
+            continue
         text = scene()
         if write:
             with open(os.path.join(TRACES, name + ".txt"), "w", encoding="utf-8") as f:

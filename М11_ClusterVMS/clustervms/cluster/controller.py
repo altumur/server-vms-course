@@ -6,8 +6,9 @@ hostname, and the snapshot is what a single-cluster customer's console
 reads. So it lives in the platform's SpecController, the VMS's spec names
 it, and this module keeps only the name М11's lessons used.
 
-Still no Nomad client: it never places a process, never sets `count`,
-never frees a slot from a silence alone (`Controller.slot_fate`).
+Still no supervisor's client: it never starts a process — it publishes numbers
+and offers, and `w2c-spares.sh` on each server starts — and never frees a slot
+from a silence alone (`Controller.slot_fate`).
 """
 from __future__ import annotations
 

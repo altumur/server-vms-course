@@ -1,44 +1,78 @@
-"""The request trace: what a cluster's processes say to Nomad, in Nomad's own words.
+"""The request trace: what a cluster's processes say to the store, in the product's own API.
 
-The lessons show every store call as the HTTP request `NomadVariables` would send for it — the method, the
-URL with its `?cas=`, the body, the answer — and the Variables before and after. Written by hand, those
-examples drift from the code the first time the code changes. So they are not written by hand: the stand
-runs the real controller, workers and console over `FakeVariables`, and `TracedVariables` records each call
-in the form `NomadVariables` would have put on the wire, built with the same `safe_path` and `quote`.
+The lessons show every store call as the request the handle sends to its server's configstore daemon — the role's
+socket, the method and route, the body, the answer:
+
+    # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
+    POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": "", "items": {…}}
+    → 200 {"index": 1004}
+
+Written by hand, those examples drift from the code the first time the code changes. So they are not written by
+hand: the stand runs the real controller, workers and console through the real handle (`ConfigstoreVariables`),
+whose transport is the daemon's own API over the daemon's own state machine in this process
+(`storemachine.local_transport`), and `TraceLog.transport` records each request and answer as it passes — the
+bytes the handle would have put on the socket, nothing rebuilt. `test_trace.py` sends the same calls over a real
+unix socket and compares.
+
+Two things are left out of what is printed, and only out of the printing: the operation id (`"id"` in every write,
+a fresh uuid per call — a trace must read the same on every run), and the percent-encoding of the query (`key=vms/…`,
+not `key=vms%2F…`). A write's body is printed with `op`, `key` and `cas` first, so its first line says what is asked.
+
+Objects are files on each server now (`cluster://`) and are not in the store's trace. A scene about them turns on
+`objects=True`, and the stand's object stores add their own lines: a file written on a server, and a request to the
+resource on the reader's server (`GET /v1/objects?…`).
 
     log = TraceLog(roots={"/tmp/clustervms-x1": "/data"})
-    vars_ = TracedVariables(FakeVariables(), log, who="console")
+    h = ConfigstoreVariables(path, transport=log.transport("console on srv-a", path, local_transport(...)))
     ...
     print(log.render())
-
-Objects on this cluster ARE Variables (`VariablesObjectStore`, `objects/<key>` -> {data}), so an object
-store built over a traced Variables shows up in the same trace, with its `data` expanded for reading.
 """
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from urllib.parse import quote
-
-from cluster.variables import Conflict, Forbidden
-from w2cplatform.variables import safe_path
+from urllib.parse import unquote
 
 
 @dataclass
 class Call:
     who: str
+    door: str
     method: str
-    url: str
+    target: str
     body: dict | None
     status: int
     answer: object
+    kind: str = "store"                 # "store" | "objects" | "file" | "join"
+
+    @property
+    def op(self) -> str:
+        """`get`, `list`, `put`, `delete` — what a store call asked; the method for anything else."""
+        if self.kind == "store" and self.target.startswith("/v1/get"):
+            return "get"
+        if self.kind == "store" and self.target.startswith("/v1/list"):
+            return "list"
+        if self.kind == "store" and isinstance(self.body, dict):
+            return str(self.body.get("op", self.method))
+        return self.method
+
+    @property
+    def write(self) -> bool:
+        return self.op in ("put", "delete")
+
+
+def body_shown(body: dict) -> dict:
+    """A write's body as printed: no operation id, `op`, `key` and `cas` first."""
+    shown = {k: body[k] for k in ("op", "key", "cas") if k in body}
+    shown.update({k: v for k, v in body.items() if k not in shown and k != "id"})
+    return shown
 
 
 @dataclass
 class TraceLog:
     roots: dict = field(default_factory=dict)          # temporary paths -> what the lesson shows instead
     calls: list = field(default_factory=list)
-    namespace: str = "default"
+    objects: bool = False                              # record object operations too (a scene about them)
 
     def mark(self) -> int:
         return len(self.calls)
@@ -48,89 +82,48 @@ class TraceLog:
             s = s.replace(real, shown)
         return s
 
-    @staticmethod
-    def _expand(obj):
-        """An object stored as a Variable carries its bytes as a JSON string in `data`: show it as JSON."""
-        if isinstance(obj, dict) and isinstance(obj.get("Items"), dict) and "data" in obj["Items"]:
+    def transport(self, who: str, door: str, inner):
+        """`inner` — a `ConfigstoreVariables` transport — with every request and answer recorded under `who`."""
+        def call(method: str, target: str, raw: bytes | None, headers: dict, timeout: float) -> tuple[int, bytes]:
+            code, got = inner(method, target, raw, headers, timeout)
             try:
-                return {**obj, "Items": {**obj["Items"], "data": json.loads(obj["Items"]["data"])}}
+                answer = json.loads(got or b"{}")
             except ValueError:
-                return obj
-        return obj
+                answer = got.decode(errors="replace")
+            self.calls.append(Call(who, door, method, target, json.loads(raw) if raw else None, code, answer))
+            return code, got
+        return call
 
     def render(self, since: int = 0, until: int | None = None, who: bool = True, width: int = 110,
-               methods: tuple | None = None) -> str:
+               writes: bool = False, kinds: tuple | None = None) -> str:
         out = []
         for c in self.calls[since:until]:
-            if methods and c.method not in methods:
+            if writes and not c.write:
+                continue
+            if kinds is not None and c.kind not in kinds:
                 continue
             if who:
-                out.append(f"# {c.who}")
-            out.append(f"{c.method} {self._clean(c.url)}")
-            if c.body is not None:
-                out.append(self._clean(json.dumps(self._expand(c.body), ensure_ascii=False, indent=2 if len(json.dumps(c.body)) > width else None)))
-            ans = self._expand(c.answer) if isinstance(c.answer, dict) else c.answer
-            text = "" if ans is None else " " + json.dumps(ans, ensure_ascii=False, indent=2 if len(json.dumps(ans)) > width else None)
-            out.append(self._clean(f"→ {c.status}{text}"))
+                out.append(f"# {c.who} → {c.door}")
+            out += self._request(c, width)
+            if c.kind != "file":
+                ans = c.answer
+                text = "" if ans is None else " " + json.dumps(ans, ensure_ascii=False,
+                                                               indent=2 if len(json.dumps(ans)) > width else None)
+                out.append(f"→ {c.status}{text}")
             out.append("")
-        return "\n".join(out).rstrip() + "\n"
+        return self._clean("\n".join(out).rstrip() + "\n")
 
-
-class TracedVariables:
-    """A Variables that records every call as the request `NomadVariables` would have sent."""
-
-    def __init__(self, inner, log: TraceLog, who: str):
-        self.inner, self.log, self.who = inner, log, who
-        self.max_bytes = getattr(inner, "max_bytes", 0)
-
-    def _key(self, path: str) -> str:
-        return quote(safe_path(path), safe="/")
-
-    def _q(self, cas=None) -> str:
-        return f"namespace={self.log.namespace}" + (f"&cas={cas}" if cas is not None else "")
-
-    def as_writer(self, writer: str, allowed=None):
-        return TracedVariables(self.inner.as_writer(writer, allowed), self.log, writer)
-
-    def get(self, path):
-        items, idx = self.inner.get(path)
-        url = f"/v1/var/{self._key(path)}?{self._q()}"
-        if items is None:
-            self.log.calls.append(Call(self.who, "GET", url, None, 404, None))
-        else:
-            self.log.calls.append(Call(self.who, "GET", url, None, 200, {"Path": path, "Items": items, "ModifyIndex": idx}))
-        return items, idx
-
-    def put(self, path, items, cas=None):
-        url = f"/v1/var/{self._key(path)}?{self._q(cas)}"
-        body = {"Items": {k: str(v) for k, v in items.items()}}
-        try:
-            idx = self.inner.put(path, items, cas)
-        except Conflict:
-            _, current = self.inner.get(path)
-            self.log.calls.append(Call(self.who, "PUT", url, body, 409, {"ModifyIndex": current}))
-            raise
-        except Forbidden:
-            self.log.calls.append(Call(self.who, "PUT", url, body, 403, "Permission denied"))
-            raise
-        self.log.calls.append(Call(self.who, "PUT", url, body, 200, {"Path": path, "ModifyIndex": idx}))
-        return idx
-
-    def list(self, prefix):
-        paths = self.inner.list(prefix)
-        url = f"/v1/vars?prefix={quote(prefix, safe=chr(47))}&{self._q()}"
-        answer = [{"Path": p, "ModifyIndex": self.inner.get(p)[1]} for p in paths]
-        self.log.calls.append(Call(self.who, "GET", url, None, 200, answer))
-        return paths
-
-    def delete(self, path, cas=None):
-        url = f"/v1/var/{self._key(path)}?{self._q(cas)}"
-        try:
-            self.inner.delete(path, cas)
-        except Conflict:
-            self.log.calls.append(Call(self.who, "DELETE", url, None, 409, None))
-            raise
-        self.log.calls.append(Call(self.who, "DELETE", url, None, 200, None))
-
-    def __getattr__(self, name):
-        return getattr(self.inner, name)
+    @staticmethod
+    def _request(c: Call, width: int) -> list[str]:
+        line = f"{c.method} {unquote(c.target)}"
+        if c.body is None:
+            return [line]
+        body = body_shown(c.body) if c.kind == "store" else c.body
+        whole = f"{line} {json.dumps(body, ensure_ascii=False)}"
+        if len(whole) <= width or not isinstance(body.get("items"), dict) or not body["items"]:
+            return [whole]
+        head = {k: v for k, v in body.items() if k != "items"}
+        first = json.dumps(head, ensure_ascii=False)[:-1] + ', "items": {'
+        rows = [f'  {json.dumps(k, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False)}'
+                for k, v in body["items"].items()]
+        return [f"{line} {first}", *[r + "," for r in rows[:-1]], rows[-1], "}}"]

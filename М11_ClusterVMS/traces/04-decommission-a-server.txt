@@ -1,38 +1,48 @@
-# console
-PUT /v1/var/platform/decommission/srv-c?namespace=default
-{"Items": {"by": "anna", "at": "1757500100.0", "why": "srv-c burnt"}}
-→ 200 {"Path": "platform/decommission/srv-c", "ModifyIndex": 1022}
+# console on srv-a → /run/configstore/console.sock
+POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, "items": {
+  "by": "anna",
+  "at": "1757500100.0",
+  "why": "srv-c burnt"
+}}
+→ 200 {"index": 1014}
 
-# vmscontroller
-PUT /v1/var/vms/slots/w-2?namespace=default&cas=1012
-{"Items": {"holder": "alloc-0002", "until": "1757500045.0", "released": "true", "gen": "1"}}
-→ 200 {"Path": "vms/slots/w-2", "ModifyIndex": 1023}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
+  "holder": "srv-c:4102",
+  "until": "1757500045.0",
+  "released": "true",
+  "gen": "1"
+}}
+→ 200 {"index": 1015}
 
-# vmscontroller
-PUT /v1/var/vms/decommissioned/srv-c?namespace=default
-{"Items": {"asked_at": "1757500100.0", "at": "1757500100.0", "slots": "w-2", "units": "2", "holds": ""}}
-→ 200 {"Path": "vms/decommissioned/srv-c", "ModifyIndex": 1024}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/decommissioned/srv-c", "cas": null, "items": {
+  "asked_at": "1757500100.0",
+  "at": "1757500100.0",
+  "slots": "w-srv-c-1",
+  "units": "2",
+  "holds": ""
+}}
+→ 200 {"index": 1016}
 
-# vmscontroller
-PUT /v1/var/vms/placement/2?namespace=default&cas=1017
-{
-  "Items": {
-    "worker": "w-1",
-    "reason": "slot w-2 released; most free capacity (49); on srv-b",
-    "at": "1757500100.0",
-    "rev": "2"
-  }
-}
-→ 200 {"Path": "vms/placement/2", "ModifyIndex": 1025}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1012, "items": {
+  "worker": "w-srv-b-1",
+  "reason": "slot w-srv-c-1 released; most free capacity (49); on srv-b",
+  "at": "1757500100.0",
+  "rev": "2"
+}}
+→ 200 {"index": 1017}
 
-# vmscontroller
-PUT /v1/var/vms/workers/w-2?namespace=default&cas=1018
-{"Items": {"units": "", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-2", "ModifyIndex": 1026}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-c-1", "cas": 1013, "items": {"units": "", "rev": "2"}}
+→ 200 {"index": 1018}
 
-# vmscontroller
-PUT /v1/var/vms/workers/w-1?namespace=default&cas=1016
-{"Items": {"units": "1,2", "rev": "2"}}
-→ 200 {"Path": "vms/workers/w-1", "ModifyIndex": 1027}
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1011, "items": {
+  "units": "1,2",
+  "rev": "2"
+}}
+→ 200 {"index": 1019}
 
-# … and 135 GET requests, omitted
+# … and 45 GET requests, omitted
