@@ -98,7 +98,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from w2cplatform import runtime
 from w2cplatform.console import STREAM_GRACE, STREAM_MIN_RATE, Deadlined, Paced, SendMixin, door_server, start_stream
-from w2cplatform.contract import SchemaTooNew, Subsystem, Worker, check_schema
+from w2cplatform.contract import NotReadThisPass, SchemaTooNew, Subsystem, Worker, check_schema
 from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import PARSE_ERRORS, finite, number
 from w2cplatform.variables import Variables
@@ -1021,21 +1021,24 @@ class VmsWorker(Worker):
             if verb == "start" or unit not in self.epochs:
                 try:
                     cam = dict(cam, epoch=self.take_epoch(unit))   # a new epoch for a new writer
-                except OSError as e:
-                    self.store_errors += 1
+                except (OSError, NotReadThisPass) as e:
+                    # The store did not answer for the epoch — or for the assignment, and the unit may be another's now
+                    # (`take_epoch`; the product's cross-check): no new number either way, the same answer below.
+                    if isinstance(e, OSError):
+                        self.store_errors += 1
                     if unit in self.epochs and self.may_record(unit):
                         # A pipeline that fell over while the store is away comes back under the epoch this
                         # worker ALREADY holds (feedback BK). It is the same writer: nobody else could have been
                         # given a number meanwhile by a store that answers nobody. It used to wait for a new
                         # epoch, and the camera was not recorded for as long as the store was silent.
-                        log.warning("%s: camera %s restarted under the epoch it holds (%d): the store did not answer "
-                                    "for a new one (%s)", self.name, unit, self.epochs[unit], e)
+                        log.warning("%s: camera %s restarted under the epoch it holds (%d): no new one now (%s)",
+                                    self.name, unit, self.epochs[unit], e)
                         cam = dict(cam, epoch=self.epochs[unit])
                     else:
                         # Never started by this worker: no epoch, no start — for THIS unit, this pass: a failed
                         # start the reconciler retries with its backoff. Raised out of here, it ended the pass
                         # for every unit after it.
-                        log.warning("%s: camera %s not started: the store did not answer for its epoch (%s)", self.name, unit, e)
+                        log.warning("%s: camera %s not started: no epoch for it (%s)", self.name, unit, e)
                         return False
                 except Exception as e:                          # noqa: BLE001
                     # …and a row `vms/epoch/<unit>` that does not parse is THIS camera's trouble too (the review's fifth
@@ -1705,6 +1708,8 @@ class VmsWorker(Worker):
                     self.take_epoch(unit)                # a device commanded is a unit fenced: its epoch, before the first command
                 except OSError:
                     raise                                # the store did not answer: not known, for every request — `pump_once` says so
+                except NotReadThisPass:
+                    continue                             # not known to be mine since the assignment was read: the pass says, as above
                 except Exception as e:                   # noqa: BLE001 — a garbled epoch row, or no slot: this command's refusal
                     self.epoch_errors[unit] = str(e)     # …and in the unit's status, as a start refused for it is (`_actuate`)
                     self._refused(rid, row, it, f"its unit's epoch could not be taken: {e}", done)

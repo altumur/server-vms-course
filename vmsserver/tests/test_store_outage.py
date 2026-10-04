@@ -286,3 +286,75 @@ def test_a_recorder_whose_store_is_away_restarts_a_fallen_pipeline_on_the_source
     assert act.started["1-main"]["source"] == live_shm(1) and act.started["1-main"]["epoch"] == 1 and r.store_errors > 0
     vars_.down = objects.down = False
     assert r.reconcile_once() == [] and act.running == {"1-main"}
+
+
+class OneRead(Flaky):
+    """…and a switch for single keys: a read of one of them is an OSError, every other call answers — a store or a
+    door that answered 503 for that one read (the product's cross-check)."""
+
+    def __init__(self, inner):
+        super().__init__(inner)
+        self.refused: set[str] = set()
+
+    def get(self, key, *a, **kw):
+        if key in self.refused:
+            raise ConnectionError(f"503 for {key}")
+        return self.inner.get(key, *a, **kw)
+
+
+def _moved_away(n=2):
+    """w-1 holds cameras 1 and 2 on a store that can refuse one read. Camera 1 goes to w-2, which starts it under
+    epoch 2; w-1's lease step finds the newer epoch and lets camera 1 go."""
+    box, ctl = _box_with_cameras(n)
+    ctl.assign("w-1", [str(i) for i in range(1, n + 1)])
+    store, act = OneRead(box.vars), FakeActuator()
+    w = VmsWorker("w-1", store, box.objects, act, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w.claim_slot(prefer="w-1")
+    assert len(w.reconcile_once()) == n
+    act2 = FakeActuator()
+    w2 = VmsWorker("w-2", box.vars, box.objects, act2, clock=box.clock, wall=box.wall, archive_root=box.archive)
+    w2.claim_slot(prefer="w-2")
+    ctl.assign("w-1", [str(i) for i in range(2, n + 1)]); ctl.assign("w-2", ["1"])
+    assert w2.reconcile_once() == [("start", 1)] and act2.epochs == {1: 2}
+    assert w.lease_pass() == ["1"] and 1 not in act.running
+    return box, store, act, w, act2, w2
+
+
+def test_a_worker_whose_assignment_read_failed_takes_no_new_epoch_on_the_assignment_it_read_before():
+    """The product's cross-check (A): the old holder's read of its assignment failed — one 503 — and the pass went on
+    with the assignment read before, which still named camera 1; the reconciler started it, and the epoch CAS, which
+    the store did answer, gave it epoch 3 over the worker the camera had moved to. The new holder was fenced by one
+    that had not read its assignment since. Rule: a new epoch only for a unit of the assignment read this pass."""
+    box, store, act, w, act2, w2 = _moved_away()
+    store.refused = {"vms/workers/w-1"}
+    box.clock.advance(60); box.wall.advance(60)                       # past any backoff
+    assert ("start", 1) not in w.reconcile_once() and act.running == {2}   # camera 1 is not started from the old list
+    assert int(box.vars.get("vms/epoch/1")[0]["epoch"]) == 2
+    assert w2.lease_pass() == [] and act2.running == {1}              # …and its new holder is not fenced
+    store.refused = set()
+    box.clock.advance(60); box.wall.advance(60)
+    assert w.reconcile_once() == [] and act.running == {2}            # read again: camera 1 is not its own
+
+
+def test_a_worker_whose_camera_row_read_failed_takes_no_epoch_for_a_camera_its_new_assignment_does_not_name():
+    """The sibling the product did not name: the assignment answered — camera 1 is gone from it — but the read of
+    camera 2's row did not, and the pass went on with the rows of the pass before, camera 1's among them. Camera 1 is
+    not the fresh assignment's: no epoch is taken for it."""
+    box, store, act, w, act2, w2 = _moved_away()
+    store.refused = {"vms/cameras/2"}
+    box.clock.advance(60); box.wall.advance(60)
+    assert ("start", 1) not in w.reconcile_once() and act.running == {2}
+    assert int(box.vars.get("vms/epoch/1")[0]["epoch"]) == 2
+    assert w2.lease_pass() == [] and act2.running == {1}
+
+
+def test_a_fallen_pipeline_of_a_camera_still_held_comes_back_under_its_epoch_when_the_assignment_read_failed():
+    """The other side of the rule: what this worker HOLDS is not taken from anyone by restarting it. Camera 2's
+    pipeline falls over in a pass whose assignment read failed: it comes back under the epoch it holds (feedback BK),
+    not a new one, and not never."""
+    box, store, act, w, act2, w2 = _moved_away()
+    store.refused = {"vms/workers/w-1"}
+    act.dead.append(2); w.pump_once()
+    box.clock.advance(5); box.wall.advance(5)                         # inside camera 2's lease
+    assert ("start", 2) in w.reconcile_once() and act.epochs[2] == 1 and act.running == {2}
+    assert int(box.vars.get("vms/epoch/2")[0]["epoch"]) == 1

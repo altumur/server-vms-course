@@ -771,3 +771,50 @@ def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():
     assert "12" in reply["vms"]
     con = AutoController(box.vars.as_writer("console", AUTO_SPEC.acl_console()), box.objects, wall=box.wall)
     con.create({**DOOR, "name": "door-again"})                               # checked against the rest, not a 500
+
+
+def test_a_scenario_that_went_away_and_came_back_is_decided_under_a_new_epoch_and_never_under_one_it_lost():
+    """The product's cross-check (B): a scenario went away from its evaluator and came back; the lease of its first
+    stay was still in the evaluator's epochs — another evaluator had taken the next epoch meanwhile — and the pass
+    decided under it, `running`, until a lease step found it fenced (in the product: never). Here a scenario the
+    evaluator's assignment no longer names is let go on its next pass — epoch, lease and status — as the
+    detector, the scan, the survey and the gateway let theirs go; back, it is taken under a new epoch, and the other
+    evaluator's lease is the one fenced."""
+    box = Box()
+    log = _Log([], wall=box.wall)
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    ctl = _assigned(box, "one")
+    a1, a2 = _worker(box, log), _worker(box, log, name="a-2")
+    a1.reconcile_once()
+    assert a1.epochs == {"one": 1} and a1.status()[0]["phase"] == "running"
+    ctl.assign("a-1", []); ctl.assign("a-2", ["one"])                    # it goes away…
+    a1.reconcile_once(); a2.reconcile_once()
+    assert a1.epochs == {} and not a1.leases and "one" not in a1.status_by_unit   # …and is let go where it went from
+    assert a2.epochs == {"one": 2}
+    ctl.assign("a-2", []); ctl.assign("a-1", ["one"])                    # …and comes back, before any lease step
+    a1.reconcile_once()
+    assert a1.epochs == {"one": 3} and a1.may_write("one") and a1.status()[0]["phase"] == "running"
+    assert int(box.vars.get("auto/epoch/one")[0]["epoch"]) == 3
+    a2.reconcile_once()
+    assert a2.epochs == {} and a2.lease_pass() == []                     # the other one let it go on its pass
+
+
+def test_a_lease_the_evaluator_lost_is_dropped_and_taken_again_and_its_status_says_so_meanwhile():
+    """B, the other road: the scenario stays assigned and its lease is lost — another instance took the epoch. The
+    lease step drops the lease (it is not kept, fenced, in `epochs`); the next pass takes a new epoch and decides
+    again. Between a fence the stand-in found and the loop's lease step, the pass says the scenario waits — not
+    `running`."""
+    from w2cplatform.epoch import next_epoch
+    box = Box()
+    log = _Log([], wall=box.wall)
+    _scenario(box, name="one", when=[DOOR["when"][0]], within=0, then=[DOOR["then"][0]])
+    _assigned(box, "one")
+    w = _worker(box, log)
+    w.reconcile_once()
+    next_epoch(box.vars, "auto/epoch/one")                               # somebody else's epoch 2
+    w.leases["one"].renew()                                              # found fenced by a renewal — the stand-in's
+    w.reconcile_once()
+    assert w.status()[0]["phase"] == "waiting" and w.epochs == {"one": 1}
+    assert w.lease_pass() == ["one"] and w.epochs == {} and not w.leases # the loop's step: dropped, not kept fenced
+    w.reconcile_once()
+    assert w.epochs == {"one": 3} and w.status()[0]["phase"] == "running"

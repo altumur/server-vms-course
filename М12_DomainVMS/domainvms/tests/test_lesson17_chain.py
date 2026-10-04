@@ -698,6 +698,40 @@ def test_by_event_the_whole_road_takes_milliseconds_while_every_timer_is_a_secon
     assert took < 0.5, f"took {took:.3f} s: something waited for a timer"
 
 
+def test_a_relay_that_lost_the_centre_tries_again_each_camera_at_its_own_moment():
+    """The product's cross-check (D): the camera's pusher, its ingest lost, tried again after exactly 2 s — every camera
+    lost it at the same moment, so every camera came back at the same millisecond, and again, and again. The course's
+    pusher has no timer of its own (its process's pass drives it); the relay's forwarder has one per camera, and it
+    was the same: `period` exactly, after a centre that did not answer. Now each wait is `period` give or take half,
+    drawn afresh every time (`retry_wait`) — the cameras spread out instead of marching."""
+    import threading
+    import time as _t
+    wall = Clock()
+    ing, fwd, ptz, yard, gate, done, centre_up = _two_relays(wall)
+    assert fwd["east"].book(), "the east relay forwards nobody: nothing would try again"
+    centre_up["on"] = False
+    waits = []
+
+    class Stop(threading.Event):
+        def wait(self, timeout=None):
+            name = threading.current_thread().name
+            if timeout is not None and name.startswith("fwd-") and not name.startswith(("fwd-asks-", "fwd-outcomes-")):
+                waits.append(timeout)
+            return super().wait(0.005 if timeout is not None else None)
+
+    stop = Stop()
+    threads = fwd["east"].serve(stop, period=2.0)
+    t0 = _t.monotonic()
+    while len(waits) < 20 and _t.monotonic() - t0 < 3.0:
+        _t.sleep(0.01)
+    stop.set()
+    for t in threads:
+        t.join(timeout=2.0)
+    assert len(waits) >= 20, waits
+    assert all(1.0 <= w <= 3.0 for w in waits), waits                  # period, give or take half
+    assert len({round(w, 6) for w in waits}) > len(waits) // 2, waits  # …and not one number for every camera
+
+
 def test_a_torn_announcement_or_book_entry_is_that_ones_trouble_and_the_relay_forwards_on():
     """The eighth review's siblings, left in this module by the М12 pass: the centre's ingest announcement and the
     upstream book's own entries (`publish_upstream`), and the books the relay's agent carried (`Forwarder.book`,

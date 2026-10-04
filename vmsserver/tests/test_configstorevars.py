@@ -166,6 +166,26 @@ def test_a_refused_connection_is_tried_again_within_d():
         shutil.rmtree(d, ignore_errors=True)
 
 
+def test_callers_refused_together_try_again_each_at_its_own_moment(monkeypatch):
+    """The sibling of the product's cross-check (D) at the store's socket: every process of a server loses its daemon
+    at the same moment, and tried again every 0.1 s exactly — in step, at the new socket at once. Now each wait is
+    `REFUSED_STEP` give or take half, drawn afresh."""
+    from w2cplatform import configstorevars
+    from w2cplatform.configstorevars import ConfigstoreVariables, _NotConnected
+    slept, refused = [], {"n": 12}
+
+    def transport(method, target, raw, headers, timeout):
+        if refused["n"]:
+            refused["n"] -= 1
+            raise _NotConnected("ConnectionRefusedError: the daemon restarts")
+        return 200, b'{"index": "", "items": null}'
+    me, real = threading.current_thread(), time.sleep                # `time` is every thread's: only this one's is counted
+    monkeypatch.setattr(configstorevars.time, "sleep", lambda s: slept.append(s) if threading.current_thread() is me else real(s))
+    ConfigstoreVariables("/nowhere.sock", transport=transport).get("vms/epoch/7")
+    assert len(slept) == 12 and all(0.05 <= s <= 0.15 for s in slept), slept
+    assert len({round(s, 6) for s in slept}) > 6, slept
+
+
 class _Faulty(LocalBackend):
     def __init__(self, fault):
         super().__init__("srv-a", 1000)
@@ -375,6 +395,72 @@ def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkey
             assert open_vars(url(dm.dir, sock[:-5])).get("vms/slots/w-1") == (None, 0), sock
     time.sleep(0.3)
     assert threading.active_count() <= before + 1, (before, threading.active_count())
+
+
+def _role_door(dm, role: str):
+    path = os.path.join(dm.dir, f"{role}.sock")
+    return next(s for s in dm.d.servers if getattr(s, "server_address", None) == path)
+
+
+def test_processes_of_one_role_leave_no_connection_held_at_their_socket():
+    """The product's cross-check (C), the client's half: a pool of keep-alive connections, 16 idle per process, four
+    processes of one role — the whole door, and the fifth process was answered 503 for five seconds. The handle keeps
+    no pool: a connection per call, closed in the call (`unix_transport`). Four handles of one role, eight threads
+    each, two hundred calls at once: not one refused, and nothing held at the socket the moment they are done."""
+    with Daemon() as dm:
+        door = _role_door(dm, "vmsworker")
+        handles = [open_vars(url(dm.dir, "vmsworker")) for _ in range(4)]
+        errors = []
+
+        def calls(h, n):
+            try:
+                for i in range(25):
+                    h.put(f"vms/slots/w-{n}", {"holder": str(i)})
+                    h.get(f"vms/slots/w-{n}")
+            except Exception as e:                     # noqa: BLE001
+                errors.append(e)
+        threads = [threading.Thread(target=calls, args=(h, 8 * k + j)) for k, h in enumerate(handles) for j in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert not errors and door.refused == 0, (errors[:3], door.refused)
+        end = time.monotonic() + 2.0                               # a loaded box: the door's threads end when they end
+        while door.serving and time.monotonic() < end:
+            time.sleep(0.05)
+        assert door.serving == 0, f"{door.serving} connection(s) held after every call was answered"
+
+
+def test_a_role_socket_lets_a_kept_alive_connection_go_once_it_has_answered(monkeypatch):
+    """C, the door's half, reproduced with the product's client — one that keeps its connection for the next call. The
+    door spoke HTTP/1.1 and kept every answered connection until its next request's headers' deadline (5 s): six
+    such callers on a socket of six, each answered once, and the seventh was refused `busy` until they timed out —
+    the product's 503 for five seconds. Nobody here sends two requests on one connection, so a door answers and
+    closes (`Connection: close`): a caller that keeps its socket keeps nothing of the door's."""
+    monkeypatch.setattr(configstore, "ROLE_CONNECTIONS", 6)
+    import http.client
+    from w2cplatform.configstorevars import _UnixConnection
+    with Daemon() as dm:
+        path = os.path.join(dm.dir, "vmsworker.sock")
+        kept, said = [], []
+        for _ in range(6):
+            c = _UnixConnection(path, 5.0)
+            c.request("GET", "/v1/status")
+            r = c.getresponse()
+            r.read()
+            assert r.status == 200
+            said.append((r.getheader("Connection") or "").lower())
+            kept.append(c)                                         # the caller keeps it, as a pool does
+        door = _role_door(dm, "vmsworker")
+        end = time.monotonic() + 2.0                               # a loaded box: the door's threads end when they end
+        while door.serving and time.monotonic() < end:
+            time.sleep(0.05)
+        try:
+            assert door.serving == 0 and said == ["close"] * 6, (door.serving, said)   # kept: six, for five seconds
+            open_vars(url(dm.dir, "vmsworker")).put("vms/slots/w-1", {"holder": "x"})   # served, not `busy`
+        finally:
+            for c in kept:
+                c.close()
 
 
 def _queued(family, where, n: int) -> int:
