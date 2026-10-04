@@ -312,13 +312,16 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
     `_pool`): one garbled row raised out of every unit's placement — nothing was placed in the whole subsystem. A
     worker whose OWN row is garbled raised out of every renewal: no lease renewed after it, no heartbeat — dead of
     one field; it is read as the row it last wrote, and the renewal writes it whole again by CAS. And a process the
-    runtime gave a name whose row is garbled takes it, as it takes any row under that name."""
+    runtime gave a name whose row is garbled takes it, as it takes any row under that name — from a holder of another
+    box, or of a name that says no box, once the controller gives it (the review's thirteenth pass, blocker 3)."""
+    from w2cplatform.contract import HUNG_MOVE_AFTER, NameOnAnotherBox
     from tests.test_lesson4_worker import _box_with_cameras
     from tests.test_stand_in import _holder
     box, ctl = _box_with_cameras(2)
     w = _holder(box)
     w.heartbeat_once()
     box.vars.put("vms/slots/w-9", GARBLED_SLOT)
+    ctl.look()
     assert set(ctl.slots()) == {"w-1"} and ctl.released_slots() == []
     assert [p.worker for p in ctl.ensure_placed()] == ["w-1", "w-1"], "one garbled slot row stopped every placement"
 
@@ -329,6 +332,13 @@ def test_a_garbled_slot_row_stops_neither_placement_nor_the_worker_it_names():
     assert row.holder == w.instance and not row.released and row.until > box.wall()
     assert w.may_write("1") and w.renew_slot() is True
 
+    try:                                                                # "somebody": whose box, the row does not say
+        _holder(box, name="w-9", instance="other:9")
+        raise AssertionError("a garbled row of a holder nobody judged was taken")
+    except NameOnAnotherBox:
+        pass
+    box.wall.advance(HUNG_MOVE_AFTER + 1)                               # nobody to say whether it runs: `wait`, to the limit
+    assert "w-9" in ctl.publish_names()["names_given"]
     w9 = _holder(box, name="w-9", instance="other:9")                   # the runtime named it: taken, and whole again
     assert Slot.from_items("w-9", box.vars.get("vms/slots/w-9")[0]).holder == "other:9" and w9.renew_slot() is True
     _forget_garbled()

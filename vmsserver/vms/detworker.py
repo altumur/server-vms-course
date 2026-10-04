@@ -74,7 +74,7 @@ class DetWorker(Worker):
     # -- where the camera's RTP is: the VMS heartbeat, never a call to the worker ---------------------
     def rtp_source(self, cam: str):
         """`(server, live_url)` of the worker holding the camera — its RTSP fan-out, on any server."""
-        found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url")
+        found = holder_of(self.objects, "vms/", cam, self.wall(), phase="running", field="live_url", eyes=self.eyes)   # fresh by change (the 13th pass)
         if found is None:
             return None
         from .config import local_only

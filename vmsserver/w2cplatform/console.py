@@ -103,6 +103,7 @@ import io
 import json
 import logging
 import os
+import re
 import socket
 import socketserver
 import threading
@@ -266,17 +267,26 @@ def heartbeats(objects, sub: str) -> dict[str, Heartbeat]:
 #
 # It is the `?passing=true` of a service catalogue, and it is here rather than in each caller for the
 # reason Consul put it in the query: a filter that callers apply by hand is a filter callers forget.
-def holders(objects, prefix: str, now: float, lost_after: float = 45.0) -> dict[str, Heartbeat]:
+#
+# …FRESH BY THE ASKER'S EYES WHERE IT HAS THEM (the review's thirteenth pass, blocker 4): `eyes` — the asker's `Eyes`, a
+# long-lived judge — say whether a heartbeat CHANGED within `lost_after` of its own clock; without them, the writer's
+# `ts` against `now`, as before (a one-off look that has watched nothing change).
+def holders(objects, prefix: str, now: float, lost_after: float = 45.0, eyes=None) -> dict[str, Heartbeat]:
     """The heartbeats fresh enough to act on."""
-    return {w: hb for w, hb in heartbeats(objects, prefix).items() if is_live(prefix.rstrip("/"), hb.ts, now, lost_after)}
+    sub = prefix.rstrip("/")
+    if eyes is not None:
+        return {w: hb for w, hb in heartbeats(objects, prefix).items()
+                if eyes.fresh(f"{sub}/heartbeats/{w}", hb.token, lost_after, hb.ts, sub)}
+    return {w: hb for w, hb in heartbeats(objects, prefix).items() if is_live(sub, hb.ts, now, lost_after)}
 
 
 # `(worker, its heartbeat, the unit's status entry)` for the process holding `unit` right now, or None.
 # `phase` narrows it further when the caller needs the unit to be doing something and not merely held:
 # a recorder subscribes to a fan-out only in `running`, while a playback door answers in `held` too.
 def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
-              phase: str | None = None, field: str | None = None):
-    for w, hb in sorted(holders(objects, prefix, now, lost_after).items()):
+              phase: str | None = None, field: str | None = None, eyes=None):
+    found = []
+    for w, hb in sorted(holders(objects, prefix, now, lost_after, eyes).items()):
         for st in hb.status:
             if str(st.get("id")) != str(unit):
                 continue
@@ -284,8 +294,40 @@ def holder_of(objects, prefix: str, unit, now: float, lost_after: float = 45.0,
                 continue
             if field is not None and not st.get(field):
                 continue
-            return w, hb, st
-    return None
+            found.append((w, hb, st))
+    return newest(found)
+
+
+def _epoch(st) -> int:
+    try:
+        return int(st.get("epoch") or 0)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def newest(found: list):
+    """Of the workers that say they hold one unit, the one under the highest epoch — the writer the fence admits; in
+    name order among equals. A judge that first looks after a server died sees the dead holder's last heartbeat as new
+    for a while (it judges by what it saw change, the thirteenth review); its epoch is the older one."""
+    best = None
+    for f in found:
+        if best is None or _epoch(f[2]) > _epoch(best[2]):
+            best = f
+    return best
+
+
+# AN ERROR IN WORDS, WITHOUT A PATH (the review's thirteenth pass, minor; the product's cross-check (c)): a 500's and a
+# 503's `detail` was `str(e)` — "[Errno 13] Permission denied: '/data/platform/vars/vms/cameras/7'", the layout of the
+# server's disk for anybody who can make a write fail. An `OSError` says its `strerror`; anything else has every
+# absolute path in its text replaced. The full error goes to the log, where the operator reads it.
+_ABSOLUTE = re.compile(r"(?<![\w.:/])/(?:[^\s'\"/:,;)]+/)+[^\s'\"/:,;)]*")
+
+
+def no_paths(e) -> str:
+    """`e` for a reply: an `OSError`'s own words, any other's text with its absolute paths cut out."""
+    if isinstance(e, OSError) and e.strerror:
+        return e.strerror
+    return _ABSOLUTE.sub("<path>", str(e))
 
 
 # The id in `/<family>/<id>`: the second segment, whatever follows it. The ONE reading of a path's id — the gate's
@@ -1499,7 +1541,9 @@ class SpecConsole:
                                  # for almost everyone, the volume for the recorder. The page needs it to offer the
                                  # archives that exist when a recording is created — `home` names one of these.
                                  "place": ctl.place_of(w),
-                                 "state": "live" if is_live(ctl.sub.name, hb.ts, now, self.lost_after) else "stale", "idle_by_policy": False})
+                                 # …by what this console saw change, on its clock (the review's thirteenth pass)
+                                 "state": "live" if ctl.eyes.fresh(ctl.sub.heartbeat_key(w), hb.token, self.lost_after, hb.ts,
+                                                                   ctl.sub.name) else "stale", "idle_by_policy": False})
         for w in ctl.idle_by_policy(list(heartbeats(ctl.objects, ctl.sub.name + "/"))):    # servers: distinct — one worker per server carries units
             for s in out.values():
                 for row in s["workers"]:
@@ -1547,6 +1591,7 @@ class SpecConsole:
                                    if server in marks else None)
             try:
                 refusal, warning = ctl.decommission_refusal(server)
+                refusal = ctl.not_watched_yet(refusal)       # a console just started says so (the thirteenth pass)
             except (*PARSE_ERRORS, OSError) as e:        # a row that does not read: that server's answer, not the page's end
                 refusal, warning = f"could not be told: {e}", None
             s["decommission_refusal"], s["decommission_warning"] = refusal, warning
@@ -1568,7 +1613,7 @@ class SpecConsole:
         try:
             key = ctl.sub.slot_key(w)
             from .contract import SLOTS, stored
-            items, _ = stored(ctl.vars, key, SLOTS)      # one the store cannot read: garbled, as one that does not parse
+            items, rev = stored(ctl.vars, key, SLOTS)    # one the store cannot read: garbled, as one that does not parse
             if not items:
                 return                                   # a name no process claimed (one given in the unit file): no slot to judge
             slot = read_slot(key, w, items)
@@ -1577,10 +1622,17 @@ class SpecConsole:
             if slot is not None and slot.released:
                 row["released"] = True
                 return
-            from .contract import published_hung_limit     # the controller's limit, not this process's (`slot_fate`)
-            fate, _, why = ctl.slot_fate(w, slot, hung_after=published_hung_limit(ctl.objects, ctl.sub))
-            if fate == "hung":
-                row.update(hung=True, hung_since=ctl.hung_since(w, slot), hung_why=why)
+            # The controller's verdict at the revision read — the judge that has watched the rows change (the review's
+            # thirteenth pass, blocker 4); else this console's own eyes, by the controller's limit (`slot_fate`)
+            from .contract import published_hung_limit, published_names
+            said = (published_names(ctl.objects, ctl.sub, "fates") or {}).get(w)
+            if isinstance(said, dict) and str(said.get("rev")) == str(rev) and isinstance(said.get("fate"), str):
+                fate, why, since = said["fate"], str(said.get("why", "")), number(f"{key}#since", said.get("since"), float, None)
+            else:
+                fate, _, why = ctl.slot_fate(w, slot, hung_after=published_hung_limit(ctl.objects, ctl.sub))
+                since = ctl.eyes.wall_of(ctl.hung_since(w, slot)) if fate == "hung" else None
+            if fate == "hung":                           # since when, on a wall clock, for the page
+                row.update(hung=True, hung_since=since, hung_why=why)
         except (*PARSE_ERRORS, OSError):
             return                                       # a name that is no key, a store that did not answer: that row says nothing of it
 
@@ -1643,7 +1695,8 @@ class SpecConsole:
     def metrics_text(self) -> str:
         p = self.spec.name
         hbs = heartbeats(self.ctl.objects, p + "/"); now = self.wall()
-        live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
+        live = {w: hb for w, hb in hbs.items()            # by what this console saw change (the thirteenth pass)
+                if self.ctl.eyes.fresh(self.ctl.sub.heartbeat_key(w), hb.token, self.lost_after, hb.ts, p)}
         hk = self.ctl.sub.heartbeat_key
         failover = self.ctl.failover_seconds()
 
@@ -1741,6 +1794,9 @@ class SpecConsole:
                   # units of groups left whole on a server that no longer reaches them, and servers whose labels row did
                   # not read on the pass's last read (the eleventh review: each was a log line or a page only)
                   f"# TYPE {p}_units_waiting_for_reach gauge", f"{p}_units_waiting_for_reach {r('reach_waiting', int)}",
+                  # …and the moves a pass may make for reach (`REACH_BUDGET`): in the pass report, and here beside the
+                  # units it holds back (the review's thirteenth pass, «Вопросы» 2)
+                  f"# TYPE {p}_reach_budget gauge", f"{p}_reach_budget {r('reach_budget', int)}",
                   # …and units left on a worker that is leaving, a group no live worker takes whole among them (the
                   # review's twelfth pass, blocker 7)
                   f"# TYPE {p}_units_left_on_leaving gauge", f"{p}_units_left_on_leaving {r('units_left_on_leaving', int)}",
@@ -1805,7 +1861,7 @@ class SpecConsole:
         def rn(server: str, field: str, value, kind=float):               # a resource's field
             return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
         lines = [f"# TYPE {p}_resources_live gauge",
-                 f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
+                 f"{p}_resources_live {sum(1 for s in res if self.ctl.resource_state(s, self.lost_after) == 'live')}",
                  # resource heartbeats that did not parse, since this process started (the review's second pass, M6)
                  f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}"]
         # Each server's disk, from its resource's heartbeat: how full, and how many bytes the watermark was asked
@@ -1842,6 +1898,15 @@ class SpecConsole:
                   *[f'{p}_resource_restore_failures_total{{server="{label(s)}"}} {rn(s, "restore.failed", said(hb, "restore").get("failed"), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_failures_total counter",
                   *[f'{p}_resource_mirror_failures_total{{server="{label(s)}"}} {rn(s, "mirror.failed", said(hb, "mirror").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  # …a pass that has not moved past the pulse's limit, and the volumes a look did not answer in time
+                  # (the review's thirteenth pass, blocker 5): the resource beats on — these say what it cannot do
+                  f"# TYPE {p}_resource_pass_stuck_seconds gauge",
+                  *[f'{p}_resource_pass_stuck_seconds{{server="{label(s)}"}} {rn(s, "pass_stuck", hb.get("pass_stuck", 0), float)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_volumes_stuck gauge",
+                  *[f'{p}_resource_volumes_stuck{{server="{label(s)}"}} {len(hb["volumes_stuck"]) if isinstance(hb.get("volumes_stuck"), dict) else 0}' for s, hb in sorted(res.items())],
+                  # …and the buckets past their days `retain` could not remove (the review's thirteenth pass, major 13)
+                  f"# TYPE {p}_resource_retain_failures_total counter",
+                  *[f'{p}_resource_retain_failures_total{{server="{label(s)}"}} {rn(s, "retain_failed", hb.get("retain_failed", 0), int)}' for s, hb in sorted(res.items())],
                   f"# TYPE {p}_resource_mirror_too_big_total counter",
                   *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
         return lines
@@ -2081,10 +2146,18 @@ class SpecConsole:
     def _uid(self, path):
         raw = path_id(path)
         try:
-            return self.spec.parse_id(raw)
+            uid = self.spec.parse_id(raw)
         except ValueError:
             raise Refused(f"{raw[:80]!r} is not an id of {self.spec.name}: its ids are "
                           f"{'whole numbers' if self.spec.numeric else 'names'}") from None
+        # …and a name is ONE segment of a key (the review's thirteenth pass, minor): `..` passed as a name, and the store
+        # refused the key it made — `PUT` and `DELETE` on `/rec/recordings/..`, `/detjob/jobs/..`, `/auto/scenarios/..`
+        # answered 500 "the write failed". Not an id: 400, as a word is where the ids are numbers.
+        from .doors import safe_segment
+        if not self.spec.numeric and not safe_segment(str(uid)):
+            raise Refused(f"{raw[:80]!r} is not an id of {self.spec.name}: a name is one segment, not '.', '..' or a "
+                          f"path")
+        return uid
 
     # What a gated caller may LOOK at: `(unit, labels) -> bool`, or None when this console is open. A list is
     # not a route that names a unit, so the gate lets in anybody with any grant — and the list then shows them
@@ -2232,7 +2305,7 @@ class SpecConsole:
         except Refused as e:
             h._send(400, {"detail": str(e), "error": str(e)}); return None
         except OSError as e:                                             # the store, not the request: a client told 400 does not retry
-            h._send(503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}); return None
+            h._send(503, {"detail": f"the store did not answer: {no_paths(e)}", "error": "store unavailable"}); return None
         if prior is not None:
             h._send(*prior); return None
         return key
@@ -2263,9 +2336,10 @@ class SpecConsole:
         if isinstance(e, Refused):                       # a body that is no object (`object_body`): the sender's, 400
             return 400, {"detail": str(e), "error": str(e)}
         if isinstance(e, OSError):
-            return 503, {"detail": f"the store did not answer: {e}", "error": "store unavailable"}
+            log.warning("%s: a write was not taken by the store: %s", self.spec.name, e)
+            return 503, {"detail": f"the store did not answer: {no_paths(e)}", "error": "store unavailable"}
         log.error("%s: a write failed: %s", self.spec.name, e)
-        return 500, {"detail": str(e), "error": "the write failed"}
+        return 500, {"detail": no_paths(e), "error": "the write failed"}
 
     # THE DOOR IN: `/session`. The gate asks for a token; this is how a person's BROWSER comes to carry one.
     #
@@ -2549,7 +2623,7 @@ class SpecConsole:
                                                     "directory": con.where(uid), "scans": con.scans})
             if path == "/resources":
                 now = con.wall()
-                return h._send(200, {s: {**hb, "state": "live" if is_live("platform", float(hb["ts"]), now, con.lost_after) else "silent"}
+                return h._send(200, {s: {**hb, "state": "live" if ctl.resource_state(s, con.lost_after) == "live" else "silent"}
                                      for s, hb in resources_seen(ctl.objects).items()})
             if path == "/servers":
                 return h._send(200, con.servers())
@@ -2777,7 +2851,7 @@ class Mount:
             self.root.journal.say("schema.raised", version=int(q.get("version", 0)), was=was, user=user)
         elif method != "GET":
             return 404, {}
-        running = builds(ctl.objects, now)
+        running = builds(ctl.objects, now, eyes=ctl.eyes)  # live by what this console saw change (the thirteenth pass)
         live = {n: b for n, b in running.items() if b["live"]}
         # One process or one row that does not read is not the route's end (the review's tenth round): `platform/schema`
         # garbled is `version: null`, said; a live process whose schema is not known (`builds`) keeps `can_raise_to`
@@ -2865,7 +2939,7 @@ class Mount:
             refusal = warning = None
             for c in consoles:
                 r, w = c.ctl.decommission_refusal(server)
-                refusal, warning = refusal or r, warning or w
+                refusal, warning = refusal or c.ctl.not_watched_yet(r), warning or w
             if refusal:
                 log.warning("server %s was not decommissioned (asked by %s): %s", server, user, refusal)
                 # …and in the journal, beside the decommissions that were made (the review's twelfth pass, minor)

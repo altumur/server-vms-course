@@ -27,7 +27,13 @@ def test_a_slot_a_worker_has_to_make_is_named_after_its_kind():
     assert (rec.name, cam.name, live.name, auto.name) == ("r-1", "w-1", "g-1", "a-1")
     again = recorder(box, None, "srv-a", acl=False)
     assert again.name == "r-2"
-    box.wall.advance(91)                                              # r-1 lapsed, and the margin out: taken before a new number
+    from w2cplatform.contract import HUNG_MOVE_AFTER
+    from w2cplatform.spec import SpecController
+    from vms.config import REC_SPEC
+    ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
+    ctl.look()
+    box.wall.advance(91 + HUNG_MOVE_AFTER)                            # r-1 lapsed and given by the controller (13th pass):
+    assert ctl.publish_names()["names_given"]                         # taken before a new number
     third = recorder(box, None, "srv-a", acl=False)
     assert third.name in ("r-1", "r-2")
 

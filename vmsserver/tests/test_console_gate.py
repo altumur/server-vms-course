@@ -1816,13 +1816,14 @@ def test_an_id_that_is_no_id_is_a_400_in_words_on_every_route_that_takes_one():
     """The coordinator's find in the twelfth round: `GET /where/None` dropped the connection — `parse_id` raised out of
     `dispatch` — and `PUT`/`DELETE /cameras/x` answered 500 "the write failed". Swept over every mount and every family
     that takes an id, with ids that are no id: nothing drops, nothing is a 5xx, and the routes that read an id say 400
-    in words."""
+    in words. `..` among them (the review's thirteenth pass, minor): a NAME the store refuses as a key — `PUT`/`DELETE` on
+    `/rec/recordings/..`, `/detjob/jobs/..`, `/auto/scenarios/..` were 500."""
     import http.client
     box = Box()
     *_, srv, base = _console_with_jobs(box, None)
     try:
         bad_ones = []
-        for bad in ("None", "x", "1.5", "%00"):
+        for bad in ("None", "x", "1.5", "%00", "..", "."):
             for prefix in ("", "/rec", "/det", "/detjob", "/auto"):
                 for fam in ("where", "cameras", "recordings", "units", "jobs", "scenarios", "timeline", "export", "whep"):
                     for method in ("GET", "PUT", "DELETE"):
@@ -1837,5 +1838,7 @@ def test_an_id_that_is_no_id_is_a_400_in_words_on_every_route_that_takes_one():
         assert st == 400 and "not an id of vms" in out["detail"] and "whole numbers" in out["detail"], out
         assert _call(base, "PUT", "/cameras/x", {"name": "n"})[0] == 400
         assert _call(base, "DELETE", "/cameras/x")[0] == 400
+        st, out = _call(base, "PUT", "/rec/recordings/..", {})
+        assert st == 400 and "one segment" in out["detail"], out
     finally:
         srv.shutdown()

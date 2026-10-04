@@ -1181,7 +1181,7 @@ def test_a_camera_that_failed_a_range_is_not_asked_again_at_once():
         tries, until = primary._source_asks["edge:1-card"]
         waits.append(until - box.clock())
         assert tries == n and primary.SOURCE_BACKOFF * 2 ** n / 2 <= waits[-1] <= primary.SOURCE_BACKOFF * 2 ** n
-        box.clock.advance(waits[-1])
+        box.clock.advance(waits[-1]); box.wall.advance(waits[-1])   # time passes for both clocks: a heartbeat is a new one
         for r in (primary, cam):
             r.lease_pass(); r.heartbeat_once()
     assert waits[0] < waits[2] and not primary.nowhere                    # the backoff grows; nothing is "not on the card"

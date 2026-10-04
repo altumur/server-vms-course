@@ -63,9 +63,19 @@ TEST_QUOTA, TEST_BLOCK, TEST_READ = VMS_TESTS.TEST_QUOTA, VMS_TESTS.TEST_BLOCK, 
 
 
 class Clock:
-    def __init__(self, t=1000.0): self.t = t
+    """The tests' clock. The controllers made on it look before it moves (`watchers`, `Controller.look`): a controller
+    judges by what it has SEEN change, by its own clock (the thirteenth review, blocker 4), and its pass looks every few
+    seconds — a jump of the clock is time in which it looked at the start and nothing it did not see changed."""
+    def __init__(self, t=1000.0): self.t, self.watchers = t, []
     def __call__(self): return self.t
-    def advance(self, s): self.t += s
+
+    def advance(self, s):
+        for ctl in list(self.watchers):
+            try:
+                ctl.look()
+            except Exception:                 # noqa: BLE001 — a store a test has taken away: that controller saw nothing
+                pass
+        self.t += s
 
 
 def host(url: str) -> str:
@@ -301,7 +311,9 @@ class Cluster:
         from cluster.controller import ClusterController
         who = who or f"{role} on {server}"
         v = self.door(role, who)
-        return ClusterController(v, self.objects_on(server, v, who), wall=self.wall, **kw)
+        ctl = ClusterController(v, self.objects_on(server, v, who), wall=self.wall, **kw)
+        self.wall.watchers.append(ctl)                         # it looks before the clock moves (`Clock`)
+        return ctl
 
     def console(self, server: str = "srv-a", who: str | None = None, **kw):
         """`vms-console` on `server`: the operator's rows and nothing else."""

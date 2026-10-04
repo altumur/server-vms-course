@@ -198,3 +198,57 @@ def test_a_key_that_names_a_directory_or_a_temporary_file_is_no_object():
             assert _call("GET", f"{a.url}/v1/objects/vms/heartbeats/w-1?scope={scope}")[0] == 200
     finally:
         _stop(s)
+
+
+def test_a_copy_that_cannot_be_read_or_kept_is_a_503_in_words_with_no_path():
+    """The review's thirteenth pass, minors, and the product's cross-check (c): an object file this server holds and
+    cannot read (mode 000) dropped the connection; a blob copy this server could not keep (no space) was 408 "the body
+    did not arrive in time", the file's absolute path in it. Each is 503 now, the error's own words, no path of this
+    server's disk — on either scope; a copy another server gives is still served."""
+    import json as _json
+
+    box = Box()
+    s = _servers(box)
+    try:
+        (a, oa, _), (b, ob, _) = s["srv-a"], s["srv-b"]
+        oa.put("vms/heartbeats/w-1", b'{"w": 1}')
+        path = os.path.join(oa.root, "vms", "heartbeats", "w-1")
+        os.chmod(path, 0)
+        try:
+            if os.access(path, os.R_OK):
+                return                                    # run as root: nothing is unreadable to it
+            for scope in ("local", "cluster"):
+                st, body, _ = _call("GET", f"{a.url}/v1/objects/vms/heartbeats/w-1?scope={scope}")
+                assert st == 503 and b"cannot be read" in body and box.root.encode() not in body, (scope, st, body)
+            ob.put("vms/heartbeats/w-1", b'{"w": 2}')        # another server has a copy: the cluster answers with it
+            st, body, _ = _call("GET", f"{a.url}/v1/objects/vms/heartbeats/w-1?scope=cluster")
+            assert st == 200 and body == b'{"w": 2}', (st, body)
+        finally:
+            os.chmod(path, 0o644)
+        data = b"a mask"
+        key = f"vms/blobs/{digest(data)}"
+        from w2cplatform import events
+        real_new_temp = events.new_temp
+
+        def full(d, prefix):
+            raise OSError(28, "No space left on device", os.path.join(d, prefix + "tmp"))
+        events.new_temp = full
+        try:
+            st, body, _ = _call("PUT", f"{a.url}/v1/objects/{key}", data)
+        finally:
+            events.new_temp = real_new_temp
+        assert st == 503 and b"No space left on device" in body and box.root.encode() not in body, (st, body)
+        assert _json.loads(body)["error"].startswith("this server could not keep the copy"), body
+    finally:
+        _stop(s)
+
+
+def test_a_write_the_store_refuses_says_why_without_the_disks_layout():
+    """The product's cross-check (c), at the console: a 503 or a 500 of a write said `str(e)` — "[Errno 13] Permission
+    denied: '/data/platform/vars/…'", the layout of the server's disk for anybody who can make a write fail. The reply
+    says the error's words; the path stays in the log."""
+    from w2cplatform.console import no_paths
+    assert no_paths(OSError(13, "Permission denied", "/data/platform/vars/vms/cameras/7")) == "Permission denied"
+    assert no_paths(RuntimeError("could not open /data/platform/vars/vms/cameras/7: no")) == "could not open <path>: no"
+    assert no_paths(ValueError("not a key: 'rec/recordings/..'")) == "not a key: 'rec/recordings/..'"
+    assert no_paths(ValueError("http://srv-1:8090/v1/objects did not answer")) == "http://srv-1:8090/v1/objects did not answer"

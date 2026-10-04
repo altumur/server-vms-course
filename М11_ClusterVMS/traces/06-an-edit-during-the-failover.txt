@@ -115,5 +115,5 @@ POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": "", "items":
 POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch": "2"}}
 → 200 {"index": 1024}
 
-# … and 31 GET requests, omitted
+# … and 81 GET requests, omitted
 # w-srv-b-1 runs camera 1 as 'edited during the failover'

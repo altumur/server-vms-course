@@ -99,9 +99,12 @@ def test_only_a_slot_row_naming_another_holder_fences_and_a_fence_is_not_for_eve
     "no". It used to stay so: alive, heartbeating `fenced: true`, recording nothing until somebody restarted it.
     On its next pass it takes a free slot and starts from nothing — a process that took whatever was free; one named by
     its unit takes its own name back only (`test_names.py`)."""
+    from w2cplatform.contract import HUNG_MOVE_AFTER
     box, ctl, store, act, a = _worker(1)
     a.given = None                                                    # not named by its unit: any free slot will do
-    box.wall.advance(91)                                              # a long pause: the slot lapsed, the margin out
+    ctl.look()
+    box.wall.advance(91 + HUNG_MOVE_AFTER)                            # a long pause: the slot lapsed, the margin out,
+    assert "w-1" in ctl.publish_names()["names_given"]                # and the controller gives its name (the 13th pass)
     b = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall)
     assert b.name == "w-1"
     assert a.lease_pass() == ["1"] and not a.recording_allowed and "slot w-1" in a.fenced_reason

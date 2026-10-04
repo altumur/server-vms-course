@@ -181,7 +181,8 @@ def test_offers_are_per_label_set_and_a_spare_takes_only_its_own():
 def test_a_taken_offer_whose_worker_is_not_heard_counts_as_issued_for_90_s():
     """A spare took the offer and has not heartbeated yet — starting, or dead before its first word. For
     `OFFER_GRACE` (90 s) from the take it counts as a worker on its way: no second offer, no second spare. Past
-    that, unheard, it is a worker that did not come, and the shortage is offered again."""
+    that, unheard, it is a worker that did not come, and the shortage is offered again. "From the take" as the
+    controller saw it, by its own clock — `taken_at` is the spare's (the review's thirteenth pass, blocker 4)."""
     box = Box()
     _worker(box)
     _cameras(box, 3)
@@ -189,6 +190,7 @@ def test_a_taken_offer_whose_worker_is_not_heard_counts_as_issued_for_90_s():
     ctl.pass_once()
     spare = Worker(SPEC.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
     assert spare.claim_slot(spare_for="") == "w-2"                          # took it, and never says a word
+    assert ctl.pass_once()["spares_starting"] == {"": 1}                    # the controller sees it taken
     assert OFFER_GRACE == 90.0
     for _ in range(3):
         box.clock.advance(25); box.wall.advance(25)
@@ -312,6 +314,60 @@ def test_no_offer_where_no_server_could_carry_a_spare():
     rep = ctl.pass_once()
     assert rep["workers_needed"]["vlan:dmz"] == 1 and "vlan:dmz" not in rep["spares_withheld"], rep
     assert [o["offer"] for o in _offers(box).values()] == ["vlan:dmz"]
+
+
+def test_a_withheld_shortage_and_the_reach_budget_are_numbers_on_metrics():
+    """The review's thirteenth pass, «Вопросы» 2 and 3: `reach_budget` was in the pass report and nowhere on `/metrics`;
+    `vms_spares_withheld` was seen as its TYPE line alone while the report said a set was withheld. Both are pinned here
+    with their values: the set withheld, 1; the budget the controller works with."""
+    from vms.console import make_console
+    box = Box()
+    _resource(box, "srv-a")
+    _worker(box, capacity=4)
+    _cameras(box, 2, labels=["vlan:dmz"])
+    ctl = _ctl(box)
+    _con(box).set_server_labels("srv-a", ["vlan:lan"])
+    rep = ctl.pass_once()
+    assert rep["spares_withheld"] and rep["reach_budget"] == ctl.reach_budget
+    srv = make_console(_con(box), box.archive, box.wall).serve("127.0.0.1", 0)
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{srv.server_address[1]}/metrics") as r:
+            text = r.read().decode()
+    finally:
+        srv.shutdown()
+    assert 'vms_spares_withheld{labels="vlan:dmz"} 1\n' in text, [l for l in text.splitlines() if "withheld" in l]
+    assert f"vms_reach_budget {ctl.reach_budget}\n" in text
+
+
+def test_a_group_left_whole_on_a_leaving_slot_is_short_and_a_spare_too_small_for_it_is_not_offered():
+    """The review's thirteenth pass, major 16 (`dq13_group` R, R2): a 4-channel NVR left whole on a released slot, beside
+    workers with 2 places each, was "short 0" — the units counted one by one against the room of every worker — no offer,
+    no alarm, four channels written by nobody. Now a group is one piece, short where no worker has room for all of it:
+    a spare is offered only one that could take it whole, a spare too small for it is withheld with the reason, and the
+    units left on the leaving worker are an alarm (`units.left_on_leaving`), once a spell."""
+    from w2cplatform.events import ALARM
+    from tests.test_server_labels import _beat, _site
+    nvr = "driverpack://acme/10.0.0.50/ch/"
+    for caps, offered in (((2, 2), 0), ((4,), 1), ((3,), 0)):
+        box = Box()
+        ctl = _site(box, srv_a="vlan:a")
+        ctl.journal = said = _Said()
+        ids = [ctl.create_camera({"source": f"{nvr}{c}", "labels": "vlan:a"})["id"] for c in range(1, 5)]
+        ctl.pass_once()
+        for k, cap in enumerate(caps, 2):
+            _beat(box, f"w-{k}", f"srv-{'bcd'[k - 2]}", "vlan:a", capacity=cap)
+        box.vars.put(ctl.sub.slot_key("w-1"), {"holder": "x", "until": "0", "released": "true", "gen": "1"})
+        rep = ctl.pass_once()
+        moved = all(ctl.where(i) == "w-2" for i in ids)
+        if caps == (4,):
+            assert moved and rep["units_short"]["vlan:a"] == 0, rep               # one worker with room: moved whole
+            continue
+        assert all(ctl.where(i) == "w-1" for i in ids) and rep["units_left_on_leaving"] == 4, rep
+        assert rep["units_short"]["vlan:a"] == 4 and rep["workers_needed"]["vlan:a"] == offered, rep
+        assert "need a worker with room for all of them" in rep["spares_withheld"]["vlan:a"], rep
+        assert said.lines.count(("units.left_on_leaving", ALARM)) == 1, said.lines
+        ctl.pass_once()
+        assert said.lines.count(("units.left_on_leaving", ALARM)) == 1             # once a spell
 
 
 def test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle():

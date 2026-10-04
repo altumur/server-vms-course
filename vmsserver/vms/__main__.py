@@ -655,6 +655,9 @@ def resource() -> None:
         logging.exception("resource heartbeat failed")
     # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
     # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
+    # The beat on a thread of its own (the review's thirteenth pass, blocker 5): that this resource is here and who runs
+    # on it, whatever the loop below is doing — a pass or a restore that hangs on a disk no longer silences the server.
+    res.start_beat(stop)
     try:
         logging.info("restore: %s", res.restore())
     except Exception:                                                     # noqa: BLE001

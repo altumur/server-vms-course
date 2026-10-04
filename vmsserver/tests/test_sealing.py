@@ -205,6 +205,146 @@ def test_a_volumes_secret_goes_into_the_store_sealed():
     assert is_sealed(row["access_secret"]) and sealer.open("access_secret", row["access_secret"], volumes.key("s3")) == "AKIA:xyz"
 
 
+def test_a_secret_sent_back_as_its_mask_is_refused_and_the_one_kept_stays():
+    """The thirteenth round (the product's guard): every reply shows a secret as `***` (`mask_secrets`), and a page that
+    put the mask into the field on an edit and saved stored `***` as the camera's password — the camera stopped and
+    nothing said why. The mask is refused at the door, in words, on a create, an edit and a volume's key; the secret
+    kept stays as it was; a field left out keeps it."""
+    from vms import volumes
+    from w2cplatform.secrets import SECRET_MASK
+    key = _key("k1")
+    box = Box()
+    con = _console_with_key(box, key)
+    con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
+    kept = box.vars.get("vms/cameras/1")[0]["cred_secret"]
+    for write in (lambda: con.update(1, {"cred_secret": SECRET_MASK}),
+                  lambda: con.create_camera({"name": "b", "source": "driverpack://file/b.mp4", "cred_secret": SECRET_MASK}),
+                  lambda: volumes.write(box.vars, {"name": "s3", "kind": "network", "url": "s3://archive.example/b",
+                                                   "access_secret": SECRET_MASK, "quota_bytes": 10 ** 12})):
+        try:
+            write()
+            raise AssertionError("a secret's mask was taken as the secret")
+        except Refused as e:
+            assert "sent as its mask" in str(e) and "leave the field out" in str(e), str(e)
+    assert box.vars.get("vms/cameras/1")[0]["cred_secret"] == kept and box.vars.get("rec/volumes/s3")[0] is None
+    con.update(1, {"name": "a, renamed"})                                    # the field left out: the secret stays
+    assert box.vars.get("vms/cameras/1")[0]["cred_secret"] == kept
+
+
+def _refused(write, *words):
+    try:
+        write()
+    except Refused as e:
+        assert all(w in str(e) for w in words), str(e)
+        return str(e)
+    raise AssertionError(f"taken: {words}")
+
+
+def test_every_mask_a_page_draws_is_refused_and_a_password_with_stars_in_it_is_not():
+    """The product's rule (the thirteenth round): `***` is what this console's replies show; a page or a client of its
+    own draws `•••`, `●●●` or `＊＊＊` — or more of one of them. Each is refused in a camera's `cred_secret` on a create
+    and an edit and in a volume's `access_secret`; a password that has stars in it is a password."""
+    from vms import volumes
+    from w2cplatform.spec import is_mask
+    box = Box()
+    con = _console_with_key(box, _key("k1"))
+    con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
+    kept = box.vars.get("vms/cameras/1")[0]["cred_secret"]
+    masks = ("***", "•••", "●●●", "＊＊＊", "******", "••••••••", " *** ")
+    for m in masks:
+        assert is_mask(m), m
+        _refused(lambda: con.update(1, {"cred_secret": m}), "sent as its mask", "leave the field out")
+        _refused(lambda: con.create_camera({"name": "b", "source": "driverpack://file/b.mp4", "cred_secret": m}),
+                 "sent as its mask")
+        _refused(lambda: volumes.write(box.vars, {"name": "s3", "kind": "network", "url": "s3://archive.example/b",
+                                                  "access_secret": m, "quota_bytes": 10 ** 12}), "sent as its mask")
+    assert box.vars.get("vms/cameras/1")[0]["cred_secret"] == kept and box.vars.get("rec/volumes/s3")[0] is None
+    for word in ("a***", "**", "*•*", "pass●●●word"):
+        assert not is_mask(word), word
+    con.update(1, {"cred_secret": "a***"})
+    assert box.vars.get("vms/cameras/1")[0]["cred_secret"] != kept
+
+
+def test_a_secret_sent_empty_on_an_edit_keeps_the_stored_one_and_an_address_changed_without_one_is_refused():
+    """The product's rule (the thirteenth round), one YAML key in both: `cred_secret: {bound_to: [source]}`. A page whose
+    password field was typed in and cleared sends `""` (or null) — that kept nothing and wiped the camera's password; it
+    keeps the stored one now. The address changed on an edit and no new password came: the stored one would go to
+    whatever host the new address names — refused, in words that do not repeat the address. A new password with the new
+    address is taken; a camera that had none has nothing to carry."""
+    key = _key("k1")
+    sealer = Sealer.from_file(key)
+    box = Box()
+    con = _console_with_key(box, key)
+    con.create_camera({"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": "Hunter2"})
+    opened = lambda: sealer.open("cred_secret", box.vars.get("vms/cameras/1")[0]["cred_secret"], "vms/cameras/1")
+    for empty in ("", None):
+        con.update(1, {"name": "a", "source": "driverpack://file/a.mp4", "cred_secret": empty})   # the whole form, the same address
+        assert opened() == "Hunter2", empty
+    rev = box.vars.get("vms/cameras/1")[0]["revision"]
+    for sent in ({}, {"cred_secret": ""}, {"cred_secret": None}):
+        why = _refused(lambda: con.update(1, {"source": "driverpack://file/elsewhere.mp4", **sent}),
+                       "cred_secret", "source", "no new cred_secret came", "send the one for the new address")
+        assert "elsewhere" not in why
+    assert box.vars.get("vms/cameras/1")[0]["revision"] == rev and opened() == "Hunter2"     # nothing written
+    con.update(1, {"source": "driverpack://file/elsewhere.mp4", "cred_secret": "Hunter3"})
+    assert opened() == "Hunter3"
+    con.create_camera({"name": "b", "source": "driverpack://file/b.mp4"})                    # no password: nothing to carry
+    con.update(2, {"source": "driverpack://file/b2.mp4"})
+    assert box.vars.get("vms/cameras/2")[0]["source"] == "driverpack://file/b2.mp4"
+
+
+def test_a_volumes_key_not_sent_is_kept_and_a_new_address_needs_a_new_one():
+    """The same rule for a volume (`volumes.BOUND_TO`: `access_secret` to its `url`). A write over a declared volume is
+    the whole declaration — and the key left out (or sent empty, or null) wiped the archive's key. It is kept now, as
+    stored; a mask is refused; another url without a new key is refused; another url with one takes it; a card drops
+    the key it cannot have."""
+    from vms import volumes
+    key = _key("k1")
+    sealer = Sealer.from_file(key)
+    box = Box()
+    vol = {"name": "s3", "kind": "network", "url": "s3://archive.example/bucket", "quota_bytes": 10 ** 12}
+    volumes.write(box.vars, {**vol, "access_key": "AKIA", "access_secret": "xyz"}, sealer=sealer)
+    opened = lambda: sealer.open("access_secret", box.vars.get("rec/volumes/s3")[0]["access_secret"], volumes.key("s3"))
+    for sent in ({}, {"access_secret": ""}, {"access_secret": None}):
+        volumes.write(box.vars, {**vol, "access_key": "AKIA", "quota_bytes": 2 * 10 ** 12, **sent}, sealer=sealer)
+        assert opened() == "xyz" and box.vars.get("rec/volumes/s3")[0]["quota_bytes"] == str(2 * 10 ** 12), sent
+    _refused(lambda: volumes.write(box.vars, {**vol, "access_secret": "***"}, sealer=sealer), "sent as its mask")
+    for sent in ({}, {"access_secret": ""}):
+        why = _refused(lambda: volumes.write(box.vars, {**vol, "url": "s3://other.example/bucket", **sent}, sealer=sealer),
+                       "access_secret", "url", "send the one for the new address")
+        assert "other.example" not in why
+    assert box.vars.get("rec/volumes/s3")[0]["url"] == vol["url"] and opened() == "xyz"
+    volumes.write(box.vars, {**vol, "url": "s3://other.example/bucket", "access_secret": "abc"}, sealer=sealer)
+    assert opened() == "abc"
+    volumes.write(box.vars, {"name": "s3", "kind": "edge", "cam": "1", "server": "cam-1", "url": "/mnt/card",
+                             "quota_bytes": 10 ** 9},
+                  sealer=sealer)
+    assert box.vars.get("rec/volumes/s3")[0]["access_secret"] == ""
+
+
+def test_bound_to_is_read_at_load_and_a_name_it_does_not_know_is_refused():
+    """`bound_to` is parsed with the spec: the shipped camera's password is bound to its source; a name the unit has
+    not, the secret itself, another secret, a field that is no secret, a value that is no name — refused at load."""
+    from w2cplatform.spec import SubsystemSpec
+    assert SPEC.fields["cred_secret"].bound_to == ("source",)
+
+    def spec(fields):
+        return SubsystemSpec.from_dict({"name": "t", "unit": {"id": "numeric", "rows": "units", "fields": fields},
+                                        "placement": {}})
+    assert spec({"url": {"type": "url"}, "x_secret": {"bound_to": "url"}}).fields["x_secret"].bound_to == ("url",)
+    for bad, words in (({"x_secret": {"bound_to": ["url"]}}, "names no field"),
+                       ({"x_secret": {"bound_to": ["x_secret"]}}, "names no field"),
+                       ({"y_secret": {}, "x_secret": {"bound_to": ["y_secret"]}}, "names no field"),
+                       ({"url": {"type": "url"}, "name": {"bound_to": ["url"]}}, "is no `*_secret`"),
+                       ({"url": {"type": "url"}, "x_secret": {"bound_to": [1]}}, "a field name or a list"),
+                       ({"url": {"type": "url"}, "x_secret": {"bound_to": []}}, "a field name or a list")):
+        try:
+            spec(bad)
+            raise AssertionError(f"loaded: {bad}")
+        except ValueError as e:
+            assert words in str(e), (bad, str(e))
+
+
 def _console_with_key(box, key):
     os.environ["SECRETS_KEY"] = key
     try:

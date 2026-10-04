@@ -20,7 +20,7 @@ A process that took whatever was free (no name given) rejoins as before.
 import json
 import urllib.request
 
-from w2cplatform.contract import SLOT_LOST_AFTER, NameOnAnotherBox, Slot
+from w2cplatform.contract import HUNG_MOVE_AFTER, SLOT_LOST_AFTER, NameOnAnotherBox, Slot
 from w2cplatform.events import ALARM
 from vms.config import SPEC
 from vms.controller import VmsController
@@ -97,19 +97,29 @@ def test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_ho
     """No ping-pong: the old process does not take its name back from the live new one, however long it asks — the
     take of a live holder's name is a START's (the unit says which process is the current one). Once the holder stops
     renewing — it hangs, or dies without a word — the name lapses, and its own nobody takes it once the margin past the
-    lapse is out (`SLOT_LOST_AFTER`: the units would move then, and the name goes with them)."""
+    lapse is out (`SLOT_LOST_AFTER`: the units would move then, and the name goes with them) — and once the controller
+    gives it (the review's thirteenth pass, blockers 2–4): nothing says whether b's process runs (no resource on its
+    server), `wait`, which keeps the name until the controller's limit."""
     box = Box()
+    ctl = _ctl(box)
     a = _unit(box)
     b = _unit(box)
+    ctl.look()
     a.lease_pass()
     for _ in range(20):
         assert a.rejoin() is None
         _tick(box, 5, b)
         assert b.lease_pass() == [] and b.recording_allowed                # b is never fenced by a
     assert _holder(box) == b.instance
+    ctl.look()
     _tick(box, b.slot_ttl + 1)                                           # b silent past its slot…
+    ctl.pass_once()
     assert a.rejoin() is None                                            # …within the margin: what it started may still write
-    _tick(box, SLOT_LOST_AFTER)                                          # …and past it (the twelfth pass, blocker 2)
+    _tick(box, SLOT_LOST_AFTER)                                          # …and past it (the twelfth pass, blocker 2):
+    ctl.pass_once()
+    assert a.rejoin() is None                                            # `wait` keeps it (the thirteenth pass, blocker 2)
+    _tick(box, HUNG_MOVE_AFTER)                                          # …until the controller's limit
+    ctl.pass_once()
     assert a.rejoin() == NAME and _holder(box) == a.instance
     b.lease_pass()
     assert not b.recording_allowed and b.rejoin() is None                # now b is the nobody, and takes nothing else
@@ -134,7 +144,8 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
     saw. Now the live holder of another box keeps it: the claimant refuses in words and exits (its unit restarts it),
     leaving its mark; `/servers` shows `name_conflict` on the holder's row, the controller says `worker.name_conflict`
     once an episode, `vms_name_conflicts` is 1. A restart on the holder's own box still takes it at once (kill -9), and
-    once nobody live holds it the other box's next restart takes it as a lapsed name and asks no more."""
+    once the controller gives it the other box's next restart takes it and asks no more (the thirteenth pass,
+    blocker 3: by the holder's `until` alone it took a hung holder's name — and its cameras — from the other box)."""
     from tests.test_console_gate import _call, _console
     box = Box()
     a = _unit(box, "machine-a")
@@ -173,9 +184,17 @@ def test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_
 
     c = _unit(box, "machine-a")                                          # its own box's restart: taken at once
     assert _holder(box) == c.instance
+    ctl.look()
     _tick(box, c.slot_ttl + 1)                                           # and then nobody renews it
+    try:
+        _unit(box, "machine-b")
+        raise AssertionError("another box took a lapsed name the controller has not given")
+    except NameOnAnotherBox as e:
+        assert "has not judged it gone" in str(e), str(e)
+    _tick(box, SLOT_LOST_AFTER + HUNG_MOVE_AFTER)                        # `wait` past the controller's limit:
+    ctl.pass_once()                                                      # it gives the name
     d = _unit(box, "machine-b")
-    assert d.name == NAME and _holder(box) == d.instance                 # a lapsed name is anybody's of that name
+    assert d.name == NAME and _holder(box) == d.instance
     assert _mark(box, "machine-b") is None
     assert ctl.pass_once()["name_conflicts"] == 0
 

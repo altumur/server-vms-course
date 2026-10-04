@@ -102,7 +102,7 @@ from .doors import MAX_LIMIT, safe_rel, safe_segment
 
 log = logging.getLogger(__name__)
 
-from .contract import ALIVE_EVERY, BUILD, PRESENCE, SCHEMA, check_schema, is_live, parse_heartbeat
+from .contract import ALIVE_EVERY, BUILD, PRESENCE, SCHEMA, Eyes, check_schema, judge_clock, parse_heartbeat
 from .rows import PARSE_ERRORS, Table, answer, counts as garbled_by_table, finite
 from .events import CONSOLE, Bucket, bucket_names_under, buckets_under, parse_bucket, subsystems_under, tree_owner
 from .longpoll import WAIT_MAX, Watch, client_gone, parse_wants
@@ -693,6 +693,48 @@ def _ask_to_free(free, need: int, now: float, min_days: float, volume: str, prog
     return _call_hook(free, need, now, min_days, volume=volume, progressed=progressed or (lambda: None))
 
 
+# THE OBJECT DOOR SAYS WHAT WENT WRONG, NOT WHERE (the review's thirteenth pass, minors; the product's cross-check (c)).
+# A copy this server holds that cannot be read (EACCES, EIO) raised past the door and dropped the connection; a copy it
+# could not keep (ENOSPC) was "the body did not arrive in time" with the file's absolute path in it. Each is a 503 now,
+# in words — the error's own words, never a path on this server's disk.
+class ObjectUnreadable(Exception):
+    """This server's copy of an object is there and cannot be read: `str()` is the reason, without a path."""
+
+
+class ObjectUnkept(Exception):
+    """A copy sent here could not be kept on this server's disk: `str()` is the reason, without a path."""
+
+
+def _why(e: OSError) -> str:
+    """An `OSError` in words — its `strerror`, never the file it names."""
+    return e.strerror or type(e).__name__
+
+
+def _summed(spaces: list[dict]) -> dict:
+    """Disks summed, as `Resource.space()` sums its volumes."""
+    total = sum(int(sp.get("total", 0)) for sp in spaces)
+    free = sum(int(sp.get("free", 0)) for sp in spaces)
+    return {"total": total, "free": free, "used": total - free, "full": (total - free) / total if total else 0.0}
+
+
+def _merged(units: list[dict]) -> dict[str, list[str]]:
+    """What is on each volume, as one (`Resource.units`)."""
+    out: dict[str, list[str]] = {}
+    for per in units:
+        for sub, names in per.items():
+            out.setdefault(sub, []).extend(u for u in names if u not in out.get(sub, []))
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def _counted(mirrors: list[dict]) -> dict[str, int]:
+    """Copies of each server, over every volume."""
+    out: dict[str, int] = {}
+    for per in mirrors:
+        for server, n in per.items():
+            out[server] = out.get(server, 0) + n
+    return out
+
+
 class Resource:
     """One server's resource: its tree, its heartbeat, its policy pass."""
 
@@ -726,7 +768,21 @@ class Resource:
         self._volume_usage: dict[str, int] = {}              # …and per volume, for the ones with a quota
         self.usage_at = 0.0                                  # …and when it was taken: a stale number must say so
         self.clock = clock                                   # monotonic: what the pass's pulse measures by (a test passes its own)
+        # Which peers are there, by what this resource saw change on its own clock (`Eyes`; the review's thirteenth pass,
+        # blocker 4): a peer whose clock ran behind was left out of the mirror and the restore. A test that drives only
+        # the wall drives this too.
+        self.eyes = Eyes(clock if clock is not time.monotonic else judge_clock(wall), wall)
         self._progress_at = clock()                          # when the running pass last got somewhere (`pass_`'s pulse)
+        self._pass_started: float | None = None              # …and when it began, while one runs (`beat`)
+        self._stuck_said = False
+        self._beating: threading.Thread | None = None        # the beat's own thread, once started (`start_beat`)
+        self._beat_at: float | None = None                   # by `clock`, when a heartbeat or a beat last went out
+        # The looks at the disks with a deadline (`_probe`): the one running per name, the last answers, and since when
+        # each that has not answered has been waited for.
+        self._probe_lock = threading.Lock()
+        self._probes: dict[str, tuple] = {}
+        self._looked: dict[str, object] = {}
+        self._stuck: dict[str, float] = {}
         self.hooks: dict[str, object] = {}         # subsystem -> object with .pass_(now) -> dict: its own policy on ITS part of the tree
         self.index = None                          # an eventdatabase.EventIndex over this tree, if the job runs one: served as GET /events
         # What the last pass could NOT free, in bytes, by volume. Over the mark and nothing left to give up is
@@ -740,6 +796,9 @@ class Resource:
         # peer that did not answer, a bucket a peer did not take or give, one too big for the door — counted since start,
         # and the restore's buckets still with peers, with when it is tried again (`restore_due`).
         self.mirror_failed = self.mirror_too_big = self.restore_failed = 0
+        # Buckets past their days `retain` could not remove, since start (`_removed`): one that will not go does not stop
+        # the rest; and whether the last pass met one, for "said once a spell".
+        self.retain_failed, self._retain_failing, self._retain_failed_pass = 0, False, False
         self.mirror_peers_failed: list[str] = []   # the peers the last `mirror` could not copy to, or not all
         self._too_big: set[str] = set()            # buckets no peer takes (over `MIRROR_MAX`, or refused 413): not sent again
         self.restore_left: int | None = None       # buckets known to be with peers and not back; None: no restore yet
@@ -913,16 +972,28 @@ class Resource:
     # Writes `{server, ts, url, usage, usage_at, space, units, mirrors: {server: n copies}}` to
     # `platform/resources/<server>/heartbeat` and returns it. `units` is how the index discovers subsystems;
     # `mirrors` is how `restore` and the index find who holds copies.
+    #
+    # EVERY LOOK AT A VOLUME WITH A DEADLINE (the review's thirteenth pass, blocker 5; the product's cross-check (a)): the
+    # `statfs`, the directory listings and the presence look ran bare on the heartbeat's thread, and one volume that
+    # stopped answering — an NFS server gone, a dying disk — held the heartbeat for good: the resource silent in 45 s,
+    # and the live workers' cameras carried off a server whose processes all ran. Each volume is looked at in a probe of
+    # its own (`_probe`, `PROBE_DEADLINE`); one that does not answer in time is said (`volumes_stuck`, with how long) and
+    # its last numbers stand; the presence look that does not answer is `presence_error` — "cannot tell", never "gone".
     def heartbeat(self) -> dict:
+        looks = {name: self._volume_look(name) for name in self.volumes}
+        usage = self._probe("usage", self.usage_cached, self.last_usage or 0)
         hb = {"server": self.server, "ts": self.wall(), "url": self.url,
               "schema": SCHEMA, "build": BUILD,                      # what this build understands, and what it is
-              "usage": self.usage_cached(), "usage_at": self.usage_at,
-              "space": self.space(), "volumes": self.spaces(), "units": self.units(),
+              "usage": usage, "usage_at": self.usage_at,
+              "space": _summed([lk["space"] for lk in looks.values()]),
+              "volumes": {name: lk["space"] for name, lk in looks.items()},
+              "units": _merged([lk["units"] for lk in looks.values()]),
               # The workers placed on this server and those whose process runs, by subsystem (`workers_here`): what
               # tells a hung worker from a dead one (`Controller.slot_fate`; the owner's decision on the review's eleventh
               # pass). The files' own clock, not `wall`: what is compared is a file's age
               # …and what it could not read of them, said and not taken for "not here" (`presence_here`; the twelfth pass)
-              **presence_here(self.root),
+              **self._presence(),
+              **({"volumes_stuck": stuck} if (stuck := self.stuck()) else {}),
               "short": sum(self.short.values()),                     # bytes the last pass was asked to free and could not
               "waits": self.watch.counts(),                          # the requests it holds (`/events/wait`): now, and refused
               # The watermark's row, when it does not parse: what the pass acts on instead (`relieve`; the review's
@@ -935,18 +1006,84 @@ class Resource:
               **({"restore": self.restore_said()} if self.restore_left or self.restore_failed or not self._restore_ok else {}),
               # The units whose days the last `retain` could not read, by name: kept, not swept (sibling A of the ninth pass)
               **({"retention_garbled": self.retention_garbled} if self.retention_garbled else {}),
+              # …and the buckets past their days it could not remove, since start (`_removed`; the thirteenth pass)
+              **({"retain_failed": self.retain_failed} if self.retain_failed else {}),
               **({"mirror": {"failed": self.mirror_failed, "too_big": self.mirror_too_big,
                              "peers_failed": self.mirror_peers_failed}}
                  if self.mirror_failed or self.mirror_too_big else {}),
               # …and the blobs' copies the same way (`mirror_blobs`): what peers did not take, since start
               **({"blobs": {"failed": self.blobs_failed, "peers_failed": self.blob_peers_failed}}
                  if self.blobs_failed else {}),
-              "mirrors": {s: sum(mirrored_count(r, s) for r in self.volumes.values())
-                          for r in self.volumes.values() for s in mirrored_servers(r)}}
+              "mirrors": _counted([lk["mirrors"] for lk in looks.values()])}
         self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(hb).encode())
-        self._last_heartbeat = hb
+        self._last_heartbeat, self._beat_at = hb, self.clock()
         self.say_door()
         return hb
+
+    # One volume as the heartbeat says it — its disk, what is on it, the copies it holds of other servers — looked at in a
+    # probe of its own, with a deadline: one that does not answer is that volume's, and its last look stands.
+    def _volume_look(self, name: str) -> dict:
+        path = self.volumes[name]
+
+        def look() -> dict:
+            return {"space": self.space(name), "units": subsystems_under(path),
+                    "mirrors": {s: mirrored_count(path, s) for s in mirrored_servers(path)}}
+        return self._probe(f"volume:{name}", look, {"space": {"total": 0, "free": 0, "used": 0, "full": 0.0},
+                                                    "units": {}, "mirrors": {}})
+
+    # Who is registered here and whose process runs (`presence_here`), with a deadline: a tree that does not answer is
+    # "cannot read the registrations" — which nobody takes for a worker's end (`Controller.presence_doubt`).
+    def _presence(self) -> dict:
+        said = self._probe("presence", lambda: presence_here(self.root), None)
+        if said is None or "presence" in self._stuck:
+            return {"presence_error": f"{self.root} did not answer in {self.PROBE_DEADLINE:g} s"}
+        return said
+
+    # A look at a disk, with a deadline (blocker 5's half (a)). `fn` runs on a thread of its own and is waited for
+    # `PROBE_DEADLINE`; in time, its answer is the answer and is kept. Not in time, the last answer kept (or `default`)
+    # stands, and the probe is said stuck since it began (`stuck`): ONE thread per probe stays in it — a probe still
+    # running is waited on again, never started twice, so a volume that hangs for a day costs one thread, not one per
+    # heartbeat. What `fn` raises is raised here, as it was without the probe.
+    PROBE_DEADLINE = 5.0
+
+    def _probe(self, name: str, fn, default):
+        with self._probe_lock:
+            run = self._probes.get(name)                   # one still running is waited on again, not doubled
+            if run is None:
+                box: dict = {}
+
+                def go(box=box):
+                    try:
+                        box["v"] = fn()
+                    except BaseException as e:                 # noqa: BLE001 — handed to the caller below
+                        box["e"] = e
+                run = (threading.Thread(target=go, daemon=True, name=f"{self.server}-{name}"), box, self.clock())
+                self._probes[name] = run
+                run[0].start()
+        thread, box, began = run
+        thread.join(self.PROBE_DEADLINE)
+        if box:
+            with self._probe_lock:
+                if self._probes.get(name) is run:
+                    del self._probes[name]
+                if name in self._stuck:
+                    log.warning("%s: %s answers again", self.server, name)
+                self._stuck.pop(name, None)
+            if "e" in box:
+                raise box["e"]
+            self._looked[name] = box["v"]
+            return box["v"]
+        with self._probe_lock:
+            if name not in self._stuck:
+                log.error("%s: %s did not answer in %g s: its last look stands, and the heartbeat goes on without it — "
+                          "the disk behind it does not answer", self.server, name, self.PROBE_DEADLINE)
+            self._stuck[name] = began
+        return self._looked.get(name, default)
+
+    # The probes that have not answered: `{name: seconds}` since each began.
+    def stuck(self) -> dict[str, float]:
+        now = self.clock()
+        return {n: round(now - t, 1) for n, t in sorted(self._stuck.items())}
 
     # -- the cluster's objects ------------------------------------------------------------
     # `platform/doors/<server> {url, since, at}` — where this resource answers, for the other resources that read every
@@ -985,6 +1122,57 @@ class Resource:
     # What the pulse of a long step says beside the heartbeat it sends again (`_pulsing`).
     def say_alive(self) -> None:
         self.say_door()
+
+    # THE BEAT: that this resource is here, and who runs on it, on a thread of its own (the review's thirteenth pass,
+    # blocker 5). The heartbeat, the door's `at` and the presence look were said from the thread of the pass, so a pass
+    # that hung took them with it: at `PULSE_LIMIT` the pulse stopped, the resource was "silent", and a hung worker
+    # holding its lock was moved — a second writer — at 250 s, long before `HUNG_MOVE_AFTER` (`p8c_pulse_stops`). Now
+    # the beat runs beside the loop whatever the loop does: the last full heartbeat again, the presence looked at anew
+    # (with its deadline), the time moved on, and the door's `at`. A pass that has not moved for `PULSE_LIMIT` ×
+    # `lost_after` is said (`pass_stuck`, on `/metrics`) and logged once — the resource is there, its pass is not, and
+    # that is a fault of the server to look at, not a silence that moves cameras.
+    def beat(self) -> bool:
+        last = getattr(self, "_last_heartbeat", None)
+        if last is None:
+            return False                                      # nothing said yet: the first heartbeat is the loop's
+        beat = {k: v for k, v in last.items() if k not in PRESENCE_FIELDS + ("pass_seconds", "pass_stuck", "volumes_stuck")}
+        beat.update(self._presence(), ts=self.wall())
+        if self.stuck():
+            beat["volumes_stuck"] = self.stuck()
+        started = self._pass_started
+        if started is not None:
+            now = self.clock()
+            still = now - self._progress_at
+            beat["pass_seconds"] = round(now - started, 1)
+            if still > self.PULSE_LIMIT * self.lost_after:
+                beat["pass_stuck"] = round(still, 1)
+                if not self._stuck_said:
+                    self._stuck_said = True
+                    log.error("%s: the pass has made no progress for %.0f s — longer than %d × lost_after: the resource "
+                              "beats on (its workers are judged by what runs, not by its pass), and says pass_stuck",
+                              self.server, still, self.PULSE_LIMIT)
+        self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(beat).encode())
+        self._beat_at = self.clock()
+        self.say_alive()
+        return True
+
+    # The beat's thread: `beat` every `PULSE_SECONDS` — unless the loop's own heartbeat went out meanwhile — until `stop`
+    # is set. A beat that fails is one beat (the review's third pass), and the thread goes on. Started once a process
+    # (`vms/__main__.resource`, М11's `cluster/__main__.resource`); a test drives `beat` itself.
+    def start_beat(self, stop: threading.Event | None = None) -> threading.Thread:
+        stop = stop or threading.Event()
+
+        def run():
+            while not stop.wait(self.PULSE_SECONDS):
+                if self._beat_at is not None and self.clock() - self._beat_at < self.PULSE_SECONDS * 0.9:
+                    continue                                  # the loop's heartbeat just went: nothing to add
+                try:
+                    self.beat()
+                except Exception:                             # noqa: BLE001 — one beat lost, not the beat
+                    log.warning("%s: a beat did not go out", self.server, exc_info=True)
+        self._beating = threading.Thread(target=run, daemon=True, name=f"{self.server}-beat")
+        self._beating.start()
+        return self._beating
 
     # `{server: url}` of every OTHER resource that said its door, read from the store at most every `DOORS_FRESH`
     # seconds. A row that is not a door (`url` not an http address, a server that is not a name) is left out and
@@ -1086,16 +1274,20 @@ class Resource:
         if key.endswith(".tmp"):
             return None, []
         local = local_store(self.objects)
-        mine = None
-        st = _stat(local, key)
-        if st is not None:
-            try:
-                data = local.get(key)
-            except (IsADirectoryError, NotADirectoryError):
-                data = None
-            if data is not None:
-                mine = (data, st[0], self.server)
+        mine, unread = None, ""
+        try:
+            st = _stat(local, key)
+            data = local.get(key) if st is not None else None
+        except (IsADirectoryError, NotADirectoryError):
+            data = None
+        except OSError as e:                                 # there, and not readable: not "nobody has it" (the 13th pass)
+            log.error("%s: its copy of %s cannot be read: %s", self.server, key, e)
+            data, unread = None, _why(e)
+        if data is not None:
+            mine = (data, st[0], self.server)
         if scope != "cluster":
+            if unread:
+                raise ObjectUnreadable(f"this server's copy of {key} cannot be read ({unread})")
             return mine, []
         blob = is_blob_key(key)
         digest_ = key.rsplit("/", 1)[1] if blob else ""
@@ -1121,12 +1313,16 @@ class Resource:
                               server, key, e)
                     continue
                 return (copy[0], copy[1], server), missing
+            if unread:
+                raise ObjectUnreadable(f"this server's copy of {key} cannot be read ({unread}), and no other server gave one")
             return None, missing
         got, missing = self._fan_out(lambda u: self.peers.object(u, key, OBJECTS_TIMEOUT))
         best = mine
         for server, copy in sorted(got.items()):
             if copy is not None and (best is None or copy[1] > best[1]):
                 best = (copy[0], copy[1], server)
+        if best is None and unread:
+            raise ObjectUnreadable(f"this server's copy of {key} cannot be read ({unread}), and no other server gave one")
         return best, missing
 
     # A blob let go: here, and `scope=cluster` on every other server that answers (the sweep, `SpecController.sweep_blobs`
@@ -1156,8 +1352,15 @@ class Resource:
         if p is None:
             raise ValueError("this server's objects are not files: nothing to put a copy into")
         dest = p(key)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        fd, tmp = new_temp(os.path.dirname(dest), os.path.basename(dest) + ".")     # the store's group reads it (`new_temp`)
+
+        def kept(step, *a):                                  # this disk's own trouble: said as such (the 13th pass)
+            try:
+                return step(*a)
+            except OSError as e:
+                log.error("%s: a copy of %s could not be kept: %s", self.server, key, e)
+                raise ObjectUnkept(f"this server could not keep the copy of {key} ({_why(e)})") from None
+        kept(os.makedirs, os.path.dirname(dest), 0o777, True)
+        fd, tmp = kept(new_temp, os.path.dirname(dest), os.path.basename(dest) + ".")   # the store's group reads it (`new_temp`)
         try:
             h, left = hashlib.sha256(), n
             with os.fdopen(fd, "wb") as f:
@@ -1165,13 +1368,13 @@ class Resource:
                     part = rfile.read(min(left, PIECE))
                     if not part:
                         raise EOFError(f"{key}: the body ended {left} bytes short of {n}")
-                    h.update(part); f.write(part); left -= len(part)
+                    h.update(part); kept(f.write, part); left -= len(part)
                 actual = f"sha256-{h.hexdigest()}"
                 if actual != key.rsplit("/", 1)[1]:
                     raise BlobMismatch(f"{key}: the bytes sent hash to {actual} — not stored")
-                f.flush(); durably(f)
-            os.replace(tmp, dest)
-            durable_dir(os.path.dirname(dest))
+                kept(f.flush); kept(durably, f)
+            kept(os.replace, tmp, dest)
+            kept(durable_dir, os.path.dirname(dest))
         finally:
             with suppress(FileNotFoundError):
                 os.remove(tmp)
@@ -1232,10 +1435,13 @@ class Resource:
         self.blob_peers_failed = failed
         return {"mirrored": n, "peers": peers, **({"peers_failed": failed} if failed else {})}
 
-    # `resources_seen` filtered to heartbeats younger than `lost_after`.
+    # `resources_seen` filtered to heartbeats that changed within `lost_after` of this resource's clock (`Eyes`).
     def live_resources(self) -> dict[str, dict]:
-        now = self.wall()
-        return {s: hb for s, hb in resources_seen(self.objects).items() if is_live("platform", float(hb["ts"]), now, self.lost_after)}
+        return {s: hb for s, hb in resources_seen(self.objects).items() if self._live(s, hb)}
+
+    def _live(self, server: str, hb: dict) -> bool:
+        key = f"{RESOURCES}/{server}/heartbeat"
+        return self.eyes.fresh(key, hb.get("ts"), self.lost_after, hb.get("ts"), "platform")
 
     # -- the policy pass ------------------------------------------------------------------
     # For each subsystem and unit, delete bucket files whose `end` is older than `retention_days` — files
@@ -1267,6 +1473,7 @@ class Resource:
         # handed `progressed` like a subsystem's pass, if it takes one (the review's sixth pass).
         kept = _call_hook(self.kept, progressed=self._progressed) if self.kept is not None else None
         self._progressed()
+        self._retain_failed_pass = False
         swept: dict[tuple[str, str], tuple] = {}
         for sub, units in self.units().items():
             for unit in units:
@@ -1281,7 +1488,9 @@ class Resource:
                         if b.end < self.wall() - days * 86400:
                             if kept is not None and kept(sub, unit, b.start, b.end):
                                 continue                                # somebody said to keep it: past its days, and here
-                            os.remove(os.path.join(path, b.path)); removed.append(b.path)
+                            if not self._removed(os.path.join(path, b.path)):
+                                continue                                # that bucket's, said and counted: the rest go on
+                            removed.append(b.path)
                             self._progressed()
                             n, a, z = swept.get((sub, unit), (0, b.start, b.end))
                             swept[(sub, unit)] = (n + 1, min(a, b.start), max(z, b.end))
@@ -1308,12 +1517,37 @@ class Resource:
                         for b in bucket_names_under(base, sub, unit, self.bucket_seconds, self._progressed):
                             if b.end < self.wall() - days * 86400 - MIRROR_GRACE \
                                     and not (kept is not None and kept(sub, unit, b.start, b.end)):
-                                os.remove(os.path.join(base, b.path)); self.mirror_removed += 1
+                                if self._removed(os.path.join(base, b.path)):
+                                    self.mirror_removed += 1
                                 self._progressed()
         if removed and self.index is not None:
             self.index.forget(self.server, removed)                     # out of its cache with the file
         self.retention_garbled = sorted(set(garbled))
+        if self._retain_failing and not self._retain_failed_pass:
+            self._retain_failing = False
+            log.warning("%s: every bucket past its days is removed again", self.server)
         return len(removed)
+
+    # ONE BUCKET THIS RESOURCE CANNOT REMOVE IS THAT BUCKET'S (the review's thirteenth pass, major 13's other half). The
+    # unlink ran bare: a directory a writer made 2755 under another group (no umask under Nomad), one EACCES, and the
+    # `PermissionError` ended `retain` whole — no bucket of any unit swept after it, every pass, and the disk grew without
+    # bound. A bucket that will not go is counted (`retain_failed`, in the heartbeat and on `/metrics`), logged once a
+    # spell, and the walk goes on; one already gone is gone.
+    def _removed(self, path: str) -> bool:
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            return True
+        except OSError as e:
+            self.retain_failed += 1
+            if not self._retain_failing:
+                self._retain_failing = True
+                log.error("%s: a bucket past its days could not be removed (%s): it stays, the others are swept — "
+                          "counted (retain_failed), said once until a pass removes everything it should",
+                          self.server, e.strerror or e)
+            self._retain_failed_pass = True
+            return False
+        return True
 
     # One unit's days, or `inf` — kept, not swept — when its row does not parse (`retain`).
     # Whatever a parse raises (`PARSE_ERRORS`: a row that is a JSON list has no `.get`), not only a word; a store that
@@ -1451,9 +1685,8 @@ class Resource:
 
     def _restore(self) -> dict:
         pulled, left, failed, peers_failed = 0, 0, 0, []
-        now, seen = self.wall(), resources_seen(self.objects)
-        live = {s: hb for s, hb in seen.items()
-                if s != self.server and is_live("platform", float(hb["ts"]), now, self.lost_after)}
+        seen = resources_seen(self.objects)
+        live = {s: hb for s, hb in seen.items() if s != self.server and self._live(s, hb)}
         for peer, hb in live.items():
             if peer in self._restored_from or not self._holds_mine(peer, hb):
                 continue
@@ -1656,61 +1889,48 @@ class Resource:
     # — so what is sent while the pass runs is the LAST heartbeat again, with the time moved on: bytes already
     # published, and nothing the pass is changing.
     PULSE_SECONDS = 10.0
-    # …and not for ever (the review's second pass): a pass stuck on a disk that never answers would be `live`
-    # with frozen numbers for as long as it hung. Four `lost_after` WITHOUT PROGRESS and the pulse stops; the pass
-    # is then what it is — silent — and the heartbeat says how long it has been running while it still beats.
+    # …and not for ever (the review's second pass): a pass stuck on a disk that never answers was `live` with frozen
+    # numbers for as long as it hung — so four `lost_after` WITHOUT PROGRESS stopped the pulse, and the resource was
+    # silent. That took the presence with it (the review's thirteenth pass, blocker 5): a hung worker on a server whose
+    # pass hung was moved at 250 s, two writers. Now the pulse goes on and says the pass is stuck (`pass_stuck`, with how
+    # long since it last moved); the presence it sends is looked at anew, with its deadline (`beat`). Frozen numbers are
+    # said for what they are, and what runs on the server is still told.
     #
     # Three things the first version got wrong (the review's third pass). The pulse died on its first error — one
     # store write that failed, an exception out of the thread, and a five-minute pass on a store that blinked was a
     # silent resource whose recordings `redistribute` moved off a sound server: each beat is in a `try` of its own
-    # now. It measured by the WALL clock, which NTP steps: by a monotonic one (`clock`). And it stopped at four `lost_after`
-    # of TOTAL time, which a year of archive legitimately takes: it stops at four `lost_after` with no progress —
-    # the walk, the retention and each part say they moved (`_progressed`) — which is what "stuck" means.
+    # now. It measured by the WALL clock, which NTP steps: by a monotonic one (`clock`). And it counted TOTAL time,
+    # which a year of archive legitimately takes: "stuck" is no progress — the walk, the retention and each part say
+    # they moved (`_progressed`).
     #
     # …and every part says it, not only the walk and the retention (the review's fourth pass): the mirror marks
     # each bucket a peer took, `relieve` each volume and each subsystem's answer, and a subsystem's hook is handed
-    # `progressed` to call as it goes. A part that moves the whole time keeps the pulse; one that hangs — a peer
-    # that takes nothing, a disk that does not answer — stops it, as before.
+    # `progressed` to call as it goes.
     PULSE_LIMIT = 4
 
     # The pulse itself, around whatever long step runs on the heartbeat's thread: `pass_`, and `restore` (the seventh
-    # pass). While it runs, the last heartbeat goes out again every `PULSE_SECONDS` with the time moved on — until
-    # `PULSE_LIMIT` × `lost_after` pass with no mark of progress (`_progressed`).
+    # pass). Where the beat runs on its own thread (`start_beat`) it is the pulse, and this only marks the step; else
+    # a thread beats while the step runs.
     @contextmanager
     def _pulsing(self):
         done = threading.Event()
-        started = self.clock()
+        self._pass_started, self._stuck_said = self.clock(), False
         self._progressed()
 
         def pulse():
             while not done.wait(self.PULSE_SECONDS):
                 try:
-                    now = self.clock()
-                    running, still = now - started, now - self._progress_at
-                    if still > self.PULSE_LIMIT * self.lost_after:
-                        log.error("%s: the pass has made no progress for %.0f s — longer than %d × lost_after: the pulse "
-                                  "stops, and this resource is reported silent until the pass ends", self.server, still,
-                                  self.PULSE_LIMIT)
-                        return
-                    last = getattr(self, "_last_heartbeat", None)
-                    if last is not None:
-                        # The workers and whose process runs are looked at again for every pulse (the review's twelfth
-                        # pass, blocker 4): sent as the pass found them, a worker restarted after the pass began and
-                        # frozen since was "placed, not running" for as long as the pass ran — dead, by its old
-                        # registration — and its slot was freed while its new process still held its lock. The look
-                        # is a listing and a `flock` per worker, nothing of the volumes' walk.
-                        beat = {k: v for k, v in last.items() if k not in PRESENCE_FIELDS}
-                        beat.update(presence_here(self.root), ts=self.wall(), pass_seconds=round(running, 1))
-                        self.objects.put(f"{RESOURCES}/{self.server}/heartbeat", json.dumps(beat).encode())
-                    self.say_alive()
+                    self.beat()
                 except Exception:                             # noqa: BLE001 — one beat lost, not the pulse
                     log.warning("%s: a pulse of the pass did not go out", self.server, exc_info=True)
 
-        threading.Thread(target=pulse, daemon=True).start()
+        if self._beating is None or not self._beating.is_alive():
+            threading.Thread(target=pulse, daemon=True).start()
         try:
             yield
         finally:
             done.set()
+            self._pass_started = None
 
     def pass_(self) -> dict:
         with self._pulsing():
@@ -1837,7 +2057,10 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                 objs, missing = resource.objects_listing(prefix, scope)
                 return self._json(200, {"server": resource.server, "objects": objs,
                                         **({"missing": missing} if scope == "cluster" else {})})
-            got, missing = resource.object_read(key, scope)
+            try:
+                got, missing = resource.object_read(key, scope)
+            except ObjectUnreadable as e:                    # there and not readable: 503 in words, not a dropped line
+                return self._json(503, {"error": str(e)})
             gone = [("X-Missing", ",".join(missing))] if missing else []
             if got is None:
                 return self._json(404, {"error": f"no object {key} on {'any server that answered' if scope == 'cluster' else resource.server}",
@@ -1885,9 +2108,12 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
             except EOFError as e:
                 self.close_connection = True
                 return self._json(400, {"error": str(e)})
+            except ObjectUnkept as e:                        # this server's disk, not the sender's body: 503, no path
+                self.close_connection = True
+                return self._json(503, {"error": str(e)})
             except (TimeoutError, OSError) as e:
                 self.close_connection = True
-                return self._json(408, {"error": f"the body did not arrive in time ({e})"})
+                return self._json(408, {"error": f"the body did not arrive in time ({_why(e)})"})
             return self._raw(204, b"")
 
         def do_GET(self):

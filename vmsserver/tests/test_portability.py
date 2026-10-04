@@ -39,6 +39,13 @@ def _reimport_without(names: set[str], *modules: str) -> list[str]:
         builtins.__import__ = real_import
         sys.modules.clear()
         sys.modules.update(saved)
+        # …and each package's attribute for its submodule: importing `w2cplatform.contract` again bound the NEW module
+        # to `w2cplatform.contract`, and a later `from w2cplatform import contract` took it — another `SKEW_MAX`, another
+        # `events.new_temp` than the code under test reads (three tests after this one failed only in the full run).
+        for name, mod in saved.items():
+            parent, _, child = name.rpartition(".")
+            if parent in saved and getattr(saved[parent], child, None) is not mod:
+                setattr(saved[parent], child, mod)
     return broken
 
 

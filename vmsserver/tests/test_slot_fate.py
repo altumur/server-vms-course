@@ -75,7 +75,10 @@ class _Site:
             self.res[s].heartbeat()
 
     def tick(self, seconds: float, live=("w-2",)):
-        """`seconds` pass; the workers in `live` renew and speak, the resources in `up` heartbeat."""
+        """`seconds` pass; the workers in `live` renew and speak, the resources in `up` heartbeat. The controller looks
+        first, as its pass does every few seconds: what changes at the end of the tick is new to it, what does not has
+        stood still the whole tick (`Controller.look`; the review's thirteenth pass, blocker 4)."""
+        self.ctl.look()
         self.box.clock.advance(seconds); self.box.wall.advance(seconds)
         for name in live:
             assert self.ws[name].renew_slot()
@@ -295,9 +298,12 @@ def test_a_server_whose_resource_was_never_heard_is_decommissioned_with_a_warnin
     box = site.box
     w3 = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-3")
     w3.heartbeat_once()
-    site.tick(100)
     _, _, _, srv, base = _console(box)
     try:
+        # The console judges by what IT saw change (the review's thirteenth pass, blocker 4): its first look, then the
+        # silence it watched
+        assert not _call(base, "GET", "/servers")[1]["servers"]["srv-3"]["decommissionable"]
+        site.tick(100)
         servers = _call(base, "GET", "/servers")[1]["servers"]
         assert servers["srv-3"]["decommissionable"] and "never heard" in servers["srv-3"]["decommission_warning"]
         st, out = _call(base, "POST", "/servers/srv-3/decommission", {"why": "gone"})
@@ -364,13 +370,23 @@ def test_a_garbled_slot_row_nobody_touches_for_a_term_can_be_claimed_again():
     box = Box()
     box.vars.put("vms/slots/w-1", {"holder": "x", "until": "soon", "released": "false", "gen": "7"})
     try:
+        ctl = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
         w = Worker(SPEC.sub, None, box.vars, box.objects, clock=box.clock, wall=box.wall)
         idx = box.vars.get("vms/slots/w-1")[1]
         assert not w._garbled_stale("w-1", idx)                              # first look: from now
         box.clock.advance(w.slot_ttl + w.HOLD_SKEW - 1)
         box.vars.put("vms/slots/w-1", {"holder": "x", "until": "later", "released": "false", "gen": "7"})   # it moved
         assert not w._garbled_stale("w-1", box.vars.get("vms/slots/w-1")[1])
+        ctl.publish_names()                                                  # the controller's first look at it
         box.clock.advance(w.slot_ttl + w.HOLD_SKEW + 1)                      # and stood still a whole term since
+        box.wall.advance(w.slot_ttl + w.HOLD_SKEW + 1)
+        # …but whose it was cannot be read, nor where it ran: `wait`, which keeps the name until the controller's limit
+        # (the review's thirteenth pass, blocker 2) — and a name is taken only where the controller gives it
+        ctl.publish_names()
+        assert w.claim_slot() == "w-2"
+        box.wall.advance(HUNG_MOVE_AFTER)
+        assert ctl.publish_names()["names_given"] == {"w-1": box.vars.get("vms/slots/w-1")[1]}
+        w.slot = None
         assert w.claim_slot() == "w-1"
         s = Slot.from_items("w-1", box.vars.get("vms/slots/w-1")[0])
         assert s.holder == w.instance and s.gen == 8
@@ -391,8 +407,9 @@ def test_a_spare_does_not_take_the_name_of_a_hung_worker_and_takes_a_dead_ones()
     site.ws["w-1"].absent()
     site.beat()
     assert site.fate() == "move"
+    site.ctl.pass_once()                                                     # the controller says so: the name is given
     other = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
-    assert other.name == "w-1"                                               # dead: its name, and what it was assigned
+    assert other.name == "w-1"                                               # dead: its name
 
 
 def test_a_spare_and_the_console_judge_a_hung_worker_by_the_controllers_limit_not_their_own():
@@ -527,6 +544,11 @@ def test_a_slot_row_that_does_not_parse_moves_only_on_two_words_and_is_never_rel
 
 # -- the twelfth pass: two holders of the same cameras ---------------------------------------------------------------
 
+def _rev(box, worker):
+    """The revision of a worker's slot row — what the controller's verdict on its name is for (`Worker._held`)."""
+    return box.vars.get(f"vms/slots/{worker}")[1]
+
+
 def _two_writers(site, worker):
     """The cameras of w-1 that `worker` records while w-1's process still records them."""
     worker.reconcile_once(); worker.reconcile_once()
@@ -548,8 +570,9 @@ def test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin(
         assert spare.name == "w-3" and _two_writers(site, spare) == [], dt
     site.ws["w-1"].absent(); site.beat()
     assert site.fate() == "move"
+    site.ctl.pass_once()                                                     # the controller says so: the name is given
     spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
-    assert spare.name == "w-1"                                               # dead: its name, and its cameras
+    assert spare.name == "w-1"                                               # dead: its name
 
 
 def test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone():
@@ -694,6 +717,7 @@ def test_the_resources_pulse_during_a_long_pass_says_who_runs_now():
                               server="srv-1")                               # restarted under its name…
             assert again.present(site.roots["srv-1"])
             again.heartbeat_once()
+            ctl.look()                                                       # (the controller looks every few seconds)
             box.wall.advance(100); box.clock.advance(100)                    # …and frozen, while the pass runs on
             site.res["srv-2"].heartbeat()
             time.sleep(0.2)
@@ -701,6 +725,7 @@ def test_the_resources_pulse_during_a_long_pass_says_who_runs_now():
             seen["running"] = resources_seen(box.objects)["srv-1"].get("running")
             seen["keep"] = again
             return {}
+    ctl.look()                                                               # the controller has seen the pass begin
     res.register("slow", Slow())
     res.pass_()
     assert seen["running"] == {"vms": ["w-1"]} and seen["fate"] == "hung", seen
@@ -712,7 +737,12 @@ def test_a_controller_started_after_a_server_died_moves_its_cameras():
     it) both their heartbeats. A controller that had heard srv-1 moved its cameras; one started after it read nothing:
     "never said which server", `wait` for ever, no sign. Now the store keeps what outlives the server — the server in the
     slot row (`Slot.server`), and when its resource last said it is there (`at` on its door row) — and the fresh
-    controller judges the two silences: the cameras move. A slot it still cannot judge is counted and an alarm."""
+    controller judges the two silences: the cameras move. A slot it still cannot judge is counted and an alarm.
+
+    …ONCE IT HAS WATCHED THEM (the review's thirteenth pass, blocker 4): the row's `at` and the slot's `until` are srv-1's
+    clock, and a fresh controller that believed them moved a live server's cameras whose clock ran behind. It takes what
+    it has never seen as just written, and judges the silence it watched: a term and the margin past its first look."""
+    from w2cplatform.contract import SLOT_LOST_AFTER, SLOT_TERM
     site = _Site()
     box = site.box
     assert box.vars.get("vms/slots/w-1")[0]["server"] == "srv-1"
@@ -724,6 +754,11 @@ def test_a_controller_started_after_a_server_died_moves_its_cameras():
     fresh = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, capacity=4,
                           wall=box.wall)
     fresh.journal = _Said()
+    assert fresh.resource_state("srv-1") == "unreachable"                    # its row, new to this controller
+    assert fresh.slot_fate("w-1", fresh.slots()["w-1"])[0] == "alive"        # …and its slot too
+    fresh.pass_once()
+    assert sorted(fresh.assignment("w-1").units) == site.on_w1
+    site.tick(SLOT_TERM + SLOT_LOST_AFTER + 1)                               # nothing of srv-1 changed meanwhile
     assert fresh.resource_state("srv-1") == "silent"
     fate, server, why = fresh.slot_fate("w-1", fresh.slots()["w-1"])
     assert (fate, server) == ("move", "srv-1"), why
@@ -883,7 +918,7 @@ def test_an_unsure_worker_keeps_its_cameras_and_name_until_HUNG_MOVE_AFTER_then_
         rep = ctl.pass_once()
         assert sorted(ctl.assignment("w-1").units) == site.on_w1 and rep["workers_unsure_moved_total"] == 0, (cause, rep)
         assert rep["workers_unjudged"] == ["w-1"], (cause, rep)
-        assert site.ws["w-2"]._held("w-1", ctl.slots()["w-1"]), cause            # the name stays its holder's
+        assert site.ws["w-2"]._held("w-1", _rev(box, "w-1")), cause              # the name stays its holder's
         assert ("worker.unsure_moved", ALARM) not in site.said.kinds(), cause
         site.tick(HUNG_MOVE_AFTER); keep()                                       # still unsure, fifteen minutes on
         assert site.fate() == "unsure_moved", cause
@@ -895,7 +930,7 @@ def test_an_unsure_worker_keeps_its_cameras_and_name_until_HUNG_MOVE_AFTER_then_
         keep()
         assert ctl.pass_once()["workers_unsure_moved_total"] == 1, cause         # counted once an episode…
         assert site.said.kinds().count(("worker.unsure_moved", ALARM)) == 1, cause   # …and said once
-        assert not site.ws["w-2"]._held("w-1", ctl.slots()["w-1"]), cause
+        assert not site.ws["w-2"]._held("w-1", _rev(box, "w-1")), cause
         spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
         assert spare.name == "w-1", cause                                        # moved: the name goes with the cameras
 
@@ -910,17 +945,123 @@ def test_an_unsure_worker_whose_fate_cannot_be_asked_past_the_limit_keeps_its_na
     ctl.pass_once()
     site.tick(HUNG_MOVE_AFTER); keep()
     assert site.fate() == "unsure_moved"
-    real = box.objects.list
+    assert "w-1" in ctl.pass_once()["names_given"]                          # the controller gives it…
+    real = box.objects.get
 
-    def failing(prefix, *a, **k):
-        if prefix.startswith("platform/resources"):
+    def failing(key, *a, **k):
+        if key == "vms/controller/pass":
             raise OSError(5, "I/O error")
-        return real(prefix, *a, **k)
-    box.objects.list = failing
+        return real(key, *a, **k)
+    box.objects.get = failing                                                # …and the spare cannot read that it does
     try:
-        assert site.ws["w-2"]._held("w-1", ctl.slots()["w-1"])
+        assert site.ws["w-2"]._held("w-1", _rev(box, "w-1"))
         spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
                           server="srv-2")
     finally:
-        box.objects.list = real
+        box.objects.get = real
     assert spare.name == "w-3"
+
+
+def test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved():
+    """The review's thirteenth pass, blocker 5 (`p8c_pulse_stops`): the heartbeat, the door's `at` and the presence look
+    went out on the thread of the pass, and a pass with no progress stopped its pulse at `PULSE_LIMIT` × `lost_after` —
+    the resource "silent", and the hung worker that held its lock moved at 250 s: two writers, long before
+    `HUNG_MOVE_AFTER`. Now the beat goes on whatever the pass does (`Resource.beat`), with the presence looked at anew,
+    and says `pass_stuck`: w-1 is hung for as long as it is, and moves only at the limit."""
+    import threading
+    import time
+    site = _Site()
+    box, ctl, res = site.box, site.ctl, site.res["srv-1"]
+    res.clock, res.PULSE_SECONDS = box.clock, 0.02
+    release, fates = threading.Event(), {}
+
+    class Hung:                                                              # a disk that never answers: no progress
+        def pass_(self, now):
+            release.wait(60)
+            return {}
+    res.register("hung", Hung())
+    site.up.discard("srv-1")                                                 # its loop is in the pass: no heartbeat of its own
+    passing = threading.Thread(target=res.pass_, daemon=True)
+    passing.start()
+    try:
+        for t in range(50, 501, 50):
+            site.tick(50)                                                    # w-1 hung: renews nothing, its lock held
+            deadline = time.monotonic() + 10                                 # …and the beat goes out with the new time:
+            while time.monotonic() < deadline and \
+                    float(resources_seen(box.objects).get("srv-1", {}).get("ts", 0)) < box.wall():
+                time.sleep(0.01)                                             # waited for, not slept for (a loaded run)
+            fates[t] = (site.fate(), ctl.resource_state("srv-1"))
+        stuck = resources_seen(box.objects)["srv-1"].get("pass_stuck")
+    finally:
+        release.set(); passing.join(5)
+    assert all(f == ("hung", "live") for t, f in fates.items() if t >= 100), fates
+    assert stuck and stuck > res.PULSE_LIMIT * res.lost_after
+    from w2cplatform.console import SpecConsole
+    text = SpecConsole(ctl, wall=box.wall).metrics_text()                    # …and on `/metrics`
+    assert 'w2c_resource_pass_stuck_seconds{server="srv-1"} ' in text and \
+        'w2c_resource_pass_stuck_seconds{server="srv-1"} 0' not in text
+    ctl.pass_once()
+    assert sorted(ctl.assignment("w-1").units) == site.on_w1                 # nothing moved: no second writer
+
+
+def test_a_volume_or_a_tree_that_does_not_answer_does_not_hold_the_resources_heartbeat():
+    """The review's thirteenth pass, the product's cross-check (a) beside blocker 5: `statfs` and the listings of the
+    volumes, and the presence look, ran bare in the heartbeat — one volume that stopped answering held it for good, and
+    the server went silent with all its processes running. Each look has a deadline now (`Resource._probe`): a volume
+    that does not answer is said (`volumes_stuck`) with its last numbers standing, one thread waits in it however many
+    heartbeats go, and a presence look that does not answer is "cannot read" — `unsure`, never a move."""
+    import threading
+    import time
+    from w2cplatform import resource as res_mod
+    site = _Site()
+    box, ctl, res = site.box, site.ctl, site.res["srv-1"]
+    res.PROBE_DEADLINE = 0.2
+    release = threading.Event()
+
+    def hung_disk(path):
+        release.wait(30)
+        return (1000, 500)
+    try:
+        res.space_probe = hung_disk
+        t0 = time.monotonic()
+        hb = res.heartbeat()
+        assert time.monotonic() - t0 < 2 and "volume:default" in hb["volumes_stuck"], hb
+        for _ in range(3):
+            assert "volume:default" in res.heartbeat()["volumes_stuck"]
+        probing = [t for t in threading.enumerate() if t.name == "srv-1-volume:default"]
+        assert len(probing) == 1, probing                                    # one thread in the hung volume, not one a beat
+        real = res_mod.presence_here
+        res_mod.presence_here = lambda root, now=None: (release.wait(30), real(root, now))[1]
+        try:
+            site.tick(100)                                                   # w-1 silent; srv-1's tree does not answer
+            hb = resources_seen(box.objects)["srv-1"]
+            assert "did not answer" in hb["presence_error"] and site.fate() == "unsure", (hb, site.fate())
+        finally:
+            res_mod.presence_here = real
+    finally:
+        release.set()
+    time.sleep(0.1)
+    res.space_probe = lambda path: (1000, 500)
+    assert "volumes_stuck" not in res.heartbeat()                            # answers again: said no more
+
+
+def test_a_worker_that_could_not_register_keeps_its_name_while_its_fate_is_wait():
+    """The review's thirteenth pass, blocker 2 (`n9_unregistered_hung_name`): `present()` failed (EACCES, ENOSPC on the
+    events tree), the worker went on working, its fate was `wait` — the controller held its cameras — and `wait` gave the
+    name: a spare took `w-1` with its assignment at +100 and +300 s, two writers. `wait` keeps the name now, as `unsure`
+    does, until the controller's limit; only then is it given (`names_given`)."""
+    site = _Site(register=False)
+    box, ctl = site.box, site.ctl
+    for dt in (100, 200):                                                    # +100 s, +300 s
+        site.tick(dt)
+        assert site.fate() == "wait"
+        ctl.pass_once()
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                          server="srv-2")
+        assert spare.name != "w-1" and _two_writers(site, spare) == [], dt
+        spare.release_slot()
+    assert sorted(ctl.assignment("w-1").units) == site.on_w1                 # its cameras held, as `wait` holds them
+    site.tick(HUNG_MOVE_AFTER)
+    assert "w-1" in ctl.pass_once()["names_given"]
+    spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+    assert spare.name == "w-1"                                               # past the limit: given

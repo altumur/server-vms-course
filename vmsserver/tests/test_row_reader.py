@@ -519,8 +519,8 @@ def test_a_devices_counts_and_a_holders_coverage_that_are_words_are_that_devices
     real = dj.holder_of, sv.holder_of
     dj.holder_of = sv.holder_of = lambda *a, **kw: found
     try:
-        assert dj.DetJobWorker.device_has(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7", 0, 50) is False
-        assert sv.SurveyWorker.device(type("W", (), {"objects": None, "wall": lambda self: 0.0})(), "7") is None
+        assert dj.DetJobWorker.device_has(type("W", (), {"objects": None, "eyes": None, "wall": lambda self: 0.0})(), "7", 0, 50) is False
+        assert sv.SurveyWorker.device(type("W", (), {"objects": None, "eyes": None, "wall": lambda self: 0.0})(), "7") is None
     finally:
         dj.holder_of, sv.holder_of = real
     _forget_garbled()
@@ -956,6 +956,8 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     for peer in ("srv-2", "srv-3"):                                     # the power cut: both said a heartbeat an hour ago
         _peer_heartbeat(box, peer, box.wall() - 3600, 10)
+    res.live_resources()                                                # …which this resource sees, and sees stand still:
+    box.clock.advance(res.lost_after + 1)                               # silent by ITS clock (the thirteenth pass, blocker 4)
     res.heartbeat()
     assert res.restore() == {"pulled": 0}
     hb = res.heartbeat()

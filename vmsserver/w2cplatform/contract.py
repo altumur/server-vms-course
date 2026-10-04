@@ -183,15 +183,22 @@ class NameOnAnotherBox(RuntimeError):
     """The name this process was started under is held by a live process of ANOTHER box (`Worker._may_take_by_name`).
     Its text is the whole message the process exits with."""
 
-    def __init__(self, slot: str, holder: str, box: str, hostname: str, here: str, name_env: str = ""):
+    def __init__(self, slot: str, holder: str, box: str, hostname: str, here: str, name_env: str = "",
+                 held: bool = False):
         self.slot, self.holder, self.box, self.hostname, self.here = slot, holder, box, hostname, here
         names = "WORKER_NAME" + (f" (or {name_env})" if name_env and name_env != "WORKER_NAME" else "")
+        # A holder whose name says no box (an `INSTANCE_ID`), and one that stopped renewing but is not judged gone (the
+        # review's thirteenth pass, blocker 3): the same refusal, in its own words.
+        where = f"on another machine (box {box}, instance {holder})" if box else \
+            f"by instance {holder}, whose name does not say which machine it runs on"
+        state = ("stopped renewing it, and its controller has not judged it gone: its process may still run and write "
+                 "(hung, or cut off from the store) — the name is taken once the controller gives it, or once its "
+                 "process is known to be dead" if held else "is live")
         super().__init__(
-            f"{slot} is held by a live process on another machine (box {box}, instance {holder}): two machines are "
-            f"given one name, usually because they share the hostname {hostname!r} (the units name their processes "
-            f"from it, w-%l-1). Give this machine another hostname, or set {names} in its unit to a name no other "
-            f"machine uses. This machine (box {here}) leaves the name alone: taking it would stop the other machine's "
-            f"live process")
+            f"{slot} is held {where}, which {state}. Two machines given one name usually share the hostname "
+            f"{hostname!r} (the units name their processes from it, w-%l-1): give this machine another hostname, or "
+            f"set {names} in its unit to a name no other machine uses. This machine (box {here}) leaves the name "
+            f"alone: taking it would make two processes of one name")
 
 
 class _NameTaken(Exception):
@@ -263,10 +270,15 @@ HUNG_MOVE_AFTER = 900.0
 # The fates of a lapsed slot whose units move now (`Controller.slot_fate`) — what `leaving` and `gone_servers` read.
 MOVED_FATES = ("move", "hung_moved", "unsure_moved")
 
-# How far ahead of this clock a slot's `until` may be and still be a lease to read: a renewal dates its slot one term
-# ahead (`slot_ttl`, 45 s), and a clock within `FUTURE_TOLERANCE` of this one. Further is a clock ahead (the review's
-# twelfth pass, major 17): `ts` an hour on held a dead server's cameras for an hour, `until` 1e308 "alive" for ever.
-SLOT_AHEAD = 45.0 + 5.0                # the term and `FUTURE_TOLERANCE`
+# A slot's term as its judge counts it: from when it saw the row renewed (`Controller.slot_fate`; the review's thirteenth
+# pass, blocker 4). A renewal dates its slot one term ahead by its holder's clock (`slot_ttl`, 45 s); the `until` it
+# writes is that clock's, and is read for what a page shows — `until` an hour ahead held a dead server's cameras for an
+# hour (the twelfth pass, major 17), one 50 s behind gave a live worker's away.
+SLOT_TERM = 45.0
+# The fates under which a lapsed slot's NAME may be taken by another process (`Worker._held`): its units move with it
+# (`MOVED_FATES`), or its server does not run it any more (`release`) — and `wait`, past `hung_move_after`
+# (`Controller.name_given`).
+NAME_FATES = MOVED_FATES + ("release",)
 
 # How often a resource writes, in the store, that it is there (`Resource.say_door`, `at` on its door row): the second
 # opinion on its silence (`Controller.resource_state`), read where its heartbeat cannot be read fresh.
@@ -329,7 +341,7 @@ def check_schema(vars_, last: int | None = None) -> int:
 # that locks a live process out. It is listed with `schema: null`, `can_raise_to` stays where the store is, and
 # `set_schema` refuses while it runs. A `build` that is not a string (a list: unhashable, and `/schema` sorts a set of
 # them) is `"?"`, as an absent one is.
-def builds(objects, now: float, lost_after: float = 45.0) -> dict[str, dict]:
+def builds(objects, now: float, lost_after: float = 45.0, eyes: "Eyes | None" = None) -> dict[str, dict]:
     def parse(raw: bytes) -> dict:                    # a worker's or a resource's: the three fields this reads, checked
         d = dict(json.loads(raw))
         try:
@@ -346,7 +358,12 @@ def builds(objects, now: float, lost_after: float = 45.0) -> dict[str, dict]:
         raw = objects.get(key)
         d = parse_heartbeat(key, raw, parse) if raw else None
         if d is not None:
-            out[heartbeat_owner(key)] = {**d, "live": is_live(key.split("/", 1)[0], d["ts"], now, lost_after)}
+            # Live by the judge's eyes where it has them — changed within `lost_after` of its clock (the review's
+            # thirteenth pass, blocker 4): `set_schema` refused nothing while a live build's clock ran 50 s behind
+            sub = key.split("/", 1)[0]
+            live = (eyes.fresh(key, d["ts"], lost_after, d["ts"], sub) if eyes is not None
+                    else is_live(sub, d["ts"], now, lost_after))
+            out[heartbeat_owner(key)] = {**d, "live": live}
     return out
 
 
@@ -425,6 +442,80 @@ def is_live(sub: str, ts: float, now: float, lost_after: float) -> bool:
     if live and lost_after <= SKEW_MIN_WITHIN and skew < SKEW_MIN.get(sub, 0.0):
         SKEW_MIN[sub] = skew
     return live
+
+
+# -- FRESHNESS BY CHANGE, ON THE JUDGE'S CLOCK (the review's thirteenth pass, blocker 4; the owner's decision of 4 Oct) --
+# `is_live` compares two machines' clocks, and `FUTURE_TOLERANCE` is all the slack it has. Every "is it still there?"
+# that moves something, gives a name away or lets a server go was asked so: a resource's `ts`, its door row's `at`, a
+# slot's `until`, a worker's `ts`. A server whose clock ran 6…30 s ahead or 50 s behind had a live worker's cameras
+# carried off at 10 s, a hung one's given a second writer at 10 s instead of 900, and a live server ahead by 30 s was
+# decommissioned (`n3`, `n4`, `n6`, `n7`, reproduced by runs). The judge now asks whether what it reads has CHANGED, and
+# how long it has stood still by ITS OWN clock: a heartbeat's `ts` and a door row's `at` are tokens that change with
+# every write — never times — and a slot's term runs from when the judge saw it renewed. A thing the judge has never
+# seen before is taken as just changed: a controller started a minute ago waits a window out before it calls anything
+# silent, rather than believe a writer's clock. The writer's time is read for two things only: the skew, when a new
+# token is first seen (`SKEW_MAX`/`SKEW_MIN` on `/metrics`, `clock.skew` in the journal past `SKEW_ALARM`), and what a
+# page shows. Every server should still run NTP; nothing here depends on it.
+#
+# Judged by a monotonic clock in a process (a wall clock stepped by NTP would age everything at once); a test that
+# drives its own wall drives this too (`judge_clock`).
+SKEW_ALARM = (FUTURE_TOLERANCE, 15.0)    # ahead, behind: past either a writer's clock is said (`Controller.say_skews`)
+
+
+def judge_clock(wall):
+    """The clock freshness is measured by: monotonic, unless the caller drives its own wall (a test)."""
+    return time.monotonic if wall is time.time else wall
+
+
+class Eyes:
+    """When this judge first saw each thing as it is now, by its own clock."""
+
+    def __init__(self, clock, wall=time.time):
+        self.clock, self.wall = clock, wall
+        self.born = clock()                       # what it has watched since: a judge started a minute ago saw a minute
+        self._seen: dict[str, tuple[object, float]] = {}
+        self._lock = threading.Lock()
+        # The writer's clock against this one, as last seen when a token changed: `{key: ts − wall}`. A new token is
+        # read up to a beat and a pass after it was written, so the number is a little behind; ahead is ahead.
+        self.skews: dict[str, float] = {}
+
+    def since(self, key: str, token, ts=None, sub: str | None = None) -> float:
+        """When `key` was first seen holding `token`, by this judge's clock. `ts` — the writer's time — and `sub`: for
+        the skew only, counted where the token is new."""
+        now = self.clock()
+        with self._lock:
+            prev = self._seen.get(key)
+            if prev is not None and prev[0] == token:
+                return prev[1]
+            self._seen[key] = (token, now)
+        # …and only a CHANGE seen tells of the writer's clock: the first sight of a key may be a token written an hour
+        # ago by a process long dead, and its `ts` says nothing of any clock.
+        if prev is not None and ts is not None and sub is not None:
+            with contextlib.suppress(TypeError, ValueError, OverflowError):
+                skew = float(ts) - self.wall()
+                if skew == skew:                                  # a NaN says nothing of a clock
+                    self.skews[key] = skew
+                    if skew > SKEW_MAX.get(sub, 0.0):
+                        SKEW_MAX[sub] = skew
+                    if skew < SKEW_MIN.get(sub, 0.0):
+                        SKEW_MIN[sub] = skew
+        return now
+
+    def age(self, key: str, token, ts=None, sub: str | None = None) -> float:
+        """How long `key` has stood still at `token`, by this judge's clock."""
+        return max(0.0, self.clock() - self.since(key, token, ts, sub))
+
+    def fresh(self, key: str, token, within: float, ts=None, sub: str | None = None) -> bool:
+        """`key` changed within `within` seconds of this judge's clock."""
+        return self.age(key, token, ts, sub) <= within
+
+    def wall_of(self, t: float) -> float:
+        """A moment of this judge's clock as its wall clock reads it — for a page."""
+        return self.wall() - (self.clock() - t)
+
+    def watched(self) -> float:
+        """How long this judge has been watching."""
+        return max(0.0, self.clock() - self.born)
 
 
 # The one row that says which server is going away for a while. It is the platform's, not a subsystem's —
@@ -688,6 +779,25 @@ def published_hung_limit(objects, sub: "Subsystem") -> float:
     return number(f"{key}#hung_move_after", said, float, HUNG_MOVE_AFTER)
 
 
+# …AND ITS VERDICT ON THE NAMES (the review's thirteenth pass, blocker 4): the slots whose name another process may take
+# now, each by the revision of the row the controller judged (`Controller.names_given`). The controller has watched the
+# rows change for as long as it has run; a process looking for a name has just started, has seen nothing change, and
+# would have to believe the holder's clock to call its slot lapsed. A name is taken only where this says so, at the very
+# revision read — a holder that renewed since is a revision past it. No report, a store that does not answer, a field
+# that does not read: no name is given (`Worker._held`).
+def published_names(objects, sub: "Subsystem", field: str = "names_given") -> dict | None:
+    """`{worker: rev}` as the controller of `sub` said it in its last pass report — None when it cannot be read.
+    `field="fates"`: its verdict on every slot that stopped renewing (`Controller.fates_said`)."""
+    key = f"{sub.name}/{CONTROLLER_PASS}"
+    try:
+        raw = objects.get(key)
+        rep = json.loads(raw) if raw else {}
+    except (*PARSE_ERRORS, OSError):
+        return None
+    said = rep.get(field) if isinstance(rep, dict) else None
+    return said if isinstance(said, dict) else None
+
+
 # What one worker should run: the row at `<name>/workers/<worker>`.
 # - `worker` — the slot name.
 # - `units` — the subsystem's unit ids as strings; the platform does not know what they are.
@@ -752,12 +862,22 @@ class Heartbeat:
     def to_bytes(self) -> bytes:
         return json.dumps({"worker": self.worker, "ts": self.ts, "status": self.status, **self.extra}).encode()
 
-    # The inverse; everything that is not `worker`/`ts`/`status` lands in `extra`.
+    # The inverse; everything that is not `worker`/`ts`/`status` lands in `extra` — and a checksum of the bytes read,
+    # for whoever judges by change (`token`).
     @classmethod
     def from_bytes(cls, raw: bytes) -> "Heartbeat":
+        import zlib
         d = json.loads(raw)
         extra = {k: v for k, v in d.items() if k not in ("worker", "ts", "status")}
-        return cls(d["worker"], float(d["ts"]), list(d.get("status", [])), extra)
+        hb = cls(d["worker"], float(d["ts"]), list(d.get("status", [])), extra)
+        hb.crc = zlib.crc32(raw)
+        return hb
+
+    # What a judge compares to tell that a heartbeat CHANGED (`Eyes`; the review's thirteenth pass, blocker 4): its `ts`
+    # and its bytes — a heartbeat written again under the same `ts` (a clock that did not move) is still a new one.
+    @property
+    def token(self) -> tuple:
+        return self.ts, self.__dict__.get("crc")
 
 
 # A worker's name as a row: who holds it, until when (wall clock), and whether the last holder let go on
@@ -990,6 +1110,9 @@ class Controller:
     def __init__(self, sub: Subsystem, vars_: Variables, objects: ObjectStore, wall=time.time):
         self._pass_local = threading.local()
         self.sub, self.vars, self.objects, self.wall = sub, vars_, objects, wall
+        # What this controller has seen change, and when, by its own clock (`Eyes`; the review's thirteenth pass,
+        # blocker 4): how long a heartbeat, a slot or a resource's row has stood still — never a writer's timestamp.
+        self.eyes = Eyes(judge_clock(wall), wall)
         check_schema(vars_)                       # a build older than the store does not run at all
 
     # The stores — or, inside `one_pass` on this thread, the pass's reads of them. Assigning sets the store itself.
@@ -1055,9 +1178,10 @@ class Controller:
         """Which workers exist: those that heartbeat recently. Never a list
         the controller keeps — a fact it reads."""
         out = {}
-        now = self.wall()
         for hb in self._heartbeats():
-            if is_live(self.sub.name, hb.ts, now, max_age):
+            # …by whether its heartbeat CHANGED within `max_age` of this controller's clock (`Eyes`; the thirteenth pass,
+            # blocker 4): a worker whose clock runs behind is not taken for gone, nor one ahead for alive
+            if self.eyes.fresh(self.sub.heartbeat_key(hb.worker), hb.token, max_age, hb.ts, self.sub.name):
                 out[hb.worker] = hb
         return out
 
@@ -1181,7 +1305,7 @@ class Controller:
     # machine you forgot to upgrade.
     def set_schema(self, version: int) -> dict:
         now = self.wall()
-        behind = {n: b for n, b in builds(self.objects, now).items()
+        behind = {n: b for n, b in builds(self.objects, now, eyes=self.eyes).items()
                   if b["live"] and (b["schema"] is None or b["schema"] < version)}   # not known: behind any (`builds`)
         if behind:
             known = [b["schema"] for b in behind.values() if b["schema"] is not None]
@@ -1227,11 +1351,14 @@ class Controller:
                 # A row that does not parse is the slot most wanted gone, and was a dead end (the sixth pass, the
                 # follow-up): written over, whole — released, nobody's.
                 done[0] = True
-                return Slot(worker, "", now, True, 0).to_items()
+                said = items if isinstance(items, dict) else {}
+                return Slot(worker, "", now, True, 0, server=str(said.get("server") or "")).to_items()
             if s.released or now <= s.until + SLOT_LOST_AFTER:
                 return None                           # released already, or renewed since it was judged
             done[0] = True
-            return Slot(worker, s.holder, s.until, True, s.gen).to_items()
+            # …the row whole, its `server` with it (the review's thirteenth pass, «Вопросы» 1): rebuilt without it, a
+            # freed slot no longer said where its holder ran — what a fresh controller reads where the heartbeat is gone
+            return Slot(worker, s.holder, s.until, True, s.gen, server=s.server).to_items()
         self.write(key, mutate)
         return done[0]
 
@@ -1285,9 +1412,13 @@ class Controller:
     # lapsed past the margin, no heartbeat to read, the resource's row older than `SLOT_LOST_AFTER` — two silences, and
     # the units move. A slot left in `wait` or `unsure` with units on it is counted and said (`unjudged`).
     #
-    # A CLOCK AHEAD (the review's twelfth pass, major 17): a slot dated further ahead than one term (`SLOT_AHEAD`) is no
-    # lease to read — judged as a row that does not parse, below — and a heartbeat dated past `FUTURE_TOLERANCE` is not
-    # "heard" (`is_live`, which counts the skew on `/metrics`).
+    # WHOSE CLOCK (the review's thirteenth pass, blocker 4; the owner's decision of 4 Oct). Every "still there?" here is
+    # asked of what THIS controller has seen change, by its own clock (`Eyes`): the slot alive for a term (`SLOT_TERM`)
+    # from when it saw the row renewed — not until the `until` its holder's clock wrote; the worker heard when its
+    # heartbeat changed within `SLOT_LOST_AFTER`; the resource by its heartbeat and its door row the same way
+    # (`resource_state`). A clock ahead holds nothing (`until` an hour on held a dead server's cameras for an hour — the
+    # twelfth pass, major 17) and a clock behind takes nothing away (one 50 s behind had a live worker's cameras moved at
+    # 10 s). The writers' times are counted as a skew where a change is first seen, and said (`say_skews`).
     #
     # A SLOT ROW THAT DOES NOT PARSE (`slot` None; the product's DZ) is not a dead worker: no lease to read, so it is
     # "not known", and moves only on two words — its worker's heartbeat silent past `SLOT_LOST_AFTER`, AND its server's
@@ -1302,25 +1433,23 @@ class Controller:
         "unsure_moved" (see above); `slot` None: a row that does not parse — no lease to read, the heartbeat and the
         server decide. `hung_after`: the controller's limit as it published it, for whoever judges in another process
         (`published_hung_limit`)."""
-        now = self.wall()
+        now = self.eyes.clock()                       # this controller's clock: what everything below is measured by
         limit = self.hung_move_after if hung_after is None else hung_after
         stored_server = slot.server if slot is not None else ""
-        if slot is not None and slot.until - now > SLOT_AHEAD:
-            is_live(self.sub.name, slot.until - SLOT_AHEAD, now, SLOT_LOST_AFTER)   # the skew, counted where it is judged
-            slot = None                               # a clock ahead: no lease to read (major 17)
-        if slot is not None and slot.until > now:
-            return "alive", "", f"{worker} holds its name for another {int(slot.until - now) + 1} s"
+        until = self._slot_end(worker, slot) if slot is not None else None
+        if until is not None and until > now:
+            return "alive", "", f"{worker} holds its name for another {int(until - now) + 1} s"
         hb = self._heard(worker)                      # read once: the shortened move asks where it ran, the rest below
         dead = self._dead_on(worker, hb, slot.holder) if slot is not None else None
         if dead:
             return "move", dead, (f"{worker}'s process on {dead} is not running: moved when its slot ran out, its "
                                   f"server's resource saying so")
-        if slot is not None and now <= slot.until + SLOT_LOST_AFTER:
-            return "alive", "", (f"{worker} stopped renewing its name {int(now - slot.until)} s ago; what it started "
-                                 f"may still be writing for {int(slot.until + SLOT_LOST_AFTER - now) + 1} s more")
-        ts = None if hb is None else number(f"{self.sub.heartbeat_key(worker)}#ts", hb.ts, float, None)
-        if ts is not None and is_live(self.sub.name, ts, now, SLOT_LOST_AFTER):
-            return "alive", "", f"{worker} was heard from {max(0, int(now - ts))} s ago"
+        if until is not None and now <= until + SLOT_LOST_AFTER:
+            return "alive", "", (f"{worker} stopped renewing its name {int(now - until)} s ago; what it started "
+                                 f"may still be writing for {int(until + SLOT_LOST_AFTER - now) + 1} s more")
+        heard = self._heard_ago(worker, hb)
+        if heard is not None and heard <= SLOT_LOST_AFTER:
+            return "alive", "", f"{worker} was heard from {int(heard)} s ago"
         server = hb.extra.get("server") if hb is not None else None
         if (not isinstance(server, str) or not server) and stored_server:
             server = stored_server                    # its heartbeat gone (with its server): where its slot says it ran
@@ -1391,18 +1520,33 @@ class Controller:
             return None                               # the slot's own holder still holds its lock: not dead, whatever the name
         return server if said is not None and worker in said[0] and worker not in said[1] else None
 
-    # Since when a hung worker has been hung — or an unsure one not judged: its slot's `until` — or, for a row that does
-    # not parse, its last heartbeat.
+    # The end of a slot's term as this controller counts it: `SLOT_TERM` past when it first saw the row as it is now —
+    # renewed, or claimed (`Eyes`; the thirteenth pass, blocker 4). By this controller's clock (`eyes.clock`).
+    def _slot_end(self, worker: str, slot: "Slot") -> float:
+        token = (slot.holder, slot.until, slot.gen, slot.released)
+        return self.eyes.since(self.sub.slot_key(worker), token) + SLOT_TERM
+
+    # How long ago this controller saw the worker's heartbeat change, or None when there is none to read.
+    def _heard_ago(self, worker: str, hb) -> float | None:
+        if hb is None:
+            return None
+        key = self.sub.heartbeat_key(worker)
+        ts = number(f"{key}#ts", hb.ts, float, None)
+        return None if ts is None else self.eyes.age(key, hb.token, ts, self.sub.name)
+
+    # Since when a hung worker has been hung — or an unsure one not judged: its slot's end as this controller counts it
+    # (`_slot_end`) — or, for a row that does not parse, since its heartbeat stood still. By this controller's clock
+    # (`eyes.clock`; a page shows it through `eyes.wall_of`).
     def hung_since(self, worker: str, slot: "Slot | None") -> float:
         if slot is not None:
-            return slot.until
-        hb, now = self._heard(worker), self.wall()
-        ts = None if hb is None else number(f"{self.sub.heartbeat_key(worker)}#ts", hb.ts, float, None)
-        if ts is not None and ts <= now + FUTURE_TOLERANCE:
-            return ts
-        # No heartbeat, or one from a clock ahead (major 17): since this controller first called it hung — so the
-        # limit still comes, counted from a restart of the controller at the latest.
-        return self.__dict__.setdefault("_hung_first", {}).setdefault(worker, now)
+            return self._slot_end(worker, slot)
+        hb = self._heard(worker)
+        heard = self._heard_ago(worker, hb)
+        if heard is not None:
+            return self.eyes.clock() - heard
+        # No heartbeat: since this controller first called it hung — so the limit still comes, counted from a restart
+        # of the controller at the latest.
+        return self.__dict__.setdefault("_hung_first", {}).setdefault(worker, self.eyes.clock())
 
     # How long a hung worker's units stay with it, past its slot's `until`, before they move anyway (`slot_fate`): fifteen
     # minutes, as the product's `HUNG_MOVE_AFTER` — time for the server's supervisor to see a process that has stopped
@@ -1435,13 +1579,20 @@ class Controller:
     # process cannot reach, a lagging copy) — `"unreachable"`, which moves nothing; stale too, or the heartbeat stale with
     # no row, `"silent"`; neither ever heard, `"unknown"`. A controller started after the server died finds the row, and
     # sees the silence the controller before it heard.
+    #
+    # …EACH BY WHETHER IT CHANGED, ON THIS CONTROLLER'S CLOCK (the review's thirteenth pass, blocker 4): the heartbeat's
+    # `ts` and the row's `at` are the resource's clock, and were compared with this one — a resource 6 s ahead or 50 s
+    # behind was "silent" while it beat, and a live worker's cameras went. Now they are tokens: changed within
+    # `lost_after`, the resource is there. The row is looked at every time, so a silence is timed from its last change.
     def resource_state(self, server: str, lost_after: float = 45.0) -> str:
-        now = self.wall()
+        from .resource import RESOURCES
         hb = self._resources().get(server)
-        if hb is not None and is_live("platform", float(hb["ts"]), now, lost_after):
-            return "live"
         at = self._said_alive(server)
-        if at is not None and -FUTURE_TOLERANCE <= now - at <= lost_after:
+        door = self._door_age(server, at) if at is not None else None     # looked at whatever the heartbeat says
+        if hb is not None and self.eyes.fresh(f"{RESOURCES}/{server}/heartbeat", hb["ts"], lost_after, hb["ts"],
+                                              "platform"):
+            return "live"
+        if door is not None and door <= lost_after:
             return "unreachable"
         # A heartbeat that is there and does not parse (`ts: NaN`) is a resource known, and not live: "silent" — it was
         # "unknown", and `wait` for ever (the review's twelfth pass, minor). Its door row, when fresh, said otherwise above.
@@ -1449,8 +1600,9 @@ class Controller:
             return "unknown"
         return "silent"
 
-    # When the resource on `server` last said in the store that it is there (`at` on its door row), or None. Read only
-    # where its heartbeat is not fresh — once a pass for each such server.
+    # When the resource on `server` last said in the store that it is there (`at` on its door row), or None. Read with
+    # every look at the server, fresh heartbeat or not — once a pass for each: a silence is timed from the row's last
+    # change (`resource_state`; the thirteenth pass).
     def _said_alive(self, server: str) -> float | None:
         from .resource import DOORS
         key = f"{DOORS}/{server}"
@@ -1463,6 +1615,11 @@ class Controller:
             at = (items or {}).get("at") if isinstance(items, dict) else None
             return None if at is None else number(f"{key}#at", at, float, None)
         return self._per_pass(key, read, "alive", rows=True)
+
+    # How long the resource's row has said the same `at`, by this controller's clock.
+    def _door_age(self, server: str, at: float) -> float:
+        from .resource import DOORS
+        return self.eyes.age(f"{DOORS}/{server}", at, at, "platform")
 
     # What the resource on `server` says of THIS subsystem's workers (`workers`, `running` in its heartbeat, from the
     # processes registered with it — `resource.workers_here`): `(workers, running)`, or None when it does not say.
@@ -1503,12 +1660,91 @@ class Controller:
     # Every slot that stopped renewing, and what becomes of it: `{worker: (fate, server, why)}` for every slot that is
     # held and not released — a row that does not parse too, judged on its heartbeat and its server. Read once a pass.
     def fates(self) -> dict[str, tuple[str, str, str]]:
+        return {w: j[:3] for w, j in self._judged_slots().items()}
+
+    # A WRITER'S CLOCK OFF THIS ONE IS SAID, AND MOVES NOTHING (the review's thirteenth pass, blocker 4; the owner's decision
+    # of 4 Oct). Nothing here is judged by a writer's time any more (`Eyes`); what it is still good for is to say that a
+    # server's clock is wrong — the person who reads `/metrics` and the journal mends NTP. Past `SKEW_ALARM` (ahead by
+    # `FUTURE_TOLERANCE`, behind by fifteen seconds: a change is first seen up to a beat and a pass after it was written,
+    # so "behind" carries that much on top), `clock.skew` once an episode per writer; `{writer: seconds}` is returned
+    # for the pass report (`clock_skew`).
+    def say_skews(self) -> dict[str, float]:
+        ahead, behind = SKEW_ALARM
+        off = {k: round(v, 1) for k, v in sorted(self.eyes.skews.items()) if v > ahead or v < -behind}
+        said = self.__dict__.setdefault("_skew_said", set())
+        for key in sorted(set(off) - said):
+            way = f"{off[key]:+.0f} s — ahead of" if off[key] > 0 else f"{off[key]:+.0f} s — behind"
+            log.error("%s: the clock that writes %s is %s this controller's: nothing is judged by it, but whatever "
+                      "reads its times reads them wrong — mend NTP on that server", self.sub.name, key, way)
+            self.journal.say("clock.skew", ALARM, of=self.sub.name, writer=key, skew=off[key],
+                             why=(f"the clock that writes {key} is {way} this controller's; nothing moves for it "
+                                  f"(freshness is judged by change), but its times are wrong where they are shown — "
+                                  f"mend NTP on that server"))
+        said.clear(); said.update(off)
+        return off
+
+    # A refusal from a judge that has not watched a silence's length yet, said so (the review's thirteenth pass, blocker
+    # 4): it takes what it has never seen as just changed, so a console started a moment ago says "heard 0 s ago" of a
+    # server that went an hour ago — true of what it saw, and the operator needs to know to ask again.
+    def not_watched_yet(self, refusal: str | None) -> str | None:
+        watched = self.eyes.watched()
+        if refusal is None or watched >= SLOT_LOST_AFTER:
+            return refusal
+        return (f"{refusal} (this process started watching {int(watched)} s ago, and a silence is told once nothing has "
+                f"changed for {int(SLOT_LOST_AFTER)} s by its own clock — ask again in {int(SLOT_LOST_AFTER - watched) + 1} s)")
+
+    # EVERYTHING IT JUDGES BY, LOOKED AT NOW (the review's thirteenth pass, blocker 4): every heartbeat, every slot, and
+    # the resource and door row of every server it knows of — so its eyes (`Eyes`) see what changed since the last look,
+    # and a silence is timed from the last change and not from the first time this controller happened to ask. The pass
+    # looks first (`SpecController.pass_once`); a test or a page that judges between passes calls it as the pass would.
+    def look(self) -> None:
+        with one_pass(self):
+            seen = self.workers_seen(max_age=1e12)
+            servers = set(self._resources())
+            servers |= {hb.extra["server"] for hb in seen.values() if isinstance(hb.extra.get("server"), str)}
+            servers |= {s.server for s in self.slots().values() if s.server}
+            for server in sorted(servers):
+                self.resource_state(server)
+            self._judged_slots()
+
+    # …and the slots whose NAME another process may take now, by the revision of the row so judged: `{worker: rev}`.
+    # A name goes with its units: given where they move (`NAME_FATES`) — and under `wait` past `hung_move_after` from the
+    # slot's end, as `unsure` gives it (the owner's decision of 4 Oct: `wait` keeps the name, as `unsure` does, until the
+    # limit). Said in the pass report (`names_given`), and a process looking for a name takes only one said there AT
+    # THE REVISION it reads (`Worker._held`): the controller watches the rows change all the time, a process that has just
+    # started has seen nothing change yet (the review's thirteenth pass, blocker 4).
+    def names_given(self) -> dict[str, object]:
+        return {w: j[3] for w, j in self._judged_slots().items() if j[4]}
+
+    # …and every slot that stopped renewing, as this controller judged it: `{worker: {fate, why, rev, since}}` — `since`
+    # on its wall, for a page (`Mount._judged` shows the controller's verdict at the revision it reads, rather than one of
+    # its own eyes that have watched nothing yet).
+    def fates_said(self) -> dict[str, dict]:
+        out = {}
+        for w, (fate, server, why, rev, _, slot) in self._judged_slots().items():
+            if fate == "alive":
+                continue
+            out[w] = {"fate": fate, "server": server, "why": why, "rev": rev,
+                      "since": round(self.eyes.wall_of(self.hung_since(w, slot)), 3)}
+        return out
+
+    # …said where every process of the subsystem reads it (`published_names`): `SpecController.pass_once` writes it in its
+    # report; a controller with no pass of its own (the platform's lessons) says it with this, its limit beside it.
+    def publish_names(self) -> dict:
+        rep = {"ts": self.wall(), "hung_move_after": self.hung_move_after, "names_given": self.names_given(),
+               "fates": self.fates_said()}
+        self.objects.put(f"{self.sub.name}/{CONTROLLER_PASS}", json.dumps(rep).encode())
+        return rep
+
+    def _judged_slots(self) -> dict[str, tuple]:
         def read():
             out = {}
             prefix = self.sub.name + "/slots/"
+            limit = self.hung_move_after
             for path in sorted(self.vars.list(prefix)):
                 worker = path[len(prefix):]
-                s = read_slot(path, worker, stored(self.vars, path, SLOTS)[0])
+                items, rev = stored(self.vars, path, SLOTS)
+                s = read_slot(path, worker, items)
                 if s is not None and (s.released or not s.holder):
                     continue
                 fate, server, why = self.slot_fate(worker, s)
@@ -1516,7 +1752,8 @@ class Controller:
                     hb = self._heard(worker)
                     said = hb.extra.get("server") if hb is not None else None
                     server = said if isinstance(said, str) else ""
-                out[worker] = (fate, server, why)
+                gives = fate in NAME_FATES or (fate == "wait" and self.eyes.clock() - self.hung_since(worker, s) > limit)
+                out[worker] = (fate, server, why, rev, gives, s)
             return out
         return self._per_pass(self.sub.name + "/slots/", read, "fates", rows=True)
 
@@ -1554,15 +1791,20 @@ class Controller:
     # third sign as every slot judgement here does; the product asks only that the slot is not being renewed. `(refusal, warning)`: the refusal names
     # the sign, in words; the warning is for a server whose resource was never heard — it passes, on the operator's word.
     def decommission_refusal(self, server: str) -> tuple[str | None, str | None]:
-        now = self.wall()
+        from .resource import RESOURCES
         hb = self._resources().get(server)
         state = self.resource_state(server, SLOT_LOST_AFTER)
+        # …how long ago, by what this controller saw change (the review's thirteenth pass, blocker 4): a live server whose
+        # clock ran 30 s ahead was decommissioned — its resource's `ts` read as "not live" by this clock
         if hb is not None and state == "live":
-            return (f"{server} answers: its resource was heard {max(0, int(now - float(hb['ts'])))} s ago — take the "
-                    f"server out of service and switch it off first"), None
+            ago = self.eyes.age(f"{RESOURCES}/{server}/heartbeat", hb["ts"])
+            return (f"{server} answers: its resource was heard {int(ago)} s ago — take the server out of service and "
+                    f"switch it off first"), None
         if state == "unreachable":                    # its heartbeat cannot be read here, but it writes to the store
-            return (f"{server} answers: its resource said it is there {max(0, int(now - (self._said_alive(server) or now)))}"
-                    f" s ago — take the server out of service and switch it off first"), None
+            at = self._said_alive(server)
+            ago = self._door_age(server, at) if at is not None else 0.0
+            return (f"{server} answers: its resource said it is there {int(ago)} s ago — take the server out of service "
+                    f"and switch it off first"), None
         for w in self.workers_on(server):
             key = self.sub.slot_key(w)
             items = stored(self.vars, key, SLOTS)[0]
@@ -1578,6 +1820,7 @@ class Controller:
 
     def decommission(self, server: str, by: str, why: str = "") -> dict:
         refusal, warning = self.decommission_refusal(server)
+        refusal = self.not_watched_yet(refusal)
         if refusal:
             raise DecommissionRefused(refusal)
         row = {"by": str(by), "at": str(self.wall()), "why": str(why or "")[:500]}
@@ -1808,6 +2051,9 @@ class Worker:
         self._hold_lock = threading.RLock()
         self._hold_seen: dict[str, tuple[int, float]] = {}
         self._slot_seen: dict[str, tuple[int, float]] = {}   # …and each garbled slot row's (`_garbled_stale`)
+        # What this process has seen change, and when, by its own clock (`Eyes`; the review's thirteenth pass, blocker 4):
+        # whose heartbeat is fresh enough to read a camera from — a holder, a recorder — by change, not by its writer's `ts`
+        self.eyes = Eyes(clock, wall)
         self._presence = None                     # the lock this process holds on its server (`present`)
         self._presence_unsaid: str | None = None  # why its name could not be written beside the lock, while it cannot
         # The slot row is renewed from two threads now — the loop, and the stand-in while a step hangs — and one
@@ -1847,33 +2093,38 @@ class Worker:
     SLOT_PREFIX = "w"                             # what a slot this worker has to MAKE is called: `<prefix>-<n>`
     server: str | None = None                     # the server it runs on, when its subsystem says (`_claim_slot` asks it)
 
-    # Whether this lapsed slot's name stays its holder's, as the controller judges it (`Controller.slot_fate`): asked
-    # through a controller's eyes over this worker's stores — the rule stays in one place.
+    # Whether a held slot's name stays its holder's — the controller's verdict, at the revision this process reads
+    # (`published_names`): the rule stays in one place, and so does the judge.
     #
-    # …AND BY THE CONTROLLER'S LIMIT, NOT THIS PROCESS'S DEFAULT (the product's alignment of the owner's decision on hung
-    # workers): the eyes were a controller built here, with `HUNG_MOVE_AFTER` as compiled in, while the controller read
-    # its own from its environment. A controller told an hour let a spare take a hung worker's name — and its cameras — at
-    # fifteen minutes: a second writer while the controller still held the units back; one told a minute left the spare
-    # waiting fourteen minutes after the units had moved. The controller says its limit in its pass report
-    # (`<sub>/controller/pass`, `hung_move_after`; the object it alone writes, `acl_objects_controller`), and the spare
-    # judges by that (`hung_limit`) — one limit, one rule, one verdict. No report yet, or a word in it: the default.
+    # It was asked through a controller built here, over this worker's stores (the twelfth pass) — and by the controller's
+    # limit, not this process's default (the product's alignment: one limit, one rule, one verdict). Not before the units
+    # would move (the twelfth pass, blocker 2): `alive`, `hung` and `unsure` keep the name; `move`, `hung_moved`,
+    # `unsure_moved` and `release` give it with the units.
     #
-    # …AND NOT BEFORE THE UNITS WOULD MOVE (the review's twelfth pass, blocker 2). Asked was only "hung?" — and for the
-    # 45 s after a hung worker's slot ran out the controller says "alive" (the margin: what it started may still write),
-    # so a nameless process took the name, and the cameras with it, at +46…+89 s: two writers. A name goes with its
-    # units, so it is given when the controller would move them, and not before: `alive`, `hung` and `unsure` keep it;
-    # `hung_moved` and `unsure_moved` — past the controller's limit, its units moving — give it with them.
-    # `wait` gives it, as before the resource said anything (an older build, a worker that never registered). And a
-    # question that cannot be asked — a store that raises — is "not known": the name stays (it was "not hung").
-    def _held(self, name: str, slot: "Slot | None") -> bool:
+    # …AND `wait` KEEPS IT, as `unsure` does, until the controller's limit (the review's thirteenth pass, blocker 2; the
+    # owner's decision of 4 Oct). `wait` gave it "as before the resource said anything": a worker whose `present()` failed
+    # (EACCES, ENOSPC on the events tree) and went on working is `wait` — its cameras held back by the controller, and a
+    # spare took the name and the cameras with it at +100 s, two writers (`n9_unregistered_hung_name`).
+    #
+    # …AND BY THE CONTROLLER'S EYES, NOT THIS PROCESS'S (the thirteenth pass, blocker 4). A controller built here at the
+    # moment of the claim has seen nothing change: to call a slot lapsed it had to believe the holder's `until`, a clock
+    # of another machine — one 50 s behind gave a live holder's name away. The controller that has watched the rows says
+    # in its pass report which names are given, at which revision (`Controller.names_given`): taken only there, and only
+    # if the row is still that revision. No report, no word on this name, a store that raises: the name stays.
+    def _held(self, name: str, rev) -> bool:
         try:
-            ctl = Controller(self.sub, self.vars, self.objects, wall=self.wall)
-            fate = ctl.slot_fate(name, slot, hung_after=published_hung_limit(self.objects, self.sub))[0]
+            given = published_names(self.objects, self.sub)
         except Exception as e:                    # noqa: BLE001 — whatever it is, nobody can say the holder is gone
             log.warning("%s: whether %s's holder is gone cannot be told (%s): its name is left alone", self.instance,
                         name, e)
             return True
-        return fate in ("alive", "hung", "unsure")
+        return given is None or name not in given or str(given[name]) != str(rev)
+
+    # Whether `holder` ran on THIS box, by both names (`runtime.box_of`). A name that says no box is not this box's: whose
+    # machine it is cannot be read from it (the review's thirteenth pass, blocker 3 — an `INSTANCE_ID` took always).
+    def _on_this_box(self, holder: str) -> bool:
+        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
+        return here is not None and there is not None and here == there
 
     # A garbled slot row is stale when this process has watched it stand still — the same revision — for the slot's term
     # and `HOLD_SKEW`, by its own monotonic clock (`_hold_stale`'s rule, for the row nobody can read).
@@ -1989,14 +2240,16 @@ class Worker:
             else:
                 # …but not the name of a worker whose units the controller would not move yet (`Controller.slot_fate`,
                 # the one rule; `_held`): hung, within the margin, or not known — a spare taking its name would take its
-                # units with it, the second holder the controller refuses to make by a move.
-                lapsed = sorted((n for n, s in known.items() if s.lapsed(now) and not self._held(n, s)),
+                # units with it, the second holder the controller refuses to make by a move. Which names those are is
+                # the controller's word at the revision read (the thirteenth pass, blocker 4), not this process's reading
+                # of a holder's `until`: a held row is a candidate where the controller gives its name, and only there.
+                lapsed = sorted((n for n, s in known.items() if self._given(n, s, rows[n][1])),
                                 key=lambda n: known[n].until)
-                free = sorted((n for n, s in known.items() if s.claimable(now) and not s.lapsed(now)), key=slot_number)
+                free = sorted((n for n, s in known.items() if self._free(s)), key=slot_number)
                 # …and a garbled row stood still for a term, the same way (the review's twelfth pass, major 4): it stands
                 # still when its holder is hung, too, and was taken past `slot_fate` with the hung worker's units.
                 free += sorted((n for n in names if n not in known and rows[n][0] and self._garbled_stale(n, rows[n][1])
-                                and not self._held(n, None)), key=slot_number)
+                                and not self._held(n, rows[n][1])), key=slot_number)
                 # A NEW slot is named after the kind of worker taking it (`SLOT_PREFIX`: `r` a recorder, `g` a
                 # gateway, `a` an evaluator — the letters a process given a name already had), not `w-` for
                 # everybody: a recorder that had to make a slot looked like a camera worker in every list, every
@@ -2008,25 +2261,39 @@ class Worker:
                 items, idx = stored(self.vars, prefix + cand, SLOTS)
                 cur = read_slot(prefix + cand, cand, items)
                 if cur is None:
-                    if prefer is None and not (items and self._garbled_stale(cand, idx) and not self._held(cand, None)):
+                    if prefer is None and not (items and self._garbled_stale(cand, idx) and not self._held(cand, idx)):
                         continue                               # garbled, and not watched standing still for a term — or held
-                    if not steal and items and (not self._garbled_stale(cand, idx) or self._held(cand, None)):
-                        raise _NameTaken(cand, "", 0.0)        # whose it is cannot be read: asked again, taken once it stands still
+                    said = items if isinstance(items, dict) else {}
+                    holder = str(said.get("holder") or "")    # whose it is, when that much of the row still reads
+                    if not steal and items and (not self._garbled_stale(cand, idx) or self._held(cand, idx)):
+                        raise _NameTaken(cand, holder, 0.0)    # whose it is cannot be read: asked again, taken once it stands still
+                    if steal and items and holder != self.instance and not self._on_this_box(holder) \
+                            and self._held(cand, idx):
+                        # …and at a start, by the same rule as a row that reads (the review's thirteenth pass, blocker 3):
+                        # a torn row of a holder on another box, or of a name that says none, is taken where the
+                        # controller gives the name, and not before
+                        refused = self._may_take_by_name(cand, holder, held=True)
+                        self._contend(cand, holder, REFUSED)
+                        raise refused
                     # The runtime named this slot, or nobody has touched its garbled row for a term: taken, written whole
                     # again — under the generation the row still says, if it says one, so a generation is not handed out
                     # twice through a torn row.
-                    cur = Slot(cand, gen=numeric(str((items if isinstance(items, dict) else {}).get("gen", ""))) or 0)
-                if prefer is None and not cur.claimable(now):
+                    cur = Slot(cand, gen=numeric(str(said.get("gen", ""))) or 0)
+                if prefer is None and not (self._free(cur) or self._given(cand, cur, idx)):
                     continue                                   # a preferred slot is taken regardless: the scheduler
                                                                # said this index is mine; the old holder fences on renewal
-                if prefer is not None and cur.holder != self.instance:
-                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._held(cand, cur)):
+                if prefer is not None and cur.holder and cur.holder != self.instance and not cur.released:
+                    if not steal and self._held(cand, idx):
                         raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
-                    if steal and not cur.claimable(now):
-                        refused = self._may_take_by_name(cand, cur.holder)
-                        if refused is not None:
-                            self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
-                            raise refused
+                    # AT A START (the owner's decision of 4 Oct; the review's thirteenth pass, blocker 3): from a holder
+                    # of THIS box, always — the unit is the authority on which process is the current one. From any other
+                    # holder — another box, or a name that says no box — only where the controller gives the name (`_held`):
+                    # the slot's lapse was read by `until` alone, and a process named on box B took a hung worker's name
+                    # and its cameras from box A at +50…+600 s, two writers (`n5_named_takes_hung`).
+                    if steal and not self._on_this_box(cur.holder) and self._held(cand, idx):
+                        refused = self._may_take_by_name(cand, cur.holder, held=cur.claimable(now))
+                        self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
+                        raise refused
                 new = Slot(cand, self.instance, now + self.slot_ttl, False, cur.gen + 1, server=self.server or "")
                 try:
                     self.vars.put(prefix + cand, new.to_items(), cas=idx)
@@ -2047,11 +2314,27 @@ class Worker:
     # take stands only where its reason does: the holder ran on this box; or the holder's name says no box, or this
     # instance's does not (an `INSTANCE_ID`, an allocation's id: a scheduler names them and moves an index between nodes
     # — there the scheduler stays the authority). A live holder on another box is left alone: the refusal, in words.
-    def _may_take_by_name(self, slot: str, holder: str) -> "NameOnAnotherBox | None":
-        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
-        if here is None or there is None or here == there:
+    #
+    # …AND A NAME THAT SAYS NO BOX IS NOT THIS BOX'S (the review's thirteenth pass, blocker 3; the product closed the same):
+    # "the scheduler stays the authority" let an `INSTANCE_ID` take a live holder's name always — whichever node it ran
+    # on. Now a holder is replaced by name only from its own box; any other holder keeps its name until the controller
+    # gives it (`Worker._held`) — a scheduler that moved an index waits out the old holder's slot, which a dead node's
+    # holder gives in a slot's term. `held`: the holder stopped renewing, but the controller has not given the name.
+    def _may_take_by_name(self, slot: str, holder: str, held: bool = False) -> "NameOnAnotherBox | None":
+        if self._on_this_box(holder):
             return None
-        return NameOnAnotherBox(slot, holder, there, socket.gethostname(), here, getattr(self, "NAME_ENV", ""))
+        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
+        return NameOnAnotherBox(slot, holder, there or "", socket.gethostname(), here or runtime.box(os.environ),
+                                getattr(self, "NAME_ENV", ""), held)
+
+    # A slot nobody holds: released, or never held — not an offer, which is a spare's (`_claim_offer`).
+    @staticmethod
+    def _free(s: "Slot") -> bool:
+        return not s.offered() and (s.released or not s.holder)
+
+    # A held slot whose name the controller gives, at the revision read (`_held`).
+    def _given(self, name: str, s: "Slot", rev) -> bool:
+        return bool(s.holder) and not s.released and not self._held(name, rev)
 
     # The box this instance runs on, as its name says it — this machine's when its name says none.
     def _box(self) -> str:

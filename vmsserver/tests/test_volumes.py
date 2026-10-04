@@ -174,8 +174,9 @@ def test_the_same_name_waits_out_a_network_volumes_hold_unless_it_was_let_go():
     assert old.volume_pass() == "s3-main"
     box.wall.advance(5); box.clock.advance(5)
     # A live holder of another box keeps its name now (`NameOnAnotherBox`, the owner's decision of 4 Oct): the other
-    # box's instance gets it once the old one's slot has lapsed by the wall — frozen, renewing nothing.
-    box.wall.advance(old.slot_ttl + 1)
+    # box's instance gets it once the controller gives it — the old one frozen, renewing nothing (the thirteenth pass).
+    from tests.test_rec_volume import _name_given
+    _name_given(box)
     again = _recorder(box, "r-1", "srv-b", instance="box-b:11:bbbbbb")   # the same slot, started on another box
     assert again.volume_pass() == "" and again.hold is None            # not at once: the old one may be writing
     assert old.store is not None and old._may_write_volume(old.store.row)

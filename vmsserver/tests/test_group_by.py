@@ -137,7 +137,11 @@ def test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_no
     """The eleventh review, a minor: the group's worker was looked for among the workers the filters LEFT, so a channel
     the device's worker did not pass — a label given to that channel, the server's row unread this pass — found no
     group and was placed alone on another worker: two sessions to one recorder. The group's worker is looked for in the
-    whole pool now; such a channel waits, and `/unplaceable` says beside whom."""
+    whole pool now; such a channel waits, and `/unplaceable` says beside whom.
+
+    …AND NOT FOR EVER (the review's thirteenth pass, major 17; `dq13_group` U): it waited for good, and no door moves a
+    group by hand. A member the group's worker may not take is a reason to move the group whole: the pass moves ch1 and
+    ch2 onto a worker every channel may go to, with room for all three, and ch3 follows them there."""
     box = Box(); ctl, con = _ctl(box)
     _worker(box, "w-1", "srv-a", labels="vlan:a"); _worker(box, "w-2", "srv-b", labels="vlan:a,vlan:c")
     a = con.create_camera({"name": "ch1", "source": NVR + "1", "labels": "vlan:a"})["id"]
@@ -149,6 +153,10 @@ def test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_no
     assert ctl.placement(c) is None, f"placed alone on {ctl.where(c)}: two sessions to one recorder"
     why = {u["id"]: u.get("why", "") for u in ctl.unplaceable()}
     assert "its device is held on w-1" in why[c], why
+    ctl.pass_once()                                                          # the group moves whole…
+    assert ctl.where(a) == ctl.where(b) == "w-2" and "which w-1 may not take" in ctl.placement(a).reason
+    ctl.pass_once()                                                          # …and the new channel follows it
+    assert ctl.where(c) == "w-2" and ctl.unplaceable() == []
 
 
 def test_a_released_workers_group_goes_whole_to_a_worker_with_room_and_a_rebalance_moves_groups_whole():

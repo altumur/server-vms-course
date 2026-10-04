@@ -51,6 +51,12 @@ def _expired(sub: str) -> None:
     expired[sub] = expired.get(sub, 0) + 1
 
 
+# …and the commands the reaper ended NOT KNOWING whether the device acted (the review's thirteenth pass, minor): the
+# holder that began one (its mark, no outcome) is gone, and what its call did nobody can say. Not "expired" — that is a
+# command never begun — counted apart: `vms_requests_unknown_total`.
+unknown: dict[str, int] = {}
+
+
 # ONE REQUEST ROW THAT DOES NOT PARSE IS THAT REQUEST'S (the review's seventh pass, M2). `valid_until: "soon"` in one
 # `rec/requests/*` row raised out of `record_on_request`, before the rows after it: for seventy-five minutes no
 # recording was made on request for anybody and no finished one was ended (`expire_recordings` shared the call). The
@@ -511,25 +517,57 @@ def _end_command(ctl, key: str, it: dict, idx, now: float) -> bool:
     if now - until < COMMAND_REAP_AFTER:
         return False                                        # its holder's to end, if it has one
     rid = key.rsplit("/", 1)[1]
-    mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
     try:
-        ctl.vars.delete(key, cas=idx)                       # by CAS: a row filed again under the same id is a new one
-    except Exception:                                       # noqa: BLE001 — changed meanwhile, or the store: the next pass
+        mark = ctl.objects.get(f"{ctl.sub.name}/commands/{rid}")     # the holder's mark (`VmsWorker.command_key`)
+    except Exception as e:                                  # noqa: BLE001 — the thirteenth pass: one mark unread ended the walk
+        # Whether its holder began it cannot be read: not known is not "never begun" — the row stands for the next turn,
+        # and the rows after it are looked at (it raised out of the sweep, and no command after it was ended)
+        log.warning("%s: whether command %s was begun cannot be read (%s): left for the next turn", ctl.spec.name, rid, e)
         return False
     try:
         said = json.loads(mark) if mark else None
     except PARSE_ERRORS:
         said = {}
+    # BEGUN AND NOT ANSWERED (the review's thirteenth pass, minor): a holder whose call into the device hangs past the
+    # deadline and the minute was reaped "ended unperformed" while it was still performing — the device may yet act,
+    # and its answer came to a row that was gone. A mark with no outcome whose holder still holds the name it marked
+    # under is that holder's to answer: left standing. Only once the holder is gone — the name another instance's, or
+    # let go — is the row ended, as NOT KNOWN (`unknown`), not as a command never begun.
+    begun = mark is not None and not (isinstance(said, dict) and said.get("outcome"))
+    if begun and _holder_still_there(ctl, said):
+        return False
+    try:
+        ctl.vars.delete(key, cas=idx)                       # by CAS: a row filed again under the same id is a new one
+    except Exception:                                       # noqa: BLE001 — changed meanwhile, or the store: the next pass
+        return False
     if isinstance(said, dict) and said.get("outcome"):
         log.info("%s: command %s was answered (%s) and its answer never reached a heartbeat: its row is cleared",
                  ctl.spec.name, rid, said.get("outcome"))
         return True
+    if begun:
+        unknown[ctl.spec.name] = unknown.get(ctl.spec.name, 0) + 1
+        log.warning("%s: command %s for %s ended %.0f s past its deadline NOT KNOWN: its holder began it and is gone "
+                    "without saying how it went — whether the device acted is not known", ctl.spec.name, rid,
+                    it.get("unit", "?"), now - until)
+        return True
     _expired(ctl.spec.name)
-    why = ("its holder began it and never said how it went: whether the device acted is not known" if mark
-           else "no worker held its camera to perform it")
-    log.warning("%s: command %s for %s ended unperformed %.0f s past its deadline — %s", ctl.spec.name, rid,
-                it.get("unit", "?"), now - until, why)
+    log.warning("%s: command %s for %s ended unperformed %.0f s past its deadline — no worker held its camera to perform "
+                "it", ctl.spec.name, rid, it.get("unit", "?"), now - until)
     return True
+
+
+# Whether the instance that marked a command still holds the name it marked under — its slot row, read now. A mark or
+# a row that does not say, a store that does not answer: "still there" — nothing is ended on what cannot be read.
+def _holder_still_there(ctl, said) -> bool:
+    if not isinstance(said, dict) or not said.get("slot") or not said.get("instance"):
+        return True
+    try:
+        items, _ = ctl.vars.get(ctl.sub.slot_key(str(said["slot"])))
+    except Exception:                                       # noqa: BLE001 — not readable here (М11's console rights)
+        return True
+    if not isinstance(items, dict):
+        return False                                        # no row at all: the name is nobody's
+    return items.get("holder") == said["instance"] and items.get("released") != "true"
 
 
 def clear_requests(ctl, sweep: bool = True) -> int:

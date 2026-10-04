@@ -14,7 +14,7 @@ import tempfile
 import urllib.request
 
 from w2cplatform import variables
-from w2cplatform.contract import Heartbeat
+from w2cplatform.contract import Heartbeat, Slot
 from w2cplatform.epoch import next_epoch
 from w2cplatform.events import EventLog, buckets_under
 from w2cplatform.memvariables import MemVariables
@@ -395,6 +395,35 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     assert f'vms_requests_expired_total{{sub="vms"}} {jobs.expired["vms"]}' in text, text
 
 
+def test_a_command_its_holder_is_still_performing_is_not_reaped_and_one_whose_holder_went_is_not_known():
+    """The review's thirteenth pass, minor: a holder's call into the device hung past the deadline and the minute, and
+    the reaper ended the command "unperformed" while it was being performed. A mark with no outcome whose holder still
+    holds the name it marked under is left to that holder; once the name is another instance's, the command is ended
+    as NOT KNOWN — `vms_requests_unknown_total`, not `vms_requests_expired_total`."""
+    from vms import jobs
+    from vms.__main__ import _reap_turn
+    from vms.console import vms_metrics
+    box = Box(); ctl, con = _ctl(box)
+    gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.94/ch/1"})["id"]
+    now = box.wall()
+    con.vars.put(SPEC.sub.request_key("slow"), {"unit": str(gate), "action": "output", "port": "1",
+                                                "valid_until": str(now + 30)})
+    box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:1:aaaaaa", now + 45, False, 1).to_items())
+    box.objects.put("vms/commands/slow", json.dumps({"instance": "box-a:1:aaaaaa", "slot": "w-1", "unit": str(gate),
+                                                     "at": now}).encode())                 # begun: the call has not returned
+    was, unknown = dict(jobs.expired), dict(jobs.unknown)
+    box.wall.advance(30 + jobs.COMMAND_REAP_AFTER + 5)
+    _reap_turn([], [con])
+    assert box.vars.get(SPEC.sub.request_key("slow"))[0] is not None                     # its holder's to answer
+    assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown.get("vms", 0) == unknown.get("vms", 0)
+    box.vars.put("vms/slots/w-1", Slot("w-1", "box-a:2:bbbbbb", box.wall() + 45, False, 2).to_items())   # it went
+    _reap_turn([], [con])
+    assert box.vars.get(SPEC.sub.request_key("slow"))[0] is None
+    assert jobs.expired.get("vms", 0) == was.get("vms", 0) and jobs.unknown["vms"] == unknown.get("vms", 0) + 1
+    text = "\n".join(vms_metrics(con)())
+    assert f'vms_requests_unknown_total{{sub="vms"}} {jobs.unknown["vms"]}' in text, text
+
+
 def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_mark_is_made_once():
     """The review's second pass (minor): a unit `live: on-demand` is held — its device on the line, nothing
     recorded — under no epoch and so under no lease; its commands went to the device with no fence at all, and the
@@ -456,29 +485,50 @@ def test_a_command_to_a_unit_held_without_a_lease_takes_its_epoch_first_and_the_
 
 # -- whose clock -------------------------------------------------------------------------------------------
 
-def test_a_heartbeat_from_the_future_is_not_live_and_the_skew_is_a_number():
-    """The review's second pass, M9. Liveness is `now - hb.ts`, and the two are two machines' clocks. A worker
-    whose clock ran a minute ahead stayed "live" a minute after it died; nothing said how far apart the clocks
-    were. Now a `ts` ahead by more than `FUTURE_TOLERANCE` is not live, the largest skew seen is on `/metrics`,
-    and a heartbeat a few seconds ahead — NTP's everyday — is live as before."""
+def test_a_writers_clock_ahead_or_behind_neither_holds_nor_drops_it_and_the_skew_is_said():
+    """The review's second pass, M9, and its thirteenth, blocker 4. Liveness was `now - hb.ts`, two machines' clocks with
+    `FUTURE_TOLERANCE` between them: a worker a minute ahead stayed "live" a minute after it died, one 50 s behind was
+    "dead" while it worked. Now a heartbeat is live while the judge sees it CHANGE (`Eyes`), whatever its `ts` says: a
+    minute ahead or a hundred seconds behind, live while it beats and silent once it stands still `lost_after` by the
+    judge's clock — on `workers_seen`, the console's state, `holders` and `/schema`'s `builds` alike. The writer's time
+    is the skew, counted where a change is seen (`<sub>_heartbeat_skew_seconds_max`/`_min`) and said past `SKEW_ALARM`:
+    `clock.skew`, once an episode per writer, in the pass report too (`clock_skew`)."""
     from w2cplatform import contract
     from w2cplatform.console import SpecConsole, holders
+    from w2cplatform.events import ALARM
     from vms.controller import VmsController
+    from tests.test_slot_fate import _Said
     box = Box()
     ctl = VmsController(box.vars, box.objects, wall=box.wall)
-    now = box.wall()
-    for name, ts in (("w-1", now), ("w-2", now + 3), ("w-3", now + 60), ("w-4", now - 100)):
-        box.objects.put(SPEC.sub.heartbeat_key(name), Heartbeat(name, ts, [], {"server": "srv-a", "capacity": 4, "headroom": 4}).to_bytes())
-    assert contract.FUTURE_TOLERANCE == 5.0
-    assert sorted(ctl.workers_seen()) == ["w-1", "w-2"] == sorted(holders(box.objects, "vms/", now))
-    assert not contract.builds(box.objects, now)["vms/w-3"]["live"] and contract.builds(box.objects, now)["vms/w-2"]["live"]
+    ctl.journal = said = _Said()
     con = SpecConsole(ctl, wall=box.wall)
+    skew = {"w-1": 0, "w-2": 3, "w-3": 60, "w-4": -100}
+
+    def beat(*names):
+        for name in names:
+            box.objects.put(SPEC.sub.heartbeat_key(name), Heartbeat(name, box.wall() + skew[name], [],
+                                                                    {"server": "srv-a", "capacity": 4, "headroom": 4}).to_bytes())
+    beat(*skew)
+    ctl.look()
+    box.wall.advance(10); beat(*skew)                                          # all four beat
+    now = box.wall()
+    assert sorted(ctl.workers_seen()) == ["w-1", "w-2", "w-3", "w-4"]
+    assert sorted(holders(box.objects, "vms/", now, eyes=ctl.eyes)) == ["w-1", "w-2", "w-3", "w-4"]
+    assert all(b["live"] for n, b in contract.builds(box.objects, now, eyes=ctl.eyes).items() if n.startswith("vms/"))
+    states = {w["worker"]: w["state"] for s in con.servers()["servers"].values() for w in s["workers"]}
+    assert states == {"w-1": "live", "w-2": "live", "w-3": "live", "w-4": "live"}
+    text = con.metrics_text()
+    assert "vms_workers_live 4" in text
+    assert contract.SKEW_MAX["vms"] >= 60 and contract.SKEW_MIN["vms"] <= -100
+    rep = ctl.pass_once()
+    assert set(rep["clock_skew"]) == {"vms/heartbeats/w-3", "vms/heartbeats/w-4"}, rep["clock_skew"]
+    assert said.kinds().count(("clock.skew", ALARM)) == 2
+    ctl.pass_once()
+    assert said.kinds().count(("clock.skew", ALARM)) == 2                      # once an episode
+    box.wall.advance(46); beat("w-1", "w-2")                                   # w-3 and w-4 stop
+    assert sorted(ctl.workers_seen()) == ["w-1", "w-2"]                        # silent by this clock, whatever theirs said
     states = {w["worker"]: w["state"] for s in con.servers()["servers"].values() for w in s["workers"]}
     assert states == {"w-1": "live", "w-2": "live", "w-3": "stale", "w-4": "stale"}
-    text = con.metrics_text()
-    assert "vms_workers_live 2" in text and "vms_heartbeat_skew_seconds_max 60.0" in text
-    box.wall.advance(56)
-    assert "w-3" in ctl.workers_seen()                                                        # its clock is 4 s ahead of ours now: live
 
 
 def test_a_clock_running_behind_is_a_number_too():
@@ -494,8 +544,11 @@ def test_a_clock_running_behind_is_a_number_too():
         contract.is_live("skew-test", ts, now, 45.0)
     contract.is_live("skew-test", now - 9000, now, 1e12)    # a LISTING, not a judgement of liveness: not counted
     assert contract.SKEW_MIN["skew-test"] == -31.0
-    box = Box()                                             # …and on `/metrics`, beside the maximum
-    ctl = VmsController(box.vars, box.objects, wall=box.wall)
+    box = Box()                                             # …and on `/metrics`, beside the maximum — counted where a
+    ctl = VmsController(box.vars, box.objects, wall=box.wall)   # CHANGE is seen (the thirteenth pass, blocker 4)
+    box.objects.put(SPEC.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall() - 31, [], {"server": "srv-a"}).to_bytes())
+    assert "w-2" in ctl.workers_seen()
+    box.wall.advance(5)
     box.objects.put(SPEC.sub.heartbeat_key("w-2"), Heartbeat("w-2", box.wall() - 31, [], {"server": "srv-a"}).to_bytes())
     assert "w-2" in ctl.workers_seen()
     m = re.search(r"\nvms_heartbeat_skew_seconds_min (-?[0-9.]+)\n", SpecConsole(ctl, wall=box.wall).metrics_text())

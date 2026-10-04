@@ -805,8 +805,9 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
         assert seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()   # fresh, while the pass ran
         assert {k: v for k, v in seen["srv-1"].items() if k not in ("ts", "pass_seconds")} == {k: v for k, v in first.items() if k != "ts"}
         assert seen["srv-1"]["pass_seconds"] >= 100                                     # …and says how long the pass has run
-        # …and not for ever (the review's second pass): a pass stuck past PULSE_LIMIT × lost_after stops pulsing,
-        # and the resource is what it is — silent — until the pass ends and the next heartbeat goes out.
+        # …and a pass stuck past PULSE_LIMIT × lost_after is SAID, not silent (the review's thirteenth pass, blocker 5):
+        # it stopped the pulse, the resource went silent, and a hung worker it ran was moved at 250 s. The beat goes
+        # on, the presence looked at anew, and `pass_stuck` says how long the pass has not moved.
 
         class Stuck(Slow):
             def pass_(self, now):
@@ -816,9 +817,10 @@ def test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh():
 
         res.register("slow", Stuck())
         res.pass_()
-        assert seen["srv-1"]["ts"] < box.wall() - res.lost_after and "srv-1" not in res.live_resources()
+        assert seen["srv-1"]["ts"] == box.wall() and "srv-1" in res.live_resources()
+        assert seen["srv-1"]["pass_stuck"] > res.PULSE_LIMIT * res.lost_after
         res.heartbeat()
-        assert "srv-1" in res.live_resources()
+        assert "srv-1" in res.live_resources() and "pass_stuck" not in resources_seen(box.objects)["srv-1"]
     finally:
         rsrv.shutdown()
 
@@ -868,7 +870,8 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
     subsystem's own hook and `relieve` did not, so a part that worked the whole time — the FIRST mirroring of a
     server, a year of buckets to its peer — was "stuck" to the pulse after four `lost_after`, and the resource went
     silent with its recordings moved off it. Now each bucket a peer took is progress, a hook is handed `progressed`,
-    and `relieve` marks each volume and each answer. A peer that hangs on one bucket still stops the pulse."""
+    and `relieve` marks each volume and each answer. A peer that hangs on one bucket is said (`pass_stuck`), and the
+    beat goes on (the review's thirteenth pass, blocker 5: it stopped the pulse, and a hung worker was moved)."""
     import time
     from w2cplatform.events import EventLog
     box = Box()
@@ -929,7 +932,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         assert "srv-1" in res.live_resources()
         del res.hooks["long"]
 
-        # …and a peer that hangs on its first bucket stops the pulse, as a stuck pass always did
+        # …and a peer that hangs on its first bucket is a stuck pass, said — the beat goes on
         box.vars.put("platform/mirror", {"enabled": "true", "copies": "1"})
         box.vars.put("platform/space", {"enabled": "false"})
         for i in range(2):
@@ -938,7 +941,7 @@ def test_a_mirror_a_hook_and_relieve_that_keep_moving_keep_the_pulse_and_one_tha
         peer_hb(); res.heartbeat()
         res.pass_()
         assert peer.took                                              # the peer was asked, and hung
-        assert seen["srv-1"]["ts"] < box.wall() - res.lost_after and "srv-1" not in res.live_resources()
+        assert seen["srv-1"]["ts"] == box.wall() and seen["srv-1"]["pass_stuck"] > limit
     finally:
         rsrv.shutdown()
 

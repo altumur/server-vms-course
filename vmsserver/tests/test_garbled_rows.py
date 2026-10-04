@@ -222,6 +222,39 @@ def test_one_units_garbled_retention_row_keeps_that_units_buckets_and_the_rest_a
     assert res.retain() == 1 and res.retention_garbled == []
 
 
+def test_one_bucket_the_resource_cannot_remove_stops_no_other_and_is_counted():
+    """The review's thirteenth pass, major 13's other half: the unlink in `retain` ran bare, and one bucket the resource
+    could not remove — a directory a writer made under another group with no umask, EACCES — raised out of the whole
+    pass: no bucket of any unit swept after it, every pass, the disk growing without bound. That bucket stays, counted
+    (`retain_failed`, in the heartbeat and as `w2c_resource_retain_failures_total`), and the rest are swept."""
+    import os
+    from w2cplatform.console import SpecConsole
+    from w2cplatform.events import EventLog, bucket_names_under
+    from w2cplatform.resource import Resource
+    from vms.controller import VmsController
+    box = Box()
+    res = Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock)
+    old = box.wall() - 40 * 86400
+    for unit in ("7", "8"):
+        EventLog(box.archive, "vms", unit, 1).append(old, "stats", "observation")
+    box.vars.put("vms/retention", {"days": "30"})
+    [b7] = bucket_names_under(box.archive, "vms", "7", 600)
+    locked = os.path.dirname(os.path.join(box.archive, b7.path))
+    os.chmod(locked, 0o555)                                                  # its directory: no unlink in it
+    try:
+        if os.access(locked, os.W_OK):
+            return                                                           # run as root: nothing is refused to it
+        assert res.retain() == 1                                             # 8's swept, 7's left
+        assert bucket_names_under(box.archive, "vms", "8", 600) == [] and res.retain_failed == 1
+        hb = res.heartbeat()
+        assert hb["retain_failed"] == 1
+        text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall), wall=box.wall).metrics_text()
+        assert 'w2c_resource_retain_failures_total{server="srv-1"} 1' in text
+    finally:
+        os.chmod(locked, 0o755)
+    assert res.retain() == 1 and bucket_names_under(box.archive, "vms", "7", 600) == []
+
+
 # -- a unit's own row, as each worker reads it ------------------------------------------------------------------
 #
 # The controller has skipped a row that does not parse since the second pass (`units()`, `_parsed`). The workers

@@ -53,6 +53,10 @@ GET /v1/get?key=vms/slots/w-srv-c-1
 }
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
+GET /v1/get?key=platform/doors/srv-c
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
+
+# vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=platform/drain
 → 200 {"items": null, "index": ""}
 

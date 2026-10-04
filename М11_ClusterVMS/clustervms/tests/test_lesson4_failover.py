@@ -31,13 +31,13 @@ def _recording(n=3, b=True):
 def _silence(c, dead: str, seconds: float, alive=()):
     """`dead` says nothing for `seconds`: the others renew, heartbeat, and their resources too, every ten seconds."""
     for _ in range(int(seconds // 10)):
-        c.wall.advance(10)
+        c.wall.advance(10); c.clock.advance(10)          # both clocks: readers judge by their own (13th)
         for name, srv in c.servers.items():
             if name != dead:
                 srv.res.heartbeat()
         for w in alive:
             w.lease_pass(); w.heartbeat_once()
-    c.wall.advance(seconds % 10)
+    c.wall.advance(seconds % 10); c.clock.advance(seconds % 10)
 
 
 def test_the_power_pull():
@@ -65,18 +65,20 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
     another's. The same server — systemd starts the unit again — is one clock, the workers' own numbers. A name taken
     on ANOTHER server (by hand: no unit does it) is what the READER saw, by its own clock: when the old instance's
     heartbeat last moved, when the new one was first there; a reader that did not see the old one alive measures
-    nothing — it counts it — and a number that is not finite is no number."""
+    nothing — it counts it — and a number that is not finite is no number. A name is taken on another server once the
+    controller gives it (the thirteenth review, blocker 3): the old server silent, its slot out and the margin past it."""
     from cluster.console import metrics_text
     from cluster.worker import ClusterWorker
     c, ctl, a, _, _ = _recording(b=False)
     fresh = ClusterController(c.vars, c.objects, wall=c.wall)              # a console started after the failure
     ctl.failover_seconds()                                                  # this one scraped while w-srv-a-1 was alive
-    c.wall.advance(LOST_AFTER + 3)
+    c.wall.advance(SLOT_TTL + LOST_AFTER + 3)                               # srv-a silent, the slot out and the margin
+    ctl.pass_once(1)                                                        # the controller gives the name
     v = c.door("vmsworker")
     b = ClusterWorker(v, c.objects_on("srv-b", v), FakeActuator(), env=c.env("srv-b", "w-srv-a-1"), clock=c.clock,
                       wall=lambda: c.wall() - 600.0)                        # srv-b's clock: 10 min behind
     b.reconcile_once(); b.heartbeat_once()
-    assert ctl.failover_seconds() == {"w-srv-a-1": 48.0}                    # by the reader's clock — not −552
+    assert ctl.failover_seconds() == {"w-srv-a-1": 93.0}                    # by the reader's clock — not −507
     assert fresh.failover_seconds() == {} and fresh.failovers_unmeasured == 1
     assert "vms_failovers_unmeasured 1" in metrics_text(fresh, 0.0)
     # the same server: one clock, the workers' own numbers (`started − previous_hb`)
@@ -92,10 +94,11 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
     from w2cplatform.rows import FIELDS
     assert ctl2.failover_seconds() == {} and "vms/heartbeats/w-srv-a-1#previous_hb" in FIELDS.bad   # not said: counted once
     assert 'vms_failover_seconds{kind="worst"} 0.0' in metrics_text(ctl2, 0.0)
-    c.wall.advance(10)                                                      # it fails again, a shorter one
+    c.wall.advance(SLOT_TTL + LOST_AFTER + 5)                               # it fails again, srv-b silent this time
+    ctl.pass_once(1)
     third = c.worker("srv-c", name="w-srv-a-1"); third.reconcile_once(); third.heartbeat_once()
     text = metrics_text(ctl, 0.0)
-    assert 'vms_failover_seconds{kind="last",worker="w-srv-a-1"} 10.0' in text and 'vms_failover_seconds{kind="worst"} 48.0' in text
+    assert 'vms_failover_seconds{kind="last",worker="w-srv-a-1"} 95.0' in text and 'vms_failover_seconds{kind="worst"} 95.0' in text
     import sys
     sys.modules["w2cplatform.rows"].forget()          # the counts are the process's: every later heartbeat would carry them
 
@@ -228,7 +231,7 @@ def test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_a
         assert [s[0] for s in first.values()] == ["srv-a", "srv-a"], first
         c.servers["srv-a"].down = True                          # its door: the worker renews and heartbeats on
         for _ in range(6):
-            c.wall.advance(10)
+            c.wall.advance(10); c.clock.advance(10)
             a.lease_pass(); a.heartbeat_once(); b.lease_pass(); b.heartbeat_once()
         assert {i: r.source(i) for i in (1, 2)} == first        # 60 s into the door's outage: the store's word
         assert r._by_the_book == {"1", "2"}
@@ -237,7 +240,7 @@ def test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_a
         b.reconcile_once(); b.heartbeat_once()
         assert r.source(2)[0] == "srv-b" and r.source(1) == first[1]   # heard on its new holder; 1 still stands
         for _ in range(5):                                      # and now w-srv-a-1 is gone too: nobody renews its name
-            c.wall.advance(10)
+            c.wall.advance(10); c.clock.advance(10)
             b.lease_pass(); b.heartbeat_once()
         assert r.source(1) is None                              # its slot ran out: the store says nobody holds it
     finally:
@@ -334,6 +337,7 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     from tests.conftest import VMS_TESTS
     c, ctl, a, act_a, b = _recording(1)
     rec = SpecController(REC_SPEC, c.door("reccontroller"), c.objects_on("srv-b", c.door("reccontroller")), wall=c.wall)
+    c.wall.watchers.append(rec)                                             # it looks as time moves, as a controller does
     assert rec.policy() == {"servers": "distinct"} and ctl.policy() == {"servers": "shared"}   # each subsystem's own default
     r1, r2 = c.recorder("srv-a"), c.recorder("srv-b")
     for r in (r1, r2):
@@ -354,6 +358,8 @@ def test_the_power_pull_moves_the_recording_and_leaves_the_footage_where_it_was_
     b.heartbeat_once()
     assert [(m[1], m[2]) for m in rec.redistribute()] == [("r-srv-a-1", "r-srv-b-1")]
     assert rec.placement("1").reason.startswith("server srv-a gone: slot r-srv-a-1 lapsed and its resource silent; ")
+    # r-srv-b-1 first looks at camera 1's holders now: w-srv-a-1's last heartbeat is new to it, as w-srv-b-1's is — the
+    # holder under the higher epoch is the one it reads (`newest`; the thirteenth review)
     assert r2.reconcile_once() == [("start", "1")] and r2.actuator.started["1"]["source"] == live_shm(1) and r2.actuator.started["1"]["epoch"] == 2
     r2.heartbeat_once()
     assert rec.workers_seen()["r-srv-b-1"].status[0]["via"] == "shm" and rec.where("1") == "r-srv-b-1"

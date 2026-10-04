@@ -145,6 +145,8 @@ def test_a_pass_reads_the_rows_and_heartbeats_once_and_the_next_pass_reads_them_
         {"id": str(i), "phase": "running", "live_url": f"rtsp://srv-9:8554/{i}"} for i in range(1, 51)], {"server": "srv-9"}).to_bytes())
     assert "7" in r.resubscribe()                                                            # the next look sees the move
     box.clock.advance(60)                                                                    # past the reconciler's backoff
+    box.objects.put(SPEC.sub.heartbeat_key("w-1"), Heartbeat("w-1", now + 60, [             # …the holder beating on: fresh
+        {"id": str(i), "phase": "running", "live_url": f"rtsp://srv-9:8554/{i}"} for i in range(1, 51)], {"server": "srv-9"}).to_bytes())
     r.reconcile_once()
     assert r.sources["7"] == "rtsp://srv-9:8554/7"
 
@@ -210,3 +212,27 @@ def test_where_a_thousand_cameras_belong_is_found_in_one_look_at_the_recorders()
     assert full <= 1100 and full <= 2 * half + 10, (half, full)
     assert homes["1"] == "srv-2" and homes["2"] == "srv-2"   # 1 beside `1-copy` on r-2; 2 has one recording, on r-2
     assert held["1"] == ("r-2", "srv-2")
+
+
+def test_a_holder_whose_clock_runs_behind_stays_the_recordings_source_while_it_beats():
+    """The review's thirteenth pass, blocker 4's sibling on the data path: a recorder found the holder of its camera by
+    the holder's `ts` against its own clock, so a holder whose server's clock ran 50 s behind was "not live" while it
+    held the camera and served its fan-out — no source, the recording waiting for nobody. Now the recorder asks whether
+    the holder's heartbeat CHANGED within 45 s of its own clock (`RecWorker.eyes`): a holder 100 s behind is the source
+    while it beats, and once it stops it is not, a silence's length later by the recorder's clock."""
+    box = _site(1)
+    now = box.wall()
+
+    def beat(ts):
+        box.objects.put(SPEC.sub.heartbeat_key("w-1"), Heartbeat("w-1", ts, [
+            {"id": "1", "phase": "running", "live_url": "rtsp://srv-1:8554/1"}], {"server": "srv-1"}).to_bytes())
+    beat(now - 100)                                                          # its clock: a hundred seconds behind
+    r, _, _ = _recorder(box, "r-1", "srv-a")
+    r.reconcile_once()
+    assert r.sources.get("1") == "rtsp://srv-1:8554/1"
+    for k in range(1, 4):                                                    # it beats on, every ten seconds
+        box.clock.advance(10); box.wall.advance(10); beat(now - 100 + 10 * k)
+        assert r.source("1") == ("srv-1", "rtsp://srv-1:8554/1"), k
+    box.clock.advance(46); box.wall.advance(46)                              # and stops
+    r.last_holder.pop("1", None)                                             # (the store's word on who holds it aside)
+    assert r.source("1") is None
