@@ -23,7 +23,10 @@ from tests.conftest import Box
 def _key(*kids):
     path = os.path.join(tempfile.mkdtemp(prefix="key-"), "platform.key")
     new_key_file(path, kids[0])
-    assert oct(os.stat(path).st_mode & 0o777) == "0o600"             # readable by its owner only
+    # its owner and its group, the clients of the secrets (`w2c-secrets`, the owner's decision of 4 October) — whatever
+    # the umask; the group is the directory's
+    assert oct(os.stat(path).st_mode & 0o777) == "0o640"
+    assert os.stat(path).st_gid == os.stat(os.path.dirname(path)).st_gid
     for kid in kids[1:]:                                              # rotation: a new line ON TOP
         lines = open(path).read()
         new_key_file(path + ".new", kid)
@@ -147,12 +150,26 @@ def test_rows_written_before_the_key_are_sealed_when_the_console_starts_with_one
 
 
 def test_the_key_is_never_made_inside_the_store_nor_over_another():
+    """…and the platform's root is not a store (the owner's layout, 4 October): `/etc/w2c/secrets` is a link into
+    `/data/platform/etc`, under `PLATFORM_DIR` and beside its stores, never in one of them (`platform_stores`)."""
+    from w2cplatform.sealing import platform_stores
     store = tempfile.mkdtemp(prefix="platform-")
     try:
         new_key_file(os.path.join(store, "secrets.key"), store=store)
         raise AssertionError("a key beside the rows it protects protects nothing")
     except ValueError as e:
         assert "inside the store" in str(e)
+    stores = platform_stores({"PLATFORM_DIR": store})
+    assert stores == [os.path.join(store, d) for d in ("config", "objects", "configstore")]
+    for inside in stores:
+        os.makedirs(inside, exist_ok=True)
+        try:
+            new_key_file(os.path.join(inside, "platform.key"), store=stores)
+            raise AssertionError(f"a key in {inside} is copied with every copy of it")
+        except ValueError as e:
+            assert "inside the store" in str(e)
+    os.makedirs(os.path.join(store, "etc", "secrets"))
+    new_key_file(os.path.join(store, "etc", "secrets", "platform.key"), store=stores)   # the layout's place for it
     path = _key("k1")
     try:
         new_key_file(path, store=store)

@@ -209,6 +209,21 @@ def durable_dir(path: str) -> None:
         os.close(fd)
 
 
+# A file in flight beside `<dir>/<prefix>…`, created under the PROCESS'S UMASK — not `tempfile.mkstemp`'s fixed 0600.
+# A platform store is shared by group (the owner's decision, 4 October: `w2c-store` for the file stores, `w2c-events`
+# for the archive, setgid directories, every unit's umask 0007): a heartbeat or a blob written 0600 by one process
+# was a file the resource — another uid of the same group — could not read. The kernel applies the umask to `0o666`
+# as it does for `open()`; `O_EXCL` keeps mkstemp's promise that the name is this writer's alone.
+def new_temp(dir: str, prefix: str, suffix: str = ".tmp") -> tuple[int, str]:
+    for _ in range(100):
+        path = os.path.join(dir, f"{prefix}{''.join(random.choice(string.ascii_lowercase) for _ in range(8))}{suffix}")
+        try:
+            return os.open(path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o666), path
+        except FileExistsError:
+            continue
+    raise FileExistsError(f"no free name for a file in flight in {dir}")
+
+
 # THE LINE, AS AGREED WITH THE PRODUCT (feedback BL; the platform review, "an event line with no second
 # timestamp, no id and no version"). The file format is shared, so the names and what they mean are too:
 #

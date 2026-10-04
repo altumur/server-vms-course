@@ -43,7 +43,9 @@ from __future__ import annotations
 import os
 import ssl
 
-TLS_DIR = "/etc/w2c/tls"
+from .runtime import ETC
+
+TLS_DIR = ETC + "/tls"                             # the platform's configuration: `runtime.ETC`
 ROLE_URI = "urn:w2c:role:"
 
 

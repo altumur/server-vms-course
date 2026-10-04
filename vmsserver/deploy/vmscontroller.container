@@ -37,13 +37,18 @@ Image=localhost/vmsserver:latest
 Exec=python3 -m vms controller
 # it needs `PLATFORM_DIR` (the stores), `CAPACITY` (the fallback for a worker whose heartbeat says nothing)
 # and `LOG_LEVEL`; the rest of the file is harmless to it.
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
 # the only mount: the config store for rows, assignments, placement, slots and the object store for
-# heartbeats (read) and the snapshot (write). No `/data/archive`: "the ACL says which rows
+# heartbeats (read) and the snapshot (write). No events archive: "the ACL says which rows
 # each token writes; the mounts say which bytes" — the controller has no bytes to write.
 # `test_who_may_write_where_is_in_the_mounts_too` asserts both are absent.
-Volume=/data/platform:/data/platform:z
+# The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
+# `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
 # nothing listens; kept for symmetry and for М11's stores.
 Network=host
 

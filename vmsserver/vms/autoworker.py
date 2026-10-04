@@ -110,7 +110,7 @@ class AutoWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env)
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
+        self.archive_root = runtime.events_root(env, archive_root)
         # The same reader the console uses, for the same reason: a scenario watches what an operator would
         # see on the timeline. One merge, one definition of "the events of the last minute".
         self.index = index or MergedIndex(objects, wall=wall)

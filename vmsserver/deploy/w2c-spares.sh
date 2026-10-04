@@ -44,8 +44,8 @@ SERVER="${SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"
 # THE PLATFORM'S NAMES — spelled here and nowhere else below, so a rename is these lines: what a role's unit runs
 # (`<SPARES_RUN> <verb>`), the two environment files every unit reads (handed to a spare too: the platform's, then
 # the VMS's — a name in both is the second's), and where the macOS spares keep their pids and logs. The defaults are
-# the product's layout (`/opt/w2c`, `/etc/w2c/w2c.env`, `/etc/vms/vms.env`); the course's box sets them in its own
-# `/data/config/w2c.env`, which the timer's service reads. A spare itself is a process of a VMS subsystem, and keeps
+# the product's layout (`/opt/w2c`, `/etc/w2c/w2c.env`, `/etc/vms/vms.env`) — the course's box's too, /etc/w2c and
+# /etc/vms being links into its data partition; `SPARES_RUN` it sets in `w2c.env`. A spare itself is a process of a VMS subsystem, and keeps
 # the subsystem's names: the unit `vms-<role>-spare-<n>`, the group `vms-<role>` of its role's store socket.
 SPARES_RUN="${SPARES_RUN:-/opt/w2c/bin/w2c-run.sh}"
 W2C_ENV="${W2C_ENV:-/etc/w2c/w2c.env}"
