@@ -18,11 +18,13 @@ restart and no "catching up": the index is ready when the process is, and an
 event is visible the moment its line is in the file.
 
 It knows which subsystems exist by the directories it finds; a new one answers
-the moment it starts writing. It knows nothing about what an event means:
-`cam` is a field an event may carry.
+the moment it starts writing. It knows nothing about what an event means. Two
+columns say whose a row is: its own unit, `<sub>/<id>` — the tree it lies in —
+and `of`, the unit that unit is about, as the line's writer said (`events.OF`).
+A query for a unit finds both: its own lines and those of every unit about it.
 
     EventIndex(root, server)      the resource job's; nothing to start and nothing to rebuild
-    query(...)                    subsystem, unit, cam (a field an event may carry), kind, class, time window
+    query(...)                    subsystem, unit (`<sub>/<id>`: its own, or about it), kind, class, time window
     listing()                     what the tree holds, from its directories alone: units, buckets, mirrors
     forget(server, paths)         retention removed a bucket: drop it from the cache (the resource calls this)
     MergedIndex(objects)          what a console has instead: every live resource's /events, merged
@@ -41,7 +43,7 @@ the moment it starts writing. It knows nothing about what an event means:
 # **Why not a database — it was one, and what it cost.** Until 28 September this was an in-memory SQLite
 # table rebuilt from the tree on every start and "tailed" every three seconds. The tail was the price, and
 # it was the whole tree: to learn which files had grown it opened and parsed EVERY bucket, a year of them at
-# the default retention — about a million files for twenty cameras, every three seconds. The four indexes
+# the default retention — about a million files for twenty units, every three seconds. The four indexes
 # over the flat table rebuilt what flattening had destroyed: two of them copied the directory layout, one
 # split two values, and "everything in this hour" was covered by none. One connection and one mutex
 # serialised every reader behind every other and behind the tail; and a restarted resource answered short
@@ -58,6 +60,11 @@ the moment it starts writing. It knows nothing about what an event means:
 # changes" is not a rule this index may lean on. It asks the file instead — size and modification time —
 # and only for the files a query's window can touch: one or two per unit for the minutes automation asks
 # about, a day's worth for a timeline. A file that grew is read from where the last read stopped.
+#
+# **A unit is `<sub>/<id>`, and nothing is a number of somebody's** (the boundary's step 2). The index had a column
+# named after one subsystem's field and a rule that a numeric unit was that field's value: the platform knew which
+# subsystem's ids were the others' subject. Now a row says its own unit and what the writer said it is about (`of`);
+# `query(unit=)` takes a reference and answers both, and a bare id is refused — whose `7` would it be?
 #
 # ## Module-level names
 # `NARROW` — the widest window, in buckets, whose file names are computed rather than listed.
@@ -77,9 +84,9 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, alarm_tree, bucket_path,
+from .events import (ALARM, CLASSES, EPOCH_DIR, EVENTS, MAX_EVENT_LATENESS, OBSERVATION, OF, alarm_tree, bucket_path,
                      bucket_start, subsystems_under, tree_owner, when)
-from .doors import numeric
+from .doors import parse_ref, ref_fault, unit_ref
 from .resource import MIRROR_DIR, mirrored_servers, resources_seen
 from .rows import PARSE_ERRORS, Table, answer, finite
 
@@ -92,7 +99,7 @@ CACHE_BYTES = 64 << 20
 
 # One bucket as read: its size and modification time when read (what says "unchanged" next time), how far
 # into the file the read got (a half-written last line is not consumed — the next read starts at it), and
-# its lines, each reduced once to what a query compares: `(t, kind, class, cam or None, the other fields)`.
+# its lines, each reduced once to what a query compares: `(t, kind, class, of or None, the other fields)`.
 @dataclass(frozen=True)
 class _Read:
     size: int
@@ -120,9 +127,10 @@ class EventIndex:
         self._cache: OrderedDict[str, _Read] = OrderedDict()
         self._bytes = 0
         self._lock = threading.Lock()
-        # Which camera a unit's lines have named (`cam` in the line: a detector `7-motion` names camera 7).
-        # A unit whose lines named exactly one camera is skipped by a query for another without being read.
-        self._cams: dict[tuple[str, str, str], set] = {}
+        # What a unit's lines have been about (`of` in the line; "" for a line about nothing), as read so far. A unit
+        # read and found about other units only — or about none — is skipped by a query for another without being
+        # read again: its lines can only be about what its row said when each was written, and that field is fixed.
+        self._abouts: dict[tuple[str, str, str], set] = {}
 
     # -- the tree, as candidates ------------------------------------------------------------------------
     # The places that hold buckets: this resource's root under its own name, and each peer's copies under
@@ -204,8 +212,10 @@ class EventIndex:
             # `mark_of`).
             try:
                 e = json.loads(raw)
-                lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)), e.get("cam"),
-                              {k: v for k, v in e.items() if k not in ("t", "kind", "cam", "class")}))
+                of = e.get(OF)
+                lines.append((float(e["t"]), str(e["kind"]), str(e.get("class", OBSERVATION)),
+                              of if isinstance(of, str) and ref_fault(of) is None else None,
+                              {k: v for k, v in e.items() if k not in ("t", "kind", OF, "class")}))
             except PARSE_ERRORS:
                 self.torn += 1
         read = _Read(st.st_size, st.st_mtime_ns, start + cut, tuple(lines), ident, head)
@@ -226,12 +236,14 @@ class EventIndex:
                 self._bytes -= old.size
 
     # -- the one read ---------------------------------------------------------------------------------------
-    def query(self, t0: float, t1: float, cam: int | None = None, kind: str | None = None,
-              subsystem: str | None = None, unit: str | None = None,
-              current_epochs: dict[tuple[str, str], int] | None = None, limit: int = 1000,
+    def query(self, t0: float, t1: float, kind: str | None = None, subsystem: str | None = None,
+              unit: str | None = None, current_epochs: dict[tuple[str, str], int] | None = None, limit: int = 1000,
               epoch_policy: dict[str, str] | None = None, keep: str = "newest", cls: str | None = None,
               by: str = "t") -> dict:
-        """`by` is WHICH TIME the window and the order are in: `t`, when a line was written — or `occurred`,
+        """`unit` is `<sub>/<id>`: the rows whose own unit it is, and the rows of every unit about it (their `of`).
+        With `subsystem` as well, only that subsystem's rows of it. A bare id is refused: whose would it be?
+
+        `by` is WHICH TIME the window and the order are in: `t`, when a line was written — or `occurred`,
         when its event happened (where the writer knew; `t` where it did not). In event time the window's
         buckets are read and `MAX_EVENT_LATENESS` further on: a line written late lies in a later file.
 
@@ -262,12 +274,7 @@ class EventIndex:
 
         What it costs is what the window touches, not what the tree holds: the files named by the window,
         a stat each, and a read of whatever of them is not in the cache yet."""
-        if keep not in ("newest", "oldest"):
-            raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
-        if cls is not None and cls not in CLASSES:
-            raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
-        if by not in ("t", "occurred"):
-            raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
+        check_query(keep, cls, by, unit)
         read_to = t1 + MAX_EVENT_LATENESS if by == "occurred" else t1
         # What the answer can still carry, and no more (feedback BD): `limit + 1` rows of each class from the end
         # `keep` names, held in two small heaps while the window is read. The cache's ceiling bounds the FILES
@@ -284,26 +291,24 @@ class EventIndex:
             for tree in ([subsystem, alarm_tree(subsystem)] if subsystem is not None else sorted(subs)):
                 sub = tree_owner(tree)[0]
                 for u in sorted(subs.get(tree, [])):
-                    if unit is not None and u != str(unit):
-                        continue
-                    if cam is not None and not self._may_be(server, tree, u, cam):
+                    own = unit_ref(sub, u)
+                    if unit is not None and own != unit and not self._may_be_about(server, tree, u, unit):
                         continue
                     for epoch, path in self._candidates(base, tree, u, t0, read_to):
                         lines = self._lines(path)
                         if lines:
                             self._learn(server, tree, u, lines)
                         rel = os.path.relpath(path, base)
-                        for t, k, c, ecam, fields in lines:
+                        for t, k, c, of, fields in lines:
                             at = float(fields.get("occurred", t)) if by == "occurred" else t
                             if not t0 <= at < t1 or (kind is not None and k != kind) or (cls is not None and c != cls):
                                 continue
-                            the_cam = ecam if ecam is not None else numeric(u)      # `7²` is no number (the ninth pass)
-                            if cam is not None and the_cam != cam:
+                            if unit is not None and own != unit and of != unit:
                                 continue
                             seq, seen = seq + 1, seen + 1
                             heap = kept[c == ALARM]
                             rank = (at, -seq) if keep == "newest" else (-at, -seq)
-                            item = (rank, (c == ALARM, at, sub, u, the_cam, epoch, k, server, rel, c, fields, t))
+                            item = (rank, (c == ALARM, at, sub, u, of, epoch, k, server, rel, c, fields, t))
                             if len(heap) < cap:
                                 heapq.heappush(heap, item)
                             elif rank > heap[0][0]:
@@ -314,28 +319,25 @@ class EventIndex:
         truncated = seen > limit
         rows = sorted(rows[:limit], key=lambda r: r[1])  # alarms came first for the CUT; the answer is by time
         out = []
-        for _, _at, sub, u, c, ep, k, server, rel, rcls, fields, t in rows:
+        for _, _at, sub, u, of, ep, k, server, rel, rcls, fields, t in rows:
             cur = (current_epochs or {}).get((sub, u))
             older = cur is not None and ep < cur
             was = (epoch_policy or {}).get(sub, "fenced") if older else "current"
-            out.append({"subsystem": sub, "unit": u, "cam": c, "epoch": ep, "t": t, "kind": k, "server": server,
-                        "bucket": rel, "class": rcls, "epoch_is": was, "fenced": was == "fenced", **fields})
+            # `unit` and `of` after the line's own fields: those two are the index's columns, and a field of either
+            # name in a line (a mark written before marks said `of`) does not answer for them.
+            out.append({"subsystem": sub, "epoch": ep, "t": t, "kind": k, "server": server, "bucket": rel,
+                        "class": rcls, "epoch_is": was, "fenced": was == "fenced", **fields,
+                        "unit": unit_ref(sub, u), OF: of or ""})
         return {"events": out, "state": self.state, "truncated": truncated}
 
-    # A unit is skipped for camera `cam` only when everything read of it so far named one OTHER camera; a unit
-    # never read, or one naming several, is read. A numeric unit is its own camera.
-    # A number by `doors.numeric`, not `isdigit` + `int`: a unit's directory `7²` raised out of every query by camera
-    # (the review's ninth pass).
-    def _may_be(self, server: str, sub: str, unit: str, cam: int) -> bool:
-        if numeric(unit) is not None and not self._cams.get((server, sub, unit)):
-            return numeric(unit) == cam
-        seen = self._cams.get((server, sub, unit))
-        return not seen or len(seen) > 1 or cam in seen
+    # A unit that is not `ref` itself is skipped for it only when everything read of it so far was about other units —
+    # or about none; a unit never read is read.
+    def _may_be_about(self, server: str, tree: str, unit: str, ref: str) -> bool:
+        seen = self._abouts.get((server, tree, unit))
+        return not seen or ref in seen
 
-    def _learn(self, server: str, sub: str, unit: str, lines: tuple) -> None:
-        cams = {ecam for _, _, _, ecam, _ in lines if ecam is not None}
-        if cams:
-            self._cams.setdefault((server, sub, unit), set()).update(cams)
+    def _learn(self, server: str, tree: str, unit: str, lines: tuple) -> None:
+        self._abouts.setdefault((server, tree, unit), set()).update(of or "" for _, _, _, of, _ in lines)
 
     # What the tree holds, from its directories alone — no file opened. For a person, a heartbeat and a test:
     # the answer to "is anything here", which a rebuild's row count used to give.
@@ -373,11 +375,31 @@ class EventIndex:
 def refence(events: list, current_epochs: dict | None, epoch_policy: dict | None) -> list:
     cur = current_epochs or {}
     for e in events:
-        c = cur.get((e["subsystem"], e["unit"]))
+        c = cur.get((e["subsystem"], unit_id(e)))
         older = c is not None and e["epoch"] < c
         e["epoch_is"] = (epoch_policy or {}).get(e["subsystem"], "fenced") if older else "current"
         e["fenced"] = e["epoch_is"] == "fenced"
     return events
+
+
+# The id of a row's own unit, as its subsystem's epoch rows name it: `unit` is `<sub>/<id>` on the wire ("" for a row
+# that does not say one: it is fenced by nothing).
+def unit_id(e: dict) -> str:
+    got = parse_ref(str(e.get("unit", "")))
+    return got[1] if got is not None and got[0] == e.get("subsystem") else ""
+
+
+# What a query may ask, refused the same way by the index and by the merge (the merge reads a resource's refusal as
+# "did not answer", and a caller's mistake would come back as an infrastructure fault that never happened).
+def check_query(keep: str, cls: str | None, by: str, unit: str | None) -> None:
+    if keep not in ("newest", "oldest"):
+        raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
+    if cls is not None and cls not in CLASSES:
+        raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
+    if by not in ("t", "occurred"):
+        raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
+    if unit is not None and ref_fault(unit):
+        raise ValueError(ref_fault(unit))
 
 
 # A RESOURCE'S ANSWER IS ANOTHER PROCESS'S WORDS (the review's eighth pass, part 4, a sibling of the peers' doors). The
@@ -482,7 +504,7 @@ class MergedIndex:
         with ThreadPoolExecutor(max_workers=min(self.lanes, len(servers))) as pool:
             return dict(zip(servers, pool.map(one, servers)))
 
-    def query(self, t0: float, t1: float, cam=None, kind=None, subsystem=None, unit=None, current_epochs=None,
+    def query(self, t0: float, t1: float, kind=None, subsystem=None, unit=None, current_epochs=None,
               limit: int = 1000, epoch_policy: dict[str, str] | None = None, keep: str = "newest",
               cls: str | None = None, by: str = "t") -> dict:
         """`by` as in `EventIndex.query`: asked of every resource, and the merge orders by the same time.
@@ -511,16 +533,11 @@ class MergedIndex:
         than left to the resources: this method reads any failure from a resource as "unreachable"
         (live by heartbeat, not answering), so a caller's bad `keep` would come back as an empty
         window and an infrastructure fault that never happened."""
-        if keep not in ("newest", "oldest"):
-            raise ValueError(f"keep is 'newest' or 'oldest', not {keep!r}")
-        if cls is not None and cls not in CLASSES:
-            raise ValueError(f"event class is one of {', '.join(CLASSES)}, not {cls!r}")
-        if by not in ("t", "occurred"):
-            raise ValueError(f"by is 't' (when written) or 'occurred' (when it happened), not {by!r}")
+        check_query(keep, cls, by, unit)
         order = when if by == "occurred" else (lambda e: e["t"])
         now = self.wall(); seen = self.seen()
         live = {s for s, hb in seen.items() if now - float(hb["ts"]) <= self.lost_after}
-        params = {k: v for k, v in (("from", t0), ("to", t1), ("cam", cam), ("kind", kind), ("subsystem", subsystem),
+        params = {k: v for k, v in (("from", t0), ("to", t1), ("kind", kind), ("subsystem", subsystem),
                                     ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls),
                                     ("by", by if by != "t" else None)) if v is not None}
         events, unreachable, from_mirror, have = [], [], set(), set()

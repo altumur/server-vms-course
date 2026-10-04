@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import time
 
-from w2cplatform.doors import numeric
+from w2cplatform.doors import numeric, unit_ref
 from w2cplatform.objects import ObjectStore
 from w2cplatform.rows import PARSE_ERRORS, Table
 from w2cplatform.spec import Refused, SpecController
@@ -377,8 +377,8 @@ def fires(trigger: dict, event: dict) -> bool:
         return False
     if str(trigger.get("kind", "")) != str(event.get("kind", "")):
         return False
-    if trigger.get("unit") not in (None, "") and str(trigger["unit"]) != str(event.get("unit", "")):
-        return False
+    if trigger.get("unit") not in (None, "") and unit_ref(trigger.get("sub", ""), trigger["unit"]) != str(event.get("unit", "")):
+        return False                                     # the trigger's unit, inside its subsystem; the line's is `<sub>/<id>`
     for k, v in (trigger.get("match") or {}).items():
         if str(event.get(k, "")) != str(v):
             return False

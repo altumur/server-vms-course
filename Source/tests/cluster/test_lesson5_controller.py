@@ -229,9 +229,9 @@ def test_the_console_over_http():
     res = cluster_resource(c.servers["srv-a"].resource, "srv-a", "http://127.0.0.1:0", c.vars, c.objects, wall=c.wall)
     rsrv = serve_resource(res, "127.0.0.1", 0); res.url = f"http://127.0.0.1:{rsrv.server_address[1]}"; res.heartbeat()
     # an operator's mark: the console's own bucket on srv-a's resource; the console has no index — it asks srv-a's, by HTTP, and finds the `cam` field
-    st, out = call("POST", "/marks", {"cam": 1, "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
+    st, out = call("POST", "/marks", {"unit": "vms/1", "note": "check the gate"}, {"Idempotency-Key": "m1", "X-User": "murat"})
     m = json.loads(out); assert st == 201 and m["bucket"].startswith(f"console/{m['unit']}/e1/")
-    st, out = call("GET", "/events?cam=1"); ev = json.loads(out)
+    st, out = call("GET", "/events?unit=vms/1"); ev = json.loads(out)
     assert st == 200 and [(e["subsystem"], e["kind"], e["user"], e["server"]) for e in ev["events"]] == [("console", "mark", "murat", "srv-a")] and ev["state"] == "live"
     # the page, and playback across the cluster: footage in srv-a's volume, through its recorder's door and the console
     assert "<video" in call("GET", "/")[1]
@@ -260,7 +260,7 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
     from vms.config import REC_SPEC
 
     class Tokens:                                                     # an `Access` with no cryptography: a token is a name
-        grants = {"viewer": [("view", "1")], "guard": [("edit", "1")], "admin": [("admin", None)]}
+        grants = {"viewer": [("view", "vms/1")], "guard": [("edit", "vms/1")], "admin": [("admin", None)]}   # units: <sub>/<id>
 
         def who(self, token):
             if token not in self.grants:
@@ -298,13 +298,13 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert call("GET", "/timeline/1", "viewer")[0] == 200
         assert call("GET", "/timeline/2", "viewer")[0] == 403                           # it was 200: any grant at all
         assert call("GET", f"/export/2?from={t - 120}&to={t - 60}", "viewer")[0] == 403    # …and the footage with it
-        assert call("POST", "/backfill", "viewer", {"cam": "1", "from": t - 120, "to": t - 60})[0] == 403   # to act, `edit`
-        assert call("POST", "/backfill", "guard", {"cam": "1", "from": t - 120, "to": t - 60})[0] == 202    # …on her camera
-        assert call("POST", "/backfill", "guard", {"cam": "2", "from": t - 120, "to": t - 60})[0] == 403
+        assert call("POST", "/backfill", "viewer", {"unit": "vms/1", "from": t - 120, "to": t - 60})[0] == 403   # to act, `edit`
+        assert call("POST", "/backfill", "guard", {"unit": "vms/1", "from": t - 120, "to": t - 60})[0] == 202    # …on her camera
+        assert call("POST", "/backfill", "guard", {"unit": "vms/2", "from": t - 120, "to": t - 60})[0] == 403
         assert call("PUT", "/rec/recordings/2", "guard", {"retention_days": 1})[0] == 403
         assert call("GET", "/rec/volumes", "admin")[0] == 200                           # the archives, as on a box
         assert "rec_recorders_needed" in call("GET", "/rec/metrics", "admin")[1]        # what `w2c-spares.sh` reads for recorders
-        assert m.root.extra.journal is m.root.journal and m.mounts["rec"].cams_of is not None
+        assert m.root.extra.journal is m.root.journal and m.mounts["rec"].spec.about_sub == "vms"   # a recording is about its camera
     finally:
         srv.shutdown()
 

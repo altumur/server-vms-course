@@ -5,7 +5,7 @@ is not a Python process). `rights` prints the configstore's rights file generate
 
     PLATFORM_STORE                     the store, as a URL: this server's configstore daemon by the role's own socket,
                                        `configstore:///run/configstore/<role>.sock` (the default, by the verb's role);
-                                       `CONFIG_URL` is the older name (product P7); `file:///path` on a bench
+                                       `file:///path` on a bench
     OBJECTS                            the object store: `cluster:///data/platform/objects?resource=http://127.0.0.1:8090`
                                        (the default) — this server's objects as files, every server's through the
                                        resource on this one, the create-only keys as rows in the process's own store;

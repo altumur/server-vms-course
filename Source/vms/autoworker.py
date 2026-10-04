@@ -31,6 +31,7 @@ import os
 import time
 
 from w2cplatform import runtime
+from w2cplatform.doors import unit_ref
 from w2cplatform.contract import Worker
 from w2cplatform.eventdatabase import MergedIndex
 from w2cplatform.events import EventLog
@@ -343,7 +344,9 @@ class AutoWorker(Worker):
         have = self._asked.get(key)
         if have is None or have["t0"] > t0 or have["t1"] < t1:
             start = min(t0, self._needed.get(key, t0))
-            rep = self.index.query(max(0.0, start), t1, subsystem=sub, kind=kind, unit=unit or None, limit=self.PER_KIND)
+            # A trigger names its unit inside its subsystem; the index takes a unit as the platform names one.
+            rep = self.index.query(max(0.0, start), t1, subsystem=sub, kind=kind, unit=unit_ref(sub, unit) if unit else None,
+                                   limit=self.PER_KIND)
             self.pass_stats["queries"] += 1
             have = self._asked[key] = {"t0": start, "t1": t1, "rep": rep}
         return have["rep"]

@@ -184,7 +184,7 @@ class SurveyWorker(Worker):
                         break
                     looked[0] = a
                     for ts, kind, fields in self._watch(model, a, b, looked):
-                        EventLog(self.archive_root, SURVEY, unit, self.epochs[unit]).append(
+                        EventLog(self.archive_root, SURVEY, unit, self.epochs[unit], of=SURVEY_SPEC.of_row(row)).append(
                             ts, kind, cam=int(row["cam"]), watch=unit, source="device", **fields)
                         self.events_written += 1
                         fired.append(ts)

@@ -203,7 +203,7 @@ def test_only_an_admin_of_the_whole_cluster_writes_a_servers_labels():
     box = Box()
     _site(box, srv_a="vlan:a")
     _resource(box, "srv-a")                                                        # known to the recorders too
-    access = Tokens({"admin": [("admin", None, ())], "cam-admin": [("admin", "1", ())],
+    access = Tokens({"admin": [("admin", None, ())], "cam-admin": [("admin", "vms/1", ())],
                      "guard": [("admin", None, ("vlan:a",))], "viewer": [("view", None, ())]})
     ctl, rec, m, srv, base = _console(box, access)
     try:

@@ -35,7 +35,7 @@ def _merged(c, rs):
         s = host(url)
         if c.servers[s].down:
             raise ConnectionError(s)
-        return rs[s].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None, p.get("kind"),
+        return rs[s].index.query(float(p["from"]), float(p["to"]), p.get("kind"),
                                  p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
     m = MergedIndex(c.objects, fetch=fetch, wall=c.wall)
     m.SEEN_FOR = 0.0          # these tests move only the wall: each query reads the resources afresh (the cache: М10's Lesson 13)
@@ -47,7 +47,7 @@ def test_events_are_indexed_by_each_resource_and_merged_by_the_console_which_hol
     _observe(c, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")            # the VMS worker, recording camera 7
     _observe(c, "srv-a", "vms", "7", 3, t + 40, "silent")
     _observe(c, "srv-b", "vms", "7", 4, t + 1205, "motion")                        # after a failover: next epoch, other server, not recording
-    _observe(c, "srv-c", "det", "d-12", 1, t + 30, "person", cam=7, score=0.9)   # a detector on a GPU server, ABOUT camera 7
+    _observe(c, "srv-c", "det", "d-12", 1, t + 30, "person", of="vms/7", cam=7, score=0.9)   # a detector on a GPU server, ABOUT camera 7
     _observe(c, "srv-c", "lpr", "lane-1", 1, t + 5, "plate", plate="AB123")      # a third subsystem, its own prefix
     rs = _resources(c)
     assert resources_seen(c.objects)["srv-c"]["units"] == {"det": ["d-12"], "lpr": ["lane-1"]}
@@ -58,20 +58,20 @@ def test_events_are_indexed_by_each_resource_and_merged_by_the_console_which_hol
     assert [e["server"] for e in rs["srv-a"].index.query(t, t + 3600)["events"]] == ["srv-a", "srv-a"]
     # the console merges by time, and fences by the epochs only the cluster's rows know
     m = _merged(c, rs)
-    q = m.query(t, t + 3600, cam=7, current_epochs={("vms", "7"): 4})
+    q = m.query(t, t + 3600, unit="vms/7", current_epochs={("vms", "7"): 4})
     assert q["state"] == "live" and [(e["subsystem"], e["unit"], e["kind"], e["server"], e["epoch"], e["fenced"]) for e in q["events"]] == [
-        ("vms", "7", "motion", "srv-a", 3, True), ("det", "d-12", "person", "srv-c", 1, False),
-        ("vms", "7", "silent", "srv-a", 3, True), ("vms", "7", "motion", "srv-b", 4, False)]
-    assert q["events"][1]["score"] == 0.9 and q["events"][1]["bucket"].startswith("det/d-12/e1/")   # found by the field; it lives in ITS bucket
+        ("vms", "vms/7", "motion", "srv-a", 3, True), ("det", "det/d-12", "person", "srv-c", 1, False),
+        ("vms", "vms/7", "silent", "srv-a", 3, True), ("vms", "vms/7", "motion", "srv-b", 4, False)]
+    assert q["events"][1]["score"] == 0.9 and q["events"][1]["bucket"].startswith("det/d-12/e1/")   # found by its `of`; it lives in ITS bucket
     assert [e["plate"] for e in m.query(t, t + 3600, subsystem="lpr")["events"]] == ["AB123"]
-    assert [e["cam"] for e in m.query(t, t + 3600, kind="motion")["events"]] == [7, 7]
+    assert [e["unit"] for e in m.query(t, t + 3600, kind="motion")["events"]] == ["vms/7", "vms/7"]
     # the index holds nothing of its own: a resource job restarted answers the same, from its tree alone
     before = rs["srv-a"].index.query(t, t + 3600)["events"]
     again = EventIndex(c.servers["srv-a"].archive, "srv-a", wall=c.wall, bucket_seconds=B)
     assert again.query(t, t + 3600)["events"] == before
     # a new bucket on srv-c is on the merged timeline in the next answer — nobody tailed it, nobody was told
-    _observe(c, "srv-c", "det", "d-12", 1, t + 700, "person", cam=9)
-    assert [e["cam"] for e in m.query(t, t + 3600, kind="person")["events"]] == [7, 9]
+    _observe(c, "srv-c", "det", "d-12", 1, t + 700, "person", of="vms/9", cam=9)
+    assert [e["of"] for e in m.query(t, t + 3600, kind="person")["events"]] == ["vms/7", "vms/9"]
 
 
 def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
@@ -82,15 +82,15 @@ def test_a_dead_resource_makes_the_answer_incomplete_by_name_not_wrong():
     for s in rs: _index(c, rs, s)
     c.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()                  # srv-a went silent
     m = _merged(c, rs)
-    assert [e["cam"] for e in m.query(t, t + 3600)["events"]] == [8] and m.state == "live; srv-a unreachable"   # unavailable, and the state says so
+    assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/8"] and m.state == "live; srv-a unreachable"   # unavailable, and the state says so
     rs["srv-a"].heartbeat()
-    assert [e["cam"] for e in m.query(t, t + 3600)["events"]] == [7, 8] and m.state == "live"   # back with its disks: its database answers again, nothing rebuilt
+    assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7", "vms/8"] and m.state == "live"   # back with its disks: its database answers again, nothing rebuilt
     c.servers["srv-b"].down = True                                                     # live by heartbeat, not answering: named too
-    assert [e["cam"] for e in m.query(t, t + 3600)["events"]] == [7] and m.state == "live; srv-b unreachable"
+    assert [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7"] and m.state == "live; srv-b unreachable"
     c.servers["srv-b"].down = False
     # retention on srv-b removed a bucket: ITS index lets it go, by (server, path) — the console is not told, it asks
     c.vars.put("vms/retention/8", {"days": "0.01"})
-    assert rs["srv-b"].retain() == 1 and [e["cam"] for e in m.query(t, t + 3600)["events"]] == [7]
+    assert rs["srv-b"].retain() == 1 and [e["unit"] for e in m.query(t, t + 3600)["events"]] == ["vms/7"]
     assert c.vars.list("vms/events") == [] and c.objects.list("vms/events") == []   # no controller, no index store, wrote an event
 
 
@@ -123,7 +123,7 @@ def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
     assert peers_of("srv-b", ["srv-a", "srv-b", "srv-c"], 2) == ["srv-c", "srv-a"] and peers_of("srv-a", ["srv-a"], 1) == []
     c = Cluster(); t = c.wall() - 7200
     _observe(c, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")
-    _observe(c, "srv-a", "det", "d-12", 1, t + 30, "person", cam=7)
+    _observe(c, "srv-a", "det", "d-12", 1, t + 30, "person", of="vms/7", cam=7)
     _observe(c, "srv-a", "vms", "7", 3, t + 6800, "motion")                      # in the OPEN bucket: not closed, not mirrored
     _observe(c, "srv-b", "vms", "8", 1, t + 20, "motion")
     pol = hbs = _resources(c)
@@ -141,12 +141,12 @@ def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
     assert rep == {"units": 3, "buckets": 3, "mirrored": ["srv-a"], "cached": 0}   # its own unit and two of srv-a's, a bucket each
     assert [e["server"] for e in rs["srv-b"].index.query(t, t + 7200)["events"]] == ["srv-a", "srv-b", "srv-a"]   # by time; two of them under srv-a's name
     _index(c, rs, "srv-a"); _index(c, rs, "srv-c"); m = _merged(c, rs)
-    ev = m.query(t, t + 7200, cam=7)["events"]
+    ev = m.query(t, t + 7200, unit="vms/7")["events"]
     assert [(e["subsystem"], e["kind"], e["server"]) for e in ev] == [("vms", "motion", "srv-a"), ("det", "person", "srv-a"), ("vms", "motion", "srv-a")]
     assert m.state == "live"                                                                         # the owner answers, open bucket included; srv-b's copies are dropped
     # srv-a dies
     c.wall.advance(60); hbs["srv-b"].heartbeat(); hbs["srv-c"].heartbeat()
-    ev = m.query(t, t + 7200, cam=7)["events"]
+    ev = m.query(t, t + 7200, unit="vms/7")["events"]
     assert [(e["subsystem"], e["kind"], e["server"]) for e in ev] == [("vms", "motion", "srv-a"), ("det", "person", "srv-a")]   # complete, from the peer; the open bucket is the RPO
     assert m.state == "live; srv-a from mirror"
     # srv-a returns — with a REPLACED, empty disk
@@ -157,6 +157,6 @@ def test_the_events_knob_is_a_peer_copy_and_the_owner_restores():
     assert [b.path for b in buckets_under(c.servers["srv-a"].archive, "vms", "7", B)] == [ev[0]["bucket"]]
     hbs["srv-a"].heartbeat()
     assert _index(c, rs, "srv-a")["buckets"] == 2                                                    # its job restarts: the index over the restored tree
-    ev2 = m.query(t, t + 7200, cam=7)["events"]
+    ev2 = m.query(t, t + 7200, unit="vms/7")["events"]
     assert [(e["kind"], e["server"], e["bucket"]) for e in ev2] == [(e["kind"], e["server"], e["bucket"]) for e in ev] and m.state == "live"   # the owner is the source again; no duplicates
     assert c.objects.list("platform/mirror") == [] and c.vars.list("vms/mirror") == []               # no store in between, ever; and not the VMS's knob

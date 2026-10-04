@@ -25,7 +25,7 @@ from tests.domain.test_lesson15_root import DOMAIN, _objects, _site
 def test_a_grant_on_the_domain_is_on_the_whole_domain_and_admin_includes_view():
     v = FakeVariables()
     set_domain_grants(v, [Grant("anna", "admin", None, 0.0), Grant("boris", "view", None, 2000.0),
-                          Grant("vera", "admin", 7, 0.0)], 1000.0)
+                          Grant("vera", "admin", "vms/7", 0.0)], 1000.0)
     assert domain_may(v, "anna", "view", 1000.0) and domain_may(v, "anna", "admin", 10 ** 12)   # 0: never lapses
     assert domain_may(v, "boris", "view", 1000.0) and not domain_may(v, "boris", "admin", 1000.0)
     assert not domain_may(v, "boris", "view", 2000.0)                    # a number is an end
@@ -143,7 +143,7 @@ def test_a_user_deleted_takes_every_grant_naming_them_and_the_last_admin_stays()
     for u in ("anna", "bob"):
         users.create_local(u, "pw", ["operator"])
     set_domain_grants(v, [Grant("anna", "admin", None, 0.0), Grant("bob", "view", None, 0.0)], 1000.0)
-    DomainPublisher(v).publish_grants("south", [Grant("bob", "edit", 7, 2000.0), Grant("carol", "view", None, 2000.0)])
+    DomainPublisher(v).publish_grants("south", [Grant("bob", "edit", "vms/7", 2000.0), Grant("carol", "view", None, 2000.0)])
     users.delete("bob")
     assert not domain_may(v, "bob", "view", 1000.0) and domain_may(v, "anna", "admin", 1000.0)
     assert [k.split("|")[0] for k in v.get(f"{GRANTS_PATH}/south")[0]] == ["carol"]

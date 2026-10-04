@@ -27,9 +27,10 @@
 # — kept footage the incidents ring took, a recording shallower than it was promised — is an ALARM in the
 # recorder's own events (`archive.keep.lost`, `archive.shallow`).
 #
-# What a line is ABOUT is in `of` (a subsystem) and `target` (a unit). Not `subsystem` and `unit`: those are
+# What a line is ABOUT is in `sub` (a subsystem) and `target` (a unit). Not `subsystem` and `unit`: those are
 # the line's own — `audit`, and the role that wrote it — and a field of the same name would answer for them
-# in every reader.
+# in every reader. Nor `of`, which is the index's own column (`events.OF`, `<sub>/<id>`): the field was `of` until
+# the index took the name (the boundary's step 2; the product's journal says `sub` too).
 #
 # "Who" is `X-User` — the name the caller gave, OR the name the console's gate proved from a token and wrote
 # over the header (`access.py`: a cluster in a domain holds a key set; a console that cannot check is shut).

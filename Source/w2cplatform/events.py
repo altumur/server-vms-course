@@ -242,9 +242,14 @@ def new_temp(dir: str, prefix: str, suffix: str = ".tmp") -> tuple[int, str]:
 #   v          the format's version — and NOT written. A line without `v` is version 1; a reader skips the
 #              fields it does not know; `v` appears the day a line changes so that an old reader would read it
 #              WRONGLY, and not before
+#   of         the unit this line's unit is about, `<sub>/<id>` (its spec's `about`, as its row said when the line
+#              was written), or absent. What lets a query for a unit find the lines of every unit about it without
+#              the index knowing what any of them is — the index's second column (the boundary's step 2; the
+#              product's `FieldOf`). Written by the writer, never looked up again: a line stays where it was filed
 #
 # The process is in the id because several processes write under one epoch in one place: a console's marks
 # and its journal of archive reads are all epoch 1.
+OF = "of"
 _PROC = "".join(random.choice(string.ascii_lowercase) for _ in range(10))
 _SEQ = itertools.count(1)
 
@@ -271,9 +276,11 @@ class EventLog:
     anything the subsystem does."""
 
     # Fixes the resource root, the subsystem prefix, the unit (stringified), the epoch this writer holds and
-    # the bucket span (10 minutes by default).
-    def __init__(self, root: str, subsystem: str, unit: str, epoch: int, bucket_seconds: int = 600):
+    # the bucket span (10 minutes by default). `of`: the unit this log's unit is about (`SubsystemSpec.of_row` of its
+    # row, as the writer holds it), written into every line as `of` unless the line names its own; "" for none.
+    def __init__(self, root: str, subsystem: str, unit: str, epoch: int, bucket_seconds: int = 600, of: str = ""):
         self.root, self.subsystem, self.unit, self.epoch, self.bucket_seconds = root, subsystem, str(unit), epoch, bucket_seconds
+        self.of = of
         self._synced: set[str] = set()            # bucket FILES whose directory entry this writer has made durable
         self._synced_dirs: set[str] = set()       # …and epoch directories whose own entry it has
 
@@ -304,6 +311,17 @@ class EventLog:
             raise ValueError(f"`occurred` is a time, in seconds, by the writer's clock — not {fields['occurred']!r}")
         if "v" in fields:
             raise ValueError("`v` is the format's version and is not written: a line without it is version 1")
+        # `of`: the log's, unless the line says its own — and a reference either way, or the index's second column would
+        # hold whatever a field of that name meant to somebody. An empty one is as if not said.
+        if fields.get(OF) in ("", None):
+            fields.pop(OF, None)
+        if OF not in fields and self.of:
+            fields[OF] = self.of
+        if OF in fields:
+            from .doors import ref_fault
+            why = ref_fault(fields[OF])
+            if why:
+                raise ValueError(f"`of` is the unit a line's unit is about: {why}")
         given = fields.pop("id", None)               # the writer names the line; a name it was handed is kept
         p = self.path_for(t, cls)                    # the class picks the tree: an alarm is kept by its own days
         os.makedirs(os.path.dirname(p), exist_ok=True)

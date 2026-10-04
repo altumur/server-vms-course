@@ -164,7 +164,7 @@ def test_a_holders_coverage_that_is_a_word_costs_its_spans_and_not_the_timeline_
     extra = vms_routes(media=True, ctl=ctl)
     h = types.SimpleNamespace(headers={}, client_address=("10.0.0.1", 0))
     assert extra(h, "GET", "/timeline/1", {"from": str(t - 60), "to": str(t)}) == (200, [])
-    status, rep = extra(h, "GET", "/segment", {"cam": "1", "from": str(t - 60), "to": str(t)})
+    status, rep = extra(h, "GET", "/segment", {"unit": "vms/1", "from": str(t - 60), "to": str(t)})
     assert status == 200 and rep["playback"].startswith("http://w-1/play/1?"), rep
     assert "vms/heartbeats/w-1#coverage" in FIELDS.bad
     assert extra(h, "GET", "/timeline/1", {"from": "yesterday"})[0] == 400       # a word in the query: 400, not no reply

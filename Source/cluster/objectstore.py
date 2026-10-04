@@ -249,7 +249,7 @@ class ObjectsUnavailable(OSError):
 def _store_from_env():
     from w2cplatform import variables as v
     store_url = getattr(v, "store_url", None)
-    url = store_url(os.environ) if store_url is not None else (os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL"))
+    url = store_url(os.environ) if store_url is not None else os.environ.get("PLATFORM_STORE")
     if not url:
         raise ValueError("a create-only object is a row in the store, and no store was named: "
                          "PLATFORM_STORE=configstore:///run/configstore/<role>.sock")
@@ -384,7 +384,7 @@ class ClusterObjectStore:
         self._said_missing(said.get("missing"))
         keys |= self._remembered(prefix, said["objects"], said.get("missing") or [])
         if _may_hold_create_only(prefix) and (self._vars is not None or self._rows is not None
-                                              or os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL")):
+                                              or os.environ.get("PLATFORM_STORE")):
             keys |= {k for k in self.rows.list(prefix) if is_create_only(k)}
         self._listed[prefix] = (self.clock(), keys)
         return sorted(keys)

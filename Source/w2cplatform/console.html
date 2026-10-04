@@ -9,7 +9,7 @@
      events — as ticks on the timeline and as a list under it, from every
      subsystem, coloured by subsystem, each click seeking the player; as a
      live feed beside the live picture, polled while watching; and as a
-     Mark button, the operator's own event — /timeline/<id>, /events?cam=,
+     Mark button, the operator's own event — /timeline/<id>, /events?unit=,
      each span's `media` route, /marks (one box: a list; a cluster: {segments,
      unreachable, note}, each span naming its server; the events reply's
      `state` names a resource that did not answer). -->
@@ -25,7 +25,7 @@ page names a camera: the VMS is the spec that says `rows: cameras`, `media: true
 and the same page (`test_one_console_mounts_every_subsystem_it_fronts`, and `test_the_console_over_http`
 asserts the word "camera" does not appear outside the leading comment). With media the page adds the
 timeline and the player, using the routes the subsystem registered (`/timeline/<id>`, and the `media` each span
-names — the VMS: `/export/<id>?rec=…`, an interval as an MP4) plus the platform's `/events?cam=`. Writes go through the console with a fresh `Idempotency-Key` per attempt
+names — the VMS: `/export/<id>?rec=…`, an interval as an MP4) plus the platform's `/events?unit=<sub>/<id>`. Writes go through the console with a fresh `Idempotency-Key` per attempt
 so a retried click is one unit; refusals are shown as the server's `detail`.
 
 ## `<style>`
@@ -92,7 +92,7 @@ spans and ticks, `−−fenced` grey, `−−live` green and `−−stale` red f
 - `#player.onended` — `next()`.
 - `#last24` click — window = last 24 h and reload the timeline; `#all` — no window.
 - `#events li` click — `seek(t)`: play the span holding `t` and jump the player to the offset.
-- `#mark` submit — `POST /marks {cam: current, note}`: the operator's own event, then reload the events.
+- `#mark` submit — `POST /marks {unit: <spec.name>/<current>, note}`: the operator's own event, then reload the events.
 - `#evfilter` change — redraw the ticks and the list for one subsystem.
 
 ### Boot
@@ -104,7 +104,7 @@ setInterval(loadEvents, 5000) })` — the events refresh on their own, the way t
 - `POST /<rows>`, `PUT /<rows>/<id>`, `DELETE /<rows>/<id>` — the writes, always with an `Idempotency-Key`.
 - `GET /timeline/<id>?from&to`, and each span's `media` with `from&to` (the VMS: `/export/<id>?rec=…`) — only
   when `spec.media`; registered by the subsystem.
-- `GET /events?from&to&cam=<id>` — the resources' event databases, merged by the console, tolerated when absent;
+- `GET /events?from&to&unit=<spec.name>/<id>` — the resources' event databases, merged by the console, tolerated when absent;
   `POST /marks` — the operator's event; `GET /servers`, `GET /mounts` — the servers as placement sees them, and what this process fronts.
 - `POST /servers/<name>/decommission {why}` — a machine gone for good (on the Mount, as `/drain`): 409 while the server
   answers, the sign named; the controllers release its slots and move their units. `DELETE` — withdrawn, or it is back.
@@ -309,6 +309,7 @@ const PALETTE = ['#c58a1a', '#8e44ad', '#2a9d5c', '#d35400', '#16a085', '#7f8c8d
 const palette = {};
 const subColor = sub => palette[sub] || (palette[sub] = PALETTE[Object.keys(palette).length % PALETTE.length]);
 const ROWS = () => '/' + spec.rows;
+const REF = () => spec.name + '/' + current;   // the current unit as the platform names one: <sub>/<id>
 const label = u => u.name || (spec.id === 'numeric' ? spec.rows.replace(/s$/, '') + ' ' + u.id : String(u.id));
 const hasEnabled = () => spec.fields.some(f => f.name === 'enabled' && f.type === 'bool');
 // What the page draws, it draws through `h`: a tagged template whose every `${…}` is escaped — a unit's name,
@@ -408,7 +409,7 @@ async function select(id) {
 // -- media: only when the spec says so (the subsystem registered /timeline and its media route) ------
 // `GET /timeline/<current>?from&to` (the subsystem's route). Accepts a plain list (one box) or `{segments,
 // unreachable, note}` (a cluster), showing `note` in `#note`. Normalises spans; tries `GET
-// /events?from&to&cam=<current>` and ignores a failure (503 without an index). Computes the visible range:
+// /events?from&to&unit=<spec.name>/<current>` and ignores a failure (503 without an index). Computes the visible range:
 // the window if set, else from the earliest span/event (or now − 1 h) to the latest (or now). Draws each
 // span as a `div.span` positioned by percentage — `events-only` when it has no media, `fenced` when fenced
 // — with a tooltip naming times, epoch, server, event count and "not recorded"; clicking a span with media
@@ -441,13 +442,13 @@ async function loadTimeline() {
 }
 
 // -- events: the resources' databases, merged by the console; the page only draws --------------------
-// `GET /events?from&to&cam=<current>`: keeps the rows in `events`, shows the merge's `state` (red unless
+// `GET /events?from&to&unit=<spec.name>/<current>`: keeps the rows in `events`, shows the merge's `state` (red unless
 // exactly "live" — a resource that did not answer is named, and the list is honest about being short),
 // and rebuilds the subsystem filter and the legend from the subsystems seen.
 async function fetchEvents(from, to) {
   events = []; groups = [];
   try {
-    const r = await fetch(`/events?from=${from}&to=${to}&cam=${encodeURIComponent(current)}`);
+    const r = await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent(REF())}`);
     if (r.ok) {
       const d = await r.json(); events = d.events || []; groups = d.aggregated ? (d.groups || []) : [];
       // Past the console's norm the answer is counts, not lines (М10A, урок 15). Say WHY the list
@@ -497,7 +498,7 @@ function drawEvents() {
     for (const g of groups.filter(g => !evfilter || g.subsystem === evfilter)) {
       const li = document.createElement('li');
       li.innerHTML = h`<span><span class="sw" style="background:${subColor(g.subsystem)}"></span>` +
-                     h`<strong>${g.count}×</strong> ${g.kind} <small>${g.subsystem}/${g.unit}</small>` +
+                     h`<strong>${g.count}×</strong> ${g.kind} <small>${g.unit}</small>` +
                      (g.class === 'alarm' ? ' <strong>alarm</strong>' : '') + `</span>` +
                      h`<small>${fmt(g.since)} – ${fmt(g.until)}</small>`;
       li.onclick = () => seek(g.since);
@@ -507,9 +508,9 @@ function drawEvents() {
   }
   for (const e of [...shown].reverse()) {
     const li = document.createElement('li'); li.className = e.fenced ? 'fenced' : '';
-    const extra = Object.entries(e).filter(([k]) => !['subsystem', 'unit', 'cam', 'epoch', 't', 'kind', 'server', 'bucket', 'fenced'].includes(k))
+    const extra = Object.entries(e).filter(([k]) => !['subsystem', 'unit', 'of', 'epoch', 't', 'kind', 'server', 'bucket', 'fenced'].includes(k))
                         .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' ');
-    li.innerHTML = h`<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.subsystem}/${e.unit}</small></span>` +
+    li.innerHTML = h`<span><span class="sw" style="background:${subColor(e.subsystem)}"></span>${fmt(e.t)} <strong>${e.kind}</strong> <small>${e.unit}</small></span>` +
                    h`<small>${e.server || ''} · epoch ${e.epoch}${e.fenced ? ' (fenced)' : ''}${extra ? ' · ' + extra : ''}</small>`;
     li.onclick = () => seek(e.t);
     ul.appendChild(li);
@@ -528,7 +529,7 @@ $('#evfilter').onchange = e => { evfilter = e.target.value; drawEvents(); };
 $('#mark').onsubmit = async e => {
   e.preventDefault();
   const note = e.target.elements.note.value;
-  try { await send('POST', '/marks', { cam: current, note }); e.target.reset(); setTimeout(loadEvents, 3500); }   // the resource's next tail
+  try { await send('POST', '/marks', { unit: REF(), note }); e.target.reset(); setTimeout(loadEvents, 3500); }   // the resource's next tail
   catch (err) { $('#evstate').textContent = 'mark refused: ' + err.message; $('#evstate').className = 'bad'; }
 };
 
@@ -663,14 +664,14 @@ async function startLive() {
   const feed = $('#livefeed'); feed.style.display = 'block'; feed.innerHTML = '<small>live events — what every subsystem observes on this unit while you watch</small>';
   live.timer = setInterval(pollLive, 3000); pollLive();
 }
-// The live feed: while watching, `GET /events?from=<since>&cam=<current>` every 3 s (the resource's tail
+// The live feed: while watching, `GET /events?from=<since>&unit=<spec.name>/<current>` every 3 s (the resource's tail
 // interval) and prepend what is new — a detector's crossing, a mark, the worker's `silent` — newest first,
 // the last 30 kept. The picture comes from the gateway; the events come from the resource; the page joins
 // them by time and nothing else.
 async function pollLive() {
   if (!live) return;
   let d;
-  try { const r = await fetch(`/events?from=${live.since}&to=1e12&cam=${encodeURIComponent(current)}`); if (!r.ok) return; d = await r.json(); } catch (_) { return; }
+  try { const r = await fetch(`/events?from=${live.since}&to=1e12&unit=${encodeURIComponent(REF())}`); if (!r.ok) return; d = await r.json(); } catch (_) { return; }
   const feed = $('#livefeed');
   for (const e of (d.events || []).sort((a, b) => a.t - b.t)) {
     const k = `${e.server}|${e.bucket}|${e.t}|${e.kind}`; if (live.seen.has(k)) continue; live.seen.add(k);

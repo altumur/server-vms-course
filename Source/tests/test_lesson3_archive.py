@@ -90,7 +90,7 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     p2 = log.append(t0 + 700.0, "person", score=0.9)               # the next bucket: rolled by the clock
     assert subsystems_under(box.archive) == {"vms": ["7"]} and st.units() == []   # watched, not recorded
     db = EventIndex(box.archive, "box", wall=box.wall)
-    assert [e["kind"] for e in db.query(t0, t0 + 1200, cam=7)["events"]] == ["motion", "silent", "person"]
+    assert [e["kind"] for e in db.query(t0, t0 + 1200, unit="vms/7")["events"]] == ["motion", "silent", "person"]
     # now a recorder records the camera under ITS epoch, into its volume: a span on the timeline, the events still the worker's
     footage(st, "7", 4, t0 + 600, t0 + 1200)
     assert st.units() == ["7"]
@@ -101,6 +101,6 @@ def test_events_are_buckets_on_the_resource_recording_or_not():
     platform = Resource(box.archive, "box", "http://box", box.vars, box.objects, wall=lambda: t0 + 40 * 86400)
     platform.index = db
     assert platform.retain() == 2 and not os.path.exists(p) and not os.path.exists(p2)
-    assert db.query(t0, t0 + 1200, cam=7)["events"] == []
+    assert db.query(t0, t0 + 1200, unit="vms/7")["events"] == []
     assert st.coverage("7") == [(t0 + 600, t0 + 1200)]             # the footage, untouched: the ring decides for it
     assert box.vars.list("vms/events") == []

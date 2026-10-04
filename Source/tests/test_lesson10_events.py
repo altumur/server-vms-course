@@ -71,29 +71,29 @@ def test_three_subsystems_events_reach_one_timeline_through_the_resource_process
         for _ in range(3):
             box.wall.advance(2); gpu.reconcile_once()                                    # one event, on the third pass
         # the operator marks a moment, and the camera goes silent: three subsystems' events on one resource
-        call(base, "POST", "/marks", {"cam": 1, "note": "check this"}, {"Idempotency-Key": "m1", "X-User": "murat"})
+        call(base, "POST", "/marks", {"unit": "vms/1", "note": "check this"}, {"Idempotency-Key": "m1", "X-User": "murat"})
         w.actuator.dead.append(1); w.pump_once()
-        st, out = call(base, "GET", "/events?cam=1"); ev = out["events"]             # nobody tailed, nobody told: the files, as they are
+        st, out = call(base, "GET", "/events?unit=vms/1"); ev = out["events"]             # nobody tailed, nobody told: the files, as they are
         assert st == 200 and out["state"] == "live"
         assert [(e["subsystem"], e["kind"], e["server"], e["fenced"]) for e in ev] == [
             ("det", "linecross", "srv-1", False), ("console", "mark", "srv-1", False), ("vms", "silent", "srv-1", False)]
-        assert ev[0]["unit"] == "1-linecross" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[1]["user"] == "murat"
+        assert ev[0]["unit"] == "det/1-linecross" and ev[0]["of"] == "vms/1" and ev[0]["pass"] == 3 and ev[0]["epoch"] == 1 and ev[1]["user"] == "murat"
         # the page shows all of it: the events under the timeline, the live feed beside the picture, the Mark button
         page = urllib.request.urlopen(base + "/").read().decode()
         assert 'id="events"' in page and 'id="livefeed"' in page and "/marks" in page and "/servers" in page
         # the same answer under the mount: /det/events fences by det's epochs too
-        assert call(base, "GET", "/det/events?cam=1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
+        assert call(base, "GET", "/det/events?unit=vms/1&subsystem=det")[1]["events"][0]["kind"] == "linecross"
         # an open bucket keeps growing: the next event is in the next answer — the file is looked at, not remembered
         for _ in range(3):
             box.wall.advance(2); gpu.reconcile_once()
-        assert len(call(base, "GET", "/events?cam=1&subsystem=det")[1]["events"]) == 2
+        assert len(call(base, "GET", "/events?unit=vms/1&subsystem=det")[1]["events"]) == 2
         # another detector instance takes the unit's epoch: the first one's events are fenced, nobody else's
         box.vars.put("det/epoch/1-linecross", {"epoch": "2"})
-        assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?cam=1")[1]["events"]] == [
+        assert [(e["subsystem"], e["fenced"]) for e in call(base, "GET", "/events?unit=vms/1")[1]["events"]] == [
             ("det", True), ("console", False), ("vms", False), ("det", True)]
         # the resource process stops: the console says so by name, and answers with what it has — nothing
         rsrv.shutdown(); rsrv.server_close()
-        st, out = call(base, "GET", "/events?cam=1")
+        st, out = call(base, "GET", "/events?unit=vms/1")
         assert st == 200 and out["events"] == [] and out["state"] == "live; srv-1 unreachable"
     finally:
         srv.shutdown(); srv.server_close()
@@ -112,11 +112,11 @@ def test_the_index_is_the_tree_and_retention_takes_the_events_with_the_file():
     assert res.index.listing() == {"units": 1, "buckets": 2, "mirrored": [], "cached": 0} and res.index.state == "live"
     again = EventIndex(box.archive, "srv-1", wall=box.wall)
     assert again.query(0, 1e12)["events"] == res.index.query(0, 1e12)["events"]          # nothing of its own: two indexes, one tree
-    m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None), wall=box.wall)
-    assert [e["t"] for e in m.query(0, 1e12, cam=7)["events"]] == [t + 10, box.wall() - 100]
+    m = MergedIndex(box.objects, fetch=lambda url, p: res.index.query(float(p["from"]), float(p["to"]), unit=p.get("unit")), wall=box.wall)
+    assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [t + 10, box.wall() - 100]
     box.vars.put("vms/retention/7", {"days": "1"})                                        # the VMS's policy for its unit, as a row the platform reads
     assert res.retain() == 1                                                              # the file went — and its events with it
-    assert [e["t"] for e in m.query(0, 1e12, cam=7)["events"]] == [box.wall() - 100]
+    assert [e["t"] for e in m.query(0, 1e12, unit="vms/7")["events"]] == [box.wall() - 100]
     assert box.vars.list("vms/events") == [] and box.objects.list("vms/events") == []     # nothing about events in any store
 
 
@@ -143,7 +143,7 @@ def test_a_torn_last_line_loses_the_line_not_the_bucket():
     assert ev.torn == before + 1                              # and the damage is counted, not silent
 
     db = EventIndex(box.archive, "srv-1", lambda: 2000.0, 600)
-    assert len(db.query(0, 1e12, cam=None, kind=None, subsystem="vms", unit="8123",
+    assert len(db.query(0, 1e12, kind=None, subsystem="vms", unit="vms/8123",
                         current_epochs={("vms", "8123"): 7})["events"]) == 5
 
 
@@ -573,18 +573,17 @@ def test_the_timeline_reads_every_epoch_once_in_a_while_and_a_cameras_timeline_o
     def ask(**q):
         h = H(); con.dispatch(h, "GET", "/events", {"from": str(t), "to": str(t + 60), **q}); return h.reply
 
-    fenced = lambda rep: [(e["unit"], e["fenced"]) for e in rep[1]["events"]]
+    fenced = lambda rep: [(e["unit"].split("/")[1], e["fenced"]) for e in rep[1]["events"]]
     assert fenced(ask()) == [("7", False), ("9", True)] and (vars_.scans, vars_.epochs) == (1, 2)
     assert fenced(ask()) == [("7", False), ("9", True)] and (vars_.scans, vars_.epochs) == (1, 2)   # a second request: the cache
     box.clock.advance(con.EPOCH_CACHE + 1)
     assert fenced(ask()) == [("7", False), ("9", True)] and vars_.scans == 2                   # past the window: read again
     # one camera: no scan, one row — its own — and read now, not from the cache
     vars_.scans = vars_.epochs = 0
-    assert fenced(ask(cam="9")) == [("9", True)] and (vars_.scans, vars_.epochs) == (0, 1)
+    assert fenced(ask(unit="vms/9")) == [("9", True)] and (vars_.scans, vars_.epochs) == (0, 1)
     box.vars.put("vms/epoch/7", {"epoch": "3"})                                                 # the camera's holder changed this instant
-    assert fenced(ask(cam="7")) == [("7", True)] and vars_.scans == 0                           # the camera's timeline knows at once…
+    assert fenced(ask(unit="vms/7")) == [("7", True)] and vars_.scans == 0                      # the camera's timeline knows at once…
     assert fenced(ask()) == [("7", False), ("9", True)]                                         # …the whole one, inside its three seconds, not yet
-    assert fenced(ask(unit="7")) == [("7", True)]                                               # a unit named is read the same way
     # the review's third pass, minor: one epoch row that does not parse was no reply at all; now that unit is unfenced
     box.vars.put("vms/epoch/9", {"epoch": "torn"})
     box.clock.advance(con.EPOCH_CACHE + 1)
@@ -1203,15 +1202,16 @@ def test_the_cache_keeps_to_its_ceiling():
 
 
 def test_a_detector_is_skipped_for_another_camera_once_its_lines_have_named_its_own():
-    """`cam` is a field an event may carry: a detector `7-motion` writes `cam: 7` in its lines, and its name is not
-    its camera. Once its lines have named camera 7, a timeline for camera 9 does not read its buckets."""
+    """A detector `7-motion` is about camera 7 (det.subsystem.yaml, `about`) and says so in every line (`of: vms/7`):
+    its name is not its camera. Once its lines have said camera 7, a timeline for camera 9 does not read its buckets."""
+    from vms.config import DET_SPEC
     from w2cplatform.events import EventLog
     box = Box()
     now = box.wall()
-    EventLog(box.archive, "det", "7-motion", 1, 600).append(now - 60, "motion", cam=7)
+    EventLog(box.archive, "det", "7-motion", 1, 600, of=DET_SPEC.of_row({"cam": "7"})).append(now - 60, "motion", cam=7)
     db = EventIndex(box.archive, "srv-1", wall=box.wall)
-    assert [e["cam"] for e in db.query(now - 600, now, cam=7)["events"]] == [7]
-    assert db._may_be("srv-1", "det", "7-motion", 9) is False and db.query(now - 600, now, cam=9)["events"] == []
+    assert [(e["unit"], e["of"]) for e in db.query(now - 600, now, unit="vms/7")["events"]] == [("det/7-motion", "vms/7")]
+    assert db._may_be_about("srv-1", "det", "7-motion", "vms/9") is False and db.query(now - 600, now, unit="vms/9")["events"] == []
 
 
 def test_a_resource_says_busy_rather_than_queueing_without_end():
@@ -1266,7 +1266,7 @@ def test_the_timeline_fences_a_subsystem_its_scan_did_not_list_and_says_one_it_m
     def ask():
         h = H(); con.dispatch(h, "GET", "/events", {"from": str(t), "to": str(t + 60)}); return h.reply
 
-    lines = lambda rep: {(e["subsystem"], e["unit"]): e["fenced"] for e in rep[1]["events"]}
+    lines = lambda rep: {(e["subsystem"], e["unit"].split("/")[1]): e["fenced"] for e in rep[1]["events"]}
     real = con.ctl.vars
     con.ctl.vars = Rights(real)
     rep = ask()

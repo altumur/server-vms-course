@@ -108,7 +108,7 @@ def test_importing_the_clusters_entry_point_takes_none_of_the_runners_signals():
 
 def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server():
     """`cluster/__main__.py` opens nothing at import (a test imports it) and, when run, the store by its verb's role —
-    `configstore:///run/configstore/<role>.sock` unless `PLATFORM_STORE` (or the older `CONFIG_URL`) says otherwise —
+    `configstore:///run/configstore/<role>.sock` unless `PLATFORM_STORE` says otherwise —
     and the objects as `cluster://` on this server, whose create-only rows go through THAT store handle, not a second
     one opened from the environment."""
     import tempfile
@@ -121,7 +121,7 @@ def test_each_process_opens_its_roles_socket_and_its_objects_on_its_own_server()
     vars_, objects = m.stores("vmsworker", {"OBJECTS": f"cluster://{d}/objects?resource=http://127.0.0.1:8090"})
     assert isinstance(vars_, ConfigstoreVariables) and vars_.path == "/run/configstore/vmsworker.sock"
     assert isinstance(objects, ClusterObjectStore) and objects.rows.vars is vars_ and objects.resource == "http://127.0.0.1:8090"
-    vars_, _ = m.stores("console", {"CONFIG_URL": f"file://{d}/config", "OBJECTS": f"file://{d}/o"})
+    vars_, _ = m.stores("console", {"PLATFORM_STORE": f"file://{d}/config", "OBJECTS": f"file://{d}/o"})
     assert type(vars_).__name__ == "FileVariables"
     assert m.OBJECTS == "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
 

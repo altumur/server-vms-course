@@ -14,7 +14,7 @@ a server's disks and nothing about what it means:
     GET  <url>/buckets/<sub>/<unit>    closed buckets, from the files
     GET  <url>/events/<path>           one bucket (also .mirror/<server>/<path>)
     GET  <url>/mirrored/<server>       which of <server>'s buckets this server holds copies of
-    GET  <url>/events?from&to&cam&kind&subsystem&unit   this resource's EventIndex: its buckets and its copies
+    GET  <url>/events?from&to&kind&subsystem&unit       this resource's EventIndex: its buckets and its copies
     GET  <url>/events/wait?want=<sub>/<kind>[/<unit>],…&timeout&since&client   HELD until a line of a wanted kind (of
                                        that unit) is appended here, or the timeout: `{changed, seq, touched}` — a hint to
                                        look, never the events; one held request per `client` (`longpoll.py`)
@@ -1497,7 +1497,7 @@ class Resource:
         # What the pass removed, per unit, in the journal: whose buckets, how many, of what period, by what
         # days. It used to be one number in a log line (feedback BN).
         for (sub, unit), (n, a, z) in sorted(swept.items()):
-            self.journal.say("events.removed", of=sub, target=unit, buckets=n, since=a, until=z,
+            self.journal.say("events.removed", sub=sub, target=unit, buckets=n, since=a, until=z,
                              days=max(days_of[(sub, unit)], floor) if tree_owner(sub)[0] == CONSOLE else days_of[(sub, unit)])
             self._progressed()                                          # a line written to the medium per unit
         # THE COPIES AGE TOO (the review, "mirror copies are never deleted"). `.mirror/<server>/…` is in no
@@ -1979,7 +1979,8 @@ class Resource:
 # - `do_GET`:
 #   - `GET /buckets/<sub>/<unit>` — `buckets_under` for that unit, one `Bucket.line()` per line, 200.
 #   - `GET /mirrored/<server>` — `mirrored_buckets` for that server, same format.
-#   - `GET /events?from&to&cam&kind&subsystem&unit&limit&keep&class` — `resource.index.query(...)` as JSON
+#   - `GET /events?from&to&kind&subsystem&unit&limit&keep&class` — `resource.index.query(...)` as JSON (`unit` is
+#     `<sub>/<id>`; a bare id is 400)
 #     (`{events, state, truncated}`, unfenced: the console fences); `keep` is "newest" (default) or
 #     "oldest" — which end of an overflowing window survives; 400 if it is neither; 503 if the job
 #     runs no index.
@@ -2138,7 +2139,7 @@ def serve(resource: Resource, host: str = "0.0.0.0", port: int = 8090, extra=Non
                     q = {k: v[0] for k, v in urllib.parse.parse_qs(self.path.partition("?")[2]).items()}
                     try:
                         rep = resource.index.query(float(q.get("from", 0)), float(q.get("to", 1e12)),
-                                                   int(q["cam"]) if q.get("cam") else None, q.get("kind"), q.get("subsystem"), q.get("unit"),
+                                                   q.get("kind"), q.get("subsystem"), q.get("unit"),
                                                    limit=min(int(q.get("limit", 1000)), MAX_LIMIT), keep=q.get("keep", "newest"),
                                                    cls=q.get("class"), by=q.get("by", "t"))
                     except ValueError as e:                       # an unknown `keep` is refused, not read as the other end

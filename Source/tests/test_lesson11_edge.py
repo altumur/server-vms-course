@@ -160,7 +160,7 @@ def test_the_console_draws_the_device_only_where_we_have_nothing():
             import json
             got = json.loads(r.read())
         assert [s["source"] for s in got] == ["device"]                     # nothing of ours yet: all of it is theirs
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/segment?cam=1&from=10&to=20") as r:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/segment?unit=vms/1&from=10&to=20") as r:
             import json
             assert json.loads(r.read())["playback"] == "http://srv-1:8083/playback/1?from=10&to=20"
     finally:

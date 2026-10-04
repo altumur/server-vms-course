@@ -3,59 +3,59 @@ srv-a: {'units': 1, 'buckets': 2, 'mirrored': [], 'cached': 0}
 srv-b: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
 srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
 
-# GET /events?cam=7 on the console — merged from every live resource
+# GET /events?unit=vms/7 on the console — merged from every live resource
 {
   "state": "live",
   "events": [
     {
       "t": 1757492812.0,
       "subsystem": "vms",
-      "unit": "7",
+      "unit": "vms/7",
+      "of": "",
       "kind": "motion",
       "server": "srv-a",
       "epoch": 3,
-      "fenced": true,
-      "cam": 7
+      "fenced": true
     },
     {
       "t": 1757492830.0,
       "subsystem": "det",
-      "unit": "d-12",
+      "unit": "det/d-12",
+      "of": "vms/7",
       "kind": "person",
       "server": "srv-c",
       "epoch": 1,
-      "fenced": false,
-      "cam": 7
+      "fenced": false
     },
     {
       "t": 1757492840.0,
       "subsystem": "vms",
-      "unit": "7",
+      "unit": "vms/7",
+      "of": "",
       "kind": "silent",
       "server": "srv-a",
       "epoch": 3,
-      "fenced": true,
-      "cam": 7
+      "fenced": true
     },
     {
       "t": 1757494005.0,
       "subsystem": "vms",
-      "unit": "7",
+      "unit": "vms/7",
+      "of": "",
       "kind": "motion",
       "server": "srv-b",
       "epoch": 4,
-      "fenced": false,
-      "cam": 7
+      "fenced": false
     },
     {
       "t": 1757499600.0,
       "subsystem": "vms",
-      "unit": "7",
+      "unit": "vms/7",
+      "of": "",
       "kind": "motion",
       "server": "srv-a",
       "epoch": 3,
-      "fenced": true,
-      "cam": 7
+      "fenced": true
     }
   ]
 }
@@ -67,22 +67,22 @@ srv-c: {'units': 1, 'buckets': 1, 'mirrored': [], 'cached': 0}
     {
       "t": 1757492830.0,
       "subsystem": "det",
-      "unit": "d-12",
+      "unit": "det/d-12",
+      "of": "vms/7",
       "kind": "person",
       "server": "srv-c",
       "epoch": 1,
-      "fenced": false,
-      "cam": 7
+      "fenced": false
     },
     {
       "t": 1757494005.0,
       "subsystem": "vms",
-      "unit": "7",
+      "unit": "vms/7",
+      "of": "",
       "kind": "motion",
       "server": "srv-b",
       "epoch": 4,
-      "fenced": false,
-      "cam": 7
+      "fenced": false
     }
   ]
 }

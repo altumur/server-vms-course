@@ -417,7 +417,7 @@ def _events_site():
     _observe(s, "srv-a", "vms", "7", 3, t + 12, "motion", zone="gate")          # the VMS worker, camera 7, before the failover
     _observe(s, "srv-a", "vms", "7", 3, t + 40, "silent")
     _observe(s, "srv-b", "vms", "7", 4, t + 1205, "motion")                      # after it: next epoch, other server
-    _observe(s, "srv-c", "det", "d-12", 1, t + 30, "person", cam=7, score=0.9)  # a detector ABOUT camera 7, on a GPU server
+    _observe(s, "srv-c", "det", "d-12", 1, t + 30, "person", of="vms/7", cam=7, score=0.9)  # a detector ABOUT camera 7, on a GPU server
     _observe(s, "srv-a", "vms", "7", 3, t + 6800, "motion")                      # in srv-a's OPEN bucket
     return s, t
 
@@ -429,15 +429,14 @@ def _merged(s):
         name = _host(url)
         if s.servers[name].down:
             raise ConnectionError(name)
-        return s.resources[name].index.query(float(p["from"]), float(p["to"]), int(p["cam"]) if "cam" in p else None,
-                                             p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
+        return s.resources[name].index.query(float(p["from"]), float(p["to"]), p.get("kind"), p.get("subsystem"), p.get("unit"), limit=int(p.get("limit", 1000)))
     m = MergedIndex(s.objects, fetch=fetch, wall=s.wall)
     m.SEEN_FOR = 0.0          # the stand moves only its wall: each query reads the resources afresh, as two queries a minute apart do
     return m
 
 
 def _short(q) -> dict:
-    keep = ("t", "subsystem", "unit", "kind", "server", "epoch", "fenced", "cam")
+    keep = ("t", "subsystem", "unit", "of", "kind", "server", "epoch", "fenced")
     return {"state": q["state"], "events": [{k: e[k] for k in keep if k in e} for e in q["events"]]}
 
 
@@ -450,10 +449,10 @@ def events_merged() -> str:
     for name in rs:
         out.append(f"{name}: {rs[name].index.listing()}")
     m = _merged(s)
-    out += ["", "# GET /events?cam=7 on the console — merged from every live resource",
-            _json(_short(m.query(t, t + 7200, cam=7, current_epochs={("vms", "7"): 4})))]
+    out += ["", "# GET /events?unit=vms/7 on the console — merged from every live resource",
+            _json(_short(m.query(t, t + 7200, unit="vms/7", current_epochs={("vms", "7"): 4})))]
     s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    out += ["", "# srv-a has been silent for 60 s", _json(_short(m.query(t, t + 7200, cam=7, current_epochs={("vms", "7"): 4})))]
+    out += ["", "# srv-a has been silent for 60 s", _json(_short(m.query(t, t + 7200, unit="vms/7", current_epochs={("vms", "7"): 4})))]
     return "\n".join(out) + "\n"
 
 
@@ -477,14 +476,14 @@ def the_events_mirror() -> str:
     for name in rs:
         out.append(f"{name} index -> {rs[name].index.listing()}")
     m = _merged(s)
-    out += ["", "# srv-a answers: its own events, the open bucket included", _json(_short(m.query(t, t + 7200, cam=7)))]
+    out += ["", "# srv-a answers: its own events, the open bucket included", _json(_short(m.query(t, t + 7200, unit="vms/7")))]
     s.wall.advance(60); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
-    out += ["", "# srv-a silent: its closed buckets, from srv-b's copy", _json(_short(m.query(t, t + 7200, cam=7)))]
+    out += ["", "# srv-a silent: its closed buckets, from srv-b's copy", _json(_short(m.query(t, t + 7200, unit="vms/7")))]
     shutil.rmtree(s.servers["srv-a"].archive); os.makedirs(s.servers["srv-a"].archive)
     rs["srv-a"].heartbeat()
     out += ["", f"# srv-a back with an EMPTY disk: restore -> {rs['srv-a'].restore()}"]
     rs["srv-a"].heartbeat()
-    out += [_json(_short(m.query(t, t + 7200, cam=7)))]
+    out += [_json(_short(m.query(t, t + 7200, unit="vms/7")))]
     return "\n".join(out) + "\n"
 
 

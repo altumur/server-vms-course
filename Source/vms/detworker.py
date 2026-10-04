@@ -157,7 +157,7 @@ class DetWorker(Worker):
     # Writes the lines the suppressor handed back — the observation, nothing, or the summary of a window that
     # just closed and then the observation — each under its class, into the unit's bucket under its epoch.
     def _write(self, unit: str, row: dict, lines) -> None:
-        log_ = EventLog(self.archive_root, DET.name, unit, self.epochs[unit])
+        log_ = EventLog(self.archive_root, DET.name, unit, self.epochs[unit], of=DET_SPEC.of_row(row))   # about its camera
         for t, kind, fields in lines:
             log_.append(t, kind, self.class_of(row, kind), **fields)
             self.status_by_unit[unit]["events"] = self.status_by_unit[unit].get("events", 0) + 1; self.events_written += 1

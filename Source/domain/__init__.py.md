@@ -1,6 +1,3 @@
 # __init__.py — the `domain` package: М12's statement of purpose
 
 **Role in the module.** The package docstring is the module's thesis: the smallest layer that can sit above a set of clusters, be switched off, and be the top of the product. It names exactly three things a cluster cannot know — lookup across clusters (`federation.py`), which cluster gets a camera (`placement.py`), whether an answer is complete (`Answer`) — plus the discipline of a layer that may be down: a signer that is the top of its own trust (`signer.py`), identity that never reaches a worker (`identity.py`, `agent.py`), grants that expire per cluster (`grants.py`), a server that joins with nobody typing a secret (`enroll.py`), and a read model that says how old it is (`readview.py`). There is no code below it: every file in this package imports `cluster.variables` / `cluster.objectstore` rather than copying them (the README: "imported, not copied"), and `cluster/` sits beside `domain/` in the one code root `Source/`, so the import resolves with nothing done.
-
-## Notes
-- Until the move into `Source/` the package searched for М11's `clustervms/` (`$CLUSTERVMS_PATH`, a sibling, the course layout) and appended it to `sys.path`; with one root that search went, and so did `CLUSTERVMS_PATH`.

@@ -325,7 +325,7 @@ def test_a_login_in_any_part_of_an_address_is_refused_and_a_stored_one_is_said_n
             items, idx = box.vars.get(key)
             writer.put(key, {**items, "source": src}, cas=idx)
             st, page = _call(base, "GET", "/cameras")
-            st2, cmd = _call(base, "POST", "/requests", {"unit": str(made[0]["id"]), "action": "output", "port": "1",
+            st2, cmd = _call(base, "POST", "/requests", {"unit": f"vms/{made[0]['id']}", "action": "output", "port": "1",
                                                          "state": "on"})
             snap.publish_snapshot()
             element = ""
@@ -542,7 +542,7 @@ def test_a_host_in_the_path_is_read_for_its_port_and_neither_a_refusal_nor_a_dev
         for src in HOST_IN_PATH_FORMS:                           # stored by an older build: the device key says none
             items, idx = box.vars.get(key)
             writer.put(key, {**items, "source": src}, cas=idx)
-            st, cmd = _call(base, "POST", "/requests", {"unit": str(cam["id"]), "action": "output", "port": "1", "state": "on"})
+            st, cmd = _call(base, "POST", "/requests", {"unit": f"vms/{cam['id']}", "action": "output", "port": "1", "state": "on"})
             assert st == 202 and not _leaks(cmd) and not _leaks(_call(base, "GET", "/cameras")[1]), (src, cmd)
     finally:
         srv.shutdown()
@@ -687,7 +687,7 @@ def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
     from tests.test_console_gate import Tokens, _call, _console
     from w2cplatform.access import TRUST_KEYS
     box = Box()
-    ctl, rec, m, srv, base = _console(box, Tokens({"one": [("admin", "2", ())], "admin": [("admin", None, ())]}))
+    ctl, rec, m, srv, base = _console(box, Tokens({"one": [("admin", "vms/2", ())], "admin": [("admin", None, ())]}))
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
         box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the gate is shut to strangers

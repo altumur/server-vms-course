@@ -6,11 +6,12 @@
 # controller class, same console class, same ACL shape as the VMS; nothing
 # about video in the platform.
 name: live
+about: {sub: vms, field: cam}   # a fan-out is about the camera it fans out: its events, grants and labels are the camera's
 unit:
   rows: streams                      # live/streams/<cam>
   id: cam                            # named by the camera it fans out, never numbered
   fields:
-    cam:       {type: string, required: true}   # the VMS camera id, as the row's name
+    cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
     grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
 placement:

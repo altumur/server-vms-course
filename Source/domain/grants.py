@@ -1,7 +1,7 @@
 """Lesson 4 — grants are cluster-local, carry an expiry, and expiry IS the
 revocation mechanism.
 
-Each cluster holds `subject X may do Y on camera Z until T` in its own
+Each cluster holds `subject X may do Y on unit Z until T` in its own
 Variables under domain/grants/*, written by the domain agent (the only
 writer of domain/* in that cluster) and read by the cluster's console and
 live gateway. Enforcement is a local read — no lookup, no token exchange —
@@ -31,10 +31,13 @@ GRANT_LIFETIME = 24 * 3600.0     # Lesson 4 makes students pick and defend it; t
 class Grant:
     subject: str
     capability: str          # "view" | "edit" | "admin"
-    camera: int | None       # None = every camera in this cluster
+    # The scope: one unit as the platform names it, `<sub>/<id>` (`vms/7`; the boundary's step 2 — it was a camera's
+    # number, and a grant could name nothing else), or None — every unit in this cluster. A grant on a unit takes in
+    # the units ABOUT it (a camera's recordings, its detectors): the console's gate asks about both (`access.may_on`).
+    unit: str | None
     valid_until: float
-    # …or the cameras that carry ALL of these labels (the product's scope, feedback BP): "the ground floor"
-    # without a grant per camera. With labels, `camera` is None and means nothing.
+    # …or the units that carry ALL of these labels (the product's scope, feedback BP): "the ground floor"
+    # without a grant per camera. With labels, `unit` is None and means nothing.
     labels: tuple = ()
 
 
@@ -44,29 +47,30 @@ class ClusterGrants:
 
     def __init__(self, cluster: str, now=time.time):
         self.cluster, self.now = cluster, now
-        self.grants: dict[tuple, float] = {}             # (subject, capability, camera, labels) -> valid until
+        self.grants: dict[tuple, float] = {}             # (subject, capability, unit, labels) -> valid until
 
-    def grant(self, subject: str, capability: str, camera: int | None, valid_until: float, labels: tuple = ()) -> None:
-        self.grants[(subject, capability, camera, tuple(sorted(labels)))] = valid_until
+    def grant(self, subject: str, capability: str, unit: str | None, valid_until: float, labels: tuple = ()) -> None:
+        self.grants[(subject, capability, unit, tuple(sorted(labels)))] = valid_until
 
     def revoke(self, subject: str) -> None:
         self.grants = {k: v for k, v in self.grants.items() if k[0] != subject}
 
-    def may(self, subject: str, capability: str, camera, now: float | None = None, labels=()) -> bool:
+    def may(self, subject: str, capability: str, unit, now: float | None = None, labels=()) -> bool:
         now = self.now() if now is None else now
-        for (s, c, cam, lab), until in self.grants.items():
+        for (s, c, u, lab), until in self.grants.items():
             if s != subject or c not in (capability, "admin") or now >= until:
                 continue
-            # A labelled grant covers a camera that carries all of its labels — and never "every camera":
-            # asked about no camera in particular (`camera=None`, no labels), it does not match.
-            if (set(lab) <= set(labels)) if lab else (cam in (camera, None)):
+            # A labelled grant covers a unit that carries all of its labels — and never "every unit": asked about no
+            # unit in particular (`unit=None`, no labels), it does not match. A grant on a unit covers that unit and
+            # nothing else; one with no unit covers every one (`"*"` included).
+            if (set(lab) <= set(labels)) if lab else (u in (unit, None)):
                 return True
         return False
 
     def renew_from_domain(self, renewals: list[Grant]) -> None:
         """The agent carried the domain's current grants for this cluster:
         replace, so a grant the domain dropped is not renewed."""
-        self.grants = {(g.subject, g.capability, g.camera, tuple(sorted(g.labels))): g.valid_until for g in renewals}
+        self.grants = {(g.subject, g.capability, g.unit, tuple(sorted(g.labels))): g.valid_until for g in renewals}
 
     def access_ends(self, subject: str, token_exp: float) -> float:
         """State in advance: if a revoke cannot reach this cluster, when does
@@ -76,7 +80,7 @@ class ClusterGrants:
 
 
 # WHAT A NAME MAY HOLD (the review's eighth pass, major; the coordinator's decision). A grant is the item
-# `<subject>|<capability>|<camera or labels:a,b>`, and the reader split it on `|` into three: a user called `acme|ivan`
+# `<subject>|<capability>|<unit:<sub>/<id>, labels:a,b, or nothing>`, and the reader split it on `|` into three: a user called `acme|ivan`
 # made FOUR, the split raised, and every grant of the row went with it — `domain_may` raised on every `/api/*` of the
 # domain's door, for the admin too, and the command that mends the grants raised the same way. `|`, `"` and the
 # control characters (a newline above all) are not allowed in a user's name, a grant's subject or a label: refused
@@ -105,7 +109,7 @@ def refuse_name(name, what: str = "name", also: str = "") -> None:
 
 def _item(g: Grant) -> str:
     return f"{g.subject}|{g.capability}|" + ("labels:" + ",".join(sorted(g.labels)) if g.labels else
-                                             "" if g.camera is None else str(g.camera))
+                                             "" if g.unit is None else UNIT_SCOPE + g.unit)
 
 
 # …AND A NAME STORED BEFORE THE RULE DOES NOT BLOCK THE ROW (the review's ninth pass, minor). A grant to `say"hi`, written
@@ -118,8 +122,11 @@ def grants_to_items(grants: list[Grant], was: dict | None = None, where: str = "
     """domain/grants/<cluster> as a Variable: one item per grant, the value its expiry. A subject or a label the reader
     could not take back apart is refused here (`BadName`), before anything is written — unless the grant is already in
     `was`, the row this replaces: then it is left out, counted."""
+    from w2cplatform.doors import ref_fault
     out = {}
     for g in grants:
+        if g.unit is not None and ref_fault(g.unit):                # a scope is a unit as the platform names one
+            raise BadName(f"a grant's unit: {ref_fault(g.unit)}")
         why = name_refused(g.subject, "user's name") or next(
             (w for w in (name_refused(label, "label", also=",") for label in g.labels) if w), None)
         if why is None:
@@ -134,17 +141,26 @@ def grants_to_items(grants: list[Grant], was: dict | None = None, where: str = "
 
 
 # …and a row that holds one anyway — written before the rule, by hand, by an older build — is read ITEM BY ITEM: an item
-# that does not split into three, whose camera is not a number or whose expiry is not a finite number, is not a grant
+# that does not split into three, whose scope is not `unit:<sub>/<id>`, `labels:…` or nothing, or whose expiry is not a
+# finite number, is not a grant
 # (`nan` lapsed never: `now >= nan` is false). It is counted once (`grant`, by `<row>#<item>`) and logged once, and the
 # other grants of the row are read. Fail shut for that item only: nobody gets a right from it, nobody loses one by it.
 GRANTS = Table("grant", "not a grant — the other grants of the row are read", "grant")
 
 
+UNIT_SCOPE = "unit:"
+
+
 def _grant(k: str, v) -> Grant:
-    subject, cap, cam = k.split("|")
-    if cam.startswith("labels:"):
-        return Grant(subject, cap, None, finite(v), tuple(l for l in cam[7:].split(",") if l))
-    return Grant(subject, cap, int(cam) if cam else None, finite(v))
+    from w2cplatform.doors import ref_fault
+    subject, cap, scope = k.split("|")
+    if scope.startswith("labels:"):
+        return Grant(subject, cap, None, finite(v), tuple(l for l in scope[7:].split(",") if l))
+    if not scope:
+        return Grant(subject, cap, None, finite(v))
+    if not scope.startswith(UNIT_SCOPE) or ref_fault(scope[len(UNIT_SCOPE):]):
+        raise ValueError(f"a grant's scope is unit:<sub>/<id>, labels:… or nothing, not {scope[:80]!r}")
+    return Grant(subject, cap, scope[len(UNIT_SCOPE):], finite(v))
 
 
 def grants_from_items(items: dict | None, where: str = "domain/grants") -> list[Grant]:
@@ -167,7 +183,7 @@ def grants_from_items(items: dict | None, where: str = "domain/grants") -> list[
 # exported in the backup with everything the domain decided (`term.EXPORTED` has `domain/grants/`). No agent
 # carries it: no cluster is called `domain` (`Members` refuses the name).
 #
-#   whole domain only   no camera, no labels: the domain's door is not a camera's
+#   whole domain only   no unit, no labels: the domain's door is not a unit's
 #   valid_until 0       never lapses — the holder's own grants are not renewed by anybody, so nothing would
 #                       renew them; a number is an end, as everywhere else
 #   the last admin      a write that leaves no `admin` is refused: the door would close for everybody, and only
@@ -180,7 +196,7 @@ def domain_may(vars_, subject: str, capability: str, now: float) -> bool:
     from w2cplatform.access import RANK
     items, _ = vars_.get(DOMAIN_GRANTS)
     for g in grants_from_items(items, DOMAIN_GRANTS):
-        if g.subject != subject or g.camera is not None or g.labels:
+        if g.subject != subject or g.unit is not None or g.labels:
             continue
         if (g.valid_until == 0 or now < g.valid_until) and RANK.get(g.capability, -1) >= RANK[capability]:
             return True
@@ -196,7 +212,7 @@ def set_domain_grants(vars_, grants: list[Grant], now: float, journal=None, by: 
     which went — the history a row that holds only its last editor loses."""
     items, idx = vars_.get(DOMAIN_GRANTS)
     new = grants_to_items(grants, was=items, where=DOMAIN_GRANTS)      # a name stored before the rule: left out, counted
-    if not any(g.capability == "admin" and g.camera is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
+    if not any(g.capability == "admin" and g.unit is None and not g.labels and (g.valid_until == 0 or now < g.valid_until)
                and _item(g) in new for g in grants):                    # …and an admin left out is no admin
         raise LastAdmin("the domain's grants would name no admin: nobody could change them again but a command on the holder")
     vars_.put(DOMAIN_GRANTS, new, cas=idx)
@@ -227,19 +243,19 @@ class ClusterAuthoriser:
     def subject(self, token: str) -> str:
         return verify(token, self.keyset, self.revoked, now=self.now(), kind="person")["sub"]   # a viewer, never a camera (CE)
 
-    def authorise(self, token: str, capability: str, camera: int) -> str:
+    def authorise(self, token: str, capability: str, unit: str) -> str:
         try:
             subject = self.subject(token)
         except TokenError as e:
             raise PermissionError(f"token refused: {e}")
-        if not self.grants.may(subject, capability, camera):
-            raise PermissionError(f"{subject} has no {capability} grant on camera {camera} in {self.grants.cluster}")
+        if not self.grants.may(subject, capability, unit):
+            raise PermissionError(f"{subject} has no {capability} grant on {unit} in {self.grants.cluster}")
         return subject
 
 
 # The FIRST administrator of the domain: a command on the holder, as the product has it (feedback CA) — whoever
 # can write the holder's store is an administrator already, so the door is not where the first one comes from.
-#   CONFIG_URL=… python3 -m domain.grants domain <subject> [view|edit|admin]
+#   PLATFORM_STORE=… python3 -m domain.grants domain <subject> [view|edit|admin]
 if __name__ == "__main__":
     import os
     import sys
@@ -247,7 +263,7 @@ if __name__ == "__main__":
     from w2cplatform.variables import open_vars
     if len(sys.argv) not in (3, 4) or sys.argv[1] != DOMAIN_SCOPE:
         sys.exit("usage: python3 -m domain.grants domain <subject> [view|edit|admin]")
-    store = open_vars(os.environ["CONFIG_URL"])
+    store = open_vars(os.environ["PLATFORM_STORE"])
     # An item that does not parse is not a grant, and is not written back: this command is how such a row is mended.
     have = [g for g in grants_from_items(store.get(DOMAIN_GRANTS)[0], DOMAIN_GRANTS) if g.subject != sys.argv[2]]
     set_domain_grants(store, have + [Grant(sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else "admin", None, 0.0)],

@@ -273,7 +273,7 @@ def test_a_session_is_hung_up_through_another_console_or_after_a_restart():
     box, ctl, live_ctl, w, srv, base = _box()
     srv.shutdown(); srv.server_close()
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
-    access = Tokens({"anna": [("view", "1", ())], "boris": [("view", "1", ())]})
+    access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())]})
 
     def console():
         m = make_console(VmsController(con_vars, box.objects, wall=box.wall), box.archive, box.wall,
@@ -570,7 +570,7 @@ def test_a_viewer_granted_one_camera_hangs_up_its_own_session_and_nobody_elses()
     con_vars = box.vars.as_writer("console", SPEC.acl_console() + LIVE_SPEC.acl_console())
     m = make_console(VmsController(con_vars, box.objects, wall=box.wall), None, box.wall,
                      live_ctl=SpecController(LIVE_SPEC, con_vars, box.objects, wall=box.wall))
-    access = Tokens({"anna": [("view", "1", ())], "boris": [("view", "1", ())]})
+    access = Tokens({"anna": [("view", "vms/1", ())], "boris": [("view", "vms/1", ())]})
     for con in (m.root, *m.mounts.values()):
         con.gate.impl = access
     srv = m.serve("127.0.0.1", 0)

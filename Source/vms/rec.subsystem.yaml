@@ -25,12 +25,16 @@
 # Created by the operator: a camera exists without a recording (watched: live, detected, its events kept),
 # and records when a row is here — from the page's Record form, which POSTs `/rec/recordings`.
 name: rec
+# A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
+# on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
+# it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
+about: {sub: vms, field: cam}
 unit:
   rows: recordings                   # rec/recordings/<name>
   id: name                           # "7", "7-cloud" — the operator's name for THIS recording
   fields:
     name:           {type: string, required: true}   # which recording this is: its key, its epoch, its streams
-    cam:            {type: string, required: true}   # WHOSE footage it holds — the VMS camera id
+    cam:            {type: string, required: true, fixed: true}   # WHOSE footage it holds — the VMS camera id
     retention_days: {type: int,    default: 30}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
@@ -105,6 +109,10 @@ placement:
 # it. The footage it names is COPIED into an `incidents` volume (`RecWorker.keep_pass`); the events it names
 # are left in place by the resource's retention.
 tables: [volumes, keeps]
+# Whose a row of a table is: a keep is its camera's (`cam`, an id of the camera `about` names). Whoever writes one
+# needs on that camera what the route needs — on both, if a write ever moved it.
+rights:
+  unit_of: {keeps: cam}
 snapshot: [name, cam, retention_days, min_depth_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads

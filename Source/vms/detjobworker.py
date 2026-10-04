@@ -249,7 +249,7 @@ class DetJobWorker(Worker):
                 for sc in left[:self.STRETCHES_PER_PASS]:
                     n = 0
                     for ts, kind, fields in self._stretch(model, sc):
-                        EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
+                        EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                             ts, kind, cam=_cam(row["cam"]), job=job, source="archive", **fields)
                         n += 1
                     log_.append(sc, n, self.wall())         # the line AFTER the events: a crash costs one re-scan
@@ -268,7 +268,7 @@ class DetJobWorker(Worker):
         return sorted(self.running)
 
     # Waiting for what is missing — until `wait_max` after it began, then `done` with `partial`. The line `scan.partial`
-    # is written once, at the interval's start in media time (where `/events?cam=` finds the scan's answer), and the
+    # is written once, at the interval's start in media time (where `/events?unit=vms/<cam>` finds the scan's answer), and the
     # end is remembered beside the progress, so the next pass before the reaper does not write it again.
     def _wait_or_end(self, job: str, row: dict, log_: ScanLog, missing: list[str], why: str, scans=None) -> dict:
         waited = log_.waiting() or log_.wait(self.wall())
@@ -279,7 +279,7 @@ class DetJobWorker(Worker):
                 return self._status(job, row, "failed", scans=scans, log=log_, why=why_not)
             if not self.may_write(job):
                 return self._status(job, row, "waiting", scans=scans, log=log_, why=why + "; ".join(missing))
-            EventLog(self.archive_root, DETJOB.name, job, self.epochs[job]).append(
+            EventLog(self.archive_root, DETJOB.name, job, self.epochs[job], of=DETJOB_SPEC.of_row(row)).append(
                 float(row["from"]), "scan.partial", cam=_cam(row["cam"]), job=job, source="archive", missing=list(missing),
                 waited=round(self.wall() - waited["since"]))
             partial = log_.wait(self.wall(), partial=missing)["partial"]

@@ -1184,14 +1184,15 @@ def test_the_operator_commands_speak_to_the_admin_socket():
         assert sorted(json.loads(out.getvalue())["roles"]) == ["console", "vmsworker"]
 
 
-def test_a_process_reads_platform_store_first_and_config_url_by_its_old_name():
-    """One function says which store a process opens (`variables.store_url`, product P7): the cluster's units set
-    `PLATFORM_STORE`, a box's and the product's older ones `CONFIG_URL`."""
+def test_a_process_reads_platform_store_and_no_other_name():
+    """One function says which store a process opens (`variables.store_url`, product P7): `PLATFORM_STORE`, else the
+    process's default. The older name `CONFIG_URL` is not read (the owner's rule of 4 Oct: no aliases, the system runs
+    on one machine) — set alone, the process opens its default and not that store."""
     both = {"PLATFORM_STORE": "configstore:///run/configstore/vmsworker.sock", "CONFIG_URL": "file:///data/c"}
     assert store_url(both) == both["PLATFORM_STORE"]
-    assert store_url({"CONFIG_URL": "file:///data/c"}) == "file:///data/c"
-    assert store_url({}, "file:///data/platform/config") == "file:///data/platform/config"
-    assert store_url({"PLATFORM_STORE": "", "CONFIG_URL": "memory://x"}) == "memory://x"
+    assert store_url({"CONFIG_URL": "file:///data/c"}) is None
+    assert store_url({"CONFIG_URL": "file:///data/c"}, "file:///data/platform/config") == "file:///data/platform/config"
+    assert store_url({"PLATFORM_STORE": "", "CONFIG_URL": "memory://x"}, "file:///d") == "file:///d"
     entry = os.path.join(os.path.dirname(HERE), "vms", "__main__.py")      # the process entry: the same function
     src = open(entry, encoding="utf-8").read()
-    assert "store_url(os.environ" in src and 'os.environ.get("CONFIG_URL")' not in src
+    assert "store_url(os.environ" in src and "CONFIG_URL" not in src

@@ -21,7 +21,7 @@ meaning no ceiling — and a write over it is refused. Refused, and not
 truncated: half a row is worse than no row, and a store that silently drops
 the tail of an object is a store that lies about `get`.
 
-The seam is the same one `CONFIG_URL` and `OBJECTS` already are (Lesson 20).
+The seam is the same one `PLATFORM_STORE` and `OBJECTS` already are (Lesson 20).
 `file://` has no ceiling, `variables://` has 64 KiB, `s3+https://` has none
 worth naming — and which one an install has is now a fact the code can read
 rather than a fact the operator is supposed to remember.

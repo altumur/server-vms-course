@@ -71,7 +71,7 @@ PLATFORM_TESTS = (
     "tests/test_pass_failures.py", "tests/test_placement_decides.py", "tests/test_retire.py", "tests/test_sealing.py",
     "tests/test_slot_fate.py", "tests/test_slot_fence.py", "tests/test_snapshot_shards.py", "tests/test_stand_in.py",
     "tests/test_store_outage.py", "tests/test_sweep.py",
-    "tests/testdata/testsub.subsystem.yaml",
+    "tests/test_units_about.py", "tests/testdata/testsub.subsystem.yaml",
 )
 SCANNED = (".py", ".html", ".htm", ".js", ".css", ".yaml", ".yml", ".json", ".md", ".sh", ".txt", ".hcl", ".service")
 
@@ -557,11 +557,12 @@ def _piece_events():
     srv, base = _testsub_console(root, vars_, objects, wall, index=EventIndex(tree, "srv-1", wall))
     try:
         st, out = _http(base, "POST", "/marks", {"unit": "testsub/c1", "note": "look"})
-        ok = st == 200
+        ok = st == 201
         st, out = _http(base, "GET", "/events?unit=testsub/c1")
         rows = out.get("events", []) if st == 200 and isinstance(out, dict) else []
         # its own line under its own name, and the mark — the console's unit's line — about it; nothing of c2's
-        ok = ok and sorted((e.get("kind"), e.get("unit") if e.get("kind") == "counted" else e.get("of")) for e in rows)             == [("counted", "testsub/c1"), ("mark", "testsub/c1")]
+        whose = sorted((e.get("kind"), e.get("unit") if e.get("kind") == "counted" else e.get("of")) for e in rows)
+        ok = ok and whose == [("counted", "testsub/c1"), ("mark", "testsub/c1")]
         ok = ok and _http(base, "GET", "/events?unit=c1")[0] == 400
         ok = ok and _http(base, "POST", "/marks", {"unit": "c1", "note": "look"})[0] == 400
     finally:

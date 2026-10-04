@@ -15,14 +15,16 @@
 # make "what did the detector see on Tuesday" unanswerable and a second run double every count. Separate
 # trees also make a re-run free to compare and a deletion a deletion of one directory.
 name: detjob
+about: {sub: vms, field: cam}   # a scan reads a camera's footage: its events, grants and labels are the camera's
 unit:
   rows: jobs                         # detjob/jobs/<name>
   id: name                           # the console composes it: "<cam>-<kind>-<n>", unique per run
   fields:
     name:    {type: string, required: true}
-    cam:     {type: string, required: true}      # the camera the footage is of — and what every event line carries,
-                                                 # because `/events?cam=7` finds a scan's results by the LINE, not the tree
-    rec:     {type: string, required: true}      # the RECORDING whose streams hold the footage. `id: cam` in
+    cam:     {type: string, required: true, fixed: true}   # the camera the footage is of — what every event line is
+                                                 # about (`of: vms/7`): `/events?unit=vms/7` finds a scan's results by the
+                                                 # LINE, not the tree
+    rec:     {type: string, required: true, fixed: true}   # the RECORDING whose streams hold the footage. `id: cam` in
                                                  # rec.subsystem.yaml makes it the camera's id today and need not tomorrow;
                                                  # naming it separately is what keeps that day a YAML edit
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | …

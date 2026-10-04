@@ -183,7 +183,7 @@ def test_the_console_over_http():
         assert spec["rows"] == "cameras" and spec["media"] and {f["name"] for f in spec["fields"]} >= {"name", "source", "enabled"}
         assert b"vms_cameras_running 1" in urllib.request.urlopen(f"http://127.0.0.1:{port}/metrics").read()   # held and streaming; recording is rec's gauge
         # an operator's mark is the CONSOLE's event: its own bucket, never a worker's
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/marks", data=json.dumps({"cam": 1, "note": "left the bag"}).encode(),
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/marks", data=json.dumps({"unit": "vms/1", "note": "left the bag"}).encode(),
                                      method="POST", headers={"Idempotency-Key": "k3", "X-User": "murat"})
         m = json.load(urllib.request.urlopen(req))
         assert m["subsystem"] == "console" and m["bucket"].startswith(f"console/{m['unit']}/e1/")
@@ -191,7 +191,7 @@ def test_the_console_over_http():
         ev = read_bucket(os.path.join(box.archive, m["bucket"]))
         name = ev[0].pop("id")                                                                   # every line has a name, given by its writer
         assert name.startswith(f"{m['unit']}-e1-") and name.rsplit("-", 1)[1].isdigit()
-        assert ev == [{"t": box.wall(), "kind": "mark", "cam": 1, "user": "murat", "note": "left the bag"}]
+        assert ev == [{"t": box.wall(), "kind": "mark", "of": "vms/1", "user": "murat", "note": "left the bag"}]   # about camera 1
         # not in vms/1/: that bucket has one writer. (`audit/console`: the journal — who created camera 1, the third pass)
         assert subsystems_under(box.archive) == {"audit": ["console"], "console": [m["unit"]]}
         # the page, and what it plays: the timeline from the recorders' doors, and an interval of it as an MP4

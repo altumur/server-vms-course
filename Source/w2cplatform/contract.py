@@ -1676,7 +1676,7 @@ class Controller:
             way = f"{off[key]:+.0f} s — ahead of" if off[key] > 0 else f"{off[key]:+.0f} s — behind"
             log.error("%s: the clock that writes %s is %s this controller's: nothing is judged by it, but whatever "
                       "reads its times reads them wrong — mend NTP on that server", self.sub.name, key, way)
-            self.journal.say("clock.skew", ALARM, of=self.sub.name, writer=key, skew=off[key],
+            self.journal.say("clock.skew", ALARM, sub=self.sub.name, writer=key, skew=off[key],
                              why=(f"the clock that writes {key} is {way} this controller's; nothing moves for it "
                                   f"(freshness is judged by change), but its times are wrong where they are shown — "
                                   f"mend NTP on that server"))
@@ -1876,7 +1876,7 @@ class Controller:
             log.warning("%s: server %s decommissioned (by %s): slots %s released, units %s move%s", self.sub.name, server,
                         row.get("by", "?"), ", ".join(freed) or "none", ", ".join(units) or "none",
                         f"; still held: {', '.join(holds)}" if holds else "")
-            self.journal.say("server.decommissioned", of=self.sub.name, server=server, by=str(row.get("by", "") or "?"),
+            self.journal.say("server.decommissioned", sub=self.sub.name, server=server, by=str(row.get("by", "") or "?"),
                              slots=LIST_SEPARATOR.join(freed), units=LIST_SEPARATOR.join(units),
                              holds=LIST_SEPARATOR.join(holds))
             done.append(server)
@@ -1910,7 +1910,7 @@ class Controller:
             elif fate == "release" and self.free_slot(worker):
                 released[worker] = why
                 log.warning("%s: slot %s released: %s", self.sub.name, worker, why)
-                self.journal.say("worker.released_by_controller", of=self.sub.name, worker=worker, server=server, why=why)
+                self.journal.say("worker.released_by_controller", sub=self.sub.name, worker=worker, server=server, why=why)
             elif fate in ("wait", "unsure") and (n := len(self.assignment(worker).units)):
                 unjudged[worker], units = why, units + n
         self._said_unjudged(unjudged)
@@ -1923,7 +1923,7 @@ class Controller:
         for w in sorted(set(unjudged) - said):
             log.error("%s: %s — its units are written by nobody until it is judged, or the operator decommissions its "
                       "server", self.sub.name, unjudged[w])
-            self.journal.say("worker.unjudged", ALARM, of=self.sub.name, worker=w, why=unjudged[w])
+            self.journal.say("worker.unjudged", ALARM, sub=self.sub.name, worker=w, why=unjudged[w])
         for w in sorted(said - set(unjudged)):
             log.warning("%s: %s can be judged again", self.sub.name, w)
         said.clear(); said.update(unjudged)
@@ -1935,7 +1935,7 @@ class Controller:
         new = sorted(set(moved) - gone)
         for w in new:
             log.error("%s: %s", self.sub.name, moved[w])
-            self.journal.say("worker.unsure_moved", ALARM, of=self.sub.name, worker=w, after=self.hung_move_after,
+            self.journal.say("worker.unsure_moved", ALARM, sub=self.sub.name, worker=w, after=self.hung_move_after,
                              why=moved[w])
         gone.clear(); gone.update(moved)
         return new
@@ -1946,13 +1946,13 @@ class Controller:
         said, gone = self.__dict__.setdefault("_hung", set()), self.__dict__.setdefault("_hung_moved", set())
         for w in sorted(set(hung) - said):
             log.error("%s: %s", self.sub.name, hung[w])
-            self.journal.say("worker.hung", ALARM, of=self.sub.name, worker=w, why=hung[w])
+            self.journal.say("worker.hung", ALARM, sub=self.sub.name, worker=w, why=hung[w])
         for w in sorted(said - set(hung) - set(moved)):
             log.warning("%s: %s is not hung any more", self.sub.name, w)
         new = sorted(set(moved) - gone)
         for w in new:
             log.error("%s: %s hung for longer than %g s: its units move anyway", self.sub.name, w, self.hung_move_after)
-            self.journal.say("worker.hung_moved", ALARM, of=self.sub.name, worker=w, after=self.hung_move_after)
+            self.journal.say("worker.hung_moved", ALARM, sub=self.sub.name, worker=w, after=self.hung_move_after)
         said.clear(); said.update(hung)
         gone.clear(); gone.update(moved)
         return new
@@ -1979,7 +1979,7 @@ class Controller:
                           "%.0f s: two machines are given one name", self.sub.name, name, m.get("holder") or "?",
                           holder_box or "not said", box, m.get("hostname") or "?", m.get("server") or "?",
                           now - m["since"])
-                self.journal.say("worker.name_conflict", ALARM, of=self.sub.name, worker=name, holder=m.get("holder"),
+                self.journal.say("worker.name_conflict", ALARM, sub=self.sub.name, worker=name, holder=m.get("holder"),
                                  holder_box=holder_box, contender=m.get("instance"), contender_box=box,
                                  contender_hostname=m.get("hostname"), contender_server=m.get("server"),
                                  since=m["since"])
@@ -2398,7 +2398,7 @@ class Worker:
             log.error("%s: its name %s/%s is held by %s (box %s) — another process started under the same name took it. "
                       "This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no "
                       "other", self.instance, self.sub.name, e.slot, e.holder or "?", holder_box or "not said")
-            self.journal.say("worker.name_taken", ALARM, of=self.sub.name, worker=e.slot, holder=e.holder,
+            self.journal.say("worker.name_taken", ALARM, sub=self.sub.name, worker=e.slot, holder=e.holder,
                              holder_box=holder_box, holder_until=e.until, instance=self.instance, box=self._box(),
                              server=self.server or "", since=now)
             self._contend_at = -1e18
@@ -2415,7 +2415,7 @@ class Worker:
         self.nameless = None
         log.warning("%s: its name %s/%s is its own again, after %.0f s of being nobody", self.instance, self.sub.name,
                     n["name"], now - n["since"])
-        self.journal.say("worker.name_back", of=self.sub.name, worker=n["name"], instance=self.instance, box=self._box(),
+        self.journal.say("worker.name_back", sub=self.sub.name, worker=n["name"], instance=self.instance, box=self._box(),
                          server=self.server or "", since=n["since"], nameless_s=round(now - n["since"]))
 
     # Still me? Read the slot; if `holder` is another instance, return False — the instance is fenced as a

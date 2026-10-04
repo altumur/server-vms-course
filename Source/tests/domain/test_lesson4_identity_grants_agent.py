@@ -158,18 +158,18 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     fed, links, dc, signer = _domain(clk)
     south = fed.clusters["south"]
     pub = DomainPublisher(dc.vars); pub.publish_keys(signer.tokens.keyset())
-    pub.publish_grants("south", [Grant("alice", "view", None, clk() + GRANT_LIFETIME), Grant("alice", "edit", 7, clk() + GRANT_LIFETIME)])
+    pub.publish_grants("south", [Grant("alice", "view", None, clk() + GRANT_LIFETIME), Grant("alice", "edit", "vms/7", clk() + GRANT_LIFETIME)])
     agent = DomainAgent("south", dc.vars, south.vars, now=clk); agent.sync()
     assert sorted(south.vars.list("domain/")) == ["domain/grants", "domain/keys", "domain/member"]   # trust and grants, no user
     g = ClusterGrants("south", now=clk)
     g.renew_from_domain(ClusterTrust(south.vars).grants())                            # the console loads them from ITS cluster
     auth = ClusterAuthoriser(g, signer.tokens.keyset(), now=clk)
     tok = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk())
-    assert auth.authorise(tok, "view", 12) == "alice" and auth.authorise(tok, "edit", 7) == "alice"
+    assert auth.authorise(tok, "view", "vms/12") == "alice" and auth.authorise(tok, "edit", "vms/7") == "alice"
     try:
-        auth.authorise(tok, "edit", 12); raise AssertionError()
+        auth.authorise(tok, "edit", "vms/12"); raise AssertionError()
     except PermissionError as e:
-        assert "no edit grant on camera 12 in south" in str(e)
+        assert "no edit grant on vms/12 in south" in str(e)
     # The revoke cannot reach south (unreachable). State in advance when access ends:
     stated = g.access_ends("alice", token_exp=clk() + TOKEN_LIFETIME)
     assert stated == clk() + TOKEN_LIFETIME                                  # the token is the shorter lifetime here
@@ -177,14 +177,14 @@ def test_grants_are_cluster_local_carried_by_the_agent_and_expiry_is_the_revocat
     # ...then measure it: the token expires, the grant is still there, access is gone anyway.
     clk.advance(TOKEN_LIFETIME + 61)
     try:
-        auth.authorise(tok, "view", 12); raise AssertionError()
+        auth.authorise(tok, "view", "vms/12"); raise AssertionError()
     except PermissionError as e:
         assert "expired" in str(e)
     # And the other direction: a fresh token, but south's agent could not renew its grants past their expiry.
     clk.advance(GRANT_LIFETIME)
     tok2 = signer.tokens.issue("alice", TOKEN_LIFETIME, now=clk())         # the domain is back and issues a fresh token...
     try:
-        auth.authorise(tok2, "view", 12); raise AssertionError()
+        auth.authorise(tok2, "view", "vms/12"); raise AssertionError()
     except PermissionError as e:
         assert "no view grant" in str(e)
     # The agent renews what the domain still grants — and drops what it does not.
@@ -272,7 +272,7 @@ def test_who_changed_the_people_the_grants_and_the_members_is_a_line_in_the_hold
     bg = BreakGlass.create(signer, "emergency-pw")
     bg.rotate("new-pw", by="alice", journal=journal)
 
-    lines = EventIndex(root, "holder", wall=clk).query(0, clk() + 1, subsystem="audit", unit="domain")["events"]
+    lines = EventIndex(root, "holder", wall=clk).query(0, clk() + 1, subsystem="audit", unit="audit/domain")["events"]
     assert [(e["kind"], e["user"], e.get("target")) for e in lines] == [
         ("domain.grants.changed", "setup", "domain"),
         ("domain.user.created", "alice", "bob"), ("domain.user.password", "alice", "bob"), ("domain.user.roles", "alice", "bob"),

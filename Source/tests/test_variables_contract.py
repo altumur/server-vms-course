@@ -1,6 +1,6 @@
 """The contract every Variables backend must keep — one suite, any backend.
 
-A store is swapped by changing `PLATFORM_STORE` (`CONFIG_URL` by its old name),
+A store is swapped by changing `PLATFORM_STORE`,
 which is only safe if "it works" means something checkable. This is that meaning:
 `file://` on a box, `configstore://` — our own store replicated by raft — in М11's
 cluster, Kubernetes when there is a site for it. A new backend is accepted when

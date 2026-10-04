@@ -7,7 +7,7 @@ nothing to it:
     GET /timeline/<cam>              every recording of the camera, from every live recorder's archive door; a door
                                      that did not answer, and a volume nobody serves (its server down), named
     GET /export/<cam>?rec&from&to    an interval as an MP4, from whichever doors hold it
-    GET /events?from&to&cam&…        merged across the live resources' event indexes (the platform's `MergedIndex`); none here
+    GET /events?from&to&unit&…       merged across the live resources' event indexes (the platform's `MergedIndex`); none here
     /rec/spec, /rec/recordings, …    the recorder mounted under its name (`Mount`): the page's Record toggle POSTs here
 
 The rest — the page, /spec, /cameras, /where (one scan of the assignments),

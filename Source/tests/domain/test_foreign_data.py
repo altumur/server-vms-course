@@ -221,8 +221,9 @@ def test_a_pipe_in_a_name_is_refused_where_it_is_made_and_a_stored_one_closes_no
     set_domain_grants(north.vars, have + [Grant("anna", "view", None, 0.0)], wall())   # what `python -m domain.grants` does
     assert sorted(north.vars.get(DOMAIN_GRANTS)[0]) == ["anna|view|", "root|admin|"]
     south, _ = make_cluster("south")
-    south.vars.put(GRANTS_PATH, {"anna|edit|7": str(wall() + 60), "x|y|z|w": "1"})
-    assert [(g.subject, g.camera) for g in ClusterTrust(south.vars).grants()] == [("anna", 7)]
+    # a scope that is no `unit:<sub>/<id>` — a bare camera number — is not a grant either: no migration reads it as one
+    south.vars.put(GRANTS_PATH, {"anna|edit|unit:vms/7": str(wall() + 60), "x|y|z|w": "1", "bob|edit|7": str(wall() + 60)})
+    assert [(g.subject, g.unit) for g in ClusterTrust(south.vars).grants()] == [("anna", "vms/7")]
 
 
 def test_an_ask_whose_deadline_or_camera_clock_is_not_a_number_is_refused_and_the_ceiling_holds():
@@ -557,9 +558,9 @@ def test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_sti
         set_domain_grants(north.vars, grants_from_items(north.vars.get(DOMAIN_GRANTS)[0]), wall()); raise AssertionError
     except LastAdmin:
         pass
-    north.vars.put("domain/grants/south", {'say"hi|view|7': "1.0"})     # a cluster's row, published again
-    DomainPublisher(north.vars).publish_grants("south", [Grant('say"hi', "view", 7, 1.0), Grant("anna", "view", 7, 2.0)])
-    assert north.vars.get("domain/grants/south")[0] == {"anna|view|7": "2.0"}
+    north.vars.put("domain/grants/south", {'say"hi|view|unit:vms/7': "1.0"})     # a cluster's row, published again
+    DomainPublisher(north.vars).publish_grants("south", [Grant('say"hi', "view", "vms/7", 1.0), Grant("anna", "view", "vms/7", 2.0)])
+    assert north.vars.get("domain/grants/south")[0] == {"anna|view|unit:vms/7": "2.0"}
 
 
 def test_a_token_whose_header_or_key_id_is_not_what_a_token_holds_is_refused_and_not_a_500():

@@ -66,7 +66,7 @@ def test_a_body_is_not_read_before_the_caller_is_known_nor_past_its_ceiling():
     with a token who declares more than `MAX_BODY` is 413, also without a byte read; within it, the body is read as
     before."""
     box = Box()
-    ctl, rec, m, srv, base = _console(box, Tokens({"guard": [("edit", "1", ())], "admin": [("admin", None, ())]}))
+    ctl, rec, m, srv, base = _console(box, Tokens({"guard": [("edit", "vms/1", ())], "admin": [("admin", None, ())]}))
     port = srv.server_address[1]
     try:
         assert _call(base, "POST", "/cameras", {"source": "driverpack://file/1.mp4"}, token="admin")[0] == 201
@@ -79,7 +79,7 @@ def test_a_body_is_not_read_before_the_caller_is_known_nor_past_its_ceiling():
         reply, _ = _raw(port, b"POST /cameras HTTP/1.1\r\nHost: x\r\nContent-Length: lots\r\n"
                               b"Authorization: Bearer admin\r\n\r\n")
         assert reply.startswith(b"HTTP/1.0 400")
-        assert _call(base, "POST", "/marks", {"cam": 1, "note": "seen"}, token="guard")[0] == 201   # a body within it: as before
+        assert _call(base, "POST", "/marks", {"unit": "vms/1", "note": "seen"}, token="guard")[0] == 201   # a body within it: as before
     finally:
         srv.shutdown()
 
@@ -605,7 +605,7 @@ def test_what_the_path_decides_is_asked_before_the_body_and_a_blobs_ceiling_is_a
     field of the spec and of nothing else; and `BLOBS_AT_ONCE` of them are read at a time."""
     from w2cplatform import console as wc
     box = Box()
-    access = Tokens({"nobody": [], "one": [("admin", "1", ())], "two": [("admin", "2", ())], "admin": [("admin", None, ())]})
+    access = Tokens({"nobody": [], "one": [("admin", "vms/1", ())], "two": [("admin", "vms/2", ())], "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
     port = srv.server_address[1]
     was = _env(BLOBS_AT_ONCE=2)
