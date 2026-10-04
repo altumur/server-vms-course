@@ -4,7 +4,7 @@ POST /v1/write {"op": "put", "key": "platform/decommission/srv-c", "cas": null, 
   "at": "1757500100.0",
   "why": "srv-c burnt"
 }}
-→ 200 {"index": 1014}
+→ 200 {"index": 1016}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items": {
@@ -13,7 +13,7 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1009, "items":
   "released": "true",
   "gen": "1"
 }}
-→ 200 {"index": 1015}
+→ 200 {"index": 1017}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/decommissioned/srv-c", "cas": null, "items": {
@@ -23,7 +23,7 @@ POST /v1/write {"op": "put", "key": "vms/decommissioned/srv-c", "cas": null, "it
   "units": "2",
   "holds": ""
 }}
-→ 200 {"index": 1016}
+→ 200 {"index": 1018}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1012, "items": {
@@ -32,17 +32,17 @@ POST /v1/write {"op": "put", "key": "vms/placement/2", "cas": 1012, "items": {
   "at": "1757500100.0",
   "rev": "2"
 }}
-→ 200 {"index": 1017}
+→ 200 {"index": 1019}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/workers/w-srv-c-1", "cas": 1013, "items": {"units": "", "rev": "2"}}
-→ 200 {"index": 1018}
+→ 200 {"index": 1020}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 POST /v1/write {"op": "put", "key": "vms/workers/w-srv-b-1", "cas": 1011, "items": {
   "units": "1,2",
   "rev": "2"
 }}
-→ 200 {"index": 1019}
+→ 200 {"index": 1021}
 
-# … and 45 GET requests, omitted
+# … and 54 GET requests, omitted

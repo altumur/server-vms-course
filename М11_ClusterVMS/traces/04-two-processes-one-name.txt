@@ -12,18 +12,37 @@ GET /v1/list?prefix=vms/slots/
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1008}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1008
+}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1008}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1008
+}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1008, "items": {
   "holder": "srv-a:4102",
   "until": "1757500045.0",
   "released": "false",
-  "gen": "2"
+  "gen": "2",
+  "server": "srv-a"
 }}
 → 200 {"index": 1012}
 
@@ -33,7 +52,16 @@ GET /v1/get?key=platform/schema
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4102", "until": "1757500045.0", "released": "false", "gen": "2"}, "index": 1012}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4102",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "2",
+    "server": "srv-a"
+  },
+  "index": 1012
+}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/workers/w-srv-a-1

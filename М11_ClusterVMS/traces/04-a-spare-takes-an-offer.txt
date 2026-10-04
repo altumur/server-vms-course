@@ -17,7 +17,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-2", "cas": 1048, "items": {
   "gen": "1",
   "offer": "",
   "offered_at": "1757500000.0",
-  "taken_at": "1757500000.0"
+  "taken_at": "1757500000.0",
+  "server": "srv-c"
 }}
 → 200 {"index": 1049}
 

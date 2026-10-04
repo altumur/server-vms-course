@@ -41,7 +41,16 @@ GET /v1/list?prefix=vms/slots/
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=vms/slots/w-srv-c-1
-→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+→ 200 {
+  "items": {
+    "holder": "srv-c:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-c"
+  },
+  "index": 1006
+}
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=platform/drain
@@ -57,7 +66,16 @@ GET /v1/list?prefix=vms/slots/
 
 # vmscontroller on srv-a → /run/configstore/vmscontroller.sock
 GET /v1/get?key=vms/slots/w-srv-c-1
-→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+→ 200 {
+  "items": {
+    "holder": "srv-c:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-c"
+  },
+  "index": 1006
+}
 
 # vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
 GET /v1/get?key=platform/schema
@@ -73,18 +91,37 @@ GET /v1/list?prefix=vms/slots/
 
 # vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-c-1
-→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+→ 200 {
+  "items": {
+    "holder": "srv-c:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-c"
+  },
+  "index": 1006
+}
 
 # vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-c-1
-→ 200 {"items": {"holder": "srv-c:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1006}
+→ 200 {
+  "items": {
+    "holder": "srv-c:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-c"
+  },
+  "index": 1006
+}
 
 # vmsworker w-srv-c-1 on srv-c → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-c-1", "cas": 1006, "items": {
   "holder": "srv-c:4102",
   "until": "1757500047.0",
   "released": "false",
-  "gen": "2"
+  "gen": "2",
+  "server": "srv-c"
 }}
 → 200 {"index": 1010}
 

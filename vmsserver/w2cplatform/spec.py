@@ -2285,8 +2285,8 @@ class SpecController(Controller):
     #                 is by the smallest capacity the live workers of the set announce (a spare is started from the
     #                 same unit and environment as the role's workers, so says the same), the fallback `CAPACITY`
     #                 only where none is live — never by this controller's own fallback while the workers say better
-    #   a server      a spare runs on a server: one whose resource is live, not drained, not decommissioned, and whose
-    #                 labels cover the set (its row; else its workers' word; a server whose labels nobody has said yet
+    #   a server      a spare runs on a server: one whose resource is not silent, not drained, not decommissioned, and
+    #                 whose labels cover the set (its row; else its workers' word; a server whose labels nobody has said yet
     #                 may cover it). Under `servers: distinct` only a server with no live worker of this subsystem
     #                 can carry a spare's units — on any other it idles by policy, the camera stays unplaced, and the
     #                 next pass offered again: spares raised to `MAX_WORKERS` on every server, each idle

@@ -85,14 +85,24 @@ GET /v1/get?key=platform/schema
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 GET /v1/get?key=vms/slots/w-srv-a-1
-→ 200 {"items": {"holder": "srv-a:4101", "until": "1757500045.0", "released": "false", "gen": "1"}, "index": 1010}
+→ 200 {
+  "items": {
+    "holder": "srv-a:4101",
+    "until": "1757500045.0",
+    "released": "false",
+    "gen": "1",
+    "server": "srv-a"
+  },
+  "index": 1010
+}
 
 # vmsworker w-srv-a-1 on srv-a → /run/configstore/vmsworker.sock
 POST /v1/write {"op": "put", "key": "vms/slots/w-srv-a-1", "cas": 1010, "items": {
   "holder": "srv-a:4101",
   "until": "1757500045.0",
   "released": "false",
-  "gen": "1"
+  "gen": "1",
+  "server": "srv-a"
 }}
 → 200 {"index": 1025}
 

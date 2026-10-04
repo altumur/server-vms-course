@@ -36,7 +36,8 @@ GET /v1/get?key=platform/doors/srv-d
 # resource on srv-d → /run/configstore/resource.sock
 POST /v1/write {"op": "put", "key": "platform/doors/srv-d", "cas": null, "items": {
   "url": "http://srv-d:8090",
-  "since": "1757500000.0"
+  "since": "1757500000.0",
+  "at": "1757500000.0"
 }}
 → 200 {"index": 1004}
 
@@ -61,7 +62,8 @@ POST /v1/write {"op": "put", "key": "vms/slots/w-srv-d-1", "cas": "", "items": {
   "holder": "srv-d:4101",
   "until": "1757500045.0",
   "released": "false",
-  "gen": "1"
+  "gen": "1",
+  "server": "srv-d"
 }}
 → 200 {"index": 1005}
 
@@ -78,15 +80,15 @@ GET /v1/list?prefix=platform/doors/
 
 # resource on srv-d → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-a
-→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0"}, "index": 1001}
+→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1001}
 
 # resource on srv-d → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-b
-→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0"}, "index": 1002}
+→ 200 {"items": {"url": "http://srv-b:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1002}
 
 # resource on srv-d → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-c
-→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0"}, "index": 1003}
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock
 GET /v1/get?key=platform/schema
@@ -105,14 +107,14 @@ GET /v1/list?prefix=platform/doors/
 
 # resource on srv-b → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-a
-→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0"}, "index": 1001}
+→ 200 {"items": {"url": "http://srv-a:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1001}
 
 # resource on srv-b → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-c
-→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0"}, "index": 1003}
+→ 200 {"items": {"url": "http://srv-c:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1003}
 
 # resource on srv-b → /run/configstore/resource.sock
 GET /v1/get?key=platform/doors/srv-d
-→ 200 {"items": {"url": "http://srv-d:8090", "since": "1757500000.0"}, "index": 1004}
+→ 200 {"items": {"url": "http://srv-d:8090", "since": "1757500000.0", "at": "1757500000.0"}, "index": 1004}
 
 # the controller on srv-b reads the heartbeats through srv-b's resource: ['w-srv-d-1']
