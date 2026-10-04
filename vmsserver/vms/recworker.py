@@ -182,11 +182,15 @@ class Look:
         age: liveness is the asker's, at its own `now`."""
         def index():
             out: dict[str, list] = {}
-            for w, hb in sorted(heartbeats(self.rec.objects, sub + "/").items()):
+            for w, hb in sorted(self.heard(sub).items()):
                 for i, st in enumerate(hb.status):
                     out.setdefault(str(st.get("id")), []).append((w, i, hb, st))
             return out
         return self._once(("units", sub), index)
+
+    # A subsystem's heartbeats by worker, whatever their age, read once.
+    def heard(self, sub: str) -> dict:
+        return self._once(("heard", sub), lambda: heartbeats(self.rec.objects, sub + "/"))
 
     # `w2cplatform.console.holder_of` over the heartbeats read once: the first live worker, in name order, whose entry
     # for `unit` is in `phase` and has `field`.
@@ -379,7 +383,7 @@ class RecWorker(VmsWorker):
                  window: tuple[int, int] | None = None, keep_days: float = 30.0, settle: float = 900.0,
                  stitch: float = 2.0, block: int | None = None, read: int | None = None):
         env = dict(os.environ if env is None else env)
-        events_root = archive_root or env.get("ARCHIVE", "/data/archive")
+        events_root = runtime.events_root(env, archive_root)    # the platform's events archive (WP-E): /data/platform/events
         instance = instance or box_instance(env)          # the box it runs on, by `BOX_ID` (`hold_follows_name`)
         super().__init__(name, vars_, objects, actuator or FakeActuator(), lease_ttl, lease_margin, clock, wall, server, capacity, instance,
                          slot_ttl, archive_root=events_root, env=env)
@@ -415,16 +419,18 @@ class RecWorker(VmsWorker):
         #
         # Nothing pinned and nothing declared — the SERVER's own volume, named after the server: what every
         # single-disk box meant before any of this existed — one place, `home: srv-a` still true, `place_by:
-        # volume` behaving exactly like `place_by: server`. It lives BESIDE the resource's tree, not in it —
-        # `/data/volume` next to `/data/archive`: inside, the resource's walks would take the ring for a
-        # subsystem, count its blocks as the tree's usage and mirror nothing of it (`ARCHIVE_VOLUME` to put it
-        # elsewhere).
+        # volume` behaving exactly like `place_by: server`. It is the VMS's, where the VMS keeps its engine's volumes
+        # (`config.OWN_VOLUME`, `/data/vms/obsd/volume`; WP-E) — never inside the resource's tree, whose walks would
+        # take the ring for a subsystem, count its blocks as the tree's usage and mirror nothing of it
+        # (`ARCHIVE_VOLUME` to put it elsewhere). A caller that names its tree (a bench, a test: `archive_root`) gets
+        # it beside that tree, as before: one directory of its own, never the box's.
         self.pinned = bool(env.get("VOLUME"))
         self.pin = str(env.get("VOLUME") or "")      # …its name, which `volume` is not while the hold is another's
         self.volume_wait = ""                        # pinned, and waiting for the hold: why (`_wait_for_pin`)
         self.default_volume = str(self.server or "default")
+        from .config import OWN_VOLUME
         beside = os.path.join(os.path.dirname(os.path.abspath(events_root)), "volume")
-        self.default_url = env.get("ARCHIVE_VOLUME") or f"file://{beside}"
+        self.default_url = env.get("ARCHIVE_VOLUME") or (f"file://{beside}" if archive_root else OWN_VOLUME)
         # Its size when it is new: `ARCHIVE_QUOTA_BYTES`, or — 0 — a share of the disk it will be on, which the DAEMON
         # measures when it formats it (`_share_of_space`; the review's fourth pass: measured here, it was the
         # container's own disk, not the data disk `/data/volume` is on).
@@ -535,6 +541,8 @@ class RecWorker(VmsWorker):
         self._offered_total = 0                                               # …summed by DELTAS, so a pipeline that stops takes nothing back
         self._offered_extra = 0                                               # what this process wrote into the writer itself: fetched ranges, keeps
         self.last_source: dict[str, tuple[str, str]] = {}                     # camera -> (server, source) read last: the answer while the store is away
+        self.last_holder: dict[str, str] = {}                                 # camera -> the worker that source was read from (`_held_by_the_book`)
+        self._by_the_book: set[str] = set()                                   # cameras whose source stands on the store's word: said once
 
     # A volume nobody declared, on a disk nobody measured: four fifths of what is free, leaving two gigabytes —
     # the product's rule (feedback BM) — and never so much that the disk ends above the watermark's low mark
@@ -573,9 +581,17 @@ class RecWorker(VmsWorker):
                         f"its last source {last[1]} stands" if last else "and it was never read")
             return last
         if found is None:
+            held = self._held_by_the_book(cam)
+            if held is not None:
+                return held
             self.last_source.pop(str(cam), None)
+            self.last_holder.pop(str(cam), None)
             return None
-        _, hb, st = found
+        holder, hb, st = found
+        if str(cam) in self._by_the_book:
+            self._by_the_book.discard(str(cam))
+            log.info("%s: camera %s's holder %s is heard again", self.name, cam, holder)
+        self.last_holder[str(cam)] = holder
         server = hb.extra.get("server", "?")
         if server == self.server and st.get("live_shm"):
             self.last_source[str(cam)] = (server, st["live_shm"])
@@ -590,6 +606,47 @@ class RecWorker(VmsWorker):
         self.behind_loopback.pop(str(cam), None)
         self.last_source[str(cam)] = (server, st["live_url"])
         return server, st["live_url"]
+
+    # A HOLDER NOT HEARD IS NOT A HOLDER GONE (the twelfth review, major 10). In a cluster the camera's heartbeat is an
+    # object on its holder's server, read through that server's resource door: with only the door away (its port
+    # closed, the resource restarting) the heartbeat aged past 45 s, `holder` found nobody, and the recording lost its
+    # source while the worker went on holding the camera and its fan-out went on serving — fifty seconds into a door
+    # outage, the reviewer's run. The heartbeat is a hint; who holds the camera is the STORE's: its placement names
+    # the worker the source was read from, and that worker's slot is held and not run out. Then the source read last
+    # stands, said once. Any of it said otherwise — another worker placed, the slot released or out, or the holder heard
+    # and not running the camera — and it does not. What cannot be read (the store away, a row torn) is not "no": the
+    # source stands, as it does when the heartbeats cannot be read at all (above).
+    def _held_by_the_book(self, cam) -> tuple[str, str] | None:
+        from .config import SPEC
+        from w2cplatform.contract import read_slot
+        cam = str(cam)
+        last, holder = self.last_source.get(cam), self.last_holder.get(cam)
+        if last is None or holder is None:
+            return None
+        now = self.wall()
+        try:
+            hb = self._look().heard("vms").get(holder)
+            if hb is not None and is_live("vms", hb.ts, now, 45.0):
+                return None                              # it speaks, and does not say it runs the camera
+            placed, _ = self.vars.get(SPEC.sub.config("placement", cam))
+            if not placed or placed.get("worker") != holder:
+                return None
+            key = SPEC.sub.slot_key(holder)
+            slot = read_slot(key, holder, self.vars.get(key)[0])
+            if slot is not None and (slot.released or slot.holder == "" or slot.until <= now):
+                return None
+        except OSError as e:
+            self.store_errors += 1
+            log.warning("%s: camera %s's holder %s is not heard, and the store did not answer whether it still holds it "
+                        "(%s): its last source %s stands", self.name, cam, holder, e, last[1])
+            return last
+        except PARSE_ERRORS:
+            pass                                         # a row that does not read: not knowing is not "no"
+        if cam not in self._by_the_book:
+            self._by_the_book.add(cam)
+            log.warning("%s: camera %s's holder %s on %s is not heard — its server's door may be away — but the store says "
+                        "it still holds the camera: recording goes on from %s", self.name, cam, holder, last[0], last[1])
+        return last
 
     # A recording's pipeline needs a source — `rtspsrc location=<live_url>`, or the worker's shared memory — and a
     # sink: this volume's writer, under this recorder's epoch. No source (the camera is held by nobody yet) means "cannot start now": the

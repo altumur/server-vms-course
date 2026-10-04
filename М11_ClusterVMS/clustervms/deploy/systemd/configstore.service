@@ -8,12 +8,15 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=w2c
-Group=w2c
-# The sockets: /run/configstore/<role>.sock, 0660, each owned by its role's group (the rights file's `group`); the
-# daemon chowns them, so its user is a member of every one of those groups (`w2c-cluster.sysusers`).
+# Its own user (WP-E): the journal is its alone (`/data/platform/configstore`, 0700), and the resource, which runs as
+# w2c, cannot read the rows past the rights file. The sockets: /run/configstore/<role>.sock, 0660, each owned by its
+# role's group (the rights file's `group`); the daemon chowns them, so configstore is a member of every one of those
+# groups (`w2c-cluster.sysusers`).
+User=configstore
+Group=configstore
 RuntimeDirectory=configstore
 RuntimeDirectoryMode=0755
+UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh configstore
 Restart=always
 RestartSec=2

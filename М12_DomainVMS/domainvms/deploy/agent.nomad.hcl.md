@@ -17,8 +17,8 @@
 - `identity { env = true }` — `NOMAD_TOKEN` in the environment: the workload identity the policy is bound to. The comment: `domain/*` and nothing else.
 - `template { data = <<-EOT … EOT  destination = "local/agent.env"  env = true }` — rendered into the task's environment:
   - `CLUSTER={{ env "NOMAD_REGION" }}` — this cluster's name from the allocation's environment, so the same jobspec serves every region and the agent asks for `domain/grants/<its own region>`.
-  - `DOMAIN_NOMAD_ADDR=http://nomad.north:4646` — the domain holder's API, read through federation forwarding (`federation.hcl`). The one hostname in the file, and it names a region's servers, not a box.
-  - `NOMAD_ADDR=http://127.0.0.1:4646` — this cluster's local agent, written. (No `network_mode = "host"` is set in `config`, unlike М11's jobs; the loopback address assumes host networking.)
+  - `DOMAIN_CONFIG_URL=configstore:///run/configstore/domainagent.sock` — the domain holder's store: in the holder's cluster, this one, by the agent's socket. It was `nomad://`, a backend that is gone (the twelfth review, major 22).
+  - `PLATFORM_STORE=configstore:///run/configstore/domainagent.sock` — this cluster's store, written, by the agent's own role's socket (`/run/configstore` mounted into the container).
   - `SYNC_INTERVAL=30` — seconds between passes; how stale a cluster's copy of a revocation may be, and half of the agent's contribution to the revocation window.
   - `OBJECTS_URL` — this cluster's object store: the agent writes `domain/reaches` there, what this cluster can see, and the domain reads it for placement and the mirror plan (`federation.REACHES`).
   - `REACHES` (commented) — the site's own names for the networks it sees; unset, the agent says the IPv4 networks of the host's interfaces as `net:<cidr>` (`agent.local_networks`).

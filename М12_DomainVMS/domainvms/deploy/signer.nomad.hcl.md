@@ -20,7 +20,7 @@
 - `identity { env = true }` — `NOMAD_TOKEN`; the comment lists what it may write: `domain/signer`, `identity/*`, `domain/keys`, `domain/revoked` (the policy also adds licence and placement).
 - `template { … destination = "local/signer.env"  env = true }`:
   - `DOMAIN_ID=acme` — the domain name: token `iss`, root CN `acme root g<n>`, the registrar id prefix, the licence's `domain`.
-  - `NOMAD_ADDR=http://127.0.0.1:4646` — the local agent (north's raft).
+  - (no store line: the signer opens its default, `configstore:///run/configstore/domain.sock` — a role М11's rights file does not have yet; the domain's split, М12A/B, adds it. Its `CLUSTERS` names this cluster's store and objects and the other cluster as one that reports — it named `nomad://` stores before, refused at start: the twelfth review, major 22.)
   - `OBJECT_STORE_URL=http://minio.north:9000/domain` — the `domain` bucket for `identity/rev-N` and `users/<id>/prefs`; plain HTTP is enough here because the identity store only `put`s and `get`s (no listing).
   - `TOKEN_LIFETIME=900` — 15 minutes, the number Lesson 4 defends; not read by the code (`identity.TOKEN_LIFETIME` is the constant).
   - `IDENTITY_PUBLISH_FLOOR=60` — the minimum seconds between identity publishes: the stated RPO for users.

@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import sys
 
-from cluster.objectstore import is_create_only
+from cluster.objectstore import ROWS_PREFIX, is_create_only
 from vms.config import (AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SPEC, SURVEY_SPEC, WORKER_ACL,
                         WORKER_OBJECTS)
 from vms.recworker import PRIMARIES
@@ -29,7 +29,7 @@ from w2cplatform.access import DOMAIN_MARKS, MEMBER_MARK, TRUST_KEYS
 from w2cplatform.contract import DECOMMISSION, SCHEMA_KEY
 from w2cplatform.resource import DOORS, MIRROR_KEY, SPACE_KEY
 
-OBJECTS = "objects/"           # the create-only objects' rows (`VariablesObjectStore`'s prefix)
+OBJECTS = ROWS_PREFIX + "/"    # the rows of the create-only objects, a worker's mark before a device command (`objectstore`)
 
 # Whose each socket is (the product's format): a subsystem's role `vms-<role>`, the platform's own `w2c-<role>`.
 PLATFORM = ("resource", "domainagent", "member")

@@ -42,14 +42,14 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # `FakeActuator` here without GStreamer), takes an epoch per camera by CAS when it starts one, holds a lease
 # per camera, writes events into the camera's bucket on this server's resource, and publishes a heartbeat
 # carrying its status. It never writes configuration: its token is `vms/epoch/*`, `vms/slots/*` and
-# `vms/devices/*` — the last one what it found a device to be, a discovery and not a decision. systemd or
-# launchd supervises the process; the process supervises its pipelines; nothing supervises the loop, because
-# the loop is the process. The docstring names what the environment hands a process (`w2cplatform/runtime.py` maps a
-# unit's or a scheduler's own names into these): `WORKER_NAME` / `SLOT_INDEX` (the slot preference; the CAS claim on
-# `vms/slots/w-N` is the proof), `SERVER_NAME` or the hostname (`server`: which resource it records into), `LABELS`
-# (`labels`: what this server can reach; the controller places by them), `INSTANCE_ID` (the instance),
-# `CAPACITY` (the worker's own number, from М9 Lesson 7's probe). Run by `__main__.worker`; tested in
-# `tests/test_lesson4_worker.py` and used across Lesson 6's tests.
+# `vms/devices/*` — the last one what it found a device to be, a discovery and not a decision. systemd (Quadlet
+# on a box) supervises the process; the process supervises its pipelines; nothing supervises the loop, because
+# the loop is the process. What the environment hands a process is the runtime's neutral names
+# (`w2cplatform/runtime.py`): `WORKER_NAME` / `SLOT_INDEX` (the slot preference; the CAS claim on `vms/slots/w-N`
+# is the proof), `SPARE_FOR` (a spare: only an offer of its set), `SERVER_NAME` or the hostname (`server`: which
+# resource it records into), `LABELS` (what this server can reach; the controller places by them), `INSTANCE_ID`
+# (the instance), `CAPACITY` (the worker's own number, from М9 Lesson 7's probe). Run by `__main__.worker`;
+# tested in `tests/test_lesson4_worker.py` and used across Lesson 6's tests.
 #
 # ## Module-level names
 # - `log` — logger `vmsworker`.
@@ -58,14 +58,13 @@ five (`w2cplatform/runtime.py`), and the loop never learns which did.
 # ### `__init__(self, name, vars_, objects, actuator=None, lease_ttl=30.0, lease_margin=5.0,
 # clock=time.monotonic, wall=time.time, server=None, capacity=None, instance=None, slot_ttl=45.0,
 # archive_root=None, bucket_seconds=600, env=None)` `env` defaults to `os.environ` (tests pass a dict).
-# `instance` defaults to `INSTANCE_ID` (with the box in it, `runtime.instance_on_box`), else the base class's
-# `<box>:pid:6hex`. Calls
+# `instance` defaults to `INSTANCE_ID`, else the base class's `box:pid:6hex` (`runtime.instance_on_box`). Calls
 # `Worker.__init__` with `name=None` and then `claim_slot(prefer=name or slot_from_environment(env))` — so
 # construction *is* the claim, and `self.name` is set afterwards. Then: `archive_root` from the argument or
 # `$ARCHIVE`, else `<PLATFORM_DIR>/events` (`runtime.events_root`: `/data/platform/events`); `capacity` from the argument or `$CAPACITY` (50) — "М9 Lesson 7's B + n·I,
 # measured on ITS server"; the actuator (`FakeActuator()` if none); an empty `rows`; the `Reconciler(self,
-# self._actuate)`; `recording_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname
-# (`runtime.server`); `labels`, `alloc`; the two start clocks. Finally it reads the previous
+# self._actuate)`; `recording_allowed = True`; `server` from the argument, `SERVER_NAME`, else the hostname;
+# `labels` (`LABELS`), `alloc` (`INSTANCE_ID`); the two start clocks. Finally it reads the previous
 # heartbeat object of this slot name: if one exists and was written by a different instance, `previous_hb`
 # is its `ts` and `previous_instance` its instance — the controller's `failover_seconds` computes `started −
 # previous_hb` from these, measured from what the workers wrote.
@@ -619,7 +618,17 @@ class VmsWorker(Worker):
         # A heartbeat that does not parse is one object's trouble (the review's second pass, M6) — here too: read
         # bare, it raised out of the constructor, and the process went into a restart loop over the very object its
         # first heartbeat would have replaced. Unparsed, there is no failover to measure; that is all it costs.
-        raw = objects.get(self.sub.heartbeat_key(self.name))
+        #
+        # …and one that cannot be READ is the same (the twelfth review, major 11). In a cluster the objects are read
+        # through this server's resource door (`cluster://`): while the resource restarted, every worker of the server
+        # raised `ObjectsUnavailable` here and went round systemd's restarts, its cameras unheld — for a number that is
+        # only ever a measurement. Not read, it is not measured; the worker starts, and says so. A spare has no name yet.
+        try:
+            raw = objects.get(self.sub.heartbeat_key(self.name)) if self.name else None
+        except OSError as e:
+            raw = None
+            log.warning("%s: its previous heartbeat could not be read (%s): this restart's failover is not measured; "
+                        "the worker starts all the same", self.name, e)
         if raw:
             from w2cplatform.contract import parse_heartbeat
             old = parse_heartbeat(self.sub.heartbeat_key(self.name), raw)

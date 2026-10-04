@@ -1,6 +1,6 @@
 # w2c-run.sh — what every unit of a cluster server runs
 
-**Role in the module.** Lesson 3. The product's runner (`ExecStart=/opt/w2c/bin/w2c-run.sh <program>`), the course's form of it. Every systemd unit, every launchd plist, every spare `w2c-spares.sh` starts (`SPARES_RUN`) and a person at a shell run the same line, and get the same environment and the same code.
+**Role in the module.** Lesson 3. The product's runner (`ExecStart=/opt/w2c/bin/w2c-run.sh <program>`), the course's form of it. Every systemd unit, every launchd plist, every spare `w2c-spares.sh` starts (from its role's template, `vms-<role>-spare@.service`) and a person at a shell run the same line, and get the same environment and the same code.
 
 ## What it does
 1. **The environment from two files** — `/etc/w2c/w2c.env` (the platform's: `SERVER_NAME`, `LABELS`, `PLATFORM_DIR`, `OBJECTS`, `RESOURCE_URL`, the store's `CONFIGSTORE_*`, the spares' settings) then `/etc/vms/vms.env` (the subsystem's) — the product's split. A name is set only when it is not set already: what the UNIT said wins (its `PLATFORM_STORE`, its `WORKER_NAME`), and the platform's file wins over the subsystem's. That is why the units list no `EnvironmentFile=`: systemd lets a file override `Environment=`. A line is `NAME=value`, a name of letters, digits and `_`; `#` and blank lines are skipped, anything else is skipped too; a value is exported as it stands and never run (`load`).

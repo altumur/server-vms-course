@@ -33,14 +33,20 @@ job "console" {
         args    = ["python3", "-m", "domain.console"]
         # The directory of the box's own door (`DOMAIN_CONSOLE_UNIX` below): 0700 root on the host, made at boot by
         # `vms.tmpfiles` — the same directory the cluster's console keeps its socket in, another file in it.
-        volumes = ["/run/vms-console:/run/vms-console"]
+        # …and this cluster's store and objects, as М11 lays them on the node: the configstore's socket of its role,
+        # the objects of `cluster://` (the twelfth review, major 22 — the job pointed at a `nomad://` store that no
+        # longer exists, and `open_vars` refused it at start).
+        volumes = ["/run/vms-console:/run/vms-console", "/run/configstore:/run/configstore", "/data/platform/objects:/data/platform/objects"]
       }
       identity { env = true }    # reads vms/snapshot, vms/*/heartbeat and domain/*; forwards writes to the owning cluster
       template {
         data        = <<-EOT
           # One line per cluster the console aggregates. The cluster-level
-          # console lists its own cluster only; the domain's lists all.
-          CLUSTERS=north=nomad://nomad.north:4646|http://minio.north:9000/cluster-restore,south=nomad://nomad.south:4646|http://minio.south:9000/cluster-restore
+          # console lists its own cluster only; the domain's lists all. Its own
+          # cluster by this node's store and objects; another cluster's store is
+          # not opened from here (a configstore has no remote reader): it is a
+          # member that REPORTS (`name=report`, `domain/uplink.py`).
+          CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
           LOST_AFTER=45
           REFRESH_INTERVAL=5
           # WHAT THE CODE OPENS, THE JOB TURNS ON (М10's eighth review, minor: the reserve and the lanes were in the

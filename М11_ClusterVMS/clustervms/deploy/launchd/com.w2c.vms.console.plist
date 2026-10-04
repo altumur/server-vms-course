@@ -2,7 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- /Library/LaunchDaemons/com.w2c.vms.console.plist — the VMS console: the page and the API (М11, a macOS server; the
      systemd unit's twin, deploy/systemd/). `install.sh` puts @HOST@ (this host's short name) in place: launchd has
-     no %l. /etc/w2c/w2c.env and /etc/vms/vms.env are read by w2c-run.sh under what this file says. -->
+     no %l. /etc/w2c/w2c.env and /etc/vms/vms.env are read by w2c-run.sh under what this file says. The unit's
+     environment, name for name (`tests/test_units.py`): the box's own door, and the cluster's key — read where it
+     lies, launchd having no credentials directory; without it the console stored passwords in the clear. -->
 <plist version="1.0">
 <dict>
 	<key>Label</key>
@@ -18,6 +20,10 @@
 		<string>configstore:///var/run/configstore/console.sock</string>
 		<key>CONSOLE_PORT</key>
 		<string>8080</string>
+		<key>CONSOLE_UNIX</key>
+		<string>/var/run/vms-console/console.sock</string>
+		<key>SECRETS_KEY</key>
+		<string>/etc/w2c/secrets/platform.key</string>
 	</dict>
 	<key>RunAtLoad</key>
 	<true/>

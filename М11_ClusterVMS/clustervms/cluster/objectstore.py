@@ -138,6 +138,12 @@ class FsObjectStore:
         return sorted(out)
 
 
+# Where the create-only objects are rows in the store: `objects/<key>`. The name the class gave every object when every
+# object was a row (М11's first shape); the create-only keys are all that is left there, and the rights file grants
+# them under it (`cluster/rights.py`).
+ROWS_PREFIX = "objects"
+
+
 class VariablesObjectStore:
     """Objects as rows: `<prefix>/<key>` -> {data: <utf-8 text>}. Keys are the
     platform's (`vms/commands/r-7`); the store is whatever Variables the caller
@@ -148,7 +154,7 @@ class VariablesObjectStore:
     and everything else to files. The class itself still holds any key: a test,
     or the module's stand, may run every object through one store."""
 
-    def __init__(self, vars_, prefix: str = "objects"):
+    def __init__(self, vars_, prefix: str = ROWS_PREFIX):
         self.vars, self.prefix = vars_, prefix.strip("/")
         # An object here IS a Variable, so it inherits the Variable's ceiling — and says so, rather than
         # letting a caller find it out in production. The `data` key and its value are what gets charged.
