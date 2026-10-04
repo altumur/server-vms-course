@@ -217,6 +217,27 @@ for path in box.vars.list(""):
 
 **Пароль набирают в поле пароля** (тринадцатое ревью, minor). Страница рисовала `cred_secret` как `type="text"`: пароль был на экране, пока его набирают, а `access_secret` тома рядом — поле пароля. Теперь каждое поле `*_secret` спеки — `type="password"` (`input` в `console.html`). И форма правки оставляет его пустым, а в подсказке пишет, задан ли пароль: заполненная значением строки, `***`, она при следующем «Save» записывала `***` паролем камеры (пустое поле — «не менять»). Тест: `test_credentials.py::test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_mask`.
 
+**Маска, пустое поле и новый адрес — на сервере** (тринадцатое ревью; правило продукта, один ключ YAML у обоих). Страница починена, но страница не единственный клиент. Поэтому три правила стоят в двери записи — `SpecController.create`/`update` и том (`volumes.write`). Маска, какую бы ни рисовал клиент, — `***`, `•••`, `●●●`, `＊＊＊` или больше одного из этих знаков, — это пароль, которого никто не набирал: 400 «a secret was sent as its mask; leave the field out to keep it». Секрет, присланный при правке пустым или `null`, оставляет сохранённый: поле, в котором что-то набрали и стёрли, раньше стирало пароль камеры. А если сменилось поле, к которому секрет привязан (`bound_to`, урок 9: `cred_secret` — к `source`, `access_secret` тома — к `url`), и нового секрета нет — 400 словами, которые адреса не повторяют:
+
+```python
+def is_mask(v) -> bool:
+    """`v` is a secret's mask as a page shows it — `***`, `•••`, `●●●`, `＊＊＊` or more of one of them."""
+    s = v.strip() if isinstance(v, str) else ""
+    return len(s) >= 3 and len(set(s)) == 1 and s[0] in MASK_CHARS
+
+
+def unbound_secret(secret: str, bound: tuple, before: dict, after: dict) -> str | None:
+    """Why an edit that sent no new `secret` may not keep the stored one — a field it is `bound` to changed — or None.
+    Nothing stored: nothing to carry, nothing refused. The words never repeat an address."""
+    moved = [b for b in bound if str(before.get(b) or "") != str(after.get(b) or "")]
+    if moved and before.get(secret):
+        return (f"{secret} was given for the {' and '.join(moved)} this row had; that changed and no new {secret} came. "
+                f"A secret is not carried to another address — send the one for the new address")
+    return None
+```
+
+У тома то же правило в `volumes._kept_key`: запись поверх объявленного тома — это объявление целиком, и ключ, которого форма не прислала, раньше стирался; теперь он остаётся таким, как сохранён (запечатан для той же строки, и `seal_items` его не трогает), а карта в камере ключа не берёт. `a***` — пароль, а не маска: знак должен быть один и тот же, не меньше трёх. Чего правило не умеет: снять пароль с камеры правкой нельзя — пустое поле значит «не менять»; камеру без пароля по новому адресу заводят заново или присылают новый пароль. Тесты: `test_sealing.py::test_every_mask_a_page_draws_is_refused_and_a_password_with_stars_in_it_is_not`, `test_sealing.py::test_a_secret_sent_empty_on_an_edit_keeps_the_stored_one_and_an_address_changed_without_one_is_refused`, `test_sealing.py::test_a_volumes_key_not_sent_is_kept_and_a_new_address_needs_a_new_one`.
+
 **Чего ключ не даёт.** Процесс консоли и процесс держателя видят пароль — им он нужен. Тот, кто может читать файл ключа **и** хранилище, читает и пароли: на коробке это тот же пользователь ОС, что запускает процессы. Ключ закрывает копии, резервные копии и процессы, которым пароль не нужен, — не машину целиком.
 
 ## Чего это не даёт

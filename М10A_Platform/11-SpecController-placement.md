@@ -190,15 +190,27 @@ def register_constraint(name: str, fn) -> None:
     def near_index(self, beats: dict | None = None) -> NearIndex:
         """The followed subsystem's live `running` entries, by the value `near` matches. `beats`: its heartbeats as
         `console.heartbeats` returns them, when the caller has read them; else they are read here, once."""
-        by: dict[str, list[tuple[str, str, str]]] = {}
         if self.spec.near == "none":
-            return NearIndex(by)
+            return NearIndex({})
         if beats is None:
+            # Inside a pass the look is the pass's (`_per_pass`): its heartbeats read once, the index built once — and a
+            # step that did not hand one in (`_pick` from `place`, `home_for`) gets the same one.
             from .console import heartbeats                        # the read model's scan, without the age filter
-            beats = heartbeats(self.objects, self.spec.near + "/")
-        field, now = self.spec.near_of, self.wall()
+            prefix = f"{self.spec.near}/heartbeats/"
+            # Memo names of their own (the review's tenth pass, minor): `""` was the list `Controller._heartbeats` keeps
+            # under the same prefix, and the index is by `near_of` — the VMS (`of: cam`) and a scan job (by id) both
+            # follow `rec`, and in one shared pass one got the other's index.
+            beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"), "beats")
+            return self._per_pass(prefix, lambda: self._near_index(beats), f"near_index:{self.spec.near_of}")
+        return self._near_index(beats)
+
+    def _near_index(self, beats: dict) -> NearIndex:
+        by: dict[str, list[tuple[str, str, str]]] = {}
+        field = self.spec.near_of
         for w, hb in beats.items():
-            if not is_live(self.spec.near, hb.ts, now, 45.0):
+            # live by what this controller saw change (`Eyes`; the review's thirteenth pass, blocker 4), not by the
+            # followed worker's clock against this one
+            if not self.eyes.fresh(f"{self.spec.near}/heartbeats/{w}", hb.token, 45.0, hb.ts, self.spec.near):
                 continue
             for st in hb.status:
                 if st.get("phase") == "running":
@@ -811,12 +823,14 @@ placement:
 
 ```python
     def resource_state(self, server: str, lost_after: float = 45.0) -> str:
-        now = self.wall()
+        from .resource import RESOURCES
         hb = self._resources().get(server)
-        if hb is not None and is_live("platform", float(hb["ts"]), now, lost_after):
-            return "live"
         at = self._said_alive(server)
-        if at is not None and -FUTURE_TOLERANCE <= now - at <= lost_after:
+        door = self._door_age(server, at) if at is not None else None     # looked at whatever the heartbeat says
+        if hb is not None and self.eyes.fresh(f"{RESOURCES}/{server}/heartbeat", hb["ts"], lost_after, hb["ts"],
+                                              "platform"):
+            return "live"
+        if door is not None and door <= lost_after:
             return "unreachable"
         # A heartbeat that is there and does not parse (`ts: NaN`) is a resource known, and not live: "silent" — it was
         # "unknown", and `wait` for ever (the review's twelfth pass, minor). Its door row, when fresh, said otherwise above.
@@ -830,6 +844,8 @@ placement:
 `live` — ресурс на этом сервере бился недавно. `silent` — бился, но давно. `unknown` — **не бился никогда**, мы про него ничего не знаем.
 
 **Четвёртое значение, `unreachable`, — ресурс есть, но его heartbeat отсюда не виден свежим** (двенадцатое ревью, блокер 5 и major 9, воспроизведено пробой ревьюера). Раньше всё, что не `live`, было `silent` или `unknown`, а этого не хватало дважды. Дверь ресурса, закрытая для контроллера, давала стареющий heartbeat — «молчит», и камеры зависшего воркера уезжали ко второму писателю. А контроллер, запущенный после того, как сервер умер вместе с файлом heartbeat'а, видел `unknown` — «не запускался» — и не переносил ничего. Теперь там, где heartbeat не свежий, метод спрашивает второе мнение: `at` на строке двери ресурса `platform/doors/<server>`, которую ресурс переписывает каждые `ALIVE_EVERY` = 15 с (`Resource.say_door`, `_said_alive`). Строка свежая — `unreachable`: ничего не переносится, сервер не исключается из размещения, списание отказывает. Строка старая, или heartbeat старый и строки нет, — `silent`. Heartbeat, который лежит и не разбирается (`ts: NaN`), — тоже `silent`: ресурс известный и не живой (minor того же ревью). `unknown` остаётся только там, где не было ни heartbeat'а, ни строки. Тесты: `tests/test_slot_fate.py::test_a_resource_whose_door_cannot_be_reached_is_not_a_silent_server`, `tests/test_slot_fate.py::test_a_controller_started_after_a_server_died_moves_its_cameras`, `tests/test_slot_fate.py::test_a_resource_heartbeat_that_does_not_parse_is_a_silent_server_not_an_unknown_one`.
+
+**И то и другое — по смене, на часах контроллера** (тринадцатое ревью, блокер 4, воспроизведено пробами ревьюера). `ts` heartbeat'а и `at` строки двери — часы ресурса, и их сравнивали с часами контроллера в окне [−5 с, +45 с]: ресурс на 6 с впереди или на 50 с позади был `silent`, пока бился, и `without_resource` ниже уносил камеры живого воркера на десятой секунде (проба `n7`; при +6…+30 и −50 с одинаково). Теперь `ts` и `at` — метки: изменились за `lost_after` по часам контроллера (`self.eyes`, урок 7, шаг 7, «Чьи часы») — `live` и `unreachable`. Строку двери метод читает при каждом взгляде на сервер, свежий heartbeat или нет, чтобы молчание считалось от её последней перемены; контроллер, впервые её увидевший, считает её только что записанной. Тест: `tests/test_review_remainder.py::test_a_writers_clock_ahead_or_behind_neither_holds_nor_drops_it_and_the_skew_is_said`; пробы `n3`, `n6`, `n7` — ни одного переноса.
 
 Разница между `silent` и `unknown` — это разница между «замолчал» и «не запускался», и она определяет, действовать ли. Замолчавший ресурс был и пропал: место, которое было, исчезло, и это повод. Неизвестный ресурс, возможно, просто ещё не стартовал — а на коробке, где процесс ресурса появился в М10B позже воркера, так бывает при каждом первом запуске. Считать `unknown` за `silent` значило бы отказываться размещать на свежей коробке, пока не поднимется каждый процесс.
 
@@ -955,14 +971,20 @@ placement:
                 best, free, near = self._pick(pool, uid, idx)
                 if best is None:
                     self.last_leaving_waiting += max(1, len(group))
-                    if len(group) > 1:
-                        key = (str(uid), gone)
-                        waits.add(key)
-                        if key not in self._leaving_said:
-                            self._leaving_said.add(key)
-                            log.warning("%s: %s and %d more of one %s stay on %s (%s): no live worker takes all of them "
-                                        "— moved together when one does, asked again every pass", self.sub.name, uid,
-                                        len(group) - 1, self.spec.group_by, gone, why)
+                    key = (str(uid), gone)
+                    waits.add(key)
+                    if key not in self._leaving_said:
+                        self._leaving_said.add(key)
+                        what = (f"{uid} and {len(group) - 1} more of one {self.spec.group_by}" if len(group) > 1 else
+                                f"{uid}")
+                        log.warning("%s: %s stay on %s (%s): no live worker takes %s — moved when one does, asked again "
+                                    "every pass", self.sub.name, what, gone, why, "all of them" if len(group) > 1 else "it")
+                        from .events import ALARM
+                        self.journal.say("units.left_on_leaving", ALARM, of=self.sub.name, unit=str(uid),
+                                         units=max(1, len(group)), worker=gone,
+                                         why=(f"{what} stay on {gone} ({why}): no live worker has the reach and the room "
+                                              f"for {'all of them' if len(group) > 1 else 'it'} — written by nobody "
+                                              f"until one does"))
                     continue
                 for m in group or [row]:
                     mid = m["id"] if m else uid
@@ -978,6 +1000,8 @@ placement:
 Дальше — тот же выбор, что при размещении: пул, ограничение, близость. Причина склеивается из двух частей: **почему уносим** и **почему принесли именно сюда**.
 
 **Группа уходит с уходящего воркера целиком — или остаётся целиком** (двенадцатое ревью, блокер 7, воспроизведено пробой ревьюера). Раньше первый канал регистратора ехал туда, куда влезал **он**, следующие `eligible` приковывал к тому же воркеру, а для них там не было места или меток — и они оставались на уходящем воркере: отпущенном, осушаемом, списанном, мёртвом. Проба ревьюера: в одном случае каналы 1 и 2 разъехались на `w-3` и `w-1`, в другом два канала из четырёх остались, где были. И все счётчики показывали 0. Теперь единицы группы на уходящем воркере (`_reach_group(row, gone)`) едут вместе — на воркер, который проходит фильтры **каждой** из них и где есть место на всех (`fits`, `capacity_of − load ≥ len(group)`); то же правило, что у `ensure_reach` ниже. Такого воркера нет — не едет ни одна: строка в логе один раз за эпизод, и единицы посчитаны в `last_leaving_waiting` → `units_left_on_leaving` в отчёте прохода и `<подсистема>_units_left_on_leaving` на `/metrics`. Туда же считаются единицы, чья строка не разбирается. Бюджета у переноса с уходящего воркера по-прежнему нет: это единицы, которые никто не пишет, и ждать они не должны. Тест: `tests/test_server_labels.py::test_a_leaving_worker_hands_a_channel_group_on_whole_or_keeps_it_whole_and_says_so`.
+
+**Оставшиеся на уходящем — тревога, и нехватка считается группой** (тринадцатое ревью, major 16, воспроизведено пробой ревьюера `dq13_group`). Группа, оставленная целой, была строкой лога и числом, а счёт запасных (М11, урок 10) её не видел: отпущенный `w-1` с четырёхканальным NVR, рядом `w-2` и `w-3` по два места — `units_left_on_leaving=4`, `units_short=0`, ни одного предложения, ни одной тревоги, четыре канала не пишет никто. Теперь в первый раз за эпизод — тревога `units.left_on_leaving` в журнале, с тем, что осталось и где. А `offer_spares` считает ждущие единицы **кусками**: группа (`group_by`) — один кусок под метками всех её ждущих единиц, и кусок помещается только туда, где у одного воркера есть место на весь (`_pack`, самый большой первым — на того, у кого места меньше всего, но хватает). Что не поместилось — нехватка. Запасных нужно столько, сколько воркеров по `per` мест унесут эти куски целиком (`_bins`); группа больше `per` — запасной её не возьмёт, и предложение не пишется, а `spares_withheld` говорит почему («need a worker with room for all of them, and a spare says 2») — раньше R2 той же пробы предлагал запасного на три места под группу из четырёх на каждом проходе. Тест: `tests/test_spares.py::test_a_group_left_whole_on_a_leaving_slot_is_short_and_a_spare_too_small_for_it_is_not_offered`.
 
 `continue` при `best is None` — не `break`. Первая версия урока рассуждала: «если некуда деть эту единицу, остальным из того же назначения тоже некуда: пул один». Пул один, а фильтры у каждой единицы свои: метки, `spread_by`, близость. Единица с редкой меткой, первая в списке, навсегда блокировала перенос всех остальных единиц умершего воркера (ревью платформы; BC). Эта единица остаётся там, где была, и это честнее, чем снять её в никуда; следующая рассматривается сама по себе.
 
@@ -1087,6 +1111,8 @@ placement:
 Единица на **живом** воркере пула, чей сервер больше не проходит ограничение, едет на живого, который проходит, — тот же `eligible` и тот же `_pick`, что при размещении, и причина из двух частей: `srv-a no longer reaches vlan:cctv-a; most free capacity (9); on srv-b`. Единицы ушедшего, уходящего или осушаемого воркера — дело `redistribute`, не этого шага. **Повод** к переезду — только ограничение: `spread_by` и `admit` подсистемы решили место один раз, и их изменение никого не увозит. Но **цель** выбирается через `eligible`, а он их спрашивает: единица не уедет туда, куда её не пустило бы размещение (десятое ревью поймало прежнюю формулировку «сюда не относятся» — она говорила о поводе, а читалась как о цели).
 
 **Группа переезжает целиком или не в этот проход (десятое ревью).** Админ одной камеры четырёхканального регистратора поменял ей `labels` — и `ensure_reach` увёз этот канал на другой держатель: две сессии к одному устройству, навсегда, а не «на секунды», как обещал урок. Теперь единица с группой (`group_by`, у VMS — устройство) едет вместе со всеми единицами своей группы на этом воркере (`_reach_group`), на воркер, который берёт их всех, в одном проходе. Тест: `tests/test_server_labels.py::test_the_channels_of_one_device_move_together_or_not_at_all`.
+
+**Новый канал, которого воркер группы не берёт, — повод перевезти группу** (тринадцатое ревью, major 17, воспроизведено пробой ревьюера). Каналы 1 и 2 NVR стоят на `w-1`, сервер которого `vlan:a` не видит; добавлен канал 3 с `vlan:a`. `eligible` приковывает его к `w-1` (одно устройство — один воркер), а `w-1` его не берёт — и канал был неразмещён навсегда: `/unplaceable` говорил «its device is held on w-1, which does not take it», а двери ручного переноса нет. Теперь `ensure_reach` после своих переездов зовёт `_regroup`: неразмещённая единица группы, которую воркер группы не берёт, — и размещённые единицы группы едут целиком на воркер, который берёт **каждую** — размещённую и ждущую — и где есть место на всех; ждущие встают туда на следующем проходе (`place`, приклеенный к новому воркеру группы). В том же бюджете, что остальные переезды; некуда — группа ждёт, сказано один раз за период и посчитано в `reach_waiting`. Тест: `tests/test_group_by.py::test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_not_placed_alone` (вторая половина).
 
 **Цель — любой воркер, у которого есть место на всю группу, а не один ближний** (одиннадцатое ревью, major, воспроизведено запуском). Цель выбирал `_pick` — один воркер, ближний первым. У четырёхканального регистратора ближний `srv-b` имел два места, а `srv-c` — пятьдесят, и оба видели метку. Проход снимал все четыре с ложной причиной «nothing live reaches it», а следующее размещение ставило два канала на `srv-b` и два — никуда, навсегда. Теперь цель выбирается среди воркеров, которые видят каждую единицу группы **и** имеют место на всю её (`roomy`); близость и дом — первыми уже среди них. Тест: `tests/test_server_labels.py::test_a_group_goes_whole_to_a_worker_with_room_for_it_when_the_near_one_has_too_little`.
 

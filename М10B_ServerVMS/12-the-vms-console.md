@@ -228,8 +228,8 @@ def coverage_of(found) -> tuple[float, float] | None:
         return None
 
 
-def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float) -> list[dict]:
-    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage"))
+def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: float, eyes=None) -> list[dict]:
+    cov = coverage_of(holder_of(objects, "vms/", cam, now, field="coverage", eyes=eyes))
     if cov is None:
         return []
     want = (max(cov[0], t0), min(cov[1], t1))
@@ -239,6 +239,8 @@ def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: floa
     return [{"start": a, "end": b, "media": None, "epoch": 0, "source": "device",
              "fenced": False, "device": True} for a, b in subtract(want, have)]
 ```
+
+`eyes` — глаза контроллера консоли (М10A, урок 7, шаг 7, «Чьи часы»; тринадцатое ревью, блокер 4): держатель — тот, чей heartbeat **менялся** за 45 с по часам консоли, а не тот, чей `ts` близок к ним. Держатель на сервере с часами на 50 с позади был «никто» — у камеры не было ни спанов устройства, ни `/segment` («nobody holds this camera right now»), пока он её держал. Без глаз (`eyes=None`) — прежнее сравнение, для разового взгляда.
 
 `subtract` — та же функция, по которой регистратор решает, что дозаписывать (урок 16). Одно правило в двух местах, поэтому картинка и работа не могут разойтись. Такой спан исчезнет первым: наш архив держит недели, карта камеры — дни.
 
@@ -259,7 +261,7 @@ def device_spans(objects, cam, ours: list[dict], t0: float, t1: float, now: floa
             t0, t1 = pb.times(raw0, raw1)
         except (TypeError, ValueError):
             return 400, {"detail": "from and to are unix seconds, and to is after from", "error": "bad range"}
-        found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url")
+        found = holder_of(ctl.objects, "vms/", cam, con_wall(), field="playback_url", eyes=ctl.eyes)   # by change (13th)
         if found is None:
             return 503, {"detail": "nobody holds this camera right now", "error": "unheld"}
         url, key = found[2]["playback_url"], found[1].extra.get("playback_key") or None
@@ -826,6 +828,10 @@ served 3/4 · 0 spare        объявлено четыре, обслужива
 **Ключ, которым хранилище не может назвать файл, — 413 словами на любом маршруте.** Тот же заход: запись или том с именем в 100 000 символов, сохранение для такой камеры, ключ идемпотентности из сотни `%` — каждый становился именем файла длиннее, чем позволяет диск. Ответом было 503 с локальным путём хранилища или обрыв. Файловое хранилище отказывает такому ключу при записи (`KeyTooLong`, предел `KEY_BYTES` = 246 байт имени файла; М10A, урок 2). Консоль отвечает на это 413 с пределом в тексте — в одном месте для всех маршрутов (`Mount._answered`, рядом с `do_GET`…`do_DELETE`), потому что отказ приходит до записи, и из ответа ещё ничего не ушло. Тест: `tests/test_garbled_rows.py::test_a_key_the_file_store_cannot_name_a_file_is_refused_at_the_write_in_words_and_is_no_row_at_a_read`.
 
 **Id, который не id этой подсистемы, — 400 словами на каждом маршруте, который берёт id** (двенадцатое ревью, находка координатора). `parse_id` бросал `ValueError` из `dispatch`: `GET /where/None` рвал соединение без ответа, а `PUT` и `DELETE /cameras/x` отвечали 500 «the write failed». Теперь `SpecConsole._uid` превращает это в `Refused` — 400 с текстом вроде `'None' is not an id of vms: its ids are whole numbers` (у подсистемы с именами вместо чисел — `names`); `/where/<id>` ловит его сам и отвечает 400 с `error: "not an id"`. Обход проверил 835 запросов — пять монтирований, их семейства маршрутов и методы: ни одного обрыва и ни одного 5xx. Тест: `tests/test_console_gate.py::test_an_id_that_is_no_id_is_a_400_in_words_on_every_route_that_takes_one`.
+
+**…и имя — один сегмент ключа** (тринадцатое ревью, minor, воспроизведено обходом ревьюера `fuzz_routes`). У подсистемы с именами вместо чисел `..` проходило `parse_id` как имя, хранилище отказывало в ключе, который из него получался (`not a key: 'rec/recordings/..'`), и `PUT`/`DELETE` на `/rec/recordings/..`, `/detjob/jobs/..`, `/auto/scenarios/..` отвечали 500 «the write failed» — 6 из 2688 запросов обхода. Теперь `_uid` проверяет имя тем же правилом, что держат пути (`doors.safe_segment`: не пусто, не `.`, не `..`, без разделителей): 400 «a name is one segment, not '.', '..' or a path». Тот же обход на новом коде — 2688 запросов, 0 пятисотых. В тест добавлены `..` и `.`.
+
+**Пятисотые и 503 говорят, что случилось, а не где лежит диск** (тринадцатое ревью, minor; сверка продукта (c)). `detail` пятисотой и 503 записи был `str(e)` — «[Errno 13] Permission denied: '/data/platform/vars/vms/cameras/7'»: раскладка диска сервера для любого, кто умеет сделать так, чтобы запись не прошла. Теперь ответ берёт слова ошибки (`console.no_paths`: у `OSError` — его `strerror`, у остальных абсолютные пути вырезаны), а полная ошибка остаётся в логе консоли. То же у заявки команды (`vms/console.py`) и у двери объектов ресурса (М10A, урок 14; копия, которую сервер не может прочесть или сохранить, — 503 словами, а не оборванное соединение или 408 с путём). Тесты: `tests/test_resource_objects.py::test_a_write_the_store_refuses_says_why_without_the_disks_layout`, `::test_a_copy_that_cannot_be_read_or_kept_is_a_503_in_words_with_no_path`.
 
 **`GET /servers` говорит обе правды.** У каждого сервера теперь `labels` (по чему размещают), `labels_node` (что говорят его воркеры) и `labels_source` — `console` или `node`; `labels_unread: true` — строка есть, но не прочиталась, и с сервера ничего не снимают (М10A, урок 11). Страница показывает это строкой «reaches …» в блоке сервера, с *edit* и *back to the node's*; перед записью она спрашивает `GET …/labels?labels=…` и называет в подтверждении камеры, которые переедут или встанут неразмещёнными. Тест: `tests/test_server_labels.py::test_the_page_is_told_which_cameras_an_edit_will_move`. Та же правда нужна была ещё в одном месте — проверке `?labels=` зрителя живого видео: она читала метки шлюза из heartbeat'а, теперь спрашивает `labels_of`, как размещение (`tests/test_lesson8_live.py::test_the_labels_a_viewer_may_ask_for_are_what_placement_reads_the_consoles_row_over_the_gateways_own`).
 

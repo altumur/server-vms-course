@@ -192,14 +192,13 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 `steal=False` — это и есть «у живого не отнимать». В самом захвате (`_claim_slot`) оно стоит рядом с проверкой другой коробки, о которой ниже:
 
 ```python
-                if prefer is not None and cur.holder != self.instance:
-                    if not steal and (not cur.claimable(now) or cur.lapsed(now) and self._held(cand, cur)):
+                if prefer is not None and cur.holder and cur.holder != self.instance and not cur.released:
+                    if not steal and self._held(cand, idx):
                         raise _NameTaken(cand, cur.holder, cur.until)   # live, or lapsed with its process hung: its holder's
-                    if steal and not cur.claimable(now):
-                        refused = self._may_take_by_name(cand, cur.holder)
-                        if refused is not None:
-                            self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
-                            raise refused
+                    if steal and not self._on_this_box(cur.holder) and self._held(cand, idx):
+                        refused = self._may_take_by_name(cand, cur.holder, held=cur.claimable(now))
+                        self._contend(cand, cur.holder, REFUSED)   # seen on /servers, not only in this box's log
+                        raise refused
 ```
 
 Пока имя держит живой экземпляр, старый процесс — **никто**: слота нет, heartbeat под именем не пишется, назначение не читается, эпох нет (всё, что огорожено, пока `seeking`, — М10A, урок 8). Один раз за эпизод он говорит в журнал тревогу `worker.name_taken` — кто держит имя и на какой коробке — и в лог:
@@ -208,26 +207,33 @@ POST /v1/write {"op": "put", "key": "vms/epoch/1", "cas": 1010, "items": {"epoch
 <экземпляр>: its name vms/w-srv-a-1 is held by <держатель> (box <коробка>) — another process started under the same name took it. This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no other
 ```
 
-И оставляет метку `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. **И истёкшее имя он берёт только тогда, когда контроллер перенёс бы его камеры** (`Worker._held`; двенадцатое ревью, блокер 2): 45 секунд после конца слота (`SLOT_LOST_AFTER`) контроллер считает слот живым — то, что начал прежний процесс, может ещё писать, — и процесс без имени, взявший имя в этом окне, забирал вместе с ним камеры зависшего: проба ревьюера дала двух писателей на +46…+89 с. Теперь имя держится, пока `slot_fate` говорит `alive`, `hung` или `unsure` (последние два — до предела `HUNG_MOVE_AFTER`: после него камеры уезжают, и имя с ними), а вопрос, на который хранилище не ответило, — «не знаю», и имя тоже держится (была «не завис»). Тесты: `vmsserver/tests/test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin`, `::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone`. Захват имени у живого держателя остался **только при старте** — это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается, как раньше, под свободным номером. Тесты: `vmsserver/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
+И оставляет метку `vms/contenders/w-srv-a-1/<коробка>` (объект, как heartbeat: `{name, state: "nameless", box, hostname, server, instance, holder, holder_box, since, at}`), переписывая её раз в `CONTEND_EVERY` (10 с) — его пульс, пока heartbeat под именем чужой. Новый держатель остановился (`SIGTERM` отпускает слот) или замолчал дольше срока слота — старый берёт своё имя и пишет `worker.name_back`. Отнимать имя у живого он не будет никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. **И истёкшее имя он берёт только тогда, когда контроллер перенёс бы его камеры** (`Worker._held`; двенадцатое ревью, блокер 2): 45 секунд после конца слота (`SLOT_LOST_AFTER`) контроллер считает слот живым — то, что начал прежний процесс, может ещё писать, — и процесс без имени, взявший имя в этом окне, забирал вместе с ним камеры зависшего: проба ревьюера дала двух писателей на +46…+89 с. Теперь имя держится, пока `slot_fate` говорит `alive`, `hung`, `unsure` или `wait` (последние три — до предела `HUNG_MOVE_AFTER`: после него у `hung` и `unsure` камеры уезжают, и имя с ними; `wait` держит имя до предела с тринадцатого ревью, блокер 2), а вопрос, на который хранилище не ответило, — «не знаю», и имя тоже держится (была «не завис»). **Судит контроллер, который смотрел** (тринадцатое ревью, блокер 4): он пишет в отчёт прохода, какие имена отданы и при какой ревизии строки слота (`names_given`), и `_held` читает этот вердикт — процесс, только что стартовавший, ничего не видел меняющимся и судил бы по `until` чужих часов (М10A, урок 7, шаг 7). Тесты: `vmsserver/tests/test_slot_fate.py::test_a_nameless_process_does_not_take_a_hung_workers_name_within_the_margin`, `::test_a_spare_that_cannot_ask_whether_the_holder_is_gone_leaves_the_name_alone`. Захват имени у живого держателя остался **только при старте** — это перезапуск после `kill -9`, где юнит знает, какой процесс настоящий. Процесс без имени (не дали ни имени, ни индекса) возвращается, как раньше, под свободным номером. Тесты: `vmsserver/tests/test_names.py` — `test_a_process_named_by_its_unit_whose_name_was_taken_is_nobody_and_takes_no_other_number`, `test_a_nobody_takes_its_name_once_the_holder_lapses_and_never_from_a_live_holder`, `test_a_process_that_took_whatever_was_free_still_rejoins_under_a_free_number`; на стенде модуля — `test_lesson4_failover.py::test_two_processes_with_one_name_the_old_one_is_nobody`.
 
 ### Свежая коробка: одно имя на двух машинах
 
 И второй случай того же рода — **свежая коробка**. `%l` — это имя хоста. Две только что поставленные машины с именем по умолчанию (`localhost`, `debian`, два клона одной виртуальной машины) дают своим воркерам одно имя — `w-localhost-1` на обоих серверах, — хотя `SERVER_NAME` в `w2c.env` у них разный. Раньше каждый перезапуск одного отнимал имя у другого, а заметить это можно было только по логам двух машин.
 
-Теперь живого держателя с **другой** коробки не трогают. Коробку экземпляр носит в своём имени: `<коробка>:<pid>:<6 hex>`, где коробка — `BOX_ID`, если его сказал рантайм, иначе идентификатор машины (`/etc/machine-id`), иначе имя хоста (`runtime.box`). Имя хоста одно на двух клонах — идентификатор машины у них разный. Правило — `Worker._may_take_by_name`:
+Теперь живого держателя с **другой** коробки не трогают. Коробку экземпляр носит в своём имени: `<коробка>:<pid>:<6 hex>`, где коробка — `BOX_ID`, если его сказал рантайм, иначе идентификатор машины (`/etc/machine-id`), иначе имя хоста (`runtime.box`). Имя хоста одно на двух клонах — идентификатор машины у них разный. Правило — `Worker._on_this_box` и `Worker._may_take_by_name`:
 
 ```python
-    def _may_take_by_name(self, slot: str, holder: str) -> "NameOnAnotherBox | None":
+    def _on_this_box(self, holder: str) -> bool:
         here, there = runtime.box_of(self.instance), runtime.box_of(holder)
-        if here is None or there is None or here == there:
+        return here is not None and there is not None and here == there
+```
+
+```python
+    def _may_take_by_name(self, slot: str, holder: str, held: bool = False) -> "NameOnAnotherBox | None":
+        if self._on_this_box(holder):
             return None
-        return NameOnAnotherBox(slot, holder, there, socket.gethostname(), here, getattr(self, "NAME_ENV", ""))
+        here, there = runtime.box_of(self.instance), runtime.box_of(holder)
+        return NameOnAnotherBox(slot, holder, there or "", socket.gethostname(), here or runtime.box(os.environ),
+                                getattr(self, "NAME_ENV", ""), held)
 ```
 
-Та же коробка — это перезапуск, имя берётся. Имя, которое коробки не называет (`INSTANCE_ID`, идентификатор аллокации: такие имена даёт планировщик и сам переносит индекс между узлами), — тоже берётся, как раньше. Живой держатель с другой коробки — отказ: процесс пишет, что делать, и выходит, а юнит его перезапускает:
+Та же коробка — это перезапуск, имя берётся. Держатель с другой коробки — отказ, **живой он или уже переставший продлевать**, пока контроллер не отдал его имя (`_held`; тринадцатое ревью, блокер 3, воспроизведено пробой ревьюера `n5_named_takes_hung`: процесс, названный на коробке B, на +50, +100 и +600 с брал имя зависшего воркера коробки A и его камеры — два писателя). **И имя, которое коробки не называет** (`INSTANCE_ID`, идентификатор аллокации), — больше не «берётся, как раньше»: чья это машина, из него не прочесть, и такое имя у живого держателя не отнимает никого — в продукте закрыто так же. Аллокация, перенесённая планировщиком на другой узел, ждёт, пока контроллер отдаст имя старой. Отказ — процесс пишет, что делать, и выходит, а юнит его перезапускает:
 
 ```
-w-localhost-1 is held by a live process on another machine (box <коробка>, instance <держатель>): two machines are given one name, usually because they share the hostname 'localhost' (the units name their processes from it, w-%l-1). Give this machine another hostname, or set WORKER_NAME in its unit to a name no other machine uses. This machine (box <своя>) leaves the name alone: taking it would stop the other machine's live process
+w-localhost-1 is held on another machine (box <коробка>, instance <держатель>), which is live. Two machines given one name usually share the hostname 'localhost' (the units name their processes from it, w-%l-1): give this machine another hostname, or set WORKER_NAME in its unit to a name no other machine uses. This machine (box <своя>) leaves the name alone: taking it would make two processes of one name
 ```
 
 Каждый отказ переписывает метку `vms/contenders/<имя>/<коробка>` с `state: "refused"`; начало эпизода (`since`) берётся из прежней свежей метки, так что перезапуски юнита эпизод не множат. Метка, не обновлявшаяся `CONTENDER_FRESH` (300 с), не читается. Кто её видит:
@@ -236,7 +242,7 @@ w-localhost-1 is held by a live process on another machine (box <коробка>
 - контроллер — раз за эпизод тревога `worker.name_conflict` (`Controller.say_name_conflicts`, шаг прохода `name_conflicts`): кто держит, какая коробка просит, с какого момента;
 - `/metrics` — `vms_name_conflicts`, число имён со свежей меткой (из отчёта прохода, поле `name_conflicts`).
 
-Когда держатель с той коробки уходит и его слот истекает, следующий перезапуск берёт имя как истёкшее и метку убирает. Тест: `test_names.py::test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_seen`. Имя хоста всё равно задают до `install.sh`: `hostnamectl set-hostname srv-a` — отказ лишь не даёт двум машинам драться за одно имя молча.
+Когда держатель с той коробки уходит, его слот истекает и контроллер отдаёт имя (`names_given` в отчёте прохода: мёртв, сервер молчит, или зависший — после предела), следующий перезапуск берёт его и метку убирает. Тест: `test_names.py::test_a_live_holder_on_another_box_keeps_its_name_and_the_refused_process_is_seen`. Имя хоста всё равно задают до `install.sh`: `hostnamectl set-hostname srv-a` — отказ лишь не даёт двум машинам драться за одно имя молча.
 
 ## Шаг 4 — Кто решает N
 
@@ -246,15 +252,21 @@ w-localhost-1 is held by a live process on another machine (box <коробка>
 #   waiting       per label set (a unit's `labels` under `labels-subset`; "" for every unit otherwise): units with no
 #                 placement, and units still on a worker that is leaving (`leaving`: a released slot, a silent
 #                 resource, a drained or decommissioned server, a dead slot whose fate is `move`). Not a hung
-#                 worker's, not a slot's before its fate says move — those are waited for, not short
-#   free          the room (`capacity − load`) of the workers in the pool whose labels cover the set
-#   units_short   waiting − free, at least 0. A set no live worker covers has no free room: short by itself
-#   needed        ceil(units_short / per), at most the servers a spare of the set could carry units on, less the
-#                 offers of the set a spare took and whose worker has not been heard yet — for `OFFER_GRACE` (90 s)
-#                 from the take it is a worker on its way
+#                 worker's, not a slot's before its fate says move — those are waited for, not short. In PIECES:
+#                 a unit alone is a piece of one; the waiting units of one `group_by` together are one piece, under
+#                 the labels of all of them (the review's thirteenth pass, major 16)
+#   free          the room (`capacity − load`) of each worker in the pool whose labels cover the set
+#   units_short   what of the waiting does not fit that room, a piece whole onto one worker or not at all (`_pack`).
+#                 A set no live worker covers has no free room: short by itself
+#   needed        the workers of `per` places it takes to carry the short pieces whole (`_bins`), at most the
+#                 servers a spare of the set could carry units on, less the offers of the set a spare took and whose
+#                 worker has not been heard yet — for `OFFER_GRACE` (90 s) from the take, as this controller saw it,
+#                 it is a worker on its way. A piece larger than `per` no spare takes: withheld, the reason said
 ```
 
 **Предложение — только туда, где запасной понесёт камеры** (двенадцатое ревью, «Вопросы»: найдено при пересборке `three-cameras` запусками). Счёт не спрашивал трёх вещей. Ёмкость он делил на свою константу `CAPACITY`, а не на то, что скажет запасной; теперь `per` — наименьшая ёмкость, которую называют живые воркеры этого набора (запасной стартует тем же юнитом и окружением и скажет то же), константа — только когда живых нет. Предложения писались и для набора, который не покрывает ни один сервер, — они висели, никем не взятые. И под `servers: distinct` запасной, поднятый на сервере, где воркер уже есть, простаивал по политике (`idle_by_policy`), камера оставалась неразмещённой, а следующий проход предлагал снова — скрипты поднимали простаивающих запасных до `MAX_WORKERS` на каждом сервере. Теперь сервер, на котором запасной может встать (`SpecController._spare_hosts`), — не списан, не в drain, его ресурс не молчит, метки покрывают набор (строка консоли, иначе слово его воркеров; сервер, о метках которого никто ещё не сказал, может покрыть); под `distinct` — ещё и без живого воркера этой подсистемы. Не хватает таких серверов — предложений столько, сколько их есть, недостача остаётся в `units_short`, причина — в отчёте (`spares_withheld`) и на `/metrics` (`vms_spares_withheld{labels}`), тревога `spares.no_server` — раз за эпизод. Тесты: `vmsserver/tests/test_spares.py::test_no_offer_where_no_server_could_carry_a_spare`, `::test_under_distinct_servers_a_spare_is_offered_only_where_it_would_not_idle`, `::test_the_shortage_is_counted_by_what_the_workers_announce_not_the_controllers_fallback`.
+
+**Группа — один кусок** (тринадцатое ревью, major 16, воспроизведено пробой ревьюера `dq13_group`). Счёт складывал ждущие единицы по одной и сравнивал с суммой свободных мест: четырёхканальный NVR, оставленный целым на отпущенном слоте, рядом два воркера по два места — «недостача 0», ни одного предложения, четыре канала не пишет никто. А с одним воркером на три места каждый проход предлагал запасного на три места — группу из четырёх он не возьмёт никогда. Теперь ждущие единицы одной группы — один кусок под метками всех их, кусок встаёт только туда, где у одного воркера место на весь (`_pack`), а запасных нужно столько, сколько воркеров по `per` мест унесут куски целиком (`_bins`). Кусок больше `per` — предложения нет, причина — в `spares_withheld` («need a worker with room for all of them, and a spare says 3»), тревога `spares.no_server`; оставшиеся на уходящем — тревога `units.left_on_leaving` (М10A, урок 11, шаг 17). Тест: `vmsserver/tests/test_spares.py::test_a_group_left_whole_on_a_leaving_slot_is_short_and_a_spare_too_small_for_it_is_not_offered`. И `vms_spares_withheld` на `/metrics` несёт значения, а не одну строку `TYPE` («Вопросы» двенадцатого прохода; на нынешнем коде не воспроизвелось — закреплено тестом `::test_a_withheld_shortage_and_the_reach_budget_are_numbers_on_metrics`, там же `vms_reach_budget`).
 
 Две вещи здесь стоят того, чтобы их прочитать дважды. **Считается после переносов**: смерть сервера не поднимает ни одного лишнего процесса, если живым хватает места, — камеры сначала расходятся по свободной ёмкости. **И не всё молчащее — недостача**: камеры зависшего воркера и камеры слота, судьба которого ещё не «переносить», — это ожидание, а не нехватка.
 

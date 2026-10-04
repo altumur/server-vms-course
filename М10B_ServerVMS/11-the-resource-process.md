@@ -257,17 +257,22 @@ def resource() -> None:
         logging.exception("resource heartbeat failed")
     # Outside the loop and in a try of its own (the review's seventh pass): a peer whose heartbeat or copy does not
     # parse raised out of here, and the resource process ended at every start — no door, no heartbeat, no pass.
+    # The beat on a thread of its own (the review's thirteenth pass, blocker 5): that this resource is here and who runs
+    # on it, whatever the loop below is doing — a pass or a restore that hangs on a disk no longer silences the server.
+    res.start_beat(stop)
     try:
         logging.info("restore: %s", res.restore())
     except Exception:                                                     # noqa: BLE001
         logging.exception("restore failed — the buckets peers hold of this server stay with them; the process goes on")
 ```
 
-**Порядок из двух шагов, и он строгий.**
+**Порядок из трёх шагов, и он строгий.**
 
 `heartbeat()` первым: заявить о себе до всякой работы. Восстановление может занять минуты (копирование бакетов от соседей после замены диска, урок 14 М10A). Всё это время консоль и контроллеры должны видеть, что ресурс есть.
 
 **Одного heartbeat'а до восстановления мало — оно бьётся само.** Первый heartbeat живёт `lost_after`, 45 секунд, а 2000 вёдер по 50 мс тянутся 100 секунд. Всё это время ресурс для индекса событий молчал: окно неполное, курсор автоматики стоит, консоль показывает ресурс молчащим, хотя его дверь отвечает (седьмое ревью, часть 1, M4). Теперь `restore` идёт под тем же пульсом, что проход (`Resource._pulsing`, урок 14 М10A). Каждое ведро — отметка прогресса, и пока восстановление движется, последний heartbeat уходит со свежим временем каждые десять секунд. Тест: `test_row_reader.py::test_restore_beats_under_the_same_pulse_as_the_pass`.
+
+**Пульс — между ними, и в своём потоке** (тринадцатое ревью, блокер 5). `start_beat(stop)` запускает поток, который каждые `PULSE_SECONDS` пишет последний heartbeat с новым временем, свежим взглядом на регистрации воркеров (со сроком на диск) и `at` строки двери (`Resource.beat`, урок 14 М10A, шаг 4) — что бы ни делал цикл ниже. Раньше heartbeat, дверь и регистрации шли с потока прохода, и проход, повисший на томе, через `PULSE_LIMIT` останавливал пульс: ресурс «молчал», зависший воркер с блокировкой уезжал на 250-й секунде, два писателя. Теперь застрявший проход бьётся дальше и говорит `pass_stuck`, а взгляд на том, не ответивший за `PROBE_DEADLINE`, называет этот том (`volumes_stuck`), не держа heartbeat. Пульс начинается после первого heartbeat'а: бить ему нечего, пока сказать нечего. Тесты: `tests/test_slot_fate.py::test_a_resource_whose_pass_hangs_beats_on_and_its_hung_worker_is_not_moved`, `tests/test_slot_fate.py::test_a_volume_or_a_tree_that_does_not_answer_does_not_hold_the_resources_heartbeat`.
 
 `restore()` вторым: забрать с соседей бакеты, которые они держали в копиях, пока этот сервер лежал. Индексу событий отдельный шаг не нужен: он читает дерево в момент запроса, и вернувшиеся бакеты видны, как только легли на диск.
 
@@ -314,7 +319,7 @@ Heartbeat каждые десять секунд, проход политики 
 
 **Почему `last_policy` ставится до прохода.** Проход, упавший с исключением, повторится через десять минут, а не через десять секунд. Иначе ресурс при недоступном хранилище обходил бы дерево шесть раз в минуту и каждый раз падал.
 
-Платформенный `pass_` идёт по порядку: проходы подсистем (у VMS их нет), `retain` с удержаниями, `relieve`, `mirror` (урок 14 М10A). Пока он идёт, отдельный поток повторяет последний heartbeat с новым временем. На годовом архиве проход длиннее срока, после которого ресурс считают молчащим, и без этого пульса сервер объявили бы мёртвым посреди прохода. Это проверяет `test_lesson10_events.py::test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`. Пульс повторяется, только пока проход движется: каждое ведро в обходах `retain` и `mirror` отмечает прогресс, а список закрытых вёдер читается по именам, без разбора файлов (пятое ревью; урок 14 М10A). Так же отмечаются каждый файл, измеренный в `usage()`, каждое удаление в `retain` и каждая строка, которую читает `kept_buckets` (шестое ревью: по модели теста 2000 вёдер давали 399,8 с без отметки в `usage` и 371 с в `retain` при пределе 2 с; тест `test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_per_file`).
+Платформенный `pass_` идёт по порядку: проходы подсистем (у VMS их нет), `retain` с удержаниями, `relieve`, `mirror` (урок 14 М10A). Пока он идёт, отдельный поток повторяет последний heartbeat с новым временем — поток `start_beat`, а без него пульс самого прохода. На годовом архиве проход длиннее срока, после которого ресурс считают молчащим, и без этого пульса сервер объявили бы мёртвым посреди прохода. Это проверяет `test_lesson10_events.py::test_a_pass_longer_than_the_pulse_keeps_the_resources_heartbeat_fresh`. Проход, который не движется дольше `PULSE_LIMIT` сроков, пульс не останавливает, а говорит `pass_stuck` (тринадцатое ревью; до него пульс тогда смолкал, и ресурс становился молчащим). Движение отмечается так: каждое ведро в обходах `retain` и `mirror` отмечает прогресс, а список закрытых вёдер читается по именам, без разбора файлов (пятое ревью; урок 14 М10A). Так же отмечаются каждый файл, измеренный в `usage()`, каждое удаление в `retain` и каждая строка, которую читает `kept_buckets` (шестое ревью: по модели теста 2000 вёдер давали 399,8 с без отметки в `usage` и 371 с в `retain` при пределе 2 с; тест `test_measuring_the_tree_and_removing_what_is_old_keep_the_pulse_with_a_mark_per_file`).
 
 `srv.shutdown()` на выходе. Слота нет, отпускать нечего, и различения «аккуратная остановка против падения» здесь тоже нет: ресурс никуда не переезжает.
 
