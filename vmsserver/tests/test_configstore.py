@@ -424,8 +424,9 @@ def test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nob
         assert [m["id"] for m in admin.status()["members"]] == ["solo"]
     finally:
         (dm.stop() if dm else b.stop())
-    with open(os.path.join(d, "peers.json"), "w") as f:
-        json.dump([f"127.0.0.1:{_port()}"], f)
+    doc = configstore.RaftBackend.member_doc(d)
+    with open(os.path.join(d, "member.json"), "w") as f:
+        json.dump({**doc, "partners": [f"127.0.0.1:{_port()}"]}, f)
     try:
         with pytest.raises(ValueError):
             configstore.start_member("solo", d, f"127.0.0.1:{port}", tls_dir=None, tuning="lan")
@@ -470,6 +471,83 @@ def _api(m: "Member", ctx, route: str, body: dict) -> tuple[int, dict]:
     conn.request("POST", route, body=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
     r = conn.getresponse()
     return r.status, json.loads(r.read() or b"{}")
+
+
+def test_a_member_killed_right_after_its_join_comes_back_into_its_group_not_as_a_group_of_one(monkeypatch):
+    """The review's thirteenth pass, blocker 1, by its probe (`probe_join_window.py`): `member.json` was written as the
+    join was accepted and the partners half a second later; killed between the two, the member came back on its
+    journal with no partner — a leader of a group of one, 0 rows, create-only handing out epoch «1» where the group's
+    was 7. The library's tick that keeps the partners is switched off here, so what is on disk is only what the
+    membership itself wrote: the joined member's `member.json` names its partners (the bootstrap member among them,
+    whom no journal names), and so does the member whose door took the join — `add` writes at once (the sibling).
+    Restarted with the same flags, srv-c is a follower of the real group and the epoch is 7, its create-only a
+    conflict. And a member that joined but knows no partner (a `member.json` from before) does not start alone: it
+    asks its `-join` door, or refuses with words."""
+    monkeypatch.setattr(configstore.RaftBackend, "_keep_peers", lambda self: None)
+    g = Group(2)
+    try:
+        a = g.leader()
+        v = open_vars(a.url())
+        for i in range(20):
+            v.put(f"vms/epoch/cam{i}", {"epoch": "7"}, cas=0)
+        c = Member(g, 2, a.adv)
+        g.members.append(c)
+        joined = configstore.RaftBackend.member_doc(c.data)
+        assert joined["how"] == "join" and sorted(joined["partners"]) == sorted([g.members[0].raft, g.members[1].raft])
+        assert c.raft in configstore.RaftBackend.member_doc(a.data)["partners"], "the door that took it did not write"
+        c.stop()                                                    # killed before any tick of the library
+        c.start(join=a.adv)
+        _ready(c)
+        _caught_up(c, g.leader())
+        st = c.status()
+        assert st["state"] == "follower" and sorted(m["id"] for m in st["members"]) == list(NAMES), st
+        assert c.daemon.backend.rep.m.rows["vms/epoch/cam5"][0] == {"epoch": "7"}
+        with pytest.raises(Conflict):
+            open_vars(c.url("vmsworker")).put("vms/epoch/cam5", {"epoch": "1"}, cas=0)
+        c.stop()
+        with open(os.path.join(c.data, "member.json"), "w") as f:  # a member.json from before the partners were in it
+            json.dump({"id": c.name, "raft": c.raft}, f)
+        try:
+            c.start()                                               # no -join to ask: it waits for its group
+            raise AssertionError("a joined member that knows no partner started")
+        except ValueError as e:
+            assert "does not start as a group of one" in str(e), e
+        c.start(join=a.adv)                                         # its -join door says who the group is
+        _ready(c)
+        assert c.status()["state"] == "follower"
+        assert sorted(configstore.RaftBackend.member_doc(c.data)["partners"]) == sorted(
+            [g.members[0].raft, g.members[1].raft])
+    finally:
+        g.stop()
+
+
+def test_a_join_under_another_spelling_of_a_members_raft_address_is_refused():
+    """The review's thirteenth pass, major 3, by its probe (`probe_alias_voter.py`): srv-d of the same CA joined with
+    `raft=localhost:<srv-a's port>` — 200, a voter nobody runs, and the group of three no longer survived losing one.
+    Addresses are compared as where they lead (`_places`): `localhost`, `LOCALHOST.`, `[::ffff:127.0.0.1]` are srv-a's
+    `127.0.0.1` — 409, and the voters stay two. An address that leads nowhere, or to every interface, and one where
+    nothing answers are refused too. A retry of srv-b's own join under another spelling is the retry (200), under the
+    spelling the group holds."""
+    g = Group(2)
+    try:
+        a, b = g.members
+        port = a.raft.rsplit(":", 1)[1]
+        ctx_c = tls.client_context(os.path.join(TLS, "srv-c"))
+        for alias in (f"localhost:{port}", f"LOCALHOST.:{port}", f"[::ffff:127.0.0.1]:{port}", f"127.1:{port}"):
+            code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": alias})
+            assert (code, said["kind"]) == (409, "refused"), (alias, code, said)
+        for nowhere in (f"0.0.0.0:{port}", "no-such-host.invalid:8301", f"127.0.0.1:{_port()}"):
+            code, said = _api(a, ctx_c, "/v1/join", {"id": "srv-c", "raft": nowhere})
+            assert (code, said["kind"]) == (409, "refused"), (nowhere, code, said)
+        bport = b.raft.rsplit(":", 1)[1]
+        code, said = _api(a, tls.client_context(b.tls), "/v1/join", {"id": "srv-b", "raft": f"localhost:{bport}",
+                                                                     "api": b.adv})
+        assert code == 200, said
+        st = a.status()
+        assert sorted((m["id"], m["raft"]) for m in st["members"]) == sorted([("srv-a", a.raft), ("srv-b", b.raft)])
+        assert len(a.daemon.backend.raft.otherNodes) == 1
+    finally:
+        g.stop()
 
 
 def test_a_member_restarted_on_its_journal_comes_back_with_its_rows():

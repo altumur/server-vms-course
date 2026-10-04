@@ -82,8 +82,68 @@ def test_a_write_repeated_with_its_id_is_answered_with_its_first_answer():
     assert m.apply({"op": "get", "key": "vms/slots/w-2"}) == {"items": {"holder": "b"}, "index": j}
     lost = _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2")
     assert lost["conflict"]
-    assert _put(m, "vms/slots/w-2", {"holder": "c"}, cas=j, op_id="op-2") == lost, "a remembered conflict wrote"
+    assert _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i, op_id="op-2") == lost, "a remembered conflict wrote"
     assert _put(m, "vms/slots/w-2", {"holder": "c"}, cas=i)["conflict"], "a NEW write against an old version passed"
+
+
+def test_an_operation_id_is_answered_from_memory_only_for_its_own_write():
+    """The review's thirteenth pass, major 4, from the machine's side: an id that comes back with ANOTHER write — the
+    same key, other items, another cas, the other op — was answered with the first write's answer, and the new write
+    was never made. Now the id answers only its own write (`_fingerprint`); under another write it is refused and
+    nothing is applied — on every member alike, since the refusal is a function of the command."""
+    m = StoreMachine()
+    first = _put(m, "vms/servers/srv-b", {"state": "on"}, op_id="op-1")
+    _put(m, "vms/servers/srv-b", {"state": "off"}, op_id="op-2")
+    applied = m.applied
+    for other in ({"op": "put", "key": "vms/servers/srv-b", "items": {"state": "off"}, "cas": None, "id": "op-1"},
+                  {"op": "put", "key": "vms/servers/srv-b", "items": {"state": "on"}, "cas": first["index"],
+                   "id": "op-1"},
+                  {"op": "delete", "key": "vms/servers/srv-b", "cas": None, "id": "op-1"},
+                  {"op": "put", "key": "vms/servers/srv-c", "items": {"state": "on"}, "cas": None, "id": "op-1"}):
+        assert "error" in m.apply(other), other
+    assert m.rows["vms/servers/srv-b"][0] == {"state": "off"} and "vms/servers/srv-c" not in m.rows
+    assert m.applied == applied + 4
+    assert _put(m, "vms/servers/srv-b", {"state": "on"}, op_id="op-1") == first      # its own write: from memory
+    sub, r = _Submit(m), Rights.parse(RIGHTS)
+    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/servers/srv-b", "items": {"state": "x"},
+                                                     "id": "op-1"}), ADMIN, r, sub)
+    assert code == 400 and "another write" in said["error"], said
+
+
+def test_what_a_write_names_is_bounded_and_never_said_back():
+    """The review's thirteenth pass, major 2, by its probe (`probe_value_bypass.py`): a delete whose `id` was 3 MiB
+    was 200 and grew the journal by 3.2 MB; a `cas` of 3 MiB was a 409 that carried the 3 MiB back. An id is up to
+    64 letters, digits, `-`, `_`; a cas is null, a number, or a word of up to 32 — refused at the door, 400 before
+    anything is submitted, and by the machine (a command in the log must agree); no refusal quotes them. The
+    siblings: a key that is no string or too long is refused without being quoted, and a list's prefix longer than
+    any key is answered «nothing» without a command."""
+    big = "x" * (3 << 20)
+    sub, r = _Submit(), Rights.parse(RIGHTS)
+    for body in ({"op": "delete", "key": "vms/x", "cas": None, "id": big},
+                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": big},
+                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": None, "id": "a b"},
+                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": None, "id": 7},
+                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": 1 << 70},
+                 {"op": "put", "key": "vms/x", "items": {"v": "1"}, "cas": [1]},
+                 {"op": "put", "key": [big], "items": {"v": "1"}},
+                 {"op": "put", "key": big + "/../x", "items": {"v": "1"}}):
+        code, said = answer("POST", "/v1/write", _write(body), ADMIN, r, sub)
+        assert code == 400 and len(json.dumps(said)) < 300, (code, str(said)[:200])
+    code, said = answer("GET", "/v1/list?prefix=" + "v" * (3 << 20), b"", ADMIN, r, sub)
+    assert (code, said) == (200, {"keys": {}})
+    assert sub.calls == [], "a refused request reached the log"
+    m = StoreMachine()
+    for cmd in ({"op": "delete", "key": "vms/x", "cas": None, "id": big},
+                {"op": "put", "key": "vms/x", "items": {}, "cas": big, "id": "op-1"}):
+        assert "error" in m.apply(cmd) and len(m.done) == 0 and m.rows == {}
+    for cas in (None, "", 0, 1003, "1003", "torn", True):                           # what the platform sends
+        code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/y", "items": {}, "cas": cas,
+                                                         "id": "0123456789abcdef0123456789abcdef"}), ADMIN, r,
+                            _Submit(StoreMachine()))
+        assert code in (200, 409), (cas, code, said)
+    code, said = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/y", "items": {}, "cas": "torn"}), ADMIN,
+                        r, _Submit(StoreMachine()))
+    assert code == 409 and "torn" not in said["error"]
 
 
 def test_the_operation_memory_forgets_the_oldest_first(monkeypatch):

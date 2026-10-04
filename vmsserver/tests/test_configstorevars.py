@@ -296,7 +296,7 @@ def test_a_daemon_dialling_another_checks_the_name_and_the_role_of_the_one_that_
             configstore.peer_call(f"srv-c@{dm.d.api_url}", os.path.join(TLS, "srv-b"), "GET", "/v1/status")
     rogue_dir = short_dir()
     try:
-        for f in ("ca.pem",):
+        for f in ("ca.pem", "crl.pem"):
             shutil.copy(os.path.join(TLS, "srv-a", f), rogue_dir)
         shutil.copy(os.path.join(TLS, "srv-a", "recworker.pem"), os.path.join(rogue_dir, "server.pem"))
         shutil.copy(os.path.join(TLS, "srv-a", "recworker.key"), os.path.join(rogue_dir, "server.key"))
@@ -497,7 +497,7 @@ def test_a_door_queues_as_many_connections_as_it_serves_before_it_accepts_one():
         finally:
             srv.server_close()
         api = configstore._TlsServer(("127.0.0.1", 0), socketserver.BaseRequestHandler,
-                                     tls.server_context(os.path.join(TLS, "srv-a")))
+                                     tls.ServerContext(os.path.join(TLS, "srv-a")))
         try:
             assert _queued(socket.AF_INET, api.server_address, configstore.API_CONNECTIONS) == configstore.API_CONNECTIONS
         finally:
@@ -552,34 +552,138 @@ def test_the_api_door_serves_so_many_of_one_address_and_lets_a_stalled_handshake
             == "srv-a"
 
 
-def test_another_daemon_changes_the_group_only_for_its_own_server_and_touches_a_row_only_forwarding():
+def test_another_daemon_changes_the_group_only_for_its_own_server_and_never_touches_a_row():
     """The review's twelfth pass, major 3: a daemon's certificate deleted slots, wrote the schema, added false voters
-    and removed members. On the `-api` door a daemon reads the group's status; joins and leaves for the server its
-    certificate names (srv-b's certificate: srv-b, not srv-c, not srv-a); and reads or writes a row only when it
-    forwards a process's request — then with THAT role's rights, named in `X-Configstore-Forwarded`, never `admin`
-    and never a role the file does not hold. A forwarded request is no change of the group."""
+    and removed members. On the `-api` door a daemon reads the group's status, and joins and leaves for the server
+    its certificate names (srv-b's certificate: srv-b, not srv-c, not srv-a). The thirteenth pass, major 1, by its
+    probe (`probe_mtls.py`): `X-Configstore-Forwarded: vmsworker` made srv-b's certificate the worker — it deleted
+    `vms/slots/w-1`; `domain` read and deleted `domain/keys/k1`. Nobody forwards in the course, so the path is gone:
+    a data request on the door is 403 with or without the mark, for every role it names, and the log never moves."""
     with Daemon(api=True) as dm:
         api, ctx = dm.d.api_url, tls.client_context(os.path.join(TLS, "srv-b"))
         call = lambda m, r, b=b"{}", h=None: _dial(api, ctx, "srv-a", m, r, b, h)      # noqa: E731
         write = lambda key: json.dumps({"op": "put", "key": key, "items": {"x": "1"}}).encode()   # noqa: E731
-        fwd = configstore.FORWARDED
+        drop = lambda key: json.dumps({"op": "delete", "key": key}).encode()             # noqa: E731
+        fwd = "X-Configstore-Forwarded"
+        assert not hasattr(configstore, "FORWARDED")
         assert call("GET", "/v1/status")[0] == 200
         for route, body in (("/v1/join", {"id": "srv-c", "raft": "127.0.0.1:1"}), ("/v1/leave", {"id": "srv-a"})):
             code, said = call("POST", route, json.dumps(body).encode())
             assert (code, said["kind"]) == (403, "forbidden") and "srv-b" in said["error"], (route, said)
         assert call("POST", "/v1/leave", b'{"id": "srv-b"}')[0] == 503                  # its own: a store that is no group
+        dm.backend.machine.apply({"op": "put", "key": "vms/slots/w-1", "items": {"holder": "w"}})
+        dm.backend.machine.apply({"op": "put", "key": "domain/keys/k1", "items": {"k": "secret"}})
         applied = dm.backend.machine.applied
-        assert call("POST", "/v1/write", write("vms/slots/w-1"))[0] == 403
-        assert call("GET", "/v1/get?key=vms/cameras/1")[0] == 403
-        assert call("GET", "/v1/list?prefix=")[0] == 403
-        for role in ("admin", "configstore", "nobody"):
-            assert call("POST", "/v1/write", write("vms/slots/w-1"), {fwd: role})[0] == 403, role
-        assert call("POST", "/v1/write", write("vms/cameras/1"), {fwd: "vmsworker"})[0] == 403
-        assert call("POST", "/v1/join", b'{"id": "srv-b", "raft": "127.0.0.1:1"}', {fwd: "vmsworker"})[0] == 403
+        for headers in (None, *({fwd: role} for role in ("vmsworker", "console", "domain", "admin", "configstore",
+                                                           "nobody", ""))):
+            for method, route, body in (("POST", "/v1/write", write("vms/slots/w-1")),
+                                        ("POST", "/v1/write", drop("vms/slots/w-1")),
+                                        ("POST", "/v1/write", drop("domain/keys/k1")),
+                                        ("GET", "/v1/get?key=domain/keys/k1", None),
+                                        ("GET", "/v1/get?key=vms/cameras/1", None),
+                                        ("GET", "/v1/list?prefix=", None)):
+                code, said = call(method, route, body, headers)
+                assert (code, said["kind"]) == (403, "forbidden"), (headers, route, code, said)
         assert dm.backend.machine.applied == applied, "a refused request reached the log"
-        code, said = call("POST", "/v1/write", write("vms/slots/w-1"), {fwd: "vmsworker"})
-        assert code == 200 and said["index"] > 1000
-        assert call("GET", "/v1/get?key=vms/slots/w-1", None, {fwd: "console"})[1]["items"] == {"x": "1"}
+        assert set(dm.backend.machine.rows) == {"vms/slots/w-1", "domain/keys/k1"}
+
+
+def test_a_certificate_that_names_no_server_is_refused_and_a_join_names_a_server():
+    """The review's thirteenth pass, minor: a certificate without «.» in its CN and without a SAN DNS gave
+    `peer_server` "", and `join` with `id: ""` passed the check that the id is the caller's own (`w2c-ca.sh` issues
+    no such certificate; another tool could). Such a peer is refused at the door; and a join — the operator's too —
+    names a server and a raft address that are what their names say, bounded: they become a member row of the log."""
+    role = (("URI", tls.ROLE_URI + "configstore"),)
+
+    class Conn:
+        def __init__(self, cert):
+            self.cert = cert
+
+        def getpeercert(self):
+            return self.cert
+
+    class Handler:
+        def __init__(self, cert):
+            self.connection, self.peer = Conn(cert), None
+
+    for cert in ({"subject": ((("commonName", "configstore"),),), "subjectAltName": role},
+                 {"subject": ((("commonName", "anything"),),), "subjectAltName": role + (("DNS", ""),)}):
+        with pytest.raises(PermissionError):
+            configstore._peer_role(Handler(cert))
+    ok = Handler({"subject": ((("commonName", "configstore.srv-b"),),), "subjectAltName": role})
+    assert configstore._peer_role(ok) == "configstore" and ok.peer == "srv-b"
+    dm = StoreDaemon(LocalBackend(), node_id="srv-a")
+    for body in ({"id": "", "raft": "127.0.0.1:1"}, {"id": "srv b", "raft": "127.0.0.1:1"},
+                 {"id": "x" * 65, "raft": "127.0.0.1:1"}, {"id": "srv-b", "raft": "x" * (1 << 20) + ":1"},
+                 {"id": "srv-b", "raft": "127.0.0.1"}, {"id": "srv-b", "raft": "127.0.0.1:1", "api": ["x"]},
+                 {"id": 7, "raft": "127.0.0.1:1"}, [1]):
+        for role_, peer in (("admin", ""), ("configstore", "srv-b"), ("configstore", "")):
+            code, said = dm.serve("POST", "/v1/join", json.dumps(body).encode(), role_, 1.0, peer=peer)
+            assert code == 400 and len(json.dumps(said)) < 400, (body if len(str(body)) < 80 else "big", code)
+    code, said = dm.serve("POST", "/v1/join", b'{"id": "srv-b", "raft": "127.0.0.1:1"}', "configstore", 1.0, peer="")
+    assert code == 403, said
+
+
+# -- revocation ------------------------------------------------------------------------------------------
+def _w2c_ca(ca: str, *args: str) -> str:
+    import subprocess
+    script = os.path.join(HERE, os.pardir, "deploy", "w2c-ca.sh")
+    env = {**os.environ, "W2C_CA_DIR": ca, "W2C_CA_DAYS": "30"}
+    done = subprocess.run(["sh", script, *args], env=env, capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    return done.stdout
+
+
+def test_a_revoked_daemon_is_refused_at_the_api_door_and_on_its_join_and_the_door_hears_of_it_without_a_restart():
+    """The review's thirteenth pass, major 5: a decommissioned or stolen server's bundle — 825 days — joined under its
+    own id; there was no revocation. `w2c-ca.sh revoke <server>` puts every certificate issued for the server on the
+    CA's revocation list and writes `crl.pem` into every bundle; both sides of the `-api` door verify against it.
+    Run end to end with the script: srv-x is a daemon (status 200, its join reaches the backend); revoked, its
+    handshake fails at a door that is ALREADY running (the door re-reads the list when the file changes) — no status,
+    no join — while srv-b goes on; a daemon dialling the revoked srv-x refuses it; a re-issued srv-x certificate
+    replaced in the bundle before the revocation is revoked with it; and a bundle without the list opens no door."""
+    ca, stolen = short_dir(), short_dir()
+    try:
+        _w2c_ca(ca, "init")
+        for server in ("srv-a", "srv-b", "srv-x"):
+            _w2c_ca(ca, "issue", server)
+        for f in ("ca.pem", "crl.pem", "server.pem", "server.key"):                # the first bundle, as somebody kept it
+            shutil.copy(os.path.join(ca, "srv-x", f), stolen)
+        _w2c_ca(ca, "issue", "srv-x")                                             # re-issued: the bundle holds a new one
+        join = json.dumps({"id": "srv-x", "raft": "127.0.0.1:1"}).encode()
+        with Daemon(api=True, tls_dir=os.path.join(ca, "srv-a")) as dm:
+            api = dm.d.api_url
+            ctxs = {name: tls.client_context(d) for name, d in (("srv-x", os.path.join(ca, "srv-x")),
+                                                                ("stolen", stolen), ("srv-b", os.path.join(ca, "srv-b")))}
+            for name in ("srv-x", "stolen"):
+                assert _dial(api, ctxs[name], "srv-a", "GET", "/v1/status")[0] == 200, name
+                assert _dial(api, ctxs[name], "srv-a", "POST", "/v1/join", join)[0] == 503, name   # the backend: no group
+            out = _w2c_ca(ca, "revoke", "srv-x")
+            assert out.count("revoked ") == 2 and "raft.secret" in out, out
+            for name in ("srv-x", "stolen"):
+                for method, route, body in (("GET", "/v1/status", b""), ("POST", "/v1/join", join)):
+                    with pytest.raises((ssl.SSLError, ConnectionError, OSError)):
+                        _dial(api, ctxs[name], "srv-a", method, route, body)
+            assert _dial(api, ctxs["srv-b"], "srv-a", "GET", "/v1/status")[0] == 200
+        with Daemon(api=True, tls_dir=os.path.join(ca, "srv-x")) as revoked:           # srv-x answering a join
+            with pytest.raises(ssl.SSLError):
+                configstore.peer_call(f"srv-x@{revoked.d.api_url}", os.path.join(ca, "srv-b"), "GET", "/v1/status")
+        os.remove(os.path.join(ca, "srv-b", "crl.pem"))
+        with refused_missing():
+            tls.server_context(os.path.join(ca, "srv-b"))
+    finally:
+        shutil.rmtree(ca, ignore_errors=True)
+        shutil.rmtree(stolen, ignore_errors=True)
+
+
+@contextlib.contextmanager
+def refused_missing():
+    try:
+        yield
+    except FileNotFoundError as e:
+        assert "crl.pem" in str(e), e
+        return
+    raise AssertionError("a door opened without its revocation list")
 
 
 # -- the handle -----------------------------------------------------------------------------------------
@@ -628,12 +732,66 @@ def test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_
     assert ids[0] == ids[1]
 
 
+def test_a_write_asked_again_after_another_write_to_its_key_is_a_new_write_and_is_applied():
+    """The review's thirteenth pass, major 4, by its probe (`probe_unknown_aba.py`): `put on` — ambiguous, it landed;
+    `put off` — OK; `put on` again went with the first `on`'s id and was answered «OK (2)» from the machine's memory,
+    and the row stayed `off`. The same with delete, put, delete and with create-only. A repeat is a repeat only of the
+    LAST write asked of its key: a later write to the key ends it, whatever its outcome, so the third call is a new
+    write with a new id, and is applied. Each sequence also with the middle write ambiguous too."""
+    from w2cplatform.storemachine import ADMIN, StoreMachine, local_transport
+    from w2cplatform.configstorevars import ConfigstoreVariables
+    for middle_cut in (False, True):
+        m = StoreMachine(1000)
+        inner = local_transport(m.apply, RIGHTS, ADMIN)
+        cut = {"n": 0}
+
+        def transport(method, target, raw, headers, timeout):
+            got = inner(method, target, raw, headers, timeout)  # the daemon applies; the answer may be cut
+            if cut["n"]:
+                cut["n"] -= 1
+                raise ConnectionResetError("answer cut")
+            return got
+
+        h = ConfigstoreVariables("/stand", transport=transport)
+        row = lambda key: m.rows.get(key, (None,))[0]                               # noqa: E731
+
+        def step(do, cut_it):
+            cut["n"] = 1 if cut_it else 0
+            try:
+                do()
+            except StoreAmbiguous:
+                assert cut_it
+
+        key = "vms/servers/srv-b"
+        m.apply({"op": "put", "key": key, "items": {"state": "init"}})
+        step(lambda: h.put(key, {"state": "on"}), True)
+        step(lambda: h.put(key, {"state": "off"}), middle_cut)
+        step(lambda: h.put(key, {"state": "on"}), False)
+        assert row(key) == {"state": "on"}, (middle_cut, row(key))
+        key = "vms/locks/cam1"
+        m.apply({"op": "put", "key": key, "items": {"owner": "w-1"}})
+        step(lambda: h.delete(key), True)
+        step(lambda: h.put(key, {"owner": "w-2"}), middle_cut)
+        step(lambda: h.delete(key), False)
+        assert row(key) is None, (middle_cut, row(key))
+        key = "vms/epoch/cam9"
+        step(lambda: h.put(key, {"epoch": "1"}, cas=0), True)
+        m.apply({"op": "delete", "key": key})                                        # gone again, by somebody
+        step(lambda: h.put(key, {"epoch": "2"}, cas=0), middle_cut)
+        m.apply({"op": "delete", "key": key})
+        step(lambda: h.put(key, {"epoch": "1"}, cas=0), False)
+        assert row(key) == {"epoch": "1"}, (middle_cut, row(key))
+
+
 # -- the raft port's secret -------------------------------------------------------------------------------
 def test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_the_installation():
     """The review's twelfth pass, minor: `raft.secret` was taken whatever its mode and length, and pysyncobj salts
     every installation's key alike. Refused when others may read it or it is shorter than `SECRET_CHARS`; the
-    password handed to the library is the secret keyed with the installation's `ca.pem` — the same for every member
-    of one installation, another for another installation with the same secret."""
+    password handed to the library is the secret keyed with the installation's CA — the same for every member of one
+    installation, another for another installation with the same secret. The thirteenth pass, minor: the key was
+    the hash of `ca.pem`'s BYTES, so one more newline, or a second CA added for a rotation, changed one member's
+    password and it dropped out of its group. It is the first CA certificate in the file now, whatever text is
+    around it."""
     d = short_dir()
     try:
         shutil.copy(os.path.join(TLS, "ca.pem"), d)
@@ -646,8 +804,14 @@ def test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_
         os.chmod(secret, 0o600)
         mine = tls.raft_secret(d)
         assert mine != "ab" * 32 and mine == tls.raft_secret(d)
-        with open(os.path.join(d, "ca.pem"), "a") as f:
-            f.write("\n")                              # another installation's CA, as far as the key goes
+        ca_text = open(os.path.join(TLS, "ca.pem")).read()
+        other_ca = open(os.path.join(TLS, "srv-a", "server.pem")).read()     # any other certificate will do
+        for text in ("\n" + ca_text + "\n\n", ca_text.replace("\n", "\r\n"), ca_text + other_ca):
+            with open(os.path.join(d, "ca.pem"), "w") as f:
+                f.write(text)                          # an editor's newlines; a CA added after it for a rotation
+            assert tls.raft_secret(d) == mine
+        with open(os.path.join(d, "ca.pem"), "w") as f:
+            f.write(other_ca)                          # another installation's CA
         assert tls.raft_secret(d) != mine
         with open(secret, "w") as f:
             f.write("short\n")
