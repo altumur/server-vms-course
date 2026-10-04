@@ -106,7 +106,7 @@ from w2cplatform.variables import Variables
 from w2cplatform.events import ALARM, OBSERVATION, EventLog, Suppressor
 
 from w2cplatform.sealing import Sealed, Sealer, open_row
-from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_of, describe, device_of,
+from .config import (DEVICES, LIVE_PORT_BASE, LOOPBACK, PLAYBACK_PORT, RTSP_PORT, SHM_DIR, SPEC, announce_host, channel_key, channel_of, describe, device_of,
                      device_identities, device_row, identity_of, live_shm, live_url, said_id, COMMAND_ARG_MAX,
                      playback_url, port_of, row)
 from .reconciler import CONVERGED, Reconciler
@@ -665,7 +665,42 @@ class VmsWorker(Worker):
         still held (see `_refresh_devices`) and its archive still served, but no pipeline is
         built for it. Holding the device is what the row buys; the live fan-out is what `live`
         asks for."""
-        return [r for r in self.rows if r.get("live", "always") != "on-demand"]
+        back = self.held_back()
+        return [r for r in self.rows if r.get("live", "always") != "on-demand" and str(r["id"]) not in back]
+
+    # ONE CHANNEL, ONE CAMERA — THE TWIN ONLY THIS WORKER CAN SEE (the owner's decision on the boundary's step 6). The
+    # platform refuses a second camera at the same address in its one spelling (`source: {unique: canonical}`), and
+    # cannot know that `…/ch/02` and `…/ch/2`, or `…/10.0.0.50:80/…` and `…/10.0.0.50/…`, are one channel: that is how
+    # the VMS reads its addresses (`config.device_of`, `channel_key`). Both are one group (`group_by: {cut_at: ch}`)
+    # when they differ after the host, so both are here: the first by id is opened, every other is «device busy» in
+    # this worker's heartbeat (`status`: `why`, `device_state: busy`) and not opened — two pipelines on one channel are camera 2's picture in
+    # camera 1's archive (the review's sixth pass). Two spellings of the host are two groups to the platform, and may be
+    # on two workers: one spelling is the operator's rule. `{camera id: the camera whose channel it is already}`.
+    #
+    # …AND A SOURCE THE VMS CANNOT READ IS NOT OPENED (the review's tenth pass, major, where it was a refusal at the door in
+    # the VMS's words, `config.source_refusal`, until the boundary's step 6): a channel written in digits that are not
+    # 0–9, a `driverpack://` address with a `?` that could name another host than the one rights were asked of. The
+    # platform takes the row (an address by RFC 3986, its port a port); this worker does not dial it, and says why.
+    # `{camera id: (state, why)}` — `busy` or `refused`.
+    def held_back(self) -> dict[str, tuple[str, str]]:
+        from w2cplatform.doors import numeric
+        from .config import source_refusal
+        seen, out = {}, {}
+        for r in sorted(self.rows, key=lambda r: (numeric(str(r["id"])) is None, numeric(str(r["id"])) or 0, str(r["id"]))):
+            if not r.get("source"):
+                continue
+            why = source_refusal(str(r["source"]))
+            if why:
+                out[str(r["id"])] = ("refused", f"not opened: {why}")
+                continue
+            key = (device_of(str(r["source"])), channel_key(str(r["source"])))
+            if key in seen:
+                out[str(r["id"])] = ("busy", f"device busy: camera {seen[key]} is this channel of the device already, "
+                                             f"written another way — one channel is one camera: point one of the two "
+                                             f"elsewhere, or delete it")
+            else:
+                seen[key] = str(r["id"])
+        return out
 
     # Read the assignment (`assignment_rev` kept for the heartbeat) and, for each unit it names, the row
     # `vms/cameras/<id>`; rows that are missing or marked `deleted: "true"` are skipped. "A fresh worker
@@ -1937,7 +1972,7 @@ class VmsWorker(Worker):
     # `vms_cameras_running`.
     def status(self) -> list[dict]:
         st = self.reconciler.status()
-        out = []
+        out, back = [], self.held_back()
         for cam in self.rows:
             cid = cam["id"]
             pos, lag = st.get(cid, (CONVERGED, 0))
@@ -1957,6 +1992,8 @@ class VmsWorker(Worker):
                 out[-1]["why"] = f"its epoch could not be taken: {self.epoch_errors[str(cid)]}"
             elif str(cid) in self.row_errors:              # running or not: it is not following its row
                 out[-1]["why"] = f"{self.row_errors[str(cid)]}; going on with the row read last"
+            if str(cid) in back:                           # «device busy», or a source it cannot read: not opened, said why
+                out[-1]["device_state"], out[-1]["why"] = back[str(cid)]
             if cam.get("source") and device_of(cam["source"]) in self.coincidences:   # recorded, and said (`describe_devices`)
                 other = self.coincidences[device_of(cam["source"])][0]
                 out[-1]["warning"] = (f"its device gives the same serial number as {other}: either one device under two "

@@ -263,9 +263,9 @@ def test_a_retry_that_lands_on_another_console_is_one_camera():
         box.wall.advance(90000); box.clock.advance(61)
         assert keys.prune() == 2 and box.vars.list("vms/idem/") == [] and keys.prune() == 0
         # a forgotten key is a new request, by design — and what stops the second camera then is the rule about
-        # sources (`volumes.refuse_camera`, the review's sixth pass): camera 1 is that channel already
+        # sources (`source: {unique: canonical}`, the platform's since the boundary's step 6): camera 1 is that address
         code, body = post(p2, "k-1")
-        assert code == 400 and "camera 1 is that source already" in body["detail"] and len(a.cameras()) == 1
+        assert code == 400 and "vms 1 has that source already" in body["detail"] and len(a.cameras()) == 1
     finally:
         s1.shutdown(); s1.server_close(); s2.shutdown(); s2.server_close()
 

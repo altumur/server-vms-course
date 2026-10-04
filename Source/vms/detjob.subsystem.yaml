@@ -27,9 +27,11 @@ unit:
     cam:     {type: string, required: true, fixed: true}   # the camera the footage is of — what every event line is
                                                  # about (`of: vms/7`): `/events?unit=vms/7` finds a scan's results by the
                                                  # LINE, not the tree
-    rec:     {type: string, required: true, fixed: true}   # the RECORDING whose streams hold the footage. `id: cam` in
-                                                 # rec.subsystem.yaml makes it the camera's id today and need not tomorrow;
-                                                 # naming it separately is what keeps that day a YAML edit
+    # The RECORDING whose streams hold the footage — a recording OF `cam`: a scan reads the footage of the camera it
+    # names (the review's fifth pass, major: `{"rec": "2"}` on a job of camera 1 read camera 2's archive and filed what
+    # it found under camera 1). `must_match` says it, and the platform refuses the row (it was `jobs.refuse_job` and a
+    # controller of the VMS's own until the boundary's step 6).
+    rec:     {type: string, required: true, fixed: true, ref: rec/recordings, must_match: {cam: cam}}
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | …
     params:  {type: string}                      # the model's settings, opaque to the platform — and SMALL
     mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (М10A Lesson 26)

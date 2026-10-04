@@ -1894,8 +1894,8 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
     # Whose a recording, a stream, a detector, a scan, a watch is — the camera it is ABOUT, and that camera's labels for
     # a grant by label — is in their specs (`about: {sub: vms, field: cam}`), and whose a keep is (`rights.unit_of`);
     # the platform's gate reads both (the boundary's step 2). What a scan's recording is, the controller refuses at the
-    # door (`jobs.refuse_job`: a recording of the camera it names), and so a recording homed on another camera's card
-    # (`volumes.refuse_recording`).
+    # door (`must_match` in detjob.subsystem.yaml: a recording of the camera it names), and so a recording homed on
+    # another camera's card (`must_match` on `home`) — declarations the platform reads since the boundary's step 6.
     for name, con in m.mounts.items():
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
         # belongs beside "who deleted camera 7".

@@ -2281,7 +2281,7 @@ class CardRecorder(RecWorker):
     # …and only a recording of THIS camera (the review's sixth pass, major). The card's recorder writes its own ring
     # into whatever recording it is given: a recording of camera 1 homed on camera 2's card (`PUT … {"home":
     # "card2"}`) was camera 2's frames under camera 1's name, out of camera 2's budget. The row is refused at the
-    # door now (`volumes.refuse_recording`); one that got here all the same — written before the rule, or past it —
+    # door now (`must_match` on the recording's `home`, the platform's); one that got here all the same — written before the rule, or past it —
     # is not recorded, and its status says why.
     def enrich(self, cam: dict) -> dict | None:
         mine = self.card_cam

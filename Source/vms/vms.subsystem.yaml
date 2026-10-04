@@ -74,6 +74,11 @@ unit:
       type: url
       required: true
       schemes: [driverpack, rtsp, rtsps, http, https, onvif]
+      # One channel, one camera: no two cameras hold the same address in its one spelling (RFC 3986 — the platform's;
+      # the review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` opened channel 2 as camera 1). Two
+      # spellings the platform cannot tell apart — `…/ch/02` and `…/ch/2` — are the worker's to find: it opens the
+      # first and says «device busy» of the other in its heartbeat (the owner's decision on the boundary's step 6).
+      unique: canonical
       credentials: {login: cred_username, secret: cred_secret}
       secret_in:
         - param: [user, usr, username, userid, login, loginuse, loginpas, loginpass, account, key, keyid, apikey, authkey,
@@ -174,7 +179,7 @@ unit:
     #
     # One name, one camera here; and changing it is the cluster's to decide, not the camera's administrator's — the
     # domain finds a camera by it (`volumes.refuse_camera`, `source_cams`; the same pass).
-    ref:                   {type: string}                     # the name a layer above knows it by (М12)
+    ref:                   {type: string, unique: true}       # the name a layer above knows it by (М12): one camera, one name
     # The device's own credential. Two fields and not one, because they are not the same KIND of thing: a
     # login identifies and a password authenticates, and only the second has to be kept. `mask_secrets`
     # keeps the secret off every reply the console sends. The worker hands both to the actuator as element
@@ -244,7 +249,10 @@ placement:
   # `device` is not a field: `VmsController.group_value` parses it out of `driverpack://<device>/<channel>`,
   # because the scheme is the subsystem's business and not the platform's. A row with no source groups
   # with nothing, which is what a half-created camera should do.
-  group_by:   device                            # channels of one device go to ONE worker — it is one connection
+  # Channels of one device go to ONE worker — it is one connection: the source in its one spelling up to `/ch/`
+  # (`driverpack://acme/10.0.0.50/ch/17` and `…/ch/18` are one device). It was `VmsController.group_value`, the VMS's
+  # parser of its addresses, until the boundary's step 6; two spellings of one host are two groups — one spelling.
+  group_by:   {field: source, cut_at: ch}
   # a worker records into the resource on its own server: every server runs its resource (`w2c-resource`) beside its
   # worker, and this is the live fact — a worker whose server's resource has gone silent is
   # not placed on, and its cameras are moved off on the controller's next pass (`redistribute`).
@@ -266,7 +274,11 @@ placement:
   # it also has `7-cloud`, and silently false, which is worse. `of` reads the recorder's status entry and
   # takes the recording whose `cam` is this camera, whatever it is called. Two of them: the smallest id,
   # and the other one reads the same fan-out over the network.
-  near:       {sub: rec, of: cam}               # an affinity: the recorder running a recording OF this camera
+  # An affinity: the recorder running a recording OF this camera — and of two, the one homed on a STANDBY volume (an
+  # enabled backup or a card): beside the primary, the worker falls with the primary's server and the backup loses its
+  # stream at exactly the moment it exists for (М10B Lesson 26; it was `volumes.rank_near_recording`, a hook, until the
+  # boundary's step 6).
+  near:       {sub: rec, of: cam, prefer: {home.kind: [backup, edge], home.enabled: true}}
   home:       near                              # …and, unlike a bare affinity, maintained: `ensure_home` follows it back
   # `rebalance(budget)` stops when the spread in `load/capacity` between the most and least loaded workers
   # is under 10 %. Rebalance runs only when asked, never in the controller's pass.

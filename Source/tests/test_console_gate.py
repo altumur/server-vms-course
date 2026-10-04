@@ -646,16 +646,15 @@ def test_a_row_cannot_be_moved_to_another_camera_by_an_edit():
 
 
 def _console_with_jobs(box, access):
-    """A gated console that fronts `rec`, `det`, `detjob` (`DetJobController`) and `auto`, as `python3 -m vms console` does."""
+    """A gated console that fronts `rec`, `det`, `detjob` and `auto`, as the console process does."""
     from vms.auto import AutoController
     from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC
-    from vms.jobs import DetJobController
     acl = SPEC.acl_console() + REC_SPEC.acl_console() + DET_SPEC.acl_console() + DETJOB_SPEC.acl_console() + AUTO_SPEC.acl_console()
     vars_ = box.vars.as_writer("console", acl)
     ctl = VmsController(vars_, box.objects, wall=box.wall)
     mounts = {"rec": SpecController(REC_SPEC, vars_, box.objects, wall=box.wall),
               "det": SpecController(DET_SPEC, vars_, box.objects, wall=box.wall),
-              "detjob": DetJobController(vars_, box.objects, wall=box.wall),
+              "detjob": SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall),
               "auto": AutoController(vars_, box.objects, wall=box.wall)}
     m = make_console(ctl, box.archive, box.wall, mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
     for con in (m.root, *m.mounts.values()):
@@ -668,7 +667,8 @@ def test_a_scan_reads_only_its_own_cameras_recording_and_keeps_it():
     """The review's fifth pass, major: `cam` was fixed, and a scan names a camera through another field too — `rec`, the
     recording whose footage it reads. `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 was 200, and
     the scan read camera 2's archive. A scan is about its camera (`about`), and `rec` is a recording of `cam`, said at
-    the door (`jobs.refuse_job`) and fixed when the job is made (`fixed: true`) — for anybody."""
+    the door (`rec: {ref: rec/recordings, must_match: {cam: cam}}` in the spec, the platform's since the boundary's
+    step 6) and fixed when the job is made (`fixed: true`) — for anybody."""
     box = Box()
     access = Tokens({"one": [("admin", "vms/1", ())], "admin": [("admin", None, ())]})
     mounts, srv, base = _console_with_jobs(box, access)
@@ -686,7 +686,7 @@ def test_a_scan_reads_only_its_own_cameras_recording_and_keeps_it():
         assert mounts["detjob"].unit("1-motion-1")["rec"] == "1"
         assert _call(base, "PUT", "/detjob/jobs/1-motion-1", {"params": "{}"}, token="one")[0] == 200   # her camera, her scan
         code, body = _call(base, "POST", "/detjob/jobs", {**job, "name": "1-motion-2", "rec": "2"}, token="admin")
-        assert code == 400 and "camera 2's" in body["detail"]                                 # another camera's recording
+        assert code == 400 and "rec 2 is cam 2's" in body["detail"]                           # another camera's recording
     finally:
         srv.shutdown()
 
@@ -1076,7 +1076,8 @@ def test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_ca
     and the card in camera 2, whose recorder writes its own camera's ring whatever the row says, wrote camera 2's
     frames into camera 1's recording, out of its own budget. An edge volume names the camera whose card it is
     (`cam`), and the controller refuses a recording of another camera on it, for whoever writes the row: a card holds
-    its own camera's recordings (`volumes.refuse_recording`). (The gate asked about the card's camera as well until the
+    its own camera's recordings (`home: {ref: rec/volumes, must_match: {cam: cam}}` in the spec, read by the platform
+    since the boundary's step 6; it was a hook of the VMS's, `volumes.refuse_recording`). (The gate asked about the card's camera as well until the
     boundary's step 2, through a hook that read cameras out of a row; whose a recording is, is its spec's `about` now,
     and the rule that a card is its camera's is the one place the refusal lives.) The same reach through a scenario's `record` with `archive: card2`: a
     scenario is the whole cluster's to write, and what it asks is refused when the request is turned into a row. A disk or a bucket is no camera's."""
@@ -1097,9 +1098,9 @@ def test_a_recording_is_homed_on_a_card_only_by_whoever_may_act_on_that_cards_ca
         assert _call(base, "POST", "/rec/volumes", {**disks, "name": "d2", "cam": "2"}, token="admin")[0] == 400   # a disk is no camera's
         assert _call(base, "POST", "/rec/recordings", {"name": "1-b", "cam": "1"}, token="admin")[0] == 201
         code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="one")
-        assert code == 400 and "card in camera 2" in body["detail"]                           # camera 2's card: nobody's place for it
+        assert code == 400 and "home card2 is cam 2's" in body["detail"]                      # camera 2's card: nobody's place for it
         code, body = _call(base, "PUT", "/rec/recordings/1-b", {"home": "card2"}, token="both")
-        assert code == 400 and "card in camera 2" in body["detail"]                           # hers too — and still not camera 1's place
+        assert code == 400 and "home card2 is cam 2's" in body["detail"]                      # hers too — and still not camera 1's place
         assert _call(base, "POST", "/rec/recordings", {"name": "1-c", "cam": "1", "home": "card2"}, token="admin")[0] == 400
         assert not rec.unit("1-b").get("home") and rec.unit("1-c") is None
         assert _call(base, "PUT", "/rec/recordings/1-b", {"home": "disks"}, token="one")[0] == 200       # a disk: her recording, her say
@@ -1147,7 +1148,8 @@ def test_a_cameras_source_is_moved_only_by_whoever_administers_every_camera_of_t
     """The review's sixth pass, major: `PUT /cameras/1 {"source": "…/ch/2"}` with `admin` on camera 1 was 200 — the
     credentials are the device's, so the holder opened channel 2 as camera 1, and camera 1's viewers and archive got
     camera 2's picture. A change of device or channel is asked about on every camera of the device it leaves and of
-    the device it moves to (`source_cams`); a channel is one camera, for anybody (`volumes.refuse_camera`); an edit
+    the device it moves to (`source_cams`); an address is one camera, for anybody (`source: {unique: canonical}`, the
+    platform's — `…/ch/2/` beside `…/ch/2` is the holder's «device busy», `test_two_spellings_of_one_channel_…`); an edit
     that leaves the source where it is asks for nothing more. `ref` — the name the domain knows the camera by — is
     the cluster's to change, and one camera's."""
     nvr = "driverpack://acme/10.0.0.50/ch/"
@@ -1161,14 +1163,14 @@ def test_a_cameras_source_is_moved_only_by_whoever_administers_every_camera_of_t
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}2"}, token="one")[0] == 403          # camera 2's channel
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}7"}, token="one")[0] == 403          # a free one, and still camera 2's device
         code, body = _call(base, "PUT", "/cameras/1", {"source": f"{nvr}2"}, token="both")
-        assert code == 400 and "camera 2 is that source already" in body["detail"]                      # every camera of the device hers: still one camera
-        assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}2/"}, token="admin")[0] == 400       # the same channel, spelt otherwise
+        assert code == 400 and "vms 2 has that source already" in body["detail"]                        # every camera of the device hers: still one camera
+        assert _call(base, "PUT", "/cameras/1", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")[0] == 400   # the same address, its host in capitals
         assert _call(base, "PUT", "/cameras/1", {"source": "driverpack://acme/10.0.0.60/ch/5"}, token="both")[0] == 403   # camera 3's device
         assert ctl.camera(1)["source"] == f"{nvr}1"
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}1", "name": "gate"}, token="one")[0] == 200   # nothing moved: her camera
         assert _call(base, "PUT", "/cameras/1", {"source": f"{nvr}7"}, token="both")[0] == 200          # a free channel, every camera of it hers
         code, body = _call(base, "POST", "/cameras", {"source": f"{nvr}7"}, token="admin")
-        assert code == 400 and "camera 1 is that source already" in body["detail"]
+        assert code == 400 and "vms 1 has that source already" in body["detail"]
         assert _call(base, "DELETE", "/cameras/1", token="admin")[0] == 200
         assert _call(base, "POST", "/cameras", {"source": f"{nvr}7"}, token="admin")[0] == 201           # a deleted camera holds no channel
         # `ref`: the cluster's to change, and one camera's
@@ -1176,7 +1178,7 @@ def test_a_cameras_source_is_moved_only_by_whoever_administers_every_camera_of_t
         assert _call(base, "PUT", "/cameras/2", {"ref": "SN-2"}, token="admin")[0] == 200
         assert _call(base, "PUT", "/cameras/2", {"ref": "SN-2", "name": "yard"}, token="both")[0] == 200   # unchanged: hers
         code, body = _call(base, "PUT", "/cameras/3", {"ref": "SN-2"}, token="admin")
-        assert code == 400 and "`ref` SN-2 already" in body["detail"]
+        assert code == 400 and "vms 2 has that ref already" in body["detail"]
     finally:
         srv.shutdown()
 
@@ -1191,7 +1193,6 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     a camera out of a row — `cams_of` — and put whose a row is into the specs)."""
     from vms.auto import AutoController
     from vms.config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, SURVEY_SPEC
-    from vms.jobs import DetJobController
     FIXED, ABOUT, MOVED, RULE, CLUSTER = "fixed: true", "about", "moved_units", "refused by the controller", "CLUSTER_ROWS"
     points = {
         ("vms", "source"): (MOVED, RULE),      # a channel of a device: every camera of both devices; one channel, one camera
@@ -1226,11 +1227,10 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
     vars_ = box.vars.as_writer("console", acl)
     ctl = VmsController(vars_, box.objects, wall=box.wall)
     mounts = {n: SpecController(specs[n], vars_, box.objects, wall=box.wall) for n in ("rec", "det", "survey")}
-    mounts.update(detjob=DetJobController(vars_, box.objects, wall=box.wall), auto=AutoController(vars_, box.objects, wall=box.wall))
+    mounts.update(detjob=SpecController(DETJOB_SPEC, vars_, box.objects, wall=box.wall), auto=AutoController(vars_, box.objects, wall=box.wall))
     m = make_console(ctl, box.archive, box.wall, live_ctl=SpecController(LIVE_SPEC, vars_, box.objects, wall=box.wall),
                      mounts=mounts, index=EventIndex(box.archive, "srv-1", wall=box.wall))
     consoles = {"vms": m.root, **m.mounts}
-    from w2cplatform.spec import REFUSE
     for (sub, field), how in points.items():
         con = consoles[sub]
         if FIXED in how:
@@ -1242,7 +1242,8 @@ def test_every_field_of_every_spec_that_points_at_something_else_is_asked_about(
         if CLUSTER in how:
             assert con.CLUSTER_ROWS, (sub, field)
         if RULE in how:
-            assert sub in REFUSE or type(con.ctl) is not SpecController, (sub, field)   # a rule of the subsystem's own
+            f = con.spec.fields[field]                                                   # declared: what it points at, or one per cluster
+            assert f.must_match or f.unique or type(con.ctl) is not SpecController, (sub, field)
 
 
 def test_a_command_to_a_device_is_asked_of_every_camera_of_the_device_by_hand_and_through_a_scenario():
@@ -1285,8 +1286,9 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
     200, and then her `output` to port 1 was 202, the recorder pulsed. `device_of` took the address as typed. It is
     canonical now — scheme and host in lower case, no trailing dot, an address in the form the resolver dials (`012.0.0.50`
     is `10.0.0.50`), no default port, no credentials — so every spelling is the recorder, for the move (`source_cams`), for the command
-    (`device_cams`) and for "one channel, one camera" (`refuse_camera`, `…/ch/02` being `…/ch/2`). A command carries the
-    device its rights were asked on (`device`)."""
+    (`device_cams`); "one channel, one camera" is the platform's for one spelling (`unique: canonical`) and the holder's
+    for the twins only the VMS reads as one (`…/ch/02` beside `…/ch/2`: «device busy», the next test). A command carries
+    the device its rights were asked on (`device`)."""
     from vms.config import channel_key, device_of
     nvr = "driverpack://acme/10.0.0.50/ch/"
     for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "DRIVERPACK://acme/10.0.0.50:80/ch/2", "driverpack://acme/10.0.0.50./ch/2",
@@ -1308,8 +1310,8 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
         for spelt in ("driverpack://ACME/10.0.0.50/ch/2", "driverpack://acme/10.0.0.50:80/ch/9",
                       "driverpack://acme/10.0.0.50./ch/9", "driverpack://acme/012.0.0.50/ch/9"):
             assert _call(base, "PUT", "/cameras/3", {"source": spelt}, token="three")[0] == 403, spelt   # the recorder's
-        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50.:80/ch/02"}, token="admin")
-        assert code == 400 and "camera 2 is that source already" in body["detail"], (code, body)        # one channel
+        code, body = _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50/ch/2"}, token="admin")
+        assert code == 400 and "vms 2 has that source already" in body["detail"], (code, body)          # one address
         assert _call(base, "PUT", "/cameras/3", {"source": "driverpack://ACME/10.0.0.50:80/ch/9"}, token="admin")[0] == 200
         for cmd in ({"unit": "vms/3", "action": "output", "port": 1}, {"unit": "vms/3", "action": "preset", "n": 2}):
             assert _call(base, "POST", "/requests", cmd, token="guard")[0] == 403, cmd   # camera 3 is the recorder's now
@@ -1317,6 +1319,36 @@ def test_one_device_under_another_spelling_is_one_device_to_every_right_asked_of
         assert box.vars.get("vms/requests/r-1")[0]["device"] == "acme/10.0.0.50"       # what the rights were asked on
         for bad in ('r"2', "r|2", "r\n2"):                                               # a name's rule (`doors.unnamable`)
             assert _call(base, "POST", "/requests", {"unit": "vms/1", "action": "output", "port": 1, "id": bad}, token="admin")[0] == 400
+    finally:
+        srv.shutdown()
+
+
+def test_two_spellings_of_one_channel_are_one_camera_to_its_holder_which_says_device_busy():
+    """The owner's decision on the boundary's step 6: the platform canonicalises an address by RFC 3986 and does not know
+    that `…/ch/02` is `…/ch/2` — that is how the VMS reads its addresses. Both are one group (`group_by: {field: source,
+    cut_at: ch}`), so one worker holds both, and that worker opens the first by id and says «device busy» of the other in
+    its heartbeat (`VmsWorker.held_back`), never dialling it: two pipelines on one channel would be camera 2's picture
+    in camera 1's archive (the review's sixth pass). Deleted, the first gives the channel to the second."""
+    from vms.worker import FakeActuator, VmsWorker
+    box = Box()
+    mounts, srv, base = _console_with_jobs(box, Tokens({"admin": [("admin", None, ())]}))
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 201
+        code, body = _call(base, "POST", "/cameras", {"source": "driverpack://ACME/10.0.0.50/ch/02"}, token="admin")
+        assert code == 201, body                                                          # another spelling: the platform takes it
+        w = VmsWorker("w-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                      archive_root=box.archive)
+        placer = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        w.heartbeat_once(); placer.ensure_placed()
+        assert placer.where(1) == placer.where(2) == "w-1"                                # one group, one worker
+        w.reconcile_once(); w.heartbeat_once()
+        said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
+        assert said["2"]["device_state"] == "busy" and "device busy: camera 1" in said["2"]["why"], said
+        assert "device_state" not in said["1"] and 1 in w.reconciler.actual and 2 not in w.reconciler.actual
+        assert _call(base, "DELETE", "/cameras/1", token="admin")[0] == 200
+        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+        said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
+        assert said["2"].get("device_state") != "busy" and 2 in w.reconciler.actual    # the channel is the second's now
     finally:
         srv.shutdown()
 
@@ -1781,9 +1813,11 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
     with `…:8²/ch/1` before the canonical key made its holder raise in `reconcile_once` and `heartbeat_once` on every
     pass — no status, no commands for any of its cameras — and the console could create no camera at all (500: one
     channel, one camera reads every row). By `doors.numeric` now: such a source is a key of its own, that camera's
-    trouble. And a new one is refused at the door, in words (400), with the siblings the sweep found: `rtsp://[…`
-    (`urlsplit` raised), a port past 65535 or of five thousand digits; a source no device can be read from is the
-    cluster's grant to point a camera at, never the open path."""
+    trouble. What is not an address by RFC 3986 — `rtsp://[…` (`urlsplit` raised), a port past 65535 — the platform
+    refuses at the door (400); what only the VMS reads in an address — a port written in its path, a channel in digits
+    that are not 0–9 — is the holder's since the boundary's step 6: the row is taken, the holder does not dial it and
+    says why in its heartbeat (`VmsWorker.held_back`). A source nobody can read a device from is still the cluster's
+    grant to point a camera at, never the open path."""
     from vms.config import channel_key, device_of, source_refusal
     from vms.worker import FakeActuator, VmsWorker
     for raw in ("driverpack://acme/10.0.0.5:8²/ch/1", "driverpack://acme/10.0.0.5/ch/①", "rtsp://[10.0.0.5/x",
@@ -1809,13 +1843,25 @@ def test_a_port_or_channel_in_digits_that_are_not_ascii_stops_neither_the_holder
         w.reconcile_once(); w.heartbeat_once()                        # neither raises
         hb = json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))
         assert {str(s["id"]) for s in hb["status"]} >= {"1", "2", "10", "11"}, hb["status"]
+        said = {str(s["id"]): s for s in hb["status"]}
+        assert all(said[c].get("device_state") == "refused" and "not opened" in said[c]["why"] for c in ("10", "11")), said
+        assert said["1"].get("device_state") != "refused"
         assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/2"}, token="admin")[0] == 201
-        for bad in ("driverpack://acme/10.0.0.7:8²/ch/1", "driverpack://acme/10.0.0.7/ch/①", "rtsp://[10.0.0.7/x",
-                    "rtsp://10.0.0.7:99999/x"):
+        for bad in ("rtsp://[10.0.0.7/x", "rtsp://10.0.0.7:99999/x"):     # not an address by RFC 3986: the platform's
             code, body = _call(base, "POST", "/cameras", {"source": bad}, token="admin")
-            assert code == 400 and ("port" in body["detail"] or "channel" in body["detail"] or "address" in body["detail"]), (bad, code, body)
+            assert code == 400 and ("port" in body["detail"] or "address" in body["detail"]), (bad, code, body)
             assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="three")[0] == 403       # the cluster's grant
             assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="admin")[0] == 400       # …and then refused
+        made = []
+        for bad in ("driverpack://acme/10.0.0.7:8²/ch/1", "driverpack://acme/10.0.0.7/ch/①"):   # the VMS's words: its holder's
+            assert _call(base, "PUT", "/cameras/3", {"source": bad}, token="three")[0] == 403       # the cluster's grant still
+            code, body = _call(base, "POST", "/cameras", {"source": bad}, token="admin")
+            assert code == 201, (bad, code, body)
+            made.append(str(body["id"]))
+        placer.ensure_placed(); w.reconcile_once(); w.heartbeat_once()
+        said = {str(s["id"]): s for s in json.loads(box.objects.get(SPEC.sub.heartbeat_key("w-1")))["status"]}
+        assert all(said[c].get("device_state") == "refused" for c in made), said
+        assert not set(made) & {str(c) for c in w.reconciler.actual}             # never dialled
     finally:
         srv.shutdown()
 

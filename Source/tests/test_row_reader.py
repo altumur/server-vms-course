@@ -108,16 +108,28 @@ def test_a_card_whose_row_stops_parsing_stays_the_cameras_card():
 
 
 def test_a_recording_is_not_homed_on_a_volume_whose_row_does_not_parse():
-    """Read as "no volume", a card whose row was garbled let any camera's recording be homed on it. It is a refusal."""
+    """Read as "no volume", a card whose row was garbled let any camera's recording be homed on it. It is a refusal: a
+    row the store cannot read is no row to point at, and one whose numbers are words still says whose card it is —
+    the platform reads `cam` from it (`must_match`, the boundary's step 6), not the VMS's reading of the whole row."""
     from w2cplatform.spec import Refused
+    from w2cplatform.variables import Garbled
     box = Box()
     box.vars.put(volumes.key("card2"), {"kind": "edge", "url": "/card", "server": "cam-2", "cam": "2", "quota_bytes": "x"})
     ctl = SpecController(REC_SPEC, box.vars, box.objects, wall=box.wall)
     try:
         ctl.create({"name": "1-b", "cam": "1", "home": "card2"})
+        raise AssertionError("homed on another camera's card")
+    except Refused as e:
+        assert "home card2 is cam 2's" in str(e), str(e)
+    real = box.vars.get
+    box.vars.get = lambda k, *a, **kw: (_ for _ in ()).throw(Garbled(k, "torn")) if k == volumes.key("card2") else real(k, *a, **kw)
+    try:
+        ctl.create({"name": "1-b", "cam": "1", "home": "card2"})
         raise AssertionError("homed on a volume nobody can read")
     except Refused as e:
         assert "does not parse" in str(e)
+    finally:
+        box.vars.get = real
     _forget_garbled()
 
 

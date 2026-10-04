@@ -595,19 +595,18 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
     one unit already: a filter that raised on one row — a field that reads and does not compare, an `admit` that trips
     on it — took `/unplaceable` and `/drain` down for every unit. That unit is listed now as one nothing can serve (with
     why), counted once a walk (`unit_judged`), and the other units are judged."""
-    from w2cplatform import rows, spec
+    from w2cplatform import rows
     from w2cplatform.console import Mount, SpecConsole
     from tests.test_lesson4_worker import _box_with_cameras
     box, ctl = _box_with_cameras(3)
     box.objects.put("vms/heartbeats/w-1", Heartbeat("w-1", box.wall(), [], {"server": "srv-a", "capacity": 50}).to_bytes())
 
-    def admit(c, row, w):
+    def taken(row):                                   # a filter that trips on one row (the platform's own, since `admit` is gone)
         if str(row["id"]) == "2":
             raise TypeError("'<' not supported between instances of 'str' and 'int'")
-        return True
+        return set()
 
-    was = spec.ADMIT.get("vms")
-    spec.ADMIT["vms"] = admit
+    ctl.servers_taken = taken
     try:
         got = {str(u["id"]): u for u in ctl.unplaceable()}
         assert set(got) == {"2"} and "could not be checked" in got["2"]["why"], got
@@ -619,9 +618,7 @@ def test_a_unit_whose_filters_raise_is_one_nothing_can_serve_and_the_others_are_
         assert status == 200 and set(rep["subsystems"]["vms"]["would_strand"]) == {"1", "2", "3"}, rep
         assert rows.counts()["unit_judged"].get("vms") == 2, rows.counts()["unit_judged"]   # one spell in each walk
     finally:
-        spec.ADMIT.pop("vms", None)
-        if was is not None:
-            spec.ADMIT["vms"] = was
+        del ctl.servers_taken
         _forget_garbled()
 
 

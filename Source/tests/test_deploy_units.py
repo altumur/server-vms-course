@@ -37,21 +37,21 @@ def _list(v):
 
 
 def test_the_units_run_the_entrypoints_the_package_has():
-    """The VMS's verbs (`python3 -m vms`: its workers, and the three processes that still run a hook of its own) and the
-    platform's (`python3 -m w2cplatform controller <sub>`: every other subsystem's controller, from the spec the image
-    carries in `SPEC_DIR` — the boundary's step 5). Each unit runs one, and each verb is a unit's."""
+    """The VMS's verbs (`python3 -m vms`: its workers, and the processes that still run code of its own) and the
+    platform's (`python3 -m w2cplatform controller <sub>`: every subsystem's controller, the VMS's included since the
+    boundary's step 6, from the spec the image carries in `SPEC_DIR`). Each unit runs one, and each verb is a unit's."""
     from vms import __main__ as m  # noqa: F401  (imports the module without running it: no __name__ == "__main__")
     from w2cplatform import host
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
     assert entrypoints == {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker",
-                           "controller", "console", "resource"}
-    platform = {"reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
+                           "console", "resource"}
+    platform = {"vmscontroller.container": "vms", "reccontroller.container": "rec", "livecontroller.container": "live", "detcontroller.container": "det",
                 "detjobcontroller.container": "detjob", "surveycontroller.container": "survey",
                 "autocontroller.container": "auto"}
     image = open(os.path.join(DEPLOY, "Containerfile")).read()
     assert "ENV SPEC_DIR=/app/vms" in image and "COPY vms vms" in image                # the specs the image carries
     assert "controller <sub>" in host.USAGE
-    for name, entry in [("vmsworker@.container", "worker"), ("vmscontroller.container", "controller"),
+    for name, entry in [("vmsworker@.container", "worker"),
                         ("console.container", "console"), ("w2c-resource.container", "resource"),
                         ("recworker@.container", "recorder"), ("liveworker@.container", "gateway"),
                         ("detworker@.container", "detworker"), ("detjobworker@.container", "detjobworker"),

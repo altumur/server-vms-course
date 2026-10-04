@@ -11,12 +11,14 @@ file — and the platform runs the controller from it:
                   rebalance dead band
     snapshot      the fields that leave the cluster, as one object for the layer above
 
-The catalogue is deliberately short. `labels-subset`: a unit's `labels` must
-be a subset of what the worker's server reports. `most-free-capacity`: the
-worker with the most capacity − load wins. A subsystem that needs another
-rule registers a function under a name (`register_constraint`), which is the
-same door the resource opens for its hooks — code, named, not YAML pretending
-to be code.
+The catalogue is deliberately short and CLOSED. `labels-subset`: a unit's
+`labels` must be a subset of what the worker's server reports.
+`most-free-capacity`: the worker with the most capacity − load wins. Nothing
+registers another: a spec naming a rule that is not here does not load. What
+a subsystem needs beyond them it DECLARES — `affinity` (a row of its table
+binds a unit to a place, or takes none), `near.prefer`, a field's `ref`,
+`must_match` and `unique`, `group_by.cut_at` — and the platform reads the
+declaration; no code of a subsystem's is called here (the boundary's step 6).
 
 What is NOT in a spec: anything about what a unit does. That is the worker,
 and the worker is the subsystem.
@@ -52,13 +54,13 @@ and the worker is the subsystem.
 #   whose worker and resource are both silent is gone (`gone_servers`) and its units move: there is no scheduler
 #   to bring the worker back on a neighbour — the units go to the workers that are there, and a shortage is
 #   offered to a spare (`offer_spares`).
-# - `CONSTRAINTS` — the catalogue: `"none"` (always eligible) and `"labels-subset"` (`_labels_subset`).
+# - `CONSTRAINTS` — the catalogue, closed: `"none"` (always eligible) and `"labels-subset"` (`_labels_subset`).
 #   `requires: resource` is not a constraint on the unit but on the worker's server: `resource_state` reads
 #   `platform/resources/<server>/heartbeat` — `live`, `silent`, or `unknown` (never seen) — and `_pool`
 #   drops workers whose resource is silent; `redistribute` moves their units off with the reason
 #   `resource on <server> silent`. A server's units put a worker where disks are declared; this is
 #   whether the resource there still answers. `unknown` passes: silent is a fact, unknown is not one.
-#   Extended only by `register_constraint`.
+#   Extended by nobody: a spec naming another rule does not load (`TIE_BREAKS` likewise).
 #
 # ## Notes
 # - Every write is `Controller.write` (CAS loop) or a create-only `put(cas=0)`; nothing is cached between passes,
@@ -265,6 +267,16 @@ class Field:
     schemes: tuple = ()
     credentials: dict = field(default_factory=dict)
     rules: object = None
+    # WHAT A FIELD POINTS AT, AND WHAT IS ONE PER CLUSTER (the boundary's step 6: what a subsystem's refusal of a row said
+    # in code, said here). `ref: <sub>/<rows>` — the value names the row `<sub>/<rows>/<value>` (a table of a spec, or
+    # its units); `must_match: {<their field>: <my field>}` — when that row holds a value in `<their field>`, this row's
+    # `<my field>` is the same, and a row there that does not parse is no row to point at: refused. A row that is not
+    # there asks nothing — what is not declared yet binds nothing. `unique: true` — no other unit holds the same value;
+    # `unique: canonical` (a url) — nor the same address in its one spelling (`canonical_url`). Both asked when the
+    # value is new to the row: a create, or an edit that changes it — rows that were doubles before stay editable.
+    ref: str = ""
+    must_match: dict = field(default_factory=dict)
+    unique: str = ""
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -378,6 +390,36 @@ def _url_words(fields: dict, name: str, f: dict) -> None:
     fld.rules = SecretRules.parse(f["secret_in"], f"field {name}") if "secret_in" in f else SecretRules()
 
 
+# `fields.<name>.ref`, `must_match`, `unique` — read into the field, refused at load when they say nothing that can be
+# asked: a `ref` that is no `<sub>/<rows>`, a `must_match` without a `ref` or naming no field of this row, a `unique`
+# that is neither `true` nor `canonical` (and `canonical` only of a url).
+def _ref_words(fields: dict, name: str, f: dict) -> None:
+    from .doors import safe_segment
+    fld = fields[name]
+    ref = f.get("ref")
+    if ref is not None:
+        parts = ref.split("/") if isinstance(ref, str) else []
+        if len(parts) != 2 or not all(safe_segment(p) for p in parts):
+            raise ValueError(f"field {name}: `ref` is <sub>/<rows> — the family of rows its value names — not {ref!r}")
+        fld.ref = ref
+    mm = f.get("must_match")
+    if mm is not None:
+        if not fld.ref:
+            raise ValueError(f"field {name}: `must_match` compares the row `ref` names, and {name} has no `ref`")
+        if not isinstance(mm, dict) or not mm or not all(isinstance(k, str) and k and isinstance(v, str) and v in fields
+                                                         for k, v in mm.items()):
+            raise ValueError(f"field {name}: `must_match` is {{<their field>: <a field of this row>}}, not {mm!r}")
+        fld.must_match = dict(mm)
+    u = f.get("unique")
+    if u is not None and u is not False:
+        if u is True:
+            fld.unique = "true"
+        elif u == "canonical" and fld.type == "url":
+            fld.unique = "canonical"
+        else:
+            raise ValueError(f"field {name}: `unique` is true, or `canonical` for a url field, not {u!r}")
+
+
 # `placement.capacity: {from, default}` — `(from, default)`. The default is REQUIRED (the product's decision): the
 # number a worker that has said nothing yet is counted at is the subsystem's to say — fifty of one kind of unit is a
 # small worker and of another an impossible one — and a spec without it does not load.
@@ -482,15 +524,31 @@ class SubsystemSpec:
     # opens four sessions to a box that licenses two; the subsystem then fails in the device's words
     # ("too many sessions"), which is the hardest kind of failure to trace back to a placement decision.
     #
-    # What the value is, the platform does not know: `group_value(row)` reads the field of this name by
-    # default, and a subsystem whose grouping is not a plain field overrides it — the VMS parses the
-    # device out of `driverpack://<device>/<channel>`, which no generic loader could do.
+    # What the value is: the field of this name, or — `group_by: {field: <a url field>, cut_at: <segment>}` — that
+    # address in its one spelling up to the segment (`url_cut`): `…/<host>/ch/17` and `…/<host>/ch/18` are one group
+    # by `cut_at: ch`. It was a subsystem's code overriding `group_value`, which parsed the address in its own words
+    # (the boundary's step 6); the platform reads the address by RFC 3986 and nothing else, and two spellings of one
+    # place are two groups — one spelling is the operator's rule, and its worker says a twin it finds.
     #
     # Where it hurts, and it does: the worker holding the group is not chosen for its room. A group that
     # outgrows its worker becomes unplaceable rather than spilling over, because spilling over is the
     # thing being prevented. The operator raises that worker's capacity or moves the group — `/unplaceable`
     # names the device, so the answer is on the screen rather than in a session count on a camera.
     group_by: str = ""
+    group_cut: str = ""           # `group_by.cut_at`: the group is the url field's spelling up to this segment
+    # `near: {…, prefer: {<their field>[.<field of the row it refs>]: <value or values>}}` — when `near` finds SEVERAL
+    # units of the followed subsystem (two of theirs about one of mine), the one to stand beside: the one whose row says
+    # so — read through their field's `ref` when the key has a dot (`home.kind`: the `kind` of the row their `home`
+    # names). Those first, the rest after; ties by their id, so two passes agree. It was a subsystem's ranking code.
+    near_prefer: dict = field(default_factory=dict)
+    # `placement.affinity: {field, table, server_field, strict}` — a row of this subsystem's `table` (one of `tables:`),
+    # named in the unit's `field`, may BIND: when the row matches `strict` (every key of it, the row's value one of the
+    # values; no `strict` — every row binds), the unit goes only to the place that row is — the worker whose place
+    # (`place_by`) is the row's name, on the server the row's `server_field` names when it names one — and that place
+    # takes no unit homed elsewhere. A place whose row says `admits: false` takes no unit at all. A FILTER, beside the
+    # labels and `spread_by`, so it beats `home` and `near` the way they do; what a place IS, the rows say. It was a
+    # subsystem's admit code (the boundary's step 6).
+    affinity: dict = field(default_factory=dict)
     # `place_by: <field>` — WHAT the policy and the home are counted in: the heartbeat field that names the
     # place a worker occupies. `server` by default, and for everything whose unit of storage is a server
     # that is the truth. A recorder's is not: a box with three disks runs three recorders, one per volume,
@@ -591,6 +649,7 @@ class SubsystemSpec:
                 raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
         for n, f in (unit.get("fields") or {}).items():
             _url_words(fields, n, f)
+            _ref_words(fields, n, f)
         for f in fields.values():
             if f.bound_to and not is_secret_field(f.name):
                 raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
@@ -634,7 +693,9 @@ class SubsystemSpec:
                    near_by=str((pl.get("near") or {}).get("by", "id") if isinstance(pl.get("near"), dict) else "id"),
                    near_of=str((pl.get("near") or {}).get("of", "") if isinstance(pl.get("near"), dict) else ""),
                    spread_by=str(pl.get("spread_by", "") or ""),
-                   group_by=str(pl.get("group_by", "") or ""),
+                   group_by=str((pl.get("group_by") or {}).get("field", "") if isinstance(pl.get("group_by"), dict)
+                                else pl.get("group_by", "") or ""),
+                   group_cut=str((pl.get("group_by") or {}).get("cut_at", "") or "") if isinstance(pl.get("group_by"), dict) else "",
                    place_by=str(pl.get("place_by", "server") or "server"),
                    offers=str(pl.get("offers", "") or ""),
                    home=str(pl.get("home", "") or ""),
@@ -650,6 +711,7 @@ class SubsystemSpec:
                    object_rows=_object_rows(d.get("name"), d.get("objects")),
                    slot_prefix=slot[0], slot_name_env=slot[1])
         spec._about_and_rights(d)
+        spec._placement_words(pl)
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         if spec.offers and d.get("slot") is not None and spec.offers != spec.slot_prefix:
@@ -756,6 +818,52 @@ class SubsystemSpec:
             if not isinstance(fld, str) or not fld:
                 raise ValueError(f"spec {self.name}: rights.unit_of.{table} names no field")
         self.unit_of = {str(t): str(f) for t, f in unit_of.items()}
+
+    # The placement's words that are a vocabulary or a declaration, checked at load (the boundary's step 6): the
+    # constraint and the tie-break are names from the closed catalogue; `group_by` is a field, or `{field, cut_at}` over
+    # a url field; `near.prefer` one key `<their field>[.<field>]` and a value or a list of them; `affinity` names a
+    # field of the row and a table of this spec, and `strict` is `{<field of the table's row>: <value or values>}`.
+    def _placement_words(self, pl: dict) -> None:
+        if self.constraint not in CONSTRAINTS:
+            raise ValueError(f"spec {self.name}: placement.constraint is one of {', '.join(CONSTRAINTS)}, not "
+                             f"{self.constraint!r} — the catalogue is closed; declare what else a unit needs")
+        if self.tie_break not in TIE_BREAKS:
+            raise ValueError(f"spec {self.name}: placement.tie_break is one of {', '.join(TIE_BREAKS)}, not {self.tie_break!r}")
+        g = pl.get("group_by")
+        if isinstance(g, dict):
+            if set(g) - {"field", "cut_at"} or self.group_by not in self.fields:
+                raise ValueError(f"spec {self.name}: placement.group_by is a field, or {{field: <a field>, cut_at: "
+                                 f"<a segment of its path>}}, not {g!r}")
+            if self.group_cut and (self.fields[self.group_by].type != "url" or "/" in self.group_cut):
+                raise ValueError(f"spec {self.name}: group_by.cut_at cuts a url field's path at a segment — "
+                                 f"{self.group_by} is {self.fields[self.group_by].type}, the segment {self.group_cut!r}")
+        near = pl.get("near")
+        prefer = near.get("prefer") if isinstance(near, dict) else None
+        if prefer is not None:
+            if not isinstance(prefer, dict) or not prefer or not self.near_of:
+                raise ValueError(f"spec {self.name}: near.prefer is {{<their field>[.<field>]: <values>, …}}, and only "
+                                 f"where `of` can find several of theirs — not {prefer!r}")
+            for k, v in prefer.items():
+                vals = v if isinstance(v, list) else [v]
+                if not isinstance(k, str) or not re.fullmatch(r"[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?", k) or not vals \
+                        or not all(isinstance(x, (str, int, float, bool)) for x in vals):
+                    raise ValueError(f"spec {self.name}: near.prefer is {{<their field>[.<field>]: <values>, …}}, not "
+                                     f"{prefer!r}")
+                self.near_prefer[k] = tuple(str(x).lower() if isinstance(x, bool) else str(x) for x in vals)
+        aff = pl.get("affinity")
+        if aff is not None:
+            if not isinstance(aff, dict) or set(aff) - {"field", "table", "server_field", "strict"} \
+                    or aff.get("field") not in self.fields or aff.get("table") not in self.tables:
+                raise ValueError(f"spec {self.name}: placement.affinity is {{field: <a field of the row>, table: <one of "
+                                 f"its tables>, server_field?, strict?}}, not {aff!r}")
+            strict = aff.get("strict") or {}
+            if not isinstance(strict, dict) or not all(isinstance(k, str) and k for k in strict):
+                raise ValueError(f"spec {self.name}: affinity.strict is {{<field of the table's row>: <values>}}, not {strict!r}")
+            self.affinity = {"field": str(aff["field"]), "table": str(aff["table"]),
+                             "server_field": str(aff.get("server_field") or ""),
+                             "strict": {str(k): tuple(str(x).lower() if isinstance(x, bool) else str(x)
+                                                      for x in (v if isinstance(v, list) else [v]))
+                                        for k, v in strict.items()}}
 
     # -- what a unit is called outside its routes, and what it is about ----------------------------------
     # `<name>/<id>` (`doors.unit_ref`): the one way a unit is named to the gate, the index and a grant.
@@ -1002,51 +1110,89 @@ def _labels_subset(row: dict, worker_labels: set[str]) -> bool:
     return set(row.get("labels") or []) <= worker_labels
 
 
+# CLOSED (the boundary's step 6, §4). A spec names one of these or does not load. There was a door for more —
+# `register_constraint`, code under a name — and nobody went through it; the three doors beside it (an admit, a near
+# rank, a refusal of a row) were each one subsystem's code run inside this controller. What a subsystem needs beyond
+# the catalogue it DECLARES, and the controller reads the declaration: `affinity`, `near.prefer`, a field's `ref`,
+# `must_match` and `unique`, `group_by.cut_at`.
 CONSTRAINTS = {"none": lambda row, labels: True, "labels-subset": _labels_subset}
+TIE_BREAKS = ("most-free-capacity",)
 
 
-# A subsystem's own rule, as code under a name — never as YAML. The same door the resource opens for its
-# hooks.
-def register_constraint(name: str, fn) -> None:
-    """A subsystem's own rule, as code under a name — never as YAML."""
-    CONSTRAINTS[name] = fn
+# A URL IN ITS ONE SPELLING (RFC 3986 §6.2.2, the syntax-based normalisation; the owner's decision on the boundary's
+# step 6): what `unique: canonical` compares and `group_by.cut_at` groups by. The scheme and the host in lower case;
+# a percent-encoding in upper case, and one that encodes an unreserved character decoded; the dot segments of the path
+# removed; an empty port gone. Nothing a SCHEME means (§6.2.3): a default port written out, or two segments a
+# subsystem reads as one number, are two spellings here — one spelling is the rule, and a twin that only the subsystem
+# can recognise is its worker's to find and say in its heartbeat. A value that is not an address is itself.
+_UNRESERVED = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
 
-# Two more doors of the same kind, for rules a constraint cannot state because they need more than the row
-# and the worker's labels. Keyed by the SPEC's name; the platform calls them and knows nothing of what they
-# mean.
-#
-# `admit(ctl, row, worker) -> bool` — may this unit be placed on this worker at all. A FILTER: it runs in
-# `eligible`, beside the labels and `spread_by`, so it beats `home` and `near` the way they do. The VMS
-# registers one for `rec`: a backup volume holds only the recordings homed on it, and they go nowhere else.
-#
-# `near_rank(ctl, their_id, memo) -> sortable` — when `near` finds SEVERAL units of the followed subsystem (two
-# recordings of one camera), which one to stand beside. Smallest first; ties by their id, so two passes
-# agree. The VMS registers one for `vms`: beside the BACKUP recording, which is the one that must survive
-# the primary's server. `memo` is a dict that lives as long as one look at the heartbeats (`NearIndex`): what the
-# rank reads to answer — the VMS's, which volumes are backups — it reads once there, not once per unit placed (the
-# scaling pass). Each of their ids is ranked once per look.
-#
-# `refuse(ctl, uid, old, new)` — may this row be WRITTEN: raises `Refused`. Called by `create` and `update` with the
-# row as it was (None for a create) and as it will be, before anything is stored — for a rule about what a field
-# POINTS AT, which the spec's types cannot state and which must hold for every writer of rows, a scenario's request
-# turned into a row as much as an operator's edit (the review's sixth pass: a recording's `home` on another camera's
-# card; a camera's `source` on a channel another camera already is). The gate asks who may; this says what may be.
-ADMIT: dict[str, object] = {}
-NEAR_RANK: dict[str, object] = {}
-REFUSE: dict[str, object] = {}
+def _pct(s: str) -> str:
+    def one(m):
+        c = chr(int(m.group(1), 16))
+        return c if c in _UNRESERVED else "%" + m.group(1).upper()
+    return re.sub(r"%([0-9A-Fa-f]{2})", one, s)
 
 
-def register_admit(spec_name: str, fn) -> None:
-    ADMIT[spec_name] = fn
+def _without_dots(path: str) -> str:
+    """RFC 3986 §5.2.4, remove_dot_segments."""
+    out: list[str] = []
+    while path:
+        if path.startswith("../"):
+            path = path[3:]
+        elif path.startswith("./"):
+            path = path[2:]
+        elif path.startswith("/./"):
+            path = "/" + path[3:]
+        elif path == "/.":
+            path = "/"
+        elif path.startswith("/../"):
+            path = "/" + path[4:]
+            if out:
+                out.pop()
+        elif path == "/..":
+            path = "/"
+            if out:
+                out.pop()
+        elif path in (".", ".."):
+            path = ""
+        else:
+            i = path.find("/", 1)
+            seg, path = (path, "") if i < 0 else (path[:i], path[i:])
+            out.append(seg)
+    return "".join(out)
 
 
-def register_refuse(spec_name: str, fn) -> None:
-    REFUSE[spec_name] = fn
+def canonical_url(v) -> str:
+    s = "" if v is None else str(v).strip()
+    try:
+        u = urlsplit(s)
+    except ValueError:
+        return s
+    if not u.scheme or not u.netloc:
+        return s
+    user, at, hostport = u.netloc.rpartition("@")
+    if hostport.endswith(":"):
+        hostport = hostport[:-1]                         # an empty port is no port
+    netloc = (_pct(user) + at if at else "") + _pct(hostport).lower()
+    return f"{u.scheme.lower()}://{netloc}{_without_dots(_pct(u.path))}" + (f"?{_pct(u.query)}" if u.query else "") \
+        + (f"#{_pct(u.fragment)}" if u.fragment else "")
 
 
-def register_near_rank(spec_name: str, fn) -> None:
-    NEAR_RANK[spec_name] = fn
+# …and that spelling up to a segment of its path (`group_by: {field, cut_at}`): the address with the path cut before the
+# first segment that is `segment`, and no query — what the units that differ only after it have in common. One with no
+# such segment is its whole spelling: a group of its own.
+def url_cut(v, segment: str) -> str:
+    c = canonical_url(v)
+    try:
+        u = urlsplit(c)
+    except ValueError:
+        return c
+    segs = u.path.split("/")
+    if not u.scheme or segment not in segs[1:]:
+        return c
+    return f"{u.scheme}://{u.netloc}" + "/".join(segs[:segs.index(segment, 1)])
 
 
 # THE ROWS THIS PROCESS WROTE, FOR A READER IN THE SAME PROCESS THAT REMEMBERS BETWEEN ITS TURNS (the eleventh review: the
@@ -1484,8 +1630,7 @@ class SpecController(Controller):
                 raise Refused(f"a {self.spec.name} {self.spec.id} may not hold {', '.join(repr(c) for c in bad)}: {uid!r}")
         if reserve is not None:
             reserve(uid)                                                # into the claim, before the row exists
-        if self.spec.name in REFUSE:                                   # the subsystem's own rule about what the row points at
-            REFUSE[self.spec.name](self, uid, None, self.spec.new_row(uid, fields))
+        self.refuse_refs(uid, None, self.spec.new_row(uid, fields))  # what its fields point at, what is one per cluster
         if not self.spec.numeric:
             old, idx = self.vars.get(self.row_key(uid))
             if old and old.get("deleted") != "true":
@@ -1512,6 +1657,43 @@ class SpecController(Controller):
         wrote(self.spec.name, uid)
         self._derived(r, uid)
         return r
+
+    # WHAT A ROW MAY POINT AT, AND WHAT IS ONE PER CLUSTER (the boundary's step 6; the review's sixth pass, two majors of
+    # one class, where it was a subsystem's code called here): a field's `ref` + `must_match`, and its `unique`. Called
+    # by `create` and `update` with the row as it was (None for a create) and as it will be, before anything is stored —
+    # every writer of rows comes through here, a request turned into a row as much as an operator's edit. The gate asks
+    # who may; this says what may be. Each asked only when the field's value is new to the row.
+    def refuse_refs(self, uid, old: dict | None, new: dict) -> None:
+        def changed(n: str) -> bool:
+            return old is None or str(old.get(n) or "") != str(new.get(n) or "")
+        for n, f in self.spec.fields.items():
+            v = str(new.get(n) or "")
+            if f.must_match and v and (changed(n) or any(changed(m) for m in f.must_match.values())):
+                sub, rows = f.ref.split("/")
+                try:
+                    items, _ = self.vars.get(f"{sub}/{rows}/{v}")
+                    if items is not None and not isinstance(items, dict):
+                        raise TypeError(type(items).__name__)
+                except (Garbled, *PARSE_ERRORS):
+                    raise Refused(f"{n} names {f.ref}/{v}, whose row does not parse: mend it first — nothing points "
+                                  f"at a row nobody can read") from None
+                if items and items.get("deleted") != "true":
+                    for theirs, mine in f.must_match.items():
+                        want = str(items.get(theirs) or "")
+                        if want and str(new.get(mine) or "") != want:
+                            raise Refused(f"{n} {v} is {theirs} {want}'s: only that {theirs}'s rows point at it, and "
+                                          f"{uid} is {mine} {new.get(mine)}'s")
+        unique = [(n, f) for n, f in self.spec.fields.items() if f.unique and str(new.get(n) or "") and changed(n)]
+        if not unique:
+            return
+        same = {n: (canonical_url if f.unique == "canonical" else str)(new[n]) for n, f in unique}
+        for row in self.units():
+            if str(row["id"]) == str(uid):
+                continue
+            for n, f in unique:
+                if row.get(n) and (canonical_url if f.unique == "canonical" else str)(row[n]) == same[n]:
+                    raise Refused(f"{self.spec.name} {row['id']} has that {n} already: one {n} is one unit — change "
+                                  f"that one, or delete it first")
 
     # The labels a unit is placed by, in the one alphabet (`LABEL_WORD`; the review's tenth pass): a camera with `склад`
     # was placed by the node's word and taken off its server as soon as an administrator gave that server a row, which
@@ -1558,8 +1740,7 @@ class SpecController(Controller):
                 why = label_refusal(r.get("labels"), was.get("labels") or ())
                 if why:
                     raise Refused(why)
-            if self.spec.name in REFUSE:             # the subsystem's own rule about what the row points at, old and new
-                REFUSE[self.spec.name](self, uid, was, r)
+            self.refuse_refs(uid, was, r)            # what its fields point at, old and new; what is one per cluster
             r["revision"] += 1                       # the trigger from М9 Lesson 5, in the controller
             return self._sealed(self.spec.items(r), uid)
         r = self.spec.row(self.write(self.row_key(uid), mutate))
@@ -1738,9 +1919,8 @@ class SpecController(Controller):
         rule = CONSTRAINTS[self.spec.constraint]
         out = [w for w in workers if rule(row, self.labels_of(w))]
         out = [w for w in out if self.server_of(w) not in self.servers_taken(row)]
-        admit = ADMIT.get(self.spec.name)
-        if admit is not None:
-            out = [w for w in out if admit(self, row, w)]
+        if self.spec.affinity:
+            out = [w for w in out if self.admits(row, w)]
         # The group's worker is looked for in the pool as GIVEN, not in what the filters left (the eleventh review, a
         # minor): a channel whose group's worker no longer passed them — its server's row unread this pass, a label
         # given to this one channel — found no group in `out` and was placed alone on another worker, two sessions to one
@@ -1772,11 +1952,47 @@ class SpecController(Controller):
                 found.append(pl.worker)
         return sorted(found)[0] if found else None
 
-    # What `group_by` names, for this row. A field by default; a subsystem that knows better overrides —
-    # `VmsController` returns the device out of the source URL, because the row has no device field and
-    # a generic loader has no business parsing a scheme it has never heard of.
+    # What `group_by` names, for this row: the field, or the address in it up to `cut_at` (`url_cut`). Nobody overrides
+    # it any more (the boundary's step 6).
     def group_value(self, row: dict) -> str:
-        return str(row.get(self.spec.group_by, "") or "")
+        v = str(row.get(self.spec.group_by, "") or "")
+        return url_cut(v, self.spec.group_cut) if v and self.spec.group_cut else v
+
+    # `affinity` (see the spec): may this unit go to this worker. The table's rows are read once a pass (`_per_pass`);
+    # a row that does not parse binds nothing and refuses nothing here — what places a unit is not a row nobody can read.
+    def admits(self, row: dict, worker: str) -> bool:
+        aff = self.spec.affinity
+        rows = self.table_rows(aff["table"])
+        place = self.place_of(worker)
+        here = rows.get(place)
+        if here is not None and str(here.get("admits", "true")).lower() == "false":
+            return False                                  # a place that takes nobody
+        home = str(row.get(aff["field"]) or "")
+        want = rows.get(home) if home else None
+        if want is not None and self._binds(want):
+            server = str(want.get(aff["server_field"]) or "") if aff["server_field"] else ""
+            return place == home and (not server or self.server_of(worker) == server)
+        return here is None or not self._binds(here)      # a binding place takes only the units homed on it
+
+    def _binds(self, items: dict) -> bool:
+        return all(str(items.get(k, "")).lower() in [x.lower() for x in vals]
+                   for k, vals in self.spec.affinity["strict"].items())
+
+    # `{name: items}` of one of this spec's tables, every row that reads — once a pass inside one.
+    def table_rows(self, table: str) -> dict[str, dict]:
+        prefix = self.sub.config(table, "")
+
+        def read():
+            out = {}
+            for key in self.vars.list(prefix):
+                try:
+                    items, _ = self.vars.get(key)
+                except (Garbled, *PARSE_ERRORS):
+                    continue
+                if isinstance(items, dict) and items:
+                    out[key[len(prefix):]] = items
+            return out
+        return self._per_pass(prefix, read, "table", rows=True)
 
     # Every live row by one value of it — the group, the spread field — built once a pass (`_per_pass`). Asked for every
     # unit waiting to be placed, it was every row read and parsed again for each: 500 cameras waiting of 600 cost a pass
@@ -2010,16 +2226,51 @@ class SpecController(Controller):
             return None
         if not self.spec.near_of or len(found) == 1:
             return found[0][1], found[0][2]                        # their unit is mine, or one of theirs: nothing to rank
-        rank = NEAR_RANK.get(self.spec.name)
 
         def ranked(f):
-            if rank is None:
+            if not self.spec.near_prefer:
                 return 0, f
             if f[0] not in near.ranks:
-                near.ranks[f[0]] = rank(self, f[0], near.memo)
+                near.ranks[f[0]] = 0 if self._preferred(f[0], near.memo) else 1
             return near.ranks[f[0]], f
         _, w, server = sorted(found, key=ranked)[0]
         return w, server
+
+    # `near.prefer` of one of their units: whether its row — or the row its field refs (`home.kind`) — holds one of the
+    # values, for every key. Their spec is the catalogue's (`catalog.py`): a process that loaded none of theirs prefers
+    # nothing. What the second step reads — a table of theirs — is read once a look (`memo`, `NearIndex`), and each of
+    # their rows once.
+    def _preferred(self, their_id: str, memo: dict) -> bool:
+        from . import catalog
+        try:
+            them = catalog.spec(self.spec.near)
+        except ValueError:
+            return False
+        try:
+            items, _ = self.vars.get(them.sub.config(them.rows, str(their_id)))
+        except (Garbled, *PARSE_ERRORS):
+            return False
+        for path, vals in self.spec.near_prefer.items():
+            first, _, second = path.partition(".")
+            v = str((items or {}).get(first) or "")
+            if second:
+                f = them.fields.get(first)
+                if not v or f is None or not f.ref:
+                    return False
+                if f.ref not in memo:
+                    sub, rows = f.ref.split("/")
+                    memo[f.ref] = {}
+                    for key in self.vars.list(f"{sub}/{rows}/"):
+                        try:
+                            it, _ = self.vars.get(key)
+                        except (Garbled, *PARSE_ERRORS):
+                            continue
+                        if isinstance(it, dict):
+                            memo[f.ref][key.rsplit("/", 1)[1]] = it
+                v = str(memo[f.ref].get(v, {}).get(second) or "")
+            if v.lower() not in [x.lower() for x in vals]:
+                return False
+        return True
 
     # Whose unit of the followed subsystem this one wants to be beside: its own id by default, or the
     # string in the field `near.by` names. The row is read for the second form only — a subsystem whose

@@ -88,32 +88,6 @@ def recording_cam(vars_, name: str) -> str:
     return str(items.get("cam") or name) if items else str(name)
 
 
-# A SCAN READS THE FOOTAGE OF THE CAMERA IT NAMES (the review's fifth pass, major). `cam` is the camera a job's events
-# carry and the gate checks; `rec` is the recording whose footage it reads — and nothing said the two were one camera:
-# `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 had the scan read camera 2's archive and file
-# what it found under camera 1. `rec` is a recording of `cam`, said at the door; and it is fixed when the job is made,
-# like `cam` (`fixed: true` in detjob.subsystem.yaml): another recording is another job.
-def refuse_job(vars_, fields: dict) -> None:
-    cam, rec = str(fields.get("cam") or ""), str(fields.get("rec") or "")
-    if cam and rec and recording_cam(vars_, rec) != cam:
-        raise Refused(f"recording {rec} is camera {recording_cam(vars_, rec)}'s, not camera {cam}'s: a scan reads the "
-                      f"footage of the camera it names")
-
-
-class DetJobController(SpecController):
-    """The platform's controller over `detjob.subsystem.yaml`, plus the rule only the VMS knows: a scan's recording
-    is its camera's (`refuse_job`). That it does not change is the spec's (`fixed: true`)."""
-
-    def __init__(self, vars_, objects, capacity: int = 50, wall=time.time, cluster: str | None = None):
-        from .config import DETJOB_SPEC
-        super().__init__(DETJOB_SPEC, vars_, objects, capacity, wall, cluster)
-
-    def create(self, fields: dict, **reserved) -> dict:
-        self.spec.refuse(fields)
-        refuse_job(self.vars, fields)
-        return super().create(fields, **reserved)
-
-
 # WHAT THE REQUEST LOOP REMEMBERS BETWEEN ITS TURNS (the scaling pass after the eighth review). The loop turns every two
 # seconds (`__main__._requests_loop`), and each turn read every row of `rec/requests/` — the backfills a person asked
 # for included, which are the recorder's and which it skips — and every recording and every detector, for their
@@ -430,7 +404,11 @@ def _scan(job_ctl, rec_ctl, cam: str, kind: str, it: dict, same: dict, now: floa
         rec = cam if cam in recs else (recs[0] if recs else "")
     if not rec or rec_ctl.unit(rec) is None:
         raise Refused(f"nothing records camera {cam}: a scan reads the archive, and there is none to read")
-    refuse_job(rec_ctl.vars, {"cam": cam, "rec": rec})   # a request's `rec` is another camera's: not this camera's scan
+    # A request's `rec` is another camera's: not this camera's scan — refused before a job of this camera is widened by
+    # it (the platform refuses the row the same way, `must_match` in detjob.subsystem.yaml, the review's fifth pass).
+    if str((rec_ctl.unit(rec) or {}).get("cam") or "") != cam:
+        raise Refused(f"recording {rec} is camera {(rec_ctl.unit(rec) or {}).get('cam')}'s, not camera {cam}'s: a scan "
+                      f"reads the footage of the camera it names")
     # One job per (recording, model) at a time, not one per firing (the review's second pass). A swaying camera
     # fires every second, and every firing used to be a two-minute job of its own: each second scanned a dozen
     # times, thousands of rows a day, both of a worker's places taken by the same minute. A request whose

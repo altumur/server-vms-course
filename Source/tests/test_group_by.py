@@ -59,7 +59,7 @@ def test_channels_of_one_device_go_to_one_worker():
     ctl.ensure_placed()
 
     assert ctl.where(a) == ctl.where(b), "two channels of one recorder, two sessions"
-    assert ctl.group_value(ctl.camera(a)) == "acme/10.0.0.50" == ctl.group_value(ctl.camera(b))
+    assert ctl.group_value(ctl.camera(a)) == "driverpack://acme/10.0.0.50" == ctl.group_value(ctl.camera(b))   # the spec's `cut_at: ch`
     assert ctl.where(other) != ctl.where(a)          # a different device is free to balance away
 
     # and a channel added later joins them rather than the emptier worker
@@ -152,7 +152,7 @@ def test_a_channel_whose_groups_worker_does_not_pass_its_filters_waits_and_is_no
     ctl.ensure_placed()
     assert ctl.placement(c) is None, f"placed alone on {ctl.where(c)}: two sessions to one recorder"
     why = {u["id"]: u.get("why", "") for u in ctl.unplaceable()}
-    assert "its device is held on w-1" in why[c], why
+    assert "its source is held on w-1" in why[c], why
     ctl.pass_once()                                                          # the group moves whole…
     assert ctl.where(a) == ctl.where(b) == "w-2" and "which w-1 may not take" in ctl.placement(a).reason
     ctl.pass_once()                                                          # …and the new channel follows it

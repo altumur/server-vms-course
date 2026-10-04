@@ -44,7 +44,11 @@ unit:
     retention_days: {type: int,    default: 30}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
-    home:           {type: string}                   # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say)
+    # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say).
+    # A card in a camera holds that camera's recordings and no other's: the volume row says whose card it is (`cam`),
+    # and the platform refuses a recording of another camera homed on it (`must_match`; the review's sixth pass, major —
+    # it was `volumes.refuse_recording`, a hook, until the boundary's step 6).
+    home:           {type: string, ref: rec/volumes, must_match: {cam: cam}}
     # WHEN THIS RECORDING STOPS BEING ONE, in unix seconds; 0 — never, which is every recording an
     # operator creates by hand. A scenario asks for ten minutes of a camera, and ten minutes is not a
     # setting on the row: it is an END. The console's loop deletes the row when the time comes, the
@@ -96,6 +100,12 @@ placement:
   # a procedure. The filters (`labels-subset`, `spread_by`, `requires: resource`) still win: this only
   # orders what is already eligible. With no home, the pick is the disk with the most room.
   home:       home                                   # the row's field naming the volume whose archive holds it
+  # …and a FILTER where the volume is a standby (`affinity`; М10B Lesson 26 — it was `volumes.admit_recording`, a hook,
+  # until the boundary's step 6). A recording homed on an enabled backup or edge volume goes there or nowhere, and
+  # nothing else goes there: a primary moved onto the backup while its server rebooted is ONE copy where the operator
+  # paid for two, and a backup moved off it is no copy at all. A volume row that says `admits: false` — an incidents
+  # volume, a place for what somebody kept (`RecWorker.keep_pass`) — takes no recording. `/unplaceable` says so.
+  affinity:   {field: home, table: volumes, server_field: server, strict: {kind: [backup, edge], enabled: true}}
   rebalance:  {dead_band: 0.10}
   # No `spread_by: cam`, deliberately, though `id: name` is what makes it possible. `spread_by` is a filter
   # over SERVERS — two recordings of one camera may not share a machine — and that is right for the reason

@@ -1,9 +1,9 @@
-"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|controller|console|resource —
-the VMS's processes on a box. The controllers of the other subsystems are the platform's, run from their specs
-(`python3 -m w2cplatform controller rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the boundary's step 5);
-the loops of `controller`, `console` and `resource` here are the platform's too (`host.controller_loop`,
-`host.sweep_loop`, `host.every`, `host.run_resource`) — run over the VMS's own controller (a device is one group),
-console (its routes) and resource (its keeps) until the boundary's step 6 turns those into declarations.
+"""python3 -m vms worker|recorder|gateway|detworker|detjobworker|surveyworker|autoworker|console|resource —
+the VMS's processes on a box. Every subsystem's controller is the platform's, run from its spec
+(`python3 -m w2cplatform controller vms|rec|live|det|detjob|survey|auto`, `w2cplatform/host.py`; the VMS's own since
+the boundary's step 6 — a device's grouping is the spec's `group_by: {field: source, cut_at: ch}`); the loops of
+`console` and `resource` here are the platform's too (`host.sweep_loop`, `host.every`, `host.run_resource`) — run
+over the console's routes and the resource's keeps until the rest of step 6 turns those into declarations.
 
     PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
     ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
@@ -30,7 +30,7 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # __main__.py — `python3 -m vms worker | controller | console | resource | …`: the box's processes
+# # __main__.py — `python3 -m vms worker | console | resource | …`: the box's processes
 #
 # **Role in the module.** The entrypoint of the VMS's units (`deploy/*.container` say `Exec=python3 -m vms <verb>`,
 # the controllers of the other subsystems `Exec=python3 -m w2cplatform controller <sub>`; the Containerfile's default
@@ -69,8 +69,8 @@ console (its routes) and resource (its keeps) until the boundary's step 6 turns 
 #
 # ### `if __name__ == "__main__"`
 # Dispatch table on `sys.argv[1]`: the workers (worker, recorder, gateway, detworker, detjobworker, surveyworker,
-# autoworker) and the three processes of the platform that still run a hook of the VMS's (controller, console,
-# resource). `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches them against
+# autoworker) and the two processes of the platform that still run a hook of the VMS's (console, resource); the
+# controller is the platform's since the boundary's step 6. `test_the_units_run_the_entrypoints_the_package_has` regex-extracts the names and matches them against
 # the `Exec=` lines of the Quadlet units — `python3 -m vms <verb>` and `python3 -m w2cplatform controller <sub>`.
 #
 # ## Notes
@@ -217,24 +217,6 @@ def recorder() -> None:
 # `HUNG_MOVE_AFTER`; one that is not running is dead, and its units move (`Controller.slot_fate`; the owner, 3 Oct).
 def _present(w) -> None:
     w.present(runtime.events_root(os.environ))
-
-
-# Builds `vmscontroller` and runs the platform's placement loop over it (`host.controller_loop`), every 5 s — the VMS's
-# own controller because a device is one group (`VmsController.group_value`: the hook the boundary's step 6 turns into
-# a declaration); every other subsystem's controller is the platform's, from its spec (`python3 -m w2cplatform`):
-# - Variables as writer `vmscontroller` with `SPEC.acl_controller()` — `vms/workers/*`, `vms/placement/*`,
-#   `vms/slots/*`; never a camera's row (see `w2cplatform/spec.py`).
-# - `VmsController(vars_, objects, capacity=$CAPACITY)`.
-# - Each pass: `ensure_placed()` (deleted rows unplaced first, then every unplaced camera onto the workers
-#   it currently sees by their heartbeats), `redistribute()` (only the cameras of a *released* slot —
-#   scale-in — move; a merely silent slot is a crash and is left for the scheduler), `publish_snapshot()`
-#   (one object per worker under `vms/snapshot/` in the object store) — each in a try of its own, said once a
-#   spell (`host.step`). No port, no state: the process can be restarted at any moment, and two of them agree by CAS.
-def controller() -> None:
-    from .config import SPEC
-    vars_ = open_vars(STORE_URL, writer="vmscontroller", acl={"vmscontroller": SPEC.acl_controller()})
-    objects = FsObjectStore(os.path.join(root, "objects"))
-    host.controller_loop(VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50"))))
 
 
 def detworker() -> None:
@@ -490,7 +472,6 @@ def console() -> None:
     from w2cplatform.spec import SpecController
     from .auto import AutoController
     from .config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SURVEY_SPEC
-    from .jobs import DetJobController
     vars_ = open_vars(STORE_URL, writer="console",
                           acl={"console": SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console()
                                + REC_SPEC.acl_console() + DETJOB_SPEC.acl_console()
@@ -501,7 +482,7 @@ def console() -> None:
     srv = serve(ctl, archive, os.environ.get("CONSOLE_HOST", "127.0.0.1"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 live_ctl=SpecController(LIVE_SPEC, vars_, objects),
                 mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
-                        "detjob": DetJobController(vars_, objects),     # a scan's recording is its camera's (`jobs.refuse_job`)
+                        "detjob": SpecController(DETJOB_SPEC, vars_, objects),   # a scan's recording is its camera's: its spec's `must_match`
                         "survey": SpecController(SURVEY_SPEC, vars_, objects),
                         # `AutoController` and not the platform's class: a scenario is refused where it is
                         # written, which is here, and the refusal has to be the subsystem's own words.
@@ -561,4 +542,4 @@ if __name__ == "__main__":
         signal.signal(s, lambda *_: stop.set())
     {"worker": worker, "recorder": recorder, "gateway": gateway, "detworker": detworker, "detjobworker": detjobworker,
      "surveyworker": surveyworker, "autoworker": autoworker,
-     "controller": controller, "console": console, "resource": resource}[sys.argv[1]]()
+     "console": console, "resource": resource}[sys.argv[1]]()
