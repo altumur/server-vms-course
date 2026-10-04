@@ -2,7 +2,7 @@
 genre: записки
 kind: разбор кода
 subject: М11_ClusterVMS
-source-commit: 6fd86b5
+source-commit: 970e5a7
 date: 2026-10-04
 status: draft
 ---
@@ -13,7 +13,7 @@ status: draft
 > Это разбор: я читал код и восстанавливал по нему, как всё устроено, максимально простыми словами.
 > **Источник истины — код.** Где записки расходятся с кодом, прав код.
 > Проект описывает себя сам: [`README.md`](../../README.md) и указатели модулей.
-> Состояние: коммит `6fd86b5`, 4 октября 2026.
+> Состояние: коммит `970e5a7`, 4 октября 2026.
 
 [← карта разбора](README.md) · назад: [05-workers-and-epochs.md](05-workers-and-epochs.md) · вперёд: [07-edit-and-delete.md](07-edit-and-delete.md)
 
@@ -94,15 +94,15 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
 → 200 {
   "server": "srv-b",
   "objects": {
-    "vms/heartbeats/w-srv-b-1": {"written": 1757500000.0, "server": "srv-b", "size": 748},
-    "vms/heartbeats/w-srv-a-1": {"written": 1757500000.0, "server": "srv-a", "size": 736},
-    "vms/heartbeats/w-srv-c-1": {"written": 1757500000.0, "server": "srv-c", "size": 730}
+    "vms/heartbeats/w-srv-b-1": {"written": 1757500000.0, "server": "srv-b", "size": 834},
+    "vms/heartbeats/w-srv-a-1": {"written": 1757500000.0, "server": "srv-a", "size": 822},
+    "vms/heartbeats/w-srv-c-1": {"written": 1757500000.0, "server": "srv-c", "size": 816}
   }
 }
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
-→ 200 {"bytes": 736, "X-Written": "1757500000.0", "X-Server": "srv-a"}
-GET /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster   → 748 байт, X-Server: srv-b
-GET /v1/objects/vms/heartbeats/w-srv-c-1?scope=cluster   → 730 байт, X-Server: srv-c
+→ 200 {"bytes": 822, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+GET /v1/objects/vms/heartbeats/w-srv-b-1?scope=cluster   → 834 байта, X-Server: srv-b
+GET /v1/objects/vms/heartbeats/w-srv-c-1?scope=cluster   → 816 байт, X-Server: srv-c
 
 # желаемое — хранилище; дорого, по чтению на камеру
 # console on srv-b → /run/configstore/console.sock
@@ -114,6 +114,8 @@ GET /v1/get?key=vms/cameras/3     → строка «Склад», index 1012
 
 # … и 18 чтений domain/* (ворота прав) — в трассе опущены
 ```
+
+Размеры heartbeat'ов здесь стендовые: путь `archive` на стенде — временный каталог, и каждый heartbeat на 61 байт длиннее, чем в юните (у `w-srv-a-1` в юните 761 байт, часть [5.4](05-workers-and-epochs.md)).
 
 Heartbeat'ы лежат файлами на трёх разных серверах (часть [5.4](05-workers-and-epochs.md)), а консоль спрашивает только ресурс **своего** сервера, с `scope=cluster`. Ресурс `srv-b` сам опрашивает ресурсы `srv-a` и `srv-c` и отдаёт по каждому ключу самую свежую копию; `X-Server` говорит, с какого сервера она пришла (`cluster/objectstore.py`, урок М11 [6](../../М11_ClusterVMS/06-what-stays-on-the-server.md)).
 
@@ -176,10 +178,10 @@ GET /v1/get?key=vms/workers/w-srv-c-1  → {"units": "3", "rev": "1"}
 
 ```
 GET /metrics
-→ 200 {"Content-Type": "text/plain", "bytes": 11606}
+→ 200 {"Content-Type": "text/plain", "bytes": 12094}
 ```
 
-Страница — 11,6 КБ. Ниже её начало целиком и по строке-две из каждой следующей группы:
+Страница — 12,1 КБ. Ниже её начало целиком и по строке-две из каждой следующей группы:
 
 ```
 # TYPE vms_workers_live gauge
@@ -218,7 +220,7 @@ vms_reconcile_last_pass_age_seconds 0.0
 # TYPE vms_reconcile_last_success_age_seconds gauge
 vms_reconcile_last_success_age_seconds 0.0
 # TYPE vms_reconcile_pass_seconds gauge
-vms_reconcile_pass_seconds 0.004
+vms_reconcile_pass_seconds 0.004            ← время прохода по часам машины, от прогона к прогону разное
 # TYPE vms_reconcile_failures counter
 vms_reconcile_failures 0
 # TYPE vms_units_unplaced gauge
@@ -228,6 +230,22 @@ vms_units_diverged 0
 …
 # TYPE vms_workers_hung gauge
 vms_workers_hung 0
+# TYPE vms_workers_hung_moved_total counter
+vms_workers_hung_moved_total 0
+# TYPE vms_workers_unsure_moved_total counter
+vms_workers_unsure_moved_total 0
+# TYPE vms_workers_unjudged gauge
+vms_workers_unjudged 0
+# TYPE vms_units_unjudged gauge
+vms_units_unjudged 0
+# TYPE vms_workers_presence_unsaid gauge
+vms_workers_presence_unsaid 0
+# TYPE vms_name_conflicts gauge
+vms_name_conflicts 0
+# TYPE vms_units_waiting_for_reach gauge
+vms_units_waiting_for_reach 0
+# TYPE vms_units_left_on_leaving gauge
+vms_units_left_on_leaving 0
 …
 # TYPE vms_rows_garbled gauge
 vms_rows_garbled 0
@@ -258,6 +276,7 @@ vms_units_short{labels="vlan:cctv"} 0
 # TYPE vms_spare_offers gauge
 vms_spare_offers{labels=""} 0
 vms_spare_offers{labels="vlan:cctv"} 0
+# TYPE vms_spares_withheld gauge
 # TYPE vms_server_labels gauge
 vms_server_labels{server="srv-a",labels="vlan:cctv",source="node"} 1
 vms_server_labels{server="srv-b",labels="vlan:cctv",source="node"} 1
@@ -284,7 +303,7 @@ w2c_resource_mirror_failures_total{server="srv-a"} 0
 …
 ```
 
-Группы такие. Воркеры и их ёмкость (`vms_workers_live` … `vms_cameras_running`). Проход контроллера — из его отчёта (`vms_reconcile_*`, `vms_units_*`, списания и зависшие воркеры, `vms_rows_garbled`). Здоровье каждого воркера — те поля его heartbeat'а, которые размещение не читает (`vms_worker_fenced`, `vms_worker_store_errors`, `vms_worker_unconfirmed`, `vms_worker_pass_failures`). Строки хранилища, которые не удалось разобрать: у воркеров по таблицам (`vms_worker_*_garbled`, по строке на воркер и таблицу — их больше двадцати) и у самой консоли (`vms_console_rows_garbled{table=…}`). Недостача ёмкости по наборам меток — то, что читает скрипт запасных (`vms_units_short`, `vms_workers_needed`, `vms_spare_offers`). Метки серверов (`vms_server_labels`). И ресурсы серверов — диск, ожидания, восстановление, зеркало событий (`w2c_resource_*`; это метрики платформы, у них префикс `w2c_`, а не `vms_`). В нашем сценарии все счётчики — нули.
+Группы такие. Воркеры и их ёмкость (`vms_workers_live` … `vms_cameras_running`). Проход контроллера — из его отчёта (`vms_reconcile_*`, `vms_units_*`, списания и зависшие воркеры, `vms_rows_garbled`). Из него же новые серии про воркеров, чью судьбу нельзя решить сразу: `vms_workers_hung_moved_total` и `vms_workers_unsure_moved_total` — сколько раз камеры уехали с зависшего воркера и с воркера под сомнением, когда вышел срок `hung_move_after`; `vms_workers_unjudged` и `vms_units_unjudged` — сколько таких воркеров с камерами сейчас и сколько камер на них ждёт; `vms_workers_presence_unsaid` — живые воркеры, не сумевшие записать имя рядом с замком регистрации (все — раздел [8.6](08-failures.md)). `vms_name_conflicts` — сколько имён просит кто-то, кроме живого держателя (раздел [2.2](02-before-first-camera.md)); `vms_units_left_on_leaving` — камеры, которые не удалось увезти с уходящего воркера. Здоровье каждого воркера — те поля его heartbeat'а, которые размещение не читает (`vms_worker_fenced`, `vms_worker_store_errors`, `vms_worker_unconfirmed`, `vms_worker_pass_failures`). Строки хранилища, которые не удалось разобрать: у воркеров по таблицам (`vms_worker_*_garbled`, по строке на воркер и таблицу — их больше двадцати) и у самой консоли (`vms_console_rows_garbled{table=…}`). Недостача ёмкости по наборам меток — то, что читает скрипт запасных (`vms_units_short`, `vms_workers_needed`, `vms_spare_offers`), и `vms_spares_withheld{labels=…} 1` — набор, для которого предложение не написано, потому что ни один сервер его не покрывает (раздел [8.3](08-failures.md)); пока таких нет, у серии только строка `# TYPE`. Метки серверов (`vms_server_labels`). И ресурсы серверов — диск, ожидания, восстановление, зеркало событий (`w2c_resource_*`; это метрики платформы, у них префикс `w2c_`, а не `vms_`). В нашем сценарии все счётчики — нули.
 
 За этой страницей 8 чтений хранилища и 57 запросов объектов. Ворот нет: `/metrics` — один из открытых маршрутов, его читает мониторинг. Из хранилища — только метки серверов, дважды: листинг `vms/servers/` (пустой — строк меток из консоли никто не заводил) и `vms/servers/srv-a`, `srv-b`, `srv-c` поштучно (`{"items": null}`); имена серверов консоль берёт из heartbeat'ов. Остальное — объекты через ресурс `srv-b`:
 
@@ -299,7 +318,7 @@ w2c_resource_mirror_failures_total{server="srv-a"} 0
 
 `vms_cameras_running 3` — это счёт записей в фазе `running` по живым воркерам, то есть тот же источник, что и `rows`.
 
-`vms_reconcile_last_pass_age_seconds 0.0` — отчёт о проходе есть, и он свежий. Отчёт пишет `pass_once` контроллера файлом `vms/controller/pass` на своём сервере (в трассе — 607 байт, `X-Server: srv-a`); консоль читает его через свой ресурс. Юнит контроллера М11 гоняет тот же проход, что на коробке: `_placement_pass` в `cluster/__main__.py` зовёт `pass_once(1)` и затем `publish_snapshot`, каждый шаг в своём `try` (урок М11 [10](../../М11_ClusterVMS/10-the-controller.md)). Поэтому `vms_reconcile_*`, `vms_units_unplaced`, `vms_units_diverged` и `vms_rows_garbled` в кластере говорят правду. Значение `-1` у возрастов означало бы «отчёта нет» — проход ни разу не прошёл.
+`vms_reconcile_last_pass_age_seconds 0.0` — отчёт о проходе есть, и он свежий. Отчёт пишет `pass_once` контроллера файлом `vms/controller/pass` на своём сервере (в трассе — 839 байт, `X-Server: srv-a`); консоль читает его через свой ресурс. Юнит контроллера М11 гоняет тот же проход, что на коробке: `_placement_pass` в `cluster/__main__.py` зовёт `pass_once(1)` и затем `publish_snapshot`, каждый шаг в своём `try` (урок М11 [10](../../М11_ClusterVMS/10-the-controller.md)). Поэтому `vms_reconcile_*`, `vms_units_unplaced`, `vms_units_diverged` и `vms_rows_garbled` в кластере говорят правду. Значение `-1` у возрастов означало бы «отчёта нет» — проход ни разу не прошёл.
 
 `vms_spare_workers 0` — метрика общая для всех подсистем. Она считает живых воркеров, которые не держат никакого места (`place_of` пуст). Места бывают у записи — это тома архива. У VMS место — это сервер воркера, и пустым оно не бывает, поэтому здесь всегда `0`. Запасные VMS устроены иначе: запасной, запущенный скриптом с `SPARE_FOR=…`, ждёт предложения слота и, пока не взял его, никто — heartbeat'а не пишет. Его видно по `vms_spare_offers` (раздел [8.8](08-failures.md)). В `vms_worker_load` воркер без места не попадает: его нулевая загрузка тянула бы среднее вниз.
 
@@ -356,9 +375,9 @@ GET /v1/objects/vms/snapshot/w-srv-c-1?scope=cluster   → 383 байт, X-Serve
 
 | Время | Кто | Что сделал | Записал в хранилище | Записал файлом на своём сервере |
 |---|---|---|---|---|
-| до сценария | ресурсы | рассказали о своих дверях | `platform/doors/srv-a..c` | — |
-| до сценария | воркеры | взяли слоты, `cas: ""` | `vms/slots/w-srv-a-1`, `…-b-1`, `…-c-1` | — |
-| до сценария | воркеры | первый heartbeat, `status: []` | — | `vms/heartbeats/w-srv-X-1` (484 байта), каждый на своём |
+| до сценария | ресурсы | рассказали о своих дверях; дальше каждые 15 с переписывают в них `at` | `platform/doors/srv-a..c` | — |
+| до сценария | воркеры | взяли слоты, `cas: ""`, и зарегистрировались у ресурса своего сервера | `vms/slots/w-srv-a-1`, `…-b-1`, `…-c-1` | замок `.workers/<экземпляр>.lock` в дереве ресурса |
+| до сценария | воркеры | первый heartbeat, `status: []` | — | `vms/heartbeats/w-srv-X-1` (509 байт), каждый на своём |
 | до сценария | ресурсы | отчитались о дисках | — | `platform/resources/srv-X/heartbeat`, каждый на своём |
 | до сценария | контроллер `srv-a` | прошёл по пустому кластеру | ничего | `vms/controller/pass`, `vms/snapshot/unplaced` (пустой) |
 | `T+0.0` | консоль `srv-a` | создала камеру 1 | `vms/idem/k-anna-0001` (pending, `cas: ""`), `vms/next_id` = 1, `idem` с номером, `vms/cameras/1` (`cas: ""`), `idem` с ответом | — |
@@ -369,7 +388,7 @@ GET /v1/objects/vms/snapshot/w-srv-c-1?scope=cluster   → 383 байт, X-Serve
 | `T+4.1` | w-srv-a-1 | прочитал назначение и строку, взял эпоху, поднял поток | `vms/epoch/1` (`cas: ""`) | — |
 | `T+4.6` | w-srv-b-1 | то же со своей камерой | `vms/epoch/2` | — |
 | `T+5.0` | w-srv-c-1 | то же со своей камерой | `vms/epoch/3` | — |
-| `T+10.3` | w-srv-a-1, b-1, c-1 | heartbeat с `phase: running` | — | `vms/heartbeats/w-srv-X-1` (~740 байт), каждый на своём |
+| `T+10.3` | w-srv-a-1, b-1, c-1 | heartbeat с `phase: running` | — | `vms/heartbeats/w-srv-X-1` (~760 байт), каждый на своём |
 | `T+11.9` | w-srv-a-1 | шаг аренд: продлил слот, перечитал эпоху | `vms/slots/w-srv-a-1` (по CAS) | — |
 | `T+12.0` | оператор | на консоли `srv-b` увидел три работающие камеры | — | — |
 
