@@ -80,7 +80,8 @@ POST /v1/join {"id": "srv-d", "raft": "10.0.0.4:8301", "api": "srv-d@10.0.0.4:83
 # resource on srv-d → /run/configstore/resource.sock
 POST /v1/write {"op": "put", "key": "platform/doors/srv-d", "cas": null, "items": {
   "url": "http://srv-d:8090",
-  "since": "1757500000.0"
+  "since": "1757500000.0",
+  "at": "1757500000.0"
 }}
 → 200 {"index": 1004}
 ```
