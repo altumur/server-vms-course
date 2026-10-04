@@ -491,13 +491,24 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
         was = self.seeking
         try:
             self.schema_seen = check_schema(self.vars, getattr(self, "schema_seen", None))   # nobody to be on a store past this build
-            self.claim_slot()
+            if self.given is not None and self.spare_for is None:
+                with self._slot_lock:
+                    self._claim_slot(self.given, 50, steal=False)
+            else:
+                self.claim_slot()
+        except NoOffer:
+            return False                          # a spare with no offer of its set: it waits, as it said at its start
+        except _NameTaken as e:
+            self._name_taken_by(e)
+            return False
         except Exception as e:                    # noqa: BLE001
             log.warning("%s: gave slot %s up and no other could be claimed (%s): nobody, taking nothing; trying again "
                         "on the next step", self.instance, was, e)
             return False
         self.seeking = None
-        log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
+        self._name_back()
+        if was:                                   # a spare that never had a name has said what it took (`_claim_offer`)
+            log.warning("%s: gave slot %s up, its units let go; going on as %s", self.instance, was, self.name)
         return True
 ```
 
@@ -514,6 +525,29 @@ def read_assignment(key: str, worker: str, items) -> "Assignment":
 | возврат холда «по имени» (`_claim_hold`, `named`) | строка слота называет другой экземпляр — как любой чужой, ждёт срок |
 
 `_seek_slot` ловит любое исключение захвата, а не только `OSError` и `RuntimeError`: что бы ни случилось, экземпляр остаётся никем и пробует на следующем шаге. И сначала сверяет схему — на хранилище новее своей сборки имён не берут. Тест: `test_slot_fence.py::test_a_fenced_holder_or_recorder_whose_rejoin_failed_says_nothing_under_the_name_another_instance_holds` — `VmsWorker`, `RecWorker` и регистратор на камере (`CardRecorder`, он наследует этот путь), включая оборот настоящего `run` с аккуратной остановкой: чужой heartbeat цел, чужая строка слота не отпущена.
+
+**«Другой слот» — только у процесса без имени** (решение владельца 4 октября; продукт — `RejoinSlot`). Процесс, которому имя дал юнит (`given`: `WORKER_NAME`, `<ROLE>_NAME`, `SLOT_INDEX` — урок 7, шаг 5), в `_seek_slot` просит только это имя, и только свободным или истёкшим (`steal=False`). Первая версия брала любой свободный: отсечённый `w-srv-a-1` становился `w-2`, вторым воркером на сервере, о котором юнит не знал, а контроллер давал ему единицы. Пока имя держит живой экземпляр, захват отвечает `_NameTaken`, и процесс остаётся никем — с тем же списком огороженного, что выше, — и говорит об этом сам:
+
+```python
+    def _name_taken_by(self, e: "_NameTaken") -> None:
+        now = self.wall()
+        holder_box = runtime.box_of(e.holder) or ""
+        if self.nameless is None:
+            self.nameless = {"name": e.slot, "holder": e.holder, "holder_box": holder_box, "since": now}
+            log.error("%s: its name %s/%s is held by %s (box %s) — another process started under the same name took it. "
+                      "This one is nobody now: it holds nothing, and takes its name back when that is free; it takes no "
+                      "other", self.instance, self.sub.name, e.slot, e.holder or "?", holder_box or "not said")
+            self.journal.say("worker.name_taken", ALARM, of=self.sub.name, worker=e.slot, holder=e.holder,
+                             holder_box=holder_box, holder_until=e.until, instance=self.instance, box=self._box(),
+                             server=self.server or "", since=now)
+            self._contend_at = -1e18
+        self.nameless.update(holder=e.holder, holder_box=holder_box)
+        if self.clock() - self._contend_at >= CONTEND_EVERY:
+            self._contend(e.slot, e.holder, NAMELESS)
+            self._contend_at = self.clock()
+```
+
+Тревога — раз за эпизод, в журнал воркера (`journal`: дерево ресурса его сервера, если оно есть, иначе лог). Метка `<sub>/contenders/<имя>/<коробка>` — раз в `CONTEND_EVERY` (10 с): пока heartbeat под именем чужой, это единственный пульс старого процесса, и `/servers` показывает его у строки держателя (`name_conflict`, урок 15). Имя освободилось — `_seek_slot` берёт его, метку убирает и пишет `worker.name_back` (`_name_back`). Живой держатель имени не отдаёт никогда: два живых процесса одного имени на одной коробке отнимали бы его друг у друга вечно. Запасной (`SPARE_FOR`) имени от юнита не имеет и по-прежнему берёт только предложение своего набора. Тесты: `test_names.py`; `test_slot_fence.py` — те же пять воркеров на `keep_slot` и держатели, теперь с именем: после моргания хранилища каждый возвращается под **своим** именем, когда чужой держатель его отпустил.
 
 **Огороженный со слотом в руках узнаёт, что имя заняли.** Сосед того же класса, которого ревью не называло. Хранилище, поднятое выше сборки, отсекает воркер, а строка слота остаётся его: `renew_slot` бросает `SchemaTooNew` раньше, чем читает строку. Продлений нет, строка протухает, новая сборка берёт имя — а старый процесс строку больше не читал и продолжал писать heartbeat поверх нового держателя. У пяти воркеров на `keep_slot` то же: отказ продления уходит из шага аренд, а heartbeat идёт в своём `try`. Теперь на каждом шаге аренд такой экземпляр читает свою строку (`name_taken`), и с шага, который видит в ней чужой экземпляр, он никто:
 
