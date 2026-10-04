@@ -33,6 +33,20 @@ the group, and what a test stand applies in one process — the same code, so th
 # FENCES the worker (`Worker._renew_slot`). So a write carries an operation id (`id`, made by the handle once per
 # call), and the machine answers a repeat of an id it has seen with the first answer — the client sessions of the
 # Raft dissertation, § 6.3. The memory is the last `OP_MEMORY` ids, in log order, so every member forgets the same.
+# An id is answered from memory only for the SAME write — op, key, items, cas (`_fingerprint`): an id that comes back
+# with another write is refused, never answered with a first answer that was not its own (the review's thirteenth
+# pass, major 4: the handle sent a new write under an old id and was told «OK» for a write it never made; the handle
+# is mended too, `configstorevars._Unknown`).
+#
+# ## What a caller names is bounded too (the review's thirteenth pass, major 2)
+# `MAX_VALUE` bounded the items and nothing else: a delete whose `id` was 3 MiB was taken — the journal grew by
+# 3.2 MB on every member, and the machine kept the id among its 50 000 — and a `cas` of 3 MiB went into the log and
+# came back in the 409's text. Every request is a command of the log, reads too, so what a caller names is bounded
+# at the door before anything is submitted, and again by the machine (a function of the command alone): an `id` is
+# `OP_ID` — up to 64 letters, digits, `-` and `_` (the handle's are 32 hex digits); a `cas` is null, a number, or a
+# short word of the same alphabet (`CAS_WORD`: the platform's `TORN` is one); a key is a key (`check_key`, its
+# length asked before its text, so a refusal never quotes a long one); a list's prefix longer than any key matches
+# nothing and is answered so without a command. No refusal quotes what the caller sent but a key.
 #
 # ## A row has a ceiling: `MAX_VALUE` (the review's twelfth pass, major 2)
 # A row of 32 MiB was taken and went into the raft log — every member holds it in memory, writes it to its journal
@@ -62,9 +76,10 @@ the group, and what a test stand applies in one process — the same code, so th
 # `configstore` (`PEER`) — another daemon on the `-api` door — is not a role of the file and has NO grant on a row
 # (the review's twelfth pass, major 3: it had every right, so one daemon's certificate deleted slots, wrote the
 # schema and changed the group). What daemons need from each other is the group: `/v1/status`, and `/v1/join` /
-# `/v1/leave` of the calling daemon's own server (`configstore.StoreDaemon.serve`). A request one daemon forwards for
-# a process is answered with THAT process's role, which the forwarding daemon names (`configstore.FORWARDED`) — never
-# with more. The file may name neither `admin` nor `configstore`: a socket of either name would be that door.
+# `/v1/leave` of the calling daemon's own server (`configstore.StoreDaemon.serve`). No daemon speaks for a process
+# either: the mark a forwarding daemon put on a request to be answered as its caller's role was any role a daemon's
+# certificate wanted, and nobody forwards in the course — it is gone (the review's thirteenth pass, major 1). The
+# file may name neither `admin` nor `configstore`: a socket of either name would be that door.
 #
 # ## The API — the product's, rendered here so the stand and the daemon say the same
 #   GET  /v1/get?key=K          → {items, index}           index "" = absent
@@ -77,6 +92,7 @@ the group, and what a test stand applies in one process — the same code, so th
 from __future__ import annotations
 
 import collections
+import hashlib
 import json
 import re
 import urllib.parse
@@ -84,6 +100,9 @@ import urllib.parse
 from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
+OP_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")         # a write's operation id (the handle's: 32 hex digits)
+CAS_WORD = re.compile(r"^[A-Za-z0-9_-]{0,32}$")      # a `cas` that is a string: "" (create-only), digits, a word
+CAS_MAX = 1 << 63                                    # a `cas` that is a number: a version, which is a log index
 MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
@@ -105,11 +124,35 @@ class Ambiguous(Unavailable):
 # were imported into, and one a cluster's rows could be exported back from, must take the same keys.
 def check_key(key) -> str:
     if not isinstance(key, str):
-        raise ValueError(f"not a key: {key!r}")
-    safe_path(key)
+        raise ValueError(f"not a key: a {type(key).__name__}")
     if len(key.replace("%", "%25").replace("/", "%2F").encode()) > KEY_BYTES:
         raise ValueError(f"not a key: longer than {KEY_BYTES} bytes as a file's name")
+    safe_path(key)                                # after the length: its refusal quotes the key
     return key
+
+
+# What a write names besides its key and items, bounded (the notes: "What a caller names is bounded too"). Raises
+# `ValueError` naming the field, never quoting it.
+def check_write(cmd: dict) -> None:
+    op_id = cmd.get("id")
+    if op_id is not None and not (isinstance(op_id, str) and OP_ID.match(op_id)):
+        raise ValueError("a write's id is up to 64 letters, digits, - and _")
+    cas = cmd.get("cas")
+    if cas is None or isinstance(cas, bool):
+        return
+    if isinstance(cas, int) and -CAS_MAX < cas < CAS_MAX:
+        return
+    if isinstance(cas, str) and CAS_WORD.match(cas):
+        return
+    raise ValueError('a write\'s cas is null, a version, "" (create-only) or a word of up to 32 letters and digits')
+
+
+# The write an operation id stands for: what a repeat must be to be answered from memory. A function of the command
+# alone, so every member keeps the same.
+def _fingerprint(cmd: dict) -> str:
+    what = json.dumps([cmd.get("op"), cmd.get("key"), cmd.get("items") if cmd.get("op") == "put" else None,
+                       cmd.get("cas")], sort_keys=True, default=str)
+    return hashlib.sha256(what.encode()).hexdigest()
 
 
 # A version as a write compares it. `None`: no CAS. `""` or 0: the key must be absent. A number (or its digits):
@@ -135,7 +178,7 @@ class StoreMachine:
 
     def __init__(self, index_base: int = 0):
         self.rows: dict[str, tuple[dict, int]] = {}
-        self.done: collections.OrderedDict[str, dict] = collections.OrderedDict()
+        self.done: collections.OrderedDict[str, tuple[str, dict]] = collections.OrderedDict()   # id → (write, answer)
         self.base = int(index_base)
         self.members: dict[str, dict] = {}        # id → {raft, api}: who is in the group, by the daemons' own word
         self.applied = 0                          # the log index of the last command applied
@@ -173,14 +216,18 @@ class StoreMachine:
         return {k: dict(v) for k, v in self.members.items()}
 
     def _write(self, cmd: dict, index: int) -> dict:
-        op_id = cmd.get("id")
-        if op_id and op_id in self.done:
-            return dict(self.done[op_id])
-        key = cmd.get("key")
         try:
-            check_key(key)
+            check_key(cmd.get("key"))
+            check_write(cmd)
         except ValueError as e:
             return {"error": str(e)}              # the door refuses it first; a command in the log must not raise
+        key, op_id = cmd["key"], cmd.get("id")
+        fingerprint = _fingerprint(cmd) if op_id else ""
+        if op_id and op_id in self.done:
+            was, res = self.done[op_id]
+            if was != fingerprint:
+                return {"error": "this operation id was another write's: a new write takes a new id"}
+            return dict(res)
         current = self.rows.get(key, (None, 0))[1]
         cas = _cas(cmd.get("cas"))
         if cas is not None and cas != current:
@@ -197,7 +244,7 @@ class StoreMachine:
             self.wrote = True
             res = {"index": self.version(index)}
         if op_id:
-            self.done[op_id] = dict(res)
+            self.done[op_id] = (fingerprint, dict(res))
             while len(self.done) > OP_MEMORY:
                 self.done.popitem(last=False)
         return res
@@ -298,6 +345,8 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             return 200, {"items": got["items"], "index": got["index"] or ""}
         if method == "GET" and u.path == "/v1/list":
             prefix = q.get("prefix", "")
+            if len(prefix.encode()) > KEY_BYTES:
+                return 200, {"keys": {}}          # longer than any key: nothing to match, nothing to ask the log
             got = submit({"op": "list", "prefix": prefix})
             return 200, {"keys": {k: v for k, v in got["keys"].items() if rights.allows(role, "read", k)}}
         if method == "POST" and u.path == "/v1/write":
@@ -308,6 +357,10 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
             if not isinstance(body, dict) or body.get("op") not in ("put", "delete"):
                 return fault(400, "badrequest", 'a write is {"op": "put"|"delete", "key", "items", "cas", "id"}')
             key = check_key(body.get("key", ""))
+            try:
+                check_write(body)
+            except ValueError as e:
+                return fault(400, "badrequest", str(e))
             action = "write" if body["op"] == "put" else "delete"
             if not rights.allows(role, action, key):
                 return fault(403, "forbidden", f"{role} may not {action} {key}")
@@ -321,15 +374,16 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 if size > MAX_VALUE:
                     return too_large(key, size)
             if body.get("id"):
-                cmd["id"] = str(body["id"])
+                cmd["id"] = body["id"]
             got = submit(cmd)
             if "error" in got:
                 return fault(400, "badkey", got["error"])
             if "toolarge" in got:
                 return too_large(key, got["toolarge"])
             if got.get("conflict"):
-                return fault(409, "conflict", f"{key}: cas={body.get('cas')!r} but the version is {got['index'] or 'absent'}",
-                             index=got["index"] or "")
+                # The version now, not the one the write named: what the caller sent is not said back to it.
+                return fault(409, "conflict", f"{key}: the version is {got['index'] or 'absent'}, not the one the "
+                                              f"write named", index=got["index"] or "")
             return 200, {"index": got["index"]}
         return fault(404, "badrequest", f"no such route: {method} {u.path}")
     except ValueError as e:
