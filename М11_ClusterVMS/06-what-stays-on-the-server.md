@@ -147,14 +147,14 @@ GET /v1/objects?prefix=vms/heartbeats/&scope=cluster
     "vms/heartbeats/w-srv-a-1": {
       "written": 1757500000.0,
       "server": "srv-a",
-      "size": 486
+      "size": 494
     }
   }
 }
 
 # vmscontroller on srv-b → the resource on srv-b, http://srv-b:8090
 GET /v1/objects/vms/heartbeats/w-srv-a-1?scope=cluster
-→ 200 {"bytes": 486, "X-Written": "1757500000.0", "X-Server": "srv-a"}
+→ 200 {"bytes": 494, "X-Written": "1757500000.0", "X-Server": "srv-a"}
 ```
 
 Откуда ресурс `srv-b` знает, где остальные. Не из heartbeat'ов — они сами объекты за этими дверями. Каждый ресурс при старте пишет **строку** `platform/doors/<сервер> {url, since}` в хранилище, и остальные читают их не чаще раза в десять секунд (`DOORS_FRESH`). Поэтому в трассах уроков чтение чужих объектов видно как ресурс, читающий `platform/doors/*`, а версии в сценах начинаются с 1004: первые три записи стенда — двери трёх ресурсов, и в трассу сцены они не попадают.
