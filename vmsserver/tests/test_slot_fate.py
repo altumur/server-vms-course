@@ -314,8 +314,9 @@ def test_the_rule_lives_in_one_place():
     site.up.discard("srv-1")
     site.tick(100)
     row = site.box.vars.get("vms/slots/w-1")[0]
-    for fate, moves, releases, refused in (("hung", {}, [], False), ("wait", {}, [], False),
+    for fate, moves, releases, refused in (("hung", {}, [], False), ("wait", {}, [], False), ("unsure", {}, [], False),
                                            ("move", {"w-1": "srv-1"}, [], False), ("hung_moved", {"w-1": "srv-1"}, [], False),
+                                           ("unsure_moved", {"w-1": "srv-1"}, [], False),
                                            ("release", {}, ["w-1"], False), ("alive", {}, [], True)):
         site.box.vars.put("vms/slots/w-1", row)                              # the slot as it was: lapsed, held
         ctl.slot_fate = lambda w, s, fate=fate: (fate, "srv-1", fate) if w == "w-1" else ("alive", "", "")
@@ -840,3 +841,86 @@ def test_a_resource_heartbeat_that_does_not_parse_is_a_silent_server_not_an_unkn
     box.objects.delete("vms/heartbeats/w-1")
     site.ctl.resource_state("srv-1")                                         # read once: the heartbeat counted as garbled
     assert site.ctl.resource_state("srv-1") == "silent" and site.fate() == "move"
+
+
+def _unsure_by(site, cause):
+    """w-1 made `unsure` by `cause`, and a hook that keeps it so after every tick: its server's door unreachable (the
+    resource's heartbeat seen as it was, its row in the store fresh), or its name not beside its lock (`presence_unsaid`)."""
+    box = site.box
+    if cause == "door unreachable":
+        stale = box.objects.get("platform/resources/srv-1/heartbeat")
+        return lambda: box.objects.put("platform/resources/srv-1/heartbeat", stale)
+    w1 = site.ws["w-1"]
+    f, d, _ = w1._presence
+    w1._presence = (f, d, None)
+    real = os.replace
+
+    def full(src, dst):
+        if str(dst).startswith(d):
+            raise OSError(28, "No space left on device")
+        return real(src, dst)
+    os.replace = full
+    try:
+        w1.heartbeat_once()
+    finally:
+        os.replace = real
+    assert site.ctl._heard("w-1").extra.get("presence_unsaid")
+    return lambda: None
+
+
+def test_an_unsure_worker_keeps_its_cameras_and_name_until_HUNG_MOVE_AFTER_then_they_move_with_an_alarm():
+    """The owner's middle way for `hung`, applied to `unsure`: a worker whose resource is there but whose word cannot be
+    taken whole (a door this process cannot reach, a name not beside its lock) kept its cameras for ever — written by
+    nobody, `worker.unjudged` all there was. Now, as a hung one, it keeps them and its name until `HUNG_MOVE_AFTER` past
+    its slot's `until`; then `unsure_moved`: the cameras move, `worker.unsure_moved` is said once an episode and
+    counted (`workers_unsure_moved_total`), and the name is given (`Worker._held`). Both causes, one rule."""
+    for cause in ("door unreachable", "name not beside its lock"):
+        site = _Site()
+        box, ctl = site.box, site.ctl
+        keep = _unsure_by(site, cause)
+        site.tick(100); keep()
+        assert site.fate() == "unsure", cause
+        rep = ctl.pass_once()
+        assert sorted(ctl.assignment("w-1").units) == site.on_w1 and rep["workers_unsure_moved_total"] == 0, (cause, rep)
+        assert rep["workers_unjudged"] == ["w-1"], (cause, rep)
+        assert site.ws["w-2"]._held("w-1", ctl.slots()["w-1"]), cause            # the name stays its holder's
+        assert ("worker.unsure_moved", ALARM) not in site.said.kinds(), cause
+        site.tick(HUNG_MOVE_AFTER); keep()                                       # still unsure, fifteen minutes on
+        assert site.fate() == "unsure_moved", cause
+        rep = ctl.pass_once()
+        assert ctl.assignment("w-1").units == [] and all(ctl.where(int(c)) == "w-2" for c in site.on_w1), (cause, rep)
+        assert "move anyway" in ctl.placement(int(site.on_w1[0])).reason, cause
+        assert rep["workers_unjudged"] == [] and rep["workers_unsure_moved_total"] == 1, (cause, rep)
+        assert not ctl.slots()["w-1"].released, cause                            # the slot stays: the process may come back
+        keep()
+        assert ctl.pass_once()["workers_unsure_moved_total"] == 1, cause         # counted once an episode…
+        assert site.said.kinds().count(("worker.unsure_moved", ALARM)) == 1, cause   # …and said once
+        assert not site.ws["w-2"]._held("w-1", ctl.slots()["w-1"]), cause
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-2")
+        assert spare.name == "w-1", cause                                        # moved: the name goes with the cameras
+
+
+def test_an_unsure_worker_whose_fate_cannot_be_asked_past_the_limit_keeps_its_name():
+    """The bound does not open the old hole: past `HUNG_MOVE_AFTER` an unsure worker's name is free — but a spare whose
+    store raises while it asks cannot say so, and "not known" still keeps the name (`Worker._held`)."""
+    site = _Site()
+    box, ctl = site.box, site.ctl
+    keep = _unsure_by(site, "door unreachable")
+    site.tick(100); keep()
+    ctl.pass_once()
+    site.tick(HUNG_MOVE_AFTER); keep()
+    assert site.fate() == "unsure_moved"
+    real = box.objects.list
+
+    def failing(prefix, *a, **k):
+        if prefix.startswith("platform/resources"):
+            raise OSError(5, "I/O error")
+        return real(prefix, *a, **k)
+    box.objects.list = failing
+    try:
+        assert site.ws["w-2"]._held("w-1", ctl.slots()["w-1"])
+        spare = VmsWorker(None, box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, capacity=4,
+                          server="srv-2")
+    finally:
+        box.objects.list = real
+    assert spare.name == "w-3"

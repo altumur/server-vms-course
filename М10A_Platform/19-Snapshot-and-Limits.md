@@ -5,7 +5,7 @@
 **Время:** ~145 минут.
 
 > [!note] Что изменилось после урока (М11 без оркестратора, октябрь 2026)
-> Урок писался, когда объекты кластера М11 были переменными Nomad с потолком 64 КиБ, и этот потолок — сквозная нить первой половины. Теперь кластер стоит без оркестратора: объекты — **файлы на каждом сервере** (`cluster://`, `ClusterObjectStore`, М11, урок [6](../М11_ClusterVMS/06-what-stays-on-the-server.md)), и потолка у них нет (`max_bytes = 0`). Урок от этого не устарел, а сдвинулся: потолок по-прежнему **объявляет хранилище** — его может объявить строка хранилища кластера (`configstore://…?max_bytes=n`), хранилище в памяти, любое объектное хранилище установки, — а снимок остаётся нарезанным по воркеру по другой причине: так пишется только то, что изменилось (шаг 6а). Числа «232 КиБ против 64» ниже — замер против того потолка, и тест держит их против объявленного потолка той же величины.
+> Урок писался, когда объекты кластера М11 были переменными Nomad с потолком 64 КиБ, и этот потолок — сквозная нить первой половины. Теперь кластер стоит без оркестратора: объекты — **файлы на каждом сервере** (`cluster://`, `ClusterObjectStore`, М11, урок [6](../М11_ClusterVMS/06-what-stays-on-the-server.md)), и потолка у них нет (`max_bytes = 0`). Урок от этого не устарел, а сдвинулся: потолок по-прежнему **объявляет хранилище** — его объявляет хранилище кластера (демон держит 512 КиБ на строку, `configstore://…?max_bytes=n` — меньше), хранилище в памяти, любое объектное хранилище установки, — а снимок остаётся нарезанным по воркеру по другой причине: так пишется только то, что изменилось (шаг 6а). Числа «232 КиБ против 64» ниже — замер против того потолка, и тест держит их против объявленного потолка той же величины.
 
 ## Зачем этот урок
 
@@ -45,7 +45,7 @@
 
 И третье, чем этот урок кончается. Обе поломки выше — и переполненный снимок, и слишком большая строка — ломались **тихо**, и это отдельный дефект, который стоит починить один раз для обеих.
 
-Цикл контроллера, как он был написан в уроке 11 и жил до сих пор:
+Цикл контроллера, как он был написан в уроке 11 и жил до сих пор (`vms/__main__.py` до этого урока, `git show 9afe938^:vmsserver/vms/__main__.py`; сегодняшний цикл — в шаге 17):
 
 ```python
     while not stop.is_set():
@@ -102,7 +102,7 @@
 
 Но он покупает не то, что кажется.
 
-**Лимит — это сигнализация, а не болезнь.** Болезнь вот:
+**Лимит — это сигнализация, а не болезнь.** Болезнь вот (`publish_snapshot` в `w2cplatform/spec.py` до этого урока, `git show 21c70a7^:vmsserver/w2cplatform/spec.py`; сегодняшний — в шаге 4):
 
 ```python
     def publish_snapshot(self) -> None:
@@ -143,18 +143,24 @@
 ```python
     def snapshot_shards(self) -> dict[str, dict]:
         """The snapshot as one object per worker, keyed by shard name."""
+        with one_pass(self):                          # `server_of` per unit read every heartbeat per unit (the scaling pass)
+            return self._snapshot_shards()
+
+    def _snapshot_shards(self) -> dict[str, dict]:
         keep = ["id"] + [f for f in self.spec.snapshot if f != "id"] + ["revision"]
         now, out = self.wall(), {}
         for r in self.units():
             w = self.where(r["id"])
             self.sub.snapshot_key(w)              # refuses a worker named `unplaced` before it shadows the shard
             sh = out.setdefault(w or UNPLACED, {"cluster": self.cluster, "worker": w, "ts": now, self.spec.rows: []})
-            sh[self.spec.rows].append({**{k: r[k] for k in keep if k in r}, "worker": w,
+            # An address leaves with no credential in it (`hide_in_url`; the eleventh review, blocker 4): a row stored before
+            # the refusal, or by another build, carried its `?pwd=` into the domain's directory.
+            sh[self.spec.rows].append({**{k: hide_in_url(r[k]) for k in keep if k in r}, "worker": w,
                                        "server": self.server_of(w or "")})
         return out
 ```
 
-Отбор полей — тот же, что был в уроке 11, и список `snapshot:` из YAML продолжает решать, что уезжает. Изменилась только **раскладка по объектам**.
+Отбор полей — тот же, что был в уроке 11, и список `snapshot:` из YAML продолжает решать, что уезжает. Изменилась только **раскладка по объектам**. Две поздние добавки не меняют формы: обёртка `one_pass` держит прочитанное на проход, чтобы `server_of` на каждую единицу не перечитывал каждый heartbeat (проход масштабирования, урок 8), а `hide_in_url` вынимает пароль из адреса, прежде чем строка уедет в каталог домена (одиннадцатое ревью).
 
 `now` берётся один раз на весь проход, а не на каждый шард: у всех шардов одного прохода один и тот же `ts`. Это не косметика — читатель ниже на него опирается.
 
@@ -164,6 +170,10 @@
 
 ```python
     def publish_snapshot(self) -> None:
+        with one_pass(self):
+            self._publish_snapshot()
+
+    def _publish_snapshot(self) -> None:
         import json
         shards = self.snapshot_shards()
         prefix = self.sub.snapshot_prefix()
@@ -173,9 +183,20 @@
         for key in self.objects.list(prefix):
             shards.setdefault(key[len(prefix):], {"cluster": self.cluster, "worker": None, "ts": self.wall(),
                                                   self.spec.rows: []})
+        # A cluster with no units at all — a camera's cluster before its camera, a recording cluster before
+        # its first recording — would publish NOTHING, and "published that there are none" would read as
+        # "never published" (feedback AA). М12's member that has not published does not report (Lesson 10),
+        # so such a cluster stayed "never reported" for ever. An empty `unplaced` shard is the statement.
+        if not shards:
+            shards[UNPLACED] = {"cluster": self.cluster, "worker": None, "ts": self.wall(), self.spec.rows: []}
         for name, shard in shards.items():
-            self.objects.put(prefix + name, json.dumps(shard).encode())
+            try:
+                self.objects.put(prefix + name, json.dumps(shard).encode())
+            except TooLarge as e:
+                # …
 ```
+
+Что делает ветка `except TooLarge` — в шаге 10.
 
 Вот цена, которую платит шардирование, и её стоит понять до конца.
 
@@ -184,6 +205,8 @@
 Значит, воркер, которого убрали при scale-in, оставляет свой последний шард **навсегда**, и домен продолжит читать из него камеры, которых там нет, от воркера, которого нет. Лечится это не удалением, а записью: шард, который этот проход не заполнил, пишется **пустым**.
 
 Именно поэтому `objects.list(prefix)` в этом методе — не оптимизация и не удобство. Это единственный способ узнать, что когда-то было написано.
+
+Та же мысль с другого конца — кластер, у которого единиц нет вовсе. Ему нечего публиковать, и «опубликовал, что их нет» читалось бы как «не публиковал ни разу» (отзыв AA). Поэтому такой кластер пишет пустой шард `unplaced`: пустой объект и здесь — утверждение.
 
 > **Проверено снятием.** Уберите цикл `for key in self.objects.list(prefix)` — и `test_a_worker_that_is_gone_stops_reporting_its_cameras` падает, а остальные 115 тестов проходят. Уберите вызов `self.sub.snapshot_key(w)` — падает `test_a_worker_may_not_be_called_unplaced`, и снова только он.
 
@@ -201,7 +224,10 @@
             raw = self.objects.get(key)
             if not raw:
                 continue
-            shard = json.loads(raw)
+            shard = published(self.name, key, raw, _a_shard)
+            if shard is None:
+                oldest = 0.0                       # a shard nobody can read has no age: the copy is as old as can be
+                continue
             ts = float(shard.get("ts", 0))
             oldest = ts if oldest is None else min(oldest, ts)
             for row in shard.get("cameras", []):
@@ -213,7 +239,7 @@
 
 Два решения, и оба стоят объяснения.
 
-**Возраст целого — возраст самого старого шарда.** Единого мгновения, в которое весь кластер был в этом состоянии, больше нет: объекты читаются по одному. `ts` снимка — это RPO домена, то, насколько он отстал; складывать туда самый свежий шард значило бы показывать RPO лучше, чем он есть. Каталог свеж настолько, насколько свежа его самая несвежая часть.
+**Возраст целого — возраст самого старого шарда.** Единого мгновения, в которое весь кластер был в этом состоянии, больше нет: объекты читаются по одному. `ts` снимка — это RPO домена, то, насколько он отстал; складывать туда самый свежий шард значило бы показывать RPO лучше, чем он есть. Каталог свеж настолько, насколько свежа его самая несвежая часть. Отсюда и шард, который не читается (`published` с проверкой `_a_shard`: не JSON, `ts` не конечное число, строка камеры не объект): он пропускается и считается один раз, а копия кластера становится самой старой, какая бывает, — `oldest = 0.0`, а не «свежая без этого шарда».
 
 **Камера, пойманная на переезде, читается один раз, из более свежего шарда.** Домен читает шарды по очереди, и писатель может оказаться между двумя `put` — тогда камера окажется и в старом шарде, и в новом. Это **не** та авария, на которой `where()` поднимает `RuntimeError`: там два разных **кластера** заявляют права на камеру, и это действительно отказ размещения. Здесь — обычный переезд внутри одного кластера, и правильный ответ на него «она на w-1», а не исключение.
 
@@ -325,7 +351,7 @@ def items_bytes(items: dict) -> int:
     return sum(len(str(k).encode()) + len(str(v).encode()) for k, v in items.items())
 ```
 
-Ключи и значения вместе — так Nomad считал Variable, и так меряют строку все бэкенды платформы. А настоящее число живёт там, где ему место, — в самом хранилище, и объявляется вместе с тем, **какое** это хранилище. У хранилища кластера — в URL, как у `memory://` (шаг 9); у демона потолка нет, и без параметра его нет и у ручки (`w2cplatform/configstorevars.py`):
+Ключи и значения вместе — так Nomad считал Variable, и так меряют строку все бэкенды платформы. А настоящее число живёт там, где ему место, — в самом хранилище, и объявляется вместе с тем, **какое** это хранилище. У хранилища кластера потолок свой: демон не берёт строку тяжелее `storemachine.MAX_VALUE` (512 КиБ, считая так же, `items_bytes`), и ручка объявляет это число своим `max_bytes`; URL может объявить меньше, как у `memory://` (шаг 9) (`w2cplatform/configstorevars.py`):
 
 ```python
 # `configstore:///run/configstore/<role>.sock[?max_bytes=n&timeout=s]` — this server's daemon, by the role's socket.
@@ -333,7 +359,8 @@ def _open(url: str, writer: str | None = None, acl: dict[str, list[str]] | None 
 ```
 
 ```python
-        self.max_bytes = max_bytes                # declared on the URL, like `memory://`: the daemon has no ceiling
+        # The daemon's ceiling, or less when the URL declares less, like `memory://` (twelfth pass).
+        self.max_bytes = min(max_bytes, MAX_VALUE) if max_bytes else MAX_VALUE
 ```
 
 У объектов кластера — ответ «нет потолка», и это тоже ответ (`М11_ClusterVMS/clustervms/cluster/objectstore.py`):
@@ -353,7 +380,7 @@ def _open(url: str, writer: str | None = None, acl: dict[str, list[str]] | None 
     anything, and a write that production would reject was green in every test.
 ```
 
-Пункт из двух половин, потому что первая есть у каждого бэкенда, а вторая — не у каждого. **Каждый стор отвечает** на вопрос `max_bytes`; каталог отвечает «0», и это ответ, а не отсутствующий атрибут. **Стор, объявивший потолок,** отказывает и оставляет прежнее значение на месте. (Текст пункта в наборе ещё называет Nomad: так пункт появился. Сегодня потолок объявляют `memory://…?max_bytes=n` и `configstore://…?max_bytes=n`, а у файлов, каталога объектов и демона хранилища его нет.)
+Пункт из двух половин, потому что первая есть у каждого бэкенда, а вторая — не у каждого. **Каждый стор отвечает** на вопрос `max_bytes`; каталог отвечает «0», и это ответ, а не отсутствующий атрибут. **Стор, объявивший потолок,** отказывает и оставляет прежнее значение на месте. (Текст пункта в наборе ещё называет Nomad: так пункт появился. Сегодня потолок объявляют демон хранилища кластера — `storemachine.MAX_VALUE`, 512 КиБ на строку, и меньше, если так скажет `configstore://…?max_bytes=n`, — и `memory://…?max_bytes=n`, а у файлов и каталога объектов его нет.)
 
 Чтобы вторая половина не осталась теорией, у `memory://` появился параметр:
 
@@ -428,10 +455,15 @@ def digest(data: bytes) -> str:
 ```python
     def put_blob(self, data: bytes) -> str:
         """Store the bytes; return the digest to put in the row."""
+        import json
         d = blob_digest(data)
-        self.objects.put(self.sub.blob_key(d), data)
+        # …
+        # On the platter before the row names it (`FsObjectStore.put_durable`); a store without the barrier puts as it can.
+        getattr(self.objects, "put_durable", self.objects.put)(self.sub.blob_key(d), data)
         return d
 ```
+
+Пропущенное на месте `# …` — снятие этих байтов со списка уборки (урок 20): к этому уроку его нет. `put_durable` — запись с барьером: объект на диске раньше, чем строка его назовёт.
 
 Порядок — не стилистика. Падение между двумя записями оставляет **объект, на который никто не показывает**: безвредно и собираемо. Обратный порядок оставляет **строку, показывающую в никуда**, — единицу, которая не может стартовать.
 
@@ -471,7 +503,7 @@ def digest(data: bytes) -> str:
             return h._send(404, {"detail": f"{field} is not a blob field", "error": "no such blob field"})
         try:
             known = self.ctl.unit(self._uid(path)) is not None
-        except (ValueError, KeyError):
+        except PARSE_ERRORS:
             known = False
         if not known:
             h.close_connection = True
@@ -495,9 +527,11 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 
 ```python
             # The blob is bigger than the STORE will hold — which is the one case where changing the store
-            # is the answer, because a blob is exactly the class of data an object store exists for.
-            return 413, {"detail": f"{e} — a blob is what an object store is for: OBJECTS=s3+https://… "
-                                   f"holds this, variables:// does not", "error": str(e)}
+            # is the answer, because a blob is exactly the class of data an object store exists for. The cluster's
+            # objects are files on each server (`OBJECTS=cluster://…`, `cluster/objectstore.py`) with no ceiling; a
+            # store that declares one (`?max_bytes=`) is what refused this.
+            return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
+                                   f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
 ```
 
 Разница с уроком 25 стоит того, чтобы её проговорить. Снимок был **проблемой формы**: один объект рос вместе с кластером, и смена хранилища сняла бы будильник, а не счёт. Блоб — **класс данных, ради которого объектные хранилища существуют**. Тот же совет, диаметрально разная обоснованность.
@@ -505,12 +539,11 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 ## Шаг 16 — Мусор, которого никто не собирает
 
 ```python
-    # Every digest any row currently names: what a sweep would keep. There is no sweep — nothing in the
-    # platform deletes an object — and this is the half of it that can be written honestly today.
+    # Every digest any row currently names: what the sweep keeps (`sweep_blobs`, below).
     def blobs_referenced(self) -> set[str]:
 ```
 
-Заменённая маска остаётся в сторе навсегда. Уборки нет, и `blobs_referenced` — та половина, которую сегодня можно написать честно: список, который сказал бы сборщику, что оставить. Тест называет мусор своим именем:
+Заменённая маска остаётся в сторе. В этом уроке уборки нет, и `blobs_referenced` — та половина, которую можно написать честно уже здесь: список, который скажет сборщику, что оставить. Сам сборщик (`sweep_blobs`: пометить, подождать, снести) пишет урок 20, и комментарий в коде уже ссылается на него. Тест называет мусор своим именем:
 
 ```python
     assert stored == {old, new}                                  # both still there
@@ -526,7 +559,7 @@ Id единицы маршрут берёт через `_uid` — тот же `p
         # and server, which the placement pass has just read — kept for the pass, they cost the snapshot no read at all
         # (`contract.one_pass`; what the pass wrote is read back from the store).
         with ctl.one_pass():
-            ctl.pass_once(1)                          # place, move, bring ONE unit home — and report on itself; it does not raise
+            ctl.pass_once(1)                          # place, move (what a server no longer reaches too), bring ONE unit home — and report; it does not raise
             # Its OWN try, and this is not tidiness. Publishing is the last call in the pass, so when it threw
             # inside the block above, placement had already succeeded — and the log said "placement pass
             # failed", naming the one thing that had not. The reverse hid the other half: a placement that
@@ -698,7 +731,7 @@ Id единицы маршрут берёт через `_uid` — тот же `p
 
 Главное здесь не в блобах. Ссылка сделана дайджестом, и из этого одного выбора выпали ротация, кэш, дедупликация и неизменяемость ключа — ни одного из них не пришлось строить. Так выглядит выбор представления, который платит за себя, и он стоит того, чтобы его искать.
 
-Честный остаток записан двумя строчками: порядок записи проверен рассуждением, а не тестом, и уборки осиротевших блобов не существует.
+Честный остаток записан двумя строчками: порядок записи проверен рассуждением, а не тестом, и уборки осиротевших блобов в этом уроке нет (её пишет урок 20).
 Один `try` вокруг двух работ — это не экономия трёх строк, это потеря различия. Размещение и публикация падают по разным причинам, значат разное и требуют разного, а сообщение было одно и называло не то.
 
 Теперь их два, и второе говорит о последствии: «слой выше читает устаревшую копию». Возраст этой копии читается из хранилища — оттуда на него может ответить любой, у кого есть порт, — и выходит числом, которое растёт, а не строкой на хосте, куда никто не смотрит. `-1` отделяет «ни разу» от «только что». В домене то же число наконец поднято на поверхность, рядом и **отдельно** от молчащих воркеров, потому что это разные аварии.
