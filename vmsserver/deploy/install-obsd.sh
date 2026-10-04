@@ -7,16 +7,21 @@
 # ================================================================================================
 # # install-obsd.sh — the box's half of obsd.service
 #
-# **Role.** `obsd.service` runs the daemon as `obsd:vms-rec`, and nothing on a fresh box made that user, that group,
+# **Role.** `obsd.service` runs the daemon as `vms-obsd:vms-obsd`, and nothing on a fresh box made that user, that group,
 # /run/vms or the box's own volume — the unit failed with 217/USER, the units mounting /run/vms with it; on a box
 # upgraded from a daemon that ran as root, the rings were root's and the daemon could not open them: the volume
 # `wrong`, nothing recorded (the review's fourth pass, blocker 2). This script does once what the box needs, and
 # hands the rest to systemd, which does it again at every boot:
 #
-# 1. `obsd.sysusers` → /etc/sysusers.d/obsd.conf, applied: the user `obsd`, the group `vms-rec` with gid 2101.
+# 1. `obsd.sysusers` → /etc/sysusers.d/obsd.conf, applied: the user and the group `vms-obsd`, the group with gid 2101.
 # 2. The gid checked: the recorders join the group BY NUMBER (`GroupAdd=2101` — a container has no /etc/group of
-#    the host's), so a `vms-rec` made earlier with another number is a recorder the daemon refuses. Said, not fixed.
-# 3. `vms.tmpfiles` → /etc/tmpfiles.d/vms.conf, applied: /run/vms, /run/obsd, /data/volume.
+#    the host's), so a `vms-obsd` made earlier with another number is a recorder the daemon refuses. Said, not fixed
+#    — and on a box set up under the course's old names (`obsd`, `vms-rec`), whose `vms-rec` still holds 2101, the
+#    old user and group are named as what to remove.
+# 3. `w2c.tmpfiles` → /etc/tmpfiles.d/w2c.conf (the platform's: /data/platform, /data/secrets) and `vms.tmpfiles` →
+#    /etc/tmpfiles.d/vms.conf (the VMS's: /run/vms, /run/vms-obsd, /run/vms-console, /data/volume), applied. Both
+#    here because the box has no installer of the platform's own (the product's is its install.sh), and a unit that
+#    mounts a directory nobody made does not start.
 # 4. WHICH VOLUMES (the review's sixth pass, minor: the script knew /data/volume and what it was told, and a volume
 #    declared on another disk of this box stayed root's unless somebody remembered its path). /data/volume; each
 #    directory named on the command line; and every volume DECLARED for this box — the rows `rec/volumes/*` of the
@@ -24,7 +29,8 @@
 #    cluster whose store is not a directory (М11: Nomad variables) has no rows here to read: its paths are named on
 #    the command line, and the script says it found none.
 # 5. THE UPGRADE, and THE DAEMON STOPPED FOR IT — only for it (the fifth pass, major; the sixth, minor). A volume is
-#    handed to `obsd:vms-rec` if anything in it is not `obsd`'s yet: a ring formatted by a daemon that ran as root.
+#    handed to `vms-obsd:vms-obsd` if anything in it is not `vms-obsd`'s yet: a ring formatted by a daemon that ran as
+#    root, or as the course's old user `obsd`.
 #    That daemon was still writing while the volumes were handed over, and made new blocks — root's — behind the
 #    `chown -R`: nothing is handed over while a daemon runs. So one that runs is stopped first — and CHECKED to be
 #    down: `stop`'s failure used to be thrown away (`|| true`), and a daemon that did not stop was chowned under.
@@ -53,15 +59,20 @@ running() {                                         # the unit active, or a proc
 install -D -m 0644 "$HERE/obsd.sysusers" /etc/sysusers.d/obsd.conf     # -D: a minimal box has no /etc/sysusers.d yet
 systemd-sysusers /etc/sysusers.d/obsd.conf
 
-GID="$(getent group vms-rec | cut -d: -f3)"
+GID="$(getent group vms-obsd | cut -d: -f3)"
 if [ "$GID" != 2101 ]; then
-  echo "the group vms-rec has gid $GID, and the recorders join 2101 (GroupAdd=2101 in recworker@.container):" >&2
+  echo "the group vms-obsd has gid $GID, and the recorders join 2101 (GroupAdd=2101 in recworker@.container):" >&2
+  # a box set up under the course's old names: its `vms-rec` holds 2101, and sysusers gave `vms-obsd` another number
+  if getent group vms-rec >/dev/null 2>&1; then
+    echo "the old group vms-rec still holds a number: stop obsd, 'userdel obsd; groupdel vms-rec', run this again" >&2
+  fi
   echo "change one of them so that they agree, then run this again" >&2
   exit 1
 fi
 
+install -D -m 0644 "$HERE/w2c.tmpfiles" /etc/tmpfiles.d/w2c.conf
 install -D -m 0644 "$HERE/vms.tmpfiles" /etc/tmpfiles.d/vms.conf
-systemd-tmpfiles --create /etc/tmpfiles.d/vms.conf
+systemd-tmpfiles --create /etc/tmpfiles.d/w2c.conf /etc/tmpfiles.d/vms.conf
 
 # 4: the volumes — the box's own, the ones named, the ones declared for this box in its own store
 VOLS="$(mktemp)"; HAND="$(mktemp)"
@@ -82,10 +93,10 @@ for ROW in "$STORE"/rec%2Fvolumes%2F*.json; do
 done
 [ "$FOUND" -gt 0 ] || echo "no volume declared for $SERVER in $STORE: only /data/volume and the paths named here are looked at"
 
-# 5: what is not obsd's yet — and the daemon stopped for the handing over, only for it, and seen to be down
+# 5: what is not vms-obsd's yet — and the daemon stopped for the handing over, only for it, and seen to be down
 while IFS= read -r VOL; do
   mkdir -p "$VOL"
-  if [ -n "$(find "$VOL" \( ! -user obsd -o ! -group vms-rec \) -print -quit)" ]; then
+  if [ -n "$(find "$VOL" \( ! -user vms-obsd -o ! -group vms-obsd \) -print -quit)" ]; then
     printf '%s\n' "$VOL" >> "$HAND"
   fi
 done < "$VOLS"
@@ -102,8 +113,8 @@ if [ -s "$HAND" ]; then
     exit 3
   fi
   while IFS= read -r VOL; do
-    echo "$VOL: handing it to obsd:vms-rec (formatted when the daemon ran as another user)"
-    chown -R obsd:vms-rec "$VOL"
+    echo "$VOL: handing it to vms-obsd:vms-obsd (formatted when the daemon ran as another user)"
+    chown -R vms-obsd:vms-obsd "$VOL"
   done < "$HAND"
 fi
 while IFS= read -r VOL; do
@@ -125,4 +136,4 @@ elif ! systemctl is-active --quiet obsd.service; then
 else
   echo "nothing changed: the running daemon is left as it is, and no recording is interrupted"
 fi
-echo "obsd: $(systemctl is-active obsd.service), socket /run/obsd/obsd.sock"
+echo "obsd: $(systemctl is-active obsd.service), socket /run/vms-obsd/obsd.sock"

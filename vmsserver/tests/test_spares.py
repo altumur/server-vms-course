@@ -7,7 +7,7 @@ held and redistributed (`SpecController.offer_spares`), it counts, per label set
 set: `<sub>_units_short`; `ceil(short / CAPACITY)` workers, less the offers taken by a spare not heard yet (for 90 s),
 is `<sub>_workers_needed`. For each it writes an OFFER: an empty slot row `<sub>/slots/<w-N>` `{holder:"", until:"0",
 released:"false", gen:"0", offer:"<set>", offered_at:<ts>}`, created with `cas=0`, and removes by CAS delete the ones
-not needed any more. A spare (`SPARE_FOR=<set>`, started by `vms-spares.sh`) takes only an offer of its set, by CAS;
+not needed any more. A spare (`SPARE_FOR=<set>`, started by `w2c-spares.sh`) takes only an offer of its set, by CAS;
 with none it waits holding nothing. An ordinary process never takes an offer. The console publishes the numbers on
 `/metrics` without a token while the pass is at most a minute old.
 """

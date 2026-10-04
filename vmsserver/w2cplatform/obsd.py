@@ -75,17 +75,31 @@ FLAG_NEED_KEY_FRAME = 1 << 0              # this sample needs an earlier key fra
 FLAG_NEED_PREVIOUS_FRAME = 1 << 3
 
 
-# Where the course's daemon listens: `/run/obsd/obsd.sock`, the directory of its own that `obsd.service` gives it
-# and only the recorder mounts (the review's third pass) — not the daemon's built-in `/run/vms/obsd.sock`, which the
-# client kept as its default after the unit moved: a recorder started without `OBSD_SOCKET` (М11's job did not set
-# it) looked beside the workers' shared memory and found no daemon there, for ever (the review's fourth pass,
-# blocker 3). On macOS the daemon's own default, per user.
+# Where the course's daemon listens: `/run/vms-obsd/obsd.sock`, the directory of its own that `obsd.service` gives
+# it and only the recorder mounts (the review's third pass) — the product's path (its `vms-obsd.service`; the course's
+# was /run/obsd until it took the product's names). Not the daemon's built-in `/run/vms/obsd.sock`, which the client
+# kept as its default after the unit moved: a recorder started without `OBSD_SOCKET` (М11's job did not set it)
+# looked beside the workers' shared memory and found no daemon there, for ever (the review's fourth pass, blocker 3).
+# On macOS the daemon's own default, per user — the product's too.
 def default_socket() -> str:
     """Where the daemon listens unless told otherwise: `OBSD_SOCKET`, else where `obsd.service` puts it."""
     if os.environ.get("OBSD_SOCKET"):
         return os.environ["OBSD_SOCKET"]
     import sys
-    return f"/tmp/vms-obsd-{os.getuid()}.sock" if sys.platform == "darwin" else "/run/obsd/obsd.sock"
+    return f"/tmp/vms-obsd-{os.getuid()}.sock" if sys.platform == "darwin" else "/run/vms-obsd/obsd.sock"
+
+
+# The name a session says in HELLO when its caller names none: the PROCESS's — `python3 -m vms` is `vms`, a script
+# `run.py` is `run` — and not a subsystem's. This is the platform's library; it used to say "vms" for every caller.
+def process_name() -> str:
+    """This process's name, as HELLO and a session's token carry it: letters, digits, `.`, `_`, `-`."""
+    import sys
+    arg0 = sys.argv[0] if sys.argv and sys.argv[0] else ""
+    base = os.path.basename(arg0)
+    if base == "__main__.py":                                   # `python3 -m <package>`: the package
+        base = os.path.basename(os.path.dirname(arg0))
+    base = base[:-3] if base.endswith(".py") else base
+    return "".join(c if c.isalnum() or c in "._-" else "-" for c in base) or "python"
 
 
 def archive_ms(unix_s: float) -> int:
@@ -272,8 +286,9 @@ class Session:
     the silence and answered late closes the old session's handle and nothing else: a handle never repeats, and a
     new session's writer has a handle of its own."""
 
-    def __init__(self, path: str | None = None, client: str = "vms", token: str | None = None,
+    def __init__(self, path: str | None = None, client: str | None = None, token: str | None = None,
                  timeout: float = 35.0, log_level: str = "warning", long_timeout: float = 35.0):
+        client = client or process_name()                        # the process's name, not a subsystem's
         self.path, self.client, self.timeout, self.log_level = path or default_socket(), client, timeout, log_level
         self.long_timeout = max(long_timeout, timeout)
         self.token = token or f"{client}-{os.getpid()}-{uuid.uuid4().hex[:8]}"

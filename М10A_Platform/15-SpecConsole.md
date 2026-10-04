@@ -518,17 +518,14 @@ class Journal:
         p = self.spec.name
         hbs = heartbeats(self.ctl.objects, p + "/"); now = self.wall()
         live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
-        res = resources_seen(self.ctl.objects)
         hk = self.ctl.sub.heartbeat_key
+        failover = self.ctl.failover_seconds()
 
         def n(w: str, field: str, kind=float, default=0):                # a worker's field
             return number(f"{hk(w)}#{field}", hbs[w].extra.get(field), kind, default)
-
-        def rn(server: str, field: str, value, kind=float):               # a resource's field
-            return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
 ```
 
-**Каждое число heartbeat'а здесь читается через `n` или `rn`, а числа отчёта о проходе — через `r`** (седьмое ревью, часть 2). Голое `int(headroom)` или `float(space.full)` бросало на одном слове в одном поле одного heartbeat'а, и пропадала вся страница метрик подсистемы — а с ней каждый алерт. `rows.number(key, value, kind, default)` (урок 8, шаг 5) отдаёт конечное число нужного вида; слово, `nan` или `inf` — «не сказано»: `default` (0, у возрастов −1), посчитано один раз на объект и поле (ключ `<объект>#<поле>`, таблица `field`), остальная страница стоит. Отсутствующее поле — тоже `default`, но не считается. Тест: `test_row_reader.py::test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page`.
+**Каждое число heartbeat'а здесь читается через `n` (у ресурса — через `rn`, в `platform_metrics` ниже), а числа отчёта о проходе — через `r`** (седьмое ревью, часть 2). Голое `int(headroom)` или `float(space.full)` бросало на одном слове в одном поле одного heartbeat'а, и пропадала вся страница метрик подсистемы — а с ней каждый алерт. `rows.number(key, value, kind, default)` (урок 8, шаг 5) отдаёт конечное число нужного вида; слово, `nan` или `inf` — «не сказано»: `default` (0, у возрастов −1), посчитано один раз на объект и поле (ключ `<объект>#<поле>`, таблица `field`), остальная страница стоит. Отсутствующее поле — тоже `default`, но не считается. Тест: `test_row_reader.py::test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page`.
 
 Формат Prometheus — это текст. Никакой библиотеки, никакого реестра, никакого клиента: `# TYPE`, имя, метки в фигурных скобках, число. Двадцать строк кода вместо зависимости, которую пришлось бы тащить на коробку.
 
@@ -571,12 +568,10 @@ class Journal:
                  f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, getattr(self.ctl, "failover_worst", 0.0), *failover.values()])}',
                  *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
                  f"# TYPE {p}_failovers_unmeasured gauge", f"{p}_failovers_unmeasured {getattr(self.ctl, 'failovers_unmeasured', 0)}",
-                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
                  # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
                  f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
-                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
                  f"# TYPE {p}_{self.spec.running_gauge} gauge",
@@ -589,7 +584,32 @@ class Journal:
 
 `running_gauge` — снова имя из YAML: у камер это `cameras_streaming`, у счётчика `ticks_ticking`. Считается перечислением статусов живых воркеров с `phase == running` — то есть **не** «сколько настроено», а «сколько на самом деле идёт».
 
-Дальше в `lines` идут возраст снимка, диски серверов, ожидания ресурсов, проход контроллера и строки, которые не разбираются (таблица ниже), очередь сборщика блобов, если у подсистемы есть блобы, и числа самой подсистемы (`metrics_extra`). Ответ (`return "\n".join(lines) + "\n"` в конце метода) заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
+Дальше в `lines` идут возраст снимка, проход контроллера и строки, которые не разбираются (таблица ниже), очередь сборщика блобов, если у подсистемы есть блобы, числа самой подсистемы (`metrics_extra`) и — один раз на процесс консоли — числа платформы. Ответ (`return "\n".join(lines) + "\n"` в конце метода) заканчивается переводом строки: Prometheus на это не жалуется, а `curl` без него печатает промпт впритык.
+
+**Ресурсы — числа платформы, и говорятся они один раз, под именем `w2c`** (решение курса о платформенных именах, по правилу продукта: платформа — `w2c`, VMS — одна из её подсистем). Ресурс — один на сервер, что бы в него ни писали подсистемы. А каждая смонтированная консоль повторяла его числа под своим префиксом: `vms_resources_live`, `det_resources_live`, `detjob_resources_live` — один факт столько раз, сколько подсистем в процессе, и алерт на диск, написанный по `vms_resource_full`, молчал бы на консоли без VMS. Теперь живые ресурсы, их диски, ожидания, нечитаемые строки, зеркало и восстановление — в `platform_metrics`, с префиксом `w2c`:
+
+```python
+        if self.says_platform:
+            lines += self.platform_metrics(now)                # the platform's, once per console process
+        return "\n".join(lines) + "\n"
+
+    # THE PLATFORM'S OWN NUMBERS: the resources, under the platform's name `w2c` — one resource per server, whatever
+    # subsystems write into it, so one set of lines per console process and not one per subsystem (`metrics_text`).
+    # Every number of a heartbeat through `rn`, as above (the review's seventh pass).
+    PLATFORM = "w2c"
+
+    def platform_metrics(self, now: float) -> list[str]:
+        p, res = self.PLATFORM, resources_seen(self.ctl.objects)
+
+        def rn(server: str, field: str, value, kind=float):               # a resource's field
+            return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
+        lines = [f"# TYPE {p}_resources_live gauge",
+                 f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
+                 # resource heartbeats that did not parse, since this process started (the review's second pass, M6)
+                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}"]
+```
+
+Кто их говорит, решает `Mount` (шаг 14): консоль, которая работает одна, — сама; в `Mount` — только корень, в том числе когда подсистему смонтировали позже (`console.says_platform = console is self.root` в `Mount._adopt`). Скрейп всех страниц процесса видит каждое число ресурса один раз. Тест: `test_one_bad_element.py::test_the_resources_are_said_once_per_console_under_the_platforms_name`. В продукте таких метрик пока нет — имена ему переданы.
 
 **Проход контроллера — тоже отсюда.** У контроллера нет порта, и спросить его не о чем. Он оставляет отчёт о проходе в хранилище объектов (урок 11, шаг 9), а консоль его отдаёт — по каждой подсистеме, с её префиксом:
 
@@ -607,8 +627,8 @@ class Journal:
 | `<p>_worker_store_errors{worker}`, `<p>_worker_pass_failures{worker}` | сколько раз хранилище ему не ответило; сколько раз часть его цикла упала |
 | `<p>_worker_slots_garbled{worker}` | сколько строк слотов воркер не смог разобрать, когда искал слот: каждая — имя, которое никто не возьмёт и никого под ним не увидят (шестое ревью) |
 | `<p>_worker_<table>s_garbled{worker}` | то же по другим таблицам, которые знает процесс консоли (`rows.counts`): `holds_garbled` — место, которое никто не возьмёт; `assignments_garbled`; у регистратора — `volumes_garbled`, `keeps_garbled`. Строки, каждая один раз, пока снова не разберётся, — не чтения (седьмое ревью: `holds_garbled` был в heartbeat'е, а здесь не был) |
-| `<p>_resource_rows_garbled{server,table}`, `<p>_resource_space_garbled{server}` | строки, которые не разобрал ресурс сервера, по таблицам, и испорченная `platform/space` (тогда водяная отметка — по последней настройке или умолчаниям); раньше были только в heartbeat'е ресурса (восьмое ревью) |
-| `<p>_resource_restore_left{server}`, `<p>_resource_restore_failures_total{server}`, `<p>_resource_mirror_failures_total{server}`, `<p>_resource_mirror_too_big_total{server}` | что ресурс ещё не привёз при `restore` (он повторяет его в своём цикле, по пиру и ведру), сколько раз пир или ведро не отдались, сколько копий зеркала не легло и сколько вёдер больше `MIRROR_MAX` пропущено (восьмое ревью) |
+| `w2c_resource_rows_garbled{server,table}`, `w2c_resource_space_garbled{server}` (числа платформы, один раз на процесс) | строки, которые не разобрал ресурс сервера, по таблицам, и испорченная `platform/space` (тогда водяная отметка — по последней настройке или умолчаниям); раньше были только в heartbeat'е ресурса (восьмое ревью) |
+| `w2c_resource_restore_left{server}`, `w2c_resource_restore_failures_total{server}`, `w2c_resource_mirror_failures_total{server}`, `w2c_resource_mirror_too_big_total{server}` (числа платформы) | что ресурс ещё не привёз при `restore` (он повторяет его в своём цикле, по пиру и ведру), сколько раз пир или ведро не отдались, сколько копий зеркала не легло и сколько вёдер больше `MIRROR_MAX` пропущено (восьмое ревью) |
 | `rec_volume_wait{worker}`, `auto_wants_folded{worker}`, `rec_stream_lagging{worker}`, `rec_stream_behind_seconds{worker}`, `rec_stream_skipped_seconds_total{worker,why}`, `rec_keep_missing_seconds{keep}` | числа подсистем (`metrics_extra`): регистратор, привязанный к тому, чей холд чужой, и ждущий (1); вычислитель, свернувший подписки длинного опроса по `(sub, kind)`, потому что троек больше `WANTS_MAX`; несёт ли аплинк поток камерного регистратора и насколько тот отстал от живого края; секунды, которых поток не донёс, по причине — `cut` (срезано до живого края), `left` (оставлено дозаписи после обрыва), `failed` (карта не смогла их отдать) и `evicted` (бюджет карты отпустил их раньше, чем они дошли до сервера; девятое ревью, `test_camera_card.py::test_footage_on_no_copy_is_one_alarm_an_episode_and_what_the_card_let_go_of_unsent_is_on_metrics`); недостача удержания (восьмое ревью) |
 | `rec_stream_owed_unknown{worker}`, `rec_stream_evicted_unknown_seconds_total{worker}`, `rec_camera_clock_stepped_seconds_total{worker,way}`, `rec_camera_clock_set_total{worker}`, `rec_camera_frames_ahead_total{worker}` | то, что пульс регистратора камеры говорил, а `/metrics` — нет (одиннадцатое ревью, minor): регистратор подключён наполовину, и карта не знает, что есть у сервера (`stream.owed: unknown` — 1); секунды, которые карта отпустила, не зная, были ли они у сервера (`evicted_unknown_s`: наполовину подключённый регистратор или время до `since` толкателя без записки на карте, М10B урок 26); часы камеры, как их приняла линия, — секунды шагов назад и вперёд (`way="back"`, `"forward"`), сколько раз часы поставили, и кадры далеко впереди часов, отброшенные (`ahead`). Слово в одном из них — здесь ноль, со счётом (`fields_garbled`). Тест: `test_camera_card.py::test_what_a_cameras_stream_says_of_its_card_and_its_clock_is_on_metrics_not_only_in_its_heartbeat` |
 | `vms_devices_slow{worker}`, `vms_commands_in_flight{worker}`, `vms_device_identity_coincidences{worker}`, `vms_devices_opening{worker}`, `vms_device_identity_changes_total{worker}`, `vms_device_events_refused_total{worker}`, `vms_commands_reanswered_total{worker}` | чего ждёт такт держателя (`beat_lines`): устройства медленные — чья команда не ответила за `PERFORM_GRACE` или чей вопрос не ответил за `DEVICE_GRACE` (объединение `_slow` и `_slow_asks`, десятое ревью); вызовы, ещё не вернувшиеся; сколько устройств держателя совпали серийным номером с другим — пишутся оба, совпадение сказано (девятое ревью, `test_console_gate.py::test_two_devices_with_one_serial_number_are_both_recorded_and_the_coincidence_is_said`); устройства, чьё открытие не вернулось, — `state: opening` (десятое ревью, `test_long_poll.py::test_a_device_that_has_not_opened_is_in_the_heartbeat_as_opening_and_one_that_refused_as_failed`); сколько раз устройство под тем же ключом назвало другой серийный номер (сосед десятого ревью, `test_long_poll.py::test_another_serial_number_under_the_same_key_is_said_and_counted`); строки, которые устройство выложило на шину, а записать их нельзя, — отброшены, остальная шина записана (`drain_bus`, `test_one_bad_element.py::test_a_line_a_device_posts_that_cannot_be_written_is_that_lines_and_the_bus_goes_on`); ответы, сказанные повтором после перезапуска (М10B, урок 4; восьмое ревью) |
@@ -909,7 +929,7 @@ Mount(cameras).mount("rec", rec).mount("det", det).mount("an", an).serve(port=80
 
 `/det` без остатка даёт `"/"` — то есть страницу подсистемы `det`. Та же страница: она строит себя из `/spec`, и `spec` у неё свой.
 
-И главное: **консоль не знает, что она смонтирована.** Её `dispatch` получает путь уже без префикса и работает так же, как если бы сидела на своём порту. Ради этого `dispatch` в шаге 5 принимает обработчик аргументом, а не является его методом.
+И главное: **консоль не знает, что она смонтирована.** Её `dispatch` получает путь уже без префикса и работает так же, как если бы сидела на своём порту. Ради этого `dispatch` в шаге 5 принимает обработчик аргументом, а не является его методом. Одно знание `Mount` ей всё же передаёт — корень ли она: числа платформы (`w2c_resources_live`, `w2c_resource_*`, шаг 11) говорит только корень, и `Mount._adopt` ставит `says_platform` каждой консоли, смонтированной сразу или позже.
 
 Коллизия имён возможна: подсистема с именем `spec` или `metrics` перехватила бы маршрут корня. Проверки на это нет — есть соглашение, что имя подсистемы совпадает с её префиксом в хранилище, а префиксы и так должны быть различны.
 
@@ -927,7 +947,7 @@ Mount(cameras).mount("rec", rec).mount("det", det).mount("an", an).serve(port=80
 | `/servers` | `"server": ["srv-x"]` в пульсе воркера — `TypeError` (ключ словаря); `5` среди строк — `TypeError` в `sorted` | пульс не разбирается (`contract._named`), пропущен и посчитан; остальные серверы на месте |
 | `/unplaceable` | тот же пульс; `source` камеры `rtsp://[::1/x` — `ValueError: Invalid IPv6 URL` из `device_of` | пульс — его; источник, который не адрес, — своё устройство (`vms/config.device_of`) |
 | `/drain` | то же и `worker` списком — `TypeError` | то же |
-| `/metrics` | `server` списком или числом в пульсе ресурса — `resources_seen` и `sorted(res.items())` | пульс ресурса не разбирается, посчитан в `<sub>_resource_heartbeats_garbled`; 400-значный `started` закрыт в девятом (`rows.number`) |
+| `/metrics` | `server` списком или числом в пульсе ресурса — `resources_seen` и `sorted(res.items())` | пульс ресурса не разбирается, посчитан в `w2c_resource_heartbeats_garbled`; 400-значный `started` закрыт в девятом (`rows.number`) |
 | `/schema` | `build` списком — `TypeError` (множество сборок); строка `platform/schema` словом — `ValueError`; `schema: 1e999` — процесс пропускался | `build` — `?`; `version: null`; схема `null`, `can_raise_to` не выше хранилища, `set_schema` отказывает |
 | `/domain` | `domain/view` рваный, списком — 500; `ts: Infinity` — вид «свежий» навсегда | 503 «вид домена прочитать нельзя» |
 | `POST /<rows>`, `PUT /<rows>/<id>`, `POST /marks`, `PUT /policy` | тело не JSON, список, вложенное глубже, чем читает JSON — 500 или вовсе без ответа; `cam: "seven"` в отметке — 500 | 400 (`object_body`), ничего не записано; ключ идемпотентности не тратится |

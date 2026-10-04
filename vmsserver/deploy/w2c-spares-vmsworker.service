@@ -10,7 +10,9 @@ After=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/w2c-spares.sh vmsworker
+EnvironmentFile=-/data/config/w2c.env
 EnvironmentFile=-/data/config/vms.env
+EnvironmentFile=-/etc/w2c/w2c.env
 EnvironmentFile=-/etc/vms/vms.env
 ProtectSystem=strict
 ProtectHome=yes

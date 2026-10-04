@@ -1,6 +1,6 @@
 # /etc/systemd/system/obsd.service — ObjectStorage, the archive's engine, as the box's own daemon.
 # Not a container and not one of the VMS's processes: the engine the recorders write their footage
-# through, over a unix socket in /run/obsd (`w2cplatform/obsd.py`). One per host — it keeps one writer per
+# through, over a unix socket in /run/vms-obsd (`w2cplatform/obsd.py`). One per host — it keeps one writer per
 # volume, and that rule means something only if every recorder on the box asks the same daemon.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
@@ -14,17 +14,18 @@
 # the declarations name. So a local volume's url is a path on THIS HOST, and the recorder that writes into it
 # needs no mount of it at all.
 #
-# - `ExecStart=… --socket /run/obsd/obsd.sock` — the socket in a directory of its OWN, which only the recorders
+# - `ExecStart=… --socket /run/vms-obsd/obsd.sock` — the socket in a directory of its OWN, which only the recorders
 #   mount (`OBSD_SOCKET` in `recworker@.container`). It was in /run/vms, beside the workers' shared memory, and so
-#   in the holder's container too — the process that runs a vendor's DriverPack (the review's third pass).
-# - `User=obsd`, `Group=vms-rec`, `OBSD_CLIENT_GROUP=vms-rec` — the daemon refuses a peer of another uid unless it
+#   in the holder's container too — the process that runs a vendor's DriverPack (the review's third pass). The
+#   product's path; the course's directory was /run/obsd until it took the product's names.
+# - `User=vms-obsd`, `Group=vms-obsd`, `OBSD_CLIENT_GROUP=vms-obsd` — the daemon refuses a peer of another uid unless it
 #   is in that group (`SO_PEERGROUPS`); the recorders join it (`GroupAdd=` in their unit), nothing else does. What
 #   is left: every member of the group is trusted alike — any recorder on the box may open any volume, and the
 #   `owner` a detached writer is picked up by is a name, not a secret. The daemon has no per-client token. The user
 #   and the group (gid 2101) are made by `obsd.sysusers`, the volume it owns by `vms.tmpfiles` — both installed by
-#   `install-obsd.sh`, which also hands a ring formatted under root to `obsd` (the review's fourth pass, blocker 2:
+#   `install-obsd.sh`, which also hands a ring formatted under root to `vms-obsd` (the review's fourth pass, blocker 2:
 #   nothing made them, and this unit failed on a fresh box with 217/USER).
-# - `RuntimeDirectory=obsd` 0750 + `RuntimeDirectoryPreserve=yes` — the socket's directory, `obsd:vms-rec`, made
+# - `RuntimeDirectory=vms-obsd` 0750 + `RuntimeDirectoryPreserve=yes` — the socket's directory, `vms-obsd:vms-obsd`, made
 #   before the daemon starts (the daemon itself would make it 0700, which no recorder could enter) and kept across
 #   its restarts. Not /run/vms any more: that one is the box's (`vms.tmpfiles`) — made only here, it did not exist
 #   without the daemon, and the holder and the recorder, which mount it, did not start either.
@@ -42,11 +43,11 @@ Description=ObjectStorage daemon — the archive's engine, one per host
 After=local-fs.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/obsd --socket /run/obsd/obsd.sock
-User=obsd
-Group=vms-rec
-Environment=OBSD_CLIENT_GROUP=vms-rec
-RuntimeDirectory=obsd
+ExecStart=/usr/local/bin/obsd --socket /run/vms-obsd/obsd.sock
+User=vms-obsd
+Group=vms-obsd
+Environment=OBSD_CLIENT_GROUP=vms-obsd
+RuntimeDirectory=vms-obsd
 RuntimeDirectoryMode=0750
 RuntimeDirectoryPreserve=yes
 Environment=OBSD_WRITER_GRACE_S=90

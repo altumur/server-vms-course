@@ -1287,8 +1287,8 @@ def test_a_client_holds_one_wait_the_total_is_a_setting_and_the_counts_are_on_th
         assert res.watch.counts() == {"waiting": 3, "held": 4, "full": 1, "replaced": 1, "max": 3}
         assert res.heartbeat()["waits"]["full"] == 1
         text = SpecConsole(VmsController(box.vars, box.objects, wall=box.wall), wall=box.wall).metrics_text()
-        for line in ('vms_resource_waits{server="srv-a"} 3', 'vms_resource_waits_full_total{server="srv-a"} 1',
-                     'vms_resource_waits_held_total{server="srv-a"} 4', 'vms_resource_waits_replaced_total{server="srv-a"} 1'):
+        for line in ('w2c_resource_waits{server="srv-a"} 3', 'w2c_resource_waits_full_total{server="srv-a"} 1',
+                     'w2c_resource_waits_held_total{server="srv-a"} 4', 'w2c_resource_waits_replaced_total{server="srv-a"} 1'):
             assert line in text, line
         EventLog(box.archive, "vms", "7", 1).append(time.time(), "io.input")
         for t, out in [(again, out2)] + others:

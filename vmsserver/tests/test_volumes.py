@@ -688,7 +688,7 @@ def test_a_network_volumes_secret_sealed_by_the_console_is_opened_by_the_recorde
     volume is not written, its status says why, and the pass — the heartbeat with it — goes on."""
     from w2cplatform.sealing import is_sealed, new_key_file
     box = Box()
-    key = os.path.join(tempfile.mkdtemp(), "vms.key")
+    key = os.path.join(tempfile.mkdtemp(), "platform.key")
     new_key_file(key)
     os.environ["SECRETS_KEY"] = key
     try:

@@ -21,7 +21,7 @@ from tests.conftest import Box
 
 
 def _key(*kids):
-    path = os.path.join(tempfile.mkdtemp(prefix="key-"), "vms.key")
+    path = os.path.join(tempfile.mkdtemp(prefix="key-"), "platform.key")
     new_key_file(path, kids[0])
     assert oct(os.stat(path).st_mode & 0o777) == "0o600"             # readable by its owner only
     for kid in kids[1:]:                                              # rotation: a new line ON TOP

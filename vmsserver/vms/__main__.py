@@ -1,9 +1,9 @@
 """python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller|
 detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontroller — the box's processes.
 
-    PLATFORM_DIR=/data/platform     the platform's stores (config/, objects/)
+    PLATFORM_DIR=/data/platform     the platform's stores (config/, objects/) — in `w2c.env`, the platform's half
     ARCHIVE=/data/archive  MEDIA_DIR=/data/media   the resource's tree (events); the recorder's own volume under it
-    OBSD_SOCKET=/run/vms/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
+    OBSD_SOCKET=/run/vms-obsd/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
                                      neither: the first free slot, a lapsed one first
     CAPACITY=50                      cameras this worker can carry — exported as headroom for the autoscaler

@@ -17,8 +17,9 @@ show them. So the console is one class, run from the same spec:
     GET/PUT/DELETE /servers/<server>/labels   what a server reaches, the administrator's word over its node's (<sub>/servers/<server>)
     GET  /events?from&to&unit&kind&subsystem   the resources' event indexes, merged (MergedIndex), fenced by every subsystem's epochs
     GET  /metrics                <name>_workers_live · <name>_worker_headroom{worker,server} · <name>_worker_load ·
-                                 <name>_epoch_conflicts · <name>_failover_seconds{kind="worst"} · <name>_resources_live ·
-                                 <name>_<running> (units in phase "running"; the spec names the gauge)
+                                 <name>_epoch_conflicts · <name>_failover_seconds{kind="worst"} ·
+                                 <name>_<running> (units in phase "running"; the spec names the gauge); and the
+                                 platform's own, once per console process: w2c_resources_live · w2c_resource_*
     POST /<rows>  (Idempotency-Key)   the row only — the controller places it on its next pass; the key is a Variable
                                  (<sub>/idem/<key>), so the retry is answered the same by whichever console gets it
     PUT  /<rows>/<id>            the operator's fields; a new revision; refused where the controller refuses
@@ -1250,6 +1251,9 @@ class SpecConsole:
         # is where a scaling policy can see it. Called with no arguments, returns Prometheus lines; the
         # platform never learns what it counted.
         self.metrics_extra = metrics_extra
+        # Whether this console's `/metrics` carries the platform's own lines (`platform_metrics`): a console alone
+        # does; in a `Mount` only the root does (`Mount._adopt`), so a scrape of every page says each fact once.
+        self.says_platform = True
         # How many events a minute one operator is expected to read. Past it the timeline stops showing
         # lines and starts showing counts — see `timeline`. The number belongs to the CONSOLE and not to a
         # subsystem's policy, because the screen merges every subsystem and the attention it competes for
@@ -1381,9 +1385,12 @@ class SpecConsole:
     # `<p>_worker_headroom{worker,server}` per live worker and the total `<p>_headroom` (what the autoscaler
     # sums); `<p>_worker_load{worker}` = `1 − headroom/capacity` per live worker (assigned/capacity: what a
     # target-value policy scales on); `<p>_epoch_conflicts{worker}` counter from every heartbeat;
-    # `<p>_failover_seconds{kind="worst"}`; `<p>_resources_live`; and `<p>_<running_gauge>` — the count of
-    # status entries in phase `running` on live workers (`vms_cameras_running`). The page reads two of
-    # these for its status line.
+    # `<p>_failover_seconds{kind="worst"}`; and `<p>_<running_gauge>` — the count of status entries in phase
+    # `running` on live workers (`vms_cameras_running`). The page reads two of these for its status line. The
+    # RESOURCES are the platform's, not a subsystem's: `w2c_resources_live` and `w2c_resource_*` (`platform_metrics`),
+    # said once per console process — by the root of a `Mount`, or by a console alone — and not once per subsystem
+    # under its prefix (the course's decision on the platform's names: `vms_resources_live`, `rec_resources_live`, …
+    # were one fact said as many times as there were subsystems mounted).
     # The servers this subsystem runs on, as the placement sees them: every server a worker heartbeats from
     # or a resource heartbeats from — the archive root its workers say they record into (on a cluster the
     # value of Nomad's `meta.archive`, the label the scheduler placed by), the state of its resource (`live`,
@@ -1567,15 +1574,11 @@ class SpecConsole:
         p = self.spec.name
         hbs = heartbeats(self.ctl.objects, p + "/"); now = self.wall()
         live = {w: hb for w, hb in hbs.items() if is_live(p, hb.ts, now, self.lost_after)}
-        res = resources_seen(self.ctl.objects)
         hk = self.ctl.sub.heartbeat_key
         failover = self.ctl.failover_seconds()
 
         def n(w: str, field: str, kind=float, default=0):                # a worker's field
             return number(f"{hk(w)}#{field}", hbs[w].extra.get(field), kind, default)
-
-        def rn(server: str, field: str, value, kind=float):               # a resource's field
-            return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
         lines = [f"# TYPE {p}_workers_live gauge", f"{p}_workers_live {len(live)}",
                  f"# TYPE {p}_worker_headroom gauge",
                  *[f'{p}_worker_headroom{{worker="{label(w)}",server="{label(hb.extra.get("server", "?"))}"}} {n(w, self.spec.headroom_from, int)}' for w, hb in live.items()],
@@ -1602,12 +1605,10 @@ class SpecConsole:
                  f'{p}_failover_seconds{{kind="worst"}} {max([self.worst_failover, getattr(self.ctl, "failover_worst", 0.0), *failover.values()])}',
                  *[f'{p}_failover_seconds{{kind="last",worker="{label(w)}"}} {s}' for w, s in sorted(failover.items())],
                  f"# TYPE {p}_failovers_unmeasured gauge", f"{p}_failovers_unmeasured {getattr(self.ctl, 'failovers_unmeasured', 0)}",
-                 f"# TYPE {p}_resources_live gauge", f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
                  # What the readers of heartbeats skipped and measured (the review's second pass, M6, M9): objects that did
                  # not parse, since this process started; and the furthest a heartbeat's clock has been AHEAD of this
                  # one's — at `FUTURE_TOLERANCE` such a worker stops counting as live.
                  f"# TYPE {p}_heartbeats_garbled counter", f"{p}_heartbeats_garbled {GARBLED.get(p, 0)}",
-                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_max gauge", f"{p}_heartbeat_skew_seconds_max {round(SKEW_MAX.get(p, 0.0), 1)}",
                  f"# TYPE {p}_heartbeat_skew_seconds_min gauge", f"{p}_heartbeat_skew_seconds_min {round(SKEW_MIN.get(p, 0.0), 1)}",
                  f"# TYPE {p}_{self.spec.running_gauge} gauge",
@@ -1620,42 +1621,6 @@ class SpecConsole:
         age = self.ctl.snapshot_age(now)
         lines += [f"# TYPE {p}_snapshot_age_seconds gauge",
                   f"{p}_snapshot_age_seconds {-1 if age is None else round(age, 1)}"]
-        # Each server's disk, from its resource's heartbeat: how full, and how many bytes the watermark was asked
-        # to free and could not (feedback BM). The second is the state nothing mends by itself — everything on
-        # the floor, or nothing of the subsystems' on that disk at all — and it used to be a line in a log.
-        lines += [f"# TYPE {p}_resource_full gauge",
-                  *[f'{p}_resource_full{{server="{label(s)}"}} {round(rn(s, "space.full", (hb.get("space") if isinstance(hb.get("space"), dict) else {}).get("full")), 3)}'
-                    for s, hb in sorted(res.items())],
-                  f"# TYPE {p}_resource_short_bytes gauge",
-                  *[f'{p}_resource_short_bytes{{server="{label(s)}"}} {rn(s, "short", hb.get("short"), int)}' for s, hb in sorted(res.items())]]
-        # The requests each resource holds for the readers of its events (`/events/wait`, `longpoll.Watch.counts`): held
-        # now, and since it started — held, refused for want of room, replaced by their own client's next. `full`
-        # climbing is an evaluator back on its two-second pass, and nothing else would say so (the review's seventh pass).
-        waits = {s: hb["waits"] for s, hb in sorted(res.items()) if isinstance(hb.get("waits"), dict)}
-        lines += [f"# TYPE {p}_resource_waits gauge",
-                  *[f'{p}_resource_waits{{server="{label(s)}"}} {rn(s, "waits.waiting", w.get("waiting"), int)}' for s, w in waits.items()]]
-        for key in ("held", "full", "replaced"):
-            lines += [f"# TYPE {p}_resource_waits_{key}_total counter",
-                      *[f'{p}_resource_waits_{key}_total{{server="{label(s)}"}} {rn(s, "waits." + key, w.get(key), int)}' for s, w in waits.items()]]
-        # What each resource could not read and could not copy (the review's eighth pass): the rows of its tables that do
-        # not parse, by table, and whether its watermark acts on a row that does not (`rows_garbled`, `space_garbled` —
-        # in the heartbeat only, a minor); the mirror's buckets a peer did not take and those too big for any; the
-        # restore's buckets still with peers and its failures. `restore_left` not falling is a replaced disk whose events
-        # have not come back; `mirror_too_big` is a bucket copied nowhere.
-        said = lambda hb, key: hb.get(key) if isinstance(hb.get(key), dict) else {}
-        lines += [f"# TYPE {p}_resource_rows_garbled counter",
-                  *[f'{p}_resource_rows_garbled{{server="{label(s)}",table="{label(t)}"}} {rn(s, "rows_garbled." + str(t), c, int)}'
-                    for s, hb in sorted(res.items()) for t, c in sorted(said(hb, "rows_garbled").items(), key=lambda x: str(x[0]))],
-                  f"# TYPE {p}_resource_space_garbled gauge",
-                  *[f'{p}_resource_space_garbled{{server="{label(s)}"}} {1 if hb.get("space_garbled") else 0}' for s, hb in sorted(res.items())],
-                  f"# TYPE {p}_resource_restore_left gauge",
-                  *[f'{p}_resource_restore_left{{server="{label(s)}"}} {rn(s, "restore.left", said(hb, "restore").get("left"), int)}' for s, hb in sorted(res.items())],
-                  f"# TYPE {p}_resource_restore_failures_total counter",
-                  *[f'{p}_resource_restore_failures_total{{server="{label(s)}"}} {rn(s, "restore.failed", said(hb, "restore").get("failed"), int)}' for s, hb in sorted(res.items())],
-                  f"# TYPE {p}_resource_mirror_failures_total counter",
-                  *[f'{p}_resource_mirror_failures_total{{server="{label(s)}"}} {rn(s, "mirror.failed", said(hb, "mirror").get("failed"), int)}' for s, hb in sorted(res.items())],
-                  f"# TYPE {p}_resource_mirror_too_big_total counter",
-                  *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
         # The controller's pass, from the report it leaves in the store (`SpecController.pass_once`): the
         # controller has no port, and a pass that fails, a unit with nowhere to go and an assignment the rows
         # contradicted used to be numbers nowhere. `-1`: no pass yet, or none that succeeded.
@@ -1737,7 +1702,61 @@ class SpecConsole:
             lines += self.spares_lines(rep, now, hbs)
         if self.metrics_extra is not None:
             lines += list(self.metrics_extra())                # the subsystem's own numbers, in its own words
+        if self.says_platform:
+            lines += self.platform_metrics(now)                # the platform's, once per console process
         return "\n".join(lines) + "\n"
+
+    # THE PLATFORM'S OWN NUMBERS: the resources, under the platform's name `w2c` — one resource per server, whatever
+    # subsystems write into it, so one set of lines per console process and not one per subsystem (`metrics_text`).
+    # Every number of a heartbeat through `rn`, as above (the review's seventh pass).
+    PLATFORM = "w2c"
+
+    def platform_metrics(self, now: float) -> list[str]:
+        p, res = self.PLATFORM, resources_seen(self.ctl.objects)
+
+        def rn(server: str, field: str, value, kind=float):               # a resource's field
+            return number(f"platform/resources/{server}/heartbeat#{field}", value, kind)
+        lines = [f"# TYPE {p}_resources_live gauge",
+                 f"{p}_resources_live {sum(1 for hb in res.values() if is_live('platform', float(hb['ts']), now, self.lost_after))}",
+                 # resource heartbeats that did not parse, since this process started (the review's second pass, M6)
+                 f"# TYPE {p}_resource_heartbeats_garbled counter", f"{p}_resource_heartbeats_garbled {GARBLED.get('platform', 0)}"]
+        # Each server's disk, from its resource's heartbeat: how full, and how many bytes the watermark was asked
+        # to free and could not (feedback BM). The second is the state nothing mends by itself — everything on
+        # the floor, or nothing of the subsystems' on that disk at all — and it used to be a line in a log.
+        lines += [f"# TYPE {p}_resource_full gauge",
+                  *[f'{p}_resource_full{{server="{label(s)}"}} {round(rn(s, "space.full", (hb.get("space") if isinstance(hb.get("space"), dict) else {}).get("full")), 3)}'
+                    for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_short_bytes gauge",
+                  *[f'{p}_resource_short_bytes{{server="{label(s)}"}} {rn(s, "short", hb.get("short"), int)}' for s, hb in sorted(res.items())]]
+        # The requests each resource holds for the readers of its events (`/events/wait`, `longpoll.Watch.counts`): held
+        # now, and since it started — held, refused for want of room, replaced by their own client's next. `full`
+        # climbing is an evaluator back on its two-second pass, and nothing else would say so (the review's seventh pass).
+        waits = {s: hb["waits"] for s, hb in sorted(res.items()) if isinstance(hb.get("waits"), dict)}
+        lines += [f"# TYPE {p}_resource_waits gauge",
+                  *[f'{p}_resource_waits{{server="{label(s)}"}} {rn(s, "waits.waiting", w.get("waiting"), int)}' for s, w in waits.items()]]
+        for key in ("held", "full", "replaced"):
+            lines += [f"# TYPE {p}_resource_waits_{key}_total counter",
+                      *[f'{p}_resource_waits_{key}_total{{server="{label(s)}"}} {rn(s, "waits." + key, w.get(key), int)}' for s, w in waits.items()]]
+        # What each resource could not read and could not copy (the review's eighth pass): the rows of its tables that do
+        # not parse, by table, and whether its watermark acts on a row that does not (`rows_garbled`, `space_garbled` —
+        # in the heartbeat only, a minor); the mirror's buckets a peer did not take and those too big for any; the
+        # restore's buckets still with peers and its failures. `restore_left` not falling is a replaced disk whose events
+        # have not come back; `mirror_too_big` is a bucket copied nowhere.
+        said = lambda hb, key: hb.get(key) if isinstance(hb.get(key), dict) else {}
+        lines += [f"# TYPE {p}_resource_rows_garbled counter",
+                  *[f'{p}_resource_rows_garbled{{server="{label(s)}",table="{label(t)}"}} {rn(s, "rows_garbled." + str(t), c, int)}'
+                    for s, hb in sorted(res.items()) for t, c in sorted(said(hb, "rows_garbled").items(), key=lambda x: str(x[0]))],
+                  f"# TYPE {p}_resource_space_garbled gauge",
+                  *[f'{p}_resource_space_garbled{{server="{label(s)}"}} {1 if hb.get("space_garbled") else 0}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_restore_left gauge",
+                  *[f'{p}_resource_restore_left{{server="{label(s)}"}} {rn(s, "restore.left", said(hb, "restore").get("left"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_restore_failures_total counter",
+                  *[f'{p}_resource_restore_failures_total{{server="{label(s)}"}} {rn(s, "restore.failed", said(hb, "restore").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_mirror_failures_total counter",
+                  *[f'{p}_resource_mirror_failures_total{{server="{label(s)}"}} {rn(s, "mirror.failed", said(hb, "mirror").get("failed"), int)}' for s, hb in sorted(res.items())],
+                  f"# TYPE {p}_resource_mirror_too_big_total counter",
+                  *[f'{p}_resource_mirror_too_big_total{{server="{label(s)}"}} {rn(s, "mirror.too_big", said(hb, "mirror").get("too_big"), int)}' for s, hb in sorted(res.items())]]
+        return lines
 
     # WHAT A HOST'S SPARES SCRIPT READS (the М11 rework; the product's names): `<p>_workers_needed{labels}` — the empty
     # set's row always — `<p>_units_short{labels}`, `<p>_spare_offers{labels}` from the controller's pass report
@@ -2596,6 +2615,7 @@ class Mount:
     def _adopt(self, console: SpecConsole) -> None:
         self.epoch_policy[console.spec.name] = console.spec.older_epochs
         console.epoch_policy = self.epoch_policy
+        console.says_platform = console is self.root         # the platform's lines once per process: the root's page
 
     def mount(self, name: str, console: SpecConsole) -> "Mount":
         self.mounts[name] = console

@@ -15,7 +15,8 @@
 
 Not one of these names an orchestrator, and that is the whole point of the
 module. A systemd unit sets `WORKER_NAME=w-%l-1` (Quadlet on one box `%i`), and
-`/etc/vms/vms.env` the server and its labels; an orchestrator, where a site has
+the platform's env file (`/etc/w2c/w2c.env`, on the course's box
+`/data/config/w2c.env`) the server and its labels; an orchestrator, where a site has
 one, maps its own (an allocation index, a node's name, a `fieldRef`) into the
 same. The loop reads these names and never learns who filled them in — the same rule the package already keeps for the stores
 (see `variables.open_vars`).

@@ -912,8 +912,8 @@ class SpecController(Controller):
             return set()                               # its row did not read, and never has: it reaches no label known
         return self.node_labels_of(worker)
 
-    # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (`/etc/vms/vms.env`,
-    # or a unit's), read by the worker when it starts: the first value of a new box and the fallback of every other.
+    # The `labels` string of its heartbeat, split on commas — the node's `LABELS` (the platform's
+    # `w2c.env`, or a unit's), read by the worker when it starts: the first value of a new box and the fallback of every other.
     def node_labels_of(self, worker: str) -> set[str]:
         hb = self._said(worker)
         return set(l for l in str(hb.extra.get("labels", "")).split(",") if l) if hb else set()

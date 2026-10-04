@@ -175,7 +175,7 @@ def test_a_heartbeat_that_does_not_parse_is_one_workers_trouble_and_not_the_pass
     assert set(con.servers()["servers"]) >= {"srv-x"} or True                                 # the console answers; what it shows is its business
     text = con.metrics_text()
     garbled = int(text.split("\nvms_heartbeats_garbled ")[1].split()[0])
-    assert garbled >= before[0] + 3 and int(text.split("\nvms_resource_heartbeats_garbled ")[1].split()[0]) >= before[1] + 1
+    assert garbled >= before[0] + 3 and int(text.split("\nw2c_resource_heartbeats_garbled ")[1].split()[0]) >= before[1] + 1
 
     box.objects.put("vms/heartbeats/w-9", ws[0].objects.get("vms/heartbeats/w-1").replace(b'"w-1"', b'"w-9"'))
     assert "w-9" in ctl.workers_seen()                                                       # mended: read again, as any other

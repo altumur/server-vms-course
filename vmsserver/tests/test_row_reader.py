@@ -366,7 +366,7 @@ def test_one_word_in_one_heartbeat_field_does_not_take_the_metrics_page():
                                                        "unplaced": "?", "seconds": "slow"}).encode())
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
     _prometheus(text)
-    assert "vms_reconcile_last_pass_age_seconds -1" in text and 'vms_resource_full{server="srv-b"} 0' in text
+    assert "vms_reconcile_last_pass_age_seconds -1" in text and 'w2c_resource_full{server="srv-b"} 0' in text
     assert 'vms_worker_holds_garbled{worker="w-2"} 0' in text                # the holds, on the page (a minor)
     _prometheus("\n".join(vms_metrics(ctl)()))
 
@@ -646,7 +646,7 @@ def test_a_restore_takes_what_every_peer_gives_and_asks_again_for_what_did_not_c
     hb = res.heartbeat()
     assert hb["restore"]["left"] == 2 and hb["restore"]["peers_failed"] == ["srv-0"] and hb["restore"]["failed"] == 2
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_resource_restore_left{server="srv-1"} 2' in text and 'vms_resource_restore_failures_total{server="srv-1"} 2' in text
+    assert 'w2c_resource_restore_left{server="srv-1"} 2' in text and 'w2c_resource_restore_failures_total{server="srv-1"} 2' in text
     good.bad.clear(); dead.dead = False
     good.paths = paths                                               # …and it lists buckets only
     dead.paths = []                                                # healed: it lists, and holds nothing more of srv-1
@@ -705,7 +705,7 @@ def test_a_mirror_copies_to_every_peer_past_one_that_refuses_and_past_a_bucket_t
     hb = res.heartbeat()
     assert hb["mirror"] == {"failed": 1, "too_big": 1, "peers_failed": ["srv-2"]}
     text = SpecConsole(ctl, wall=box.wall).metrics_text()
-    assert 'vms_resource_mirror_too_big_total{server="srv-1"} 1' in text and 'vms_resource_mirror_failures_total{server="srv-1"} 1' in text
+    assert 'w2c_resource_mirror_too_big_total{server="srv-1"} 1' in text and 'w2c_resource_mirror_failures_total{server="srv-1"} 1' in text
     # …and a peer that refuses 413 under the bound: counted, and the bucket is not sent to it again
     res2 = R.Resource(box.archive, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall, clock=box.clock, peers=Peers())
     refuse_413[0] = True
@@ -960,7 +960,7 @@ def test_a_restore_that_met_no_live_peer_or_raised_whole_is_asked_again_and_a_la
     assert res.restore() == {"pulled": 0}
     hb = res.heartbeat()
     assert hb["restore"]["done"] is False and hb["restore"]["left"] == -1, hb["restore"]
-    assert 'vms_resource_restore_left{server="srv-1"} -1' in SpecConsole(ctl, wall=box.wall).metrics_text()
+    assert 'w2c_resource_restore_left{server="srv-1"} -1' in SpecConsole(ctl, wall=box.wall).metrics_text()
     assert not res.restore_due()
     box.clock.advance(RESTORE_RETRY)
     assert res.restore_due() and res.restore() == {"pulled": 0}         # still nobody: asked, and the pause doubles

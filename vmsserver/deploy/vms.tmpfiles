@@ -1,22 +1,24 @@
 # /etc/tmpfiles.d/vms.conf — the directories the VMS's units mount, made at every boot whoever starts first.
-# Installed and applied by install-obsd.sh (`systemd-tmpfiles --create`).
+# Installed and applied by install-obsd.sh (`systemd-tmpfiles --create`), after `w2c.conf` (the platform's: its stores,
+# its secrets — `w2c.tmpfiles`).
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # vms.tmpfiles — /run/vms, /run/obsd and the box's own volume
+# # vms.tmpfiles — /run/vms, /run/vms-obsd, /run/vms-console and the box's own volume
 #
 # **Role.** A container's `Volume=` of a host directory that does not exist does not start. /run is a tmpfs, empty
-# at every boot, and /run/vms was made only by obsd.service (`RuntimeDirectory=obsd vms`): without the daemon —
+# at every boot, and /run/vms was made only by obsd.service (then `RuntimeDirectory=obsd vms`): without the daemon —
 # not installed yet, or failing — neither `vmsworker@` nor `recworker@` started, and the box held no camera at all
 # for want of an archive engine (the review's fourth pass, blocker 2). So the directories are the box's, made here:
 #
 # - `/run/vms` — the workers' shared-memory branches (`live_shm`), written by the holder and read by a recorder on
 #   this box; both run as root in their containers.
-# - `/run/obsd` — the daemon's socket, 0750 `obsd:vms-rec`: only the daemon and its clients' group get in. The
-#   unit's own `RuntimeDirectory=obsd` makes the same directory when the daemon starts; this one is for a recorder
-#   that starts first, whose mount of it would otherwise fail.
+# - `/run/vms-obsd` — the daemon's socket, 0750 `vms-obsd:vms-obsd`: only the daemon and its clients' group get in.
+#   The unit's own `RuntimeDirectory=vms-obsd` makes the same directory when the daemon starts; this one is for a
+#   recorder that starts first, whose mount of it would otherwise fail. The product's path (its `vms-obsd.service`);
+#   the course's was /run/obsd.
 # - `/data/volume` — the box's own volume, where a recorder with nothing declared writes (`ARCHIVE_VOLUME`, beside
-#   `ARCHIVE`). The daemon opens it, as `obsd`, so `obsd` owns it. On the data partition, never the rootfs slot
+#   `ARCHIVE`). The daemon opens it, as `vms-obsd`, so `vms-obsd` owns it. On the data partition, never the rootfs slot
 #   (М9 Lesson 5): an OS update must not take the archive with it — which is why it is not the product's
 #   `StateDirectory=` (/var/lib, on the slot). A volume declared on another path of this box is chowned by
 #   `install-obsd.sh <path>`. `d` sets the directory's owner and mode only; a ring formatted when the daemon ran as
@@ -28,5 +30,5 @@
 # ================================================================================================
 d /run/vms         0755 root root    -
 d /run/vms-console 0700 root root    -
-d /run/obsd        0750 obsd vms-rec -
-d /data/volume     0750 obsd vms-rec -
+d /run/vms-obsd    0750 vms-obsd vms-obsd -
+d /data/volume     0750 vms-obsd vms-obsd -
