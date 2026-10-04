@@ -6,7 +6,8 @@
 #   w2c-ca.sh issue <server> [role…]    one server's bundle in <ca dir>/<server>/: ca.pem, crl.pem, raft.secret and a
 #                                       certificate with CN <first role>.<server>, SAN DNS <server> and one SAN URI
 #                                       urn:w2c:role:<role> per role (default role: configstore). The store daemon's is
-#                                       server.pem / server.key; another role's is <role>.pem / <role>.key.
+#                                       server.pem / server.key, its role alone (configstore with another is
+#                                       refused); another role's is <role>.pem / <role>.key.
 #   w2c-ca.sh revoke <server>           every certificate ever issued for <server> onto the revocation list, and a
 #                                       new crl.pem (in the CA directory and in every bundle under it)
 #   w2c-ca.sh crl                       crl.pem made again from what is revoked — before the list's nextUpdate, and
@@ -108,6 +109,13 @@ issue() {
     [ -n "$server" ] || die "issue <server> [role…]"
     shift
     [ $# -gt 0 ] || set -- "$STORE_ROLE"
+    # The store daemon's certificate carries its role alone (the product's cross-check; tls.py SOLE_ROLES): with
+    # another role in it, whoever runs that other role holds a member's key of the group.
+    if [ $# -gt 1 ]; then
+        for r in "$@"; do
+            [ "$r" = "$STORE_ROLE" ] && die "$STORE_ROLE with another role ($*): a daemon's certificate carries one role — issue $STORE_ROLE alone, the others apart"
+        done
+    fi
     [ -e "$CA_DIR/ca.key" ] || die "no CA in $CA_DIR: w2c-ca.sh init first"
     [ -e "$CA_DIR/crl.pem" ] || crl >/dev/null
     name=$1
@@ -166,7 +174,8 @@ revoke() {
     rm -f "$conf"
     [ "$n" -gt 0 ] || grep -q "/CN=[^/]*\.$server\$" "$CA_DIR/index.txt" || die "no certificate issued for $server in $CA_DIR"
     crl >/dev/null
-    echo "$CA_DIR/crl.pem: copy it to /etc/w2c/tls/crl.pem on every server (the doors re-read it)."
+    echo "$CA_DIR/crl.pem: copy it to /etc/w2c/tls/crl.pem on every server (the doors re-read it; a connection opened before lives until it is answered)."
+    echo "$server is still a voter if it was a member: configstore leave $server, on a member."
     echo "$server still knows raft.secret: make a new one (openssl rand -hex 32), put it on every member, restart the group."
 }
 
