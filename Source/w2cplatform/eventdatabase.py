@@ -456,15 +456,21 @@ class MergedIndex:
 
     # Which resources exist — a listing of `resources/` and a read of every heartbeat there — at most once every
     # `SEEN_FOR` seconds of `clock` (the product's DD). It was read on every query: every poll of every open page, a
-    # List and a Get per resource each time. A heartbeat comes every few seconds anyway, and liveness is still judged
-    # by `wall` against the heartbeat's own time; what the cache costs is a resource that appeared, seen up to two
-    # seconds late. The resources themselves are asked on every query, as before.
+    # List and a Get per resource each time. A heartbeat comes every few seconds anyway; what the cache costs is a
+    # resource that appeared, seen up to two seconds late. The resources themselves are asked on every query, as before.
+    #
+    # Live by what THIS reader saw change (`live`; the product's r29-writers2): `now - hb.ts` was the resource's clock
+    # against the console's — a resource dead an hour whose clock ran ahead was asked, and named as not answering, for
+    # that hour; one 100 s behind was "silent", and every window it could have written in incomplete. Its `ts` is still
+    # what says whether a silent resource could have written inside a window: a time of the events' own clock.
     SEEN_FOR = 2.0
 
     def __init__(self, objects, fetch=None, wall=time.time, lost_after: float = 45.0, timeout: float = 3.0,
                  cooldown: float = 10.0, lanes: int = 8, clock=time.monotonic):
         self.objects, self.wall, self.lost_after, self.timeout = objects, wall, lost_after, timeout
         self.clock = clock
+        from .contract import Eyes, judge_clock
+        self.eyes = Eyes(judge_clock(wall), wall)
         self._seen: tuple[float, dict] | None = None     # (read at, by `clock`; the resources) — one tuple, swapped whole
         self.fetch = fetch or self._http
         self.state = "live"
@@ -486,6 +492,11 @@ class MergedIndex:
         if last is None or now - last[0] >= self.SEEN_FOR:
             last = self._seen = (now, resources_seen(self.objects))
         return last[1]
+
+    def live(self, seen: dict) -> set[str]:
+        """Of `seen`, the resources whose heartbeat changed within `lost_after` of this reader's clock."""
+        return {s for s, hb in seen.items()
+                if self.eyes.fresh(f"platform/resources/{s}/heartbeat", hb.get("ts"), self.lost_after, hb.get("ts"), "platform")}
 
     def _http(self, url: str, params: dict) -> dict:
         with urllib.request.urlopen(f"{url}/events?{urllib.parse.urlencode(params)}", timeout=self.timeout) as r:
@@ -536,7 +547,7 @@ class MergedIndex:
         check_query(keep, cls, by, unit)
         order = when if by == "occurred" else (lambda e: e["t"])
         now = self.wall(); seen = self.seen()
-        live = {s for s, hb in seen.items() if now - float(hb["ts"]) <= self.lost_after}
+        live = self.live(seen)
         params = {k: v for k, v in (("from", t0), ("to", t1), ("kind", kind), ("subsystem", subsystem),
                                     ("unit", unit), ("limit", limit), ("keep", keep), ("class", cls),
                                     ("by", by if by != "t" else None)) if v is not None}

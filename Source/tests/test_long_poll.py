@@ -805,10 +805,18 @@ def test_the_evaluator_asks_for_the_kinds_its_scenarios_watch_and_says_how_it_wa
     w.heartbeat_once()
     assert "auto_waits_total{" not in "\n".join(auto_metrics(con)())                 # the long poll was not asked for
 
-    w.index = MergedIndex(box.objects, fetch=lambda url, params: {"events": []}, wall=box.wall)
-    for server, age in (("srv-a", 1), ("srv-b", 100)):               # one live resource, one silent
-        box.objects.put(f"platform/resources/{server}/heartbeat",
-                        json.dumps({"server": server, "ts": box.wall() - age, "url": f"http://{server}:8090"}).encode())
+    from tests.conftest import Clock
+    looks = Clock()                                                  # the index's cache of the listing: its own clock
+    w.index = MergedIndex(box.objects, fetch=lambda url, params: {"events": []}, wall=box.wall, clock=looks)
+
+    def beat(*servers):
+        for server in servers:
+            box.objects.put(f"platform/resources/{server}/heartbeat",
+                            json.dumps({"server": server, "ts": box.wall(), "url": f"http://{server}:8090"}).encode())
+    beat("srv-a", "srv-b")
+    w._resources()                                                   # the index's first look: both taken as just changed
+    box.wall.advance(60); looks.advance(60)
+    beat("srv-a")                                                    # one live resource, one silent — by what it saw (r29)
     assert w._resources() == {"srv-a": "http://srv-a:8090"}
     lp = w.watch_events({})
     lp.fetch = lambda url, wants, timeout, since: {"changed": False, "full": True, "seq": 0}

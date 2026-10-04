@@ -76,7 +76,7 @@ def test_the_objects_that_are_rows_are_the_loaded_specs_and_nothing_else():
 # A url field the way a subsystem says how its addresses carry a login.
 TARGET = {"type": "url", "required": True, "schemes": ["https", "sftp"],
           "credentials": {"login": "account_name", "secret": "pass_secret"},
-          "secret_in": [{"param": ["pwd", "token*", "*key"]},
+          "secret_in": [{"param": ["pwd", "token*", "*key", "=auth"]},
                         {"regex": r"(?:^|/)~(?P<login>[^:/]+):(?P<secret>[^/]+)", "in": "path"},
                         {"nested": "via"}]}
 
@@ -98,6 +98,7 @@ def test_how_an_address_carries_a_login_is_the_specs_and_the_platform_keeps_no_l
     rules = _target_spec().fields["target"].rules
     assert is_credential_param("pwd", rules) and is_credential_param("token_bucket", rules)     # `token*`: a word begins it
     assert is_credential_param("apiKey", rules) and not is_credential_param("keyframe", rules)  # `*key`: the last word ends it
+    assert is_credential_param("auth", rules) and not is_credential_param("enable_auth", rules)  # `=auth`: the whole name
     assert "pwd" in address_refusal("https://h/x?pwd=Hunter2", rules)
     assert "a login and a password in its path" in address_refusal("https://h/~me:Hunter2/x", rules)
     assert "'via'" in address_refusal("https://h/x?via=https%3A%2F%2Fh2%2F%3Fpwd%3DHunter2", rules)
@@ -126,7 +127,7 @@ def test_a_url_fields_words_are_read_at_load_and_anything_else_is_refused():
     _refused(lambda: _target_spec({**TARGET, "credentials": {"login": "pass_secret"}}), "credentials.login")
     _refused(lambda: _target_spec({**TARGET, "credentials": {"secret": "account_name"}}), "credentials.secret")
     _refused(lambda: _target_spec({**TARGET, "schemes": ["HTTPS"]}), "`schemes` is a list of schemes")
-    for bad, words in (({"param": "pwd"}, "`param` is a list of names"), ({"param": ["*pwd*"]}, "a name, `name*` or `*name`"),
+    for bad, words in (({"param": "pwd"}, "`param` is a list of names"), ({"param": ["*pwd*"]}, "a name, `=name`, `name*` or `*name`"), ({"param": ["=pwd*"]}, "a name, `=name`"),
                        ({"regex": "x(?P<secret>.)"}, "`in: path` or `in: query`"),
                        ({"regex": "x(.)", "in": "path"}, "names what it finds"),
                        ({"regex": "(", "in": "query"}, "no regular expression"),

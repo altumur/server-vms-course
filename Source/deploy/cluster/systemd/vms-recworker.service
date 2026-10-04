@@ -6,7 +6,9 @@
 [Unit]
 Description=VMS recorder — the recordings of its assignment, into this server's volume
 After=network-online.target configstore.service w2c-resource.service vms-obsd.service
-Wants=network-online.target configstore.service vms-obsd.service
+# Ordered after the store's member and the engine, never starting them (the product's r28-ops2): `Wants=` made every restart of
+# this unit start what the administrator had stopped. Each is enabled on its own, so boot brings it up anyway.
+Wants=network-online.target
 
 [Service]
 User=vms

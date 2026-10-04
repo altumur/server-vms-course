@@ -163,7 +163,7 @@ class DetJobWorker(Worker):
             # the whole recording (the review's third pass): what answered is scanned, but the job is not `done`
             # while a door was silent or a volume unread — it waits for them, and says which (`missing`).
             read = recording_read(self.objects, row["rec"], row["from"], max(row["to"], now) + self.lag, self.wall(),
-                                  vars_=self.vars)
+                                  vars_=self.vars, eyes=self.eyes)   # the doors live by change (r29-writers2)
             log_ = ScanLog(self.archive_root, job)
             if not read.answered:
                 self._stop(job)

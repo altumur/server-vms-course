@@ -2659,6 +2659,21 @@ class SpecController(Controller):
                 groups.setdefault((value, pl.worker if pl is not None else ""), []).append(row)
             else:
                 pieces.setdefault(key(row), []).append(1)
+        # …and a NEW group whose first channels went onto a worker without room for the rest (the product's r29-writers2,
+        # decided the other way): the rest wait pinned to that worker (`eligible`) and the group moves only whole
+        # (`ensure_reach`), so the piece is the group whole — what waits and what is placed beside it. Counted by what
+        # waits alone, it "fitted" the room of a worker it may not go to: short 0, no offer, a channel written by nobody.
+        # The product counts the remainder and splits the group; a group is one worker here (`group_by`).
+        for (value, on), members in list(groups.items()):
+            if on:
+                continue
+            placed = [o for o in self._rows_by("group", self.group_value).get(value, ()) if not self.retired(o)
+                      and (p := self.placement(o["id"])) is not None and p.worker not in leaving]
+            beside = {self.placement(o["id"]).worker for o in placed}
+            if len(beside) == 1 and self.capacity_of(w := next(iter(beside))) - self.load(w) >= len(members):
+                del groups[(value, on)]                 # its worker has the room: placed there on the next pass
+            else:
+                members += placed
         for members in groups.values():
             labels = label_set({str(l) for m in members for l in (m.get("labels") or [])}) if subset else ""
             pieces.setdefault(labels, []).append(len(members))
@@ -2944,16 +2959,24 @@ class SpecController(Controller):
             if str(uid) in done or self.retired(row) or not self.group_value(row) or self.placement(uid) is not None:
                 continue
             held = self.worker_with_group(row, pool)
-            if held is None or self.eligible(row, pool):
-                continue                                  # no group placed, or its worker takes it: `place`'s to do
+            if held is None:
+                continue                                  # no group placed: `place`'s to do
+            # …or one its worker HAS NO ROOM FOR (the product's r29-writers2, decided whole): a new group's first channels
+            # went onto a worker without room for the rest, which waited pinned to it for ever — while `offer_spares`
+            # counts the group whole, a spare came and nothing moved. The same reason to move the group whole.
+            waiting = self._group_rows_waiting(row)
+            roomless = self.capacity_of(held) - self.load(held) < len(waiting)
+            if self.eligible(row, pool) and not roomless:
+                continue                                  # its worker takes it: `place`'s to do
+            why = f"which {held} has no room for" if roomless and self.eligible(row, pool) else f"which {held} may not take"
             first = next((o for o in self._rows_by("group", self.group_value).get(self.group_value(row), ())
                           if not self.retired(o) and (pl := self.placement(o["id"])) is not None and pl.worker == held), None)
             if first is None:
                 continue
-            group, waiting = self._reach_group(first, held), self._group_rows_waiting(row)
+            group = self._reach_group(first, held)
             done |= {str(m["id"]) for m in group + waiting}
             if len(group) > budget:
-                wait(group, held, f"its {len(group)} units would move with {uid}, a new member {held} may not take — "
+                wait(group, held, f"its {len(group)} units would move with {uid}, a new member {why} — "
                                   f"more than the {budget} moves left this pass")
                 continue
             others = [w for w in pool if w != held]
@@ -2965,11 +2988,11 @@ class SpecController(Controller):
             idx = self.near_index() if idx is None else idx
             best, free, near = self._pick(roomy, uid, idx)
             if best is None:
-                wait(group, held, f"{uid}, a new member, may not go to {held}, and no live worker takes all "
+                wait(group, held, f"{uid}, a new member {why}, waits, and no live worker takes all "
                                   f"{len(group) + len(waiting)} of them")
                 continue
             for m in group:
-                reason = (f"with {uid}, one {self.spec.group_by}, which {held} may not take; most free capacity ({free}); "
+                reason = (f"with {uid}, one {self.spec.group_by}, {why}; most free capacity ({free}); "
                           f"on {self.server_of(best)}{near}")
                 if not self.move_from(m["id"], held, best, reason):
                     break                                 # somebody moved it first: the rest of the group, next pass
@@ -3083,12 +3106,13 @@ class SpecController(Controller):
     # What the console lists: every `status` entry from every worker's latest heartbeat (any age), tagged
     # with `worker`, `server`, `age` and `worker_state` (`live` or `stale`), sorted by unit id.
     # `test_the_failure_arithmetic`: with the controller gone the read model still answers from heartbeats;
-    # with the worker gone 100 s the rows say `stale`, age 100.
+    # with the worker gone 100 s the rows say `stale`, age 100. The age is how long THIS reader has seen the heartbeat
+    # stand still (`Eyes`; the product's r29-writers2): `now - hb.ts` was the worker's clock against the console's, and
+    # a worker 100 s behind read `stale` on every row while it ran them.
     def read_model(self, lost_after: float = 45.0) -> list[dict]:
-        now = self.wall()
         rows = []
         for w, hb in self.workers_seen(max_age=1e12).items():
-            age = now - hb.ts
+            age = self.eyes.age(self.sub.heartbeat_key(w), hb.token, hb.ts, self.sub.name)
             state = "live" if age <= lost_after else "stale"
             for s in hb.status:
                 if "id" not in s:
@@ -3276,14 +3300,16 @@ class SpecController(Controller):
     # only as fresh as its oldest part, and taking the newest would report an RPO better than the real one —
     # which is exactly the direction a number like this must never be wrong in.
     #
-    # A `ts` FROM THE FUTURE IS NOT FRESH (the review's ninth pass, minor): a controller whose clock ran an hour ahead
-    # and then stopped wrote shards an hour ahead — `max(0, now − ts)` read them as age 0 for that hour, the copy above
-    # "fresh" while nothing published it. A shard further ahead than `FUTURE_TOLERANCE` (the heartbeats' rule) has no
-    # age anybody can vouch for: the oldest there can be, counted once (`fields_garbled`), and its lead goes into the
-    # subsystem's `heartbeat_skew_seconds_max`, where a clock running ahead is already measured.
+    # BY WHAT THE READER SAW CHANGE (the product's r29-writers2; the ninth pass's minor before it). The age was `now − ts`,
+    # the controller's clock against the reader's: a controller an hour ahead that then stopped wrote shards that read
+    # "fresh" for that hour (the ninth pass bounded it at `FUTURE_TOLERANCE`), and one 100 s behind read 100 s stale
+    # while it published every pass. Now a shard's age is how long THIS reader has seen it stand still (`Eyes`, by its
+    # own clock; the shard's `ts` a token that changes with every publish, and the skew measured where it changes) —
+    # the oldest of them, the directory's age. A reader started a minute ago has watched a minute: its ages begin at 0,
+    # as every judge's here does (`Eyes`), rather than believe a writer's clock. A shard that does not parse has no age
+    # anybody can vouch for: the oldest there can be, counted once (`fields_garbled`).
     def snapshot_age(self, now: float | None = None) -> float | None:
         import json
-        from .contract import FUTURE_TOLERANCE, SKEW_MAX
         from .rows import FIELDS
         now = self.wall() if now is None else now
         oldest = None
@@ -3294,18 +3320,13 @@ class SpecController(Controller):
                 continue
             try:
                 ts = finite(json.loads(raw).get("ts", 0))   # `nan` passes every `min` and read as fresh (the review's eighth pass)
-            except PARSE_ERRORS:
-                ts = 0.0                              # a shard that does not parse has no age: the oldest there can be
-            if ts - now > FUTURE_TOLERANCE:
-                SKEW_MAX[self.sub.name] = max(SKEW_MAX.get(self.sub.name, 0.0), ts - now)
-                FIELDS.garbled(f"{key}#ts", ValueError(f"{ts - now:.0f} s ahead of this clock: no age anybody can vouch for"))
-                ts = 0.0
-            else:
-                FIELDS.parsed(f"{key}#ts")
-            oldest = ts if oldest is None else min(oldest, ts)
-        if oldest is None:
-            return None
-        return max(0.0, now - oldest)
+            except PARSE_ERRORS as e:
+                FIELDS.garbled(f"{key}#ts", e)
+                return now                            # a shard that does not parse has no age: the oldest there can be
+            FIELDS.parsed(f"{key}#ts")
+            age = self.eyes.age(key, ts, ts, self.sub.name)
+            oldest = age if oldest is None else max(oldest, age)
+        return oldest
 
     # Writes one object per worker under `<name>/snapshot/`.
     def publish_snapshot(self) -> None:

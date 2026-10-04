@@ -29,7 +29,7 @@ import urllib.error
 import urllib.request
 
 from w2cplatform.access import token_of
-from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heartbeats, holder_of, holders, label, no_paths,  # noqa: F401
+from w2cplatform.console import (PAGE, ClaimLost, Mount, SpecConsole, framed, heard_live, heartbeats, holder_of, holders, label, no_paths,  # noqa: F401
                                  object_body, path_id, send_file)   # (PAGE, send_file re-exported for М11)
 from w2cplatform.contract import HEARTBEATS, slot_number
 from w2cplatform.rows import FIELDS, PARSE_ERRORS, finite, number
@@ -281,11 +281,17 @@ def own_name_is_hers(rec_ctl, cam) -> bool:
 
 # Every recorder that serves its archive, live: `[(name, url, heartbeat)]`. A recorder holds ONE volume and its
 # door answers for it — a camera recorded into two volumes, or one whose recording moved, is answered by two.
-def recorder_doors(objects, now: float, lost_after: float = 45.0) -> list:
+#
+# LIVE BY WHAT THE READER SAW CHANGE (the product's r29-writers2): `now - hb.ts` here, in `unserved_volumes`, the keeps'
+# numbers, a volume's size and its waiting recorders — the recorder's clock against the reader's, with no bound ahead:
+# a recorder dead an hour whose clock ran an hour ahead stayed a door, and one 100 s behind was a volume "unserved".
+# `eyes` — the asker's long-lived `Eyes` — say whether the heartbeat changed within `lost_after` of the asker's clock
+# (`heard_live`); without them, `is_live` (bounded both ways).
+def recorder_doors(objects, now: float, lost_after: float = 45.0, eyes=None) -> list:
     out = []
     for name, hb in sorted(heartbeats(objects, "rec/").items()):
         url = str(hb.extra.get("archive_url") or "")
-        if url and now - hb.ts <= lost_after:
+        if url and heard_live("rec", name, hb, now, lost_after, eyes):
             out.append((name, url.rstrip("/"), hb))
     return out
 
@@ -294,13 +300,13 @@ def recorder_doors(objects, now: float, lost_after: float = 45.0) -> list:
 # the server is down, its disk with it, or a network archive is waiting for a spare. Its footage is not LOST: it is
 # in that volume, and it is unavailable until a recorder holds the volume again. `[{volume, server, since}]`, from
 # the recorders' last heartbeats; the timeline names them instead of drawing a hole where they are (М11 lesson 6).
-def unserved_volumes(objects, now: float, lost_after: float = 45.0) -> list[dict]:
+def unserved_volumes(objects, now: float, lost_after: float = 45.0, eyes=None) -> list[dict]:
     live, stale = set(), {}
     for name, hb in heartbeats(objects, "rec/").items():
         vol = str(hb.extra.get("volume") or "")
         if not vol:
             continue                               # a spare holds nothing
-        if now - hb.ts <= lost_after:
+        if heard_live("rec", name, hb, now, lost_after, eyes):
             live.add(vol)
         elif vol not in stale or hb.ts > stale[vol]["since"]:
             stale[vol] = {"volume": vol, "server": str(hb.extra.get("server", "")), "recorder": name, "since": hb.ts}
@@ -857,7 +863,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
         except ValueError:
             return 400, {"detail": "from and to are unix seconds", "error": "bad range"}
         ours, unreachable = [], []
-        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        doors = recorder_doors(ctl.objects, con_wall(), eyes=(rec_ctl or ctl).eyes) if ctl is not None else []
         for unit in recordings_of(rec_ctl, cid):
             # Fenced against the RECORDING's epoch, which the store holds — a door knows only its own recorder's,
             # and the zombie's stream may be in another volume than the survivor's. A copy (`e0`, a keep's) is
@@ -877,7 +883,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                                  "volume": hb.extra.get("volume", ""), "media": f"/export/{cid}?rec={unit}"})
         extra_ = device_spans(ctl.objects, cid, ours, t0, t1, con_wall(), ctl.eyes) if ctl is not None else []
         spans = sorted(ours + extra_, key=lambda d: (d["start"], d["epoch"]))
-        gone = unserved_volumes(ctl.objects, con_wall()) if ctl is not None else []
+        gone = unserved_volumes(ctl.objects, con_wall(), eyes=(rec_ctl or ctl).eyes) if ctl is not None else []
         if unreachable or gone:
             notes = []
             if unreachable:
@@ -977,7 +983,7 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
             units = [u for u in units if u == str(q["rec"])]
             if not units:
                 return 404, {"detail": f"recording {q['rec']} is not a recording of camera {cid}", "error": "not hers"}
-        doors = recorder_doors(ctl.objects, con_wall()) if ctl is not None else []
+        doors = recorder_doors(ctl.objects, con_wall(), eyes=(rec_ctl or ctl).eyes) if ctl is not None else []
         unreachable: list[str] = []
 
         # THE FRAMES OF A STRETCH, A MINUTE AT A TIME (the review's third pass, major; the door streams since its
@@ -1216,7 +1222,7 @@ def _histogram(metric: str, sub: str, w: str, field: str, h, les) -> list[str]:
 
 def rec_metrics(rec_ctl: SpecController):
     def lines() -> list[str]:
-        view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, rec_ctl.wall(), objects=rec_ctl.objects)
+        view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, rec_ctl.wall(), objects=rec_ctl.objects, eyes=rec_ctl.eyes)
         unserved = view["wanted"] - view["serving"]
         spare = len(spare_workers(rec_ctl))
         return ["# TYPE rec_volumes_declared gauge",
@@ -1247,7 +1253,7 @@ def rec_metrics(rec_ctl: SpecController):
 def _keep_missing(rec_ctl: SpecController, lost_after: float = 45.0) -> list[str]:
     now, worst, sub = rec_ctl.wall(), {}, rec_ctl.spec.sub.name
     for w, hb in heartbeats(rec_ctl.objects, sub).items():
-        if now - hb.ts > lost_after:
+        if not heard_live(sub, w, hb, now, lost_after, rec_ctl.eyes):     # by change (r29-writers2)
             continue
         missing = hb.extra.get("keep_missing") or {}
         if isinstance(missing, str):
@@ -1501,7 +1507,8 @@ def auto_metrics(auto_ctl):
 def as_held(rec_ctl: SpecController, vol: dict, now: float, lost_after: float = 45.0) -> dict:
     for w, hb in heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items():
         x = hb.extra
-        if str(x.get("volume") or "") != vol["name"] or now - hb.ts > lost_after:
+        if str(x.get("volume") or "") != vol["name"] or not heard_live(rec_ctl.spec.sub.name, w, hb, now, lost_after,
+                                                                       rec_ctl.eyes):
             continue
         # A camera's card (`kind: edge`) is no ring of the engine: its recorder says what the card holds against its
         # budget, and whether it opened at all (`vms/card.py`). Nothing to shrink, no size the engine formatted.
@@ -1585,7 +1592,7 @@ def rec_routes(rec_ctl: SpecController):
             return None
         if method == "GET" and path in ("/volumes", "/volumes/"):
             now = rec_ctl.wall()
-            view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, now, objects=rec_ctl.objects)
+            view = volumes.served(rec_ctl.vars, rec_ctl.spec.sub, now, objects=rec_ctl.objects, eyes=rec_ctl.eyes)
             spare = spare_workers(rec_ctl)
             view = {**view, "volumes": [{**v, **as_held(rec_ctl, v, now)} for v in view["volumes"]]}
             # A recorder pinned to a volume whose hold is another's writes nothing and says why (`volume_wait`): only its
@@ -1593,7 +1600,7 @@ def rec_routes(rec_ctl: SpecController):
             # minor). Its line, and on the volume it waits for.
             waiting = [{"recorder": w, "why": str(hb.extra["volume_wait"])}
                        for w, hb in sorted(heartbeats(rec_ctl.objects, rec_ctl.spec.sub.name).items())
-                       if hb.extra.get("volume_wait") and now - hb.ts <= 45.0]
+                       if hb.extra.get("volume_wait") and heard_live(rec_ctl.spec.sub.name, w, hb, now, 45.0, rec_ctl.eyes)]
             view["volumes"] = [{**v, **({"waiting": [x["recorder"] for x in waiting if x["why"].startswith(f"{v['name']} ")]}
                                         if any(x["why"].startswith(f"{v['name']} ") for x in waiting) else {})}
                                for v in view["volumes"]]
@@ -1605,7 +1612,7 @@ def rec_routes(rec_ctl: SpecController):
                          **scale_hint(rec_ctl, view["wanted"] - view["serving"], len(spare)),
                          # …and what to offer somebody who has declared nothing yet: the disk each box
                          # already records into, sized to its partition. A proposal, not a row.
-                         "suggested": volumes.suggest(rec_ctl.vars, rec_ctl.objects, rec_ctl.spec.sub, now)}
+                         "suggested": volumes.suggest(rec_ctl.vars, rec_ctl.objects, rec_ctl.spec.sub, now, eyes=rec_ctl.eyes)}
         if method == "POST" and path in ("/volumes", "/volumes/"):
             try:
                 body = object_body(handler)                  # not JSON, nested past its depth, a list: 400 (the eleventh review)
@@ -1721,13 +1728,13 @@ def source_cams(ctl, scenarios=None):
             v = row.get("labels") or []
             return {str(x) for x in (v if isinstance(v, (list, tuple)) else str(v).split(",")) if str(x)}
         if "labels" in new and labels(old) != labels(new) and a:
-            same = one_device(ctl.vars, ctl.objects, ctl.wall)
+            same = one_device(ctl.vars, ctl.objects, ctl.wall, ctl.eyes)
             dev = same(device_of(a))
             out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) == dev}
         if a == b:
             return out                                   # the source as it was: nothing moved, nothing to look up
         if volumes.source_key(a) != volumes.source_key(b):
-            same = one_device(ctl.vars, ctl.objects, ctl.wall)       # known: held by a live holder now (the tenth pass)
+            same = one_device(ctl.vars, ctl.objects, ctl.wall, ctl.eyes)   # known: held by a holder seen live now (10th, r29)
             devices = {same(device_of(s)) for s in (a, b) if s}
             out |= {str(r["id"]) for r in ctl.cameras() if r.get("source") and same(device_of(str(r["source"]))) in devices}
             if device_of(a) != device_of(b):

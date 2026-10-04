@@ -977,7 +977,13 @@ class RecWorker(VmsWorker):
             self._not_written_since.pop(key, None)
             return True
         FIELDS.parsed(f"{PRIMARIES}#{ref}")
-        if now - seen > self.CARRIED_LOST_AFTER:                 # the book is as old as the agent's last contact
+        # …as old by what THIS recorder saw change (the product's r29-writers2): `ts` is the agent's clock, and an agent
+        # whose clock ran an hour ahead and then lost the domain vouched for the book for that hour. A recorder that has
+        # only its two stores (М12's gate) reads the agent's clock as before.
+        eyes = getattr(self, "eyes", None)
+        stale = (not raw or eyes.age(DOMAIN_SEEN, seen) > self.CARRIED_LOST_AFTER) if eyes is not None else \
+            now - seen > self.CARRIED_LOST_AFTER
+        if stale:                                                # the book is as old as the agent's last contact
             self._not_written_since.pop(key, None)
             return True
         if not e.get("should") or e.get("written"):
@@ -2948,7 +2954,7 @@ class RecWorker(VmsWorker):
         # Not a door on another server's loopback (the review's fourth pass): announced truthfully and not reachable from
         # here, it was asked every pass, refused, and the keep stayed uncopied with nothing to say why.
         from .config import local_only
-        live = [(n, u, hb) for n, u, hb in recorder_doors(self.objects, now)
+        live = [(n, u, hb) for n, u, hb in recorder_doors(self.objects, now, eyes=self.eyes)   # by change (r29-writers2)
                 if n != self.name and not local_only(u, str(hb.extra.get("server", "?")), self.server)]
         doors = [(n, u) for n, u, _ in live]
         state: dict[str, dict] = {}

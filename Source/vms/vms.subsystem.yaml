@@ -57,7 +57,9 @@ unit:
     #   with it (`pwd_md5`, `passwordHash`), `*pwd` a last word ending with it (`userpwd`, `clientsecret`). `p`, `code`,
     #   `pin` are not here: too many cameras mean something else by them (a profile, a codec), and a list that refuses
     #   those refuses cameras, not passwords. A word that only begins a name (`token_bucket`, `authmode`, `passage`) is
-    #   no credential (the thirteenth review, minor).
+    #   no credential (the thirteenth review, minor). `=auth` — the whole name only: as the last word of a longer one
+    #   (`rtsp_auth`, `enable_auth`, `basic_auth`, `x-auth`) it says how the camera authenticates, not with what; a Wi-Fi
+    #   key (`psk`, `wpa_psk`) and a private key (`privkey`) are credentials (the product's r28-secrets2).
     # - the XMeye/Xiongmai chain in the path, `/user=admin_password=…_channel=1_stream=0.sdp` (the twelfth review,
     #   blocker 8): a password ends at the last `_` before the next `name=`, `Hun_ter2_channel=1` is `Hun_ter2`;
     # - a password's name segment gives the next segment (`/user/admin/password/…/snap.jpg`); not `pass` or `pw`:
@@ -76,7 +78,8 @@ unit:
       secret_in:
         - param: [user, usr, username, userid, login, loginuse, loginpas, loginpass, account, key, keyid, apikey, authkey,
                   accesskey, secretkey, sig, signature, sid, session, sessionid, pw, psd, pass, password, passwd, pwd, psw,
-                  userpass, passcode, passphrase, secret, token, auth, authorization, cred, creds, credential, credentials,
+                  userpass, passcode, passphrase, secret, token, "=auth", authorization, cred, creds, credential, credentials,
+                  psk, privkey, privatekey,
                   "password*", "passwd*", "pwd*", "psw*", "secret*",
                   "*password", "*passwd", "*pwd", "*secret", "*token"]
         - regex: '(?i)(?:^|[/_&;])(?:user|usr|username)=(?P<login>[^_&;/#]*)_(?:password|passwd|pwd|pass)=(?P<secret>[^&;/#]*?)(?=_[^_=&;/#]+=|[&;/#]|$)'

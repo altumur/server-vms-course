@@ -224,9 +224,11 @@ def _read_contender(objects, key: str) -> dict | None:
     return row
 
 
-def contenders(objects, sub: "Subsystem", now: float) -> dict[str, list[dict]]:
+def contenders(objects, sub: "Subsystem", now: float, eyes: "Eyes | None" = None) -> dict[str, list[dict]]:
     """The fresh marks of a subsystem, by name, ordered by box: the processes that want a name another instance holds
-    and asked within `CONTENDER_FRESH` of now. A mark that does not read is skipped; a store that does not answer, none."""
+    and asked within `CONTENDER_FRESH` of now — of the reader's clock where it has `eyes`: the mark CHANGED within it (the
+    product's r29-writers2; `at` is the claimant's clock, and a claimant an hour ahead that stopped asking was a conflict
+    for an hour). A mark that does not read is skipped; a store that does not answer, none."""
     out: dict[str, list[dict]] = {}
     try:
         keys = objects.list(sub.contenders_prefix())
@@ -234,7 +236,8 @@ def contenders(objects, sub: "Subsystem", now: float) -> dict[str, list[dict]]:
         return out
     for key in keys:
         row = _read_contender(objects, key)
-        if row is not None and now - row["at"] <= CONTENDER_FRESH:
+        if row is not None and (eyes.fresh(key, row["at"], CONTENDER_FRESH) if eyes is not None
+                                else now - row["at"] <= CONTENDER_FRESH):
             out.setdefault(str(row["name"]), []).append(row)
     for rows in out.values():
         rows.sort(key=lambda r: str(r.get("box", "")))
@@ -361,7 +364,11 @@ def builds(objects, now: float, lost_after: float = 45.0, eyes: "Eyes | None" = 
             # Live by the judge's eyes where it has them — changed within `lost_after` of its clock (the review's
             # thirteenth pass, blocker 4): `set_schema` refused nothing while a live build's clock ran 50 s behind
             sub = key.split("/", 1)[0]
-            live = (eyes.fresh(key, d["ts"], lost_after, d["ts"], sub) if eyes is not None
+            # …by the token every reader of a heartbeat gives the same eyes (`Heartbeat.token`, `(ts, crc)`): a bare `ts`
+            # here and `(ts, crc)` in `/servers` under one key read as a change at every turn — a dead worker "fresh"
+            # for as long as a page asked both (found beside the product's r29-writers2)
+            import zlib
+            live = (eyes.fresh(key, (d["ts"], zlib.crc32(raw)), lost_after, d["ts"], sub) if eyes is not None
                     else is_live(sub, d["ts"], now, lost_after))
             out[heartbeat_owner(key)] = {**d, "live": live}
     return out
@@ -1964,7 +1971,7 @@ class Controller:
     # `name_conflicts`, `<p>_name_conflicts` on `/metrics`.
     def say_name_conflicts(self) -> int:
         now = self.wall()
-        marks = contenders(self.objects, self.sub, now)
+        marks = contenders(self.objects, self.sub, now, self.eyes)
         said, before = {}, self.__dict__.setdefault("_names_said", {})
         for name in sorted(marks):
             for m in marks[name]:

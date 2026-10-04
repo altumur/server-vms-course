@@ -571,7 +571,7 @@ def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_th
         assert made["source"] == s
         con.delete(made["id"])
     # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
-    for n in ("pwd", "PassWord", "pass_word", "user_id", "access_token", "authToken", "x-auth", "X-Amz-Signature",
+    for n in ("pwd", "PassWord", "pass_word", "user_id", "access_token", "authToken", "X-Amz-Signature",
               "AWSAccessKeyId", "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
               "Authorization", "session_id", "passcode"):
         assert is_credential_param(n), n
@@ -588,7 +588,8 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
     from the ring's (`Sealer.mac`), which the store never sees; without one, the sha256 of the body as a page says it
     (`*_secret` masked, addresses hidden). Either way the dictionary finds nothing; the same body under the same key is
     still the same request — on another console holding the same ring, and on one a rotation ahead (the kid names the
-    key) — and another body is still 422."""
+    key) — and another body is still 422. And on a console whose ring no longer holds the claim's kid, the masked digest
+    kept beside the HMAC answers (the product's r28-secrets2)."""
     import hashlib
     import os
     from tests.test_sealing import _key
@@ -643,7 +644,7 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
         row = box.vars.get("vms/cameras/1")[0]
         claims = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]
         assert is_sealed(row["cred_secret"]) == keyed and len(con.cameras()) == 1
-        assert all(("mac" in c) == keyed and ("digest" in c) != keyed and "sha256" not in c for c in claims), claims
+        assert all(("mac" in c) == keyed and "digest" in c and "sha256" not in c for c in claims), claims
         assert reversed_(claims, row) == [], reversed_(claims, row)
 
     # …and across consoles: one ring, a rotation ahead, and a ring without the claim's kid
@@ -659,7 +660,74 @@ def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_t
     assert box.vars.get("vms/idem/r1")[0]["mac"].startswith("k1:")
     assert ahead.claim("r1", "anna", body) == (201, {"id": 1})                  # the same request, by the kid it names
     assert ahead.claim("r1", "anna", body + b" ")[0] == 422                      # another body
-    assert other.claim("r1", "anna", body)[0] == 422                             # a digest it cannot make: not answered
+    # …and a ring whose kid was REMOVED within the claim's day (the product's r28-secrets2): the claim's `mac` is one no
+    # console can make any more, and a correct retry was 422. The masked digest beside it answers then — the same body,
+    # the first reply; another body, 422 still. A claim with no digest and a kid gone is not answered.
+    assert other.claim("r1", "anna", body) == (201, {"id": 1})
+    assert other.claim("r1", "anna", json.dumps({"name": "yard", "cred_secret": "admin123"}).encode())[0] == 422
+    assert other.claim("r1", "boris", body)[0] == 422                            # another caller: never
+    items, idx = box.vars.get("vms/idem/r1")
+    box.vars.put("vms/idem/r1", {k: v for k, v in items.items() if k != "digest"}, cas=idx)
+    assert other.claim("r1", "anna", body)[0] == 422
+
+
+# The product's r28-secrets2 defects, checked in the course: refused, and said by no reader.
+R28_FORMS = [
+    "http://h:1984/api/stream.mp4?src=rtsp://admin:Hunter2@cam",
+    "http://h:1984/api/stream.mp4?src=rtsp://admin:Hunter2@cam:554/live",
+    "http://h:1984/api/stream.mp4?src=rtsp://cam/live?pwd=Hunter2",
+    "http://h:1984/proxy/rtsp%3A%2F%2Fadmin%3AHunter2%40cam/live",
+    "http://h/proxy/rtsp%3A//admin%3AHunter2%40cam/live",
+    "rtsp://10.0.0.5/live?pass%3DHunter2=1",
+    "rtsp://10.0.0.5/live?x=1&pwd%3DHunter2%26a=1",
+    "rtsp://10.0.0.5/live?psk=Hunter2", "rtsp://10.0.0.5/live?wpa_psk=Hunter2", "rtsp://10.0.0.5/live?privkey=Hunter2",
+    "rtsp://10.0.0.5/live?\uff50\uff41\uff53\uff53\uff57\uff4f\uff52\uff44=Hunter2",
+    "rtsp://10.0.0.5/live?pa\u017f\u017fword=Hunter2",
+    "rtsp://10.0.0.5/live?pass\u200bword=Hunter2", "rtsp://10.0.0.5/live?\U0001d429\U0001d430\U0001d41d=Hunter2",
+    "rtsp://10.0.0.5/live?\u24df\u24e6\u24d3=Hunter2",
+]
+
+
+def test_the_products_second_secrets_pass_finds_nothing_in_the_course():
+    """The product's r28-secrets2, checked here — runs of each form. (1) go2rtc with a port: `http://h:1984/…?src=
+    rtsp://admin:…@cam` was refused, but said with ITS port masked (`h:***`): an `@` anywhere after the host made the
+    port a secret, and the inner address's `@` is not the outer's. (2) An `@` in the query was read as the end of a
+    login from the path's first segment on: `rtsp://10.0.0.5:554/live?x=y@b` was said `10.0.0.5:***/…@b`. (3) A key
+    escaped inside a name, `?pass%3D…=1`, was taken: the name read as one word. Now it is two — a credential's — and the
+    refusal names `pass`, never the decoded rest. (4) Credential names the rule did not know: `psk`, `wpa_psk`, `privkey`
+    (fullwidth, `ſ`, a zero-width space, mathematical and circled letters were known — NFKC and the format characters).
+    (5) False refusals: `?rtsp_auth=`, `?enable_auth=`, `x-auth`, `basic_auth` name how a device authenticates, not what
+    with — decided as the product: not a credential; `auth` alone still is. (6) A legacy `driverpack://acme/<login>@
+    <host>/ch/<n>` whose password holds a `/`, or a login in the vendor's place, gave an odd device key and no channel —
+    the channels of one recorder split: the key is the host without the login. (7) An address escaped WHOLE — no `://`
+    to see — was no address: refused now inside a list as anywhere, and said masked."""
+    from vms.config import channel_key, device_of
+    from w2cplatform.secrets import address_refusal, hide_in_url, is_credential_param, refusal_within
+    for src in R28_FORMS:
+        why = address_refusal(src)
+        assert why and not _leaks(why) and not _leaks(hide_in_url(src)), (src, why, hide_in_url(src))
+        assert not _leaks(mask_secrets([{"source": src}])), src
+    assert hide_in_url(R28_FORMS[0]) == "http://h:1984/api/stream.mp4?src=***"
+    assert hide_in_url(R28_FORMS[1]) == "http://h:1984/api/stream.mp4?src=***"
+    assert hide_in_url("rtsp://10.0.0.5:554/live?x=y@b") == "rtsp://10.0.0.5:554/live?x=\u2026@b"
+    assert hide_in_url("rtsp://a:Hunter2@10.0.0.5:554/live?x=y@b") == "rtsp://\u2026@10.0.0.5:554/live?x=\u2026@b"
+    assert "pass" in address_refusal("rtsp://10.0.0.5/live?pass%3DHunter2=1")
+    for n in ("psk", "wpa_psk", "WPA-PSK", "privkey", "private_key", "auth", "Authorization"):
+        assert is_credential_param(n), n
+    for n in ("rtsp_auth", "enable_auth", "x-auth", "basic_auth", "gpio_pin", "auth_mode"):
+        assert not is_credential_param(n), n
+    for src in ("rtsp://10.0.0.5/live?rtsp_auth=1", "rtsp://10.0.0.5/live?enable_auth=0", "http://10.0.0.5/io?gpio_pin=3",
+                "rtsp://10.0.0.5/live?basic_auth=1", "http://h:1984/api/stream.mp4?src=rtsp%3A%2F%2Fcam%3A554%2Flive"):
+        assert address_refusal(src) is None and hide_in_url(src) == src, src
+    for src in ("driverpack://acme/admin:Hun/ter2@10.0.0.5/ch/1", "driverpack://admin:Hunter2@acme/10.0.0.5/ch/1",
+                "driverpack://acme/admin:Hunter2@10.0.0.5/ch/1", "driverpack://acme/10.0.0.5/ch/1"):
+        assert (device_of(src), channel_key(src)) == ("acme/10.0.0.5", "1"), (src, device_of(src), channel_key(src))
+    whole = "rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs"
+    for value in (whole, [whole], {"a": [whole]}):
+        where, why = refusal_within({"source": value})
+        assert where.startswith("source") and why and not _leaks(where + why), (value, where, why)
+        assert not _leaks(json.dumps(mask_secrets([{"source": value}])))
+    assert refusal_within({"source": ["rtsp%3A%2F%2Fcam%2Fs"], "note": "50%25 off"}) is None
 
 
 def test_a_value_inside_a_list_or_an_object_is_asked_and_masked_all_the_way_down():

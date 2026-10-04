@@ -63,7 +63,8 @@ def test_the_recorder_unit_reaches_the_daemon_the_hosts_unit_runs():
     users = next(f for f in ("vms-obsd.sysusers", "obsd.sysusers") if os.path.exists(os.path.join(M10, f)))
     groups = {renamed(f[1]) for f in (l.split() for l in open(os.path.join(M10, users), encoding="utf-8")) if f and f[0] == "g"}
     assert group in groups                                                              # a group the host has
-    assert "vms-obsd.service" in rec["After"][0] and "vms-obsd.service" in rec["Wants"][0]   # the name `install.sh` gives it
+    assert "vms-obsd.service" in rec["After"][0]                                        # the name `install.sh` gives it
+    assert "vms-obsd.service" not in rec.get("Wants", [""])[0]                          # ordered after, never started by it (r28-ops2)
     job = open(JOB, encoding="utf-8").read()
     assert re.search(r'OBSD_SOCKET\s*=\s*"([^"]+)"', job).group(1) == sock              # the appendix too
 

@@ -144,7 +144,8 @@ def test_a_recorder_with_no_daemon_says_the_archive_is_away_and_keeps_its_place(
 def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole():
     """srv-a went down with its disk: the recorder that held `disks-a` is silent, and nobody else can hold a
     disk of srv-a. The footage in it is not lost — it is there, unavailable until srv-a is back — and the
-    camera's timeline says exactly that, by volume and server, beside what the live doors answered."""
+    camera's timeline says exactly that, by volume and server, beside what the live doors answered. Silent by what the
+    console saw: its heartbeat stood still a minute (the product's r29-writers2)."""
     from w2cplatform.contract import Heartbeat
     from vms.console import vms_routes
     from tests.conftest import door, footage, store
@@ -159,13 +160,15 @@ def test_a_volume_nobody_serves_is_named_on_the_timeline_and_not_drawn_as_a_hole
     try:
         routes = vms_routes(True, None, con, rec_con)
         rec_con.create({"name": "1", "cam": "1"})
+        routes(None, "GET", "/timeline/1", {})                     # the console's first look: every heartbeat just changed
+        box.wall.advance(60); srv.announce()                        # a minute on, r-a has said nothing (r29-writers2)
         status, body = routes(None, "GET", "/timeline/1", {})
         assert status == 200 and [(s["start"], s["recorder"]) for s in body["segments"]] == [(t - 300, "r-b")]
         assert body["unavailable"] == [{"volume": "disks-a", "server": "srv-a", "recorder": "r-a", "since": t - 600}]
         assert "disks-a (on srv-a) is unavailable" in body["note"] and "not lost" in body["note"]
 
         box.objects.put(REC_SPEC.sub.heartbeat_key("r-a"),                 # srv-a is back, its recorder holds the disk again
-                        Heartbeat("r-a", t, [], {"server": "srv-a", "volume": "disks-a"}).to_bytes())
+                        Heartbeat("r-a", box.wall(), [], {"server": "srv-a", "volume": "disks-a"}).to_bytes())
         status, body = routes(None, "GET", "/timeline/1", {})
         assert isinstance(body, list) and len(body) == 1                   # nothing to explain: a plain list
     finally:

@@ -19,6 +19,9 @@
 		<key>CONFIGSTORE_SOCKETS</key>
 		<string>__BOX__/state/run/configstore</string>
 	</dict>
+	<!-- Its journal is its own (r28-ops2): 0077, as the unit's UMask; `w2c-run.sh` sets the same. -->
+	<key>Umask</key>
+	<integer>63</integer>
 	<key>RunAtLoad</key>
 	<true/>
 	<key>KeepAlive</key>
