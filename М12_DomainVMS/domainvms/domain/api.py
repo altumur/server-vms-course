@@ -40,6 +40,18 @@ class ApiError(Exception):
         return f"{self.status}: {self.detail}"
 
 
+# An address that carries a credential, refused in the cluster's words (`secrets.address_refusal`) and named by its
+# field: the domain's `_refuse_secrets`, and a camera's own console (`Device._update`), which a kept edit reaches
+# without the domain's door (Lesson 9).
+def refuse_addresses(fields: dict) -> None:
+    from w2cplatform.secrets import address_refusal
+    for k in sorted(fields, key=str):
+        why = address_refusal(fields[k]) if isinstance(fields[k], str) else None
+        if why:
+            raise ApiError(400, f"{k}: {why} — a device's login and password are set in the camera's own cluster, in "
+                                f"cred_username / cred_secret; an address is shown, kept, backed up and relayed")
+
+
 class ConsoleAPI:
     def __init__(self, directory: DomainDirectory, consoles: Callable[[str], ClusterConsole],
                  verifier: Callable[[str], str] | None = None, pending=None, last_known=None):
@@ -74,12 +86,20 @@ class ConsoleAPI:
     # books a relay carries (Lesson 17), and its fields in the journal. A `*_secret` among them is in the clear in
     # all of those — past the cluster's key, which seals a secret only on the way into the cluster's own store
     # (М10A Lesson 18). So the domain refuses it, kept or forwarded: a password is set in the camera's cluster.
+    #
+    # …NOR IN AN ADDRESS (vmsserver's twelfth review, blocker 9; a run). The rule looked at field NAMES, and `{"source":
+    # "…?usr=admin&pwd=…"}` for a camera whose cluster was off was 202 with the password in the reply, kept in
+    # `domain/pending/<cluster>`, and applied on the camera when it came back. Every value that is an address goes
+    # through the cluster's own rule (`secrets.address_refusal`: a login, a port that is no number, a credential pair
+    # in the query or the path), refused before anything is kept or forwarded, in words that name the field and never
+    # the value.
     def _refuse_secrets(self, fields: dict) -> None:
         from w2cplatform.secrets import is_secret_field
         bad = sorted(k for k in fields if is_secret_field(k))
         if bad:
             raise ApiError(400, f"{', '.join(bad)}: a device's password is set in the camera's own cluster — the domain "
                                 f"keeps, backs up and relays its edits, and a password would be in the clear in all of those")
+        refuse_addresses(fields)
 
     def update_camera(self, camera: int, fields: dict, idempotency_key: str, token: str | None = None) -> dict:
         if idempotency_key in self._seen:
@@ -141,6 +161,9 @@ class ConsoleAPI:
         if idempotency_key in self._seen:
             return self._seen[idempotency_key]
         self._refuse_placement(fields)
+        # The same refusals as an edit's (the product's cross-check of vmsserver's twelfth review): a create is not kept,
+        # but it passes the domain's door, its journal and its idempotency copy — a password is set in the cluster.
+        self._refuse_secrets(fields)
         subject = self._subject(token)
         result = self.consoles(cluster).create_camera(fields, subject)
         resp = {"cluster": cluster, "result": result, "authenticated": self.verifier is not None}

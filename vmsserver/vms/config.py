@@ -134,23 +134,31 @@ def device_of(source: str) -> str:
     vendor's own addressing stays opaque, only the grouping is ours — and one
     spelling for one address (`_host`)."""
     from urllib.parse import urlsplit
+    from w2cplatform.secrets import SECRET_MASK, hide_in_url
     try:
         u = urlsplit(str(source).strip())
     except ValueError:                                   # `rtsp://[10.0.0.5/…`: "Invalid IPv6 URL" (the tenth pass's sweep)
-        return str(source)                               # not an address anybody can say the device of: as it is
+        return hide_in_url(str(source))                  # not an address anybody can say the device of: as a page says it
     scheme = u.scheme.lower()
     if scheme != "driverpack":
         if not u.netloc:
             return str(source)                           # not an address: a path, a name — as it is
         # …nor are credentials in its parameters (the eleventh review, blocker 4): the key is in the heartbeat, `/devices`
         # and the log, and a row stored before the refusal named its password there.
-        from w2cplatform.secrets import hide_in_url
         return hide_in_url(f"{scheme}://{_host(u.netloc, scheme)}{u.path}" + (f"?{u.query}" if u.query else ""))
     parts = [p for p in u.path.split("/") if p]
     vendor = u.netloc.strip().lower().rstrip(".")
     if vendor == "file":
         return "file/" + parts[0] if parts else "file"
-    return f"{vendor}/{_host(parts[0], scheme)}" if parts else vendor
+    if not parts:
+        return vendor
+    # The host in the path, without what a row stored before the refusals put around it (the twelfth review's sweep):
+    # a login before an `@`, a `;name=value`, a port that is no number — `acme/admin:…@10.0.0.5`, `10.0.0.5;password=…`.
+    host = _host(parts[0].rsplit("@", 1)[-1].split(";", 1)[0], scheme)
+    head, colon, port = host.rpartition(":")
+    if colon and not host.endswith("]") and port and not port.isdigit():
+        host = f"{head}:{SECRET_MASK}"
+    return f"{vendor}/{host}"
 
 
 # WHAT TWO KEYS ARE ONE DEVICE BY: the key (`device_of`), or — once a holder has opened them — what the device said it
@@ -354,8 +362,9 @@ def source_refusal(source: str) -> str | None:
     said = repr(shown_source(src))
     try:
         u = urlsplit(src)
-    except ValueError as e:
-        return f"{said} is not an address: {e}"
+    except ValueError:                                   # its words quote the host, a login and all (the twelfth review)
+        from w2cplatform.secrets import NOT_AN_ADDRESS
+        return f"{said} is not an address: {NOT_AN_ADDRESS}"
     host = u.netloc
     if u.scheme.lower() == "driverpack":
         parts = [p for p in u.path.split("/") if p]

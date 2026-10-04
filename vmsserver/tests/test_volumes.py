@@ -507,6 +507,70 @@ def test_the_key_never_goes_into_the_address():
             assert "never the key to it" in str(e) and "AKIAEXAMPLE" not in str(e) and "wJalr" not in str(e), str(e)
 
 
+# A bucket's key written into a volume's url every way the twelfth review (blocker 10) and the product's cross-check (7 of
+# 7 spellings taken there) found it: a secret with `/`, `+`, `=`, `?`, `#` in it, no host at all, a secret that begins
+# with digits, the signed and the named forms in the query and the path. The secret is `wJalr…`.
+KEY_FORMS = [
+    "s3://AKIAEXAMPLE:wJalr/XUtn@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:wJalr+XUtn=@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:wJalr?XUtn@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:wJalr#XUtn@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:wJalrXUtn@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:wJalrXUtn",
+    "s3://:wJalr/XUtn@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:12/wJalr@s3.example.com/eu-1/vms",
+    "s3://AKIAEXAMPLE:1234?wJalr@s3.example.com/eu-1/vms",
+    "s3://s3.example.com/eu-1/vms?X-Amz-Credential=AKIAEXAMPLE%2F20261004&X-Amz-Signature=wJalr",
+    "s3://s3.example.com/eu-1/vms?AWSAccessKeyId=AKIAEXAMPLE&Signature=wJalr",
+    "s3://s3.example.com/eu-1/vms?aws_secret_access_key=wJalr",
+    "s3://s3.example.com/eu-1/vms?secret=wJalr",
+    "s3://s3.example.com/eu-1/vms?access_key=AKIAEXAMPLE&secret_key=wJalr",
+    "s3://s3.example.com/eu-1/vms/access_key=AKIAEXAMPLE_secret_key=wJalr",
+    "s3://s3.example.com/eu-1/vms;secret=wJalr",
+    "https://s3.example.com/vms?x-amz-security-token=wJalr",
+]
+
+
+def test_a_key_in_a_volumes_url_is_refused_whatever_its_characters_and_an_old_row_is_said_nowhere():
+    """The twelfth review, blocker 10 and major 15 — runs: the `@` was looked for before the first `/` only, and AWS
+    secret keys hold `/`: `s3://AKIA:…/x@h/bucket` was taken and stood on `/volumes`; and a row declared before the rule
+    (`?X-Amz-Credential=…`, `?secret=…`) stood there as stored, in the recorder's `volume_error`, its heartbeat and its log
+    (`Port could not be cast … as '…'`). Now the url goes through the address rule (`secrets.address_refusal`): every
+    form of `KEY_FORMS` is refused in words that never quote it; one put in the store as an older build would have is
+    said by `volumes.served` (`GET /volumes`), and by a recorder that takes it — its heartbeat and its log — with the
+    secret hidden (`hide_in_url`, `archive.volume_params`)."""
+    import logging
+    from vms.archive import volume_params
+    box = Box()
+    for url in KEY_FORMS:
+        try:
+            volumes.refuse({"name": "v", "kind": "network", "url": url, "quota_bytes": 1})
+            raise AssertionError(f"a key rode in on a volume's url: {url}")
+        except Refused as e:
+            assert "never the key to it" in str(e) and "wJalr" not in str(e) and "XUtn" not in str(e), (url, str(e))
+    said = []
+    h = logging.Handler()
+    h.emit = lambda r: said.append(r.getMessage())
+    logging.getLogger().addHandler(h)
+    try:
+        for i, url in enumerate(KEY_FORMS[:3] + KEY_FORMS[9:10]):              # stored before the rule
+            box.vars.put(volumes.key(f"old{i}"), volumes.Volume.from_items(
+                f"old{i}", {"kind": "network", "url": url, "quota_bytes": str(64 << 20)}).to_items())
+            r = _recorder(box, f"r-old{i}", "srv-a")
+            r.volume_pass()
+            hb = r.heartbeat_extra()
+            assert "wJalr" not in json.dumps(hb, default=str) and "XUtn" not in json.dumps(hb, default=str), (url, hb)
+            try:
+                volume_params(url)
+            except ValueError as e:
+                assert "wJalr" not in str(e) and "XUtn" not in str(e), str(e)
+        shown = volumes.served(box.vars, REC_SPEC.sub, box.wall())["volumes"]
+        assert len(shown) == 4 and "wJalr" not in json.dumps(shown) and "XUtn" not in json.dumps(shown), shown
+    finally:
+        logging.getLogger().removeHandler(h)
+    assert said and not [s for s in said if "wJalr" in s or "XUtn" in s]
+
+
 def test_a_recorder_that_holds_an_archive_is_not_a_spare():
     """Taking a volume and opening it are two moments, and on a bucket whose
     previous writer is still letting go the gap is most of a minute. A process

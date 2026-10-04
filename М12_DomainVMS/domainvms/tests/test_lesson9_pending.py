@@ -221,3 +221,65 @@ def test_an_edit_made_before_the_last_one_was_confirmed_is_not_a_conflict():
     assert member.rows[CAM]["events_retention_days"] == 14, "the camera's own earlier value was read as somebody else's change"
     pending.collect(fed)
     assert pending.of("cam-4471") == {}
+
+
+# A camera's login in an address, as the domain may be handed one (vmsserver's twelfth review, blocker 9; the product's
+# cross-check): the query, an XMeye path, a userinfo, one cut short by an unescaped `?`, an S3 signature.
+LOGINS = ["http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2",
+          "rtsp://10.0.0.9:554/user=admin_password=Hunter2_channel=1_stream=0.sdp?real_stream",
+          "rtsp://10.0.0.9/live;user=admin;pwd=Hunter2",
+          "rtsp://admin:Hunter2@10.0.0.5/s",
+          "rtsp://admin:Hunter2?x@10.0.0.5/s",
+          "http://10.0.0.5/user/admin/password/Hunter2/snap.jpg",
+          "https://s3.example.com/b/o?X-Amz-Signature=Hunter2"]
+
+
+def _holder_keys_with(fed, word="Hunter2") -> list[str]:
+    v = fed.domain_holder.vars
+    return [k for k in v.list("") if word in json.dumps(v.get(k)[0] or {})]
+
+
+def test_an_address_with_a_password_is_refused_and_never_kept_carried_or_reported():
+    """vmsserver's twelfth review, blocker 9 — a run: the domain refused `*_secret` by NAME, and `{"source": "…?usr=admin
+    &pwd=…"}` for a camera that was off was 202 with the password in the reply, kept in `domain/pending/cam-4471`, and
+    applied on the camera when it came back. The door now runs every address through the cluster's rule
+    (`secrets.address_refusal`, `api.refuse_addresses`): each form of `LOGINS` is 400 at an edit and at a create, the
+    field named and the value never, and nothing is kept. The floor under it — an entry an older domain kept: the
+    camera's own console refuses it (`Device._update`), the outcome says so without the value, and the domain's next
+    write of the row (`_dump`) keeps the address hidden; no key of the holder's store — the row, the outcomes carried
+    up, what a backup copies — holds the password."""
+    from domain.device import DeviceCluster
+    from domain.pending import PENDING_PATH
+    from cluster.variables import FakeVariables
+    wall, fed, links, pending, api = _domain_with_a_camera_that_went_off({"name": "gate", "source": "rtsp://10.0.0.5/s"})
+    for i, src in enumerate(LOGINS):
+        for call in (lambda: api.update_camera(CAM, {"source": src}, idempotency_key=f"u{i}", token="anna"),
+                     lambda: api.create_camera({"name": "n", "source": src}, cluster="cam-4471", idempotency_key=f"c{i}",
+                                               token="anna")):
+            try:
+                call()
+                raise AssertionError(f"the domain took a password in an address: {src}")
+            except ApiError as e:
+                assert e.status == 400 and "source" in e.detail and "Hunter2" not in e.detail, e.detail
+    assert pending.of("cam-4471") == {} and _holder_keys_with(fed) == [] and api._seen == {}
+
+    # …and one an older domain kept: the camera refuses it, the outcome and the row say no password.
+    cam = DeviceCluster("4471", FakeVariables(), wall=wall)
+    cam.boot()
+    try:
+        cam._update(1, {"source": LOGINS[1]}, None)
+        raise AssertionError("the camera's own console took a password in an address")
+    except ApiError as e:
+        assert e.status == 400 and "Hunter2" not in e.detail
+    old = {CAM: json.dumps({"rev": 1, "subject": "anna", "since": wall(),
+                            "fields": {"source": {"old": cam.row().get("source"), "new": LOGINS[1]}}})}
+    fed.domain_holder.vars.put(f"{PENDING_PATH}/cam-4471", old)
+    links["cam-4471"].up = True
+    agent = DomainAgent("cam-4471", fed.domain_holder.vars, fed.clusters["cam-4471"].vars, now=wall,
+                        console=cam.local_console(), current=cam.current)
+    assert agent.sync()
+    assert "Hunter2" not in json.dumps(cam.row())                                # not on the flash
+    outcomes = fed.clusters["cam-4471"].vars.get("domain/outcomes")[0]
+    assert outcomes and "refused" in outcomes[CAM] and "Hunter2" not in json.dumps(outcomes)
+    pending.collect(fed)
+    assert pending.of("cam-4471")[CAM]["refused"] and _holder_keys_with(fed) == []

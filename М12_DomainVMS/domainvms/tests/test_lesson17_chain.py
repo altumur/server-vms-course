@@ -788,10 +788,20 @@ def test_a_cameras_own_snapshot_carries_no_secret_and_no_password_in_an_address(
     """vmsserver's eleventh review, blocker 4, and the product's cross-check (the domain's snapshot): a camera that is its
     own cluster publishes its row as its snapshot, and an edit through its door takes any field — a `cred_secret`, or a
     `source` with `?pwd=…`, went into the domain's directory as written. The snapshot carries no secret field and no
-    credential in an address (`secrets.mask_secrets`), as a cluster's shards do."""
+    credential in an address (`secrets.mask_secrets`), as a cluster's shards do. Since vmsserver's twelfth review (blocker
+    9) the door refuses such an address (`Device._update`); a row an older build stored is published hidden."""
+    from domain.api import ApiError
     cam = DeviceCluster(SERIAL, FakeVariables(), wall=Clock())
     cam.boot()
-    cam._update(1, {"source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2", "cred_secret": "Hunter2"}, None)
+    try:
+        cam._update(1, {"source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2"}, None)
+        raise AssertionError("the camera's own console took a password in an address")
+    except ApiError as e:
+        assert e.status == 400 and "Hunter2" not in e.detail
+    items, idx = cam.flash.get("vms/cameras/1")
+    cam._put_row({**json.loads(items["row"]), "source": "http://10.0.0.5/videostream.cgi?usr=admin&pwd=Hunter2",
+                  "cred_secret": "Hunter2"}, cas=idx)                          # as an older build stored it
+    cam.publish()
     snap = cam.ram.get(f"vms/snapshot/{SERIAL}")
     assert b"Hunter2" not in snap and json.loads(snap)["cameras"][0]["source"].endswith("usr=***&pwd=***")
 

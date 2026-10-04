@@ -25,6 +25,7 @@ import time
 from cluster.variables import Conflict, Variables
 
 from w2cplatform.rows import PARSE_ERRORS
+from w2cplatform.secrets import hide_in_reply
 
 from .api import ApiError
 from .federation import MEMBER_OBJECTS, Unreachable
@@ -64,8 +65,14 @@ def _unread(items: dict | None) -> dict[str, str]:
     return {k: v for k, v in (items or {}).items() if not parses(v)}
 
 
+# NO PASSWORD IS KEPT HERE, NOR IN AN OUTCOME (vmsserver's twelfth review, blocker 9, and the product's cross-check): the
+# door refuses an address with a credential in it (`ConsoleAPI._refuse_secrets`), and this is the floor under it — every
+# write of a row of kept edits, and every outcome a member reports, says each address in it as a page does
+# (`secrets.hide_in_reply`): an entry kept by an older domain, a conflict's `current` read off a row stored before the
+# rule. A hidden value applied is still refused at the camera (`pwd=***` is a credential pair), as the edit's outcome.
 def _dump(entries: dict[str, dict], unread: dict[str, str] | None = None) -> dict[str, str]:
-    return {**(unread or {}), **{k: json.dumps(v, ensure_ascii=False, sort_keys=True) for k, v in entries.items()}}
+    return {**(unread or {}), **{k: json.dumps(hide_in_reply(v), ensure_ascii=False, sort_keys=True)
+                                 for k, v in entries.items()}}
 
 
 class PendingEdits:
@@ -226,5 +233,5 @@ def apply_pending(entries: dict[str, dict], current, console, now: float) -> dic
                 out["applied"] = sorted(apply)
             except ApiError as err:
                 out["refused"] = err.detail
-        outcomes[camera] = out
+        outcomes[camera] = hide_in_reply(out)                # a conflict's `current` is the member's row (see `_dump`)
     return outcomes
