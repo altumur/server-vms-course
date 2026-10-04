@@ -1402,8 +1402,11 @@ class _RingFrames:
                 "ahead": r.ahead, "clock_set": r.line.sets, "clock_unset": r.line.unset}
 
     def moves(self) -> list[tuple]:
-        """The moves of the ring's line (`CamRing.moves`), in unix seconds: `(lo, hi, delta)`."""
-        return [(unix_s(lo), unix_s(hi), d / 1000.0) for lo, hi, d in self.ring.moves()]
+        """The moves of the ring's line (`CamRing.moves`), in unix seconds: `(lo, hi, delta)` — the delta in whole ms, as
+        the ring moved its frames by (`CamRing._relabel`; the twelfth review's sibling: moved by the line's fraction of a
+        ms, the pusher's place no longer met the frame it stood on, and the next piece began at a key frame — the frames
+        before it, four at a set of the clock, never sent)."""
+        return [(unix_s(lo), unix_s(hi), int(round(d)) / 1000.0) for lo, hi, d in self.ring.moves()]
 
     def adrift(self) -> float | None:
         """Where the ring's line went on by a guess, its clock unset since a reboot (`CamRing.adrift`), or None."""
@@ -1705,8 +1708,11 @@ class CameraPusher:
 
     def _request(self, fn, *a, held: bool = False, **kw):
         """A request to an ingest: the camera's clock as it is sent (`camera_now`), and how long its last request took
-        there and back (`rtt`) — measured now, unless the ingest may hold it (`held`)."""
+        there and back (`rtt`) — measured now, unless the ingest may hold it (`held`). A look at the clock that finds it
+        set moves the line, and the pusher follows the move at once (`_follow`): what the ingest answers is on the moved
+        line."""
         sent = self.clock()
+        self._follow()
         out = fn(*a, camera_now=sent, rtt=self.rtt, **kw)
         took = self.clock() - sent
         if not held:
@@ -2094,6 +2100,7 @@ class CameraPusher:
 
     def _push(self, ing, token: str, work: dict, loose: list, key: str) -> tuple[int, bool]:
         now = self.clock()
+        self._follow()                                                 # (below: a look may have moved the line)
         self._left = 0.0
         self._peak = self.behind()                                     # how far behind the pass begins (`_judge_lag`)
         self._start(work, now)
@@ -2103,9 +2110,12 @@ class CameraPusher:
         allowance = min(PIECE_BYTES + self.frames.weight(self.seen), 2 * PIECE_BYTES)
         pushed = sent_bytes = 0
         while sent_bytes < allowance:
-            # The camera's clock is looked at BEFORE the piece is read (the twelfth review's sibling): a look that finds the
-            # clock set moves the line (`CamLine._set`), and a piece read before it went with a `camera_now` on the moved
-            # line — four frames on the old one at the new offset, ten seconds early, dropped as repeats at every set.
+            # The camera's clock is looked at BEFORE the piece is read, and the move it may make is followed before the
+            # stream's place is used (the twelfth review's sibling, found with blocker 12): a look that finds the clock set
+            # moves the line (`CamLine._set`). A piece read before it went with a `camera_now` on the moved line — four
+            # frames on the old one at the new offset, ten seconds early; and `_start`, comparing the cursor on the old line
+            # with the clock on the new, took the stream for fallen behind by the set and cut it to the newest key frame —
+            # the frames before it never sent, counted as `cut_s`.
             self.clock()
             self._follow()
             piece, off_card = self._next_piece(allowance - sent_bytes)

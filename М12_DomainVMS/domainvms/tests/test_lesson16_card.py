@@ -1298,7 +1298,8 @@ def test_a_camera_without_an_rtc_that_reboots_for_seconds_has_its_frames_before_
     `CLOCK_STEP` was taken at once and they lay where captured, but a single slow request then lost its travel's worth of
     frames. A rise past `CLOCK_STEP` is taken at once PROVISIONALLY now (`provisional`): the requests after the boot agree
     with it, it is a step — and the frames of R = 10 and 60 s lie where they were captured, before NTP, after it, and for a
-    camera whose clock nobody sets; R = 3 s, inside `CLOCK_STEP`, still waits for `OFFSET_RISE`, its frames 3 s early."""
+    camera whose clock nobody sets, none of them missing across the set (the twelfth review); R = 3 s, inside
+    `CLOCK_STEP`, still waits for `OFFSET_RISE`, its frames 3 s early."""
     import shutil
     wall0 = 1_780_000_000.0
     for R, ntp in ((10.0, 10.0), (60.0, 10.0), (60.0, None), (3.0, 10.0)):
@@ -1343,6 +1344,10 @@ def test_a_camera_without_an_rtc_that_reboots_for_seconds_has_its_frames_before_
         assert len(before_ntp) >= 90, (R, ntp, len(before_ntp))
         if R > 5.0:
             assert all(abs(e) < 0.002 for e in before_ntp.values()), (R, ntp, min(before_ntp.values()))
+            # …and none missing across the set (the twelfth review's sibling: the stream's place was compared on the old
+            # line with the clock on the set one — taken for fallen behind, cut to the next key frame: 4 frames at R = 60)
+            missing = [i for i in range(booted, n - 30) if i not in live]
+            assert not missing, (R, ntp, missing[:6])
         else:
             assert sum(1 for e in before_ntp.values() if abs(e + R) < 0.002) >= 80, R    # inside the hold: R early
         assert all(abs(e) < 0.002 for e in after_ntp.values()), (R, ntp)
