@@ -43,11 +43,13 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # - `-api host:port` — the other daemons' door: `/v1/status`, and `/v1/join` / `/v1/leave` of the calling daemon's
 #   OWN server (the id in the body is the server its certificate names). Mutual TLS, mandatory (`tls.py`): a client
 #   certificate of the installation's CA with the role `configstore`, or the handshake fails (no certificate) or the
-#   door answers 403 (another role's certificate). A daemon has NO right on a row (the review's twelfth pass, major
-#   3; `storemachine.Rights`): a data request on this door is answered only when it is forwarded for a process, and
-#   then as that process's role, which the forwarding daemon names in `FORWARDED` — a role of the rights file,
-#   never `admin`. A join that would leave a voter nobody runs is refused: an id already in the group at another
-#   raft address, or a raft address another id holds (`RaftBackend.add`).
+#   door answers 403 (another role's certificate). A certificate the CA has revoked fails the handshake (`tls.py`,
+#   `crl.pem`; the review's thirteenth pass, major 5), and one that names no server is refused (minor). A daemon has
+#   NO right on a row (the review's twelfth pass, major 3; `storemachine.Rights`), and no request on this door is
+#   answered as anybody else's: a data request is 403, whatever it carries (the thirteenth pass, major 1 — below).
+#   A join that would leave a voter nobody runs is refused: an id already in the group at another raft address, a
+#   raft address another id holds — however it is spelled, compared as the addresses it resolves to — or one where
+#   nothing answers (`RaftBackend.add`).
 # - the raft port (`-raft`) — the library's own, pickle on the wire: an open one is code execution for anyone
 #   who reaches it. `password=` from `<tls>/raft.secret` encrypts and authenticates it (the product's
 #   `hashicorp/raft` puts TLS there instead; `password=` needs the `cryptography` module). The library is told to
@@ -77,10 +79,13 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # row): a follower cut off from the group must not go on confirming an epoch the others have moved.
 # A command that arrives at a follower is carried to the leader by the library over the raft port — the daemon's
 # forwarding is the library's (`appendEntriesUseBatch=False`: at once, not at the next tick — 150 ms a write
-# otherwise). The rights were checked on the way in, by the daemon whose socket the caller opened. The product's
-# `hashicorp/raft` does not carry commands, so its daemon forwards the request itself over the `-api` door, marked
-# `X-Configstore-Forwarded: <the caller's role>` (`FORWARDED`: a forwarded request is never forwarded again — 503
-# `notleader`). This daemon never sends it; its door answers such a request with the rights of the role it names.
+# otherwise). The rights were checked on the way in, by the daemon whose socket the caller opened.
+# NO DAEMON FORWARDS A REQUEST OVER THE `-api` DOOR, AND THE DOOR TAKES NONE (the review's thirteenth pass, major 1;
+# the author's decision). The door answered a data request marked `X-Configstore-Forwarded: <role>` with that role's
+# rights — the product's `hashicorp/raft` carries no commands, so its daemon forwards them so — but this daemon
+# never sent the mark, and any daemon's certificate made itself any role with it: srv-b's certificate deleted
+# `vms/slots/*` as `vmsworker` and `domain/keys/*` as `domain` at srv-a's door. The path is gone: a data request on
+# the `-api` door is 403, marked or not, until a daemon that forwards exists (mTLS, its second round).
 #
 # ## Faults — "not done" and "do not know" are different answers
 # `commandsWaitLeader=False`: with no leader the library refuses a command at once instead of queueing it, so
@@ -96,9 +101,19 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # order, because a group that counts a voter which is not running has lost a vote. The member hands the change
 # to the library, which carries it to the leader (AddVoter); the library takes one membership change at a time
 # and refuses a second while the first is uncommitted, and the daemon retries that refusal.
-# A daemon that was taken into a group (`member.json`) starts from its journal, with the members it saw last
-# (`peers.json`): `-bootstrap` and `-join` count only the first time, so a unit restarted by systemd with the same
-# flags just comes back. A start that failed before its group took it leaves nothing it would start from.
+# A daemon that was taken into a group (`member.json`) starts from its journal, with the members it saw last:
+# `-bootstrap` and `-join` count only the first time, so a unit restarted by systemd with the same flags just comes
+# back. A start that failed before its group took it leaves nothing it would start from.
+# THE PARTNERS ARE WRITTEN WITH THE MEMBERSHIP, IN ONE FILE (the review's thirteenth pass, blocker 1). `member.json`
+# was written as soon as the join was accepted and the partners (`peers.json`) half a second later, on the first
+# tick: a member killed between the two came back with its journal and no partner — a leader of a group of one, its
+# own rows, create-only handing out epoch «1» where the group's was 7. The journal does not name the member a group
+# was bootstrapped on (its membership is no command of the log), so the journal cannot give it back. Now
+# `member.json` carries the partners and how the daemon became a member (`how`: `bootstrap` or `join`), written
+# atomically at once — a join's partners are the members the group named when it took it — and rewritten when the
+# library's view changes (`_keep_peers`) or this daemon changes the group (`add`, `remove`). A member that JOINED
+# and knows no partner never starts alone: it asks its `-join` door who the group is, or refuses to start
+# (`start_member`); only a group that shrank to it, by the library's own word (`alone`), is a group of one.
 # The operator's `join` / `leave` are the same change asked through `admin.sock`, for a member already running.
 #
 # ## The one-time import (a box becomes a cluster), and backup / restore
@@ -130,6 +145,7 @@ import http.client
 import ipaddress
 import json
 import os
+import re
 import socket
 import socketserver
 import ssl
@@ -146,10 +162,9 @@ from .variables import STORE_SCHEME, items_bytes
 
 # What an installation sees, each said once (the product names them; a rename is a line here).
 SOCKETS = "/run/configstore"                        # `<role>.sock` and `admin.sock`
-DATA = runtime.DATA + "/configstore"                # journal, dump, peers, member — the platform's state (`runtime.DATA`)
+DATA = runtime.DATA + "/configstore"                # journal, dump, member.json — the platform's state (`runtime.DATA`)
 RIGHTS_FILE = runtime.ETC + "/configstore-rights.json"   # generated from the spec (М11: `python3 -m cluster rights`)
 ADMIN_URL = f"{STORE_SCHEME}://{SOCKETS}/admin.sock"
-FORWARDED = "X-Configstore-Forwarded"               # the product's mark on a request one daemon forwards to another
 PLATFORM_ROLES = frozenset({"resource"})            # the platform's own processes among the store's callers
 
 
@@ -165,6 +180,7 @@ def socket_group(role: str, rights: Rights | None = None) -> str:
 LEADER_WAIT = 5.0          # how long a command may wait for a leader before the daemon answers 503
 JOIN_WAIT = 30.0           # a membership change: one at a time, a log entry, a new member catching up
 BIND_WAIT = 10.0           # how long the library may take to open the raft port
+ANSWER_WAIT = 2.0          # how long a new voter's raft port may take to accept, before it is added
 
 # What every door bears (the review's twelfth pass, major 1; the notes above).
 ROLE_CONNECTIONS = 64      # connections one socket (a role's, `admin.sock`) serves at once
@@ -259,6 +275,33 @@ def _bind_address(raft: str) -> tuple[str, int]:
     return info[0][4][0], int(port)
 
 
+# Where a raft address leads, as the set of (ip, port) it resolves to — `localhost:8301`, `127.0.0.1:8301`,
+# `LOCALHOST.:8301` and `[::ffff:127.0.0.1]:8301` are one place (the review's thirteenth pass, major 3: a join compared
+# the TEXT, and srv-d joined at `localhost:<srv-a's port>` beside srv-a — a voter nobody runs). Empty when it
+# resolves to nothing.
+def _places(raft: str) -> set[tuple[str, int]]:
+    host, sep, port = raft.rpartition(":")
+    if not sep or not host or not port.isdigit():
+        return set()
+    try:
+        info = socket.getaddrinfo(host.strip("[]"), int(port), type=socket.SOCK_STREAM)
+    except (socket.gaierror, UnicodeError, ValueError):
+        return set()
+    out = set()
+    for *_, addr in info:
+        ip = ipaddress.ip_address(addr[0].split("%", 1)[0])
+        ip = getattr(ip, "ipv4_mapped", None) or ip
+        out.add((str(ip), int(port)))
+    return out
+
+
+# The raft addresses of `addrs` that are not this member's own, however it is spelled there: a partner list that named
+# this member under another spelling would make it a voter of its own group nobody runs.
+def _others(addrs, raft: str) -> list[str]:
+    mine = _places(raft)
+    return sorted({a for a in addrs if a and a != raft and not (mine and mine & _places(a))})
+
+
 def _loopback(ip: str) -> bool:
     try:
         return ipaddress.ip_address(ip.split("%", 1)[0]).is_loopback
@@ -272,7 +315,7 @@ NO_SECRET = ("a raft port without its secret is a group of one on this box's loo
 
 class RaftBackend:
     """One member of the group. `raft` is this member's raft address, `partners` the others' ([] for a group of
-    one), `data` the directory of its journal, dump and `peers.json`. Without `password` it is a group of one,
+    one), `data` the directory of its journal, dump and `member.json`. Without `password` it is a group of one,
     listening on loopback, or it is not at all (the notes: Doors)."""
 
     def __init__(self, node_id: str, raft: str, partners: list[str], data: str, tuning: str | dict = "default",
@@ -312,7 +355,8 @@ class RaftBackend:
         self.rep = lib["Replicated"]()
         self.raft = lib["SyncObj"](raft, list(partners), lib["SyncObjConf"](**{**conf, **knobs}), consumers=[self.rep])
         self._stop = threading.Event()
-        self._peers: list[str] | None = None
+        self._member: dict | None = None             # what `member.json` says, once the group took this daemon
+        self._member_lock = threading.Lock()
         if not password:
             self._open_only_to_this_box()
         threading.Thread(target=self._keep_peers, daemon=True).start()
@@ -340,21 +384,55 @@ class RaftBackend:
             raise ValueError(f"{NO_SECRET}; the library listens on {where[0] if where else 'an address it does not say'}")
 
     # A member is one once its group took it: `member.json` is written after the bootstrap's first commands or an
-    # accepted join, never before. A journal without it is what a start that failed left behind — a daemon that
-    # took it for state would come back as a group of one of its own, beside the real one.
+    # accepted join, never before, and with the partners in it (the notes: A group). A journal without it is what a
+    # start that failed left behind — a daemon that took it for state would come back as a group of one of its own,
+    # beside the real one.
     @staticmethod
     def has_state(data: str) -> bool:
         return os.path.exists(os.path.join(data, "member.json"))
 
-    def became_member(self) -> None:
+    @staticmethod
+    def member_doc(data: str) -> dict:
+        with open(os.path.join(data, "member.json")) as f:
+            doc = json.load(f)
+        return doc if isinstance(doc, dict) else {}
+
+    def _write_member(self, doc: dict) -> None:
         tmp = os.path.join(self.data, "member.json.tmp")
         with open(tmp, "w") as f:
-            json.dump({"id": self.node_id, "raft": self.raft_addr}, f)
+            json.dump(doc, f)
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(tmp, os.path.join(self.data, "member.json"))
+
+    # `how` is `bootstrap` or `join`; `partners` the other members' raft addresses as the group named them.
+    def became_member(self, how: str, partners: list[str]) -> None:
+        with self._member_lock:
+            self._member = {"id": self.node_id, "raft": self.raft_addr, "how": how,
+                            "partners": _others(partners, self.raft_addr), "alone": False}
+            self._write_member(self._member)
+
+    # A member restarted on its journal: what its `member.json` said, with the partners it starts with.
+    def resumed(self, doc: dict, partners: list[str]) -> None:
+        with self._member_lock:
+            self._member = {"id": self.node_id, "raft": self.raft_addr, "how": doc.get("how") or "join",
+                            "partners": _others(partners, self.raft_addr), "alone": bool(doc.get("alone"))}
+            self._write_member(self._member)
+
+    # The library's view, or this daemon's own change of the group, into `member.json` at once. An empty view of a
+    # member that joined is the group shrunk to it, by the library's word: `alone`, a group of one from now on.
+    def _save_partners(self) -> None:
+        with self._member_lock:
+            if self._member is None:
+                return                               # not a member yet: nothing it would start from
+            peers = sorted(n.id for n in self.raft.otherNodes)
+            if peers != self._member["partners"]:
+                self._member = {**self._member, "partners": peers, "alone": not peers}
+                self._write_member(self._member)
 
     @staticmethod
     def forget_failed_start(data: str) -> None:
-        for f in ("journal", "journal.meta", "dump", "dump.tmp", "peers.json", "peers.json.tmp"):
+        for f in ("journal", "journal.meta", "dump", "dump.tmp", "peers.json", "peers.json.tmp", "member.json.tmp"):
             try:
                 os.remove(os.path.join(data, f))
             except FileNotFoundError:
@@ -363,21 +441,14 @@ class RaftBackend:
     @staticmethod
     def saved_peers(data: str) -> list[str]:
         try:
-            with open(os.path.join(data, "peers.json")) as f:
-                return list(json.load(f))
+            return list(RaftBackend.member_doc(data).get("partners") or [])
         except FileNotFoundError:
             return []
 
-    # The members this daemon saw last, kept beside the journal: what it starts with after a restart.
+    # The members this daemon sees, kept in `member.json` beside the journal: what it starts with after a restart.
     def _keep_peers(self) -> None:
         while not self._stop.wait(0.5):
-            peers = sorted(n.id for n in self.raft.otherNodes)
-            if peers != self._peers:
-                tmp = os.path.join(self.data, "peers.json.tmp")
-                with open(tmp, "w") as f:
-                    json.dump(peers, f)
-                os.replace(tmp, os.path.join(self.data, "peers.json"))
-                self._peers = peers
+            self._save_partners()
 
     # A command, until it is applied or the wait is over. Refusals that mean "not appended" (no leader, the queue
     # full, a membership change in progress) and those that mean "appended, outcome unknown" (leader changed, no
@@ -431,18 +502,40 @@ class RaftBackend:
     # raft address, or an address another id holds, is refused — the old address would stay a voter of the group
     # beside the new one, and a group that counts a voter nobody runs has lost a vote. A server that moved leaves
     # first. A member without the raft port's secret takes nobody: it is a group of one (`NO_SECRET`).
+    # "THE SAME ADDRESS" IS THE SAME PLACE, NOT THE SAME TEXT (the review's thirteenth pass, major 3): every address is
+    # compared as what it resolves to (`_places`) — the members' rows, this daemon's own, and the library's voters,
+    # which a row may not name. A retry spelled another way is the retry, under the spelling the group holds. An
+    # address that resolves to nothing, or to every interface (`0.0.0.0`), names no server; and a new voter must
+    # answer on its raft port before it is added — its daemon starts before it asks to join (`start_member`).
     def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT) -> None:
         if not self.secret:
             raise PermissionError(NO_SECRET)
+        here = _places(raft)
+        if not here or any(ipaddress.ip_address(ip).is_unspecified for ip, _ in here):
+            raise PermissionError(f"{raft} names no one server's raft port")
         known = self.rep.m.members_copy()
-        if node_id in known and known[node_id]["raft"] != raft:
+        if node_id in known and not here & _places(known[node_id]["raft"]):
             raise PermissionError(f"{node_id} is a member at {known[node_id]['raft']}, not {raft}: leave first")
-        holder = next((k for k, v in known.items() if v["raft"] == raft and k != node_id), None)
+        holder = next((k for k, v in known.items() if k != node_id and here & _places(v["raft"])), None)
         if holder is not None:
             raise PermissionError(f"{raft} is {holder}'s raft address")
+        mine = known.get(node_id, {}).get("raft")
+        voters = {self.raft_addr} | {n.id for n in self.raft.otherNodes}
+        for v in voters:
+            # Its own row's address, or the very text it asks for — a join that added the voter and went before
+            # its row was written, asked again — is the retry; another spelling of a voter's address is not.
+            if v not in (mine, raft) and here & _places(v):
+                raise PermissionError(f"{raft} is the raft address of a voter of this group ({v})")
+        raft = mine or raft                          # a retry keeps the spelling the group holds
         end = time.monotonic() + deadline
-        if raft != self.raft_addr and raft not in {n.id for n in self.raft.otherNodes}:
+        if raft not in voters:
+            try:
+                socket.create_connection(sorted(here)[0], timeout=ANSWER_WAIT).close()
+            except OSError as e:
+                raise PermissionError(f"nothing answers at {raft} ({type(e).__name__}): start its daemon, then "
+                                      f"join") from None
             self._apply(self.raft.addNodeToCluster, raft, deadline=deadline, write=True)
+            self._save_partners()
         self.submit({"op": "member", "id": node_id, "raft": raft, "api": api}, max(1.0, end - time.monotonic()))
 
     def remove(self, node_id: str, deadline: float = JOIN_WAIT) -> None:
@@ -450,6 +543,7 @@ class RaftBackend:
         raft = row["raft"] if row else node_id
         if raft in {n.id for n in self.raft.otherNodes}:
             self._apply(self.raft.removeNodeFromCluster, raft, deadline=deadline, write=True)
+            self._save_partners()
         self.submit({"op": "unmember", "id": node_id}, deadline)
 
     def status(self) -> dict:
@@ -520,8 +614,7 @@ def _door(daemon: "StoreDaemon", role_of):
                     deadline = float(self.headers.get("X-Deadline") or daemon.leader_wait)
                 except ValueError:
                     deadline = daemon.leader_wait
-                code, body = daemon.serve(method, self.path, raw, role, deadline, peer=self.peer,
-                                          forwarded=self.headers.get(FORWARDED, "") if role == PEER else "")
+                code, body = daemon.serve(method, self.path, raw, role, deadline, peer=self.peer)
                 return self._send(code, body)
             except Exception as e:                       # noqa: BLE001 — a door answers, whatever went wrong behind it
                 return self._send(500, {"kind": "internal", "error": f"{type(e).__name__}: {e}"})
@@ -638,9 +731,10 @@ def _unix_server(path: str, handler, mode: int, group: str | None):
 
 class _TlsServer(_Bounded, ThreadingHTTPServer):
     """The `-api` door: the TLS handshake in the request's own thread, so one slow peer does not hold the door; so many
-    connections at once, so many to one address (a full door closes the next: there is no TLS yet to answer in)."""
+    connections at once, so many to one address (a full door closes the next: there is no TLS yet to answer in). Its
+    context is made again when the revocation list changes (`tls.ServerContext`)."""
 
-    def __init__(self, addr, handler, ctx: ssl.SSLContext):
+    def __init__(self, addr, handler, ctx: "tls.ServerContext"):
         self.ctx = ctx
         self.bound(API_CONNECTIONS, API_PER_ADDRESS)
         super().__init__(addr, handler)
@@ -648,9 +742,9 @@ class _TlsServer(_Bounded, ThreadingHTTPServer):
     def finish_request(self, request, client_address):
         request.settimeout(DOOR_TIMEOUT)
         try:
-            conn = self.ctx.wrap_socket(request, server_side=True)
+            conn = self.ctx.get().wrap_socket(request, server_side=True)
         except (ssl.SSLError, OSError):
-            return                                   # no certificate, or not one of ours: no door at all
+            return                                   # no certificate, not one of ours, revoked, or no list: no door
         try:
             self.RequestHandlerClass(conn, client_address, self)
         finally:
@@ -660,9 +754,41 @@ class _TlsServer(_Bounded, ThreadingHTTPServer):
                 pass
 
 
+# A daemon's certificate, and the server it names — a certificate that names none (no «.» in its CN, no SAN DNS) is
+# refused here, so `peer` is never "" behind this door (the review's thirteenth pass, minor: `join` with `id: ""`
+# passed the check that the id is the caller's own).
 def _peer_role(handler) -> str:
     handler.peer = tls.peer_server(tls.require_role(handler.connection, PEER))
+    if not handler.peer:
+        raise PermissionError("the peer's certificate names no server (CN <role>.<server>, or a SAN DNS)")
     return PEER
+
+
+# What a join or a leave names, bounded before it is a command of the log or a voter (the review's thirteenth pass,
+# major 2's sibling: `id`, `raft` and `api` went into the member rows as sent). A server's name as `w2c-ca.sh` puts it
+# in a certificate; a raft address `host:port`; a leave may name a voter by its raft address (one with no row).
+_SERVER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_ADDRESS = re.compile(r"^[A-Za-z0-9._:\[\]%-]{1,253}:[0-9]{1,5}$")
+_API = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]{0,63}@)?[A-Za-z0-9._:\[\]%-]{1,253}:[0-9]{1,5}$")
+
+
+def _membership(path: str, raw: bytes) -> tuple[str, tuple | None]:
+    body = json.loads(raw or b"{}")
+    if not isinstance(body, dict):
+        raise ValueError("not an object")
+    node_id = body.get("id")
+    if path == "/v1/leave":
+        if not isinstance(node_id, str) or not (_SERVER_ID.match(node_id) or _ADDRESS.match(node_id)):
+            raise ValueError("id is a server's name or a voter's raft address")
+        return node_id, None
+    raft, api = body.get("raft"), body.get("api", "")
+    if not isinstance(node_id, str) or not _SERVER_ID.match(node_id):
+        raise ValueError("id is a server's name: up to 64 letters, digits, '.', '-' and '_'")
+    if not isinstance(raft, str) or not _ADDRESS.match(raft):
+        raise ValueError("raft is host:port")
+    if not isinstance(api, str) or (api and not _API.match(api)):
+        raise ValueError("api is server@host:port, or nothing")
+    return node_id, (node_id, raft, api)
 
 
 class StoreDaemon:
@@ -688,7 +814,7 @@ class StoreDaemon:
         if api is not None:
             if not tls_dir:
                 raise ValueError("the -api door is mutual TLS only: -tls <dir> (deploy/w2c-ca.sh)")
-            srv = _TlsServer(api, _door(self, _peer_role), tls.server_context(tls_dir))
+            srv = _TlsServer(api, _door(self, _peer_role), tls.ServerContext(tls_dir))
             self._listen(srv)
             host, port = srv.server_address[:2]
             self.api_url = api_advertised or f"{host}:{port}"
@@ -701,9 +827,8 @@ class StoreDaemon:
         return {**self.backend.status(), "api": self.api_url}
 
     # `role` is who the door says is calling; on the `-api` door that is `PEER`, with `peer` the server its certificate
-    # names and `forwarded` the role a forwarding daemon names for its caller (the notes: Doors).
-    def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "",
-              forwarded: str = "") -> tuple[int, dict]:
+    # names (the notes: Doors).
+    def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "") -> tuple[int, dict]:
         path = urllib.parse.urlsplit(target).path
         if method == "GET" and path == "/v1/status":
             return 200, self.status()
@@ -712,15 +837,13 @@ class StoreDaemon:
                 return 403, {"kind": "forbidden", "error": f"{role} may not read the rights"}
             return 200, self.rights.doc()
         if method == "POST" and path in ("/v1/join", "/v1/leave"):
-            if role not in (ADMIN, PEER) or forwarded:
-                return 403, {"kind": "forbidden", "error": f"{forwarded or role} may not change the group"}
+            if role not in (ADMIN, PEER):
+                return 403, {"kind": "forbidden", "error": f"{role} may not change the group"}
             try:
-                body = json.loads(raw or b"{}")
-                node_id = str(body["id"])
-                join = (node_id, str(body["raft"]), str(body.get("api", ""))) if path == "/v1/join" else None
-            except (ValueError, KeyError, TypeError, AttributeError) as e:
+                node_id, join = _membership(path, raw)
+            except ValueError as e:
                 return 400, {"kind": "badrequest", "error": f"{path} takes {{id, raft, api}}: {e}"}
-            if role == PEER and node_id != peer:
+            if role == PEER and (not peer or node_id != peer):
                 return 403, {"kind": "forbidden", "error": f"the daemon of {peer or 'no server'} may change the group "
                                                            f"for its own server, not for {node_id}"}
             try:
@@ -734,12 +857,8 @@ class StoreDaemon:
                 return 503, {"kind": "unavailable", "error": str(e)}
             return 200, self.status()
         if role == PEER:
-            # A daemon has no right on a row; a request it forwards is its caller's, with its caller's rights.
-            if forwarded not in self.rights.roles:
-                return 403, {"kind": "forbidden", "error": f"a daemon may not read or write rows: a request forwarded "
-                                                           f"for a process names its role in {FORWARDED}"
-                                                           + (f" ({forwarded!r} is no role here)" if forwarded else "")}
-            role = forwarded
+            # A daemon has no right on a row, and speaks for nobody else (the notes: no daemon forwards).
+            return 403, {"kind": "forbidden", "error": "a daemon may not read or write rows"}
         return answer(method, target, raw, role, self.rights,
                       lambda cmd: self.backend.submit(cmd, min(self.leader_wait, deadline)))
 
@@ -811,7 +930,13 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
     if password is None and join and not RaftBackend.has_state(data):
         raise ValueError(f"{NO_SECRET}; -join makes a group of more")
     if RaftBackend.has_state(data):
-        return RaftBackend(node_id, raft, RaftBackend.saved_peers(data), data, tuning, password, leader_wait)
+        doc = RaftBackend.member_doc(data)
+        partners = list(doc.get("partners") or [])
+        if not partners and doc.get("how") != "bootstrap" and not doc.get("alone"):
+            partners = _rejoin(node_id, raft, data, join, tls_dir)
+        b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait)
+        b.resumed(doc, partners)
+        return b
     if bootstrap == bool(join):
         raise ValueError("an empty -dir needs -bootstrap (a new group of one) or -join <a member's api>")
     RaftBackend.forget_failed_start(data)
@@ -826,18 +951,20 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
         except BaseException:
             b.stop()
             raise
-        b.became_member()
+        b.became_member("bootstrap", [])
         return b
     if not tls_dir:
         raise ValueError("-join speaks to a member's -api door, which is mutual TLS: -tls <dir>")
     members = peer_call(join, tls_dir, "GET", "/v1/status", timeout=10.0)["members"]
-    b = RaftBackend(node_id, raft, [m["raft"] for m in members if m["raft"] != raft], data, tuning, password,
-                    leader_wait)
+    partners = _others((m["raft"] for m in members), raft)
+    b = RaftBackend(node_id, raft, partners, data, tuning, password, leader_wait)
     end = time.monotonic() + JOIN_WAIT
     while True:
         try:
-            peer_call(join, tls_dir, "POST", "/v1/join", {"id": node_id, "raft": raft, "api": api_advertised})
-            b.became_member()
+            said = peer_call(join, tls_dir, "POST", "/v1/join", {"id": node_id, "raft": raft, "api": api_advertised})
+            # The members the group named when it took this daemon, with the partners it started with: written with
+            # the membership itself (the notes: A group).
+            b.became_member("join", partners + [m["raft"] for m in said.get("members", []) if m.get("raft")])
             return b
         except (OSError, http.client.HTTPException, ValueError):
             if time.monotonic() > end:
@@ -845,6 +972,21 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
                 RaftBackend.forget_failed_start(data)
                 raise
             time.sleep(0.2)
+
+
+# A member that joined and knows no partner — a `member.json` from before the partners were kept with it — never
+# starts as a group of one: its `-join` door says who the group is, and the group must still count this daemon;
+# otherwise it does not start, and says what to do (systemd tries again: the daemon waits for its group).
+def _rejoin(node_id: str, raft: str, data: str, join: str | None, tls_dir: str | None) -> list[str]:
+    stay = (f"{node_id} was taken into a group and knows none of its members ({data}/member.json): it does not start "
+            f"as a group of one beside it")
+    if not join or not tls_dir:
+        raise ValueError(f"{stay} — start it with -join <a member's api> to ask the group, or, if the group no "
+                         f"longer counts it, empty {data} and join again")
+    members = peer_call(join, tls_dir, "GET", "/v1/status", timeout=10.0)["members"]
+    if not any(m.get("id") == node_id or m.get("raft") == raft for m in members):
+        raise ValueError(f"{stay}, and the group at {join} does not count it: empty {data} and join again")
+    return _others((m.get("raft") for m in members), raft)
 
 
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
@@ -925,7 +1067,7 @@ def restore_rows(backup: dict, dst) -> dict:
 def _serve_args(argv: list[str]) -> argparse.Namespace:
     ap = argparse.ArgumentParser(prog="python3 -m w2cplatform.configstore", description="the cluster's config store daemon")
     ap.add_argument("-id", required=True, help="this server's name")
-    ap.add_argument("-dir", default=DATA, help=f"journal, dump, peers (default {DATA})")
+    ap.add_argument("-dir", default=DATA, help=f"journal, dump, member.json (default {DATA})")
     ap.add_argument("-raft", required=True, help="this member's raft address, host:port")
     ap.add_argument("-api", help="the other daemons' door, host:port (mutual TLS)")
     ap.add_argument("-advertise", help="the -api address the others dial, server@host:port (default id@-api)")
