@@ -241,7 +241,7 @@ def test_a_command_whose_deadline_is_nan_or_inf_is_refused_by_the_holder_and_at_
     door = con2.create_camera({"name": "door", "source": "driverpack://acme/10.0.0.90/ch/1", "kind": "io"})["id"]
     route = vms_routes(None, None, con2, None)
     for i, bad in enumerate(("NaN", "Infinity", '"soon"')):
-        payload = f'{{"unit": {door}, "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
+        payload = f'{{"unit": "vms/{door}", "action": "output", "port": 1, "valid_until": {bad}}}'.encode()
         st, body = route(_Body(payload, key=f"k{i}"), "POST", "/requests", {})
         assert st == 400 and body["error"] == "bad deadline", (bad, st, body)
     assert box2.vars.list("vms/requests/") == []

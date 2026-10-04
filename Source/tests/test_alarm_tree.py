@@ -39,7 +39,7 @@ def test_the_writer_picks_the_tree_and_the_index_answers_under_one_name():
     assert rows[2]["bucket"].startswith("vms.alarms/")                   # where it lies is said; whose it is, is `vms`
     alarms = db.query(0, box.wall(), subsystem="vms", cls="alarm")["events"]
     assert [r["port"] for r in alarms] == ["2", "1"]                     # from the old mixed bucket, and from the new tree
-    assert [r["kind"] for r in db.query(0, box.wall(), cam=7, cls="observation")["events"]] == ["stats"]
+    assert [r["kind"] for r in db.query(0, box.wall(), unit=rows[0]["unit"], cls="observation")["events"]] == ["stats"]   # its unit, `<sub>/<id>`
     assert {r["subsystem"] for r in db.query(0, box.wall())["events"]} == {"vms"}   # …and with no subsystem named, too
     assert db.query(t - 1, t + 5, current_epochs={("vms", "7"): 4})["events"][1]["fenced"] is True   # one epoch for both trees
 

@@ -68,6 +68,20 @@ REC_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__fil
 DETJOB_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "detjob.subsystem.yaml"))  # the fifth: archive scans, the first work that ends
 AUTO_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "auto.subsystem.yaml"))  # the sixth: scenarios, the first work that READS what the others wrote
 SURVEY_SPEC = SubsystemSpec.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "survey.subsystem.yaml"))  # the sixth: watching an archive we do not own
+
+
+# A camera as the platform names a unit: `vms/<id>` — and `"*"`, every one, as it is (the boundary's step 2: the
+# platform names units `<sub>/<id>` and nothing else; the VMS's own rows and routes name its cameras by id).
+def cam_ref(cam) -> str:
+    from w2cplatform.doors import unit_ref
+    return "*" if str(cam) == "*" else unit_ref(SPEC.name, cam)
+
+
+# …and back: the camera a reference names, None for a reference to anything else, or no reference at all.
+def camera_of_ref(ref) -> str | None:
+    from w2cplatform.doors import parse_ref
+    got = parse_ref(ref)
+    return got[1] if got is not None and got[0] == SPEC.name else None
 PLAYBACK_PORT = 8083     # the holder's playback surface: HTTP, because a browser must be able to seek it
 LIVE_PORT_BASE = 20000       # a camera's RTP port on its worker's loopback: the RTSP fan-out's one subscriber (gstvms/livesrv.py)
 SHM_DIR = "/run/vms"         # the tee's shared-memory branch: <SHM_DIR>/<cam>.shm — a subscriber on the SAME server reads it (shmsrc), no RTSP hop

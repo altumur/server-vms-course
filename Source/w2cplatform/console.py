@@ -24,7 +24,7 @@ show them. So the console is one class, run from the same spec:
                                  (<sub>/idem/<key>), so the retry is answered the same by whichever console gets it
     PUT  /<rows>/<id>            the operator's fields; a new revision; refused where the controller refuses
     DELETE /<rows>/<id>          the row is marked; the controller's pass takes its placement back
-    POST /marks  (Idempotency-Key)    an operator's observation {unit|cam, note}: the CONSOLE's event, into
+    POST /marks  (Idempotency-Key)    an operator's observation {unit: <sub>/<id>, note}: the CONSOLE's event, into
                                  console/<instance>/… on this server's resource — never a worker's bucket
     POST/DELETE /servers/<server>/decommission  {why} — on the Mount, as /drain: "this machine is gone for good"
                                  (platform/decommission/<server>): 409 while the server answers; the controllers release
@@ -49,7 +49,7 @@ rule in this file.
 # units are, which fields the operator owns and what leaves the cluster; that is everything a console needs
 # to list, edit and show them, so the console is one class run from the same spec. It serves `console.html`,
 # `/spec` (what the page reads first), the rows with the read model, `/where`, `/resources`, `/unplaceable`,
-# `/events` (if a `MergedIndex` — anything with `query(t0, t1, cam, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
+# `/events` (if a `MergedIndex` — anything with `query(t0, t1, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
 # POST `/marks` — with idempotency keys stored in Variables so a retry answered by another console instance
 # is the same request. What a subsystem adds is registered, not subclassed: `extra(handler, method, path,
 # query)` gets every request the built-in routes do not claim (the VMS: `/timeline` and `/export`). The
@@ -85,8 +85,8 @@ rule in this file.
 #   headers (`Gate.caller`) before a byte of the body is read; the body is read once, under `MAX_BODY` (`MAX_BLOB`
 #   for a blob's bytes) and a deadline (`read_body`); the request's line and headers arrive whole within
 #   `CONSOLE_TIMEOUT` (`DeadlineReader`); and `CONSOLE_CONNECTIONS` are served at once, the next answered 503
-#   (`ConsoleServer`). A row that reaches a camera through another field says so (`cams_of`), and a write to it asks
-#   for the route's capability on every such camera, before and after (`admit_cams`).
+#   (`ConsoleServer`). Whose a row is the spec says (`about`, `rights.unit_of`), and a write to it asks for the
+#   route's capability on that unit, before and after (`admit_rows`; the boundary's step 2).
 # - …and what the sixth pass found left of it. WHOSE the connections are (`Bounds`): one address holds a share of
 #   them (`CONSOLE_PER_ADDRESS`), the door in has a reserve (`CONSOLE_RESERVE`, `RESERVE_ROUTES`), the monitors named
 #   in `CONSOLE_MONITORS` a lane of their own (`MONITOR_ROUTES`; the seventh pass), and the caller on the box —
@@ -94,7 +94,7 @@ rule in this file.
 #   request line and headers have `CONSOLE_HEADER_TIMEOUT`, not the socket's timeout (`Deadlined`). RIGHTS BEFORE THE
 #   BODY (`dispatch`): everything the path decides is asked first, the body read after, and only a blob route of the
 #   spec reads up to `MAX_BLOB`, `BLOBS_AT_ONCE` at a time (`blob_route`). A CHANGE that reaches other units says so
-#   (`moved_cams`, beside `cams_of`). And the same server, deadline and bounded body are every door's, not the
+#   (`moved_units`, `body_units`). And the same server, deadline and bounded body are every door's, not the
 #   console's alone: `door_server`, `Deadlined`, `read_body`, and for what a door streams `Paced` and `start_stream`.
 # ================================================================================================
 from __future__ import annotations
@@ -111,7 +111,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlsplit
 
-from .doors import MAX_LIMIT, byte_range
+from .doors import MAX_LIMIT, byte_range, parse_ref, ref_fault
 
 from .secrets import hide_in_reply, mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
@@ -119,8 +119,8 @@ from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_M
                        parse_heartbeat, read_slot, schema_version)
 from .epoch import current_epoch
 from .rows import PARSE_ERRORS, Table, counts as garbled_by_table, finite, number
-from .eventdatabase import refence
-from .events import ALARM, CONSOLE, EventLog
+from .eventdatabase import refence, unit_id
+from .events import ALARM, CONSOLE, OF, EventLog
 
 
 # The default flow one operator is expected to read, in events a minute. Past it a timeline of separate
@@ -147,8 +147,8 @@ def blobs_slots() -> threading.BoundedSemaphore:
     if not _blobs:
         _blobs.append(threading.BoundedSemaphore(max(1, int(os.environ.get("BLOBS_AT_ONCE", BLOBS_AT_ONCE)))))
     return _blobs[0]
-from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, session_cookie,
-                     token_of)
+from .access import (COOKIE, GLASS_COOKIE, OPEN_ROUTES, UNIX_PEER, Denied, Gate, caller_addr, is_local, may_on,
+                     session_cookie, token_of)
 from .journal import AUDIT, Journal
 from .resource import resources_seen
 from .limits import TooLarge
@@ -1334,6 +1334,12 @@ class IdempotencyKeys:
 
 
 # One console for every subsystem.
+# A row's `labels` as a list of words — none for no row, and none for a value that is not a list.
+def _labels(row: dict | None) -> list:
+    v = (row or {}).get("labels") or []
+    return [str(x) for x in v] if isinstance(v, (list, tuple)) else []
+
+
 class SpecConsole:
     """One console for every subsystem. `ctl` is the subsystem's SpecController
     holding the console's token; `media` says the page may draw a timeline and
@@ -1371,6 +1377,10 @@ class SpecConsole:
         self.scans = 0
         self._epochs: tuple[float, dict] = (-1e9, {})
         self.epoch_scans = 0
+        # The subsystems this console's process serves, by name — what a reference `<sub>/<id>` is looked up in: its
+        # row, what it is about (`about`), the labels a grant is matched against. Alone, this console; in a `Mount`,
+        # one dict shared by every console of it (`Mount._adopt`).
+        self.units: dict[str, "SpecConsole"] = {self.spec.name: self}
 
     # The operator's view of a window, which is NOT the index's view of it.
     #
@@ -1415,7 +1425,9 @@ class SpecConsole:
         s = self.spec
         return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
                 "fields": [{"name": f.name, "type": f.type, "default": f.default_value(), "required": f.required,
-                            **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {})} for f in s.fields.values()],
+                            **({"inherit": f.inherit, "merge": f.merge} if f.inherits else {}),
+                            **({"fixed": True} if f.fixed else {})} for f in s.fields.values()],
+                **({"about": {"sub": s.about_sub, "field": s.about_field}} if s.about_sub else {}),
                 "metrics": {"prefix": s.name, "running": s.running_gauge}}
 
     # -- the directory: where is unit N, in one scan of the assignments ---------------------------
@@ -1662,7 +1674,7 @@ class SpecConsole:
                 rows = ctl.server_labels() or {}
                 sees = self._visible(h)
                 moves = [u for u in ctl.would_move(server, labels)
-                         if sees is None or sees(str(u), self._labels(str(u), None))]
+                         if sees is None or sees(*self.target_in(self, u))]
                 return 200, {"server": server, "labels": sorted(rows[server]) if server in rows else None,
                              "labels_source": ctl.labels_source(server), "would_move": moves}
             # Through `object_body` (the eleventh review, a minor): `ValueError` alone let a body nested past what JSON
@@ -1670,11 +1682,11 @@ class SpecConsole:
             body = object_body(h) if method == "PUT" else {}
             if method == "PUT":
                 labels = ctl.set_server_labels(server, body.get("labels"))
-                self.journal.say("server.labels.set", of=self.spec.name, server=server, labels=",".join(labels), user=user)
+                self.journal.say("server.labels.set", sub=self.spec.name, server=server, labels=",".join(labels), user=user)
                 return 200, {"server": server, "labels": labels, "labels_source": "console",
                              "will_move": ctl.would_move(server, labels)}
             if ctl.clear_server_labels(server):
-                self.journal.say("server.labels.cleared", of=self.spec.name, server=server, user=user)
+                self.journal.say("server.labels.cleared", sub=self.spec.name, server=server, user=user)
             return 200, {"server": server, "labels_source": "node", "will_move": ctl.would_move(server, None)}
         except Refused as e:
             return 400, {"detail": str(e), "error": "refused"}
@@ -1960,7 +1972,7 @@ class SpecConsole:
         try:
             r = self.ctl.create(body, uid=self.seen.reserved(key) if key else None,
                                 reserve=(lambda uid: self.seen.reserve(key, uid)) if key else None)
-            self.journal.say("unit.created", of=self.spec.name, target=str(r.get("id")), user=user,
+            self.journal.say("unit.created", sub=self.spec.name, target=str(r.get("id")), user=user,
                              fields=",".join(sorted(str(k) for k in body)))
             # Masked, like every other way out. This reply is ALSO what `IdempotencyKeys` stores to answer a
             # retry, so an unmasked one puts a second copy of the secret in the config store under a key
@@ -1981,12 +1993,12 @@ class SpecConsole:
 
     # `ctl.update` → 200 with the row; `Refused` → 400; `TooLarge` → 413; `KeyError` → 404.
     #
-    # A row's `cam` is fixed at its creation (`SpecController.update`, the review's fourth pass): the gate checked the
-    # grant on the camera the row names now, and a PUT that changed it moved the unit past that check.
+    # A `fixed` field is set at the row's creation (`SpecController.update`, the review's fourth pass): the gate checks
+    # the grant on the unit the row is about now, and a PUT that changed it would move the row past that check.
     def update(self, uid, body: dict, user: str = "operator") -> tuple[int, dict]:
         try:
             row = self.ctl.update(uid, body)
-            self.journal.say("unit.changed", of=self.spec.name, target=str(uid), user=user,
+            self.journal.say("unit.changed", sub=self.spec.name, target=str(uid), user=user,
                              fields=",".join(sorted(str(k) for k in body)), revision=row.get("revision"))
             return 200, mask_secrets([row])[0]
         except Refused as e:
@@ -2021,7 +2033,7 @@ class SpecConsole:
             # store that declares one (`?max_bytes=`) is what refused this.
             return 413, {"detail": f"{e} — a blob is what an object store is for: this one declares a ceiling; the "
                                    f"cluster's file objects (OBJECTS=cluster://…) have none", "error": str(e)}
-        self.journal.say("unit.changed", of=self.spec.name, target=str(uid), user=user, fields=field,
+        self.journal.say("unit.changed", sub=self.spec.name, target=str(uid), user=user, fields=field,
                          revision=row.get("revision"), digest=d)
         return 200, {**mask_secrets([row])[0], field: d, "bytes": len(data)}
 
@@ -2035,35 +2047,29 @@ class SpecConsole:
     def delete(self, uid, user: str = "operator") -> tuple[int, dict]:
         if self.ctl.unit(uid) is None:
             return 404, {"detail": "no such unit", "error": "no such unit"}
-        # `of` and `target`, not `subsystem` and `unit`: those two are the LINE's own — who wrote it — and a field
-        # of the same name would answer for it in every reader.
-        self.journal.say("unit.deleted", of=self.spec.name, target=str(uid), user=user)
+        # `sub` and `target`, not `subsystem` and `unit`: those two are the LINE's own — who wrote it — and a field
+        # of the same name would answer for it in every reader (`journal.py`).
+        self.journal.say("unit.deleted", sub=self.spec.name, target=str(uid), user=user)
         try:
             self.ctl.delete(uid)
         except Exception as e:
-            self.journal.say("unit.delete.failed", of=self.spec.name, target=str(uid), user=user, error=str(e))
+            self.journal.say("unit.delete.failed", sub=self.spec.name, target=str(uid), user=user, error=str(e))
             raise
         return 200, {"deleted": uid}
 
-    # An operator's observation. 503 if there is no resource on this server; 400 unless the body names `cam`
-    # or `unit`. Appends `{kind: mark, user, note, cam|unit}` at `wall()` to the console's own bucket —
-    # `cam` is stored as an int because it is the field the index joins on — and returns 201 `{subsystem:
-    # "console", unit: <instance>, bucket: <relative path>}`. It is the console's event, into
+    # An operator's observation. 503 if there is no resource on this server; 400 unless the body names the unit it is
+    # about, `<sub>/<id>` — a bare id is whose? Appends `{kind: mark, user, note, of: <sub>/<id>}` at `wall()` to the
+    # console's own bucket — `of`, the index's second column, so a query for that unit finds the mark (the boundary's
+    # step 2: the mark named a number in a field of one subsystem's, and the index joined on that field) — and
+    # returns 201 `{subsystem: "console", unit: <instance>, bucket: <relative path>}`. It is the console's event, into
     # `console/<instance>/e1/…` on this server's resource, never a worker's bucket.
     def mark(self, body: dict, user: str) -> tuple[int, dict]:
         if self.marks is None:
             return 503, {"detail": "no resource on this server to write marks into", "error": "no resource on this server to write marks into"}
-        if "cam" not in body and "unit" not in body:
-            return 400, {"detail": "a mark names a unit", "error": "a mark names a unit"}
-        fields = {"user": user, "note": str(body.get("note", ""))}
-        if "cam" in body:
-            try:
-                fields["cam"] = int(body["cam"])                      # the field the index joins on
-            except PARSE_ERRORS:                                      # a word, `Infinity`: 400, not "the write failed"
-                return 400, {"detail": f"a mark's `cam` is a unit's number, not {body['cam']!r:.40}", "error": "bad cam"}
-        else:
-            fields["unit"] = str(body["unit"])
-        path = self.marks.append(self.wall(), "mark", **fields)
+        why = ref_fault(body.get("unit")) if "unit" in body else "a mark names the unit it is about, <sub>/<id>"
+        if why:
+            return 400, {"detail": why, "error": "a mark names a unit"}
+        path = self.marks.append(self.wall(), "mark", user=user, note=str(body.get("note", "")), **{OF: str(body["unit"])})
         return 201, {"subsystem": "console", "unit": self.instance, "bucket": os.path.relpath(path, self.marks_root)}
 
     # -- the handler ----------------------------------------------------------------------------
@@ -2088,12 +2094,12 @@ class SpecConsole:
     #   - `GET /servers` — `servers()`: per server, `archive` (what its workers record into — the server's events
     #     root), `resource` (`live | silent | unreachable | unknown`), `workers`, `placeable` and `why`.
     #   - `GET /unplaceable` — `ctl.unplaceable()`.
-    #         - `GET /events?from&to&cam|unit&kind&subsystem&limit&keep&class` — 503 if no index; else
+    #         - `GET /events?from&to&unit&kind&subsystem&limit&keep&class` — 503 if no index; else
     #       `current_epochs` from every `<sub>/epoch/*` row (`epochs`, cached `EPOCH_CACHE` seconds) and
-    #       `index.query`; with `cam` or `unit`, the query runs unfenced and the answer is fenced by the epochs of
-    #       the units in it (`epochs_of`, `refence`), read by name. A numeric `unit` is
-    #       treated as `cam`; a non-numeric one is passed as `unit`. `keep` is "newest" (default) or
-    #       "oldest", 400 if it is neither; the reply carries `truncated` when the window did not fit.
+    #       `index.query`; with `unit` (`<sub>/<id>`: its own lines and those of every unit about it; a bare id is
+    #       400), the query runs unfenced and the answer is fenced by the epochs of the units in it (`epochs_of`,
+    #       `refence`), read by name. `keep` is "newest" (default) or "oldest", 400 if it is neither; the reply
+    #       carries `truncated` when the window did not fit.
     #   - `GET /metrics` — `metrics_text()` as `text/plain`.
     #   - otherwise `_extra("GET", …)`; then 404 `{detail, error}`.
     # - `_idem() -> key | None` — for POST: 400 if `Idempotency-Key` is missing or malformed; if `claim`
@@ -2167,14 +2173,14 @@ class SpecConsole:
         try:
             access = self.gate.access()
         except Denied:
-            return lambda unit, labels: False
+            return lambda unit, labels, of=None: False
         if access is None:
             return None
         try:
             payload = self.gate.payload(h.headers, access)
         except Denied:
-            return lambda unit, labels: False
-        return lambda unit, labels: access.may(payload, "view", unit, labels)
+            return lambda unit, labels, of=None: False
+        return lambda unit, labels, of=None: may_on(access, payload, "view", unit, labels, of)
 
     # Whether a gated caller holds a grant given on LABELS (`Access.by_labels`, when the access can say): what `/events`
     # asks before it names the units whose labels it could not read. An access that cannot say is taken as no.
@@ -2189,7 +2195,7 @@ class SpecConsole:
         ask = getattr(access, "by_labels", None)
         return bool(ask(payload, "view")) if ask is not None else False
 
-    # What a route needs: `(capability, unit, labels)`.
+    # What a route needs: `(capability, unit, labels, of)` — what `Gate.admit` takes.
     #
     #   view    every GET, and whatever a subsystem says changes nothing though it is a POST (`VIEW_POSTS` —
     #           the VMS: asking for a live stream)
@@ -2199,80 +2205,103 @@ class SpecConsole:
     #
     # The unit is named when the path names one; a grant may be for one unit, for units with given labels, or
     # for the whole cluster, and a route that names no unit needs the last (to act) or any grant at all (to look).
-    # A recording is its camera's: the grant is on the camera.
+    # A unit ABOUT another (its spec's `about`) is asked with what it is about: a grant on either is enough, and the
+    # labels are the about-unit's (`target`).
     #
-    # The three lists are the platform's own routes; a subsystem adds its own to the console it builds
-    # (`vms/console.py`), because only it knows that a backfill acts and a volume configures.
+    # The three lists are the platform's own routes; a subsystem adds its own to the console it builds, because
+    # only it knows that a backfill acts and a volume configures. `CLUSTER_ROWS`: the rows of this console are the
+    # whole cluster's business — a write to one needs the cluster's grant, whatever the row names (a subsystem whose
+    # rows reach many units of others, and whose own labels say where it runs, not whose it is).
     EDIT_ROUTES: tuple = ("/marks", "/requests")
     UNIT_ROUTES: tuple = ("where",)
     VIEW_POSTS: tuple = ()
+    CLUSTER_ROWS: bool = False
 
-    # The unit an ACTION names in its body (`unit`, or `cam`): a mark, a command and a keep are about one unit,
-    # and an operator granted that unit must be able to make them. The body is read here and put back, so
-    # whoever answers the request reads it again as if nobody had.
+    # The unit an ACTION names in its body (`unit`, `<sub>/<id>`): a mark, a command and a keep are about one unit,
+    # and an operator granted that unit must be able to make them. The body is read here and put back, so whoever
+    # answers the request reads it again as if nobody had.
     #
-    # A GET names its unit in the query the same way (`?cam=`, `?unit=`): the device's own footage, the events
-    # of one camera. A route that names no unit anywhere is answered to any grant — a list, and the list is cut
-    # to what the caller may see; a route that names one in the query is about that unit (the review's second
-    # pass, blocker 1: `/segment?cam=7` was "any grant", and the footage of camera 7 went to the guard of camera 3).
-    # A body that names two units — `unit` one thing, `cam` another — is refused: the gate would check one and
-    # the action would go to the other (the same review, major).
+    # A GET names its unit in the query the same way (`?unit=<sub>/<id>`): the events of one unit, a subsystem's route
+    # about one. A route that names no unit anywhere is answered to any grant — a list, and the list is cut to what the
+    # caller may see; a route that names one in the query is about that unit (the review's second pass, blocker 1: a
+    # route that named its unit in the query was "any grant", and one unit's footage went to the guard of another). A
+    # name that is no reference — a bare id — is 400 here, asked of nobody: whose `7` would the gate check?
     def _named(self, h, method: str, path: str, q: dict | None = None) -> str | None:
         if method == "GET":
-            q = q or {}
-            if "unit" in q and "cam" in q and str(q["unit"]) != str(q["cam"]):
-                raise Denied(400, "the query names two units: `unit` and `cam` must be the same one, or name one")
-            named = q.get("unit", q.get("cam"))
-            return str(named) if named not in (None, "") else None
-        if method not in ("POST", "PUT") or not path.startswith(self.EDIT_ROUTES):
+            named = (q or {}).get("unit")
+        else:
+            if method not in ("POST", "PUT") or not path.startswith(self.EDIT_ROUTES):
+                return None
+            body = self._sent(h)
+            named = body.get("unit") if isinstance(body, dict) else None
+        if named in (None, ""):
             return None
-        raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
-        h.rfile = io.BytesIO(raw)
+        why = ref_fault(named)
+        if why:
+            raise Denied(400, why)
+        return str(named)
+
+    # The body as sent, read and put back — `{}` for none, None for one that is no JSON.
+    @staticmethod
+    def _sent(h):
+        if isinstance(h.rfile, io.BytesIO):
+            raw = h.rfile.getvalue()
+        else:
+            raw = h.rfile.read(int(h.headers.get("Content-Length", 0) or 0))
+            h.rfile = io.BytesIO(raw)
         try:
-            body = json.loads(raw or b"{}")
+            return json.loads(raw or b"{}")
         except PARSE_ERRORS:                             # nested past what JSON reads too: no reply at all (the tenth round)
             return None
-        if not isinstance(body, dict):
-            return None
-        if "unit" in body and "cam" in body and str(body["unit"]) != str(body["cam"]):
-            raise Denied(400, "the body names two units: `unit` and `cam` must be the same one, or name one")
-        named = body.get("unit", body.get("cam"))
-        return str(named) if named not in (None, "") else None
 
-    def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list]:
+    def needs(self, method: str, path: str, named: str | None = None) -> tuple[str, str | None, list, str | None]:
         cap = "view" if method == "GET" or (self.VIEW_POSTS and path.startswith(self.VIEW_POSTS)) else \
               "edit" if path.startswith(self.EDIT_ROUTES) else "admin"
         family, pid = self.route_id(method, path)
-        in_path = bool(pid) and family in (self.spec.rows, *self.UNIT_ROUTES)
-        uid = pid if in_path else named
-        if uid is None:
-            return cap, None, []
+        if pid and family in (self.spec.rows, *self.UNIT_ROUTES):
+            if self.CLUSTER_ROWS and family == self.spec.rows and method != "GET":
+                return cap, None, [], None
+            return (cap, *self.target_in(self, pid))
+        if named is None:
+            return cap, None, [], None
+        return (cap, *self.target(named))
+
+    # WHAT A UNIT IS, AS A GRANT IS ASKED ABOUT IT: `(ref, labels, of)`, read through the catalogue (`units`) — its row,
+    # what the row says it is about (`about`), and the labels a `labels:` grant reads: the about-unit's when there is one
+    # (a recording's own labels say where it runs, not whose it is), else its own. A unit of a subsystem this console
+    # does not serve is asked as it is named, with no labels: only a grant on it, or the cluster's, takes it in.
+    def target(self, ref: str) -> tuple[str, list, str | None]:
+        got = parse_ref(ref)
+        con = self.units.get(got[0]) if got is not None else None
+        if con is None:
+            return ref, [], None
+        return self.target_in(con, got[1])
+
+    def target_in(self, con: "SpecConsole", pid) -> tuple[str, list, str | None]:
+        return self.target_of_row(con, con.row_of(pid), con.spec.ref(pid))
+
+    def target_of_row(self, con: "SpecConsole", row: dict | None, ref: str) -> tuple[str, list, str | None]:
+        of = con.spec.of_row(row) or None
+        return ref, (self.labels_of(of) if of else _labels(row)), of
+
+    # The labels of the unit a reference names, through the catalogue; none when its row is not here.
+    def labels_of(self, ref: str) -> list:
+        got = parse_ref(ref)
+        con = self.units.get(got[0]) if got is not None else None
+        return _labels(con.row_of(got[1])) if con is not None else []
+
+    # This console's row of `pid`, as stored — None when it is absent, deleted, no id of this subsystem, or does not
+    # parse (a row nobody can read names nothing: the unit's own grant and the cluster's still answer for it).
+    def row_of(self, pid) -> dict | None:
         try:
-            row = self.ctl.unit(self.spec.parse_id(uid))
-        except PARSE_ERRORS:                             # a `json` field ten thousand deep too: the PUT that mends it is not dropped (the ninth review's sweep)
-            row = None
-        if not in_path and row is not None and "cam" in row:
-            row = None                                   # a body names the unit the action is ABOUT, not one of this console's rows
-        unit = str((row or {}).get("cam") or uid)
-        return cap, unit, self._labels(unit, row)
-
-    # The labels a grant is matched against are the labels of the unit the grant is ON. A console whose rows are
-    # ABOUT another subsystem's units (a recording is its camera's) says whose they are: `labels_of`, set by
-    # whoever builds it. Without it, the row's own.
-    labels_of = None
-
-    def _labels(self, unit: str, row: dict | None) -> list:
-        if self.labels_of is not None and (row is None or "cam" in row):
-            try:
-                return list(self.labels_of(unit) or [])
-            except Exception:                            # noqa: BLE001 — not found, or the store is away: no labels, so no label grant matches
-                return []
-        return list((row or {}).get("labels") or [])
+            return self.ctl.unit(self.spec.parse_id(pid))
+        except (ValueError, OSError, *PARSE_ERRORS):   # a store that did not answer for it: no row, so no label grant
+            return None
 
     def _extra(self, h, method, path, q):
         # What a subsystem's own routes need to filter a LIST the way this console filters its rows (the product,
         # feedback CG): `h.sees(unit, labels)`, None when the console is open, and `h.labels_for(unit)`.
-        h.sees, h.labels_for = self._visible(h), (lambda unit: self._labels(str(unit), None))
+        h.sees, h.labels_for = self._visible(h), (lambda unit: self.target(str(unit))[1])
         r = self.extra(h, method, path, q) if self.extra else None
         if r is None:
             return False
@@ -2413,105 +2442,102 @@ class SpecConsole:
     def read_body(self, h, limit: int) -> bool:
         return read_body(h, limit)
 
-    # THE CAMERAS A ROW NAMES, THROUGH ANY FIELD (the review's fifth pass, major). `cam` was made fixed, and the gate
-    # checks the camera in it — but a row can name a camera through other fields: a scan's `rec` is a recording, and
-    # its footage is that recording's camera's; a scenario's `when` and `then` name the cameras it watches and acts
-    # on. `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 pointed a scan at camera 2's archive,
-    # and a scenario edited under a grant that matched its PLACEMENT labels sent commands to camera 12. A subsystem
-    # whose rows do that says so: `cams_of(row) -> {camera, …}`, every camera the row reaches, `"*"` for "any camera"
-    # (a trigger with no unit) — which only a grant on the whole cluster covers. A write to such a row is admitted
-    # only when the caller holds the route's capability on every camera of the row as it IS and as it WILL BE: the
-    # old value, so a row cannot be taken from a camera one may not touch; the new one, so it cannot be pointed at
-    # one. A row that names no camera of its own (`cam`) — a scenario — IS its cameras: an edit or a delete of it is
-    # asked of them alone, and its own labels, which say where its evaluator runs, grant nothing on it
-    # (`is_its_units`). Creating one still asks for a grant on the whole cluster, as every create here does.
-    cams_of = None
-    # …AND THE CAMERAS A CHANGE REACHES (the review's sixth pass, major). `cams_of` reads one row; some edits are about
-    # two: a camera whose `source` moves to another channel of its recorder shows that channel's picture under this
-    # camera's name, to this camera's viewers and into its archive — `PUT /cameras/1 {"source": "…/ch/2"}` with
-    # `admin` on camera 1 was 200. `moved_cams(old, new) -> {camera, …}`: every camera the CHANGE touches beyond the
-    # row itself — for the VMS, every camera of the device it leaves and of the device it moves to, when the device or
-    # the channel changes (`vms/console.py`, `source_cams`). Empty for an edit that moves nothing: renaming a camera
-    # asks for nothing more than it did.
-    moved_cams = None
-    # …AND THE CAMERAS AN ACTION REACHES (the review's seventh pass, major). A route whose unit is in the body
-    # (`/requests`) was asked about that unit alone — and a command goes to a DEVICE: `edit` on camera 1 of a
-    # sixteen-channel recorder pulsed its relays and turned it to a preset, the lock of camera 2's zone among them.
-    # `body_cams(path, body) -> {camera, …}`: every camera the action in the body reaches beyond the unit it names — for
-    # the VMS, every camera of the device, unless the device binds the port or the preset to a channel (`vms/console.py`,
-    # `command_cams`). Asked after the body, for the route's capability, as the unit is.
-    body_cams = None
+    # WHOSE ROWS A WRITE TOUCHES (the review's fifth pass, major; the boundary's step 2). The gate checks the unit a path
+    # names — and a write can reach units through the rows it writes. The platform reads two of those from the spec:
+    #
+    #   about         a row of this subsystem is about the unit its `about.field` names, and that field is `fixed`:
+    #                 the row as it is and as it will be are about the same unit, asked with it (`needs`, `target`)
+    #   unit_of       a row of one of its tables is its unit's (`rights.unit_of`): whoever writes it needs on that unit
+    #                 what the route needs — on both, when a write moves it from one to another (`_table_targets`)
+    #
+    # And two the subsystem says, because they are about what its routes DO, not whose a row is: `moved_units(old,
+    # new) -> {<sub>/<id> | "*"}` — every unit a CHANGE of one of its rows reaches beyond the row itself (for the VMS: a
+    # camera's `source` moved to another channel of a recorder shows that channel's picture under this camera's name,
+    # the review's sixth pass); `body_units(path, body) -> {…}` — every unit an ACTION in a body reaches beyond the unit
+    # it names (for the VMS: a command to a device reaches every camera of the device, the seventh). `"*"` is "any
+    # unit", which only a grant on the whole cluster covers. They are the subsystem's word on its own routes — what the
+    # product's VMS says in its gate's `Needs` — and step 6 of the boundary plan moves them into its spec and worker.
+    moved_units = None
+    body_units = None
 
+    # `(table, id or None)` for a write to a row of one of this subsystem's tables that `rights.unit_of` says whose —
+    # `(None, None)` for anything else.
+    def _table_row(self, method: str, path: str) -> tuple[str | None, str | None]:
+        if method not in ("POST", "PUT", "DELETE"):
+            return None, None
+        segs = path.split("/")
+        if len(segs) < 2 or segs[1] not in self.spec.unit_of or len(segs) > 3:
+            return None, None
+        return segs[1], (segs[2] if len(segs) == 3 and segs[2] else None)
+
+    # The units a write to such a row touches: the row as stored (the path names one) and the row as sent (`sent`, the
+    # body, once it is read).
+    def _table_targets(self, method: str, path: str, sent=None) -> set:
+        table, rid = self._table_row(method, path)
+        if table is None:
+            return set()
+        from .doors import safe_segment
+        rows = []
+        if rid and safe_segment(rid):
+            try:
+                rows.append(self.ctl.vars.get(self.spec.sub.config(table, rid))[0])
+            except OSError:
+                rows.append({self.spec.unit_of[table]: "*"})   # the store did not say whose: the cluster's grant
+        if isinstance(sent, dict) and method != "DELETE":
+            rows.append(sent)
+        out = set()
+        for row in rows:
+            v = (row or {}).get(self.spec.unit_of[table])
+            if v == "*":
+                out.add("*")
+                continue
+            ref, _known = self.spec.table_unit(table, row)
+            if ref:
+                out.add(ref)
+        return out
+
+    # `(old row or None, True)` for a write to one of this console's rows — `(None, False)` for anything else.
     def _row_written(self, method: str, path: str):
-        """`(old row or None, True)` for a write to one of this console's rows — `(None, False)` for anything else."""
-        if (self.cams_of is None and self.moved_cams is None) or method not in ("POST", "PUT", "DELETE"):
+        if method not in ("POST", "PUT", "DELETE"):
             return None, False
         rows_path = "/" + self.spec.rows
         if (path != rows_path and not path.startswith(rows_path + "/")) or len(path.split("/")) > 3:
             return None, False                           # not a row; or a blob's bytes: no field that names a unit
         pid = path_id(path)
-        try:
-            return (self.ctl.unit(self.spec.parse_id(pid)) if pid else None), True
-        except PARSE_ERRORS:
-            return None, True
+        return (self.row_of(pid) if pid else None), True
 
-    def is_its_units(self, method: str, path: str) -> bool:
-        if self.cams_of is None:
-            return False
-        old, written = self._row_written(method, path)
-        return written and method in ("PUT", "DELETE") and old is not None and "cam" not in old
-
-    # In two steps, because the body is read between them (`dispatch`): `body=False` asks about the row as it IS —
-    # what the path alone decides — and `body=True` about the row as it WILL BE, and what the change reaches. `asked`
-    # is what this request has been admitted on already, `{(capability, unit)}`: nothing is asked — or written into
-    # the journal — twice.
-    def admit_cams(self, h, method: str, path: str, asked: set | None = None, body: bool = True) -> None:
-        old, written = self._row_written(method, path)
-        if not written:
-            return
+    # In two steps, because the body is read between them (`dispatch`): `body=False` asks about what the path alone
+    # decides — a table's row as stored — and `body=True` about the row as it WILL BE, and what the change reaches.
+    # `asked` is what this request has been admitted on already, `{(capability, unit)}`: nothing is asked — or written
+    # into the journal — twice.
+    def admit_rows(self, h, method: str, path: str, asked: set | None = None, body: bool = True) -> None:
+        if method not in ("POST", "PUT", "DELETE"):
+            return                                       # a read writes no row: what a list shows is cut where it is made
         asked = set() if asked is None else asked
-        whole = body or method == "DELETE"               # a delete has no body: the first step is all of it
-        new = None
-        if body and method != "DELETE":
-            try:
-                sent = json.loads(h.rfile.getvalue() or b"{}") if isinstance(h.rfile, io.BytesIO) else {}
-            except PARSE_ERRORS:
-                sent = {}
-            new = {**(old or {}), **sent} if isinstance(sent, dict) else old
-        cams = set()
-        if self.cams_of is not None:
-            for row in (old, new):
-                if row is not None:
-                    try:
-                        cams |= {str(c) for c in (self.cams_of(row) or ())}
-                    except Exception:                    # noqa: BLE001 — a row nobody can read the units of is anybody's
-                        cams.add("*")
-        if self.moved_cams is not None and body and old is not None and new is not None:
-            try:
-                cams |= {str(c) for c in (self.moved_cams(old, new) or ())}
-            except Exception:                            # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
-                cams.add("*")
-        if not cams and whole and self.cams_of is not None:
-            cams = {"*"}                                 # a row that names no unit at all is anybody's: the cluster's grant
-        cap = self.needs(method, path)[0]
-        for cam in sorted(cams):
-            unit = None if cam == "*" else cam
-            if (cap, unit) in asked:
-                continue
-            self.gate.admit(h.headers, cap, unit, [] if cam == "*" else self._labels(cam, None))
-            asked.add((cap, unit))
+        sent = self._sent(h) if body and method != "DELETE" else None
+        refs = self._table_targets(method, path, sent if body else None)
+        if body and self.moved_units is not None and isinstance(sent, dict):
+            old, written = self._row_written(method, path)
+            if written and old is not None and method == "PUT":
+                try:
+                    refs |= {str(u) for u in (self.moved_units(old, {**old, **sent}) or ())}
+                except Exception:                        # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
+                    refs.add("*")
+        self._admit_each(h, self.needs(method, path)[0], refs, asked)
 
-    def admit_body_cams(self, h, path: str, cap: str, asked: set) -> None:
+    def admit_body_units(self, h, path: str, cap: str, asked: set) -> None:
         try:
-            sent = json.loads(h.rfile.getvalue() or b"{}") if isinstance(h.rfile, io.BytesIO) else {}
-            cams = {str(c) for c in (self.body_cams(path, sent) or ())}
+            refs = {str(u) for u in (self.body_units(path, self._sent(h)) or ())}
         except Exception:                                # noqa: BLE001 — nobody can say what it reaches: the cluster's grant
-            cams = {"*"}
-        for cam in sorted(cams):
-            unit = None if cam == "*" else cam
+            refs = {"*"}
+        self._admit_each(h, cap, refs, asked)
+
+    def _admit_each(self, h, cap: str, refs: set, asked: set) -> None:
+        for ref in sorted(refs):
+            unit, labels, of = ("*", [], None) if ref == "*" else self.target(ref)
             if (cap, unit) in asked:
                 continue
-            self.gate.admit(h.headers, cap, unit, [] if cam == "*" else self._labels(cam, None))
+            self.gate.admit(h.headers, cap, unit, labels, of)
             asked.add((cap, unit))
 
     # `PUT /<rows>/<id>/<field>`: the bytes of a blob. Reached only by a caller already admitted on the unit (`dispatch`).
@@ -2571,11 +2597,14 @@ class SpecConsole:
                 if in_body:
                     self.gate.admit(h.headers, "view")   # any grant here at all
                     asked.add(("view", None))
-                elif not self.is_its_units(method, path):
+                else:
                     need = self.needs(method, path, self._named(h, method, path, q))
-                    self.gate.admit(h.headers, *need)
-                    asked.add(need[:2])
-                self.admit_cams(h, method, path, asked, body=False)
+                    # A table's row that names whose it is (`rights.unit_of`) is that unit's: a request that names no unit
+                    # of its own and writes such a row is about that row's unit, and about nothing wider.
+                    if not (need[1] is None and self._table_targets(method, path)):
+                        self.gate.admit(h.headers, *need)
+                        asked.add(need[:2])
+                self.admit_rows(h, method, path, asked, body=False)
             except Denied as e:
                 h.close_connection = True                # refused before the body: what follows the headers is not read
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
@@ -2589,12 +2618,12 @@ class SpecConsole:
             try:
                 if in_body:
                     need = self.needs(method, path, self._named(h, method, path, q))
-                    if need[:2] not in asked:
+                    if need[:2] not in asked and not (need[1] is None and self._table_targets(method, path, self._sent(h))):
                         self.gate.admit(h.headers, *need)
                         asked.add(need[:2])
-                    if self.body_cams is not None:
-                        self.admit_body_cams(h, path, need[0], asked)
-                self.admit_cams(h, method, path, asked)
+                    if self.body_units is not None:
+                        self.admit_body_units(h, path, need[0], asked)
+                self.admit_rows(h, method, path, asked)
             except Denied as e:
                 return h._send(e.status, {"detail": e.why, "error": "denied"})
         if method == "GET":
@@ -2608,7 +2637,7 @@ class SpecConsole:
                 rows, configured = ctl.read_model(con.lost_after), mask_secrets(ctl.units())
                 sees = self._visible(h)
                 if sees is not None:                     # gated: the list is what THIS caller may look at, not the cluster's
-                    ok = {str(r["id"]) for r in ctl.units() if sees(str(r.get("cam") or r["id"]), self._labels(str(r.get("cam") or r["id"]), r))}
+                    ok = {str(r["id"]) for r in ctl.units() if sees(*self.target_of_row(self, r, spec.ref(r["id"])))}
                     rows = [r for r in rows if str(r.get("id")) in ok]
                     configured = [r for r in configured if str(r.get("id")) in ok]
                 return h._send(200, {"rows": rows, "configured": configured})
@@ -2638,22 +2667,21 @@ class SpecConsole:
             if path == "/events":
                 if con.index is None:
                     return h._send(503, {"error": "no event index behind this console"})
-                cam = q.get("cam") or (q.get("unit") if (q.get("unit") or "").isdigit() else None)
-                # Every subsystem's epochs, from the cache — the timeline shows them all. A camera's or one unit's
-                # timeline reads only the epochs of the units in ITS answer, after the query, and fences again.
-                narrow = bool(cam or q.get("unit"))
+                # `unit` is `<sub>/<id>` — its own lines and those of every unit about it (the index's `of`); a bare id
+                # is 400 (`check_query`). Every subsystem's epochs, from the cache — the timeline shows them all. One
+                # unit's timeline reads only the epochs of the units in ITS answer, after the query, and fences again.
+                unit = q.get("unit") or None
+                narrow = unit is not None
                 cur = {} if narrow else con.epochs()
                 try:                                          # the operator's timeline: `limit` is theirs to set, and
                                                               # `keep` says which end of a busy hour they get
                     t0, t1 = float(q.get("from", 0)), float(q.get("to", 1e12))
-                    rep = con.index.query(t0, t1,
-                                          int(cam) if cam else None, q.get("kind"), q.get("subsystem"),
-                                          q.get("unit") if not cam else None, cur,
+                    rep = con.index.query(t0, t1, q.get("kind"), q.get("subsystem"), unit, cur,
                                           limit=min(int(q.get("limit", 1000)), MAX_LIMIT),
                                           epoch_policy=con.epoch_policy, keep=q.get("keep", "newest"),
                                           cls=q.get("class"), by=q.get("by", "t"))
                     if narrow:
-                        refence(rep["events"], con.epochs_of({(e["subsystem"], e["unit"]) for e in rep["events"]}), con.epoch_policy)
+                        refence(rep["events"], con.epochs_of({(e["subsystem"], unit_id(e)) for e in rep["events"]}), con.epoch_policy)
                     else:
                         # …AND A SUBSYSTEM THE SCAN DID NOT SEE IS ASKED BY NAME (the twelfth round's «Вопросы» 6, found
                         # by runs): the scan lists the empty prefix, and a store that answers only what the console may
@@ -2665,7 +2693,7 @@ class SpecConsole:
                         seen_subs, refused = {s for s, _ in cur} | {AUDIT, CONSOLE}, set()
                         other = [e for e in rep["events"] if e.get("subsystem") not in seen_subs]
                         if other:
-                            refence(other, con.epochs_of({(e["subsystem"], e["unit"]) for e in other}, refused),
+                            refence(other, con.epochs_of({(e["subsystem"], unit_id(e)) for e in other}, refused),
                                     con.epoch_policy)
                         if refused:
                             rep = {**rep, "epochs_unread": sorted(refused)}
@@ -2681,34 +2709,39 @@ class SpecConsole:
                         # The row is read through `rows.Table` now (`UNIT_LABELS`: counted once, logged once, on
                         # `/metrics`); its unit is judged with no labels — the unit's own grant and the whole cluster's
                         # still see its events, a grant by label cannot, since what the row says is not known — and what
-                        # was left out for that reason is said in the answer (`withheld`), by unit. A `cam` that is no id
-                        # of this subsystem names no row: judged with no labels, nothing withheld. A store that does not
-                        # answer for the row is that unit's too, said the same way.
-                        def labels_of(unit: str) -> list:
-                            if unit == "*" or not spec.rows or "cam" in (spec.fields or {}):
+                        # was left out for that reason is said in the answer (`withheld`), by unit. A unit of a subsystem
+                        # this console does not serve names no row here: judged with no labels, nothing withheld. A store
+                        # that does not answer for the row is that unit's too, said the same way.
+                        #
+                        # Whose a line is: its own unit's, and the unit it is about (`of`) — a grant on either sees it,
+                        # with the about-unit's labels when there is one (the boundary's step 2; the product's `MayOn`).
+                        def labels_of(ref: str) -> list:
+                            got = parse_ref(ref)
+                            c = self.units.get(got[0]) if got is not None else None
+                            if c is None or not c.spec.rows:
                                 return []
                             try:
-                                uid = spec.parse_id(unit)
+                                uid = c.spec.parse_id(got[1])
                             except ValueError:
                                 return []
                             try:
-                                row = UNIT_LABELS.read(ctl._row_key(uid), lambda: ctl.unit(uid), GARBLED_ROW)
+                                row = UNIT_LABELS.read(c.ctl._row_key(uid), lambda: c.ctl.unit(uid), GARBLED_ROW)
                             except OSError as err:
-                                unread[unit] = f"the store did not answer for its row ({err})"
+                                unread[ref] = f"the store did not answer for its row ({err})"
                                 return []
                             if row is GARBLED_ROW:
-                                unread[unit] = "its row does not parse"
+                                unread[ref] = "its row does not parse"
                                 return []
-                            labels = (row or {}).get("labels") or []
-                            return [str(x) for x in labels] if isinstance(labels, (list, tuple)) else []
+                            return _labels(row)
 
                         def may_see(e):
-                            unit = "*" if e.get("cam") is None else str(e["cam"])
-                            if unit not in known:
-                                known[unit] = bool(sees(unit, labels_of(unit)))
-                            if not known[unit] and unit in unread:
-                                withheld[unit] = withheld.get(unit, 0) + 1
-                            return known[unit]
+                            ref, of = str(e.get("unit", "")), (e.get(OF) or None)
+                            whose = of or ref               # the unit whose labels a grant is matched against
+                            if (ref, of) not in known:
+                                known[(ref, of)] = bool(sees(ref, labels_of(whose), of))
+                            if not known[(ref, of)] and whose in unread:
+                                withheld[whose] = withheld.get(whose, 0) + 1
+                            return known[(ref, of)]
                         rep = {**rep, "events": [e for e in rep["events"] if may_see(e)]}
                         # …said only to a caller who holds a grant BY LABEL (the review's tenth pass, minor): what is
                         # withheld is what such a grant might have covered. A grant on one unit never covered another
@@ -2756,7 +2789,7 @@ class SpecConsole:
                     return h._send(400 if isinstance(e, Refused) else 403, {"detail": str(e), "error": str(e)})
                 # A knob that moves every unit of the subsystem is a line with a name and the new values in it (the
                 # review's third pass, minor): the policy's values are choices, not secrets.
-                con.journal.say("policy.changed", of=spec.name, user=h.headers.get("X-User", "operator"),
+                con.journal.say("policy.changed", sub=spec.name, user=h.headers.get("X-User", "operator"),
                                 policy=json.dumps(body, sort_keys=True))
                 return h._send(200, out)
             if not path.startswith(rows_path + "/"):
@@ -2802,12 +2835,17 @@ class Mount:
         # console answering the request has to know what an older epoch means in a subsystem it does not
         # own. A subsystem nobody mounted keeps the default, which is the old behaviour.
         self.epoch_policy: dict[str, str] = {}
+        # …and one catalogue, the same way: a reference `<sub>/<id>` names a unit of whichever subsystem this process
+        # serves, and the gate of any of its consoles reads that unit's row, what it is about and its labels.
+        self.units: dict[str, SpecConsole] = {}
         for c in (self.root, *self.mounts.values()):
             self._adopt(c)
 
     def _adopt(self, console: SpecConsole) -> None:
         self.epoch_policy[console.spec.name] = console.spec.older_epochs
         console.epoch_policy = self.epoch_policy
+        self.units[console.spec.name] = console
+        console.units = self.units
         console.says_platform = console is self.root         # the platform's lines once per process: the root's page
 
     def mount(self, name: str, console: SpecConsole) -> "Mount":

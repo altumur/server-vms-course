@@ -37,7 +37,7 @@ from w2cplatform.contract import Worker
 from w2cplatform.spec import SpecController
 from w2cplatform.variables import Variables
 
-from .config import LIVE_SPEC
+from .config import LIVE_SPEC, cam_ref
 from w2cplatform.rows import PARSE_ERRORS
 
 LIVE = LIVE_SPEC.sub
@@ -391,7 +391,8 @@ class LiveWorker(Worker):
             # console is. A key set and nothing to check with: shut.
             def _admitted(self, cam) -> bool:
                 try:
-                    gw.gate.admit(self.headers, "view", cam, gw.labels_of(cam) if cam is not None else [])
+                    gw.gate.admit(self.headers, "view", cam_ref(cam) if cam is not None else None,   # vms/<cam>: a grant's unit
+                                  gw.labels_of(cam) if cam is not None else [])
                     return True
                 except Denied as e:
                     self._send(e.status, {"error": "denied", "detail": e.why})

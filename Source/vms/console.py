@@ -38,6 +38,7 @@ from w2cplatform.spec import Refused, SpecController
 from w2cplatform.variables import Conflict
 
 from . import keeps, volumes
+from .config import cam_ref, camera_of_ref
 
 log = logging.getLogger("vms.console")
 READ_NOTE_EVERY = 60.0        # the same piece of archive, by the same person: one `archive.read` a minute
@@ -209,7 +210,7 @@ class LiveFront:
 #   play it by); a door that did not answer makes the reply `{segments, unreachable, note}`.
 # - `GET /export/<cam>?rec&from&to` — the frames of the interval as one fragmented MP4, the reply written by
 #   this function itself (it returns `()`), and a line `archive.read` with the sha256 of what left.
-# - `GET /segment?cam=` — the DEVICE's own footage, through its holder's playback door (`segment`).
+# - `GET /segment?unit=vms/<id>` — the DEVICE's own footage, through its holder's playback door (`segment`).
 
 
 # What the DEVICE has and we do not — drawn only where our own footage does not cover it. The same
@@ -550,9 +551,9 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                 body = json.loads(handler.rfile.read(int(handler.headers.get("Content-Length", 0))) or b"{}")
                 if any(isinstance(body.get(k), bool) for k in ("from", "to")):
                     raise TypeError("true and false are not seconds")   # `float(False)` is 0.0: 1970, not an answer
-                cam, t0, t1 = str(body.get("cam", "")), float(body.get("from", 0)), float(body.get("to", 0))
+                cam, t0, t1 = camera_of_ref(body.get("unit")) or "", float(body.get("from", 0)), float(body.get("to", 0))
             except PARSE_ERRORS:                             # a body nested past JSON's depth too: 400, not no reply (the tenth round)
-                return 400, {"detail": "a backfill is {cam, from, to}: a camera and two unix seconds", "error": "bad range"}
+                return 400, {"detail": "a backfill is {unit: vms/<id>, from, to}: a camera and two unix seconds", "error": "bad range"}
             if not cam or not (math.isfinite(t0) and math.isfinite(t1)) or t1 <= t0:
                 return 400, {"detail": "a backfill wants a camera and a range of finite unix seconds", "error": "bad range"}
             # A RANGE A PERSON CAN MEAN (the review's fourth pass, Т-B6's remainder). The recorder fetches in pieces and
@@ -737,9 +738,14 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
 
     # The command, as a row: `(202, {queued, detail})`, or the refusal.
     def file_request(handler, body: dict, key: str):
-        unit, action = str(body.get("unit", "")), str(body.get("action", ""))
-        if not unit or ctl.camera(unit) is None:
-            return 404, {"detail": f"no unit {unit}", "error": "no such unit"}
+        # The camera is named as the platform names a unit, `vms/<id>` (the boundary's step 2): the gate asked about that
+        # one. The row is this subsystem's own and names its camera by id, as its holder reads it.
+        ref, action = str(body.get("unit", "")), str(body.get("action", ""))
+        if camera_of_ref(ref) is None:
+            return 400, {"detail": f"a command names its camera as vms/<id>, not {ref[:80]!r}", "error": "bad unit"}
+        unit = camera_of_ref(ref)
+        if ctl.camera(unit) is None:
+            return 404, {"detail": f"no unit {ref}", "error": "no such unit"}
         if action not in ("output", "preset"):
             return 400, {"detail": f"actions are output and preset, not {action!r}", "error": "unknown action"}
         now = con_wall()
@@ -787,10 +793,11 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
                      "detail": "the worker holding this device performs it at its next look at the requests; "
                                "after valid_until it expires unperformed"}
 
-    # `GET /segment?cam=` — the device's own footage, through its holder's playback door: the URL, and a line.
+    # `GET /segment?unit=vms/<id>` — the device's own footage, through its holder's playback door: the URL, and a line.
+    # The camera is named as the platform names a unit (the boundary's step 2): that is what the gate asked about.
     def segment(handler, q: dict):
         from . import playback as pb
-        cam, raw0, raw1 = str(q.get("cam") or ""), q.get("from", 0), q.get("to", 1e12)
+        cam, raw0, raw1 = camera_of_ref(q.get("unit")) or "", q.get("from", 0), q.get("to", 1e12)
         try:
             t0, t1 = pb.times(raw0, raw1)
         except (TypeError, ValueError):
@@ -1151,7 +1158,7 @@ def scale_hint(rec_ctl: SpecController, unserved: int, spare: int) -> dict:
     if os.environ.get("NOMAD_ALLOC_ID"):
         live = len(rec_ctl.workers_seen())
         return {"needed": needed, "how": f"nomad job scale recworker {live + needed}"}
-    if str(os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL") or "").startswith("configstore://"):
+    if str(os.environ.get("PLATFORM_STORE") or "").startswith("configstore://"):
         return {"needed": needed, "how": "w2c-spares.sh recworker"}
     taken = list(rec_ctl.slots())
     nxt = max([slot_number(n) for n in taken] + [0]) + 1
@@ -1530,7 +1537,7 @@ def rec_routes(rec_ctl: SpecController):
             garbled: list = []
             shown = keeps.declared(rec_ctl.vars, garbled) + garbled
             if sees is not None:
-                shown = [k for k in shown if sees(str(k.cam), handler.labels_for(k.cam))]
+                shown = [k for k in shown if sees(cam_ref(k.cam), handler.labels_for(cam_ref(k.cam)))]
             first = extra.__dict__.setdefault("garbled_seen", {})
             now = rec_ctl.wall()
             for k in garbled:
@@ -1649,18 +1656,6 @@ def auto_routes(auto_ctl):
     return extra
 
 
-# The cameras a scan job reaches: the one it names, and the one whose recording it reads (`jobs.recording_cam`).
-def job_cams(vars_):
-    from .jobs import recording_cam
-
-    def cams(row: dict) -> set:
-        out = {str(row.get("cam") or "")}
-        if row.get("rec"):
-            out.add(recording_cam(vars_, str(row["rec"])))
-        return out - {""}
-    return cams
-
-
 # The camera behind a VOLUME, when it has one: an edge volume is the card in a camera (`volumes.Volume.cam`). `"*"`
 # for a card that does not say whose it is — a row from before cards named their camera: only a grant on the whole
 # cluster covers it. None for every other kind of volume: a disk or a bucket is the cluster's, no camera's.
@@ -1672,18 +1667,6 @@ def volume_cam(vars_, name: str) -> str | None:
     if vol is None or vol.kind != "edge":
         return None
     return vol.cam or "*"
-
-
-# The cameras a RECORDING reaches (the review's sixth pass, major): the one it records, and — homed on a camera's
-# card — the camera whose card that is. `PUT /rec/recordings/1-b {"home": "card2"}` with `admin` on camera 1 was 200,
-# and camera 2's card then wrote camera 2's frames into camera 1's recording, out of its own budget. Rights on the
-# camera recorded are not rights on the card: the gate asks for the route's capability on both, before and after the
-# edit (`SpecConsole.admit_cams`). That a card holds only its own camera's recordings is the controller's rule, for
-# whoever writes the row (`volumes.refuse_recording`).
-def recording_cams(vars_):
-    def cams(row: dict) -> set:
-        return {str(row.get("cam") or ""), volume_cam(vars_, str(row.get("home") or "")) or ""} - {""}
-    return cams
 
 
 # The cameras a change of `source` reaches (the same review, major): every camera of the device the row leaves and of
@@ -1800,7 +1783,7 @@ def command_cams(ctl):
     def cams(path: str, body) -> set:
         if path != "/requests" or not isinstance(body, dict) or str(body.get("action", "")) not in ("output", "preset"):
             return set()                                 # not a command to a device (`file_request` refuses the rest)
-        unit = str(body.get("unit") or "")
+        unit = camera_of_ref(body.get("unit")) or ""
         return device_cams(ctl, unit) if unit and ctl.camera(unit) is not None else set()
     return cams
 
@@ -1883,7 +1866,6 @@ def make_console(ctl: VmsController, archive_root: str | None, wall=None, live_c
 # through that console was written into the journal. A console built anywhere is wired here, or it is not the VMS's.
 def wire_vms(m: Mount, ctl, index=None) -> Mount:
     root = m.root
-    cam_labels = lambda cam: (ctl.camera(cam) or {}).get("labels") or []
     if root.extra is not None:
         root.extra.journal = root.journal    # where `archive.read` goes: the journal, `audit/console/…`
         root.extra.seen = root.seen          # where a command's Idempotency-Key is kept past its row (`POST /requests`)
@@ -1896,42 +1878,39 @@ def wire_vms(m: Mount, ctl, index=None) -> Mount:
     root.NO_UNIT = ("/whep/session/",)                                   # a live session is not a camera: its route checks it
     root.VIEW_POSTS = ("/whep/",)
     # A camera's `source` moved to another channel or device reaches every camera of both devices (`source_cams`);
-    # their labels are read from their own rows, as a mount reads a camera's.
     # …and, moved to another device, every camera of every scenario that commands it (the eighth pass).
     controllers = {name: con.ctl for name, con in m.mounts.items()}
     auto = controllers.get("auto")
-    root.moved_cams = source_cams(ctl, (auto.units, scenario_cams(auto.vars, controllers, ctl)) if auto is not None else None)
+    root.moved_units = as_refs(source_cams(ctl, (auto.units, scenario_cams(auto.vars, controllers, ctl)) if auto is not None else None))
     # …and a command to a device reaches every camera of the device (`command_cams`).
-    root.body_cams = command_cams(ctl)
-    root.labels_of = cam_labels
+    root.body_units = as_refs(command_cams(ctl))
+    # Whose a recording, a stream, a detector, a scan, a watch is — the camera it is ABOUT, and that camera's labels for
+    # a grant by label — is in their specs (`about: {sub: vms, field: cam}`), and whose a keep is (`rights.unit_of`);
+    # the platform's gate reads both (the boundary's step 2). What a scan's recording is, the controller refuses at the
+    # door (`jobs.refuse_job`: a recording of the camera it names), and so a recording homed on another camera's card
+    # (`volumes.refuse_recording`).
     for name, con in m.mounts.items():
-        c = con.ctl
         # ONE journal for the process: a mount has no resource root of its own, and "who deleted recording 7"
         # belongs beside "who deleted camera 7".
         con.journal = root.journal
         if name == "rec":
             con.EDIT_ROUTES = SpecConsole.EDIT_ROUTES + ("/keeps",)   # a keep is set by an operator; a volume by an administrator
             con.ID_ROUTES = ("keeps", "volumes")                       # one id each, and nothing after it
-        if "cam" in c.spec.fields:
-            # A recording, a stream, a detector are ABOUT a camera, and a grant on labels is a grant on the
-            # CAMERA's labels: read from the camera's row, not from the recording's own (which say where it runs).
-            # Every subsystem whose rows name a camera — a scan job and a survey too (the review's fourth pass), and
-            # a live stream, whose own labels say which gateway serves it (the sixth): by the field, not by a list
-            # of names that the next subsystem is missing from.
-            con.labels_of = cam_labels
-        # …and the rows that reach a camera through ANOTHER field (the review's fifth pass, major): a scan through its
-        # recording, a scenario through its triggers and actions. The gate checks every camera such a row names,
-        # before and after the write (`SpecConsole.admit_cams`).
-        if name == "rec":
-            con.cams_of = recording_cams(c.vars)                       # …and a recording through the card it is homed on
-        if name == "detjob":
-            con.cams_of = job_cams(c.vars)
+        # A scenario is the cameras it watches and acts on, and its own labels say where its evaluator runs — not whose
+        # it is (the review's fifth pass). A write to one is the whole cluster's business (the product's gate says the
+        # same of `/auto/…`); who may see it in a list is still its own labels' question.
         if name == "auto":
-            con.cams_of = scenario_cams(c.vars, controllers, ctl)
-            con.labels_of = cam_labels
+            con.CLUSTER_ROWS = True
         if con.extra is not None:
             con.extra.journal = root.journal
     return m
+
+
+def as_refs(fn):
+    """A function answering camera ids, answering references (`moved_units`, `body_units`)."""
+    def refs(*args) -> set:
+        return {cam_ref(c) for c in (fn(*args) or ())}
+    return refs
 
 
 # `make_console(...).serve(host, port)`: the server in a daemon thread, returned so the caller can

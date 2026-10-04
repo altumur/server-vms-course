@@ -98,9 +98,8 @@ logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime
 root = runtime.platform_dir(os.environ)
 # The store seam: a process is told a URL and nothing else (`w2cplatform.variables.open_vars`). On a box
 # this is `file://` — in-process, no daemon, no hop. `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` in a
-# cluster (`CONFIG_URL` is the old name, still read: `store_url`), `k8s://…` later; not one of those names
-# appears in the loop.
-CONFIG_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
+# cluster (`store_url`), `k8s://…` later; not one of those names appears in the loop.
+STORE_URL = store_url(os.environ, "file://" + os.path.join(root, "config"))
 stop = threading.Event()
 
 
@@ -123,7 +122,7 @@ def worker() -> None:
     from w2cplatform import runtime
     from .config import WORKER_ACL
     name = runtime.slot(os.environ, "WORKER_NAME", "w")
-    vars_ = open_vars(CONFIG_URL, writer="vmsworker", acl={"vmsworker": WORKER_ACL})
+    vars_ = open_vars(STORE_URL, writer="vmsworker", acl={"vmsworker": WORKER_ACL})
     objects = FsObjectStore(os.path.join(root, "objects"))
     archive = runtime.events_root(os.environ)
     try:
@@ -174,7 +173,7 @@ def recorder() -> None:
     # hand before a recorder took volumes, and was never given `rec/holds/*`: on a box with a declared volume
     # this process was refused its own place, by its own token (found with feedback BR).
     from .config import REC_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="recworker", acl={"recworker": REC_SPEC.sub.acl_worker()})
+    vars_ = open_vars(STORE_URL, writer="recworker", acl={"recworker": REC_SPEC.sub.acl_worker()})
     objects = FsObjectStore(os.path.join(root, "objects"))
     try:
         from gstvms.actuator import GstRecActuator
@@ -212,7 +211,7 @@ def reccontroller() -> None:
     recorders — one per server, where the archive is. No code of its own."""
     from w2cplatform.spec import SpecController
     from .config import REC_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="reccontroller", acl={"reccontroller": REC_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="reccontroller", acl={"reccontroller": REC_SPEC.acl_controller()})
     _controller_loop(SpecController(REC_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -266,7 +265,7 @@ def _controller_loop(ctl) -> None:
 
 def controller() -> None:
     from .config import SPEC
-    vars_ = open_vars(CONFIG_URL, writer="vmscontroller", acl={"vmscontroller": SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="vmscontroller", acl={"vmscontroller": SPEC.acl_controller()})
     objects = FsObjectStore(os.path.join(root, "objects"))
     _controller_loop(VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50"))))
 
@@ -276,7 +275,7 @@ def livecontroller() -> None:
     gateways by viewer headroom. No code of its own."""
     from w2cplatform.spec import SpecController
     from .config import LIVE_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="livecontroller", acl={"livecontroller": LIVE_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="livecontroller", acl={"livecontroller": LIVE_SPEC.acl_controller()})
     _controller_loop(SpecController(LIVE_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -285,7 +284,7 @@ def detcontroller() -> None:
     GPU-labelled detector workers by stream headroom. No code of its own."""
     from w2cplatform.spec import SpecController
     from .config import DET_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="detcontroller", acl={"detcontroller": DET_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="detcontroller", acl={"detcontroller": DET_SPEC.acl_controller()})
     _controller_loop(SpecController(DET_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -293,7 +292,7 @@ def detworker() -> None:
     """A detector worker: a worker of the `det` subsystem. Its token writes its slot, its epochs and its
     heartbeat; its events go into det/<unit>/e<epoch>/ on this server's resource."""
     from .detworker import DetWorker
-    vars_ = open_vars(CONFIG_URL, writer="detworker", acl={"detworker": ["det/epoch/*", "det/slots/*"]})
+    vars_ = open_vars(STORE_URL, writer="detworker", acl={"detworker": ["det/epoch/*", "det/slots/*"]})
     d = DetWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")), capacity=int(os.environ.get("CAPACITY", "8")),
                   archive_root=runtime.events_root(os.environ))
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
@@ -307,7 +306,7 @@ def autocontroller() -> None:
     and only this subsystem knows what runnable means."""
     from .auto import AutoController
     from .config import AUTO_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="autocontroller", acl={"autocontroller": AUTO_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="autocontroller", acl={"autocontroller": AUTO_SPEC.acl_controller()})
     _controller_loop(AutoController(vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -319,7 +318,7 @@ def autoworker() -> None:
     from .autoworker import AutoWorker
     from .config import AUTO_SPEC
     acl = AUTO_SPEC.sub.acl_worker() + requests_acl("vms", "rec", "det")
-    vars_ = open_vars(CONFIG_URL, writer="autoworker", acl={"autoworker": acl})
+    vars_ = open_vars(STORE_URL, writer="autoworker", acl={"autoworker": acl})
     a = AutoWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                    capacity=int(os.environ.get("CAPACITY", "50")),
                    archive_root=runtime.events_root(os.environ))
@@ -338,7 +337,7 @@ def detjobcontroller() -> None:
     own — and, until the placement predicate lands, no notion that a job ever finishes."""
     from w2cplatform.spec import SpecController
     from .config import DETJOB_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="detjobcontroller", acl={"detjobcontroller": DETJOB_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="detjobcontroller", acl={"detjobcontroller": DETJOB_SPEC.acl_controller()})
     _controller_loop(SpecController(DETJOB_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -348,7 +347,7 @@ def detjobworker() -> None:
     to spend the streams live detection is running on. Its events go into detjob/<job>/e<epoch>/ on this
     server's resource; its progress goes beside them, because its token may not write the row."""
     from .detjobworker import DetJobWorker
-    vars_ = open_vars(CONFIG_URL, writer="detjobworker", acl={"detjobworker": ["detjob/epoch/*", "detjob/slots/*"]})
+    vars_ = open_vars(STORE_URL, writer="detjobworker", acl={"detjobworker": ["detjob/epoch/*", "detjob/slots/*"]})
     j = DetJobWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SCAN_CAPACITY", "2")),
                      archive_root=runtime.events_root(os.environ))
@@ -362,7 +361,7 @@ def surveycontroller() -> None:
     beside the worker holding the camera. No code of its own."""
     from w2cplatform.spec import SpecController
     from .config import SURVEY_SPEC
-    vars_ = open_vars(CONFIG_URL, writer="surveycontroller", acl={"surveycontroller": SURVEY_SPEC.acl_controller()})
+    vars_ = open_vars(STORE_URL, writer="surveycontroller", acl={"surveycontroller": SURVEY_SPEC.acl_controller()})
     _controller_loop(SpecController(SURVEY_SPEC, vars_, FsObjectStore(os.path.join(root, "objects"))))
 
 
@@ -372,7 +371,7 @@ def surveyworker() -> None:
     because a survey must never be able to spend what live detection is running on, and its real limit is
     usually the two playback sessions the device allows rather than the GPU."""
     from .surveyworker import SurveyWorker
-    vars_ = open_vars(CONFIG_URL, writer="surveyworker", acl={"surveyworker": ["survey/epoch/*", "survey/slots/*"]})
+    vars_ = open_vars(STORE_URL, writer="surveyworker", acl={"surveyworker": ["survey/epoch/*", "survey/slots/*"]})
     s = SurveyWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SURVEY_CAPACITY", "2")),
                      archive_root=runtime.events_root(os.environ))
@@ -387,7 +386,7 @@ def gateway() -> None:
     from w2cplatform.spec import SpecController
     from .config import LIVE_SPEC
     from .liveworker import LiveWorker
-    vars_ = open_vars(CONFIG_URL, writer="liveworker",
+    vars_ = open_vars(STORE_URL, writer="liveworker",
                           acl={"liveworker": ["live/epoch/*", "live/slots/*", "live/streams/*"]})
     objects = FsObjectStore(os.path.join(root, "objects"))
     from .config import port_of
@@ -590,7 +589,7 @@ def console() -> None:
     from .auto import AutoController
     from .config import AUTO_SPEC, DET_SPEC, DETJOB_SPEC, LIVE_SPEC, REC_SPEC, SURVEY_SPEC
     from .jobs import DetJobController
-    vars_ = open_vars(CONFIG_URL, writer="console",
+    vars_ = open_vars(STORE_URL, writer="console",
                           acl={"console": SPEC.acl_console() + LIVE_SPEC.acl_console() + DET_SPEC.acl_console()
                                + REC_SPEC.acl_console() + DETJOB_SPEC.acl_console()
                                + SURVEY_SPEC.acl_console() + AUTO_SPEC.acl_console()})   # the operator's rows of EVERY subsystem it fronts
@@ -643,7 +642,7 @@ def resource() -> None:
     import time
     from w2cplatform.resource import serve
     from .resource import vms_resource
-    vars_ = open_vars(CONFIG_URL)
+    vars_ = open_vars(STORE_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
     res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),

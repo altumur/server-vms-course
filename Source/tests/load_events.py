@@ -103,10 +103,10 @@ def part1(root: str, now: float, files: int) -> dict:
     idx = EventIndex(root, "srv-1")
     res["auto_first"], r = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="vms", limit=500))
     res["auto_cached"], _ = timed(lambda: idx.query(now - 300, now, kind="io.input", subsystem="vms", limit=500), 20)
-    res["timeline_first"], _ = timed(lambda: EventIndex(root, "srv-1").query(now - 3600, now, cam=7, limit=1000))
-    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, cam=7, limit=1000), 5)
-    idx.query(now - 3600, now, cam=7, limit=1000)
-    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, cam=7, limit=1000), 10)
+    res["timeline_first"], _ = timed(lambda: EventIndex(root, "srv-1").query(now - 3600, now, unit="vms/7", limit=1000))
+    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="vms/7", limit=1000), 5)
+    idx.query(now - 3600, now, unit="vms/7", limit=1000)
+    res["timeline_cached"], _ = timed(lambda: idx.query(now - 3600, now, unit="vms/7", limit=1000), 10)
     print(f"   index, automation's window (5 min, one kind, all units): first {ms(res['auto_first'])}, "
           f"cached {ms(res['auto_cached'])}  ({len(r['events'])} events)")
     print(f"   index, a timeline (1 h, camera 7):                        first {ms(res['timeline_first'])}, "

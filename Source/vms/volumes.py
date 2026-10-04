@@ -551,8 +551,8 @@ def rank_near_recording(ctl, recording_id: str, memo: dict | None = None) -> int
 #
 # Rights on the camera are not enough for either, and the rule is in two places because it has two halves. WHAT MAY BE
 # is here, at the one door every writer of rows goes through (`spec.register_refuse`): a card holds only its own
-# camera's recordings; a channel is one camera. WHO MAY is the gate's (`vms/console.py`: `recording_cams`,
-# `source_cams`): the camera behind `home`, and every camera of the device a `source` leaves or moves to.
+# camera's recordings; a channel is one camera. WHO MAY is the gate's: the camera a recording is about (its spec's
+# `about`), and every camera of the device a `source` leaves or moves to (`vms/console.py`, `source_cams`).
 #
 # A row that does not parse is not "no volume" here (the review's seventh pass): read as None, a card whose row was
 # garbled would take any camera's recording. `volume_named` raises `Unreadable` for it, and a recording is not homed

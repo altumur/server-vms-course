@@ -143,7 +143,7 @@ def test_a_backfill_request_is_a_row_and_not_a_202():
 
     class H:                                                        # the handler surface the route uses
         headers = {"Content-Length": "48", "X-User": "anna"}
-        rfile = type("R", (), {"read": staticmethod(lambda n: json.dumps({"cam": "7", "from": t0, "to": t1}).encode())})()
+        rfile = type("R", (), {"read": staticmethod(lambda n: json.dumps({"unit": "vms/7", "from": t0, "to": t1}).encode())})()
 
     status, body = routes(H(), "POST", "/backfill", {})
     assert status == 202 and body["queued"]["id"] == rid

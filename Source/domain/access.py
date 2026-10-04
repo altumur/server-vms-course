@@ -66,9 +66,8 @@ class ClusterAccess:
         subject, grants, now = str(payload.get("sub", "")), self._grants(), self.wall()
         if unit is None and capability == "view":
             return any(s == subject and now < until for (s, *_), until in grants.grants.items())
-        from w2cplatform.doors import numeric                # not `isdigit` + `int`: `7²` raised (vmsserver's ninth review)
-        camera = unit if unit is None or numeric(unit) is None else numeric(unit)
-        return any(grants.may(subject, c, camera, now, labels=labels) for c, r in RANK.items() if r >= RANK[capability])
+        # `unit` is `<sub>/<id>`, `"*"` or None, as the gate names it; a grant names a unit the same way (`grants.Grant`)
+        return any(grants.may(subject, c, unit, now, labels=labels) for c, r in RANK.items() if r >= RANK[capability])
 
     # Whether the subject holds a grant given on labels, at `capability` or above (vmsserver's tenth review): a cluster's
     # console names the units whose labels it could not read only to such a caller — what is withheld is what a grant
@@ -78,7 +77,7 @@ class ClusterAccess:
             return False                                     # it sees every unit: nothing is withheld from it
         subject, now = str(payload.get("sub", "")), self.wall()
         return any(s == subject and lab and now < until and RANK.get(c, -1) >= RANK[capability]
-                   for (s, c, _cam, lab), until in self._grants().grants.items())
+                   for (s, c, _unit, lab), until in self._grants().grants.items())
 
 
 def cluster_access(cluster_vars, wall=time.time) -> ClusterAccess:

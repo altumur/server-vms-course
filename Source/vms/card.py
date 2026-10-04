@@ -104,6 +104,7 @@ from w2cplatform.secrets import hide_in_url
 
 from . import volumes
 from .archive import stitch
+from .config import REC_SPEC
 from .recworker import REC, RecWorker
 from .worker import VmsWorker
 
@@ -2051,7 +2052,7 @@ class CardRecorder(RecWorker):
                 continue
             self.prebuffer_short[uid] = now
             st = self.ring.status(now)
-            EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+            EventLog(self.archive_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
                 now, "card.prebuffer.short", cls=ALARM, cam=row.get("cam"), reach_s=round(reach, 1), need_s=need,
                 ring_bytes=st["ring_max_bytes"], window_s=st["ring_window_s"])
             log.warning("%s: the ring holds %.0f s of %s and a break is noticed after %.0f: its start will not be on the "
@@ -2091,7 +2092,7 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+                EventLog(self.archive_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
                     now, "card.failing", cls=ALARM, cam=row.get("cam"), state=state, error=error)
                 said += 1
         if said:
@@ -2190,7 +2191,7 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+                EventLog(self.archive_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
                     now, "camera.footage.lost", cls=ALARM, cam=row.get("cam"), lost_s=round(grew, 1), failed_s=failed,
                     evicted_s=evicted, why=said.get("failed_why", ""))
                 told += 1
@@ -2217,7 +2218,7 @@ class CardRecorder(RecWorker):
         for row in self.rows:
             uid = str(row["id"])
             if uid in self.epochs:
-                EventLog(self.archive_root, REC.name, uid, self.epochs[uid]).append(
+                EventLog(self.archive_root, REC.name, uid, self.epochs[uid], of=REC_SPEC.of_row(row)).append(
                     now, "camera.uplink.short", cls=ALARM, cam=row.get("cam"), behind_s=said.get("behind_s"),
                     cut_s=said.get("cut_s"), failed_s=said.get("failed_s"))
                 told += 1

@@ -252,6 +252,12 @@ class Field:
     inherits: bool = False
     merge: str = "override"       # override | union — for an inheriting field
     bound_to: tuple = ()          # a `*_secret` field: the fields it is the key to (`unbound_secret`)
+    # `fixed: true` — set when the unit is created and never changed after, by anybody, deleted or not (a tombstone
+    # keeps it: the name comes back for the same value only). The field a unit is ABOUT another by (`about.field`)
+    # is the case that needs it: the gate asks about the unit the row names NOW, and a row that could be pointed
+    # elsewhere would take its history with it (the review's fourth pass, when the rule was written into this
+    # controller under one subsystem's field name; the boundary's step 2 made it the spec's word).
+    fixed: bool = False
 
     # Convert an item string or JSON value to the typed value; `None` gives the default. Bools accept a real
     # bool or the string `"true"`; lists accept a list or a comma-separated string.
@@ -358,22 +364,22 @@ class SubsystemSpec:
     servers: str = "shared"       # the default of the `servers` policy knob: shared | distinct (the console may change it)
     tie_break: str = "most-free-capacity"
     near: str = "none"            # a subsystem whose worker holding the same unit id this one prefers to be beside (an affinity, never a filter)
-    # WHICH unit of that subsystem. `id` — the same unit id, which is what `near: <sub>` means and all the
-    # VMS needed while the camera and its recording were the same string. A subsystem whose units are named
-    # for something else has to say so: a detector's unit is `7-linecross`, no recorder ever reports that id,
-    # and `near: rec` on it would match nothing — an affinity that reads as followed and is not. So
-    # `near: {sub: rec, by: cam}` — follow the recorder holding the recording my `cam` field names.
+    # WHICH unit of that subsystem. `id` — the same unit id, which is what `near: <sub>` means, and all a pair
+    # of subsystems needs while their units are named alike. A subsystem whose units are named for something
+    # else has to say so: a unit called `7-a` is not one the other subsystem ever reports, and `near: <sub>` on
+    # it would match nothing — an affinity that reads as followed and is not. So `near: {sub: <sub>, by:
+    # <field>}` — follow the worker holding the unit my `<field>` names.
     near_by: str = "id"
-    # `near: {sub: rec, of: cam}` — WHAT OF THEIRS the value is matched against. `by` says which value of
+    # `near: {sub: <sub>, of: <field>}` — WHAT OF THEIRS the value is matched against. `by` says which value of
     # MINE to look for (my id, or a field of my row); `of` says where in THEIR status to look for it (their
-    # unit id by default, or a field they report). The two are independent, and the second arrived when
-    # recordings stopped being named by their camera: "the recorder running a recording whose `cam` is
-    # camera 7" holds whether the operator called it `7`, `7-cloud` or `gate-lobby`, while "the recorder
-    # running unit `7`" was only ever true by coincidence — and silently false when the coincidence ended.
+    # unit id by default, or a field they report). The two are independent, and the second arrived when their
+    # units stopped being named by what they are about: "the worker running a unit whose `<field>` is 7"
+    # holds whether the operator called that unit `7`, `7-b` or `lobby`, while "the worker running unit `7`"
+    # was only ever true by coincidence — and silently false when the coincidence ended.
     #
-    #   vms:    near: {sub: rec, of: cam}            my id (7)        vs their `cam`     — whoever records me
-    #   det:    near: {sub: rec, by: cam, of: cam}   my field `cam`   vs their `cam`     — likewise, for a pair
-    #   detjob: near: {sub: rec, by: rec}            my field `rec`   vs their id        — I name the recording
+    #   near: {sub: B, of: f}           my id (7)        vs their `f`     — whoever runs a unit about me
+    #   near: {sub: B, by: f, of: f}    my field `f`     vs their `f`     — likewise, for a pair about one thing
+    #   near: {sub: B, by: g}           my field `g`     vs their id      — I name their unit
     #
     # The field is read from the heartbeat STATUS (`status_extra` puts it there), not from the other
     # subsystem's rows, which this controller has no business reading. Several of their units may answer —
@@ -470,15 +476,32 @@ class SubsystemSpec:
     # lines collapse only when they are identical. A subsystem narrows it when a field drifts for a reason
     # that is not a new observation.
     suppress: dict[str, "Suppress"] = field(default_factory=dict)
+    # `about: {sub: <another subsystem>, field: <a field of the row>}` — every unit of this subsystem is ABOUT one unit
+    # of another: the one whose id its row holds in that field (a recording is about its camera). What the platform
+    # reads it for, and nothing else: an event of such a unit is also its about-unit's (the line's `of`, the index's
+    # second column), a grant on the about-unit takes it in, and the labels a `labels:` grant is matched against are
+    # the about-unit's — a unit's own labels say where it may run, not whose it is. Empty: about nothing but itself.
+    # The field is `fixed`: what a unit is about does not change.
+    about_sub: str = ""
+    about_field: str = ""
+    # `rights: {unit_of: {<table>: <field>}}` — a row of that table (one of `tables:`) belongs to the unit its field
+    # names: a unit of the subsystem `about` names, or of this one without `about`; a value written `<sub>/<id>` is
+    # taken as it is. Whoever writes the row needs on that unit what the route needs — on both, when a write moves
+    # the row from one to another.
+    unit_of: dict = field(default_factory=dict)
 
     # Builds the spec from the YAML dict, tolerating absent sections. Field defaults are parsed to their
-    # type once here (strings kept as strings so `"cam{id}"` survives). `snapshot` defaults to every field.
+    # type once here (strings kept as strings so `"u{id}"` survives). `snapshot` defaults to every field.
     @classmethod
     def from_dict(cls, d: dict) -> "SubsystemSpec":
         unit, pl = d.get("unit", {}), d.get("placement", {})
         fields = {n: Field(n, f.get("type", "string"), f.get("default"), bool(f.get("required", False)),
-                           f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")))
+                           f.get("inherit"), "inherit" in f, f.get("merge", "override"), _bound_to(n, f.get("bound_to")),
+                           f.get("fixed", False) is True)
                   for n, f in (unit.get("fields") or {}).items()}
+        for n, f in (unit.get("fields") or {}).items():
+            if "fixed" in f and not isinstance(f["fixed"], bool):
+                raise ValueError(f"field {n}: `fixed` is true or false, not {f['fixed']!r}")
         for f in fields.values():
             if f.bound_to and not is_secret_field(f.name):
                 raise ValueError(f"field {f.name}: `bound_to` is a secret's — the address it is the key to; "
@@ -534,6 +557,7 @@ class SubsystemSpec:
                    running_gauge=str((d.get("console", {}) or {}).get("running", "units_running")),
                    older_epochs=str((d.get("events", {}) or {}).get("older_epochs", "fenced")),
                    suppress=suppress_rules(d.get("events", {}) or {}))
+        spec._about_and_rights(d)
         if spec.offers and not re.fullmatch(r"[a-z]{1,8}", spec.offers):
             raise ValueError(f"placement.offers is the prefix of the slots offered (`w`, `g`), not {spec.offers!r}")
         # A secret in the snapshot is a secret leaving the cluster: `vms/snapshot/*` is what М12's directory
@@ -602,6 +626,90 @@ class SubsystemSpec:
         if spec.home and spec.home != "near" and spec.home not in fields:
             raise ValueError(f"spec {spec.name}: home names no field: {spec.home!r}")
         return spec
+
+    # `about:` and `rights:` as written, checked at load: `about` names another subsystem by a name and a field of this
+    # row, which is `fixed` (said in the file, not assumed); `rights.unit_of` names this spec's own tables and a field
+    # each. Anything else is refused here, before a console reads a row by it.
+    def _about_and_rights(self, d: dict) -> None:
+        about = d.get("about")
+        if about is not None:
+            from .doors import safe_segment
+            sub, fld = (about.get("sub"), about.get("field")) if isinstance(about, dict) else (None, None)
+            if not isinstance(sub, str) or not isinstance(fld, str) or not safe_segment(sub) or unnamable(sub) \
+                    or sub == self.name or set(about) - {"sub", "field"}:
+                raise ValueError(f"spec {self.name}: `about:` is {{sub: <another subsystem>, field: <a field of the "
+                                 f"row>}}, not {about!r}")
+            if fld not in self.fields:
+                raise ValueError(f"spec {self.name}: about.field names no field: {fld!r}")
+            if not self.fields[fld].fixed:
+                raise ValueError(f"spec {self.name}: about.field {fld!r} is what a unit is about, and that does not "
+                                 f"change — say `fixed: true` on it")
+            self.about_sub, self.about_field = sub, fld
+        rights = d.get("rights")
+        if rights is None:
+            return
+        if not isinstance(rights, dict) or set(rights) - {"unit_of"}:
+            raise ValueError(f"spec {self.name}: `rights:` takes `unit_of: {{<table>: <field>}}`, not {rights!r}")
+        unit_of = rights.get("unit_of") or {}
+        if not isinstance(unit_of, dict):
+            raise ValueError(f"spec {self.name}: rights.unit_of is {{<table>: <field>}}, not {unit_of!r}")
+        for table, fld in unit_of.items():
+            if table not in self.tables:
+                raise ValueError(f"spec {self.name}: rights.unit_of names {table!r}, which is not one of its tables")
+            if not isinstance(fld, str) or not fld:
+                raise ValueError(f"spec {self.name}: rights.unit_of.{table} names no field")
+        self.unit_of = {str(t): str(f) for t, f in unit_of.items()}
+
+    # -- what a unit is called outside its routes, and what it is about ----------------------------------
+    # `<name>/<id>` (`doors.unit_ref`): the one way a unit is named to the gate, the index and a grant.
+    def ref(self, uid) -> str:
+        from .doors import unit_ref
+        return unit_ref(self.name, uid)
+
+    # A value a row holds as a unit of `sub`, as a reference — a value already written as one of `sub`'s stays.
+    @staticmethod
+    def _ref_in(sub: str, v) -> str:
+        from .doors import parse_ref, unit_ref
+        v = "" if v is None else str(v)
+        if not v:
+            return ""
+        got = parse_ref(v)
+        return v if got is not None and got[0] == sub else unit_ref(sub, v)
+
+    # The unit a row of this subsystem is about — `<about.sub>/<value of about.field>` — "" when the spec says no
+    # `about` or the row holds nothing in the field.
+    def of_row(self, row: dict | None) -> str:
+        if not self.about_sub or not row or row.get(self.about_field) in (None, ""):
+            return ""
+        return self._ref_in(self.about_sub, row.get(self.about_field))
+
+    # Whose a row of one of this subsystem's tables is (`rights.unit_of`): `(ref, True)`, `("", True)` when the table
+    # says whose and the row names nobody, `("", False)` when the spec does not say it of the table.
+    def table_unit(self, table: str, row: dict | None) -> tuple[str, bool]:
+        fld = self.unit_of.get(table)
+        if fld is None:
+            return "", False
+        v = (row or {}).get(fld)
+        if v in (None, ""):
+            return "", True
+        from .doors import parse_ref
+        if parse_ref(str(v)) is not None:
+            return str(v), True
+        return self._ref_in(self.about_sub or self.name, v), True
+
+    # The first `fixed` field `fields` would change in the row `was` (stored items or a row), None for none —
+    # compared as the field parses them, so 7 and "7" are one value.
+    def fixed_changed(self, was: dict | None, fields: dict) -> str | None:
+        for n, f in self.fields.items():
+            if not f.fixed or n not in fields or not was or was.get(n) in (None, ""):
+                continue
+            try:
+                same = str(f.parse(fields[n])) == str(f.parse(was[n]))
+            except PARSE_ERRORS:
+                same = False
+            if not same:
+                return n
+        return None
 
     # `yaml.safe_load` then `from_dict`. PyYAML is imported lazily so the rest of the platform has no
     # dependency on it.
@@ -745,7 +853,7 @@ class SubsystemSpec:
                 # …A LOGIN NOR A CREDENTIAL ANYWHERE IN IT — the platform's one rule (`secrets.address_refusal`), the one a
                 # volume's url and the domain's door ask. This was a copy of it, and the copy fell behind (the thirteenth
                 # review, blocker 6): it read the `@` of the netloc and the path only, and `…/relay?src=rtsp%3A%2F%2Fadmin
-                # %3A…%40cam` — how a relay like go2rtc is told what to fetch — was 201, the password in the row, the
+                # %3A…%40host` — how a relay like go2rtc is told what to fetch — was 201, the password in the row, the
                 # page and the snapshot. What the copy had learnt before, a review at a time: a login in the path of a
                 # scheme that names its host there (the tenth round), a credential pair (the eleventh review, blocker 4).
                 # The words name the parameter, never its value.
@@ -754,15 +862,15 @@ class SubsystemSpec:
                     raise Refused(f"{name} may not be stored as typed: {why}. Put the login in cred_username and the "
                                   f"password or token in cred_secret — a url field is in the snapshot, and the snapshot "
                                   f"leaves the cluster")
-                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/cam7#@nvr50/ch/1` is
-                # device `cam7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
+                # …AND NO `#`. `urlsplit` reads it as the start of a fragment: `driverpack://acme/dev7#@nvr50/ch/1` is
+                # device `dev7` to every right asked of it, while a driver that does not stop at `#` dials `nvr50` —
                 # rights asked of one device, another device opened. Nothing a camera is reached at holds one.
                 if "#" in str(fields[name]):
                     raise Refused(f"{name} may not hold '#': an address with a fragment names one place to the rights "
                                   f"and maybe another to the driver")
 
     # A fresh row: each required field must be present and truthy (`"a vms unit needs a source"`), others
-    # get their default; a string value containing `{id}` has it substituted (the VMS's `name: "cam{id}"`);
+    # get their default; a string value containing `{id}` has it substituted (a spec's `name: "u{id}"`);
     # `revision` is 1.
     def new_row(self, uid, fields: dict) -> dict:
         r = {"id": uid}
@@ -1270,16 +1378,16 @@ class SpecController(Controller):
             old, idx = self.vars.get(self._row_key(uid))
             if old and old.get("deleted") != "true":
                 raise Refused(f"{self.spec.name} unit {uid} exists")
-            # A NAME STAYS ITS CAMERA'S (the review's fifth pass, major). A unit's name is also the name of what it left
-            # behind — a recording's tree in its volumes, a detector's events — and readers find those by the name.
-            # Deleted as camera 1's «1-cloud» and created again as camera 2's, the recording handed camera 1's
-            # footage to whoever may view camera 2 (`GET /export/2` played it). The tombstone keeps `cam`: the name
-            # comes back for the same camera, and for another it is refused — whatever was written under it is still
-            # there, and nothing here can know when the last of it is gone, so "reuse once the archive is empty" is
-            # not a rule this controller could keep.
-            if old and "cam" in old and "cam" in fields and str(self.spec.fields["cam"].parse(fields["cam"])) != str(old["cam"]):
-                raise Refused(f"the name {uid} was cam {old['cam']}'s, and what was written under it still is: create "
-                              f"cam {fields['cam']}'s under another name")
+            # A NAME STAYS ITS UNIT'S (the review's fifth pass, major). A unit's name is also the name of what it left
+            # behind — what its workers wrote under it — and readers find that by the name. Deleted as one unit's and
+            # created again about another, the name handed the first one's history to whoever may view the second.
+            # The tombstone keeps every field, the `fixed` ones with them: the name comes back with the same values,
+            # and with others it is refused — whatever was written under it is still there, and nothing here can know
+            # when the last of it is gone, so "reuse once it is empty" is not a rule this controller could keep.
+            moved = self.spec.fixed_changed(old, fields) if old else None
+            if moved:
+                raise Refused(f"the name {uid} was {moved} {old[moved]}'s, and what was written under it still is: "
+                              f"create {moved} {fields[moved]}'s under another name")
             if old:                                                 # a named unit deleted earlier comes back under its name:
                 r = self.spec.new_row(uid, fields)                  # a fresh row, one revision on from the old one, by CAS on it
                 r["revision"] = int(old.get("revision", 0)) + 1
@@ -1308,13 +1416,11 @@ class SpecController(Controller):
     # restarts what it runs on a new revision); write. Derived rows are refreshed only if one of their
     # source fields changed.
     #
-    # THE UNIT A ROW IS ABOUT IS FIXED AT ITS CREATION (the review's fourth pass, major). A recording, a detector, a
-    # stream is ABOUT a camera — `cam`, the field the console's gate reads to know whose grant to check — and the gate
-    # checks the camera the row names NOW. `PUT /rec/recordings/1 {"cam": "2"}` with `admin` on camera 1 passed on
-    # camera 1 and moved the recording to camera 2: the recorder wrote camera 2 into a tree camera 1's viewers read; a
-    # detector took its alarms and scenarios along. Rights on both cameras would make the move legal for somebody who
-    # holds both, and it would still be one camera's history going on as another's; so `cam` does not change. The
-    # same value is no change — the page sends the whole form.
+    # A `fixed` FIELD IS SET AT CREATION (the review's fourth pass, major). A unit that is ABOUT another (`about`) is
+    # judged by the gate on the unit its row names NOW; a PUT that changed the field passed on the old unit and moved
+    # the row — and its history, its alarms, the scenarios on it — to the new one. Rights on both would make the move
+    # legal for somebody who holds both, and it would still be one unit's history going on as another's; so a fixed
+    # field does not change. The same value is no change — a page sends the whole form.
     def update(self, uid, fields: dict) -> dict:
         self.spec.refuse(fields)
         # A secret sent EMPTY or null on an edit keeps the stored one (the thirteenth round; the product's rule): a page
@@ -1325,9 +1431,10 @@ class SpecController(Controller):
             if not it or it.get("deleted") == "true":
                 raise KeyError(uid)
             r = self.spec.row(it)
-            if "cam" in fields and "cam" in r and str(self.spec.fields["cam"].parse(fields["cam"])) != str(r["cam"]):
-                raise Refused(f"`cam` is fixed when the unit is created: {uid} is about {r['cam']} — create one for "
-                              f"{fields['cam']} under another name (this one stays {r['cam']}'s, deleted or not)")
+            moved = self.spec.fixed_changed(r, fields)
+            if moved:
+                raise Refused(f"`{moved}` is fixed when the unit is created: {uid} is {moved} {r[moved]}'s — create one "
+                              f"for {fields[moved]} under another name (this one stays {r[moved]}'s, deleted or not)")
             was = dict(r)
             for k, v in fields.items():
                 r[k] = self.spec.fields[k].parse(v)
@@ -1758,8 +1865,8 @@ class SpecController(Controller):
             from .console import heartbeats                        # the read model's scan, without the age filter
             prefix = f"{self.spec.near}/heartbeats/"
             # Memo names of their own (the review's tenth pass, minor): `""` was the list `Controller._heartbeats` keeps
-            # under the same prefix, and the index is by `near_of` — the VMS (`of: cam`) and a scan job (by id) both
-            # follow `rec`, and in one shared pass one got the other's index.
+            # under the same prefix, and the index is by `near_of` — two subsystems that follow one, one by a field and
+            # one by id, shared one pass, and one got the other's index.
             beats = self._per_pass(prefix, lambda: heartbeats(self.objects, self.spec.near + "/"), "beats")
             return self._per_pass(prefix, lambda: self._near_index(beats), f"near_index:{self.spec.near_of}")
         return self._near_index(beats)
@@ -2326,7 +2433,7 @@ class SpecController(Controller):
                         # …and an alarm, once a spell (the review's thirteenth pass, major 16): written by nobody until
                         # a worker with the room comes — the spares' count asks for one (`offer_spares`)
                         from .events import ALARM
-                        self.journal.say("units.left_on_leaving", ALARM, of=self.sub.name, unit=str(uid),
+                        self.journal.say("units.left_on_leaving", ALARM, sub=self.sub.name, unit=str(uid),
                                          units=max(1, len(group)), worker=gone,
                                          why=(f"{what} stay on {gone} ({why}): no live worker has the reach and the room "
                                               f"for {'all of them' if len(group) > 1 else 'it'} — written by nobody "
@@ -2542,7 +2649,7 @@ class SpecController(Controller):
         from .events import ALARM
         for labels in sorted(set(withheld) - said):
             log.error("%s: spares for labels '%s' are short and none is offered: %s", self.sub.name, labels, withheld[labels])
-            self.journal.say("spares.no_server", ALARM, of=self.sub.name, labels=labels, why=withheld[labels])
+            self.journal.say("spares.no_server", ALARM, sub=self.sub.name, labels=labels, why=withheld[labels])
         said.clear(); said.update(withheld)
 
     # One offer for `labels`, created under the next number nobody has (`cas=0`); one made under us: the next number.
@@ -2767,7 +2874,7 @@ class SpecController(Controller):
             return
         self._reach_budget_said.add(key)
         from .events import ALARM
-        self.journal.say("units.over_budget", ALARM, of=self.sub.name, unit=str(group[0]["id"]), units=len(group),
+        self.journal.say("units.over_budget", ALARM, sub=self.sub.name, unit=str(group[0]["id"]), units=len(group),
                          worker=worker, budget=budget,
                          why=(f"{len(group)} units of one {self.spec.group_by} stay on {worker}, whose server no longer "
                               f"reaches them: they move together, and that is more than the {budget} moves a pass may "

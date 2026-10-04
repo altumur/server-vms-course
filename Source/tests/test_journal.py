@@ -22,7 +22,7 @@ DAY = 86400.0
 
 
 def _audit(box, role="console"):
-    rows = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", unit=role)["events"]
+    rows = EventIndex(box.archive, "srv-1", wall=box.wall).query(0, box.wall() + 1, subsystem="audit", unit=f"audit/{role}")["events"]
     return [{k: v for k, v in r.items() if k not in ("id", "t", "server", "bucket", "epoch", "epoch_is", "fenced", "cam", "class", "subsystem", "unit")} for r in rows]
 
 
@@ -60,8 +60,8 @@ def test_who_deleted_it_who_kept_it_and_who_took_the_volume_away():
     assert said[2]["quota_bytes"] == 10 ** 11 and said[2]["was"] == 10 ** 12   # requested: the recorder applies it (the review's fourth pass)
     assert said[2]["confirmed"] is False
     gone = [e for e in _raw(box) if e["kind"] == "unit.deleted"]
-    assert [(e["subsystem"], e["unit"]) for e in gone] == [("audit", "console")] * 2       # whose line it is…
-    assert [(e["of"], e["target"]) for e in gone] == [("rec", "1"), ("vms", str(cam))]     # …and what it is about
+    assert [(e["subsystem"], e["unit"]) for e in gone] == [("audit", "audit/console")] * 2       # whose line it is…
+    assert [(e["sub"], e["target"]) for e in gone] == [("rec", "1"), ("vms", str(cam))]     # …and what it is about
 
 
 def _raw(box):

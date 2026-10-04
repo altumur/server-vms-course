@@ -16,12 +16,13 @@
 #
 # It is not `detjob` either: its work does not end. There is no `retire_when` here.
 name: survey
+about: {sub: vms, field: cam}   # a watch is on a camera's own archive: its events, grants and labels are the camera's
 unit:
   rows: watches                      # survey/watches/<name>
   id: name                           # "<cam>-<kind>", the operator's name for the pair
   fields:
     name:    {type: string, required: true}
-    cam:     {type: string, required: true}      # whose device archive to watch
+    cam:     {type: string, required: true, fixed: true}   # whose device archive to watch
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | …
     params:  {type: string}                      # the model's settings, opaque to the platform
     mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store

@@ -50,9 +50,10 @@ class _Log:
 def ev(t, sub, unit, kind, **fields):
     """Exactly the row `MergedIndex.query` returns — `subsystem`, not `sub`, and
     no second spelling to hide behind. The fake that carried both keys is how a
-    scenario that could never fire passed seven tests."""
-    return {"t": float(t), "subsystem": sub, "unit": str(unit), "cam": None, "kind": kind, "epoch": 1,
-            "server": "srv-a", "bucket": "b", "fenced": False, "epoch_is": "current", **fields}
+    scenario that could never fire passed seven tests. Its own unit is `<sub>/<id>`,
+    as every row's is (the boundary's step 2)."""
+    return {"t": float(t), "subsystem": sub, "epoch": 1, "kind": kind, "server": "srv-a", "bucket": "b",
+            "fenced": False, "epoch_is": "current", **fields, "unit": f"{sub}/{unit}", "of": ""}
 
 
 DOOR = {"name": "door-on-badge",
@@ -744,7 +745,7 @@ def test_a_loud_camera_does_not_cut_the_quiet_one_a_scenario_watches():
     _assigned(box, "one")
     w = _worker(box, log)
     assert w.reconcile_once() == ["one"] and "cut" not in w.status()[0]
-    assert log.asked[0]["unit"] == "12"
+    assert log.asked[0]["unit"] == "vms/12"
 
 
 def test_one_camera_row_that_cannot_be_read_does_not_withdraw_the_scenarios():

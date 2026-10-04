@@ -10,7 +10,7 @@ therefore right exactly when the contract suite is green against it."""
 # This is the second implementation: the same five clauses, in memory, in fifty lines.
 #
 # It is not a mock and it is not test scaffolding. It is registered on the same seam `file://` is, chosen
-# the same way (`CONFIG_URL=memory://`), and held to the same standard — `test_variables_contract.py` runs
+# the same way (`PLATFORM_STORE=memory://`), and held to the same standard — `test_variables_contract.py` runs
 # against it unchanged:
 #
 #     CONTRACT_URL=memory:// python3 tests/run.py

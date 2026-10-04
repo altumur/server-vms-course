@@ -51,7 +51,7 @@ from w2cplatform.variables import Variables
 
 from . import volumes
 from .archive import Archive, ArchiveError, Fenced, classify, overlaps, stitch, subtract
-from .config import rec_row
+from .config import REC_SPEC, rec_row
 from .worker import FakeActuator, VmsWorker
 from .writerwatch import WriterWatch
 
@@ -83,6 +83,13 @@ DOMAIN_SEEN = "domain/seen"
 
 log = logging.getLogger("recworker")
 REC = Subsystem("rec")
+
+
+# The camera a keep's lines are about — its camera, as `rights.unit_of` says whose a keep is (rec.subsystem.yaml): a
+# query for the camera finds them (`of`, the index's second column).
+def keep_of(k) -> str:
+    from .config import REC_SPEC
+    return REC_SPEC.table_unit("keeps", {"cam": k.cam})[0]
 VOLUME_MISSING = "VOLUME_MISSING"       # a volume in use at its address before, and not there now (`RecWorker._may_format`)
 
 
@@ -2093,7 +2100,7 @@ class RecWorker(VmsWorker):
             if now - self.shallow.get(unit, -1e18) < self.SHALLOW_AGAIN or unit not in self.epochs:
                 continue
             self.shallow[unit] = now
-            EventLog(self.archive_root, REC.name, unit, self.epochs[unit]).append(
+            EventLog(self.archive_root, REC.name, unit, self.epochs[unit], of=REC_SPEC.of_row(row)).append(
                 now, "archive.shallow", cls=ALARM, cam=row.get("cam"), depth_days=depths[unit], min_depth_days=floor)
             logging.warning("%s: recording %s holds %.1f day(s) and was promised %.0f: the ring of %s has closed",
                             self.name, unit, depths[unit], floor, self.volume)
@@ -2964,7 +2971,7 @@ class RecWorker(VmsWorker):
                 now_in, before = inside(k, rec), self.keep_held.get((k.id, rec), 0.0)
                 if now_in + 1.0 < before:
                     lost = round(before - now_in, 1)
-                    EventLog(self.archive_root, REC.name, rec, 0).append(
+                    EventLog(self.archive_root, REC.name, rec, 0, of=keep_of(k)).append(
                         now, "archive.keep.lost", cls=ALARM, cam=k.cam, keep=k.id, recording=rec, seconds=lost,
                         volume=self.volume)
                     logging.error("%s: %.0f s of keep %s (%s) are gone from %s: its ring took them",
@@ -3002,7 +3009,7 @@ class RecWorker(VmsWorker):
                 # Durable, with how much of the keep the volume held: what `keep_held` is restored from when this
                 # recorder starts again — in memory only, a restart forgot what had been copied, and the incidents
                 # ring taking it afterwards raised no `archive.keep.lost` (the review's third pass, a minor).
-                EventLog(self.archive_root, REC.name, rec, 0).append(
+                EventLog(self.archive_root, REC.name, rec, 0, of=keep_of(k)).append(
                     now, "archive.keep.copied", durable=True, cam=k.cam, keep=k.id, recording=rec, bytes=size,
                     sha256=digest, seconds=round(self.keep_held.get((k.id, rec), 0.0), 1), volume=self.volume)
                 entry.setdefault("sha256", {})[rec] = digest
@@ -3124,7 +3131,7 @@ class RecWorker(VmsWorker):
         entry["missing_since"] = since
         if now - since >= self.KEEP_UNCOPIED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.archive_root, REC.name, unit, 0).append(
+            EventLog(self.archive_root, REC.name, unit, 0, of=keep_of(k)).append(
                 now, "archive.keep.uncopied", cls=ALARM, cam=k.cam, keep=k.id, seconds=round(missing, 1),
                 since=since, volume=self.volume)
             logging.error("%s: keep %s is %.0f s short of what it names, for %.0f s: no door that answers from here has "
@@ -3145,7 +3152,7 @@ class RecWorker(VmsWorker):
         entry["garbled_since"] = since
         if now - since >= self.KEEP_GARBLED_AFTER and (said is None or now - said >= self.SHALLOW_AGAIN):
             unit = (sorted(k.recordings) or [str(k.cam)])[0]
-            EventLog(self.archive_root, REC.name, unit, 0).append(
+            EventLog(self.archive_root, REC.name, unit, 0, of=keep_of(k)).append(
                 now, "archive.keep.garbled", cls=ALARM, cam=k.cam, keep=k.id, since=since, volume=self.volume)
             logging.error("%s: keep %s of camera %s has not been readable for %.0f min: its camera's footage is held as "
                           "far as the keep can be read, and none of it is copied for safekeeping. Mend the keep or lift "

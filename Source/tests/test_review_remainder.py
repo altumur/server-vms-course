@@ -230,7 +230,7 @@ def test_a_command_carries_a_deadline_and_a_near_one():
     from vms.console import vms_routes
     from vms.worker import VmsWorker
     route = vms_routes(None, None, con)
-    far = json.dumps({"unit": str(door), "action": "output", "port": 1, "valid_until": now + 601}).encode()
+    far = json.dumps({"unit": f"vms/{door}", "action": "output", "port": 1, "valid_until": now + 601}).encode()
     body = type("H", (), {"headers": {"Content-Length": str(len(far)), "Idempotency-Key": "far-1"}, "rfile": io.BytesIO(far)})()
     assert route(body, "POST", "/requests", {})[1]["error"] == "too far" and MAX_VALID_FOR == VmsWorker.MAX_VALID
 
@@ -245,7 +245,7 @@ def test_a_command_retried_is_one_command():
     route = vms_routes(None, None, con)
 
     def post(key, **fields):
-        data = json.dumps({"unit": str(door), "action": "output", "port": 1, **fields}).encode()
+        data = json.dumps({"unit": f"vms/{door}", "action": "output", "port": 1, **fields}).encode()
         headers = {"Content-Length": str(len(data)), **({"Idempotency-Key": key} if key else {})}
         return route(type("H", (), {"headers": headers, "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
 
@@ -322,7 +322,7 @@ def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_a
             return e.code, json.load(e)
     import urllib.error
     try:
-        pulse = {"unit": door, "action": "output", "port": 1}
+        pulse = {"unit": f"vms/{door}", "action": "output", "port": 1}
         first = post("open-1", pulse)
         assert first[0] == 202 and box.vars.list(SPEC.sub.requests_prefix()) == [SPEC.sub.request_key("open-1")]
         box.vars.delete(SPEC.sub.request_key("open-1"))                     # answered by the holder, cleared by the controller
@@ -330,7 +330,7 @@ def test_a_commands_key_outlives_its_row_and_a_holder_forgets_what_nobody_will_a
         assert post("open-1", pulse) == first                               # the retry: the first reply…
         assert box.vars.list(SPEC.sub.requests_prefix()) == []              # …and no second command
         assert post("open-1", {**pulse, "port": 2})[0] == 422               # the same key for another command: refused
-        assert post("open-2", {"unit": 999, "action": "output"})[0] == 404
+        assert post("open-2", {"unit": "vms/999", "action": "output"})[0] == 404
         assert post("open-2", pulse)[0] == 202                              # a refusal did not spend the key
     finally:
         srv.shutdown()
@@ -358,7 +358,7 @@ def test_a_command_for_a_camera_nobody_holds_is_ended_by_the_reaper_and_counted(
     gate = con.create_camera({"name": "gate", "source": "driverpack://acme/10.0.0.93/ch/1"})["id"]
     assert ctl.placement(gate) is None                                    # no worker anywhere: nobody holds it
     route = vms_routes(None, None, con)
-    data = json.dumps({"unit": str(gate), "action": "output", "port": 1}).encode()
+    data = json.dumps({"unit": f"vms/{gate}", "action": "output", "port": 1}).encode()
     filed = route(type("H", (), {"headers": {"Content-Length": str(len(data)), "Idempotency-Key": "open-gate"},
                                  "rfile": io.BytesIO(data)})(), "POST", "/requests", {})
     assert filed[0] == 202
@@ -629,7 +629,7 @@ def test_who_read_the_archive_is_an_event_and_once_a_minute():
 
 
 def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
-    """The review's third pass (Н-B1's remainder, and its minor): `/segment?cam=` hands out the holder's playback
+    """The review's third pass (Н-B1's remainder, and its minor): `/segment?unit=vms/<id>` hands out the holder's playback
     door, the footage then goes holder → browser, and nothing said so. The console never sees those bytes; it says
     what it gave — `archive.read` with `source: device`, who, which camera, which minutes."""
     from vms.console import serve
@@ -641,7 +641,7 @@ def test_the_door_to_a_devices_own_footage_is_said_when_it_is_handed_out():
                               {"server": "srv-1"}).to_bytes())
     srv = serve(ctl, box.archive, port=0, wall=box.wall)
     try:
-        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/segment?cam=7&from=100&to=200",
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/segment?unit=vms/7&from=100&to=200",
                                      headers={"X-User": "anna"})
         with urllib.request.urlopen(req) as r:
             assert json.loads(r.read())["playback"] == "http://h:1/playback/7?from=100&to=200"

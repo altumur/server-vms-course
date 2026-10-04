@@ -63,8 +63,21 @@ class Denied(Exception):
         self.status, self.why, self.retry_after = status, why, retry_after
 
 
+# Whether `payload` holds `capability` on `unit` or on the unit it is about (`of`) — the one question every door asks
+# of a unit (the product's `MayOn`). A grant on a unit takes in the units about it because each of those says so in its
+# spec (`about`); nothing here knows what either is.
+def may_on(access, payload: dict, capability: str, unit: str | None, labels, of: str | None = None) -> bool:
+    labels = list(labels or [])
+    if access.may(payload, capability, unit, labels):
+        return True
+    return bool(of) and of != unit and access.may(payload, capability, of, labels)
+
+
 class Access(Protocol):
     def who(self, token: str) -> dict: ...                       # the token's payload (`sub`, …), or `Denied(401)`
+    # `unit`: `<sub>/<id>` (`doors.unit_ref`), `"*"` (every unit: only a grant on the whole cluster), or None (no unit
+    # in particular: to look, any grant; to act, the whole cluster's). A grant's scope is a unit, labels, or the
+    # cluster; that a grant on a unit takes in the units ABOUT it is asked by the gate (`Gate.admit`, `of`), not here.
     def may(self, payload: dict, capability: str, unit: str | None, labels: list) -> bool: ...
     # Optional: whether the payload's subject holds a grant given on labels at `capability` or above — what `/events`
     # asks before it names units whose labels it could not read (`SpecConsole._by_labels`). Absent: taken as no.
@@ -389,7 +402,10 @@ class Gate:
         self._glass.pop(cookie(headers, GLASS_COOKIE) or "", None)
 
     # The name to act under — or `Denied`. With no key set: whatever `X-User` says, as before.
-    def admit(self, headers, capability: str, unit: str | None = None, labels: list | None = None) -> str:
+    # `of`: the unit `unit` is about (its spec's `about`), when it is about one — a grant that takes in either is enough,
+    # with the labels given for both (the about-unit's, when there is one: a unit's own labels say where it runs).
+    def admit(self, headers, capability: str, unit: str | None = None, labels: list | None = None,
+              of: str | None = None) -> str:
         access = self.access()
         if access is None:
             return headers.get("X-User", "operator")
@@ -404,7 +420,7 @@ class Gate:
             if self.journal is not None and capability != "view":
                 from .events import ALARM
                 self.journal().say("access.break_glass", cls=ALARM, user=name, capability=capability, **({"target": unit} if unit else {}))
-        if not access.may(payload, capability, unit, list(labels or [])):
+        if not may_on(access, payload, capability, unit, labels, of):
             if self.journal is not None:
                 self.journal().say("access.denied", user=name, capability=capability, **({"target": unit} if unit else {}))
             raise Denied(403, f"{name} may not {capability}" + (f" {unit}" if unit else " here"))

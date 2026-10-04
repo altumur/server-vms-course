@@ -45,7 +45,7 @@ The resource on THIS server did not answer: nothing of the cluster can be read f
 `cluster:///data/platform/objects?resource=http://127.0.0.1:8090`. `max_bytes = 0`.
 
 ### `__init__(self, root, resource="http://127.0.0.1:8090", vars_=None, timeout=10.0, wall=time.time, clock=time.monotonic, list_fresh=1.0)`
-`local` is М10's `FsObjectStore(root)` — what the resource here serves as `scope=local`. `vars_` is the store for the create-only rows; without it they are opened from the environment on first use (`store_url`, else `PLATFORM_STORE`, else `CONFIG_URL`). `missing` is the servers the last answer named as silent; `_where` and `_heard` are what this reader last listed and read of each server (`_remembered`, below).
+`local` is М10's `FsObjectStore(root)` — what the resource here serves as `scope=local`. `vars_` is the store for the create-only rows; without it they are opened from the environment on first use (`store_url`, else `PLATFORM_STORE`). `missing` is the servers the last answer named as silent; `_where` and `_heard` are what this reader last listed and read of each server (`_remembered`, below).
 
 ### `put(key, data)`, `put_durable(key, data)`
 A create-only key goes to the rows; anything else to the local file, its mtime set to the writer's `wall` — the `written` a reader picks the freshest copy by.

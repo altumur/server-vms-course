@@ -41,8 +41,8 @@ log = logging.getLogger("domain.signer")
 
 def main() -> None:
     domain = os.environ.get("DOMAIN_ID", "domain")
-    # The domain holder's store: its configstore by the domain's own socket (`PLATFORM_STORE`, else the older
-    # `CONFIG_URL`); the role `domain` is one of the two that may delete `domain/*` rows (`storemachine.DOMAIN_ROLES`).
+    # The domain holder's store: its configstore by the domain's own socket, unless `PLATFORM_STORE` says otherwise;
+    # the role `domain` is one of the two that may delete `domain/*` rows (`storemachine.DOMAIN_ROLES`).
     vars_ = open_vars(store_url(os.environ, "configstore:///run/configstore/domain.sock"))
     objects = open_store(os.environ.get("OBJECT_STORE_URL", "file:///data/domain"))
     pub = DomainPublisher(vars_)

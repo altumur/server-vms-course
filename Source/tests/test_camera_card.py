@@ -961,7 +961,7 @@ def test_the_pre_record_is_what_the_ring_holds_and_a_ring_shorter_than_the_detec
     assert abs(rec.prebuffered("1-card") - ring.status()["ring_span_s"]) < 1e-9 and rec.prebuffered("1-card") <= 46.0
     rec.gate_pass()
     [alarm] = _alarms(box, "card.prebuffer.short")
-    assert alarm["class"] == "alarm" and alarm["unit"] == "1-card" and alarm["need_s"] == 50.0
+    assert alarm["class"] == "alarm" and alarm["unit"] == "rec/1-card" and alarm["of"] == "vms/1" and alarm["need_s"] == 50.0
     assert 43.0 <= alarm["reach_s"] <= 46.0 and alarm["window_s"] == 60.0
     st = _status(rec)
     assert st["prebuffer_short"] == 50.0 and 43.0 <= st["prebuffer_s"] <= 46.0

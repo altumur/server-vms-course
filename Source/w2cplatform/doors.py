@@ -9,6 +9,8 @@ product's doors, feedback BD). A rule written once per door is a rule some door 
 
     safe_segment(name)   ONE name: not empty, not `.` or `..`, no separator, no NUL. A unit, a server, a subsystem
     safe_rel(rel)        a relative path every segment of which is such a name — so neither `..` nor a leading `/`
+    parse_ref(ref)       a UNIT as the platform names one outside its subsystem's routes, `<sub>/<id>`: (sub, id), or
+                         None for anything else — a bare id names nothing (`ref_fault` says why, `unit_ref` makes one)
     byte_range(h, size)  a `Range` header cut to the file: the bytes to send, or None for a range no part of
                          which exists (416). The length sent is never the client's number
     MAX_LIMIT            the most rows one answer of `/events` carries, whatever `limit` says: `limit=999999999`
@@ -46,6 +48,31 @@ def unnamable(name: str, unit: bool = False) -> list[str]:
     import unicodedata
     return sorted({c for c in str(name) if c in '|"' or unicodedata.category(c) in ("Cc", "Zl", "Zp")
                    or (unit and (c == LIST_SEPARATOR or (c.isdigit() and not "0" <= c <= "9")))})
+
+
+# A UNIT NAMED OUTSIDE ITS OWN SUBSYSTEM'S ROUTES: `<sub>/<id>` — `testsub/c1`, `other/a-b` — one string, wherever the
+# platform names a unit: `/events?unit=`, a mark's `unit`, an event line's `of`, a grant's `unit:` scope (the boundary's
+# step 2, ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md §2.1). A bare id names nothing — whose `7` would it be? — and the id has no
+# `/` of its own: everything after the first one, one segment.
+def unit_ref(sub: str, uid) -> str:
+    return f"{sub}/{uid}"
+
+
+def parse_ref(ref) -> tuple[str, str] | None:
+    """`(sub, id)` of a reference, None for anything that is not one: a bare id, an empty half, a path."""
+    if not isinstance(ref, str):
+        return None
+    sub, sep, uid = ref.partition("/")
+    if not sep or not safe_segment(sub) or not safe_segment(uid) or unnamable(sub) or unnamable(uid):
+        return None
+    return sub, uid
+
+
+def ref_fault(ref) -> str | None:
+    """Why `ref` is not a reference to a unit, in words — None when it is one."""
+    if parse_ref(ref) is not None:
+        return None
+    return f"a unit is named <sub>/<id> — testsub/7, other/a-b — not {str(ref)[:80]!r}"
 
 
 # A name as the number it is, or None: ASCII digits only, and only as many as `int` takes (`sys.int_max_str_digits` —

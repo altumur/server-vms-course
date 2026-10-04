@@ -462,8 +462,8 @@ def test_the_list_of_keeps_is_what_the_caller_may_see():
     for cam in ("1", "3", "ref:SN-A"):
         K.write(box.vars, {"cam": cam, "from": 100.0, "to": 200.0}, [], "anna", box.wall())
     route = rec_routes(rec)
-    labels = {"3": ["hall"]}
-    boris = SimpleNamespace(headers={}, sees=lambda unit, lab: unit == "1", labels_for=lambda u: labels.get(u, []))
+    labels = {"vms/3": ["hall"]}                                        # a camera as the platform names a unit: vms/<id>
+    boris = SimpleNamespace(headers={}, sees=lambda unit, lab: unit == "vms/1", labels_for=lambda u: labels.get(u, []))
     vera = SimpleNamespace(headers={}, sees=lambda unit, lab: "hall" in lab, labels_for=lambda u: labels.get(u, []))
     open_ = SimpleNamespace(headers={}, sees=None, labels_for=lambda u: [])
     cams = lambda h: sorted(k["cam"] for k in route(h, "GET", "/keeps", {})[1]["keeps"])   # noqa: E731

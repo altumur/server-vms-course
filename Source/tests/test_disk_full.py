@@ -103,7 +103,7 @@ def test_a_recording_cut_inside_its_floor_raises_an_alarm_and_a_young_ring_does_
     box.clock.advance(61)
     assert r.store.status()["firstBlockId"] > 0
     assert r.depth_pass()["7"] < 7.0
-    assert [a[:3] for a in alarms()] == [("7", "archive.shallow", "alarm")]   # 8 was promised nothing
+    assert [a[:3] for a in alarms()] == [("rec/7", "archive.shallow", "alarm")]   # 8 was promised nothing
     assert r.status_extra(r.rows[0])["shallow"] is True and "shallow" not in r.status_extra(r.rows[1])
 
     box.clock.advance(61); r.depth_pass()

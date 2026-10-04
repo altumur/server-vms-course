@@ -117,7 +117,7 @@ def safe_path(path: str) -> str:
 # and ACL map; it keeps no cache, so any number of instances over the same directory — in one process or
 # many — are equivalent.
 # -- the seam: which store is behind the contract, said as a URL ------------------------------------
-# A process is told `PLATFORM_STORE` (`store_url`; `CONFIG_URL` is its old name, still read) and nothing
+# A process is told `PLATFORM_STORE` (`store_url`) and nothing
 # else. `file://` is in-process — on a box there is no daemon, no hop and no second quorum, which is the
 # whole reason this is a factory and not a service. Every other scheme is registered by the module that
 # implements it, so the platform's loops name no backend and adding Kubernetes later adds a file, not a
@@ -141,12 +141,12 @@ _BUILTIN = {"file": "w2cplatform.variables", "memory": "w2cplatform.memvariables
             STORE_SCHEME: "w2cplatform.configstorevars"}
 
 
-# Which store a process opens, from its environment: `PLATFORM_STORE` first — the cluster's unit says
-# `configstore:///run/configstore/<role>.sock` — then `CONFIG_URL`, the name a box's units and the product's older ones
-# still carry (product P7), then `default`. One function, so no process reads the two names in its own order.
+# Which store a process opens, from its environment: `PLATFORM_STORE` — the cluster's unit says
+# `configstore:///run/configstore/<role>.sock` — else `default`. One function, so no process reads it its own way.
+# One name and no other: the system runs on one machine and nothing carries an older one (the owner's rule of 4 Oct).
 def store_url(env=None, default: str | None = None) -> str | None:
     env = os.environ if env is None else env
-    return env.get("PLATFORM_STORE") or env.get("CONFIG_URL") or default
+    return env.get("PLATFORM_STORE") or default
 
 
 def register_scheme(scheme: str, factory) -> None:

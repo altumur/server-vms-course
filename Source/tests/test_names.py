@@ -223,7 +223,7 @@ def test_every_kind_of_worker_writes_its_journal_into_its_servers_events_archive
         root = tempfile.mkdtemp(prefix="events-")
         w = make({"ARCHIVE": root})
         role = f"{w.sub.name}worker"
-        w.journal.say("worker.name_taken", ALARM, of=w.sub.name, worker=w.name, holder="another")
-        w.journal.say("worker.name_back", of=w.sub.name, worker=w.name)
+        w.journal.say("worker.name_taken", ALARM, sub=w.sub.name, worker=w.name, holder="another")
+        w.journal.say("worker.name_back", sub=w.sub.name, worker=w.name)
         said = buckets_under(root, "audit", role, 600) + buckets_under(root, alarm_tree("audit"), role, 600)
         assert sorted(b.subsystem for b in said) == sorted(["audit", alarm_tree("audit")]), (kind, root, said)

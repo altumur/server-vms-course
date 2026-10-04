@@ -34,7 +34,7 @@ TERMINAL = ("done", "failed")
 # worker's news and stay in the heartbeat: nothing downstream acts on them.
 MIRRORED = ("fetching", "running") + TERMINAL
 # How long a finished job's row stays after the reaper saw it end. Its events are in the archive under the
-# archive's days and are found by `/events?cam=`; the ROW is the operator's list of what ran, and a list that
+# archive's days and are found by `/events?unit=vms/<cam>`; the ROW is the operator's list of what ran, and a list that
 # keeps every scan a scenario ever asked for is a list nobody can read. Three days is the window in which
 # somebody asks "did last night's search finish" (the review's second pass).
 FINISHED_RETENTION_SECONDS = 3 * 86400.0
@@ -92,7 +92,7 @@ def recording_cam(vars_, name: str) -> str:
 # carry and the gate checks; `rec` is the recording whose footage it reads — and nothing said the two were one camera:
 # `PUT /detjob/jobs/1-motion-1 {"rec": "2"}` with `admin` on camera 1 had the scan read camera 2's archive and file
 # what it found under camera 1. `rec` is a recording of `cam`, said at the door; and it is fixed when the job is made,
-# like `cam` (`DetJobController.update`): another recording is another job.
+# like `cam` (`fixed: true` in detjob.subsystem.yaml): another recording is another job.
 def refuse_job(vars_, fields: dict) -> None:
     cam, rec = str(fields.get("cam") or ""), str(fields.get("rec") or "")
     if cam and rec and recording_cam(vars_, rec) != cam:
@@ -102,7 +102,7 @@ def refuse_job(vars_, fields: dict) -> None:
 
 class DetJobController(SpecController):
     """The platform's controller over `detjob.subsystem.yaml`, plus the rule only the VMS knows: a scan's recording
-    is its camera's (`refuse_job`), and it does not change."""
+    is its camera's (`refuse_job`). That it does not change is the spec's (`fixed: true`)."""
 
     def __init__(self, vars_, objects, capacity: int = 50, wall=time.time, cluster: str | None = None):
         from .config import DETJOB_SPEC
@@ -112,13 +112,6 @@ class DetJobController(SpecController):
         self.spec.refuse(fields)
         refuse_job(self.vars, fields)
         return super().create(fields, **reserved)
-
-    def update(self, uid, fields: dict) -> dict:
-        row = self.unit(uid)
-        if row is not None and "rec" in fields and str(fields["rec"]) != str(row.get("rec")):
-            raise Refused(f"`rec` is fixed when the job is made: {uid} reads {row.get('rec')} — make another job for "
-                          f"{fields['rec']}")
-        return super().update(uid, fields)
 
 
 # WHAT THE REQUEST LOOP REMEMBERS BETWEEN ITS TURNS (the scaling pass after the eighth review). The loop turns every two
