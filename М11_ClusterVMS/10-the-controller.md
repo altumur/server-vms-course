@@ -143,7 +143,11 @@ POST /v1/write {"op": "put", "key": "vms/placement/1", "cas": "", "items": {
   "at": "1757500000.0",
   "rev": "1"
 }}
-→ 409 {"kind": "conflict", "error": "vms/placement/1: cas='' but the version is 1009", "index": 1009}
+→ 409 {
+  "kind": "conflict",
+  "error": "vms/placement/1: the version is 1009, not the one the write named",
+  "index": 1009
+}
 ```
 
 Контроллер на `srv-a` получает `409` — хранилище говорит словами, что строка уже есть и какая у неё версия, — читает строку размещения снова и находит, что воркер уже назван. Его функция изменения возвращает `None`: «менять нечего», и `Controller.write` ничего не пишет (урок 2). Он **принимает** решение соседа. В трассе после `409` нет ни одной записи:
