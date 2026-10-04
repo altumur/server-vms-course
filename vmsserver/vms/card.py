@@ -70,14 +70,15 @@ or `network` volume like a server's — and is not built here.
 #   `restore(note, newest)` — kept on the card, taken back by the next process; `moves` — what of it was relabelled.
 # - `CamRing(window, max_bytes, clock, steady)` — `add(sample)`, `subscribe(fn)`, `set_keep(keep, spill, who)`,
 #   `after(t_ms)`, `piece(t_ms, max_bytes)`, `reach()`, `now()`, `skew()`, `status(now)`; `on_move(fn)`, `moves()`,
-#   `note()`, `restore(note, newest)` — its line's.
+#   `note()`, `restore(note, newest)`, `adrift()`, `unplaced()` — its line's.
 # - `CardBuffer.read_note(name)`, `write_note(name, data)` — a small file beside the segments (what the server has,
 #   `delivered.json`; the camera's line, `LINE_NOTE`).
 # - `CardBuffer(path, budget)` — `append(stream, sample)`, `finish(stream)`, `coverage(recording)`, `pieces(recording,
 #   t0, t1, max_bytes)`, `range(recording, t0, t1)`, `newest()`, `relabel(lo, hi, delta)`, `stats()`, `err`, `close()`.
 #   Raises `CardError` (an `OSError`): `NeedKey`, `Backwards`, `NoRecording`, a read cut short.
-# - `CardActuator(ring, card)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`, `stats(cid)`;
-#   `card` — attached, it restores the ring's line from the card; `note_line()` — the line kept on the card.
+# - `CardActuator(ring, card, serial=…)` — the recorder's actuator: `(verb, cam)`, `keep(cid, on)`, `pump()`, `drain()`,
+#   `stats(cid)`; `card` — attached, it restores the ring's line from the card; `note_line()` — the line kept on the card;
+#   `serial` — whose line it is (said late, it takes back a line continued from another camera's note).
 # - `CardRecorder(name, vars_, objects, ring, ...)` — a `RecWorker` whose volume is the card; `answer_range`.
 # - `declare_card(vars_, server, path, budget, cam=…)` — the card as the camera's own cluster declares it (`kind: edge`,
 #   `cam`: whose card it is — only that camera's recordings are homed on it).
@@ -267,11 +268,25 @@ def _group_end(frames, start: int = 0) -> int:
 # A camera whose clock is never set goes on from boot to boot right after the card's newest — boots apart on the card,
 # the time a reboot took unknown to it; the ingest sees that as its offset moving, and counts it (`clock_steps`).
 #
+# …AND A SECOND UNSET BOOT IS UNSET TOO (the thirteenth review, blocker 7, its probe `pq1_two_reboots`). "Unset again"
+# was told by the line the note's conversion gave — `floor − target`, a year — and the note of a boot whose clock was
+# never set keeps a GUESS for a conversion: the next unset boot came out a boot's length behind the card's newest, was
+# taken for a step back, and lost `adrift`. The first boot's hole, asked before NTP, was answered with the frames of
+# 60–90 s (+60.2 s), and the second boot's seconds, never relabelled, lay 30.1 s early for good. Unset is told by the
+# camera's own clock now: a clock before `CLOCK_FLOOR` while the card holds frames more than `CLOCK_UNSET` later. Every
+# such boot goes on right after the card's newest, `adrift` from there; the first of a run of them is kept (`drift`) —
+# their frames are placed by guesses, each a boot's length or more early, and nothing on the camera can say by how much.
+# When the clock is set, the boot it is set in is relabelled (`since`, as before), and the earlier boots of the run
+# become UNPLACED (`unplaced`, `[lo, hi)` on the line, kept in the note): frames with no capture time. A range of the
+# card leaves them out (М12 `CameraPusher._read_card`), counted — an empty part of an answer, never another moment's
+# frames — and while a boot is adrift, every range reaching before it is refused as before (`_stale_range`).
+#
 # A CAMERA DOES NOT SLEEP (the owner's decision on the eleventh review): the steady clock is the monotonic one, and a sleep
 # would look like the camera's clock stepping forward by its length — taken up on the line and counted (`forward`).
 CLOCK_UNSET = 365 * 86400.0              # a step forward of more than a year…
 CLOCK_FLOOR = 1.5e9                      # …out of a clock that read before mid-2017: the clock was SET (`CamLine`)
 LINE_NOTE = "line.json"                  # the line, kept on the card beside the segments (`CardActuator.note_line`)
+UNPLACED_KEPT = 32                       # unplaced spans a line keeps (`CamLine.unplaced`): the oldest go first
 
 
 # A BOOT IS TOLD BY ITS ID, NEVER BY THE STEADY CLOCK ALONE (the twelfth review, major 21, its probe `pz5_noboot`).
@@ -328,12 +343,16 @@ class CamLine:
         self.since = None                # …where the camera's clock was found unset: relabelled when it is set
         self.anchor = 0                  # the conversion (line − clock) the line takes when the clock is set
         self.adrift = None               # …where a reboot with the clock unset put the line by a guess (`restore`), until set
+        self.drift = None                # …where the first boot of a run of unset ones went on by a guess, until set
+        self.unplaced: list[list] = []   # `[lo, hi)`: the frames of unset boots the set clock could not place
         self.sets = self.unset = 0       # clocks set, and found unset again by a reboot
         self.moves: list[tuple] = []     # (lo, hi, delta): what of the line was relabelled, for whoever holds its times
         self.on_move: list = []          # fn(lo, hi, delta), called where the move is made (the ring's lock)
         self.version = 0                 # moves with every change of the conversion: the card's note is written again
         self.tied = False                # the line is the card's: restored from its note, or written into it
         self._quiet = False              # the step due is a clock being set: not a step of the clock to count
+        self._before: tuple = (None, 0, None, None, [])   # the line's own before `restore`, and the move it made (`retake`)
+        self._took: tuple | None = None
 
     def look(self):
         """The camera's clock, in units — and a step it took since the last look, against the steady clock, made due."""
@@ -382,7 +401,12 @@ class CamLine:
         lo = self.since if self.since is not None else self.origin
         self.sets += 1
         self.due -= jump                                         # the frames captured on the set clock: on the anchor…
-        self._quiet, self.since, self.adrift = True, None, None
+        if self.drift is not None and lo is not None and self.drift < lo:
+            self.unplaced = (self.unplaced + [[self.drift, lo]])[-UNPLACED_KEPT:]   # the earlier unset boots: no time
+            log.warning("the camera's clock was set after more than one boot with it unset: the boot it was set in goes on "
+                        "the set clock; the %.0f s of frames of the boots before it have no capture time, and are left out "
+                        "of what the card answers", (lo - self.drift) / self.unit)
+        self._quiet, self.since, self.adrift, self.drift = True, None, None, None
         self.version += 1
         if delta * 1000 >= self.unit:                            # (later: nothing placed can overtake what was)
             self._move(lo, before, delta)                        # …and those before it, relabelled to meet them
@@ -397,7 +421,7 @@ class CamLine:
         raw = self.look()
         return {"line": raw + self.shift + self.due, "raw": raw, "unit": self.unit, "boot": self._boot(),
                 "steady": self.steady() if self.steady is not None else None, "since": self.since, "anchor": self.anchor,
-                "adrift": self.adrift}
+                "adrift": self.adrift, "drift": self.drift, "unplaced": [list(u) for u in self.unplaced]}
 
     def restore(self, note: dict | None, newest=None) -> tuple | None:
         """The line of the camera's process before this one (`note`, as `note()` wrote it on the card; None: none, or
@@ -407,35 +431,71 @@ class CamLine:
         now = raw + self.shift + self.due
         st = self.steady() if self.steady is not None else None
         target, step, floor, since, anchor, adrift = now, 0, newest, self.since, self.anchor, self.adrift
+        drift, unplaced, same = self.drift, list(self.unplaced), False
+        self._before = (since, anchor, adrift, drift, unplaced)              # (`retake`)
         if note is not None:
             n_line, n_raw = note["line"], note["raw"]
             n_st, n_boot, boot = note.get("steady"), note.get("boot"), self._boot()
+            unplaced = ([list(u) for u in note.get("unplaced") or []] + unplaced)[-UNPLACED_KEPT:]
             if st is not None and n_st is not None and st >= n_st and boot is not None and boot == n_boot:
+                same = True
                 target = n_line + (st - n_st) * self.unit                # the same boot: by the steady clock
                 step = (raw - n_raw) - (st - n_st) * self.unit           # …what the clock did while no process watched
                 since, anchor, adrift = note.get("since"), note.get("anchor") or 0, note.get("adrift")
+                drift = note.get("drift")
             else:                                                        # a new boot — or no id to say: by the conversion
-                target = raw + (n_line - n_raw)
-                floor = n_line if newest is None else max(newest, n_line)
+                # …unless the note's boot had its clock unset and its line on a date (the thirteenth review, blocker 7):
+                # that conversion was a guess (`adrift`), and the one a set clock takes is the anchor
+                guess = n_raw < self.floor and n_line - n_raw > CLOCK_UNSET * self.unit
                 anchor = (n_line - n_raw) if n_raw >= self.floor else (note.get("anchor") or 0)
+                target = raw + (anchor if guess else n_line - n_raw)
+                floor = n_line if newest is None else max(newest, n_line)
+                drift = (note.get("drift") if note.get("drift") is not None else note.get("since")) if guess else None
                 since = adrift = None
-        if floor is not None and target <= floor:
-            if floor - target > CLOCK_UNSET * self.unit and raw < self.floor:
-                self.unset += 1                                          # the clock unset again: after the card's newest,
-                log.warning("the camera's clock is not set (the card's newest is %.0f days later than it): its frames go on "
-                            "right after the card's newest until it is set", (floor - target) / self.unit / 86400)
-                target = since = adrift = floor + self.gap               # until it is set — by a guess (`adrift`)
-            else:
-                step = min(step, target - floor - self.gap)              # behind what the card holds: stepped back
-                target = floor + self.gap
+        # Unset is told by the camera's own clock against the card (the thirteenth review, blocker 7): through the note's
+        # guess, a second unset boot looked a step back of its length. What this process placed before the card came (it
+        # opened late) goes on after the card's newest too.
+        ahead = max(0, now - self.origin) if self.origin is not None else 0
+        if not same and floor is not None and raw < self.floor and floor - raw > CLOCK_UNSET * self.unit:
+            self.unset += 1                                              # the clock unset again: after the card's newest,
+            log.warning("the camera's clock is not set (the card's newest is %.0f days later than it): its frames go on "
+                        "right after the card's newest until it is set", (floor - raw) / self.unit / 86400)
+            since = adrift = floor + self.gap                            # until it is set — by a guess (`adrift`)
+            target = adrift + ahead
+            drift = since if drift is None else drift                    # …the first of a run of unset boots
+        else:
+            if floor is not None and target - ahead <= floor:
+                step = min(step, target - ahead - floor - self.gap)      # behind what the card holds: stepped back
+                target = floor + self.gap + ahead
+            if not same and drift is not None:                           # a run of unset boots, and this one is set:
+                end = floor + self.gap                                   # …their frames lie up to the card's newest
+                unplaced = (unplaced + [[drift, end]])[-UNPLACED_KEPT:] if drift < end else unplaced
+                log.warning("the camera's clock is set after a boot with it unset: the %.0f s of frames of the unset boots "
+                            "have no capture time, and are left out of what the card answers", (end - drift) / self.unit)
+                drift = None
         if abs(step) > CLOCK_JUMP * self.unit:
             self._said(-step, target)
         delta, mv = target - now, None
         if abs(delta) * 100 >= self.unit:
             mv = self._move(self.origin if self.origin is not None else now, now, delta)
         self.since, self.anchor, self.adrift, self.tied = since, anchor, adrift, True
+        self.drift, self.unplaced, self._took = drift, unplaced, mv
         self.version += 1
         return mv
+
+    def retake(self, newest=None) -> float:
+        """The note `restore` went on from was not this camera's — its serial was said only after the card was attached
+        (`CardActuator.serial`): the line goes back to where it stood before, and goes on from the card's newest frame as
+        a line with no note does. Returns how far the line moved, in units."""
+        since, anchor, adrift, drift, unplaced = self._before
+        took, self._took, back = self._took, None, 0
+        if took is not None:
+            lo, hi, d = took
+            self._move(lo + d, hi + d, -d)
+            back = -d
+        self.since, self.anchor, self.adrift, self.drift, self.unplaced = since, anchor, adrift, drift, list(unplaced)
+        mv = self.restore(None, newest)
+        return back + (mv[2] if mv else 0)
 
     def now(self):
         """The camera's clock on the line, in units: what the camera states beside its frames."""
@@ -575,11 +635,22 @@ class CamRing:
         with self._lock:
             return self.line.restore(note, newest)
 
+    def retake(self, newest: int | None) -> float:
+        """The line restored from a note that was another camera's, taken back (`CamLine.retake`): ms it moved."""
+        with self._lock:
+            return self.line.retake(newest)
+
     def adrift(self) -> int | None:
         """Where the ring's line went on by a guess — a reboot with the clock unset put it right after the card's newest —
         until the clock is set (`CamLine.adrift`), archive ms; None: the line is on the camera's clock."""
         with self._lock:
             return None if self.line.adrift is None else int(self.line.adrift)
+
+    def unplaced(self) -> list[tuple[int, int]]:
+        """`[lo, hi)` of the ring's line, archive ms, where frames of unset boots lie that the set clock could not place
+        (`CamLine.unplaced`): no capture time is known for them."""
+        with self._lock:
+            return [(int(lo), int(hi)) for lo, hi in self.line.unplaced]
 
     def skew(self) -> float:
         """What the ring's line adds to the camera's clock, in seconds — the steps it has taken up, back and forward.
@@ -1340,7 +1411,7 @@ class CardActuator:
     NOTE_EVERY = 30.0                    # the line's note is written at least this often (`note_line`)
 
     def __init__(self, ring: CamRing, card: CardBuffer | None = None, threaded: bool = True,
-                 queue_bytes: int = QUEUE_BYTES, piece_bytes: int = PIECE_BYTES):
+                 queue_bytes: int = QUEUE_BYTES, piece_bytes: int = PIECE_BYTES, serial: str | None = None):
         self.ring, self.threaded, self._card = ring, threaded, None
         self.recs: dict[str, _Rec] = {}
         self._lock = threading.Lock()
@@ -1364,10 +1435,33 @@ class CardActuator:
         # when the card was attached (`card_serial`) tells the pusher the card's older footage is not this camera's
         # (`CardRecorder.remember_card`). The segments themselves carry no serial: a card written before this pass, or by
         # a process that did not know its serial, has none to say.
-        self.serial: str | None = None
+        self._serial: str | None = serial
         self.card_serial: str | None = None
+        self._line_of: str | None = None     # the serial of the note the line went on from, while ours is not said
         ring.on_move(self._moved)
         self.card = card
+
+    # …SAID BEFORE THE CARD IS ATTACHED, OR TAKEN BACK (the thirteenth review, a minor: the course's camera process opens the
+    # card in its recorder — `CardRecorder.reconcile_once` — and only then М12's `tie` said the serial, so the check above
+    # never ran: SN-A's line, 30 s behind, went on for SN-B). The camera's process says it when it builds the actuator
+    # (`serial=`); one said later than the card was attached takes back a line the card's note of another camera gave
+    # (`CamRing.retake`): the line goes on after what the card holds, as with no note.
+    @property
+    def serial(self) -> str | None:
+        return self._serial
+
+    @serial.setter
+    def serial(self, serial: str | None) -> None:
+        self._serial = serial
+        card, of = self._card, self._line_of
+        if card is None or serial is None or of is None:
+            return
+        self._line_of = None
+        if of != serial:
+            moved = self.ring.retake(card.newest())
+            log.warning("card: the camera's line of time had gone on from another camera's note (%s): taken back — it goes "
+                        "on after what the card holds (moved %.3f s)", of, moved / 1000.0)
+            self.note_line(force=True)
 
     # THE CARD IS WHERE THE CAMERA'S LINE IS KEPT (the eleventh review, blockers 1 and 2; `CamLine`). The card is attached
     # here — at the start, or by the recorder when it opens (`CardRecorder.volume_pass`) — and the ring's line goes on
@@ -1385,7 +1479,7 @@ class CardActuator:
             self._restore_line(card)
 
     def _restore_line(self, card: CardBuffer) -> None:
-        note = None
+        note, self._line_of = None, None
         try:
             raw = card.read_note(LINE_NOTE)
             if raw:
@@ -1394,7 +1488,8 @@ class CardActuator:
                     raise ValueError("not a line of this camera's units")
                 opt = lambda k: None if d.get(k) is None else finite(d[k])
                 note = {"line": finite(d["line"]), "raw": finite(d["raw"]), "steady": opt("steady"),
-                        "since": opt("since"), "anchor": opt("anchor") or 0, "adrift": opt("adrift"),
+                        "since": opt("since"), "anchor": opt("anchor") or 0, "adrift": opt("adrift"), "drift": opt("drift"),
+                        "unplaced": [[finite(lo), finite(hi)] for lo, hi in d.get("unplaced") or []],
                         "boot": d.get("boot") if isinstance(d.get("boot"), str) else None}
                 writer = d.get("serial")
                 self.card_serial = str(writer)[:64] if isinstance(writer, str) and writer else None
@@ -1402,6 +1497,8 @@ class CardActuator:
                     log.warning("card: its note of the camera's line of time was written by another camera (%s): the line "
                                 "goes on after what the card holds, not from that camera's", self.card_serial)
                     note = None
+                elif note is not None and self.serial is None:
+                    self._line_of = self.card_serial         # whose note it went on from, until ours is said
         except (CardError, *PARSE_ERRORS) as e:
             log.warning("card: its note of the camera's line of time does not read (%s): the line goes on after what the "
                         "card holds", e)
