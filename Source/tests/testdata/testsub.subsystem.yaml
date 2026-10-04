@@ -1,0 +1,23 @@
+# testsub.subsystem.yaml — a subsystem that exists only for the platform's own tests (tests/test_boundary.py; the
+# product's `w2cplatform/testdata/testsub.subsystem.yaml` is the same subsystem).
+#
+# The platform knows the subsystems by their specs and by nothing else. This one has nothing to do with the
+# product: a unit is a named counter a worker keeps. If the platform's pieces come up on this file alone —
+# the controller from the spec, the contract's keys, slots, epochs, the console, the resource — they come up
+# without the product. Later steps of the boundary plan add `about:` and `domain:` sections here.
+name: testsub
+unit:
+  rows: counters                     # testsub/counters/<name>
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int,    default: 0}
+    labels: {type: list}
+placement:
+  capacity:   {from: capacity, fallback: 4}
+  headroom:   {from: headroom}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+snapshot: [name]
+console:
+  running: counters_running
