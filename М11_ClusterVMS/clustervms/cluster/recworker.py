@@ -21,7 +21,15 @@ from __future__ import annotations
 from vms.recworker import REC, RecWorker  # noqa: F401
 from vms.worker import FakeActuator
 
+from cluster.worker import notify
+
 
 class ClusterRecorder(RecWorker):
     def __init__(self, vars_, objects, actuator=None, env: dict | None = None, **kw):
         super().__init__(None, vars_, objects, actuator or FakeActuator(), env=env, **kw)
+
+    # The watchdog, as the worker's (`cluster.worker.notify`): a recorder hung in obsd stops turning, and systemd
+    # starts it again after `WatchdogSec` — past the five minutes its stand-in holds its place.
+    def between(self, poll: float, stop, beat: float) -> None:
+        notify()
+        super().between(poll, stop, beat)

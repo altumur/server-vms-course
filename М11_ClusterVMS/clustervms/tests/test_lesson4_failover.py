@@ -101,8 +101,9 @@ def test_a_restart_is_measured_on_one_clock_and_a_name_taken_elsewhere_by_the_re
 
 
 def test_one_silence_moves_nothing_and_two_silences_move_the_cameras_under_either_policy():
-    """One silence — a crashed process, its resource still answering — moves nothing: the unit is systemd's to start
-    again, under the same name, on the same server. Two silences from one server — the slot out and out by the
+    """One silence — a process that lives and says nothing, its resource answering and naming it running — moves
+    nothing: it is hung, and the unit is systemd's to stop and start again (`WatchdogSec`), under the same name, on the
+    same server (a process that ENDED is the next test's). Two silences from one server — the slot out and out by the
     margin, and the resource on that server silent — are a fact about the server, and the controller moves its
     cameras to a worker that is here, under `distinct` (one worker per server carries cameras) and under `shared`
     (the default) alike: there is no orchestrator to bring the process back elsewhere
@@ -112,7 +113,7 @@ def test_one_silence_moves_nothing_and_two_silences_move_the_cameras_under_eithe
     assert ctl.policy() == {"servers": "shared"}                                              # the default: a box is several workers on one server
     assert c.console().set_policy({"servers": "distinct"}) == {"servers": "distinct"}         # the administrator's choice, one row: vms/policy
     assert ctl.assignment("w-srv-b-1").units == []
-    # a crash: w-srv-a-1's process dies, srv-a's resource keeps heartbeating
+    # a hang: w-srv-a-1's process lives (its lock in srv-a's tree held) and says nothing; srv-a's resource heartbeats
     c.wall.advance(2 * LOST_AFTER + 3); b.lease_pass(); b.heartbeat_once(); rs["srv-a"].heartbeat(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
     assert ctl.slots()["w-srv-a-1"].lapsed(c.wall()) and ctl.gone_servers() == {} and ctl.redistribute() == []   # one silence: left alone
     # the power pull: srv-a is gone — its worker and its resource both silent
@@ -135,6 +136,125 @@ def test_one_silence_moves_nothing_and_two_silences_move_the_cameras_under_eithe
     c.wall.advance(2 * LOST_AFTER + 3); b.lease_pass(); b.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()   # srv-a dies again
     assert ctl.slots()["w-srv-a-1"].lapsed(c.wall()) and ctl.gone_servers() == {"w-srv-a-1": "srv-a"}
     assert [(m[1], m[2]) for m in ctl.redistribute()] == [("w-srv-a-1", "w-srv-b-1")] and ctl.where(4) == "w-srv-b-1"
+
+
+def test_every_unit_registers_with_its_servers_resource_and_a_process_that_ended_moves_when_its_slot_runs_out():
+    """The twelfth review's «Вопросы», defect 1: the cluster's entry points never called `Worker.present` (the box's do,
+    `vms/__main__._present`). Every resource heartbeat said `workers` and `running` empty, so a worker whose process
+    died on a live server was `wait` — "cannot be told" — for ever, and nobody wrote its cameras if systemd did not
+    bring it back. Now `cluster.__main__.make_worker`/`make_recorder` build AND register — what the units run, and what
+    the stand builds its processes with. srv-a's resource lists its worker and its recorder, placed and running. The
+    worker hangs (its process lives): past its slot nothing moves — `hung`. Its process ends: placed, not running — and
+    its cameras go to w-srv-b-1 at that pass, srv-a's resource answering all along, its reason saying why."""
+    from w2cplatform.resource import resources_seen
+    c, ctl, a, act_a, b = _recording()
+    r = c.recorder("srv-a")
+    try:
+        c.servers["srv-a"].res.heartbeat()
+        said = resources_seen(c.objects)["srv-a"]
+        assert said["workers"] == said["running"] == {"vms": ["w-srv-a-1"], "rec": ["r-srv-a-1"]}, said
+
+        def beat(seconds):                                  # srv-a's resource answers; w-srv-a-1 says nothing
+            for _ in range(int(seconds // 10)):
+                c.wall.advance(10)
+                for srv in c.servers.values():
+                    srv.res.heartbeat()
+                b.lease_pass(); b.heartbeat_once()
+        beat(SLOT_TTL + LOST_AFTER + 10)                    # past the name AND the margin
+        assert ctl.slot_fate("w-srv-a-1", ctl.slots()["w-srv-a-1"])[0] == "hung"
+        ctl.pass_once(1)
+        assert [ctl.where(i) for i in (1, 2, 3)] == ["w-srv-a-1"] * 3          # hung: its units stay, no second writer
+        a.absent()                                                              # its process ends; systemd does not bring it back
+        beat(10)
+        said = resources_seen(c.objects)["srv-a"]
+        assert said["workers"]["vms"] == ["w-srv-a-1"] and "vms" not in said["running"], said
+        ctl.pass_once(1)
+        assert [ctl.where(i) for i in (1, 2, 3)] == ["w-srv-b-1"] * 3
+        assert ctl.placement(1).reason.startswith("w-srv-a-1's process on srv-a is not running"), ctl.placement(1).reason
+        assert b.reconcile_once() == [("start", 1), ("start", 2), ("start", 3)] and b.actuator.epochs == {1: 2, 2: 2, 3: 2}
+    finally:
+        r.after_stop()
+
+
+def test_the_worker_entry_point_registers_its_process_before_it_runs():
+    """What a unit runs, run: `cluster.__main__.worker()` with this server's store and objects and its unit's
+    environment, stopped before its first turn — its registration is in its server's events archive (`ARCHIVE`), under
+    the name it claimed, and its lock held for as long as its process lives."""
+    import json
+    import os
+    import cluster.__main__ as m
+    c = Cluster(); c.resources_up()
+    srv = c.servers["srv-a"]
+    v = c.door("vmsworker")
+    env = {**c.env("srv-a", "w-srv-a-1"), "RTSP_HOST": "0.0.0.0"}
+    saved, stores = {k: os.environ.get(k) for k in env}, m.stores
+    built = []
+    real = m.make_worker
+
+    def keep(*a, **kw):
+        built.append(real(*a, **kw))
+        return built[-1]
+    try:
+        os.environ.update(env)
+        m.stores = lambda role, env=None: (v, c.objects_on("srv-a", v))
+        m.make_worker = keep
+        m.stop.set()                                                            # SIGTERM before the first turn
+        m.worker()
+    finally:
+        m.stop.clear(); m.stores, m.make_worker = stores, real
+        for k, val in saved.items():
+            os.environ.pop(k, None) if val is None else os.environ.__setitem__(k, val)
+    d = os.path.join(srv.resource, ".workers")
+    said = [json.load(open(os.path.join(d, f))) for f in os.listdir(d) if f.endswith(".json")]
+    assert said == [{"sub": "vms", "name": "w-srv-a-1", "pid": os.getpid()}], said
+    srv.res.heartbeat()
+    from w2cplatform.resource import resources_seen
+    assert resources_seen(c.objects)["srv-a"]["running"] == {"vms": ["w-srv-a-1"]}
+    built[0].absent()
+
+
+def test_a_recorder_keeps_a_live_cameras_source_while_its_holders_door_is_away_and_lets_it_go_when_the_store_says_so():
+    """The twelfth review, major 10 (`m11/p3`): the recorder found a camera's source in its holder's heartbeat, an
+    object on the holder's server read through that server's door — with only the DOOR away, the heartbeat aged past
+    45 s and `source(1)` said nobody, fifty seconds in, while w-srv-a-1 held the camera and its fan-out served. Now the
+    store says who holds it: placed on w-srv-a-1, whose slot is held — the source read last stands. And it lets go when
+    the store says otherwise: camera 2 moved to w-srv-b-1 (until w-srv-b-1 says it runs it, nobody), and camera 1 once
+    its holder's slot ran out."""
+    c, ctl, a, act_a, b = _recording(2)
+    r = c.recorder("srv-b")
+    try:
+        r.lease_pass(); r.heartbeat_once()
+        first = {i: r.source(i) for i in (1, 2)}
+        assert [s[0] for s in first.values()] == ["srv-a", "srv-a"], first
+        c.servers["srv-a"].down = True                          # its door: the worker renews and heartbeats on
+        for _ in range(6):
+            c.wall.advance(10)
+            a.lease_pass(); a.heartbeat_once(); b.lease_pass(); b.heartbeat_once()
+        assert {i: r.source(i) for i in (1, 2)} == first        # 60 s into the door's outage: the store's word
+        assert r._by_the_book == {"1", "2"}
+        ctl.move(2, "w-srv-b-1", "operator: srv-b sees that VLAN")
+        assert r.source(2) is None                              # placed elsewhere: not the old holder's any more
+        b.reconcile_once(); b.heartbeat_once()
+        assert r.source(2)[0] == "srv-b" and r.source(1) == first[1]   # heard on its new holder; 1 still stands
+        for _ in range(5):                                      # and now w-srv-a-1 is gone too: nobody renews its name
+            c.wall.advance(10)
+            b.lease_pass(); b.heartbeat_once()
+        assert r.source(1) is None                              # its slot ran out: the store says nobody holds it
+    finally:
+        r.after_stop()
+
+
+def test_a_worker_starts_while_its_servers_resource_does_not_answer():
+    """The twelfth review, major 11: a worker read its name's previous heartbeat in its constructor — through this
+    server's resource door, in a cluster — and while that resource restarted, `ObjectsUnavailable` ended every worker of
+    the server at its start, round and round systemd's restarts, its cameras held by nobody: for a number that only
+    measures the failover. Now it starts — its name claimed, its cameras run — and that restart is not measured."""
+    c, ctl, a, act_a, _ = _recording(2, b=False)
+    c.servers["srv-a"].down = True                                      # srv-a's resource is restarting
+    c.wall.advance(5)
+    again = c.worker("srv-a")                                           # systemd starts the worker's unit again
+    assert again.name == "w-srv-a-1" and again.previous_hb == 0.0
+    assert again.reconcile_once() == [("start", 1), ("start", 2)]
 
 
 def test_the_old_instance_wakes_up_and_the_archive_is_intact():

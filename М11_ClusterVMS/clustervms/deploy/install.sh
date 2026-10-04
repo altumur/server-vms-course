@@ -4,7 +4,8 @@
 #   deploy/install.sh [--spares]                as root, on every server, from a checkout of the course
 #
 #   --spares   also `w2c-spares.sh` and its timers (М10's `vmsserver/deploy/`): every minute it reads the console's
-#              numbers and starts the spares this server can serve — never stops one (lesson 4)
+#              numbers and starts the spares this server can serve — never stops one (lesson 4) — each from its role's
+#              template (`vms-vmsworker-spare@.service`, `vms-recworker-spare@.service`; macOS: the role's plist)
 #
 # Both: /etc/w2c -> /data/platform/etc and /etc/vms -> /data/vms/etc (mutable configuration on the data partition).
 # Linux (systemd): /opt/w2c/{vmsserver,clustervms,bin/w2c-run.sh}; `w2c-cluster.sysusers` and `.tmpfiles`; the archive's
@@ -33,6 +34,9 @@ for a in "$@"; do
 done
 
 UNITS="configstore w2c-resource vms-console vms-vmscontroller vms-reccontroller vms-vmsworker vms-recworker"
+# A spare is its role's unit but the name (the twelfth review, blocker 6): installed with the spares, never enabled —
+# `w2c-spares.sh` starts `vms-<role>-spare@<n>`.
+SPARE_UNITS="vms-vmsworker-spare@ vms-recworker-spare@"
 
 # -- the code -----------------------------------------------------------------------------------------------------
 mkdir -p "$W2C_HOME/bin"
@@ -91,6 +95,9 @@ if command -v systemctl >/dev/null 2>&1; then
     install -m 0644 "$HERE/systemd/$u.service" "/etc/systemd/system/$u.service"
   done
   if [ "$SPARES" = yes ]; then
+    for u in $SPARE_UNITS; do
+      install -m 0644 "$HERE/systemd/$u.service" "/etc/systemd/system/$u.service"
+    done
     rm -f /usr/local/bin/w2c-spares.sh
     cp "$VMSSERVER/deploy/w2c-spares.sh" /usr/local/bin/w2c-spares.sh; chmod 0755 /usr/local/bin/w2c-spares.sh
     for f in "$VMSSERVER"/deploy/w2c-spares*.service "$VMSSERVER"/deploy/w2c-spares*.timer; do
@@ -105,12 +112,14 @@ if command -v systemctl >/dev/null 2>&1; then
 elif [ "$(uname)" = Darwin ]; then
   # -- macOS --------------------------------------------------------------------------------------------------------
   HOST="$(hostname -s)"
+  # WHICH BOX, as systemd's %m says it on Linux: this Mac's hardware UUID — the same across restarts and renames.
+  BOXID="$(ioreg -rd1 -c IOPlatformExpertDevice | sed -n 's/.*"IOPlatformUUID" = "\(.*\)"/\1/p')"
   for p in "$HERE"/launchd/com.w2c.*.plist; do
     name="$(basename "$p")"
     case "$name" in com.w2c.spares*) [ "$SPARES" = yes ] || continue ;; esac
     dest="/Library/LaunchDaemons/$name"
     launchctl bootout system "$dest" >/dev/null 2>&1 || true
-    sed "s/@HOST@/$HOST/g" "$p" > "$dest"
+    sed -e "s/@HOST@/$HOST/g" -e "s/@BOXID@/$BOXID/g" "$p" > "$dest"
     chmod 0644 "$dest"
     launchctl bootstrap system "$dest"
   done

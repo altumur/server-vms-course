@@ -9,7 +9,8 @@ Wants=network-online.target configstore.service
 [Service]
 User=vms
 Group=vms
-SupplementaryGroups=vms-console
+# Its store socket's group; the events archive (an operator's marks) and the objects (WP-E); the key ring's.
+SupplementaryGroups=vms-console w2c-events w2c-store w2c-secrets
 Environment=PLATFORM_STORE=configstore:///run/configstore/console.sock
 Environment=CONSOLE_PORT=8080
 # Who is "on the box" is whoever came through this socket (`w2cplatform/access.py`, `is_local`).
@@ -22,13 +23,17 @@ LoadCredential=platform.key:/etc/w2c/secrets/platform.key
 Environment=SECRETS_KEY=%d/platform.key
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
 # override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
-UMask=0002
+UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh console
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
 MemoryMax=256M
 NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/events /data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

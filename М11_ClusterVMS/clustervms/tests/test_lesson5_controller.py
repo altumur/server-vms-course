@@ -146,7 +146,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     sv = make_console(ctl).root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
     assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
-    assert sv["srv-a"]["archive"] == "/data/platform/events"                                        # the worker's $ARCHIVE: the platform's events archive (`runtime.events_root`)
+    assert sv["srv-a"]["archive"] == c.servers["srv-a"].resource                                   # the worker's $ARCHIVE: its server's events archive (`w2c.env`)
     x = ctl.create_camera({"source": "driverpack://file/x.mp4", "labels": ["vlan:cctv-a"]})["id"]
     assert ctl.place(x).worker == B                                                                # never w-srv-a-1 while srv-a's resource is silent
     assert ctl.unplaceable() == []                                                                 # srv-b reaches cctv-a too; nothing waits
@@ -307,3 +307,29 @@ def test_the_clusters_console_asks_about_the_camera_a_route_names_exactly_as_the
         assert m.root.extra.journal is m.root.journal and m.mounts["rec"].cams_of is not None
     finally:
         srv.shutdown()
+
+
+
+def test_the_clusters_console_keeps_a_requests_until_as_the_boxs_does():
+    """The twelfth review, on the author's answer ("REREAD … any console"): in М11 no console ran the loop that turns a
+    request into work and ends it at its `until` — a recording asked for ten minutes went on, and nobody in the cluster
+    kept the end. The cluster's console runs the box's turns now (`cluster.__main__.console_turn`), through its own
+    socket and its rights: a scenario's "record camera 1 for ten minutes" becomes a recording with an end, the request
+    goes, and the recording ends when its end has come."""
+    import cluster.__main__ as m
+    from vms.config import REC_SPEC
+    from vms.jobs import Remembered
+    from w2cplatform.spec import SpecController
+    c = Cluster(); c.resources_up()
+    con = c.console("srv-a")
+    rec = SpecController(REC_SPEC, con.vars, con.objects, wall=c.wall)
+    con.create_camera({"source": "driverpack://file/1.mp4"})
+    now = c.wall()
+    c.vars.put("rec/requests/f1-0", {"action": "record", "cam": "1", "minutes": "10", "valid_until": str(now + 30)})
+    mem = Remembered()
+    m.console_turn(con, rec, mem, now=now, reap=True)
+    assert rec.unit("1-auto")["until"] == now + 600 and c.vars.get("rec/requests/f1-0")[0] is None
+    m.console_turn(con, rec, mem, now=now + 300)
+    assert "1-auto" in [str(u["id"]) for u in rec.units()]                  # not yet
+    m.console_turn(con, rec, mem, now=now + 601)
+    assert "1-auto" not in [str(u["id"]) for u in rec.units()]              # its end came: ended

@@ -5,7 +5,7 @@ Python view of the same thing, for the worker and the tests:
     vms/cameras/<id>      the row: the spec's fields, plus revision       (the controller writes)
     vms/workers/<worker>  units, rev                                      (the controller writes)
     vms/placement/<id>    worker, reason, at, rev                         (the controller writes)
-    vms/retention/<id>    days — derived from events_retention_days       (the controller writes; the resource reads)
+    vms/retention/<id>    days — derived from events_retention_days       (the console writes, with the row; the resource reads)
     vms/epoch/<id>        epoch                                           (a worker takes, by CAS)
     vms/devices/<device>  events, rays, relays, ptz, presets — what it says and does   (its holder, on a change)
     vms/next_id           n                                               (the controller)
@@ -27,8 +27,8 @@ here is controller-derived status — that is in the worker's heartbeat.
 #   token may too).
 # - `vms/workers/<worker>` — `units, rev` (the controller writes; the worker reads).
 # - `vms/placement/<id>` — `worker, reason, at, rev` (the controller writes).
-# - `vms/retention/<id>` — `days`, derived from `events_retention_days` (the controller writes; the
-#   platform's resource job reads).
+# - `vms/retention/<id>` — `days`, derived from `events_retention_days` (the console writes it with the camera's
+#   row, by its own token — `SpecController.create`/`update`/`delete`; the platform's resource reads it).
 # - `vms/epoch/<id>` — `epoch` (a worker takes, by CAS).
 # - `vms/next_id` — `n` (the controller).
 #
@@ -190,7 +190,7 @@ def device_identities(vars_) -> dict[str, str]:
 
 # READ BY KEY, ONCE (the review's ninth pass, minor; a count): `one_device` read every device row there is on every
 # command, every move and every scenario edit — rows are never removed, and 1000 of them were 1009 reads for one press
-# of a relay (in М11, a thousand HTTP calls to Nomad). It reads the row of a device it is asked about, the first time it
+# of a relay (in М11, a thousand reads through the store's leader). It reads the row of a device it is asked about, the first time it
 # is asked, and nothing else: one instance per request, so what it says is the store's at that request.
 #
 # KNOWN IS NOW, NOT ONCE (the review's tenth pass, major; a run). A row says what the device under that key WAS when a

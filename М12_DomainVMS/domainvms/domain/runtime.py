@@ -1,6 +1,7 @@
 """Wiring for the real processes: the environment the jobspecs set, turned
-into Clusters over the config store (`open_vars`) and the object store. Not exercised by the
-tests (no Nomad here); everything it wires is."""
+into Clusters over the config store (`open_vars`) and the object store. Run by the tests over the
+jobs' own lines (`test_lesson3_readview_api_gateway.py`, the twelfth review's major 22); everything it
+wires is exercised elsewhere."""
 from __future__ import annotations
 
 import os
@@ -13,10 +14,10 @@ from .federation import Cluster, Federation
 
 
 def federation_from_env(var: str = "CLUSTERS") -> Federation:
-    """CLUSTERS=north=nomad://nomad.north:4646|http://minio.north:9000/x,south=...
+    """CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects,south=report
     The first entry, or DOMAIN_HOLDER, is the domain holder.
 
-    Each half is a URL with a scheme: the config store (`open_vars` — `nomad://`,
+    Each half is a URL with a scheme: the config store (`open_vars` — `configstore://`,
     `file://`, whatever a backend registered) and the object store (`open_store`).
     Neither half names a vendor in code; a cluster on another orchestrator is a
     different scheme in this one string."""

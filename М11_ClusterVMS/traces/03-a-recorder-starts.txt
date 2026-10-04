@@ -61,7 +61,7 @@ GET /v1/get?key=rec/volumes/disks-a
 → 200 {
   "items": {
     "kind": "local",
-    "url": "/data/srv-a/archive",
+    "url": "/data/srv-a/disks",
     "server": "srv-a",
     "quota_bytes": "4000000000000",
     "access_secret": "",

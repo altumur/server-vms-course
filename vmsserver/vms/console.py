@@ -1135,10 +1135,17 @@ def vms_routes(media: bool = True, live: LiveFront | None = None, ctl=None, rec_
 #
 # The slot name for a box is the next free number: instances are named by the slot they claim
 # (`recworker@r-3` claims `r-3`), so the command has to name one nobody holds.
+#
+# A cluster of М11 has no `recworker@` (the twelfth review, a minor): one recorder unit per server, `r-%l-1`, and the
+# rest are spares its script starts from the role's template (`vms-recworker-spare@<n>`, as the role's unit) on a server
+# that can take them — so the command is that script's, run on the server that has the disks. The console knows it is
+# one by its store: a configstore's socket, where a box has files.
 def scale_hint(rec_ctl: SpecController, unserved: int, spare: int) -> dict:
     needed = max(0, unserved - spare)                   # a spare takes an archive on its next pass
     if not needed:
         return {"needed": 0, "how": None}
+    if str(os.environ.get("PLATFORM_STORE") or os.environ.get("CONFIG_URL") or "").startswith("configstore://"):
+        return {"needed": needed, "how": "w2c-spares.sh recworker"}
     if os.environ.get("NOMAD_ALLOC_ID"):
         live = len(rec_ctl.workers_seen())
         return {"needed": needed, "how": f"nomad job scale recworker {live + needed}"}

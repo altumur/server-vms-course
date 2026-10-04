@@ -34,23 +34,31 @@
 # It never stops anything. A spare costs a few megabytes and is what makes the NEXT shortage get served in a pass
 # instead of a deploy; deciding that a box has too many is a person's call, on purpose.
 #
-#   Linux   systemd-run --unit vms-<role>-spare-<n> --setenv SPARE_FOR=<set> $SPARES_RUN <verb>
-#   macOS   nohup env SPARE_FOR=<set> $SPARES_RUN <verb>, its pid in $SPARES_DIR/vms-<role>-spare-<n>.pid
+# A SPARE IS ITS ROLE'S UNIT, NOT A ROOT SHELL (the twelfth review, blocker 6). It ran as `systemd-run … $SPARES_RUN`:
+# as root, without the cluster's key, without the fan-out opened — the cameras of a dead server whose passwords are
+# sealed did not start on the very process started for them, and what it wrote was root's. Now it is started from a
+# TEMPLATE that is the role's regular unit line for line but the name (`vms-<role>-spare@.service`, installed with
+# the units: the same user, groups, socket, key, umask and watchdog — `tests/test_units.py` holds the two together),
+# so whatever the role's unit is given, a spare is given; and the set it is for goes in a file of one line the
+# template reads (`EnvironmentFile=$SPARES_ENV/<unit>.env`), the only thing this script says to it. No template for
+# the role: nothing started, and said — never a process with less than its unit has.
+#
+#   Linux   SPARE_FOR=<set> into $SPARES_ENV/vms-<role>-spare@<n>.service.env; systemctl start vms-<role>-spare@<n>
+#   macOS   the role's own plist ($LAUNCHD_DIR/com.w2c.vms.<role>.plist) copied as com.w2c.vms.<role>.spare-<n> — no
+#           name, SPARE_FOR=<set>, its doors on ports the OS gives — into $SPARES_DIR, and `launchctl bootstrap`ped
 set -eu
 
 ME="${0##*/}"
 CONSOLE="${CONSOLE:-http://127.0.0.1:8080}"
 SERVER="${SERVER_NAME:-$(hostname -s 2>/dev/null || hostname)}"
-# THE PLATFORM'S NAMES — spelled here and nowhere else below, so a rename is these lines: what a role's unit runs
-# (`<SPARES_RUN> <verb>`), the two environment files every unit reads (handed to a spare too: the platform's, then
-# the VMS's — a name in both is the second's), and where the macOS spares keep their pids and logs. The defaults are
-# the product's layout (`/opt/w2c`, `/etc/w2c/w2c.env`, `/etc/vms/vms.env`) — the course's box's too, /etc/w2c and
-# /etc/vms being links into its data partition; `SPARES_RUN` it sets in `w2c.env`. A spare itself is a process of a VMS subsystem, and keeps
-# the subsystem's names: the unit `vms-<role>-spare-<n>`, the group `vms-<role>` of its role's store socket.
-SPARES_RUN="${SPARES_RUN:-/opt/w2c/bin/w2c-run.sh}"
-W2C_ENV="${W2C_ENV:-/etc/w2c/w2c.env}"
-ENV_FILE="${ENV_FILE:-/etc/vms/vms.env}"
+# THE PLATFORM'S NAMES — spelled here and nowhere else below, so a rename is these lines: where a spare's set is
+# written for its template (Linux), where the roles' plists are and the macOS spares' copies go. What a spare RUNS,
+# its environment files and its credentials are its template's — the role's unit's — and nothing this script says. A
+# spare itself is a process of a VMS subsystem, and keeps the subsystem's names: the unit `vms-<role>-spare@<n>`
+# (macOS: `com.w2c.vms.<role>.spare-<n>`), the group `vms-<role>` of its role's store socket.
 SPARES_DIR="${SPARES_DIR:-/var/run/w2c-spares}"
+SPARES_ENV="${SPARES_ENV:-/run/w2c-spares}"         # Linux: each spare's set, read by its template (its timers' RuntimeDirectory)
+LAUNCHD_DIR="${LAUNCHD_DIR:-/Library/LaunchDaemons}" # macOS: where `install.sh` put the roles' plists
 NAME=vms
 roles=$(printf '%s' "${*:-${SPARES_ROLES:-recworker}}" | tr ',' ' ')
 
@@ -67,54 +75,70 @@ covers() {
 # Whether spare <n> of a role runs here.
 running() {
     if [ "$linux" = 1 ]; then
-        systemctl is-active --quiet "$NAME-$1-spare-$2"
+        systemctl is-active --quiet "$NAME-$1-spare@$2"
     else
-        [ -f "$SPARES_DIR/$NAME-$1-spare-$2.pid" ] && kill -0 "$(cat "$SPARES_DIR/$NAME-$1-spare-$2.pid")" 2>/dev/null
+        launchctl print "system/com.w2c.$NAME.$1.spare-$2" >/dev/null 2>&1
     fi
 }
 
-# Start spare $2 of role $1, verb $3, for the label set $4 — with no SPARE_FOR when $5 is empty (a recorder).
+# Whether this server has the role's spare template: the regular unit's twin (Linux), the regular plist (macOS).
+template() {
+    if [ "$linux" = 1 ]; then
+        systemctl cat "$NAME-$1-spare@.service" >/dev/null 2>&1
+    else
+        [ -f "$LAUNCHD_DIR/com.w2c.$NAME.$1.plist" ]
+    fi
+}
+
+# Start spare $2 of role $1, for the label set $3 — with no SPARE_FOR when $4 is empty (a recorder).
 start() {                                           # sh has no locals: the arguments, by number
     if [ "$linux" = 1 ]; then
-        systemctl reset-failed "$NAME-$1-spare-$2" >/dev/null 2>&1 || true      # a spare that ended leaves its name behind
-        group=""
-        getent group "$NAME-$1" >/dev/null 2>&1 && group="--property=SupplementaryGroups=$NAME-$1"   # its role's store socket
-        if [ -n "$5" ]; then
-            # shellcheck disable=SC2086
-            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$W2C_ENV" \
-                --property=EnvironmentFile=-"$ENV_FILE" $group --setenv SPARE_FOR="$4" "$SPARES_RUN" "$3"
-        else
-            # shellcheck disable=SC2086
-            systemd-run --unit "$NAME-$1-spare-$2" --property=EnvironmentFile=-"$W2C_ENV" \
-                --property=EnvironmentFile=-"$ENV_FILE" $group "$SPARES_RUN" "$3"
+        if [ -n "$4" ]; then                        # the set, the one line its template reads; written before the start
+            mkdir -p "$SPARES_ENV"
+            printf 'SPARE_FOR=%s\n' "$3" >"$SPARES_ENV/$NAME-$1-spare@$2.service.env"
         fi
+        systemctl reset-failed "$NAME-$1-spare@$2" >/dev/null 2>&1 || true      # a spare that ended leaves its name behind
+        systemctl start "$NAME-$1-spare@$2"
     else
+        # The role's plist, as launchd runs the role: its user, its environment, its log beside. Not its name — a spare
+        # has none — and its doors on ports the OS gives: the server's own worker and recorder have 8554 and 8084.
+        label="com.w2c.$NAME.$1.spare-$2"
         mkdir -p "$SPARES_DIR"
-        if [ -n "$5" ]; then
-            nohup env SPARE_FOR="$4" "$SPARES_RUN" "$3" >>"$SPARES_DIR/$NAME-$1-spare-$2.log" 2>&1 &
-        else
-            nohup "$SPARES_RUN" "$3" >>"$SPARES_DIR/$NAME-$1-spare-$2.log" 2>&1 &
+        plist="$SPARES_DIR/$label.plist"
+        cp "$LAUNCHD_DIR/com.w2c.$NAME.$1.plist" "$plist"
+        plutil -replace Label -string "$label" "$plist"
+        plutil -remove EnvironmentVariables.WORKER_NAME "$plist" 2>/dev/null || true
+        if [ -n "$4" ]; then
+            plutil -replace EnvironmentVariables.SPARE_FOR -string "$3" "$plist"
         fi
-        echo $! >"$SPARES_DIR/$NAME-$1-spare-$2.pid"
+        case "$1" in
+            vmsworker) plutil -replace EnvironmentVariables.RTSP_PORT -string auto "$plist" ;;
+            recworker) plutil -replace EnvironmentVariables.ARCHIVE_PORT -string 0 "$plist" ;;
+        esac
+        plutil -replace StandardErrorPath -string "/var/log/w2c/$label.log" "$plist"
+        plutil -replace StandardOutPath -string "/var/log/w2c/$label.log" "$plist"
+        chmod 0644 "$plist"
+        launchctl bootout "system/$label" >/dev/null 2>&1 || true              # one that ended leaves its label behind
+        launchctl bootstrap system "$plist"
     fi
 }
 
-if command -v systemd-run >/dev/null 2>&1; then
+if command -v systemctl >/dev/null 2>&1; then
     linux=1
 elif [ "$(uname)" = Darwin ]; then
     linux=0
 else
-    echo "$ME: neither systemd-run nor macOS here — nothing started" >&2
+    echo "$ME: neither systemd nor macOS here — nothing started" >&2
     exit 0
 fi
 srv=$(printf '%s' "$SERVER" | sed 's/[.]/\\./g')
 
 for role in $roles; do
     case "$role" in
-        recworker)  page=/rec/metrics;  prefix=rec;  cap=${MAX_RECORDERS:-8};  verb=recorder ;;
-        vmsworker)  page=/metrics;      prefix=vms;  cap=${MAX_WORKERS:-4};    verb=worker ;;
-        liveworker) page=/live/metrics; prefix=live; cap=${MAX_GATEWAYS:-4};   verb=gateway ;;
-        autoworker) page=/auto/metrics; prefix=auto; cap=${MAX_EVALUATORS:-4}; verb=autoworker ;;
+        recworker)  page=/rec/metrics;  prefix=rec;  cap=${MAX_RECORDERS:-8} ;;
+        vmsworker)  page=/metrics;      prefix=vms;  cap=${MAX_WORKERS:-4} ;;
+        liveworker) page=/live/metrics; prefix=live; cap=${MAX_GATEWAYS:-4} ;;
+        autoworker) page=/auto/metrics; prefix=auto; cap=${MAX_EVALUATORS:-4} ;;
         *) echo "$ME: no role $role (recworker, vmsworker, liveworker, autoworker)" >&2; continue ;;
     esac
     text=$(curl -fsS --max-time 5 "$CONSOLE$page" 2>/dev/null) || {
@@ -138,6 +162,10 @@ for role in $roles; do
         echo "$ME: $CONSOLE$page says no number for $role (its controller's pass is stale, or none ran) — nothing started"
         continue
     fi
+    if ! template "$role"; then
+        echo "$ME: no spare template for $role on $SERVER ($NAME-$role-spare@.service, or com.w2c.$NAME.$role.plist on macOS) — nothing started: a spare runs as its role's unit or not at all" >&2
+        continue
+    fi
     n=1
     have=0
     while [ "$n" -le "$cap" ]; do                   # the spares of this role already here count against the ceiling
@@ -154,8 +182,8 @@ for role in $roles; do
         n=1
         while [ "$needed" -gt 0 ] && [ "$room" -gt 0 ] && [ "$n" -le "$cap" ]; do
             if ! running "$role" "$n"; then
-                if start "$role" "$n" "$verb" "$set" "$spare"; then
-                    echo "$ME: started $NAME-$role-spare-$n${spare:+ for labels '$set'}"
+                if start "$role" "$n" "$set" "$spare"; then
+                    echo "$ME: started $NAME-$role-spare@$n${spare:+ for labels '$set'}"
                     needed=$((needed - 1))
                     room=$((room - 1))
                 fi

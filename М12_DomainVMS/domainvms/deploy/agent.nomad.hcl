@@ -10,13 +10,18 @@ job "domain-agent" {
     count = 1
     task "agent" {
       driver = "podman"
-      config { image = "vms/domainvms:latest"; args = ["python3", "-m", "domain.agent"] }
+      config {
+        image   = "vms/domainvms:latest"
+        args    = ["python3", "-m", "domain.agent"]
+        # This cluster's store, by the agent's own socket (the twelfth review, major 22: `nomad://` is gone).
+        volumes = ["/run/configstore:/run/configstore"]
+      }
       identity { env = true }    # bound to agent-policy.hcl: domain/* and nothing else
       template {
         data        = <<-EOT
           CLUSTER={{ env "NOMAD_REGION" }}
-          DOMAIN_CONFIG_URL=nomad://nomad.north:4646   # the domain holder, read through federation forwarding; a scheme, not a vendor
-          NOMAD_ADDR=http://127.0.0.1:4646              # this cluster, written
+          DOMAIN_CONFIG_URL=configstore:///run/configstore/domainagent.sock   # the domain holder's store: this one, in the holder's cluster
+          PLATFORM_STORE=configstore:///run/configstore/domainagent.sock      # this cluster, written — by the agent's own socket
           SYNC_INTERVAL=30
           OBJECTS_URL=http://minio.{{ env "NOMAD_REGION" }}:9000/cluster   # this cluster's objects: where it says what it reaches
           # REACHES=vlan:cctv-a,vlan:cctv-b   the site's names for the networks it sees; unset: the host's interfaces

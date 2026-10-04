@@ -16,8 +16,11 @@ is not a Python process). `rights` prints the configstore's rights file generate
                                        only an offer of the set (`Worker.claim_slot(spare_for=)`), else waits holding nothing
     SERVER_NAME, LABELS                the server, what it can reach (`/etc/w2c/w2c.env`) — neutral names
                                        (`w2cplatform/runtime.py`); a unit or an orchestrator fills them alike
-    ARCHIVE                            worker, recorder: where their events go (the resource on their server); the
-                                       recorder's own volume goes beside it (`/data/volume`) when nothing is declared
+    ARCHIVE                            the platform's events archive on this server (`/etc/w2c/w2c.env`; unset:
+                                       `<PLATFORM_DIR>/events`, `runtime.events_root`): the resource's tree, where the
+                                       worker and the recorder write their events and register (`Worker.present`)
+    ARCHIVE_VOLUME                     recorder: its own volume when nothing is declared (`vms.config.OWN_VOLUME`,
+                                       `/data/vms/obsd/volume`: the VMS's, not beside the platform's events)
     OBSD_SOCKET                        recorder: the host's ObjectStorage daemon (its default: where the obsd unit listens)
     ARCHIVE_URL                        recorder: what its heartbeat says the door is — the server's IP, so the console and
                                        a primary backfilling from a backup reach it with no DNS between servers
@@ -52,7 +55,13 @@ OBJECTS = "cluster:///data/platform/objects?resource=http://127.0.0.1:8090"
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
 stop = threading.Event()
-archive = os.environ.get("ARCHIVE", "/data/archive")
+# The platform's events archive on this server — the resource's tree, `/data/platform/events` (WP-E, the box's layout) —
+# by the platform's own reader of it, as the box's entry point reads it (`vms/__main__.py`).
+archive = runtime.events_root(os.environ)
+# The snapshot's cluster name when `/etc/vms/vms.env` says none: the module's cluster, `room-a` — the name its env
+# example, its Nomad appendix and М12 give it. It was `cluster-a` here and `room-a` there (the twelfth review's
+# «Вопросы»); a server that says nothing now names the cluster as the others do.
+CLUSTER = "room-a"
 
 
 # The process's two stores, opened when it runs and never at import (a test imports this module): the store by its
@@ -64,19 +73,43 @@ def stores(role: str, env=None):
     return vars_, open_store(env.get("OBJECTS") or OBJECTS, vars_=vars_)
 
 
+# A process that holds a slot REGISTERS with its server's resource before it runs (`Worker.present`), as the box's entry
+# point does (`vms/__main__._present`): a lock in the resource's tree for as long as the process lives, its name beside
+# it. The cluster's entry points did not (the twelfth review's «Вопросы», defect 1): the resource's heartbeat said
+# `workers` and `running` empty on every server, so a worker whose process died on a live server was judged `wait` —
+# "cannot be told" — for ever, its cameras written by nobody if systemd did not bring it back, and a slot the server no
+# longer runs was never released. Built and registered here, and the stand builds its processes through these two
+# (`tests/conftest.py`), so what the stand runs is what a unit runs.
+def make_worker(vars_, objects, actuator=None, env: dict | None = None, **kw):
+    from cluster.worker import ClusterWorker
+    w = ClusterWorker(vars_, objects, actuator, env=env, **kw)
+    w.present(w.archive_root)                  # its server's resource tree: where its events go too
+    return w
+
+
+def make_recorder(vars_, objects, actuator=None, env: dict | None = None, **kw):
+    from cluster.recworker import ClusterRecorder
+    r = ClusterRecorder(vars_, objects, actuator, env=env, **kw)
+    r.present(r.archive_root)
+    return r
+
+
 def worker() -> None:
     """holds the camera: one connection, one epoch, one fan-out (rtsp://<server>:8554/<cam>), its events into
     the resource on its server. No footage: recording is the recorder's."""
-    from cluster.worker import ClusterWorker
     try:
         from gstvms.actuator import GstActuator
         # Bound to loopback unless the unit opens it (`RTSP_HOST`, М10B Lesson 4) — and in a cluster the unit
         # does: a recorder on another server has to reach it. There is no authentication at this door; what
-        # the unit opens, the cluster's network has to keep closed.
-        act = GstActuator(rtsp_address=os.environ.get("RTSP_HOST", "127.0.0.1"))
+        # the unit opens, the cluster's network has to keep closed. Its port is the unit's too (`RTSP_PORT`, `auto`
+        # for "ask the OS": a spare beside the server's own worker, `vms-vmsworker-spare@.service`), and what the OS
+        # gave is what the heartbeat announces (`live_url`), as on a box.
+        from vms.config import RTSP_PORT, port_of
+        act = GstActuator(rtsp_port=port_of(os.environ.get("RTSP_PORT"), RTSP_PORT),
+                          rtsp_address=os.environ.get("RTSP_HOST", "127.0.0.1"))
     except ImportError:
         logging.warning("no GStreamer: the fake actuator holds nothing"); act = None
-    w = ClusterWorker(*stores("vmsworker"), act)
+    w = make_worker(*stores("vmsworker"), act)
     w.rtsp_host = os.environ.get("RTSP_HOST", "127.0.0.1")   # a door announces what it bound
     logging.info("worker %s on %s (instance %s) claimed its slot; labels %s", w.name, w.server, w.instance, w.labels)
     # `beat`: between two passes the worker looks at its request rows every quarter of a second (`COMMANDS_BEAT`;
@@ -89,18 +122,27 @@ def worker() -> None:
 def recorder() -> None:
     """the only writer of footage: subscribes to the worker's fan-out and writes into the volume it holds, through
     the host's obsd; serves that volume at its archive door."""
-    from cluster.recworker import ClusterRecorder
     try:
         from gstvms.actuator import GstRecActuator
         act = GstRecActuator()
     except ImportError:
         logging.warning("no GStreamer: the fake actuator records nothing"); act = None
-    r = ClusterRecorder(*stores("recworker"), act, archive_root=archive)
+    # Its events into the platform's archive, its own volume where the VMS keeps volumes (`config.OWN_VOLUME`) — said
+    # here, as the box's entry point says it, and not left to the recorder's fallback beside the events tree: that is
+    # the platform's directory now (WP-E).
+    from vms.config import OWN_VOLUME
+    env = {**os.environ, "ARCHIVE_VOLUME": os.environ.get("ARCHIVE_VOLUME") or OWN_VOLUME}
+    r = make_recorder(*stores("recworker"), act, env=env, archive_root=archive)
     # The door binds where the unit says it is reachable (`ARCHIVE_URL`), else loopback — `0.0.0.0` was the
     # default, and a door with no authentication on every interface is what the review's second pass found.
     announced = urlsplit(os.environ.get("ARCHIVE_URL", "")).hostname
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST") or announced or "127.0.0.1", int(os.environ.get("ARCHIVE_PORT", "8084")))
-    r.archive_url = os.environ.get("ARCHIVE_URL") or r.archive_url   # the unit says how to reach it: an address, no DNS between servers
+    # The unit says how to reach it — an address, no DNS between servers — and the door says on which port it got: a
+    # spare recorder asks the OS for one (`ARCHIVE_PORT=0`, `vms-recworker-spare@.service`), and the server's
+    # `ARCHIVE_URL` names its own recorder's 8084. Said as the env file says it only when that is the port it has.
+    said = os.environ.get("ARCHIVE_URL")
+    if said and urlsplit(said).port == srv.server_address[1]:
+        r.archive_url = said
     logging.info("recorder %s on %s (instance %s) claimed its slot; labels %s; archive door %s",
                  r.name, r.server, r.instance, r.labels, r.archive_url)
     try:
@@ -165,7 +207,7 @@ def controller() -> None:
     nothing asks it anything."""
     from cluster.controller import ClusterController
     ctl = ClusterController(*stores("vmscontroller"), capacity=int(os.environ.get("CAPACITY", "50")),
-                            cluster=os.environ.get("CLUSTER", "cluster-a"))
+                            cluster=os.environ.get("CLUSTER") or CLUSTER)
     while not stop.is_set():
         _placement_pass("placement", ctl)
         stop.wait(5)
@@ -181,12 +223,42 @@ def console() -> None:
     from vms.config import REC_SPEC
     vars_, objects = stores("console")
     ctl = ClusterController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")),
-                            cluster=os.environ.get("CLUSTER", "cluster-a"))
+                            cluster=os.environ.get("CLUSTER") or CLUSTER)
+    rec_ctl = SpecController(REC_SPEC, vars_, objects)
     srv = serve(ctl, os.environ.get("CONSOLE_HOST", "0.0.0.0"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 archive_root=archive if os.path.isdir(archive) else None,     # marks go into this server's resource, if it has one
-                rec_ctl=SpecController(REC_SPEC, vars_, objects))              # the recorder at /rec/…: the page's Record toggle
+                rec_ctl=rec_ctl)                                               # the recorder at /rec/…: the page's Record toggle
+    threading.Thread(target=_console_loop, args=(ctl, rec_ctl), daemon=True).start()
     stop.wait()
     srv.shutdown()
+
+
+# THE CONSOLE'S LOOP — WHO KEEPS A REQUEST'S `until` IN М11 (the twelfth review, on the author's answer: "REREAD"). A box's
+# console runs three loops beside its door (`vms/__main__.console`): what a request asked, turned into work, and a
+# recording asked for some minutes ended at its `until` (`_requests_turn`); the requests a holder answered, cleared
+# (`clear_requests`, every two seconds); the reaper's slower pass, which takes the day-old ones too. The cluster's console
+# ran none of them: a recording on request went on past its end, and the answered requests stood. The same turns here,
+# over this console's two subsystems, on every server's console — every write in them a CAS, so two consoles at once
+# end a recording once. Each console keeps the `until` it wrote within a turn, and one another console wrote within
+# `jobs.Remembered.REREAD` (thirty seconds) — sooner when its end is near.
+def console_turn(ctl, rec_ctl, mem, now: float | None = None, reap: bool = False) -> None:
+    from vms.__main__ import _reap_turn, _requests_turn
+    from vms.jobs import clear_requests
+    _steps("console", lambda: _requests_turn(rec_ctl, None, None, mem, now=now),
+           *[(lambda c=c: clear_requests(c, sweep=False)) for c in (rec_ctl, ctl)])
+    if reap:
+        _steps("console reaper", lambda: _reap_turn([], [rec_ctl, ctl], rec_ctl, now=now))
+
+
+def _console_loop(ctl, rec_ctl, every: float = 2.0, reap_every: float = 30.0) -> None:
+    from vms.jobs import Remembered
+    mem, reaped = Remembered(), -1e18
+    while not stop.is_set():
+        reap = time.monotonic() - reaped >= reap_every
+        if reap:
+            reaped = time.monotonic()
+        console_turn(ctl, rec_ctl, mem, reap=reap)
+        stop.wait(every)
 
 
 def resource() -> None:

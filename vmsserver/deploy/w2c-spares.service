@@ -24,3 +24,7 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
 NoNewPrivileges=yes
+# Where it writes each spare's label set for the spare's template to read (`$SPARES_ENV`): the one directory it may
+# write, kept between runs — a spare restarted by systemd reads its file again.
+RuntimeDirectory=w2c-spares
+RuntimeDirectoryPreserve=yes

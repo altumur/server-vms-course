@@ -371,6 +371,15 @@ def test_the_console_writes_out_the_command_and_does_not_run_it():
     finally:
         del os.environ["NOMAD_ALLOC_ID"]
 
+    # and on a cluster of М11, with no orchestrator, in the spares script's (the twelfth review: `recworker@` is no
+    # unit there — a spare recorder is `vms-recworker-spare@<n>`, its role's template, which the script starts)
+    os.environ["PLATFORM_STORE"] = "configstore:///run/configstore/console.sock"
+    try:
+        _, view = route(None, "GET", "/volumes", {})
+        assert view["needed"] == 1 and view["how"] == "w2c-spares.sh recworker"
+    finally:
+        del os.environ["PLATFORM_STORE"]
+
 
 def test_the_numbers_a_scaling_policy_reads():
     """`spare: 0` while something is declared and unserved is the one state that

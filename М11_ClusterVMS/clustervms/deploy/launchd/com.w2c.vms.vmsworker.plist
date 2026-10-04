@@ -2,7 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- /Library/LaunchDaemons/com.w2c.vms.vmsworker.plist — the worker: holds its cameras; its name from the unit, one per server (М11, a macOS server; the
      systemd unit's twin, deploy/systemd/). `install.sh` puts @HOST@ (this host's short name) in place: launchd has
-     no %l. /etc/w2c/w2c.env and /etc/vms/vms.env are read by w2c-run.sh under what this file says. -->
+     no %l. /etc/w2c/w2c.env and /etc/vms/vms.env are read by w2c-run.sh under what this file says. The unit's
+     environment, name for name (`tests/test_units.py`): the cluster's key too, or a sealed password does not open.
+     No watchdog: launchd has none, and a hung worker here waits the fifteen minutes (`HUNG_MOVE_AFTER`). -->
 <plist version="1.0">
 <dict>
 	<key>Label</key>
@@ -22,6 +24,8 @@
 		<string>0.0.0.0</string>
 		<key>UNCONFIRMED_MAX</key>
 		<string>90</string>
+		<key>SECRETS_KEY</key>
+		<string>/etc/w2c/secrets/platform.key</string>
 	</dict>
 	<key>RunAtLoad</key>
 	<true/>

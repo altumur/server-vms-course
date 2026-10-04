@@ -1,0 +1,15 @@
+# /usr/lib/sysusers.d/vms-nomad.conf — the appendix «форма поставки»: on a node where Nomad runs the VMS's jobs,
+# beside `w2c-cluster.conf` (`deploy/systemd/w2c-cluster.sysusers`), which makes every group named here.
+# A unit joins its role's groups for its own process (`SupplementaryGroups=`); a Nomad task cannot — `raw_exec` runs
+# it as `user = "vms"` with that USER's groups. So under Nomad the user is a member of what its tasks open: each
+# task's store socket, the archive's engine, the box's layout (WP-E) — the events archive, the objects, the key ring.
+# Without the last one the tasks could not read the key at all (the twelfth review, major 13: it was 0750 root:w2c,
+# and `vms` is not in `w2c`): `Sealer.from_file` raised and every task went round its restarts. What it costs: on such
+# a node the roles are one user, and the sockets tell the tasks' processes apart no more than Nomad does.
+m vms vms-console
+m vms vms-vmsworker
+m vms vms-recworker
+m vms vms-obsd
+m vms w2c-events
+m vms w2c-store
+m vms w2c-secrets
