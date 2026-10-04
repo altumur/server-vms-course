@@ -1,6 +1,7 @@
-"""A config store with the semantics Nomad Variables promise — a
-raft-assigned ModifyIndex, PUT with cas=<index> succeeding only if the index
-still matches, a conflict otherwise — on one box, as files.
+"""A config store with the semantics a raft-backed store promises (М11's
+`configstore://`, and Nomad Variables before it) — a raft-assigned
+ModifyIndex, PUT with cas=<index> succeeding only if the index still matches,
+a conflict otherwise — on one box, as files.
 
 One JSON file per path under <root>/vars/, one counter file for the index,
 one lock. Every write is atomic (write-then-rename) and serialised by the
@@ -10,11 +11,11 @@ raft would: one of them wins the CAS.
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # variables.py — a file-backed config store with the semantics of Nomad Variables: ModifyIndex,
+# # variables.py — a file-backed config store with the semantics of a raft-backed one: ModifyIndex,
 # check-and-set, one writer per prefix
 #
-# **Role in the module.** Lesson 1's config store. It gives one box exactly what a raft-backed Nomad
-# Variables store gives a cluster: every path has a `ModifyIndex`, a `put(cas=<index>)` succeeds only if the
+# **Role in the module.** Lesson 1's config store. It gives one box exactly what a raft-backed store
+# (`configstore://`; Nomad Variables when the course began) gives a cluster: every path has a `ModifyIndex`, a `put(cas=<index>)` succeeds only if the
 # index still matches and raises `Conflict` otherwise, and a writer identity may be confined to a set of
 # prefixes (the ACL policy). Everything in the platform that must be consistent — assignments, placement
 # rows, epochs, slots, idempotency keys, unit rows — lives here; bulk or frequent data (heartbeats,
@@ -32,7 +33,7 @@ raft would: one of them wins the CAS.
 #   ACL is set; it is how "one writer per prefix" is enforced mechanically rather than by convention. The
 #   console test proves a console token cannot write placement by expecting exactly this.
 # - `Variables` — `typing.Protocol` with `get`, `put`, `list`: the interface every consumer types against.
-#   `FileVariables` implements it here; М11's Nomad client will too. (Note `delete` is not in the Protocol
+#   `FileVariables` implements it here; М11's daemon client (`ConfigstoreVariables`) does too. (Note `delete` is not in the Protocol
 #   even though `FileVariables` has it; `IdempotencyKeys.prune` uses it.)
 #
 # ## Notes
@@ -83,7 +84,8 @@ Index = str | int
 
 class Variables(Protocol):
     # What one path may weigh: the sum of the lengths of every key and every value in it, which is how
-    # Nomad measures a Variable. `NO_CEILING` (0) when the store has none. See `limits.py`.
+    # the cluster's daemon weighs a row (`storemachine.MAX_VALUE`) and Nomad weighed a Variable. `NO_CEILING`
+    # (0) when the store has none. See `limits.py`.
     max_bytes: int
 
     def get(self, path: str) -> tuple[dict | None, Index]: ...
@@ -280,14 +282,14 @@ class Corrupt(Exception):
     """The store cannot say what it holds — and says so, instead of starting again."""
 
 
-# A ROW THE STORE HOLDS AND CANNOT READ IS THAT ROW'S PARSE ERROR (the eleventh review, a minor). Nomad answers every
-# Variable as a map of strings; a file of this store can be torn (a hand edit, a disk that lied about a write), hold
+# A ROW THE STORE HOLDS AND CANNOT READ IS THAT ROW'S PARSE ERROR (the eleventh review, a minor). A store answers every
+# row as a map of strings (the daemon does, Nomad did); a file of this store can be torn (a hand edit, a disk that lied about a write), hold
 # `items` that are not a map, or values that are not strings — and `get` raised whatever `json` or `dict` raised, or
 # handed the non-strings on, and the routes that read the drain, a slot, a placement or a worker's row bare fell whole
 # with it. A torn file, `items` that are not a map, an index that is no whole number: one error now, a `ValueError`
 # naming the row — every reader of rows reads it as that row not parsing (`rows.PARSE_ERRORS`, `rows.Table`). A value
-# that is not a string is handed on as its JSON text, a string, as Nomad would hold it: the field's parse error, read
-# by the field's reader as a Nomad value that does not parse is. A row that does not read has the version `TORN`: a
+# that is not a string is handed on as its JSON text, a string, as a store of strings would hold it: the field's parse
+# error, read by the field's reader as a stored string that does not parse is. A row that does not read has the version `TORN`: a
 # write that means to replace it says so (`put(cas=TORN)`, `Controller.write`), and one that read anything else conflicts.
 TORN = "torn"
 
@@ -341,12 +343,12 @@ class FileVariables:
 
     # Returns a new handle on the same directory seen through another identity, allowed only the given
     # prefixes (`'vms/*'`, `'vms/epoch/*'` style: a trailing `*` means prefix match, otherwise exact path).
-    # This is what a Nomad ACL policy does for a task's token. The tests build the controller with
+    # This is what the cluster daemon's rights file does for a role (`storemachine.Rights`). The tests build the controller with
     # `as_writer("vmscontroller", SPEC.acl_controller())` and the console with `as_writer("console",
     # SPEC.acl_console())`.
     def as_writer(self, writer: str, allowed: list[str]) -> "FileVariables":
         """The same store seen through another identity, allowed only these
-        prefixes ('vms/*', 'vms/epoch/*') — what a Nomad ACL policy does."""
+        prefixes ('vms/*', 'vms/epoch/*') — what the daemon's rights file does for a role."""
         v = FileVariables(self.root, writer, dict(self.acl), volatile=self.volatile)
         v.acl[writer] = allowed
         return v
@@ -431,8 +433,8 @@ class FileVariables:
                 raise TypeError("its items are not a map")
             if isinstance(idx, bool) or not isinstance(idx, int):
                 raise TypeError("its index is not a whole number")
-            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what Nomad would hold
-            # had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
+            # A value that is not a string (a hand edit: `1e999`, `true`, a list) is its JSON text — what a store of strings
+            # would hold had it been written so: its reader's parse error, the field's, and the rest of the row still says what it says.
             items = {k: v if isinstance(v, str) else json.dumps(v) for k, v in items.items()}
         except (ValueError, TypeError, KeyError, RecursionError) as e:
             raise Garbled(path, f"{type(e).__name__}: {e}") from None
