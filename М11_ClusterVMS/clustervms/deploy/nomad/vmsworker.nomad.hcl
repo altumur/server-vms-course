@@ -26,7 +26,7 @@ job "vmsworker" {
 
     task "vmsworker" {
       driver       = "raw_exec"
-      user         = "vms"                           # a member of vms-vmsworker: its socket of the node's configstore
+      user         = "vms"                           # its groups are the task's: `vms-nomad.sysusers` (the socket, the key ring)
       kill_timeout = "20s"                           # room to release the slot: a stop says so, a crash cannot
       config {
         command = "/opt/w2c/bin/w2c-run.sh"

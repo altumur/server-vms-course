@@ -30,6 +30,12 @@ Volume=/data/platform/config:/data/platform/config:z
 Volume=/data/platform/objects:/data/platform/objects:z
 GroupAdd=2103
 PodmanArgs=--umask=0007
+# The events archive, though a gateway writes no events: it REGISTERS there (`vms/__main__._present` — a lock and its
+# name in `.workers`, which the resource lists as running). Without the mount that went into the container's own
+# layer, the resource never saw it, and a hung gateway was taken for one its server does not run — its slot released,
+# a second gateway on its cameras (the twelfth review, major 5). The archive's clients' group, as every writer's.
+Volume=/data/platform/events:/data/platform/events:z
+GroupAdd=2102
 Network=host
 StopTimeout=10
 

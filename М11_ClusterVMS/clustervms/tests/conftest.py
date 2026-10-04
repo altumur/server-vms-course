@@ -17,7 +17,9 @@ instead of HTTP: the same answers, no sockets. A server that is `down` answers n
 events — and what it last said is what a reader that heard it remembers.
 
 A PROCESS is named the way its unit names it: `WORKER_NAME=w-%l-1` — `w-srv-a-1` on srv-a, `r-srv-a-1` for the
-recorder; a spare has no name until it takes an offer. There are no allocations.
+recorder; a spare has no name until it takes an offer. There are no allocations. It is built by the entry point's own
+`make_worker`/`make_recorder` (`cluster/__main__.py`) and so REGISTERS with its server's resource as a unit's does
+(`Worker.present`: a lock in that server's tree while the object lives) — `absent()` is its process ending.
 """
 from __future__ import annotations
 
@@ -258,7 +260,8 @@ class Cluster:
         the unit (`WORKER_NAME=w-%l-1`), the server and its labels from `/etc/w2c/w2c.env` — and this incarnation,
         host and pid. A spare has `SPARE_FOR` and no name."""
         self.pids += 1
-        env = {"SERVER_NAME": server, "LABELS": self.servers[server].labels, "INSTANCE_ID": f"{server}:{self.pids}"}
+        env = {"SERVER_NAME": server, "LABELS": self.servers[server].labels, "INSTANCE_ID": f"{server}:{self.pids}",
+               "ARCHIVE": self.servers[server].resource}          # `w2c.env`: the platform's events archive here
         if name is not None:
             env["WORKER_NAME"] = name
         env.update({k: str(v) for k, v in more.items()})
@@ -273,8 +276,9 @@ class Cluster:
             env["INSTANCE_ID"] = instance
         who = f"vmsworker {name or 'spare'} on {server}"
         v = self.door("vmsworker", who)
-        return ClusterWorker(v, self.objects_on(server, v, who), actuator or FakeActuator(), env=env,
-                             clock=self.clock, wall=self.wall, capacity=capacity, **kw)
+        from cluster.__main__ import make_worker
+        return make_worker(v, self.objects_on(server, v, who), actuator or FakeActuator(), env=env,
+                           clock=self.clock, wall=self.wall, capacity=capacity, **kw)
 
     def recorder(self, server: str, capacity: int = 50, actuator=None, name: str | None = None,
                  **kw) -> ClusterRecorder:
@@ -283,9 +287,10 @@ class Cluster:
         name = name or f"r-{server}-1"
         who = f"recworker {name} on {server}"
         v = self.door("recworker", who)
-        return ClusterRecorder(v, self.objects_on(server, v, who), actuator or FakeActuator(),
-                               env=self.env(server, name), **self.rec_kw(server, name),
-                               clock=self.clock, wall=self.wall, capacity=capacity, **kw)
+        from cluster.__main__ import make_recorder
+        return make_recorder(v, self.objects_on(server, v, who), actuator or FakeActuator(),
+                             env=self.env(server, name), **self.rec_kw(server, name),
+                             clock=self.clock, wall=self.wall, capacity=capacity, **kw)
 
     def rec_kw(self, server: str, name: str) -> dict:
         return {"archive_root": self.servers[server].archive, "obsd": obsd_session(f"rec-{name}-{self.pids}"),

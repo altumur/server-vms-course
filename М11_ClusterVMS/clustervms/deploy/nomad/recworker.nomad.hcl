@@ -25,7 +25,7 @@ job "recworker" {
 
     task "recworker" {
       driver       = "raw_exec"
-      user         = "vms"                           # a member of vms-recworker and of vms-obsd (gid 2101): the daemon lets it in
+      user         = "vms"                           # its groups are the task's: `vms-nomad.sysusers` (the socket, vms-obsd, the key ring)
       kill_timeout = "40s"                           # the pipelines stop, the writer closes after its flush, then the hold goes
       config {
         command = "/opt/w2c/bin/w2c-run.sh"
@@ -41,7 +41,8 @@ job "recworker" {
         OBSD_SOCKET     = "/run/vms-obsd/obsd.sock"  # where vms-obsd.service listens
         UNCONFIRMED_MAX = "90"
         SECRETS_KEY     = "/etc/w2c/secrets/platform.key"
-        ARCHIVE      = "${meta.archive}"
+        # No ARCHIVE: its events go where the node's resource keeps them, `ARCHIVE` in /etc/w2c/w2c.env
+        # (`/data/platform/events`) — `meta.archive` only says where disks are, which is what the constraint asks.
         ARCHIVE_HOST = "${attr.unique.network.ip-address}"
         ARCHIVE_PORT = "8084"
         ARCHIVE_URL  = "http://${attr.unique.network.ip-address}:8084"

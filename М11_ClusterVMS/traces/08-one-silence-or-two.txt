@@ -1,4 +1,4 @@
-# a crash — w-srv-a-1 silent, srv-a's resource alive: gone_servers() = {}, redistribute() = [], writes: 0
+# a hang — w-srv-a-1 silent, its process running, srv-a's resource alive: gone_servers() = {}, redistribute() = [], fate: 'hung', writes: 0
 # the power pull — w-srv-a-1 AND srv-a's resource silent: gone_servers() = {'w-srv-a-1': 'srv-a'}
 
 # vmscontroller on srv-b → /run/configstore/vmscontroller.sock

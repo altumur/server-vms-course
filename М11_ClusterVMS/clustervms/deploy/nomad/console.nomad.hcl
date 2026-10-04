@@ -30,7 +30,7 @@ job "console" {
     }
     task "console" {
       driver = "raw_exec"
-      user   = "vms"                                 # a member of vms-console: its socket of the node's configstore
+      user   = "vms"                                 # its groups are the task's: `vms-nomad.sysusers` (the socket, the key ring)
       config {
         command = "${var.w2c_home}/bin/w2c-run.sh"
         args    = ["console"]

@@ -130,7 +130,9 @@ def a_recorder_starts() -> str:
     claims its name like any worker — and then takes the VOLUME, by CAS, under `rec/holds/`: the one write a
     recorder makes that a VMS worker never does."""
     s = Stand()
-    volumes.write(s.vars, {"name": "disks-a", "kind": "local", "server": "srv-a", "url": s.servers["srv-a"].archive,
+    # The disks, not the events archive: that is the platform's tree (WP-E), and the processes of srv-a register in it.
+    disks = os.path.join(os.path.dirname(s.servers["srv-a"].archive), "disks")
+    volumes.write(s.vars, {"name": "disks-a", "kind": "local", "server": "srv-a", "url": disks,
                            "quota_bytes": 4 * 10**12})
     s.log.calls.clear()
     r = s.recorder("srv-a")
@@ -185,11 +187,11 @@ def a_spare_takes_an_offer() -> str:
     con.create_camera({"name": "cam-9", "source": "driverpack://file/9.mp4"})
     mark = s.log.mark()
     ctl.pass_once(1)                                                   # full: the ninth waits — and an offer is written
-    spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemd-run --unit vms-vmsworker-spare-1 --setenv SPARE_FOR=`
+    spare = s.worker("srv-c", capacity=4, spare_for="")                # `systemctl start vms-vmsworker-spare@1`, `SPARE_FOR=` in its file
     spare.heartbeat_once()
     ctl.pass_once(1)
     spare.reconcile_once()
-    spare.release_slot()                                               # `systemctl stop vms-vmsworker-spare-1`: SIGTERM
+    spare.release_slot()                                               # `systemctl stop vms-vmsworker-spare@1`: SIGTERM
     con.delete_camera(1); con.delete_camera(2)                         # room to move into
     ctl.pass_once(1)
     return s.log.render(since=mark, writes=True) + f"\n# … and {s.reads(mark)} GET requests, omitted\n"
@@ -520,9 +522,10 @@ def pull_the_power() -> str:
 
 
 def one_silence_or_two() -> str:
-    """Lesson 8: a crash — w-srv-a-1 silent, srv-a's resource alive — moves nothing: the unit is systemd's to start
-    again, and its process comes back under the same name. A dead server — two silences: the slot, and the resource
-    on its server — is a fact the controller acts on."""
+    """Lesson 8: a hang — w-srv-a-1 silent, its process running (registered with srv-a's resource, its lock held), the
+    resource alive — moves nothing: the unit is systemd's to start again (its watchdog), and its process comes back
+    under the same name. A dead server — two silences: the slot, and the resource on its server — is a fact the
+    controller acts on."""
     s = Stand()
     ctl, a, b = _recording(s)
     rs = s.resources
@@ -531,6 +534,7 @@ def one_silence_or_two() -> str:
         r.heartbeat()
     crash = s.log.mark()
     one = (ctl.gone_servers(), ctl.redistribute())
+    fate = ctl.slot_fate("w-srv-a-1", ctl.slots()["w-srv-a-1"])[0]
     after_crash = s.log.mark()
     s.wall.advance(2 * 45 + 3); b.lease_pass(); b.heartbeat_once(); rs["srv-b"].heartbeat(); rs["srv-c"].heartbeat()
     gone = ctl.gone_servers()
@@ -538,8 +542,8 @@ def one_silence_or_two() -> str:
     ctl.redistribute()
     b.reconcile_once()
     writes_in_crash = sum(1 for c in s.log.calls[crash:after_crash] if c.write)
-    return (f"# a crash — w-srv-a-1 silent, srv-a's resource alive: gone_servers() = {one[0]}, redistribute() = "
-            f"{one[1]}, writes: {writes_in_crash}\n"
+    return (f"# a hang — w-srv-a-1 silent, its process running, srv-a's resource alive: gone_servers() = {one[0]}, "
+            f"redistribute() = {one[1]}, fate: {fate!r}, writes: {writes_in_crash}\n"
             f"# the power pull — w-srv-a-1 AND srv-a's resource silent: gone_servers() = {gone}\n\n"
             + s.log.render(since=mark, writes=True))
 

@@ -1,7 +1,7 @@
 # /etc/systemd/system/w2c-spares-liveworker.service — the one-shot its timer fires: spare live gateways
 # (`w2c-spares.sh liveworker`), for the label sets this server covers, as many as `live_workers_needed on /live/metrics` says and
-# `MAX_GATEWAYS` allows. Each is `systemd-run --unit vms-liveworker-spare-<n> --setenv SPARE_FOR=<set>`: it takes an offer
-# of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
+# `MAX_GATEWAYS` allows. Each is `systemctl start vms-liveworker-spare@<n>` — its role's unit's template, the same user, groups and key —
+# with `SPARE_FOR=<set>` in its one-line file: it takes an offer of its set, or waits holding nothing. Nothing is ever stopped. Why a host unit and not a container:
 # `w2c-spares.service`.
 [Unit]
 Description=w2c: start spare live gateways the console says are missing
@@ -16,3 +16,7 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
 NoNewPrivileges=yes
+# Where it writes each spare's label set for the spare's template to read (`$SPARES_ENV`): the one directory it may
+# write, kept between runs — a spare restarted by systemd reads its file again.
+RuntimeDirectory=w2c-spares
+RuntimeDirectoryPreserve=yes

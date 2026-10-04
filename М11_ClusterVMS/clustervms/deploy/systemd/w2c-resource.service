@@ -9,17 +9,24 @@ Wants=network-online.target configstore.service
 [Service]
 User=w2c
 Group=w2c
-SupplementaryGroups=w2c-resource vms
+# Its store socket's group, and the two of the box's layout (WP-E): the events archive it owns and its clients write
+# (`w2c-events`), the objects (`w2c-store`). `UMask=0007`: what it writes there is its group's, 0660 in 2770.
+SupplementaryGroups=w2c-resource w2c-events w2c-store
 Environment=PLATFORM_STORE=configstore:///run/configstore/resource.sock
 Environment=RESOURCE_PORT=8090
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
 # override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
-UMask=0002
+UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh resource
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
 NoNewPrivileges=yes
+# The door is on every interface (`0.0.0.0:8090`): what it may write is said, the rest of the system is read-only.
+ProtectSystem=strict
+ReadWritePaths=/data/platform/events /data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

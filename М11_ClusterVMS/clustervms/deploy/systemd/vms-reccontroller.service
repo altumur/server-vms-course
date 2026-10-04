@@ -8,16 +8,21 @@ Wants=network-online.target configstore.service
 [Service]
 User=vms
 Group=vms
-SupplementaryGroups=vms-reccontroller
+# Its store socket's group, and the objects' (WP-E): the snapshot it publishes is objects on this server.
+SupplementaryGroups=vms-reccontroller w2c-store
 Environment=PLATFORM_STORE=configstore:///run/configstore/reccontroller.sock
 # /etc/w2c/w2c.env, then /etc/vms/vms.env: read by w2c-run.sh UNDER what this unit says — `EnvironmentFile=` would
 # override `Environment=` (systemd's rule), and the socket and the name above are the unit's, never a file's.
-UMask=0002
+UMask=0007
 ExecStart=/opt/w2c/bin/w2c-run.sh reccontroller
 Restart=always
 RestartSec=2
 TimeoutStopSec=20
 NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

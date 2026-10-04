@@ -1,12 +1,14 @@
-"""The resource job on a cluster is М10's resource process (vms.resource) run as
-a `system` job on every server with meta.archive: the platform's Resource with
-the VMS registered on it — serving buckets, taking mirrors from its peers,
-retaining every subsystem's buckets by that subsystem's policy, and keeping
-the event index over its own tree. Nothing here is new; the names say so:
-platform/resources/<server>/heartbeat, platform/mirror, job "resource".
+"""The resource on a cluster is М10's resource process (vms.resource) run by the
+platform's unit on every server (`w2c-resource.service`): the platform's Resource
+with the VMS registered on it — serving buckets, taking mirrors from its peers,
+retaining every subsystem's buckets by that subsystem's policy, keeping the event
+index over its own tree (the platform's events archive, `/data/platform/events`),
+listing the workers registered there (`workers`, `running`), and the door to this
+server's objects. Nothing here is new; the names say so:
+platform/resources/<server>/heartbeat, platform/mirror, platform/doors/<server>.
 
 Footage is not on its tree. It is in volumes of ObjectStorage, written through
-the host's `obsd` (the `obsd` system job) by the recorder that holds each one,
+the host's `obsd` (`vms-obsd.service`) by the recorder that holds each one,
 and read through that recorder's archive door — a resource has nothing of it
 to serve, retain or evacuate.
 

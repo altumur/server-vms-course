@@ -38,19 +38,20 @@ job "domain-signer" {
       config {
         image   = "vms/domainvms:latest"
         args    = ["python3", "-m", "domain.signer_service"]
-        volumes = ["/run/vms-console:/run/vms-console"]   # the box's own door's directory (`SIGNER_UNIX` below)
+        # The box's own door's directory (`SIGNER_UNIX` below); this cluster's store and objects (the twelfth review,
+        # major 22: `nomad://` is gone).
+        volumes = ["/run/vms-console:/run/vms-console", "/run/configstore:/run/configstore", "/data/platform/objects:/data/platform/objects"]
       }
       identity { env = true }    # NOMAD_TOKEN: may write domain/signer, identity/*, domain/keys, domain/revoked, and the books
       template {
         data        = <<-EOT
           DOMAIN_ID=acme
-          NOMAD_ADDR=http://127.0.0.1:4646
           OBJECT_STORE_URL=http://minio.north:9000/domain
           TOKEN_LIFETIME=900
           IDENTITY_PUBLISH_FLOOR=60
           # The books (domain/books.py): sources, primaries, polls, upstream, asks — they carry tokens this
           # job mints, so their pass runs here. The same list as the domain's console; CENTRE/STAR, Lesson 17.
-          CLUSTERS=north=nomad://nomad.north:4646|http://minio.north:9000/cluster-restore,south=nomad://nomad.south:4646|http://minio.south:9000/cluster-restore
+          CLUSTERS=north=configstore:///run/configstore/console.sock|cluster:///data/platform/objects?resource=http://127.0.0.1:8090,south=report
           LOST_AFTER=45
           # The box's own door to the door in (`/login` through a flood, from the node: `--unix-socket`), and the
           # monitors' lane for `/healthz` (М10's eighth review: in the code, and not turned on here).

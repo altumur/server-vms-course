@@ -280,15 +280,17 @@ def test_the_holder_reads_no_more_of_the_domain_than_its_door_asks():
 def test_the_clusters_key_is_a_credential_of_the_three_units_that_open_a_password_and_no_row():
     """The console seals, the holder and the recorder open (`w2cplatform/sealing.py`). On Nomad the key was a Variable
     that three policies read and a template rendered; here it is a file on every server, and the three units — and no
-    other — load it as a systemd credential, readable by their own process only (`%d/platform.key`). No role of the
-    store reads any `secrets/` row: there is none."""
+    other — load it as a systemd credential, readable by their own process only (`%d/platform.key`); and the spares of
+    the two that open one, which are their units but the name (the twelfth review, blocker 6). No role of the store
+    reads any `secrets/` row: there is none."""
     r = rights()
     for role in r.roles:
         assert not r.allows(role, "read", "secrets/vms"), role
     deploy = os.path.join(os.path.dirname(RIGHTS), "systemd")
     loaders = {f for f in os.listdir(deploy) if f.endswith(".service")
                and "LoadCredential=platform.key:/etc/w2c/secrets/platform.key" in open(os.path.join(deploy, f)).read()}
-    assert loaders == {"vms-console.service", "vms-vmsworker.service", "vms-recworker.service"}
+    assert loaders == {"vms-console.service", "vms-vmsworker.service", "vms-recworker.service",
+                       "vms-vmsworker-spare@.service", "vms-recworker-spare@.service"}
 
 
 def test_a_key_is_exact_and_a_prefix_says_so():

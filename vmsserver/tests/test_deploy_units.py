@@ -375,9 +375,51 @@ def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_
         assert ("User" in c) == (n == "w2c-resource.container"), n
     assert writers == {"w2c-resource.container", "console.container", "vmsworker@.container", "recworker@.container",
                        "detworker@.container", "detjobworker@.container", "surveyworker@.container",
-                       "autoworker@.container"}, writers
+                       "autoworker@.container", "liveworker@.container"}, writers
     r = unit("w2c-resource.container")["Container"]
     assert (r["User"], r["Group"]) == (W2C, W2C) and W2C_SECRETS not in _list(r.get("GroupAdd"))   # it opens no secret
+
+
+def test_every_process_that_registers_with_the_resource_mounts_the_events_archive():
+    """The twelfth review, major 5: a process that holds a slot registers with its server's resource
+    (`vms/__main__._present`: a lock and its name in `<events archive>/.workers`), and the live gateway's container
+    did not mount the events archive — its registration went into the container's own layer, the resource never saw it,
+    and a hung gateway was "not listed", its slot released: two gateways. Every entry point that calls `_present`, read
+    from `vms/__main__.py`, against the container that runs it: the archive mounted, its group joined."""
+    import ast
+    src = ast.parse(open(os.path.join(HERE, "vms", "__main__.py"), encoding="utf-8").read())
+    registers = {f.name for f in src.body if isinstance(f, ast.FunctionDef)
+                 and any(isinstance(n, ast.Call) and getattr(n.func, "id", "") == "_present" for n in ast.walk(f))}
+    assert {"worker", "recorder", "gateway", "detworker", "detjobworker", "surveyworker", "autoworker"} <= registers, registers
+    ran = set()
+    for n in sorted(os.listdir(DEPLOY)):
+        if n.endswith(".container"):
+            c = unit(n)["Container"]
+            verb = c["Exec"].split()[-1]
+            if verb in registers:
+                vols = dict(v.split(":", 1) for v in _list(c["Volume"]))
+                assert vols.get(EVENTS) == f"{EVENTS}:z" and W2C_EVENTS in _list(c.get("GroupAdd")), n
+                ran.add(verb)
+    assert ran == registers, registers - ran                        # every one of them has its container
+
+
+def test_a_recorder_told_nothing_keeps_its_events_in_the_platforms_archive_and_its_volume_where_the_vms_keeps_volumes():
+    """WP-E's layout in the recorder's own defaults (the twelfth review's alignment): with no `ARCHIVE`, no
+    `archive_root` and no `ARCHIVE_VOLUME`, its events go to the platform's archive (`runtime.events_root`:
+    `/data/platform/events`) and its own volume is the VMS's (`config.OWN_VOLUME`, `/data/vms/obsd/volume`) — it was
+    `/data/archive` and `/data/volume` beside it, the layout before. A tree named by its caller keeps its volume beside."""
+    import types
+    from tests.conftest import Box
+    from vms.config import OWN_VOLUME
+    from vms.recworker import RecWorker
+    from vms.worker import FakeActuator
+    box = Box()
+    r = RecWorker("r-1", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                  obsd=types.SimpleNamespace(), env={})
+    assert r.archive_root == EVENTS and r.default_url == OWN_VOLUME == "file:///data/vms/obsd/volume"
+    named = RecWorker("r-2", box.vars, box.objects, FakeActuator(), clock=box.clock, wall=box.wall, server="srv-1",
+                      obsd=types.SimpleNamespace(), env={}, archive_root=box.archive)
+    assert named.default_url == "file://" + os.path.join(os.path.dirname(os.path.abspath(box.archive)), "volume")
 
 
 def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing():
@@ -522,12 +564,19 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
     assert "no volume declared for srv-1" in out.stdout
 
 
-def _spares(*args, pages=None, env=None, active=(), linux=True):
+ROLES_WITH_TEMPLATES = ("vmsworker", "recworker", "liveworker", "autoworker")
+
+
+def _spares(*args, pages=None, env=None, active=(), linux=True, templates=ROLES_WITH_TEMPLATES):
     """`w2c-spares.sh` RUN, every command it talks to a shim: `curl` answers from `pages` (`{path: text}`, a missing
-    path is a console that does not answer), `systemd-run` writes its line down and the unit is active from then on,
-    `systemctl is-active` says so for `active` and what was started. `(the finished process, the lines)`. `linux`
-    False: no `systemd-run` anywhere on PATH, `uname` says Darwin — the macOS path, `SPARES_RUN` a shim that writes down
-    its verb and `SPARE_FOR` and stays up."""
+    path is a console that does not answer); on Linux `systemctl cat` finds the spare templates of `templates`,
+    `systemctl start` writes its line down and the unit is active from then on, `systemctl is-active` says so for
+    `active` and what was started. `linux` False: no `systemctl` anywhere on PATH, `uname` says Darwin — the macOS path:
+    the roles' plists of `templates` in `$LAUNCHD_DIR` (as `install.sh` lays them), the real `plutil`, a `launchctl`
+    that writes its line down and has the label loaded from then on. Every shim writes before it returns: nothing runs
+    in the background, so the lines are there when the script ends. `(the finished process — its `dir` the shims' —,
+    the lines)`."""
+    import plistlib
     import shutil
     import subprocess
     import tempfile
@@ -539,39 +588,51 @@ def _spares(*args, pages=None, env=None, active=(), linux=True):
             f.write(text)
     for unit in active:
         open(os.path.join(bin_, "active-" + unit), "w").close()
+    launchd = os.path.join(bin_, "launchd")
+    os.makedirs(launchd)
+    for role in templates:
+        open(os.path.join(bin_, f"template-vms-{role}-spare@.service"), "w").close()
+        with open(os.path.join(launchd, f"com.w2c.vms.{role}.plist"), "wb") as f:     # the role's own, as installed
+            plistlib.dump({"Label": f"com.w2c.vms.{role}", "ProgramArguments": ["/opt/w2c/bin/w2c-run.sh", role],
+                           "EnvironmentVariables": {"PLATFORM_STORE": f"configstore:///var/run/configstore/{role}.sock",
+                                                    "WORKER_NAME": f"x-srv-a-1", "SECRETS_KEY": "/etc/w2c/secrets/platform.key",
+                                                    "RTSP_HOST": "0.0.0.0", "ARCHIVE_PORT": "8084"},
+                           "KeepAlive": True, "StandardErrorPath": f"/var/log/w2c/com.w2c.vms.{role}.log",
+                           "StandardOutPath": f"/var/log/w2c/com.w2c.vms.{role}.log"}, f)
     says = {"curl": f'for a; do url=$a; done; f="{bin_}/page$(printf %s "${{url#http://console}}" | tr / _)"; '
                     f'[ -f "$f" ] && cat "$f" || exit 22',
-            "systemd-run": f'echo "systemd-run $*" >> "{log}"; : > "{bin_}/active-$2"',
-            "systemctl": f'case "$1" in is-active) [ -f "{bin_}/active-$3" ] ;; *) echo "systemctl $*" >> "{log}" ;; esac',
-            "getent": "exit 2",
+            "systemctl": f'case "$1" in is-active) [ -f "{bin_}/active-$3" ] ;; cat) [ -f "{bin_}/template-$2" ] ;; '
+                         f'start) echo "systemctl start $2" >> "{log}"; : > "{bin_}/active-$2" ;; '
+                         f'reset-failed) ;; *) echo "systemctl $*" >> "{log}" ;; esac',
             "uname": "echo Darwin",
-            "run": f'echo "run $1 SPARE_FOR=${{SPARE_FOR-unset}}" >> "{log}"; exec sleep 30'}
-    names = ("curl", "systemd-run", "systemctl", "getent") if linux else ("curl", "uname", "run")
+            "launchctl": f'case "$1" in print) [ -f "{bin_}/active-${{2#system/}}" ] ;; bootout) ;; '
+                         f'bootstrap) echo "launchctl bootstrap $2 $3" >> "{log}"; : > "{bin_}/active-$(basename "$3" .plist)" ;; '
+                         f'*) echo "launchctl $*" >> "{log}" ;; esac'}
+    names = ("curl", "systemctl") if linux else ("curl", "uname", "launchctl")
     for name in names:
         with open(os.path.join(bin_, name), "w") as f:
             f.write(f"#!/bin/sh\n{says[name]}\n")
         os.chmod(os.path.join(bin_, name), 0o755)
     path = bin_ + os.pathsep + os.environ.get("PATH", "")
-    if not linux:                                    # only the shims and the plain tools: no systemd-run to be found
-        for tool in ("sed", "grep", "tr", "cat", "mkdir", "env", "nohup", "sleep", "hostname"):
-            os.symlink(shutil.which(tool), os.path.join(bin_, tool))
+    if not linux:                                    # only the shims and the plain tools: no systemctl to be found
+        for tool in ("sed", "grep", "tr", "cat", "mkdir", "cp", "chmod", "basename", "hostname", "plutil"):
+            found = shutil.which(tool)
+            if found:
+                os.symlink(found, os.path.join(bin_, tool))
         path = bin_
     full = {"PATH": path, "CONSOLE": "http://console", "SERVER_NAME": "srv-a", "SPARES_DIR": os.path.join(bin_, "spares"),
-            "SPARES_RUN": os.path.join(bin_, "run") if not linux else "/opt/w2c/bin/w2c-run.sh", **(env or {})}
+            "SPARES_ENV": os.path.join(bin_, "env"), "LAUNCHD_DIR": launchd, **(env or {})}
     out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "w2c-spares.sh"), *args], env=full, capture_output=True,
                          text=True, timeout=30)
-    if not linux:
-        import time
-        time.sleep(0.5)                              # the spares, started in the background, write their line
-    calls = [line.strip() for line in open(log)]
-    for pid in (os.listdir(full["SPARES_DIR"]) if os.path.isdir(full["SPARES_DIR"]) else ()):
-        if pid.endswith(".pid"):
-            subprocess.run(["kill", open(os.path.join(full["SPARES_DIR"], pid)).read().strip()], capture_output=True)
-    return out, calls
+    out.dir = bin_
+    return out, [line.strip() for line in open(log)]
 
 
-# What a spare is handed (the product's layout): the platform's env file, then the VMS's — the two every unit reads.
-ENVS = "--property=EnvironmentFile=-/etc/w2c/w2c.env --property=EnvironmentFile=-/etc/vms/vms.env"
+def _said_to(out, unit: str) -> str | None:
+    """What the script wrote for a spare's template to read (`$SPARES_ENV/<unit>.service.env`), or None."""
+    p = os.path.join(out.dir, "env", unit + ".service.env")
+    return open(p).read() if os.path.exists(p) else None
+
 
 NEEDED = """# TYPE vms_workers_needed gauge
 vms_workers_needed{labels=""} 1
@@ -587,20 +648,19 @@ def test_the_spares_script_starts_spares_for_the_sets_its_server_covers_up_to_it
     """The product's P5, the course's `w2c-spares.sh vmsworker`, run with its commands shimmed. The console wants one
     camera worker on no label, two on `vlan:dmz`, one on `vlan:x`; srv-a reaches `vlan:dmz` by the console's row
     (`vms_server_labels … source="console"`). Under `MAX_WORKERS=2`: a spare for the empty set and one for `vlan:dmz`,
-    each `systemd-run --unit vms-vmsworker-spare-<n> --setenv SPARE_FOR=<set>`; none for `vlan:x`, which srv-a does not
-    reach; the second `vlan:dmz` not, the ceiling. Run again: the two run, the ceiling is reached, nothing more. Never a
-    stop, never a kill."""
+    each `systemctl start vms-vmsworker-spare@<n>` with its set in the one-line file its template reads; none for
+    `vlan:x`, which srv-a does not reach; the second `vlan:dmz` not, the ceiling. Run again: the two run, the ceiling is
+    reached, nothing more. Never a stop, never a kill."""
     out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"})
     assert out.returncode == 0, out.stderr
-    started = [c for c in calls if c.startswith("systemd-run")]
-    assert started == [
-        f"systemd-run --unit vms-vmsworker-spare-1 {ENVS} --setenv SPARE_FOR= /opt/w2c/bin/w2c-run.sh worker",
-        f"systemd-run --unit vms-vmsworker-spare-2 {ENVS} --setenv SPARE_FOR=vlan:dmz /opt/w2c/bin/w2c-run.sh worker"], calls
+    started = [c for c in calls if c.startswith("systemctl start")]
+    assert started == ["systemctl start vms-vmsworker-spare@1", "systemctl start vms-vmsworker-spare@2"], calls
+    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-vmsworker-spare@2") == "SPARE_FOR=vlan:dmz\n"
     assert "which srv-a does not reach" in out.stdout and "the ceiling here is 2" in out.stderr, out.stdout + out.stderr
     assert not any(" stop " in c or c.startswith(("systemctl stop", "kill")) for c in calls), calls
     out, calls = _spares("vmsworker", pages={"/metrics": NEEDED}, env={"MAX_WORKERS": "2"},
-                         active=("vms-vmsworker-spare-1", "vms-vmsworker-spare-2"))
-    assert out.returncode == 0 and not [c for c in calls if c.startswith("systemd-run")], calls
+                         active=("vms-vmsworker-spare@1", "vms-vmsworker-spare@2"))
+    assert out.returncode == 0 and not [c for c in calls if c.startswith("systemctl start")], calls
 
 
 def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_starts_nothing_on_a_silent_or_stale_console():
@@ -610,35 +670,69 @@ def test_the_spares_script_takes_the_hosts_labels_without_a_console_row_and_star
     recorder by `rec_recorders_needed` on `/rec/metrics`, with no `SPARE_FOR` (it takes a free volume, no offer)."""
     no_row = NEEDED.replace('server="srv-a"', 'server="srv-c"')
     out, calls = _spares("vmsworker", pages={"/metrics": no_row}, env={"LABELS": "vlan:x"})
-    assert [c.split()[2] + " " + c.split()[6] for c in calls if c.startswith("systemd-run")] == \
-        ["vms-vmsworker-spare-1 SPARE_FOR=", "vms-vmsworker-spare-2 SPARE_FOR=vlan:x"], calls
+    assert [c for c in calls if c.startswith("systemctl start")] == \
+        ["systemctl start vms-vmsworker-spare@1", "systemctl start vms-vmsworker-spare@2"], calls
+    assert _said_to(out, "vms-vmsworker-spare@1") == "SPARE_FOR=\n" and _said_to(out, "vms-vmsworker-spare@2") == "SPARE_FOR=vlan:x\n"
     out, calls = _spares("vmsworker", pages={})
     assert out.returncode == 0 and calls == [] and "no answer" in out.stderr, out.stderr
     out, calls = _spares("vmsworker", pages={"/metrics": "vms_units_unplaced 3\n"})
     assert out.returncode == 0 and calls == [] and "nothing started" in out.stdout, out.stdout
     out, calls = _spares(pages={"/rec/metrics": "rec_recorders_needed 1\n", "/live/metrics": 'live_workers_needed{labels=""} 1\n'},
                          env={"SPARES_ROLES": "recworker,liveworker"})
-    assert [c for c in calls if c.startswith("systemd-run")] == [
-        f"systemd-run --unit vms-recworker-spare-1 {ENVS} /opt/w2c/bin/w2c-run.sh recorder",
-        f"systemd-run --unit vms-liveworker-spare-1 {ENVS} --setenv SPARE_FOR= /opt/w2c/bin/w2c-run.sh gateway"], calls
+    assert [c for c in calls if c.startswith("systemctl start")] == [
+        "systemctl start vms-recworker-spare@1", "systemctl start vms-liveworker-spare@1"], calls
+    assert _said_to(out, "vms-recworker-spare@1") is None and _said_to(out, "vms-liveworker-spare@1") == "SPARE_FOR=\n"
 
 
-def test_the_spares_script_on_macos_starts_a_spare_with_nohup_and_counts_it_by_its_pid():
-    """No `systemd-run`, and `uname` says Darwin: `nohup env SPARE_FOR=<set> $SPARES_RUN <verb>`, the pid in
-    `$SPARES_DIR/vms-<role>-spare-<n>.pid` — what the next run counts against the ceiling."""
-    out, calls = _spares("autoworker", pages={"/auto/metrics": 'auto_workers_needed{labels=""} 1\n'}, linux=False)
+def test_a_spare_is_started_only_as_its_roles_unit_and_never_as_root_without_one():
+    """The twelfth review, blocker 6: a spare was `systemd-run … w2c-run.sh worker` — root, no key, the fan-out on
+    loopback; a camera of the dead server with a sealed password did not start on the spare started for it. Now a
+    spare is its role's TEMPLATE (`vms-<role>-spare@.service`, the regular unit's twin) or nothing: a server without
+    the template starts nothing for that role and says why, and the script calls no `systemd-run` at all."""
+    out, calls = _spares("vmsworker", "recworker", pages={"/metrics": NEEDED, "/rec/metrics": "rec_recorders_needed 1\n"},
+                         templates=("recworker",))
     assert out.returncode == 0, out.stderr
-    assert calls == ["run autoworker SPARE_FOR="], calls + [out.stdout, out.stderr]
-    assert "started vms-autoworker-spare-1" in out.stdout
+    assert [c for c in calls if c.startswith("systemctl start")] == ["systemctl start vms-recworker-spare@1"], calls
+    assert "no spare template for vmsworker" in out.stderr and "runs as its role's unit or not at all" in out.stderr
+    assert "systemd-run" not in open(os.path.join(DEPLOY, "w2c-spares.sh")).read().split("set -eu", 1)[1]
+
+
+def test_the_spares_script_on_macos_starts_its_roles_plist_without_the_name_and_counts_it_by_its_label():
+    """No `systemctl`, and `uname` says Darwin: the role's own plist (`$LAUNCHD_DIR/com.w2c.vms.<role>.plist`, what
+    launchd runs the role from) copied as `com.w2c.vms.<role>.spare-<n>` — the same program and environment, its key
+    included, but no `WORKER_NAME`, `SPARE_FOR=<set>`, its fan-out on a port the OS gives and its own log — and
+    `launchctl bootstrap`ped; a loaded label is what the next run counts against the ceiling. Every call is made before
+    the script ends (the coordinator's flaky test: the `nohup` child wrote its line after the script had)."""
+    import plistlib
+    import shutil
+    if not shutil.which("plutil"):
+        import pytest
+        pytest.skip("no plutil: the macOS path is checked on macOS")
+    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False)
+    assert out.returncode == 0, out.stderr
+    plist = os.path.join(out.dir, "spares", "com.w2c.vms.vmsworker.spare-1.plist")
+    assert calls == [f"launchctl bootstrap system {plist}"], calls + [out.stdout, out.stderr]
+    assert "started vms-vmsworker-spare@1" in out.stdout
+    with open(plist, "rb") as f:
+        p = plistlib.load(f)
+    assert p["Label"] == "com.w2c.vms.vmsworker.spare-1" and p["ProgramArguments"] == ["/opt/w2c/bin/w2c-run.sh", "vmsworker"]
+    assert p["EnvironmentVariables"] == {"PLATFORM_STORE": "configstore:///var/run/configstore/vmsworker.sock",
+                                         "SECRETS_KEY": "/etc/w2c/secrets/platform.key", "RTSP_HOST": "0.0.0.0",
+                                         "ARCHIVE_PORT": "8084", "SPARE_FOR": "", "RTSP_PORT": "auto"}, p
+    assert p["StandardErrorPath"] == "/var/log/w2c/com.w2c.vms.vmsworker.spare-1.log" and p["KeepAlive"] is True
+    out, calls = _spares("vmsworker", pages={"/metrics": 'vms_workers_needed{labels=""} 1\n'}, linux=False,
+                         env={"MAX_WORKERS": "1"}, active=("com.w2c.vms.vmsworker.spare-1",))
+    assert out.returncode == 0 and calls == [], calls
 
 
 def test_every_spares_unit_runs_the_script_for_its_role():
     """`w2c-spares.{service,timer}` for recorders, `w2c-spares-<role>.{service,timer}` for the camera workers, the
     gateways and the evaluators (the product's §6): each service a one-shot running `w2c-spares.sh <role>` on the host,
-    each timer every minute."""
+    each timer every minute — and the one directory it writes, where each spare's set is for its template to read."""
     for role in ("recworker", "vmsworker", "liveworker", "autoworker"):
         name = "w2c-spares" if role == "recworker" else f"w2c-spares-{role}"
         svc = unit(name + ".service")["Service"]
         assert svc["Type"] == "oneshot" and svc["ExecStart"] == f"/usr/local/bin/w2c-spares.sh {role}", svc
+        assert svc["RuntimeDirectory"] == "w2c-spares" and svc["RuntimeDirectoryPreserve"] == "yes", svc
         assert unit(name + ".timer")["Timer"]["OnUnitActiveSec"] == "1min"
     assert os.access(os.path.join(DEPLOY, "w2c-spares.sh"), os.X_OK)

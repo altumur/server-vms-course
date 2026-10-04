@@ -377,6 +377,36 @@ def test_what_the_doors_open_in_code_the_jobs_turn_on_and_a_monitor_is_an_addres
     assert 'CONSOLE_MONITORS = "127.0.0.1,${attr.unique.network.ip-address},${var.monitors}"' in cluster
 
 
+def test_the_domains_jobs_name_stores_that_open():
+    """The twelfth review, major 22: the console's, the signer's and the agent's jobs named their stores `nomad://…` —
+    a backend that is gone — and `open_vars` refused it with `ValueError` before anything started. Each job's lines,
+    as its template hands them to the process, now build the federation (`runtime.federation_from_env`) and open the
+    agent's two stores: this cluster's by its configstore socket and its objects (here under a directory of the
+    test's, which a node has at `/data/platform/objects`), another cluster as a member that reports."""
+    import os
+    import re
+    import tempfile
+    from domain.runtime import federation_from_env
+    from w2cplatform.variables import open_vars
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    objects = tempfile.mkdtemp(prefix="objects-")
+    for name in ("console", "signer", "agent", "gateway"):
+        assert not re.search(r"=\s*nomad://", open(os.path.join(here, "deploy", f"{name}.nomad.hcl")).read()), name
+    for name in ("console", "signer"):
+        job = open(os.path.join(here, "deploy", f"{name}.nomad.hcl")).read()
+        line = re.search(r"^\s*CLUSTERS=(\S+)", job, re.M).group(1).replace("/data/platform/objects", objects)
+        saved = os.environ.get("CLUSTERS")
+        os.environ["CLUSTERS"] = line
+        try:
+            fed = federation_from_env()
+        finally:
+            os.environ.pop("CLUSTERS") if saved is None else os.environ.__setitem__("CLUSTERS", saved)
+        assert sorted(fed.clusters) == ["north", "south"] and fed.domain_holder.name == "north", name
+    agent = open(os.path.join(here, "deploy", "agent.nomad.hcl")).read()
+    for var in ("DOMAIN_CONFIG_URL", "PLATFORM_STORE"):
+        assert open_vars(re.search(rf"^\s*{var}=(\S+)", agent, re.M).group(1)) is not None, var
+
+
 def test_the_domain_holder_console_draws_the_domain_from_one_object_and_says_when_it_is_old():
     """One tree for the site (feedback X). The domain leaves its view as one object in the domain holder's own
     object store on every pass; that cluster's console serves it at /domain and asks no member anything. A
