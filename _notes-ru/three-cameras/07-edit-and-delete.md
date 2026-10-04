@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: разбор кода
-subject: М11_ClusterVMS
+subject: М11_Cluster
 source-commit: 970e5a7
 date: 2026-10-04
 status: draft
@@ -85,7 +85,7 @@ vms/cameras/2 → {"id": "2", "revision": "2", "name": "Парковка",
 
 Одна строка — это один ключ `configstore`, одна запись по CAS и один `index`, поэтому воркер видит либо все настройки старыми, либо все новыми. Разложите их по пяти ключам, и появится состояние «половина применилась».
 
-Строка небольшая: в нашем кластере у камеры 255 байт полей и 356 байт тела записи ([часть 10](10-limits-and-scale.md)). Потолка размера строки у `configstore` нет: демон принимает строку любого размера, а потолок, если он нужен, объявляет адрес хранилища — `configstore:///run/configstore/<роль>.sock?max_bytes=n` (`w2cplatform/configstorevars.py`, `w2cplatform/limits.py`). Юниты курса его не объявляют (`PLATFORM_STORE=configstore:///run/configstore/console.sock`), значит `max_bytes = 0` — потолка нет. Если объявить, правка, которая не влезает, получит у консоли `413` с размером и пределом, до всякой записи. Что ограничено и без объявления: тело запроса к консоли — мебибайт (`MAX_BODY`, `CONSOLE_MAX_BODY` в `w2cplatform/console.py`), а имя ключа — 246 байт в закодированном виде (`KEY_BYTES` в `w2cplatform/variables.py`). Старые 64 КиБ были потолком Variables Nomad и ушли вместе с ними. Почему строки при этом держат маленькими: каждая запись строки целиком идёт через журнал raft на все серверы (урок М11 [2](../../М11_ClusterVMS/02-the-store-becomes-replicated.md)).
+Строка небольшая: в нашем кластере у камеры 255 байт полей и 356 байт тела записи ([часть 10](10-limits-and-scale.md)). Потолка размера строки у `configstore` нет: демон принимает строку любого размера, а потолок, если он нужен, объявляет адрес хранилища — `configstore:///run/configstore/<роль>.sock?max_bytes=n` (`w2cplatform/configstorevars.py`, `w2cplatform/limits.py`). Юниты курса его не объявляют (`PLATFORM_STORE=configstore:///run/configstore/console.sock`), значит `max_bytes = 0` — потолка нет. Если объявить, правка, которая не влезает, получит у консоли `413` с размером и пределом, до всякой записи. Что ограничено и без объявления: тело запроса к консоли — мебибайт (`MAX_BODY`, `CONSOLE_MAX_BODY` в `w2cplatform/console.py`), а имя ключа — 246 байт в закодированном виде (`KEY_BYTES` в `w2cplatform/variables.py`). Старые 64 КиБ были потолком Variables Nomad и ушли вместе с ними. Почему строки при этом держат маленькими: каждая запись строки целиком идёт через журнал raft на все серверы (урок М11 [2](../../М11_Cluster/02-the-store-becomes-replicated.md)).
 
 Ключ делят только когда у настройки **другой читатель**. Таких случаев два: срок хранения событий дублируется в `vms/retention/<id>`, а срок хранения тревог — в `vms/alarms_retention/<id>`. Оба читает ресурс, которому камера целиком не нужна. Пока срок не задан, производной строки нет вовсе — как у камеры 2 до этой правки, где консоль получила `{"items": null}` и создала строку с `"cas": ""`. Ресурс идёт по цепочке: строка камеры, иначе общая строка подсистемы (`vms/retention` или `vms/alarms_retention`), иначе год (для тревог — три года; `retention_days` в `w2cplatform/resource.py`).
 
@@ -116,7 +116,7 @@ PUT /cameras/2  {"worker": "w-srv-a-1"}
 
 Поля `worker`, `placement`, `epoch`, `revision`, `observed_revision`, `phase` и `id` клиент не присылает никогда (`PLATFORM_FIELDS` и `refuse` в `w2cplatform/spec.py`). Первые два принадлежат контроллеру, `revision` и `id` — платформе, остальные воркеру. До строки камеры такой запрос не доходит, но ключ идемпотентности, если он прислан, занимает: отказ `400` кладётся под ключ, как любой ответ, и повтор с тем же ключом получит тот же отказ.
 
-И дело не только в проверке консоли. Сокет `console.sock` пишет `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/retention/*`, `vms/alarms_retention/*` и ещё несколько строк оператора, но не `vms/workers/*` и не `vms/placement/*` — их пишет только `vmscontroller.sock` (`М11_ClusterVMS/clustervms/deploy/configstore-rights.json`, урок М11 [5](../../М11_ClusterVMS/05-rights-by-who-is-calling.md)). Проскочи такое поле мимо `refuse`, хранилище всё равно не дало бы консоли записать назначение.
+И дело не только в проверке консоли. Сокет `console.sock` пишет `vms/cameras/*`, `vms/next_id`, `vms/idem/*`, `vms/retention/*`, `vms/alarms_retention/*` и ещё несколько строк оператора, но не `vms/workers/*` и не `vms/placement/*` — их пишет только `vmscontroller.sock` (`Source/deploy/cluster/configstore-rights.json`, урок М11 [5](../../М11_Cluster/05-rights-by-who-is-calling.md)). Проскочи такое поле мимо `refuse`, хранилище всё равно не дало бы консоли записать назначение.
 
 ---
 
@@ -163,7 +163,7 @@ POST /v1/write {"op": "put", "key": "vms/retention/3", "cas": "", "items": {"day
 
 Строка не удаляется, а помечается:
 
-```1248:1256:vmsserver/w2cplatform/spec.py
+```1248:1256:Source/w2cplatform/spec.py
     # The operator's half: the row is marked `deleted: "true"` (not removed) and derived rows get their
     # `on_delete`. Its placement is the controller's half, taken back on the next pass by `unplace_deleted`
     # — a console's token cannot touch an assignment, and does not need to.
@@ -194,7 +194,7 @@ GET /v1/get?key=vms/cameras/3           → {…, "deleted": "true"}, index 1026
 PUT vms/heartbeats/w-srv-c-1                                             работает: []
 ```
 
-```647:650:vmsserver/vms/worker.py
+```647:650:Source/vms/worker.py
         for unit in a.units:
             items, _ = self.vars.get(self.SUB.config(self.ROWS, unit))
             if items and items.get("deleted") != "true":

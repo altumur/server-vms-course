@@ -1,0 +1,54 @@
+# agent.py — Lesson 4: the domain agent that copies the key set, the revocation list and THIS cluster's grants into the cluster's `domain/*` and nothing else; `python3 -m domain.agent`
+
+**Role in the module.** Lesson 4. One small Nomad job per cluster (`deploy/domain/agent.nomad.hcl`) whose only right is to write `domain/*` in that cluster's Variables (`deploy/domain/agent-policy.hcl`) — the way a worker's only right is its epochs and its slot, and the controller's is `vms/*` (М11's policies). It carries the three things a cluster needs from the domain and nothing else: the signer's public key set, the revocation list, and the grants for THIS cluster. When the domain is unreachable it stops updating; the cluster's console and gateway keep verifying with the keys they have, issued tokens run to expiry, grants run to theirs, nobody new logs in — "the bounded outage the services table promises, with the mechanism named". Workers are not involved. Three classes: the signer's side (`DomainPublisher`), the agent (`DomainAgent`), and the cluster's reader (`ClusterTrust`). Depends on `tokens.KeySet`/`RevocationList`, `grants` (lazily, to avoid a cycle), and М11's `Variables`. Used by `signer_service` (publisher), `console.main` (trust) and the Lesson 4 tests.
+
+## Module-level names
+- `KEYS_PATH = "domain/keys"`, `REVOKED_PATH = "domain/revoked"`, `GRANTS_PATH = "domain/grants"` — the three Variables. In the domain holder, grants are per cluster at `domain/grants/<cluster>`; in a member cluster they land at plain `domain/grants`.
+
+## `class DomainPublisher`
+"The signer's side: writes the key set and the revocation list into the domain HOLDER's Variables, where agents read them."
+### `__init__(self, domain_vars)`.
+### `publish_keys(self, ks)` — `domain/keys` ← `ks.to_items()`, by CAS on the current index.
+### `publish_revoked(self, rl)` — `domain/revoked` ← `rl.to_items()`, by CAS.
+### `publish_break_glass(self, cluster, pwhash, now)` — `domain/break_glass/<cluster>` ← `{"pwhash", "set_at"}`, by CAS: the one local account of `cluster`, its password's hash, never the password (Lesson 4, step 7).
+### `publish_grants(self, cluster, grants)` — `domain/grants/<cluster>` ← `grants_to_items(grants, was=have, where=path)`, by CAS, where `have` is the row it replaces; "the cluster's agent copies them home". Passing the old row is the review's ninth pass: a grant under a name stored before the rule (`say"hi`) is left out of the new row, counted, instead of refusing the whole write — a new grant under such a name still raises `BadName` (`grants.py.md`; `test_foreign_data.py::test_an_old_name_with_a_quote_blocks_no_write_of_grants_and_a_new_one_is_still_refused`). Called only by tests (see Notes).
+
+## `class DomainAgent`
+### `__init__(self, cluster, domain_vars, cluster_vars, now=time.time, console=None, current=None, domain_objects=None, cluster_objects=None)`
+`console` and `current(ref) -> (id, row)` are Lesson 9: given them the agent also applies the edits the domain kept for this cluster, through the cluster's own console. `domain_objects` (where the domain publishes documents) and `cluster_objects` (this cluster's DURABLE store) are Lessons 12 and 15: given them it carries the shared settings and, on a member chosen to keep it, the backup of the domain's state. `shared`, `backup`, `holder` hold what the last pass did with each document, for the console and the tests.
+
+### `_carry_keys(self, items) -> str` — Lesson 15, step 9. A wrapper over `_carry_keys_parsed`: a key set from the domain that does not parse (`PARSE_ERRORS`) is refused like one that does not verify — `refused: the domain's key set does not parse (…); holding the one carried before` — and a pinned root this member cannot read (`Untrusted`) is `refused: …` too; either way the pass goes on to its report (the review's eighth pass: `json.loads(items["doc"])` raised out of the pass, and nothing after the keys was carried). `test_foreign_data.py::test_a_cluster_whose_trust_rows_do_not_parse_answers_503_with_why_and_its_agent_mends_them`: the domain's own key set torn, the next `sync()` is still `True`, `keys` starts with that refusal, and the cluster's door still admits with the set carried before.
+
+`_carry_keys_parsed` — the rules. Lesson 4's rule: the key set as it is — but only one that reads (`KeySet.from_items` before `_carry`). Once the member has a root pinned (`ROOT_PATH = "domain/root"`): only a set that root signed (kid `root`, the same public key), never an older `rev` than it holds ("holding rev N"). The first root-signed set pins the root (in production it comes with enrollment). A set signed by another root than the pinned one is refused with that reason first — `refused: signed by a root this member did not pin` — which is what a person can act on; the member still reports, and its report carries `domain/root` and `domain/keys` (`uplink._rows`), so the domain sees which root it pinned (`Members.pinned`, feedback BX). An unsigned set once a root is pinned: `refused: a key set not signed by the domain's root`. A copy of the key set here that does not read (`Untrusted`) does not hold a signed set back: the root's signed set replaces it. A holder carried off the wall can sign anything with its token key — but not as the root. What it did is `self.keys`; a refusal is also logged once, until it changes (`_say_refused`).
+### `_carry(self, path, items, clear=False)`
+Copy one Variable home, by CAS, only if it differs. `items is None` means the domain has nothing there, and nothing is written — unless `clear`, which carries an EMPTY set too: an edit the domain has cleared must stop being applied here (Lesson 9).
+
+### `sync(self) -> bool`
+One pass. Reads the three Variables from the domain (`domain/keys`, `domain/revoked`, `domain/grants/<cluster>`); `Unreachable` → `False` and nothing written (`test_domain_down_clusters_keep_verifying_nobody_new_logs_in` asserts `last_synced` unchanged). For each of the three that exists on the domain side, compare with what the cluster has and `put` by CAS only if different — an unchanged set costs no raft write. Stamps `last_synced`, counts, returns `True`. `test_nothing_about_a_user_reaches_a_worker_only_trust_does`: after a sync south's Variables under `domain/` are exactly `["domain/keys"]` and under `identity/` nothing; and the agent's writer handle gets `Forbidden` on `vms/cameras/7`, `vms/epoch/7`, `vms/slots/w-0`.
+
+Since Lessons 9–15 the same pass also: reads `domain/pending/<cluster>` and the per-cluster rows in `PER_CLUSTER` (`domain/sources/<cluster>` — Lesson 13's source book) and carries each to its unsuffixed path; carries the pending edits with `clear=True`, applies them with `apply_pending` and writes the outcomes to `domain/outcomes`; carries the holder record with `term.carry_holder`, which never takes a smaller term (Lesson 15); and, given the object stores, carries the shared settings and this member's backup pointer with `shared.carry`, verified against the key set this pass just carried. Any `Unreachable` along the way → `False`.
+
+`LDEVID_PATH = "domain/ldevid"` is in `PER_CLUSTER`: a member's LDevID signed again by a new holder after a theft (`term.reissue_ldevids`), carried home like the other per-cluster rows.
+
+## `class ClusterTrust`
+"What a cluster's console and gateway read from THEIR OWN cluster's Variables — never from the domain — to verify tokens and decide grants offline."
+### `__init__(self, cluster_vars)`.
+### `keyset(self) -> KeySet | None` — `domain/keys`, or `None` before the first sync.
+### `revoked(self) -> set[str]` — the jtis from `domain/revoked` (empty if absent).
+### `grants(self) -> list[Grant]` — `grants_from_items` of `domain/grants`, item by item; the console loads them with `ClusterGrants.renew_from_domain`.
+
+`keyset`, `root` and `revoked` raise `Untrusted` when their row is there and does not parse (counted in `tokens.TRUST_ROWS`): the doors answer 503 "nobody can be checked" (the review's eighth pass).
+
+## Functions
+
+### `main()`
+`python3 -m domain.agent`, one per cluster. `CLUSTER` (default `NOMAD_REGION`, default `local`); `DOMAIN_NOMAD_ADDR` (required — the domain holder, read through federation forwarding); `NOMAD_ADDR` (this cluster, written); `SYNC_INTERVAL` (default 30 s). Loops `sync()` until SIGTERM/SIGINT; any exception counts as "domain unreachable" (the comment: keep the last set) and prints `<cluster>: domain unreachable; keeping the key set from <last_synced>`.
+
+## Notes
+- Both `NomadVariables` handles use the same `NOMAD_TOKEN` — the agent's workload identity — for the read from the domain region and the write to the local one; whether that token is honoured through forwarding is `verify-bench.sh` item 2/3, not a test.
+- In production, `sync()` sees `URLError`/`OSError` from `NomadVariables` on a dead link, not `Unreachable`; the loop's broad `except` (`run`, which sets the next pass before the pass and logs a pass that raised once) is what makes it behave as designed. Callers of `sync()` that catch only `Unreachable` (the tests) rely on the fakes.
+- No production process calls `publish_grants`: `signer_service` publishes keys and the revocation list only, and `deploy/domain/signer-policy.hcl` does not grant `domain/grants/*` to the signer. Grants reach a cluster only in the tests. See the report.
+- The domain holder's own agent (the jobspec runs one per region, including north) reads `domain/keys` from north and writes it to north — the same Variable, always equal, so a no-op.
+- Lesson 14: `wake()` — an alarm on the card; `due()` — woken, and the last urgent report at least `URGENT_GAP` (1 s) ago; `report_now()` — the loop's urgent pass. `main` waits for the interval or a wake, whichever first, so the card never syncs from its own thread.
+
+`alarm_waiting` (feedback AZ): given a card's `waiting`, `due()` also reports at once when the card holds an alarm newer than the last page reported (`_paged_at`) — for an agent in another process than the card, which `on_alarm` cannot wake.

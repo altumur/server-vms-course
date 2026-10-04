@@ -634,7 +634,7 @@ BLOCK, READ = 8 << 20, 1 << 20
 ## Результат
 
 ```bash
-cd vmsserver
+cd Source
 OBSD_BIN=<out>/build/obsd python3 tests/run.py
 ```
 

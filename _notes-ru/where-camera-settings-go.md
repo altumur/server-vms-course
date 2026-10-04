@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: разбор кода + предложения
-subject: М10A_Platform, М11_ClusterVMS
+subject: М10A_Platform, М11_Cluster
 source-commit: 2b66bea
 date: 2026-10-02
 status: draft
@@ -277,7 +277,7 @@ PUT /v1/var/vms/retention/7?cas=3
 
 Строка **не удаляется, а помечается**:
 
-```549:554:vmsserver/w2cplatform/spec.py
+```549:554:Source/w2cplatform/spec.py
     def delete(self, uid) -> None:
         """The operator's half: the row is marked. Its placement is the controller's
         half, taken back on the next pass (`unplace_deleted`) — a console's token
@@ -297,7 +297,7 @@ GET /v1/var/vms/workers/w-1        → назначение ВСЁ ЕЩЁ наз
 GET /v1/var/vms/cameras/7          → deleted: "true"  → строка пропускается
 ```
 
-```348:352:vmsserver/vms/worker.py
+```348:352:Source/vms/worker.py
         for unit in a.units:
             items, _ = self.vars.get(self.SUB.config(self.ROWS, unit))
             if items and items.get("deleted") != "true":
@@ -336,15 +336,15 @@ PUT  /v1/var/vms/placement/7?cas=12     {"worker":"","reason":"deleted","at":…
 
 ### Такт воркера: раз в две секунды, и три разных срока внутри
 
-Выше несколько раз сказано «воркер на своём проходе» — пора назвать число. Проход — **раз в две секунды**, и это дефолт, который оба развёртывания берут как есть (`w.run(stop=stop)` в `vmsserver/vms/__main__.py` и в `cluster/__main__.py`):
+Выше несколько раз сказано «воркер на своём проходе» — пора назвать число. Проход — **раз в две секунды**, и это дефолт, который оба развёртывания берут как есть (`w.run(stop=stop)` в `Source/vms/__main__.py` и в `cluster/__main__.py`):
 
-```673:673:vmsserver/vms/worker.py
+```673:673:Source/vms/worker.py
     def run(self, poll: float = 2.0, stop=None) -> None:
 ```
 
 Отсюда сразу ответ на самый частый вопрос оператора: **правка настройки доходит до видео не дольше двух секунд.** Но внутри одного цикла живут три разных такта, и путать их не стоит:
 
-```684:694:vmsserver/vms/worker.py
+```684:694:Source/vms/worker.py
         while not stop.is_set():
             try:
                 self.reconcile_once()
@@ -385,7 +385,7 @@ PUT  /v1/var/vms/placement/7?cas=12     {"worker":"","reason":"deleted","at":…
 
 Контракт говорит это прямо:
 
-```62:63:vmsserver/w2cplatform/contract.py
+```62:63:Source/w2cplatform/contract.py
 # - `until` is wall-clock while leases are monotonic: slots are compared across processes and boxes, leases
 #   only within one process.
 ```
@@ -427,7 +427,7 @@ GET /v1/var/vms/epoch/12   → {"epoch": "5"}   а мой был 4 → каме�
 
 Слот — это строка с четырьмя полями: кто держит, до какого времени, отпустил ли по-хорошему и какое это по счёту владение.
 
-```467:475:vmsserver/w2cplatform/contract.py
+```467:475:Source/w2cplatform/contract.py
 class Slot:
     """A worker's name, as a row: who holds it, until when (wall clock), and
     whether the last holder let go of it on purpose."""
@@ -443,7 +443,7 @@ class Slot:
 
 Продление — это буквально «перечитать строку и убедиться, что держатель по-прежнему я». Перед строкой слота воркер ещё раз сверяет версию схемы хранилища: если её подняли под работающим процессом, он ограждает себя так же, как при чужом держателе:
 
-```904:921:vmsserver/w2cplatform/contract.py
+```904:921:Source/w2cplatform/contract.py
     def _renew_slot(self) -> bool:
         if self.slot is None:
             return self.seeking is None           # a fixed name never claimed is itself; a name given up is nobody's here
@@ -482,7 +482,7 @@ class Slot:
 
 **Действовать** — реле, пресет, заявка — можно, пока с последнего продления прошло меньше `30 − 5 = 25` секунд. Это строгое `may_write`:
 
-```182:184:vmsserver/w2cplatform/epoch.py
+```182:184:Source/w2cplatform/epoch.py
     def may_write(self) -> bool:
         with self._lock:
             return not self.fenced and (self.clock() - self.last_renewal) < (self.ttl - self.margin)
@@ -490,7 +490,7 @@ class Slot:
 
 **Писать данные** — поток и события — можно дольше. Если окно в 25 секунд истекло, пока хранилище **молчало**, аренда не потеряна: сказать «эпоха кончилась» было некому. Тогда данные идут дальше под той же эпохой, пока молчание не перевалит за потолок `UNCONFIRMED_MAX`:
 
-```163:171:vmsserver/w2cplatform/epoch.py
+```163:171:Source/w2cplatform/epoch.py
     def may_record(self) -> bool:
         with self._lock:
             if self.fenced:
@@ -516,7 +516,7 @@ class Slot:
 
 Реакция зависит от того, **что** не продлилось. Раньше потерянная аренда камеры, которая всё ещё числилась за мной, гасила весь экземпляр. Теперь так не делается (обратная связь, пункт BC):
 
-```767:769:vmsserver/vms/worker.py
+```767:769:Source/vms/worker.py
     def lease_pass(self) -> list[str]:
         """Renew the slot and every lease. Another holder on my slot: the instance
         fences. A lost lease: that one camera stops and gives its epoch up."""
@@ -539,7 +539,7 @@ class Slot:
 
 **Остановка по-хорошему.** Nomad присылает SIGTERM (уменьшили `count`, выводим сервер), и воркер отмечает это в строке:
 
-```654:657:vmsserver/w2cplatform/contract.py
+```654:657:Source/w2cplatform/contract.py
     def release_slot(self) -> None:
         """An orderly stop (SIGTERM from the scheduler: scale-in, or a drain).
         Says so in the row — `released` — which is what tells scale-in from a
@@ -550,7 +550,7 @@ class Slot:
 
 **Падение.** Процесс умер и ничего сказать не успел. Слот просто истёк, и `released` в нём по-прежнему `false`. Контроллер такие слоты **не разбирает специально**, потому что Nomad поднимет процесс под тем же именем, и тот подберёт своё назначение сам:
 
-```490:496:vmsserver/w2cplatform/contract.py
+```490:496:Source/w2cplatform/contract.py
     def released_slots(self) -> list[str]:
         """Slots whose holder let go on purpose (scale-in, or `retire`) and
         that still have an assignment: what a subsystem redistributes. A slot
@@ -601,7 +601,7 @@ GET /metrics     → строка статуса: сколько воркеро�
 
 И вот нюанс, который стоит обсудить. `configured` собирается так:
 
-```607:613:vmsserver/w2cplatform/spec.py
+```607:613:Source/w2cplatform/spec.py
     def units(self) -> list[dict]:
         out = []
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
@@ -663,7 +663,7 @@ GET /v1/var/vms/cameras/2
 
 Интересно, что для доменной консоли эта задача уже решена, и решена **не через Variables**. Доменная модель чтения читает каталог `objects/vms/snapshot/` — десяток объектов вместо шестисот — плюс heartbeat'ы, держит результат в памяти и отдаёт список с поиском и пагинацией, не делая ни одного запроса к воркеру или контроллеру:
 
-```164:172:М12_DomainVMS/domainvms/domain/readview.py
+```164:172:Source/domain/readview.py
     def list(self, q: str = "", page: int = 1, size: int = 50, cluster: str | None = None) -> dict:
         rows = [r for r in self.rows() if (not cluster or r.cluster == cluster)
                 and (not q or q.lower() in r.name.lower() or q == str(r.camera))]
@@ -692,7 +692,7 @@ GET /v1/var/vms/cameras/2
 
 И заметьте: **серверная проекция в дизайне уже есть** — проекция значит «отдавать не всю запись, а только перечисленные поля». Вот только список полей здесь выбран при проектировании, а не в момент запроса:
 
-```111:111:vmsserver/vms/vms.subsystem.yaml
+```111:111:Source/vms/vms.subsystem.yaml
 snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
 ```
 
@@ -708,7 +708,7 @@ snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, 
 
 Nomad на `GET /v1/vars?prefix=…` отдаёт по записи на каждую переменную: `Namespace`, `Path`, `CreateIndex`, `CreateTime`, **`ModifyIndex`**, `ModifyTime`. Значений нет — но версия каждой строки есть. А клиент оставляет только путь:
 
-```99:101:М11_ClusterVMS/clustervms/cluster/variables.py
+```99:101:Source/cluster/variables.py
     def list(self, prefix: str) -> list[str]:
         status, body = self._req("GET", f"{self.addr}/v1/vars?prefix={quote(prefix, safe=chr(47))}&namespace={self.namespace}")
         return [v["Path"] for v in (body or [])]
@@ -737,7 +737,7 @@ Nomad на `GET /v1/vars?prefix=…` отдаёт по записи на каж�
 
 А нужно это потому, что **сканируем мы не по клику оператора, а по таймеру.** Консолей пять (`system`-job, по одной на сервер), и страница опрашивает `GET /<rows>` каждые десять секунд:
 
-```283:285:vmsserver/w2cplatform/console.html
+```283:285:Source/w2cplatform/console.html
 // from `_workers_live` and `_<running gauge>`. Runs at load and every 10 s.
 async function loadUnits() {
   const d = await (await fetch(ROWS())).json();
@@ -749,7 +749,7 @@ async function loadUnits() {
 
 Здесь и выясняется, что отдельный процесс заводить не нужно, и я зря предлагал выбирать между ним и контроллером. **Все дорогие пути проходят через одну функцию:**
 
-```607:613:vmsserver/w2cplatform/spec.py
+```607:613:Source/w2cplatform/spec.py
     def units(self) -> list[dict]:
         out = []
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
@@ -802,7 +802,7 @@ async function loadUnits() {
 
 Сначала про кластер, потому что именно там вопрос и стоит. Вот весь список камер в консоли кластера:
 
-```561:562:vmsserver/w2cplatform/console.py
+```561:562:Source/w2cplatform/console.py
             if path == rows_path:
                 return h._send(200, {"rows": ctl.read_model(con.lost_after), "configured": mask_secrets(ctl.units())})
 ```
@@ -811,7 +811,7 @@ async function loadUnits() {
 
 `units()` — дорогой. Это лист плюс чтение на каждую камеру:
 
-```607:613:vmsserver/w2cplatform/spec.py
+```607:613:Source/w2cplatform/spec.py
     def units(self) -> list[dict]:
         out = []
         for p in self.vars.list(self.sub.config(self.spec.rows) + "/"):
@@ -823,7 +823,7 @@ async function loadUnits() {
 
 `read_model()` — дешёвый. Он читает **heartbeat'ы воркеров**, а это объекты, по одному на воркера:
 
-```1045:1053:vmsserver/w2cplatform/spec.py
+```1045:1053:Source/w2cplatform/spec.py
     def read_model(self, lost_after: float = 45.0) -> list[dict]:
         now = self.wall()
         rows = []
@@ -860,7 +860,7 @@ async function loadUnits() {
 
 Выше — про кластер. На домене поиск **уже есть**, и он правильной формы:
 
-```164:166:М12_DomainVMS/domainvms/domain/readview.py
+```164:166:Source/domain/readview.py
     def list(self, q: str = "", page: int = 1, size: int = 50, cluster: str | None = None) -> dict:
         rows = [r for r in self.rows() if (not cluster or r.cluster == cluster)
                 and (not q or q.lower() in r.name.lower() or q == str(r.camera))]
@@ -870,7 +870,7 @@ async function loadUnits() {
 
 **Дефект первый: `rows()` пересобирается на каждый вызов.** Посмотрите, что происходит перед фильтром:
 
-```125:134:М12_DomainVMS/domainvms/domain/readview.py
+```125:134:Source/domain/readview.py
     def rows(self) -> list[Row]:
         now = self.wall()
         out = []
@@ -891,7 +891,7 @@ async function loadUnits() {
 
 **Дефект второй: искать по `ref` нельзя, хотя `ref` — это домашняя личность домена.** Воркер кладёт `ref` в heartbeat:
 
-```516:516:vmsserver/vms/worker.py
+```516:516:Source/vms/worker.py
             out.append({"id": cid, "ref": cam.get("ref", ""), "name": cam.get("name", str(cid)), "enabled": cam["enabled"], "phase": phase, "position": pos,
 ```
 
@@ -931,7 +931,7 @@ async function loadUnits() {
 
 Делает его **контроллер**, последним шагом каждого прохода, то есть **раз в 5 секунд**:
 
-```191:197:vmsserver/vms/__main__.py
+```191:197:Source/vms/__main__.py
     while not stop.is_set():
         try:
             ctl.ensure_placed()                       # deleted rows unplaced; new units onto the workers it sees
@@ -943,7 +943,7 @@ async function loadUnits() {
 
 Публикация вынесена в собственный блок `try`, и это не аккуратность ради аккуратности. Размещение и публикация — две разные работы, поэтому у них две разные строчки в журнале: иначе отказ публикации маскировался бы под «placement pass failed», а отказ размещения молча уносил бы с собой снапшот.
 
-```203:204:vmsserver/vms/__main__.py
+```203:204:Source/vms/__main__.py
         try:
             ctl.publish_snapshot()
 ```
@@ -954,7 +954,7 @@ async function loadUnits() {
 
 Раньше снапшот был одним объектом на весь кластер, и именно поэтому он ломался. Сейчас он нарезан по воркерам:
 
-```1164:1174:vmsserver/w2cplatform/spec.py
+```1164:1174:Source/w2cplatform/spec.py
     def snapshot_shards(self) -> dict[str, dict]:
         """The snapshot as one object per worker, keyed by shard name."""
         keep = ["id"] + [f for f in self.spec.snapshot if f != "id"] + ["revision"]
@@ -978,7 +978,7 @@ async function loadUnits() {
 
 Контроллер кладёт его в **объектное хранилище**, а не в Variables напрямую:
 
-```1208:1218:vmsserver/w2cplatform/spec.py
+```1208:1218:Source/w2cplatform/spec.py
     def publish_snapshot(self) -> None:
         import json
         shards = self.snapshot_shards()
@@ -996,7 +996,7 @@ async function loadUnits() {
 
 Но объектное хранилище на кластере — это **`variables://objects`** (дефолт во всех jobspec'ах), то есть адаптер, который складывает объекты в те же Variables под префиксом `objects/`:
 
-```115:117:М11_ClusterVMS/clustervms/cluster/objectstore.py
+```115:117:Source/cluster/objectstore.py
     def put(self, key: str, data: bytes) -> None:
         check(key, len(data), self.max_bytes)
         self.vars.put(self._path(key), {"data": data.decode("utf-8")})       # no cas: the last heartbeat wins, as it should
@@ -1087,7 +1087,7 @@ PUT /v1/var/objects/vms/snapshot/w-2
 
 **Про `worker` и `server` стоит отдельно, потому что совпадение имён обманчиво.** В heartbeat'е `server` — первоисточник: процесс сообщает, где он прямо сейчас. В снапшоте `worker` — это решение контроллера («я определил камеру 7 на `w-2`»), а `server` контроллер списывает из heartbeat'а этого воркера в момент публикации:
 
-```464:466:vmsserver/w2cplatform/spec.py
+```464:466:Source/w2cplatform/spec.py
     def server_of(self, worker: str) -> str:
         hb = self.workers_seen(max_age=1e12).get(worker)
         return hb.extra.get("server", "?") if hb else "?"
@@ -1112,13 +1112,13 @@ PUT /v1/var/objects/vms/snapshot/w-2
 
 Домен читает оба объекта, и в коде они различаются даже формой пути:
 
-```61:63:М12_DomainVMS/domainvms/domain/federation.py
+```61:63:Source/domain/federation.py
         keys = self.objects.list(SNAPSHOT)
         if not keys:
             return None
 ```
 
-```87:90:М12_DomainVMS/domainvms/domain/federation.py
+```87:90:Source/domain/federation.py
         for key in self.objects.list(HEARTBEATS):
             raw = self.objects.get(key)
             if raw:
@@ -1131,7 +1131,7 @@ PUT /v1/var/objects/vms/snapshot/w-2
 
 Сказанное выше про heartbeat'ы («каждый несёт только свои пятьдесят, запас пятикратный») держится на одном числе, и число это не архитектурное:
 
-```303:303:vmsserver/vms/worker.py
+```303:303:Source/vms/worker.py
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
 ```
 
@@ -1153,7 +1153,7 @@ PUT /v1/var/objects/vms/snapshot/w-2
 
 Хорошая новость в том, что heartbeat **уже разделён** на две части — это видно по его форме:
 
-```333:334:vmsserver/w2cplatform/contract.py
+```333:334:Source/w2cplatform/contract.py
     def to_bytes(self) -> bytes:
         return json.dumps({"worker": self.worker, "ts": self.ts, "status": self.status, **self.extra}).encode()
 ```
@@ -1192,7 +1192,7 @@ PUT /v1/var/objects/vms/snapshot/w-2
 
 Первый сорт проверяется прямо, и docstring сам объясняет, зачем его вообще передают:
 
-```107:110:vmsserver/vms/config.py
+```107:110:Source/vms/config.py
 def live_url(server: str, cid) -> str:
     """Where a camera's stream is served from: the worker's RTSP fan-out. In the
     heartbeat, so a subscriber needs only the heartbeat — on any server."""
@@ -1247,7 +1247,7 @@ def live_url(server: str, cid) -> str:
 
 Заодно из читателей ушёл фильтр, который раньше был ценой старой раскладки. В кластере `workers_seen()` теперь листит один каталог и ничего не отсеивает:
 
-```427:429:vmsserver/w2cplatform/contract.py
+```427:429:Source/w2cplatform/contract.py
         # One prefix, no filter: `<name>/heartbeats/` holds heartbeats and nothing else.
         for key in self.objects.list(self.sub.heartbeats_prefix()):
             raw = self.objects.get(key)
@@ -1255,7 +1255,7 @@ def live_url(server: str, cid) -> str:
 
 На домене был читатель похуже — он **считал слэши**, и любой лишний уровень вложенности сделал бы кластер пустым на вид. Его тоже переписали, и в докстроке прямо сказано, чем был тот фильтр:
 
-```84:85:М12_DomainVMS/domainvms/domain/federation.py
+```84:85:Source/domain/federation.py
         The filter this used to carry (`endswith("/heartbeat") and count("/") == 2`)
         was the price of a key layout that put every worker's name at the top."""
 ```
@@ -1270,7 +1270,7 @@ def live_url(server: str, cid) -> str:
 
 **Читатель первый — каталог, «где камера 7».** Домену запрещено читать строки камер из Variables кластера: строки принадлежат контроллеру, и веер поштучных чтений через WAN был бы и медленным, и нарушением правила одного писателя. Поэтому домен читает **каталог шардов** — листинг и `get` на каждый, ровно как он уже читает heartbeat'ы:
 
-```50:51:М12_DomainVMS/domainvms/domain/federation.py
+```50:51:Source/domain/federation.py
     def snapshot(self) -> dict | None:
         """The cluster's cameras and placement, merged from one object per worker.
 ```
@@ -1281,7 +1281,7 @@ def live_url(server: str, cid) -> str:
 
 **Читатель второй — отчёт о расхождениях (`shadow.py`).** Он ищет камеры, которые домен разместил на кластер, а кластер их так и не создал:
 
-```10:10:М12_DomainVMS/domainvms/domain/shadow.py
+```10:10:Source/domain/shadow.py
     orphaned      placed by the domain, and no cluster's snapshot lists it            fault
 ```
 
@@ -1302,7 +1302,7 @@ def live_url(server: str, cid) -> str:
 
 Раньше здесь был дефект, видимый оператору: `readview.py` обещал в докстроке читать снапшот, а в `refresh()` читал только heartbeat'ы. Камера, которую никакой воркер не подхватил, в доменном списке не появлялась вообще. **Это починили**, и теперь `refresh()` в одном проходе берёт оба источника:
 
-```109:116:М12_DomainVMS/domainvms/domain/readview.py
+```109:116:Source/domain/readview.py
                 for w, hb in c.heartbeats().items():
                     self.snapshots[(name, w)] = Snapshot(w, name, float(hb.get("ts", 0)), str(hb.get("server", "?")),
                                                          list(hb.get("status", [])))
@@ -1346,7 +1346,7 @@ def live_url(server: str, cid) -> str:
 
 Важно, что́ именно изменилось. Потолок никуда не делся — это по-прежнему 64 KiB на объект, — но он перестал зависеть от размера кластера. Шард растёт вместе с `CAPACITY` одного воркера, а кластер растёт числом воркеров, то есть числом объектов. Причина записана прямо в коде:
 
-```206:211:vmsserver/w2cplatform/contract.py
+```206:211:Source/w2cplatform/contract.py
     # `<name>/snapshot/<worker>` — one object per worker, the same shape the heartbeat key already has.
     # The snapshot used to be ONE object for the whole cluster, and it was the only place in the platform
     # where data grew in a single object: an object store has a ceiling (Nomad Variables: 64 KiB on the
@@ -1357,14 +1357,14 @@ def live_url(server: str, cid) -> str:
 
 Посмотрите на границы, которые дизайн объявляет сам:
 
-```17:20:М11_ClusterVMS/clustervms/deploy/vmsworker.nomad.hcl
+```17:20:Source/deploy/cluster/vmsworker.nomad.hcl
     scaling {
       enabled = true
       min     = 1
       max     = 12                                   # the servers' budget: B + n·I from М9 Lesson 7
 ```
 
-Двенадцать воркеров максимум, по ~50 камер на воркера ([`spec.py`](../vmsserver/w2cplatform/spec.py), `capacity_fallback: int = 50`; [`ARCHITECTURE.md`](../ARCHITECTURE.md) говорит «up to ~50 GStreamer pipelines in one process»). **Проектные 600 камер теперь публикуются штатно: двенадцать шардов по 12 КБ.**
+Двенадцать воркеров максимум, по ~50 камер на воркера ([`spec.py`](../Source/w2cplatform/spec.py), `capacity_fallback: int = 50`; [`ARCHITECTURE.md`](../ARCHITECTURE.md) говорит «up to ~50 GStreamer pipelines in one process»). **Проектные 600 камер теперь публикуются штатно: двенадцать шардов по 12 КБ.**
 
 #### Что осталось от этого вопроса
 
@@ -1372,7 +1372,7 @@ def live_url(server: str, cid) -> str:
 
 Второе изменение к лучшему: **отказ стал громким.** Раньше файловое хранилище принимало объект любого размера, и запись, которую Nomad отверг бы на проде, в тестах проходила. Теперь хранилище объявляет свой потолок полем `max_bytes`, а превышение поднимает `TooLarge` с ключом, размером и пределом, причём вызывающий добавляет к этому человеческое объяснение:
 
-```1221:1227:vmsserver/w2cplatform/spec.py
+```1221:1227:Source/w2cplatform/spec.py
             except TooLarge as e:
                 # The store refuses with bytes; the caller knows what those bytes WERE. A shard is one
                 # worker's assignment, so an oversized shard is not a shape problem any more — it is a
@@ -1390,9 +1390,9 @@ def live_url(server: str, cid) -> str:
 
 Требование к списку обычно звучит как «мне нужны камеры, и сразу с именем» или «сразу с тем, на каком сервере она живёт». Выглядит как один вопрос, а на самом деле это **три разных вопроса с ценой, различающейся в тысячи раз**, и разница зависит от того, где поле лежит.
 
-У камеры **восемь полей оператора** (`OPERATOR_FIELDS = tuple(SPEC.fields)` в [config.py](../vmsserver/vms/config.py), то есть ровно блок `fields:` из YAML). И приятная новость: **в снапшот уезжают все восемь**:
+У камеры **восемь полей оператора** (`OPERATOR_FIELDS = tuple(SPEC.fields)` в [config.py](../Source/vms/config.py), то есть ровно блок `fields:` из YAML). И приятная новость: **в снапшот уезжают все восемь**:
 
-```111:111:vmsserver/vms/vms.subsystem.yaml
+```111:111:Source/vms/vms.subsystem.yaml
 snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, live]
 ```
 
@@ -1423,7 +1423,7 @@ snapshot: [name, source, enabled, events_retention_days, priority, labels, ref, 
 
 Контроллер — это цикл раз в 5 секунд без порта и без состояния: он читает обстановку и делает четыре действия, каждое из которых можно расписать запросами.
 
-```187:195:vmsserver/vms/__main__.py
+```187:195:Source/vms/__main__.py
 def _controller_loop(ctl) -> None:
     """One controller process per subsystem, the same loop: unplace what was deleted, place what is new onto the
     workers it sees, move what a released slot left, bring one unit home if its server came back, publish the
@@ -1573,7 +1573,7 @@ PUT /v1/var/objects/vms/snapshot/unplaced      камеры, которых ни
 
 > Failover of the controller itself is not measured anywhere: while it is being rescheduled, workers keep recording from their last assignment and the console keeps writing rows; **only new placements wait.**
 >
-> — [`vmscontroller.nomad.hcl.md`](../М11_ClusterVMS/clustervms/deploy/vmscontroller.nomad.hcl.md)
+> — [`vmscontroller.nomad.hcl.md`](../Source/deploy/cluster/vmscontroller.nomad.hcl.md)
 
 **Что произойдёт само.** Nomad заметит пропавшего клиента, пометит аллокацию потерянной и запустит контроллер на другом сервере — обычное перепланирование `service`-job с `count = 1`, десятки секунд, без участия человека. Новый экземпляр ничего не помнит и начинает с чтения store с нуля, поэтому на первом же проходе разместит всё накопившееся.
 
@@ -1618,7 +1618,7 @@ PUT /v1/var/objects/vms/snapshot/unplaced      камеры, которых ни
 
 **Но под всеми четырьмя вызовами лежит одна и та же функция.** `workers_seen()` стоит тринадцать чтений: листинг объектов плюс `get` на каждый из двенадцати heartbeat'ов. Состояния она не держит принципиально, и это записано прямо в докстроке:
 
-```422:429:vmsserver/w2cplatform/contract.py
+```422:429:Source/w2cplatform/contract.py
     def workers_seen(self, max_age: float = 45.0) -> dict[str, Heartbeat]:
         """Which workers exist: those that heartbeat recently. Never a list
         the controller keeps — a fact it reads."""
@@ -1631,7 +1631,7 @@ PUT /v1/var/objects/vms/snapshot/unplaced      камеры, которых ни
 
 Беда в том, что зовут её не раз за проход, а на каждую камеру — через `server_of`, который целиком состоит из одного обращения к `workers_seen`:
 
-```464:466:vmsserver/w2cplatform/spec.py
+```464:466:Source/w2cplatform/spec.py
     def server_of(self, worker: str) -> str:
         hb = self.workers_seen(max_age=1e12).get(worker)
         return hb.extra.get("server", "?") if hb else "?"
@@ -1750,7 +1750,7 @@ vms/cameras/7/mask       только маска, своя ревизия, св�
 
 Самые тяжёлые данные в системе — видео. Архив — это «`ArchiveResource`, архив **одного** сервера», то есть два каталога на локальном диске того, кто пишет:
 
-```187:192:vmsserver/vms/archive.py
+```187:192:Source/vms/archive.py
     def __init__(self, spool_root: str, archive_root: str, bucket_seconds: int = 600, wall=None):
         import time
         self.spool, self.root, self.bucket_seconds = spool_root, archive_root, bucket_seconds
@@ -1761,7 +1761,7 @@ vms/cameras/7/mask       только маска, своя ревизия, св�
 
 А доступ к нему — не через общее хранилище, а **через того, кто им владеет**:
 
-```100:103:vmsserver/vms/config.py
+```100:103:Source/vms/config.py
 def playback_url(server: str, cid) -> str:
     """Where a camera's OWN archive is served from — the holder's playback surface.
     HTTP, not the RTSP fan-out: a browser has to seek inside it, and the recorder
@@ -1820,9 +1820,9 @@ def playback_url(server: str, cid) -> str:
 
 ### Что говорит сам дизайн
 
-Около **600**: двенадцать воркеров максимум по `scaling { max = 12 }` — [`vmsworker.nomad.hcl`](../М11_ClusterVMS/clustervms/deploy/vmsworker.nomad.hcl), строка 20 — по ~50 камер на воркера ([`spec.py`](../vmsserver/w2cplatform/spec.py), строка 166: `capacity_fallback: int = 50`).
+Около **600**: двенадцать воркеров максимум по `scaling { max = 12 }` — [`vmsworker.nomad.hcl`](../Source/deploy/cluster/vmsworker.nomad.hcl), строка 20 — по ~50 камер на воркера ([`spec.py`](../Source/w2cplatform/spec.py), строка 166: `capacity_fallback: int = 50`).
 
-```17:20:М11_ClusterVMS/clustervms/deploy/vmsworker.nomad.hcl
+```17:20:Source/deploy/cluster/vmsworker.nomad.hcl
     scaling {
       enabled = true
       min     = 1
@@ -1831,7 +1831,7 @@ def playback_url(server: str, cid) -> str:
 
 Оговорка, без которой число обманывает. Из двух множителей в jobspec'е записан только один: **`max = 12` — граница, а 50 — дефолт.** Ёмкость воркера приходит из переменной окружения, и вообще-то это *слово самого воркера*, которое контроллер принимает из heartbeat'а:
 
-```303:303:vmsserver/vms/worker.py
+```303:303:Source/vms/worker.py
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))   # М9 Lesson 7's B + n·I, measured on ITS server
 ```
 
@@ -1919,7 +1919,7 @@ def playback_url(server: str, cid) -> str:
 
 Ниже выяснится, что есть и вариант **C — площадка как кластер М11 из одной машины**: то же железо, что у A, но домен видит её как обычный кластер. Он и оказывается самым интересным.
 
-**А вот дыра, и она не зависит от точного числа площадок.** Если площадку делать кластером М11, то в [`server.hcl`](../М11_ClusterVMS/clustervms/deploy/server.hcl) стоит `bootstrap_expect = 3` — три сервера на кворум. На площадку с двумя-тремя десятками камер, которая умещается на одной машине. Сто площадок превращаются в триста серверов там, где вендор ставит сто.
+**А вот дыра, и она не зависит от точного числа площадок.** Если площадку делать кластером М11, то в [`server.hcl`](../Source/deploy/cluster/server.hcl) стоит `bootstrap_expect = 3` — три сервера на кворум. На площадку с двумя-тремя десятками камер, которая умещается на одной машине. Сто площадок превращаются в триста серверов там, где вендор ставит сто.
 
 **Но сразу оговорка, иначе вывод получится неверным: тройка ничем не «требуется».** Это число в примере развёртывания, и ни одна строка кода его не читает. Nomad принимает и единицу — с честным предупреждением в собственной документации: *«A value of `1` does not provide any fault tolerance and is not recommended for production use cases»*. А комментарий в нашем же `server.hcl.md` объясняет тройку иначе, чем «кворум нужен»: она *«prevents a lone first server from bootstrapping a one-node raft that later splits»* — то есть защищает от случайного односерверного raft при установке на три коробки, а не запрещает односерверный намеренно.
 
@@ -1936,7 +1936,7 @@ def playback_url(server: str, cid) -> str:
 
 **То есть действительная цена единицы — не доступность записи, а единственная копия конфигурации.** Видео при смерти сервера продолжает писаться в обоих случаях; разница в том, что три сервера реплицируют строки камер, а один держит их на одном диске.
 
-**И у единицы есть неожиданное достоинство, ради которого её стоит рассмотреть всерьёз.** М12 федерирует кластеры как **регионы Nomad**, связанные WAN-gossip'ом ([`federation.hcl`](../М12_DomainVMS/domainvms/deploy/federation.hcl)). Бокс М9 — не регион, и **механизма агрегировать боксы, а не регионы, домен не описывает** — это дыра. А односерверный кластер — регион. То есть `bootstrap_expect = 1` — самый дешёвый способ закрыть эту дыру: одна машина на площадке, но домен видит её ровно так же, как любой другой кластер, теми же жёстко прошитыми путями.
+**И у единицы есть неожиданное достоинство, ради которого её стоит рассмотреть всерьёз.** М12 федерирует кластеры как **регионы Nomad**, связанные WAN-gossip'ом ([`federation.hcl`](../Source/deploy/domain/federation.hcl)). Бокс М9 — не регион, и **механизма агрегировать боксы, а не регионы, домен не описывает** — это дыра. А односерверный кластер — регион. То есть `bootstrap_expect = 1` — самый дешёвый способ закрыть эту дыру: одна машина на площадке, но домен видит её ровно так же, как любой другой кластер, теми же жёстко прошитыми путями.
 
 Остаётся один вопрос, который тройка прятала, а единица делает явным: **чем резервируется единственный raft.** Любопытно, что домен почти готов служить ответом — в его снапшоте лежат все восемь операторских полей, то есть ровно то, что оператор настраивал, — но восстановление из снапшота нигде не описано как путь.
 
@@ -2117,7 +2117,7 @@ sequenceDiagram
 GET /spec
 ```
 
-```276:280:vmsserver/w2cplatform/console.py
+```276:280:Source/w2cplatform/console.py
     def describe(self) -> dict:
         s = self.spec
         return {"name": s.name, "rows": s.rows, "id": s.id, "media": self.media,
@@ -2139,14 +2139,14 @@ GET /cameras
    "rows":       [ …статус по каждой камере из heartbeat'ов… ]}
 ```
 
-```561:562:vmsserver/w2cplatform/console.py
+```561:562:Source/w2cplatform/console.py
             if path == rows_path:
                 return h._send(200, {"rows": ctl.read_model(con.lost_after), "configured": mask_secrets(ctl.units())})
 ```
 
 Это ровно те два источника, о которых говорит часть 2: `configured` — желаемое (строки камер, поштучно из Variables), `rows` — фактическое (heartbeat'ы воркеров). Браузер их **склеивает, и порядок склейки важен**:
 
-```286:288:vmsserver/w2cplatform/console.html
+```286:288:Source/w2cplatform/console.html
   const byId = {};
   for (const c of d.configured || []) byId[c.id] = { ...c, phase: 'silent', worker_state: 'stale' };
   for (const r of d.rows || []) byId[r.id] = { ...byId[r.id], ...r };   // the heartbeat's word wins over the row's
@@ -2193,7 +2193,7 @@ GET /cameras
 
 Здесь самое неожиданное: **настройки выбранной камеры страница не запрашивает вообще.**
 
-```308:310:vmsserver/w2cplatform/console.html
+```308:310:Source/w2cplatform/console.html
   current = id; queue = [];
   const c = units.find(x => x.id === id) || {};
   $('#title').textContent = label(c);
@@ -2275,7 +2275,7 @@ Idempotency-Key: 3f9c1e2a-…
 
 **А теперь то, чего в UI нет.** Страница показывает `phase`, `worker`, `server`, `epoch`, `age` и причину размещения:
 
-```313:314:vmsserver/w2cplatform/console.html
+```313:314:Source/w2cplatform/console.html
   $('#meta').textContent = [c.phase, c.worker && `on ${c.worker}`, c.server, c.epoch ? `epoch ${c.epoch}` : null, why,
                             c.worker_state === 'stale' ? 'last known state' : null].filter(Boolean).join(' · ');
 ```
@@ -2375,7 +2375,7 @@ Idempotency-Key: 3f9c1e2a-…
 
     Отдельно и мимоходом: группировку в списке считаем ненужной, но если она понадобится, **поле группировки должно попасть в узкий набор**, а подходящего поля у камеры нет вовсе — это территория вопроса 7.
 24. **У кластера три имени, и они нигде не сверяются.** Различить один кластер от другого можно на трёх уровнях, и это три независимых имени:
-    - **Nomad** различает по `region` в [federation.hcl](../М12_DomainVMS/domainvms/deploy/federation.hcl) — у каждого свой raft, связь по WAN-gossip;
+    - **Nomad** различает по `region` в [federation.hcl](../Source/deploy/domain/federation.hcl) — у каждого свой raft, связь по WAN-gossip;
     - **сам кластер** зовёт себя переменной `CLUSTER` и кладёт это имя в снапшот (`spec.py`, дефолт `cluster-a`);
     - **домен** адресует кластер по имени из строки `CLUSTERS` (`<имя>=<адрес Nomad>|<url хранилища>`), и это имя становится ключом в `Federation.clusters`.
 
@@ -2393,7 +2393,7 @@ Idempotency-Key: 3f9c1e2a-…
 - [`ARCHITECTURE.md`](../ARCHITECTURE.md) — §1.3 (слой может быть недоступен), §1.5 (какое хранилище под какую форму данных), §1.11 (`publish-then-point`), §1.12 (контроллер, воркер, консоль)
 - [`М10A_Platform/04-ObjectStore.md`](../М10A_Platform/04-ObjectStore.md) — признаки объекта, «целиком или никак»
 - [`М10A_Platform/16-HTML.md`](../М10A_Platform/16-HTML.md) — почему страница опрашивает, а не слушает, и где это перестанет работать
-- [`М11_ClusterVMS/02-workers-resources-and-the-controller-as-jobs.md`](../М11_ClusterVMS/02-workers-resources-and-the-controller-as-jobs.md) — 64 KiB и raft, арифметика heartbeat'ов
+- [`М11_Cluster/02-workers-resources-and-the-controller-as-jobs.md`](../М11_Cluster/02-workers-resources-and-the-controller-as-jobs.md) — 64 KiB и raft, арифметика heartbeat'ов
 - [`М12_DomainVMS/module-design.md`](../М12_DomainVMS/module-design.md) — модель чтения для UI: из снапшота и heartbeat'ов, никогда из Variables
 - [Nomad Variables HTTP API](https://developer.hashicorp.com/nomad/api-docs/variables/variables) — `cas` против `ModifyIndex`, 409, и blocking queries (`index` + `wait`), которые мы пока не используем
 - Отраслевые числа для части 5, on-prem: [Milestone Storage Architecture](https://doc.milestonesys.com/wp/pdf/en-US/XProtectStorageArchitectureAndRecommendations_2023-09.pdf) (200–300 камер на сервер записи) · [Milestone VMS Design Guide](https://doc.milestonesys.com/2024R1/en-US/wp_sysarch/vms_design_guide.htm) (проект до 300; 100 на удалённую площадку) · [Genetec System Requirements 5.14](https://techdocs.genetec.com/r/en-US/Security-Center-System-Requirements-Guide-5.14/Maximum-number-of-cameras-and-readers-per-server-type) (50/100 на Directory + Archiver) · [Genetec Federation at scale](https://techdocs.genetec.com/r/en-US/All-about-FederationTM-in-Security-Center-5.13/Requirements-for-large-Federation-systems) (~150 камер на федерируемую систему)

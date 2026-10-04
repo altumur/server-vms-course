@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: сравнение с чужими системами
-subject: М11_ClusterVMS
+subject: М11_Cluster
 source-commit: 4099cd5
 date: 2026-09-23
 status: draft
@@ -103,7 +103,7 @@ Kubernetes решает это парой чисел: `generation` растёт 
 
 **Личность берётся, а не выдаётся.** В контракте это сказано прямо:
 
-```603:603:vmsserver/w2cplatform/contract.py
+```603:603:Source/w2cplatform/contract.py
         instance. The controller never hands names out; a process takes one."""
 ```
 

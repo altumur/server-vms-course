@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: прототип и замер; прототип стал хранилищем кластера курса (`configstore`)
-subject: М10A_Platform, М11_ClusterVMS
+subject: М10A_Platform, М11_Cluster
 source-commit: 133554f
 date: 2026-10-04
 status: draft
@@ -12,13 +12,13 @@ status: draft
 > [!note] Замер прототипа; прототип с тех пор стал кодом курса
 > Записка отвечает на первый открытый вопрос из [«Кластер без оркестратора»](without-an-orchestrator.md): укладываются ли аренды воркеров в выборы лидера raft. Для ответа был написан прототип — `raftvars.py` (схема `raft://`), тесты `test_raftvars.py` и замер `raft_election.py`.
 > **Сегодня прототипа нет: он стал хранилищем кластера М11.** Где что теперь:
-> - машина состояний — `vmsserver/w2cplatform/storemachine.py` (семантика `FileVariables`, версия — индекс журнала, память идентификаторов операций, права);
-> - демон — `vmsserver/w2cplatform/configstore.py` (`python3 -m w2cplatform.configstore`, сокет на роль `/run/configstore/<роль>.sock`, дверь `-api` с mTLS — `tls.py`);
-> - ручка — `vmsserver/w2cplatform/configstorevars.py`, схема `configstore:///run/configstore/<роль>.sock` вместо `raft://`;
-> - тесты — `vmsserver/tests/test_storemachine.py`, `test_configstorevars.py`, `test_configstore.py` (настоящий raft; пропускается без `pysyncobj`) вместо `test_raftvars.py`;
-> - замер — `vmsserver/tests/configstore_election.py` вместо `raft_election.py`, тем же сценарием.
+> - машина состояний — `Source/w2cplatform/storemachine.py` (семантика `FileVariables`, версия — индекс журнала, память идентификаторов операций, права);
+> - демон — `Source/w2cplatform/configstore.py` (`python3 -m w2cplatform.configstore`, сокет на роль `/run/configstore/<роль>.sock`, дверь `-api` с mTLS — `tls.py`);
+> - ручка — `Source/w2cplatform/configstorevars.py`, схема `configstore:///run/configstore/<роль>.sock` вместо `raft://`;
+> - тесты — `Source/tests/test_storemachine.py`, `test_configstorevars.py`, `test_configstore.py` (настоящий raft; пропускается без `pysyncobj`) вместо `test_raftvars.py`;
+> - замер — `Source/tests/configstore_election.py` вместо `raft_election.py`, тем же сценарием.
 >
-> Числа ниже — замер **прототипа**, и записка оставлена как запись о нём: имена в тексте — нынешние, а где поведение прототипа отличалось от кода курса, так и сказано. Правка цикла воркера из раздела «Что менять» сделана (`vms/worker.py`, `vms/autoworker.py`, `tests/test_lease_step.py`), ручка повторяет отказ соединения в пределах `D` (пункт 2). Замер демона курса и замеры продукта на `hashicorp/raft` — в М11, урок [8](../М11_ClusterVMS/08-pull-the-power.md), шаг 4.
+> Числа ниже — замер **прототипа**, и записка оставлена как запись о нём: имена в тексте — нынешние, а где поведение прототипа отличалось от кода курса, так и сказано. Правка цикла воркера из раздела «Что менять» сделана (`vms/worker.py`, `vms/autoworker.py`, `tests/test_lease_step.py`), ручка повторяет отказ соединения в пределах `D` (пункт 2). Замер демона курса и замеры продукта на `hashicorp/raft` — в М11, урок [8](../М11_Cluster/08-pull-the-power.md), шаг 4.
 > Все числа ниже измерены на одной машине (стенд описан ниже). Где число выведено из формулы, так и сказано.
 
 [← все записки](README.md)
@@ -63,7 +63,7 @@ status: draft
 
 ## Тесты
 
-В прототипе — `test_raftvars.py`, восемь тестов. Сегодня они в `vmsserver/tests/test_configstore.py` (настоящий raft; пропускается целиком, если `pysyncobj` не установлен — основной набор остаётся зелёным без него), а то, что можно проверить без raft, — в `test_storemachine.py` (машина) и `test_configstorevars.py` (сокет демона, права, mTLS, импорт). Группы в тестах идут с быстрыми таймингами, чтобы свежая группа на каждый пункт контракта стоила доли секунды. Таблица — тесты прототипа под нынешними именами:
+В прототипе — `test_raftvars.py`, восемь тестов. Сегодня они в `Source/tests/test_configstore.py` (настоящий raft; пропускается целиком, если `pysyncobj` не установлен — основной набор остаётся зелёным без него), а то, что можно проверить без raft, — в `test_storemachine.py` (машина) и `test_configstorevars.py` (сокет демона, права, mTLS, импорт). Группы в тестах идут с быстрыми таймингами, чтобы свежая группа на каждый пункт контракта стоила доли секунды. Таблица — тесты прототипа под нынешними именами:
 
 | Тест | Что доказывает |
 |---|---|
@@ -80,7 +80,7 @@ status: draft
 
 ## Замер
 
-Прототип — `raft_election.py`; тот же сценарий в коде курса — `vmsserver/tests/configstore_election.py`, с `-bootstrap`, `-join`, сертификатами и паролем порта raft. Три демона: сначала группа из одного, потом два сервера вступают через `--join`. 30 воркеров — настоящий `Worker` платформы, не модель, — по 10 на сервер, у каждого слот и 8 эпох: 240 аренд. Каждый продлевает так, как продлевает `Worker.run`: шаг аренд, когда прошло 8,33 с, проверка раз в 2 с; срок одного вызова хранилища — 5 с (демон ждёт лидера до 4,5 с). На каждом сервере зонд пишет раз в 20 мс.
+Прототип — `raft_election.py`; тот же сценарий в коде курса — `Source/tests/configstore_election.py`, с `-bootstrap`, `-join`, сертификатами и паролем порта raft. Три демона: сначала группа из одного, потом два сервера вступают через `--join`. 30 воркеров — настоящий `Worker` платформы, не модель, — по 10 на сервер, у каждого слот и 8 эпох: 240 аренд. Каждый продлевает так, как продлевает `Worker.run`: шаг аренд, когда прошло 8,33 с, проверка раз в 2 с; срок одного вызова хранилища — 5 с (демон ждёт лидера до 4,5 с). На каждом сервере зонд пишет раз в 20 мс.
 
 Один заход: подождать 3–10 с (случайная фаза относительно шагов воркеров), найти лидера, убить его `SIGKILL`, мерить, пока зонды на двух выживших снова не запишут; через 2 с поднять убитого на его журнале, дождаться, пока догонит, и пока каждая аренда и каждый слот не подтвердятся после его возвращения. Пауза записи — от убийства до первой успешной записи, начатой после него. Воркеры убитого сервера считаются отдельно: при настоящей смерти сервера они умирают вместе с ним.
 
@@ -152,7 +152,7 @@ status: draft
 
 ```bash
 pip install pysyncobj
-cd vmsserver
+cd Source
 python3 tests/run.py                                        # test_storemachine.py, test_configstorevars.py, test_configstore.py среди прочих
 python3 tests/configstore_election.py --timing default --kills 25
 python3 tests/configstore_election.py --timing lan --kills 25

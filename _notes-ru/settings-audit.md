@@ -44,7 +44,7 @@ status: draft
 
 Сериализация пишет ровно `id`, `revision` и поля спеки — больше ничего:
 
-```392:396:vmsserver/w2cplatform/spec.py
+```392:396:Source/w2cplatform/spec.py
     def items(self, row: dict) -> dict:
         out = {"id": str(row["id"]), "revision": str(row.get("revision", 1))}
         for n, f in self.fields.items():
@@ -60,7 +60,7 @@ status: draft
 
 В `console.py` нет разбора `Authorization` — аутентификации нет вообще. Единственное место, где появляется имя человека, это маркер оператора, и там оно берётся из непроверенного заголовка с дефолтом:
 
-```603:604:vmsserver/w2cplatform/console.py
+```603:604:Source/w2cplatform/console.py
             if path == "/marks":
                 resp = con.mark(h._body(), h.headers.get("X-User", "operator"))
 ```
@@ -81,7 +81,7 @@ status: draft
 
 `EventLog` — append-only JSON-lines в бакетах на диске resource, один писатель на файл по построению. Консоль **уже держит свой экземпляр**:
 
-```267:267:vmsserver/w2cplatform/console.py
+```267:267:Source/w2cplatform/console.py
         self.marks = EventLog(marks_root, "console", self.instance, 1) if marks_root else None   # the console's own log: one writer, so epoch 1
 ```
 
@@ -89,7 +89,7 @@ Epoch 1 навсегда — писатель один, ограждать не 
 
 Запись — одна строка:
 
-```128:133:vmsserver/w2cplatform/events.py
+```128:133:Source/w2cplatform/events.py
     def append(self, t: float, kind: str, **fields) -> str:
         p = self.path_for(t)
         os.makedirs(os.path.dirname(p), exist_ok=True)
@@ -106,7 +106,7 @@ Epoch 1 навсегда — писатель один, ограждать не 
 
 Чтобы записать «было → стало», не нужно ничего читать дополнительно: мутатор в `update()` и так держит старое значение в руках прежде, чем его перезаписать.
 
-```582:592:vmsserver/w2cplatform/spec.py
+```582:592:Source/w2cplatform/spec.py
     def update(self, uid, fields: dict) -> dict:
         self.spec.refuse(fields)
         def mutate(it):
@@ -140,14 +140,14 @@ verify()         → offline, возвращает payload["sub"]
 
 Два свойства, которые здесь важны, записаны в коде буквально:
 
-```74:77:М12_DomainVMS/domainvms/domain/agent.py
+```74:77:Source/domain/agent.py
 class ClusterTrust:
     """What a cluster's console and gateway read from THEIR OWN cluster's
     Variables — never from the domain — to verify tokens and decide grants
     offline."""
 ```
 
-```128:130:М12_DomainVMS/domainvms/domain/tokens.py
+```128:130:Source/domain/tokens.py
 def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float | None = None,
            skew: float = 60.0) -> dict:
     """Offline. Returns the payload (the subject is payload["sub"])."""
@@ -171,7 +171,7 @@ def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float
 
 Самый дешёвый вариант — не хранить на домене ничего, а в момент отчёта опросить кластеры. Для аудита он не работает, и причина в слове «произвольные»:
 
-```146:149:vmsserver/w2cplatform/eventdatabase.py
+```146:149:Source/w2cplatform/eventdatabase.py
     def query(self, t0: float, t1: float, cam: int | None = None, kind: str | None = None,
               subsystem: str | None = None, unit: str | None = None,
               current_epochs: dict[tuple[str, str], int] | None = None, limit: int = 1000,
@@ -267,7 +267,7 @@ def verify(token: str, keys: KeySet, revoked: set[str] = frozenset(), now: float
 
 `retention_days` берёт дни из строки подсистемы, а дефолт — год:
 
-```134:140:vmsserver/w2cplatform/resource.py
+```134:140:Source/w2cplatform/resource.py
 def retention_days(vars_, subsystem: str, unit: str, default: float = 365.0) -> float:
     """The unit's days if its subsystem set them, else the subsystem's, else a year."""
     for path in (f"{subsystem}/retention/{unit}", f"{subsystem}/retention"):

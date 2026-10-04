@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- ~/Library/LaunchAgents/com.w2c.vms.vmsworker.plist — the worker: holds its cameras; its name from the unit, one per server (М11, a macOS server; the
+     systemd unit's twin, deploy/cluster/systemd/). `install.sh` puts @HOST@ (this host's short name) in place: launchd has
+     no %l. __BOX__/w2c.env and __BOX__/vms.env are read by w2c-run.sh under what this file says (`W2C_BOX`). The unit's
+     environment, name for name (`tests/cluster/test_units.py`): the cluster's key too, or a sealed password does not open.
+     No watchdog: launchd has none, and a hung worker here waits the fifteen minutes (`HUNG_MOVE_AFTER`). -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.w2c.vms.vmsworker</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__BOX__/bin/w2c-run.sh</string>
+		<string>worker</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>W2C_BOX</key>
+		<string>__BOX__</string>
+		<key>PLATFORM_STORE</key>
+		<string>configstore://__BOX__/state/run/configstore/vmsworker.sock</string>
+		<key>WORKER_NAME</key>
+		<string>w-@HOST@-1</string>
+		<key>RTSP_HOST</key>
+		<string>0.0.0.0</string>
+		<key>UNCONFIRMED_MAX</key>
+		<string>90</string>
+		<key>SECRETS_KEY</key>
+		<string>__BOX__/secrets/platform.key</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>2</integer>
+	<key>StandardErrorPath</key>
+	<string>__BOX__/state/logs/com.w2c.vms.vmsworker.log</string>
+	<key>StandardOutPath</key>
+	<string>__BOX__/state/logs/com.w2c.vms.vmsworker.log</string>
+</dict>
+</plist>

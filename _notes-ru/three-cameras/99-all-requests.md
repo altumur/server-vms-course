@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: разбор кода
-subject: М11_ClusterVMS
+subject: М11_Cluster
 source-commit: 970e5a7
 date: 2026-10-04
 status: draft

@@ -1,6 +1,6 @@
 # Where the Databases Live
 
-**A decision record for М9_EdgeVMS and М11_ClusterVMS.** Companion to `worker-and-process-model.md`, written in answer to *"a domain exists when its Postgres exists — so is Postgres installed on every host, and how do they sync?"*, and then revised in answer to a second question that corrected it: *if the host needs an event store and an index anyway, why not Postgres locally too?*
+**A decision record for М9_EdgeVMS and М11_Cluster.** Companion to `worker-and-process-model.md`, written in answer to *"a domain exists when its Postgres exists — so is Postgres installed on every host, and how do they sync?"*, and then revised in answer to a second question that corrected it: *if the host needs an event store and an index anyway, why not Postgres locally too?*
 
 It was revised a third time, and that revision **inverted the second verdict below.** The question that did it: *the Node is a Nomad allocation, not a server — its configuration does not change when Nomad moves it from one server to another, so why does anything need to write ownership at all?* That is right, and the design changed because of it.
 

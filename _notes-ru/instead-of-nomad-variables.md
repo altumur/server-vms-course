@@ -1,7 +1,7 @@
 ---
 genre: записки
 kind: прикидка, в коде этого нет
-subject: М11_ClusterVMS
+subject: М11_Cluster
 source-commit: 4099cd5
 date: 2026-09-23
 status: draft
@@ -147,7 +147,7 @@ sequenceDiagram
 
 `nomad` **— одно приложение HashiCorp, по процессу на машину, и оно совмещает дверь и хранилище.** Более того, на наших трёх машинах он запущен в двух режимах сразу, и в конфигурации так и сказано:
 
-```1:2:М11_ClusterVMS/clustervms/deploy/client.hcl
+```1:2:Source/deploy/cluster/client.hcl
 # reference/client.hcl — Lesson 1: a Nomad client on an appliance server.
 # Servers get server.hcl; on the bench the same three boxes run both.
 ```
@@ -235,7 +235,7 @@ sequenceDiagram
 
 Обратите внимание на вторую строку. Сейчас размещение живёт отдельным ключом именно потому, что права нарезаны по префиксам:
 
-```370:372:vmsserver/w2cplatform/spec.py
+```370:372:Source/w2cplatform/spec.py
     def acl_controller(self) -> list[str]:
         """Placement: what the controller (count = 1) may write — never a unit's row."""
         return [f"{self.name}/workers/*", f"{self.name}/placement/*", f"{self.name}/slots/*"]
@@ -269,7 +269,7 @@ sequenceDiagram
 
 Наши ACL — это список префиксов, и в нём есть звёздочки:
 
-```355:364:vmsserver/w2cplatform/spec.py
+```355:364:Source/w2cplatform/spec.py
     def acl_console(self) -> list[str]:
         """The operator's rows: what a console (one per server, any of them) may write — never placement."""
         out = [f"{self.name}/{self.rows}/*", f"{self.name}/next_id", f"{self.name}/idem/*",   # idem: a retried POST answered the same by ANY instance
@@ -306,7 +306,7 @@ RBAC такого не умеет. Права там выдаются на ти�
 
 Но главное место, где этот потолок резал, мы уже расшили сами, и переезд тут опоздал. Снапшот был единственным объектом в платформе, который рос вместе с числом камер, и на проектных шестистах он в 64 KiB не помещался. Его нарезали по воркерам, и причина записана прямо в коде:
 
-```206:211:vmsserver/w2cplatform/contract.py
+```206:211:Source/w2cplatform/contract.py
     # `<name>/snapshot/<worker>` — one object per worker, the same shape the heartbeat key already has.
     # The snapshot used to be ONE object for the whole cluster, and it was the only place in the platform
     # where data grew in a single object: an object store has a ceiling (Nomad Variables: 64 KiB on the
@@ -335,7 +335,7 @@ RBAC такого не умеет. Права там выдаются на ти�
 
 Здесь главный подвох, и он не в Kubernetes, а в нашем собственном контракте. Вот он целиком:
 
-```81:88:vmsserver/w2cplatform/variables.py
+```81:88:Source/w2cplatform/variables.py
 class Variables(Protocol):
     # What one path may weigh: the sum of the lengths of every key and every value in it, which is how
     # Nomad measures a Variable. `NO_CEILING` (0) when the store has none. See `limits.py`.
@@ -369,7 +369,7 @@ class Variables(Protocol):
 
 Проход контроллера — это четыре вызова подряд, и дорог каждый. Три из них идут одним блоком, а публикация снапшота вынесена в отдельный, чтобы её отказ не путали с отказом размещения:
 
-```193:195:vmsserver/vms/__main__.py
+```193:195:Source/vms/__main__.py
             ctl.ensure_placed()                       # deleted rows unplaced; new units onto the workers it sees
             ctl.redistribute()                        # units of a RELEASED slot (scale-in) onto the rest
             ctl.ensure_home(1)                        # ONE unit a pass back to the server its row names, if it is back
@@ -389,7 +389,7 @@ class Variables(Protocol):
 
 Под всеми четырьмя вызовами лежит один и тот же примитив — `workers_seen()`. Он стоит тринадцать чтений: листинг плюс `get` на каждый из двенадцати heartbeat'ов. Состояния он не держит принципиально, и это записано прямо в его докстроке:
 
-```422:429:vmsserver/w2cplatform/contract.py
+```422:429:Source/w2cplatform/contract.py
     def workers_seen(self, max_age: float = 45.0) -> dict[str, Heartbeat]:
         """Which workers exist: those that heartbeat recently. Never a list
         the controller keeps — a fact it reads."""
@@ -402,7 +402,7 @@ class Variables(Protocol):
 
 Беда в том, что зовут его не раз за проход, а на каждую камеру — через `server_of`, который состоит ровно из одного обращения к `workers_seen`:
 
-```499:501:vmsserver/w2cplatform/spec.py
+```499:501:Source/w2cplatform/spec.py
     def server_of(self, worker: str) -> str:
         hb = self.workers_seen(max_age=1e12).get(worker)
         return hb.extra.get("server", "?") if hb else "?"
@@ -520,8 +520,8 @@ CONTRACT_URL=k8s://... python3 tests/run.py
 - [«На чьей архитектуре мы стоим»](./whose-architecture.md) — почему совпадение с Kubernetes вообще обсуждается
 - [урок 3 «Контракт хранилища и второй бэкенд»](../М10A_Platform/03-RegisterScheme.md) — шов по схеме URL, непрозрачный индекс, контракт из семи пунктов
 - [урок 7 «Личность через захват»](../М10A_Platform/07-Slot-and-Runtime.md) — пять нейтральных имён окружения и то, чего шов не абстрагирует нарочно
-- [variables.py](../vmsserver/w2cplatform/variables.py) — `Variables` как протокол, `Index = str | int`, CAS и `Conflict`
-- [objects.py](../vmsserver/w2cplatform/objects.py) — объектное хранилище: `put`, `get`, `list`, и ни CAS, ни версий
+- [variables.py](../Source/w2cplatform/variables.py) — `Variables` как протокол, `Index = str | int`, CAS и `Conflict`
+- [objects.py](../Source/w2cplatform/objects.py) — объектное хранилище: `put`, `get`, `list`, и ни CAS, ни версий
 - [Kubernetes API concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/) — `resourceVersion`, `watch`, листинг по страницам
 - [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) — свои типы объектов и их схема
 - [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) — права на типы объектов, перечисление имён и почему шаблонов нет

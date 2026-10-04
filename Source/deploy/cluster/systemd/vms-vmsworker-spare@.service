@@ -1,0 +1,52 @@
+# /etc/systemd/system/vms-vmsworker-spare@.service — a SPARE worker, started by `w2c-spares.sh` as
+# `vms-vmsworker-spare@<n>` for a label set the controller offered (lesson 4). The worker's unit, line for line —
+# the same user, groups, socket, key, umask, watchdog — but no name: a spare takes only an OFFER of its set, by CAS,
+# and with none it waits holding nothing. It ran from `systemd-run` as root before, without the key or the opened
+# fan-out (the twelfth review, blocker 6): the cameras of a dead server with a sealed password did not start on the
+# very process started for them. `tests/cluster/test_units.py` holds this file to `vms-vmsworker.service`.
+[Unit]
+Description=VMS spare worker %i — takes an offer of its label set, else waits holding nothing
+After=network-online.target configstore.service w2c-resource.service
+Wants=network-online.target
+# The store's member must be UP already, not pulled up (the thirteenth review, major 12): `Wants=` started a stopped
+# `configstore` whenever the spares' timer started a spare — past the administrator who stopped it, and past polkit,
+# which lets the spares' user start this template and nothing else. Not running: this spare does not start.
+Requisite=configstore.service
+
+[Service]
+User=vms
+Group=vms
+SupplementaryGroups=vms-vmsworker w2c-events w2c-store w2c-secrets
+Environment=PLATFORM_STORE=configstore:///run/configstore/vmsworker.sock
+# Its label set: the file `w2c-spares.sh` writes before it starts the instance, of which `w2c-run.sh` reads the line
+# `SPARE_FOR=` and nothing else, checked against the labels' alphabet — no line, or no set: it does not start, else it
+# would be a worker taking any free name. Not `EnvironmentFile=` (the product's cross-check, 4 Oct): whoever could
+# write the file — the spares' user — could set any variable, `LD_PRELOAD` too, in a process holding this key.
+Environment=SPARE_FILE=/run/w2c-spares/%n.env
+Environment=RTSP_HOST=0.0.0.0
+# A second worker on this server: its fan-out on a port the OS gives (`auto`), published in its heartbeat (`live_url`)
+# — 8554 is the server's own worker's.
+Environment=RTSP_PORT=auto
+Environment=UNCONFIRMED_MAX=90
+LoadCredential=platform.key:/etc/w2c/secrets/platform.key
+Environment=SECRETS_KEY=%d/platform.key
+UMask=0007
+RuntimeDirectory=vms
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+Type=simple
+NotifyAccess=main
+ExecStart=/opt/w2c/bin/w2c-run.sh worker
+Restart=always
+RestartSec=2
+# A set the runner refuses (no `SPARE_FOR=` line, or not a label set) is exit 2: the same file at every restart, so no
+# restart (the thirteenth review, minor) — it stays failed, said in its journal, and the spares' script tries the next
+# number.
+RestartPreventExitStatus=2
+TimeoutStopSec=20
+WatchdogSec=360
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/data/platform/events /data/platform/objects
+ProtectHome=yes
+PrivateTmp=yes
