@@ -340,7 +340,7 @@ def test_a_claim_is_stale_by_standing_still_on_this_consoles_clock_and_not_by_an
 def test_an_idempotency_key_is_one_callers_for_one_body():
     """The review's second pass, minor: a replay under a known key was answered with the stored reply to anybody —
     a stranger got anna's 201, and anna's own second mark under a reused key was silently not written. The claim
-    carries who (`X-User`, the name the gate proved where there is one) and the sha256 of the body; a replay by
+    carries who (`X-User`, the name the gate proved where there is one) and a digest of the body; a replay by
     another caller or with another body is 422. The same caller with the same body is the same request."""
     from vms.config import SPEC
     box = Box()
@@ -356,7 +356,7 @@ def test_an_idempotency_key_is_one_callers_for_one_body():
         # …and while the first caller's claim is still pending on another console, the stranger is told at once
         box.vars.put("vms/idem/k-2", {"state": "pending", "at": box.wall(), "sub": "anna", "sha256": "0" * 64}, cas=0)
         assert _post(port, "k-2", user="boris")[0] == 422
-        assert box.vars.get("vms/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("vms/idem/k-1")[0]["sha256"]) == 64
+        assert box.vars.get("vms/idem/k-1")[0]["sub"] == "anna" and len(box.vars.get("vms/idem/k-1")[0]["digest"]) == 64
     finally:
         srv.shutdown(); srv.server_close()
 

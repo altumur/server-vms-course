@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from vms.config import SPEC
@@ -67,7 +68,7 @@ def test_a_url_field_refuses_a_login():
             con.create_camera({"name": "gate", "source": bad})
             raise AssertionError(f"a credential rode in on the URL: {bad}")
         except Refused as e:
-            assert "may not carry a login" in str(e)
+            assert "carries a login" in str(e) and "hunter2" not in str(e)
     assert con.cameras() == []                                   # nothing was created on the way to the refusal
 
     cam = con.create_camera({"name": "gate", "source": "driverpack://file/gate.mp4"})
@@ -380,14 +381,340 @@ def test_a_refusal_never_quotes_a_password_and_the_idempotency_copy_keeps_none()
 
 
 def test_hiding_a_login_is_one_scan_of_the_address_whatever_its_length():
-    """The pairs of the path and the chains (the twelfth review) are read by position, in one pass: an address of
-    100 000 characters of each kind the regexes once choked on is hidden, refused and keyed in well under a second."""
+    """The pairs of the path and the chains (the twelfth review) are read by position, in one pass, and so are the
+    hosts and the addresses nested in a parameter (the thirteenth): an address ten times longer costs about ten times
+    as much — for each kind of body the regexes once choked on, a run with no `@` among them. Measured as a RATIO of
+    the best of a few runs at 100 000 and at 10 000 characters, in the process's own CPU time with the collector held,
+    not as a wall time: the suite runs on a loaded machine too, and a bound in seconds failed there (the coordinator,
+    the thirteenth round). One scan is about 10; a scan from every position, as the unanchored `[^/@]*@` was, is
+    about 100 — the bound, 35, keeps both apart."""
+    import gc
     import time
     from vms.config import device_of
     from w2cplatform.secrets import address_refusal, hide_in_url
-    n = 100_000
-    for body in ("/" * n, "&" * n, "=" * n, ";" * n, "@" * n, "_=" * (n // 2), "a=b_" * (n // 4), "/pwd" * (n // 4)):
-        src = "rtsp://10.0.0.5/x" + body
-        t = time.monotonic()
-        hide_in_url(src), address_refusal(src), device_of(src)
-        assert time.monotonic() - t < 1.0, body[:8]
+
+    def cost(body: str, runs: int) -> float:
+        best = float("inf")
+        for r in range(runs):                                    # another host each run: no reader's cache answers it
+            src = f"rtsp://10.0.{r}.5/x" + body
+            gc.collect()
+            gc.disable()                                         # a collection's cost is the heap's, not the scan's
+            try:
+                t = time.process_time()                          # CPU time: the other processes' load is not ours
+                hide_in_url(src), address_refusal(src), device_of(src)
+                best = min(best, time.process_time() - t)
+            finally:
+                gc.enable()
+        return best
+
+    kinds = (lambda n: "/" * n, lambda n: "&" * n, lambda n: "=" * n, lambda n: ";" * n, lambda n: "@" * n,
+             lambda n: "x" * n, lambda n: "_=" * (n // 2), lambda n: "a=b_" * (n // 4), lambda n: "/pwd" * (n // 4),
+             lambda n: "/%41" * (n // 4), lambda n: "?a=x%3A%2F%2F" * (n // 13), lambda n: "&a=x://" * (n // 7))
+    for kind in kinds:
+        small, big = cost(kind(10_000), 5), cost(kind(100_000), 3)
+        assert big / max(small, 1e-6) < 35, (kind(8), small, big)
+
+
+# The thirteenth review's probes: an address inside a parameter (go2rtc's `?src=`), escaped once, twice and not at all, in
+# a query and in a path segment; and a host in the path whose port is a password (`driverpack://`), with the vendor's and
+# the host's pairs a row stored before the rules may hold.
+NESTED_FORMS = [
+    "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs",
+    "http://proxy/relay?src=rtsp://admin:Hunter2@cam/s",
+    "http://proxy/relay?src=http%3A%2F%2Fcam%2Fx.cgi%3Fusr%3Dadmin%26pwd%3DHunter2",
+    "http://proxy/relay?src=http%253A%252F%252Fp2%252F%253Fsrc%253Drtsp%25253A%25252F%25252Fadmin%25253AHunter2%252540cam",
+    "http://proxy/rtsp%3A%2F%2Fadmin%3AHunter2%40cam%2Fs",
+    "http://proxy/x;src=rtsp%3A%2F%2Fcam%2Fs%3Fuser%3Dadmin_password%3DHunter2",
+]
+HOST_IN_PATH_FORMS = [
+    "driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1",
+    "driverpack://acme/10.0.0.5:Hunter2/ch/1",
+    "driverpack://acme/admin:Hunter2/ch/1",
+    "driverpack://acme:Hunter2/10.0.0.5/ch/1",
+    "driverpack://acme/10.0.0.5&password=Hunter2/ch/1",
+    "driverpack://acme/10.0.0.5_pwd=Hunter2/ch/1",
+    "driverpack://acme;pwd=Hunter2/10.0.0.5/ch/1",
+    "driverpack://acme/pwd=Hunter2/ch/1",
+]
+# …and the review's 38 ordinary addresses (`probe_false_positives.py`): 8 of them were refused by a stem found inside
+# another word (`token_bucket`, `passage`, `authmode`, `bypass`, `compass`, a path segment `pass` or `pw`).
+FALSE_FRIENDS = [
+    "rtsp://10.0.0.5/Streaming/Channels/101", "rtsp://10.0.0.5/streaming/channels/101",
+    "rtsp://10.0.0.5:554/cam/realmonitor?channel=1&subtype=0", "rtsp://10.0.0.5/h264/ch1/main/av_stream",
+    "rtsp://10.0.0.5/live?token_bucket=10", "http://10.0.0.5/keypad/snapshot.jpg", "http://10.0.0.5/passage/cam1.mjpg",
+    "http://10.0.0.5/authority/live.sdp", "rtsp://10.0.0.5/passage=north_channel=1", "rtsp://10.0.0.5/live?passage=north",
+    "rtsp://10.0.0.5/live?authmode=digest", "rtsp://10.0.0.5/live?bypass=1",
+    "http://10.0.0.5/axis-cgi/mjpg/video.cgi?resolution=640x480&compression=30", "rtsp://10.0.0.5/onvif1",
+    "rtsp://10.0.0.5:554/11", "rtsp://10.0.0.5/MediaInput/h264/stream_1",
+    "rtsp://10.0.0.5/Streaming/Channels/101?transportmode=multicast&profile=Profile_1",
+    "http://10.0.0.5/cgi-bin/mjpg/video.cgi?channel=1&subtype=1", "rtsp://10.0.0.5/user_stream=1",
+    "rtsp://10.0.0.5/live/ch00_0", "rtsp://10.0.0.5/0/video1", "rtsp://10.0.0.5/stream1?keyframe=1",
+    "rtsp://10.0.0.5/stream1?keyint=25", "rtsp://10.0.0.5/stream1?sessiontimeout=60",
+    "rtsp://10.0.0.5/stream1?accountless=1", "rtsp://10.0.0.5/videoMain?usrname_hint=0",
+    "rtsp://10.0.0.5/live/pass/stream", "rtsp://10.0.0.5/pw/1", "rtsp://10.0.0.5/live.sdp?compass=1",
+    "http://10.0.0.5/snapshot.cgi?chn=1&u=1", "rtsp://10.0.0.5/av0_0", "rtsp://10.0.0.5/ch01.264?dev=1",
+    "rtsp://10.0.0.5/tcp/av0_0", "rtsp://10.0.0.5/cam1/h264?key_frame_interval=2",
+    "rtsp://10.0.0.5/stream?apikey_required=false", "rtsp://10.0.0.5/live?sid_hint=1",
+    "http://10.0.0.5/webcapture.jpg?command=snap&channel=1", "driverpack://acme/10.0.0.50/ch/17",
+    # the product's own false refusals, and a relay told to fetch an address with no login in it
+    "rtsp://10.0.0.5/live?monkey=1", "rtsp://10.0.0.5/live?hotkey=F1", "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs",
+]
+
+
+def test_an_address_inside_a_parameter_is_an_address_and_a_camera_asks_the_platforms_one_rule():
+    """The thirteenth review, blocker 6 — a run: `http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3A…%40cam%2Fs`, how a relay
+    like go2rtc is told what to fetch, was 201: the camera's rule was its own copy (`SubsystemSpec.refuse`, `@` read in
+    the netloc and the path), and the password stood in the row, `GET /cameras`, the reply to an edit, the snapshot and
+    the device's key; unescaped, it was 201 too, hidden on the page but in the row in the clear. Now the camera asks
+    `secrets.address_refusal`, which reads a value that is an address once unescaped as an address (`_nested`, three
+    levels; deeper is refused for that alone). Every form is refused at create and at an edit, through the console, in
+    words that never say it, and no idempotency copy keeps it; the sibling door that asks the same rule — a volume's
+    url — refuses it too (the domain's: М12's suite); a stored one is said by no reader; a relay told to fetch an
+    address with no login in it is taken."""
+    from tests.test_console_gate import _call, _console
+    from vms.config import device_of
+    from vms.volumes import refuse as refuse_volume
+    from w2cplatform.secrets import address_refusal, hide_in_url
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        cam = _call(base, "POST", "/cameras", {"name": "c", "source": "rtsp://10.0.0.5/s"})[1]
+        for src in NESTED_FORMS:
+            st, b = _call(base, "POST", "/cameras", {"name": "relay", "source": src})
+            st2, b2 = _call(base, "PUT", f"/cameras/{cam['id']}", {"source": src})
+            assert st == st2 == 400 and not _leaks(b) and not _leaks(b2), (src, b, b2)
+            assert address_refusal(src) and not _leaks(address_refusal(src)) and not _leaks(hide_in_url(src)), src
+            assert not _leaks(device_of(src)), src
+        ok = _call(base, "POST", "/cameras", {"name": "relay", "source": "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs"})
+        assert ok[0] == 201 and ok[1]["source"] == "http://proxy/relay?src=rtsp%3A%2F%2Fcam%2Fs"
+        # …a stored one (an older build's): said by no reader
+        key = f"vms/cameras/{cam['id']}"
+        writer = box.vars.as_writer("console", SPEC.acl_console())
+        snap = VmsController(box.vars.as_writer("vmscontroller", SPEC.acl_controller()), box.objects, wall=box.wall)
+        for src in NESTED_FORMS:
+            items, idx = box.vars.get(key)
+            writer.put(key, {**items, "source": src}, cas=idx)
+            page = _call(base, "GET", "/cameras")[1]
+            one = _call(base, "PUT", f"/cameras/{cam['id']}", {"name": "c2"})[1]
+            snap.publish_snapshot()
+            assert not _leaks(page) and not _leaks(one) and not _leaks(published_snapshot(box.objects, "vms")), src
+    finally:
+        srv.shutdown()
+    assert box.vars.list("vms/idem/") and not _leaks(json.dumps([box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]))
+    for src in NESTED_FORMS:                                     # the sibling door on the same rule: a volume's url
+        try:
+            refuse_volume({"name": "cold", "url": src, "quota_gb": 1})
+            raise AssertionError(f"a volume took {src}")
+        except Refused as e:
+            assert not _leaks(e), str(e)
+    deep = "rtsp://cam/s"                                        # bounded: nested deeper than it reads is refused
+    for _ in range(5):
+        deep = "http://proxy/relay?src=" + urllib.parse.quote(deep, safe="")
+    assert "more than 3 deep" in (address_refusal(deep) or "") and hide_in_url(deep).endswith("src=***")
+
+
+def test_a_host_in_the_path_is_read_for_its_port_and_neither_a_refusal_nor_a_device_key_says_the_password():
+    """The thirteenth review, majors 8 and 9 — runs: `driverpack://acme/admin:Hunter2%4010.0.0.5/ch/1` was 400 with the
+    password in the words ("the port in '…:Hunter2…' is not a port"), kept a day in `vms/idem/*`: `driverpack://` names
+    its host in the path, where `hide_in_url` did not look for a port. And a row stored before the rules
+    (`acme:hunter2/10.0.0.5`, `acme/10.0.0.5&password=hunter2`) kept the password in its device key (`device_of`) — in
+    `POST /requests`, `vms/requests/*`, the heartbeat and `vms/devices/<key>`. Now the host in the path is read for its
+    port (`secrets._hosts`) where an address is refused and where it is said, `source_refusal` quotes no address, and
+    `device_of` says its key as a page says an address. A key with nothing in it is the key it was."""
+    from tests.test_console_gate import _call, _console
+    from vms.config import device_of, source_refusal
+    from w2cplatform.secrets import address_refusal, hide_in_url
+    for src in HOST_IN_PATH_FORMS:
+        assert address_refusal(src) and not _leaks(address_refusal(src)) and not _leaks(hide_in_url(src)), src
+        assert not _leaks(device_of(src)) and not _leaks(source_refusal(src) or ""), (src, device_of(src))
+    assert device_of("driverpack://acme/10.0.0.50/ch/17") == "acme/10.0.0.50"
+    assert device_of("driverpack://Acme/10.0.0.50:8000/ch/1") == "acme/10.0.0.50:8000"
+    box = Box()
+    ctl, rec, m, srv, base = _console(box)
+    try:
+        cam = _call(base, "POST", "/cameras", {"name": "c", "source": "driverpack://acme/10.0.0.50/ch/1"})[1]
+        for src in HOST_IN_PATH_FORMS:
+            st, b = _call(base, "POST", "/cameras", {"name": "c", "source": src})
+            st2, b2 = _call(base, "PUT", f"/cameras/{cam['id']}", {"source": src})
+            assert st == st2 == 400 and not _leaks(b) and not _leaks(b2), (src, b, b2)
+        key = f"vms/cameras/{cam['id']}"
+        writer = box.vars.as_writer("console", SPEC.acl_console())
+        for src in HOST_IN_PATH_FORMS:                           # stored by an older build: the device key says none
+            items, idx = box.vars.get(key)
+            writer.put(key, {**items, "source": src}, cas=idx)
+            st, cmd = _call(base, "POST", "/requests", {"unit": str(cam["id"]), "action": "output", "port": "1", "state": "on"})
+            assert st == 202 and not _leaks(cmd) and not _leaks(_call(base, "GET", "/cameras")[1]), (src, cmd)
+    finally:
+        srv.shutdown()
+    kept = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/") + box.vars.list("vms/requests/")]
+    assert kept and not _leaks(json.dumps(kept))
+
+
+def test_a_credentials_name_is_read_by_whole_words_and_every_listed_form_goes_the_right_way():
+    """The thirteenth review, minor — a run: the stems of the rule were matched anywhere in a name, and 8 of the review's
+    38 ordinary addresses were refused (`?token_bucket=`, `/passage=north_channel=1`, `?authmode=`, `?bypass=`,
+    `?compass=`, a path segment `pass` or `pw`); the product found `?monkey=` and `?hotkey=` refused in its own. The
+    name is read as words now (`secrets.is_credential_param`). Both ways, counted: every form of `LOGIN_FORMS`,
+    `NESTED_FORMS` and `HOST_IN_PATH_FORMS` refused, every form of `FALSE_FRIENDS` and `PLAIN_FORMS` taken and said as
+    typed — at the rule and at a camera's create."""
+    from w2cplatform.secrets import address_refusal, hide_in_url, is_credential_param
+    bad = LOGIN_FORMS + NESTED_FORMS + HOST_IN_PATH_FORMS
+    good = FALSE_FRIENDS + PLAIN_FORMS
+    refused = [s for s in bad if address_refusal(s)]
+    taken = [s for s in good if address_refusal(s) is None and hide_in_url(s) == s]
+    assert (len(refused), len(taken)) == (len(bad), len(good)) == (57, 50), \
+        (sorted(set(bad) - set(refused)), sorted(set(good) - set(taken)))
+    box = Box()
+    con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+    for i, s in enumerate(good):                                 # one at a time: two of them are one channel spelt twice
+        made = con.create_camera({"name": f"f{i}", "source": s})
+        assert made["source"] == s
+        con.delete(made["id"])
+    # the names, word by word: a credential's — and a word that only begins a name, or `pass` glued at its end, is not
+    for n in ("pwd", "PassWord", "pass_word", "user_id", "access_token", "authToken", "x-auth", "X-Amz-Signature",
+              "AWSAccessKeyId", "aws_secret_access_key", "api_key", "pwd_md5", "userpwd", "clientsecret", "ｐｗｄ",
+              "Authorization", "session_id", "passcode"):
+        assert is_credential_param(n), n
+    for n in ("token_bucket", "passage", "authmode", "auth_mode", "bypass", "compass", "passthrough", "monkey", "hotkey",
+              "keyframe", "key_frame_interval", "apikey_required", "sid_hint", "usrname_hint", "user_stream", "authority",
+              "sessiontimeout", "accountless", "channel", "u"):
+        assert not is_credential_param(n), n
+
+
+def test_the_idempotency_claim_keeps_no_digest_a_dictionary_can_turn_back_into_the_password():
+    """The thirteenth review, major 7 — a run: the camera's row held `cred_secret` sealed, and the idempotency claim
+    beside it (`vms/idem/<key>`, a day) held the sha256 of the raw body; `admin123` and `qwerty2024` came back from it
+    with a dictionary of seven words. Now, with the cluster's key ring, the claim holds an HMAC under a key derived
+    from the ring's (`Sealer.mac`), which the store never sees; without one, the sha256 of the body as a page says it
+    (`*_secret` masked, addresses hidden). Either way the dictionary finds nothing; the same body under the same key is
+    still the same request — on another console holding the same ring, and on one a rotation ahead (the kid names the
+    key) — and another body is still 422."""
+    import hashlib
+    import os
+    from tests.test_sealing import _key
+    from w2cplatform.console import IdempotencyKeys
+    from w2cplatform.sealing import Sealer, is_sealed
+    words = ["12345", "admin", "password", "admin123", "Hunter2", "qwerty2024", "888888"]
+
+    def reversed_(claims, row):
+        found = []
+        for v in claims:
+            digests = {str(v.get(k, "")).split(":")[-1] for k in ("mac", "digest", "sha256")}
+            for w in words:
+                for body in ({"cred_secret": w}, {"name": row["name"], "source": row["source"],
+                                                  "cred_username": row["cred_username"], "cred_secret": w}):
+                    for text in (json.dumps(body), json.dumps(body, sort_keys=True)):
+                        if hashlib.sha256(text.encode()).hexdigest() in digests:
+                            found.append(w)
+        return found
+
+    for keyed in (True, False):
+        box = Box()
+        if keyed:
+            os.environ["SECRETS_KEY"] = _key("k1")
+        try:
+            con = VmsController(box.vars.as_writer("console", SPEC.acl_console()), box.objects, wall=box.wall)
+        finally:
+            os.environ.pop("SECRETS_KEY", None)
+        srv = serve(con, box.archive, port=0, wall=box.wall)
+        base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+        def send(method, path, body, k):
+            req = urllib.request.Request(base + path, data=json.dumps(body).encode(), method=method,
+                                         headers={"Idempotency-Key": k, "Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req) as r:
+                    return r.status, json.loads(r.read())
+            except urllib.error.HTTPError as e:
+                return e.code, json.loads(e.read())
+        try:
+            first = {"name": "gate", "source": "driverpack://file/gate.mp4", "cred_username": "admin", "cred_secret": "admin123"}
+            made = send("POST", "/cameras", first, "s1")
+            assert made[0] == 201 and send("POST", "/cameras", first, "s1") == made       # a retry: the same reply
+            assert send("POST", "/cameras", {**first, "name": "yard"}, "s1")[0] == 422      # another body under it
+            # …another password alone is another body only to a digest that holds it: with a key. Without one the
+            # digest holds no secret, and a retry with another password is the first request — said, not a hole: the
+            # first reply, no second camera
+            again = send("POST", "/cameras", {**first, "cred_secret": "x"}, "s1")
+            assert again[0] == 422 if keyed else again == made
+            assert send("PUT", "/cameras/1", {"cred_secret": "qwerty2024"}, "s2")[0] == 200
+        finally:
+            srv.shutdown()
+        row = box.vars.get("vms/cameras/1")[0]
+        claims = [box.vars.get(k)[0] for k in box.vars.list("vms/idem/")]
+        assert is_sealed(row["cred_secret"]) == keyed and len(con.cameras()) == 1
+        assert all(("mac" in c) == keyed and ("digest" in c) != keyed and "sha256" not in c for c in claims), claims
+        assert reversed_(claims, row) == [], reversed_(claims, row)
+
+    # …and across consoles: one ring, a rotation ahead, and a ring without the claim's kid
+    k1, k2 = os.urandom(32), os.urandom(32)
+    box = Box()
+    w = box.vars.as_writer("console", SPEC.acl_console())
+    a = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k1": k1}, "k1"))
+    ahead = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k1": k1, "k2": k2}, "k2"), sleep=lambda s: None)
+    other = IdempotencyKeys(w, "vms/idem/", box.wall, sealer=Sealer({"k3": k2}, "k3"), sleep=lambda s: None)
+    body = json.dumps({"name": "gate", "cred_secret": "admin123"}).encode()
+    assert a.claim("r1", "anna", body) is None
+    a.store("r1", (201, {"id": 1}))
+    assert box.vars.get("vms/idem/r1")[0]["mac"].startswith("k1:")
+    assert ahead.claim("r1", "anna", body) == (201, {"id": 1})                  # the same request, by the kid it names
+    assert ahead.claim("r1", "anna", body + b" ")[0] == 422                      # another body
+    assert other.claim("r1", "anna", body)[0] == 422                             # a digest it cannot make: not answered
+
+
+def test_a_value_inside_a_list_or_an_object_is_asked_and_masked_all_the_way_down():
+    """The thirteenth review, minor — a run (М12): only a value that was a string was asked, and `{"source":
+    ["rtsp://admin:…@…"]}` was 202, kept, applied on the camera and published as typed. `secrets.refusal_within` asks
+    every string inside a list or an object (and a key that is an address), naming the place and never the value;
+    `mask_secrets` hides an address and masks a `*_secret` at any depth. The domain's door and a camera's own console
+    ask it (М12's suite, `test_domain_door.py`)."""
+    from w2cplatform.secrets import refusal_within
+    for value in (["rtsp://admin:Hunter2@10.0.0.5/s"], {"url": "http://h/x?pwd=Hunter2"},
+                  {"a": [{"b": "http://proxy/relay?src=rtsp%3A%2F%2Fadmin%3AHunter2%40cam"}]},
+                  {"rtsp://admin:Hunter2@h/s": 1}):
+        where, why = refusal_within({"source": value})
+        assert where.startswith("source") and why and not _leaks(where + why), (where, why)
+        shown = mask_secrets([{"source": value, "extra": {"cred_secret": "Hunter2", "empty_secret": ""}}])[0]
+        assert not _leaks(json.dumps(shown, default=str)) and shown["extra"] == {"cred_secret": SECRET_MASK, "empty_secret": ""}
+    assert refusal_within({"source": ["rtsp://10.0.0.5/s"], "labels": ["a", "b"], "n": 3}) is None
+
+
+def test_a_closed_consoles_gate_never_quotes_a_source_it_refuses():
+    """The product's cross-check of the thirteenth review: a closed console's gate quoted a password read as a port
+    («invalid port ":Hunter2"»). The course's gate asks who and may, from the headers and the units the body names, and
+    its refusals name a caller, a capability and a unit — checked here over every form this file holds: whatever the
+    caller (none, one with a grant on another camera, an administrator), no reply says the password."""
+    from tests.test_console_gate import Tokens, _call, _console
+    from w2cplatform.access import TRUST_KEYS
+    box = Box()
+    ctl, rec, m, srv, base = _console(box, Tokens({"one": [("admin", "2", ())], "admin": [("admin", None, ())]}))
+    try:
+        assert _call(base, "POST", "/cameras", {"source": "driverpack://acme/10.0.0.50/ch/1"}, token="admin")[0] == 201
+        box.vars.put(TRUST_KEYS, {"current": "k1", "key:k1": "00" * 32})   # in a domain: the gate is shut to strangers
+        said = 0
+        for token in (None, "one", "admin"):
+            for src in LOGIN_FORMS + NESTED_FORMS + HOST_IN_PATH_FORMS + ["rtsp://admin:Hunter2@h:Hunter2/s"]:
+                for method, path in (("POST", "/cameras"), ("PUT", "/cameras/1")):
+                    st, b = _call(base, method, path, {"source": src}, token=token)
+                    assert st >= 400 and not _leaks(b), (token, method, src, st, b)
+                    said += 1
+        assert said == 3 * 2 * (43 + 6 + 8 + 1)
+    finally:
+        srv.shutdown()
+
+
+def test_the_page_asks_a_secret_in_a_password_field_and_never_fills_it_with_the_mask():
+    """The thirteenth review, minor: the page drew `cred_secret` as `type="text"` — the password on the screen while it
+    is typed, where `access_secret` beside it was a password field. Every `*_secret` of a spec is a password field now
+    (`input` in `console.html`); and the edit form leaves it empty, its placeholder saying whether one is set — filled
+    with the row's `***` it saved `***` as the camera's password on the next Save."""
+    import os
+    import re
+    page = open(os.path.join(os.path.dirname(__file__), "..", "w2cplatform", "console.html"), encoding="utf-8").read()
+    body = page[page.index("function input(f, adding)"):]
+    body = body[:body.index("\n}\n")]
+    first = body.index("if (f.name.endsWith('_secret'))")
+    assert 'type="password"' in body[first:body.index("\n", first)] and first < body.index('type="text"')
+    fill = page[page.index("function fillEdit(c)"):]
+    fill = fill[:fill.index("\n}\n")]
+    assert re.search(r"endsWith\('_secret'\)\) \{ el\.value = '';", fill)
