@@ -38,6 +38,10 @@ pytestmark = pytest.mark.skipif(not have_library(), reason="the raft library is 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TLS = os.path.join(HERE, "tls")
 NAMES = ("srv-a", "srv-b", "srv-c")                  # one TLS bundle each under tests/tls/
+# A checkout keeps no mode but the executable bit, so the bundles' secrets come out 0644 — and the daemon refuses a raft
+# secret others can read (`tls.raft_secret`, the review's twelfth pass). `w2c-ca.sh` writes them 0600; so does this.
+for _name in NAMES:
+    os.chmod(os.path.join(TLS, _name, "raft.secret"), 0o600)
 RIGHTS = Rights.parse({"roles": {
     # `platform/schema` too: a worker checks the store's schema version before it runs (`contract.check_schema`).
     "vmsworker": {"read": ["vms/*", "platform/schema"], "write": ["vms/epoch/*", "vms/slots/*"],
@@ -382,6 +386,90 @@ def test_a_join_is_refused_without_a_daemons_certificate():
         assert [m["id"] for m in box.status()["members"]] == ["srv-a"]
     finally:
         g.stop()
+
+
+def _listening(backend) -> tuple:
+    """Where the library's raft port listens: its own socket, which pysyncobj keeps private."""
+    end = time.monotonic() + 10
+    while True:
+        srv = getattr(backend.raft, "_SyncObj__transport")._server
+        sock = getattr(srv, "_TcpServer__socket")
+        if sock is not None:
+            return sock.getsockname()
+        assert time.monotonic() < end, "the raft port was never opened"
+        time.sleep(0.02)
+
+
+def test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nobody():
+    """The review's twelfth pass, blocker 1, by its probe (`cfg/probe_raft_bind.py`): a member started with
+    `-raft 127.0.0.1:<port>` and no secret listened on `*:<port>` — pickle from the network is code execution. The
+    library is told where to listen (`bindAddress`) and the daemon asks its socket: `127.0.0.1`, and `lsof` says the
+    same. Such a member is a group of one: the operator's `join` is refused (409) and the group does not change, and
+    a restart from a journal that names a partner is refused."""
+    import subprocess
+    d = tempfile.mkdtemp(prefix="cs", dir="/tmp")
+    port = _port()
+    b = configstore.start_member("solo", d, f"127.0.0.1:{port}", bootstrap=True, tls_dir=None, tuning="lan")
+    dm = None
+    try:
+        assert _listening(b)[0] == "127.0.0.1", _listening(b)
+        if shutil.which("lsof"):
+            out = subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"], capture_output=True, text=True).stdout
+            assert f"127.0.0.1:{port}" in out and f"*:{port}" not in out, out
+        dm = StoreDaemon(b, node_id="solo", sockets=os.path.join(d, "s"), rights=RIGHTS)
+        admin = open_vars(f"configstore://{d}/s/admin.sock")
+        code, said = dm.serve("POST", "/v1/join", json.dumps({"id": "srv-x", "raft": f"127.0.0.1:{_port()}"}).encode(),
+                              "admin", 5.0)
+        assert (code, said["kind"]) == (409, "refused") and "group of one" in said["error"], said
+        assert [m["id"] for m in admin.status()["members"]] == ["solo"]
+    finally:
+        (dm.stop() if dm else b.stop())
+    with open(os.path.join(d, "peers.json"), "w") as f:
+        json.dump([f"127.0.0.1:{_port()}"], f)
+    try:
+        with pytest.raises(ValueError):
+            configstore.start_member("solo", d, f"127.0.0.1:{port}", tls_dir=None, tuning="lan")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_a_daemon_joins_only_as_its_own_server_and_no_join_leaves_a_voter_nobody_runs():
+    """The review's twelfth pass, major 3, on a real group: srv-b's certificate at srv-a's `-api` door may not join
+    srv-c or remove srv-a (403), and srv-b again at another raft address is refused (409) — the old address would
+    stay a voter nobody runs. The operator's `join` through `admin.sock` is held to the same (the sibling): an id the
+    group holds at another address, an address another id holds. The group stays two."""
+    g = Group(2)
+    try:
+        a, b = g.members
+        ctx = tls.client_context(b.tls)
+        call = lambda route, body: _api(a, ctx, route, body)                              # noqa: E731
+        assert call("/v1/join", {"id": "srv-c", "raft": f"127.0.0.1:{_port()}"})[0] == 403
+        assert call("/v1/leave", {"id": "srv-a"})[0] == 403
+        code, said = call("/v1/join", {"id": "srv-b", "raft": f"127.0.0.1:{_port()}"})
+        assert (code, said["kind"]) == (409, "refused") and "leave first" in said["error"], said
+        assert call("/v1/join", {"id": "srv-b", "raft": b.raft, "api": b.adv})[0] == 200   # a retry of its own join
+        admin = open_vars(a.url())
+        for body, words in (({"id": "srv-b", "raft": f"127.0.0.1:{_port()}"}, "leave first"),
+                            ({"id": "srv-z", "raft": b.raft}, "srv-b's raft address")):
+            try:
+                admin._call("POST", "/v1/join", body)
+                raise AssertionError(f"a join that leaves a voter nobody runs was taken: {body}")
+            except Conflict as e:                               # the handle's word for a 409
+                assert words in str(e), e
+        assert sorted(m["id"] for m in a.status()["members"]) == ["srv-a", "srv-b"]
+        assert len(a.status()["members"]) == 2
+    finally:
+        g.stop()
+
+
+def _api(m: "Member", ctx, route: str, body: dict) -> tuple[int, dict]:
+    import http.client
+    s = ctx.wrap_socket(socket.create_connection(("127.0.0.1", m.api_port), timeout=10), server_hostname=m.name)
+    conn = http.client.HTTPConnection("127.0.0.1", m.api_port, timeout=40)
+    conn.sock = s
+    conn.request("POST", route, body=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    r = conn.getresponse()
+    return r.status, json.loads(r.read() or b"{}")
 
 
 def test_a_member_restarted_on_its_journal_comes_back_with_its_rows():

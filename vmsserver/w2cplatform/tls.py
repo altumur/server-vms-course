@@ -88,14 +88,34 @@ def client_context(directory: str, name: str = "server") -> ssl.SSLContext:
     return ctx
 
 
+# THE SECRET IS CHECKED, AND SALTED BY THE INSTALLATION (the review's twelfth pass, minor). It was taken as it was: a
+# file anybody on the server could read, one character long, would do. So it is refused when its mode lets anybody but
+# its owner read it (`w2c-ca.sh` writes it 0600) and when it is shorter than `SECRET_CHARS` (`w2c-ca.sh` writes 64
+# hex characters, 256 bits). And pysyncobj derives its key with one PBKDF2 salt for every installation in the world
+# (`pysyncobj/encryptor.py`, `SALT`), so the password it is handed is the secret keyed with this installation's CA
+# (`ca.pem`, which every member holds): a key worked out for one installation's secret is no use against another's.
+SECRET_CHARS = 32
+
+
 def raft_secret(directory: str) -> str:
-    """The raft port's shared secret; refused when it is not there or empty — an open raft port is not a default."""
-    path = Bundle(directory).raft_secret
-    with open(path) as f:
+    """The raft port's password: `raft.secret`, refused when it is not there, readable by others or short — an open
+    raft port is not a default — keyed with the installation's CA."""
+    import hashlib
+    import hmac
+    import stat
+    b = Bundle(directory)
+    with open(b.raft_secret) as f:
+        mode = stat.S_IMODE(os.fstat(f.fileno()).st_mode)
         secret = f.read().strip()
-    if not secret:
-        raise ValueError(f"{path} is empty")
-    return secret
+    if mode & 0o077:
+        raise ValueError(f"{b.raft_secret} is readable by others (mode {mode:04o}): chmod 600 — it is the raft port's "
+                         f"password")
+    if len(secret) < SECRET_CHARS:
+        raise ValueError(f"{b.raft_secret} holds {len(secret)} characters, fewer than {SECRET_CHARS}: make it again "
+                         f"(deploy/w2c-ca.sh init writes 64)")
+    with open(b.ca, "rb") as f:
+        salt = hashlib.sha256(f.read()).digest()
+    return hmac.new(salt, secret.encode(), hashlib.sha256).hexdigest()
 
 
 def split_address(address: str) -> tuple[str, str, int]:

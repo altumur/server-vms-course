@@ -40,13 +40,34 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # - `<sockets>/admin.sock` — 0600, root's: everything but what nobody does (an epoch deleted, `domain/*` deleted
 #   by anyone but the domain's own roles, `storemachine.DOMAIN_ROLES`). The operator's commands (`status`, `join`, `leave`, `rights`, `backup`, `restore`,
 #   `import` — the product's `configstore` command has the same verbs) and the contract suite use it.
-# - `-api host:port` — the other daemons' door: `/v1/join`, `/v1/leave`, `/v1/status`, and the data routes for
-#   a peer. Mutual TLS, mandatory (`tls.py`): a client certificate of the installation's CA with the role
-#   `configstore`, or the handshake fails (no certificate) or the door answers 403 (another role's certificate).
+# - `-api host:port` — the other daemons' door: `/v1/status`, and `/v1/join` / `/v1/leave` of the calling daemon's
+#   OWN server (the id in the body is the server its certificate names). Mutual TLS, mandatory (`tls.py`): a client
+#   certificate of the installation's CA with the role `configstore`, or the handshake fails (no certificate) or the
+#   door answers 403 (another role's certificate). A daemon has NO right on a row (the review's twelfth pass, major
+#   3; `storemachine.Rights`): a data request on this door is answered only when it is forwarded for a process, and
+#   then as that process's role, which the forwarding daemon names in `FORWARDED` — a role of the rights file,
+#   never `admin`. A join that would leave a voter nobody runs is refused: an id already in the group at another
+#   raft address, or a raft address another id holds (`RaftBackend.add`).
 # - the raft port (`-raft`) — the library's own, pickle on the wire: an open one is code execution for anyone
 #   who reaches it. `password=` from `<tls>/raft.secret` encrypts and authenticates it (the product's
-#   `hashicorp/raft` puts TLS there instead; `password=` needs the `cryptography` module). Without `-tls` the
-#   daemon refuses a raft address off loopback.
+#   `hashicorp/raft` puts TLS there instead; `password=` needs the `cryptography` module). The library is told to
+#   listen on the raft address it was given (`bindAddress`) — left to itself it listened on every interface
+#   (the review's twelfth pass, blocker 1: `-raft 127.0.0.1:…` without `-tls` passed a check of the address's
+#   TEXT, and the socket was on `0.0.0.0`). Without the secret a member is a group of one and its socket is on
+#   loopback, proved by the socket — the address resolved and bound before the library is started, and the
+#   library's own listening socket asked again after (`RaftBackend._open_only_to_this_box`); a partner, a join, an
+#   operator's `join`, or a start from a journal that names partners, all refused.
+#
+# ## Every door is bounded (the review's twelfth pass, major 1)
+# A role socket made a thread for every connection and waited on it for ever: 200 idle connections were 203
+# threads, and `Content-Length: -1` was `read(-1)` — a read to the end of a connection the caller kept open. Each
+# door now serves `ROLE_CONNECTIONS` (the `-api` door `API_CONNECTIONS`, `API_PER_ADDRESS` of them to one address)
+# connections at once; the next is answered 503 `unavailable` on the spot, unread — not done, so a write may be sent
+# again — (the `-api` door just closes it: there is no TLS yet to answer in). A request's line and headers arrive
+# whole within `HEADERS_WAIT` and a body within its own deadline with a floor on its pace — the platform's
+# `Deadlined` and `read_body` (`console.py`), the same as every other door's — and a length that is not a
+# non-negative number is 400, one past `MAX_BODY` 413, unread. `MAX_BODY` is a row's ceiling (`storemachine.MAX_VALUE`)
+# as JSON may spell it: six bytes for a character at worst.
 # The names an installation sees — paths, the socket groups — are the constants below, each said once.
 #
 # ## Writes and reads, and what a follower does with them
@@ -58,8 +79,8 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # forwarding is the library's (`appendEntriesUseBatch=False`: at once, not at the next tick — 150 ms a write
 # otherwise). The rights were checked on the way in, by the daemon whose socket the caller opened. The product's
 # `hashicorp/raft` does not carry commands, so its daemon forwards the request itself over the `-api` door, marked
-# `X-Configstore-Forwarded` (`FORWARDED`: a forwarded request is never forwarded again — 503 `notleader`). This
-# daemon never sends it; its door answers such a request like any peer's.
+# `X-Configstore-Forwarded: <the caller's role>` (`FORWARDED`: a forwarded request is never forwarded again — 503
+# `notleader`). This daemon never sends it; its door answers such a request with the rights of the role it names.
 #
 # ## Faults — "not done" and "do not know" are different answers
 # `commandsWaitLeader=False`: with no leader the library refuses a command at once instead of queueing it, so
@@ -85,14 +106,20 @@ and the operator's commands, through this server's `admin.sock` (the product's o
 # through `admin.sock` into a FRESH group — no rows yet — whose base (`-index-base N`) is at least the file's
 # counter: every new version is above every old one, so a version a process still remembers from the file matches
 # nothing and its CAS conflicts. Online, through the daemon, because a write that goes through the log is on every
-# member; and refused whole, before the first write, when the file holds a row that does not read.
+# member; and refused whole, before the first write, when the file holds a row that does not read or a row heavier
+# than the store takes (`storemachine.MAX_VALUE`).
 # `backup` writes every row and the highest version it saw; `restore` is the same import from that file, into a
 # fresh group whose base is above that version. (The product's `recover` — a group rebuilt from one survivor's
 # journal when the majority is gone for good — is not here.)
+# AN IMPORT THAT STOPPED IS CONTINUED (the review's twelfth pass, minor: it could not be). The same `import` or
+# `restore` again goes on where the last one stopped when every row the group holds is one it loaded — the same key,
+# the same items; a row it did not load, or one changed since, refuses it as before: rows are loaded into a group
+# nobody else has written to.
 #
 # ## What pysyncobj does not give (and the product's library does)
 # - the journal is a memory-mapped file with no fsync before an entry is acknowledged: it survives a killed
-#   process, not a power cut of a majority (`FileVariables` has its barriers for exactly that, feedback BD)
+#   process, not a power cut of a majority (`FileVariables` has its barriers for exactly that, feedback BD); the
+#   product's `raft-boltdb` syncs every batch before it is acknowledged. Open here, and said in lesson 2.
 # - no pre-vote and no leader lease; a leader cut off from the others steps down after `leaderFallbackTimeout`
 #   (30 s by default) — harmless for correctness, because reads go through the log
 # ================================================================================================
@@ -100,8 +127,10 @@ from __future__ import annotations
 
 import argparse
 import http.client
+import ipaddress
 import json
 import os
+import socket
 import socketserver
 import ssl
 import sys
@@ -112,8 +141,8 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import tls
-from .storemachine import ADMIN, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer
-from .variables import STORE_SCHEME
+from .storemachine import ADMIN, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer
+from .variables import STORE_SCHEME, items_bytes
 
 # What an installation sees, each said once (the product names them; a rename is a line here).
 SOCKETS = "/run/configstore"                        # `<role>.sock` and `admin.sock`
@@ -135,6 +164,15 @@ def socket_group(role: str, rights: Rights | None = None) -> str:
 
 LEADER_WAIT = 5.0          # how long a command may wait for a leader before the daemon answers 503
 JOIN_WAIT = 30.0           # a membership change: one at a time, a log entry, a new member catching up
+BIND_WAIT = 10.0           # how long the library may take to open the raft port
+
+# What every door bears (the review's twelfth pass, major 1; the notes above).
+ROLE_CONNECTIONS = 64      # connections one socket (a role's, `admin.sock`) serves at once
+API_CONNECTIONS = 32       # …the `-api` door: a few daemons, each with a join or a status at a time
+API_PER_ADDRESS = 8        # …of which one address holds this many, so a stranger's handshakes do not fill it
+HEADERS_WAIT = 5.0         # seconds a request's line and headers may take, whole
+DOOR_TIMEOUT = 10.0        # seconds a door's socket waits on a caller that sends or reads nothing
+MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character escaped (`\u00XX`), and its key
 
 # Timings by name (`-tuning`). `default` is the library's own (election 0.4–1.4 s, heartbeat 0.1 s); `lan` is
 # what a LAN of three can afford; `slow` is a loaded box or a WAN — the shape Consul ships (five times its LAN
@@ -208,20 +246,60 @@ def have_library() -> bool:
         return False
 
 
+# The interface a raft address names, as the socket will be bound to it: `host:port` resolved once, so what is checked
+# and what the library binds are one address (`bindAddress` takes it as it is; left out, the library binds `0.0.0.0`).
+def _bind_address(raft: str) -> tuple[str, int]:
+    host, sep, port = raft.rpartition(":")
+    if not sep or not host or not port.isdigit():
+        raise ValueError(f"not a raft address: {raft!r} (host:port)")
+    try:
+        info = socket.getaddrinfo(host.strip("[]"), int(port), type=socket.SOCK_STREAM)
+    except socket.gaierror as e:
+        raise ValueError(f"the raft address {raft} names no interface: {e}") from None
+    return info[0][4][0], int(port)
+
+
+def _loopback(ip: str) -> bool:
+    try:
+        return ipaddress.ip_address(ip.split("%", 1)[0]).is_loopback
+    except ValueError:
+        return False
+
+
+NO_SECRET = ("a raft port without its secret is a group of one on this box's loopback — pickle on that port is "
+             "code execution for anyone who reaches it: -tls <dir> with raft.secret (deploy/w2c-ca.sh)")
+
+
 class RaftBackend:
     """One member of the group. `raft` is this member's raft address, `partners` the others' ([] for a group of
-    one), `data` the directory of its journal, dump and `peers.json`."""
+    one), `data` the directory of its journal, dump and `peers.json`. Without `password` it is a group of one,
+    listening on loopback, or it is not at all (the notes: Doors)."""
 
     def __init__(self, node_id: str, raft: str, partners: list[str], data: str, tuning: str | dict = "default",
                  password: str | None = None, leader_wait: float = LEADER_WAIT):
-        lib = _library()
+        ip, port = _bind_address(raft)
+        if not password:
+            if partners:
+                raise ValueError(f"{NO_SECRET}; this member was to start with {', '.join(partners)}")
+            # The socket, not the address's text: bound to the address resolved, before the library is let near it.
+            probe = socket.socket(socket.AF_INET6 if ":" in ip else socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                probe.bind((ip, 0))
+                bound = probe.getsockname()[0]
+            except OSError as e:
+                raise ValueError(f"the raft address {raft} is not this box's: {e}") from None
+            finally:
+                probe.close()
+            if not _loopback(bound):
+                raise ValueError(f"{NO_SECRET}; {raft} is {bound}")
+        lib = _library()                             # after the refusals: they need no raft library to be said
         os.makedirs(data, exist_ok=True)
         knobs = dict(TUNINGS[tuning]) if isinstance(tuning, str) else dict(tuning)
         # `useFork=False`: the dump is written by the tick thread, not by a forked child — a fork of a process with
         # an HTTP server's threads in it is what macOS refuses to promise anything about.
         conf = {"dynamicMembershipChange": True, "useFork": False, "appendEntriesUseBatch": False,
                 "commandsWaitLeader": False, "journalFile": os.path.join(data, "journal"),
-                "fullDumpFile": os.path.join(data, "dump")}
+                "fullDumpFile": os.path.join(data, "dump"), "bindAddress": f"{ip}:{port}"}
         if password:
             try:
                 import cryptography  # noqa: F401 — pysyncobj's `password=` is built on it
@@ -230,11 +308,36 @@ class RaftBackend:
             conf["password"] = password
         self.fail = lib["FAIL_REASON"]
         self.node_id, self.raft_addr, self.data, self.leader_wait = node_id, raft, data, leader_wait
+        self.secret = bool(password)
         self.rep = lib["Replicated"]()
         self.raft = lib["SyncObj"](raft, list(partners), lib["SyncObjConf"](**{**conf, **knobs}), consumers=[self.rep])
         self._stop = threading.Event()
         self._peers: list[str] | None = None
+        if not password:
+            self._open_only_to_this_box()
         threading.Thread(target=self._keep_peers, daemon=True).start()
+
+    # The library's own listening socket, asked: what it bound, not what it was told. Its transport keeps the socket
+    # private (pysyncobj 0.3: `SyncObj.__transport._server`), so a library that renamed it is refused too — a member
+    # without its secret that cannot show where it listens does not run.
+    def listening(self) -> tuple | None:
+        end = time.monotonic() + BIND_WAIT
+        while time.monotonic() < end:
+            try:
+                srv = getattr(self.raft, "_SyncObj__transport")._server
+                sock = getattr(srv, "_TcpServer__socket")
+                if sock is not None and getattr(self.raft, "_SyncObj__transport").ready:
+                    return sock.getsockname()
+            except (AttributeError, OSError):
+                return None
+            time.sleep(0.02)
+        return None
+
+    def _open_only_to_this_box(self) -> None:
+        where = self.listening()
+        if where is None or not _loopback(str(where[0])):
+            self.raft.destroy_synchronous()
+            raise ValueError(f"{NO_SECRET}; the library listens on {where[0] if where else 'an address it does not say'}")
 
     # A member is one once its group took it: `member.json` is written after the bootstrap's first commands or an
     # accepted join, never before. A journal without it is what a start that failed left behind — a daemon that
@@ -322,7 +425,21 @@ class RaftBackend:
 
     # Membership, one change at a time: the library carries the change to the leader and refuses a second while the
     # first is uncommitted; both are retried inside the wait. Then the member's row: its id and its door.
+    #
+    # A JOIN NEVER LEAVES A VOTER NOBODY RUNS (the review's twelfth pass, major 3: a daemon's certificate added false
+    # voters). The same id again at the same address is a retry and goes through; an id the group holds at another
+    # raft address, or an address another id holds, is refused — the old address would stay a voter of the group
+    # beside the new one, and a group that counts a voter nobody runs has lost a vote. A server that moved leaves
+    # first. A member without the raft port's secret takes nobody: it is a group of one (`NO_SECRET`).
     def add(self, node_id: str, raft: str, api: str, deadline: float = JOIN_WAIT) -> None:
+        if not self.secret:
+            raise PermissionError(NO_SECRET)
+        known = self.rep.m.members_copy()
+        if node_id in known and known[node_id]["raft"] != raft:
+            raise PermissionError(f"{node_id} is a member at {known[node_id]['raft']}, not {raft}: leave first")
+        holder = next((k for k, v in known.items() if v["raft"] == raft and k != node_id), None)
+        if holder is not None:
+            raise PermissionError(f"{raft} is {holder}'s raft address")
         end = time.monotonic() + deadline
         if raft != self.raft_addr and raft not in {n.id for n in self.raft.otherNodes}:
             self._apply(self.raft.addNodeToCluster, raft, deadline=deadline, write=True)
@@ -356,14 +473,23 @@ class RaftBackend:
 # -- doors -----------------------------------------------------------------------------------------------
 def _door(daemon: "StoreDaemon", role_of):
     """The HTTP handler of one door. `role_of(handler)` says who is calling: the socket's role, or the role in the
-    peer's certificate on the `-api` door (`PermissionError` when it is not a daemon's)."""
-    class Door(BaseHTTPRequestHandler):
+    peer's certificate on the `-api` door (`PermissionError` when it is not a daemon's). Reads under the platform's
+    deadlines (`Deadlined`, `read_body`: the notes, "Every door is bounded")."""
+    from .console import Deadlined, read_body        # the platform's door; imported here, `console` imports much
+
+    class Door(Deadlined, BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
+        timeout = DOOR_TIMEOUT
+        header_timeout = HEADERS_WAIT
+        peer = ""                                    # the server a daemon's certificate names (`-api` door)
 
         def log_message(self, *a):           # a request a second per worker is not a log line
             pass
 
         def _send(self, code: int, body: dict) -> None:
+            if code >= 400 and "kind" not in body:   # `read_body`'s refusals say `error` and `detail`; the API, `kind`
+                body = {"kind": {408: "timeout", 413: "toolarge"}.get(code, "badrequest"),
+                        "error": str(body.get("detail") or body.get("error") or "")}
             raw = json.dumps(body).encode()
             self.send_response(code)
             self.send_header("Content-Type", "application/json")
@@ -373,6 +499,10 @@ def _door(daemon: "StoreDaemon", role_of):
 
         def _serve(self, method: str) -> None:
             try:
+                # The body first, bounded and under its deadline: a 403 sent over a body left unread is a reset the
+                # caller never reads the 403 from.
+                if not read_body(self, MAX_BODY):
+                    return                               # 400 / 413 / 408 sent, the connection closed
                 n = int(self.headers.get("Content-Length") or 0)
                 raw = self.rfile.read(n) if n else b""
                 try:
@@ -383,7 +513,8 @@ def _door(daemon: "StoreDaemon", role_of):
                     deadline = float(self.headers.get("X-Deadline") or daemon.leader_wait)
                 except ValueError:
                     deadline = daemon.leader_wait
-                code, body = daemon.serve(method, self.path, raw, role, deadline)
+                code, body = daemon.serve(method, self.path, raw, role, deadline, peer=self.peer,
+                                          forwarded=self.headers.get(FORWARDED, "") if role == PEER else "")
                 return self._send(code, body)
             except Exception as e:                       # noqa: BLE001 — a door answers, whatever went wrong behind it
                 return self._send(500, {"kind": "internal", "error": f"{type(e).__name__}: {e}"})
@@ -397,12 +528,86 @@ def _door(daemon: "StoreDaemon", role_of):
     return Door
 
 
+# So many connections served at once, so many of them to one address; the next is refused on the spot (`busy`), and
+# what it sent is not read. Mixed in before a threading server: the count is taken before a thread is made.
+class _Bounded:
+    daemon_threads = True
+    per_address: int | None = None
+
+    def bound(self, limit: int, per_address: int | None = None) -> None:
+        self.limit, self.per_address = limit, per_address
+        self.count_lock = threading.Lock()
+        self.serving, self.refused, self.by_addr, self.held = 0, 0, {}, {}
+
+    def process_request(self, request, client_address):
+        addr = str(client_address[0]) if isinstance(client_address, tuple) and client_address else ""
+        with self.count_lock:
+            room = self.serving < self.limit and (self.per_address is None
+                                                  or self.by_addr.get(addr, 0) < self.per_address)
+            if room:
+                self.serving += 1
+                self.by_addr[addr] = self.by_addr.get(addr, 0) + 1
+                self.held[request] = addr
+            else:
+                self.refused += 1
+        if not room:
+            return self.busy(request)
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._give(request)
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._give(request)
+
+    def _give(self, request) -> None:
+        with self.count_lock:
+            addr = self.held.pop(request, None)
+            if addr is None:
+                return
+            self.serving -= 1
+            if self.by_addr.get(addr, 1) > 1:
+                self.by_addr[addr] -= 1
+            else:
+                self.by_addr.pop(addr, None)
+
+    def busy(self, request) -> None:
+        self.shutdown_request(request)
+
+    def handle_error(self, request, client_address):
+        if isinstance(sys.exc_info()[1], OSError):
+            return                                   # a caller that hung up, or was let go at its deadline
+        super().handle_error(request, client_address)
+
+
+# A full role socket says so in the store's own words — `unavailable`: nothing was read, so nothing was done, and the
+# handle's caller reads it as a store that did not answer (`StoreUnavailable`), never as an outcome unknown.
+_BUSY_BODY = json.dumps({"kind": "unavailable", "error": f"busy: this socket serves {ROLE_CONNECTIONS} connections at "
+                                                         f"once — not done, try again"}).encode()
+BUSY = (b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\nConnection: close\r\n"
+        b"Content-Length: %d\r\n\r\n%s" % (len(_BUSY_BODY), _BUSY_BODY))
+
+
 # The unix server class is asked for here, inside the call: `socketserver` has it only where `AF_UNIX` exists.
 def _unix_server(path: str, handler, mode: int, group: str | None):
+    class UnixDoor(_Bounded, socketserver.ThreadingUnixStreamServer):
+        def busy(self, request) -> None:
+            from .console import linger
+            try:
+                request.settimeout(1.0)
+                request.sendall(BUSY)
+            except OSError:
+                return self.shutdown_request(request)
+            linger.add(request)                      # its request unread: finished, not reset
+
     if os.path.exists(path):
         os.unlink(path)                              # a socket left by a daemon that was killed
-    srv = socketserver.ThreadingUnixStreamServer(path, handler)
-    srv.daemon_threads = True
+    srv = UnixDoor(path, handler)
+    srv.bound(ROLE_CONNECTIONS)
     os.chmod(path, mode)
     if group:
         try:
@@ -413,21 +618,17 @@ def _unix_server(path: str, handler, mode: int, group: str | None):
     return srv
 
 
-class _TlsServer(ThreadingHTTPServer):
-    """The `-api` door: the TLS handshake in the request's own thread, so one slow peer does not hold the door."""
-    daemon_threads = True
+class _TlsServer(_Bounded, ThreadingHTTPServer):
+    """The `-api` door: the TLS handshake in the request's own thread, so one slow peer does not hold the door; so many
+    connections at once, so many to one address (a full door closes the next: there is no TLS yet to answer in)."""
 
     def __init__(self, addr, handler, ctx: ssl.SSLContext):
         self.ctx = ctx
+        self.bound(API_CONNECTIONS, API_PER_ADDRESS)
         super().__init__(addr, handler)
 
-    def handle_error(self, request, client_address):
-        if isinstance(sys.exc_info()[1], OSError):
-            return                                   # a peer that hung up mid-request: not the door's fault
-        super().handle_error(request, client_address)
-
     def finish_request(self, request, client_address):
-        request.settimeout(10.0)
+        request.settimeout(DOOR_TIMEOUT)
         try:
             conn = self.ctx.wrap_socket(request, server_side=True)
         except (ssl.SSLError, OSError):
@@ -442,7 +643,7 @@ class _TlsServer(ThreadingHTTPServer):
 
 
 def _peer_role(handler) -> str:
-    tls.require_role(handler.connection, PEER)
+    handler.peer = tls.peer_server(tls.require_role(handler.connection, PEER))
     return PEER
 
 
@@ -481,7 +682,10 @@ class StoreDaemon:
     def status(self) -> dict:
         return {**self.backend.status(), "api": self.api_url}
 
-    def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float) -> tuple[int, dict]:
+    # `role` is who the door says is calling; on the `-api` door that is `PEER`, with `peer` the server its certificate
+    # names and `forwarded` the role a forwarding daemon names for its caller (the notes: Doors).
+    def serve(self, method: str, target: str, raw: bytes, role: str, deadline: float, peer: str = "",
+              forwarded: str = "") -> tuple[int, dict]:
         path = urllib.parse.urlsplit(target).path
         if method == "GET" and path == "/v1/status":
             return 200, self.status()
@@ -490,19 +694,34 @@ class StoreDaemon:
                 return 403, {"kind": "forbidden", "error": f"{role} may not read the rights"}
             return 200, self.rights.doc()
         if method == "POST" and path in ("/v1/join", "/v1/leave"):
-            if role not in (ADMIN, PEER):
-                return 403, {"kind": "forbidden", "error": f"{role} may not change the group"}
+            if role not in (ADMIN, PEER) or forwarded:
+                return 403, {"kind": "forbidden", "error": f"{forwarded or role} may not change the group"}
             try:
                 body = json.loads(raw or b"{}")
-                if path == "/v1/join":
-                    self.backend.add(str(body["id"]), str(body["raft"]), str(body.get("api", "")))
-                else:
-                    self.backend.remove(str(body["id"]))
-            except (ValueError, KeyError, TypeError) as e:
+                node_id = str(body["id"])
+                join = (node_id, str(body["raft"]), str(body.get("api", ""))) if path == "/v1/join" else None
+            except (ValueError, KeyError, TypeError, AttributeError) as e:
                 return 400, {"kind": "badrequest", "error": f"{path} takes {{id, raft, api}}: {e}"}
+            if role == PEER and node_id != peer:
+                return 403, {"kind": "forbidden", "error": f"the daemon of {peer or 'no server'} may change the group "
+                                                           f"for its own server, not for {node_id}"}
+            try:
+                if join:
+                    self.backend.add(*join)
+                else:
+                    self.backend.remove(node_id)
+            except PermissionError as e:
+                return 409, {"kind": "refused", "error": str(e)}
             except Unavailable as e:
                 return 503, {"kind": "unavailable", "error": str(e)}
             return 200, self.status()
+        if role == PEER:
+            # A daemon has no right on a row; a request it forwards is its caller's, with its caller's rights.
+            if forwarded not in self.rights.roles:
+                return 403, {"kind": "forbidden", "error": f"a daemon may not read or write rows: a request forwarded "
+                                                           f"for a process names its role in {FORWARDED}"
+                                                           + (f" ({forwarded!r} is no role here)" if forwarded else "")}
+            role = forwarded
         return answer(method, target, raw, role, self.rights,
                       lambda cmd: self.backend.submit(cmd, min(self.leader_wait, deadline)))
 
@@ -568,9 +787,11 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
                  api_advertised: str = "", leader_wait: float = LEADER_WAIT) -> RaftBackend:
     """The backend of a member: from its journal when `data` holds one; else a new group of one (`bootstrap`) or a
     new member of the group a member's door (`join`) belongs to."""
+    # Without `-tls` there is no secret, and `RaftBackend` takes no partner and listens on loopback only, by its socket
+    # (the review's twelfth pass, blocker 1) — a join is refused here, before anything is asked of a member.
     password = tls.raft_secret(tls_dir) if tls_dir else None
-    if password is None and raft.rsplit(":", 1)[0] not in ("127.0.0.1", "localhost", "::1", "[::1]"):
-        raise ValueError(f"a raft port off loopback ({raft}) needs its secret: -tls <dir> with raft.secret")
+    if password is None and join and not RaftBackend.has_state(data):
+        raise ValueError(f"{NO_SECRET}; -join makes a group of more")
     if RaftBackend.has_state(data):
         return RaftBackend(node_id, raft, RaftBackend.saved_peers(data), data, tuning, password, leader_wait)
     if bootstrap == bool(join):
@@ -611,17 +832,28 @@ def start_member(node_id: str, data: str, raft: str, *, bootstrap: bool = False,
 # -- loading rows into a fresh group: import, restore ----------------------------------------------------
 def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> dict:
     """Write `rows` into the group behind `dst` (an admin handle), each created with `cas=0`, values untouched.
-    Refused whole, before the first write, when the group holds rows already or its base is below `highest`."""
+    Refused whole, before the first write, when a row is heavier than the store takes, when the group's base is below
+    `highest`, or when the group holds a row this load did not write — a row that is one of `rows`, the same, is one
+    an earlier run of the same load wrote before it stopped, and the load goes on after it (twelfth pass, minor)."""
+    heavy = [f"{k} ({items_bytes(v)} bytes)" for k, v in rows if items_bytes(v) > MAX_VALUE]
+    if heavy:
+        raise ValueError(f"rows heavier than the store takes ({MAX_VALUE} bytes) — move what makes them big into an "
+                         f"object first: " + "; ".join(heavy))
     status = dst.status()
     base = int(status.get("index_base", 0))
     if base < highest:
         raise ValueError(f"the group's base is {base} and {what} handed out versions up to {highest}: start the group "
                          f"with -index-base {highest} or more, or a version remembered from {what} could match a new row")
-    if dst.list(""):
-        raise ValueError("the group already holds rows: rows are loaded into a fresh group only")
+    want = dict(rows)
+    held = set(dst.list(""))
+    alien = sorted(k for k in held if k not in want or dst.get(k)[0] != want[k])
+    if alien:
+        raise ValueError(f"the group holds rows this load did not write ({', '.join(alien[:5])}"
+                         f"{', …' if len(alien) > 5 else ''}): rows are loaded into a fresh group only")
     for key, items in rows:
-        dst.put(key, items, cas=0)
-    return {"rows": len(rows), "highest_before": highest, "index_base": base}
+        if key not in held:
+            dst.put(key, items, cas=0)
+    return {"rows": len(rows), "highest_before": highest, "index_base": base, "there_before": len(held)}
 
 
 def import_rows(src_url: str, dst) -> dict:
