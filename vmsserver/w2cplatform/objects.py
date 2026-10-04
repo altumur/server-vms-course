@@ -34,10 +34,9 @@ whole or not at all."""
 from __future__ import annotations
 
 import os
-import tempfile
 from typing import Protocol
 
-from .events import durable_dir, durably
+from .events import durable_dir, durably, new_temp
 from .limits import NO_CEILING, check
 
 
@@ -85,7 +84,7 @@ class FsObjectStore:
         # A name of its OWN for the file in flight (feedback BD). `<path>.tmp` was shared by every writer of the
         # key: a zombie and its replacement writing one heartbeat wrote into one file, and what was renamed into
         # place was the two of them interleaved — a heartbeat that does not parse, read by a controller's pass.
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        fd, tmp = new_temp(os.path.dirname(p), os.path.basename(p) + ".")
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)
@@ -120,7 +119,7 @@ class FsObjectStore:
         check(key, len(data), self.max_bytes)
         p = self._p(key)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p), prefix=os.path.basename(p) + ".", suffix=".tmp")
+        fd, tmp = new_temp(os.path.dirname(p), os.path.basename(p) + ".")
         try:
             with os.fdopen(fd, "wb") as f:
                 f.write(data)

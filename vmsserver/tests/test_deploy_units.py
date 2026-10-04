@@ -24,6 +24,18 @@ def unit(name):
     return {sec: {k: (v[0] if len(v) == 1 else v) for k, v in kv.items()} for sec, kv in out.items()}
 
 
+# The box's layout (the owner's decisions, 4 October): the platform's state under /data/platform — its two stores and
+# its events archive — and its key ring under /etc/w2c, a link into /data/platform/etc.
+CONFIG, OBJECTS, EVENTS = "/data/platform/config", "/data/platform/objects", "/data/platform/events"
+KEY = "/etc/w2c/secrets/platform.key"
+# The numbers the containers run as and join by (`w2c.sysusers`, `obsd.sysusers`).
+W2C, W2C_EVENTS, W2C_STORE, W2C_SECRETS, VMS_OBSD = "2100", "2102", "2103", "2104", "2101"
+
+
+def _list(v):
+    return v if isinstance(v, list) else [] if v is None else [v]
+
+
 def test_the_units_run_the_entrypoints_the_package_has():
     from vms import __main__ as m  # noqa: F401  (imports the module without running it: no __name__ == "__main__")
     entrypoints = set(re.findall(r'"(\w+)": \w+', open(os.path.join(HERE, "vms", "__main__.py")).read().split("__main__")[-1]))
@@ -41,23 +53,26 @@ def test_the_units_run_the_entrypoints_the_package_has():
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
-        # the data partition, never a rootfs slot; the platform's half first, the VMS's after it (a name in both: the VMS's)
-        assert u["Container"]["EnvironmentFile"] == ["/data/config/w2c.env", "/data/config/vms.env"]
+        # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
+        assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
         for vol in (u["Container"]["Volume"] if isinstance(u["Container"]["Volume"], list) else [u["Container"]["Volume"]]):
-            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:",   # sockets on a tmpfs, not state
+                                   f"{KEY}:")), vol                                              # the key ring: one file
 
 
 def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
     The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert "/data/archive" not in vols("vmscontroller.container")
+    assert EVENTS not in vols("vmscontroller.container")
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
-    assert vols("vmsworker@.container")["/data/archive"] == "/data/archive:z"          # its events, vms/<cam>/, on this box's resource
+            # the two stores, never /data/platform whole: its etc/secrets holds the key ring
+            assert "/data/platform" not in vols(n) and not any(v.startswith("/data/platform/etc") for v in vols(n)), n
+    assert vols("vmsworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, vms/<cam>/, on this box's resource
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
-    assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
+    assert vols("recworker@.container")[EVENTS] == f"{EVENTS}:z"                      # its events; its volume is the daemon's
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
     assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
     # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
@@ -66,8 +81,8 @@ def test_who_may_write_where_is_in_the_mounts_too():
             assert ("/run/vms-obsd" in vols(n)) == (n == "recworker@.container"), n
     rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
     assert rec_env["OBSD_SOCKET"] == "/run/vms-obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/platform.key"   # it opens a volume's secret
-    assert "/data/archive" not in vols("reccontroller.container")
-    assert vols("w2c-resource.container")["/data/platform"] == "/data/platform:z"   # the heartbeat is written; rows are only read
+    assert EVENTS not in vols("reccontroller.container")
+    assert vols("w2c-resource.container")[OBJECTS] == f"{OBJECTS}:z"                  # the heartbeat is written, and its door's row
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
     assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
     assert unit("w2c-resource.container")["Service"]["Restart"] == "always"         # a process, not a timer: the database lives in it
@@ -80,8 +95,9 @@ def test_the_image_carries_the_three_packages_and_nothing_else():
     assert "postgres" not in cf.lower()                                                # the per-box database is gone (М10 Lesson 1)
     assert 'CMD ["python3", "-m", "vms", "worker"]' in cf
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
-    assert "PLATFORM_DIR=/data/platform" in open(os.path.join(DEPLOY, "w2c.env.example")).read()
-    assert all(k in env for k in ("ARCHIVE=/data/archive", "CAPACITY="))
+    platform = open(os.path.join(DEPLOY, "w2c.env.example")).read()
+    assert "PLATFORM_DIR=/data/platform" in platform and f"ARCHIVE={EVENTS}" in platform   # the events archive is the platform's
+    assert "CAPACITY=" in env
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
 
 
@@ -92,24 +108,25 @@ def _env_names(name: str) -> set:
 
 def test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads():
     """The product's rule on the platform's names (3 October): the platform is w2c, the VMS one of its subsystems, and
-    `/etc/vms/vms.env` split into the platform's `w2c.env` — its directory, its store, the server's name, labels, box
-    id — and the VMS's `vms.env`. The course's box keeps its root, `/data/config/`. Every unit reads both, the
-    platform's first (checked per unit above); the spares' units read them too, in both layouts; and each name is in
-    its own half and only there."""
+    `/etc/vms/vms.env` split into the platform's `w2c.env` — its directory, its events archive, its store, the
+    server's name, labels, box id — and the VMS's `vms.env`. Since the owner's decision of 4 October the course's
+    box has the product's paths too, `/etc/w2c` and `/etc/vms` being links into its data partition. Every unit reads
+    both, the platform's first (checked per unit above); the spares' units read them too; and each name is in its own
+    half and only there — `ARCHIVE` the platform's."""
     platform, vms = _env_names("w2c.env.example"), _env_names("vms.env.example")
-    assert {"PLATFORM_DIR", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
-    assert {"ARCHIVE", "CAPACITY", "MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET"} <= vms
+    assert {"PLATFORM_DIR", "ARCHIVE", "PLATFORM_STORE", "SERVER_NAME", "LABELS", "BOX_ID"} <= platform
+    assert {"CAPACITY", "MEDIA_DIR", "SHM_DIR", "OBSD_SOCKET", "ARCHIVE_VOLUME"} <= vms
     assert not platform & vms, platform & vms
     for n in os.listdir(DEPLOY):
         if n.startswith("w2c-spares") and n.endswith(".service"):
-            assert unit(n)["Service"]["EnvironmentFile"] == ["-/data/config/w2c.env", "-/data/config/vms.env",
-                                                             "-/etc/w2c/w2c.env", "-/etc/vms/vms.env"], n
+            assert unit(n)["Service"]["EnvironmentFile"] == ["-/etc/w2c/w2c.env", "-/etc/vms/vms.env"], n
     # the cluster's key ring: one file of the platform's, in the three units that open sealed fields and no other
     keyed = {n for n in os.listdir(DEPLOY) if n.endswith(".container")
              and "SECRETS_KEY=/run/secrets/platform.key" in unit(n)["Container"].get("Environment", [])}
     assert keyed == {"console.container", "vmsworker@.container", "recworker@.container"}, keyed
     for n in keyed:
-        assert "/data/secrets/platform.key:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
+        assert f"{KEY}:/run/secrets/platform.key:ro,z" in unit(n)["Container"]["Volume"], n
+        assert W2C_SECRETS in _list(unit(n)["Container"]["GroupAdd"]), n                 # 0640, its group: the clients of the key
     assert unit("w2c-resource.container")["Unit"]["Description"].startswith("w2c ")   # the platform's process
 
 
@@ -149,22 +166,26 @@ def test_a_session_named_by_nobody_says_its_process_name_and_not_a_subsystems():
     assert Session("/nonexistent/obsd.sock", client="rec-r-1").client == "rec-r-1"
 
 
-def _sysusers() -> tuple[set, dict, set]:
-    """`obsd.sysusers` as (users, {group: gid}, {(user, group)}) — a user's primary group (`u <name> -:<group>`)
-    counted as one it is in."""
-    users, groups, members = set(), {}, set()
-    for line in open(os.path.join(DEPLOY, "obsd.sysusers")):
-        f = line.split()
-        if not f or f[0].startswith("#"):
-            continue
-        if f[0] == "u":
-            users.add(f[1])
-            if ":" in f[2]:
-                members.add((f[1], f[2].split(":", 1)[1]))
-        elif f[0] == "g":
-            groups[f[1]] = f[2]
-        elif f[0] == "m":
-            members.add((f[1], f[2]))
+def _sysusers() -> tuple[dict, dict, set]:
+    """`obsd.sysusers` and `w2c.sysusers` as ({user: uid}, {group: gid}, {(user, group)}) — a user's primary group
+    counted as one it is in: `u <name> -:<group>`, or `u <name> <n>`, which makes the group of its name with the same
+    number."""
+    users, groups, members = {}, {}, set()
+    for name in ("obsd.sysusers", "w2c.sysusers"):
+        for line in open(os.path.join(DEPLOY, name)):
+            f = line.split()
+            if not f or f[0].startswith("#"):
+                continue
+            if f[0] == "u":
+                users[f[1]] = f[2].split(":", 1)[0]
+                if ":" in f[2]:
+                    members.add((f[1], f[2].split(":", 1)[1]))
+                elif f[2].isdigit():
+                    groups[f[1]] = f[2]; members.add((f[1], f[1]))
+            elif f[0] == "g":
+                groups[f[1]] = f[2]
+            elif f[0] == "m":
+                members.add((f[1], f[2]))
     return users, groups, members
 
 
@@ -186,16 +207,27 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
     by — every host directory under /run a container mounts is in `vms.tmpfiles`, the box's own volume is the daemon's,
     and `install-obsd.sh` installs both files, checks the number and hands an old ring over. Since the platform's names
     (3 October): the platform's directories — its stores, its secrets — are `w2c.tmpfiles`, installed beside it, and
-    the daemon's user and group are the product's `vms-obsd`."""
-    assert set(_tmpfiles("w2c.tmpfiles")) == {"/data/platform", "/data/secrets"}
-    assert _tmpfiles("w2c.tmpfiles")["/data/secrets"][1:] == ("0700", "root", "root")   # the key ring: root's alone
-    assert not any(p.startswith("/data/platform") or p.startswith("/data/secrets") for p in _tmpfiles("vms.tmpfiles"))
+    the daemon's user and group are the product's `vms-obsd`. Since the owner's decisions of 4 October: the platform's
+    state is under /data/platform, its configuration in its etc/ (/etc/w2c, a link), its key ring 0640 to the group
+    `w2c-secrets` in a directory the group may pass and not list; the VMS's under /data/vms, the box's own volume in
+    /data/vms/obsd; the platform's user and its clients' groups in `w2c.sysusers`, each with the number the units
+    run as and join by."""
+    w2c = _tmpfiles("w2c.tmpfiles")
+    assert w2c == {"/data/platform": ("d", "0755", "root", "root"), "/data/platform/etc": ("d", "0755", "root", "root"),
+                   "/data/platform/etc/secrets": ("d", "2710", "root", "w2c-secrets"),
+                   CONFIG: ("d", "2770", "w2c", "w2c-store"), OBJECTS: ("d", "2770", "w2c", "w2c-store"),
+                   EVENTS: ("d", "2770", "w2c", "w2c-events")}, w2c
+    assert os.path.dirname(KEY) == "/etc/w2c/secrets"                                     # = /data/platform/etc/secrets
+    assert not any(p.startswith("/data/platform") for p in _tmpfiles("vms.tmpfiles"))
     users, groups, members = _sysusers()
+    assert (users["w2c"], groups["w2c"], groups["w2c-events"], groups["w2c-store"], groups["w2c-secrets"]) == \
+        (W2C, W2C, W2C_EVENTS, W2C_STORE, W2C_SECRETS)
+    assert {("w2c", "w2c-events"), ("w2c", "w2c-store")} <= members                       # its archive's clients, its stores
     dirs = _tmpfiles()
     svc = unit("obsd.service")["Service"]
     assert svc["User"] in users and svc["Group"] in groups and (svc["User"], svc["Group"]) in members
     rec = unit("recworker@.container")["Container"]
-    assert groups[svc["Group"]] == rec["GroupAdd"]                                       # the number the container joins by
+    assert groups[svc["Group"]] == VMS_OBSD and VMS_OBSD in _list(rec["GroupAdd"])       # the number the container joins by
     for n in os.listdir(DEPLOY):
         if not n.endswith(".container"):
             continue
@@ -206,16 +238,187 @@ def test_every_user_group_and_directory_a_unit_names_is_made_by_the_install_file
                 assert host in dirs, f"{n} mounts {host}, which nothing makes before it starts"
     sock_dir = os.path.dirname(svc["ExecStart"].split("--socket", 1)[1].strip())
     assert dirs[sock_dir] == ("d", svc["RuntimeDirectoryMode"], svc["User"], svc["Group"])   # the same as the unit makes it
-    archive = dict(l.strip().split("=", 1) for l in open(os.path.join(DEPLOY, "vms.env.example"))
-                   if "=" in l and not l.startswith("#"))["ARCHIVE"]
-    own = os.path.join(os.path.dirname(archive), "volume")                                # the box's own volume, beside ARCHIVE
-    assert dirs[own][2:] == (svc["User"], svc["Group"])                                   # the daemon opens it, as itself
+    from vms.config import OWN_VOLUME
+    own = OWN_VOLUME[len("file://"):]                                                     # the box's own volume: the VMS's
+    assert own.startswith("/data/vms/obsd/") and dirs[own][2:] == (svc["User"], svc["Group"])   # the daemon opens it, as itself
+    assert dirs[os.path.dirname(own)][2:] == (svc["User"], svc["Group"])
     script = open(os.path.join(DEPLOY, "install-obsd.sh")).read()
-    for needed in ("obsd.sysusers", "systemd-sysusers", "w2c.tmpfiles", "vms.tmpfiles", "systemd-tmpfiles --create",
-                   f'"$GID" != {rec["GroupAdd"]}', f"chown -R {svc['User']}:{svc['Group']}", own,
+    for needed in ("obsd.sysusers", "w2c.sysusers", "systemd-sysusers", "w2c.tmpfiles", "vms.tmpfiles",
+                   "systemd-tmpfiles --create", f'"$GID" != {VMS_OBSD}', f"passwd w2c {W2C}", f"group w2c-events {W2C_EVENTS}",
+                   f"group w2c-store {W2C_STORE}", f"group w2c-secrets {W2C_SECRETS}",
+                   f"chown -R {svc['User']}:{svc['Group']}", own.replace("/data/", '$R/data/', 1),
+                   'link_etc "$R/etc/w2c" "$R/data/platform/etc"', 'link_etc "$R/etc/vms" "$R/data/vms/etc"',
                    "obsd.service", "systemctl enable obsd.service", "systemctl restart obsd.service"):
         assert needed in script, needed
     assert os.access(os.path.join(DEPLOY, "install-obsd.sh"), os.X_OK)
+
+
+def _may(path: str, uid: int, gids: set, need: int) -> bool:
+    """What the kernel answers a process of `uid` in `gids` (not root) asking `need` (r=4, w=2, x=1) of `path`: the
+    owner's bits if it is the owner, else the group's if it is in the group, else the others'."""
+    import stat
+    st = os.stat(path)
+    bits = st.st_mode >> 6 if st.st_uid == uid else st.st_mode >> 3 if st.st_gid in gids else st.st_mode
+    return bits & need == need and not (need & 2 and st.st_mode & stat.S_ISVTX and st.st_uid != uid)
+
+
+def _may_unlink(path: str, uid: int, gids: set) -> bool:
+    """An entry goes if its directory lets the caller write and search it (the file's own mode does not matter)."""
+    return _may(os.path.dirname(path), uid, gids, 3)
+
+
+def test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote():
+    """The owner's decision (4 October): the events archive is the platform's, the resource runs as `w2c`, and a
+    subsystem writes its buckets as a CLIENT — a member of `w2c-events`, with the umask 0007 its unit sets, into a tree
+    setgid to that group (`w2c.tmpfiles`: 2770 `w2c:w2c-events`). There is no second uid here without root, so the
+    claim is the modes, checked as the kernel would for a process of ANOTHER uid whose only tie to the tree is that
+    group: a client writes a camera's events and a recorder's under the umask 0007 into such a tree, and every
+    directory it made is the tree's group with rwx for it (and setgid, where the kernel passes it on), every file the
+    group's with rw — so that process may unlink every bucket and read every line; and the resource's retention
+    removes the old one. Under the old umask, 0022, the same check says it could not: the umask is half the rule."""
+    import stat
+    import sys
+    import tempfile
+    from vms.archive import event_log
+    from vms.resource import vms_resource
+    from w2cplatform import runtime
+    from w2cplatform.events import EventLog
+    from tests.conftest import Box
+    group = (set(os.getgroups()) - {os.getgid()} or {os.getgid()}).pop()   # a group this process is in, not its own if it can
+    resource = (os.getuid() + 1, {group})                                    # another uid; the group its only tie
+
+    def tree(umask: int):
+        events = os.path.join(tempfile.mkdtemp(prefix="platform-"), "events")
+        os.mkdir(events)
+        os.chown(events, -1, group)
+        os.chmod(events, 0o2770)
+        assert runtime.events_root({"PLATFORM_DIR": os.path.dirname(events)}) == events   # the default, said once
+        was = os.umask(umask)                                                # the client's unit: `--umask=…`
+        try:
+            event_log(events, 7, 1).append(box.wall() - 3 * 86400, "motion")  # past a day's retention
+            event_log(events, 7, 1).append(box.wall() - 100, "motion")
+            EventLog(events, "rec", "1", 1, 600).append(box.wall() - 100, "archive.shallow")
+        finally:
+            os.umask(was)
+        dirs, files = [], []
+        for d, ds, fs in os.walk(events):
+            dirs += [os.path.join(d, x) for x in ds]
+            files += [os.path.join(d, x) for x in fs]
+        return events, dirs, files
+
+    box = Box()
+    events, dirs, files = tree(0o007)
+    assert len(files) == 3 and dirs
+    for d in dirs:
+        st = os.stat(d)
+        assert st.st_gid == group and st.st_mode & 0o070 == 0o070, (d, oct(st.st_mode))
+        if sys.platform.startswith("linux"):
+            assert st.st_mode & stat.S_ISGID, d                              # Linux passes setgid on to a new directory
+        assert _may(d, *resource, 7), d
+    for f in files:
+        st = os.stat(f)
+        assert st.st_gid == group and st.st_mode & 0o060 == 0o060, (f, oct(st.st_mode))
+        assert _may_unlink(f, *resource) and _may(f, *resource, 4), f
+    res = vms_resource(events, "srv-1", "http://srv-1", box.vars, box.objects, wall=box.wall)
+    box.vars.put("vms/retention/7", {"days": "1"})
+    assert res.retain() == 1                                                 # the resource deletes the client's old bucket
+    assert sum(1 for f in files if os.path.exists(f)) == 2
+    _, _, old = tree(0o022)                                                  # the box's units before: every process root
+    assert not all(_may_unlink(f, *resource) for f in old)                   # …and a resource of another uid could not
+
+
+def test_a_platform_stores_files_are_its_groups_under_the_units_umask():
+    """`w2c-store` (the owner's decision, 4 October): the platform's file stores are shared by group, and the resource —
+    `w2c`, not root — reads the heartbeats and rows other processes write, takes the rows' lock and writes its own.
+    An object was written through `tempfile.mkstemp`, which makes every file 0600 whatever the umask: a heartbeat
+    another uid of the group could not read. Now a file in flight is made under the process's umask (`new_temp`), as
+    the rows always were: under the units' 0007 an object, a create-only mark, a row, the lock and the counter are
+    all 0660 — and nothing is left in flight."""
+    import tempfile
+    from w2cplatform.objects import FsObjectStore
+    from w2cplatform.variables import FileVariables
+    root = tempfile.mkdtemp(prefix="platform-")
+    was = os.umask(0o007)
+    try:
+        objects, vars_ = FsObjectStore(os.path.join(root, "objects")), FileVariables(os.path.join(root, "config"))
+        objects.put("platform/resources/srv-1/heartbeat", b"{}")
+        assert objects.put_new("vms/commands/1/a", b"1")
+        vars_.put("platform/doors/srv-1", {"url": "http://srv-1:8090"})
+    finally:
+        os.umask(was)
+    made = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs]
+    assert not any(f.endswith(".tmp") for f in made), made
+    assert {os.path.relpath(f, root): oct(os.stat(f).st_mode & 0o777) for f in made} == {
+        "objects/platform/resources/srv-1/heartbeat": "0o660", "objects/vms/commands/1/a": "0o660",
+        "config/vars/platform%2Fdoors%2Fsrv-1.json": "0o660", "config/lock": "0o660", "config/index": "0o660"}
+
+
+def test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_group():
+    """The owner's decisions (4 October), in the unit lines. The resource runs as `w2c` (`User=2100`, `Group=2100`)
+    and is the one unit of the box that names a user: the VMS's processes are still root in their containers. Every
+    unit opens the platform's two file stores as a member of `w2c-store` (`GroupAdd=2103`); every unit that mounts the
+    events archive joins `w2c-events` (2102) — the resource, which deletes there, and the clients that write
+    buckets; every unit writes with the umask 0007 (`PodmanArgs=--umask=0007`: Quadlet has no key for it, and
+    systemd's `UMask=` would be podman's, not the container's) — so what each makes is its group's."""
+    writers = set()
+    for n in sorted(os.listdir(DEPLOY)):
+        if not n.endswith(".container"):
+            continue
+        c = unit(n)["Container"]
+        vols = dict(v.split(":", 1) for v in _list(c["Volume"]))
+        groups = _list(c.get("GroupAdd"))
+        assert vols.get(CONFIG) == f"{CONFIG}:z" and vols.get(OBJECTS) == f"{OBJECTS}:z" and W2C_STORE in groups, n
+        assert "--umask=0007" in _list(c.get("PodmanArgs")), n
+        assert (EVENTS in vols) == (W2C_EVENTS in groups), n
+        if EVENTS in vols:
+            writers.add(n)
+        assert ("User" in c) == (n == "w2c-resource.container"), n
+    assert writers == {"w2c-resource.container", "console.container", "vmsworker@.container", "recworker@.container",
+                       "detworker@.container", "detjobworker@.container", "surveyworker@.container",
+                       "autoworker@.container"}, writers
+    r = unit("w2c-resource.container")["Container"]
+    assert (r["User"], r["Group"]) == (W2C, W2C) and W2C_SECRETS not in _list(r.get("GroupAdd"))   # it opens no secret
+
+
+def test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing():
+    """The owner's decision (4 October): configuration in /data, /etc as links — `/etc/w2c → /data/platform/etc`,
+    `/etc/vms → /data/vms/etc` — and the course's box moved off its old places by the install script, deleting
+    nothing. RUN in a sandbox (`INSTALL_ROOT`) holding a box of the old layout: `/data/config/{w2c,vms}.env`,
+    `/data/secrets/platform.key`, `/data/archive` with a bucket, a ring at `/data/volume`, a real `/etc/w2c` with a
+    file. After: the links, every file where the layout says, the old `ARCHIVE=/data/archive` of `vms.env` (read
+    second, so it would win) commented out and `w2c.env` given the platform's archive, the ring kept where it is
+    with `ARCHIVE_VOLUME` saying so, the key 0640 to `w2c-secrets`. Run again: nothing moves, nothing is said twice.
+    And a group made with another number than the units join by stops the script before it changes anything."""
+    import tempfile
+    box = tempfile.mkdtemp(prefix="install-box-")
+    old = {"data/config/w2c.env": "PLATFORM_DIR=/data/platform\n", "data/config/vms.env": "ARCHIVE=/data/archive\nCAPACITY=7\n",
+           "data/secrets/platform.key": "k1 00\n", "data/archive/vms/7/e1/20261004T100000Z.events.jsonl": '{"t": 1}\n',
+           "data/volume/ring.0": "ring", "etc/w2c/configstore-rights.json": "{}\n"}
+    for path, text in old.items():
+        os.makedirs(os.path.dirname(os.path.join(box, path)), exist_ok=True)
+        with open(os.path.join(box, path), "w") as f:
+            f.write(text)
+    at = lambda *p: os.path.join(box, *p)                                    # noqa: E731
+    out, calls = _install_obsd(owned=True, same_unit=True, box=box)
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert os.readlink(at("etc/w2c")) == at("data/platform/etc") and os.readlink(at("etc/vms")) == at("data/vms/etc")
+    w2c, vms = open(at("etc/w2c/w2c.env")).read(), open(at("etc/vms/vms.env")).read()
+    assert w2c.startswith("PLATFORM_DIR=/data/platform\n") and "\nARCHIVE=/data/platform/events\n" in w2c
+    assert "CAPACITY=7" in vms and not any(l.startswith("ARCHIVE=") for l in vms.splitlines())   # it would win, and say /data/archive
+    assert vms.count("\nARCHIVE_VOLUME=file:///data/volume\n") == 1 and open(at("data/volume/ring.0")).read() == "ring"
+    assert open(at("data/platform/etc/secrets/platform.key")).read() == "k1 00\n"
+    key = at("data/platform/etc/secrets/platform.key")
+    assert f"chgrp w2c-secrets {key}" in calls and f"chmod 0640 {key}" in calls
+    assert os.path.exists(at("data/platform/events/vms/7/e1/20261004T100000Z.events.jsonl")) and not os.path.exists(at("data/archive"))
+    assert os.path.exists(at("etc/w2c/configstore-rights.json"))             # the real /etc/w2c's file, moved under the link
+    assert not os.path.exists(at("data/config")) and not os.path.exists(at("data/secrets"))   # emptied, so gone
+    out, calls = _install_obsd(owned=True, same_unit=True, box=box)          # again: a box in order
+    assert out.returncode == 0 and "moved" not in out.stdout and "ARCHIVE" not in out.stdout, out.stdout
+    assert open(at("etc/vms/vms.env")).read() == vms and open(at("etc/w2c/w2c.env")).read() == w2c
+    out, calls = _install_obsd(owned=True, numbers={**NUMBERS, "group w2c-events": "999"})
+    assert out.returncode == 1 and "w2c-events has the number 999" in out.stderr, out.stderr
+    assert not any(c.startswith(("systemd-tmpfiles", "chgrp", "chown", "systemctl")) for c in calls), calls
+    assert not os.path.exists(os.path.join(out.box, "etc"))                  # nothing laid before the numbers agree
 
 
 def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and_restarts_it_after():
@@ -239,30 +442,44 @@ def test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and
     assert not any("--now" in line for line in calls)                                  # a running unit is not left as it was
 
 
-def _install_obsd(*args, active=True, stops=True, owned=False, same_unit=False, store=None, server="srv-1"):
+# What `getent` answers on a box where `obsd.sysusers` and `w2c.sysusers` were applied: the numbers the units say.
+NUMBERS = {"passwd w2c": W2C, "group w2c": W2C, "group w2c-events": W2C_EVENTS, "group w2c-store": W2C_STORE,
+           "group w2c-secrets": W2C_SECRETS, "group vms-obsd": VMS_OBSD}
+
+
+def _install_obsd(*args, active=True, stops=True, owned=False, same_unit=False, store=None, server="srv-1", box=None,
+                  numbers=None):
     """`install-obsd.sh` RUN, every command it calls a shim that writes its line down: `(the finished process, the
     lines)`. `active`: a daemon runs; `stops`: `systemctl stop` stops it; `owned`: every volume is obsd's already;
-    `same_unit`: the unit installed is the one in the tree; `store`: the box's file store, for the declared volumes."""
+    `same_unit`: the unit installed is the one in the tree; `store`: the box's file store, for the declared volumes;
+    `box`: the directory the layout is made under (`INSTALL_ROOT`; a fresh one when not given — `out.box`), where
+    `mkdir` and `install` really make what they are asked; `numbers`: what `getent` answers (`NUMBERS`)."""
     import subprocess
     import tempfile
     bin_ = tempfile.mkdtemp(prefix="install-obsd-")
+    box = box or tempfile.mkdtemp(prefix="install-box-")
     log, state = os.path.join(bin_, "calls"), os.path.join(bin_, "active")
     if active:
         open(state, "w").close()
-    says = {"id": "echo 0", "getent": "echo vms-obsd:x:2101:", "find": "true" if owned else 'echo "$2/block-0"',
+    answers = "".join(f'"{k}") echo "{k.split()[1]}:x:{v}:" ;; ' for k, v in (numbers or NUMBERS).items())
+    says = {"id": "echo 0", "getent": f'case "$1 $2" in {answers}*) exit 2 ;; esac',
+            "find": "true" if owned else 'echo "$2/block-0"',
             "pgrep": f'[ -f "{state}" ]', "cmp": "true" if same_unit else "false",
+            "mkdir": f'case "$*" in *"{box}"*) exec /bin/mkdir "$@" ;; esac',
+            "install": f'case "$*" in *"{box}"*) exec /usr/bin/install "$@" ;; esac',
             "systemctl": (f'case "$1" in is-active) [ -f "{state}" ] ;; '
                           + (f'stop) rm -f "{state}" ;; ' if stops else "stop) false ;; ")
                           + f'restart|start) : > "{state}" ;; esac')}
     for name in ("id", "install", "systemd-sysusers", "getent", "systemd-tmpfiles", "systemctl", "mkdir", "find",
-                 "chown", "chmod", "pgrep", "cmp"):
+                 "chown", "chgrp", "chmod", "pgrep", "cmp"):
         with open(os.path.join(bin_, name), "w") as f:
             f.write(f'#!/bin/sh\necho "{name} $*" >> "{log}"\n{says.get(name, "true")}\n')
         os.chmod(os.path.join(bin_, name), 0o755)
     env = {**os.environ, "PATH": bin_ + os.pathsep + os.environ.get("PATH", ""), "SERVER_NAME": server,
-           "PLATFORM_DIR": store or os.path.join(bin_, "no-store")}
+           "PLATFORM_DIR": store or os.path.join(bin_, "no-store"), "INSTALL_ROOT": box}
     out = subprocess.run(["/bin/sh", os.path.join(DEPLOY, "install-obsd.sh"), *args], env=env,
                          capture_output=True, text=True, timeout=30)
+    out.box = box
     return out, [line.strip() for line in open(log)]
 
 
@@ -298,7 +515,8 @@ def test_install_obsd_stops_the_daemon_only_to_hand_a_volume_over_and_does_not_g
     out, calls = _install_obsd(store=root)
     assert out.returncode == 0, out.stderr
     handed = sorted(c.split()[-1] for c in calls if c.startswith("chown -R vms-obsd:vms-obsd"))
-    assert handed == ["/data/disk-2", "/data/second", "/data/volume"], handed   # this box's, declared: found without being told
+    own = out.box + "/data/vms/obsd/volume"                                     # the box's own, under its layout
+    assert handed == sorted(["/data/disk-2", "/data/second", own]), handed     # this box's, declared: found without being told
     assert "declared for srv-1: /data/disk-2 (disk-2)" in out.stdout and "/data/theirs" not in out.stdout
     out, calls = _install_obsd()                                               # no store to read: said, not passed over
     assert "no volume declared for srv-1" in out.stdout

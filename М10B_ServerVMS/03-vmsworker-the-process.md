@@ -114,7 +114,7 @@ def labels_from_environment(env: dict) -> list[str]:
 Стоит задержаться на том, что это значит. Подсистема — не подкласс с переопределёнными методами, а **четыре константы плюс YAML**. Если бы рекордер потребовал переопределить `refresh` или `_actuate`, шаблона бы не было; убывание стоимости подсистем от четырёх уроков к одному — это то же наблюдение, посчитанное в уроках.
 
 ```python
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource
+        self.archive_root = runtime.events_root(env, archive_root)   # this server's resource: where its events go
         self.shm_dir = env.get("SHM_DIR", SHM_DIR)
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "50"))
         self.actuator = actuator or FakeActuator()

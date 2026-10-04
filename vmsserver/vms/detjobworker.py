@@ -84,7 +84,7 @@ class DetJobWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("SCAN_CAPACITY", "2"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")
+        self.archive_root = runtime.events_root(env, archive_root)
         self.step = self.STEP if step is None else float(step)
         self.lag = float(env.get("VISIBLE_LAG_SECONDS", "600"))   # how far behind the visible footage runs: a block's worth
         self.wait_max = float(env.get("SCAN_WAIT_SECONDS", self.WAIT_MAX))

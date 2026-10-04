@@ -1,8 +1,9 @@
 """python3 -m vms worker|controller|recorder|reccontroller|console|resource|gateway|livecontroller|detworker|detcontroller|
 detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontroller — the box's processes.
 
-    PLATFORM_DIR=/data/platform     the platform's stores (config/, objects/) — in `w2c.env`, the platform's half
-    ARCHIVE=/data/archive  MEDIA_DIR=/data/media   the resource's tree (events); the recorder's own volume under it
+    PLATFORM_DIR=/data/platform     the platform's state (config/, objects/, events/) — in `w2c.env`, the platform's half
+    ARCHIVE=/data/platform/events   the platform's events archive, the resource's tree — `w2c.env` too
+    ARCHIVE_VOLUME  MEDIA_DIR=/data/media   the recorder's own volume (`/data/vms/obsd/volume`); the holder's files
     OBSD_SOCKET=/run/vms-obsd/obsd.sock   the host's ObjectStorage daemon — every recorder writes its footage through it
     WORKER_NAME=w-1                  the slot to claim (systemd: %i); unset: NOMAD_ALLOC_INDEX → w-<index>;
                                      neither: the first free slot, a lapsed one first
@@ -34,10 +35,12 @@ detjobworker|detjobcontroller|surveyworker|surveycontroller|autoworker|autocontr
 # checks that the verbs in the dispatch table are exactly the ones the units invoke.
 #
 # Environment (from the docstring and the code):
-# - `PLATFORM_DIR` (default `/data/platform`) — the platform's stores: `<dir>/config` is `FileVariables`,
-#   `<dir>/objects` is `FsObjectStore`.
-# - `ARCHIVE` (`/data/archive`) — the resource's tree: every subsystem's events. A recorder with nothing declared
-#   formats its server's own volume beside it (`/data/volume` for `/data/archive`; `ARCHIVE_VOLUME` to put it elsewhere).
+# - `PLATFORM_DIR` (default `/data/platform`, `runtime.platform_dir`) — the platform's state: `<dir>/config` is
+#   `FileVariables`, `<dir>/objects` is `FsObjectStore`, `<dir>/events` the events archive.
+# - `ARCHIVE` (`runtime.events_root`: `<PLATFORM_DIR>/events`) — the platform's events archive, the resource's tree:
+#   every subsystem's buckets, each process a client of it (group `w2c-events`). A recorder with nothing declared
+#   formats its server's own volume at `ARCHIVE_VOLUME`, by default `config.OWN_VOLUME` (`/data/vms/obsd/volume`:
+#   the archive engine is the VMS's, and so are its volumes).
 #   `MEDIA_DIR` is read by `gstvms/uri.py`, not here.
 # - `OBSD_SOCKET` — the host's ObjectStorage daemon (`w2cplatform/obsd.py`); `OBSD_TIMEOUT` (`10`) how long a
 #   recorder waits for one answer from it — shorter than a lease.
@@ -82,6 +85,7 @@ import signal
 import sys
 import threading
 
+from w2cplatform import runtime
 from w2cplatform.objects import FsObjectStore
 from w2cplatform.variables import open_vars, store_url
 
@@ -89,7 +93,7 @@ from .controller import VmsController
 from .worker import FakeActuator, VmsWorker, commands_beat
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(asctime)s %(name)s %(levelname)s %(message)s")
-root = os.environ.get("PLATFORM_DIR", "/data/platform")
+root = runtime.platform_dir(os.environ)
 # The store seam: a process is told a URL and nothing else (`w2cplatform.variables.open_vars`). On a box
 # this is `file://` — in-process, no daemon, no hop. `PLATFORM_STORE=configstore:///run/configstore/<role>.sock` in a
 # cluster (`CONFIG_URL` is the old name, still read: `store_url`), `k8s://…` later; not one of those names
@@ -119,7 +123,7 @@ def worker() -> None:
     name = runtime.slot(os.environ, "WORKER_NAME", "w")
     vars_ = open_vars(CONFIG_URL, writer="vmsworker", acl={"vmsworker": WORKER_ACL})
     objects = FsObjectStore(os.path.join(root, "objects"))
-    archive = os.environ.get("ARCHIVE", "/data/archive")
+    archive = runtime.events_root(os.environ)
     try:
         from gstvms.actuator import GstActuator
         from .config import port_of, RTSP_PORT
@@ -181,7 +185,12 @@ def recorder() -> None:
     # operator asks for.
     win = os.environ.get("BACKFILL_WINDOW", "")
     window = tuple(int(x) for x in win.split("-")) if "-" in win else None
-    r = RecWorker(None, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")),
+    # Its events into the platform's archive, its own volume where the VMS keeps volumes (`config.OWN_VOLUME`) — said
+    # here, not left to the recorder's fallback beside the events tree, which is the platform's directory now.
+    from .config import OWN_VOLUME
+    env = {**os.environ, "ARCHIVE_VOLUME": os.environ.get("ARCHIVE_VOLUME") or OWN_VOLUME}
+    r = RecWorker(None, vars_, objects, act, capacity=int(os.environ.get("CAPACITY", "50")), env=env,
+                  archive_root=runtime.events_root(os.environ),
                   window=window, keep_days=float(os.environ.get("RETENTION_DAYS", "30")))
     r.backfill_budget = int(os.environ.get("BACKFILL_BUDGET", "1"))
     srv = r.serve_archive(os.environ.get("ARCHIVE_HOST", "127.0.0.1"), int(os.environ.get("ARCHIVE_PORT", "0")))
@@ -220,7 +229,7 @@ def reccontroller() -> None:
 # long as the process lives. A silent worker whose process the resource names running is HUNG, and keeps its units for
 # `HUNG_MOVE_AFTER`; one that is not running is dead, and its units move (`Controller.slot_fate`; the owner, 3 Oct).
 def _present(w) -> None:
-    w.present(os.environ.get("ARCHIVE", "/data/archive"))
+    w.present(runtime.events_root(os.environ))
 
 
 def _controller_loop(ctl) -> None:
@@ -284,7 +293,7 @@ def detworker() -> None:
     from .detworker import DetWorker
     vars_ = open_vars(CONFIG_URL, writer="detworker", acl={"detworker": ["det/epoch/*", "det/slots/*"]})
     d = DetWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")), capacity=int(os.environ.get("CAPACITY", "8")),
-                  archive_root=os.environ.get("ARCHIVE", "/data/archive"))
+                  archive_root=runtime.events_root(os.environ))
     logging.info("detector %s (instance %s) claimed its slot; models: %s", d.name, d.instance, ",".join(d.models))
     _present(d)
     d.run(stop=stop)
@@ -311,7 +320,7 @@ def autoworker() -> None:
     vars_ = open_vars(CONFIG_URL, writer="autoworker", acl={"autoworker": acl})
     a = AutoWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                    capacity=int(os.environ.get("CAPACITY", "50")),
-                   archive_root=os.environ.get("ARCHIVE", "/data/archive"))
+                   archive_root=runtime.events_root(os.environ))
     logging.info("evaluator %s (instance %s) claimed its slot; may file: %s", a.name, a.instance, ",".join(acl[-3:]))
     # The long poll (`w2cplatform/longpoll.py`): a request held at every resource it asks, answered when an event
     # one of its scenarios watches is written there — the pass begins then, not at the end of its two seconds.
@@ -340,7 +349,7 @@ def detjobworker() -> None:
     vars_ = open_vars(CONFIG_URL, writer="detjobworker", acl={"detjobworker": ["detjob/epoch/*", "detjob/slots/*"]})
     j = DetJobWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SCAN_CAPACITY", "2")),
-                     archive_root=os.environ.get("ARCHIVE", "/data/archive"))
+                     archive_root=runtime.events_root(os.environ))
     logging.info("scan worker %s (instance %s) claimed its slot; models: %s", j.name, j.instance, ",".join(j.models))
     _present(j)
     j.run(stop=stop)
@@ -364,7 +373,7 @@ def surveyworker() -> None:
     vars_ = open_vars(CONFIG_URL, writer="surveyworker", acl={"surveyworker": ["survey/epoch/*", "survey/slots/*"]})
     s = SurveyWorker(None, vars_, FsObjectStore(os.path.join(root, "objects")),
                      capacity=int(os.environ.get("SURVEY_CAPACITY", "2")),
-                     archive_root=os.environ.get("ARCHIVE", "/data/archive"))
+                     archive_root=runtime.events_root(os.environ))
     logging.info("survey %s (instance %s) claimed its slot; models: %s", s.name, s.instance, ",".join(s.models))
     _present(s)
     s.run(stop=stop)
@@ -584,7 +593,7 @@ def console() -> None:
                                + SURVEY_SPEC.acl_console() + AUTO_SPEC.acl_console()})   # the operator's rows of EVERY subsystem it fronts
     objects = FsObjectStore(os.path.join(root, "objects"))
     ctl = VmsController(vars_, objects, capacity=int(os.environ.get("CAPACITY", "50")))
-    archive = os.environ.get("ARCHIVE", "/data/archive")                    # its resource tree: where the operator's marks go
+    archive = runtime.events_root(os.environ)                    # its resource tree: where the operator's marks go
     srv = serve(ctl, archive, os.environ.get("CONSOLE_HOST", "127.0.0.1"), int(os.environ.get("CONSOLE_PORT", "8080")),
                 live_ctl=SpecController(LIVE_SPEC, vars_, objects),
                 mounts={"det": SpecController(DET_SPEC, vars_, objects), "rec": SpecController(REC_SPEC, vars_, objects),
@@ -634,7 +643,7 @@ def resource() -> None:
     vars_ = open_vars(CONFIG_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(os.environ.get("ARCHIVE", "/data/archive"), socket.gethostname(),
+    res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),
                        os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port)
     try:                                                                  # a store away at the start does not end the process
