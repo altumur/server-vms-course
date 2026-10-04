@@ -112,7 +112,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from .doors import MAX_LIMIT, byte_range
 
-from .secrets import mask_secrets
+from .secrets import hide_in_reply, mask_secrets
 from .contract import (GARBLED, HEARTBEATS, SCHEMA, SCHEMA_KEY, SKEW_MAX, SKEW_MIN, Assignment, DrainRefused, Heartbeat,
                        DecommissionRefused, SchemaTooNew, builds, contenders, is_live, label_set, name_conflict,
                        parse_heartbeat, read_slot, schema_version)
@@ -1187,13 +1187,18 @@ class IdempotencyKeys:
     #
     # A 5xx is NOT remembered: "the store is away" is not an answer to the request, and kept under the key it was
     # the answer to every retry for a day. The claim is let go instead, and the retry does the work.
+    #
+    # The copy says every address in the reply as a page does (`hide_in_reply`; the twelfth review, major 16): a refusal
+    # that quoted a password — `urlsplit`'s words for a port — was kept here for a day, under a key nobody looks at. The
+    # replies that leave are masked where they are made; this is the copy's own floor.
     def store(self, key: str, resp: tuple[int, dict]) -> None:
         if int(resp[0]) >= 500:
             return self.release(key)
         path = self._path(key)
         tag, rev = self._mine.get(path, {}), self._rev.get(path, 0)
         try:
-            self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(resp[1]), "at": self.wall(), **tag}, cas=rev)
+            self.vars.put(path, {"state": "done", "status": resp[0], "body": json.dumps(hide_in_reply(resp[1])), "at": self.wall(),
+                                 **tag}, cas=rev)
         except Conflict:
             raise ClaimLost(f"the claim on {key} was taken over by another console before the reply was kept") from None
         finally:

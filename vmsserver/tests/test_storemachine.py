@@ -12,7 +12,8 @@ import tempfile
 
 import pytest
 
-from w2cplatform.storemachine import ADMIN, Ambiguous, Rights, StoreMachine, Unavailable, answer, local_transport
+from w2cplatform.storemachine import (ADMIN, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer,
+                                      local_transport)
 from w2cplatform.configstorevars import ConfigstoreVariables, StoreAmbiguous, StoreUnavailable
 from w2cplatform.variables import Conflict, Forbidden
 
@@ -320,3 +321,45 @@ def test_the_handle_maps_the_wire_back_to_the_contract():
         admin.get("vms/../x")
     worker.delete("vms/slots/w-1", cas=i)
     assert admin.get("vms/slots/w-1") == (None, 0)
+
+
+# -- the twelfth review ---------------------------------------------------------------------------------
+def test_another_daemon_has_no_right_on_any_row_and_the_file_may_not_name_it():
+    """The review's twelfth pass, major 3 (its probe: `R.allows(PEER, "delete", "vms/slots/a")` was True, and so was
+    writing `platform/schema`). `configstore` — another daemon on the `-api` door — is granted nothing on a row by
+    the rights; what it may do is the group's (`configstore.StoreDaemon.serve`). And the file may name neither it nor
+    `admin`: a socket of either name would be that door."""
+    r = Rights.parse(RIGHTS)
+    for action, key in (("delete", "vms/slots/a"), ("write", "platform/schema"), ("read", "vms/cameras/1"),
+                        ("write", "vms/epoch/7"), ("read", "domain/break_glass")):
+        assert not r.allows(PEER, action, key), (action, key)
+    sub = _Submit()
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "platform/schema", "items": {"v": "9"}}),
+                        PEER, r, sub)
+    assert (code, body["kind"]) == (403, "forbidden") and sub.calls == []
+    for name in (PEER, ADMIN):
+        with pytest.raises(ValueError):
+            Rights.parse({"roles": {name: {"read": ["*"], "write": ["*"]}}})
+
+
+def test_a_row_heavier_than_the_store_takes_is_refused_at_the_door_and_by_the_machine():
+    """The review's twelfth pass, major 2 (its probe: a value of 32 MiB taken in 0.24 s, into the raft log). A row's
+    items weigh at most `MAX_VALUE` bytes, counted as every store counts them (`items_bytes`): 413 `toolarge` at the
+    door, before anything is submitted; the machine refuses the same command too — every member applies the log and
+    must refuse alike — and the row it held stays; a row at the ceiling is taken; the handle says `TooLarge`."""
+    from w2cplatform.limits import TooLarge
+    r, m = Rights.parse(RIGHTS), StoreMachine(1000)
+    sub = _Submit(m)
+    at = {"b": "x" * (MAX_VALUE - 1)}
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/slots/w-1", "items": at}), ADMIN, r, sub)
+    assert code == 200, body
+    over = {"b": "x" * MAX_VALUE}
+    n = len(sub.calls)
+    code, body = answer("POST", "/v1/write", _write({"op": "put", "key": "vms/slots/w-1", "items": over}), ADMIN, r, sub)
+    assert (code, body["kind"], body["size"], body["limit"]) == (413, "toolarge", MAX_VALUE + 1, MAX_VALUE)
+    assert len(sub.calls) == n, "a row over the ceiling reached the log"
+    assert m.apply({"op": "put", "key": "vms/slots/w-1", "items": over, "cas": None}) == {"toolarge": MAX_VALUE + 1}
+    assert m.rows["vms/slots/w-1"][0] == at, "the machine wrote a row over the ceiling"
+    h = ConfigstoreVariables("/stand", transport=local_transport(sub, r, ADMIN))
+    with pytest.raises(TooLarge):
+        h.put("vms/slots/w-1", over)

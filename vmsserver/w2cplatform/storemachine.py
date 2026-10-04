@@ -34,6 +34,18 @@ the group, and what a test stand applies in one process — the same code, so th
 # call), and the machine answers a repeat of an id it has seen with the first answer — the client sessions of the
 # Raft dissertation, § 6.3. The memory is the last `OP_MEMORY` ids, in log order, so every member forgets the same.
 #
+# ## A row has a ceiling: `MAX_VALUE` (the review's twelfth pass, major 2)
+# A row of 32 MiB was taken and went into the raft log — every member holds it in memory, writes it to its journal
+# and sends it to a follower that lags, and while one entry that size crosses the network the leader's heartbeats
+# wait behind it. A row is a couple of hundred bytes; what makes one big is a field that belongs in an object. So a
+# row's items weigh at most `MAX_VALUE` bytes, counted as every store counts them (`variables.items_bytes`: keys and
+# values, as bytes — Nomad's measure of a Variable, `limits.py`): refused at the door (413 `toolarge`, before
+# anything is submitted) and again by the machine, whose refusal is a function of the command alone, so every member
+# refuses the same. 512 KiB is Consul's ceiling for a value on the same `hashicorp/raft` the product runs
+# (`kv_max_value_size`), for the same reason; it is a thousand times a row, and eight times Nomad's 64 KiB that the
+# platform was built under — no row the code writes comes near it. `FileVariables` has no ceiling of its own, so a
+# box's rows are measured at the import (`configstore.import_rows`), all of them before the first write.
+#
 # ## The rights file — who may do what, by the socket the caller came through
 # `/etc/w2c/configstore-rights.json` (generated from the spec by `python3 -m cluster rights`, М11), in the product's
 # format (its configstore round 2):
@@ -47,11 +59,18 @@ the group, and what a test stand applies in one process — the same code, so th
 # nobody does: delete an epoch row, or delete `domain/*` — which only the domain's own roles do (`DOMAIN_ROLES`:
 # `domain`, `domainagent`). `list` answers only the keys the role may read; `get` of a key it may not read is 403.
 #
+# `configstore` (`PEER`) — another daemon on the `-api` door — is not a role of the file and has NO grant on a row
+# (the review's twelfth pass, major 3: it had every right, so one daemon's certificate deleted slots, wrote the
+# schema and changed the group). What daemons need from each other is the group: `/v1/status`, and `/v1/join` /
+# `/v1/leave` of the calling daemon's own server (`configstore.StoreDaemon.serve`). A request one daemon forwards for
+# a process is answered with THAT process's role, which the forwarding daemon names (`configstore.FORWARDED`) — never
+# with more. The file may name neither `admin` nor `configstore`: a socket of either name would be that door.
+#
 # ## The API — the product's, rendered here so the stand and the daemon say the same
 #   GET  /v1/get?key=K          → {items, index}           index "" = absent
 #   GET  /v1/list?prefix=P      → {keys: {key: index}}
 #   POST /v1/write {op: "put"|"delete", key, items, cas, id} → {index}     cas null = none, "" = create-only
-#   faults {kind, error}: 409 conflict (+ index now), 403 forbidden, 400 badkey / badrequest,
+#   faults {kind, error}: 409 conflict (+ index now), 403 forbidden, 400 badkey / badrequest, 413 toolarge,
 #                         503 unavailable (not done), 503 ambiguous (outcome unknown; repeat only with the same id)
 # `answer` is the whole of it; the daemon adds `/v1/join`, `/v1/leave`, `/v1/status`, which are about raft.
 # ================================================================================================
@@ -62,9 +81,10 @@ import json
 import re
 import urllib.parse
 
-from .variables import KEY_BYTES, epoch_row, safe_path
+from .variables import KEY_BYTES, epoch_row, items_bytes, safe_path
 
 OP_MEMORY = 50_000         # write answers remembered by id; a retry comes within seconds, this is hours of writes
+MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
 ADMIN = "admin"            # the root-only socket's role
 PEER = "configstore"       # another daemon, on the mutually authenticated `-api` door
 # The roles that may delete `domain/*` (the product's names): the domain's own processes on its store, and its agent in
@@ -165,6 +185,8 @@ class StoreMachine:
         cas = _cas(cmd.get("cas"))
         if cas is not None and cas != current:
             res = {"conflict": True, "index": current}
+        elif cmd["op"] == "put" and items_bytes(cmd.get("items") or {}) > MAX_VALUE:
+            res = {"toolarge": items_bytes(cmd["items"])}      # the door refuses it first; the log must agree anyway
         elif cmd["op"] == "put":
             items = cmd.get("items") or {}
             self.rows[key] = ({str(k): str(v) for k, v in items.items()}, self.version(index))
@@ -216,8 +238,9 @@ class Rights:
                              '"delete": [...]}}}')
         roles = {}
         for role, grants in doc["roles"].items():
-            if not isinstance(role, str) or not _ROLE.match(role) or role == ADMIN:
-                raise ValueError(f"not a role name: {role!r} (lower case, digits, - and _; {ADMIN!r} is the store's own)")
+            if not isinstance(role, str) or not _ROLE.match(role) or role in (ADMIN, PEER):
+                raise ValueError(f"not a role name: {role!r} (lower case, digits, - and _; {ADMIN!r} and {PEER!r} are "
+                                 f"the store's own)")
             if not isinstance(grants, dict) or set(grants) - set(ACTIONS) - {"group"}:
                 raise ValueError(f"{role}: a role says its socket's group, and read, write and delete, each a list of "
                                  f"keys or prefixes")
@@ -243,8 +266,8 @@ class Rights:
     def allows(self, role: str, action: str, key: str) -> bool:
         if action == "delete" and (epoch_row(key) or (key.startswith("domain/") and role not in DOMAIN_ROLES)):
             return False                          # nobody, `admin` included (`variables.refuse_delete`)
-        if role in (ADMIN, PEER):
-            return True
+        if role == ADMIN:
+            return True                           # `PEER` is no role of the file: no grant on any row (twelfth pass)
         pats = self.roles.get(role, {}).get(action, [])
         if any(_hit(p[1:], key) for p in pats if p.startswith("!")):
             return False                          # a denial wins over every grant, wherever it stands in the list
@@ -254,6 +277,11 @@ class Rights:
 # -- the API ------------------------------------------------------------------------------------------
 def fault(code: int, kind: str, error: str, **more) -> tuple[int, dict]:
     return code, {"kind": kind, "error": error, **more}
+
+
+def too_large(key: str, size: int) -> tuple[int, dict]:
+    return fault(413, "toolarge", f"{key}: a row of {size} bytes; a row here weighs at most {MAX_VALUE}",
+                 size=size, limit=MAX_VALUE)
 
 
 def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, submit) -> tuple[int, dict]:
@@ -289,11 +317,16 @@ def answer(method: str, target: str, raw: bytes, role: str, rights: Rights, subm
                 if not isinstance(items, dict) or not all(isinstance(k, str) for k in items):
                     return fault(400, "badrequest", "items are a map of strings")
                 cmd["items"] = {k: str(v) for k, v in items.items()}
+                size = items_bytes(cmd["items"])
+                if size > MAX_VALUE:
+                    return too_large(key, size)
             if body.get("id"):
                 cmd["id"] = str(body["id"])
             got = submit(cmd)
             if "error" in got:
                 return fault(400, "badkey", got["error"])
+            if "toolarge" in got:
+                return too_large(key, got["toolarge"])
             if got.get("conflict"):
                 return fault(409, "conflict", f"{key}: cas={body.get('cas')!r} but the version is {got['index'] or 'absent'}",
                              index=got["index"] or "")

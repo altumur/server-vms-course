@@ -190,12 +190,35 @@ FRAME_AHEAD = 60.0
 # sixty seconds puts its frames where they were captured, as before this pass — and the next request back on the old
 # clock withdraws it by the frames, slewed (`_slewed`), uncounted: a push of 5.5–40 s puts its frames at most its travel
 # late, for about twice its travel, and loses none (measured, the table in lesson 16). A move DOWN past
-# `CLOCK_STEP` is still taken at once — but only from an offset held firm (`_firm`: the requests of `OFFSET_RISE`, at
-# least `RISE_REQUESTS`, agreed with it) or with no frame placed by it yet: a first pass whose requests all travelled
-# eight seconds put its frames eight seconds late, and the jump down from there dropped the next eight; such a move is
-# slewed (`_slewed`), as a small one is. What stays: a delay of a second or more on EVERY request for longer than
-# `OFFSET_RISE` is, by the requests' times, this cluster's clock stepped forward a second — the offset moves up by the
-# least delay and comes back down by the frames (measured: 40 s of 1–3 s, frames up to 1.3 s late, none lost).
+# `CLOCK_STEP` was still taken at once from an offset held firm (`_firm`: the requests of `OFFSET_RISE`, at least
+# `RISE_REQUESTS`, agreed with it); from one not held firm — a first pass whose requests all travelled eight seconds put
+# its frames eight seconds late, and the jump down from there dropped the next eight — it is slewed (`_slewed`), as a
+# small one is; and since the twelfth review from a firm one too (below).
+#
+# …AND A PLATEAU OF TRAVEL IS NOT A STEP EITHER (the twelfth review, blocker 13, its probe `pz4_road SC=bloat`: every
+# request of twenty seconds travelled eight — a full drop-tail buffer — so three requests agreed with the provisional
+# rise, it became a step, and the first quick request after the plateau jumped the offset down at once: 79 frames to
+# `repeats`, 59 for six seconds over a minute). Three requests that agree prove nothing when each of them travelled as
+# long as the rise. So the camera says, with every request, how long its last request took there and back on its own
+# line (`rtt`: a request's travel one way is never longer than its round trip), and the ingest counts a request for a
+# rise only when the rise is longer than that round trip by more than the bound it is held to — `CLOCK_STEP` for a
+# provisional rise, `OFFSET_HOLD` for a small one; a request its round trip explains neither confirms a rise nor
+# withdraws it. A camera rebooted with its clock unset says a round trip of milliseconds and a rise of the reboot's
+# length: a step, as before. And a move down past `CLOCK_STEP` is never a jump now, from a firm offset too: a target
+# taken at once by the first frame that leaps with it (a clock set, `leap`), slewed by the frames otherwise. What stays:
+# a camera that states no round trip (one of an older build) is held as before this pass.
+#
+# …AND A RANGE IS TOLD ONLY BY A FIRM OFFSET (the twelfth review, blocker 11). A range is told the camera on its own
+# clock, by the offset it is first told by, and goes back by the same (`told_by`, below). That offset was whatever the
+# held one was at the moment: a provisional rise (a slow poll carried the range: its frames read six or eight seconds
+# away from the hole), the middle of a slew (a range told by 5.0 while the stream slewed from 10 to 0), or a long poll
+# held at the ingest — every wake measured the offset again by the `camera_now` the poll was sent with, so the hold
+# itself read as the request's travel (held 7 s: told by 5.0; 12 s: by 10.02). Now a range, `have` and an ask's
+# deadline are told by the FIRM offset (`_told`): the target while the stream slews to it, none while a rise is
+# provisional — a range waits then, untold, for the requests that decide it (`have` and a deadline go by the raised
+# offset: earlier on the camera's clock, never later); a held poll's wake measures nothing; and a range told by an
+# offset the requests after it showed to be one request's travel — a move down from an offset not held firm — fails,
+# and backfill asks it again (`_untold`).
 OFFSET_HOLD = 0.25
 OFFSET_RISE = 30.0
 RISE_REQUESTS = 3
@@ -451,7 +474,7 @@ class Ingest:
         return [self, *[p for p in self.peers() if p is not self]]
 
     # -- the camera's side of the conversation ----------------------------------------------------------
-    def _check(self, token: str, ref: str, camera_now: float | None = None) -> dict:
+    def _check(self, token: str, ref: str, camera_now: float | None = None, rtt: float | None = None) -> dict:
         ks = self._keys()
         if ks is None:
             raise Refused(f"{self.cluster}: no key set yet — is this cluster's agent running?")
@@ -462,16 +485,20 @@ class Ingest:
         if p.get("aud") != audience(self.cluster) or str(p.get("ref")) != str(ref):
             raise Refused(f"stream token is for {p.get('ref')} at {p.get('aud')}, not {ref} at {audience(self.cluster)}")
         if camera_now is not None:                               # every request says what time the camera thinks it is
-            self._offset(ref, self._cam(ref), self.wall(), self.wall() - _finite_clock(camera_now))
+            self._offset(ref, self._cam(ref), self.wall(), self.wall() - _finite_clock(camera_now), _round_trip(rtt))
         return p
 
-    def _offset(self, ref: str, cam: _Camera, now: float, offset: float) -> None:
+    def _offset(self, ref: str, cam: _Camera, now: float, offset: float, rtt: float | None = None) -> None:
         """The camera's offset, held: moved by what one request says only past `OFFSET_HOLD` — down by the frames (a
-        target the stream slews to; past `CLOCK_STEP` from an offset held firm, at once), up when every request for
-        `OFFSET_RISE`, `RISE_REQUESTS` at least, said so — past `CLOCK_STEP` at once, provisionally, until the requests
-        after it confirm or withdraw it (above, `OFFSET_HOLD`; DZ). While it slews, the offset held is where it goes
-        (`target`)."""
+        target the stream slews to; past `CLOCK_STEP` a leap the frames take at once when they leap with it), up when
+        every request for `OFFSET_RISE`, `RISE_REQUESTS` at least, said so — past `CLOCK_STEP` at once, provisionally,
+        until the requests after it confirm or withdraw it (above, `OFFSET_HOLD`; DZ). A request whose round trip
+        (`rtt`, the camera's word) explains its rise counts for none (the twelfth review). While it slews, the offset
+        held is where it goes (`target`)."""
         held = cam.target if cam.target is not None else cam.offset
+
+        def travelled(rise: float, bound: float) -> bool:        # the camera's last round trip leaves no more than `bound`
+            return rtt is not None and rise - rtt <= bound
         if not cam.told:
             cam.offset, cam.told, cam.agreed = offset, True, (now, 1)
         elif offset < held - OFFSET_HOLD and cam.provisional is not None:
@@ -486,29 +513,41 @@ class Ingest:
                 cam.target, cam.leap = cam.provisional, False
             cam.provisional, cam.rise, cam.agreed = None, None, (now, 1)
         elif offset < held - OFFSET_HOLD:
-            if offset < held - CLOCK_STEP and (self._firm(cam, now) or cam.newest is None):
-                self._moved(ref, cam, offset)
+            firm = self._firm(cam, now)
+            if cam.newest is None:
+                self._moved(ref, cam, offset)                    # no frame put by it yet: nothing to slew
             else:
+                # Down by the frames, from a firm offset too (the twelfth review, blocker 13): past `CLOCK_STEP` it is a
+                # leap the first frame that leaps with it takes at once (a clock set), and slewed otherwise — the end of
+                # a plateau of travel that was taken for a step jumped down at once and sent its travel's worth of frames
+                # to `repeats`.
                 cam.clock_steps += 1
                 log.info("camera %s: its clock is %.3f s further ahead of this cluster's than its frames are put by: the "
                          "stream takes the new difference over its next frames", ref, held - offset)
                 cam.target, cam.rise, cam.leap = offset, None, offset < held - CLOCK_STEP
+            if not firm:
+                self._untold(ref, offset, now)                   # what it was held at was a request's travel
             cam.agreed = (now, 1)
         elif offset > held + CLOCK_STEP:
             # A rise past `CLOCK_STEP`: taken at once, PROVISIONALLY (DZ, the product's rule): a camera that rebooted with
             # its clock unset goes on after the card's newest frame, its offset up by the reboot's length, and its frames
             # land where they were captured only by the new one. The requests after it say which it was: back on the old
-            # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then.
-            if cam.provisional is None:
-                cam.provisional = held
-            cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
-            cam.agreed = (now, 1)
+            # clock withdraws it (above), `RISE_REQUESTS` agreeing make it a step, counted then. One whose own round trip
+            # explains it is the travel of a plateau the stream is already in: nothing (the twelfth review).
+            if not travelled(offset - held, CLOCK_STEP):
+                if cam.provisional is None:
+                    cam.provisional = held
+                cam.offset, cam.target, cam.leap, cam.newest, cam.rise = offset, None, False, None, None
+                cam.agreed = (now, 1)
         elif offset > held + OFFSET_HOLD:
-            since, low, n = cam.rise or (now, offset, 0)
-            cam.rise = (since, min(low, offset), n + 1)
-            if now - since >= OFFSET_RISE and n + 1 >= RISE_REQUESTS:
-                self._moved(ref, cam, cam.rise[1])
-                cam.agreed = (since, n + 1)                      # every request of the window agreed with it: firm
+            if not travelled(offset - held, OFFSET_HOLD):        # a plateau of travel under `CLOCK_STEP`: nothing either
+                since, low, n = cam.rise or (now, offset, 0)
+                cam.rise = (since, min(low, offset), n + 1)
+                if now - since >= OFFSET_RISE and n + 1 >= RISE_REQUESTS:
+                    self._moved(ref, cam, cam.rise[1])
+                    cam.agreed = (since, n + 1)                  # every request of the window agreed with it: firm
+        elif cam.provisional is not None and travelled(cam.offset - cam.provisional, CLOCK_STEP):
+            pass                                                 # agrees with the rise as its round trip explains: no word
         else:
             cam.rise = None                                      # inside the hold: what was held stands
             cam.agreed = (cam.agreed[0], cam.agreed[1] + 1)
@@ -526,6 +565,30 @@ class Ingest:
         needs (`RISE_REQUESTS`, `OFFSET_RISE`)."""
         since, n = cam.agreed
         return n >= RISE_REQUESTS and now - since >= OFFSET_RISE
+
+    @staticmethod
+    def _told(cam: _Camera) -> float | None:
+        """The offset a range is told the camera by (above, the twelfth review): the firm one — where the
+        stream slews to while it slews — or None while a rise is provisional: nobody knows yet whether it was the camera's
+        clock or one request's travel."""
+        if cam.provisional is not None:
+            return None
+        return cam.target if cam.target is not None else cam.offset
+
+    def _untold(self, ref: str, offset: float, now: float) -> None:
+        """The offset held was one request's travel (a move down from an offset not held firm): a range told by it reads
+        the card that far from the hole — failed, and asked again (the twelfth review)."""
+        for ing in self._cluster():
+            c = ing._cam(ref)
+            for rid, by in list(c.told_by.items()):
+                if rid in c.ranges and by > offset + OFFSET_HOLD:
+                    c.ranges.pop(rid, None)
+                    c.parts.pop(rid, None)
+                    c.failed[rid] = (f"it was told the camera by its clock as a slow request had it ({by - offset:.1f} s "
+                                     f"off): asked again", now)
+                    log.info("camera %s: a range was told by an offset %.1f s off — one request's travel: failed, asked "
+                             "again", ref, by - offset)
+        self._changed()
 
     @staticmethod
     def _moved(ref: str, cam: _Camera, offset: float) -> None:
@@ -588,15 +651,19 @@ class Ingest:
             raise Refused(f"{self.cluster}: {e}") from None
 
     def poll(self, token: str, ref: str, camera_now: float | None = None, version: int | None = None,
-             wait: float = 0.0) -> dict:
+             wait: float = 0.0, rtt: float | None = None) -> dict:
         """The camera's long poll: whether to push now, and which ranges to upload — ranges on the CAMERA's
         clock. Wants and requests at any ingest of this cluster count (AG). `version`: what the camera last saw;
         the same version is a poll the ingest HOLDS — up to `wait` seconds, answered the moment anything changes
-        — and, if nothing did, answers with `held`."""
+        — and, if nothing did, answers with `held`. `rtt`: how long the camera's last request took there and back.
+
+        The camera's clock is measured as the poll ARRIVES, once: a wake of the held poll measures nothing (the twelfth
+        review — every wake measured it again by the `camera_now` the poll was sent with, so the hold read as travel)."""
         until = time.monotonic() + wait
         while True:
             gen = self._gen
-            out = self._poll_once(token, ref, camera_now, version)
+            out = self._poll_once(token, ref, camera_now, version, rtt)
+            camera_now = rtt = None                              # …and a wake measures nothing
             if not out.get("held") or time.monotonic() >= until:
                 return out
             lapse = self._next_lapse(ref)                        # AH: a want or an ask that runs out changes the answer
@@ -615,18 +682,24 @@ class Ingest:
             soon += [a["deadline"] - now for a in list(c.asks.values()) if a["deadline"] > now]
         return min(soon) if soon else None
 
-    def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None) -> dict:
-        self._check(token, ref, camera_now)
+    def _poll_once(self, token: str, ref: str, camera_now: float | None, version: int | None,
+                   rtt: float | None = None) -> dict:
+        self._check(token, ref, camera_now, rtt)
         now, cam = self.wall(), self._cam(ref)
         cam.polled_at = now
+        firm = self._told(cam)                                   # None: a rise is provisional — new ranges wait
         push, ranges, asks, told = False, {}, {}, {}
         for ing in self._cluster():
             ing._forget(now)
             c = ing._cam(ref)
             c.wants = {w: u for w, u in c.wants.items() if u > now}       # a want that ran out wakes the poll (AF)
             push = push or bool(c.wants)
-            ranges.update(c.ranges)
-            told.update({rid: c.told_by.setdefault(rid, cam.offset) for rid in list(c.ranges)})
+            for rid, r in list(c.ranges.items()):
+                by = c.told_by.get(rid)
+                if by is None and firm is not None:
+                    by = c.told_by[rid] = firm
+                if by is not None:
+                    ranges[rid], told[rid] = r, by
             _forget_outcomes(c, now)
             for aid, a in list(c.asks.items()):
                 if a["deadline"] <= now:                                  # dies at its deadline, never kept
@@ -641,24 +714,30 @@ class Ingest:
             cam.said, cam.version = said, cam.version + 1
         # A range is told with the recording it is of, and with the size of a piece the recorder waits for
         # (`piece_wait`): the camera sends its answer in pieces no larger (the product's `PollRange`, and two fields more).
-        # It is told by the offset it was first told by (`told_by`), every time: the answer goes back by the same (`upload`).
+        # It is told by the offset it was first told by (`told_by`), every time: the answer goes back by the same (`upload`)
+        # — the firm offset (`_told`), and none while a rise is provisional: the range waits untold (the twelfth review).
+        # An ask's deadline and `have` go by the firm offset too, and by the raised one while it is provisional: the
+        # earlier on the camera's clock — an ask expires early sooner than it is performed late, and the camera takes the
+        # recorder to have less, so it sends again what the tee drops and its card holds more, never less.
+        said_by = cam.offset if firm is None else firm
         out = {"push": push, "version": cam.version,
                "ranges": {rid: {"from": t0 - told[rid], "to": t1 - told[rid], "recording": rec, "piece": PIECE_BYTES}
                           for rid, (t0, t1, rec) in ranges.items()},
-               "asks": {aid: {"action": a["action"], "by": a["by"], "deadline": a["deadline"] - cam.offset}
+               "asks": {aid: {"action": a["action"], "by": a["by"],
+                              "deadline": a["deadline"] - said_by}
                         for aid, a in asks.items()}}
         if uncovered is not None:
             out["uncovered"] = uncovered
         have = self._have(ref)
         if have is not None:
             # Not part of `said`: it moves with every frame written, and a poll held for news must not wake for it.
-            out["have"] = float(have) - cam.offset
+            out["have"] = float(have) - said_by
         if version is not None and version == cam.version:
             out["held"] = True                                   # nothing changed: the real ingest holds the request
         return out
 
-    def push(self, token: str, ref: str, frames: list, camera_now: float | None = None) -> int:
-        self._check(token, ref, camera_now)
+    def push(self, token: str, ref: str, frames: list, camera_now: float | None = None, rtt: float | None = None) -> int:
+        self._check(token, ref, camera_now, rtt)
         frames = self._timely(ref, self._slewed(self._cam(ref), self._timely(ref, frames, future=False), self.wall()), CAMERA_AHEAD)
         have = self._have(ref)
         if have is not None:
@@ -716,7 +795,7 @@ class Ingest:
         return len(frames)
 
     def upload(self, token: str, ref: str, rid: str, samples: list, camera_now: float | None = None,
-               failed: str | None = None, more: bool = False, seq: int = 0) -> bool:
+               failed: str | None = None, more: bool = False, seq: int = 0, rtt: float | None = None) -> bool:
         """The camera's answer to a range request: samples with their own times, moved onto the cluster's clock,
         kept by the id of the request at whichever ingest of the cluster asked (AD). Never the live stream.
         `failed`: the camera could not read the range — no samples, and why (the product's `X-Range-Failed`); the
@@ -739,7 +818,7 @@ class Ingest:
         after it: 10 of 300 samples landed past the range asked for and two seconds of it were missing). Each piece goes
         back onto this cluster's clock by the offset the request was first told by (`told_by`), so the answer lands in the
         range it answers, whatever the offset does meanwhile."""
-        self._check(token, ref, camera_now)
+        self._check(token, ref, camera_now, rtt)
         now, wanted = self.wall(), False
         for ing in self._cluster():
             c = ing._cam(ref)
@@ -1323,8 +1402,16 @@ class _RingFrames:
                 "ahead": r.ahead, "clock_set": r.line.sets, "clock_unset": r.line.unset}
 
     def moves(self) -> list[tuple]:
-        """The moves of the ring's line (`CamRing.moves`), in unix seconds: `(lo, hi, delta)`."""
-        return [(unix_s(lo), unix_s(hi), d / 1000.0) for lo, hi, d in self.ring.moves()]
+        """The moves of the ring's line (`CamRing.moves`), in unix seconds: `(lo, hi, delta)` — the delta in whole ms, as
+        the ring moved its frames by (`CamRing._relabel`; the twelfth review's sibling: moved by the line's fraction of a
+        ms, the pusher's place no longer met the frame it stood on, and the next piece began at a key frame — the frames
+        before it, four at a set of the clock, never sent)."""
+        return [(unix_s(lo), unix_s(hi), int(round(d)) / 1000.0) for lo, hi, d in self.ring.moves()]
+
+    def adrift(self) -> float | None:
+        """Where the ring's line went on by a guess, its clock unset since a reboot (`CamRing.adrift`), or None."""
+        ms = self.ring.adrift()
+        return None if ms is None else unix_s(ms)
 
 
 class _OwnFrames:
@@ -1352,6 +1439,9 @@ class _OwnFrames:
 
     def moves(self) -> list[tuple]:
         return list(self.line.moves)
+
+    def adrift(self) -> float | None:
+        return self.line.adrift
 
     def skew(self) -> float:
         return self.line.skew()
@@ -1567,6 +1657,12 @@ class CameraPusher:
         # `Ingest._have`): the card holds what lies past it. An ingest that says no `have` leaves what it took delivered.
         self.have: float | None = None
         self._moved = len(self.frames.moves())                         # the line's moves this pusher has followed (`_follow`)
+        # HOW LONG ITS LAST REQUEST TOOK, THERE AND BACK (the twelfth review, blocker 13): said with every request (`rtt`),
+        # on the camera's line, which steps of its clock do not move. The ingest takes a rise its round trip explains for
+        # travel, not for the camera's clock (`Ingest._offset`). A held poll is not measured: the hold is not travel.
+        self.rtt: float | None = None
+        # The ranges it was told, by road, and how many moves of its line it had followed when it was first told each.
+        self._told: dict[str, tuple[str, int]] = {}
 
     # THE LINE MOVES, AND THE PUSHER'S PLACE WITH IT (the eleventh review, blockers 1 and 2): the camera's line goes on from
     # the card's when the card is attached (`vms.card.CamLine.restore`), and is re-anchored when an unset clock is set
@@ -1590,6 +1686,38 @@ class CameraPusher:
             for u in self.uploading.values():                          # …and a range being answered: failed, asked again
                 u["piece"], u["pieces"] = None, _refused_read("the camera's line of time moved while the range was read")
         self._moved = len(moves)
+
+    # …AND A RANGE TOLD BEFORE THE LINE MOVED IS NOT READ ON THE MOVED ONE (the twelfth review, blocker 12's sibling): the
+    # ingest goes on telling a range by the offset it was first told by (`told_by`), and that offset is of the line before
+    # the move — the clock set, the frames before it relabelled. Read on the moved line, it brought what lay where the
+    # range had been. A range being answered fails at the move (above); one told and not begun yet fails when it is
+    # begun. And while the line is ADRIFT — a reboot with the clock unset put it right after the card's newest, by a
+    # guess (`vms.card.CamLine.adrift`) — a range reaching before where it went adrift is not read either: before it lie
+    # the frames of a boot whose offset the ingest no longer holds, and whichever offset told the range is wrong for one
+    # of the two (blocker 12: the first boot's hole, asked between the boot and NTP, read 30 s away). Both fail — RANGE
+    # FAILED, never an empty answer — and backfill asks again: after the clock is set the card is on one offset again.
+    def _stale_range(self, rid: str, t0: float) -> str | None:
+        """Why the range `rid` (from `t0`, on the line) is not read now, or None."""
+        if self._told.get(rid, ("", self._moved))[1] < self._moved:
+            return "the camera's line of time moved after the range was told: asked again by the line as it is"
+        adrift = self.frames.adrift()
+        if adrift is not None and t0 < adrift:
+            return ("the camera's clock is not set since it booted: the range reaches into an earlier boot, asked again "
+                    "once the clock is set")
+        return None
+
+    def _request(self, fn, *a, held: bool = False, **kw):
+        """A request to an ingest: the camera's clock as it is sent (`camera_now`), and how long its last request took
+        there and back (`rtt`) — measured now, unless the ingest may hold it (`held`). A look at the clock that finds it
+        set moves the line, and the pusher follows the move at once (`_follow`): what the ingest answers is on the moved
+        line."""
+        sent = self.clock()
+        self._follow()
+        out = fn(*a, camera_now=sent, rtt=self.rtt, **kw)
+        took = self.clock() - sent
+        if not held:
+            self.rtt = took if took >= 0 else None                     # a line moved under it: no measure
+        return out
 
     def entry(self) -> dict | None:
         """The book of primaries — or, for a camera nobody records, the book of polls: an ingest to poll for
@@ -1774,13 +1902,15 @@ class CameraPusher:
     def remember(self, note) -> bool:
         """The card's note from the camera's process before this one (`delivery` as it wrote it): its `since` and the
         stretches it lists before this process began. A note that does not read is no note — logged; another camera's
-        is not this camera's — logged, and the card's older footage is not offered as this camera's."""
+        is not this camera's — logged, and the card's older footage is not offered as this camera's. A note of only a
+        serial (`{"serial"}`: the card kept no note of what the server has, its line's note named whose card it is —
+        `CardRecorder.remember_card`) says only that."""
         self._follow()
         try:
             if not isinstance(note, dict):
                 raise TypeError("not an object")
             writer = note.get("serial")
-            since = finite(note["since"])
+            since = finite(note["since"]) if "since" in note or writer is None else None
             spans = [(finite(a), finite(b)) for a, b in note.get("delivered") or []]
         except PARSE_ERRORS as e:
             log.warning("camera %s: the card's note of what the server has does not read (%s): what the card holds from "
@@ -1793,7 +1923,7 @@ class CameraPusher:
                         "not offered as this camera's footage, and is counted as let go of unknowing when the card is full",
                         self.serial, str(writer)[:64])
             return False
-        if since >= self.since:
+        if since is None or since >= self.since:
             return False
         began, self.since = self.since, since
         for a, b in spans:
@@ -1938,9 +2068,13 @@ class CameraPusher:
         for url in road["urls"]:
             try:
                 ing = self.dial(url)
-                work = ing.poll(road["token"], self.serial, camera_now=self.clock(),
-                                version=self.versions.get(key, -1), wait=wait)
+                work = self._request(ing.poll, road["token"], self.serial, version=self.versions.get(key, -1), wait=wait,
+                                     held=wait > 0)
                 self.versions[key] = work["version"]
+                told = work.get("ranges") or {}
+                self._told = {rid: k for rid, k in self._told.items() if k[0] != key or rid in told}
+                for rid in told:
+                    self._told.setdefault(rid, (key, self._moved))
                 return ing, work, url
             except Unreachable:
                 continue
@@ -1966,6 +2100,7 @@ class CameraPusher:
 
     def _push(self, ing, token: str, work: dict, loose: list, key: str) -> tuple[int, bool]:
         now = self.clock()
+        self._follow()                                                 # (below: a look may have moved the line)
         self._left = 0.0
         self._peak = self.behind()                                     # how far behind the pass begins (`_judge_lag`)
         self._start(work, now)
@@ -1975,13 +2110,21 @@ class CameraPusher:
         allowance = min(PIECE_BYTES + self.frames.weight(self.seen), 2 * PIECE_BYTES)
         pushed = sent_bytes = 0
         while sent_bytes < allowance:
+            # The camera's clock is looked at BEFORE the piece is read, and the move it may make is followed before the
+            # stream's place is used (the twelfth review's sibling, found with blocker 12): a look that finds the clock set
+            # moves the line (`CamLine._set`). A piece read before it went with a `camera_now` on the moved line — four
+            # frames on the old one at the new offset, ten seconds early; and `_start`, comparing the cursor on the old line
+            # with the clock on the new, took the stream for fallen behind by the set and cut it to the newest key frame —
+            # the frames before it never sent, counted as `cut_s`.
+            self.clock()
+            self._follow()
             piece, off_card = self._next_piece(allowance - sent_bytes)
             if not piece:
                 break
             out = [f if off_card or self.live_from is None or _t(f) > self.live_from else dict(f, ring=True)
                    for f in piece]
             try:
-                ing.push(token, self.serial, out, camera_now=self.clock())
+                self._request(ing.push, token, self.serial, out)
             except Unreachable:
                 return pushed, False                                   # nothing moves: the next road gets it all
             self._took(key, piece)
@@ -1993,7 +2136,7 @@ class CameraPusher:
                     self.resuming = False                              # the break is sent: what follows is live
         if loose and self.behind() <= 0:
             try:
-                ing.push(token, self.serial, list(loose), camera_now=self.clock())
+                self._request(ing.push, token, self.serial, list(loose))
             except Unreachable:
                 return pushed, False
             self._took(key, [])
@@ -2056,6 +2199,9 @@ class CameraPusher:
                 t0, t1 = r["from"], r["to"]
                 piece = min(int(r.get("piece") or PIECE_BYTES), PIECE_BYTES)
                 try:
+                    stale = self._stale_range(rid, t0)
+                    if stale is not None:
+                        raise OSError(stale)
                     pieces = iter(self._read_card(r.get("recording") or self.recording, t0, t1, piece))
                 except OSError as e:
                     if not self._range_failed(ing, token, rid, t0, t1, e):
@@ -2087,8 +2233,8 @@ class CameraPusher:
         """`(landed, ok)`: the range's pending piece uploaded — or its end said. Not ok: not acknowledged, kept."""
         try:
             if u["piece"] is _END:
-                ing.upload(token, self.serial, rid, [], camera_now=self.clock(), seq=u["seq"])
-            elif not ing.upload(token, self.serial, rid, u["piece"], camera_now=self.clock(), more=True, seq=u["seq"]):
+                self._request(ing.upload, token, self.serial, rid, [], seq=u["seq"])
+            elif not self._request(ing.upload, token, self.serial, rid, u["piece"], more=True, seq=u["seq"]):
                 self.uploading.pop(rid, None)                          # nobody waits for it any more
                 return False, True
         except Unreachable:
@@ -2101,7 +2247,7 @@ class CameraPusher:
 
     def _range_failed(self, ing, token: str, rid: str, t0: float, t1: float, e: OSError) -> bool:
         try:
-            ing.upload(token, self.serial, rid, [], camera_now=self.clock(), failed=str(e))
+            self._request(ing.upload, token, self.serial, rid, [], failed=str(e))
         except Unreachable:
             return False                                               # said again next pass: the range is still asked
         self.failed_ranges.append((t0, t1, str(e)))
@@ -2328,6 +2474,9 @@ def tie(pusher: CameraPusher, recorder) -> CameraPusher:
     recorder.stream_said, recorder.stream_owed = pusher.said, pusher.owed_spans
     recorder.stream_unknown = pusher.unknown_before                    # …and before what it knows (the eleventh review)
     recorder.stream_delivery, recorder.stream_remember = pusher.delivery, pusher.remember
+    if getattr(recorder, "actuator", None) is not None:
+        recorder.actuator.serial = pusher.serial                       # whose line the card keeps (the twelfth review),
+        recorder.actuator.note_line(force=True)                        # …said on a card open already
     if pusher.card is None:
         pusher.card = recorder.answer_range
     recorder.remember_card()                                           # a card open already: what it kept, now
@@ -2429,6 +2578,17 @@ def _finite_clock(camera_now) -> float:
         return finite(camera_now)
     except (TypeError, ValueError, OverflowError):
         raise Refused(f"the camera's clock is a number of seconds, not {camera_now!r}") from None
+
+
+def _round_trip(rtt) -> float | None:
+    """How long the camera's last request took there and back, as it says (`rtt`; the twelfth review) — or None: it does
+    not say, or says something that is no time. Only ever an excuse for a rise, never a reason for a move: a garbled one is
+    none."""
+    try:
+        v = finite(rtt) if rtt is not None else None
+    except PARSE_ERRORS:
+        return None
+    return v if v is not None and v >= 0 else None
 
 
 def _urls(v: dict) -> None:

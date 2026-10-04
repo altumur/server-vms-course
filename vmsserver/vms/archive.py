@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from urllib.parse import urlsplit, unquote
 
 from w2cplatform.doors import numeric
+from w2cplatform.secrets import NOT_AN_ADDRESS, hide_in_url
 from w2cplatform.events import EventLog
 from w2cplatform.obsd import Closed, ObsdError, Sample, Session, SessionLost, Unavailable, archive_ms, unix_s
 from w2cplatform.rows import PARSE_ERRORS, Table, finite
@@ -86,21 +87,27 @@ def parse_stream(name: str) -> tuple[str, int, str] | None:
 
 # Where a volume is, as `obsd` opens it: PARAMETERS, never a URI with a key in it — a URI is printed, logged,
 # published in heartbeats; the key travels separately (`access_secret`, sealed in the store, opened only by the
-# process that mounts the volume: М10A Lesson 18).
+# process that mounts the volume: М10A Lesson 18). Its refusals say the url as a page does (`hide_in_url`): a row stored
+# before `volumes.refuse` took a key with `/` in it went into `volume_error`, the heartbeat and the log (the twelfth review).
 def volume_params(url: str, secret: str = "", access_key: str = "") -> dict:
     if "://" not in url:
         return {"schema": "file", "path": url}           # a local volume's row names its directory
-    u = urlsplit(url)
+    said = hide_in_url(url)
+    try:
+        u = urlsplit(url)
+        port = u.port
+    except ValueError:                                   # `urlsplit`'s words quote the port: a key, in an old row
+        raise ValueError(f"{said}: {NOT_AN_ADDRESS}") from None
     if u.scheme == "file":
         return {"schema": "file", "path": unquote(u.path)}
     if u.scheme.startswith("s3"):
         parts = [p for p in u.path.split("/") if p]
         if len(parts) < 2:
-            raise ValueError(f"{url}: an s3 volume is s3://<host>/<region>/<bucket>[/<path>]")
-        return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(u.port)} if u.port else {}),
+            raise ValueError(f"{said}: an s3 volume is s3://<host>/<region>/<bucket>[/<path>]")
+        return {"schema": u.scheme, "host": u.hostname or "", **({"port": str(port)} if port else {}),
                 "region": parts[0], "bucket": parts[1], "path": "/".join(parts[2:]),
                 "access_key": access_key, "secret_key": secret}   # the key's id from the row's `access_key`, never the url
-    raise ValueError(f"{url}: not an archive this course opens (file://, s3://)")
+    raise ValueError(f"{said}: not an archive this course opens (file://, s3://)")
 
 
 @dataclass(frozen=True)

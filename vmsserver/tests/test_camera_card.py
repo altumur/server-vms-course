@@ -1587,3 +1587,90 @@ def test_a_camera_without_an_rtc_battery_relabels_what_it_recorded_before_its_cl
             assert line.sets == 1 and all(abs(got[i] - (start + i / 10)) < 0.002 for i in range(3200, 4000)), ntp_again
         else:                                                           # never set: right after the card's newest
             assert line.sets == 0 and got[2999] < got[3200] < got[2999] + 0.01, got[3200] - got[2999]
+
+
+# -- the twelfth review ----------------------------------------------------------------------------------------------
+def test_a_process_with_no_boot_id_goes_on_from_the_card_as_a_new_boot_and_its_frames_lie_where_captured():
+    """The twelfth review, major 21, its probe `pz5_noboot`: with no boot id — macOS gave none — "the same boot" was
+    decided by the steady clock alone. The camera was off for 300 s, its new process started at an uptime later than the
+    one its last note was written at, and it took the note's line for its own and went on from it by the steady clock:
+    the line hundreds of seconds behind the camera's clock, the hole before the reboot answered with nothing (here: 180 s
+    early). A note or a process with no id is a new boot now (`CamLine.restore`): the line goes on through the conversion
+    the card kept, and every frame of both boots lies on the card where it was captured — with the first process's step
+    of +30 s taken up and not taken again. And the system's boot id is read where it keeps one (`boot_id`)."""
+    import shutil
+    import sys
+    from vms.card import boot_id
+    for jump in (0.0, 30.0):
+        path = tempfile.mkdtemp(prefix="card-")
+        true, skew, up = [100_000.0], [0.0], [0.0]
+        start = true[0]
+        camclock = lambda: true[0] + skew[0]
+        boot_at = [start]
+        steady = lambda: true[0] - boot_at[0] + up[0]                    # monotonic: starts again at the boot, at `up`
+
+        def step_at(at):
+            if abs(at - 10.0) < 0.05:
+                skew[0] += jump
+        try:
+            p = _Process(path, camclock, steady)                          # no boot id
+            p.film(0, start, start + 30, true, camclock, step_at)
+            p.close()
+            true[0], boot_at[0], up[0] = start + 330, start + 330, 150.0  # off 300 s; back at an uptime past the note's
+            q = _Process(path, camclock, steady, epoch=2)
+            q.film(3300, start, start + 360, true, camclock)
+            q.close()
+            got, stretches = _on_card(path)
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        assert sorted(got) == list(range(300)) + list(range(3300, 3600)), jump
+        off = [(n, round(t - start - n / 10, 1)) for n, t in sorted(got.items()) if abs(t - start - n / 10) >= 0.002]
+        assert not off, (jump, off[:3])
+    if sys.platform in ("darwin", "linux"):
+        assert boot_id() and boot_id() == boot_id(), boot_id()
+
+
+def test_the_line_on_the_card_names_its_camera_and_another_cameras_line_is_not_gone_on_from():
+    """The twelfth review, a minor ("with no `delivered.json` there is no guard against another camera's card: no serial
+    in `line.json`"): the line's note says whose it is now (`CardActuator.serial`, set by М12's `tie`), and a process of
+    another camera over the same card does not go on from that camera's line — it begins its own after what the card
+    holds — and says whose card it found (`card_serial`: the camera's pusher takes the card's older footage for another
+    camera's, `CameraPusher.remember`). The same camera goes on from its own line, the step it took up kept."""
+    import json
+    import shutil
+    for second in ("SN-A", "SN-B"):
+        path = tempfile.mkdtemp(prefix="card-")
+        true, skew = [100_000.0], [0.0]
+        start = true[0]
+        camclock, steady = (lambda: true[0] + skew[0]), (lambda: true[0] - start)
+
+        def process(serial, epoch):
+            ring = CamRing(window=600.0, clock=camclock, steady=steady)
+            ring.line.boot = lambda: "b1"
+            act = CardActuator(ring, None, threaded=False)
+            act.serial = serial
+            act.card = CardBuffer(path, segment_span=10.0)
+            act("start", {"id": "1-card", "epoch": epoch})
+            return ring, act
+        try:
+            ring, act = process("SN-A", 1)
+            for n in range(300):
+                true[0] = start + n / 10
+                if n == 100:
+                    skew[0] += 30.0                                       # its clock steps; the line takes it up
+                ring.add(_shot(n, camclock()))
+                if n % 5 == 4:
+                    act.drain()
+            act.note_line(force=True)
+            assert json.loads(act.card.read_note("line.json"))["serial"] == "SN-A"
+            act.stop_all()
+            act.card.close()
+            true[0] = start + 40
+            ring2, act2 = process(second, 2)
+            assert act2.card_serial == "SN-A", second
+            skew2 = ring2.skew()
+            act2.stop_all()
+            act2.card.close()
+        finally:
+            shutil.rmtree(path, ignore_errors=True)
+        assert abs(skew2 - (-30.0 if second == "SN-A" else 0.0)) < 0.01, (second, skew2)
