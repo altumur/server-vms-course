@@ -1,11 +1,13 @@
 """What a store can hold, said by the store.
 
-A store has a ceiling and the platform has to know it. Nomad Variables cap a
-whole Variable — every key and every value in it — at 64 KiB, and that number
-is not the platform's to choose: it is a constant in the scheduler
-(`maxVariableSize = 65536`), and the request to make it configurable has been
-open since 2022 and answered with "we don't want to give users a new way to
-break their clusters".
+A store has a ceiling and the platform has to know it. This was learned when
+the cluster's store was Nomad Variables: Nomad capped a whole Variable — every
+key and every value in it — at 64 KiB, and that number was not the platform's
+to choose: a constant in the scheduler (`maxVariableSize = 65536`), the request
+to make it configurable open since 2022 and answered with "we don't want to
+give users a new way to break their clusters". The cluster's store is now its
+own daemon (`configstore://`), whose row ceiling is `storemachine.MAX_VALUE`;
+the lesson stands — the number belongs to the store, not to its caller.
 
 Before this module the number lived in prose. `FsObjectStore` never refuses
 anything, so a write that would be rejected in production succeeded in every
