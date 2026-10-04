@@ -41,17 +41,23 @@ from urllib.parse import urlsplit
 def resolve(uri: str, media_dir: str | None = None) -> str:
     """Anything but driverpack://file/<name> is the real DriverPack's."""
     media_dir = media_dir or os.environ.get("MEDIA_DIR", "/data/media")
-    u = urlsplit(uri)
+    from w2cplatform.secrets import NOT_AN_ADDRESS, hide_in_url    # pure too: `re` and `urllib`
+    try:
+        u = urlsplit(uri)
+    except ValueError:                               # its words quote the host, a login and all (the twelfth review)
+        raise ValueError(f"not an address: {NOT_AN_ADDRESS}") from None
     # What stands before an `@` is a login: never in an error (the tenth round). Tried only where a run begins — after
     # the start, a `/` or an `@` — or a long name with no `@` was a scan from every position (the eleventh review).
     shown = re.sub(r"(?<![^/@])[^/@]*@", "…@", str(uri))
     cut = re.search(r"[?;]", shown)                  # …nor its parameters, where a camera's login often is (`?usr=…&pwd=…`,
     if cut:                                          # `;password=…`): the actuator logs this message (the eleventh review)
         shown = shown[:cut.start() + 1] + "…"
+    shown = hide_in_url(shown)                       # …nor a pair in the path, nor a port that is no number (`/user=admin_
+                                                     # password=…_channel=1`, `admin:…%40host`: the twelfth review, blocker 8)
     if u.scheme != "driverpack":
         raise ValueError(f"not a driverpack URI: {shown}")
     if u.netloc != "file":
-        raise ValueError(f"driverpack://{u.netloc.rsplit('@', 1)[-1]}/… names a vendor driver; this course ships only driverpack://file/<name>")
+        raise ValueError(f"{hide_in_url('driverpack://' + u.netloc.rsplit('@', 1)[-1])}/… names a vendor driver; this course ships only driverpack://file/<name>")
     name = u.path.lstrip("/")
     if not name or "/" in name or ".." in name:
         raise ValueError(f"bad media name in {shown}")

@@ -35,7 +35,7 @@ from cluster.variables import Conflict, Variables
 from w2cplatform.epoch import next_epoch
 
 from .agent import ClusterTrust
-from .api import ApiError
+from .api import ApiError, refuse_addresses
 from .federation import Cluster, Unreachable
 
 ROW, EPOCH = "vms/cameras/1", "vms/epoch/1"
@@ -251,6 +251,11 @@ class DeviceCluster:
             raise ApiError(404, f"{self.name} is one camera, {self.serial}; it has no camera {camera}")
         if subject is not None and not self.may(subject, "edit"):
             raise ApiError(403, f"{subject} has no grant to edit on {self.name}")
+        # An address with a credential in it is refused here too, whoever sends it (vmsserver's twelfth review, blocker
+        # 9, defence in depth): a kept edit carried home by the agent reaches this console without the domain's door
+        # (`apply_pending`, a camera nobody can reach), and one kept by an older domain carries what the door now
+        # refuses. Refused, it is the edit's outcome (`refused`, the field named, never the value) — not on the flash.
+        refuse_addresses(fields)
         for _ in range(10):
             items, idx = self.flash.get(ROW)
             row = json.loads(items["row"])

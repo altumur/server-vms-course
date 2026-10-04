@@ -86,7 +86,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 from .doors import numeric, unnamable
-from .secrets import credential_params, hide_in_url, is_secret_field
+from .secrets import NOT_AN_ADDRESS, credential_params, hide_in_url, is_secret_field
 from .blobs import digest as blob_digest, is_digest, verify
 from .contract import (ASSIGNMENTS, ASSIGNMENTS_GARBLED, CONTROLLER_PASS, DECOMMISSION, DRAIN_KEY, OFFER_GRACE, SLOTS,
                        SLOTS_GARBLED, UNPLACED, Controller, Subsystem, is_live, label_set, one_pass, read_slot, slot_number,
@@ -672,8 +672,8 @@ class SubsystemSpec:
                 try:
                     u = urlsplit(str(fields[name]))
                     u.port
-                except ValueError as e:
-                    raise Refused(f"{name} is not an address: {e}")
+                except ValueError:                       # its words quote the port it could not read: a password
+                    raise Refused(f"{name} is not an address: {NOT_AN_ADDRESS}") from None   # (the twelfth review, major 16)
                 # …a login in the PATH too: a scheme that names its host in the path (`driverpack://acme/user:pw@host`)
                 # carried a password past `netloc` into the snapshot (the product team's addition to the tenth round).
                 # A file's name is a name, `@` and all.

@@ -51,7 +51,7 @@ from dataclasses import dataclass
 
 from w2cplatform.contract import HOLDS, Slot, Subsystem, read_hold
 from w2cplatform.rows import FIELDS as NUMBERS, PARSE_ERRORS, Table, number
-from w2cplatform.secrets import is_secret_field
+from w2cplatform.secrets import hide_in_url, is_secret_field
 from w2cplatform.spec import Refused
 
 SUB = "rec"
@@ -181,17 +181,18 @@ def refuse(fields: dict) -> None:
     # so `s3://KEY:SECRET@host/bucket` is the same secret in three public places, and the `*_secret`
     # rule cannot help because the field it guards is not the one carrying it. The secret is a VALUE
     # among values (`access_secret`), assembled only by the process that opens the volume.
-    if "@" in url.split("//", 1)[-1].split("/", 1)[0]:
-        raise Refused("a volume's url names the archive, never the key to it: the credentials go in "
-                      "`access_secret` — this string is printed on the page and published in heartbeats")
-    # …nor in its parameters (the eleventh review's sibling of a camera's `?pwd=`): `…/bucket?X-Amz-Credential=…` or
-    # `?secret=…` was taken, and printed and published the same. The rule and its list: `secrets.is_credential_param`.
-    from w2cplatform.secrets import credential_params
-    creds = credential_params(url)
-    if creds:
-        raise Refused(f"a volume's url names the archive, never the key to it ({', '.join(dict.fromkeys(creds))}): the "
-                      f"credentials go in `access_key` / `access_secret` — this string is printed on the page and "
-                      f"published in heartbeats")
+    #
+    # The rule is the address rule (`secrets.address_refusal`), whatever the characters of the key (the twelfth review,
+    # blocker 10; a run): the `@` was looked for before the first `/` only, and AWS secret keys hold `/` —
+    # `s3://AKIA:…/x@h/bucket` was taken and printed on `/volumes`. An `@` anywhere after the `://`, a port that is no
+    # number (`KEY:SECRET` with no host, or a `?` or `#` in the secret), a credential pair in the query or the path
+    # (`…/bucket?X-Amz-Credential=…`, `?secret=…`: the eleventh review's sibling of a camera's `?pwd=`) — refused, in
+    # words that never repeat the url. A local directory has no `://`, and its name is a name.
+    from w2cplatform.secrets import address_refusal
+    why = address_refusal(url)
+    if why:
+        raise Refused(f"a volume's url names the archive, never the key to it ({why}): the credentials go in "
+                      f"`access_key` / `access_secret` — this string is printed on the page and published in heartbeats")
 
 
 def write(vars_, fields: dict, sealer=None) -> Volume:
@@ -338,7 +339,9 @@ def served(vars_, sub: Subsystem, now: float, lost_after: float = 45.0, objects=
         slot = held.get(v.name)
         live = slot is not None and not slot.released and slot.holder != "" and now <= slot.until
         err = broken.get(v.name) if live else None
-        row = {k: x for k, x in v.to_items().items() if not is_secret_field(k)}   # the rule at the source
+        # The rule at the source — and the url as a page may say it (`hide_in_url`; the twelfth review, major 15): a row
+        # declared before `refuse` saw `?X-Amz-Credential=…`, `?secret=…` or `KEY:SECRET@` stood on `/volumes` as stored.
+        row = {k: hide_in_url(x) for k, x in v.to_items().items() if not is_secret_field(k)}
         why = (None if live and not err else
                f"held by {slot.holder}, which cannot write there: {err}" if err else
                "disabled by the administrator" if not v.enabled else

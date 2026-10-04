@@ -99,6 +99,7 @@ import time
 
 from w2cplatform.obsd import SMPL, Sample, archive_ms, unix_s
 from w2cplatform.rows import PARSE_ERRORS, finite, number
+from w2cplatform.secrets import hide_in_url
 
 from . import volumes
 from .archive import stitch
@@ -2244,14 +2245,17 @@ class CardRecorder(RecWorker):
                 for uid in list(self.reconciler.failures):
                     if uid not in self.reconciler.actual:
                         self.reconciler.failures.pop(uid, None)
-                log.info("%s: the card %s is open; the card records", self.name, vol.url)
+                log.info("%s: the card %s is open; the card records", self.name, hide_in_url(vol.url))
             except OSError as e:
-                if str(e) != self.card_error or self.card_fault != "would not open":
+                # A card is a directory, never an address (`volumes.refuse`); a row declared before that rule is said as a
+                # page says it — in the log and in the heartbeat's `card.error` (the twelfth review, major 15).
+                why = hide_in_url(str(e))
+                if why != self.card_error or self.card_fault != "would not open":
                     log.warning("%s: the card %s would not open: %s; going on without it (the ring and the pusher work; "
                                 "a break longer than the ring is lost), trying again every %.0f s",
-                                self.name, vol.url, e, self.CARD_RETRY)
+                                self.name, hide_in_url(vol.url), why, self.CARD_RETRY)
                     self.card_since = self.wall()
-                self.card_fault, self.card_error = "would not open", str(e)
+                self.card_fault, self.card_error = "would not open", why
                 self._card_retry_at = self.clock() + self.CARD_RETRY
         self.volume = self.hold
         if self.card is not None:
@@ -2279,7 +2283,7 @@ class CardRecorder(RecWorker):
             return
         self.card_failures += 1
         log.warning("%s: the card %s refused a write: %s; closing it, trying again in %.0f s (the ring and the pusher "
-                    "work; what the ring lets go of meanwhile is lost to the card)", self.name, vol.url, err, self.CARD_RETRY)
+                    "work; what the ring lets go of meanwhile is lost to the card)", self.name, hide_in_url(vol.url), err, self.CARD_RETRY)
         for uid in list(self.reconciler.actual):
             self.actuator("stop", {"id": uid})
             self.reconciler.lost(uid, self.now())
