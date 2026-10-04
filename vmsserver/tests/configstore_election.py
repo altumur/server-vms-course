@@ -59,6 +59,8 @@ from w2cplatform.variables import open_vars  # noqa: E402
 POLL = 2.0                     # `Worker.run`'s default `poll`: the lease step is LOOKED AT this often
 NAMES = ("srv-a", "srv-b", "srv-c")
 TLS = os.path.join(HERE, "tests", "tls")
+for _name in NAMES:                # a checkout leaves them 0644; the daemon takes a raft secret only 0600 (`tls.raft_secret`)
+    os.chmod(os.path.join(TLS, _name, "raft.secret"), 0o600)
 ALIASES = {"defaults": "default", "fast": "lan"}     # the prototype's names for the same timings
 
 

@@ -118,20 +118,33 @@ python3 -m w2cplatform.configstore import --from file:///data/platform/config
 ```python
 def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> dict:
     """Write `rows` into the group behind `dst` (an admin handle), each created with `cas=0`, values untouched.
-    Refused whole, before the first write, when the group holds rows already or its base is below `highest`."""
+    Refused whole, before the first write, when a row is heavier than the store takes, when the group's base is below
+    `highest`, or when the group holds a row this load did not write — a row that is one of `rows`, the same, is one
+    an earlier run of the same load wrote before it stopped, and the load goes on after it (twelfth pass, minor)."""
+    heavy = [f"{k} ({items_bytes(v)} bytes)" for k, v in rows if items_bytes(v) > MAX_VALUE]
+    if heavy:
+        raise ValueError(f"rows heavier than the store takes ({MAX_VALUE} bytes) — move what makes them big into an "
+                         f"object first: " + "; ".join(heavy))
     status = dst.status()
     base = int(status.get("index_base", 0))
     if base < highest:
         raise ValueError(f"the group's base is {base} and {what} handed out versions up to {highest}: start the group "
                          f"with -index-base {highest} or more, or a version remembered from {what} could match a new row")
-    if dst.list(""):
-        raise ValueError("the group already holds rows: rows are loaded into a fresh group only")
+    want = dict(rows)
+    held = set(dst.list(""))
+    alien = sorted(k for k in held if k not in want or dst.get(k)[0] != want[k])
+    if alien:
+        raise ValueError(f"the group holds rows this load did not write ({', '.join(alien[:5])}"
+                         f"{', …' if len(alien) > 5 else ''}): rows are loaded into a fresh group only")
     for key, items in rows:
-        dst.put(key, items, cas=0)
-    return {"rows": len(rows), "highest_before": highest, "index_base": base}
+        if key not in held:
+            dst.put(key, items, cas=0)
+    return {"rows": len(rows), "highest_before": highest, "index_base": base, "there_before": len(held)}
 ```
 
 И ещё раньше — если в файлах коробки есть строка, которая не читается: выброшенная, она читалась бы как отсутствующая, а отсутствующая эпоха начинается снова с 1. Тесты — `test_a_box_imported_into_a_fresh_group_keeps_its_values_and_no_version_it_handed_out_matches` (значения те же, каждая запомненная старая версия даёт `Conflict`, и весь набор тестов контракта `Variables` зелёный после импорта) и `test_an_import_is_refused_whole_into_a_group_it_could_confuse`. Тот же механизм у резервной копии: `configstore backup` пишет строки и самую высокую версию, `configstore restore --from` загружает их в свежую группу, основание которой выше этой версии (`test_a_backup_restores_into_a_fresh_group_above_its_highest_version`).
+
+**Остановившийся импорт продолжается.** Двенадцатое ревью заметило, что импорт, оборванный на середине (оборвалась сессия оператора, упал демон), продолжить было нельзя: в группе уже есть строки, а группу со строками импорт отвергает. Оставалось одно — стереть `-dir` на всех серверах и поднимать группу заново. Теперь тот же `import` или `restore`, запущенный ещё раз, продолжает с того места, где остановился, если каждая строка в группе — одна из тех, что он загружает, и такая же. Строка, которую он не писал, или изменённая с тех пор, по-прежнему отказывает: загружать можно только в группу, куда больше никто не писал. **И строка тяжелее, чем берёт хранилище, отказывает весь импорт до первой записи**: у `FileVariables` потолка нет, у группы есть (`MAX_VALUE`, шаг 3). Тест — `test_an_import_that_stopped_goes_on_and_a_row_heavier_than_the_store_takes_refuses_it_whole`.
 
 Почему не сделать коробку группой из одного с первого дня, чтобы обойтись без импорта? Так предлагала записка, и это работает. Но коробка тогда платит журналом raft за каждую запись — продления аренд, порядка записи в секунду на воркер, на флеш, круглосуточно, — ради перехода, который большинство коробок не сделает никогда. Разовый импорт дешевле.
 
@@ -146,12 +159,13 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> d
 | `put(path, items, cas)` | `POST /v1/write {"op": "put", "key", "items", "cas", "id"}` | `200 {"index": N}` |
 | `delete(path, cas)` | `POST /v1/write {"op": "delete", "key", "cas", "id"}` | `200 {"index": N}` |
 
-`cas: null` — без условия; `cas: ""` — «только создать»: ключа быть не должно; число — «только если версия ключа сейчас такая». `id` — идентификатор операции, его ручка делает сама на каждый вызов (шаг 9).
+`cas: null` — без условия; `cas: ""` — «только создать»: ключа быть не должно; число — «только если версия ключа сейчас такая». `id` — идентификатор операции, его ручка делает сама, один на операцию (шаг 9).
 
-Отказ — тело `{"kind", "error"}` с одним из пяти видов, и каждый вид ручка переводит в то, что код платформы уже понимает (`w2cplatform/configstorevars.py`):
+Отказ — тело `{"kind", "error"}` с одним из шести видов, и каждый вид ручка переводит в то, что код платформы уже понимает (`w2cplatform/configstorevars.py`):
 
 ```
 #   409 → `Conflict`   403 → `Forbidden`   400 → `ValueError` (not a key, as `safe_path` says it)
+#   413 toolarge → `TooLarge` (a row over `storemachine.MAX_VALUE`)
 #   503 unavailable → `StoreUnavailable`   503 ambiguous → `StoreAmbiguous`
 ```
 
@@ -160,12 +174,21 @@ def _load_fresh(rows: list[tuple[str, dict]], highest: int, dst, what: str) -> d
 | `409 conflict` | версия ключа не та, что в `cas`; тело несёт версию сейчас | перечитать и применить своё поверх (шаг 5) |
 | `403 forbidden` | роль этого сокета не может так поступить с этим ключом | ничего: это ошибка кода или чужой процесс (шаг 6) |
 | `400 badkey` | ключ, который хранилище не примет (тот же запрет, что у файлов) | ничего: ошибка кода |
+| `413 toolarge` | строка тяжелее `MAX_VALUE` (512 КиБ) | ничего: то, что делает строку тяжёлой, место в объекте |
 | `503 unavailable` | лидера не нашлось за время ожидания (`-leader-wait`, 5 с): запись **не сделана** | повторить можно; воркер держит то, что держит, и пробует на следующем шаге |
 | `503 ambiguous` | запись дошла до лидера, а он умер, не ответив: исход **неизвестен** | повторять — только с тем же `id`; кому важно, сначала перечитать |
 
-Последние два — новое по сравнению с файлами, и различать их — главное, что здесь надо понять. Оба вида — `OSError` (`StoreUnavailable` — подкласс `OSError`, `StoreAmbiguous` — подкласс `StoreUnavailable`), а каждый вызывающий в платформе уже читает `OSError` как «хранилище не ответило», а не как «нет» (обратная связь BC): воркер не бросает камеру из-за паузы хранилища. И ни один из них — не `Conflict`. `Conflict` на продлении слота **ограждает** воркер (`Worker._renew_slot` возвращает `False`); отдать его за неизвестный исход значило бы оградить живой воркер выборами лидера.
+Два `503` — новое по сравнению с файлами, и различать их — главное, что здесь надо понять. Оба вида — `OSError` (`StoreUnavailable` — подкласс `OSError`, `StoreAmbiguous` — подкласс `StoreUnavailable`), а каждый вызывающий в платформе уже читает `OSError` как «хранилище не ответило», а не как «нет» (обратная связь BC): воркер не бросает камеру из-за паузы хранилища. И ни один из них — не `Conflict`. `Conflict` на продлении слота **ограждает** воркер (`Worker._renew_slot` возвращает `False`); отдать его за неизвестный исход значило бы оградить живой воркер выборами лидера.
 
-Откуда демон знает, какой из двух ответить (`RaftBackend._apply`): отказы библиотеки «нет лидера», «очередь полна», «идёт смена состава» значат «команда не добавлена в журнал»; «этот узел не лидер», «лидер сменился», «исход неизвестен» и молчание дольше срока — «могла быть добавлена, а дойдёт ли до фиксации, неизвестно». В пределах своего срока демон повторяет обе с той же командой — и с тем же `id`; когда срок вышел, он отвечает `unavailable`, только если видел одни отказы первого рода.
+**У строки есть потолок.** Двенадцатое ревью записало значение в 32 МиБ — оно было принято за 0,24 с и легло в журнал raft. Такую запись каждый член группы держит в памяти и пишет в журнал, её шлют отставшему ведомому, и пока одна такая запись идёт по сети, пульс лидера ждёт за ней. Строка весит пару сотен байт, а тяжёлой её делает поле, которому место в объекте. Поэтому строка весит не больше `MAX_VALUE` байт. Считают так же, как любое хранилище (`variables.items_bytes`: ключи и значения в байтах — мера Nomad для Variable). Отказ дважды: дверь отвечает `413 toolarge` до того, как что-то отправлено в журнал, и машина отказывает ту же команду сама — каждый член группы применяет журнал и обязан отказать одинаково (`w2cplatform/storemachine.py`):
+
+```python
+MAX_VALUE = 512 << 10      # what a row's items may weigh (`items_bytes`): see the notes above
+```
+
+512 КиБ — потолок значения у Consul на том же `hashicorp/raft`, что у продукта (`kv_max_value_size`), и по той же причине. Это тысяча строк и восемь потолков Nomad (64 КиБ), под которые платформа строилась. Ни одна строка, которую пишет код, к нему не подходит. Ручка объявляет этот потолок своим `max_bytes`, поэтому тяжёлая строка — `TooLarge` ещё у вызывающего, как у любого хранилища с потолком. Тест — `test_a_row_heavier_than_the_store_takes_is_refused_at_the_door_and_by_the_machine`.
+
+Откуда демон знает, какой из двух `503` ответить (`RaftBackend._apply`): отказы библиотеки «нет лидера», «очередь полна», «идёт смена состава» значат «команда не добавлена в журнал»; «этот узел не лидер», «лидер сменился», «исход неизвестен» и молчание дольше срока — «могла быть добавлена, а дойдёт ли до фиксации, неизвестно». В пределах своего срока демон повторяет обе с той же командой — и с тем же `id`; когда срок вышел, он отвечает `unavailable`, только если видел одни отказы первого рода.
 
 **Чтение — тоже через журнал.** `get` и `list` — команды raft: ответ — то, что лежало в машине состояний на этой записи у лидера этого срока. Это линеаризуемо — в `pysyncobj` нет ReadIndex и аренды лидера, и другого линеаризуемого чтения она не даёт. Продление аренды в платформе — это **чтение** (`Lease.renew` читает строку эпохи), и локальным оно быть не может: ведомый, отрезанный от группы, продолжал бы подтверждать эпоху, которую остальные уже сдвинули. Следствие для трасс: на демоне чтение тратит индекс журнала, и версии двух соседних записей отличаются не на единицу, а на число чтений между ними. Стенд чтений не считает, чтобы трассы читались, а ни один код в платформе не рассчитывает, что версии идут подряд: их сравнивают только на равенство.
 
@@ -414,7 +437,7 @@ worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
 
 Во время выборов библиотека отвечает «лидер сменился» или «исход неизвестен» на команду, которую старый лидер уже добавил в журнал и которая ещё может пройти. Повторить её как новую запись — значит получить `Conflict` от собственной первой копии: первая копия сдвинула версию, и `cas` повтора уже не тот. А `Conflict` на продлении слота ограждает воркер.
 
-Поэтому каждая запись несёт идентификатор операции — `id`, ручка делает его один раз на вызов, — демон повторяет команду с тем же `id`, а машина состояний помнит последние 50 000 ответов и на повтор отдаёт первый (клиентские сессии из диссертации Raft, § 6.3; `w2cplatform/storemachine.py`):
+Поэтому каждая запись несёт идентификатор операции — `id`, ручка делает его один раз на операцию (ниже), — демон повторяет команду с тем же `id`, а машина состояний помнит последние 50 000 ответов и на повтор отдаёт первый (клиентские сессии из диссертации Raft, § 6.3; `w2cplatform/storemachine.py`):
 
 ```python
     def _write(self, cmd: dict, index: int) -> dict:
@@ -424,6 +447,26 @@ worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
 ```
 
 Решает машина только по команде и своему состоянию — никаких часов и случайных чисел, — потому что каждый член группы применяет тот же журнал и обязан прийти к тем же строкам; и память идентификаторов у всех забывает одинаково. Тесты — `test_a_write_repeated_with_its_id_is_answered_with_its_first_answer` (машина) и `test_a_write_retried_with_its_id_after_its_first_copy_landed_is_applied_once` (группа из трёх: повтор через другой сервер — тот же индекс, ничего не применено дважды). В замере продукта это и есть «26–38 повторов на прогон, отвеченных из памяти, без конфликта». `hashicorp/raft` этого сам не делает: это слой над библиотекой, и продукт его написал.
+
+**Один `id` на операцию, а не на вызов.** Двенадцатое ревью запустило пробу: два вызова одного и того же `put` после оборванного соединения несли два разных `id`. Ручка делала новый на каждый вызов. А цикл аренд, получив `StoreAmbiguous`, просит ту же запись ещё раз — и если первая копия тем временем прошла, `cas` повтора конфликтовал с ней, то есть ограждал воркер. Теперь ручка помнит `id` записи, исход которой ей неизвестен (`_unknown`, по всему содержимому записи: операция, ключ, значения, `cas`). Та же запись, попрошенная снова, уходит с тем же `id` и отвечается один раз. Определённый ответ — индекс, `Conflict`, `Forbidden`, плохой ключ — `id` забывает; другая запись в тот же ключ — другая операция, со своим `id` (`w2cplatform/configstorevars.py`):
+
+```python
+    def _write(self, body: dict) -> dict:
+        what = json.dumps(body, sort_keys=True)
+        op_id = self._unknown.get(what) or uuid.uuid4().hex
+        try:
+            got = self._call("POST", "/v1/write", {**body, "id": op_id})
+        except StoreUnavailable:
+            self._unknown.keep(what, op_id)        # "not done" this time; an earlier copy may still land
+            raise
+        except BaseException:
+            self._unknown.forget(what)
+            raise
+        self._unknown.forget(what)
+        return got
+```
+
+Тест — `test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_and_is_applied_once`: первая копия прошла, соединение оборвалось, тот же `put` ещё раз получает индекс первой копии, а не `Conflict`; проба ревью внутри теста — два оборванных вызова несут один `id`.
 
 ## Шаг 10 — Что обязан обещать фейк
 
@@ -467,13 +510,52 @@ worst unconfirmed with a 9.6 s pause: before 29.6 s, after 21.6 s (window 25)
 
 **Дверь `-api` — только взаимный TLS.** Одна CA на установку, `deploy/w2c-ca.sh` (в `vmsserver/deploy/`): `init` делает CA и общий секрет порта raft, `issue <сервер>` — сертификат демона сервера, который кладут в `/etc/w2c/tls`. Дверь требует клиентский сертификат этой CA с ролью `configstore` (`tls.require_role`): без сертификата не проходит рукопожатие, с сертификатом другой роли — `403`. Набирающий демон проверяет и сервер, к которому пришёл: сертификат CA, имя того сервера, которого он хотел, роль `configstore`. Без `-tls` демон дверь `-api` не открывает вовсе. Тесты — `test_a_join_is_refused_without_a_daemons_certificate`, `test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_roles_certificate`, `test_a_daemon_dialling_another_checks_the_name_and_the_role_of_the_one_that_answers`, `test_a_daemon_will_not_open_its_doors_unprotected`.
 
-**Порт raft — пароль.** Узлы `pysyncobj` говорят между собой pickle, и открытый порт raft — это исполнение чужого кода для любого, кто до него дотянулся. Демон курса передаёт библиотеке `password=` из `/etc/w2c/tls/raft.secret` — она шифрует и аутентифицирует трафик (для этого нужен модуль `cryptography`) — и отказывается слушать raft не на петле без этого секрета:
+**Демон на двери `-api` меняет группу только за свой сервер и не трогает строк.** Двенадцатое ревью: сертификат роли `configstore` имел все права — удалял слоты, писал схему, добавлял ложных голосующих и снимал членов. Теперь демону можно то, что демонам нужно друг от друга: `/v1/status` и `/v1/join` / `/v1/leave` за тот сервер, который назван в его сертификате (`configstore.StoreDaemon.serve`):
 
 ```python
-    password = tls.raft_secret(tls_dir) if tls_dir else None
-    if password is None and raft.rsplit(":", 1)[0] not in ("127.0.0.1", "localhost", "::1", "[::1]"):
-        raise ValueError(f"a raft port off loopback ({raft}) needs its secret: -tls <dir> with raft.secret")
+            if role == PEER and node_id != peer:
+                return 403, {"kind": "forbidden", "error": f"the daemon of {peer or 'no server'} may change the group "
+                                                           f"for its own server, not for {node_id}"}
 ```
+
+Прав на строки у него нет вовсе (урок 5). Запрос, который демон пересылает за процесс (так делает демон продукта: `hashicorp/raft` команды не носит), отвечается с правами **этого процесса** — его роль пересылающий называет в `X-Configstore-Forwarded`, и это роль из файла прав, никогда не `admin`. И вступление не оставляет голосующего, которого никто не запускал: id, который группа держит на другом адресе raft, или адрес, который держит другой id, — `409` (`RaftBackend.add`; то же для `join` оператора через `admin.sock`). Тесты — `test_another_daemon_changes_the_group_only_for_its_own_server_and_touches_a_row_only_forwarding` и `test_a_daemon_joins_only_as_its_own_server_and_no_join_leaves_a_voter_nobody_runs` (на настоящей группе из двух).
+
+**Порт raft — пароль.** Узлы `pysyncobj` говорят между собой pickle, и открытый порт raft — это исполнение чужого кода для любого, кто до него дотянулся. Демон курса передаёт библиотеке `password=` из `/etc/w2c/tls/raft.secret` — она шифрует и аутентифицирует трафик (для этого нужен модуль `cryptography`). Секрет проверяется: если его могут прочесть другие (не `0600`) или он короче 32 символов, демон откажется стартовать. А соль PBKDF2 у `pysyncobj` одна на все установки мира, поэтому библиотеке отдаётся секрет, ключённый `ca.pem` установки (`tls.raft_secret`).
+
+**Без секрета — только группа из одного на петле, и проверяется сокет, а не текст адреса.** Двенадцатое ревью запустило пробу: член группы, поднятый с `-raft 127.0.0.1:<порт>` без `-tls`, прошёл прежнюю проверку — она сверяла строку адреса со списком петлевых. А слушал он `*:<порт>`: `pysyncobj` без `bindAddress` слушает все интерфейсы, и pickle с сети исполнялся бы от имени хранилища. Теперь библиотеке передаётся адрес, на котором слушать (`bindAddress` — тот же адрес raft, разрешённый один раз). Без секрета этот адрес сначала связывается сокетом до того, как библиотека к нему подойдёт, и демон отказывает, если это не петля; соседи без секрета не допускаются вовсе (`RaftBackend.__init__`):
+
+```python
+        ip, port = _bind_address(raft)
+        if not password:
+            if partners:
+                raise ValueError(f"{NO_SECRET}; this member was to start with {', '.join(partners)}")
+            # The socket, not the address's text: bound to the address resolved, before the library is let near it.
+            probe = socket.socket(socket.AF_INET6 if ":" in ip else socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                probe.bind((ip, 0))
+                bound = probe.getsockname()[0]
+            except OSError as e:
+                raise ValueError(f"the raft address {raft} is not this box's: {e}") from None
+            finally:
+                probe.close()
+            if not _loopback(bound):
+                raise ValueError(f"{NO_SECRET}; {raft} is {bound}")
+```
+
+А когда библиотека открыла порт, демон спрашивает уже её собственный слушающий сокет и останавливает её, если тот не на петле (`_open_only_to_this_box`). Такой член группы никого не принимает: `-join` без `-tls`, `join` оператора, старт с журнала, в котором записаны соседи, — отказ. Тесты — `test_a_member_without_the_raft_secret_listens_on_loopback_only_and_takes_nobody` (проба ревью: сокет на `127.0.0.1`, и `lsof` говорит то же), `test_a_raft_port_without_its_secret_is_refused_on_every_interface_but_loopback_before_it_opens` (`0.0.0.0` — отказ, и на порту так никто и не слушал), `test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_the_installation`. Честно об оставшемся: группа из одного на петле без секрета открыта локальным пользователям этой машины — это решение курса для стенда, а не для площадки.
+
+**У каждой двери демона — срок и предел.** Двенадцатое ревью: 200 простаивающих соединений к сокету роли — 203 потока навсегда, а `Content-Length: -1` превращался в `read(-1)` — чтение до конца соединения, которое вызывающий держит открытым. Теперь сокет роли и `admin.sock` обслуживают не больше `ROLE_CONNECTIONS` соединений сразу, а дверь `-api` — не больше `API_CONNECTIONS`, из них `API_PER_ADDRESS` от одного адреса. Следующее соединение получает отказ сразу и непрочитанным: `503 unavailable`, то есть «не сделано», и запись можно повторить; дверь `-api` его просто закрывает, потому что TLS ещё нет и отвечать не в чем. Строка запроса с заголовками должна прийти целиком за `HEADERS_WAIT`, тело — за свой срок с нижней границей темпа. Это `Deadlined` и `read_body` платформы, те же, что у остальных дверей. Длина, которая не неотрицательное число, — `400`, длина больше `MAX_BODY` — `413`, и тело не читается (`w2cplatform/configstore.py`):
+
+```python
+ROLE_CONNECTIONS = 64      # connections one socket (a role's, `admin.sock`) serves at once
+API_CONNECTIONS = 32       # …the `-api` door: a few daemons, each with a join or a status at a time
+API_PER_ADDRESS = 8        # …of which one address holds this many, so a stranger's handshakes do not fill it
+HEADERS_WAIT = 5.0         # seconds a request's line and headers may take, whole
+DOOR_TIMEOUT = 10.0        # seconds a door's socket waits on a caller that sends or reads nothing
+MAX_BODY = 6 * MAX_VALUE + (64 << 10)   # a row at its ceiling, every character escaped (`\u00XX`), and its key
+```
+
+Тесты — `test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once` (сокет роли и `admin.sock`), `test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at_every_door` (и дверь `-api`), `test_the_api_door_serves_so_many_of_one_address_and_lets_a_stalled_handshake_go`. Порт raft — дверь библиотеки: сколько соединений она держит и сколько ждёт незнакомца, решает `pysyncobj`. Курс закрывает его секретом; в продукте — TLS и транспорт `hashicorp/raft` со своими сроками.
 
 Скажем прямо, чего у демона курса нет. **В `hashicorp/raft` продукта на порту raft стоит TLS**, тот же сертификат кластера; в `pysyncobj` TLS нет — только общий пароль. **И у продукта есть `configstore recover`** — группа, пересобранная из журнала одного выжившего, когда большинство потеряно навсегда (`RecoverCluster`, процедура в `deploy/STORE-RECOVERY.md` продукта); у демона курса `recover` нет, и потеря двух серверов из трёх — это восстановление из резервной копии (`configstore restore`). К этому же списку: журнал `pysyncobj` не делает `fsync` перед подтверждением записи (переживает убитый процесс, но не отключение питания большинства), в ней нет пред-голосования и аренды лидера. Для курса библиотеки хватает — контракт зелёный, запись через ведомого ~1 мс, ни одной аренды за окном с таймингами по умолчанию, — а этот список и есть то, что продукт берёт у `hashicorp/raft` с `raft-boltdb`.
 
@@ -517,9 +599,10 @@ def test_m10s_base_classes_run_on_the_cluster_stores_unchanged():
 - **Прочитать один раз и писать много раз с первой версией.** Каждая запись после первой — `409`. Пишите через `Controller.write`: он перечитывает.
 - **Писать без `cas`, где он нужен.** Две консоли — одна потерянная правка, без единой ошибки.
 - **Принять `503` за «нет».** `unavailable` и `ambiguous` — «хранилище не ответило»; воркер, бросивший камеры из-за выборов лидера, сделал отказ из паузы.
-- **Повторить запись после `ambiguous` с новым `id`.** Первая копия могла пройти — повтор получит `Conflict` от неё. Повторяйте с тем же `id` или перечитайте.
+- **Повторить запись после `ambiguous` с новым `id`.** Первая копия могла пройти — повтор получит `Conflict` от неё. Ручка сама повторяет ту же запись с тем же `id`; запись, хоть чем-то другая, — новая операция, и перед ней перечитайте.
 - **Медленные тайминги raft «для надёжности».** Каждая секунда выборов — секунда без записи на всех серверах. `lan` для серверов.
-- **Открыть порт raft без секрета.** Демон откажется — и правильно: pickle на открытом порту — чужой код у вас в процессе.
+- **Открыть порт raft без секрета.** Демон откажется на любом адресе, кроме петли, и в любой группе больше одного — и правильно: pickle на открытом порту — чужой код у вас в процессе. Проверяется сокет, а не текст адреса: `127.0.0.1` в строке не значит, что библиотека слушает только петлю.
+- **Положить `raft.secret` с правами `0644`.** Демон не стартует: секрет порта raft — пароль, его читает только владелец.
 - **Верить фейку, потому что тесты зелёные.** Проверьте его против семи обещаний — иначе он пропустит ровно ту ошибку, от которой должен защищать.
 
 ## Итог
@@ -546,6 +629,7 @@ def test_m10s_base_classes_run_on_the_cluster_stores_unchanged():
 ## Открытые вопросы
 
 - **Не измерено:** разделение сети (лидер жив, но отрезан), отключение питания большинства, смерть лидера во время вступления нового сервера и окно 1 → 2 → 3, настоящая сеть вместо петли. Влияние TLS на выборы в продукте тоже не мерилось.
+- **Журнал без `fsync`.** `pysyncobj` подтверждает запись, не сбросив журнал на диск: убитый процесс он переживает, отключение питания большинства — нет. У продукта `raft-boltdb` сбрасывает каждую пачку до подтверждения. В курсе это не исправить, не меняя библиотеку; не мерилось.
 - **Одно чтение на все эпохи воркера.** Шаг аренд — это `K + 3` запросов подряд, при `CAPACITY=50` — 53 записи журнала на воркер каждые 10 с. Чтение нескольких ключей одной командой сделало бы шаг из трёх запросов. Это расширение контракта `Variables`, не только хранилища, и в этот заход оно не вошло.
 
 ## Что дальше

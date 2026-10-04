@@ -230,13 +230,14 @@ def test_an_answer_cut_off_by_a_dying_daemon_is_not_an_answer():
 
 
 # -- the -api door: mutual TLS ------------------------------------------------------------------------
-def _dial(api_url: str, ctx: ssl.SSLContext, name: str, method: str, route: str, body: bytes = b"{}"):
+def _dial(api_url: str, ctx: ssl.SSLContext, name: str, method: str, route: str, body: bytes = b"{}",
+          headers: dict | None = None):
     import http.client
     host, port = api_url.rsplit(":", 1)
     s = ctx.wrap_socket(socket.create_connection((host, int(port)), timeout=5), server_hostname=name)
     conn = http.client.HTTPConnection(host, int(port), timeout=5)
     conn.sock = s
-    conn.request(method, route, body=body, headers={"Content-Type": "application/json"})
+    conn.request(method, route, body=body, headers={"Content-Type": "application/json", **(headers or {})})
     r = conn.getresponse()
     return r.status, json.loads(r.read() or b"{}")
 
@@ -245,7 +246,8 @@ def test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_role
     """A daemon that accepts `POST /v1/join` from anybody hands the cluster's store to anybody. Without a client
     certificate the handshake itself fails; with a certificate of the installation's CA for another role (a
     recorder's, `urn:w2c:role:recworker`) the door answers 403 before it reads the request; a daemon's certificate
-    (`configstore.<server>`, `urn:w2c:role:configstore`) gets through — here to a store that is no group, 503."""
+    (`configstore.<server>`, `urn:w2c:role:configstore`) gets through for its own server — here to a store that is
+    no group, 503."""
     with Daemon(api=True) as dm:
         api = dm.d.api_url
         bare = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -256,7 +258,8 @@ def test_the_api_door_refuses_a_join_without_a_certificate_and_with_another_role
         code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-a"), "recworker"), "srv-a", "POST",
                            "/v1/join", join)
         assert (code, said["kind"]) == (403, "forbidden") and "recworker" in said["error"]
-        code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-b")), "srv-a", "POST", "/v1/join", join)
+        code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-b")), "srv-a", "POST", "/v1/join",
+                           join.replace(b"srv-x", b"srv-b"))
         assert code == 503, said
         code, said = _dial(api, tls.client_context(os.path.join(TLS, "srv-b")), "srv-a", "GET", "/v1/status")
         assert code == 200 and said["id"] == "srv-a"
@@ -291,6 +294,238 @@ def test_a_daemon_will_not_open_its_doors_unprotected():
         StoreDaemon(LocalBackend(), node_id="srv-a", api=("127.0.0.1", 0), tls_dir=None)
     with pytest.raises(ValueError):
         configstore.start_member("srv-a", short_dir(), "10.0.0.1:8301", bootstrap=True)
+
+
+def _free_port() -> int:
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+
+def test_a_raft_port_without_its_secret_is_refused_on_every_interface_but_loopback_before_it_opens():
+    """The review's twelfth pass, blocker 1: `-raft 127.0.0.1:…` without `-tls` passed a check of the address's TEXT
+    and the library listened on `0.0.0.0` — pickle from the network. Without the secret the address is resolved and
+    BOUND before the library is asked (`0.0.0.0` is every interface, not loopback), and refused then: nothing ever
+    listened on the port. A join makes a group of more, and is refused too. No raft library is needed to say so."""
+    port = _free_port()
+    with refused("loopback"):
+        configstore.start_member("srv-a", short_dir(), f"0.0.0.0:{port}", bootstrap=True)
+    with pytest.raises(ConnectionRefusedError):
+        socket.create_connection(("127.0.0.1", port), timeout=1).close()
+    with refused("loopback"):
+        configstore.start_member("srv-b", short_dir(), f"127.0.0.1:{_free_port()}", join="srv-a@127.0.0.1:1")
+
+
+# -- every door of the daemon is bounded (the review's twelfth pass, major 1) -----------------------------
+def _raw(path: str, data: bytes = b"", wait: float = 3.0) -> bytes:
+    """What a door answers on a unix socket to `data`, until it closes the connection or `wait` is over."""
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.settimeout(wait)
+    s.connect(path)
+    out = b""
+    try:
+        if data:
+            s.sendall(data)
+        while True:
+            got = s.recv(65536)
+            if not got:
+                break
+            out += got
+    except (socket.timeout, ConnectionResetError):
+        pass
+    finally:
+        s.close()
+    return out
+
+
+def test_every_door_lets_an_idle_connection_go_and_serves_so_many_at_once(monkeypatch):
+    """The reviewer's probe: 200 idle connections to a role's socket were 203 threads, held for ever. A request's line
+    and headers arrive within `HEADERS_WAIT` or the connection is let go; a socket serves `ROLE_CONNECTIONS` at once,
+    and the next is answered on the spot, unread, 503 `unavailable` — not done, so the handle says `StoreUnavailable`
+    and never «maybe done», even for a write. The role's socket the review ran, and `admin.sock` beside it."""
+    monkeypatch.setattr(configstore, "HEADERS_WAIT", 0.5)
+    monkeypatch.setattr(configstore, "ROLE_CONNECTIONS", 6)
+    before = threading.active_count()
+    with Daemon() as dm:
+        for sock in ("vmsworker.sock", "admin.sock"):
+            path = os.path.join(dm.dir, sock)
+            idle = []
+            for _ in range(6):
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.connect(path)
+                idle.append(s)
+            time.sleep(0.2)
+            t0 = time.monotonic()
+            busy = _raw(path, b"GET /v1/status HTTP/1.1\r\nHost: x\r\n\r\n")
+            assert busy.startswith(b"HTTP/1.1 503") and b'"unavailable"' in busy, (sock, busy[:80])
+            assert time.monotonic() - t0 < 1.0, "the full door kept the next caller waiting"
+            if sock == "vmsworker.sock":
+                try:
+                    open_vars(url(dm.dir, "vmsworker")).put("vms/slots/w-1", {"holder": "x"})
+                    raise AssertionError("a full socket took a write")
+                except StoreUnavailable as e:
+                    assert not isinstance(e, StoreAmbiguous), f"a refused connection was said to be maybe done: {e}"
+            for s in idle:
+                s.settimeout(2.0)
+                assert s.recv(1) == b"", f"{sock}: an idle connection was kept past its headers' deadline"
+                s.close()
+            time.sleep(0.2)
+            assert open_vars(url(dm.dir, sock[:-5])).get("vms/slots/w-1") == (None, 0), sock
+    time.sleep(0.3)
+    assert threading.active_count() <= before + 1, (before, threading.active_count())
+
+
+def test_a_length_that_is_no_byte_count_or_past_the_ceiling_is_refused_unread_at_every_door():
+    """The reviewer's probe: `Content-Length: -1` was `read(-1)` — a read to the end of a connection the caller keeps
+    open, the door's thread held. A length that is not a non-negative number is 400, one past `MAX_BODY` 413, neither
+    read, at once — on a role's socket, `admin.sock` and the `-api` door (`read_body`, the platform's)."""
+    with Daemon(api=True) as dm:
+        for sock in ("vmsworker.sock", "admin.sock"):
+            for length, code in ((b"-1", b"400"), (b"ten", b"400"), (str(configstore.MAX_BODY + 1).encode(), b"413")):
+                t0 = time.monotonic()
+                said = _raw(os.path.join(dm.dir, sock), b"POST /v1/write HTTP/1.1\r\nHost: x\r\nContent-Length: " +
+                            length + b"\r\n\r\n{")
+                assert said.startswith(b"HTTP/1.1 " + code), (sock, length, said[:80])
+                assert time.monotonic() - t0 < 1.0, (sock, length)
+        import http.client
+        host, port = dm.d.api_url.rsplit(":", 1)
+        ctx = tls.client_context(os.path.join(TLS, "srv-b"))
+        for length, code in (("-1", 400), (str(configstore.MAX_BODY + 1), 413)):
+            s = ctx.wrap_socket(socket.create_connection((host, int(port)), timeout=5), server_hostname="srv-a")
+            s.sendall(f"POST /v1/join HTTP/1.1\r\nHost: x\r\nContent-Length: {length}\r\n\r\n{{".encode())
+            r = http.client.HTTPResponse(s)
+            r.begin()
+            assert r.status == code, (length, r.status)
+            s.close()
+
+
+def test_the_api_door_serves_so_many_of_one_address_and_lets_a_stalled_handshake_go(monkeypatch):
+    """The `-api` door is a door too (the sibling the review did not run): a connection that never finishes its TLS
+    handshake holds a place for `DOOR_TIMEOUT` at most, one address holds `API_PER_ADDRESS` places, and the next of it
+    is closed on the spot — there is no TLS yet to answer it in. Once the stalled ones are let go a daemon is served."""
+    monkeypatch.setattr(configstore, "API_CONNECTIONS", 4)
+    monkeypatch.setattr(configstore, "API_PER_ADDRESS", 2)
+    monkeypatch.setattr(configstore, "DOOR_TIMEOUT", 0.5)
+    with Daemon(api=True) as dm:
+        host, port = dm.d.api_url.rsplit(":", 1)
+        stalled = [socket.create_connection((host, int(port)), timeout=3) for _ in range(2)]
+        time.sleep(0.1)
+        extra = socket.create_connection((host, int(port)), timeout=3)
+        t0 = time.monotonic()
+        assert extra.recv(1) == b"" and time.monotonic() - t0 < 0.4, "the address's third connection was served"
+        extra.close()
+        for s in stalled:
+            assert s.recv(1) == b"", "a handshake that never came was waited on"
+            s.close()
+        assert configstore.peer_call(f"srv-a@{dm.d.api_url}", os.path.join(TLS, "srv-b"), "GET", "/v1/status")["id"] \
+            == "srv-a"
+
+
+def test_another_daemon_changes_the_group_only_for_its_own_server_and_touches_a_row_only_forwarding():
+    """The review's twelfth pass, major 3: a daemon's certificate deleted slots, wrote the schema, added false voters
+    and removed members. On the `-api` door a daemon reads the group's status; joins and leaves for the server its
+    certificate names (srv-b's certificate: srv-b, not srv-c, not srv-a); and reads or writes a row only when it
+    forwards a process's request — then with THAT role's rights, named in `X-Configstore-Forwarded`, never `admin`
+    and never a role the file does not hold. A forwarded request is no change of the group."""
+    with Daemon(api=True) as dm:
+        api, ctx = dm.d.api_url, tls.client_context(os.path.join(TLS, "srv-b"))
+        call = lambda m, r, b=b"{}", h=None: _dial(api, ctx, "srv-a", m, r, b, h)      # noqa: E731
+        write = lambda key: json.dumps({"op": "put", "key": key, "items": {"x": "1"}}).encode()   # noqa: E731
+        fwd = configstore.FORWARDED
+        assert call("GET", "/v1/status")[0] == 200
+        for route, body in (("/v1/join", {"id": "srv-c", "raft": "127.0.0.1:1"}), ("/v1/leave", {"id": "srv-a"})):
+            code, said = call("POST", route, json.dumps(body).encode())
+            assert (code, said["kind"]) == (403, "forbidden") and "srv-b" in said["error"], (route, said)
+        assert call("POST", "/v1/leave", b'{"id": "srv-b"}')[0] == 503                  # its own: a store that is no group
+        applied = dm.backend.machine.applied
+        assert call("POST", "/v1/write", write("vms/slots/w-1"))[0] == 403
+        assert call("GET", "/v1/get?key=vms/cameras/1")[0] == 403
+        assert call("GET", "/v1/list?prefix=")[0] == 403
+        for role in ("admin", "configstore", "nobody"):
+            assert call("POST", "/v1/write", write("vms/slots/w-1"), {fwd: role})[0] == 403, role
+        assert call("POST", "/v1/write", write("vms/cameras/1"), {fwd: "vmsworker"})[0] == 403
+        assert call("POST", "/v1/join", b'{"id": "srv-b", "raft": "127.0.0.1:1"}', {fwd: "vmsworker"})[0] == 403
+        assert dm.backend.machine.applied == applied, "a refused request reached the log"
+        code, said = call("POST", "/v1/write", write("vms/slots/w-1"), {fwd: "vmsworker"})
+        assert code == 200 and said["index"] > 1000
+        assert call("GET", "/v1/get?key=vms/slots/w-1", None, {fwd: "console"})[1]["items"] == {"x": "1"}
+
+
+# -- the handle -----------------------------------------------------------------------------------------
+def test_a_write_asked_again_after_its_outcome_was_unknown_carries_its_first_id_and_is_applied_once():
+    """The review's twelfth pass, minor, and its probe: two calls of the same `put` after a cut connection carried two
+    ids, so a first copy that had landed was not recognised and the repeat's CAS conflicted with it — what fences a
+    worker. The same write asked again carries the id of the one whose outcome is unknown, and is answered with the
+    first copy's index; a write that got an answer forgets it, and a different write has an id of its own."""
+    from w2cplatform.storemachine import ADMIN, StoreMachine, local_transport
+    from w2cplatform.configstorevars import ConfigstoreVariables
+    m = StoreMachine(1000)
+    inner = local_transport(m.apply, RIGHTS, ADMIN)
+    sent, cut = [], {"next": False}
+
+    def transport(method, target, raw, headers, timeout):
+        if raw:
+            sent.append(json.loads(raw)["id"])
+        got = inner(method, target, raw, headers, timeout)
+        if cut["next"]:
+            cut["next"] = False
+            raise ConnectionResetError("the daemon went after applying it")
+        return got
+
+    h = ConfigstoreVariables("/stand", transport=transport)
+    v = h.put("vms/slots/w-1", {"holder": "a"}, cas=0)
+    cut["next"] = True
+    with pytest.raises(StoreAmbiguous):
+        h.put("vms/slots/w-1", {"holder": "a", "n": "2"}, cas=v)
+    landed = m.rows["vms/slots/w-1"][1]
+    assert landed > v, "the first copy should have landed"
+    again = h.put("vms/slots/w-1", {"holder": "a", "n": "2"}, cas=v)       # not `Conflict`: the same write, once
+    assert again == landed and sent[-1] == sent[-2]
+    h.put("vms/slots/w-1", {"holder": "a", "n": "3"}, cas=again)
+    assert sent[-1] != sent[-2], "a new write took an old one's id"
+    # the reviewer's own probe: a transport that cuts every time — both calls carry one id
+    ids = []
+
+    def cutting(method, target, raw, headers, timeout):
+        ids.append(json.loads(raw)["id"])
+        raise ConnectionResetError("cut")
+
+    probe = ConfigstoreVariables("/stand", transport=cutting)
+    for _ in range(2):
+        with pytest.raises(StoreAmbiguous):
+            probe.put("vms/x", {"a": "r"}, cas=5)
+    assert ids[0] == ids[1]
+
+
+# -- the raft port's secret -------------------------------------------------------------------------------
+def test_the_raft_secret_is_refused_readable_by_others_or_short_and_is_keyed_by_the_installation():
+    """The review's twelfth pass, minor: `raft.secret` was taken whatever its mode and length, and pysyncobj salts
+    every installation's key alike. Refused when others may read it or it is shorter than `SECRET_CHARS`; the
+    password handed to the library is the secret keyed with the installation's `ca.pem` — the same for every member
+    of one installation, another for another installation with the same secret."""
+    d = short_dir()
+    try:
+        shutil.copy(os.path.join(TLS, "ca.pem"), d)
+        secret = os.path.join(d, "raft.secret")
+        with open(secret, "w") as f:
+            f.write("ab" * 32 + "\n")
+        os.chmod(secret, 0o644)
+        with refused("chmod 600"):
+            tls.raft_secret(d)
+        os.chmod(secret, 0o600)
+        mine = tls.raft_secret(d)
+        assert mine != "ab" * 32 and mine == tls.raft_secret(d)
+        with open(os.path.join(d, "ca.pem"), "a") as f:
+            f.write("\n")                              # another installation's CA, as far as the key goes
+        assert tls.raft_secret(d) != mine
+        with open(secret, "w") as f:
+            f.write("short\n")
+        with refused("fewer than"):
+            tls.raft_secret(d)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
 
 
 # -- a box becomes a cluster: the one-time import, backup and restore ------------------------------------
@@ -365,6 +600,45 @@ def test_an_import_is_refused_whole_into_a_group_it_could_confuse():
         f.write('{"items": {"epoch": "7"}, "ind')
     with Daemon(LocalBackend("srv-a", index_base=counter)) as dm:
         with refused("vms/epoch/1"):
+            configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
+        assert open_vars(url(dm.dir)).list("") == []
+
+
+def test_an_import_that_stopped_goes_on_and_a_row_heavier_than_the_store_takes_refuses_it_whole():
+    """The review's twelfth pass, minor: an import that stopped half-way could not be continued — the group held rows,
+    and a group with rows is refused. The same import again goes on after the rows it wrote, when every row the group
+    holds is one of them, the same; a row it did not write still refuses it. And a box's row heavier than the store
+    takes (`MAX_VALUE`; `FileVariables` has no ceiling) refuses the import whole, before the first write."""
+    from w2cplatform.storemachine import MAX_VALUE
+    box, remembered, counter = _box()
+
+    class Cut:
+        def __init__(self, h, after):
+            self.h, self.left = h, after
+
+        def __getattr__(self, name):
+            return getattr(self.h, name)
+
+        def put(self, *a, **kw):
+            if self.left == 0:
+                raise OSError("the operator's ssh went")
+            self.left -= 1
+            return self.h.put(*a, **kw)
+
+    with Daemon(LocalBackend("srv-a", index_base=counter)) as dm:
+        admin = open_vars(url(dm.dir))
+        with pytest.raises(OSError):
+            configstore.import_rows("file://" + box.root, Cut(admin, 2))
+        assert len(admin.list("")) == 2
+        got = configstore.import_rows("file://" + box.root, admin)
+        assert (got["rows"], got["there_before"]) == (len(remembered), 2)
+        assert {k: admin.get(k)[0] for k in remembered} == {k: box.get(k)[0] for k in remembered}
+        admin.put("vms/cameras/0", {"name": "changed since"}, cas=admin.get("vms/cameras/0")[1])
+        with refused("did not write"):
+            configstore.import_rows("file://" + box.root, admin)
+    box.put("vms/heavy", {"blob": "x" * MAX_VALUE})
+    with Daemon(LocalBackend("srv-a", index_base=counter + 10)) as dm:
+        with refused("vms/heavy"):
             configstore.import_rows("file://" + box.root, open_vars(url(dm.dir)))
         assert open_vars(url(dm.dir)).list("") == []
 
