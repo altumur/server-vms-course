@@ -69,23 +69,33 @@ Volume=/run/vms-console:/run/vms-console:z
 # connections of their own, which a flood from the network cannot take; anyone else is answered `/metrics` only from
 # the common slots. Set it to Prometheus's address in `vms.env` (`CONSOLE_MONITORS=10.0.0.5`); unset — no lane.
 #Environment=CONSOLE_MONITORS=10.0.0.5
-# `PLATFORM_DIR`, `ARCHIVE`, `CAPACITY` (the fallback capacity its controller object carries; it
+# `PLATFORM_DIR`, `ARCHIVE` (both the platform's, `w2c.env`), `CAPACITY` (the fallback capacity its controller object carries; it
 # never places, so it is unused in practice), `LOG_LEVEL`.
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
 # read-write: the console's token writes camera rows, `next_id`, derived retention rows and idempotency
 # keys, and reads heartbeats for the read model.
-Volume=/data/platform:/data/platform:z
+# The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
+# `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
 # The cluster's key (`w2cplatform/sealing.py`): the console seals device passwords with it, the holder opens
-# them for the pipeline. Mounted into these two units ONLY — a key beside the store, in /data/platform, would
-# be copied with every copy of it; /data/secrets is mounted nowhere else. `python3 -m w2cplatform.sealing new /data/secrets/platform.key`.
-Volume=/data/secrets/platform.key:/run/secrets/platform.key:ro,z
+# them for the pipeline. Mounted, as one file, into these units ONLY — never inside a store, where it would be copied
+# with every copy of it; `/etc/w2c/secrets` (a link into /data/platform/etc) is mounted nowhere else, and no unit mounts
+# /data/platform whole. `python3 -m w2cplatform.sealing new /etc/w2c/secrets/platform.key`.
+Volume=/etc/w2c/secrets/platform.key:/run/secrets/platform.key:ro,z
+# the key ring is 0640, group `w2c-secrets`: a process that seals or opens a secret joins it, by number.
+GroupAdd=2104
 Environment=SECRETS_KEY=/run/secrets/platform.key
 # read-write, as the header says: operator marks are the console's own event buckets,
 # `console/<hostname:pid>/e1/…` on this server's resource (`POST /marks` → `SpecConsole.mark`), and that is
 # the one thing it writes there. It never touches
 # `vms/<cam>/…`, whose buckets have one writer, the worker holding the epoch.
-Volume=/data/archive:/data/archive:z
+Volume=/data/platform/events:/data/platform/events:z
+# a CLIENT of the platform's events archive: `w2c-events`, by number — what it writes there the resource deletes.
+GroupAdd=2102
 # the port is the box's own; no mapping.
 Network=host
 

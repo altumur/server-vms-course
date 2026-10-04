@@ -3,18 +3,38 @@
 # ================================================================================================
 # NOTES — what every part of this file does and why (kept beside the code, not in a separate document)
 # ================================================================================================
-# # w2c.tmpfiles — the platform's stores and its secrets
+# # w2c.tmpfiles — the platform's state, its configuration and its secrets
 #
 # **Role.** The platform is w2c and the VMS one of its subsystems (the product's rule, 3 October), and the box's
 # directories split the same way: what every process of the platform needs is here, what the VMS's processes need is
 # in `vms.tmpfiles`. The product's pair is `/etc/tmpfiles.d/w2c.conf` (its `/var/lib/w2c`, `/run/configstore`) and
-# `vms.conf`; the course's box keeps its state on the data partition (М9 Lesson 5), so its paths are under /data.
+# `vms.conf`; the course's box keeps its state on the data partition (М9 Lesson 5), so its paths are under /data —
+# ALL the platform's mutable state under one root, `/data/platform` (the owner's decisions, 4 October), and its
+# configuration with it: /etc/w2c is a link to `/data/platform/etc`, which `install-obsd.sh` lays (an A/B box's /etc
+# is on the slot an update replaces).
 #
-# - `/data/platform` — `PLATFORM_DIR` (`w2c.env`): the config store's files and the objects (heartbeats, the
-#   snapshot). Every unit mounts it; a unit whose `Volume=` names a host directory that does not exist does not start.
-# - `/data/secrets` — the cluster's key ring, `platform.key` (`python3 -m w2cplatform.sealing new
-#   /data/secrets/platform.key`), 0700 root: mounted, as one file, into the three units that open sealed fields and
-#   nowhere else, and never inside `/data/platform` — a copy of the store must not carry the key that opens it.
+# - `/data/platform` — `PLATFORM_DIR` (`w2c.env`), root's: nothing writes in it but the directories below.
+# - `etc/` — this box's `/etc/w2c`: `w2c.env` (root's, 0644), and in a cluster `configstore-rights.json` and `tls/`.
+# - `etc/secrets` — the cluster's key ring, `platform.key` (`python3 -m w2cplatform.sealing new
+#   /etc/w2c/secrets/platform.key`: 0640). 2710 root:`w2c-secrets`: the members of the group — the console, the
+#   holder, the recorder — may pass through to the file they are told, and not list what else is there (`x`
+#   without `r`); setgid, so a key made here is the group's without a `chgrp`; root alone writes it, because no
+#   running process does. Mounted, as one file, into the three units that open sealed fields and nowhere else; and
+#   no unit mounts `/data/platform` whole, only the stores below — a copy of a store must not carry the key.
+# - `config/`, `objects/` — the platform's two file stores (`file://`): the rows, and the heartbeats and the snapshot.
+#   2770 `w2c`:`w2c-store`, setgid: every unit opens them as a member of `w2c-store` with the umask 0007, so a row
+#   or an object any process writes is a file the resource — `w2c`, not root — reads, and the rows' lock one it takes.
+# - `events/` — the platform's events archive (`ARCHIVE`), the resource's: 2770 `w2c`:`w2c-events`, setgid. A
+#   process that writes buckets is a CLIENT, a member of `w2c-events` with the umask 0007: what it makes there is
+#   0660 in directories 2770 of the group, which the resource deletes by its retention. Only the resource deletes buckets,
+#   mirrors and restores there.
+#
+# `d` sets the mode and the owner of the directory itself at every boot; what is inside — a box upgraded from root's
+# `/data/archive` — is handed over once, by `install-obsd.sh`, not at every boot.
 # ================================================================================================
-d /data/platform 0755 root root -
-d /data/secrets  0700 root root -
+d /data/platform              0755 root root        -
+d /data/platform/etc          0755 root root        -
+d /data/platform/etc/secrets  2710 root w2c-secrets -
+d /data/platform/config       2770 w2c  w2c-store   -
+d /data/platform/objects      2770 w2c  w2c-store   -
+d /data/platform/events       2770 w2c  w2c-events  -

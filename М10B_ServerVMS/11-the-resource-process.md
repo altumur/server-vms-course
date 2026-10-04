@@ -233,10 +233,12 @@ def resource() -> None:
     vars_ = open_vars(CONFIG_URL)
     objects = FsObjectStore(os.path.join(root, "objects"))
     host, port = os.environ.get("RESOURCE_HOST", "127.0.0.1"), int(os.environ.get("RESOURCE_PORT", "8090"))
-    res = vms_resource(os.environ.get("ARCHIVE", "/data/archive"), socket.gethostname(),
+    res = vms_resource(runtime.events_root(os.environ), socket.gethostname(),
                        os.environ.get("RESOURCE_URL", f"http://{host}:{port}"), vars_, objects)
     srv = serve(res, host, port)
 ```
+
+Дерево — **архив событий платформы**: `runtime.events_root` — `$ARCHIVE` из `w2c.env`, иначе `<PLATFORM_DIR>/events`, то есть `/data/platform/events`. Умолчание сказано один раз, и спрашивают его точки входа и воркеры, которые пишут в архив (у регистратора осталось своё запасное, до которого на коробке не доходит, — урок 17, шаг 8). Раньше `/data/archive` было записано в каждом из них — и в файле VMS, `vms.env`, хотя архив не VMS, а платформы (решение владельца от 4 октября; урок 17, шаг 8).
 
 Имя ресурса — **имя хоста**. Не слот и не индекс: ресурс один на сервер, а у сервера уже есть имя. Взятие слота по CAS здесь было бы ритуалом, который ничего не защищает.
 
@@ -391,6 +393,8 @@ Heartbeat каждые десять секунд, проход политики 
 ## Шаг 6 — Один процесс, две топологии
 
 На коробке это один процесс под systemd (`deploy/w2c-resource.container`, служба `w2c-resource.service` — имя продукта: ресурс — процесс платформы, а имена платформы — `w2c`). В М11 тот же `vms_resource` работает системной задачей на каждом сервере, и `clustervms/cluster/resource.py` его только реэкспортирует:
+
+**На коробке ресурс работает от `w2c`, а не от root.** Пока он был root, причина звучала так: проход хранения удаляет бакеты, которые воркеры пишут от root, а другой uid удалить их не может. Теперь архив событий — служба платформы: каталог `/data/platform/events` принадлежит `w2c` (2770, группа `w2c-events`, setgid), а каждый процесс, который пишет в него бакеты, — **клиент**: юнит входит в `w2c-events` и задаёт маску 0007. Всё, что клиент создаёт, остаётся группе и открыто ей, и ресурс, член группы, удаляет бакет, который писал не он; бакеты в архиве удаляет только он. Как устроены юниты и как это проверено без второго uid — урок 17, шаг 6 (`test_deploy_units.py::test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote`).
 
 ```python
 from vms.resource import vms_resource as cluster_resource  # noqa: F401

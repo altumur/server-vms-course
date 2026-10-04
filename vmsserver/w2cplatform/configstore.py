@@ -140,14 +140,14 @@ import urllib.parse
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from . import tls
+from . import runtime, tls
 from .storemachine import ADMIN, MAX_VALUE, PEER, Ambiguous, Rights, StoreMachine, Unavailable, answer
 from .variables import STORE_SCHEME, items_bytes
 
 # What an installation sees, each said once (the product names them; a rename is a line here).
 SOCKETS = "/run/configstore"                        # `<role>.sock` and `admin.sock`
-DATA = "/data/platform/configstore"                 # journal, dump, peers, member
-RIGHTS_FILE = "/etc/w2c/configstore-rights.json"    # generated from the spec (М11: `python3 -m cluster rights`)
+DATA = runtime.DATA + "/configstore"                # journal, dump, peers, member — the platform's state (`runtime.DATA`)
+RIGHTS_FILE = runtime.ETC + "/configstore-rights.json"   # generated from the spec (М11: `python3 -m cluster rights`)
 ADMIN_URL = f"{STORE_SCHEME}://{SOCKETS}/admin.sock"
 FORWARDED = "X-Configstore-Forwarded"               # the product's mark on a request one daemon forwards to another
 PLATFORM_ROLES = frozenset({"resource"})            # the platform's own processes among the store's callers

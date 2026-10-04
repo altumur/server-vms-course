@@ -9,7 +9,7 @@
 #
 # THE KEY IS NOT IN THE STORE. That is the whole design, and everything else follows from it. A key kept beside
 # the rows it protects protects nothing: a copy of the store is a copy of both. So the key is a FILE, given only
-# to the processes that write a secret or use one:
+# to the processes that write a secret or use one — on the box, the members of `w2c-secrets`:
 #
 #   the console     writes rows: it SEALS every `*_secret` value on the way in (`SpecController`)
 #   the holder      opens the device: it OPENS the password at the last moment, for the pipeline (`VmsWorker`)
@@ -213,24 +213,34 @@ def seal_stored(sealer: "Sealer | None", vars_, prefixes) -> int:
     return sealed
 
 
-def new_key_file(path: str, kid: str = "k1", store: str | None = None) -> None:
-    """A key ring with one key, readable by its owner only. Rotation: add a line ON TOP, by hand or by script.
-    Never inside the store (`store`, the platform's directory): a key beside the rows it protects protects nothing,
-    and every backup of the store would carry both. Never over an existing file (`O_EXCL`): a key lost is every
-    password sealed with it."""
-    if store:
-        real, root = os.path.realpath(path), os.path.realpath(store)
+def new_key_file(path: str, kid: str = "k1", store: str | list[str] | tuple[str, ...] | None = None) -> None:
+    """A key ring with one key, readable by its owner and its group — the clients of the secrets, `w2c-secrets`
+    (the owner's decision, 4 October): 0640, whatever the umask; the group is the directory's, which is setgid to it
+    (`w2c.tmpfiles`). Rotation: add a line ON TOP, by hand or by script. Never inside a store (`store`, a directory
+    or several): a key beside the rows it protects protects nothing, and every backup of the store would carry both.
+    Never over an existing file (`O_EXCL`): a key lost is every password sealed with it."""
+    for one in ([store] if isinstance(store, str) else store or []):
+        real, root = os.path.realpath(path), os.path.realpath(one)
         if real == root or real.startswith(root.rstrip(os.sep) + os.sep):
-            raise ValueError(f"{path} is inside the store ({store}): put the key where the store and its backups are not")
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            raise ValueError(f"{path} is inside the store ({one}): put the key where the store and its backups are not")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
+    os.fchmod(fd, 0o640)                                 # a umask of 0077 would leave the group out
     with os.fdopen(fd, "w") as f:
         f.write(f"{kid} {_secrets.token_bytes(32).hex()}\n")
 
 
-if __name__ == "__main__":                              # python3 -m w2cplatform.sealing new /data/secrets/platform.key
+# The STORES under the platform's root — its rows, its objects, the cluster's journal — and not the root itself: the
+# root holds `etc/` too, where the key belongs (`/etc/w2c/secrets/platform.key` is a link into `/data/platform/etc`).
+def platform_stores(env: dict) -> list[str]:
+    from .runtime import platform_dir
+    return [os.path.join(platform_dir(env), d) for d in ("config", "objects", "configstore")]
+
+
+if __name__ == "__main__":                              # python3 -m w2cplatform.sealing new /etc/w2c/secrets/platform.key
     import sys
     if len(sys.argv) == 3 and sys.argv[1] == "new":
-        new_key_file(sys.argv[2], store=os.environ.get("PLATFORM_DIR", "/data/platform"))
-        print(f"a key ring with one key: {sys.argv[2]} (mode 0600) — mount it into the console and the holders only")
+        new_key_file(sys.argv[2], store=platform_stores(os.environ))
+        print(f"a key ring with one key: {sys.argv[2]} (mode 0640, the directory's group: w2c-secrets) — read by the "
+              "console, the holders and the recorders, which join that group")
     else:
         print("usage: python3 -m w2cplatform.sealing new <path>")

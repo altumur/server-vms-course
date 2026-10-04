@@ -1,7 +1,7 @@
 # Урок 17 — На коробке
 
 **Модуль:** М10B — ServerVMS (часть вторая)
-**Вы напишете:** `vms/__main__.py` — десять точек входа, каждая со своим токеном; `deploy/` — по юниту Quadlet на процесс, `obsd.service` для движка архива, `Containerfile`, `w2c.env.example` и `vms.env.example`; `tests/test_deploy_units.py` — четыре теста, читающие юниты как код.
+**Вы напишете:** `vms/__main__.py` — десять точек входа, каждая со своим токеном; `deploy/` — по юниту Quadlet на процесс, `obsd.service` для движка архива, `Containerfile`, `w2c.env.example` и `vms.env.example`, пользователи и каталоги коробки; `tests/test_deploy_units.py` — четыре теста, читающие юниты как код.
 **Время:** ~85 минут.
 
 ## Зачем этот урок
@@ -121,13 +121,15 @@ def test_who_may_write_where_is_in_the_mounts_too():
     """The ACL says which rows each token writes; the mounts say which bytes.
     The controller has no archive at all; footage is mounted nowhere — it is behind the host's obsd."""
     vols = lambda n: dict(v.split(":", 1) for v in (lambda x: x if isinstance(x, list) else [x])(unit(n)["Container"]["Volume"]))
-    assert "/data/archive" not in vols("vmscontroller.container")
+    assert EVENTS not in vols("vmscontroller.container")
     for n in os.listdir(DEPLOY):
         if n.endswith(".container"):
             assert "/data/spool" not in vols(n), n                                       # there is no spool: footage goes through obsd
-    assert vols("vmsworker@.container")["/data/archive"] == "/data/archive:z"          # its events, vms/<cam>/, on this box's resource
+            # the two stores, never /data/platform whole: its etc/secrets holds the key ring
+            assert "/data/platform" not in vols(n) and not any(v.startswith("/data/platform/etc") for v in vols(n)), n
+    assert vols("vmsworker@.container")[EVENTS] == f"{EVENTS}:z"                       # its events, vms/<cam>/, on this box's resource
     assert vols("vmsworker@.container")["/data/media"].endswith(":ro,z")
-    assert vols("recworker@.container")["/data/archive"] == "/data/archive:z"         # its events, and its own volume's path
+    assert vols("recworker@.container")[EVENTS] == f"{EVENTS}:z"                      # its events; its volume is the daemon's
     assert "/data/media" not in vols("recworker@.container")                          # it never reads a camera: it subscribes to the fan-out
     assert vols("vmsworker@.container")["/run/vms"] == "/run/vms:z" == vols("recworker@.container")["/run/vms"]   # the tee's shared memory
     # the daemon's socket: the recorder's alone, never the holder's — the process with a vendor's DriverPack in it
@@ -136,8 +138,8 @@ def test_who_may_write_where_is_in_the_mounts_too():
             assert ("/run/vms-obsd" in vols(n)) == (n == "recworker@.container"), n
     rec_env = dict(e.split("=", 1) for e in unit("recworker@.container")["Container"]["Environment"])
     assert rec_env["OBSD_SOCKET"] == "/run/vms-obsd/obsd.sock" and rec_env["SECRETS_KEY"] == "/run/secrets/platform.key"   # it opens a volume's secret
-    assert "/data/archive" not in vols("reccontroller.container")
-    assert vols("w2c-resource.container")["/data/platform"] == "/data/platform:z"   # the heartbeat is written; rows are only read
+    assert EVENTS not in vols("reccontroller.container")
+    assert vols("w2c-resource.container")[OBJECTS] == f"{OBJECTS}:z"                  # the heartbeat is written, and its door's row
     assert unit("recworker@.container")["Container"]["StopTimeout"] == "40"          # the writer's close waits for its flush (30 s)
     assert "obsd.service" in unit("recworker@.container")["Unit"]["After"]
     assert unit("w2c-resource.container")["Service"]["Restart"] == "always"         # a process, not a timer: the database lives in it
@@ -153,7 +155,7 @@ def test_who_may_write_where_is_in_the_mounts_too():
 
 **Медиа воркеру только на чтение**, регистратору — **не смонтированы вовсе**, и комментарий объясняет: *он никогда не читает камеру, он подписывается на раздачу.* Регистратор, у которого нет доступа к файлам камер, физически не может открыть второе соединение.
 
-**Регистратору архив на запись — ради его событий**: `archive.shallow`, `archive.keep.*` под `rec/` на ресурсе этого сервера. Видео здесь нет. Собственный том сервера лежит рядом, в `/data/volume` (урок 10, шаг 8), и регистратор его не монтирует: он называет путь демону, а том открывает демон на хосте. Объявленный локальный том — тоже путь на хосте, который открывает демон, и монтировать его регистратору не нужно вовсе.
+**Регистратору архив на запись — ради его событий**: `archive.shallow`, `archive.keep.*` под `rec/` на ресурсе этого сервера. Видео здесь нет. Собственный том сервера лежит у VMS, в `/data/vms/obsd/volume` (урок 10, шаг 8; `config.OWN_VOLUME`), и регистратор его не монтирует: он называет путь демону, а том открывает демон на хосте. Объявленный локальный том — тоже путь на хосте, который открывает демон, и монтировать его регистратору не нужно вовсе.
 
 **Сокет демона — в своём каталоге и только у регистратора.** До третьего ревью сокет `obsd` лежал в `/run/vms` рядом с разделяемой памятью воркеров, и процесс воркера — тот, где работает сторонний DriverPack, — мог читать запись всех камер коробки мимо прав и аудита, а в окно ожидания писателя — забрать его. Воркеру `obsd` не нужен вовсе. Теперь сокет — `/run/vms-obsd/obsd.sock`, монтирует его один `recworker@` (`OBSD_SOCKET`, `GroupAdd`), а демон работает своим пользователем (`User=vms-obsd`) и пускает, кроме себя, только группу `OBSD_CLIENT_GROUP` (нужна сборка демона, которая этот параметр знает). Чего по-прежнему нет: клиенты группы доверены одинаково, а владелец писателя — имя, не секрет. Ключ печатей у регистратора теперь тоже есть: ему открывать секрет сетевого тома (урок 10).
 
@@ -161,7 +163,9 @@ def test_who_may_write_where_is_in_the_mounts_too():
 
 **У контроллера записей нет архива.** Он тоже только вычисление, хотя его подсистема — про тома.
 
-**Ресурсу хранилище платформы на запись** — ради heartbeat'а; строки он только читает.
+**Ресурсу хранилище платформы на запись** — ради heartbeat'а и одной строки, `platform/doors/<сервер>`: где он отвечает. Остальные строки он только читает.
+
+**Хранилища — двумя монтированиями, а не `/data/platform` целиком.** Каждый юнит монтировал `/data/platform`, и, пока там лежали только хранилища, это было одно и то же. Теперь под тем же корнем лежит `etc/` — конфигурация платформы, а в ней `secrets/platform.key` (шаг 8). Каталог целиком дал бы ключ каждому контейнеру коробки: процессы в них — root, и права на файл их не остановят. Поэтому юнит монтирует `config/` и `objects/`, а архив событий — `events/`, и ничего больше; цикл теста держит, чтобы ни один юнит не смонтировал корень или его `etc/`.
 
 Две последние проверки — про регистратор и его остановку: `StopTimeout=40` и `After=obsd.service`. Откуда эти числа и этот порядок — шаг 5.
 
@@ -179,12 +183,17 @@ Exec=python3 -m vms worker
 Environment=WORKER_NAME=%i
 Environment=RTSP_PORT=auto
 Environment=PLAYBACK_PORT=auto
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
-Volume=/data/platform:/data/platform:z
-Volume=/data/secrets/platform.key:/run/secrets/platform.key:ro,z
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
+Volume=/etc/w2c/secrets/platform.key:/run/secrets/platform.key:ro,z
+GroupAdd=2104
 Environment=SECRETS_KEY=/run/secrets/platform.key
-Volume=/data/archive:/data/archive:z
+Volume=/data/platform/events:/data/platform/events:z
+GroupAdd=2102
 Volume=/data/media:/data/media:ro,z
 Volume=/run/vms:/run/vms:z
 Network=host
@@ -239,6 +248,8 @@ Environment=PLAYBACK_PORT=auto
 `Restart=always`, `RestartSec=2` — и комментарий: *процесс супервизирует конвейеры, systemd супервизирует процесс.* Перезапущенный экземпляр берёт тот же слот и поднимает свои камеры с новой эпохой — **без участия контроллера**.
 
 `:z` на каждом томе — пересылка меток SELinux. На коробке с включённым SELinux без этого контейнер не прочитает ничего.
+
+`GroupAdd=2103`, `GroupAdd=2102`, `GroupAdd=2104` и `PodmanArgs=--umask=0007` — воркер **клиент** платформы: хранилищ (группа `w2c-store`), архива событий (`w2c-events`) и ключа (`w2c-secrets`). Группы — числами, потому что у контейнера нет `/etc/group` хоста, а маска — аргументом podman: ключа для неё у Quadlet нет, а `UMask=` в `[Service]` задал бы маску самому podman, не процессу в контейнере. Зачем всё это процессу, который и так root, — шаг 6.
 
 ### Кто запускает экземпляр, которого не хватает
 
@@ -314,12 +325,13 @@ WantedBy=multi-user.target
 
 ### Подготовка коробки: пользователь, группа, каталоги
 
-Юнит, который называет несуществующего пользователя, не стартует (217/USER), а без демона не пишет никто. И `/run/vms` создавал только он — без демона не стартовали ни `vmsworker@`, ни `recworker@`, которые его монтируют (четвёртое ревью, блокер 2: после третьего ревью коробку под нового пользователя не готовил никто). Поэтому у коробки четыре файла установки:
+Юнит, который называет несуществующего пользователя, не стартует (217/USER), а без демона не пишет никто. И `/run/vms` создавал только он — без демона не стартовали ни `vmsworker@`, ни `recworker@`, которые его монтируют (четвёртое ревью, блокер 2: после третьего ревью коробку под нового пользователя не готовил никто). Поэтому у коробки пять файлов установки:
 
 - `deploy/obsd.sysusers` → `/etc/sysusers.d/obsd.conf`: группа `vms-obsd` с **фиксированным** номером 2101 (по нему её находят контейнеры) и пользователь `vms-obsd`, для которого она основная (`u vms-obsd -:vms-obsd`).
-- `deploy/w2c.tmpfiles` → `/etc/tmpfiles.d/w2c.conf`: каталоги **платформы** — `/data/platform` 0755 root (хранилища, `PLATFORM_DIR`) и `/data/secrets` 0700 root (связка ключей, `platform.key`). У продукта та же пара — `w2c.conf` и `vms.conf`, только пути в `/var/lib` и `/run`.
-- `deploy/vms.tmpfiles` → `/etc/tmpfiles.d/vms.conf`: каталоги **VMS** — `/run/vms` 0755 root (разделяемая память воркеров), `/run/vms-console` 0700 root (сокет консоли), `/run/vms-obsd` 0750 `vms-obsd:vms-obsd` (для регистратора, который стартует раньше демона), `/data/volume` 0750 `vms-obsd:vms-obsd` (собственный том сервера — его открывает демон, значит, он и владелец).
-- `deploy/install-obsd.sh`: ставит все три (другого установщика у коробки нет; у продукта это его `install.sh`), отказывается, если `vms-obsd` уже есть с другим номером — на коробке со старыми именами курса называет, что убрать: `userdel obsd; groupdel vms-rec`, — **один раз** отдаёт `vms-obsd:vms-obsd` кольца, отформатированные, когда демон работал от root — `/data/volume`, пути, переданные аргументами, и тома, **объявленные для этой коробки** в её собственном хранилище (строки `rec/volumes/*` с `server` этой машины и каталогом в `url`; каждый найденный называется, а когда хранилище не каталог, как в М11, скрипт говорит, что не нашёл ни одного, и ждёт путей аргументами), — и включает `obsd.service`, перезапуская его только когда что-то под ним изменилось.
+- `deploy/w2c.sysusers` → `/etc/sysusers.d/w2c.conf`: пользователь платформы `w2c` (2100) и группы её клиентов — `w2c-events` (2102), `w2c-store` (2103), `w2c-secrets` (2104), тоже с фиксированными номерами и по той же причине (шаг 6).
+- `deploy/w2c.tmpfiles` → `/etc/tmpfiles.d/w2c.conf`: каталоги **платформы** под одним корнем — `/data/platform` 0755 root, его `etc/` (это `/etc/w2c`), `etc/secrets` 2710 `root:w2c-secrets`, `config/` и `objects/` 2770 `w2c:w2c-store`, `events/` 2770 `w2c:w2c-events`. У продукта та же пара — `w2c.conf` и `vms.conf`, только пути в `/var/lib` и `/run`.
+- `deploy/vms.tmpfiles` → `/etc/tmpfiles.d/vms.conf`: каталоги **VMS** — `/run/vms` 0755 root (разделяемая память воркеров), `/run/vms-console` 0700 root (сокет консоли), `/run/vms-obsd` 0750 `vms-obsd:vms-obsd` (для регистратора, который стартует раньше демона), `/data/vms` и его `etc/` (это `/etc/vms`), `/data/vms/obsd` и `/data/vms/obsd/volume` 0750 `vms-obsd:vms-obsd` (собственный том сервера — его открывает демон, значит, он и владелец).
+- `deploy/install-obsd.sh`: ставит все четыре (другого установщика у коробки нет; у продукта это его `install.sh`), отказывается, если `vms-obsd` или одно из имён платформы уже есть с другим номером — на коробке со старыми именами курса называет, что убрать: `userdel obsd; groupdel vms-rec`, — переносит старую раскладку курса на раздел данных и кладёт ссылки `/etc/w2c` и `/etc/vms` (шаг 8), **один раз** отдаёт содержимое хранилищ группе `w2c-store`, архива событий — группе `w2c-events`, а `vms-obsd:vms-obsd` — кольца, отформатированные, когда демон работал от root — `/data/vms/obsd/volume`, пути, переданные аргументами, и тома, **объявленные для этой коробки** в её собственном хранилище (строки `rec/volumes/*` с `server` этой машины и каталогом в `url`; каждый найденный называется, а когда хранилище не каталог, как в М11, скрипт говорит, что не нашёл ни одного, и ждёт путей аргументами), — и включает `obsd.service`, перезапуская его только когда что-то под ним изменилось.
 
 **Сначала остановить демон, потом отдавать тома, потом перезапустить.** Первая версия скрипта делала `chown -R`, пока работал прежний демон от root, а в конце звала `systemctl enable --now obsd.service`. На обновляемой коробке root-демон продолжал писать во время передачи и создавал за спиной `chown` новые блоки — снова root'а, которых новый демон потом не открыл бы. А `enable --now` запускает остановленный юнит и не трогает работающий: старый демон оставался под старым юнитом, с сокетом там, где регистраторы его больше не ищут, и все тома стояли `away`, пока кто-нибудь не перезапустил демон руками (пятое ревью, major, по скрипту; создание файлов проверено запуском). Теперь порядок такой: `systemctl stop obsd.service` до передачи томов, затем юнит, `daemon-reload`, `systemctl enable obsd.service` и `systemctl restart obsd.service` — юнит в том виде, в каком он написан сейчас, что бы ни работало до него. Тест: `test_deploy_units.py::test_install_obsd_stops_a_running_daemon_before_the_volumes_change_hands_and_restarts_it_after` запускает сам скрипт, подменив каждую команду записывающей заглушкой, и проверяет порядок, а не подстроку: остановка, передача томов, установка юнита, `enable`, `restart` — и ни одного `enable --now`.
 
@@ -396,19 +408,33 @@ StopTimeout=40
 
 ## Шаг 6 — Ресурс: процесс вместо таймера
 
-`deploy/w2c-resource.container` — Quadlet делает из него `w2c-resource.service`. Ресурс — процесс **платформы**, а не VMS, и с правилом продукта о платформенных именах юнит назван как у продукта (`w2c-resource.service`; у курса был `resource.container`). Работает он, как и все контейнеры коробки, от root в своём контейнере, а не от пользователя `w2c`, как у продукта: проход политики удаляет бакеты, которые воркеры пишут в `/data/archive` от root, и ресурс с другим uid не смог бы их удалить без группы и прав на всё дерево, которых у коробки курса нет. Это открыто.
+`deploy/w2c-resource.container` — Quadlet делает из него `w2c-resource.service`. Ресурс — процесс **платформы**, а не VMS, и с правилом продукта о платформенных именах юнит назван как у продукта (`w2c-resource.service`; у курса был `resource.container`).
+
+**Ресурс работает от `w2c`, а не от root** (решение владельца от 4 октября). Раньше он, как все контейнеры коробки, был root в своём контейнере, и причина была одна: проход политики удаляет бакеты, которые воркеры пишут в архив событий от root, а ресурс с другим uid удалить их не мог — у дерева не было ни группы, ни прав для неё. Причину убрало другое решение: **архив событий — платформы**. Каталог `/data/platform/events` принадлежит `w2c`, режим 2770, группа `w2c-events`, setgid; бакеты в нём удаляет, зеркалит и восстанавливает только ресурс. Подсистемы пишут свои бакеты как **клиенты** службы: юнит каждого пишущего процесса — держатель, регистратор, детектор, скан, наблюдение, вычислитель, консоль со своими метками — входит в `w2c-events` (`GroupAdd=2102`) и пишет с маской 0007. Тогда каждый каталог, который клиент создал, — 2770 этой группы (setgid передаётся вниз), каждый файл — 0660, и ресурс, член группы, удаляет его, хотя файл не его. Та же схема «служба и группа её клиентов», что у `obsd` (`vms-obsd`) и, в кластере, у `configstore` (сокет на роль).
+
+Хранилища устроены так же: `config/` и `objects/` — 2770 группы `w2c-store`, каждый юнит в ней и с той же маской. Ресурсу это нужно не меньше, чем архив: он пишет heartbeat и строку двери, а для строки берёт замок хранилища (`config/lock`), который до него мог создать любой процесс. Здесь нашлась одна неправда библиотеки: `FsObjectStore` писал объект через `tempfile.mkstemp`, а тот создаёт файл 0600 при любой маске — heartbeat, который другой uid той же группы не прочтёт. Теперь файл в полёте создаётся с маской процесса (`events.new_temp`, `O_EXCL` вместо `mkstemp`), как строки создавались всегда. Тест: `test_deploy_units.py::test_a_platform_stores_files_are_its_groups_under_the_units_umask` — под маской 0007 объект, метка «создать только», строка, замок и счётчик — 0660, ничего не осталось в полёте.
+
+Процессы VMS по-прежнему root в своих контейнерах — это не этот шаг; root и скрипт запасных на хосте, по другой причине: он запускает юниты (шаг 4). Группы им уже даны: root проходит мимо прав, но файлы, которые он создаёт под маской 0007 в setgid-каталоге, — группы и для группы, и именно это нужно ресурсу.
 
 ```ini
 Description=w2c resource — the policy pass, the heartbeat, the event index
 Exec=python3 -m vms resource
+User=2100
+Group=2100
 Environment=RESOURCE_HOST=127.0.0.1
 Environment=RESOURCE_PORT=8090
-Volume=/data/platform:/data/platform:z
-Volume=/data/archive:/data/archive:z
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
+Volume=/data/platform/events:/data/platform/events:z
+GroupAdd=2102
 
 [Service]
 Restart=always
 ```
+
+Без второго uid тут не проверить запуском — нужен root, — поэтому тест проверяет **права так, как их проверило бы ядро** для процесса другого uid, связанного с деревом только группой. Клиент пишет под маской 0007 события камеры и регистратора в дерево 2770 группы, в которой состоит тест; каждый созданный каталог — этой группы и с `rwx` для неё (на Linux — и setgid), каждый файл — с `rw`; значит, процесс другого uid из этой группы может удалить каждый бакет и прочесть каждую строку, а проход хранения ресурса удаляет старый. И под старой маской, 0022, та же проверка говорит, что не смог бы: маска — половина правила. Тест: `test_deploy_units.py::test_the_resource_as_w2c_deletes_a_bucket_a_client_of_w2c_events_wrote`. Строки юнитов держит `test_the_platforms_processes_run_as_w2c_and_every_writer_is_a_client_of_its_group`: ресурс — `User=2100`, единственный юнит коробки с пользователем; каждый юнит — в `w2c-store` и с маской 0007; в `w2c-events` — ровно те, кто монтирует архив событий.
 
 Шапка юнита называет замену:
 
@@ -420,7 +446,7 @@ Restart=always
 
 Тест проверяет `Restart=always` с комментарием: *процесс, а не таймер: база живёт в нём.*
 
-Видео — не его дело, и примечание к юниту говорит это прямо: *Footage is not its business: it is in volumes, behind the host's obsd.* Под `/data/archive` лежит и собственный том сервера (`volume/`), но это том демона, а не бакет, и обход ресурса его не открывает.
+Видео — не его дело, и примечание к юниту говорит это прямо: *Footage is not its business: it is in volumes, behind the host's obsd.* Тома в архиве событий нет: собственный том сервера — у VMS, в `/data/vms/obsd/volume`.
 
 `RESOURCE_HOST=127.0.0.1` — на одной коробке к ресурсу обращается только консоль. Примечание говорит, что в М11 задача слушает адрес сервера, потому что соседи шлют туда зеркала.
 
@@ -469,12 +495,13 @@ CMD ["python3", "-m", "vms", "worker"]
 
 `CMD` по умолчанию — `worker`, и юниты всё равно повторяют `Exec=` явно. Дублирование намеренное: юнит должен читаться сам по себе, не требуя заглянуть в образ.
 
-## Шаг 8 — Конфигурация на разделе данных
+## Шаг 8 — Конфигурация на разделе данных, `/etc` — ссылки
 
 ```
-# /data/config/vms.env — the VMS subsystems' half of this box's environment: the archive's root, capacity, media,
-# the recorder's and the evaluator's knobs. Every unit reads it after `w2c.env` (the platform's half). On the data
-# partition, never in a rootfs slot (М9 Lesson 5): an OS update must not change which archive this box records into.
+# /etc/vms/vms.env — the VMS subsystems' half of this box's environment: capacity, media, the recorder's volume
+# and the evaluator's knobs. Every unit reads it after `w2c.env` (the platform's half). /etc/vms is a LINK to
+# /data/vms/etc: on the data partition, never in a rootfs slot (М9 Lesson 5) — an OS update must not change which
+# volume this box records into.
 ```
 
 Последняя фраза — и за ней весь урок 5 М9.
@@ -483,18 +510,25 @@ CMD ["python3", "-m", "vms", "worker"]
 
 Конфигурация коробки — какая ёмкость, какой архив, какое имя — переживать обновление обязана. Поэтому она на разделе данных, который обновление не трогает.
 
-**Файлов два: платформы и VMS** (правило продукта о платформенных именах, 3 октября). Продукт разделил `/etc/vms/vms.env` на `/etc/w2c/w2c.env` — каталог платформы, хранилище, имя сервера, метки, номер коробки, секреты — и `/etc/vms/vms.env` — настройки подсистем; каждый процесс читает оба. Курс сделал то же на своём разделе данных: `/data/config/w2c.env` (`PLATFORM_DIR`, `PLATFORM_STORE`, `SERVER_NAME`, `LABELS`, `BOX_ID`, а для скрипта запасных — `CONSOLE` и потолки) и `/data/config/vms.env` (всё остальное). Каждый юнит называет оба, платформы — первым: `EnvironmentFile=/data/config/w2c.env`, затем `EnvironmentFile=/data/config/vms.env`; имя, заданное в обоих, берётся из второго. Ключ — не значение в файле, а файл: `/data/secrets/platform.key` (было `vms.key`), смонтированный как `/run/secrets/platform.key` только в консоль, держатель и регистратор. Юниты запасных читают оба файла в обоих местах — `/data/config/` курса и `/etc/w2c`, `/etc/vms` продукта, — а запасному отдают пару продукта (`W2C_ENV`, `ENV_FILE`; на коробке курса их задают в `w2c.env`).
+**Файлов два: платформы и VMS** (правило продукта о платформенных именах, 3 октября). Продукт разделил `/etc/vms/vms.env` на `/etc/w2c/w2c.env` — каталог платформы, архив событий, хранилище, имя сервера, метки, номер коробки, секреты — и `/etc/vms/vms.env` — настройки подсистем; каждый процесс читает оба. Каждый юнит называет оба, платформы — первым: `EnvironmentFile=/etc/w2c/w2c.env`, затем `EnvironmentFile=/etc/vms/vms.env`; имя, заданное в обоих, берётся из второго.
 
-`w2c.env.example` и `vms.env.example` — то, что копируют на коробку, с комментарием у каждой переменной. Тест сторожит обязательные — и то, чего быть не должно:
+**Пути — продукта, а файлы — на разделе данных** (решение владельца от 4 октября). `/etc` на A/B-коробке лежит в слоте корня, поэтому сами каталоги переехали: конфигурация платформы — в `/data/platform/etc/` (`w2c.env`, `secrets/platform.key`, а в кластере ещё `configstore-rights.json` и `tls/`), и `/etc/w2c` — **ссылка** на него; конфигурация VMS — в `/data/vms/etc/` (`vms.env`), и `/etc/vms` — ссылка туда. Юниты и код называют `/etc/w2c/…` и `/etc/vms/…`, а не то, куда ведёт ссылка. Ссылку на обычном сервере кладёт `install-obsd.sh` (на A/B-коробке продукта — образ), и ничего не удаляет: настоящий каталог `/etc/w2c` сначала **переносится** в `/data` (`link_etc`, та же функция, что у `install.sh` М11), старые места курса — тоже: `/data/config/w2c.env` → `/etc/w2c/w2c.env`, `/data/config/vms.env` → `/etc/vms/vms.env`, `/data/secrets/*` → `/etc/w2c/secrets/`, `/data/archive` → `/data/platform/events` (одним переименованием). Файл, который уже лежит на месте, остаётся, а перенесённый ложится рядом как `<имя>.from-config`. Старый `vms.env` говорил `ARCHIVE=/data/archive`, а второй файл побеждает — строку скрипт закомментирует и даст `w2c.env` архив платформы. Кольцо на старом `/data/volume` под демоном не переносится: скрипт пишет в `vms.env` `ARCHIVE_VOLUME=file:///data/volume`, и коробка пишет туда, где её записи. Тест: `test_deploy_units.py::test_install_obsd_moves_the_old_layout_into_data_and_links_etc_deleting_nothing` — запускает скрипт в песочнице (`INSTALL_ROOT`) над коробкой старой раскладки, проверяет ссылки и каждый файл, запускает второй раз — ничего не движется и не повторяется, — и группу с чужим номером, которая останавливает скрипт раньше, чем он что-то тронул.
+
+**Умолчания — в одном месте.** `/data/archive` было записано умолчанием в шести классах воркеров и восьми местах `__main__`. Теперь архив событий спрашивают у одной функции платформы, `runtime.events_root` (`$ARCHIVE`, иначе `<PLATFORM_DIR>/events`): пять классов — `VmsWorker`, `DetWorker`, `DetJobWorker`, `SurveyWorker`, `AutoWorker` — и все восемь мест `__main__`. Шестой класс, `RecWorker`, своё запасное `/data/archive` пока держит — это открыто, — но на коробке до него не доходит: точка входа передаёт ему и архив, и том. Корень — у `runtime.platform_dir`, `/etc/w2c` и путь ключа — `runtime.ETC` и `runtime.KEY_FILE`, данные и права хранилища кластера — от них же (`configstore.DATA`, `RIGHTS_FILE`, `tls.TLS_DIR`); свои пути VMS — в `vms/config.py` (`VMS_DATA`, `OWN_VOLUME`).
+
+**Ключ — не значение в файле, а файл:** `/etc/w2c/secrets/platform.key`, 0640, группа `w2c-secrets` (решение владельца от 4 октября; урок 18 М10A), смонтированный как `/run/secrets/platform.key` только в консоль, держатель и регистратор, которые входят в эту группу. Каталог `secrets/` — 2710 `root:w2c-secrets`: член группы проходит к файлу, который ему назвали, но не видит, что ещё там лежит (`x` без `r`), а setgid даёт новому ключу группу без `chgrp`. Пишет его только root при установке (`python3 -m w2cplatform.sealing new /etc/w2c/secrets/platform.key`), потому что ни один работающий процесс его не пишет. Юниты запасных читают ту же пару, `/etc/w2c/w2c.env` и `/etc/vms/vms.env`, и её же отдают запасному.
+
+`w2c.env.example` и `vms.env.example` — то, что `install-obsd.sh` кладёт на коробку, где файлов ещё нет, с комментарием у каждой переменной. Тест сторожит обязательные — и то, чего быть не должно:
 
 ```python
     env = open(os.path.join(DEPLOY, "vms.env.example")).read()
-    assert "PLATFORM_DIR=/data/platform" in open(os.path.join(DEPLOY, "w2c.env.example")).read()
-    assert all(k in env for k in ("ARCHIVE=/data/archive", "CAPACITY="))
+    platform = open(os.path.join(DEPLOY, "w2c.env.example")).read()
+    assert "PLATFORM_DIR=/data/platform" in platform and f"ARCHIVE={EVENTS}" in platform   # the events archive is the platform's
+    assert "CAPACITY=" in env
     assert "SPOOL=" not in env and "SEGMENT_SECONDS=" not in env
 ```
 
-А что каждое имя — в своей половине и только там, что юниты запасных читают обе и что ключ — в трёх юнитах и ни в одном больше, сторожит `test_deploy_units.py::test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads`.
+А что каждое имя — в своей половине и только там (`ARCHIVE` — платформы), что юниты запасных читают обе и что ключ — в трёх юнитах и ни в одном больше, сторожит `test_deploy_units.py::test_the_platforms_settings_and_the_vmss_are_two_files_every_unit_reads`.
 
 `SPOOL` и `SEGMENT_SECONDS` ушли вместе с файловым архивом: очереди на диске нет, а длину куска решает движок — блоками и последовательностями (урок 7). Вторая строка теста не даёт им вернуться в пример, который копируют на коробки.
 
@@ -502,13 +536,16 @@ CMD ["python3", "-m", "vms", "worker"]
 
 ```
 # the server's own volume, where a recorder with nothing declared writes: a volume of ObjectStorage, opened by
-# the host's obsd (`obsd.service`). Unset: `volume` BESIDE `$ARCHIVE` — `/data/volume` — and not inside the
-# tree, where the resource's walks would take the ring for events and count its blocks as the tree's usage.
-# ARCHIVE_VOLUME=file:///data/volume
+# the host's obsd (`obsd.service`) as `vms-obsd`. Unset: `/data/vms/obsd/volume` (`vms/config.py`, `OWN_VOLUME`):
+# the archive engine is the VMS's, and so are its volumes — under `/data/vms/obsd`, never inside the platform's
+# events archive, where the resource's walks would take the ring for events. A box set up before this layout keeps
+# its ring where it is: `install-obsd.sh` writes `ARCHIVE_VOLUME=file:///data/volume` here when it finds one there.
+# ARCHIVE_VOLUME=file:///data/vms/obsd/volume
 # its size when it is first formatted — a ring: it never grows past it, and gives up its oldest minutes when
 # full. Unset: four fifths of what is free, leaving two gigabytes and the disk under the watermark's low mark
-# once the ring is full. A volume that exists keeps its size until a declaration (`rec/volumes/<name>`) says
-# another.
+# once the ring is full — of the disk the volume is on as the DAEMON sees it (`VOLUME_SPACE`), not the recorder's
+# container, where the volume is not mounted. A volume that exists keeps its size until a declaration
+# (`rec/volumes/<name>`) says another.
 # ARCHIVE_QUOTA_BYTES=
 # the host's ObjectStorage daemon: /run/vms-obsd/obsd.sock, where `obsd.service` puts it — set in the recorder's own
 # unit, the one process that mounts that directory. How long a recorder waits for one answer from it: shorter
@@ -517,7 +554,7 @@ CMD ["python3", "-m", "vms", "worker"]
 # OBSD_TIMEOUT=10
 ```
 
-**`ARCHIVE_VOLUME`** — где собственный том сервера. Рядом с деревом ресурса, а не внутри: внутри обходы ресурса приняли бы кольцо за дерево событий и посчитали бы его блоки занятым местом.
+**`ARCHIVE_VOLUME`** — где собственный том сервера. Движок архива — VMS, а не платформы, и его тома — у VMS, под `/data/vms/obsd` (решение владельца от 4 октября), а не в архиве событий платформы: там обходы ресурса приняли бы кольцо за дерево событий и посчитали бы его блоки занятым местом. Умолчание говорит точка входа регистратора (`config.OWN_VOLUME`), а не сам регистратор: его запасное «рядом с деревом событий» теперь означало бы каталог платформы.
 
 **`ARCHIVE_QUOTA_BYTES`** — размер собственного тома сервера, когда он форматируется впервые. Квота — это размер кольца (урок 10, шаг 3), и спрашивается она один раз: отформатированный том свой размер не меняет, пока объявление не скажет другой. Без неё — четыре пятых свободного места, но не больше, чем держит диск под нижней отметкой ватерлинии, когда кольцо заполнится.
 
@@ -542,10 +579,11 @@ def test_the_units_run_the_entrypoints_the_package_has():
         u = unit(name)
         assert u["Container"]["Image"] == "localhost/vmsserver:latest"                 # one image, one thing to publish
         assert u["Container"]["Exec"] == f"python3 -m vms {entry}"
-        # the data partition, never a rootfs slot; the platform's half first, the VMS's after it (a name in both: the VMS's)
-        assert u["Container"]["EnvironmentFile"] == ["/data/config/w2c.env", "/data/config/vms.env"]
+        # /etc/w2c and /etc/vms, links into the data partition; the platform's half first, the VMS's after it
+        assert u["Container"]["EnvironmentFile"] == ["/etc/w2c/w2c.env", "/etc/vms/vms.env"]
         for vol in …:
-            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:")), vol   # sockets on a tmpfs, not state
+            assert vol.startswith(("/data/", "/run/vms:", "/run/vms-obsd:", "/run/vms-console:",   # sockets on a tmpfs, not state
+                                   f"{KEY}:")), vol                                              # the key ring: one file
 ```
 
 **Таблица диспетчера извлекается регулярным выражением из исходника** и сверяется с юнитами. Здесь видны все шестнадцать глаголов — десять этого урока и шесть, которые добавят уроки 20–25.
@@ -554,7 +592,7 @@ def test_the_units_run_the_entrypoints_the_package_has():
 
 `from vms import __main__ as m` — импорт **без запуска**: в модуле есть `if __name__ == "__main__"`, и при импорте он не срабатывает. Проверяется, что модуль вообще импортируется — то есть все подсистемы собираются.
 
-И последнее утверждение: **каждый том начинается с `/data/`, `/run/vms:`, `/run/vms-obsd:` или `/run/vms-console:`**. Ни одного монтирования из корня, ни `/etc`, ни `/var`, ни сокета докера. Всё состояние коробки — на разделе данных, плюс три tmpfs: разделяемая память воркеров, сокет демона (с четвёртого ревью — свой каталог, правило пришлось расширить) и сокет консоли.
+И последнее утверждение: **каждый том начинается с `/data/`, `/run/vms:`, `/run/vms-obsd:`, `/run/vms-console:` — или это файл ключа**. Ни одного монтирования из корня, ни `/var`, ни сокета докера. Всё состояние коробки — на разделе данных, плюс три tmpfs: разделяемая память воркеров, сокет демона (с четвёртого ревью — свой каталог, правило пришлось расширить) и сокет консоли. Единственный путь под `/etc` — `/etc/w2c/secrets/platform.key`, одним файлом, и он тоже на разделе данных: `/etc/w2c` — ссылка в `/data/platform/etc`.
 
 Это правило, за которым стоит следить в любой системе: **если контейнер монтирует что-то из корня, объясните зачем.** Обычно объяснения нет.
 
@@ -583,7 +621,7 @@ console:
 ## Результат
 
 ```bash
-deploy/install-obsd.sh                       # пользователь и группа vms-obsd (2101), каталоги w2c и vms, кольца — vms-obsd (демон остановлен), юнит, restart
+deploy/install-obsd.sh                       # vms-obsd (2101), w2c (2100) и группы клиентов, /etc/w2c и /etc/vms — ссылки в /data, каталоги, кольца — vms-obsd, юнит
 systemctl enable --now w2c-resource vmscontroller reccontroller console
 systemctl enable --now vmsworker@w-1 recworker@r-1
 systemctl enable --now livecontroller liveworker@g-1
@@ -597,7 +635,7 @@ curl -X POST localhost:8080/cameras -H 'Idempotency-Key: a1' \
      -d '{"source":"driverpack://file/lobby.mp4"}'
 ```
 
-За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. И одна строка, которую стоит знать после установки: сетевой том регистратор берёт только на `obsd` с патчем 07 (`WRITER_ABANDON`: движок, который умеет отдать том, когда его взяла другая коробка). На коробке со старым демоном `GET /rec/volumes` говорит это в `why` тома словами регистратора — `r-1 does not take it: obsd on <сервер> is too old to write <том> safely … Update obsd on <сервер>; volumes on its own disks are not affected` — то же, что лежит в его heartbeat'е под `refused`; собственные диски коробки это не трогает. Нажали «Запись» — регистратор форматирует том сервера `/data/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
+За один проход камера держится; heartbeat говорит `live_url: rtsp://box:8554/1`. И одна строка, которую стоит знать после установки: сетевой том регистратор берёт только на `obsd` с патчем 07 (`WRITER_ABANDON`: движок, который умеет отдать том, когда его взяла другая коробка). На коробке со старым демоном `GET /rec/volumes` говорит это в `why` тома словами регистратора — `r-1 does not take it: obsd on <сервер> is too old to write <том> safely … Update obsd on <сервер>; volumes on its own disks are not affected` — то же, что лежит в его heartbeat'е под `refused`; собственные диски коробки это не трогает. Нажали «Запись» — регистратор форматирует том сервера `/data/vms/obsd/volume` и пишет поток `1/e1`. Записанные минуты видны, когда закрывается их блок (урок 8).
 
 ```bash
 systemctl stop vmscontroller            # ничего работающее не останавливается
@@ -612,7 +650,10 @@ systemctl restart obsd                  # регистраторы держат 
 
 - **Новый `obsd` поверх запущенного файла на macOS.** `cp -p` новым бинарником поверх прежнего — и процесс убивается при старте (SIGKILL, код 137): ядро держит кеш подписи прежнего файла. Класть новым файлом — удалить, потом копировать (обратная связь CP).
 
-- **Конфигурация в корневом разделе.** Обновление системы поменяет, в какой архив пишет коробка.
+- **Конфигурация в корневом разделе.** Обновление системы поменяет, в какой архив пишет коробка. `/etc/w2c` и `/etc/vms` — ссылки в `/data`, а не каталоги.
+- **`/data/platform` целиком в юните.** С ним каждому контейнеру достаётся `etc/secrets/platform.key`. Монтируются `config/`, `objects/`, `events/` — по одному.
+- **Клиент архива с маской 0022.** Его каталоги — 2755, и ресурс (`w2c`) не удалит из них ни одного бакета: хранение молча перестаёт удалять.
+- **Группа платформы с другим номером.** Контейнер входит в группу по числу; `install-obsd.sh` останавливается и называет, какое имя с каким номером.
 - **Образ на глагол.** Шестнадцать публикаций, шестнадцать версий и шестнадцать способов рассинхронизироваться.
 - **Токен на подсистему вместо токена на процесс.** Ошибка в консоли сможет переразместить камеры.
 - **Медиа, смонтированные регистратору.** Второе соединение к камере станет возможным — и однажды случится.
@@ -640,17 +681,19 @@ systemctl restart obsd                  # регистраторы держат 
 - Движок архива — демон хоста, один на коробку: правило «один писатель на том» значит что-то, только если все регистраторы спрашивают один демон.
 - Сроки выводятся из того, что делает остановка: ожидание писателя (90 с) длиннее истечения захвата (45 с), остановка регистратора (40 с) длиннее сброса (30 с), остановка демона (60 с) — по README.
 - Ресурс — процесс, а не таймер: у таймера не может быть ни heartbeat'а, ни порта, ни индекса.
-- Один образ, три пакета, ни одного `pip install` и ни одного `obsd`; конфигурация на разделе данных, потому что обновление не должно менять, куда пишет коробка.
+- Один образ, три пакета, ни одного `pip install` и ни одного `obsd`; конфигурация на разделе данных, а `/etc/w2c` и `/etc/vms` — ссылки туда, потому что обновление не должно менять, куда пишет коробка.
+- Ресурс — служба платформы от `w2c`, а пишущие процессы — её клиенты: группа `w2c-events`, setgid, маска 0007; бакеты удаляет только ресурс.
 - Юниты читаются тестами: опечатка в `Exec=` ломает сборку, а не коробку.
 
 ## Упражнения
 
-1. Перенесите `vms.env` и `w2c.env` в `/etc`, как у продукта. Проведите обновление системы через RAUC и посмотрите на `CAPACITY` и `PLATFORM_DIR`.
+1. Замените ссылку `/etc/w2c` настоящим каталогом с тем же `w2c.env`. Проведите обновление системы через RAUC и посмотрите на `CAPACITY` и `PLATFORM_DIR`.
 2. Смонтируйте регистратору `/data/media`. Опишите, чем это опасно через год.
 3. Поставьте `StopTimeout=10` у `recworker@`. Остановите регистратор посреди записи и посмотрите, сколько ждал следующий держатель тома и что он нашёл в томе.
 4. Поставьте `OBSD_WRITER_GRACE_S=20`. Убейте регистратор `kill -9` и проследите, кто и когда возьмёт том.
 5. Уберите `RuntimeDirectoryMode=0750` из `obsd.service`, удалите `/run/vms-obsd` и перезапустите демон. Что видит регистратор и что говорит его `volume_error`?
-6. Смонтируйте регистратору `/data/archive` как `/archive` и задайте `ARCHIVE=/archive`. Что регистратор назовёт демону и что ответит демон?
+6. Уберите `ARCHIVE_VOLUME` и умолчание `OWN_VOLUME` из точки входа регистратора. Где он отформатирует том сервера и что об этом скажет обход ресурса?
+13. Уберите `PodmanArgs=--umask=0007` из юнита детектора. Через сутки посмотрите, что удалил проход хранения ресурса и что осталось под `det/`.
 7. Соберите образ с `obsd` внутри и запустите демон в каждом контейнере регистратора. Объявите сетевой том и поднимите два регистратора на одной коробке. Что пойдёт не так и почему ни один из двух этого не заметит?
 8. Соберите отдельный образ для консоли. Перечислите, что теперь надо делать при выпуске новой версии.
 9. Дайте консоли токен всей подсистемы. Напишите в ней вызов `place` и посмотрите, что произойдёт.

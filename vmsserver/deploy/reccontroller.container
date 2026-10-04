@@ -11,9 +11,14 @@ After=network.target
 [Container]
 Image=localhost/vmsserver:latest
 Exec=python3 -m vms reccontroller
-EnvironmentFile=/data/config/w2c.env
-EnvironmentFile=/data/config/vms.env
-Volume=/data/platform:/data/platform:z
+EnvironmentFile=/etc/w2c/w2c.env
+EnvironmentFile=/etc/vms/vms.env
+# The platform's two file stores, and nothing else of /data/platform (its etc/ holds the key ring): setgid
+# `w2c-store`, joined by number; every file this process makes there is its group's (`--umask=0007`).
+Volume=/data/platform/config:/data/platform/config:z
+Volume=/data/platform/objects:/data/platform/objects:z
+GroupAdd=2103
+PodmanArgs=--umask=0007
 Network=host
 
 [Service]

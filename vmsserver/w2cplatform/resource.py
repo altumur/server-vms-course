@@ -1085,9 +1085,8 @@ class Resource:
     # a peer's disk that rotted, or a door that cut the body, does not become this server's blob. A body that ends short
     # is an `EOFError`; a late one raises what the door's deadline raises.
     def take_blob(self, key: str, rfile, n: int) -> None:
-        import tempfile
         from .blobs import BlobMismatch
-        from .events import durable_dir, durably
+        from .events import durable_dir, durably, new_temp
         if not is_blob_key(key):
             raise ValueError(f"{key}: only a blob is put here")
         local = local_store(self.objects)
@@ -1096,7 +1095,7 @@ class Resource:
             raise ValueError("this server's objects are not files: nothing to put a copy into")
         dest = p(key)
         os.makedirs(os.path.dirname(dest), exist_ok=True)
-        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(dest), prefix=os.path.basename(dest) + ".", suffix=".tmp")
+        fd, tmp = new_temp(os.path.dirname(dest), os.path.basename(dest) + ".")     # the store's group reads it (`new_temp`)
         try:
             h, left = hashlib.sha256(), n
             with os.fdopen(fd, "wb") as f:

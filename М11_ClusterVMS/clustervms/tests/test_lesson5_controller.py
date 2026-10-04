@@ -146,7 +146,7 @@ def test_a_worker_runs_where_a_resource_answers_and_leaves_when_it_stops():
     sv = make_console(ctl).root.servers()["servers"]
     assert sv["srv-a"]["resource"] == "silent" and sv["srv-a"]["placeable"] is False and sv["srv-a"]["why"] == "resource on srv-a silent"
     assert sv["srv-b"]["resource"] == "live" and sv["srv-b"]["placeable"] is True and [w["worker"] for w in sv["srv-b"]["workers"]] == [B]
-    assert sv["srv-a"]["archive"] == "/data/archive"                                                # the worker's $ARCHIVE, from /etc/vms/vms.env
+    assert sv["srv-a"]["archive"] == "/data/platform/events"                                        # the worker's $ARCHIVE: the platform's events archive (`runtime.events_root`)
     x = ctl.create_camera({"source": "driverpack://file/x.mp4", "labels": ["vlan:cctv-a"]})["id"]
     assert ctl.place(x).worker == B                                                                # never w-srv-a-1 while srv-a's resource is silent
     assert ctl.unplaceable() == []                                                                 # srv-b reaches cctv-a too; nothing waits

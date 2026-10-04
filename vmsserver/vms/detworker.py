@@ -62,7 +62,7 @@ class DetWorker(Worker):
         self.capacity = capacity if capacity is not None else int(env.get("CAPACITY", "8"))
         self.server = runtime.server(env, server)
         self.labels = runtime.labels(env, "gpu")
-        self.archive_root = archive_root or env.get("ARCHIVE", "/data/archive")   # this server's resource: where the buckets go
+        self.archive_root = runtime.events_root(env, archive_root)   # this server's resource: where the buckets go
         self.running: dict[str, object] = {}                                     # unit -> model
         self.status_by_unit: dict[str, dict] = {}
         self.events_written = 0

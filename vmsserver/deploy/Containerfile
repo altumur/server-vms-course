@@ -44,8 +44,9 @@
 # ## Notes
 # - Everything the verbs import is in the apt line: the standard library, PyYAML for the spec, and the
 #   GStreamer stack for `gstvms`. Without the last, `__main__.worker` still runs, with the fake actuator.
-# - Nothing is configured in the image: stores, roots and capacity all come from `/data/config/w2c.env` (the
-#   platform's) and `/data/config/vms.env` (the VMS's) through the units — an OS or image update changes no data path (М9 Lesson 5).
+# - Nothing is configured in the image: stores, roots and capacity all come from `/etc/w2c/w2c.env` (the
+#   platform's) and `/etc/vms/vms.env` (the VMS's) through the units — links into the data partition, so an OS or
+#   image update changes no data path (М9 Lesson 5). No user either: a unit says it by number (`User=2100`).
 # ================================================================================================
 # A slim Debian base: the GStreamer stack comes from Debian's packages, so no compiling and one apt line.
 FROM docker.io/library/debian:bookworm-slim
