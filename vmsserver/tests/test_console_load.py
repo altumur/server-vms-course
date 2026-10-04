@@ -1190,6 +1190,63 @@ def test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared
         csrv.shutdown(); _restore(was)
 
 
+def test_past_its_headers_a_door_reads_its_client_with_a_floor_even_where_no_body_deadline_was_set():
+    """The review's twelfth pass, major 8, the door's half: past the headers a door's reads had a deadline a year away
+    (`Deadlined.parse_request`), so a handler that read from its client without `body_deadline` — a door of a subsystem
+    written later, a route that reads a part of a body itself — waited a byte at a time for as long as the client
+    trickled: the connection, and its thread, were the client's. Now the first read past the headers sets a body's
+    floor (`DeadlineReader.lazy`: the handler's `timeout` and `BODY_RATE` after it), whoever reads it; a body that comes
+    at that rate is untouched."""
+    from http.server import BaseHTTPRequestHandler
+    from w2cplatform.console import Deadlined, door_server
+    seen = []
+
+    class H(Deadlined, BaseHTTPRequestHandler):
+        timeout = 0.5
+
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            began = time.monotonic()
+            try:
+                data = self.rfile.read(int(self.headers["Content-Length"]))   # no `body_deadline`: the door's floor
+                seen.append(("whole", len(data), time.monotonic() - began))
+                self.send_response(204); self.end_headers()
+            except OSError as e:
+                seen.append((type(e).__name__, 0, time.monotonic() - began))
+                self.close_connection = True
+
+    srv = door_server(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    port = srv.server_address[1]
+    try:
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(f"POST /x HTTP/1.1\r\nHost: x\r\nContent-Length: 100000\r\n\r\n".encode())
+        began = time.monotonic()
+        while time.monotonic() - began < 8 and not seen:
+            try:
+                s.sendall(b"x")                                           # a byte every 0.2 s: inside each read's timeout
+            except OSError:
+                break
+            time.sleep(0.2)
+        s.close()
+        assert seen and seen[0][0] == "TimeoutError" and seen[0][2] < 3.0, seen
+        body = b"y" * (256 << 10)                                         # a body at four times the floor: whole
+        s = socket.create_connection(("127.0.0.1", port))
+        s.sendall(f"POST /x HTTP/1.1\r\nHost: x\r\nContent-Length: {len(body)}\r\n\r\n".encode())
+        for off in range(0, len(body), 64 << 10):
+            s.sendall(body[off:off + (64 << 10)])
+            time.sleep(0.25)
+        s.settimeout(5)
+        assert s.recv(4096).split(b"\r\n")[0].endswith(b"204 No Content"), seen
+        s.close()
+        assert seen[1][:2] == ("whole", len(body)), seen
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
 def test_a_bucket_goes_out_in_pieces_to_a_slow_reader_and_is_never_held_whole():
     """The review's seventh pass, major — a run: `GET /events/<bucket>` was `f.read()` into one reply; eight readers of a
     60 MB bucket that did not read held 400 MB in the resource, and a peer slower than 2 MB/s never got one — the

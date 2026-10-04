@@ -574,6 +574,7 @@ class VmsWorker(Worker):
         self._dev_queues: dict = {}                      # device (or ("open", key)) -> its questions not begun yet, in order
         self._dev_runners: set = set()                   # …and the lines a thread is working through now: one per device
         self._dev_heads: dict = {}                       # …and the call each of those lines is in now (`_ask_devices` judges it)
+        self._door_reads: dict[int, list] = {}           # device -> the door's reads of its sessions not back yet (`_door_read`)
         self._dev_said: set = set()                      # devices said slow, (question, device) said failing: once a spell
         self._open_failed: dict[str, str] = {}           # device key -> why it did not open, until it opens
         self._said_coverage: dict[tuple, object] = {}    # ("coverage", device, camera) -> what the device said last
@@ -2195,6 +2196,8 @@ class VmsWorker(Worker):
         if row is None:
             raise KeyError(cam)
         dev = self.device_of_row(row)
+        if dev is not None and (why := self._door_stuck(dev)):
+            raise TimeoutError(why)                      # a device the door already waited for in vain: 503 at once
         cov = self._door_coverage(dev, cam) if dev is not None else None   # by the device's line (the eleventh review)
         if cov is None:
             raise KeyError(cam)
@@ -2222,12 +2225,7 @@ class VmsWorker(Worker):
                     span = min(self.PLAYBACK_FIRST, self.PLAYBACK_PIECE) if rate is None else \
                         max(1.0, min(self.PLAYBACK_PIECE, held / max(rate, 1.0)))
                     b = min(t1, at + span)
-                    sid = dev.open_playback(cam, at, b)  # OverflowError when the device is full
-                    try:
-                        got = dev.read(sid)
-                        got = [bytes(got)] if isinstance(got, (bytes, bytearray, memoryview)) else [bytes(c) for c in got]
-                    finally:
-                        dev.close_playback(sid)          # before a byte of the piece is sent
+                    got = self._door_read(dev, cam, at, b)   # opened, read and closed before a byte of it is sent
                     size = sum(len(c) for c in got)
                     budget.force(size - held, who)       # what the piece really is, whatever was asked
                     held = size
@@ -2240,6 +2238,112 @@ class VmsWorker(Worker):
             finally:
                 budget.give(held, who)
         return pieces()
+
+    # A PIECE IS READ OFF THE DOOR'S THREAD, AND WAITED FOR WITH A DEADLINE (the review's twelfth pass, major 8; a run,
+    # `h5_door_http`). The door opened, read and closed a device's session on the connection's own thread: eight
+    # `/playback` to a recorder that stopped answering never ended, and from the same address `/playback` to a healthy
+    # recorder, `/recordings` and `/devices` were 503 — the door's connections were the hung device's, and no socket
+    # deadline ends a thread that is inside a call to a device. The door's questions had their line and their wait
+    # (`_door_ask`); its reads had neither. Now a piece is read by a thread of its own — open, read, close, the session
+    # closed before the piece is handed on, as before — and the door waits for it:
+    #
+    #   the open            `DOOR_ASK_WAIT`, as long as a question; the device's own refusal (full: `OverflowError`) as it was
+    #   each chunk          `PLAYBACK_STALL`: a read that gives nothing for so long is given up — a first piece is the
+    #                       door's 503 «ask again», a later one ends the reply short, and the connection is let go
+    #   the whole piece     `PLAYBACK_STALL` and the piece's seconds over `PLAYBACK_DEVICE_PACE`: a device that trickles
+    #                       a byte just inside the stall deadline is cut all the same — a card played back at the speed
+    #                       it was recorded is well inside it
+    #   per device          `DOOR_READS_PER_DEVICE` reads not back at once, the next 503; and a device with a read the
+    #                       door gave up on and that has not come back since — or whose line has been in one question
+    #                       longer than `DOOR_ASK_WAIT` — is answered 503 at once (`_door_stuck`): a hung device holds a
+    #                       handful of threads that wait inside it, never the door's connections
+    #
+    # A read given up on is not read further (a streaming driver's chunks are no longer taken), and its session is closed
+    # by its own thread whenever the device comes back.
+    PLAYBACK_STALL = 10.0                # seconds a device's read may give nothing before the door gives up on it
+    PLAYBACK_DEVICE_PACE = 0.5           # seconds of footage a second a device gives at least, over a whole piece
+    DOOR_READS_PER_DEVICE = 8            # the door's reads of one device not back at once: the next is 503
+
+    def _door_stuck(self, dev) -> str | None:
+        now = time.monotonic()
+        with self._dev_lock:
+            lost = [j["since"] for j in self._door_reads.get(id(dev), ()) if j["given_up"]]
+            head = self._dev_heads.get(id(dev))
+        if lost:
+            return (f"the device has not come back from a read this door gave up on {now - min(lost):.0f} s ago — it is "
+                    f"busy or does not answer; ask again")
+        if head is not None and now - head["t0"] > self.DOOR_ASK_WAIT:
+            return (f"the device has not answered a question for {now - head['t0']:.0f} s — it is busy or does not "
+                    f"answer; ask again")
+        return None
+
+    def _door_read(self, dev, cam, t0: float, t1: float) -> list[bytes]:
+        import queue
+        if why := self._door_stuck(dev):
+            raise TimeoutError(why)
+        job = {"since": time.monotonic(), "given_up": False, "q": queue.Queue()}
+        with self._dev_lock:
+            jobs = self._door_reads.setdefault(id(dev), [])
+            if len(jobs) >= self.DOOR_READS_PER_DEVICE:
+                raise TimeoutError(f"the device has {len(jobs)} reads of this door under way already — ask again")
+            jobs.append(job)
+
+        def run():
+            sid, said = None, None
+            try:
+                sid = dev.open_playback(cam, t0, t1)     # OverflowError when the device is full
+                job["q"].put(("open", None))
+                got = dev.read(sid)
+                if isinstance(got, (bytes, bytearray, memoryview)):
+                    job["q"].put(("chunk", bytes(got)))
+                else:
+                    try:
+                        for c in got:
+                            if job["given_up"]:
+                                break                    # nobody waits for the rest: not read on
+                            job["q"].put(("chunk", bytes(c)))
+                    finally:
+                        getattr(got, "close", lambda: None)()
+            except Exception as e:                       # noqa: BLE001 — the device's word, raised at the door below
+                said = e
+            finally:
+                try:
+                    if sid is not None:
+                        dev.close_playback(sid)          # before the door hands a byte of the piece on
+                except Exception as e:                   # noqa: BLE001
+                    said = said or e
+                with self._dev_lock:
+                    jobs = self._door_reads.get(id(dev), [])
+                    if job in jobs:
+                        jobs.remove(job)
+                    if not jobs:
+                        self._door_reads.pop(id(dev), None)
+                job["q"].put(("end", said))
+
+        threading.Thread(target=run, name=f"{self.name}-read", daemon=True).start()
+        until = job["since"] + self.DOOR_ASK_WAIT + self.PLAYBACK_STALL + (t1 - t0) / self.PLAYBACK_DEVICE_PACE
+        out, opened = [], False
+        while True:
+            wait = min(self.PLAYBACK_STALL if opened else self.DOOR_ASK_WAIT, until - time.monotonic())
+            try:
+                kind, value = job["q"].get(timeout=max(0.0, wait))
+            except queue.Empty:
+                job["given_up"] = True
+                if not opened:
+                    why = f"the device has not opened its footage within {self.DOOR_ASK_WAIT:g} s"
+                elif time.monotonic() >= until:
+                    why = f"the device gave {t1 - t0:.0f} s of footage slower than {self.PLAYBACK_DEVICE_PACE:g} s a second"
+                else:
+                    why = f"the device gave nothing for {self.PLAYBACK_STALL:g} s"
+                raise TimeoutError(f"{why} — it is busy or does not answer; the playback was cut, ask again") from None
+            if kind == "open":
+                opened = True
+            elif kind == "chunk":
+                out.append(value)
+            else:
+                if value is not None:
+                    raise value
+                return out
 
     # What the heartbeat says per unit beyond the platform's fields: the worker publishes `live_url` — where a
     # recorder, a gateway or a detector subscribes; never a viewer.

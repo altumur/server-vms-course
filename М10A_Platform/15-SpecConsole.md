@@ -1053,6 +1053,20 @@ def open_doors(host: str, port: int, handler, unix_env: str = "CONSOLE_UNIX", sa
 
 **У тела — пол темпа, а не только срок** (восьмое ревью, воспроизведено запуском). Срок был пропорционален длине, которую тело **объявило**, без пола скорости. 60 МБ получали 945 с, 64 МиБ — 1054 с, и отправитель байта раз в несколько секунд держал соединение всё это время. 32 таких соединения занимали долю адреса у двери ресурса, а два адреса — всю дверь (`/events`, `/events/wait`, зеркала) примерно на 17 минут за цикл. Теперь после льготы тело приходит не медленнее `BODY_RATE` в среднем, иначе чтение опоздало (`DeadlineReader.pace`, его ставит `body_deadline` для каждой двери, читающей тело): к `timeout + got / BODY_RATE` секундам от начала тела должны прийти `got` байтов. Телу, которое идёт с тем темпом, на который срок всегда рассчитывал, ничего не меняется — прежний срок и есть последняя точка этого пола. Струйку дверь отпускает на льготе, а не в конце объявленного. Чтобы держать долю двери, теперь нужно **слать** `BODY_RATE` на соединение. Тест: `test_console_load.py::test_a_body_that_trickles_is_let_go_at_its_grace_whatever_length_it_declared` — 60 МБ, объявленные и поданные струйкой в `PUT /mirror`, получают 408 меньше чем за 4 с при льготе 1 с, и копии нет; так же запись подсистемы через ресурс (`extra_put`) и тело `POST /marks` у консоли; бакет, поданный втрое быстрее пола, ложится целым. Что дверь **отдаёт потоком**, идёт через `Paced` и `start_stream` — об этом в М10B, уроке 15. Консоль домена и подписчик (М12) с седьмого ревью — не `door_server`, а консольные двери: те же `Bounds`, что у консоли, с резервом, полосой мониторов и сокетом коробки (`open_doors`). Тесты: `test_console_load.py::test_the_holders_door_is_bounded_and_deadlined_like_the_consoles`, `…::test_the_gateways_offer_is_bounded_and_its_door_is_the_consoles`, `…::test_the_resources_door_is_bounded_and_a_mirrored_bucket_is_never_held_whole`, `…::test_the_resources_door_gives_a_mirrored_body_a_deadline_whole_and_a_subsystems_write_too`; М12, `test_lesson3_readview_api_gateway.py::test_the_domains_console_is_a_door_like_the_others_bounded_and_with_a_ceiling_on_a_body` и `…::test_the_domains_console_has_the_consoles_reserve_and_a_listed_monitor_is_answered_whoever_floods`. Отдельного теста двери подписчика нет: она собирается в `main()` из окружения и идёт тем же `open_doors`, что консоль домена.
 
+**После заголовков пол есть всегда, даже если обработчик не поставил срок телу** (двенадцатое ревью, major 8). После заголовков срок запроса становился годом (`365 * 86400`), и пол получал только тот, кто звал `body_deadline`. Обработчик, читающий клиента без него, — дверь подсистемы, написанная позже, маршрут, который дочитывает часть тела сам, — ждал по байту, пока клиент капал, и соединение с потоком принадлежали клиенту. Теперь первое чтение после заголовков, не нашедшее пола, ставит его само (`DeadlineReader.lazy`): льгота — `timeout` обработчика, дальше `BODY_RATE`, кто бы ни читал.
+
+```python
+    def parse_request(self):
+        ok = super().parse_request()
+        self.deadline = float("inf")
+        reader = getattr(self.rfile, "raw", None)
+        if isinstance(reader, DeadlineReader):
+            reader.lazy = True
+        return ok
+```
+
+Чего срок соединения не делает и не может: поток, который ждёт не клиента, а устройство или соседа, не кончит никакой срок сокета. Такие ожидания каждая дверь ограничивает сама — у держателя это `_door_ask` для вопросов и `_door_read` для чтений сессий (М10B, урок 15). Тест: `test_console_load.py::test_past_its_headers_a_door_reads_its_client_with_a_floor_even_where_no_body_deadline_was_set` — обработчик читает тело без `body_deadline`, клиент шлёт байт раз в 0,2 с, и чтение обрывается меньше чем за 3 с при льготе 0,5 с; тело, поданное вчетверо быстрее пола, приходит целым.
+
 И зеркальный ему метод одиночной консоли, ради которого всё сошлось:
 
 ```python

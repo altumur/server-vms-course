@@ -1848,3 +1848,146 @@ def test_the_doors_two_questions_share_one_wait_and_a_coverage_said_before_says_
     finally:
         holder._heard = None
         gate.set()
+
+
+def _door_get(port: int, path: str, timeout: float = 20.0):
+    """One GET to a holder's playback door: `(status, body, seconds)`, or `(exception name, b"", seconds)`."""
+    import http.client
+    began = time.monotonic()
+    try:
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout)
+        c.request("GET", path)
+        r = c.getresponse()
+        body = r.read()
+        c.close()
+        return r.status, body, time.monotonic() - began
+    except Exception as e:                                                # noqa: BLE001 — what the client saw
+        return type(e).__name__, b"", time.monotonic() - began
+
+
+def test_a_playback_door_to_a_hung_recorder_answers_ask_again_and_keeps_its_connections_for_the_others():
+    """The review's twelfth pass, major 8 — a run (`h5_door_http` SCEN=dead): the door opened and read a device's session
+    on the connection's own thread with no deadline, so eight `/playback` to a recorder that stopped answering never
+    ended, and from the same address `/playback` to a healthy recorder, `/recordings` and `/devices` were 503 — the
+    door's connections were the hung device's. Now a piece is read off the door's thread and waited for with a deadline
+    (`_door_read`): the hung recorder's requests are 503 «ask again» within `DOOR_ASK_WAIT`, the door's connections come
+    back, the healthy recorder is served from the same address, the hung one holds at most `DOOR_READS_PER_DEVICE` of
+    the door's reads however many are asked, and once given up on it is answered 503 at once (`_door_stuck`)."""
+    box = _real_box()
+    gate, hung, inside = threading.Event(), threading.Event(), [0]
+
+    class NVR(FakeDevice):
+        def coverage(self, cam):
+            return {"from": 0.0, "to": 60.0, "fragments": 0}
+
+        def recordings(self, cam, t0, t1):
+            return [(0.0, 60.0)]
+
+        def open_playback(self, cam, t0, t1):
+            if hung.is_set() and self.key.endswith(".50"):
+                inside[0] += 1
+                gate.wait(30)
+            return super().open_playback(cam, t0, t1)
+
+    holder, cams = _nvr_holder(box, 8, lambda k: NVR(k, channels=[str(c) for c in range(1, 9)], max_playbacks=16, bps=1000))
+    con = VmsController(box.vars.as_writer("console", VMS.acl_console()), box.objects, wall=box.wall)
+    healthy = con.create_camera({"name": "b1", "source": "driverpack://acme/10.0.0.60/ch/1"})["id"]
+    VmsController(box.vars.as_writer("vmscontroller", VMS.acl_controller()), box.objects, wall=box.wall).ensure_placed()
+    holder.DOOR_ASK_WAIT = 0.5
+    for _ in range(2):
+        holder.reconcile_once()
+        holder.heartbeat_once()
+    srv = holder.serve_playback("127.0.0.1", 0)
+    port = holder.playback_port
+    try:
+        assert _door_get(port, f"/playback/{cams[0]}?from=0&to=2")[0] == 200
+        hung.set()
+        got = {}
+        doors = [threading.Thread(target=lambda i=i: got.__setitem__(i, _door_get(port, f"/playback/{cams[i]}?from=0&to=2")),
+                                  daemon=True) for i in range(8)]
+        for t in doors:
+            t.start()
+        for t in doors:
+            t.join(5)
+        assert len(got) == 8, f"{len(got)} of 8 requests to the hung recorder answered"
+        for status, body, took in got.values():
+            assert status == 503 and b"ask again" in body and took < 3 * holder.DOOR_ASK_WAIT, (status, body[:120], took)
+        assert inside[0] <= holder.DOOR_READS_PER_DEVICE, inside[0]
+        assert srv.bounds.used["common"] == 0, srv.bounds.used                   # the door's connections are back
+        assert _door_get(port, f"/playback/{healthy}?from=0&to=2", 5)[0] == 200
+        assert _door_get(port, f"/recordings/{healthy}?from=0&to=60", 5)[0] == 200
+        assert _door_get(port, "/devices", 5)[0] == 200
+        status, body, took = _door_get(port, f"/playback/{cams[1]}?from=0&to=2", 5)
+        assert status == 503 and took < 0.3, (status, body[:120], took)          # a device given up on: 503 at once
+    finally:
+        gate.set()
+        srv.shutdown()
+        srv.server_close()
+
+
+def test_a_playback_whose_device_stops_giving_footage_half_way_is_cut_at_the_stall_and_lets_the_connection_go():
+    """The same finding's streaming half: a reply already going out waited for the device's next piece for as long as
+    the device took, and a device that stopped half way held the connection for good — no deadline of the door's is
+    on a call into a device. Now each chunk of a read comes within `PLAYBACK_STALL`, so the reply ends short (the client
+    sees it cut) and the door's connection is let go; a device that trickles inside the stall deadline is cut all the
+    same by the piece's pace (`PLAYBACK_DEVICE_PACE`); and the device's session is closed when it comes back."""
+    import http.client
+    box = _real_box()
+    gate = threading.Event()
+
+    class Stalls(FakeDevice):
+        mode = "stop"
+
+        def coverage(self, cam):
+            return {"from": 0.0, "to": 60.0, "fragments": 0}
+
+        def read(self, sid):
+            cam, t0, t1 = self.open[sid]
+            if t0 < 1.0:
+                return super().read(sid)                                  # the first piece: whole, at once
+
+            def chunks():
+                yield b"\x00" * 100
+                while self.mode == "trickle" and not gate.is_set():
+                    time.sleep(0.05)
+                    yield b"\x00"
+                gate.wait(30)
+            return chunks()
+
+    holder, cams = _nvr_holder(box, 1, lambda k: Stalls(k, channels=["1"], max_playbacks=4, bps=1000))
+    holder.DOOR_ASK_WAIT, holder.PLAYBACK_STALL, holder.PLAYBACK_FIRST = 0.5, 0.4, 1.0
+    holder.PLAYBACK_DEVICE_PACE = 20.0                                    # a piece of 29 s: 1.5 s of the device's
+    holder.reconcile_once()
+    holder.heartbeat_once()
+    srv = holder.serve_playback("127.0.0.1", 0)
+    port = holder.playback_port
+    try:
+        for mode, most in (("stop", 2.0), ("trickle", 6.0)):
+            Stalls.mode = mode
+            began = time.monotonic()
+            c = http.client.HTTPConnection("127.0.0.1", port, timeout=20)
+            c.request("GET", f"/playback/{cams[0]}?from=0&to=30")
+            r = c.getresponse()
+            assert r.status == 200, r.status
+            try:
+                r.read()
+                raise AssertionError(f"{mode}: a reply whose device stopped came whole")
+            except http.client.IncompleteRead:
+                pass
+            took = time.monotonic() - began
+            c.close()
+            assert took < most, (mode, took)
+            deadline = time.monotonic() + 2
+            while srv.bounds.used["common"] and time.monotonic() < deadline:
+                time.sleep(0.02)
+            assert srv.bounds.used["common"] == 0, (mode, srv.bounds.used)
+            gate.set()                                                    # the device comes back: its session closes
+            deadline = time.monotonic() + 2
+            while holder._door_reads and time.monotonic() < deadline:
+                time.sleep(0.02)
+            assert not holder._door_reads and not holder.devices["acme/10.0.0.50"].open, holder._door_reads
+            gate.clear()
+    finally:
+        gate.set()
+        srv.shutdown()
+        srv.server_close()
